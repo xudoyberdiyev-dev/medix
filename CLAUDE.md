@@ -1,6 +1,6 @@
 # MEDIX — Claude uchun ish qoidalari
 
-Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + Claude. Kod avtonom sessiyalarda (kuniga 3 marta: ~02:00, ~08:00, ~16:30 Toshkent) va egasi ochgan sessiyalarda yoziladi.
+Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + Claude. Kod avtonom sessiyalarda (kuniga 4 marta: 07:00, 12:00, 18:00, 23:00 Toshkent) va egasi ochgan sessiyalarda yoziladi.
 
 ## Haqiqat manbalari (shu tartibda)
 1. `docs/SPEC.md` — loyihaning to'liq tavsifi (rollar, jarayonlar, biznes qoidalari, texnologiyalar, arxitektura). **Har sessiyada kerakli bo'limini o'qing.**
@@ -9,6 +9,7 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 4. Ziddiyat bo'lsa — eng keyingi sanali qaror ustun; hal qilib bo'lmasa, PLAN.md → «Egasiga savollar» ga yozing va boshqa vazifaga o'ting.
 
 ## Sessiya tartibi (avtonom ish)
+0. **Boshlanish xabari:** `status/last-start.txt` ga «▶️ MEDIX: HH:MM sessiya boshlandi — reja: <keyingi vazifa>» yozing, develop'ga commit+push qiling (Telegram'ga ketadi) va `PushNotification` vositasi bo'lsa, shu matnni u orqali ham yuboring.
 1. `git fetch origin && git checkout develop && git pull` (develop bo'lmasa — main'dan yarating).
 2. `PLAN.md` → «Hozirgi holat» va «Keyingi vazifalar» ni o'qing. Oldingi sessiyaning oxirgi hisobotini (`reports/` dagi eng yangi fayl) o'qing.
 3. Oldingi CI natijasini tekshiring: `gh run list --branch develop -L 3`. Yiqilgan bo'lsa — **birinchi navbatda shuni tuzating** (`gh run view <id> --log-failed`).
@@ -19,7 +20,7 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 **Egasining qarori (01.11.2026):** SPEC 17-bo'limidagi «har vazifa uchun egasi tasdiqlaydi» o'rniga — vazifalar avtonom bajariladi, egasi bosqich oxirida PR orqali ko'rib chiqadi. Kichik qarorlarni o'zingiz qabul qiling va hisobotda yozing.
 
 ### Faqat egasidan so'rab qilinadigan ishlar (to'xtang, «Egasiga savollar» ga yozing)
-- Pul sarflash, pullik xizmat/obuna, domen.
+- Pul sarflash, pullik xizmat/obuna, domen. (Istisno: egasi 01.11.2026 da Claude usage credits — $100 bonus — ishlatishga ruxsat bergan; buni egasi sozlamada yoqadi, sessiya o'zi hech narsa sotib olmaydi.)
 - Production ma'lumotini o'chirish yoki o'zgartirish; `main` ga to'g'ridan-to'g'ri push yoki force-push.
 - SPEC dagi biznes qoidasini o'zgartirish (QQS, qarz, narx, ruxsatlar).
 - Kalit/parol/token — hech qachon kodga yoki chatga yozilmaydi; faqat GitHub Secrets / env.
