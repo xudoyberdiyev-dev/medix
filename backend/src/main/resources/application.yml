@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: medix
+  datasource:
+    url: ${MEDIX_DB_URL:jdbc:postgresql://localhost:5432/medix}
+    username: ${MEDIX_DB_USER:medix}
+    password: ${MEDIX_DB_PASSWORD:medix}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jackson:
+    time-zone: Asia/Tashkent
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /api/openapi
+  swagger-ui:
+    path: /api/docs

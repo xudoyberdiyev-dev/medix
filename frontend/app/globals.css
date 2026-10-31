@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/*
+ * MEDIX dizayn tizimi tokenlari (design/system/tokens.json).
+ * Kodda faqat token nomi ishlatiladi — HEX emas. Yangi rang qoʻshilmaydi.
+ */
+@theme {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-brand-900: #123c3a;
+  --color-primary: #0d9488;
+  --color-primary-button: #0f766e;
+  --color-primary-button-hover: #115e59;
+  --color-primary-soft: #ddf5ee;
+  --color-surface: #ffffff;
+  --color-background: #f5f7f8;
+  --color-table-header: #f8fafa;
+  --color-text-primary: #172b2a;
+  --color-text-secondary: #5b6b6a;
+  --color-text-disabled: #94a3a1;
+  --color-border: #e2e8f0;
+  --color-sidebar-text: #a9c7c3;
+  --color-sidebar-active: #2dd4bf;
+  --color-sidebar-item-active-bg: rgb(255 255 255 / 0.08);
+  --color-success: #15803d;
+  --color-success-bg: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-bg: #fffbeb;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fef2f2;
+  --color-info: #1d4ed8;
+  --color-info-bg: #eff6ff;
+  --color-overlay: rgb(18 60 58 / 0.4);
+
+  --font-sans: "Inter", system-ui, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+  --text-page-title: 24px;
+  --text-page-title--line-height: 32px;
+  --text-page-title--font-weight: 600;
+  --text-section-title: 18px;
+  --text-section-title--line-height: 26px;
+  --text-section-title--font-weight: 600;
+  --text-subtitle: 15px;
+  --text-subtitle--line-height: 22px;
+  --text-subtitle--font-weight: 600;
+  --text-kpi: 28px;
+  --text-kpi--line-height: 36px;
+  --text-kpi--font-weight: 600;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-table: 13px;
+  --text-table--line-height: 18px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-mono: 13px;
+  --text-mono--line-height: 18px;
+
+  --radius-sm: 4px;
+  --radius-control: 6px;
+  --radius-card: 8px;
+  --radius-modal: 12px;
+
+  --shadow-overlay: 0 4px 16px rgb(18 60 58 / 0.08);
+
+  --spacing-sidebar: 240px;
+  --spacing-sidebar-collapsed: 64px;
+  --spacing-topbar: 56px;
+  --spacing-control-sm: 32px;
+  --spacing-control-md: 36px;
+  --spacing-control-lg: 44px;
+  --spacing-row-md: 40px;
+  --spacing-row-sm: 36px;
+}
+
+@layer base {
+  html {
+    color: var(--color-text-primary);
+    background: var(--color-background);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+}

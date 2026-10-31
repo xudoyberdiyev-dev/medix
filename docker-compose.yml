@@ -1,0 +1,48 @@
+# MEDIX — lokal muhit (SPEC 15-bo'lim).
+# Ishga tushirish: docker compose up -d   →  http://localhost:3000
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: medix
+      POSTGRES_USER: medix
+      POSTGRES_PASSWORD: ${MEDIX_DB_PASSWORD:-medix}
+      TZ: Asia/Tashkent
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medix -d medix"]
+      interval: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-medix}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-medix-minio-secret}
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [miniodata:/data]
+
+  backend:
+    build: ./backend
+    environment:
+      MEDIX_DB_URL: jdbc:postgresql://postgres:5432/medix
+      MEDIX_DB_USER: medix
+      MEDIX_DB_PASSWORD: ${MEDIX_DB_PASSWORD:-medix}
+    depends_on:
+      postgres: { condition: service_healthy }
+    ports: ["8080:8080"]
+
+  frontend:
+    build:
+      context: ./frontend
+      args: { BACKEND_URL: http://backend:8080 }
+    environment:
+      BACKEND_URL: http://backend:8080
+    depends_on: [backend]
+    ports: ["3000:3000"]
+
+volumes:
+  pgdata:
+  miniodata:

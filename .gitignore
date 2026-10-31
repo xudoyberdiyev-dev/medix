@@ -1,0 +1,16 @@
+# Backend
+backend/.gradle/
+backend/build/
+backend/out/
+*.class
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Muhit
+.env
+.env.*
+!.env.example

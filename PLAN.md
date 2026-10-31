@@ -1,0 +1,96 @@
+# MEDIX — V1 ish rejasi va progress
+
+Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testlar → CI yashil → hisobot. Bosqich tugasa — `develop → main` PR.
+
+## Hozirgi holat
+- **Sana:** 01.11.2026
+- **Bosqich:** 0 — Loyiha poydevori (asosiy qismi tayyor, CI natijasi kutilmoqda)
+- **Oxirgi sessiya:** 01.11.2026 ~00:30 — poydevor qurildi (backend skeleti, frontend qobig'i, CI, Docker Compose).
+- **Keyingi vazifa:** 0.8 (CI yashilligini tasdiqlash), keyin 1-bosqich 1.1.
+
+## Egasidan kutilayotganlar
+- [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
+- [ ] Telegram: `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` ni repo Secrets'ga qo'shish.
+- [ ] Rejali vazifalarda «Automatically approve» ni yoqish.
+- [ ] Claude Design'dagi `notes/T12-topshirish.md` (131 ruxsat kaliti, ma'lumot tuzilmalari) va `notes/T12-audit.md` ni repoga (`docs/notes/`) yoki shu chatga qo'shish — 1-bosqich 1.3 uchun kerak.
+- [ ] `MEDIX_ozgarishlar.md` (qarorlar tarixi) — `docs/` ga.
+- [ ] SmartUp'dan 2–3 qatorli namuna eksport (mahsulotlar, qoldiqlar, qarzlar) — 4 va 11-bosqich uchun.
+- [ ] (Ixtiyoriy) Bulut muhiti tarmoq sozlamasida Maven Central (`repo.maven.apache.org`), `services.gradle.org` va Docker Hub'ga ruxsat — shunda backend sessiya ichida ham tekshiriladi, CI kutish shart bo'lmaydi.
+
+## Egasiga savollar
+_(hozircha yo'q)_
+
+---
+
+## 0. Loyiha poydevori
+- [x] 0.1 Repo tuzilmasi, `CLAUDE.md`, `PLAN.md`, `docs/SPEC.md`, `design/` (dizayn tizimi tokenlari, qoidalar, komponentlar API)
+- [x] 0.2 Backend: Spring Boot 4.1.1, Java 25, Gradle 9.1 wrapper, 13 modul paketi (Spring Modulith), Actuator, springdoc (`/api/docs`)
+- [x] 0.3 Flyway V1: `document_sequence`; `Money` (pul, HALF_UP, `1.250.000,00`), `DocumentNumber`, `DocumentSequenceService` + testlar (parallel 200 chaqiriqda takror yo'q)
+- [x] 0.4 Frontend: Next.js 16.4, TS strict, Tailwind 4 + Medix tokenlari, Inter/JetBrains Mono, sidebar + topbar qobig'i, login sahifasi (UI), `formatMoney/formatDate` + testlar
+- [x] 0.5 Docker Compose (Postgres 18, MinIO, backend, frontend), Dockerfile'lar
+- [x] 0.6 GitHub Actions CI (backend build+test, frontend format/lint/typecheck/test/build), CI yiqilsa Telegram ogohlantirish
+- [x] 0.7 Telegram hisobot workflow (`reports/*.md` → Telegram)
+- [ ] 0.8 CI birinchi marta yashil (backend versiyalari: springdoc 3.0.x, Testcontainers 2 nomlari tekshiriladi)
+- [ ] 0.9 OpenAPI → TypeScript mijoz generatsiyasi (`openapi-typescript` + `openapi-fetch`), TanStack Query provayderi
+- [ ] 0.10 Medix UI komponentlari asosi: Badge, TextField, Select, Table (TanStack), Modal, Drawer, Toast, Alert, Tabs, Pagination, SystemStates — `design/system/components.d.ts` shartnomasiga mos
+
+## 1. Identifikatsiya
+- [ ] 1.1 Flyway: company, branch (kod TSH/SMQ/BXR/FRG, STIR), warehouse, zone (tur, sotuvga ochiqmi), employee, role, permission, role_permission, audit_log (faqat qo'shiladigan, trigger), spring_session
+- [ ] 1.2 Spring Security 7 + Spring Session JDBC: login/logout, httpOnly+Secure cookie, CSRF, parol (Argon2/BCrypt), birinchi kirishda parol almashtirish, bloklangan xodim
+- [ ] 1.3 Ruxsatlar: 131 kalit katalogi (T12-topshirish.md dan), 11 rol standart matritsasi, `@PreAuthorize`, rol nusxasi
+- [ ] 1.4 Filial doirasi: xodim faqat o'z filiali; barcha filiallar — Direktor/Admin/Buxgalter
+- [ ] 1.5 Audit jurnali servisi (kim, qachon, nima, eski → yangi) + PIN tasdig'i asosi
+- [ ] 1.6 Sozlash ustasi API (faqat CEO, birinchi ishga tushirish): kompaniya → filiallar → omborlar va zonalar → rollar → xodimlar → yakun
+- [ ] 1.7 Frontend: login (ulangan), parol almashtirish, sozlash ustasi (Stepper), Xodimlar, Rollar va ruxsatlar matritsasi, Filiallar, Omborlar va zonalar, Audit jurnali, Profil; rolga qarab menyu
+- [ ] 1.8 e2e (Playwright): login → usta → xodim yaratish
+
+## 2. Katalog
+- [ ] Mahsulotlar (8 raqamli noyob kod, tarix), pro jadval (qidiruv lotin/kirill, filtrlar, ustunlar, ko'rinishlar, .xlsx eksport, URL filtrlar)
+- [ ] Kichik ma'lumotnomalar (ishlab chiqaruvchi, kategoriya, birlik, hudud, mashina, xarajat moddasi, davlat)
+- [ ] Kontragentlar (bitta STIR — bitta karta, ikki rol) + filial shartlari (limit, muddat, narx turi, minimal muddat, operator)
+- [ ] Mahsulot importi (SmartUp, Apache POI)
+
+## 3. Narxlar
+- [ ] 8 narx turi, narx = mahsulot × tur × filial × sana (QQS bilan), NO hujjati va tarix
+- [ ] Narx o'rnatish: «Mahsulot bo'yicha» va «Kirim bo'yicha»; ommaviy ustama, yaxlitlash 100/500/1000
+- [ ] Nazorat: tannarxdan past — Direktor tasdig'i; >20% — ogohlantirish
+- [ ] Narx tanlash qoidasi (partiya → mijoz turi → bazaviy) + testlar
+
+## 4. Ombor
+- [ ] Partiyalar, harakatlar jurnali (StockMove), StockBalance (zona × partiya), CHECK ≥ 0
+- [ ] Qoldiqlar sahifasi (pro jadval), Muddat nazorati
+- [ ] Boshlang'ich qoldiq (BQ) — SmartUp importi
+
+## 5. Kirim
+- [ ] Ikki bosqichli kirim (Qoralama → Qabul qilindi → O'tkazildi), «Mahsulot qo'shish» katalog sahifasi
+- [ ] Farq sabablari, Karantin, «haqiqiy/hujjat bo'yicha» qarori; bekor qilish (Direktor/Admin)
+- [ ] Bonus balans (BNS), aksiya (10+1, «-B» partiya), 100% oldindan to'langan kirim, to'lov kuni eslatmalari
+
+## 6. Buyurtma
+- [ ] Buyurtma kiritish + katalog sahifasi, «Oldingi buyurtmani takrorlash», miqdor qoidalari, «N ta muammo» paneli
+- [ ] Kredit nazorati va tasdiq (≤20% — Filial rahbari, >20% yoki 30+ kun — Direktor)
+- [ ] Buyurtmalar sahifasi (holat yorliqlari, «Hozir kimda»), buyurtma kartochkasi
+
+## 7. Ombor zanjiri
+- [ ] FEFO taklifi va zahira, vaqt berish
+- [ ] Yig'uvchi paneli, Markirovkachi paneli (GS1 tekshiruv tartibi), Ombor mudiri paneli (monitor, SSE)
+- [ ] Hisobdan o'tkazish, reys, nakladnoy, terish varag'i
+
+## 8. Yetkazish
+- [ ] Haydovchi paneli, sotuv/HF «Yo'lda» da, qisman yetkazish, yetkazilmadi, qaytgan tovar, haydovchidagi pul
+
+## 9. Pul
+- [ ] MT (eng eski qarzdan taqsimlash, avans), YT, KO/BO, IO, kassa/Terminal/bank, kunni yopish, qarz jurnali, Kassir paneli
+
+## 10. Bosh sahifa va hisobotlar
+- [ ] Rollar bosh sahifalari, «Diqqat talab qiladi», hisobotlar katalogi (jOOQ), chop etish shakllari (OpenHTMLtoPDF)
+
+## 11. Ishga tushirish
+- [ ] SmartUp'dan to'liq import, sinov, o'qitish, parallel ishlash
+
+---
+
+## Qarorlar jurnali
+- 01.11.2026 — Ish tartibi: avtonom sessiyalar, `develop` branch, bosqich oxirida PR (egasi qarori).
+- 01.11.2026 — Bulut sessiyasida Maven bloklangani uchun backend CI orqali tekshiriladi.
+- 01.11.2026 — Shriftlar `@fontsource` orqali (build vaqtida tashqi tarmoq kerak emas).
