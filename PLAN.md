@@ -4,14 +4,13 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 01.11.2026
-- **Bosqich:** 0 — Loyiha poydevori (asosiy qismi tayyor, CI natijasi kutilmoqda)
+- **Bosqich:** 0 — Loyiha poydevori (0.1–0.8 tayyor, CI yashil)
 - **Oxirgi sessiya:** 01.11.2026 ~00:30 — poydevor qurildi (backend skeleti, frontend qobig'i, CI, Docker Compose).
-- **Keyingi vazifa:** 0.8 (CI yashilligini tasdiqlash), keyin 1-bosqich 1.1.
+- **Keyingi vazifa:** 0.9 (OpenAPI → TS mijoz), 0.10 (UI komponentlari asosi), keyin 1-bosqich 1.1.
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
 - [ ] Telegram: `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` ni repo Secrets'ga qo'shish.
-- [ ] Rejali vazifalarda «Automatically approve» ni yoqish.
 - [ ] Claude Design'dagi `notes/T12-topshirish.md` (131 ruxsat kaliti, ma'lumot tuzilmalari) va `notes/T12-audit.md` ni repoga (`docs/notes/`) yoki shu chatga qo'shish — 1-bosqich 1.3 uchun kerak.
 - [ ] `MEDIX_ozgarishlar.md` (qarorlar tarixi) — `docs/` ga.
 - [ ] SmartUp'dan 2–3 qatorli namuna eksport (mahsulotlar, qoldiqlar, qarzlar) — 4 va 11-bosqich uchun.
@@ -30,7 +29,7 @@ _(hozircha yo'q)_
 - [x] 0.5 Docker Compose (Postgres 18, MinIO, backend, frontend), Dockerfile'lar
 - [x] 0.6 GitHub Actions CI (backend build+test, frontend format/lint/typecheck/test/build), CI yiqilsa Telegram ogohlantirish
 - [x] 0.7 Telegram hisobot workflow (`reports/*.md` → Telegram)
-- [ ] 0.8 CI birinchi marta yashil (backend versiyalari: springdoc 3.0.x, Testcontainers 2 nomlari tekshiriladi)
+- [x] 0.8 CI birinchi marta yashil (backend: build + testlar Testcontainers bilan; frontend: format/lint/typecheck/test/build)
 - [ ] 0.9 OpenAPI → TypeScript mijoz generatsiyasi (`openapi-typescript` + `openapi-fetch`), TanStack Query provayderi
 - [ ] 0.10 Medix UI komponentlari asosi: Badge, TextField, Select, Table (TanStack), Modal, Drawer, Toast, Alert, Tabs, Pagination, SystemStates — `design/system/components.d.ts` shartnomasiga mos
 
@@ -94,3 +93,6 @@ _(hozircha yo'q)_
 - 01.11.2026 — Ish tartibi: avtonom sessiyalar, `develop` branch, bosqich oxirida PR (egasi qarori).
 - 01.11.2026 — Bulut sessiyasida Maven bloklangani uchun backend CI orqali tekshiriladi.
 - 01.11.2026 — Shriftlar `@fontsource` orqali (build vaqtida tashqi tarmoq kerak emas).
+
+## Sessiya jurnali
+- 01.11.2026 00:30–00:45 — 0-bosqich poydevori qurildi va push qilindi; CI (develop) yashil. Rejali sessiyalar yaratildi: 01:43, 07:47 (+09:00 hisobot), 16:23 (+18:00 hisobot).
