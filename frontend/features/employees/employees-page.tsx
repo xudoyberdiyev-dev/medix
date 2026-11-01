@@ -13,6 +13,8 @@ import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/compon
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { can } from "@/features/auth/can";
+import { useMe } from "@/features/auth/session";
 import { useRoles } from "@/features/setup/api";
 import { describeError } from "@/features/setup/form-error";
 import { ApiError } from "@/lib/api/client";
@@ -30,6 +32,8 @@ import {
 type Dialog = { kind: "block" | "reset"; employee: Employee } | null;
 
 export function EmployeesPage() {
+  const me = useMe();
+  const canEdit = can(me.data, "staff.edit");
   const employees = useEmployees();
   const unblock = useUnblockEmployee();
   const [query, setQuery] = useState("");
@@ -77,9 +81,11 @@ export function EmployeesPage() {
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">Xodimlar</h1>
-        <Button icon={UserPlus} onClick={() => setCreating(true)}>
-          Xodim qoʻshish
-        </Button>
+        {canEdit ? (
+          <Button icon={UserPlus} onClick={() => setCreating(true)}>
+            Xodim qoʻshish
+          </Button>
+        ) : null}
       </div>
       {employees.error ? (
         <ErrorState onRetry={() => employees.refetch()} />
@@ -103,34 +109,36 @@ export function EmployeesPage() {
               />
             </div>
           }
-          rowActions={(e) => (
-            <RowMenu
-              items={[
-                e.status === "BLOCKED"
-                  ? {
-                      key: "unblock",
-                      label: "Blokdan chiqarish",
-                      icon: <LockOpen size={16} strokeWidth={1.5} aria-hidden />,
-                      onSelect: () =>
-                        unblock.mutate(e.id, {
-                          onSuccess: () => toast({ tone: "success", title: "Xodim blokdan chiqarildi", description: e.fullName }),
-                        }),
-                    }
-                  : {
-                      key: "block",
-                      label: "Bloklash",
-                      icon: <Ban size={16} strokeWidth={1.5} aria-hidden />,
-                      onSelect: () => setDialog({ kind: "block", employee: e }),
-                    },
-                {
-                  key: "reset",
-                  label: "Vaqtinchalik parol berish",
-                  icon: <KeyRound size={16} strokeWidth={1.5} aria-hidden />,
-                  onSelect: () => setDialog({ kind: "reset", employee: e }),
-                },
-              ]}
-            />
-          )}
+          rowActions={(e) =>
+            canEdit ? (
+              <RowMenu
+                items={[
+                  e.status === "BLOCKED"
+                    ? {
+                        key: "unblock",
+                        label: "Blokdan chiqarish",
+                        icon: <LockOpen size={16} strokeWidth={1.5} aria-hidden />,
+                        onSelect: () =>
+                          unblock.mutate(e.id, {
+                            onSuccess: () => toast({ tone: "success", title: "Xodim blokdan chiqarildi", description: e.fullName }),
+                          }),
+                      }
+                    : {
+                        key: "block",
+                        label: "Bloklash",
+                        icon: <Ban size={16} strokeWidth={1.5} aria-hidden />,
+                        onSelect: () => setDialog({ kind: "block", employee: e }),
+                      },
+                  {
+                    key: "reset",
+                    label: "Vaqtinchalik parol berish",
+                    icon: <KeyRound size={16} strokeWidth={1.5} aria-hidden />,
+                    onSelect: () => setDialog({ kind: "reset", employee: e }),
+                  },
+                ]}
+              />
+            ) : null
+          }
           emptyState={
             query ? (
               <NoResultsState onClearFilters={() => setQuery("")} />

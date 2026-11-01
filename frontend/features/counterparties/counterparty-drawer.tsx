@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/selection-controls";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useDictionary } from "@/features/dictionaries/api";
 import { useBranchList } from "@/features/organization/api";
@@ -20,9 +21,9 @@ import { useEmployeeOptions } from "@/features/products/api";
 import { describeError } from "@/features/setup/form-error";
 import { formatMoney } from "@/lib/format";
 import {
-  BLOCKERS,
+  canBlockCard,
+  canEditCard,
   PAYMENT_TYPES,
-  TERMS_EDITORS,
   formatIsoDate,
   parseMoneyInput,
   parseUzDate,
@@ -56,6 +57,7 @@ export function CounterpartyDrawer({
   onCreated: (id: number) => void;
 }) {
   const cp = useCounterparty(counterpartyId);
+  const me = useMe();
   const [tab, setTab] = useState("main");
   if (counterpartyId !== null && cp.error)
     return (
@@ -73,6 +75,8 @@ export function CounterpartyDrawer({
       </Drawer>
     );
   const c = cp.data ?? null;
+  const cardEdit = c ? canEditCard(me.data?.permissions, c.customer, c.supplier) : canEdit;
+  const licenseEdit = can(me.data, "clients.lic");
   const tabs = c
     ? {
         items: [
@@ -101,13 +105,13 @@ export function CounterpartyDrawer({
           key={c ? `${c.id}-${c.blocked}-${c.active}` : "new"}
           cp={c}
           defaultRole={defaultRole}
-          canEdit={canEdit}
+          canEdit={cardEdit}
           onClose={onClose}
           onCreated={onCreated}
         />
       ) : null}
-      {tab === "licenses" && c ? <LicensesTab cp={c} canEdit={canEdit} /> : null}
-      {tab === "contracts" && c ? <ContractsTab cp={c} canEdit={canEdit} /> : null}
+      {tab === "licenses" && c ? <LicensesTab cp={c} canEdit={licenseEdit} /> : null}
+      {tab === "contracts" && c ? <ContractsTab cp={c} canEdit={cardEdit} /> : null}
       {tab === "terms" && c ? <TermsTab cp={c} /> : null}
     </Drawer>
   );
@@ -154,7 +158,7 @@ function MainTab({
     <K extends keyof typeof form>(k: K) =>
     (v: (typeof form)[K]) =>
       setForm((f) => ({ ...f, [k]: v }));
-  const canBlock = BLOCKERS.includes(me.data?.role.code ?? "");
+  const canBlock = cp ? canBlockCard(me.data?.permissions, cp.customer, cp.supplier) : false;
 
   function submit(e?: FormEvent) {
     e?.preventDefault();
@@ -539,7 +543,9 @@ function ContractDialog({ cpId, contract, onClose }: { cpId: number; contract: C
 function TermsTab({ cp }: { cp: CounterpartyDetail }) {
   const me = useMe();
   const branches = useBranchList();
-  const canEdit = TERMS_EDITORS.includes(me.data?.role.code ?? "");
+  const perms = me.data?.permissions ?? [];
+  const customerSide = cp.customer && perms.includes("clients.terms");
+  const supplierSide = cp.supplier && perms.includes("suppliers.terms");
   const visible = (branches.data ?? []).filter((b) => b.active || cp.terms.some((t) => t.branchId === b.id));
   if (!branches.data) return <Skeleton className="h-40 w-full" />;
   return (
@@ -552,7 +558,8 @@ function TermsTab({ cp }: { cp: CounterpartyDetail }) {
           branchId={b.id}
           branchName={b.name}
           terms={cp.terms.find((t) => t.branchId === b.id) ?? null}
-          canEdit={canEdit}
+          customerSide={customerSide}
+          supplierSide={supplierSide}
         />
       ))}
     </div>
@@ -564,14 +571,17 @@ function TermsCard({
   branchId,
   branchName,
   terms,
-  canEdit,
+  customerSide,
+  supplierSide,
 }: {
   cp: CounterpartyDetail;
   branchId: number;
   branchName: string;
   terms: Terms | null;
-  canEdit: boolean;
+  customerSide: boolean;
+  supplierSide: boolean;
 }) {
+  const canEdit = customerSide || supplierSide;
   const save = useSaveTerms();
   const priceTypes = usePriceTypes();
   const employees = useEmployeeOptions();
@@ -636,9 +646,9 @@ function TermsCard({
         ) : undefined
       }
     >
-      <fieldset disabled={!canEdit} className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {cp.customer ? (
-          <>
+          <fieldset disabled={!customerSide} className="contents">
             <div className="col-span-2 text-label text-text-secondary">Mijoz sifatida</div>
             <TextField
               label="Kredit limiti"
@@ -659,7 +669,7 @@ function TermsCard({
             />
             <Select
               label="Narx turi"
-              disabled={!canEdit}
+              disabled={!customerSide}
               value={f.priceTypeId}
               onChange={set("priceTypeId")}
               placeholder="Bazaviy (Narx)"
@@ -677,16 +687,16 @@ function TermsCard({
             <Select
               label="Operator"
               searchable
-              disabled={!canEdit}
+              disabled={!customerSide}
               value={f.operatorId}
               onChange={set("operatorId")}
               options={empOptions}
               className="col-span-2"
             />
-          </>
+          </fieldset>
         ) : null}
         {cp.supplier ? (
-          <>
+          <fieldset disabled={!supplierSide} className="contents">
             <div className="col-span-2 text-label text-text-secondary">Yetkazib beruvchi sifatida</div>
             <TextField
               label="Toʻlov muddati (YB)"
@@ -698,7 +708,7 @@ function TermsCard({
             />
             <Select
               label="Asosiy toʻlov turi"
-              disabled={!canEdit}
+              disabled={!supplierSide}
               value={f.defaultPaymentType}
               onChange={set("defaultPaymentType")}
               options={PAYMENT_TYPES}
@@ -706,15 +716,15 @@ function TermsCard({
             <Select
               label="Taʼminot masʼuli"
               searchable
-              disabled={!canEdit}
+              disabled={!supplierSide}
               value={f.supplyEmployeeId}
               onChange={set("supplyEmployeeId")}
               options={empOptions}
               className="col-span-2"
             />
-          </>
+          </fieldset>
         ) : null}
-      </fieldset>
+      </div>
       {err.message ? <Alert tone="danger" title={err.message} className="mt-4" /> : null}
     </Card>
   );

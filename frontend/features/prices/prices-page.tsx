@@ -10,13 +10,14 @@ import { EmptyState, ErrorState, NoResultsState } from "@/components/ui/system-s
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
+import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { usePriceTypes } from "@/features/counterparties/api";
 import { useBranchList } from "@/features/organization/api";
 import { formatDate, formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
-  PRICE_SETTERS,
+  PRICE_CREATE,
   STATUS_LABELS,
   usePriceChanges,
   usePrices,
@@ -53,7 +54,7 @@ export function PricesPage() {
   const active = (branches.data ?? []).filter((b) => b.active);
   const [branchOverride, setBranchOverride] = useState<number | null>(null);
   const branchId = branchOverride ?? (me.data && !me.data.allBranches ? (me.data.branchId ?? null) : (selected ?? active[0]?.id ?? null));
-  const canSet = PRICE_SETTERS.includes(me.data?.role.code ?? "");
+  const canSet = can(me.data, PRICE_CREATE);
   const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[] } | null>(null);
 
   return (

@@ -11,12 +11,14 @@ import { Select } from "@/components/ui/select";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent, usePriceTypes } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { describeError } from "@/features/setup/form-error";
 import { formatMoney } from "@/lib/format";
 import {
+  PRICE_BELOW,
   computeMarkup,
   percentChange,
   searchProducts,
@@ -105,7 +107,7 @@ function Editor({
   const [local, setLocal] = useState<string | null>(null);
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const [dialog, setDialog] = useState<"markup" | "approve" | "reject" | "cancel" | null>(null);
-  const isDirector = me.data?.role.code === "DIRECTOR";
+  const isDirector = can(me.data, PRICE_BELOW);
   const typeName = (id: number) => types.data?.find((t) => t.id === id)?.name ?? "";
   const err = describeError(save.error ?? submit.error);
   const bigCount = lines.filter((l) => Math.abs(percentChange(l.oldPrice, parseMoneyInput(l.newPrice) ?? "") ?? 0) > 20).length;
@@ -131,9 +133,10 @@ function Editor({
       { id: doc?.id, body: b },
       {
         onSuccess: (d) => {
+          // Yangi hujjat: muharrir qayta ochilishi (onCreated) oʻtkazishdan keyin — aks holda natija xabari yoʻqoladi.
+          if (then) return then(d.id);
+          toast({ tone: "success", title: "Qoralama saqlandi", description: d.number });
           if (!doc) onCreated(d.id);
-          if (then) then(d.id);
-          else toast({ tone: "success", title: "Qoralama saqlandi", description: d.number });
         },
       },
     );
@@ -189,12 +192,17 @@ function Editor({
                 onClick={() =>
                   saveDraft((id) =>
                     submit.mutate(id, {
-                      onSuccess: (d) =>
+                      onSuccess: (d) => {
                         toast({
                           tone: "success",
                           title: d.status === "APPROVED" ? "Narxlar kuchga kirdi" : "Direktor tasdigʻiga yuborildi",
                           description: d.number,
-                        }),
+                        });
+                        if (!doc) onCreated(d.id);
+                      },
+                      onError: () => {
+                        if (!doc) onCreated(id);
+                      },
                     }),
                   )
                 }

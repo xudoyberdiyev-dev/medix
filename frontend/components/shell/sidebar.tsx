@@ -24,7 +24,7 @@ export function Sidebar() {
         <span className="text-subtitle text-white">MEDIX</span>
       </div>
       <nav aria-label="Asosiy menyu" className="flex-1 overflow-y-auto px-3 pb-4">
-        {navigationFor(me.data?.role.code).map((group, gi) => (
+        {navigationFor(me.data?.permissions).map((group, gi) => (
           <div key={group.title ?? gi} className="mt-4 first:mt-2">
             {group.title ? <div className="px-3 pb-1 text-caption font-medium">{group.title}</div> : null}
             <ul>

@@ -13,7 +13,7 @@ import { useMe } from "@/features/auth/session";
 import { useDictionary } from "@/features/dictionaries/api";
 import { formatQuantity } from "@/lib/format";
 import {
-  CARD_EDITORS,
+  canEditCard,
   formatIsoDate,
   licenseState,
   todayTashkent,
@@ -108,7 +108,7 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
   const params = useSearchParams();
   const f = parse(new URLSearchParams(params.toString()), role);
   const me = useMe();
-  const canEdit = CARD_EDITORS.includes(me.data?.role.code ?? "");
+  const canEdit = canEditCard(me.data?.permissions, role === "CUSTOMER", role === "SUPPLIER");
   const list = useCounterparties(f);
   const regions = useDictionary("REGION");
   const [search, setSearch] = useState(f.q);

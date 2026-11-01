@@ -14,6 +14,7 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useBranchList } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
@@ -21,9 +22,8 @@ import { formatQuantity } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
 import {
   DICTIONARIES,
-  DICTIONARY_EDITORS,
-  EXPENSE_EDITORS,
-  VEHICLE_EDITORS,
+  EXPENSE_PERMISSION,
+  VEHICLE_PERMISSION,
   parseCapacity,
   useDictionary,
   useExpenseItems,
@@ -93,14 +93,11 @@ export function DictionariesPage() {
   const tab = TABS.some((t) => t.key === params.get("tab")) ? (params.get("tab") as string) : TABS[0].key;
   const [creating, setCreating] = useState(false);
   const me = useMe();
-  const role = me.data?.role.code ?? "";
   const dict = DICTIONARIES.find((d) => d.kind.toLowerCase() === tab);
-  const canEdit =
-    tab === "vehicles"
-      ? VEHICLE_EDITORS.includes(role)
-      : tab === "expense-items"
-        ? EXPENSE_EDITORS.includes(role)
-        : DICTIONARY_EDITORS.includes(role);
+  const canEdit = can(
+    me.data,
+    tab === "vehicles" ? VEHICLE_PERMISSION : tab === "expense-items" ? EXPENSE_PERMISSION : (dict?.permission ?? ""),
+  );
   const addLabel = dict ? `${dict.singular} qoʻshish` : tab === "vehicles" ? "Mashina qoʻshish" : "Modda qoʻshish";
 
   return (

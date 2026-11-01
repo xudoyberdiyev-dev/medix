@@ -4,46 +4,56 @@ import { Building2, CircleUser, ScrollText, Settings2, Users, Warehouse } from "
 import Link from "next/link";
 import { useMe } from "@/features/auth/session";
 
-const ADMINS = ["DIRECTOR", "ADMIN"];
-
 /** Sozlamalar boʻlimlari (SPEC 4: Boshqaruv). Rolga qarab koʻrinadi — yakuniy ruxsat serverda. */
-export const SETTINGS_SECTIONS = [
-  { href: "/settings/branches", icon: Building2, title: "Filiallar", description: "Kod, STIR, yuridik nom; nofaol qilish", roles: ADMINS },
+export const SETTINGS_SECTIONS: { href: string; icon: typeof Users; title: string; description: string; anyOf?: string[] }[] = [
+  {
+    href: "/settings/branches",
+    icon: Building2,
+    title: "Filiallar",
+    description: "Kod, STIR, yuridik nom; nofaol qilish",
+    anyOf: ["branches.view"],
+  },
   {
     href: "/settings/warehouses",
     icon: Warehouse,
     title: "Omborlar va zonalar",
     description: "Omborlar, Sovuq va Seyf zonalari",
-    roles: [...ADMINS, "BRANCH_MANAGER"],
+    anyOf: ["warehouses.view"],
   },
   {
     href: "/settings/employees",
     icon: Users,
     title: "Xodimlar",
     description: "Loginlar, rollar, bloklash, vaqtinchalik parol",
-    roles: ADMINS,
+    anyOf: ["staff.view"],
   },
-  { href: "/settings/audit", icon: ScrollText, title: "Audit jurnali", description: "Kim, qachon, nima oʻzgartirdi", roles: ADMINS },
-  { href: "/profile", icon: CircleUser, title: "Profil", description: "Telefon, parol, PIN", roles: ["*"] },
+  {
+    href: "/settings/audit",
+    icon: ScrollText,
+    title: "Audit jurnali",
+    description: "Kim, qachon, nima oʻzgartirdi",
+    anyOf: ["audit.view"],
+  },
+  { href: "/profile", icon: CircleUser, title: "Profil", description: "Telefon, parol, PIN" },
   {
     href: "/setup",
     icon: Settings2,
     title: "Sozlash ustasi",
     description: "Birinchi ishga tushirish: kompaniya, filiallar, omborlar",
-    roles: ["DIRECTOR"],
+    anyOf: ["company.edit"],
   },
 ];
 
-export function sectionsFor(roleCode: string | undefined) {
-  if (!roleCode) return [];
-  return SETTINGS_SECTIONS.filter((s) => s.roles.includes("*") || s.roles.includes(roleCode));
+export function sectionsFor(permissions: string[] | undefined) {
+  if (!permissions) return [];
+  return SETTINGS_SECTIONS.filter((s) => !s.anyOf || s.anyOf.some((k) => permissions.includes(k)));
 }
 
 export function SettingsSections() {
   const me = useMe();
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
-      {sectionsFor(me.data?.role.code).map(({ href, icon: Icon, title, description }) => (
+      {sectionsFor(me.data?.permissions).map(({ href, icon: Icon, title, description }) => (
         <Link
           key={href}
           href={href}

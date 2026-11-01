@@ -104,7 +104,7 @@ class CounterpartyIT {
                 .andReturn());
 
         mvc.perform(json(post("/api/counterparties"), accountant,
-                        "{\"tin\":\"" + tin + "\",\"name\":\"Takror\",\"customer\":false,\"supplier\":true}"))
+                        "{\"tin\":\"" + tin + "\",\"name\":\"Takror\",\"customer\":true,\"supplier\":false}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("counterparty.tinTaken"));
         mvc.perform(json(post("/api/counterparties"), accountant,

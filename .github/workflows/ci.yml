@@ -147,6 +147,7 @@ jobs:
         run: |
           echo "----- BACKEND -----"; tail -n 200 backend.log || true
           echo "----- FRONTEND -----"; tail -n 100 frontend.log || true
+          for f in frontend/test-results/*/error-context.md; do echo "----- $f -----"; cat "$f" || true; done
       - name: Playwright hisoboti
         if: failure()
         uses: actions/upload-artifact@v4

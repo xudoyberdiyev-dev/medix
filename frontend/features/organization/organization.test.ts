@@ -44,11 +44,11 @@ describe("groupByBranch", () => {
 });
 
 describe("sectionsFor", () => {
-  it("Filial rahbari faqat Omborlar va Profilni koʻradi", () => {
-    expect(sectionsFor("BRANCH_MANAGER").map((s) => s.href)).toEqual(["/settings/warehouses", "/profile"]);
+  it("Filial rahbari (staff.view, audit.view) — Xodimlar, Audit, Profil", () => {
+    expect(sectionsFor(["staff.view", "audit.view"]).map((s) => s.href)).toEqual(["/settings/employees", "/settings/audit", "/profile"]);
   });
-  it("Sozlash ustasi faqat Direktorga", () => {
-    expect(sectionsFor("ADMIN").some((s) => s.href === "/setup")).toBe(false);
-    expect(sectionsFor("DIRECTOR").some((s) => s.href === "/setup")).toBe(true);
+  it("Sozlash ustasi — company.edit bilan", () => {
+    expect(sectionsFor(["staff.view"]).some((s) => s.href === "/setup")).toBe(false);
+    expect(sectionsFor(["company.edit"]).some((s) => s.href === "/setup")).toBe(true);
   });
 });

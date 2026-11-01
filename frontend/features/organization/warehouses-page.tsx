@@ -25,6 +25,7 @@ import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/compon
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import {
@@ -44,9 +45,6 @@ import {
   type ZoneType,
 } from "./api";
 import { DeactivateDialog } from "./deactivate-dialog";
-
-/** Omborlarni Direktor, Bosh administrator va Filial rahbari (oʻz filiali) boshqaradi. */
-const MANAGERS = ["DIRECTOR", "ADMIN", "BRANCH_MANAGER"];
 
 const ZONE_ICONS: Partial<Record<ZoneType, typeof Snowflake>> = { COLD: Snowflake, SAFE: Vault };
 
@@ -72,8 +70,8 @@ export function WarehousesPage() {
   const [editing, setEditing] = useState<Warehouse | "new" | null>(null);
   const [deactivating, setDeactivating] = useState<Warehouse | null>(null);
 
-  if (me.data && !MANAGERS.includes(me.data.role.code))
-    return <ForbiddenState description="Omborlarni Direktor, Bosh administrator va Filial rahbari boshqaradi." />;
+  if (me.data && !can(me.data, "warehouses.view"))
+    return <ForbiddenState description="Omborlarni Direktor va Bosh administrator boshqaradi." />;
 
   const branchName = (id: number) => branches.data?.find((b) => b.id === id)?.name ?? "";
   const q = query.trim().toLocaleLowerCase("uz");

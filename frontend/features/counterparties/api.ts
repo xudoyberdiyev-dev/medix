@@ -15,10 +15,16 @@ export type TermsRequest = components["schemas"]["TermsRequest"];
 export type CounterpartyRole = "CUSTOMER" | "SUPPLIER";
 export type CounterpartyStatus = "ACTIVE" | "BLOCKED" | "INACTIVE" | "ALL";
 
-/** Ruxsatlar matritsasi (1.3) kelguncha — rol boʻyicha (server ham tekshiradi). */
-export const CARD_EDITORS = ["DIRECTOR", "ADMIN", "BRANCH_MANAGER", "ACCOUNTANT", "PURCHASER"];
-export const TERMS_EDITORS = ["DIRECTOR", "ADMIN", "BRANCH_MANAGER"];
-export const BLOCKERS = ["DIRECTOR", "ADMIN", "BRANCH_MANAGER", "ACCOUNTANT"];
+/** Kartani oʻzgartirish (1.3): mijoz tomoni — clients.create, YB tomoni — suppliers.create (ikkalasi boʻlsa ikkalasi). */
+export function canEditCard(perms: string[] | undefined, customer: boolean, supplier: boolean): boolean {
+  const p = perms ?? [];
+  return (customer || supplier) && (!customer || p.includes("clients.create")) && (!supplier || p.includes("suppliers.create"));
+}
+
+export function canBlockCard(perms: string[] | undefined, customer: boolean, supplier: boolean): boolean {
+  const p = perms ?? [];
+  return (customer && p.includes("clients.block")) || (supplier && p.includes("suppliers.block"));
+}
 
 export const PAYMENT_TYPES = [
   { value: "TRANSFER", label: "Perechisleniye" },

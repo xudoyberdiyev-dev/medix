@@ -17,17 +17,32 @@ export interface DictionaryMeta {
   /** Qisqa nom maydoni: yorligʻi va maslahati. */
   shortName?: { label: string; hint: string; mono?: boolean };
   empty: string;
+  /** Oʻzgartirish ruxsati (1.3). */
+  permission: string;
 }
 
 export const DICTIONARIES: DictionaryMeta[] = [
-  { kind: "MANUFACTURER", title: "Ishlab chiqaruvchilar", singular: "Ishlab chiqaruvchi", empty: "Dori ishlab chiqaruvchi korxonalar" },
-  { kind: "CATEGORY", title: "Kategoriyalar", singular: "Kategoriya", empty: "Mahsulot guruhlari, masalan «Antibiotiklar»" },
+  {
+    kind: "MANUFACTURER",
+    title: "Ishlab chiqaruvchilar",
+    singular: "Ishlab chiqaruvchi",
+    empty: "Dori ishlab chiqaruvchi korxonalar",
+    permission: "lookups.makers",
+  },
+  {
+    kind: "CATEGORY",
+    title: "Kategoriyalar",
+    singular: "Kategoriya",
+    empty: "Mahsulot guruhlari, masalan «Antibiotiklar»",
+    permission: "lookups.cats",
+  },
   {
     kind: "UNIT",
     title: "Birliklar",
     singular: "Birlik",
     shortName: { label: "Qisqa yozuvi", hint: "Masalan: dona, qad." },
     empty: "Oʻlchov birliklari",
+    permission: "lookups.units",
   },
   {
     kind: "COUNTRY",
@@ -35,14 +50,14 @@ export const DICTIONARIES: DictionaryMeta[] = [
     singular: "Davlat",
     shortName: { label: "Kod", hint: "2 ta lotin harfi, masalan UZ", mono: true },
     empty: "Ishlab chiqarilgan davlatlar",
+    permission: "lookups.makers",
   },
-  { kind: "REGION", title: "Hududlar", singular: "Hudud", empty: "Mijozlar manzili va yetkazish hududlari" },
+  { kind: "REGION", title: "Hududlar", singular: "Hudud", empty: "Mijozlar manzili va yetkazish hududlari", permission: "lookups.regions" },
 ];
 
-/** Ruxsatlar matritsasi (1.3) kelguncha — rol boʻyicha (server ham tekshiradi). */
-export const DICTIONARY_EDITORS = ["DIRECTOR", "ADMIN", "PURCHASER"];
-export const VEHICLE_EDITORS = ["DIRECTOR", "ADMIN", "BRANCH_MANAGER", "WAREHOUSE_MANAGER"];
-export const EXPENSE_EDITORS = ["DIRECTOR", "ADMIN", "ACCOUNTANT"];
+/** Mashinalar va xarajat moddalari ruxsatlari (1.3). */
+export const VEHICLE_PERMISSION = "lookups.fleet";
+export const EXPENSE_PERMISSION = "lookups.items";
 
 function useInvalidating<T, R>(key: readonly unknown[], fn: (v: T) => Promise<R>) {
   const qc = useQueryClient();

@@ -11,6 +11,7 @@ import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/compon
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import {
@@ -23,8 +24,6 @@ import {
   type Branch,
 } from "./api";
 import { DeactivateDialog } from "./deactivate-dialog";
-
-const MANAGERS = ["DIRECTOR", "ADMIN"];
 
 export function BranchStatus({ active }: { active: boolean }) {
   return active ? (
@@ -47,7 +46,7 @@ export function BranchesPage() {
   const [editing, setEditing] = useState<Branch | "new" | null>(null);
   const [deactivating, setDeactivating] = useState<Branch | null>(null);
 
-  if (me.data && !MANAGERS.includes(me.data.role.code))
+  if (me.data && !can(me.data, "branches.view"))
     return <ForbiddenState description="Filiallarni Direktor va Bosh administrator boshqaradi." />;
 
   const rows = filterBranches(branches.data ?? [], query);

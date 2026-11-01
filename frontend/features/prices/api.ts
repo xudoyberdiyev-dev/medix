@@ -11,8 +11,9 @@ export type PriceChangeSummary = components["schemas"]["PriceChangeSummary"];
 export type PriceChangeStatus = PriceChangeDetail["status"];
 export type MarkupLine = components["schemas"]["MarkupLine"];
 
-/** Narx oʻrnatadiganlar (server ham tekshiradi). */
-export const PRICE_SETTERS = ["DIRECTOR", "ADMIN", "PURCHASER", "BRANCH_MANAGER"];
+/** Narx oʻrnatish va tannarxdan past narx tasdigʻi ruxsatlari (1.3). */
+export const PRICE_CREATE = "prices.create";
+export const PRICE_BELOW = "prices.below";
 
 export const STATUS_LABELS: Record<PriceChangeStatus, string> = {
   DRAFT: "Qoralama",

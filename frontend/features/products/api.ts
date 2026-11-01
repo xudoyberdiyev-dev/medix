@@ -11,8 +11,8 @@ export type ProductDetail = components["schemas"]["ProductDetail"];
 export type ProductRequest = components["schemas"]["ProductRequest"];
 export type EmployeeOption = components["schemas"]["EmployeeOption"];
 
-/** Mahsulotni Direktor, Bosh administrator va Xarid oʻzgartiradi (server ham tekshiradi). */
-export const PRODUCT_EDITORS = ["DIRECTOR", "ADMIN", "PURCHASER"];
+/** Mahsulot yaratish/oʻzgartirish ruxsati (1.3). */
+export const PRODUCT_CREATE = "products.create";
 
 const KEY = ["products"] as const;
 
