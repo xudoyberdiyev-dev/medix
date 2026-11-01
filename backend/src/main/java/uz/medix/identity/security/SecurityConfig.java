@@ -1,6 +1,7 @@
 package uz.medix.identity.security;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,6 +21,8 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfException;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import uz.medix.shared.error.MedixException;
 
@@ -30,6 +33,8 @@ import uz.medix.shared.error.MedixException;
 @Configuration(proxyBeanMethods = false)
 @EnableMethodSecurity
 class SecurityConfig {
+
+    static final String SESSION_COOKIE = "MEDIX_SESSION";
 
     @Bean
     SecurityFilterChain api(
@@ -44,7 +49,7 @@ class SecurityConfig {
                 .formLogin(f -> f.disable())
                 .logout(l -> l.logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler((req, res, auth) -> res.setStatus(204))
-                        .deleteCookies("MEDIX_SESSION"))
+                        .deleteCookies(SESSION_COOKIE))
                 .authorizeHttpRequests(a -> a.requestMatchers("/api/auth/login", "/api/auth/csrf")
                         .permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info")
@@ -80,6 +85,18 @@ class SecurityConfig {
         return username -> {
             throw new UsernameNotFoundException(username);
         };
+    }
+
+    /** Sessiya cookie'si: httpOnly, Secure (lokal http'da {@code MEDIX_COOKIE_SECURE=false}), SameSite=Lax. */
+    @Bean
+    CookieSerializer cookieSerializer(@Value("${medix.session.cookie-secure:true}") boolean secure) {
+        var serializer = new DefaultCookieSerializer();
+        serializer.setCookieName(SESSION_COOKIE);
+        serializer.setCookiePath("/");
+        serializer.setUseHttpOnlyCookie(true);
+        serializer.setUseSecureCookie(secure);
+        serializer.setSameSite("Lax");
+        return serializer;
     }
 
     @Bean

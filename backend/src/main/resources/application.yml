@@ -33,13 +33,10 @@ server:
   servlet:
     session:
       timeout: 10h
-      cookie:
-        name: MEDIX_SESSION
-        http-only: true
-        secure: ${MEDIX_COOKIE_SECURE:true}
-        same-site: lax
 
 medix:
+  session:
+    cookie-secure: ${MEDIX_COOKIE_SECURE:true}
   bootstrap:
     login: ${MEDIX_BOOTSTRAP_LOGIN:}
     password: ${MEDIX_BOOTSTRAP_PASSWORD:}
