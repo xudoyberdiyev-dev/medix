@@ -79,7 +79,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ## 7. Ombor zanjiri
 - [x] FEFO zahira (`inventory.StockReservations`: Navbatga o'tishda muddati eng yaqin partiyalar, sotuvga ochiq zona, minimal yaroqlilik; tartibli FOR UPDATE, parallel test; bekor qilishda bo'shaydi; mavjud qoldiqdan ayriladi), vaqt berish (yig'ish/markirovka daqiqasi, Ombor mudiri)
 - [~] Yig'uvchi paneli ✅ (navbat, «Band: …», bitta faol yig'ish, katta taymer / «Kechikdi: N daqiqa», «Olindi» belgilari, yakunlash → Jo'natish zonasi; API'da «Boshqa partiyadan oldim» — FEFO dan chetlanish belgisi). Qoldi: UI'da boshqa partiyani tanlash, «Muammo bor», terish varag'i, «Bugungi natijam». Markirovkachi paneli (GS1), Ombor mudiri paneli (monitor, SSE) — keyingi
-- [ ] Hisobdan o'tkazish, reys, nakladnoy, terish varag'i
+- [~] Hisobdan o'tkazish ✅ (har qator «Tekshirildi», joylar soni → Hujjatlashtirilmoqda; «Yig'ishga qaytarish» — butun buyurtma, tovar joyiga, zahira qayta; qator bo'yicha — keyin). Qoldi: reys, nakladnoy, terish varag'i
 
 ## 8. Yetkazish
 - [ ] Haydovchi paneli, sotuv/HF «Yo'lda» da, qisman yetkazish, yetkazilmadi, qaytgan tovar, haydovchidagi pul

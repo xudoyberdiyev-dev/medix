@@ -261,4 +261,24 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();
   await expect(page.getByText("Navbatda — ombor yigʻishga tayyorlaydi")).toBeVisible();
+
+  // Vaqt berish → yigʻish → hisobdan oʻtkazish
+  await field(page, "Yigʻish vaqti").fill("10");
+  await page.getByRole("button", { name: "Vaqt berish" }).click();
+  await expect(page.getByText("Vaqt berildi")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.goto("/picking");
+  await page.getByRole("button", { name: "Yigʻishni boshlash" }).first().click();
+  await expect(page.getByRole("timer")).toBeVisible();
+  await page.getByText("Olindi").first().click();
+  await page.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
+  await expect(page.getByText("Yigʻish yakunlandi")).toBeVisible();
+
+  await page.goto("/orders");
+  await page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first().click();
+  await expect(page.getByText("Hisobdan oʻtkazish", { exact: true })).toBeVisible();
+  await page.getByText("Tekshirildi").first().click();
+  await field(page, "Joylar soni").fill("1");
+  await page.getByRole("button", { name: "Hisobdan oʻtkazish" }).click();
+  await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
 });
