@@ -3,11 +3,11 @@
 Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testlar → CI yashil → hisobot. Bosqich tugasa — `develop → main` PR.
 
 ## Hozirgi holat
-- **Sana:** 01.11.2026
-- **Bosqich:** 0, 1 — tugadi; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90% (qoldi: SmartUp ustunlari); 5 — Kirim ~80% (qoldi: kirim uchun katalog sahifasi; YT/avans — 9-bosqich); 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~80% (FEFO, vaqt, yig'ish, markirovka, monitor, muammolar, hisobdan o'tkazish, reys)
-- **PR:** #1 (develop → main) ochiq — 0–4-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 01.11.2026 18:05–19:55 — BQ, Qoldiqlar eksporti; Kirim (to'liq oqim, qarz jurnali, BNS, bonus kirim, eslatmalar); bildirishnomalar; tannarx nazorati va kirim narxidan ustama; Buyurtma (qoidalar, kredit nazorati, tasdiq darajalari, katalog, takrorlash); FEFO zahira; vaqt berish, Yig'uvchi paneli, hisobdan o'tkazish. CI yashil (e2e 6 ssenariy).
-- **Keyingi vazifa (yangilandi 01.11 kechqurun):** 7-bosqich davomi — Markirovkachi paneli (GS1 tartibi), Hisobdan o'tkazish (har qator «Tekshirildi», joylar soni, «Yig'ishga qaytarish»), Ombor mudiri monitori; so'ng hujjatlashtirish/reys (8-bosqich: sotuv va HF «Yo'lda» da). Eski ro'yxat: 5-bosqich qoldig'i — to'lov kuni va bonus eslatmalari (notification moduli: Direktor, Buxgalter, «Kim nomiga»), «Mahsulot qo'shish» katalog sahifasi (kirim qatorlari uchun), kirim ro'yxatida filtrlar (YB, sana). Keyin 3-bosqich «Kirim bo'yicha» narx rejimi va o'rtacha/oxirgi kirim narxiga ustama; so'ng 6-bosqich — Buyurtma.
+- **Sana:** 02.11.2026
+- **Bosqich:** 0, 1 — tugadi; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90% (qoldi: SmartUp ustunlari); 5 — Kirim ~80%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85% (FEFO, vaqt, yig'ish, markirovka, monitor, muammolar, hisobdan o'tkazish, reys/nakladnoy); 8 — Yetkazish ~50% (sotuv/HF, haydovchi paneli, yetkazildi/yetkazilmadi, qaytgan tovar)
+- **PR:** #1 (develop → main) ochiq — 0–8-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
+- **Oxirgi sessiya:** 01.11.2026 23:00 – 02.11.2026 00:10 — markirovka, monitor, «Muammo bor», reys, sotuv/HF, haydovchi paneli. CI yashil (backend + frontend + e2e).
+- **Keyingi vazifa:** 8-bosqich davomi — qisman yetkazish (QM asl sotuv narxida), «Haydovchidagi pul» → Kassir qabul qiladi (MT, 9-bosqich bilan), reys «Qaytish kutilmoqda» → «Yakunlangan» (qaytgan tovar va pul topshirilgach); buyurtma kartochkasida NK/SV/HF raqamlari, reys va «Hozir kimda». So'ng 7-bosqich qoldiqlari: kodlar .xlsx eksporti, terish varag'i va nakladnoy chop etish (10-bosqich PDF bilan), Yig'uvchi UI'da boshqa partiya, «Bugungi natijam». Eski qoldiqlar: 5-bosqich «Mahsulot qo'shish» katalog sahifasi, kirim filtrlari; 3-bosqich «Kirim bo'yicha» narx rejimi.
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
@@ -22,6 +22,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Yaxlitlash yo'nalishi:** narx 100/500/1000 ga eng yaqin qiymatga yaxlitlanadi (12 340 → 12 300). Doim yuqoriga kerak bo'lsa ayting.
 - **Narx turlari:** «Ulgurji partiya narxi» partiyaga bog'langan tur deb belgilandi. To'g'rimi?
 - ~~**1.3 Ruxsatlar**~~ — HAL QILINDI (01.11.2026 12:00 sessiyasi): 132 kalit va matritsa joriy qilindi.
+- **Operator va reys:** T12 matritsasida Operator'da `shipments.trip` (reys tuzish) bor. Ataylabmi? Odatda reysni Ombor mudiri / Filial rahbari tuzadi.
+- **Sig'im oshsa:** hozir reys tuzilmaydi (bloklanadi). Ogohlantirish bilan ruxsat berish kerakmi?
 - **Boshlang'ich CEO hisobi:** production uchun `MEDIX_BOOTSTRAP_LOGIN` va `MEDIX_BOOTSTRAP_PASSWORD` ni server env'iga bering (birinchi kirishda parol almashtiriladi). Repoga yozilmaydi.
 
 ---
@@ -84,7 +86,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [~] Hisobdan o'tkazish ✅. Hujjatlashtirish va reys ✅ (`delivery.trip`, sahifa Ombor → Jo'natish): mashina, haydovchi (bitta faol reys), sig'im tekshiruvi (band joylar bilan), nakladnoy NK (bir marta beriladi), «Yuklanmoqda»; «O'zi olib ketadi» — reyssiz NK; reysni bekor qilish; bekor qilingan buyurtma reysdan chiqadi. Qoldi: nakladnoy/yo'l varaqasi/terish varag'i chop etish (10-bosqich PDF bilan), reysga buyurtma qo'shish/olib tashlash
 
 ## 8. Yetkazish
-- [ ] Haydovchi paneli, sotuv/HF «Yo'lda» da, qisman yetkazish, yetkazilmadi, qaytgan tovar, haydovchidagi pul
+- [x] Sotuv (SV) va hisob-faktura (HF) — «Yuklab bo'lindi — reysni boshlash» yoki «Mijoz olib ketdi» paytida: tovar Jo'natish zonasidan chiqadi (jurnal), mijoz qarzi (to'lov muddati — filial shartidagi kunlar), QQS (narx ichida, HALF_UP), tannarx, kodlar «sotilgan», «Yo'lda» — bitta tranzaksiyada
+- [~] Haydovchi paneli ✅ (Reysim: «Qabul qildim» joylar soni bilan, reysni boshlash, rasm, «Yetkazildi» + naqd summa, «Yetkazilmadi» + sabab, «Reysni yakunlash» → Qaytish kutilmoqda / Yakunlangan). Qoldi: imzo (API bor — signature=true), qisman yetkazish (QM)
+- [x] Yetkazilmadi: sotuv bekor, qarz teskari yoziladi, kodlar bo'shaydi, tovar «Qaytmoqda» → Ombor mudiri sanab Karantinga (kam kelsa — muammo)
+- [ ] Haydovchidagi pul → Kassir (MT) — 9-bosqich bilan; reysni «Yakunlangan»ga o'tkazish
 
 ## 9. Pul
 - [ ] MT (eng eski qarzdan taqsimlash, avans), YT, KO/BO, IO, kassa/Terminal/bank, kunni yopish, qarz jurnali, Kassir paneli
@@ -98,6 +103,14 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ---
 
 ## Qarorlar jurnali
+- 02.11.2026 — Markirovka: V1 da milliy reestr yo'q (V3) — «reestrda bor va sotilmagan» o'rniga global takror: faol yoki sotilgan kod (GTIN + seriya) qayta qabul qilinmaydi (unikal indeks, parallel test). Tur: mahsulot birligi «dona» — D (91), boshqasi — Q. Bitta kod = qatorning bitta birligi. Bonus partiya «-B» qo'shimchasisiz ham mos. AI 17 ixtiyoriy. Ajratgichsiz (GS yo'q) kod — format xatosi.
+- 02.11.2026 — Markirovkasiz buyurtma «Markirovkada» bosqichidan o'tmaydi (yig'ishdan to'g'ri Hisobdan o'tkazishga) — SPEC «Markirovkasiz — tasdiqlash» tugmasi kerak emas.
+- 02.11.2026 — «Muammo bor»: Yig'ilmoqda/Markirovkada — faqat shu ishni bajarayotgan xodim; Yuklanmoqda/Yo'lda — haydovchi. Bildirishnoma orders.queue egalariga (filial + barcha filial rollari). «Boshqa» — izoh majburiy.
+- 02.11.2026 — Monitor yangilanishi 10 s so'rov bilan (SSE — keyin). Umumiy kechikish chegarasi `medix.orders.late-days` (standart 2), sozlamalar sahifasi kelguncha.
+- 02.11.2026 — Reys: sig'im — mashinaning faol (Rejalashtirilgan/Yo'lda) reyslaridagi joylar bilan birga, oshsa — reys tuzilmaydi (sig'im belgilanmagan bo'lsa tekshirilmaydi). Haydovchida bir vaqtda bitta faol reys (Qaytish kutilmoqda ham). NK raqami buyurtmaga bir marta beriladi, reys bekor qilinsa saqlanadi. Bekor qilish — faqat yuklash boshlanmagan «Rejalashtirilgan» reys. Reysdagi buyurtma bekor qilinsa — reysdan chiqadi, buyurtma qolmasa reys bekor (`OrderCancelled` sinxron hodisasi).
+- 02.11.2026 — Sotuv: to'lov muddati = sotuv sanasi + filial shartidagi to'lov kunlari (shart bo'lmasa — muddatsiz). Sotuv qatorlari partiya bo'yicha, narx — muzlatilgan qator narxi. QQS = summa × stavka / (100 + stavka), HALF_UP. Sotuv tahrirlanmaydi, faqat «Yetkazilmadi»da bekor (qarz teskari yozuv bilan).
+- 02.11.2026 — Yetkazish rasmi V1 da bazada (bytea, ≤ 5 MB, JPEG/PNG/WEBP); MinIO — joylashtirishda. Naqd summa 0 … buyurtma summasi. Reys yakunida qaytgan tovar yoki naqd bo'lsa — «Qaytish kutilmoqda».
+- 02.11.2026 — Ruxsatlar T12 bo'yicha: Operator'da shipments.trip bor (matritsada ✓) — o'zgartirilmadi; savol sifatida qo'shildi.
 - 01.11.2026 — Buyurtma: narx yuborishda hisoblanib muzlatiladi (qoralamada — joriy narx va «Narx o'zgardi»). Maksimal miqdordan ko'p — Filial rahbari tasdig'i. Litsenziya yozuvi bor-u hammasi o'tgan bo'lsa — buyurtma kiritilmaydi; nazoratdagi mahsulot — amal qiluvchi «nazoratdagi» litsenziya kerak. Muddati o'tgan qarz — to'lovlar eng eski qarzdan (FIFO); har qanday kechikish — Filial rahbari, 30+ kun — Direktor.
 - 01.11.2026 — Zahira «Navbatda»ga o'tishda (tasdiqsiz yuborish yoki tasdiq) qo'yiladi; tasdiq paytida qoldiq yetmasa — tasdiqlanmaydi. Yig'uvchi boshqa partiya olsa — ogohlantirish belgisi (`fefoDeviation`), bloklanmaydi.
 - 01.11.2026 — Yig'ish/tekshiruv buyurtma bilan bir modulda (`sales.order`) — holat mashinasi bitta joyda; ombor harakatlari `inventory` ochiq API'lari orqali. «Yig'ishga qaytarish» V1 da butun buyurtma uchun.
@@ -137,6 +150,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 01.11.2026 23:00 – 02.11.2026 00:10 — 7-bosqich: markirovka (GS1, tekshiruv tartibi, global takror, parallel test), Markirovkachi paneli, Ombor monitori, «Muammo bor», reys (RS) va nakladnoy (NK), «O'zi olib ketadi», Jo'natish sahifasi; 8-bosqich: sotuv/HF, Haydovchi paneli, yetkazildi/yetkazilmadi, qaytgan tovar qabuli. CI yashil.
 - 01.11.2026 18:05–19:55 — 4-bosqich: BQ, Qoldiqlar eksporti, ombor nofaol qilish tekshiruvi; 5-bosqich: Kirim (to'liq oqim + qarz jurnali), BNS, bonus kirim, to'lov/bonus eslatmalari + bildirishnomalar; 3-bosqich: tannarxdan past narx, o'rtacha/oxirgi kirim narxidan ustama; 6-bosqich: buyurtma (qoidalar, kredit, tasdiq, katalog); 7-bosqich: FEFO zahira, vaqt berish, yig'ish, hisobdan o'tkazish. E2E: BQ, Kirim, Buyurtma→yig'ish→tekshiruv. E2E 3 ta UI xatoni topdi (tuzatildi).
 - 01.11.2026 12:08–14:20 — 1.3 ruxsatlar (T12 egasi yubordi) va Rollar sahifasi; 4-bosqich asosi (jurnal, qoldiq, Qoldiqlar/Muddat). 1.5 PIN, 1.7 Filiallar/Omborlar/Profil, 1.8 e2e (CI), filial tanlagichi; 2-bosqich: ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport; 3-bosqich: NO hujjati, narxlar. E2E parol almashtirishdan keyingi qayta yo'naltirish xatosini topdi va tuzatildi.
 - 01.11.2026 07:00–08:15 — 0.9, 0.10 (0-bosqich tugadi, PR #1), 1.1 sxema, 1.2 xavfsizlik, 1.4 filial doirasi, 1.5 audit, 1.6 usta API, 1.7 login/parol/usta/xodimlar/audit UI. CI yashil.
