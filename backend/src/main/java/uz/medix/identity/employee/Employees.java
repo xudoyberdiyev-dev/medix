@@ -62,6 +62,13 @@ public class Employees {
             }
         }
         String login = n.login().strip().toLowerCase(Locale.ROOT);
+        boolean taken = jdbc.sql("SELECT EXISTS (SELECT 1 FROM employee WHERE login = :l)")
+                .param("l", login)
+                .query(Boolean.class)
+                .single();
+        if (taken) {
+            throw MedixException.conflict("employee.loginTaken", login);
+        }
         long id;
         try {
             id = jdbc.sql("""

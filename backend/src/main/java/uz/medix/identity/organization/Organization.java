@@ -92,6 +92,7 @@ public class Organization {
     @Transactional
     public Branch createBranch(BranchData d) {
         long companyId = company().orElseThrow(() -> MedixException.badRequest("setup.companyMissing")).id();
+        ensureUnique(d, 0L);
         try {
             long id = jdbc.sql("""
                     INSERT INTO branch (company_id, code, name, legal_name, tin, address, phone)
@@ -110,6 +111,7 @@ public class Organization {
     @Transactional
     public Branch updateBranch(long id, BranchData d) {
         Branch before = branch(id).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        ensureUnique(d, id);
         try {
             jdbc.sql("""
                     UPDATE branch SET code = :code, name = :name, legal_name = :legal, tin = :tin, address = :address,
@@ -126,6 +128,19 @@ public class Organization {
                 .change(snapshot(new BranchData(before.code(), before.name(), before.legalName(), before.tin(), before.address(),
                         before.phone())), snapshot(d)));
         return after;
+    }
+
+    /** Oldindan tekshiruv: bazadagi UNIQUE xatosi tranzaksiyani buzadi; UNIQUE esa poyga holati uchun qoladi. */
+    private void ensureUnique(BranchData d, long exceptId) {
+        boolean taken = jdbc.sql("SELECT EXISTS (SELECT 1 FROM branch WHERE (code = :code OR tin = :tin) AND id <> :id)")
+                .param("code", d.code().strip().toUpperCase(java.util.Locale.ROOT))
+                .param("tin", d.tin().strip())
+                .param("id", exceptId)
+                .query(Boolean.class)
+                .single();
+        if (taken) {
+            throw MedixException.conflict("branch.duplicate", d.code(), d.tin());
+        }
     }
 
     private static Map<String, Object> params(BranchData d) {
