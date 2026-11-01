@@ -130,6 +130,38 @@ public class Organization {
         return after;
     }
 
+    /**
+     * Filialni faollashtirish / nofaol qilish (SPEC 13-qoida: filial o'chirilmaydi). Oxirgi faol filial nofaol qilinmaydi.
+     */
+    @Transactional
+    public Branch setActive(long id, boolean active, String reason) {
+        Branch before = jdbc.sql("SELECT id, code, name, legal_name, tin, address, phone, active FROM branch WHERE id = :id FOR UPDATE")
+                .param("id", id)
+                .query(Branch.class)
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (before.active() == active) {
+            return before;
+        }
+        if (!active) {
+            long others = jdbc.sql("SELECT count(*) FROM branch WHERE active AND id <> :id")
+                    .param("id", id)
+                    .query(Long.class)
+                    .single();
+            if (others == 0) {
+                throw MedixException.conflict("branch.lastActive");
+            }
+        }
+        jdbc.sql("UPDATE branch SET active = :a, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("a", active)
+                .param("id", id)
+                .update();
+        var entry = AuditEntry.of(active ? "branch.activate" : "branch.deactivate", "branch", id)
+                .change(Map.of("active", before.active()), Map.of("active", active));
+        audit.record(reason == null || reason.isBlank() ? entry : entry.withReason(reason.strip()));
+        return branch(id).orElseThrow();
+    }
+
     /** Oldindan tekshiruv: bazadagi UNIQUE xatosi tranzaksiyani buzadi; UNIQUE esa poyga holati uchun qoladi. */
     private void ensureUnique(BranchData d, long exceptId) {
         boolean taken = jdbc.sql("SELECT EXISTS (SELECT 1 FROM branch WHERE (code = :code OR tin = :tin) AND id <> :id)")

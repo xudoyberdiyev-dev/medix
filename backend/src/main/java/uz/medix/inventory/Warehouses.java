@@ -92,6 +92,139 @@ public class Warehouses {
                 .single();
     }
 
+    /** Barcha omborlar (filial doirasini chaqiruvchi qo'llaydi). */
+    @Transactional(readOnly = true)
+    public List<Warehouse> listAll() {
+        List<Long> branchIds = jdbc.sql("SELECT id FROM branch ORDER BY id").query(Long.class).list();
+        return listByBranches(branchIds);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Optional<Warehouse> findById(long id) {
+        boolean exists = jdbc.sql("SELECT EXISTS (SELECT 1 FROM warehouse WHERE id = :id)")
+                .param("id", id)
+                .query(Boolean.class)
+                .single();
+        return exists ? java.util.Optional.of(find(id)) : java.util.Optional.empty();
+    }
+
+    /** Faol filial bormi — ombor faqat faol filialga qo'shiladi. */
+    @Transactional(readOnly = true)
+    public boolean branchActive(long branchId) {
+        return jdbc.sql("SELECT EXISTS (SELECT 1 FROM branch WHERE id = :b AND active)")
+                .param("b", branchId)
+                .query(Boolean.class)
+                .single();
+    }
+
+    @Transactional
+    public Warehouse update(long id, String name, String address) {
+        Warehouse before = lock(id);
+        boolean duplicate = jdbc.sql("""
+                SELECT EXISTS (SELECT 1 FROM warehouse WHERE branch_id = :b AND lower(name) = lower(:n) AND id <> :id)""")
+                .param("b", before.branchId())
+                .param("n", name.strip())
+                .param("id", id)
+                .query(Boolean.class)
+                .single();
+        if (duplicate) {
+            throw MedixException.conflict("warehouse.duplicateName", name.strip());
+        }
+        jdbc.sql("UPDATE warehouse SET name = :n, address = :a, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("n", name.strip())
+                .param("a", blankToNull(address))
+                .param("id", id)
+                .update();
+        Warehouse after = find(id);
+        audit.record(AuditEntry.of("warehouse.update", "warehouse", id)
+                .change(snapshot(before), snapshot(after)));
+        return after;
+    }
+
+    /** Ixtiyoriy zona (Sovuq yoki Seyf) qo'shadi. Majburiy zonalar ombor yaratilganda bor. */
+    @Transactional
+    public Warehouse addZone(long id, ZoneType type) {
+        lock(id);
+        if (ZoneType.REQUIRED.contains(type)) {
+            throw MedixException.badRequest("warehouse.extraZones");
+        }
+        boolean exists = jdbc.sql("SELECT EXISTS (SELECT 1 FROM zone WHERE warehouse_id = :w AND type = :t)")
+                .param("w", id)
+                .param("t", type.name())
+                .query(Boolean.class)
+                .single();
+        if (exists) {
+            throw MedixException.conflict("warehouse.zoneExists", type.defaultName());
+        }
+        long zoneId = jdbc.sql("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, :t, :n) RETURNING id")
+                .param("w", id)
+                .param("t", type.name())
+                .param("n", type.defaultName())
+                .query(Long.class)
+                .single();
+        audit.record(AuditEntry.of("zone.create", "zone", zoneId)
+                .change(null, Map.of("warehouseId", id, "type", type.name())));
+        return find(id);
+    }
+
+    /** Zona nomini o'zgartiradi (turi va sotuvga ochiqligi o'zgarmaydi). */
+    @Transactional
+    public Warehouse renameZone(long warehouseId, long zoneId, String name) {
+        Warehouse w = lock(warehouseId);
+        Zone zone = w.zones().stream().filter(z -> z.id() == zoneId).findFirst()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        boolean duplicate = w.zones().stream().anyMatch(z -> z.id() != zoneId && z.name().equalsIgnoreCase(name.strip()));
+        if (duplicate) {
+            throw MedixException.conflict("warehouse.zoneDuplicateName", name.strip());
+        }
+        jdbc.sql("UPDATE zone SET name = :n, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("n", name.strip())
+                .param("id", zoneId)
+                .update();
+        audit.record(AuditEntry.of("zone.update", "zone", zoneId)
+                .change(Map.of("name", zone.name()), Map.of("name", name.strip())));
+        return find(warehouseId);
+    }
+
+    /**
+     * Omborni faollashtirish / nofaol qilish (SPEC 13-qoida: o'chirilmaydi).
+     * TODO(4-bosqich): qoldig'i bor omborni nofaol qilish taqiqlanadi (StockBalance paydo bo'lganda).
+     */
+    @Transactional
+    public Warehouse setActive(long id, boolean active, String reason) {
+        Warehouse before = lock(id);
+        if (before.active() == active) {
+            return before;
+        }
+        if (active && !branchActive(before.branchId())) {
+            throw MedixException.conflict("warehouse.branchInactive");
+        }
+        jdbc.sql("UPDATE warehouse SET active = :a, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("a", active)
+                .param("id", id)
+                .update();
+        var entry = AuditEntry.of(active ? "warehouse.activate" : "warehouse.deactivate", "warehouse", id)
+                .change(Map.of("active", before.active()), Map.of("active", active));
+        audit.record(reason == null || reason.isBlank() ? entry : entry.withReason(reason.strip()));
+        return find(id);
+    }
+
+    private Warehouse lock(long id) {
+        jdbc.sql("SELECT id FROM warehouse WHERE id = :id FOR UPDATE")
+                .param("id", id)
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        return find(id);
+    }
+
+    private static Map<String, Object> snapshot(Warehouse w) {
+        Map<String, Object> m = new java.util.HashMap<>();
+        m.put("name", w.name());
+        m.put("address", w.address());
+        return m;
+    }
+
     private record Row(long id, long branchId, String name, String address, boolean active) {}
 
     private Warehouse find(long id) {
