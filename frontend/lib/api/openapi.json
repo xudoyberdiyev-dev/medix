@@ -1528,6 +1528,140 @@
         "tags" : [ "products" ]
       }
     },
+    "/api/products/export" : {
+      "get" : {
+        "description" : "Jadvaldagi filtrlar bilan; ko'pi bilan 50 000 qator.",
+        "operationId" : "export",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "manufacturerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "categoryId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ACTIVE",
+            "enum" : [ "ACTIVE", "INACTIVE", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "controlled",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "marked",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "NAME",
+            "enum" : [ "CODE", "NAME", "MANUFACTURER" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "desc",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Excel'ga eksport (.xlsx)",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/import" : {
+      "post" : {
+        "description" : "apply=false — faqat tekshiradi (hech narsa yozilmaydi); apply=true — xato bo'lmasa hammasini yozadi.",
+        "operationId" : "importFile",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "apply",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Excel'dan import",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/import-template" : {
+      "get" : {
+        "operationId" : "importTemplate",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import shabloni (.xlsx)",
+        "tags" : [ "products" ]
+      }
+    },
     "/api/products/{id}" : {
       "get" : {
         "operationId" : "get_1",
@@ -3165,6 +3299,54 @@
           }
         },
         "required" : [ "active", "direction", "id", "name", "system" ]
+      },
+      "ImportResult" : {
+        "type" : "object",
+        "properties" : {
+          "applied" : {
+            "type" : "boolean"
+          },
+          "created" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "createdCategories" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "createdManufacturers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRowError"
+            }
+          },
+          "rows" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "applied", "created", "createdCategories", "createdManufacturers", "errors", "rows" ]
+      },
+      "ImportRowError" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "message", "row" ]
       },
       "License" : {
         "type" : "object",

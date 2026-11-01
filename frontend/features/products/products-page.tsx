@@ -168,7 +168,7 @@ export function ProductsPage() {
             className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-4 font-medium hover:bg-background"
           >
             <FileDown size={16} strokeWidth={1.5} aria-hidden />
-            Excel'ga yuklash
+            Excelʼga yuklash
           </a>
           {canEdit ? (
             <>
@@ -337,6 +337,7 @@ export function ProductsPage() {
           }
         />
       )}
+      {importing ? <ImportDialog onClose={() => setImporting(false)} /> : null}
       {open !== null ? (
         <ProductDrawer
           productId={open === "new" ? null : open}

@@ -31,7 +31,7 @@ async function upload(file: File, apply: boolean): Promise<ImportResult> {
   );
 }
 
-/** Excel'dan import: avval tekshiriladi (hech narsa yozilmaydi), xato boʻlmasa — «Import qilish». */
+/** Excelʼdan import: avval tekshiriladi (hech narsa yozilmaydi), xato boʻlmasa — «Import qilish». */
 export function ImportDialog({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
@@ -67,7 +67,7 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
       open
       onClose={onClose}
       size="lg"
-      title="Mahsulotlarni Excel'dan import qilish"
+      title="Mahsulotlarni Excelʼdan import qilish"
       primaryAction={
         ready
           ? { label: `${formatQuantity(result.created)} ta mahsulotni import qilish`, loading: pending, onClick: () => run(true) }
