@@ -19,14 +19,16 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 import uz.medix.TestcontainersConfig;
 
-/** Xodimni bloklash (sessiyasi tugaydi), blokdan chiqarish, vaqtinchalik parol, audit jurnali. */
+/**
+ * Xodimni bloklash (sessiyasi tugaydi), blokdan chiqarish, vaqtinchalik parol, audit jurnali.
+ * {@code @Transactional} emas: Spring Session o'z (REQUIRES_NEW) tranzaksiyasida ishlaydi — test tranzaksiyasi
+ * sessiya qatorini qulflab qo'ysa, keyingi so'rov o'zini kutib qoladi.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
-@Transactional
 class EmployeeAdminIT {
 
     private static final String PASSWORD = "Sinov-parol-2026";
