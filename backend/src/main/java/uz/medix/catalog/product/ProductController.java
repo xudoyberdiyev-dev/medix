@@ -3,8 +3,11 @@ package uz.medix.catalog.product;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,8 +16,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import uz.medix.catalog.product.ProductModels.ChangeCodeRequest;
 import uz.medix.catalog.product.ProductModels.DeactivateRequest;
 import uz.medix.catalog.product.ProductModels.Filter;
@@ -38,9 +43,11 @@ class ProductController {
     private static final int MAX_PAGE_SIZE = 200;
 
     private final Products products;
+    private final ProductExcel excel;
 
-    ProductController(Products products) {
+    ProductController(Products products, ProductExcel excel) {
         this.products = products;
+        this.excel = excel;
     }
 
     @GetMapping
@@ -58,6 +65,45 @@ class ProductController {
             @RequestParam(defaultValue = "50") int size) {
         int safeSize = Math.clamp(size, 1, MAX_PAGE_SIZE);
         return products.search(new Filter(q, manufacturerId, categoryId, status, controlled, marked, sort, desc, Math.max(page, 0), safeSize));
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "Excel'ga eksport (.xlsx)", description = "Jadvaldagi filtrlar bilan; ko'pi bilan 50 000 qator.")
+    void export(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Long manufacturerId,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "ACTIVE") Status status,
+            @RequestParam(required = false) Boolean controlled,
+            @RequestParam(required = false) Boolean marked,
+            @RequestParam(defaultValue = "NAME") SortField sort,
+            @RequestParam(defaultValue = "false") boolean desc,
+            HttpServletResponse response) throws IOException {
+        xlsx(response, "mahsulotlar.xlsx");
+        excel.export(new Filter(q, manufacturerId, categoryId, status, controlled, marked, sort, desc, 0, 1), response.getOutputStream());
+    }
+
+    @GetMapping("/import-template")
+    @Operation(summary = "Import shabloni (.xlsx)")
+    void importTemplate(HttpServletResponse response) throws IOException {
+        xlsx(response, "mahsulotlar-shablon.xlsx");
+        excel.template(response.getOutputStream());
+    }
+
+    @PostMapping(path = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Excel'dan import",
+            description = "apply=false — faqat tekshiradi (hech narsa yozilmaydi); apply=true — xato bo'lmasa hammasini yozadi.")
+    ProductExcel.ImportResult importFile(@RequestPart("file") MultipartFile file, @RequestParam(defaultValue = "false") boolean apply)
+            throws IOException {
+        try (var in = file.getInputStream()) {
+            return excel.importFile(in, apply);
+        }
+    }
+
+    private static void xlsx(HttpServletResponse response, String filename) {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
     }
 
     @GetMapping("/{id}")

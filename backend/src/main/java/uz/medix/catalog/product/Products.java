@@ -158,8 +158,17 @@ public class Products {
 
     @Transactional
     ProductDetail create(ProductRequest r) {
+        return create(r, null);
+    }
+
+    /** {@code presetCode} — import uchun (masalan, SmartUp kodi saqlansin); band bo'lsa xato. */
+    @Transactional
+    ProductDetail create(ProductRequest r, String presetCode) {
         Normalized n = validate(r, null);
-        String code = newCode();
+        if (presetCode != null && codeTaken(presetCode)) {
+            throw MedixException.conflict("product.codeTaken", presetCode);
+        }
+        String code = presetCode != null ? presetCode : newCode();
         long id = jdbc.sql("""
                 INSERT INTO product (code, name, contract_name, classifier_name, manufacturer_id, category_id, country_id, unit_id,
                                      supply_employee_id, ikpu, farm_id, controlled, marked, prescription, vat_rate, min_qty, max_qty)
@@ -386,7 +395,7 @@ public class Products {
         throw new IllegalStateException("Bo'sh mahsulot kodi topilmadi");
     }
 
-    private boolean codeTaken(String code) {
+    boolean codeTaken(String code) {
         return jdbc.sql("""
                 SELECT EXISTS (SELECT 1 FROM product WHERE code = :c)
                     OR EXISTS (SELECT 1 FROM product_code_history WHERE old_code = :c)""")
