@@ -145,3 +145,31 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await page.reload();
   await expect(page.getByRole("cell", { name: "2.500,00" })).toBeVisible();
 });
+
+test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/opening");
+  await page.getByRole("button", { name: "Qoldiq kiritish" }).first().click();
+  await choose(page, "Ombor", /Markaziy ombor/);
+  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("E2E");
+  await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
+  await choose(page, "Zona", /Asosiy saqlash/);
+  await field(page, "Partiya").fill("E2E-01");
+  await field(page, "Yaroqlilik").fill("31.12.2029");
+  await field(page, "Soni").fill("120");
+  await field(page, "Tannarx (1 dona)").fill("1.800,50");
+  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
+  await expect(page.getByRole("cell", { name: "E2E-01" })).toBeVisible();
+  await page.getByRole("button", { name: "Oʻtkazish" }).click();
+  await expect(page.getByText("Qoldiq omborga kirdi")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/stock");
+  const row = page.getByRole("row", { name: /Paracetamol E2E/ });
+  await expect(row).toContainText("E2E-01");
+  await expect(row).toContainText("120");
+  await expect(row).toContainText("1.800,50");
+});
