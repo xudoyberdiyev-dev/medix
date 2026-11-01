@@ -3,6 +3,7 @@ import { canApprove, canCancelOrder } from "./api";
 import { counterText } from "./marking-page";
 import { groupByStage, sinceText, type MonitorCard } from "./monitor-page";
 import { timerText } from "./picking-page";
+import { capacityState } from "./shipments-page";
 
 const none = { own: false, cancel: false, manage: false, cancelPick: false };
 
@@ -71,5 +72,13 @@ describe("monitor", () => {
     expect(sinceText(new Date("2026-11-03T11:15:00Z"), now)).toBe("45 daqiqa");
     expect(sinceText(new Date("2026-11-03T08:50:00Z"), now)).toBe("3 soat 10 daqiqa");
     expect(sinceText(new Date("2026-11-01T08:00:00Z"), now)).toBe("2 kun 4 soat");
+  });
+});
+
+describe("reys sigʻimi", () => {
+  it("band joylar bilan birga hisoblanadi", () => {
+    expect(capacityState(3, 1, 5)).toEqual({ text: "4 / 5 joy", over: false });
+    expect(capacityState(4, 2, 5)).toEqual({ text: "6 / 5 joy", over: true });
+    expect(capacityState(7, 0, null)).toEqual({ text: "7 joy · sigʻim belgilanmagan", over: false });
   });
 });
