@@ -80,6 +80,7 @@ class EmployeeAdminIT {
         Cookie operator = login(opLogin);
 
         mvc.perform(get("/api/employees").cookie(admin)).andExpect(status().isOk());
+        mvc.perform(get("/api/branches").cookie(operator)).andExpect(status().isOk());
 
         mvc.perform(post("/api/employees/" + opId + "/block")
                         .with(csrf())
