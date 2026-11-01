@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
+import uz.medix.shared.security.Actor;
 
 /** Xodimlar. Loginni administrator yaratadi; vaqtinchalik parol birinchi kirishda almashtiriladi (SPEC 2, 13). */
 @Service
@@ -43,6 +44,77 @@ public class Employees {
     @Transactional(readOnly = true)
     public List<Employee> list() {
         return jdbc.sql(SELECT + " ORDER BY e.full_name").query(Employee.class).list();
+    }
+
+    /** Filial doirasi bilan (SPEC 13): barcha filiallar huquqi bo'lmasa — faqat o'z filiali xodimlari. */
+    @Transactional(readOnly = true)
+    public List<Employee> list(Actor actor) {
+        if (actor.allBranches()) {
+            return list();
+        }
+        return jdbc.sql(SELECT + " WHERE e.branch_id = :b ORDER BY e.full_name")
+                .param("b", actor.branchId() == null ? -1L : actor.branchId())
+                .query(Employee.class)
+                .list();
+    }
+
+    @Transactional
+    public Employee block(Actor actor, long id, String reason) {
+        Employee e = accessible(actor, id);
+        if (e.id() == actor.employeeId()) {
+            throw MedixException.badRequest("employee.cannotBlockSelf");
+        }
+        jdbc.sql("UPDATE employee SET status = 'BLOCKED', blocked_reason = :r, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("r", reason.strip())
+                .param("id", id)
+                .update();
+        // Bloklangan xodimning ochiq sessiyalari darhol tugatiladi.
+        jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
+        audit.record(AuditEntry.of("employee.block", "employee", id)
+                .change(Map.of("status", e.status()), Map.of("status", "BLOCKED"))
+                .withReason(reason.strip()));
+        return get(id);
+    }
+
+    @Transactional
+    public Employee unblock(Actor actor, long id) {
+        Employee e = accessible(actor, id);
+        jdbc.sql("UPDATE employee SET status = 'ACTIVE', blocked_reason = NULL, failed_login_count = 0, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("id", id)
+                .update();
+        audit.record(AuditEntry.of("employee.unblock", "employee", id)
+                .change(Map.of("status", e.status()), Map.of("status", "ACTIVE")));
+        return get(id);
+    }
+
+    /** Vaqtinchalik parol beradi; xodim keyingi kirishda almashtiradi. Ochiq sessiyalar tugatiladi. */
+    @Transactional
+    public Employee resetPassword(Actor actor, long id, String temporaryPassword) {
+        Employee e = accessible(actor, id);
+        jdbc.sql("UPDATE employee SET password_hash = :h, must_change_password = true, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("h", encoder.encode(temporaryPassword))
+                .param("id", id)
+                .update();
+        jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
+        audit.record(AuditEntry.of("employee.resetPassword", "employee", id));
+        return get(id);
+    }
+
+    private Employee get(long id) {
+        return jdbc.sql(SELECT + " WHERE e.id = :id").param("id", id).query(Employee.class).single();
+    }
+
+    /** Topilmasa yoki boshqa filialniki bo'lsa — 404 (boshqa filial xodimi borligini ham bildirmaymiz). */
+    private Employee accessible(Actor actor, long id) {
+        Employee e = jdbc.sql(SELECT + " WHERE e.id = :id")
+                .param("id", id)
+                .query(Employee.class)
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (!actor.allBranches() && (e.branchId() == null || !actor.canAccessBranch(e.branchId()))) {
+            throw MedixException.notFound("error.notFound");
+        }
+        return e;
     }
 
     @Transactional
@@ -92,7 +164,7 @@ public class Employees {
         snapshot.put("role", n.roleCode());
         snapshot.put("branchId", n.branchId());
         audit.record(AuditEntry.of("employee.create", "employee", id).change(null, snapshot));
-        return jdbc.sql(SELECT + " WHERE e.id = :id").param("id", id).query(Employee.class).single();
+        return get(id);
     }
 
     @Transactional(readOnly = true)
