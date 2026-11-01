@@ -42,6 +42,13 @@ class TripController {
 
     record HandoverResult(String sale) {}
 
+    record DeliverRequest(@io.swagger.v3.oas.annotations.media.Schema(nullable = true, description = "Naqd olingan summa, masalan «25000.00»")
+            @Size(max = 24) String cash) {}
+
+    record PhotoResult(long id) {}
+
+    record FinishResult(TripModels.TripStatus status) {}
+
     private final Trips trips;
     private final CurrentActor currentActor;
 
@@ -133,5 +140,37 @@ class TripController {
     @Operation(summary = "«O'zi olib ketadi» — mijoz olib chiqdi", description = "Sotuv va hisob-faktura; «Yo'lda».")
     HandoverResult handover(@PathVariable long orderId) {
         return new HandoverResult(trips.handover(actor(), orderId));
+    }
+
+    @PostMapping(value = "/{id}/stops/{stopId}/photos", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "Yetkazish rasmi", description = "JPEG/PNG/WEBP, ≤ 5 MB. signature=true — mijoz imzosi (ixtiyoriy).")
+    PhotoResult photo(@PathVariable long id, @PathVariable long stopId, @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(defaultValue = "false") boolean signature) throws java.io.IOException {
+        return new PhotoResult(trips.addPhoto(actor(), id, stopId, file.getContentType(), file.getBytes(), signature));
+    }
+
+    @PostMapping("/{id}/stops/{stopId}/deliver")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "«Yetkazildi»", description = "Kamida 1 rasm majburiy; naqd to'lovda olingan summa.")
+    TripDetail deliver(@PathVariable long id, @PathVariable long stopId, @Valid @RequestBody DeliverRequest r) {
+        trips.deliver(actor(), id, stopId, r.cash());
+        return trips.find(actor(), id);
+    }
+
+    @PostMapping("/{id}/stops/{stopId}/undeliver")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "«Yetkazilmadi»", description = "Sabab majburiy; sotuv va qarz bekor, tovar «Qaytmoqda».")
+    TripDetail undeliver(@PathVariable long id, @PathVariable long stopId, @Valid @RequestBody ReasonRequest r) {
+        trips.undeliver(actor(), id, stopId, r.reason());
+        return trips.find(actor(), id);
+    }
+
+    @PostMapping("/{id}/finish")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "«Reysni yakunlash»", description = "Qaytgan tovar yoki naqd pul bo'lsa — «Qaytish kutilmoqda».")
+    FinishResult finish(@PathVariable long id) {
+        return new FinishResult(trips.finish(actor(), id));
     }
 }

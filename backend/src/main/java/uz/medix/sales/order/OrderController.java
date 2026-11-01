@@ -40,9 +40,14 @@ class OrderController {
     private final OrderPicking picking;
     private final OrderMonitor monitor;
     private final OrderIssues issues;
+    private final OrderSales sales;
     private final CurrentActor currentActor;
 
-    OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, CurrentActor currentActor) {
+    record ReturnAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0)
+            Integer receivedQty) {}
+
+    OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, CurrentActor currentActor) {
+        this.sales = sales;
         this.issues = issues;
         this.orders = orders;
         this.picking = picking;
@@ -193,6 +198,20 @@ class OrderController {
     @Operation(summary = "Muammoni hal qilindi deb belgilash")
     OrderIssues.OrderIssueItem resolveIssue(@PathVariable long issueId, @Valid @RequestBody OrderIssues.ResolveRequest r) {
         return issues.resolve(actor(), issueId, r.resolution());
+    }
+
+    @GetMapping("/returns")
+    @PreAuthorize("hasAuthority('orders.check')")
+    @Operation(summary = "Qaytayotgan tovar", description = "Yetkazilmagan buyurtmalar tovari — Ombor mudiri sanab qabul qiladi.")
+    List<OrderSales.PendingReturn> pendingReturns() {
+        return sales.pendingReturns(actor());
+    }
+
+    @PostMapping("/returns/{returnId}/accept")
+    @PreAuthorize("hasAuthority('orders.check')")
+    @Operation(summary = "Qaytgan tovarni qabul qilish", description = "Karantinga; kam kelsa — muammo yoziladi.")
+    void acceptReturn(@PathVariable long returnId, @Valid @RequestBody ReturnAcceptRequest r) {
+        sales.acceptReturn(actor(), returnId, r.receivedQty());
     }
 
     @GetMapping("/pick-queue")

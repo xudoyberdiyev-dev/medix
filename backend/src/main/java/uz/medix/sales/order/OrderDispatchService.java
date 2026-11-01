@@ -125,4 +125,28 @@ class OrderDispatchService implements OrderDispatch {
         return jdbc.sql("SELECT delivery_type = 'PICKUP' FROM sales_order WHERE id = :id").param("id", orderId).query(Boolean.class).optional()
                 .orElse(false);
     }
+
+    @Override
+    public void delivered(Actor actor, long orderId) {
+        int n = jdbc.sql("""
+                UPDATE sales_order SET status = 'DELIVERED', status_changed_at = now(), updated_at = now(), version = version + 1
+                WHERE id = :id AND status = 'IN_TRANSIT'""")
+                .param("id", orderId)
+                .update();
+        if (n == 0) {
+            throw MedixException.conflict("trip.orderNotInTransit");
+        }
+        audit.record(AuditEntry.of("order.delivered", "sales_order", orderId).change(Map.of("status", "IN_TRANSIT"), Map.of("status", "DELIVERED")));
+    }
+
+    @Override
+    public void undelivered(Actor actor, long orderId, String reason) {
+        sales.cancelUndelivered(actor, orderId, reason);
+    }
+
+    @Override
+    public String total(long orderId) {
+        return new Money(jdbc.sql("SELECT total FROM sales_order WHERE id = :id").param("id", orderId).query(java.math.BigDecimal.class).single())
+                .toString();
+    }
 }

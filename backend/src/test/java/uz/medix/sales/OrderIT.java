@@ -832,6 +832,57 @@ class OrderIT {
         send(post("/api/orders/" + o1 + "/cancel"), keeper, "{\"reason\":\"Kech\"}").andExpect(status().isConflict());
         assertThatThrownBy(() -> jdbc.sql("UPDATE sale SET total = 1 WHERE order_id = :o").param("o", o1).update()).hasMessageContaining("oʻzgarmaydi");
 
+        // Yetkazildi: rasm majburiy, naqd ≤ summa; reys yakuni — naqd bor → «Qaytish kutilmoqda»
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/deliver"), driverSession, "{}").andExpect(jsonPath("$.code").value("trip.photoRequired"));
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/trips/" + trip + "/stops/" + stop + "/photos")
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "a.txt", "text/plain", new byte[] {1}))
+                        .with(csrf()).cookie(driverSession))
+                .andExpect(status().isBadRequest());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/trips/" + trip + "/stops/" + stop + "/photos")
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[] {1, 2, 3}))
+                        .with(csrf()).cookie(driverSession))
+                .andExpect(status().isCreated());
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/deliver"), driverSession, "{\"cash\":\"5000\"}")
+                .andExpect(jsonPath("$.code").value("trip.cashInvalid"));
+        send(post("/api/trips/" + trip + "/finish"), driverSession, "").andExpect(jsonPath("$.code").value("trip.stopsOpen"));
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/deliver"), driverSession, "{\"cash\":\"2000\"}")
+                .andExpect(jsonPath("$.stops[0].outcome").value("DELIVERED"))
+                .andExpect(jsonPath("$.stops[0].cashCollected").value("2000.00"))
+                .andExpect(jsonPath("$.stops[0].photos").value(1));
+        assertThat(statusOf(o1)).isEqualTo("DELIVERED");
+        send(post("/api/trips/" + trip + "/finish"), driverSession, "").andExpect(jsonPath("$.status").value("RETURN_WAIT"));
+
+        // Yetkazilmadi: sotuv bekor, qarz teskari, tovar «Qaytmoqda» → Ombor mudiri sanab Karantinga (kam kelsa — muammo)
+        Cookie driver2 = loginAs("DRIVER", p.branchId());
+        long driver2Id = jdbc.sql("SELECT max(id) FROM employee WHERE full_name = 'Sinov DRIVER' AND branch_id = :b").param("b", p.branchId())
+                .query(Long.class).single();
+        long o3 = documenting(p, c, prod, 2, 1, "DELIVERY", operator, keeper, picker);
+        MvcResult t3 = send(post("/api/trips"), keeper, "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver2Id + ",\"tripDate\":\"" + today()
+                + "\",\"orderIds\":[" + o3 + "]}").andExpect(status().isCreated()).andReturn();
+        long trip3 = id(t3);
+        long stop3 = ((Number) JsonPath.read(t3.getResponse().getContentAsString(), "$.stops[0].id")).longValue();
+        send(post("/api/trips/" + trip3 + "/stops/" + stop3 + "/load"), driver2, "{\"places\":1}").andExpect(status().isOk());
+        send(post("/api/trips/" + trip3 + "/start"), driver2, "").andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
+                        .query(String.class).single())
+                .isEqualTo("4000.00");
+        send(post("/api/trips/" + trip3 + "/stops/" + stop3 + "/undeliver"), driver2, "{\"reason\":\"Dorixona yopiq\"}")
+                .andExpect(jsonPath("$.stops[0].outcome").value("UNDELIVERED"));
+        assertThat(statusOf(o3)).isEqualTo("UNDELIVERED");
+        assertThat(jdbc.sql("SELECT status FROM sale WHERE order_id = :o").param("o", o3).query(String.class).single()).isEqualTo("CANCELLED");
+        assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
+                        .query(String.class).single())
+                .isEqualTo("2000.00");
+        send(post("/api/trips/" + trip3 + "/finish"), driver2, "").andExpect(jsonPath("$.status").value("RETURN_WAIT"));
+        long ret = jdbc.sql("SELECT id FROM sales_return_pending WHERE order_id = :o").param("o", o3).query(Long.class).single();
+        mvc.perform(get("/api/orders/returns").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) ret)));
+        send(post("/api/orders/returns/" + ret + "/accept"), keeper, "{\"receivedQty\":3}").andExpect(status().isBadRequest());
+        send(post("/api/orders/returns/" + ret + "/accept"), keeper, "{\"receivedQty\":1}").andExpect(status().isOk());
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(1);
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_order_issue WHERE order_id = :o AND reason = 'SHORTAGE'").param("o", o3).query(Long.class)
+                        .single())
+                .isEqualTo(1);
+
         // O'zi olib ketadi: nakladnoy → mijoz olib chiqdi
         long o2 = documenting(p, c, prod, 1, 1, "PICKUP", operator, keeper, picker);
         send(post("/api/trips/pickup/" + o2 + "/handover"), keeper, "").andExpect(status().isConflict());

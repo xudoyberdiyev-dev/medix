@@ -35,4 +35,16 @@ public interface OrderDispatch {
 
     /** «O'zi olib ketadi» buyurtmasi (yetkazish turi bo'yicha tekshiruv uchun). */
     boolean isPickup(long orderId);
+
+    /** «Yetkazildi»: «Yo'lda» → «Yetkazildi». */
+    void delivered(Actor actor, long orderId);
+
+    /**
+     * «Yetkazilmadi» (sabab majburiy): sotuv bekor, mijoz qarzi teskari yoziladi, kodlar bo'shaydi, tovar «Qaytmoqda»
+     * (Ombor mudiri sanab Karantinga qabul qiladi). Buyurtma «Yetkazilmadi».
+     */
+    void undelivered(Actor actor, long orderId, String reason);
+
+    /** Buyurtma summasi (QQS bilan) — naqd pul chegarasi uchun. */
+    String total(long orderId);
 }

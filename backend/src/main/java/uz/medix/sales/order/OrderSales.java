@@ -174,4 +174,111 @@ class OrderSales {
                 Map.of("number", number, "invoice", invoice, "total", total.toString(), "status", "IN_TRANSIT")));
         return number;
     }
+
+    /** «Yetkazilmadi»: sotuv bekor, qarz teskari, kodlar bo'shaydi, tovar «Qaytmoqda». Chaqiruvchi tranzaksiyasida. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    void cancelUndelivered(Actor actor, long orderId, String reason) {
+        record S(long id, String number, long branchId, long customerId, long warehouseId, BigDecimal total, String orderStatus) {}
+        S sale = jdbc.sql("""
+                SELECT s.id, s.number, s.branch_id, s.customer_id, s.warehouse_id, s.total, o.status AS order_status
+                FROM sale s JOIN sales_order o ON o.id = s.order_id WHERE s.order_id = :o AND s.status = 'POSTED' FOR UPDATE OF s, o""")
+                .param("o", orderId)
+                .query((rs, n) -> new S(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getLong("customer_id"),
+                        rs.getLong("warehouse_id"), rs.getBigDecimal("total"), rs.getString("order_status")))
+                .optional()
+                .orElseThrow(() -> MedixException.conflict("trip.orderNotInTransit"));
+        if (!actor.canAccessBranch(sale.branchId()) || !"IN_TRANSIT".equals(sale.orderStatus())) {
+            throw MedixException.conflict("trip.orderNotInTransit");
+        }
+        String why = reason.strip();
+        jdbc.sql("UPDATE sale SET status = 'CANCELLED', cancelled_by = :by, cancelled_at = now(), cancel_reason = :r WHERE id = :id")
+                .param("by", actor.employeeId())
+                .param("r", why)
+                .param("id", sale.id())
+                .update();
+        parties.record(new PartyLedger.DocRef(DOC_TYPE, sale.id(), sale.number()), sale.branchId(), sale.customerId(), PartyLedger.Side.CUSTOMER,
+                new Money(sale.total().negate()), null, "Yetkazilmadi: " + why);
+        jdbc.sql("""
+                INSERT INTO sales_return_pending (order_id, sale_id, batch_id, product_id, warehouse_id, qty)
+                SELECT :o, :s, batch_id, product_id, :w, sum(qty) FROM sale_line WHERE sale_id = :s GROUP BY batch_id, product_id""")
+                .param("o", orderId)
+                .param("s", sale.id())
+                .param("w", sale.warehouseId())
+                .update();
+        jdbc.sql("""
+                UPDATE sales_order_mark SET status = 'RELEASED', closed_by = :by, closed_at = now(), close_reason = :r
+                WHERE order_id = :o AND status = 'SOLD'""")
+                .param("by", actor.employeeId())
+                .param("r", "Yetkazilmadi: " + why)
+                .param("o", orderId)
+                .update();
+        jdbc.sql("""
+                UPDATE sales_order SET status = 'UNDELIVERED', cancel_reason = :r, status_changed_at = now(), updated_at = now(), version = version + 1
+                WHERE id = :id""")
+                .param("r", why)
+                .param("id", orderId)
+                .update();
+        audit.record(AuditEntry.of("order.undelivered", "sales_order", orderId)
+                .change(Map.of("status", "IN_TRANSIT"), Map.of("status", "UNDELIVERED", "sale", sale.number())).withReason(why));
+    }
+
+    record PendingReturn(long id, long orderId, String orderNumber, String customer, String product, String batch, int qty, java.time.Instant createdAt) {}
+
+    @Transactional(readOnly = true)
+    List<PendingReturn> pendingReturns(Actor actor) {
+        return jdbc.sql("""
+                SELECT r.id, r.order_id, o.number, c.name AS customer, p.name AS product, b.number AS batch, r.qty, r.created_at, o.branch_id
+                FROM sales_return_pending r JOIN sales_order o ON o.id = r.order_id JOIN counterparty c ON c.id = o.customer_id
+                JOIN product p ON p.id = r.product_id JOIN batch b ON b.id = r.batch_id
+                WHERE r.received_at IS NULL ORDER BY r.created_at, r.id""")
+                .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id"))
+                        ? new PendingReturn(rs.getLong("id"), rs.getLong("order_id"), rs.getString("number"), rs.getString("customer"),
+                                rs.getString("product"), rs.getString("batch"), rs.getInt("qty"), rs.getTimestamp("created_at").toInstant())
+                        : null)
+                .list()
+                .stream()
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
+
+    /** Qaytgan tovarni sanab qabul qilish → Karantin (SPEC 5.4). Kam kelsa — muammo yoziladi. */
+    @Transactional
+    void acceptReturn(Actor actor, long returnId, int receivedQty) {
+        record R(long orderId, long saleId, String saleNumber, long batchId, long warehouseId, int qty, long branchId, String orderNumber) {}
+        R r = jdbc.sql("""
+                SELECT r.order_id, r.sale_id, s.number AS sale_number, r.batch_id, r.warehouse_id, r.qty, o.branch_id, o.number AS order_number
+                FROM sales_return_pending r JOIN sale s ON s.id = r.sale_id JOIN sales_order o ON o.id = r.order_id
+                WHERE r.id = :id AND r.received_at IS NULL FOR UPDATE OF r""")
+                .param("id", returnId)
+                .query((rs, n) -> new R(rs.getLong("order_id"), rs.getLong("sale_id"), rs.getString("sale_number"), rs.getLong("batch_id"),
+                        rs.getLong("warehouse_id"), rs.getInt("qty"), rs.getLong("branch_id"), rs.getString("order_number")))
+                .optional()
+                .filter(x -> actor.canAccessBranch(x.branchId()))
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (receivedQty < 0 || receivedQty > r.qty()) {
+            throw MedixException.badRequest("return.qtyInvalid", r.qty());
+        }
+        long quarantine = jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'QUARANTINE' AND active")
+                .param("w", r.warehouseId())
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> MedixException.conflict("receipt.zoneMissing", "Karantin"));
+        if (receivedQty > 0) {
+            stock.post(new StockLedger.DocRef(DOC_TYPE, r.saleId(), r.saleNumber()), List.of(StockLedger.Move.in(quarantine, r.batchId(), receivedQty)));
+        }
+        jdbc.sql("UPDATE sales_return_pending SET received_qty = :q, received_by = :by, received_at = now() WHERE id = :id")
+                .param("q", receivedQty)
+                .param("by", actor.employeeId())
+                .param("id", returnId)
+                .update();
+        if (receivedQty < r.qty()) {
+            jdbc.sql("""
+                    INSERT INTO sales_order_issue (order_id, stage, reason, note, created_by) VALUES (:o, 'UNDELIVERED', 'SHORTAGE', :n, :by)""")
+                    .param("o", r.orderId())
+                    .param("n", "Qaytgan tovar kam: kutilgan " + r.qty() + ", keldi " + receivedQty)
+                    .param("by", actor.employeeId())
+                    .update();
+        }
+        audit.record(AuditEntry.of("order.returnAccept", "sales_order", r.orderId()).change(null, Map.of("expected", r.qty(), "received", receivedQty)));
+    }
 }

@@ -33,7 +33,9 @@ final class TripModels {
     record TripOptions(List<VehicleOption> vehicles, List<DriverOption> drivers) {}
 
     record TripStop(long id, int seq, long orderId, String orderNumber, @Schema(nullable = true) String waybillNumber, String customer,
-            @Schema(nullable = true) String address, int places, String total, @Schema(nullable = true) Instant loadedAt) {}
+            @Schema(nullable = true) String address, @Schema(nullable = true) String phone, String paymentType, int places, String total,
+            @Schema(nullable = true) Instant loadedAt, @Schema(nullable = true, description = "DELIVERED yoki UNDELIVERED") String outcome,
+            @Schema(nullable = true) String outcomeReason, @Schema(nullable = true) String cashCollected, int photos) {}
 
     record TripSummary(long id, String number, long branchId, LocalDate tripDate, TripStatus status, String vehicle,
             @Schema(nullable = true) Integer capacityBoxes, String driver, int orders, int places, String total, Instant createdAt) {}
