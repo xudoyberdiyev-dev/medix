@@ -58,7 +58,7 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await field(page, "Yuridik nomi").fill("Medix TSH MChJ");
   await field(page, "STIR").fill("301234567");
   await page.getByRole("button", { name: "Filial qoʻshish" }).click();
-  await expect(page.getByRole("cell", { name: "Toshkent" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Toshkent", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Davom etish" }).click();
 
   // 3. Ombor
@@ -66,7 +66,7 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await field(page, "Ombor nomi").fill("Markaziy ombor");
   await page.getByText("Sovuq", { exact: true }).click();
   await page.getByRole("button", { name: "Ombor qoʻshish" }).click();
-  await expect(page.getByRole("cell", { name: "Markaziy ombor" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Markaziy ombor", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Davom etish" }).click();
 
   // 4. Rollar
@@ -80,7 +80,7 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await choose(page, "Filial", /Toshkent/);
   await field(page, "Vaqtinchalik parol").fill(OPERATOR_TEMP);
   await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
-  await expect(page.getByRole("cell", { name: "operator.1" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "operator.1", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Davom etish" }).click();
 
   // 6. Yakun
@@ -90,11 +90,11 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
 
   // Sozlamalar → Filiallar, Omborlar, Xodimlar
   await page.goto("/settings/branches");
-  await expect(page.getByRole("cell", { name: "TSH" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "TSH", exact: true })).toBeVisible();
   await page.goto("/settings/warehouses");
   await expect(page.getByText("Markaziy ombor")).toBeVisible();
   await page.goto("/settings/employees");
-  await expect(page.getByRole("cell", { name: "operator.1" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "operator.1", exact: true })).toBeVisible();
   await expect(page.getByText("Parol almashtirilmagan")).toBeVisible();
 
   // Profil: PIN oʻrnatish
