@@ -44,7 +44,11 @@ export function useChangePassword() {
       await ensureCsrf();
       await unwrap(api.POST("/api/auth/password", { body }));
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ME_QUERY_KEY }),
+    // Keshni darhol yangilaymiz: aks holda AuthGate eski `mustChangePassword` ni koʻrib, /password ga qaytaradi.
+    onSuccess: () => {
+      qc.setQueryData<Me>(ME_QUERY_KEY, (me) => (me ? { ...me, mustChangePassword: false } : me));
+      return qc.invalidateQueries({ queryKey: ME_QUERY_KEY });
+    },
   });
 }
 
