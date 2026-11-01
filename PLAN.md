@@ -4,9 +4,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 01.11.2026
-- **Bosqich:** 0 — tugadi (PR #1 develop → main egasi ko'rib chiqishini kutmoqda; PR develop'dagi 1-bosqich ishlarini ham o'z ichiga oladi); 1 — Identifikatsiya ~65%
-- **Oxirgi sessiya:** 01.11.2026 07:00–08:15 — 0.9, 0.10, 1.1, 1.2, 1.4/1.5 (asosi), 1.6, 1.7 (login, parol, usta, xodimlar, audit, menyu). CI yashil.
-- **Keyingi vazifa:** 1.7 qolgani (Filiallar va Omborlar sahifalari, Profil), 1.5 PIN tasdig'i, 1.8 e2e (CI'da backend + frontend + Playwright). 1.3 — T12-topshirish.md kutilmoqda.
+- **Bosqich:** 0 — tugadi; 1 — Identifikatsiya ~90% (faqat 1.3 ruxsatlar katalogi kutilmoqda); 2 — Katalog ~90%; 3 — Narxlar ~60%
+- **PR:** #1 (develop → main) ochiq — 0–3-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
+- **Oxirgi sessiya:** 01.11.2026 12:08–~14:30 — Filiallar/Omborlar/Profil/PIN, e2e, filial tanlagichi; Katalog (ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport); Narxlar (NO hujjati, narx tarixi, ustama). CI yashil.
+- **Keyingi vazifa:** 3-bosqich: Narxlar UI tekshiruvi va «Kirim bo'yicha» rejim (5-bosqichdan keyin), tannarx nazorati (partiyalar bilan). Keyin 4-bosqich — Ombor (partiyalar, StockMove jurnali, StockBalance, Qoldiqlar sahifasi, Muddat nazorati).
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
@@ -17,6 +18,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [ ] (Ixtiyoriy) Bulut muhiti tarmoq sozlamasida Maven Central (`repo.maven.apache.org`), `services.gradle.org` va Docker Hub'ga ruxsat — shunda backend sessiya ichida ham tekshiriladi, CI kutish shart bo'lmaydi.
 
 ## Egasiga savollar
+- **Rollar bo'yicha vaqtinchalik ruxsatlar** (Qarorlar jurnali, 01.11.2026) — 1.3 katalogi kelguncha shunday ishlaydi. Xususan: kontragent limitini kim o'zgartiradi (hozir Direktor/Admin/Filial rahbari), narxni kim o'rnatadi (hozir + Xarid)? Farq bo'lsa yozing.
+- **Yaxlitlash yo'nalishi:** narx 100/500/1000 ga eng yaqin qiymatga yaxlitlanadi (12 340 → 12 300). Doim yuqoriga kerak bo'lsa ayting.
+- **Narx turlari:** «Ulgurji partiya narxi» partiyaga bog'langan tur deb belgilandi. To'g'rimi?
 - **1.3 Ruxsatlar:** 131 ta kalit katalogi `notes/T12-topshirish.md` da — u repoda yo'q va Claude Design artifactlaridan ham topilmadi. Faylni `docs/notes/` ga qo'shing; shungacha ruxsat tekshiruvi rol bo'yicha (`hasRole('DIRECTOR')` va h.k.).
 - **Boshlang'ich CEO hisobi:** production uchun `MEDIX_BOOTSTRAP_LOGIN` va `MEDIX_BOOTSTRAP_PASSWORD` ni server env'iga bering (birinchi kirishda parol almashtiriladi). Repoga yozilmaydi.
 
@@ -45,16 +49,16 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [x] 1.8 e2e (Playwright, CI `e2e` ishi: Postgres + backend jar + `next start`): CEO birinchi kirish → parol → usta → xodim → Sozlamalar → PIN; operator vaqtinchalik parol bilan kiradi, Sozlamalar yopiq
 
 ## 2. Katalog
-- [ ] Mahsulotlar (8 raqamli noyob kod, tarix), pro jadval (qidiruv lotin/kirill, filtrlar, ustunlar, ko'rinishlar, .xlsx eksport, URL filtrlar)
-- [ ] Kichik ma'lumotnomalar (ishlab chiqaruvchi, kategoriya, birlik, hudud, mashina, xarajat moddasi, davlat)
-- [ ] Kontragentlar (bitta STIR — bitta karta, ikki rol) + filial shartlari (limit, muddat, narx turi, minimal muddat, operator)
-- [ ] Mahsulot importi (SmartUp, Apache POI)
+- [x] Mahsulotlar: 8 raqamli tasodifiy kod (o'zgartirish tarixi, eski kod qayta berilmaydi), shtrix-kodlar, IKPU, QQS, min/max, belgilar; pro jadval — qidiruv lotin/kirill (pg_trgm, `SearchText`), filtrlar URL'da, chiplar, saralash, ustunlar menyusi, sahifalash, .xlsx eksport. Qoldi: saqlangan ko'rinishlar, «topilgan joy qator ostida»
+- [x] Kichik ma'lumotnomalar: ishlab chiqaruvchi, kategoriya, birlik, davlat, hudud (boshlang'ich qiymatlar bilan), mashinalar (filial doirasida), xarajat/kirim moddalari (SPEC ro'yxati — standart, o'zgarmaydi)
+- [x] Kontragentlar: bitta STIR/JShShIR — bitta karta, mijoz/YB rollari, bloklash, litsenziyalar (muddati holati), shartnomalar (filial bilan), filial shartlari (limit, to'lov muddati, narx turi, minimal yaroqlilik, operator; YB: muddat, to'lov turi, ta'minot mas'uli)
+- [~] Mahsulot importi (.xlsx, Apache POI): MEDIX shabloni, tekshiruv → yozish, hammasi yoki hech narsa. Qoldi: SmartUp ustunlari (namuna kutilmoqda)
 
 ## 3. Narxlar
-- [ ] 8 narx turi, narx = mahsulot × tur × filial × sana (QQS bilan), NO hujjati va tarix
-- [ ] Narx o'rnatish: «Mahsulot bo'yicha» va «Kirim bo'yicha»; ommaviy ustama, yaxlitlash 100/500/1000
-- [ ] Nazorat: tannarxdan past — Direktor tasdig'i; >20% — ogohlantirish
-- [ ] Narx tanlash qoidasi (partiya → mijoz turi → bazaviy) + testlar
+- [x] 8 narx turi, narx = mahsulot × tur × filial × sana (QQS bilan), NO hujjati (raqam NO-TSH-000001) va tarix (narx jadvali faqat qo'shiladi; yakunlangan NO trigger bilan himoyalangan)
+- [~] Narx o'rnatish «Mahsulot bo'yicha» ✅ (jadvaldan tanlab yoki qator qo'shib), ommaviy ustama (bazaviy/amaldagi narxga, yaxlitlash 100/500/1000) ✅. Qoldi: «Kirim bo'yicha» rejimi va o'rtacha/oxirgi kirim narxiga ustama (5-bosqichdan keyin)
+- [~] Nazorat: >20% — ogohlantirish ✅; Direktor tasdig'i (PIN) oqimi ✅; tannarxdan past narxni aniqlash — partiyalar (4–5-bosqich) bilan
+- [~] Narx tanlash qoidasi `PriceMath.select` (partiya → mijoz turi → bazaviy) + birlik testlari ✅; buyurtmada ishlatish — 6-bosqich
 
 ## 4. Ombor
 - [ ] Partiyalar, harakatlar jurnali (StockMove), StockBalance (zona × partiya), CHECK ≥ 0
@@ -91,6 +95,15 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ---
 
 ## Qarorlar jurnali
+- 01.11.2026 — Filial kodi yaratilgandan keyin o'zgarmaydi (hujjat raqamlarida ishlatiladi). Oxirgi faol filial nofaol qilinmaydi.
+- 01.11.2026 — Omborlarni Filial rahbari ham boshqaradi (o'z filiali) — SPEC 3 «filial sozlamalari». Ombor nofaol qilish: 4-bosqichda qoldiq bo'lsa taqiqlanadi.
+- 01.11.2026 — PIN: 4–6 raqam, 1111/1234 kabi oson PIN rad etiladi, 5 ketma-ket xato → 15 daqiqa qulf (taxmin qilishdan himoya). O'rnatish/almashtirish joriy parol bilan.
+- 01.11.2026 — Profil'da xodim faqat telefonini o'zgartiradi; ism, rol, filial — administrator.
+- 01.11.2026 — Qidiruv: lotin/kirill normalizatsiyasi (Java `SearchText` = TS `lib/search.ts`): kirill→lotin, tutuq belgilarisiz, «ts»→«c», «ks/kh»→«x» (dori nomlari: Парацетамол ≈ Paracetamol). Bazada `search_text` + pg_trgm indeksi.
+- 01.11.2026 — Ruxsatlar (1.3 kelguncha rol bo'yicha): ma'lumotnomalar va mahsulotlar — Direktor/Admin/Xarid; mashinalar — + Filial rahbari, Ombor mudiri; xarajat moddalari — + Buxgalter; kontragent kartasi — Direktor/Admin/Filial rahbari/Buxgalter/Xarid; filial shartlari (limit, narx turi) — Direktor/Admin/Filial rahbari; narx o'rnatish — Direktor/Admin/Xarid/Filial rahbari.
+- 01.11.2026 — Mahsulot importi: hammasi yoki hech narsa; yangi ishlab chiqaruvchi/kategoriya avtomatik qo'shiladi, birlik va davlat esa mavjud bo'lishi shart.
+- 01.11.2026 — NO: tannarxdan past qator bo'lmasa (yoki Direktor o'tkazsa) darhol tasdiqlanadi; o'tib ketgan sana bilan tasdiqlansa narx bugundan kuchga kiradi. Yaxlitlash — eng yaqin 100/500/1000 ga (HALF_UP).
+- 01.11.2026 — Kontragent STIR: 9 raqam (yuridik shaxs) yoki 14 raqam JShShIR (yakka tadbirkor).
 - 01.11.2026 — Ish tartibi: avtonom sessiyalar, `develop` branch, bosqich oxirida PR (egasi qarori).
 - 01.11.2026 — Bulut sessiyasida Maven bloklangani uchun backend CI orqali tekshiriladi.
 - 01.11.2026 — Jadval: kuniga 4 sessiya (07:00, 12:00, 18:00, 23:00); har sessiya boshida xabar, oxirida hisobot. Egasi usage credits ($100 bonus) ishlatishga ruxsat berdi.
@@ -105,5 +118,6 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 01.11.2026 12:08–~14:30 — 1.5 PIN, 1.7 Filiallar/Omborlar/Profil, 1.8 e2e (CI), filial tanlagichi; 2-bosqich: ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport; 3-bosqich: NO hujjati, narxlar. E2E parol almashtirishdan keyingi qayta yo'naltirish xatosini topdi va tuzatildi.
 - 01.11.2026 07:00–08:15 — 0.9, 0.10 (0-bosqich tugadi, PR #1), 1.1 sxema, 1.2 xavfsizlik, 1.4 filial doirasi, 1.5 audit, 1.6 usta API, 1.7 login/parol/usta/xodimlar/audit UI. CI yashil.
 - 01.11.2026 00:30–00:45 — 0-bosqich poydevori qurildi va push qilindi; CI (develop) yashil. Rejali sessiyalar: 07:00, 12:00, 18:00, 23:00 (har biri boshlanganda xabar, oxirida hisobot).
