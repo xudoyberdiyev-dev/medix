@@ -116,4 +116,38 @@ public class StockReservations {
                         rs.getDate("expiry_date").toLocalDate(), rs.getLong("zone_id"), rs.getString("zone"), rs.getInt("qty")))
                 .list();
     }
+
+    /** Qator zahirasini iste'mol qilish (tovar yig'ildi — zahira o'z vazifasini bajardi). */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public int consumeLine(String docType, long docId, long lineId) {
+        return jdbc.sql("""
+                UPDATE stock_reservation SET status = 'CONSUMED', closed_at = now()
+                WHERE doc_type = :t AND doc_id = :d AND doc_line_id = :l AND status = 'ACTIVE'""")
+                .param("t", docType)
+                .param("d", docId)
+                .param("l", lineId)
+                .update();
+    }
+
+    /** Boshqa partiya tanlanganda: shu partiyaning sotuvga ochiq zonalardagi bo'sh (zahirasiz) qoldig'i, qulf bilan. */
+    public record Free(long zoneId, int qty) {}
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<Free> freeOf(long warehouseId, long batchId) {
+        jdbc.sql("SELECT 1 FROM stock_balance WHERE warehouse_id = :w AND batch_id = :b ORDER BY zone_id FOR UPDATE")
+                .param("w", warehouseId)
+                .param("b", batchId)
+                .query((rs, n) -> 1)
+                .list();
+        return jdbc.sql("""
+                SELECT s.zone_id, s.qty - coalesce((SELECT sum(x.qty) FROM stock_reservation x
+                                                    WHERE x.zone_id = s.zone_id AND x.batch_id = s.batch_id AND x.status = 'ACTIVE'), 0) AS qty
+                FROM stock_balance s JOIN zone z ON z.id = s.zone_id JOIN batch b ON b.id = s.batch_id
+                WHERE s.warehouse_id = :w AND s.batch_id = :b AND z.sellable AND z.active AND s.qty > 0 AND b.expiry_date >= current_date
+                ORDER BY s.zone_id""")
+                .param("w", warehouseId)
+                .param("b", batchId)
+                .query((rs, n) -> new Free(rs.getLong("zone_id"), rs.getInt("qty")))
+                .list();
+    }
 }

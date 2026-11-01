@@ -448,4 +448,79 @@ class OrderIT {
         Integer released = tx.execute(s -> reservations.release("BY", 900_001));
         assertThat(released).isEqualTo(2);
     }
+
+    private long zoneOf(long warehouseId, String type) {
+        return jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = :t").param("w", warehouseId).param("t", type).query(Long.class).single();
+    }
+
+    private long qtyIn(long zone, long product) {
+        return jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_balance WHERE zone_id = :z AND product_id = :p")
+                .param("z", zone).param("p", product).query(Long.class).single();
+    }
+
+    @Test
+    void timePickFinishMovesToShippingAndCancelReturns() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        long prod = product(p, "BY Yig'ish", "1000", 0, null, null);
+        long[] batches = new long[2];
+        tx.executeWithoutResult(s -> {
+            batches[0] = ledger.createBatch(prod, "Y-EARLY", null, LocalDate.now().plusMonths(6), Money.of("100"), false, "BQ", null);
+            batches[1] = ledger.createBatch(prod, "Y-LATE", null, LocalDate.now().plusYears(2), Money.of("100"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", prod, "BQ-Y"), List.of(Move.in(p.main(), batches[0], 10), Move.in(p.main(), batches[1], 10)));
+        });
+        long shipping = zoneOf(p.warehouseId(), "SHIPPING");
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+
+        long o1 = draft(operator, order(p, c, new long[][] {{prod, 4}}));
+        send(post("/api/orders/" + o1 + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+        long o2 = draft(operator, order(p, c, new long[][] {{prod, 3}}));
+        send(post("/api/orders/" + o2 + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+
+        // Vaqt berilmagan — boshlab bo'lmaydi; vaqt — faqat Ombor mudiri
+        send(post("/api/orders/" + o1 + "/pick/start"), picker, "").andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("order.noTime"));
+        send(post("/api/orders/" + o1 + "/time"), picker, "{\"pickMinutes\":15}").andExpect(status().isForbidden());
+        send(post("/api/orders/" + o1 + "/time"), keeper, "{\"pickMinutes\":15}").andExpect(jsonPath("$.pickMinutes").value(15));
+        send(post("/api/orders/" + o2 + "/time"), keeper, "{\"pickMinutes\":10}").andExpect(status().isOk());
+        mvc.perform(get("/api/orders/pick-queue").cookie(picker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].id", hasItem((int) o1)));
+
+        // Bitta faol yig'ish
+        send(post("/api/orders/" + o1 + "/pick/start"), picker, "").andExpect(jsonPath("$.status").value("PICKING"));
+        send(post("/api/orders/" + o2 + "/pick/start"), picker, "")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("order.pickerBusy"));
+        Cookie otherPicker = loginAs("PICKER", p.branchId());
+        send(post("/api/orders/" + o1 + "/pick/finish"), otherPicker, "{}").andExpect(status().isForbidden());
+
+        // «Ha, shundan oldim» — FEFO zahira (Y-EARLY) Jo'natish zonasiga
+        send(post("/api/orders/" + o1 + "/pick/finish"), picker, "{}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CHECKING"))
+                .andExpect(jsonPath("$.fefoDeviation").value(false));
+        assertThat(qtyIn(shipping, prod)).isEqualTo(4);
+        assertThat(qtyIn(p.main(), prod)).isEqualTo(16);
+        assertThat(jdbc.sql("SELECT string_agg(status, ',') FROM stock_reservation WHERE doc_type = 'BY' AND doc_id = :o").param("o", o1)
+                        .query(String.class).single())
+                .isEqualTo("CONSUMED");
+
+        // «Boshqa partiyadan oldim» — Y-LATE; ogohlantirish belgisi
+        send(post("/api/orders/" + o2 + "/pick/start"), picker, "").andExpect(status().isOk());
+        long line2 = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o").param("o", o2).query(Long.class).single();
+        send(post("/api/orders/" + o2 + "/pick/finish"), picker, "{\"lines\":[{\"lineId\":" + line2 + ",\"batchId\":" + batches[1] + "}]}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fefoDeviation").value(true));
+        assertThat(qtyIn(shipping, prod)).isEqualTo(7);
+        assertThat(jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_balance WHERE batch_id = :b AND zone_id = :z").param("b", batches[1])
+                        .param("z", p.main()).query(Long.class).single())
+                .isEqualTo(7);
+
+        // Hisobdan o'tkazish bosqichida bekor qilish — tovar olingan zonaga qaytadi
+        send(post("/api/orders/" + o1 + "/cancel"), keeper, "{\"reason\":\"Mijoz voz kechdi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
+        assertThat(qtyIn(shipping, prod)).isEqualTo(3);
+        assertThat(qtyIn(p.main(), prod)).isEqualTo(17);
+    }
 }

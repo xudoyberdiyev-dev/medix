@@ -144,6 +144,12 @@ final class OrderModels {
             @Schema(nullable = true) String cancelledBy,
             @Schema(nullable = true) Instant cancelledAt,
             @Schema(nullable = true) String cancelReason,
+            @Schema(nullable = true, description = "Yig'ish uchun berilgan vaqt, daqiqa") Integer pickMinutes,
+            @Schema(nullable = true) Integer markMinutes,
+            @Schema(nullable = true) String picker,
+            @Schema(nullable = true) Instant pickStartedAt,
+            @Schema(nullable = true) Instant pickFinishedAt,
+            @Schema(description = "Yig'uvchi FEFO taklif qilmagan partiyani olgan") boolean fefoDeviation,
             List<OrderLine> lines) {}
 
     /** Oldingi buyurtmalar (takrorlash uchun). */
@@ -164,4 +170,29 @@ final class OrderModels {
             boolean marked) {}
 
     record CatalogPage(List<CatalogRow> items, long total, int page, int size) {}
+
+    record TimeRequest(
+            @NotNull(message = "{validation.required}") @Min(1) @Max(600) Integer pickMinutes,
+            @Schema(nullable = true) @Min(1) @Max(600) Integer markMinutes) {}
+
+    /** Partiya tasdig'i: batchId bo'sh — «Ha, shundan oldim» (FEFO zahira); to'ldirilgan — «Boshqa partiyadan oldim». */
+    record PickLineConfirm(@NotNull(message = "{validation.required}") Long lineId, @Schema(nullable = true) Long batchId) {}
+
+    record PickFinishRequest(@Schema(nullable = true) List<@Valid PickLineConfirm> lines) {}
+
+    /** Yig'uvchi navbati kartasi (SPEC 5.4). */
+    record PickQueueItem(
+            long id,
+            String number,
+            String customer,
+            OrderStatus status,
+            int lines,
+            long totalQty,
+            boolean marked,
+            @Schema(nullable = true) Integer pickMinutes,
+            @Schema(nullable = true) String picker,
+            @Schema(nullable = true) Long pickerId,
+            @Schema(nullable = true) Instant pickStartedAt,
+            @Schema(nullable = true, description = "Berilgan vaqt tugash payti") Instant deadline,
+            Instant queuedAt) {}
 }

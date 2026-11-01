@@ -23,6 +23,7 @@ import uz.medix.finance.PartyLedger;
 import uz.medix.finance.PartyLedger.CreditState;
 import uz.medix.finance.PartyLedger.Side;
 import uz.medix.inventory.StockAvailability;
+import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockAvailability.Available;
 import uz.medix.inventory.StockReservations;
 import uz.medix.inventory.StockReservations.Allocation;
@@ -67,19 +68,21 @@ class Orders {
 
     private final JdbcClient jdbc;
     private final PriceBook prices;
-    private final StockAvailability stock;
+    private final StockAvailability availability;
     private final PartyLedger parties;
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
     private final Clock clock;
     private final StockReservations reservations;
+    private final StockLedger stock;
 
-    Orders(JdbcClient jdbc, PriceBook prices, StockAvailability stock, PartyLedger parties, AuditLog audit, DocumentSequenceService numbers,
-            Clock clock, StockReservations reservations) {
+    Orders(JdbcClient jdbc, PriceBook prices, StockAvailability availability, PartyLedger parties, AuditLog audit,
+            DocumentSequenceService numbers, Clock clock, StockReservations reservations, StockLedger stock) {
         this.reservations = reservations;
+        this.stock = stock;
         this.jdbc = jdbc;
         this.prices = prices;
-        this.stock = stock;
+        this.availability = availability;
         this.parties = parties;
         this.audit = audit;
         this.numbers = numbers;
@@ -196,7 +199,7 @@ class Orders {
         Map<Long, Product> products = products(ids);
         Map<Long, Quote> quotes = prices.quotes(branchId, t.priceTypeId(), ids, today);
         LocalDate minExpiry = today.plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
-        Map<Long, Available> available = stock.available(warehouseId, ids, minExpiry);
+        Map<Long, Available> available = availability.available(warehouseId, ids, minExpiry);
         Boolean license = controlledLicense(customerId, today);
         Money total = Money.ZERO;
         ApprovalLevel level = null;
@@ -334,18 +337,21 @@ class Orders {
                 String customerTin, Date orderDate, String deliveryType, Date deliveryDate, String address, String paymentType, String note,
                 String status, String approvalLevel, String approvalReasons, BigDecimal total, String createdBy, long createdById,
                 Timestamp createdAt, Timestamp submittedAt, String decidedBy, Timestamp decidedAt, String decisionReason, String cancelledBy,
-                Timestamp cancelledAt, String cancelReason) {}
+                Timestamp cancelledAt, String cancelReason, Integer pickMinutes, Integer markMinutes, String picker, Timestamp pickStartedAt,
+                Timestamp pickFinishedAt, boolean fefoDeviation) {}
         Optional<HeadRow> head = jdbc.sql("""
                 SELECT o.id, o.number, o.branch_id, o.warehouse_id, w.name AS warehouse, o.customer_id, c.name AS customer, c.tin AS customer_tin,
                        o.order_date, o.delivery_type, o.delivery_date, o.address, o.payment_type, o.note, o.status, o.approval_level,
                        o.approval_reasons, o.total, cb.full_name AS created_by, o.created_by AS created_by_id, o.created_at, o.submitted_at,
-                       db.full_name AS decided_by, o.decided_at, o.decision_reason, xb.full_name AS cancelled_by, o.cancelled_at, o.cancel_reason
+                       db.full_name AS decided_by, o.decided_at, o.decision_reason, xb.full_name AS cancelled_by, o.cancelled_at, o.cancel_reason,
+                       o.pick_minutes, o.mark_minutes, pk.full_name AS picker, o.pick_started_at, o.pick_finished_at, o.fefo_deviation
                 FROM sales_order o
                 JOIN warehouse w ON w.id = o.warehouse_id
                 JOIN counterparty c ON c.id = o.customer_id
                 JOIN employee cb ON cb.id = o.created_by
                 LEFT JOIN employee db ON db.id = o.decided_by
                 LEFT JOIN employee xb ON xb.id = o.cancelled_by
+                LEFT JOIN employee pk ON pk.id = o.picker_id
                 WHERE o.id = :id""")
                 .param("id", id)
                 .query(HeadRow.class)
@@ -396,7 +402,8 @@ class Orders {
                 PaymentType.valueOf(h.paymentType()), h.note(), status,
                 h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, priceChanged, ev.credit(), issues,
                 h.createdBy(), h.createdById(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
-                h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), lines));
+                h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
+                instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), lines));
     }
 
     private List<LineRow> lineRows(long orderId) {
@@ -706,6 +713,18 @@ class Orders {
             throw MedixException.conflict("order.cannotCancel", h.status().name());
         }
         reservations.release(DOC_TYPE, id);
+        // Yig'ilgan tovar saqlash zonasiga qaytadi (SPEC 5.2): Jo'natish → olingan zona.
+        List<StockLedger.Move> back = jdbc.sql("""
+                SELECT from_zone_id, to_zone_id, batch_id, sum(qty) AS qty FROM sales_order_pick WHERE order_id = :id
+                GROUP BY from_zone_id, to_zone_id, batch_id ORDER BY from_zone_id, batch_id""")
+                .param("id", id)
+                .query((rs, n) -> List.of(StockLedger.Move.out(rs.getLong("to_zone_id"), rs.getLong("batch_id"), rs.getInt("qty")),
+                        StockLedger.Move.in(rs.getLong("from_zone_id"), rs.getLong("batch_id"), rs.getInt("qty"))))
+                .list()
+                .stream()
+                .flatMap(List::stream)
+                .toList();
+        stock.post(new StockLedger.DocRef(DOC_TYPE, id, h.number()), back);
         jdbc.sql("""
                 UPDATE sales_order SET status = 'CANCELLED', cancelled_by = :by, cancelled_at = now(), cancel_reason = :r, status_changed_at = now(),
                        updated_at = now(), version = version + 1 WHERE id = :id""")

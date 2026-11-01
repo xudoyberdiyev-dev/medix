@@ -37,10 +37,12 @@ import uz.medix.shared.security.CurrentActor;
 class OrderController {
 
     private final Orders orders;
+    private final OrderPicking picking;
     private final CurrentActor currentActor;
 
-    OrderController(Orders orders, CurrentActor currentActor) {
+    OrderController(Orders orders, OrderPicking picking, CurrentActor currentActor) {
         this.orders = orders;
+        this.picking = picking;
         this.currentActor = currentActor;
     }
 
@@ -149,6 +151,37 @@ class OrderController {
     @Operation(summary = "Qoralamaga qaytarish", description = "Faqat «Tasdiqlashda» holatidan.")
     OrderDetail returnToDraft(@PathVariable long id, Authentication auth) {
         orders.returnToDraft(actor(), id, has(auth, "approvals.branch") || has(auth, "approvals.director"));
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/time")
+    @PreAuthorize("hasAuthority('orders.queue')")
+    @Operation(summary = "Vaqt berish", description = "Yig'ish va markirovka uchun daqiqa (har buyurtmaga alohida). Faqat «Navbatda».")
+    OrderDetail giveTime(@PathVariable long id, @Valid @RequestBody OrderModels.TimeRequest r) {
+        picking.giveTime(actor(), id, r.pickMinutes(), r.markMinutes());
+        return detail(id);
+    }
+
+    @GetMapping("/pick-queue")
+    @PreAuthorize("hasAnyAuthority('picking.do', 'orders.queue')")
+    @Operation(summary = "Yig'uvchi navbati", description = "Vaqt berilgan «Navbatda» va «Yig'ilmoqda» buyurtmalar.")
+    List<OrderModels.PickQueueItem> pickQueue() {
+        return picking.queue(actor());
+    }
+
+    @PostMapping("/{id}/pick/start")
+    @PreAuthorize("hasAuthority('picking.do')")
+    @Operation(summary = "Yig'ishni boshlash", description = "Bir yig'uvchida bitta faol buyurtma.")
+    OrderDetail pickStart(@PathVariable long id) {
+        picking.start(actor(), id);
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/pick/finish")
+    @PreAuthorize("hasAuthority('picking.do')")
+    @Operation(summary = "Yig'ishni yakunlash", description = "Partiya tasdig'i; tovar Jo'natish zonasiga o'tadi.")
+    OrderDetail pickFinish(@PathVariable long id, @Valid @RequestBody OrderModels.PickFinishRequest r) {
+        picking.finish(actor(), id, r.lines());
         return detail(id);
     }
 
