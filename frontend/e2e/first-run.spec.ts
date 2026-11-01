@@ -281,4 +281,10 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await field(page, "Joylar soni").fill("1");
   await page.getByRole("button", { name: "Hisobdan oʻtkazish" }).click();
   await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // Ombor monitori: buyurtma «Hujjatlashtirilmoqda» ustunida
+  await page.goto("/warehouse");
+  await expect(page.getByRole("heading", { name: "Ombor monitori" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Hujjatlashtirilmoqda" })).toContainText("Shifo Dorixona E2E");
 });
