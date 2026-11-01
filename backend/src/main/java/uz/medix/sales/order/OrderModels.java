@@ -81,7 +81,16 @@ final class OrderModels {
             @Schema(nullable = true) Integer minQty,
             @Schema(nullable = true) Integer maxQty,
             boolean controlled,
-            boolean marked) {}
+            boolean marked,
+            @Schema(description = "FEFO zahira (Navbatda va keyin)") List<ReservedBatch> reserved) {
+
+        OrderLine withReserved(List<ReservedBatch> r) {
+            return new OrderLine(id, lineNo, productId, productCode, productName, manufacturer, qty, price, currentPrice, amount, priceType,
+                    available, nearestExpiry, minQty, maxQty, controlled, marked, r);
+        }
+    }
+
+    record ReservedBatch(String batch, LocalDate expiryDate, String zone, int qty) {}
 
     record OrderSummary(
             long id,

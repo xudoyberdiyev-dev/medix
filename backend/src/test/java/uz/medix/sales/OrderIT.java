@@ -244,7 +244,12 @@ class OrderIT {
         send(post("/api/orders/" + doc + "/submit"), operator, "")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("QUEUED"))
-                .andExpect(jsonPath("$.total").value("26000.00"));
+                .andExpect(jsonPath("$.total").value("26000.00"))
+                .andExpect(jsonPath("$.lines[0].reserved[0].qty").value(10))
+                .andExpect(jsonPath("$.lines[0].reserved[0].batch").value("S-" + a));
+        // Zahira mavjud qoldiqdan ayriladi
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin").cookie(operator))
+                .andExpect(jsonPath("$.items[0].available").value(40));
         // Tasdiqlangan buyurtmada narx muzlatiladi
         setPrice(p, a, "9999");
         mvc.perform(get("/api/orders/" + doc).cookie(operator))
@@ -262,7 +267,10 @@ class OrderIT {
         Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
         send(post("/api/orders/" + doc + "/cancel"), keeper, "{\"reason\":\"Mijoz voz kechdi\"}")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.lines[0].reserved.length()").value(0));
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin").cookie(operator))
+                .andExpect(jsonPath("$.items[0].available").value(50));
     }
 
     @Test
@@ -386,5 +394,57 @@ class OrderIT {
         assertThat(jdbc.sql("SELECT count(*) FROM stock_move WHERE batch_id IN (SELECT id FROM batch WHERE product_id = :p) AND doc_type <> 'BQ'")
                         .param("p", a).query(Long.class).single())
                 .isZero();
+    }
+
+    @Autowired
+    uz.medix.inventory.StockReservations reservations;
+
+    @Test
+    void fefoAndParallelReservationsNeverOverbook() throws Exception {
+        Place p = place();
+        loginAs("OPERATOR", p.branchId());
+        long prod = product(p, "BY FEFO", "100", 0, null, null);
+        tx.executeWithoutResult(s -> {
+            long late = ledger.createBatch(prod, "LATE", null, LocalDate.now().plusYears(3), Money.of("100"), false, "BQ", null);
+            long early = ledger.createBatch(prod, "EARLY", null, LocalDate.now().plusMonths(8), Money.of("100"), false, "BQ", null);
+            long expired = ledger.createBatch(prod, "OLD", null, LocalDate.now().minusDays(1), Money.of("100"), false, "BQ", null);
+            long quarantined = ledger.createBatch(prod, "Q", null, LocalDate.now().plusMonths(2), Money.of("100"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", prod, "BQ-FEFO"), List.of(Move.in(p.main(), late, 6), Move.in(p.main(), early, 4),
+                    Move.in(p.main(), expired, 50), Move.in(p.quarantine(), quarantined, 50)));
+        });
+        // FEFO: avval eng yaqin muddat (EARLY 4), keyin LATE; muddati o'tgan va Karantin — yo'q
+        var first = tx.execute(s -> reservations.reserve("BY", 900_001, "BY-T-1", p.warehouseId(), today(),
+                List.of(new uz.medix.inventory.StockReservations.Request(1, prod, 5, "BY FEFO"))));
+        assertThat(first).extracting(a -> a.batchNumber() + ":" + a.qty()).containsExactly("EARLY:4", "LATE:1");
+
+        // Qolgan 5 dona — 6 ta parallel so'rov (har biri 2): aniq 2 tasi muvaffaqiyatli
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(6);
+        var start = new java.util.concurrent.CountDownLatch(1);
+        var ok = new java.util.concurrent.atomic.AtomicInteger();
+        List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            long doc = 900_100 + i;
+            futures.add(pool.submit(() -> {
+                start.await();
+                try {
+                    tx.executeWithoutResult(s -> reservations.reserve("BY", doc, "BY-T-" + doc, p.warehouseId(), today(),
+                            List.of(new uz.medix.inventory.StockReservations.Request(doc, prod, 2, "BY FEFO"))));
+                    ok.incrementAndGet();
+                } catch (uz.medix.shared.error.MedixException e) {
+                    // yetmadi
+                }
+                return null;
+            }));
+        }
+        start.countDown();
+        for (var f : futures) {
+            f.get(60, java.util.concurrent.TimeUnit.SECONDS);
+        }
+        pool.shutdown();
+        assertThat(ok.get()).isEqualTo(2);
+        assertThat(jdbc.sql("SELECT sum(qty) FROM stock_reservation WHERE product_id = :p AND status = 'ACTIVE'").param("p", prod)
+                        .query(Long.class).single())
+                .isEqualTo(9);
+        assertThat(tx.execute(s -> reservations.release("BY", 900_001))).isEqualTo(2);
     }
 }

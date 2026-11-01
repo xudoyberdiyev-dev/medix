@@ -24,6 +24,8 @@ import uz.medix.finance.PartyLedger.CreditState;
 import uz.medix.finance.PartyLedger.Side;
 import uz.medix.inventory.StockAvailability;
 import uz.medix.inventory.StockAvailability.Available;
+import uz.medix.inventory.StockReservations;
+import uz.medix.inventory.StockReservations.Allocation;
 import uz.medix.pricing.PriceBook;
 import uz.medix.pricing.PriceBook.Quote;
 import uz.medix.sales.order.OrderModels.ApprovalLevel;
@@ -57,6 +59,7 @@ import uz.medix.shared.security.Actor;
 class Orders {
 
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
+    static final String DOC_TYPE = "BY";
     static final BigDecimal LIMIT_BRANCH_PCT = BigDecimal.valueOf(20);
     static final int OVERDUE_DIRECTOR_DAYS = 30;
     static final Set<OrderStatus> CANCEL_BY_WAREHOUSE = Set.of(OrderStatus.QUEUED, OrderStatus.PICKING, OrderStatus.MARKING,
@@ -69,9 +72,11 @@ class Orders {
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
     private final Clock clock;
+    private final StockReservations reservations;
 
     Orders(JdbcClient jdbc, PriceBook prices, StockAvailability stock, PartyLedger parties, AuditLog audit, DocumentSequenceService numbers,
-            Clock clock) {
+            Clock clock, StockReservations reservations) {
+        this.reservations = reservations;
         this.jdbc = jdbc;
         this.prices = prices;
         this.stock = stock;
@@ -370,8 +375,14 @@ class Orders {
             lines.add(new OrderLine(r.id(), r.lineNo(), r.productId(), p.code(), p.name(), p.manufacturer(), r.qty(),
                     stored == null ? null : stored.toString(), current == null ? null : current.toString(),
                     shown == null ? null : shown.times(r.qty()).toString(), r.priceType(), a == null ? 0 : a.qty(),
-                    a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked()));
+                    a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked(), List.of()));
         }
+        Map<Long, List<OrderModels.ReservedBatch>> reserved = new HashMap<>();
+        for (Allocation a : reservations.active(DOC_TYPE, id)) {
+            reserved.computeIfAbsent(a.lineId(), k -> new ArrayList<>())
+                    .add(new OrderModels.ReservedBatch(a.batchNumber(), a.expiry(), a.zone(), a.qty()));
+        }
+        lines = lines.stream().map(l -> l.withReserved(reserved.getOrDefault(l.id(), List.of()))).toList();
         List<OrderIssue> issues = draft ? new ArrayList<>(ev.issues()) : List.of();
         if (draft && priceChanged) {
             issues.add(new OrderIssue(IssueLevel.WARNING, "order.priceChanged",
@@ -428,9 +439,11 @@ class Orders {
         // Sotuvga mavjud qoldiq (StockAvailability bilan bir xil qoida) — o'qish modeli.
         String from = " " + """
                 FROM product p LEFT JOIN manufacturer mf ON mf.id = p.manufacturer_id
-                LEFT JOIN (SELECT s.product_id, sum(s.qty) AS qty, min(b.expiry_date) AS nearest
+                LEFT JOIN (SELECT s.product_id, sum(s.qty - coalesce(r.qty, 0)) AS qty, min(b.expiry_date) AS nearest
                            FROM stock_balance s JOIN batch b ON b.id = s.batch_id JOIN zone z ON z.id = s.zone_id
-                           WHERE s.warehouse_id = :w AND s.qty > 0 AND z.sellable AND z.active AND b.expiry_date >= :min
+                           LEFT JOIN (SELECT zone_id, batch_id, sum(qty) AS qty FROM stock_reservation WHERE status = 'ACTIVE'
+                                      GROUP BY zone_id, batch_id) r ON r.zone_id = s.zone_id AND r.batch_id = s.batch_id
+                           WHERE s.warehouse_id = :w AND s.qty > coalesce(r.qty, 0) AND z.sellable AND z.active AND b.expiry_date >= :min
                            GROUP BY s.product_id) a ON a.product_id = p.id
                 """;
         long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
@@ -597,6 +610,9 @@ class Orders {
                     .update();
         }
         OrderStatus next = ev.level() == null ? OrderStatus.QUEUED : OrderStatus.PENDING_APPROVAL;
+        if (next == OrderStatus.QUEUED) {
+            reserve(h, rows, ev);
+        }
         jdbc.sql("""
                 UPDATE sales_order SET status = :s, total = :t, approval_level = :lvl, approval_reasons = :rs, submitted_at = now(),
                        queued_at = CASE WHEN :s = 'QUEUED' THEN now() ELSE NULL END, decided_by = NULL, decided_at = NULL, decision_reason = NULL,
@@ -622,6 +638,9 @@ class Orders {
         if (level == ApprovalLevel.DIRECTOR ? !directorRight : !(branchRight || directorRight)) {
             throw MedixException.forbidden(level == ApprovalLevel.DIRECTOR ? "order.directorOnly" : "order.approveForbidden");
         }
+        List<LineRow> rows = lineRows(id);
+        reserve(h, rows, evaluate(h.branchId(), h.warehouseId(), h.customerId(),
+                rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList()));
         jdbc.sql("""
                 UPDATE sales_order SET status = 'QUEUED', decided_by = :by, decided_at = now(), queued_at = now(), status_changed_at = now(),
                        updated_at = now(), version = version + 1 WHERE id = :id""")
@@ -686,6 +705,7 @@ class Orders {
         } else {
             throw MedixException.conflict("order.cannotCancel", h.status().name());
         }
+        reservations.release(DOC_TYPE, id);
         jdbc.sql("""
                 UPDATE sales_order SET status = 'CANCELLED', cancelled_by = :by, cancelled_at = now(), cancel_reason = :r, status_changed_at = now(),
                        updated_at = now(), version = version + 1 WHERE id = :id""")
@@ -695,6 +715,15 @@ class Orders {
                 .update();
         audit.record(AuditEntry.of("order.cancel", "sales_order", id)
                 .change(Map.of("status", h.status().name()), Map.of("status", OrderStatus.CANCELLED.name())).withReason(reason.strip()));
+    }
+
+    /** FEFO zahira (SPEC 6-7): «Navbatda»ga o'tishda — sotuvga ochiq zona va mijozning minimal yaroqlilik talabi bilan. */
+    private void reserve(Head h, List<LineRow> rows, Evaluation ev) {
+        Terms t = terms(h.customerId(), h.branchId());
+        LocalDate minExpiry = today().plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
+        reservations.reserve(DOC_TYPE, h.id(), h.number(), h.warehouseId(), minExpiry, rows.stream()
+                .map(r -> new StockReservations.Request(r.id(), r.productId(), r.qty(), ev.products().get(r.productId()).name()))
+                .toList());
     }
 
     // ===== Ichki =====

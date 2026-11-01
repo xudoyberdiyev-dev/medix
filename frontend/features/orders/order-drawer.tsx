@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, History, Info, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
+import { Check, CircleAlert, History, Info, LayoutList, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,7 @@ import {
   type OrderIssue,
   type OrderRequest,
 } from "./api";
+import { CatalogDialog } from "./catalog-dialog";
 import { OrderStatusBadge, day } from "./orders-page";
 
 const KIND = "Buyurtma";
@@ -99,7 +100,7 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
   );
   const [adding, setAdding] = useState<{ product: string | null; qty: string }>({ product: null, qty: "" });
   const [local, setLocal] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<"repeat" | "reject" | "cancel" | null>(null);
+  const [dialog, setDialog] = useState<"catalog" | "repeat" | "reject" | "cancel" | null>(null);
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const err = describeError(save.error ?? submit.error ?? approve.error ?? back.error);
 
@@ -253,7 +254,7 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
   return (
     <Drawer
       open
-      onClose={onClose}
+      onClose={dialog ? () => undefined : onClose}
       size="lg"
       kind={doc ? `${KIND} · ${doc.createdBy}` : KIND}
       title={doc ? doc.number : "Yangi buyurtma"}
@@ -354,6 +355,15 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
             <Button variant="tertiary" icon={History} disabled={!customer} onClick={() => setDialog("repeat")}>
               Oldingi buyurtmani takrorlash
             </Button>
+            <Button
+              variant="tertiary"
+              icon={LayoutList}
+              disabled={!warehouseId}
+              onClick={() => setDialog("catalog")}
+              className="col-span-4 justify-self-start"
+            >
+              Katalogdan tanlash (qoldiq va narx bilan)
+            </Button>
           </div>
         ) : null}
 
@@ -443,6 +453,28 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
           </table>
         </div>
       </div>
+      {dialog === "catalog" && warehouseId ? (
+        <CatalogDialog
+          warehouseId={Number(warehouseId)}
+          customerId={customer ? Number(customer) : null}
+          header={`${doc?.number ?? "Yangi buyurtma"} · ${customerLabel || "mijoz tanlanmagan"} · ${
+            activeWarehouses.find((w) => String(w.id) === warehouseId)?.name ?? ""
+          } · ${formatQuantity(lines.length)} qator`}
+          onClose={() => setDialog(null)}
+          onAdd={(picked) => {
+            setLines((ls) => {
+              const next = [...ls];
+              for (const p of picked) {
+                const i = next.findIndex((x) => x.productId === p.productId);
+                if (i >= 0) next[i] = { ...next[i], qty: String(Number(next[i].qty) + Number(p.qty)) };
+                else next.push(p);
+              }
+              return next;
+            });
+            setDialog(null);
+          }}
+        />
+      ) : null}
       {dialog === "repeat" && customer ? (
         <RepeatDialog
           customerId={Number(customer)}
