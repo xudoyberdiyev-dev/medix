@@ -12,7 +12,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
 - [ ] Telegram: `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` ni repo Secrets'ga qo'shish.
-- [ ] Claude Design'dagi `notes/T12-topshirish.md` (131 ruxsat kaliti, ma'lumot tuzilmalari) va `notes/T12-audit.md` ni repoga (`docs/notes/`) yoki shu chatga qo'shish — 1-bosqich 1.3 uchun kerak.
+- [x] `notes/T12-topshirish.md`, `T12-audit.md` va boshqa notes — `docs/notes/` ga qo'shildi (01.11.2026, egasi yubordi).
 - [ ] `MEDIX_ozgarishlar.md` (qarorlar tarixi) — `docs/` ga.
 - [ ] SmartUp'dan 2–3 qatorli namuna eksport (mahsulotlar, qoldiqlar, qarzlar) — 4 va 11-bosqich uchun.
 - [ ] (Ixtiyoriy) Bulut muhiti tarmoq sozlamasida Maven Central (`repo.maven.apache.org`), `services.gradle.org` va Docker Hub'ga ruxsat — shunda backend sessiya ichida ham tekshiriladi, CI kutish shart bo'lmaydi.
