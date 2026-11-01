@@ -2315,6 +2315,101 @@
         "tags" : [ "roles" ]
       }
     },
+    "/api/roles/matrix" : {
+      "get" : {
+        "description" : "Barcha rollar, 132 ruxsat kaliti va rol → kalitlar.",
+        "operationId" : "matrix",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Matrix"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ruxsatlar matritsasi",
+        "tags" : [ "roles" ]
+      }
+    },
+    "/api/roles/{code}/copy" : {
+      "post" : {
+        "operationId" : "copy",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CopyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Role"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Rol nusxasi",
+        "tags" : [ "roles" ]
+      }
+    },
+    "/api/roles/{code}/permissions" : {
+      "put" : {
+        "description" : "Direktor roli himoyalangan. Xodimning keyingi kirishida kuchga kiradi.",
+        "operationId" : "setPermissions",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PermissionsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Matrix"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Rol ruxsatlarini saqlash",
+        "tags" : [ "roles" ]
+      }
+    },
     "/api/setup" : {
       "get" : {
         "operationId" : "status",
@@ -3173,6 +3268,17 @@
         },
         "required" : [ "branchId", "number" ]
       },
+      "CopyRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
       "CounterpartyDetail" : {
         "type" : "object",
         "properties" : {
@@ -3933,6 +4039,34 @@
         },
         "required" : [ "base", "branchId", "percent", "priceTypeId", "productIds", "rounding" ]
       },
+      "Matrix" : {
+        "type" : "object",
+        "properties" : {
+          "grants" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "description" : "Rol kodi → ruxsat kalitlari"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Permission"
+            }
+          },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Role"
+            }
+          }
+        },
+        "required" : [ "grants", "permissions", "roles" ]
+      },
       "MeResponse" : {
         "type" : "object",
         "properties" : {
@@ -3969,6 +4103,34 @@
           }
         },
         "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
+      },
+      "Permission" : {
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          },
+          "key" : {
+            "type" : "string"
+          },
+          "module" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "description", "key", "module" ]
+      },
+      "PermissionsRequest" : {
+        "type" : "object",
+        "properties" : {
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "permissions" ]
       },
       "PinRequest" : {
         "type" : "object",

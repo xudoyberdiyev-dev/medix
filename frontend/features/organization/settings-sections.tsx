@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, CircleUser, ScrollText, Settings2, Users, Warehouse } from "lucide-react";
+import { Building2, CircleUser, ScrollText, Settings2, ShieldCheck, Users, Warehouse } from "lucide-react";
 import Link from "next/link";
 import { useMe } from "@/features/auth/session";
 
@@ -26,6 +26,13 @@ export const SETTINGS_SECTIONS: { href: string; icon: typeof Users; title: strin
     title: "Xodimlar",
     description: "Loginlar, rollar, bloklash, vaqtinchalik parol",
     anyOf: ["staff.view"],
+  },
+  {
+    href: "/settings/roles",
+    icon: ShieldCheck,
+    title: "Rollar va ruxsatlar",
+    description: "11 rol, 132 ruxsat kaliti, rol nusxasi",
+    anyOf: ["roles.view"],
   },
   {
     href: "/settings/audit",
