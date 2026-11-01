@@ -4,7 +4,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 01.11.2026
-- **Bosqich:** 0 — Loyiha poydevori (0.1–0.8 tayyor, CI yashil)
+- **Bosqich:** 0 — tugadi (PR develop → main egasi ko'rib chiqishini kutmoqda); 1 — Identifikatsiya boshlandi
 - **Oxirgi sessiya:** 01.11.2026 ~00:30 — poydevor qurildi (backend skeleti, frontend qobig'i, CI, Docker Compose).
 - **Keyingi vazifa:** 0.9 (OpenAPI → TS mijoz), 0.10 (UI komponentlari asosi), keyin 1-bosqich 1.1.
 
@@ -30,8 +30,8 @@ _(hozircha yo'q)_
 - [x] 0.6 GitHub Actions CI (backend build+test, frontend format/lint/typecheck/test/build), CI yiqilsa Telegram ogohlantirish
 - [x] 0.7 Telegram hisobot workflow (`reports/*.md` → Telegram)
 - [x] 0.8 CI birinchi marta yashil (backend: build + testlar Testcontainers bilan; frontend: format/lint/typecheck/test/build)
-- [ ] 0.9 OpenAPI → TypeScript mijoz generatsiyasi (`openapi-typescript` + `openapi-fetch`), TanStack Query provayderi
-- [ ] 0.10 Medix UI komponentlari asosi: Badge, TextField, Select, Table (TanStack), Modal, Drawer, Toast, Alert, Tabs, Pagination, SystemStates — `design/system/components.d.ts` shartnomasiga mos
+- [x] 0.9 OpenAPI → TypeScript mijoz generatsiyasi (`openapi-typescript` + `openapi-fetch`), TanStack Query provayderi. Backend test `build/openapi/openapi.json` yozadi, CI uni `frontend/lib/api/openapi.json` bilan solishtiradi (farq bo'lsa logda to'liq tavsif chiqadi → ko'chirib `pnpm api:gen`)
+- [x] 0.10 Medix UI komponentlari asosi: Badge, TextField, Select, Table (TanStack), Modal, Drawer, Toast, Alert, Tabs, Pagination, SystemStates — `design/system/components.d.ts` shartnomasiga mos
 
 ## 1. Identifikatsiya
 - [ ] 1.1 Flyway: company, branch (kod TSH/SMQ/BXR/FRG, STIR), warehouse, zone (tur, sotuvga ochiqmi), employee, role, permission, role_permission, audit_log (faqat qo'shiladigan, trigger), spring_session
