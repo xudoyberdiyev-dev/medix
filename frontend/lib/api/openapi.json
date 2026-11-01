@@ -18,6 +18,9 @@
     "description" : "Mashinalar",
     "name" : "vehicles"
   }, {
+    "description" : "Buyurtmalar",
+    "name" : "orders"
+  }, {
     "description" : "Qoldiqlar",
     "name" : "stock"
   }, {
@@ -66,7 +69,7 @@
   "paths" : {
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -210,7 +213,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "responses" : {
           "200" : {
             "content" : {
@@ -230,7 +233,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_10",
+        "operationId" : "create_11",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -260,7 +263,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_9",
+        "operationId" : "update_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -366,7 +369,7 @@
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -443,7 +446,7 @@
         "tags" : [ "counterparties" ]
       },
       "post" : {
-        "operationId" : "create_9",
+        "operationId" : "create_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -472,7 +475,7 @@
     },
     "/api/counterparties/{id}" : {
       "get" : {
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -498,7 +501,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_8",
+        "operationId" : "update_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -884,7 +887,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -913,7 +916,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_8",
+        "operationId" : "create_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -951,7 +954,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_7",
+        "operationId" : "update_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -1070,7 +1073,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "responses" : {
           "200" : {
             "content" : {
@@ -1092,7 +1095,7 @@
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "responses" : {
           "200" : {
             "content" : {
@@ -1112,7 +1115,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_7",
+        "operationId" : "create_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1246,7 +1249,7 @@
     },
     "/api/expense-items" : {
       "get" : {
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "responses" : {
           "200" : {
             "content" : {
@@ -1266,7 +1269,7 @@
         "tags" : [ "expense-items" ]
       },
       "post" : {
-        "operationId" : "create_6",
+        "operationId" : "create_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1389,7 +1392,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "responses" : {
           "200" : {
             "content" : {
@@ -1441,7 +1444,7 @@
     },
     "/api/opening-balances" : {
       "get" : {
-        "operationId" : "list_5",
+        "operationId" : "list_6",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -1494,7 +1497,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BQ-TSH-000001). Qoralama qoldiqqa ta'sir qilmaydi.",
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1535,7 +1538,7 @@
     },
     "/api/opening-balances/{id}" : {
       "get" : {
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1562,7 +1565,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_6",
+        "operationId" : "update_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1601,7 +1604,7 @@
     "/api/opening-balances/{id}/cancel" : {
       "post" : {
         "description" : "Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.",
-        "operationId" : "cancel_2",
+        "operationId" : "cancel_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1717,6 +1720,401 @@
         },
         "summary" : "O'tkazish",
         "tags" : [ "opening" ]
+      }
+    },
+    "/api/orders" : {
+      "get" : {
+        "operationId" : "list_5",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "mine",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buyurtmalar",
+        "tags" : [ "orders" ]
+      },
+      "post" : {
+        "description" : "Raqam darhol beriladi (BY-TSH-000001). Qoldiq va qarzga ta'sir qilmaydi.",
+        "operationId" : "create_5",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OrderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Buyurtma qoralamasi",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/default-payment-type" : {
+      "get" : {
+        "description" : "Mijozning oxirgi buyurtmasidan, bo'lmasa Perechisleniye.",
+        "operationId" : "defaultPaymentType",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "To'lov turi standarti",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/previous" : {
+      "get" : {
+        "description" : "«Oldingi buyurtmani takrorlash» uchun.",
+        "operationId" : "previous",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PreviousOrder"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijozning oxirgi 5 ta buyurtmasi",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}" : {
+      "get" : {
+        "description" : "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.",
+        "operationId" : "get_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buyurtma",
+        "tags" : [ "orders" ]
+      },
+      "put" : {
+        "operationId" : "update_6",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OrderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani tahrirlash",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/approve" : {
+      "post" : {
+        "operationId" : "approve_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tasdiqlash",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/cancel" : {
+      "post" : {
+        "description" : "Sabab majburiy. «Yo'lda» va undan keyin bekor qilinmaydi.",
+        "operationId" : "cancel_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OrderReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekor qilish",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/reject" : {
+      "post" : {
+        "operationId" : "reject_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OrderReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Rad etish",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/return" : {
+      "post" : {
+        "description" : "Faqat «Tasdiqlashda» holatidan.",
+        "operationId" : "returnToDraft",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamaga qaytarish",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/submit" : {
+      "post" : {
+        "description" : "Xato bo'lsa — yuborilmaydi; tasdiq sababi bo'lsa — tasdiqqa, aks holda — Navbatga.",
+        "operationId" : "submit_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yuborish",
+        "tags" : [ "orders" ]
       }
     },
     "/api/price-changes" : {
@@ -2044,7 +2442,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "responses" : {
           "200" : {
             "content" : {
@@ -2940,7 +3338,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "responses" : {
           "200" : {
             "content" : {
@@ -3250,7 +3648,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4453,6 +4851,46 @@
         },
         "required" : [ "headerName", "token" ]
       },
+      "CustomerCredit" : {
+        "type" : "object",
+        "properties" : {
+          "blocked" : {
+            "type" : "boolean"
+          },
+          "controlledLicense" : {
+            "type" : "boolean",
+            "description" : "Nazoratdagi preparatlar litsenziyasi amal qiladi"
+          },
+          "creditLimit" : {
+            "type" : "string"
+          },
+          "debt" : {
+            "type" : "string"
+          },
+          "limitLeft" : {
+            "type" : "string"
+          },
+          "minShelfLifeDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "overdueDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "paymentDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "priceType" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "blocked", "debt", "overdue", "overdueDays" ]
+      },
       "DeactivateRequest" : {
         "type" : "object",
         "properties" : {
@@ -5319,6 +5757,381 @@
         },
         "required" : [ "branchId", "createdAt", "createdBy", "cutoffDate", "id", "lines", "number", "source", "status", "totalQty", "warehouse", "warehouseId" ]
       },
+      "OrderDetail" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "approvalLevel" : {
+            "type" : "string",
+            "enum" : [ "BRANCH", "DIRECTOR" ]
+          },
+          "approvalReasons" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdById" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "credit" : {
+            "$ref" : "#/components/schemas/CustomerCredit"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customerTin" : {
+            "type" : "string"
+          },
+          "decidedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "decidedBy" : {
+            "type" : "string"
+          },
+          "decisionReason" : {
+            "type" : "string"
+          },
+          "deliveryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "deliveryType" : {
+            "type" : "string",
+            "enum" : [ "DELIVERY", "PICKUP" ]
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "issues" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OrderIssue"
+            }
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OrderLine"
+            }
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "orderDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "paymentType" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "priceChanged" : {
+            "type" : "boolean",
+            "description" : "Qoralamada narx o'zgargan qatorlar bor"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          },
+          "submittedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "total" : {
+            "type" : "string"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "status", "total", "warehouse", "warehouseId" ]
+      },
+      "OrderIssue" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "level" : {
+            "type" : "string",
+            "enum" : [ "ERROR", "APPROVAL", "WARNING" ]
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "level", "message" ]
+      },
+      "OrderLine" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "available" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sotuvga mavjud qoldiq"
+          },
+          "controlled" : {
+            "type" : "boolean"
+          },
+          "currentPrice" : {
+            "type" : "string",
+            "description" : "Hozirgi narx (qoralamada)"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "maxQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "nearestExpiry" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "price" : {
+            "type" : "string",
+            "description" : "Muzlatilgan yoki oxirgi saqlangan narx"
+          },
+          "priceType" : {
+            "type" : "string"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "available", "controlled", "id", "lineNo", "marked", "productCode", "productId", "productName", "qty" ]
+      },
+      "OrderLineRequest" : {
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 1000000,
+            "minimum" : 1
+          }
+        },
+        "required" : [ "productId", "qty" ]
+      },
+      "OrderPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OrderSummary"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "OrderReasonRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
+      "OrderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "deliveryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "deliveryType" : {
+            "type" : "string",
+            "enum" : [ "DELIVERY", "PICKUP" ]
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OrderLineRequest"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "paymentType" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "customerId", "deliveryType", "lines", "paymentType", "warehouseId" ]
+      },
+      "OrderSummary" : {
+        "type" : "object",
+        "properties" : {
+          "approvalLevel" : {
+            "type" : "string",
+            "enum" : [ "BRANCH", "DIRECTOR" ]
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "deliveryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "deliveryType" : {
+            "type" : "string",
+            "enum" : [ "DELIVERY", "PICKUP" ]
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "orderDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          },
+          "statusChangedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "total" : {
+            "type" : "string"
+          },
+          "warehouse" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "id", "lines", "number", "orderDate", "status", "statusChangedAt", "total", "warehouse" ]
+      },
       "Permission" : {
         "type" : "object",
         "properties" : {
@@ -5366,6 +6179,30 @@
             "enum" : [ "ACTUAL", "DOCUMENT" ]
           }
         }
+      },
+      "PreviousOrder" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "orderDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "lines", "number", "orderDate", "total" ]
       },
       "PriceChangeDetail" : {
         "type" : "object",

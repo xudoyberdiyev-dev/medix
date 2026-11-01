@@ -229,3 +229,36 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await expect(page.getByRole("row", { name: /KR-E2E-B/ })).toContainText("5");
   await expect(page.getByRole("row", { name: /KR-E2E(?!-B)/ }).first()).toContainText("48");
 });
+
+test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/customers");
+  await page.getByRole("button", { name: "Mijoz qoʻshish" }).click();
+  await field(page, "STIR / JShShIR").fill("305551234");
+  await field(page, "Nomi").fill("Shifo Dorixona E2E");
+  await page.getByRole("button", { name: "Kartani saqlash" }).click();
+  await expect(page.getByText("Kontragent qoʻshildi")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/orders");
+  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("Shifo");
+  await page.getByRole("option", { name: /Shifo Dorixona E2E/ }).click();
+  await choose(page, "Ombor", /Markaziy ombor/);
+  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("E2E");
+  await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
+  await field(page, "Miqdor").first().fill("10");
+  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  await expect(page.getByText("Muammo yoʻq — buyurtmani yuborish mumkin")).toBeVisible();
+  await expect(page.getByText("25.000,00 soʻm")).toBeVisible();
+
+  await page.getByRole("button", { name: "Yuborish" }).click();
+  await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();
+  await expect(page.getByText("Navbatda — ombor yigʻishga tayyorlaydi")).toBeVisible();
+});

@@ -72,9 +72,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [~] Bonus balans: BNS («Bonus tasdiqlandi», summa yoki foiz), bonus hisobidan kirim (qarz yo'q, tannarx 0, «-B»), aksiya (10+1 → alohida «-B» partiya), 100% oldindan to'langan kirim ✅. Qoldi: to'lov kuni va bonus eslatmalari (notification), avans yetmasa ogohlantirish (YT/avans — 9-bosqich)
 
 ## 6. Buyurtma
-- [ ] Buyurtma kiritish + katalog sahifasi, «Oldingi buyurtmani takrorlash», miqdor qoidalari, «N ta muammo» paneli
-- [ ] Kredit nazorati va tasdiq (≤20% — Filial rahbari, >20% yoki 30+ kun — Direktor)
-- [ ] Buyurtmalar sahifasi (holat yorliqlari, «Hozir kimda»), buyurtma kartochkasi
+- [~] Buyurtma kiritish ✅ (mijoz, ombor, yetkazish turi/sanasi, manzil — standarti kartadan, to'lov turi — oxirgi buyurtmadan), «Oldingi buyurtmani takrorlash» ✅ (oxirgi 5 ta), miqdor qoidalari ✅ (qoldiqdan ko'p / min dan kam — yuborilmaydi, max dan ko'p — tasdiqqa), «N ta muammo» paneli ✅, narx muzlatish va «Narx o'zgardi» ✅. Qoldi: alohida «Mahsulot qo'shish» katalog sahifasi (klaviatura, «Faqat bor mahsulotlar»), Alt+1…5
+- [x] Kredit nazorati va tasdiq: limit ≤20% — Filial rahbari (approvals.branch), >20% yoki muddati o'tgan qarz 30+ kun — Direktor (approvals.director); muddati o'tgan qarz FIFO bilan (`PartyLedger.creditState`); rad etish, qoralamaga qaytarish, bekor qilish qoidalari (SPEC 5.2)
+- [~] Buyurtmalar sahifasi ✅ (holat filtri, qidiruv, «Mening buyurtmalarim»), buyurtma kartochkasi (mijoz qatori, muammolar, tasdiq sabablari) ✅. Qoldi: «Hozir kimda», holat yorliqlari (tab), e2e
 
 ## 7. Ombor zanjiri
 - [ ] FEFO taklifi va zahira, vaqt berish
