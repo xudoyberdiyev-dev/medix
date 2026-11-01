@@ -1,12 +1,13 @@
 "use client";
 
-import { Ban, CircleCheck, Ellipsis, KeyRound, LockOpen, UserPlus, Users } from "lucide-react";
+import { Ban, CircleCheck, KeyRound, LockOpen, UserPlus, Users } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
+import { RowMenu } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -34,7 +35,6 @@ export function EmployeesPage() {
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
-  const [menuFor, setMenuFor] = useState<number | null>(null);
 
   if (employees.error instanceof ApiError && employees.error.isForbidden)
     return <ForbiddenState description="Xodimlarni Direktor va Bosh administrator boshqaradi." />;
@@ -104,46 +104,32 @@ export function EmployeesPage() {
             </div>
           }
           rowActions={(e) => (
-            <span className="relative inline-flex">
-              <Button
-                variant="icon"
-                size="sm"
-                icon={Ellipsis}
-                aria-label="Amallar"
-                title="Amallar"
-                onClick={() => setMenuFor(menuFor === e.id ? null : e.id)}
-              />
-              {menuFor === e.id ? (
-                <span
-                  role="menu"
-                  className="absolute top-full right-0 z-30 mt-1 flex w-56 flex-col rounded-card border border-border bg-surface p-1 text-left shadow-overlay"
-                >
-                  {e.status === "BLOCKED" ? (
-                    <MenuItem
-                      icon={<LockOpen size={16} strokeWidth={1.5} aria-hidden />}
-                      label="Blokdan chiqarish"
-                      onClick={() => {
-                        setMenuFor(null);
+            <RowMenu
+              items={[
+                e.status === "BLOCKED"
+                  ? {
+                      key: "unblock",
+                      label: "Blokdan chiqarish",
+                      icon: <LockOpen size={16} strokeWidth={1.5} aria-hidden />,
+                      onSelect: () =>
                         unblock.mutate(e.id, {
                           onSuccess: () => toast({ tone: "success", title: "Xodim blokdan chiqarildi", description: e.fullName }),
-                        });
-                      }}
-                    />
-                  ) : (
-                    <MenuItem
-                      icon={<Ban size={16} strokeWidth={1.5} aria-hidden />}
-                      label="Bloklash"
-                      onClick={() => (setMenuFor(null), setDialog({ kind: "block", employee: e }))}
-                    />
-                  )}
-                  <MenuItem
-                    icon={<KeyRound size={16} strokeWidth={1.5} aria-hidden />}
-                    label="Vaqtinchalik parol berish"
-                    onClick={() => (setMenuFor(null), setDialog({ kind: "reset", employee: e }))}
-                  />
-                </span>
-              ) : null}
-            </span>
+                        }),
+                    }
+                  : {
+                      key: "block",
+                      label: "Bloklash",
+                      icon: <Ban size={16} strokeWidth={1.5} aria-hidden />,
+                      onSelect: () => setDialog({ kind: "block", employee: e }),
+                    },
+                {
+                  key: "reset",
+                  label: "Vaqtinchalik parol berish",
+                  icon: <KeyRound size={16} strokeWidth={1.5} aria-hidden />,
+                  onSelect: () => setDialog({ kind: "reset", employee: e }),
+                },
+              ]}
+            />
           )}
           emptyState={
             query ? (
@@ -162,20 +148,6 @@ export function EmployeesPage() {
       {dialog?.kind === "block" ? <BlockDialog employee={dialog.employee} onClose={() => setDialog(null)} /> : null}
       {dialog?.kind === "reset" ? <ResetDialog employee={dialog.employee} onClose={() => setDialog(null)} /> : null}
     </>
-  );
-}
-
-function MenuItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onClick}
-      className="flex h-control-sm items-center gap-2 rounded-control px-2 text-body hover:bg-table-header"
-    >
-      {icon}
-      {label}
-    </button>
   );
 }
 
