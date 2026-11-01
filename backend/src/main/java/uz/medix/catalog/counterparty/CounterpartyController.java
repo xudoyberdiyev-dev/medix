@@ -18,7 +18,7 @@ import uz.medix.catalog.counterparty.CounterpartyModels.ContractRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyDetail;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
-import uz.medix.catalog.counterparty.CounterpartyModels.PageResult;
+import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
 import uz.medix.catalog.counterparty.CounterpartyModels.ReasonRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.Role;
 import uz.medix.catalog.counterparty.CounterpartyModels.Status;
@@ -59,7 +59,7 @@ class CounterpartyController {
 
     @GetMapping
     @Operation(summary = "Kontragentlar", description = "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).")
-    PageResult list(
+    CounterpartyPage list(
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "ALL") Role role,
             @RequestParam(defaultValue = "ACTIVE") Status status,

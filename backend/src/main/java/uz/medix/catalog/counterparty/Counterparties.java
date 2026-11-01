@@ -22,7 +22,7 @@ import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRow;
 import uz.medix.catalog.counterparty.CounterpartyModels.License;
 import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
-import uz.medix.catalog.counterparty.CounterpartyModels.PageResult;
+import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
 import uz.medix.catalog.counterparty.CounterpartyModels.PaymentType;
 import uz.medix.catalog.counterparty.CounterpartyModels.Ref;
 import uz.medix.catalog.counterparty.CounterpartyModels.Role;
@@ -55,7 +55,7 @@ class Counterparties {
     // ===== O'qish =====
 
     @Transactional(readOnly = true)
-    PageResult search(String q, Role role, Status status, Long regionId, boolean sortByTin, int page, int size) {
+    CounterpartyPage search(String q, Role role, Status status, Long regionId, boolean sortByTin, int page, int size) {
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
         switch (role) {
@@ -96,7 +96,7 @@ class Counterparties {
                 .param("offset", (long) page * size)
                 .query(Counterparties::row)
                 .list();
-        return new PageResult(items, total, page, size);
+        return new CounterpartyPage(items, total, page, size);
     }
 
     @Transactional(readOnly = true)

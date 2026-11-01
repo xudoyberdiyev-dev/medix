@@ -92,5 +92,5 @@ final class ProductModels {
     record Filter(String q, Long manufacturerId, Long categoryId, Status status, Boolean controlled, Boolean marked, SortField sort,
             boolean desc, int page, int size) {}
 
-    record PageResult(List<ProductRow> items, long total, int page, int size) {}
+    record ProductPage(List<ProductRow> items, long total, int page, int size) {}
 }

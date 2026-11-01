@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uz.medix.catalog.product.ProductModels.ChangeCodeRequest;
 import uz.medix.catalog.product.ProductModels.DeactivateRequest;
 import uz.medix.catalog.product.ProductModels.Filter;
-import uz.medix.catalog.product.ProductModels.PageResult;
+import uz.medix.catalog.product.ProductModels.ProductPage;
 import uz.medix.catalog.product.ProductModels.ProductDetail;
 import uz.medix.catalog.product.ProductModels.ProductRequest;
 import uz.medix.catalog.product.ProductModels.SortField;
@@ -45,7 +45,7 @@ class ProductController {
 
     @GetMapping
     @Operation(summary = "Mahsulotlar ro'yxati", description = "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.")
-    PageResult list(
+    ProductPage list(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Long manufacturerId,
             @RequestParam(required = false) Long categoryId,

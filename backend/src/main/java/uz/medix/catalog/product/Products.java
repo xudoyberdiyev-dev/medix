@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.catalog.product.ProductModels.CodeChange;
 import uz.medix.catalog.product.ProductModels.Filter;
-import uz.medix.catalog.product.ProductModels.PageResult;
+import uz.medix.catalog.product.ProductModels.ProductPage;
 import uz.medix.catalog.product.ProductModels.ProductDetail;
 import uz.medix.catalog.product.ProductModels.ProductRequest;
 import uz.medix.catalog.product.ProductModels.ProductRow;
@@ -59,7 +59,7 @@ public class Products {
     // ===== O'qish =====
 
     @Transactional(readOnly = true)
-    PageResult search(Filter f) {
+    ProductPage search(Filter f) {
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
         if (f.status() == ProductModels.Status.ACTIVE) {
@@ -112,7 +112,7 @@ public class Products {
                 .param("offset", (long) f.page() * f.size())
                 .query(Products::row)
                 .list();
-        return new PageResult(items, total, f.page(), f.size());
+        return new ProductPage(items, total, f.page(), f.size());
     }
 
     @Transactional(readOnly = true)

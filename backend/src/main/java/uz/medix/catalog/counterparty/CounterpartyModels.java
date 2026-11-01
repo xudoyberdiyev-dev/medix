@@ -36,7 +36,7 @@ final class CounterpartyModels {
             boolean blocked,
             boolean active) {}
 
-    record PageResult(List<CounterpartyRow> items, long total, int page, int size) {}
+    record CounterpartyPage(List<CounterpartyRow> items, long total, int page, int size) {}
 
     record License(long id, String number, String kind, @Schema(nullable = true) LocalDate issuedOn,
             @Schema(nullable = true) LocalDate validUntil, boolean controlledAllowed) {}
