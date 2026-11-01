@@ -39,7 +39,7 @@ import uz.medix.shared.error.MedixException;
 @Tag(name = "products", description = "Mahsulotlar")
 class ProductController {
 
-    private static final String MANAGE = "hasAnyRole('DIRECTOR', 'ADMIN', 'PURCHASER')";
+    private static final String MANAGE = "hasAuthority('products.create')";
     private static final int MAX_PAGE_SIZE = 200;
 
     private final Products products;

@@ -70,14 +70,14 @@ class BranchController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('DIRECTOR', 'ADMIN')")
+    @PreAuthorize("hasAuthority('branches.view')")
     @Operation(summary = "Filial qo'shish")
     Organization.Branch create(@Valid @RequestBody CreateBranchRequest r) {
         return organization.createBranch(new Organization.BranchData(r.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone()));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DIRECTOR', 'ADMIN')")
+    @PreAuthorize("hasAuthority('branches.view')")
     @Operation(summary = "Filialni tahrirlash", description = "Kod o'zgarmaydi.")
     Organization.Branch update(@PathVariable long id, @Valid @RequestBody UpdateBranchRequest r) {
         Organization.Branch current = scoped(id);
@@ -86,7 +86,7 @@ class BranchController {
     }
 
     @PostMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('DIRECTOR', 'ADMIN')")
+    @PreAuthorize("hasAuthority('branches.view')")
     @Operation(summary = "Filialni nofaol qilish", description = "Oxirgi faol filial nofaol qilinmaydi.")
     Organization.Branch deactivate(@PathVariable long id, @Valid @RequestBody DeactivateRequest r) {
         scoped(id);
@@ -94,7 +94,7 @@ class BranchController {
     }
 
     @PostMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('DIRECTOR', 'ADMIN')")
+    @PreAuthorize("hasAuthority('branches.view')")
     @Operation(summary = "Filialni faollashtirish")
     Organization.Branch activate(@PathVariable long id) {
         scoped(id);

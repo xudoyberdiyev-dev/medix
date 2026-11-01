@@ -40,7 +40,7 @@ import uz.medix.shared.security.CurrentActor;
 @Tag(name = "vehicles", description = "Mashinalar")
 class VehicleController {
 
-    private static final String MANAGE = "hasAnyRole('DIRECTOR', 'ADMIN', 'BRANCH_MANAGER', 'WAREHOUSE_MANAGER')";
+    private static final String MANAGE = "hasAuthority('lookups.fleet')";
 
     record Vehicle(long id, long branchId, String plateNumber, String model, @Schema(nullable = true) Integer capacityBoxes,
             boolean active) {}

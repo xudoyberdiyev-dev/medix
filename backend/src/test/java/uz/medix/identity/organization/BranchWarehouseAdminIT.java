@@ -167,69 +167,60 @@ class BranchWarehouseAdminIT {
     }
 
     @Test
-    void warehouseLifecycleAndBranchScope() throws Exception {
+    void warehouseLifecycleAndPermissions() throws Exception {
         Cookie admin = loginAs("ADMIN", null);
         long own = branch(admin);
-        long other = branch(admin);
         Cookie manager = loginAs("BRANCH_MANAGER", own);
 
-        MvcResult w = mvc.perform(json(post("/api/warehouses"), manager, "{\"branchId\":" + own + ",\"name\":\"Markaziy\"}"))
+        // warehouses.view — faqat Direktor va Bosh administrator (T12 matritsasi)
+        mvc.perform(json(post("/api/warehouses"), manager, "{\"branchId\":" + own + ",\"name\":\"Markaziy\"}"))
+                .andExpect(status().isForbidden());
+
+        MvcResult w = mvc.perform(json(post("/api/warehouses"), admin, "{\"branchId\":" + own + ",\"name\":\"Markaziy\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.zones", hasSize(4)))
                 .andReturn();
         long wid = id(w);
 
-        mvc.perform(json(post("/api/warehouses"), manager, "{\"branchId\":" + own + ",\"name\":\"markaziy\"}"))
+        mvc.perform(json(post("/api/warehouses"), admin, "{\"branchId\":" + own + ",\"name\":\"markaziy\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("warehouse.duplicateName"));
 
-        // Boshqa filialga — ruxsat yo'q
-        mvc.perform(json(post("/api/warehouses"), manager, "{\"branchId\":" + other + ",\"name\":\"Begona\"}"))
-                .andExpect(status().isBadRequest());
-        long otherWarehouse = id(mvc.perform(json(post("/api/warehouses"), admin, "{\"branchId\":" + other + ",\"name\":\"Begona\"}"))
-                .andExpect(status().isCreated())
-                .andReturn());
-        mvc.perform(json(put("/api/warehouses/" + otherWarehouse), manager, "{\"name\":\"Meniki\"}"))
-                .andExpect(status().isNotFound());
+        // Filial rahbari o'z filiali omborlarini ko'radi
         mvc.perform(get("/api/warehouses").cookie(manager))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.branchId == " + other + ")]", hasSize(0)))
                 .andExpect(jsonPath("$[?(@.branchId == " + own + ")]", hasSize(1)));
 
-        mvc.perform(json(put("/api/warehouses/" + wid), manager, "{\"name\":\"Markaziy ombor\",\"address\":\"Chilonzor 5\"}"))
+        mvc.perform(json(put("/api/warehouses/" + wid), admin, "{\"name\":\"Markaziy ombor\",\"address\":\"Chilonzor 5\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Markaziy ombor"))
                 .andExpect(jsonPath("$.address").value("Chilonzor 5"));
 
-        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), manager, "{\"type\":\"COLD\"}"))
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"COLD\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.zones", hasSize(5)))
                 .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].sellable").value(true));
-        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), manager, "{\"type\":\"COLD\"}"))
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"COLD\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("warehouse.zoneExists"));
-        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), manager, "{\"type\":\"MAIN\"}"))
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"MAIN\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("warehouse.extraZones"));
 
         long zoneId = jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'COLD'").param("w", wid).query(Long.class).single();
-        mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + zoneId), manager, "{\"name\":\"Muzlatkich\"}"))
+        mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + zoneId), admin, "{\"name\":\"Muzlatkich\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].name").value("Muzlatkich"));
-        mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + zoneId), manager, "{\"name\":\"karantin\"}"))
+        mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + zoneId), admin, "{\"name\":\"karantin\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
 
-        mvc.perform(json(post("/api/warehouses/" + wid + "/deactivate"), manager, "{\"reason\":\"Ta'mirlash\"}"))
+        mvc.perform(json(post("/api/warehouses/" + wid + "/deactivate"), admin, "{\"reason\":\"Ta'mirlash\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
-        mvc.perform(post("/api/warehouses/" + wid + "/activate").with(csrf()).cookie(manager))
+        mvc.perform(post("/api/warehouses/" + wid + "/activate").with(csrf()).cookie(admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(true));
-
-        Cookie operator = loginAs("OPERATOR", own);
-        mvc.perform(get("/api/warehouses").cookie(operator)).andExpect(status().isOk());
-        mvc.perform(json(put("/api/warehouses/" + wid), operator, "{\"name\":\"X\"}"))
-                .andExpect(status().isForbidden());
+        mvc.perform(json(put("/api/warehouses/" + wid), manager, "{\"name\":\"X\"}")).andExpect(status().isForbidden());
     }
 }

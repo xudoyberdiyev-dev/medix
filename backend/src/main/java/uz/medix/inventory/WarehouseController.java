@@ -32,7 +32,7 @@ import uz.medix.shared.security.CurrentActor;
 @Tag(name = "warehouses", description = "Omborlar va zonalar")
 class WarehouseController {
 
-    private static final String MANAGE = "hasAnyRole('DIRECTOR', 'ADMIN', 'BRANCH_MANAGER')";
+    private static final String MANAGE = "hasAuthority('warehouses.view')";
 
     record CreateWarehouseRequest(
             @NotNull(message = "{validation.required}") Long branchId,

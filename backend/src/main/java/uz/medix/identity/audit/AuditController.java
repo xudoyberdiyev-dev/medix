@@ -18,7 +18,7 @@ import uz.medix.shared.security.CurrentActor;
 /** Audit jurnalini ko'rish — Direktor va Bosh administrator. Filial doirasi qo'llanadi. */
 @RestController
 @RequestMapping("/api/audit")
-@PreAuthorize("hasAnyRole('DIRECTOR', 'ADMIN')")
+@PreAuthorize("hasAuthority('audit.view')")
 @Tag(name = "audit", description = "Audit jurnali")
 class AuditController {
 

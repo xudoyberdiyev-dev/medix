@@ -93,7 +93,7 @@ class CounterpartyIT {
 
     @Test
     void cardSearchAndBlock() throws Exception {
-        Cookie accountant = loginAs("ACCOUNTANT", null);
+        Cookie accountant = loginAs("BRANCH_MANAGER", null);
         String tin = tin();
         String tag = UUID.randomUUID().toString().substring(0, 5);
         long id = id(mvc.perform(json(post("/api/counterparties"), accountant,
@@ -122,6 +122,12 @@ class CounterpartyIT {
         mvc.perform(get("/api/counterparties").param("q", "901112233").cookie(operator)).andExpect(jsonPath("$.items[?(@.id == " + id + ")]", hasSize(1)));
         mvc.perform(get("/api/counterparties").param("q", tin).param("role", "SUPPLIER").cookie(operator)).andExpect(jsonPath("$.total").value(0));
         mvc.perform(json(post("/api/counterparties/" + id + "/block"), operator, "{\"reason\":\"X\"}")).andExpect(status().isForbidden());
+        // Xarid mijoz kartasini yarata olmaydi (clients.create yo'q), YB kartasini — oladi
+        Cookie purchaser = loginAs("PURCHASER", null);
+        mvc.perform(json(post("/api/counterparties"), purchaser, "{\"tin\":\"" + tin() + "\",\"name\":\"X\",\"customer\":true,\"supplier\":false}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(json(post("/api/counterparties"), purchaser, "{\"tin\":\"" + tin() + "\",\"name\":\"YB " + tag + "\",\"customer\":false,\"supplier\":true}"))
+                .andExpect(status().isCreated());
 
         mvc.perform(json(post("/api/counterparties/" + id + "/block"), accountant, "{\"reason\":\"Qarzi muddati o'tgan\"}"))
                 .andExpect(status().isOk())

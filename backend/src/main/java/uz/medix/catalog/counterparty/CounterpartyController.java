@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,18 +28,15 @@ import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
 
 /**
- * Kontragentlar (Ma'lumotnomalar → Mijozlar / Yetkazib beruvchilar). Ko'rish — har bir kirgan xodim; karta — Direktor,
- * Bosh administrator, Filial rahbari, Buxgalter, Xarid; filial shartlari (limit, narx turi) — Direktor, Bosh administrator,
- * Filial rahbari (o'z filiali). Ruxsatlar matritsasi (1.3) kelguncha rol bo'yicha.
+ * Kontragentlar (Ma'lumotnomalar → Mijozlar / Yetkazib beruvchilar). Ruxsat kartadagi rol bo'yicha (1.3):
+ * mijoz — {@code clients.*}, yetkazib beruvchi — {@code suppliers.*}; ikki rolli kartada ikkala tomon tekshiriladi.
+ * Filial shartlarida xodim faqat ruxsati bor tomonni o'zgartiradi (masalan, Xarid — faqat YB shartlarini).
  */
 @RestController
 @RequestMapping("/api/counterparties")
 @Tag(name = "counterparties", description = "Kontragentlar")
 class CounterpartyController {
 
-    private static final String CARD = "hasAnyRole('DIRECTOR', 'ADMIN', 'BRANCH_MANAGER', 'ACCOUNTANT', 'PURCHASER')";
-    private static final String TERMS = "hasAnyRole('DIRECTOR', 'ADMIN', 'BRANCH_MANAGER')";
-    private static final String BLOCK = "hasAnyRole('DIRECTOR', 'ADMIN', 'BRANCH_MANAGER', 'ACCOUNTANT')";
 
     private final Counterparties counterparties;
     private final CurrentActor currentActor;
@@ -51,6 +48,34 @@ class CounterpartyController {
 
     private Actor actor() {
         return currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
+    }
+
+    private static boolean has(Authentication auth, String key) {
+        return auth.getAuthorities().stream().anyMatch(a -> key.equals(a.getAuthority()));
+    }
+
+    private static void require(Authentication auth, String key) {
+        if (!has(auth, key)) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+    }
+
+    /** Karta: mijoz tomoni — clients.create, YB tomoni — suppliers.create (ikkalasi bo'lsa ikkalasi). */
+    private static void requireEdit(Authentication auth, boolean customer, boolean supplier) {
+        if ((customer && !has(auth, "clients.create")) || (supplier && !has(auth, "suppliers.create")) || (!customer && !supplier
+                && !has(auth, "clients.create") && !has(auth, "suppliers.create"))) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+    }
+
+    private static void requireEdit(Authentication auth, CounterpartyDetail cp) {
+        requireEdit(auth, cp.customer(), cp.supplier());
+    }
+
+    private static void requireBlock(Authentication auth, CounterpartyDetail cp) {
+        if (!((cp.customer() && has(auth, "clients.block")) || (cp.supplier() && has(auth, "suppliers.block")))) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
     }
 
     private CounterpartyDetail detail(long id) {
@@ -78,94 +103,103 @@ class CounterpartyController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(CARD)
     @Operation(summary = "Kontragent qo'shish")
-    CounterpartyDetail create(@Valid @RequestBody CounterpartyRequest r) {
+    CounterpartyDetail create(@Valid @RequestBody CounterpartyRequest r, Authentication auth) {
+        requireEdit(auth, r.customer(), r.supplier());
         return detail(counterparties.create(r));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(CARD)
     @Operation(summary = "Kartani tahrirlash")
-    CounterpartyDetail update(@PathVariable long id, @Valid @RequestBody CounterpartyRequest r) {
+    CounterpartyDetail update(@PathVariable long id, @Valid @RequestBody CounterpartyRequest r, Authentication auth) {
+        CounterpartyDetail current = detail(id);
+        requireEdit(auth, current.customer() || r.customer(), current.supplier() || r.supplier());
         counterparties.update(id, r);
         return detail(id);
     }
 
     @PostMapping("/{id}/block")
-    @PreAuthorize(BLOCK)
     @Operation(summary = "Bloklash", description = "Bloklangan mijozga buyurtma kiritilmaydi.")
-    CounterpartyDetail block(@PathVariable long id, @Valid @RequestBody ReasonRequest r) {
+    CounterpartyDetail block(@PathVariable long id, @Valid @RequestBody ReasonRequest r, Authentication auth) {
+        requireBlock(auth, detail(id));
         counterparties.block(id, r.reason());
         return detail(id);
     }
 
     @PostMapping("/{id}/unblock")
-    @PreAuthorize(BLOCK)
     @Operation(summary = "Blokdan chiqarish")
-    CounterpartyDetail unblock(@PathVariable long id) {
+    CounterpartyDetail unblock(@PathVariable long id, Authentication auth) {
+        requireBlock(auth, detail(id));
         counterparties.unblock(id);
         return detail(id);
     }
 
     @PostMapping("/{id}/deactivate")
-    @PreAuthorize(CARD)
     @Operation(summary = "Nofaol qilish")
-    CounterpartyDetail deactivate(@PathVariable long id, @Valid @RequestBody ReasonRequest r) {
+    CounterpartyDetail deactivate(@PathVariable long id, @Valid @RequestBody ReasonRequest r, Authentication auth) {
+        requireEdit(auth, detail(id));
         counterparties.setActive(id, false, r.reason());
         return detail(id);
     }
 
     @PostMapping("/{id}/activate")
-    @PreAuthorize(CARD)
     @Operation(summary = "Faollashtirish")
-    CounterpartyDetail activate(@PathVariable long id) {
+    CounterpartyDetail activate(@PathVariable long id, Authentication auth) {
+        requireEdit(auth, detail(id));
         counterparties.setActive(id, true, null);
         return detail(id);
     }
 
     @PostMapping("/{id}/licenses")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(CARD)
     @Operation(summary = "Litsenziya qo'shish")
-    CounterpartyDetail addLicense(@PathVariable long id, @Valid @RequestBody LicenseRequest r) {
+    CounterpartyDetail addLicense(@PathVariable long id, @Valid @RequestBody LicenseRequest r, Authentication auth) {
+        require(auth, "clients.lic");
         counterparties.saveLicense(id, null, r);
         return detail(id);
     }
 
     @PutMapping("/{id}/licenses/{licenseId}")
-    @PreAuthorize(CARD)
     @Operation(summary = "Litsenziyani tahrirlash")
-    CounterpartyDetail updateLicense(@PathVariable long id, @PathVariable long licenseId, @Valid @RequestBody LicenseRequest r) {
+    CounterpartyDetail updateLicense(@PathVariable long id, @PathVariable long licenseId, @Valid @RequestBody LicenseRequest r,
+            Authentication auth) {
+        require(auth, "clients.lic");
         counterparties.saveLicense(id, licenseId, r);
         return detail(id);
     }
 
     @PostMapping("/{id}/contracts")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(CARD)
     @Operation(summary = "Shartnoma qo'shish")
-    CounterpartyDetail addContract(@PathVariable long id, @Valid @RequestBody ContractRequest r) {
+    CounterpartyDetail addContract(@PathVariable long id, @Valid @RequestBody ContractRequest r, Authentication auth) {
+        requireEdit(auth, detail(id));
         counterparties.saveContract(id, null, r, actor());
         return detail(id);
     }
 
     @PutMapping("/{id}/contracts/{contractId}")
-    @PreAuthorize(CARD)
     @Operation(summary = "Shartnomani tahrirlash")
-    CounterpartyDetail updateContract(@PathVariable long id, @PathVariable long contractId, @Valid @RequestBody ContractRequest r) {
+    CounterpartyDetail updateContract(@PathVariable long id, @PathVariable long contractId, @Valid @RequestBody ContractRequest r,
+            Authentication auth) {
+        requireEdit(auth, detail(id));
         counterparties.saveContract(id, contractId, r, actor());
         return detail(id);
     }
 
     @PutMapping("/{id}/terms/{branchId}")
-    @PreAuthorize(TERMS)
     @Operation(summary = "Filial shartlari", description = "Limit, to'lov muddati, narx turi, minimal yaroqlilik, operator; YB shartlari.")
-    CounterpartyDetail saveTerms(@PathVariable long id, @PathVariable long branchId, @Valid @RequestBody TermsRequest r) {
+    CounterpartyDetail saveTerms(@PathVariable long id, @PathVariable long branchId, @Valid @RequestBody TermsRequest r,
+            Authentication auth) {
         if (!actor().canAccessBranch(branchId)) {
             throw MedixException.notFound("error.notFound");
         }
-        counterparties.saveTerms(id, branchId, r);
+        CounterpartyDetail cp = detail(id);
+        boolean customerSide = cp.customer() && has(auth, "clients.terms");
+        boolean supplierSide = cp.supplier() && has(auth, "suppliers.terms");
+        if (!customerSide && !supplierSide) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+        counterparties.saveTerms(id, branchId, r, customerSide, supplierSide);
         return detail(id);
     }
 }

@@ -20,7 +20,7 @@ class RoleController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('DIRECTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('roles.view', 'staff.view')")
     @Operation(summary = "Rollar ro'yxati")
     List<Roles.Role> list() {
         return roles.list();

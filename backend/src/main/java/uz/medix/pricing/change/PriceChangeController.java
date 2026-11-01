@@ -39,7 +39,7 @@ import uz.medix.shared.security.CurrentActor;
 @Tag(name = "pricing", description = "Narxlar")
 class PriceChangeController {
 
-    private static final String SET_PRICES = "hasAnyRole('DIRECTOR', 'ADMIN', 'PURCHASER', 'BRANCH_MANAGER')";
+    private static final String SET_PRICES = "hasAuthority('prices.create')";
 
     private final PriceChanges changes;
     private final CurrentActor currentActor;
@@ -108,13 +108,13 @@ class PriceChangeController {
     @PreAuthorize(SET_PRICES)
     @Operation(summary = "O'tkazish", description = "Tannarxdan past narx bo'lsa — Direktor tasdig'iga, aks holda darhol kuchga kiradi.")
     PriceChangeDetail submit(@PathVariable long id, Authentication auth) {
-        boolean director = auth.getAuthorities().stream().anyMatch(a -> "ROLE_DIRECTOR".equals(a.getAuthority()));
+        boolean director = auth.getAuthorities().stream().anyMatch(a -> "prices.below".equals(a.getAuthority()));
         changes.submit(actor(), id, director);
         return detail(id);
     }
 
     @PostMapping("/price-changes/{id}/approve")
-    @PreAuthorize("hasRole('DIRECTOR')")
+    @PreAuthorize("hasAuthority('prices.below')")
     @Operation(summary = "Direktor tasdig'i (PIN)")
     PriceChangeDetail approve(@PathVariable long id, @Valid @RequestBody PinRequest r) {
         changes.approve(actor(), id, r.pin());
@@ -122,7 +122,7 @@ class PriceChangeController {
     }
 
     @PostMapping("/price-changes/{id}/reject")
-    @PreAuthorize("hasRole('DIRECTOR')")
+    @PreAuthorize("hasAuthority('prices.below')")
     @Operation(summary = "Rad etish")
     PriceChangeDetail reject(@PathVariable long id, @Valid @RequestBody ReasonRequest r) {
         changes.reject(actor(), id, r.reason());

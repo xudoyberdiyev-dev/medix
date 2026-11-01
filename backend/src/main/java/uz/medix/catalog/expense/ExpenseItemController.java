@@ -33,7 +33,7 @@ import uz.medix.shared.error.MedixException;
 @Tag(name = "expense-items", description = "Xarajat va kirim moddalari")
 class ExpenseItemController {
 
-    private static final String MANAGE = "hasAnyRole('DIRECTOR', 'ADMIN', 'ACCOUNTANT')";
+    private static final String MANAGE = "hasAuthority('lookups.items')";
 
     enum Direction { EXPENSE, INCOME }
 

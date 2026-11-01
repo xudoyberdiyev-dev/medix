@@ -136,7 +136,7 @@ class CatalogDictionariesIT {
     void vehiclesAreBranchScoped() throws Exception {
         long own = branch();
         long other = branch();
-        Cookie manager = loginAs("WAREHOUSE_MANAGER", own);
+        Cookie manager = loginAs("BRANCH_MANAGER", own);
         String plate = "01 a " + ThreadLocalRandom.current().nextInt(100, 999) + " bc";
         long vid = id(mvc.perform(json(post("/api/vehicles"), manager,
                         "{\"branchId\":" + own + ",\"plateNumber\":\"" + plate + "\",\"model\":\"Damas\",\"capacityBoxes\":40}"))

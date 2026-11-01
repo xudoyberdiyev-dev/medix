@@ -24,7 +24,7 @@ import uz.medix.shared.security.CurrentActor;
 /** Xodimlar boshqaruvi — Direktor va Bosh administrator (SPEC 3). Filial doirasi serverda. */
 @RestController
 @RequestMapping("/api/employees")
-@PreAuthorize("hasAnyRole('DIRECTOR', 'ADMIN')")
+@PreAuthorize("hasAuthority('staff.view')")
 @Tag(name = "employees", description = "Xodimlar")
 class EmployeeController {
 
@@ -62,6 +62,7 @@ class EmployeeController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('staff.edit')")
     @Operation(summary = "Xodim qo'shish")
     Employees.Employee create(@Valid @RequestBody CreateEmployeeRequest r) {
         Actor a = actor();
@@ -73,18 +74,21 @@ class EmployeeController {
     }
 
     @PostMapping("/{id}/block")
+    @PreAuthorize("hasAuthority('staff.edit')")
     @Operation(summary = "Xodimni bloklash", description = "Ochiq sessiyalari darhol tugatiladi.")
     Employees.Employee block(@PathVariable long id, @Valid @RequestBody BlockRequest r) {
         return employees.block(actor(), id, r.reason());
     }
 
     @PostMapping("/{id}/unblock")
+    @PreAuthorize("hasAuthority('staff.edit')")
     @Operation(summary = "Blokdan chiqarish")
     Employees.Employee unblock(@PathVariable long id) {
         return employees.unblock(actor(), id);
     }
 
     @PostMapping("/{id}/reset-password")
+    @PreAuthorize("hasAuthority('staff.edit')")
     @Operation(summary = "Vaqtinchalik parol berish")
     Employees.Employee resetPassword(@PathVariable long id, @Valid @RequestBody ResetPasswordRequest r) {
         return employees.resetPassword(actor(), id, r.temporaryPassword());

@@ -314,7 +314,7 @@ class Counterparties {
     }
 
     @Transactional
-    void saveTerms(long counterpartyId, long branchId, TermsRequest r) {
+    void saveTerms(long counterpartyId, long branchId, TermsRequest r, boolean customerSide, boolean supplierSide) {
         lockCard(counterpartyId);
         if (!branchExists(branchId)) {
             throw MedixException.badRequest("employee.branchUnknown");
@@ -345,6 +345,32 @@ class Counterparties {
                 .stream()
                 .findFirst()
                 .orElse(null);
+        // Ruxsati yo'q tomon o'zgarmaydi — mavjud qiymatlar saqlanadi.
+        if (before != null) {
+            if (!customerSide) {
+                p.put("limit", before.get("credit_limit"));
+                p.put("days", before.get("payment_days"));
+                p.put("price", before.get("price_type_id"));
+                p.put("shelf", before.get("min_shelf_life_days"));
+                p.put("operator", before.get("operator_employee_id"));
+            }
+            if (!supplierSide) {
+                p.put("sdays", before.get("supplier_payment_days"));
+                p.put("ptype", before.get("default_payment_type"));
+                p.put("supply", before.get("supply_employee_id"));
+            }
+        } else {
+            if (!customerSide) {
+                for (String k : List.of("limit", "days", "price", "shelf", "operator")) {
+                    p.put(k, null);
+                }
+            }
+            if (!supplierSide) {
+                for (String k : List.of("sdays", "ptype", "supply")) {
+                    p.put(k, null);
+                }
+            }
+        }
         jdbc.sql("""
                 INSERT INTO counterparty_branch_terms (counterparty_id, branch_id, credit_limit, payment_days, price_type_id,
                        min_shelf_life_days, operator_employee_id, supplier_payment_days, default_payment_type, supply_employee_id)
@@ -359,7 +385,7 @@ class Counterparties {
                 .update();
         Map<String, Object> after = new HashMap<>(p);
         after.remove("cp");
-        after.put("limit", limit == null ? null : limit.toPlainString());
+        after.put("limit", p.get("limit") == null ? null : p.get("limit").toString());
         audit.record(AuditEntry.of("counterparty.terms", "counterparty", counterpartyId).change(before, after));
     }
 
