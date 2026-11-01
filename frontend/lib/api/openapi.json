@@ -18,6 +18,12 @@
     "description" : "Audit jurnali",
     "name" : "audit"
   }, {
+    "description" : "Profil",
+    "name" : "profile"
+  }, {
+    "description" : "Omborlar va zonalar",
+    "name" : "warehouses"
+  }, {
     "description" : "Xodimlar",
     "name" : "employees"
   }, {
@@ -30,7 +36,7 @@
   "paths" : {
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -192,11 +198,144 @@
         },
         "summary" : "Ko'rish mumkin bo'lgan filiallar",
         "tags" : [ "branches" ]
+      },
+      "post" : {
+        "operationId" : "create_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateBranchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Branch"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Filial qo'shish",
+        "tags" : [ "branches" ]
+      }
+    },
+    "/api/branches/{id}" : {
+      "put" : {
+        "description" : "Kod o'zgarmaydi.",
+        "operationId" : "update_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateBranchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Branch"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filialni tahrirlash",
+        "tags" : [ "branches" ]
+      }
+    },
+    "/api/branches/{id}/activate" : {
+      "post" : {
+        "operationId" : "activate_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Branch"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filialni faollashtirish",
+        "tags" : [ "branches" ]
+      }
+    },
+    "/api/branches/{id}/deactivate" : {
+      "post" : {
+        "description" : "Oxirgi faol filial nofaol qilinmaydi.",
+        "operationId" : "deactivate_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeactivateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Branch"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filialni nofaol qilish",
+        "tags" : [ "branches" ]
       }
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list",
+        "operationId" : "list_1",
         "responses" : {
           "200" : {
             "content" : {
@@ -216,7 +355,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create",
+        "operationId" : "create_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -348,9 +487,78 @@
         "tags" : [ "employees" ]
       }
     },
+    "/api/profile" : {
+      "get" : {
+        "operationId" : "get",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "O'z profilim",
+        "tags" : [ "profile" ]
+      },
+      "put" : {
+        "operationId" : "update_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Telefon raqamini yangilash",
+        "tags" : [ "profile" ]
+      }
+    },
+    "/api/profile/pin" : {
+      "put" : {
+        "description" : "Joriy parol bilan tasdiqlanadi. PIN — 4–6 raqam.",
+        "operationId" : "setPin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetPinRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "PIN o'rnatish yoki almashtirish",
+        "tags" : [ "profile" ]
+      }
+    },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_1",
+        "operationId" : "list_3",
         "responses" : {
           "200" : {
             "content" : {
@@ -561,10 +769,258 @@
         "summary" : "Ombor va zonalarni qo'shish",
         "tags" : [ "setup" ]
       }
+    },
+    "/api/warehouses" : {
+      "get" : {
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Warehouse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ko'rish mumkin bo'lgan omborlar va ularning zonalari",
+        "tags" : [ "warehouses" ]
+      },
+      "post" : {
+        "description" : "Qabul, Asosiy saqlash, Karantin, Jo'natish zonalari doim yaratiladi.",
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateWarehouseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Ombor qo'shish",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}" : {
+      "put" : {
+        "operationId" : "update",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateWarehouseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Omborni tahrirlash",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}/activate" : {
+      "post" : {
+        "operationId" : "activate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Omborni faollashtirish",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}/deactivate" : {
+      "post" : {
+        "operationId" : "deactivate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeactivateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Omborni nofaol qilish",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}/zones" : {
+      "post" : {
+        "operationId" : "addZone",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddZoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Zona qo'shish (Sovuq yoki Seyf)",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}/zones/{zoneId}" : {
+      "put" : {
+        "operationId" : "renameZone",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "zoneId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RenameZoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zona nomini o'zgartirish",
+        "tags" : [ "warehouses" ]
+      }
     }
   },
   "components" : {
     "schemas" : {
+      "AddZoneRequest" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "type" ]
+      },
       "AuditPage" : {
         "type" : "object",
         "properties" : {
@@ -743,6 +1199,42 @@
         },
         "required" : [ "name" ]
       },
+      "CreateBranchRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "code" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[A-Za-z]{3}$"
+          },
+          "legalName" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "tin" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{9}$"
+          }
+        },
+        "required" : [ "code", "legalName", "name", "tin" ]
+      },
       "CreateEmployeeRequest" : {
         "type" : "object",
         "properties" : {
@@ -782,6 +1274,34 @@
         },
         "required" : [ "fullName", "login", "roleCode", "temporaryPassword" ]
       },
+      "CreateWarehouseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "extraZones" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+            },
+            "uniqueItems" : true
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "branchId", "name" ]
+      },
       "CsrfResponse" : {
         "type" : "object",
         "properties" : {
@@ -793,6 +1313,17 @@
           }
         },
         "required" : [ "headerName", "token" ]
+      },
+      "DeactivateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
       },
       "Employee" : {
         "type" : "object",
@@ -924,6 +1455,59 @@
         },
         "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
       },
+      "Profile" : {
+        "type" : "object",
+        "properties" : {
+          "branchName" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lastLoginAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "login" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "pinSet" : {
+            "type" : "boolean"
+          },
+          "pinSetAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "position" : {
+            "type" : "string"
+          },
+          "roleCode" : {
+            "type" : "string"
+          },
+          "roleName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName" ]
+      },
+      "RenameZoneRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
       "ResetPasswordRequest" : {
         "type" : "object",
         "properties" : {
@@ -972,6 +1556,20 @@
         },
         "required" : [ "code", "name" ]
       },
+      "SetPinRequest" : {
+        "type" : "object",
+        "properties" : {
+          "currentPassword" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "pin" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [ "currentPassword", "pin" ]
+      },
       "SetupStatus" : {
         "type" : "object",
         "properties" : {
@@ -1008,6 +1606,63 @@
           }
         },
         "required" : [ "blockers", "branches", "completed", "employees", "warehouses" ]
+      },
+      "UpdateBranchRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "legalName" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "tin" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{9}$"
+          }
+        },
+        "required" : [ "legalName", "name", "tin" ]
+      },
+      "UpdateProfileRequest" : {
+        "type" : "object",
+        "properties" : {
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          }
+        }
+      },
+      "UpdateWarehouseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
       },
       "Warehouse" : {
         "type" : "object",

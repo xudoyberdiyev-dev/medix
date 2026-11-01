@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -105,7 +105,65 @@ export interface paths {
         /** Ko'rish mumkin bo'lgan filiallar */
         get: operations["list_2"];
         put?: never;
+        /** Filial qo'shish */
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Filialni tahrirlash
+         * @description Kod o'zgarmaydi.
+         */
+        put: operations["update_2"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branches/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Filialni faollashtirish */
+        post: operations["activate_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branches/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Filialni nofaol qilish
+         * @description Oxirgi faol filial nofaol qilinmaydi.
+         */
+        post: operations["deactivate_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -120,10 +178,10 @@ export interface paths {
             cookie?: never;
         };
         /** Xodimlar ro'yxati */
-        get: operations["list"];
+        get: operations["list_1"];
         put?: never;
         /** Xodim qo'shish */
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -184,6 +242,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O'z profilim */
+        get: operations["get"];
+        /** Telefon raqamini yangilash */
+        put: operations["update_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * PIN o'rnatish yoki almashtirish
+         * @description Joriy parol bilan tasdiqlanadi. PIN — 4–6 raqam.
+         */
+        put: operations["setPin"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/roles": {
         parameters: {
             query?: never;
@@ -192,7 +288,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_1"];
+        get: operations["list_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -320,10 +416,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ko'rish mumkin bo'lgan omborlar va ularning zonalari */
+        get: operations["list"];
+        put?: never;
+        /**
+         * Ombor qo'shish
+         * @description Qabul, Asosiy saqlash, Karantin, Jo'natish zonalari doim yaratiladi.
+         */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Omborni tahrirlash */
+        put: operations["update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Omborni faollashtirish */
+        post: operations["activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Omborni nofaol qilish */
+        post: operations["deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}/zones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Zona qo'shish (Sovuq yoki Seyf) */
+        post: operations["addZone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}/zones/{zoneId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Zona nomini o'zgartirish */
+        put: operations["renameZone"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AddZoneRequest: {
+            /** @enum {string} */
+            type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
+        };
         AuditPage: {
             items: components["schemas"]["AuditRow"][];
             /** Format: int64 */
@@ -382,6 +588,14 @@ export interface components {
         CompanyRequest: {
             name: string;
         };
+        CreateBranchRequest: {
+            address?: string;
+            code: string;
+            legalName: string;
+            name: string;
+            phone?: string;
+            tin: string;
+        };
         CreateEmployeeRequest: {
             /** Format: int64 */
             branchId?: number;
@@ -392,9 +606,19 @@ export interface components {
             roleCode: string;
             temporaryPassword: string;
         };
+        CreateWarehouseRequest: {
+            address?: string;
+            /** Format: int64 */
+            branchId: number;
+            extraZones?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
+            name: string;
+        };
         CsrfResponse: {
             headerName: string;
             token: string;
+        };
+        DeactivateRequest: {
+            reason: string;
         };
         Employee: {
             /** Format: int64 */
@@ -440,6 +664,25 @@ export interface components {
             permissions: string[];
             role: components["schemas"]["RoleRef"];
         };
+        Profile: {
+            branchName?: string;
+            fullName: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            lastLoginAt?: string;
+            login: string;
+            phone?: string;
+            pinSet: boolean;
+            /** Format: date-time */
+            pinSetAt?: string;
+            position?: string;
+            roleCode: string;
+            roleName: string;
+        };
+        RenameZoneRequest: {
+            name: string;
+        };
         ResetPasswordRequest: {
             temporaryPassword: string;
         };
@@ -460,6 +703,10 @@ export interface components {
             code: string;
             name: string;
         };
+        SetPinRequest: {
+            currentPassword: string;
+            pin: string;
+        };
         SetupStatus: {
             /** @description Yakunlashga to'sqinlik qilayotgan sabablar (i18n matni) */
             blockers: string[];
@@ -468,6 +715,20 @@ export interface components {
             completed: boolean;
             employees: components["schemas"]["Employee"][];
             warehouses: components["schemas"]["Warehouse"][];
+        };
+        UpdateBranchRequest: {
+            address?: string;
+            legalName: string;
+            name: string;
+            phone?: string;
+            tin: string;
+        };
+        UpdateProfileRequest: {
+            phone?: string;
+        };
+        UpdateWarehouseRequest: {
+            address?: string;
+            name: string;
         };
         Warehouse: {
             active: boolean;
@@ -503,7 +764,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_3: {
+    list_4: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -634,7 +895,105 @@ export interface operations {
             };
         };
     };
-    list: {
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBranchRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBranchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    activate_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    deactivate_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    list_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -654,7 +1013,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -752,7 +1111,73 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+        };
+    };
+    update_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+        };
+    };
+    setPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPinRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -925,6 +1350,177 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWarehouseRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWarehouseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    activate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    deactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    addZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddZoneRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    renameZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                zoneId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameZoneRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
