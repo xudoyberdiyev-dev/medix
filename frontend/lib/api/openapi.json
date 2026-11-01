@@ -48,6 +48,9 @@
     "description" : "Sozlash ustasi",
     "name" : "setup"
   }, {
+    "description" : "Markirovka",
+    "name" : "marking"
+  }, {
     "description" : "Audit jurnali",
     "name" : "audit"
   }, {
@@ -1390,6 +1393,291 @@
         "tags" : [ "expense-items" ]
       }
     },
+    "/api/marking/codes" : {
+      "get" : {
+        "operationId" : "codes",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "orderId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "mine",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "today",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkCodePage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodlar jurnali",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/mine" : {
+      "get" : {
+        "description" : "Faol ish bo'lmasa — 204.",
+        "operationId" : "mine",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkWork"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mening markirovkam",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/orders/{id}" : {
+      "get" : {
+        "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
+        "operationId" : "get_7",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkWork"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buyurtma markirovkasi",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/orders/{id}/codes/{markId}/remove" : {
+      "post" : {
+        "description" : "Yakunlashdan oldin, sabab bilan.",
+        "operationId" : "remove",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "markId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OrderReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkWork"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodni olib tashlash",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/orders/{id}/finish" : {
+      "post" : {
+        "description" : "Barcha kodlar skanerlangan bo'lsa → «Hisobdan o'tkazilmoqda».",
+        "operationId" : "finish",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkWork"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovkani yakunlash",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/orders/{id}/scan" : {
+      "post" : {
+        "description" : "Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN) → partiya → tur (quti/dona) → qator to'lganmi.",
+        "operationId" : "scan",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScanRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScanResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodni skanerlash",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/orders/{id}/start" : {
+      "post" : {
+        "description" : "Bir markirovkachida bitta faol buyurtma.",
+        "operationId" : "start",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkWork"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovkani boshlash",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/queue" : {
+      "get" : {
+        "description" : "«Markirovkada» buyurtmalar; boshlanganlari — markirovkachi nomi bilan («Band: …»).",
+        "operationId" : "queue",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MarkQueueItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovka navbati",
+        "tags" : [ "marking" ]
+      }
+    },
     "/api/notifications" : {
       "get" : {
         "operationId" : "list_15",
@@ -1924,6 +2212,35 @@
           }
         },
         "summary" : "To'lov turi standarti",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/monitor" : {
+      "get" : {
+        "description" : "Bosqichlar ustunlari, taymerlar, kechikkanlar (Navbatda … Yuklanmoqda).",
+        "operationId" : "monitor",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MonitorBoard"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ombor mudiri monitori",
         "tags" : [ "orders" ]
       }
     },
@@ -5602,6 +5919,269 @@
         },
         "required" : [ "login", "password" ]
       },
+      "MarkBatch" : {
+        "type" : "object",
+        "properties" : {
+          "batch" : {
+            "type" : "string"
+          },
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "scanned" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "batch", "batchId", "expiryDate", "qty", "scanned" ]
+      },
+      "MarkCode" : {
+        "type" : "object",
+        "properties" : {
+          "batch" : {
+            "type" : "string"
+          },
+          "closeReason" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "gtin" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "BOX", "UNIT" ]
+          },
+          "lineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "scannedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "scannedBy" : {
+            "type" : "string"
+          },
+          "serial" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD" ]
+          }
+        },
+        "required" : [ "batch", "code", "gtin", "id", "kind", "lineId", "orderId", "orderNumber", "productName", "scannedAt", "scannedBy", "serial", "status" ]
+      },
+      "MarkCodePage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MarkCode"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "MarkLine" : {
+        "type" : "object",
+        "properties" : {
+          "batches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MarkBatch"
+            }
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "BOX", "UNIT" ]
+          },
+          "lineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "scanned" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "batches", "kind", "lineId", "lineNo", "productCode", "productName", "qty", "scanned" ]
+      },
+      "MarkQueueItem" : {
+        "type" : "object",
+        "properties" : {
+          "customer" : {
+            "type" : "string"
+          },
+          "deadline" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Berilgan vaqt tugash payti"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Markirovkali qatorlar soni"
+          },
+          "markMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "markStartedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "marker" : {
+            "type" : "string"
+          },
+          "markerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "statusChangedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Skanerlanadigan kodlar soni"
+          }
+        },
+        "required" : [ "customer", "id", "lines", "number", "statusChangedAt", "totalQty" ]
+      },
+      "MarkWork" : {
+        "type" : "object",
+        "properties" : {
+          "boxesNeeded" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "boxesScanned" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Skanerlangan quti / kerak"
+          },
+          "codes" : {
+            "type" : "array",
+            "description" : "Faol (olib tashlanmagan) kodlar",
+            "items" : {
+              "$ref" : "#/components/schemas/MarkCode"
+            }
+          },
+          "complete" : {
+            "type" : "boolean",
+            "description" : "Barcha kodlar skanerlangan — yakunlash mumkin"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "deadline" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MarkLine"
+            }
+          },
+          "markMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "markStartedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "marker" : {
+            "type" : "string"
+          },
+          "markerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "unitsNeeded" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unitsScanned" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "boxesNeeded", "boxesScanned", "codes", "complete", "customer", "id", "lines", "number", "status", "unitsNeeded", "unitsScanned" ]
+      },
       "MarkupLine" : {
         "type" : "object",
         "properties" : {
@@ -5729,6 +6309,98 @@
           }
         },
         "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
+      },
+      "MonitorBoard" : {
+        "type" : "object",
+        "properties" : {
+          "cards" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MonitorCard"
+            }
+          },
+          "generatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "late" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Berilgan vaqtdan o'tganlar"
+          },
+          "lateDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "stale" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "«N kundan oshgan»lar"
+          },
+          "waitingTime" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Vaqt berilmagan «Navbatda»"
+          }
+        },
+        "required" : [ "cards", "generatedAt", "late", "lateDays", "stale", "waitingTime" ]
+      },
+      "MonitorCard" : {
+        "type" : "object",
+        "properties" : {
+          "customer" : {
+            "type" : "string"
+          },
+          "deadline" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Berilgan vaqt tugash payti (yig'ish, markirovka)"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "late" : {
+            "type" : "boolean",
+            "description" : "Berilgan vaqtdan o'tgan"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "person" : {
+            "type" : "string",
+            "description" : "Hozir kimda: yig'uvchi yoki markirovkachi"
+          },
+          "since" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Shu holatga o'tgan payt"
+          },
+          "stale" : {
+            "type" : "boolean",
+            "description" : "Holatda «N kundan oshgan»"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          },
+          "timeGiven" : {
+            "type" : "boolean",
+            "description" : "Vaqt berilganmi (Navbatda)"
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "customer", "id", "late", "lines", "marked", "number", "since", "stale", "status", "timeGiven", "totalQty" ]
       },
       "NotificationItem" : {
         "type" : "object",
@@ -7762,6 +8434,29 @@
           }
         },
         "required" : [ "code", "name" ]
+      },
+      "ScanRequest" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "code" ]
+      },
+      "ScanResult" : {
+        "type" : "object",
+        "properties" : {
+          "accepted" : {
+            "$ref" : "#/components/schemas/MarkCode"
+          },
+          "work" : {
+            "$ref" : "#/components/schemas/MarkWork"
+          }
+        },
+        "required" : [ "accepted", "work" ]
       },
       "SetPinRequest" : {
         "type" : "object",

@@ -75,10 +75,10 @@ export function MarkingPage() {
   const [tab, setTab] = useState("mine");
   const mine = useQuery({
     queryKey: ["marking", "mine"],
-    queryFn: async () => {
+    queryFn: async (): Promise<MarkWork | null> => {
       const r = await api.GET("/api/marking/mine");
       if (r.response.status === 204) return null;
-      return unwrap(r);
+      return unwrap(Promise.resolve(r));
     },
     enabled: allowed,
   });
@@ -90,7 +90,7 @@ export function MarkingPage() {
   });
 
   if (me.data && !allowed) return <ForbiddenState description="Markirovka paneli faqat markirovkachilar uchun." />;
-  const waiting = (queue.data ?? []).filter((o) => o.markerId === null).length;
+  const waiting = (queue.data ?? []).filter((o) => !o.markerId).length;
 
   return (
     <>
@@ -168,7 +168,11 @@ function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
       {items.length === 0 ? (
         <Card>
-          <EmptyState icon={Tag} title="Navbat boʻsh" description="Yigʻuvchi markirovkali buyurtmani yakunlaganda shu yerda paydo boʻladi." />
+          <EmptyState
+            icon={Tag}
+            title="Navbat boʻsh"
+            description="Yigʻuvchi markirovkali buyurtmani yakunlaganda shu yerda paydo boʻladi."
+          />
         </Card>
       ) : (
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -180,7 +184,7 @@ function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
                 {formatQuantity(o.lines)} xil · {formatQuantity(o.totalQty)} ta kod · vaqt {o.markMinutes ?? "—"} daqiqa
               </div>
               <div className="mt-2">
-                {o.markerId !== null ? (
+                {o.markerId ? (
                   <Badge tone="warning">Band: {o.marker}</Badge>
                 ) : (
                   <Button size="sm" icon={Play} disabled={busy} loading={pending === o.id} onClick={() => void start(o.id)}>
@@ -475,7 +479,11 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
         <Skeleton className="h-40 w-full" />
       ) : codes.data.items.length === 0 ? (
         <Card>
-          <EmptyState icon={ScanLine} title="Kod topilmadi" description={today ? "Bugun hali kod skanerlanmagan." : "Qidiruvni oʻzgartirib koʻring."} />
+          <EmptyState
+            icon={ScanLine}
+            title="Kod topilmadi"
+            description={today ? "Bugun hali kod skanerlanmagan." : "Qidiruvni oʻzgartirib koʻring."}
+          />
         </Card>
       ) : (
         <>
@@ -511,7 +519,14 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
             </table>
           </div>
           <div className="mt-3">
-            <Pagination page={page} pageSize={50} total={codes.data.total} onPageChange={setPage} onPageSizeChange={() => undefined} pageSizeOptions={[50]} />
+            <Pagination
+              page={page}
+              pageSize={50}
+              total={codes.data.total}
+              onPageChange={setPage}
+              onPageSizeChange={() => undefined}
+              pageSizeOptions={[50]}
+            />
           </div>
         </>
       )}

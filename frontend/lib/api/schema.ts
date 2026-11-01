@@ -598,6 +598,163 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/marking/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kodlar jurnali */
+        get: operations["codes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mening markirovkam
+         * @description Faol ish bo'lmasa — 204.
+         */
+        get: operations["mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buyurtma markirovkasi
+         * @description Qatorlar, partiyalar, hisoblagichlar va faol kodlar.
+         */
+        get: operations["get_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/codes/{markId}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kodni olib tashlash
+         * @description Yakunlashdan oldin, sabab bilan.
+         */
+        post: operations["remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Markirovkani yakunlash
+         * @description Barcha kodlar skanerlangan bo'lsa → «Hisobdan o'tkazilmoqda».
+         */
+        post: operations["finish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kodni skanerlash
+         * @description Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN) → partiya → tur (quti/dona) → qator to'lganmi.
+         */
+        post: operations["scan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Markirovkani boshlash
+         * @description Bir markirovkachida bitta faol buyurtma.
+         */
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Markirovka navbati
+         * @description «Markirovkada» buyurtmalar; boshlanganlari — markirovkachi nomi bilan («Band: …»).
+         */
+        get: operations["queue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -821,6 +978,26 @@ export interface paths {
          * @description Mijozning oxirgi buyurtmasidan, bo'lmasa Perechisleniye.
          */
         get: operations["defaultPaymentType"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/monitor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ombor mudiri monitori
+         * @description Bosqichlar ustunlari, taymerlar, kechikkanlar (Navbatda … Yuklanmoqda).
+         */
+        get: operations["monitor"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2368,6 +2545,125 @@ export interface components {
             login: string;
             password: string;
         };
+        MarkBatch: {
+            batch: string;
+            /** Format: int64 */
+            batchId: number;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int32 */
+            qty: number;
+            /** Format: int32 */
+            scanned: number;
+        };
+        MarkCode: {
+            batch: string;
+            closeReason?: string;
+            code: string;
+            gtin: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "BOX" | "UNIT";
+            /** Format: int64 */
+            lineId: number;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            productName: string;
+            /** Format: date-time */
+            scannedAt: string;
+            scannedBy: string;
+            serial: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD";
+        };
+        MarkCodePage: {
+            items: components["schemas"]["MarkCode"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        MarkLine: {
+            batches: components["schemas"]["MarkBatch"][];
+            /** @enum {string} */
+            kind: "BOX" | "UNIT";
+            /** Format: int64 */
+            lineId: number;
+            /** Format: int32 */
+            lineNo: number;
+            productCode: string;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            /** Format: int32 */
+            scanned: number;
+        };
+        MarkQueueItem: {
+            customer: string;
+            /**
+             * Format: date-time
+             * @description Berilgan vaqt tugash payti
+             */
+            deadline?: string;
+            /** Format: int64 */
+            id: number;
+            /**
+             * Format: int32
+             * @description Markirovkali qatorlar soni
+             */
+            lines: number;
+            /** Format: int32 */
+            markMinutes?: number;
+            /** Format: date-time */
+            markStartedAt?: string;
+            marker?: string;
+            /** Format: int64 */
+            markerId?: number;
+            number: string;
+            /** Format: date-time */
+            statusChangedAt: string;
+            /**
+             * Format: int64
+             * @description Skanerlanadigan kodlar soni
+             */
+            totalQty: number;
+        };
+        MarkWork: {
+            /** Format: int32 */
+            boxesNeeded: number;
+            /**
+             * Format: int32
+             * @description Skanerlangan quti / kerak
+             */
+            boxesScanned: number;
+            /** @description Faol (olib tashlanmagan) kodlar */
+            codes: components["schemas"]["MarkCode"][];
+            /** @description Barcha kodlar skanerlangan — yakunlash mumkin */
+            complete: boolean;
+            customer: string;
+            /** Format: date-time */
+            deadline?: string;
+            /** Format: int64 */
+            id: number;
+            lines: components["schemas"]["MarkLine"][];
+            /** Format: int32 */
+            markMinutes?: number;
+            /** Format: date-time */
+            markStartedAt?: string;
+            marker?: string;
+            /** Format: int64 */
+            markerId?: number;
+            number: string;
+            status: string;
+            /** Format: int32 */
+            unitsNeeded: number;
+            /** Format: int32 */
+            unitsScanned: number;
+        };
         MarkupLine: {
             /** @description Kirim narxi asosida — faqat special.cost bilan */
             basePrice?: string;
@@ -2416,6 +2712,59 @@ export interface components {
             mustChangePassword: boolean;
             permissions: string[];
             role: components["schemas"]["RoleRef"];
+        };
+        MonitorBoard: {
+            cards: components["schemas"]["MonitorCard"][];
+            /** Format: date-time */
+            generatedAt: string;
+            /**
+             * Format: int32
+             * @description Berilgan vaqtdan o'tganlar
+             */
+            late: number;
+            /** Format: int32 */
+            lateDays: number;
+            /**
+             * Format: int32
+             * @description «N kundan oshgan»lar
+             */
+            stale: number;
+            /**
+             * Format: int32
+             * @description Vaqt berilmagan «Navbatda»
+             */
+            waitingTime: number;
+        };
+        MonitorCard: {
+            customer: string;
+            /**
+             * Format: date-time
+             * @description Berilgan vaqt tugash payti (yig'ish, markirovka)
+             */
+            deadline?: string;
+            /** Format: int64 */
+            id: number;
+            /** @description Berilgan vaqtdan o'tgan */
+            late: boolean;
+            /** Format: int32 */
+            lines: number;
+            marked: boolean;
+            number: string;
+            /** @description Hozir kimda: yig'uvchi yoki markirovkachi */
+            person?: string;
+            /**
+             * Format: date-time
+             * @description Shu holatga o'tgan payt
+             */
+            since: string;
+            /** @description Holatda «N kundan oshgan» */
+            stale: boolean;
+            /** @enum {string} */
+            status: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
+            /** @description Vaqt berilganmi (Navbatda) */
+            timeGiven: boolean;
+            /** Format: int64 */
+            totalQty: number;
         };
         NotificationItem: {
             body?: string;
@@ -3234,6 +3583,13 @@ export interface components {
         RoleRef: {
             code: string;
             name: string;
+        };
+        ScanRequest: {
+            code: string;
+        };
+        ScanResult: {
+            accepted: components["schemas"]["MarkCode"];
+            work: components["schemas"]["MarkWork"];
         };
         SetPinRequest: {
             currentPassword: string;
@@ -4335,6 +4691,192 @@ export interface operations {
             };
         };
     };
+    codes: {
+        parameters: {
+            query?: {
+                orderId?: number;
+                mine?: boolean;
+                today?: boolean;
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkCodePage"];
+                };
+            };
+        };
+    };
+    mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkWork"];
+                };
+            };
+        };
+    };
+    get_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkWork"];
+                };
+            };
+        };
+    };
+    remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                markId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkWork"];
+                };
+            };
+        };
+    };
+    finish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkWork"];
+                };
+            };
+        };
+    };
+    scan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScanRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScanResult"];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkWork"];
+                };
+            };
+        };
+    };
+    queue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkQueueItem"][];
+                };
+            };
+        };
+    };
     list_15: {
         parameters: {
             query?: never;
@@ -4684,6 +5226,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": "CASH" | "TRANSFER" | "ONLINE";
+                };
+            };
+        };
+    };
+    monitor: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitorBoard"];
                 };
             };
         };

@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   LayoutDashboard,
+  MonitorDot,
   PackageOpen,
   PackagePlus,
   Pill,
@@ -51,6 +52,7 @@ export const navigation: NavGroup[] = [
   {
     title: "Ombor",
     items: [
+      { key: "warehouse", label: "Monitor", href: "/warehouse", icon: MonitorDot, anyOf: ["orders.queue"] },
       { key: "receipts", label: "Kirim", href: "/receipts", icon: PackagePlus, anyOf: ["receipt.view"] },
       { key: "picking", label: "Yigʻish", href: "/picking", icon: ClipboardCheck, anyOf: ["picking.do"] },
       { key: "marking", label: "Markirovka", href: "/marking", icon: ScanLine, anyOf: ["marking.scan"] },
