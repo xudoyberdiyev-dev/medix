@@ -78,23 +78,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Usta holati */
+        get: operations["status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Filial qo'shish */
+        post: operations["createBranch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/branches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Filialni tahrirlash */
+        put: operations["updateBranch"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/company": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Kompaniya nomini saqlash */
+        put: operations["company"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ustani yakunlash */
+        post: operations["complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/employees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Xodim qo'shish (vaqtinchalik parol bilan) */
+        post: operations["createEmployee"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup/warehouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ombor va zonalarni qo'shish */
+        post: operations["createWarehouse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Branch: {
+            active: boolean;
+            address?: string;
+            code: string;
+            /** Format: int64 */
+            id: number;
+            legalName: string;
+            name: string;
+            phone?: string;
+            tin: string;
+        };
+        BranchRequest: {
+            address: string;
+            code: string;
+            legalName: string;
+            name: string;
+            phone: string;
+            tin: string;
+        };
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
         };
+        Company: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: date-time */
+            setupCompletedAt?: string;
+        };
+        CompanyRequest: {
+            name: string;
+        };
         CsrfResponse: {
             headerName: string;
             token: string;
+        };
+        Employee: {
+            /** Format: int64 */
+            branchId?: number;
+            fullName: string;
+            /** Format: int64 */
+            id: number;
+            login: string;
+            mustChangePassword: boolean;
+            phone?: string;
+            position?: string;
+            roleCode: string;
+            roleName: string;
+            status: string;
+        };
+        EmployeeRequest: {
+            /** Format: int64 */
+            branchId: number;
+            fullName: string;
+            login: string;
+            phone: string;
+            position: string;
+            roleCode: string;
+            temporaryPassword: string;
         };
         LoginRequest: {
             login: string;
             password: string;
         };
         MeResponse: {
+            /** @description Barcha filiallar ma'lumotini ko'radi */
+            allBranches: boolean;
             /**
              * Format: int64
              * @description Asosiy filial; null — biriktirilmagan
@@ -111,6 +285,40 @@ export interface components {
         RoleRef: {
             code: string;
             name: string;
+        };
+        SetupStatus: {
+            /** @description Yakunlashga to'sqinlik qilayotgan sabablar (i18n matni) */
+            blockers: string[];
+            branches: components["schemas"]["Branch"][];
+            company?: components["schemas"]["Company"];
+            completed: boolean;
+            employees: components["schemas"]["Employee"][];
+            warehouses: components["schemas"]["Warehouse"][];
+        };
+        Warehouse: {
+            active: boolean;
+            address?: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            zones: components["schemas"]["Zone"][];
+        };
+        WarehouseRequest: {
+            address: string;
+            /** Format: int64 */
+            branchId: number;
+            extraZones: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
+            name: string;
+        };
+        Zone: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            sellable: boolean;
+            /** @enum {string} */
+            type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
     };
     responses: never;
@@ -204,6 +412,168 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupStatus"];
+                };
+            };
+        };
+    };
+    createBranch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    updateBranch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    company: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Company"];
+                };
+            };
+        };
+    };
+    complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupStatus"];
+                };
+            };
+        };
+    };
+    createEmployee: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    createWarehouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarehouseRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
             };
         };
     };

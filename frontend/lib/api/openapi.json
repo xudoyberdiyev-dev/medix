@@ -11,6 +11,9 @@
   "tags" : [ {
     "description" : "Tizimga kirish va sessiya",
     "name" : "auth"
+  }, {
+    "description" : "Sozlash ustasi",
+    "name" : "setup"
   } ],
   "paths" : {
     "/api/auth/csrf" : {
@@ -103,10 +106,269 @@
         "summary" : "Parolni almashtirish",
         "tags" : [ "auth" ]
       }
+    },
+    "/api/setup" : {
+      "get" : {
+        "operationId" : "status",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetupStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Usta holati",
+        "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup/branches" : {
+      "post" : {
+        "operationId" : "createBranch",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BranchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Branch"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Filial qo'shish",
+        "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup/branches/{id}" : {
+      "put" : {
+        "operationId" : "updateBranch",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BranchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Branch"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filialni tahrirlash",
+        "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup/company" : {
+      "put" : {
+        "operationId" : "company",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompanyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Company"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kompaniya nomini saqlash",
+        "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup/complete" : {
+      "post" : {
+        "operationId" : "complete",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetupStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ustani yakunlash",
+        "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup/employees" : {
+      "post" : {
+        "operationId" : "createEmployee",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EmployeeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Employee"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Xodim qo'shish (vaqtinchalik parol bilan)",
+        "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup/warehouses" : {
+      "post" : {
+        "operationId" : "createWarehouse",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WarehouseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Ombor va zonalarni qo'shish",
+        "tags" : [ "setup" ]
+      }
     }
   },
   "components" : {
     "schemas" : {
+      "Branch" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "legalName" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "code", "id", "legalName", "name", "tin" ]
+      },
+      "BranchRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "code" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[A-Za-z]{3}$"
+          },
+          "legalName" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "tin" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{9}$"
+          }
+        },
+        "required" : [ "address", "code", "legalName", "name", "phone", "tin" ]
+      },
       "ChangePasswordRequest" : {
         "type" : "object",
         "properties" : {
@@ -122,6 +384,34 @@
         },
         "required" : [ "currentPassword", "newPassword" ]
       },
+      "Company" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "setupCompletedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "id", "name" ]
+      },
+      "CompanyRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
       "CsrfResponse" : {
         "type" : "object",
         "properties" : {
@@ -133,6 +423,83 @@
           }
         },
         "required" : [ "headerName", "token" ]
+      },
+      "Employee" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "login" : {
+            "type" : "string"
+          },
+          "mustChangePassword" : {
+            "type" : "boolean"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "position" : {
+            "type" : "string"
+          },
+          "roleCode" : {
+            "type" : "string"
+          },
+          "roleName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "fullName", "id", "login", "mustChangePassword", "roleCode", "roleName", "status" ]
+      },
+      "EmployeeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fullName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "login" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[A-Za-z0-9._-]{3,64}$"
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "position" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "roleCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "temporaryPassword" : {
+            "type" : "string",
+            "maxLength" : 128,
+            "minLength" : 8
+          }
+        },
+        "required" : [ "branchId", "fullName", "login", "phone", "position", "roleCode", "temporaryPassword" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -153,6 +520,10 @@
       "MeResponse" : {
         "type" : "object",
         "properties" : {
+          "allBranches" : {
+            "type" : "boolean",
+            "description" : "Barcha filiallar ma'lumotini ko'radi"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64",
@@ -181,7 +552,7 @@
             "$ref" : "#/components/schemas/RoleRef"
           }
         },
-        "required" : [ "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
+        "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
       },
       "RoleRef" : {
         "type" : "object",
@@ -194,6 +565,120 @@
           }
         },
         "required" : [ "code", "name" ]
+      },
+      "SetupStatus" : {
+        "type" : "object",
+        "properties" : {
+          "blockers" : {
+            "type" : "array",
+            "description" : "Yakunlashga to'sqinlik qilayotgan sabablar (i18n matni)",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Branch"
+            }
+          },
+          "company" : {
+            "$ref" : "#/components/schemas/Company"
+          },
+          "completed" : {
+            "type" : "boolean"
+          },
+          "employees" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Employee"
+            }
+          },
+          "warehouses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Warehouse"
+            }
+          }
+        },
+        "required" : [ "blockers", "branches", "completed", "employees", "warehouses" ]
+      },
+      "Warehouse" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "zones" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Zone"
+            }
+          }
+        },
+        "required" : [ "active", "branchId", "id", "name", "zones" ]
+      },
+      "WarehouseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "extraZones" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+            },
+            "uniqueItems" : true
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "address", "branchId", "extraZones", "name" ]
+      },
+      "Zone" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "sellable" : {
+            "type" : "boolean"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "id", "name", "sellable", "type" ]
       }
     }
   }
