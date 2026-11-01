@@ -208,7 +208,7 @@ class OpeningBalanceIT {
                 .query(String.class)
                 .list();
         assertThat(batches).containsExactly("PR-1|12500.50|BQ", "PR-1-B|0.00|BQ");
-        long journal = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_move WHERE doc_type = 'BQ' AND doc_id = :d").param("d", doc).query(Long.class).single();
+        long journal = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_move WHERE doc_type = 'BQ' AND doc_id = :d AND batch_id IN (SELECT batch_id FROM opening_balance_line WHERE opening_id = :d)").param("d", doc).query(Long.class).single();
         assertThat(journal).isEqualTo(118);
 
         // O'tkazilgan hujjat o'zgarmaydi — API va baza darajasida
@@ -334,7 +334,7 @@ class OpeningBalanceIT {
                 .andExpect(jsonPath("$.cancelReason").value("Ikki marta kiritilgan"));
         assertThat(stock(p.main(), a.id())).isEqualTo(6);
         // Jurnal: kirim va bekor qilish chiqimi saqlanadi (faqat qo'shiladi)
-        assertThat(jdbc.sql("SELECT string_agg(qty::text, ',' ORDER BY id) FROM stock_move WHERE doc_type = 'BQ' AND doc_id = :d")
+        assertThat(jdbc.sql("SELECT string_agg(qty::text, ',' ORDER BY id) FROM stock_move WHERE doc_type = 'BQ' AND doc_id = :d AND batch_id IN (SELECT batch_id FROM opening_balance_line WHERE opening_id = :d)")
                         .param("d", doc2).query(String.class).single())
                 .isEqualTo("4,-4");
         assertThatThrownBy(() -> jdbc.sql("UPDATE opening_balance SET note = 'x' WHERE id = :d").param("d", doc2).update())
