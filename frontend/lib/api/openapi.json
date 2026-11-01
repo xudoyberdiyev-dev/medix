@@ -1,0 +1,13 @@
+{
+  "components" : { },
+  "info" : {
+    "description" : "Farmatsevtika ulgurji distribyutsiyasi ERP",
+    "title" : "MEDIX API",
+    "version" : "v1"
+  },
+  "openapi" : "3.1.0",
+  "paths" : { },
+  "servers" : [ {
+    "url" : "/"
+  } ]
+}

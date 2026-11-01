@@ -34,6 +34,8 @@ management:
         enabled: true
 
 springdoc:
+  writer-with-default-pretty-printer: true
+  writer-with-order-by-keys: true
   api-docs:
     path: /api/openapi
   swagger-ui:

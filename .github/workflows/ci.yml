@@ -26,6 +26,19 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build va testlar (Testcontainers + PostgreSQL 18)
         run: ./gradlew --no-daemon build
+      - name: OpenAPI tavsifi (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi
+          path: backend/build/openapi/openapi.json
+          if-no-files-found: ignore
+      - name: OpenAPI frontend bilan mosmi
+        run: |
+          if ! diff -u ../frontend/lib/api/openapi.json build/openapi/openapi.json; then
+            echo "::error::API o'zgardi. 'openapi' artifactini frontend/lib/api/openapi.json ga ko'chiring va 'pnpm api:gen' ni ishga tushiring."
+            exit 1
+          fi
       - name: Test hisobotlari
         if: failure()
         uses: actions/upload-artifact@v4
@@ -52,6 +65,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm lint
+      - run: pnpm api:check
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
