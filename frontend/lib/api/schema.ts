@@ -626,7 +626,7 @@ export interface paths {
          * Mening markirovkam
          * @description Faol ish bo'lmasa — 204.
          */
-        get: operations["mine"];
+        get: operations["mine_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -728,7 +728,7 @@ export interface paths {
          * Markirovkani boshlash
          * @description Bir markirovkachida bitta faol buyurtma.
          */
-        post: operations["start"];
+        post: operations["start_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2055,6 +2055,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reysim (haydovchi)
+         * @description Faol reys bo'lmasa — 204.
+         */
+        get: operations["mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/options": {
         parameters: {
             query?: never;
@@ -2089,6 +2109,26 @@ export interface paths {
          * @description Reyssiz, «Yuklanmoqda»ga.
          */
         post: operations["pickup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/pickup/{orderId}/handover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «O'zi olib ketadi» — mijoz olib chiqdi
+         * @description Sotuv va hisob-faktura; «Yo'lda».
+         */
+        post: operations["handover"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2146,6 +2186,46 @@ export interface paths {
          * @description Faqat yuklash boshlanmagan «Rejalashtirilgan» reys.
          */
         post: operations["cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Yuklab bo'lindi — reysni boshlash»
+         * @description Har buyurtmaga sotuv (SV) va hisob-faktura (HF); «Yo'lda».
+         */
+        post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/stops/{stopId}/load": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Qabul qildim»
+         * @description Haydovchi buyurtmani joylar soni bo'yicha qabul qiladi.
+         */
+        post: operations["load"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2667,6 +2747,9 @@ export interface components {
             name: string;
             system: boolean;
         };
+        HandoverResult: {
+            sale: string;
+        };
         ImportResult: {
             applied: boolean;
             /** Format: int32 */
@@ -2731,6 +2814,10 @@ export interface components {
             priceTypeId: number;
             /** Format: int64 */
             productId: number;
+        };
+        LoadRequest: {
+            /** Format: int32 */
+            places: number;
         };
         LoginRequest: {
             login: string;
@@ -3838,6 +3925,9 @@ export interface components {
             completed: boolean;
             employees: components["schemas"]["Employee"][];
             warehouses: components["schemas"]["Warehouse"][];
+        };
+        StartResult: {
+            sales: string[];
         };
         StockPage: {
             items: components["schemas"]["StockRow"][];
@@ -5049,7 +5139,7 @@ export interface operations {
             };
         };
     };
-    mine: {
+    mine_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5166,7 +5256,7 @@ export interface operations {
             };
         };
     };
-    start: {
+    start_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -7129,6 +7219,26 @@ export interface operations {
             };
         };
     };
+    mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
     options: {
         parameters: {
             query: {
@@ -7171,6 +7281,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PickupResult"];
+                };
+            };
+        };
+    };
+    handover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoverResult"];
                 };
             };
         };
@@ -7231,6 +7363,55 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
+    start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartResult"];
+                };
+            };
+        };
+    };
+    load: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                stopId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoadRequest"];
             };
         };
         responses: {

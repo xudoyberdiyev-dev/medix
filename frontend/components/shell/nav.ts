@@ -57,6 +57,7 @@ export const navigation: NavGroup[] = [
       { key: "picking", label: "Yigʻish", href: "/picking", icon: ClipboardCheck, anyOf: ["picking.do"] },
       { key: "marking", label: "Markirovka", href: "/marking", icon: ScanLine, anyOf: ["marking.scan"] },
       { key: "shipments", label: "Joʻnatish", href: "/shipments", icon: Truck, anyOf: ["shipments.view"] },
+      { key: "driver", label: "Reysim", href: "/driver", icon: Truck, anyOf: ["trip.driver"] },
       { key: "stock", label: "Qoldiqlar", href: "/stock", icon: Boxes, anyOf: ["stock.view"] },
       { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: PackageOpen, anyOf: ["opening.list", "opening.view"] },

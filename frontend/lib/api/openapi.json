@@ -1468,7 +1468,7 @@
     "/api/marking/mine" : {
       "get" : {
         "description" : "Faol ish bo'lmasa — 204.",
-        "operationId" : "mine",
+        "operationId" : "mine_1",
         "responses" : {
           "200" : {
             "content" : {
@@ -1632,7 +1632,7 @@
     "/api/marking/orders/{id}/start" : {
       "post" : {
         "description" : "Bir markirovkachida bitta faol buyurtma.",
-        "operationId" : "start",
+        "operationId" : "start_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4558,6 +4558,26 @@
         "tags" : [ "trips" ]
       }
     },
+    "/api/trips/mine" : {
+      "get" : {
+        "description" : "Faol reys bo'lmasa — 204.",
+        "operationId" : "mine",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Reysim (haydovchi)",
+        "tags" : [ "trips" ]
+      }
+    },
     "/api/trips/options" : {
       "get" : {
         "description" : "Filialning faol mashinalari (band joylar bilan) va haydovchilari.",
@@ -4614,6 +4634,35 @@
           }
         },
         "summary" : "«O'zi olib ketadi» — nakladnoy",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/pickup/{orderId}/handover" : {
+      "post" : {
+        "description" : "Sotuv va hisob-faktura; «Yo'lda».",
+        "operationId" : "handover",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HandoverResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«O'zi olib ketadi» — mijoz olib chiqdi",
         "tags" : [ "trips" ]
       }
     },
@@ -4713,6 +4762,82 @@
           }
         },
         "summary" : "Reysni bekor qilish",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/start" : {
+      "post" : {
+        "description" : "Har buyurtmaga sotuv (SV) va hisob-faktura (HF); «Yo'lda».",
+        "operationId" : "start",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StartResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Yuklab bo'lindi — reysni boshlash»",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/stops/{stopId}/load" : {
+      "post" : {
+        "description" : "Haydovchi buyurtmani joylar soni bo'yicha qabul qiladi.",
+        "operationId" : "load",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "stopId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoadRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Qabul qildim»",
         "tags" : [ "trips" ]
       }
     },
@@ -6106,6 +6231,15 @@
         },
         "required" : [ "active", "direction", "id", "name", "system" ]
       },
+      "HandoverResult" : {
+        "type" : "object",
+        "properties" : {
+          "sale" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "sale" ]
+      },
       "ImportResult" : {
         "type" : "object",
         "properties" : {
@@ -6283,6 +6417,17 @@
           }
         },
         "required" : [ "newPrice", "priceTypeId", "productId" ]
+      },
+      "LoadRequest" : {
+        "type" : "object",
+        "properties" : {
+          "places" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          }
+        },
+        "required" : [ "places" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -9003,6 +9148,18 @@
           }
         },
         "required" : [ "blockers", "branches", "completed", "employees", "warehouses" ]
+      },
+      "StartResult" : {
+        "type" : "object",
+        "properties" : {
+          "sales" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "sales" ]
       },
       "StockPage" : {
         "type" : "object",

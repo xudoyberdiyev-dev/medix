@@ -79,6 +79,14 @@ export function ShipmentsPage() {
   const [cancelError, setCancelError] = useState<unknown>(null);
   const [cancelPending, setCancelPending] = useState(false);
   const [pickupPending, setPickupPending] = useState<number | null>(null);
+  const waiting = useQuery({
+    queryKey: ["orders", "list", "pickup-loading", scopeBranch],
+    queryFn: () =>
+      unwrap(api.GET("/api/orders", { params: { query: { status: "LOADING", branchId: scopeBranch ?? undefined, size: 200 } } })),
+    enabled: allowed,
+    select: (p) => p.items.filter((o) => o.deliveryType === "PICKUP"),
+  });
+  const [handoverPending, setHandoverPending] = useState<number | null>(null);
   const options = useQuery({
     queryKey: ["trips", "options", tripBranch],
     queryFn: () => unwrap(api.GET("/api/trips/options", { params: { query: { branchId: tripBranch ?? 0 } } })),
@@ -136,6 +144,21 @@ export function ShipmentsPage() {
       setError(e);
     } finally {
       setPickupPending(null);
+    }
+  }
+
+  async function handover(id: number) {
+    setHandoverPending(id);
+    setError(null);
+    try {
+      await ensureCsrf();
+      const r = await unwrap(api.POST("/api/trips/pickup/{orderId}/handover", { params: { path: { orderId: id } } }));
+      toast({ tone: "success", title: "Mijoz olib ketdi", description: `Sotuv ${r.sale} va hisob-faktura yozildi` });
+      await qc.invalidateQueries({ queryKey: ["orders"] });
+    } catch (e) {
+      setError(e);
+    } finally {
+      setHandoverPending(null);
     }
   }
 
@@ -229,6 +252,34 @@ export function ShipmentsPage() {
                           onClick={() => void pickup(o.id)}
                         >
                           Nakladnoy berish
+                        </Button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+            {(waiting.data ?? []).length > 0 ? (
+              <>
+                <h2 className="mt-6 mb-3 text-subtitle">Olib ketishni kutmoqda</h2>
+                <ul className="flex flex-col gap-2">
+                  {(waiting.data ?? []).map((o) => (
+                    <li
+                      key={o.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-3"
+                    >
+                      <div>
+                        <span className="font-mono">{o.number}</span> · {o.customer} · {formatMoney(o.total)} soʻm
+                      </div>
+                      {can(me.data, "shipments.ship") ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          icon={PackageCheck}
+                          loading={handoverPending === o.id}
+                          onClick={() => void handover(o.id)}
+                        >
+                          Mijoz olib ketdi
                         </Button>
                       ) : null}
                     </li>
