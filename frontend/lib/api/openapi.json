@@ -18,6 +18,9 @@
     "description" : "Mashinalar",
     "name" : "vehicles"
   }, {
+    "description" : "Qoldiqlar",
+    "name" : "stock"
+  }, {
     "description" : "Omborlar va zonalar",
     "name" : "warehouses"
   }, {
@@ -54,7 +57,7 @@
   "paths" : {
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -1058,7 +1061,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "responses" : {
           "200" : {
             "content" : {
@@ -1700,7 +1703,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "responses" : {
           "200" : {
             "content" : {
@@ -2295,7 +2298,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "responses" : {
           "200" : {
             "content" : {
@@ -2600,6 +2603,84 @@
         },
         "summary" : "Ombor va zonalarni qo'shish",
         "tags" : [ "setup" ]
+      }
+    },
+    "/api/stock" : {
+      "get" : {
+        "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
+        "operationId" : "list_9",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sellableOnly",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "expiringWithinDays",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StockPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoldiqlar (zona × partiya)",
+        "tags" : [ "stock" ]
       }
     },
     "/api/vehicles" : {
@@ -4786,6 +4867,102 @@
           }
         },
         "required" : [ "blockers", "branches", "completed", "employees", "warehouses" ]
+      },
+      "StockPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StockRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Sahifadagi emas, filtr bo'yicha jami"
+          }
+        },
+        "required" : [ "items", "page", "size", "total", "totalQty" ]
+      },
+      "StockRow" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "bonus" : {
+            "type" : "boolean"
+          },
+          "cost" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "daysLeft" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Yaroqlilikka qolgan kunlar (manfiy — o'tgan)"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sellable" : {
+            "type" : "boolean"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zone" : {
+            "type" : "string"
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zoneType" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "batchId", "batchNumber", "bonus", "daysLeft", "expiryDate", "productCode", "productId", "productName", "qty", "sellable", "warehouse", "warehouseId", "zone", "zoneId", "zoneType" ]
       },
       "Terms" : {
         "type" : "object",

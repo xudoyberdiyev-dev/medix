@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_12"];
+        get: operations["list_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -448,7 +448,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_11"];
+        get: operations["list_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -739,7 +739,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari */
-        get: operations["list_10"];
+        get: operations["list_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -967,7 +967,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_9"];
+        get: operations["list_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1146,6 +1146,26 @@ export interface paths {
         put?: never;
         /** Ombor va zonalarni qo'shish */
         post: operations["createWarehouse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qoldiqlar (zona × partiya)
+         * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
+         */
+        get: operations["list_9"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1943,6 +1963,51 @@ export interface components {
             employees: components["schemas"]["Employee"][];
             warehouses: components["schemas"]["Warehouse"][];
         };
+        StockPage: {
+            items: components["schemas"]["StockRow"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+            /**
+             * Format: int64
+             * @description Sahifadagi emas, filtr bo'yicha jami
+             */
+            totalQty: number;
+        };
+        StockRow: {
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            bonus: boolean;
+            /** @description Faqat special.cost ruxsati bilan */
+            cost?: string;
+            /**
+             * Format: int64
+             * @description Yaroqlilikka qolgan kunlar (manfiy — o'tgan)
+             */
+            daysLeft: number;
+            /** Format: date */
+            expiryDate: string;
+            manufacturer?: string;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            sellable: boolean;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+            zone: string;
+            /** Format: int64 */
+            zoneId: number;
+            /** @enum {string} */
+            zoneType: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
+        };
         Terms: {
             /** Format: int64 */
             branchId: number;
@@ -2048,7 +2113,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_12: {
+    list_13: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -2727,7 +2792,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -3200,7 +3265,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -3565,7 +3630,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -3815,6 +3880,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    list_9: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                warehouseId?: number;
+                q?: string;
+                sellableOnly?: boolean;
+                expiringWithinDays?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockPage"];
                 };
             };
         };
