@@ -927,6 +927,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hisobdan o'tkazish
+         * @description Barcha qatorlar «Tekshirildi» va joylar soni → «Hujjatlashtirilmoqda».
+         */
+        post: operations["check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{id}/pick/finish": {
         parameters: {
             query?: never;
@@ -998,6 +1018,26 @@ export interface paths {
          * @description Faqat «Tasdiqlashda» holatidan.
          */
         post: operations["returnToDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/return-to-pick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Yig'ishga qaytarish
+         * @description Sabab bilan; tovar olingan joyiga qaytadi, zahira qayta qo'yiladi.
+         */
+        post: operations["returnToPick"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2040,6 +2080,11 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        CheckRequest: {
+            checkedLines: number[];
+            /** Format: int32 */
+            places: number;
+        };
         CodeChange: {
             /** Format: date-time */
             changedAt: string;
@@ -2584,6 +2629,11 @@ export interface components {
             /** Format: date-time */
             pickStartedAt?: string;
             picker?: string;
+            /**
+             * Format: int32
+             * @description Joylar soni (quti)
+             */
+            places?: number;
             /** @description Qoralamada narx o'zgargan qatorlar bor */
             priceChanged: boolean;
             /** @enum {string} */
@@ -4776,6 +4826,32 @@ export interface operations {
             };
         };
     };
+    check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
     pickFinish: {
         parameters: {
             query?: never;
@@ -4860,6 +4936,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    returnToPick: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderReasonRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

@@ -2114,6 +2114,45 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/{id}/check" : {
+      "post" : {
+        "description" : "Barcha qatorlar «Tekshirildi» va joylar soni → «Hujjatlashtirilmoqda».",
+        "operationId" : "check",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CheckRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisobdan o'tkazish",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/{id}/pick/finish" : {
       "post" : {
         "description" : "Partiya tasdig'i; tovar Jo'natish zonasiga o'tadi.",
@@ -2246,6 +2285,45 @@
           }
         },
         "summary" : "Qoralamaga qaytarish",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/return-to-pick" : {
+      "post" : {
+        "description" : "Sabab bilan; tovar olingan joyiga qaytadi, zahira qayta qo'yiladi.",
+        "operationId" : "returnToPick",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OrderReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yig'ishga qaytarish",
         "tags" : [ "orders" ]
       }
     },
@@ -4648,6 +4726,27 @@
         },
         "required" : [ "currentPassword", "newPassword" ]
       },
+      "CheckRequest" : {
+        "type" : "object",
+        "properties" : {
+          "checkedLines" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 500,
+            "minItems" : 1
+          },
+          "places" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000,
+            "minimum" : 1
+          }
+        },
+        "required" : [ "checkedLines", "places" ]
+      },
       "CodeChange" : {
         "type" : "object",
         "properties" : {
@@ -6150,6 +6249,11 @@
           },
           "picker" : {
             "type" : "string"
+          },
+          "places" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Joylar soni (quti)"
           },
           "priceChanged" : {
             "type" : "boolean",

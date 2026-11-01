@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/selection-controls";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
@@ -329,6 +330,7 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
 
         {doc ? <CreditRow doc={doc} /> : null}
         {doc?.status === "QUEUED" && can(me.data, "orders.queue") ? <TimeForm doc={doc} /> : null}
+        {doc?.status === "CHECKING" && can(me.data, "orders.check") ? <CheckForm doc={doc} /> : null}
 
         {editable ? (
           <div className="grid grid-cols-[1fr_9rem_auto_auto] items-end gap-3 rounded-card border border-border p-3">
@@ -714,6 +716,93 @@ function TimeForm({ doc }: { doc: OrderDetail }) {
       </Button>
       {doc.picker ? <span className="text-text-secondary">Yigʻuvchi: {doc.picker}</span> : null}
       {err.message ? <Alert tone="danger" title={err.message} className="w-full" /> : null}
+    </div>
+  );
+}
+
+/** Hisobdan oʻtkazish (SPEC 5.2 №6): har qator «Tekshirildi», joylar soni; xato boʻlsa — «Yigʻishga qaytarish» (sabab bilan). */
+function CheckForm({ doc }: { doc: OrderDetail }) {
+  const qc = useQueryClient();
+  const [checked, setChecked] = useState<Record<number, boolean>>({});
+  const [places, setPlaces] = useState(doc.places ? String(doc.places) : "");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const [returning, setReturning] = useState(false);
+  const err = describeError(error);
+  const all = doc.lines.every((l) => checked[l.id]);
+
+  async function run(fn: () => Promise<OrderDetail>, title: string) {
+    setPending(true);
+    setError(null);
+    try {
+      await ensureCsrf();
+      const d = await fn();
+      qc.setQueryData(["orders", "one", d.id], d);
+      await qc.invalidateQueries({ queryKey: ["orders", "list"] });
+      toast({ tone: "success", title, description: d.number });
+      setReturning(false);
+    } catch (e) {
+      setError(e);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-card border border-border p-3">
+      <h3 className="text-subtitle">Hisobdan oʻtkazish</h3>
+      <ul className="flex flex-col gap-2">
+        {doc.lines.map((l) => (
+          <li key={l.id} className="flex items-center gap-3">
+            <Checkbox label="Tekshirildi" checked={Boolean(checked[l.id])} onChange={(v) => setChecked((m) => ({ ...m, [l.id]: v }))} />
+            <span className="flex-1">
+              {l.productName} · <span className="tabular-nums">{formatQuantity(l.qty)}</span> dona
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-wrap items-end gap-3">
+        <TextField label="Joylar soni" value={places} onChange={setPlaces} inputMode="numeric" suffix="quti" className="w-40" />
+        <Button
+          variant="secondary"
+          disabled={!all || !/^\d+$/.test(places) || Number(places) < 1}
+          loading={pending && !returning}
+          onClick={() =>
+            void run(
+              () =>
+                unwrap(
+                  api.POST("/api/orders/{id}/check", {
+                    params: { path: { id: doc.id } },
+                    body: { checkedLines: doc.lines.map((l) => l.id), places: Number(places) },
+                  }),
+                ),
+              "Hisobdan oʻtkazildi — hujjatlashtirishga",
+            )
+          }
+        >
+          Hisobdan oʻtkazish
+        </Button>
+        <Button variant="tertiary" icon={RotateCcw} onClick={() => setReturning(true)}>
+          Yigʻishga qaytarish
+        </Button>
+      </div>
+      {err.message ? <Alert tone="danger" title={err.message} /> : null}
+      {returning ? (
+        <DeactivateDialog
+          title={`${doc.number}ni yigʻishga qaytarasizmi?`}
+          consequence="Tovar Joʻnatish zonasidan olingan joyiga qaytadi, zahira qayta qoʻyiladi va buyurtma navbatga tushadi."
+          actionLabel="Yigʻishga qaytarish"
+          pending={pending}
+          error={error}
+          onClose={() => setReturning(false)}
+          onConfirm={(reason) =>
+            void run(
+              () => unwrap(api.POST("/api/orders/{id}/return-to-pick", { params: { path: { id: doc.id } }, body: { reason } })),
+              "Yigʻishga qaytarildi",
+            )
+          }
+        />
+      ) : null}
     </div>
   );
 }
