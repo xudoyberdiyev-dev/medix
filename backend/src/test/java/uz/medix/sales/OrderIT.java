@@ -222,6 +222,18 @@ class OrderIT {
                 .andExpect(jsonPath("$.issues.length()").value(0))
                 .andReturn();
         long doc = id(created);
+        // «Mahsulot qo'shish» katalogi: mavjud qoldiq va mijoz narxi; «Faqat bor mahsulotlar»
+        long empty = product(p, "BY Aspirin bo'sh", "100", 0, null, null);
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("customerId", String.valueOf(c))
+                        .param("q", "аспирин").cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].available").value(50))
+                .andExpect(jsonPath("$.items[0].price").value("2500.50"));
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin")
+                        .param("inStockOnly", "false").cookie(operator))
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[*].productId", hasItem((int) empty)));
         // Qoralamada narx o'zgarsa — ogohlantirish
         setPrice(p, a, "2600");
         mvc.perform(get("/api/orders/" + doc).cookie(operator))

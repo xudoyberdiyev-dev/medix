@@ -77,6 +77,19 @@ class OrderController {
         return detail(id);
     }
 
+    @GetMapping("/catalog")
+    @PreAuthorize("hasAuthority('orders.create')")
+    @Operation(summary = "«Mahsulot qo'shish» katalogi", description = "Mavjud qoldiq, mijoz narxi, eng yaqin muddat, min/max.")
+    OrderModels.CatalogPage catalog(
+            @RequestParam long warehouseId,
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "true") boolean inStockOnly,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return orders.catalog(actor(), warehouseId, customerId, q, inStockOnly, Math.max(page, 0), Math.clamp(size, 1, 200));
+    }
+
     @GetMapping("/previous")
     @PreAuthorize("hasAuthority('orders.create')")
     @Operation(summary = "Mijozning oxirgi 5 ta buyurtmasi", description = "«Oldingi buyurtmani takrorlash» uchun.")

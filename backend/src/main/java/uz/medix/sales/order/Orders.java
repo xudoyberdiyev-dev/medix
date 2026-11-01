@@ -397,6 +397,59 @@ class Orders {
                 .list();
     }
 
+    /**
+     * «Mahsulot qo'shish» katalogi: faol mahsulotlar, sotuvga mavjud qoldiq (mijozning minimal yaroqlilik talabi bilan) va mijoz
+     * narxi. Qidiruv — kod, shtrix-kod yoki nom (lotin/kirill). «Faqat bor mahsulotlar» standart yoqilgan.
+     */
+    @Transactional(readOnly = true)
+    OrderModels.CatalogPage catalog(Actor actor, long warehouseId, Long customerId, String q, boolean inStockOnly, int page, int size) {
+        Place place = place(actor, warehouseId);
+        Terms t = customerId == null ? new Terms(null, null, null, null, null) : terms(customerId, place.branchId());
+        LocalDate minExpiry = today().plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
+        StringBuilder where = new StringBuilder(" WHERE p.active");
+        Map<String, Object> params = new HashMap<>();
+        params.put("w", warehouseId);
+        params.put("min", Date.valueOf(minExpiry));
+        String nq = uz.medix.shared.text.SearchText.normalize(q);
+        if (!nq.isEmpty()) {
+            String[] parts = nq.split(" ");
+            where.append(" AND (p.code = :exact OR EXISTS (SELECT 1 FROM product_barcode pb WHERE pb.product_id = p.id AND pb.barcode = :exact)"
+                    + " OR (true");
+            for (int i = 0; i < parts.length && i < 8; i++) {
+                where.append(" AND p.search_text LIKE :q").append(i).append(" ESCAPE '\\'");
+                params.put("q" + i, "%" + uz.medix.shared.text.SearchText.likeEscape(parts[i]) + "%");
+            }
+            where.append("))");
+            params.put("exact", q.strip());
+        }
+        if (inStockOnly) {
+            where.append(" AND coalesce(a.qty, 0) > 0");
+        }
+        // Sotuvga mavjud qoldiq (StockAvailability bilan bir xil qoida) — o'qish modeli.
+        String from = " " + """
+                FROM product p LEFT JOIN manufacturer mf ON mf.id = p.manufacturer_id
+                LEFT JOIN (SELECT s.product_id, sum(s.qty) AS qty, min(b.expiry_date) AS nearest
+                           FROM stock_balance s JOIN batch b ON b.id = s.batch_id JOIN zone z ON z.id = s.zone_id
+                           WHERE s.warehouse_id = :w AND s.qty > 0 AND z.sellable AND z.active AND b.expiry_date >= :min
+                           GROUP BY s.product_id) a ON a.product_id = p.id
+                """;
+        long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
+        record Row(long id, String code, String name, String manufacturer, Integer qty, Date nearest, Integer minQty, Integer maxQty,
+                boolean controlled, boolean marked) {}
+        List<Row> rows = jdbc.sql("SELECT p.id, p.code, p.name, mf.name AS manufacturer, a.qty, a.nearest, p.min_qty, p.max_qty, p.controlled, p.marked"
+                        + from + where + " ORDER BY lower(p.name), p.id LIMIT :l OFFSET :o")
+                .params(params)
+                .param("l", size)
+                .param("o", (long) page * size)
+                .query(Row.class)
+                .list();
+        Map<Long, Quote> quotes = prices.quotes(place.branchId(), t.priceTypeId(), rows.stream().map(Row::id).toList(), today());
+        List<OrderModels.CatalogRow> items = rows.stream().map(r -> new OrderModels.CatalogRow(r.id(), r.code(), r.name(), r.manufacturer(),
+                r.qty() == null ? 0 : r.qty(), Optional.ofNullable(quotes.get(r.id())).map(x -> x.price().toString()).orElse(null),
+                localDate(r.nearest()), r.minQty(), r.maxQty(), r.controlled(), r.marked())).toList();
+        return new OrderModels.CatalogPage(items, total, page, size);
+    }
+
     /** Mijozning oxirgi 5 ta buyurtmasi («Oldingi buyurtmani takrorlash»). */
     @Transactional(readOnly = true)
     List<PreviousOrder> previous(Actor actor, long customerId) {
