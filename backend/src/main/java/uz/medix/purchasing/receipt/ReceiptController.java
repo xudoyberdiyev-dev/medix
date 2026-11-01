@@ -113,6 +113,14 @@ class ReceiptController {
         return detail(id, auth);
     }
 
+    @PostMapping("/{id}/bonus")
+    @PreAuthorize("hasAuthority('supplierBonus.confirm')")
+    @Operation(summary = "Bonus tasdiqlandi (BNS)", description = "Chegirma YB bonus balansiga qo'shiladi. Faqat o'tkazilgan kirim, bir marta.")
+    ReceiptDetail confirmBonus(@PathVariable long id, Authentication auth) {
+        receipts.confirmBonus(actor(), id);
+        return detail(id, auth);
+    }
+
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyAuthority('receipt.cancel', 'receipt.cancelPosted')")
     @Operation(summary = "Bekor qilish", description = "O'tkazilgan kirim — faqat receipt.cancelPosted va tovar ishlatilmagan bo'lsa.")

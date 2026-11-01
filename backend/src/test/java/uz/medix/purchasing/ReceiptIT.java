@@ -335,4 +335,74 @@ class ReceiptIT {
                 .andExpect(jsonPath("$.items", hasSize(1)))
                 .andExpect(jsonPath("$.items[0].status").value("CANCELLED"));
     }
+
+    private String postedReceipt(Cookie who, String body) throws Exception {
+        MvcResult created = send(post("/api/receipts"), who, body).andExpect(status().isCreated()).andReturn();
+        long doc = id(created);
+        StringBuilder accept = new StringBuilder("{\"lines\":[");
+        List<Integer> ids = lineIds(created);
+        List<Integer> qtys = JsonPath.read(created.getResponse().getContentAsString(), "$.lines[*].qty");
+        for (int i = 0; i < ids.size(); i++) {
+            accept.append(i == 0 ? "" : ",").append("{\"lineId\":").append(ids.get(i)).append(",\"receivedQty\":").append(qtys.get(i))
+                    .append(",\"damagedQty\":0}");
+        }
+        send(post("/api/receipts/" + doc + "/accept"), who, accept.append("]}").toString()).andExpect(status().isOk());
+        return String.valueOf(doc);
+    }
+
+    @Test
+    void discountBecomesBonusBalanceAndBonusReceiptHasNoDebt() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 15);
+        long a = product("KR bonus", false);
+        Cookie admin = loginAs("ADMIN", null);
+
+        // 1) Oddiy kirim, chegirma 3% — qarz kamaymaydi
+        String kr1 = postedReceipt(admin, doc(p, sup, false, line(a, "B1", p.main(), 10, 0, "1000")));
+        send(post("/api/receipts/" + kr1 + "/post"), admin, "{}").andExpect(jsonPath("$.debtAmount").value("10000.00"));
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        send(post("/api/receipts/" + kr1 + "/bonus"), keeper, "").andExpect(status().isForbidden());
+        send(post("/api/receipts/" + kr1 + "/bonus"), admin, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bonusNumber").value(matchesPattern("^BNS-[A-Z]{3}-\\d{6}$")))
+                .andExpect(jsonPath("$.bonusAmount").value("300.00"))
+                .andExpect(jsonPath("$.bonusBalance").value("300.00"))
+                .andExpect(jsonPath("$.supplierBalance").value("10000.00"));
+        send(post("/api/receipts/" + kr1 + "/bonus"), admin, "").andExpect(status().isConflict());
+
+        // 2) Bonus balans hisobidan kirim: qarz yo'q, tannarx 0, «-B»
+        String bonusDoc = doc(p, sup, false, line(a, "B2", p.main(), 1, 1, "250"))
+                .replace("\"discountKind\":\"PERCENT\",\"discountValue\":\"3\",", "\"fromBonus\":true,");
+        send(post("/api/receipts"), admin, bonusDoc.replace("\"fromBonus\":true", "\"fromBonus\":true,\"prepaid\":true").replace("\"prepaid\":false,", ""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("receipt.bonusConflict"));
+        String kr2 = postedReceipt(admin, bonusDoc);
+        mvc.perform(get("/api/receipts/" + kr2).cookie(admin)).andExpect(jsonPath("$.dueDate").doesNotExist()).andExpect(jsonPath("$.fromBonus").value(true));
+        send(post("/api/receipts/" + kr2 + "/post"), admin, "{}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.debtAmount").value("0.00"))
+                .andExpect(jsonPath("$.bonusBalance").value("50.00"))
+                .andExpect(jsonPath("$.supplierBalance").value("10000.00"));
+        assertThat(jdbc.sql("SELECT number || ':' || cost || ':' || bonus FROM batch WHERE product_id = :p AND number LIKE 'B2%'").param("p", a)
+                        .query(String.class).list())
+                .containsExactly("B2-B:0.00:true");
+        assertThat(stock(p.main(), a)).isEqualTo(12);
+
+        // 3) Balans yetmaydi — o'tkazilmaydi
+        String kr3 = postedReceipt(admin, bonusDoc.replace("\"B2\"", "\"B3\"").replace("\"250\"", "\"100\""));
+        send(post("/api/receipts/" + kr3 + "/post"), admin, "{}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("receipt.bonusInsufficient"));
+
+        // 4) Bonusi ishlatilgan kirimni bekor qilib bo'lmaydi; bonus kirimini bekor qilsa — balans qaytadi
+        send(post("/api/receipts/" + kr1 + "/cancel"), admin, "{\"reason\":\"xato\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("receipt.bonusUsed"));
+        send(post("/api/receipts/" + kr2 + "/cancel"), admin, "{\"reason\":\"xato\"}").andExpect(status().isOk());
+        send(post("/api/receipts/" + kr1 + "/cancel"), admin, "{\"reason\":\"xato\"}").andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT coalesce(sum(amount), 0)::text FROM supplier_bonus_ledger WHERE supplier_id = :s").param("s", sup)
+                        .query(String.class).single())
+                .isEqualTo("0.00");
+        assertThat(debt(p.branchId(), sup)).isEqualTo("0.00");
+    }
 }

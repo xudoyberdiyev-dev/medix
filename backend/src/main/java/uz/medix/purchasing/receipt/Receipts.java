@@ -53,6 +53,7 @@ import uz.medix.shared.security.Actor;
 class Receipts {
 
     static final String DOC_TYPE = "KR";
+    static final String BNS_TYPE = "BNS";
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
 
     private final JdbcClient jdbc;
@@ -61,8 +62,11 @@ class Receipts {
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
     private final Clock clock;
+    private final SupplierBonuses bonuses;
 
-    Receipts(JdbcClient jdbc, StockLedger stock, PartyLedger parties, AuditLog audit, DocumentSequenceService numbers, Clock clock) {
+    Receipts(JdbcClient jdbc, StockLedger stock, PartyLedger parties, AuditLog audit, DocumentSequenceService numbers, Clock clock,
+            SupplierBonuses bonuses) {
+        this.bonuses = bonuses;
         this.jdbc = jdbc;
         this.stock = stock;
         this.parties = parties;
@@ -129,12 +133,12 @@ class Receipts {
     Optional<ReceiptDetail> find(long id, Actor actor, boolean prices) {
         record HeadRow(long id, String number, long branchId, long warehouseId, String warehouse, long supplierId, String supplier,
                 Date receiptDate, String invoiceNumber, Date invoiceDate, String paymentType, Date dueDate, boolean dueManual, Long ownerId,
-                String owner, boolean prepaid, String discountKind, BigDecimal discountValue, Date discountDate, String note, String status,
+                String owner, boolean prepaid, boolean fromBonus, String discountKind, BigDecimal discountValue, Date discountDate, String note, String status,
                 String resolution, BigDecimal debtAmount, String createdBy, Timestamp createdAt, String acceptedBy, Timestamp acceptedAt,
                 String postedBy, Timestamp postedAt, String cancelledBy, Timestamp cancelledAt, String cancelReason) {}
         Optional<HeadRow> head = jdbc.sql("""
                 SELECT r.id, r.number, r.branch_id, r.warehouse_id, w.name AS warehouse, r.supplier_id, c.name AS supplier, r.receipt_date,
-                       r.invoice_number, r.invoice_date, r.payment_type, r.due_date, r.due_manual, r.owner_id, ow.full_name AS owner, r.prepaid,
+                       r.invoice_number, r.invoice_date, r.payment_type, r.due_date, r.due_manual, r.owner_id, ow.full_name AS owner, r.prepaid, r.from_bonus,
                        r.discount_kind, r.discount_value, r.discount_date, r.note, r.status, r.resolution, r.debt_amount,
                        cb.full_name AS created_by, r.created_at, ab.full_name AS accepted_by, r.accepted_at, pb.full_name AS posted_by,
                        r.posted_at, xb.full_name AS cancelled_by, r.cancelled_at, r.cancel_reason
@@ -183,14 +187,19 @@ class Receipts {
         }
         boolean accepted = !rows.isEmpty() && rows.getFirst().receivedQty() != null;
         String balance = prices ? parties.balance(h.branchId(), h.supplierId(), Side.SUPPLIER).toString() : null;
+        String bonusBalance = prices ? bonuses.balance(h.branchId(), h.supplierId()).toString() : null;
+        record Bns(String number, BigDecimal amount, Timestamp createdAt) {}
+        Optional<Bns> bns = jdbc.sql("SELECT number, amount, created_at FROM supplier_bonus WHERE receipt_id = :id").param("id", id).query(Bns.class).optional();
         return Optional.of(new ReceiptDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.supplierId(), h.supplier(),
                 h.receiptDate().toLocalDate(), h.invoiceNumber(), localDate(h.invoiceDate()), PaymentType.valueOf(h.paymentType()),
-                localDate(h.dueDate()), h.dueManual(), h.ownerId(), h.owner(), h.prepaid(),
+                localDate(h.dueDate()), h.dueManual(), h.ownerId(), h.owner(), h.prepaid(), h.fromBonus(),
                 h.discountKind() == null ? null : DiscountKind.valueOf(h.discountKind()),
                 h.discountValue() == null ? null : new Money(h.discountValue()).toString(), localDate(h.discountDate()), h.note(),
                 ReceiptStatus.valueOf(h.status()), h.resolution() == null ? null : Resolution.valueOf(h.resolution()), prices,
                 prices && priced && !rows.isEmpty() ? amount.toString() : null, prices && priced && accepted ? actual.toString() : null,
-                prices && h.debtAmount() != null ? new Money(h.debtAmount()).toString() : null, balance, qty, bonus, diff, h.createdBy(),
+                prices && h.debtAmount() != null ? new Money(h.debtAmount()).toString() : null, balance, bonusBalance,
+                bns.map(Bns::number).orElse(null), prices ? bns.map(b -> new Money(b.amount()).toString()).orElse(null) : null,
+                bns.map(b -> b.createdAt().toInstant()).orElse(null), qty, bonus, diff, h.createdBy(),
                 h.createdAt().toInstant(), h.acceptedBy(), instant(h.acceptedAt()), h.postedBy(), instant(h.postedAt()), h.cancelledBy(),
                 instant(h.cancelledAt()), h.cancelReason(), out));
     }
@@ -226,8 +235,9 @@ class Receipts {
         checkHeader(r);
         String number = numbers.next(DocumentPrefix.KR, place.branchCode()).toString();
         long id = jdbc.sql("""
-                INSERT INTO receipt (number, branch_id, warehouse_id, supplier_id, receipt_date, payment_type, prepaid, due_date, created_by)
-                VALUES (:n, :b, :w, :s, :d, :pt, :pp, :due, :by) RETURNING id""")
+                INSERT INTO receipt (number, branch_id, warehouse_id, supplier_id, receipt_date, payment_type, prepaid, from_bonus, due_date,
+                                     created_by)
+                VALUES (:n, :b, :w, :s, :d, :pt, :pp, :fb, :due, :by) RETURNING id""")
                 .param("n", number)
                 .param("b", place.branchId())
                 .param("w", r.warehouseId())
@@ -235,7 +245,8 @@ class Receipts {
                 .param("d", Date.valueOf(r.receiptDate()))
                 .param("pt", r.paymentType().name())
                 .param("pp", r.prepaid())
-                .param("due", r.prepaid() ? null : Date.valueOf(r.dueDate() == null ? r.receiptDate() : r.dueDate()))
+                .param("fb", r.fromBonus())
+                .param("due", r.prepaid() || r.fromBonus() ? null : Date.valueOf(r.dueDate() == null ? r.receiptDate() : r.dueDate()))
                 .param("by", actor.employeeId())
                 .query(Long.class)
                 .single();
@@ -262,13 +273,14 @@ class Receipts {
         checkHeader(r);
         jdbc.sql("""
                 UPDATE receipt SET branch_id = :b, warehouse_id = :w, supplier_id = :s, receipt_date = :d, payment_type = :pt, prepaid = :pp,
-                       due_date = coalesce(due_date, :d), updated_at = now(), version = version + 1 WHERE id = :id""")
+                       from_bonus = :fb, due_date = coalesce(due_date, :d), updated_at = now(), version = version + 1 WHERE id = :id""")
                 .param("b", place.branchId())
                 .param("w", r.warehouseId())
                 .param("s", r.supplierId())
                 .param("d", Date.valueOf(r.receiptDate()))
                 .param("pt", r.paymentType().name())
                 .param("pp", r.prepaid())
+                .param("fb", r.fromBonus())
                 .param("id", id)
                 .update();
         writeHeader(id, place.branchId(), r);
@@ -293,6 +305,9 @@ class Receipts {
                 throw MedixException.badRequest("receipt.discountInvalid");
             }
         }
+        if (r.fromBonus() && (r.prepaid() || r.discountKind() != null)) {
+            throw MedixException.badRequest("receipt.bonusConflict");
+        }
         if (r.dueDate() != null && r.dueDate().isBefore(r.receiptDate())) {
             throw MedixException.badRequest("receipt.dueBeforeDate");
         }
@@ -301,8 +316,9 @@ class Receipts {
     /** To'lov kuni: 100% oldindan to'langan — yo'q; aks holda kiritilgani yoki kirim sanasi + YB sharti (SPEC 5.1). */
     private void writeHeader(long id, long branchId, ReceiptRequest r) {
         LocalDate standard = r.receiptDate().plusDays(supplierDays(r.supplierId(), branchId));
-        LocalDate due = r.prepaid() ? null : (r.dueDate() == null ? standard : r.dueDate());
-        boolean manual = !r.prepaid() && r.dueDate() != null && !r.dueDate().equals(standard);
+        boolean noDebt = r.prepaid() || r.fromBonus();
+        LocalDate due = noDebt ? null : (r.dueDate() == null ? standard : r.dueDate());
+        boolean manual = !noDebt && r.dueDate() != null && !r.dueDate().equals(standard);
         if (r.ownerId() != null) {
             boolean ok = jdbc.sql("SELECT EXISTS (SELECT 1 FROM employee WHERE id = :e AND status <> 'BLOCKED')")
                     .param("e", r.ownerId()).query(Boolean.class).single();
@@ -440,13 +456,15 @@ class Receipts {
             }
             LocalDate produced = localDate(l.producedOn());
             Long batch = null;
-            if (arrived > 0) {
-                batch = stock.createBatch(l.productId(), l.batchNumber(), produced, l.expiryDate().toLocalDate(), new Money(l.price()), false,
-                        DOC_TYPE, l.id());
-                moves.add(Move.in(receiving, batch, arrived));
+            // Bonus balans hisobidan kirim: butun tovar (aksiya bonusi ham) — bitta «Bonus» partiya, tannarx 0.
+            int extra = h.fromBonus() ? l.bonusQty() : 0;
+            if (arrived + extra > 0) {
+                batch = stock.createBatch(l.productId(), l.batchNumber(), produced, l.expiryDate().toLocalDate(), new Money(l.price()),
+                        h.fromBonus(), DOC_TYPE, l.id());
+                moves.add(Move.in(receiving, batch, arrived + extra));
             }
             Long bonusBatch = null;
-            if (l.bonusQty() > 0) {
+            if (l.bonusQty() > 0 && !h.fromBonus()) {
                 bonusBatch = stock.createBatch(l.productId(), l.batchNumber(), produced, l.expiryDate().toLocalDate(), Money.ZERO, true,
                         DOC_TYPE, l.id());
                 moves.add(Move.in(receiving, bonusBatch, l.bonusQty()));
@@ -500,10 +518,11 @@ class Receipts {
                 throw MedixException.conflict("receipt.zoneInvalid", l.lineNo());
             }
             int arrived = l.receivedQty() + l.damagedQty();
+            int extra = h.fromBonus() ? l.bonusQty() : 0;
             if (l.batchId() != null) {
-                moves.add(Move.out(receiving, l.batchId(), arrived));
-                if (l.receivedQty() > 0) {
-                    moves.add(Move.in(l.zoneId(), l.batchId(), l.receivedQty()));
+                moves.add(Move.out(receiving, l.batchId(), arrived + extra));
+                if (l.receivedQty() + extra > 0) {
+                    moves.add(Move.in(l.zoneId(), l.batchId(), l.receivedQty() + extra));
                 }
                 if (l.damagedQty() > 0) {
                     moves.add(Move.in(quarantine, l.batchId(), l.damagedQty()));
@@ -517,10 +536,20 @@ class Receipts {
             debt = debt.plus(new Money(l.price()).times(paid));
         }
         stock.post(new DocRef(DOC_TYPE, id, h.number()), moves);
-        record Terms(long supplierId, Date dueDate) {}
-        Terms t = jdbc.sql("SELECT supplier_id, due_date FROM receipt WHERE id = :id").param("id", id).query(Terms.class).single();
-        parties.record(new PartyLedger.DocRef(DOC_TYPE, id, h.number()), h.branchId(), t.supplierId(), Side.SUPPLIER, debt,
-                localDate(t.dueDate()), null);
+        if (h.fromBonus()) {
+            // Qarz yo'q — summa bonus balansdan ayriladi (yetmasa o'tkazilmaydi; balans bilan qarz yopilmaydi).
+            bonuses.lock(h.branchId(), h.supplierId());
+            Money available = bonuses.balance(h.branchId(), h.supplierId());
+            if (available.compareTo(debt) < 0) {
+                throw MedixException.conflict("receipt.bonusInsufficient", available.format(), debt.format());
+            }
+            bonuses.record(h.branchId(), h.supplierId(), Money.ZERO.minus(debt), DOC_TYPE, id, h.number(), null);
+            debt = Money.ZERO;
+        } else {
+            Date due = jdbc.sql("SELECT due_date FROM receipt WHERE id = :id").param("id", id).query(Date.class).optional().orElse(null);
+            parties.record(new PartyLedger.DocRef(DOC_TYPE, id, h.number()), h.branchId(), h.supplierId(), Side.SUPPLIER, debt,
+                    localDate(due), null);
+        }
         jdbc.sql("""
                 UPDATE receipt SET status = 'POSTED', resolution = :res, debt_amount = :debt, posted_by = :by, posted_at = now(),
                        updated_at = now(), version = version + 1 WHERE id = :id""")
@@ -534,6 +563,50 @@ class Receipts {
         after.put("debt", debt.toString());
         after.put("resolution", applied == null ? "" : applied.name());
         audit.record(AuditEntry.of("receipt.post", "receipt", id).change(Map.of("status", ReceiptStatus.ACCEPTED.name()), after));
+    }
+
+    // ===== Bonus (BNS) =====
+
+    /**
+     * «Bonus tasdiqlandi»: o'tkazilgan kirimdagi chegirma YB bonus balansiga qo'shiladi (BNS hujjati). Foiz — yozilgan qarzdan
+     * (HALF_UP). Bir kirim — bitta BNS. Chegirma qarzdan ayrilmaydi (SPEC 5.1).
+     */
+    @Transactional
+    void confirmBonus(Actor actor, long id) {
+        Head h = lock(id, actor);
+        requireStatus(h, ReceiptStatus.POSTED);
+        record Disc(String discountKind, BigDecimal discountValue, BigDecimal debtAmount) {}
+        Disc d = jdbc.sql("SELECT discount_kind, discount_value, debt_amount FROM receipt WHERE id = :id").param("id", id).query(Disc.class)
+                .single();
+        if (d.discountKind() == null) {
+            throw MedixException.conflict("receipt.noDiscount");
+        }
+        boolean exists = jdbc.sql("SELECT EXISTS (SELECT 1 FROM supplier_bonus WHERE receipt_id = :id)").param("id", id).query(Boolean.class)
+                .single();
+        if (exists) {
+            throw MedixException.conflict("receipt.bonusConfirmed");
+        }
+        Money amount = DiscountKind.valueOf(d.discountKind()) == DiscountKind.SUM ? new Money(d.discountValue())
+                : new Money(d.debtAmount().multiply(d.discountValue()).movePointLeft(2));
+        if (amount.isZero()) {
+            throw MedixException.conflict("receipt.noDiscount");
+        }
+        String branchCode = jdbc.sql("SELECT code FROM branch WHERE id = :b").param("b", h.branchId()).query(String.class).single();
+        String number = numbers.next(DocumentPrefix.BNS, branchCode).toString();
+        long bnsId = jdbc.sql("""
+                INSERT INTO supplier_bonus (number, branch_id, supplier_id, receipt_id, amount, created_by)
+                VALUES (:n, :b, :s, :r, :a, :by) RETURNING id""")
+                .param("n", number)
+                .param("b", h.branchId())
+                .param("s", h.supplierId())
+                .param("r", id)
+                .param("a", amount.amount())
+                .param("by", actor.employeeId())
+                .query(Long.class)
+                .single();
+        bonuses.lock(h.branchId(), h.supplierId());
+        bonuses.record(h.branchId(), h.supplierId(), amount, BNS_TYPE, bnsId, number, h.number());
+        audit.record(AuditEntry.of("receipt.bonusConfirm", "receipt", id).change(null, Map.of("bns", number, "amount", amount.toString())));
     }
 
     // ===== Bekor qilish =====
@@ -580,9 +653,23 @@ class Receipts {
             stock.post(new DocRef(DOC_TYPE, id, h.number()), reverse);
             if (h.status() == ReceiptStatus.POSTED) {
                 Money total = parties.docTotal(DOC_TYPE, id);
-                long supplier = jdbc.sql("SELECT supplier_id FROM receipt WHERE id = :id").param("id", id).query(Long.class).single();
-                parties.record(new PartyLedger.DocRef(DOC_TYPE, id, h.number()), h.branchId(), supplier, Side.SUPPLIER,
+                parties.record(new PartyLedger.DocRef(DOC_TYPE, id, h.number()), h.branchId(), h.supplierId(), Side.SUPPLIER,
                         Money.ZERO.minus(total), null, "Bekor qilindi");
+                bonuses.lock(h.branchId(), h.supplierId());
+                // Bonus balansdan olingan summa qaytariladi; tasdiqlangan bonus (BNS) — balansdan ayriladi (ishlatilgan bo'lsa — yo'q).
+                bonuses.record(h.branchId(), h.supplierId(), Money.ZERO.minus(bonuses.docTotal(DOC_TYPE, id)), DOC_TYPE, id, h.number(),
+                        "Bekor qilindi");
+                record Bns(long id, String number, BigDecimal amount) {}
+                Optional<Bns> bns = jdbc.sql("SELECT id, number, amount FROM supplier_bonus WHERE receipt_id = :id").param("id", id)
+                        .query(Bns.class).optional();
+                if (bns.isPresent()) {
+                    Money amount = new Money(bns.get().amount());
+                    if (bonuses.balance(h.branchId(), h.supplierId()).compareTo(amount) < 0) {
+                        throw MedixException.conflict("receipt.bonusUsed", bns.get().number());
+                    }
+                    bonuses.record(h.branchId(), h.supplierId(), Money.ZERO.minus(amount), BNS_TYPE, bns.get().id(), bns.get().number(),
+                            "Kirim bekor qilindi");
+                }
             }
         }
         jdbc.sql("""
@@ -599,13 +686,13 @@ class Receipts {
 
     // ===== Ichki =====
 
-    private record Head(long id, String number, long branchId, long warehouseId, ReceiptStatus status) {}
+    private record Head(long id, String number, long branchId, long warehouseId, long supplierId, ReceiptStatus status, boolean fromBonus) {}
 
     private Head lock(long id, Actor actor) {
-        return jdbc.sql("SELECT id, number, branch_id, warehouse_id, status FROM receipt WHERE id = :id FOR UPDATE")
+        return jdbc.sql("SELECT id, number, branch_id, warehouse_id, supplier_id, status, from_bonus FROM receipt WHERE id = :id FOR UPDATE")
                 .param("id", id)
                 .query((rs, n) -> new Head(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getLong("warehouse_id"),
-                        ReceiptStatus.valueOf(rs.getString("status"))))
+                        rs.getLong("supplier_id"), ReceiptStatus.valueOf(rs.getString("status")), rs.getBoolean("from_bonus")))
                 .optional()
                 .filter(h -> actor.canAccessBranch(h.branchId()))
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
