@@ -46,6 +46,7 @@ final class ReceiptModels {
             @Schema(nullable = true, description = "Faktura narxi (1 dona, QQS bilan). Ombor mudiri kiritmaydi.")
                     @Pattern(regexp = MONEY, message = "{validation.money}") String price) {}
 
+    /** {@code fromBonus} — ixtiyoriy (eski mijozlar yubormaydi): {@code null} = yo'q. */
     record ReceiptRequest(
             @NotNull(message = "{validation.required}") Long warehouseId,
             @NotNull(message = "{validation.required}") Long supplierId,
@@ -56,7 +57,7 @@ final class ReceiptModels {
             @Schema(nullable = true, description = "Bo'sh — kirim sanasi + YB sharti (filial)") LocalDate dueDate,
             @Schema(nullable = true, description = "«Kim nomiga» xodim") Long ownerId,
             boolean prepaid,
-            @Schema(description = "YB bonus balansi hisobidan: qarz yo'q, tannarx 0") boolean fromBonus,
+            @Schema(nullable = true, description = "YB bonus balansi hisobidan: qarz yo'q, tannarx 0") Boolean fromBonus,
             @Schema(nullable = true) DiscountKind discountKind,
             @Schema(nullable = true) @Pattern(regexp = MONEY, message = "{validation.money}") String discountValue,
             @Schema(nullable = true) LocalDate discountDate,

@@ -245,8 +245,8 @@ class Receipts {
                 .param("d", Date.valueOf(r.receiptDate()))
                 .param("pt", r.paymentType().name())
                 .param("pp", r.prepaid())
-                .param("fb", r.fromBonus())
-                .param("due", r.prepaid() || r.fromBonus() ? null : Date.valueOf(r.dueDate() == null ? r.receiptDate() : r.dueDate()))
+                .param("fb", fromBonus(r))
+                .param("due", r.prepaid() || fromBonus(r) ? null : Date.valueOf(r.dueDate() == null ? r.receiptDate() : r.dueDate()))
                 .param("by", actor.employeeId())
                 .query(Long.class)
                 .single();
@@ -280,7 +280,7 @@ class Receipts {
                 .param("d", Date.valueOf(r.receiptDate()))
                 .param("pt", r.paymentType().name())
                 .param("pp", r.prepaid())
-                .param("fb", r.fromBonus())
+                .param("fb", fromBonus(r))
                 .param("id", id)
                 .update();
         writeHeader(id, place.branchId(), r);
@@ -305,7 +305,7 @@ class Receipts {
                 throw MedixException.badRequest("receipt.discountInvalid");
             }
         }
-        if (r.fromBonus() && (r.prepaid() || r.discountKind() != null)) {
+        if (fromBonus(r) && (r.prepaid() || r.discountKind() != null)) {
             throw MedixException.badRequest("receipt.bonusConflict");
         }
         if (r.dueDate() != null && r.dueDate().isBefore(r.receiptDate())) {
@@ -316,7 +316,7 @@ class Receipts {
     /** To'lov kuni: 100% oldindan to'langan — yo'q; aks holda kiritilgani yoki kirim sanasi + YB sharti (SPEC 5.1). */
     private void writeHeader(long id, long branchId, ReceiptRequest r) {
         LocalDate standard = r.receiptDate().plusDays(supplierDays(r.supplierId(), branchId));
-        boolean noDebt = r.prepaid() || r.fromBonus();
+        boolean noDebt = r.prepaid() || fromBonus(r);
         LocalDate due = noDebt ? null : (r.dueDate() == null ? standard : r.dueDate());
         boolean manual = !noDebt && r.dueDate() != null && !r.dueDate().equals(standard);
         if (r.ownerId() != null) {
@@ -735,6 +735,10 @@ class Receipts {
         if (p.blocked()) {
             throw MedixException.conflict("receipt.supplierBlocked");
         }
+    }
+
+    private static boolean fromBonus(ReceiptRequest r) {
+        return Boolean.TRUE.equals(r.fromBonus());
     }
 
     private static LocalDate localDate(Date d) {
