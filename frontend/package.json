@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "api:gen": "openapi-typescript lib/api/openapi.json -o lib/api/schema.ts",
-    "api:check": "pnpm api:gen && git diff --exit-code -- lib/api/schema.ts"
+    "api:check": "pnpm api:gen && git diff --exit-code -- lib/api/schema.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
@@ -25,6 +26,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
