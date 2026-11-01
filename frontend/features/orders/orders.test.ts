@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canApprove, canCancelOrder } from "./api";
+import { timerText } from "./picking-page";
 
 const none = { own: false, cancel: false, manage: false, cancelPick: false };
 
@@ -18,5 +19,13 @@ describe("buyurtma qoidalari (server bilan bir xil)", () => {
     expect(canApprove("DIRECTOR", true, false)).toBe(false);
     expect(canApprove("DIRECTOR", false, true)).toBe(true);
     expect(canApprove(null, true, true)).toBe(false);
+  });
+});
+
+describe("timerText", () => {
+  it("qolgan va kechikkan vaqt", () => {
+    const now = new Date("2026-11-01T10:00:00Z");
+    expect(timerText(new Date("2026-11-01T10:12:05Z"), now)).toEqual({ text: "12:05", late: false });
+    expect(timerText(new Date("2026-11-01T09:57:30Z"), now)).toEqual({ text: "Kechikdi: 3 daqiqa", late: true });
   });
 });

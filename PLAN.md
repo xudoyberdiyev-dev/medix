@@ -7,7 +7,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Bosqich:** 0 — tugadi; 1 — Identifikatsiya **tugadi**; 2 — Katalog ~90%; 3 — Narxlar ~75% (tannarxdan past nazorati yoqildi); 4 — Ombor ~85% (BQ, eksport; qoldi: SmartUp ustunlari); 5 — Kirim ~70% (KR to'liq oqim, BNS, bonus kirim; qoldi: eslatmalar, «Mahsulot qo'shish» katalog sahifasi)
 - **PR:** #1 (develop → main) ochiq — 0–4-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
 - **Oxirgi sessiya:** 01.11.2026 18:05 — 4-bosqich: BQ hujjati (qoralama → o'tkazish → Direktor bekor qilishi, .xlsx import), Qoldiqlar/Muddat .xlsx eksport, omborni nofaol qilishda qoldiq tekshiruvi; 5-bosqich: Kirim (qoralama → qabul → o'tkazish, farq sababi, Karantin, qarz jurnali, to'lov kuni), BNS va bonus balans hisobidan kirim; 3-bosqich: tannarxdan past narx → Direktor tasdig'i. E2E: BQ va Kirim ssenariylari.
-- **Keyingi vazifa:** 5-bosqich qoldig'i — to'lov kuni va bonus eslatmalari (notification moduli: Direktor, Buxgalter, «Kim nomiga»), «Mahsulot qo'shish» katalog sahifasi (kirim qatorlari uchun), kirim ro'yxatida filtrlar (YB, sana). Keyin 3-bosqich «Kirim bo'yicha» narx rejimi va o'rtacha/oxirgi kirim narxiga ustama; so'ng 6-bosqich — Buyurtma.
+- **Keyingi vazifa (yangilandi 01.11 kechqurun):** 7-bosqich davomi — Markirovkachi paneli (GS1 tartibi), Hisobdan o'tkazish (har qator «Tekshirildi», joylar soni, «Yig'ishga qaytarish»), Ombor mudiri monitori; so'ng hujjatlashtirish/reys (8-bosqich: sotuv va HF «Yo'lda» da). Eski ro'yxat: 5-bosqich qoldig'i — to'lov kuni va bonus eslatmalari (notification moduli: Direktor, Buxgalter, «Kim nomiga»), «Mahsulot qo'shish» katalog sahifasi (kirim qatorlari uchun), kirim ro'yxatida filtrlar (YB, sana). Keyin 3-bosqich «Kirim bo'yicha» narx rejimi va o'rtacha/oxirgi kirim narxiga ustama; so'ng 6-bosqich — Buyurtma.
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
@@ -77,8 +77,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [~] Buyurtmalar sahifasi ✅ (holat filtri, qidiruv, «Mening buyurtmalarim»), buyurtma kartochkasi (mijoz qatori, muammolar, tasdiq sabablari) ✅. Qoldi: «Hozir kimda», holat yorliqlari (tab), e2e
 
 ## 7. Ombor zanjiri
-- [ ] FEFO taklifi va zahira, vaqt berish
-- [ ] Yig'uvchi paneli, Markirovkachi paneli (GS1 tekshiruv tartibi), Ombor mudiri paneli (monitor, SSE)
+- [x] FEFO zahira (`inventory.StockReservations`: Navbatga o'tishda muddati eng yaqin partiyalar, sotuvga ochiq zona, minimal yaroqlilik; tartibli FOR UPDATE, parallel test; bekor qilishda bo'shaydi; mavjud qoldiqdan ayriladi), vaqt berish (yig'ish/markirovka daqiqasi, Ombor mudiri)
+- [~] Yig'uvchi paneli ✅ (navbat, «Band: …», bitta faol yig'ish, katta taymer / «Kechikdi: N daqiqa», «Olindi» belgilari, yakunlash → Jo'natish zonasi; API'da «Boshqa partiyadan oldim» — FEFO dan chetlanish belgisi). Qoldi: UI'da boshqa partiyani tanlash, «Muammo bor», terish varag'i, «Bugungi natijam». Markirovkachi paneli (GS1), Ombor mudiri paneli (monitor, SSE) — keyingi
 - [ ] Hisobdan o'tkazish, reys, nakladnoy, terish varag'i
 
 ## 8. Yetkazish

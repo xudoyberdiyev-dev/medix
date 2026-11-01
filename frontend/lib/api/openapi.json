@@ -1927,6 +1927,29 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/pick-queue" : {
+      "get" : {
+        "description" : "Vaqt berilgan «Navbatda» va «Yig'ilmoqda» buyurtmalar.",
+        "operationId" : "pickQueue",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PickQueueItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yig'uvchi navbati",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/previous" : {
       "get" : {
         "description" : "«Oldingi buyurtmani takrorlash» uchun.",
@@ -2091,6 +2114,74 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/{id}/pick/finish" : {
+      "post" : {
+        "description" : "Partiya tasdig'i; tovar Jo'natish zonasiga o'tadi.",
+        "operationId" : "pickFinish",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PickFinishRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yig'ishni yakunlash",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/pick/start" : {
+      "post" : {
+        "description" : "Bir yig'uvchida bitta faol buyurtma.",
+        "operationId" : "pickStart",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yig'ishni boshlash",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/{id}/reject" : {
       "post" : {
         "operationId" : "reject_1",
@@ -2184,6 +2275,45 @@
           }
         },
         "summary" : "Yuborish",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/time" : {
+      "post" : {
+        "description" : "Yig'ish va markirovka uchun daqiqa (har buyurtmaga alohida). Faqat «Navbatda».",
+        "operationId" : "giveTime",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TimeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Vaqt berish",
         "tags" : [ "orders" ]
       }
     },
@@ -5967,6 +6097,10 @@
             "type" : "string",
             "enum" : [ "DELIVERY", "PICKUP" ]
           },
+          "fefoDeviation" : {
+            "type" : "boolean",
+            "description" : "Yig'uvchi FEFO taklif qilmagan partiyani olgan"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -5983,6 +6117,10 @@
               "$ref" : "#/components/schemas/OrderLine"
             }
           },
+          "markMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "note" : {
             "type" : "string"
           },
@@ -5996,6 +6134,22 @@
           "paymentType" : {
             "type" : "string",
             "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "pickFinishedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "pickMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yig'ish uchun berilgan vaqt, daqiqa"
+          },
+          "pickStartedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "picker" : {
+            "type" : "string"
           },
           "priceChanged" : {
             "type" : "boolean",
@@ -6020,7 +6174,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "status", "total", "warehouse", "warehouseId" ]
+        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "fefoDeviation", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "status", "total", "warehouse", "warehouseId" ]
       },
       "OrderIssue" : {
         "type" : "object",
@@ -6304,6 +6458,86 @@
           }
         },
         "required" : [ "permissions" ]
+      },
+      "PickFinishRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PickLineConfirm"
+            }
+          }
+        }
+      },
+      "PickLineConfirm" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "lineId" ]
+      },
+      "PickQueueItem" : {
+        "type" : "object",
+        "properties" : {
+          "customer" : {
+            "type" : "string"
+          },
+          "deadline" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Berilgan vaqt tugash payti"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "pickMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pickStartedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "picker" : {
+            "type" : "string"
+          },
+          "pickerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "queuedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "customer", "id", "lines", "marked", "number", "queuedAt", "status", "totalQty" ]
       },
       "PinRequest" : {
         "type" : "object",
@@ -7654,6 +7888,24 @@
             "format" : "int64"
           }
         }
+      },
+      "TimeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "markMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 600,
+            "minimum" : 1
+          },
+          "pickMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 600,
+            "minimum" : 1
+          }
+        },
+        "required" : [ "pickMinutes" ]
       },
       "UpdateBranchRequest" : {
         "type" : "object",

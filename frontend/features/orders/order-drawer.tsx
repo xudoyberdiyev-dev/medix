@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, CircleAlert, History, Info, LayoutList, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +13,13 @@ import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
-import { useMe } from "@/features/auth/session";
+import { ensureCsrf, useMe } from "@/features/auth/session";
 import { PAYMENT_TYPES, formatIsoDate, parseUzDate } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { useWarehouses } from "@/features/organization/api";
 import { searchProducts } from "@/features/prices/api";
 import { describeError } from "@/features/setup/form-error";
+import { api, unwrap } from "@/lib/api/client";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import {
   APPROVE_BRANCH,
@@ -326,6 +328,7 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
         </div>
 
         {doc ? <CreditRow doc={doc} /> : null}
+        {doc?.status === "QUEUED" && can(me.data, "orders.queue") ? <TimeForm doc={doc} /> : null}
 
         {editable ? (
           <div className="grid grid-cols-[1fr_9rem_auto_auto] items-end gap-3 rounded-card border border-border p-3">
@@ -668,5 +671,49 @@ function RepeatDialog({ customerId, onClose, onPick }: { customerId: number; onC
         Qoldiq va narx yangidan hisoblanadi; yetmaydiganlar muammolar panelida koʻrinadi.
       </p>
     </Modal>
+  );
+}
+
+/** Vaqt berish (Ombor mudiri, SPEC 5.2 №3): yigʻish va markirovka uchun daqiqa, har buyurtmaga alohida. */
+function TimeForm({ doc }: { doc: OrderDetail }) {
+  const qc = useQueryClient();
+  const marked = doc.lines.some((l) => l.marked);
+  const [pick, setPick] = useState(doc.pickMinutes ? String(doc.pickMinutes) : "");
+  const [mark, setMark] = useState(doc.markMinutes ? String(doc.markMinutes) : "");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const err = describeError(error);
+  async function submit() {
+    setPending(true);
+    setError(null);
+    try {
+      await ensureCsrf();
+      const d = await unwrap(
+        api.POST("/api/orders/{id}/time", {
+          params: { path: { id: doc.id } },
+          body: { pickMinutes: Number(pick), markMinutes: marked && mark ? Number(mark) : undefined },
+        }),
+      );
+      qc.setQueryData(["orders", "one", d.id], d);
+      await qc.invalidateQueries({ queryKey: ["orders", "list"] });
+      toast({ tone: "success", title: "Vaqt berildi", description: `${d.number} · yigʻish ${d.pickMinutes} daqiqa` });
+    } catch (e) {
+      setError(e);
+    } finally {
+      setPending(false);
+    }
+  }
+  return (
+    <div className="flex flex-wrap items-end gap-3 rounded-card border border-border p-3">
+      <TextField label="Yigʻish vaqti" value={pick} onChange={setPick} inputMode="numeric" suffix="daqiqa" className="w-40" />
+      {marked ? (
+        <TextField label="Markirovka vaqti" value={mark} onChange={setMark} inputMode="numeric" suffix="daqiqa" className="w-40" />
+      ) : null}
+      <Button variant="secondary" loading={pending} disabled={!/^\d+$/.test(pick)} onClick={() => void submit()}>
+        {doc.pickMinutes ? "Vaqtni oʻzgartirish" : "Vaqt berish"}
+      </Button>
+      {doc.picker ? <span className="text-text-secondary">Yigʻuvchi: {doc.picker}</span> : null}
+      {err.message ? <Alert tone="danger" title={err.message} className="w-full" /> : null}
+    </div>
   );
 }

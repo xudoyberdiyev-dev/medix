@@ -4,6 +4,7 @@ import {
   Boxes,
   CalendarClock,
   ChartColumn,
+  ClipboardCheck,
   ClipboardList,
   LayoutDashboard,
   PackageOpen,
@@ -50,6 +51,7 @@ export const navigation: NavGroup[] = [
     title: "Ombor",
     items: [
       { key: "receipts", label: "Kirim", href: "/receipts", icon: PackagePlus, anyOf: ["receipt.view"] },
+      { key: "picking", label: "Yigʻish", href: "/picking", icon: ClipboardCheck, anyOf: ["picking.do"] },
       { key: "stock", label: "Qoldiqlar", href: "/stock", icon: Boxes, anyOf: ["stock.view"] },
       { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: PackageOpen, anyOf: ["opening.list", "opening.view"] },

@@ -4,9 +4,9 @@ import { navigationFor } from "./nav";
 const keys = (perms: string[]) => navigationFor(perms).flatMap((g) => g.items.map((i) => i.key));
 
 describe("ruxsatga qarab menyu", () => {
-  it("panel rollari (masalan, haydovchi) faqat bosh sahifani koʻradi", () => {
+  it("panel rollari (masalan, haydovchi) faqat bosh sahifa va oʻz panelini koʻradi", () => {
     expect(keys(["trip.driver"])).toEqual(["home"]);
-    expect(keys(["orders.view", "picking.do"])).toEqual(["home"]);
+    expect(keys(["orders.view", "picking.do"])).toEqual(["home", "picking"]);
   });
 
   it("kalitga qarab: Qoldiqlar — stock.view, Sozlamalar — xodimlar/audit/…", () => {

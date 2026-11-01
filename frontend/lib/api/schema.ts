@@ -829,6 +829,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/pick-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Yig'uvchi navbati
+         * @description Vaqt berilgan «Navbatda» va «Yig'ilmoqda» buyurtmalar.
+         */
+        get: operations["pickQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/previous": {
         parameters: {
             query?: never;
@@ -907,6 +927,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{id}/pick/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Yig'ishni yakunlash
+         * @description Partiya tasdig'i; tovar Jo'natish zonasiga o'tadi.
+         */
+        post: operations["pickFinish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/pick/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Yig'ishni boshlash
+         * @description Bir yig'uvchida bitta faol buyurtma.
+         */
+        post: operations["pickStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{id}/reject": {
         parameters: {
             query?: never;
@@ -958,6 +1018,26 @@ export interface paths {
          * @description Xato bo'lsa — yuborilmaydi; tasdiq sababi bo'lsa — tasdiqqa, aks holda — Navbatga.
          */
         post: operations["submit_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/time": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vaqt berish
+         * @description Yig'ish va markirovka uchun daqiqa (har buyurtmaga alohida). Faqat «Navbatda».
+         */
+        post: operations["giveTime"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2480,16 +2560,30 @@ export interface components {
             deliveryDate?: string;
             /** @enum {string} */
             deliveryType: "DELIVERY" | "PICKUP";
+            /** @description Yig'uvchi FEFO taklif qilmagan partiyani olgan */
+            fefoDeviation: boolean;
             /** Format: int64 */
             id: number;
             issues: components["schemas"]["OrderIssue"][];
             lines: components["schemas"]["OrderLine"][];
+            /** Format: int32 */
+            markMinutes?: number;
             note?: string;
             number: string;
             /** Format: date */
             orderDate: string;
             /** @enum {string} */
             paymentType: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: date-time */
+            pickFinishedAt?: string;
+            /**
+             * Format: int32
+             * @description Yig'ish uchun berilgan vaqt, daqiqa
+             */
+            pickMinutes?: number;
+            /** Format: date-time */
+            pickStartedAt?: string;
+            picker?: string;
             /** @description Qoralamada narx o'zgargan qatorlar bor */
             priceChanged: boolean;
             /** @enum {string} */
@@ -2612,6 +2706,42 @@ export interface components {
         };
         PermissionsRequest: {
             permissions: string[];
+        };
+        PickFinishRequest: {
+            lines?: components["schemas"]["PickLineConfirm"][];
+        };
+        PickLineConfirm: {
+            /** Format: int64 */
+            batchId?: number;
+            /** Format: int64 */
+            lineId: number;
+        };
+        PickQueueItem: {
+            customer: string;
+            /**
+             * Format: date-time
+             * @description Berilgan vaqt tugash payti
+             */
+            deadline?: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lines: number;
+            marked: boolean;
+            number: string;
+            /** Format: int32 */
+            pickMinutes?: number;
+            /** Format: date-time */
+            pickStartedAt?: string;
+            picker?: string;
+            /** Format: int64 */
+            pickerId?: number;
+            /** Format: date-time */
+            queuedAt: string;
+            /** @enum {string} */
+            status: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
+            /** Format: int64 */
+            totalQty: number;
         };
         PinRequest: {
             pin: string;
@@ -3147,6 +3277,12 @@ export interface components {
             supplierPaymentDays?: number;
             /** Format: int64 */
             supplyEmployeeId?: number;
+        };
+        TimeRequest: {
+            /** Format: int32 */
+            markMinutes?: number;
+            /** Format: int32 */
+            pickMinutes: number;
         };
         UpdateBranchRequest: {
             address?: string;
@@ -4502,6 +4638,26 @@ export interface operations {
             };
         };
     };
+    pickQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickQueueItem"][];
+                };
+            };
+        };
+    };
     previous: {
         parameters: {
             query: {
@@ -4620,6 +4776,54 @@ export interface operations {
             };
         };
     };
+    pickFinish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PickFinishRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    pickStart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
     reject_1: {
         parameters: {
             query?: never;
@@ -4678,6 +4882,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    giveTime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
