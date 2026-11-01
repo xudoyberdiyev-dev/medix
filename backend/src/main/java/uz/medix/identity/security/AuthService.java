@@ -12,7 +12,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.shared.audit.AuditEntry;
+import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
+import uz.medix.shared.security.Actor;
 
 /** Login va parol almashtirish. Xato matnlari i18n kalitlari bilan ({@code auth.*}). */
 @Service
@@ -24,11 +27,13 @@ public class AuthService {
     private final EmployeeAccounts accounts;
     private final PasswordEncoder encoder;
     private final Clock clock;
+    private final AuditLog audit;
 
-    AuthService(EmployeeAccounts accounts, PasswordEncoder encoder, Clock clock) {
+    AuthService(EmployeeAccounts accounts, PasswordEncoder encoder, Clock clock, AuditLog audit) {
         this.accounts = accounts;
         this.encoder = encoder;
         this.clock = clock;
+        this.audit = audit;
         this.dummyHash = encoder.encode("medix-dummy-password");
     }
 
@@ -45,14 +50,18 @@ public class AuthService {
             throw MedixException.unauthorized("auth.badCredentials");
         }
         var a = account.get();
+        var actor = new Actor(a.id(), a.branchId());
         if (!encoder.matches(password, a.passwordHash())) {
             accounts.recordFailedLogin(a.id());
+            audit.record(AuditEntry.of("auth.loginFailed", "employee", a.id()), actor);
             throw MedixException.unauthorized("auth.badCredentials");
         }
         if (a.blocked()) {
+            audit.record(AuditEntry.of("auth.loginBlocked", "employee", a.id()), actor);
             throw MedixException.forbidden("auth.blocked");
         }
         accounts.recordSuccessfulLogin(a.id(), clock.instant());
+        audit.record(AuditEntry.of("auth.login", "employee", a.id()), actor);
         return authenticationFor(a);
     }
 
@@ -76,6 +85,7 @@ public class AuthService {
             throw MedixException.badRequest("auth.passwordSame");
         }
         accounts.changePassword(employeeId, encoder.encode(newPassword), clock.instant());
+        audit.record(AuditEntry.of("auth.passwordChanged", "employee", employeeId), new Actor(a.id(), a.branchId()));
     }
 
     private UsernamePasswordAuthenticationToken authenticationFor(EmployeeAccounts.Account a) {

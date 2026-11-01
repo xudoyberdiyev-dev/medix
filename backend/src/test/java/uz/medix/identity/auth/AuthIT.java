@@ -106,6 +106,14 @@ class AuthIT {
                 .query(Long.class)
                 .single();
         assertThat(lastLogin).isEqualTo(1L);
+
+        Long audited = jdbc.sql("""
+                SELECT count(*) FROM audit_log a JOIN employee e ON a.employee_id = e.id
+                WHERE e.login = :l AND a.action = 'auth.login' AND a.entity_type = 'employee'""")
+                .param("l", login)
+                .query(Long.class)
+                .single();
+        assertThat(audited).isEqualTo(1L);
     }
 
     @Test
@@ -130,6 +138,13 @@ class AuthIT {
                 .query(Integer.class)
                 .single();
         assertThat(failed).isEqualTo(1);
+        Long audited = jdbc.sql("""
+                SELECT count(*) FROM audit_log a JOIN employee e ON a.employee_id = e.id
+                WHERE e.login = :l AND a.action = 'auth.loginFailed'""")
+                .param("l", login)
+                .query(Long.class)
+                .single();
+        assertThat(audited).isEqualTo(1L);
 
         mvc.perform(post("/api/auth/login")
                         .with(csrf())

@@ -1,5 +1,6 @@
 package uz.medix.identity.auth;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import uz.medix.identity.security.MedixPrincipal;
 
@@ -9,7 +10,7 @@ record MeResponse(
         String login,
         String fullName,
         RoleRef role,
-        Long branchId,
+        @Schema(nullable = true, description = "Asosiy filial; null — biriktirilmagan") Long branchId,
         boolean mustChangePassword,
         List<String> permissions) {
 
