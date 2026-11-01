@@ -36,7 +36,10 @@ jobs:
       - name: OpenAPI frontend bilan mosmi
         run: |
           if ! diff -u ../frontend/lib/api/openapi.json build/openapi/openapi.json; then
-            echo "::error::API o'zgardi. 'openapi' artifactini frontend/lib/api/openapi.json ga ko'chiring va 'pnpm api:gen' ni ishga tushiring."
+            echo "::error::API o'zgardi. Quyidagi tavsifni (yoki 'openapi' artifactini) frontend/lib/api/openapi.json ga ko'chiring va 'pnpm api:gen' ni ishga tushiring."
+            echo "----- OPENAPI BEGIN -----"
+            cat build/openapi/openapi.json
+            echo "----- OPENAPI END -----"
             exit 1
           fi
       - name: Test hisobotlari
