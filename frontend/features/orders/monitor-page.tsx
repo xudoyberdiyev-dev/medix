@@ -13,6 +13,7 @@ import type { components } from "@/lib/api/schema";
 import { formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { STATUS_LABELS, type OrderStatus } from "./api";
+import { IssuesList } from "./issues";
 import { OrderDrawer } from "./order-drawer";
 import { timerText } from "./picking-page";
 
@@ -121,6 +122,12 @@ export function MonitorPage() {
           )}
         </>
       )}
+      {board.data ? (
+        <section className="mt-6" aria-label="Muammolar">
+          <h2 className="mb-3 text-subtitle">Muammolar</h2>
+          <IssuesList onOpenOrder={setOpen} />
+        </section>
+      ) : null}
       {open !== null ? <OrderDrawer id={open} onClose={() => setOpen(null)} onCreated={() => undefined} /> : null}
     </>
   );

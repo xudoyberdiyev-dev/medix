@@ -16,6 +16,7 @@ import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatQuantity } from "@/lib/format";
 import { useOrder } from "./api";
+import { IssueButton } from "./issues";
 import { day } from "./orders-page";
 
 /** Qolgan vaqt: musbat — «12:05», manfiy — «Kechikdi: N daqiqa» (SPEC 5.2). */
@@ -192,9 +193,12 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
       {err.message ? <Alert tone="danger" title={err.message} className="mt-3" /> : null}
       <div className="mt-4 flex items-center justify-between gap-3">
         <span className="text-caption text-text-secondary">Partiya tasdigʻi: «Ha, shundan oldim» — koʻrsatilgan partiyalardan.</span>
-        <Button icon={CheckCircle2} disabled={!all} loading={pending} onClick={() => void finish()}>
-          Yigʻishni yakunlash
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <IssueButton orderId={id} />
+          <Button icon={CheckCircle2} disabled={!all} loading={pending} onClick={() => void finish()}>
+            Yigʻishni yakunlash
+          </Button>
+        </div>
       </div>
     </Card>
   );

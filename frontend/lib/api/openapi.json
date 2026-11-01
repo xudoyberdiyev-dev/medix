@@ -2215,6 +2215,84 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/issues" : {
+      "get" : {
+        "description" : "Ombor mudiri paneli: ochiq (standart) yoki barchasi; buyurtma bo'yicha.",
+        "operationId" : "listIssues",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "orderId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "open",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrderIssueItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Muammolar",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/issues/{issueId}/resolve" : {
+      "post" : {
+        "operationId" : "resolveIssue",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "issueId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResolveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderIssueItem"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Muammoni hal qilindi deb belgilash",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/monitor" : {
       "get" : {
         "description" : "Bosqichlar ustunlari, taymerlar, kechikkanlar (Navbatda … Yuklanmoqda).",
@@ -2467,6 +2545,45 @@
           }
         },
         "summary" : "Hisobdan o'tkazish",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/issues" : {
+      "post" : {
+        "description" : "Sabab tanlanadi; xabar Ombor mudiriga keladi, taymer to'xtamaydi.",
+        "operationId" : "reportIssue",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IssueRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderIssueItem"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "«Muammo bor»",
         "tags" : [ "orders" ]
       }
     },
@@ -5789,6 +5906,22 @@
         },
         "required" : [ "message", "row" ]
       },
+      "IssueRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "description" : "«Boshqa» uchun majburiy",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "reason" : {
+            "type" : "string",
+            "enum" : [ "NOT_FOUND", "SHORTAGE", "DAMAGED", "WRONG_BATCH", "EXPIRY", "CODE_UNREADABLE", "OTHER" ]
+          }
+        },
+        "required" : [ "reason" ]
+      },
       "License" : {
         "type" : "object",
         "properties" : {
@@ -6971,6 +7104,57 @@
           }
         },
         "required" : [ "code", "level", "message" ]
+      },
+      "OrderIssueItem" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string",
+            "enum" : [ "NOT_FOUND", "SHORTAGE", "DAMAGED", "WRONG_BATCH", "EXPIRY", "CODE_UNREADABLE", "OTHER" ]
+          },
+          "reasonLabel" : {
+            "type" : "string"
+          },
+          "resolution" : {
+            "type" : "string"
+          },
+          "resolvedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "resolvedBy" : {
+            "type" : "string"
+          },
+          "stage" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          }
+        },
+        "required" : [ "createdAt", "createdBy", "customer", "id", "orderId", "orderNumber", "reason", "reasonLabel", "stage" ]
       },
       "OrderLine" : {
         "type" : "object",
@@ -8397,6 +8581,17 @@
           }
         },
         "required" : [ "temporaryPassword" ]
+      },
+      "ResolveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "resolution" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "resolution" ]
       },
       "Role" : {
         "type" : "object",

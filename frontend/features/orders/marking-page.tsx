@@ -21,6 +21,7 @@ import { ApiError } from "@/lib/api/errors";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, GS1_ERROR_TEXT, parseGs1 } from "@/lib/gs1";
+import { IssueButton } from "./issues";
 import { day } from "./orders-page";
 import { timerText } from "./picking-page";
 
@@ -219,6 +220,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
   useEffect(() => {
     if (removing) return;
     const keep = () => {
+      if (document.querySelector("dialog[open]")) return;
       if (document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") input.current?.focus();
     };
     keep();
@@ -380,7 +382,8 @@ function ActiveMarking({ work }: { work: MarkWork }) {
             ))}
           </ul>
           {finishErr.message ? <Alert tone="danger" title={finishErr.message} className="mt-3" /> : null}
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <IssueButton orderId={work.id} />
             <Button icon={CheckCircle2} disabled={!work.complete} loading={finishing} onClick={() => void finish()}>
               Markirovkani yakunlash
             </Button>

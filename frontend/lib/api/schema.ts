@@ -986,6 +986,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Muammolar
+         * @description Ombor mudiri paneli: ochiq (standart) yoki barchasi; buyurtma bo'yicha.
+         */
+        get: operations["listIssues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/issues/{issueId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Muammoni hal qilindi deb belgilash */
+        post: operations["resolveIssue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/monitor": {
         parameters: {
             query?: never;
@@ -1118,6 +1155,26 @@ export interface paths {
          * @description Barcha qatorlar «Tekshirildi» va joylar soni → «Hujjatlashtirilmoqda».
          */
         post: operations["check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Muammo bor»
+         * @description Sabab tanlanadi; xabar Ombor mudiriga keladi, taymer to'xtamaydi.
+         */
+        post: operations["reportIssue"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2497,6 +2554,12 @@ export interface components {
             /** Format: int32 */
             row: number;
         };
+        IssueRequest: {
+            /** @description «Boshqa» uchun majburiy */
+            note?: string;
+            /** @enum {string} */
+            reason: "NOT_FOUND" | "SHORTAGE" | "DAMAGED" | "WRONG_BATCH" | "EXPIRY" | "CODE_UNREADABLE" | "OTHER";
+        };
         License: {
             controlledAllowed: boolean;
             /** Format: int64 */
@@ -3001,6 +3064,27 @@ export interface components {
             /** Format: int32 */
             lineNo?: number;
             message: string;
+        };
+        OrderIssueItem: {
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            customer: string;
+            /** Format: int64 */
+            id: number;
+            note?: string;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            /** @enum {string} */
+            reason: "NOT_FOUND" | "SHORTAGE" | "DAMAGED" | "WRONG_BATCH" | "EXPIRY" | "CODE_UNREADABLE" | "OTHER";
+            reasonLabel: string;
+            resolution?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            resolvedBy?: string;
+            /** @enum {string} */
+            stage: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
         };
         OrderLine: {
             amount?: string;
@@ -3566,6 +3650,9 @@ export interface components {
         };
         ResetPasswordRequest: {
             temporaryPassword: string;
+        };
+        ResolveRequest: {
+            resolution: string;
         };
         Role: {
             code: string;
@@ -5230,6 +5317,55 @@ export interface operations {
             };
         };
     };
+    listIssues: {
+        parameters: {
+            query?: {
+                orderId?: number;
+                open?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderIssueItem"][];
+                };
+            };
+        };
+    };
+    resolveIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                issueId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderIssueItem"];
+                };
+            };
+        };
+    };
     monitor: {
         parameters: {
             query?: {
@@ -5412,6 +5548,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    reportIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderIssueItem"];
                 };
             };
         };
