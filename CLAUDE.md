@@ -28,6 +28,8 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 ## Muhit cheklovlari (bulutdagi sessiya)
 - **Maven Central, Gradle, Docker Hub bloklangan** → backend bu yerda kompilyatsiya qilinmaydi va testlanmaydi. Backend **faqat GitHub Actions CI** da tekshiriladi: push → `gh run watch <id> --exit-status` (yoki `gh run list` bilan kuting) → yiqilsa `gh run view <id> --log-failed`.
   - Kichik sof Java klasslarni (Spring'siz) mahalliy `javac` (JDK 21) bilan tekshirish mumkin.
+  - SQL migratsiyalarni mahalliy PostgreSQL 16 bilan tekshirish mumkin (`/usr/lib/postgresql/16/bin`, `postgres` foydalanuvchisi bilan `initdb -D /var/tmp/pgdata` → `pg_ctl ... -o '-p 55432 -k /var/tmp' start` → `psql -h /var/tmp -p 55432 -U medix`).
+- **OpenAPI → frontend tiplari:** backend API o'zgarsa CI «OpenAPI frontend bilan mosmi» qadamida yiqiladi va logda to'liq tavsifni chiqaradi (artifact yuklab olish bloklangan). `gh run view <id> --log-failed > ci.log && python3 scripts/extract-openapi-from-ci-log.py ci.log frontend/lib/api/openapi.json && (cd frontend && pnpm api:gen)` → commit.
 - **npm registry ochiq** → frontend to'liq mahalliy tekshiriladi: `cd frontend && pnpm install && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
 - UI'ni ko'rish: `pnpm build && pnpm start -p 3100`, keyin Playwright (global o'rnatilgan, `NODE_PATH=$(npm root -g)`) bilan skrinshot olib, dizayn bilan solishtiring.
 - Next.js 16 — o'quv ma'lumotlaringizdan farq qiladi: kod yozishdan oldin `frontend/node_modules/next/dist/docs/` dagi tegishli qo'llanmani o'qing (masalan, Middleware endi `proxy.ts`).
