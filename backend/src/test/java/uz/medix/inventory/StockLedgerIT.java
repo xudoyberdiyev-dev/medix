@@ -219,6 +219,11 @@ class StockLedgerIT {
 
         Cookie admin = loginAs("ADMIN", null);
         mvc.perform(get("/api/stock").param("q", "qoldiq api sinov").param("branchId", String.valueOf(p.branchId())).cookie(admin))
+                .andDo(r -> {
+                    if (r.getResponse().getStatus() >= 500) {
+                        throw new AssertionError("500: " + r.getResolvedException(), r.getResolvedException());
+                    }
+                })
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.totalQty").value(4))
