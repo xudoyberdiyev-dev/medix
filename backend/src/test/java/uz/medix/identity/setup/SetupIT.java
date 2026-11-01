@@ -142,6 +142,15 @@ class SetupIT {
     }
 
     @Test
+    void rolesListedForDirector() throws Exception {
+        Cookie ceo = loginAs("DIRECTOR");
+        mvc.perform(get("/api/roles").cookie(ceo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.system == true)]", hasSize(11)))
+                .andExpect(jsonPath("$[0].code").value("DIRECTOR"));
+    }
+
+    @Test
     void onlyDirectorCanUseWizard() throws Exception {
         Cookie operator = loginAs("OPERATOR");
         mvc.perform(get("/api/setup").cookie(operator))
