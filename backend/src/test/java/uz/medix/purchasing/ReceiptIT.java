@@ -1,0 +1,338 @@
+package uz.medix.purchasing;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.jayway.jsonpath.JsonPath;
+import jakarta.servlet.http.Cookie;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.support.TransactionTemplate;
+import uz.medix.TestcontainersConfig;
+import uz.medix.inventory.StockLedger;
+import uz.medix.inventory.StockLedger.DocRef;
+import uz.medix.inventory.StockLedger.Move;
+import uz.medix.inventory.Warehouses;
+import uz.medix.inventory.ZoneType;
+
+/** KR: qoralama → qabul (farq sababi, Qabul zonasi) → o'tkazish (zonalar, Karantin, qarz, to'lov kuni) → bekor qilish qoidalari. */
+@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@AutoConfigureMockMvc
+@Import(TestcontainersConfig.class)
+class ReceiptIT {
+
+    private static final String PASSWORD = "Sinov-parol-2026";
+
+    @Autowired
+    MockMvc mvc;
+
+    @Autowired
+    JdbcClient jdbc;
+
+    @Autowired
+    PasswordEncoder encoder;
+
+    @Autowired
+    Warehouses warehouses;
+
+    @Autowired
+    StockLedger ledger;
+
+    @Autowired
+    TransactionTemplate tx;
+
+    private record Place(long branchId, long warehouseId, long receiving, long main, long quarantine, long safe) {}
+
+    private Place place() {
+        jdbc.sql("INSERT INTO company (name) SELECT 'Medix Group' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
+        var rnd = ThreadLocalRandom.current();
+        String code = "" + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26));
+        Long branch = jdbc.sql("""
+                INSERT INTO branch (company_id, code, name, legal_name, tin)
+                SELECT id, :c, 'KR sinov ' || :c, 'MChJ', :t FROM company ON CONFLICT DO NOTHING RETURNING id""")
+                .param("c", code)
+                .param("t", String.valueOf(400_000_000L + rnd.nextLong(99_999_999L)))
+                .query(Long.class)
+                .optional()
+                .orElse(null);
+        if (branch == null) {
+            return place();
+        }
+        long b = branch;
+        Warehouses.Warehouse w = tx.execute(s -> warehouses.create(b, "KR ombor " + code, null, Set.of(ZoneType.SAFE)));
+        return new Place(b, w.id(), zone(w, ZoneType.RECEIVING), zone(w, ZoneType.MAIN), zone(w, ZoneType.QUARANTINE), zone(w, ZoneType.SAFE));
+    }
+
+    private static long zone(Warehouses.Warehouse w, ZoneType t) {
+        return w.zones().stream().filter(z -> z.type() == t).findFirst().orElseThrow().id();
+    }
+
+    private long supplier(long branchId, Integer days) {
+        long id = jdbc.sql("INSERT INTO counterparty (tin, name, is_supplier) VALUES (:t, :n, true) RETURNING id")
+                .param("t", String.valueOf(200_000_000L + ThreadLocalRandom.current().nextLong(99_999_999L)))
+                .param("n", "YB " + UUID.randomUUID().toString().substring(0, 6))
+                .query(Long.class)
+                .single();
+        if (days != null) {
+            jdbc.sql("INSERT INTO counterparty_branch_terms (counterparty_id, branch_id, supplier_payment_days) VALUES (:c, :b, :d)")
+                    .param("c", id)
+                    .param("b", branchId)
+                    .param("d", days)
+                    .update();
+        }
+        return id;
+    }
+
+    private long product(String name, boolean controlled) {
+        return jdbc.sql("""
+                INSERT INTO product (code, name, unit_id, search_text, controlled)
+                SELECT :c, :n, id, lower(:n), :ctl FROM unit WHERE short_name = 'dona' RETURNING id""")
+                .param("c", String.valueOf(10_000_000 + ThreadLocalRandom.current().nextInt(89_999_999)))
+                .param("n", name)
+                .param("ctl", controlled)
+                .query(Long.class)
+                .single();
+    }
+
+    private Cookie loginAs(String role, Long branchId) throws Exception {
+        String login = "kr" + UUID.randomUUID().toString().substring(0, 8);
+        jdbc.sql("""
+                INSERT INTO employee (login, full_name, role_id, branch_id, password_hash, must_change_password)
+                SELECT :login, 'Sinov ' || :role, id, :b, :hash, false FROM role WHERE code = :role""")
+                .param("login", login)
+                .param("b", branchId)
+                .param("hash", encoder.encode(PASSWORD))
+                .param("role", role)
+                .update();
+        MvcResult r = mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"login\":\"" + login + "\",\"password\":\"" + PASSWORD + "\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        for (String h : r.getResponse().getHeaders("Set-Cookie")) {
+            if (h.startsWith("MEDIX_SESSION=")) {
+                return new Cookie("MEDIX_SESSION", h.substring("MEDIX_SESSION=".length(), h.indexOf(';')));
+            }
+        }
+        throw new AssertionError("sessiya yo'q");
+    }
+
+    private ResultActions send(MockHttpServletRequestBuilder b, Cookie session, String body) throws Exception {
+        return mvc.perform(b.with(csrf()).cookie(session).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andDo(r -> {
+                    if (r.getResponse().getStatus() >= 500) {
+                        throw new AssertionError("500: " + r.getResolvedException(), r.getResolvedException());
+                    }
+                });
+    }
+
+    private static long id(MvcResult r) throws Exception {
+        return ((Number) JsonPath.read(r.getResponse().getContentAsString(), "$.id")).longValue();
+    }
+
+    private static List<Integer> lineIds(MvcResult r) throws Exception {
+        return JsonPath.read(r.getResponse().getContentAsString(), "$.lines[*].id");
+    }
+
+    private static LocalDate today() {
+        return LocalDate.now(ZoneId.of("Asia/Tashkent"));
+    }
+
+    private static String line(long product, String batch, long zone, int qty, int bonus, String price) {
+        return "{\"productId\":" + product + ",\"batchNumber\":\"" + batch + "\",\"expiryDate\":\"2028-06-30\",\"zoneId\":" + zone
+                + ",\"qty\":" + qty + ",\"bonusQty\":" + bonus + ",\"price\":" + (price == null ? "null" : "\"" + price + "\"") + "}";
+    }
+
+    private static String doc(Place p, long supplier, boolean prepaid, String... lines) {
+        return "{\"warehouseId\":" + p.warehouseId() + ",\"supplierId\":" + supplier + ",\"receiptDate\":\"" + today()
+                + "\",\"invoiceNumber\":\"F-77\",\"paymentType\":\"TRANSFER\",\"prepaid\":" + prepaid
+                + ",\"discountKind\":\"PERCENT\",\"discountValue\":\"3\",\"lines\":[" + String.join(",", lines) + "]}";
+    }
+
+    private long stock(long zone, long product) {
+        return jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_balance WHERE zone_id = :z AND product_id = :p")
+                .param("z", zone).param("p", product).query(Long.class).single();
+    }
+
+    private String debt(long branch, long supplier) {
+        return jdbc.sql("SELECT coalesce(sum(amount), 0)::text FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = 'SUPPLIER'")
+                .param("b", branch).param("c", supplier).query(String.class).single();
+    }
+
+    @Test
+    void draftAcceptPostWithDiffAndDebt() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 30);
+        long a = product("KR Ibuprofen", false);
+        long c = product("KR Morfin", true);
+        Cookie purchaser = loginAs("PURCHASER", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+
+        // Nazoratdagi mahsulot Asosiy zonaga — yo'q
+        send(post("/api/receipts"), purchaser, doc(p, sup, false, line(c, "M-1", p.main(), 1, 0, "100")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("receipt.controlledZone"));
+
+        MvcResult created = send(post("/api/receipts"), purchaser, doc(p, sup, false,
+                        line(a, "IB-1", p.main(), 10, 1, "15000.50"), line(c, "M-1", p.safe(), 4, 0, "200000")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.number").value(matchesPattern("^KR-[A-Z]{3}-\\d{6}$")))
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.dueDate").value(today().plusDays(30).toString()))
+                .andExpect(jsonPath("$.dueManual").value(false))
+                .andExpect(jsonPath("$.amount").value("950005.00"))
+                .andExpect(jsonPath("$.totalBonusQty").value(1))
+                .andReturn();
+        long doc = id(created);
+        List<Integer> lines = lineIds(created);
+        assertThat(stock(p.receiving(), a)).isZero();
+
+        // Ombor mudiri narxni ko'rmaydi va narxli qoralamani tahrirlamaydi
+        mvc.perform(get("/api/receipts/" + doc).cookie(keeper))
+                .andExpect(jsonPath("$.pricesVisible").value(false))
+                .andExpect(jsonPath("$.lines[0].price").doesNotExist())
+                .andExpect(jsonPath("$.amount").doesNotExist())
+                .andExpect(jsonPath("$.supplierBalance").doesNotExist());
+        send(put("/api/receipts/" + doc), keeper, doc(p, sup, false, line(a, "IB-1", p.main(), 10, 1, null)))
+                .andExpect(status().isForbidden());
+
+        // Farq bor — sabab majburiy va soniga mos
+        String noReason = "{\"lines\":[{\"lineId\":" + lines.get(0) + ",\"receivedQty\":8,\"damagedQty\":0},{\"lineId\":" + lines.get(1)
+                + ",\"receivedQty\":4,\"damagedQty\":0}]}";
+        send(post("/api/receipts/" + doc + "/accept"), keeper, noReason)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("receipt.diffReasonRequired"));
+        send(post("/api/receipts/" + doc + "/accept"), keeper, noReason.replace("\"damagedQty\":0}", "\"damagedQty\":0,\"diffReason\":\"EXCESS\"}"))
+                .andExpect(status().isBadRequest());
+        // 9 yaroqli + 1 shikastlangan; ikkinchi qator to'liq
+        String ok = "{\"lines\":[{\"lineId\":" + lines.get(0) + ",\"receivedQty\":9,\"damagedQty\":1,\"diffReason\":\"DAMAGED\"},{\"lineId\":"
+                + lines.get(1) + ",\"receivedQty\":4,\"damagedQty\":0}]}";
+        send(post("/api/receipts/" + doc + "/accept"), keeper, ok)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACCEPTED"))
+                .andExpect(jsonPath("$.hasDiff").value(true))
+                .andExpect(jsonPath("$.lines[0].bonusBatch").value("IB-1-B"));
+        // Qabul zonasida, sotuvga yopiq; qarz yo'q
+        assertThat(stock(p.receiving(), a)).isEqualTo(11);
+        assertThat(stock(p.main(), a)).isZero();
+        assertThat(debt(p.branchId(), sup)).isEqualTo("0");
+        assertThatThrownBy(() -> jdbc.sql("UPDATE receipt_line SET qty = 1 WHERE receipt_id = :d").param("d", doc).update())
+                .hasMessageContaining("faqat qoralamada");
+
+        // O'tkazish: qaror majburiy; keyin zonalar va qarz
+        send(post("/api/receipts/" + doc + "/post"), manager, "{}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("receipt.resolutionRequired"));
+        send(post("/api/receipts/" + doc + "/post"), keeper, "{\"resolution\":\"ACTUAL\"}").andExpect(status().isForbidden());
+        send(post("/api/receipts/" + doc + "/post"), manager, "{\"resolution\":\"DOCUMENT\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("POSTED"))
+                .andExpect(jsonPath("$.resolution").value("DOCUMENT"))
+                .andExpect(jsonPath("$.debtAmount").value("950005.00"))
+                .andExpect(jsonPath("$.supplierBalance").value("950005.00"));
+        assertThat(stock(p.receiving(), a)).isZero();
+        assertThat(stock(p.main(), a)).isEqualTo(10); // 9 + 1 bonus
+        assertThat(stock(p.quarantine(), a)).isEqualTo(1);
+        assertThat(stock(p.safe(), c)).isEqualTo(4);
+        assertThat(debt(p.branchId(), sup)).isEqualTo("950005.00");
+        assertThat(jdbc.sql("SELECT due_date FROM party_ledger WHERE doc_type = 'KR' AND doc_id = :d").param("d", doc).query(LocalDate.class).single())
+                .isEqualTo(today().plusDays(30));
+        // Partiya tannarxi — faktura narxi; bonus — 0
+        assertThat(jdbc.sql("SELECT string_agg(number || ':' || cost, ',' ORDER BY id) FROM batch WHERE product_id = :p").param("p", a)
+                        .query(String.class).single())
+                .isEqualTo("IB-1:15000.50,IB-1-B:0.00");
+        assertThatThrownBy(() -> jdbc.sql("UPDATE receipt SET debt_amount = 1 WHERE id = :d").param("d", doc).update())
+                .hasMessageContaining("faqat bekor qilish");
+
+        // Filial rahbari o'tkazilganni bekor qila olmaydi; partiyadan sotilgan bo'lsa Admin ham
+        send(post("/api/receipts/" + doc + "/cancel"), manager, "{\"reason\":\"xato\"}")
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("receipt.cancelPostedForbidden"));
+        long batch = jdbc.sql("SELECT batch_id FROM receipt_line WHERE id = :l").param("l", lines.get(0).longValue()).query(Long.class).single();
+        tx.executeWithoutResult(s -> ledger.post(new DocRef("SV", 9, "SV-TST-000009"), List.of(Move.out(p.main(), batch, 1))));
+        Cookie admin = loginAs("ADMIN", null);
+        send(post("/api/receipts/" + doc + "/cancel"), admin, "{\"reason\":\"xato\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("receipt.batchUsed"));
+    }
+
+    @Test
+    void cancelPostedReversesStockAndDebt() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), null);
+        long a = product("KR bekor", false);
+        Cookie admin = loginAs("ADMIN", null);
+        MvcResult created = send(post("/api/receipts"), admin, doc(p, sup, false, line(a, "B-1", p.main(), 5, 2, "1000"))).andReturn();
+        long doc = id(created);
+        // YB sharti yo'q — to'lov kuni = kirim sanasi
+        assertThat(jdbc.sql("SELECT due_date FROM receipt WHERE id = :d").param("d", doc).query(LocalDate.class).single()).isEqualTo(today());
+        send(post("/api/receipts/" + doc + "/accept"), admin,
+                "{\"lines\":[{\"lineId\":" + lineIds(created).getFirst() + ",\"receivedQty\":5,\"damagedQty\":0}]}")
+                .andExpect(status().isOk());
+        send(post("/api/receipts/" + doc + "/post"), admin, "{}").andExpect(status().isOk()).andExpect(jsonPath("$.debtAmount").value("5000.00"));
+        assertThat(stock(p.main(), a)).isEqualTo(7);
+
+        send(post("/api/receipts/" + doc + "/cancel"), admin, "{\"reason\":\"Ikki marta kiritilgan\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+        assertThat(stock(p.main(), a)).isZero();
+        assertThat(debt(p.branchId(), sup)).isEqualTo("0.00");
+        assertThat(jdbc.sql("SELECT count(*) FROM party_ledger WHERE doc_type = 'KR' AND doc_id = :d").param("d", doc).query(Long.class).single())
+                .isEqualTo(2);
+    }
+
+    @Test
+    void acceptedCanBeCancelledAndPrepaidHasNoDue() throws Exception {
+        Place p = place();
+        Place other = place();
+        long sup = supplier(p.branchId(), 10);
+        long a = product("KR oldindan", false);
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        MvcResult created = send(post("/api/receipts"), manager, doc(p, sup, true, line(a, "P-1", p.main(), 3, 0, "500")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.dueDate").doesNotExist())
+                .andExpect(jsonPath("$.prepaid").value(true))
+                .andReturn();
+        long doc = id(created);
+        send(post("/api/receipts/" + doc + "/accept"), manager,
+                "{\"lines\":[{\"lineId\":" + lineIds(created).getFirst() + ",\"receivedQty\":3,\"damagedQty\":0}]}")
+                .andExpect(status().isOk());
+        assertThat(stock(p.receiving(), a)).isEqualTo(3);
+        send(post("/api/receipts/" + doc + "/cancel"), manager, "{\"reason\":\"YB qaytarib oldi\"}").andExpect(status().isOk());
+        assertThat(stock(p.receiving(), a)).isZero();
+
+        // Boshqa filial xodimi ko'rmaydi; Buxgalter yarata olmaydi
+        Cookie otherKeeper = loginAs("WAREHOUSE_MANAGER", other.branchId());
+        mvc.perform(get("/api/receipts/" + doc).cookie(otherKeeper)).andExpect(status().isNotFound());
+        Cookie accountant = loginAs("ACCOUNTANT", null);
+        send(post("/api/receipts"), accountant, doc(p, sup, false, line(a, "P-2", p.main(), 1, 0, "1"))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/receipts").param("branchId", String.valueOf(p.branchId())).cookie(accountant))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(1)))
+                .andExpect(jsonPath("$.items[0].status").value("CANCELLED"));
+    }
+}

@@ -1,0 +1,160 @@
+package uz.medix.purchasing.receipt;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+import uz.medix.inventory.ZoneType;
+
+/** KR (kirim) API shakllari. Pul — satr. Narx/summa — faqat ko'rish huquqi borlarga (Ombor mudiri narxni ko'rmaydi, SPEC 5.1-2). */
+final class ReceiptModels {
+
+    private ReceiptModels() {}
+
+    static final int MAX_LINES = 2_000;
+    static final int MAX_QTY = 10_000_000;
+    static final String MONEY = "^\\d{1,16}(\\.\\d{1,2})?$";
+
+    enum ReceiptStatus { DRAFT, ACCEPTED, POSTED, CANCELLED }
+
+    enum PaymentType { CASH, TRANSFER, ONLINE }
+
+    enum DiscountKind { SUM, PERCENT }
+
+    /** Qabuldagi farq sababi: kam keldi, ortiqcha keldi, shikastlangan. */
+    enum DiffReason { SHORT, EXCESS, DAMAGED }
+
+    /** Farq bo'lsa o'tkazishdagi qaror: qarz haqiqiy soni bo'yicha yoki hujjat bo'yicha. */
+    enum Resolution { ACTUAL, DOCUMENT }
+
+    record ReceiptLineRequest(
+            @NotNull(message = "{validation.required}") Long productId,
+            @NotBlank(message = "{validation.required}") @Size(max = 60) String batchNumber,
+            @Schema(nullable = true) LocalDate producedOn,
+            @NotNull(message = "{validation.required}") LocalDate expiryDate,
+            @NotNull(message = "{validation.required}") Long zoneId,
+            @NotNull(message = "{validation.required}") @Min(1) @Max(MAX_QTY) Integer qty,
+            @Min(0) @Max(MAX_QTY) int bonusQty,
+            @Schema(nullable = true, description = "Faktura narxi (1 dona, QQS bilan). Ombor mudiri kiritmaydi.")
+                    @Pattern(regexp = MONEY, message = "{validation.money}") String price) {}
+
+    record ReceiptRequest(
+            @NotNull(message = "{validation.required}") Long warehouseId,
+            @NotNull(message = "{validation.required}") Long supplierId,
+            @NotNull(message = "{validation.required}") LocalDate receiptDate,
+            @Schema(nullable = true) @Size(max = 64) String invoiceNumber,
+            @Schema(nullable = true) LocalDate invoiceDate,
+            @NotNull(message = "{validation.required}") PaymentType paymentType,
+            @Schema(nullable = true, description = "Bo'sh — kirim sanasi + YB sharti (filial)") LocalDate dueDate,
+            @Schema(nullable = true, description = "«Kim nomiga» xodim") Long ownerId,
+            boolean prepaid,
+            @Schema(nullable = true) DiscountKind discountKind,
+            @Schema(nullable = true) @Pattern(regexp = MONEY, message = "{validation.money}") String discountValue,
+            @Schema(nullable = true) LocalDate discountDate,
+            @Schema(nullable = true) @Size(max = 500) String note,
+            @NotNull(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid ReceiptLineRequest> lines) {}
+
+    record AcceptLine(
+            @NotNull(message = "{validation.required}") Long lineId,
+            @NotNull(message = "{validation.required}") @Min(0) @Max(MAX_QTY) Integer receivedQty,
+            @Min(0) @Max(MAX_QTY) int damagedQty,
+            @Schema(nullable = true, description = "Farq bo'lsa majburiy") DiffReason diffReason,
+            @Schema(nullable = true, description = "Zonani Ombor mudiri o'zgartirishi mumkin") Long zoneId) {}
+
+    record AcceptRequest(@NotEmpty(message = "{receipt.noLines}") List<@Valid AcceptLine> lines) {}
+
+    record PostRequest(@Schema(nullable = true, description = "Farq bo'lsa majburiy") Resolution resolution) {}
+
+    record ReceiptCancelRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
+
+    record ReceiptLine(
+            long id,
+            int lineNo,
+            long productId,
+            String productCode,
+            String productName,
+            String batchNumber,
+            @Schema(nullable = true) LocalDate producedOn,
+            LocalDate expiryDate,
+            long zoneId,
+            String zone,
+            ZoneType zoneType,
+            int qty,
+            int bonusQty,
+            @Schema(nullable = true, description = "Faqat narxni ko'rish huquqi bilan") String price,
+            @Schema(nullable = true) Integer receivedQty,
+            @Schema(nullable = true) Integer damagedQty,
+            @Schema(nullable = true) DiffReason diffReason,
+            @Schema(nullable = true) String batch,
+            @Schema(nullable = true) String bonusBatch) {}
+
+    record ReceiptSummary(
+            long id,
+            String number,
+            long branchId,
+            String warehouse,
+            long supplierId,
+            String supplier,
+            LocalDate receiptDate,
+            @Schema(nullable = true) String invoiceNumber,
+            ReceiptStatus status,
+            int lines,
+            long totalQty,
+            @Schema(nullable = true) String amount,
+            @Schema(nullable = true) LocalDate dueDate,
+            boolean prepaid,
+            String createdBy,
+            Instant createdAt) {}
+
+    record ReceiptPage(List<ReceiptSummary> items, long total, int page, int size) {}
+
+    record ReceiptDetail(
+            long id,
+            String number,
+            long branchId,
+            long warehouseId,
+            String warehouse,
+            long supplierId,
+            String supplier,
+            LocalDate receiptDate,
+            @Schema(nullable = true) String invoiceNumber,
+            @Schema(nullable = true) LocalDate invoiceDate,
+            PaymentType paymentType,
+            @Schema(nullable = true) LocalDate dueDate,
+            boolean dueManual,
+            @Schema(nullable = true) Long ownerId,
+            @Schema(nullable = true) String owner,
+            boolean prepaid,
+            @Schema(nullable = true) DiscountKind discountKind,
+            @Schema(nullable = true) String discountValue,
+            @Schema(nullable = true) LocalDate discountDate,
+            @Schema(nullable = true) String note,
+            ReceiptStatus status,
+            @Schema(nullable = true) Resolution resolution,
+            boolean pricesVisible,
+            @Schema(nullable = true, description = "Hujjat bo'yicha summa (narx × soni)") String amount,
+            @Schema(nullable = true, description = "Haqiqiy soni bo'yicha summa (qabuldan keyin)") String actualAmount,
+            @Schema(nullable = true, description = "Yozilgan qarz (o'tkazilgandan keyin)") String debtAmount,
+            @Schema(nullable = true, description = "YB saldo shu filialda: musbat — qarz, manfiy — avans") String supplierBalance,
+            long totalQty,
+            long totalBonusQty,
+            @Schema(description = "Qabulda farq bor") boolean hasDiff,
+            String createdBy,
+            Instant createdAt,
+            @Schema(nullable = true) String acceptedBy,
+            @Schema(nullable = true) Instant acceptedAt,
+            @Schema(nullable = true) String postedBy,
+            @Schema(nullable = true) Instant postedAt,
+            @Schema(nullable = true) String cancelledBy,
+            @Schema(nullable = true) Instant cancelledAt,
+            @Schema(nullable = true) String cancelReason,
+            List<ReceiptLine> lines) {}
+}
