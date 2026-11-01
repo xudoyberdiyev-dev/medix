@@ -413,6 +413,12 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
                             Nazoratdagi
                           </Badge>
                         ) : null}
+                        {s && s.reserved.length > 0 ? (
+                          <span className="mt-1 block text-caption text-text-secondary">
+                            Zahira (FEFO):{" "}
+                            {s.reserved.map((r) => `${r.batch} × ${formatQuantity(r.qty)} · ${day(r.expiryDate)} · ${r.zone}`).join("; ")}
+                          </span>
+                        ) : null}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums">{s ? formatQuantity(s.available) : "—"}</td>
                       <td className="px-3 py-2 tabular-nums">{s?.nearestExpiry ? day(s.nearestExpiry) : "—"}</td>

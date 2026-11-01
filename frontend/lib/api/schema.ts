@@ -789,6 +789,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * «Mahsulot qo'shish» katalogi
+         * @description Mavjud qoldiq, mijoz narxi, eng yaqin muddat, min/max.
+         */
+        get: operations["catalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/default-payment-type": {
         parameters: {
             query?: never;
@@ -1905,6 +1925,33 @@ export interface components {
             phone?: string;
             tin: string;
         };
+        CatalogPage: {
+            items: components["schemas"]["CatalogRow"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CatalogRow: {
+            /** Format: int32 */
+            available: number;
+            code: string;
+            controlled: boolean;
+            manufacturer?: string;
+            marked: boolean;
+            /** Format: int32 */
+            maxQty?: number;
+            /** Format: int32 */
+            minQty?: number;
+            name: string;
+            /** Format: date */
+            nearestExpiry?: string;
+            price?: string;
+            /** Format: int64 */
+            productId: number;
+        };
         ChangeCodeRequest: {
             code: string;
             reason: string;
@@ -2493,6 +2540,8 @@ export interface components {
             productName: string;
             /** Format: int32 */
             qty: number;
+            /** @description FEFO zahira (Navbatda va keyin) */
+            reserved: components["schemas"]["ReservedBatch"][];
         };
         OrderLineRequest: {
             /** Format: int64 */
@@ -2977,6 +3026,14 @@ export interface components {
         };
         RenameZoneRequest: {
             name: string;
+        };
+        ReservedBatch: {
+            batch: string;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int32 */
+            qty: number;
+            zone: string;
         };
         ResetPasswordRequest: {
             temporaryPassword: string;
@@ -4392,6 +4449,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    catalog: {
+        parameters: {
+            query: {
+                warehouseId: number;
+                customerId?: number;
+                q?: string;
+                inStockOnly?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPage"];
                 };
             };
         };

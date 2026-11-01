@@ -1827,6 +1827,76 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/catalog" : {
+      "get" : {
+        "description" : "Mavjud qoldiq, mijoz narxi, eng yaqin muddat, min/max.",
+        "operationId" : "catalog",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "inStockOnly",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CatalogPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Mahsulot qo'shish» katalogi",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/default-payment-type" : {
       "get" : {
         "description" : "Mijozning oxirgi buyurtmasidan, bo'lmasa Perechisleniye.",
@@ -4349,6 +4419,74 @@
         },
         "required" : [ "code", "legalName", "name", "tin" ]
       },
+      "CatalogPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CatalogRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "CatalogRow" : {
+        "type" : "object",
+        "properties" : {
+          "available" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "controlled" : {
+            "type" : "boolean"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "maxQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "nearestExpiry" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "price" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "available", "code", "controlled", "marked", "name", "productId" ]
+      },
       "ChangeCodeRequest" : {
         "type" : "object",
         "properties" : {
@@ -5968,9 +6106,16 @@
           "qty" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "reserved" : {
+            "type" : "array",
+            "description" : "FEFO zahira (Navbatda va keyin)",
+            "items" : {
+              "$ref" : "#/components/schemas/ReservedBatch"
+            }
           }
         },
-        "required" : [ "available", "controlled", "id", "lineNo", "marked", "productCode", "productId", "productName", "qty" ]
+        "required" : [ "available", "controlled", "id", "lineNo", "marked", "productCode", "productId", "productName", "qty", "reserved" ]
       },
       "OrderLineRequest" : {
         "type" : "object",
@@ -7211,6 +7356,26 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "ReservedBatch" : {
+        "type" : "object",
+        "properties" : {
+          "batch" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "zone" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "batch", "expiryDate", "qty", "zone" ]
       },
       "ResetPasswordRequest" : {
         "type" : "object",
