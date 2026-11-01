@@ -78,6 +78,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rollar ro'yxati */
+        get: operations["list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/setup": {
         parameters: {
             query?: never;
@@ -213,11 +230,11 @@ export interface components {
             tin: string;
         };
         BranchRequest: {
-            address: string;
+            address?: string;
             code: string;
             legalName: string;
             name: string;
-            phone: string;
+            phone?: string;
             tin: string;
         };
         ChangePasswordRequest: {
@@ -254,11 +271,11 @@ export interface components {
         };
         EmployeeRequest: {
             /** Format: int64 */
-            branchId: number;
+            branchId?: number;
             fullName: string;
             login: string;
-            phone: string;
-            position: string;
+            phone?: string;
+            position?: string;
             roleCode: string;
             temporaryPassword: string;
         };
@@ -281,6 +298,19 @@ export interface components {
             mustChangePassword: boolean;
             permissions: string[];
             role: components["schemas"]["RoleRef"];
+        };
+        Role: {
+            code: string;
+            /**
+             * Format: int64
+             * @description Biriktirilgan xodimlar soni
+             */
+            employeeCount: number;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @description Standart rol: o'chirilmaydi */
+            system: boolean;
         };
         RoleRef: {
             code: string;
@@ -306,10 +336,10 @@ export interface components {
             zones: components["schemas"]["Zone"][];
         };
         WarehouseRequest: {
-            address: string;
+            address?: string;
             /** Format: int64 */
             branchId: number;
-            extraZones: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
+            extraZones?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
             name: string;
         };
         Zone: {
@@ -412,6 +442,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Role"][];
+                };
             };
         };
     };
