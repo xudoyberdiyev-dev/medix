@@ -601,6 +601,11 @@ class OrderIT {
                 .andExpect(jsonPath("$.unitsNeeded").value(3))
                 .andExpect(jsonPath("$.complete").value(false));
         send(post("/api/marking/orders/" + o1 + "/start"), marker2, "").andExpect(jsonPath("$.code").value("marking.taken"));
+        mvc.perform(get("/api/orders/monitor").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cards[?(@.id == " + o1 + ")].person", hasItem("Sinov MARKER")))
+                .andExpect(jsonPath("$.cards[?(@.id == " + o1 + ")].late", hasItem(false)));
+        mvc.perform(get("/api/orders/monitor").cookie(marker)).andExpect(status().isForbidden());
 
         // Tekshiruv tartibi: format → mahsulot → partiya → tur
         send(post("/api/marking/orders/" + o1 + "/scan"), marker, "{\"code\":\"" + ean + "\"}").andExpect(jsonPath("$.code").value("marking.format"));

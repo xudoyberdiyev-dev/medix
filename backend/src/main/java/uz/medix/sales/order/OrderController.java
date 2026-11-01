@@ -38,11 +38,13 @@ class OrderController {
 
     private final Orders orders;
     private final OrderPicking picking;
+    private final OrderMonitor monitor;
     private final CurrentActor currentActor;
 
-    OrderController(Orders orders, OrderPicking picking, CurrentActor currentActor) {
+    OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, CurrentActor currentActor) {
         this.orders = orders;
         this.picking = picking;
+        this.monitor = monitor;
         this.currentActor = currentActor;
     }
 
@@ -160,6 +162,13 @@ class OrderController {
     OrderDetail giveTime(@PathVariable long id, @Valid @RequestBody OrderModels.TimeRequest r) {
         picking.giveTime(actor(), id, r.pickMinutes(), r.markMinutes());
         return detail(id);
+    }
+
+    @GetMapping("/monitor")
+    @PreAuthorize("hasAuthority('orders.queue')")
+    @Operation(summary = "Ombor mudiri monitori", description = "Bosqichlar ustunlari, taymerlar, kechikkanlar (Navbatda … Yuklanmoqda).")
+    OrderMonitor.MonitorBoard monitor(@RequestParam(required = false) Long branchId) {
+        return monitor.board(actor(), branchId);
     }
 
     @GetMapping("/pick-queue")

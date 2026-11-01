@@ -44,6 +44,9 @@ medix:
   bootstrap:
     login: ${MEDIX_BOOTSTRAP_LOGIN:}
     password: ${MEDIX_BOOTSTRAP_PASSWORD:}
+  orders:
+    # Umumiy kechikish: buyurtma bir holatda shuncha kundan ortiq tursa — «N kundan oshgan» (SPEC 5.2)
+    late-days: 2
 
 management:
   endpoints:

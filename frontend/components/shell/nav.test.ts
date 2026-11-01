@@ -7,6 +7,7 @@ describe("ruxsatga qarab menyu", () => {
   it("panel rollari (masalan, haydovchi) faqat bosh sahifa va oʻz panelini koʻradi", () => {
     expect(keys(["trip.driver"])).toEqual(["home"]);
     expect(keys(["orders.view", "picking.do"])).toEqual(["home", "picking"]);
+    expect(keys(["marking.scan", "marking.view"])).toEqual(["home", "marking"]);
   });
 
   it("kalitga qarab: Qoldiqlar — stock.view, Sozlamalar — xodimlar/audit/…", () => {
