@@ -30,3 +30,10 @@ describe("mahsulot filtrlari URL'da", () => {
     expect(toQuery(f)).toMatchObject({ categoryId: 2, controlled: true, marked: undefined, page: 1 });
   });
 });
+
+describe("eksport havolasi", () => {
+  it("sahifalashsiz, boʻsh qiymatlarsiz", async () => {
+    const { exportQuery } = await import("./url-state");
+    expect(exportQuery({ ...DEFAULT_FILTERS, q: "nimesil", page: 4 })).toBe("q=nimesil&status=ACTIVE&sort=NAME&desc=false");
+  });
+});

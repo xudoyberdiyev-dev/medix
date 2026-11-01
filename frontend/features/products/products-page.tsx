@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleCheck, CirclePause, Columns3, FilterX, Pill, Plus, QrCode, ShieldAlert, X } from "lucide-react";
+import { CircleCheck, CirclePause, Columns3, FileDown, FileUp, FilterX, Pill, Plus, QrCode, ShieldAlert, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,9 @@ import { useMe } from "@/features/auth/session";
 import { useDictionary } from "@/features/dictionaries/api";
 import { formatQuantity } from "@/lib/format";
 import { PRODUCT_EDITORS, useProducts, type ProductRow } from "./api";
+import { ImportDialog } from "./import-dialog";
 import { ProductDrawer } from "./product-drawer";
-import { DEFAULT_FILTERS, activeFilterCount, parseFilters, serializeFilters, type ProductFilters } from "./url-state";
+import { DEFAULT_FILTERS, activeFilterCount, exportQuery, parseFilters, serializeFilters, type ProductFilters } from "./url-state";
 
 const COLUMN_STORAGE = "medix-products-columns";
 
@@ -64,6 +65,7 @@ export function ProductsPage() {
   const [hidden, setHidden] = useHiddenColumns();
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [open, setOpen] = useState<number | "new" | null>(null);
+  const [importing, setImporting] = useState(false);
   const [search, setSearch] = useState(filters.q);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -159,11 +161,26 @@ export function ProductsPage() {
           <h1 className="text-page-title">Mahsulotlar</h1>
           {data ? <span className="text-text-secondary">{formatQuantity(data.total)} ta</span> : null}
         </div>
-        {canEdit ? (
-          <Button icon={Plus} onClick={() => setOpen("new")}>
-            Mahsulot qoʻshish
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/products/export?${exportQuery(filters)}`}
+            download
+            className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-4 font-medium hover:bg-background"
+          >
+            <FileDown size={16} strokeWidth={1.5} aria-hidden />
+            Excel'ga yuklash
+          </a>
+          {canEdit ? (
+            <>
+              <Button variant="secondary" icon={FileUp} onClick={() => setImporting(true)}>
+                Import
+              </Button>
+              <Button icon={Plus} onClick={() => setOpen("new")}>
+                Mahsulot qoʻshish
+              </Button>
+            </>
+          ) : null}
+        </div>
       </div>
       {products.error ? (
         <ErrorState onRetry={() => products.refetch()} />

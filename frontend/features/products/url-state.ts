@@ -81,3 +81,13 @@ export function toQuery(f: ProductFilters) {
     size: f.size,
   };
 }
+
+/** Eksport havolasi uchun soʻrov satri (sahifalashsiz). */
+export function exportQuery(f: ProductFilters): string {
+  const q = toQuery(f);
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(q)) {
+    if (v !== undefined && k !== "page" && k !== "size") p.set(k, String(v));
+  }
+  return p.toString();
+}

@@ -124,7 +124,7 @@ class ProductExcelIT {
         mvc.perform(multipart("/api/products/import").file(good).with(csrf()).cookie(loginAs("OPERATOR"))).andExpect(status().isForbidden());
 
         // Eksport — o'qiladigan .xlsx, import qilingan mahsulot bor
-        byte[] file = mvc.perform(get("/api/products/export").param("q", "import a " + tag).cookie(purchaser))
+        byte[] file = mvc.perform(get("/api/products/export").param("q", code).cookie(purchaser))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
