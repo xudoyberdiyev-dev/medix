@@ -3,6 +3,7 @@ package uz.medix.identity.security;
 import java.io.Serializable;
 import java.util.Set;
 import org.springframework.security.core.AuthenticatedPrincipal;
+import uz.medix.shared.security.Actor;
 
 /**
  * Sessiyadagi foydalanuvchi. Spring Session JDBC uni seriyalashtiradi — faqat oddiy qiymatlar.
@@ -27,6 +28,20 @@ public record MedixPrincipal(
     @Override
     public String getName() {
         return login;
+    }
+
+    /**
+     * Barcha filiallar doirasi. Hozircha rol bo'yicha (SPEC 13); ruxsatlar matritsasi (1.3) kelganda
+     * alohida ruxsat kalitiga o'tkaziladi.
+     */
+    public static final Set<String> ALL_BRANCH_ROLES = Set.of("DIRECTOR", "ADMIN", "ACCOUNTANT");
+
+    public boolean allBranches() {
+        return ALL_BRANCH_ROLES.contains(roleCode);
+    }
+
+    public Actor toActor() {
+        return new Actor(id, branchId, allBranches());
     }
 
     public MedixPrincipal withPasswordChanged() {

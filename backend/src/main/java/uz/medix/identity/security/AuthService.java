@@ -50,7 +50,7 @@ public class AuthService {
             throw MedixException.unauthorized("auth.badCredentials");
         }
         var a = account.get();
-        var actor = new Actor(a.id(), a.branchId());
+        var actor = new Actor(a.id(), a.branchId(), MedixPrincipal.ALL_BRANCH_ROLES.contains(a.roleCode()));
         if (!encoder.matches(password, a.passwordHash())) {
             accounts.recordFailedLogin(a.id());
             audit.record(AuditEntry.of("auth.loginFailed", "employee", a.id()), actor);
@@ -85,7 +85,7 @@ public class AuthService {
             throw MedixException.badRequest("auth.passwordSame");
         }
         accounts.changePassword(employeeId, encoder.encode(newPassword), clock.instant());
-        audit.record(AuditEntry.of("auth.passwordChanged", "employee", employeeId), new Actor(a.id(), a.branchId()));
+        audit.record(AuditEntry.of("auth.passwordChanged", "employee", employeeId), new Actor(a.id(), a.branchId(), MedixPrincipal.ALL_BRANCH_ROLES.contains(a.roleCode())));
     }
 
     private UsernamePasswordAuthenticationToken authenticationFor(EmployeeAccounts.Account a) {

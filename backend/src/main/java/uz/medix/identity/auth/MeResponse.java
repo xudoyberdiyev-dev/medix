@@ -12,12 +12,13 @@ record MeResponse(
         RoleRef role,
         @Schema(nullable = true, description = "Asosiy filial; null — biriktirilmagan") Long branchId,
         boolean mustChangePassword,
+        @Schema(description = "Barcha filiallar ma'lumotini ko'radi") boolean allBranches,
         List<String> permissions) {
 
     record RoleRef(String code, String name) {}
 
     static MeResponse of(MedixPrincipal p) {
         return new MeResponse(p.id(), p.login(), p.fullName(), new RoleRef(p.roleCode(), p.roleName()), p.branchId(),
-                p.mustChangePassword(), p.permissions().stream().sorted().toList());
+                p.mustChangePassword(), p.allBranches(), p.permissions().stream().sorted().toList());
     }
 }

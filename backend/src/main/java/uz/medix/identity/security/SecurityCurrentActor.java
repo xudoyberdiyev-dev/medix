@@ -14,7 +14,7 @@ class SecurityCurrentActor implements CurrentActor {
     public Optional<Actor> current() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof MedixPrincipal p) {
-            return Optional.of(new Actor(p.id(), p.branchId()));
+            return Optional.of(p.toActor());
         }
         return Optional.empty();
     }
