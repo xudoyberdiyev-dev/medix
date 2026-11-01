@@ -226,8 +226,8 @@ class Receipts {
         checkHeader(r);
         String number = numbers.next(DocumentPrefix.KR, place.branchCode()).toString();
         long id = jdbc.sql("""
-                INSERT INTO receipt (number, branch_id, warehouse_id, supplier_id, receipt_date, payment_type, prepaid, created_by)
-                VALUES (:n, :b, :w, :s, :d, :pt, :pp, :by) RETURNING id""")
+                INSERT INTO receipt (number, branch_id, warehouse_id, supplier_id, receipt_date, payment_type, prepaid, due_date, created_by)
+                VALUES (:n, :b, :w, :s, :d, :pt, :pp, :due, :by) RETURNING id""")
                 .param("n", number)
                 .param("b", place.branchId())
                 .param("w", r.warehouseId())
@@ -235,6 +235,7 @@ class Receipts {
                 .param("d", Date.valueOf(r.receiptDate()))
                 .param("pt", r.paymentType().name())
                 .param("pp", r.prepaid())
+                .param("due", r.prepaid() ? null : Date.valueOf(r.dueDate() == null ? r.receiptDate() : r.dueDate()))
                 .param("by", actor.employeeId())
                 .query(Long.class)
                 .single();
@@ -261,7 +262,7 @@ class Receipts {
         checkHeader(r);
         jdbc.sql("""
                 UPDATE receipt SET branch_id = :b, warehouse_id = :w, supplier_id = :s, receipt_date = :d, payment_type = :pt, prepaid = :pp,
-                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                       due_date = coalesce(due_date, :d), updated_at = now(), version = version + 1 WHERE id = :id""")
                 .param("b", place.branchId())
                 .param("w", r.warehouseId())
                 .param("s", r.supplierId())
