@@ -2,6 +2,7 @@ package uz.medix.identity.security;
 
 import java.io.Serializable;
 import java.util.Set;
+import org.springframework.security.core.AuthenticatedPrincipal;
 
 /**
  * Sessiyadagi foydalanuvchi. Spring Session JDBC uni seriyalashtiradi — faqat oddiy qiymatlar.
@@ -16,10 +17,16 @@ public record MedixPrincipal(
         String roleName,
         Long branchId,
         boolean mustChangePassword,
-        Set<String> permissions) implements Serializable {
+        Set<String> permissions) implements AuthenticatedPrincipal, Serializable {
 
     public MedixPrincipal {
         permissions = Set.copyOf(permissions);
+    }
+
+    /** Spring Session'da {@code principal_name} — login. */
+    @Override
+    public String getName() {
+        return login;
     }
 
     public MedixPrincipal withPasswordChanged() {
