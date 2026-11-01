@@ -1,5 +1,6 @@
 package uz.medix.identity.setup;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -19,21 +20,21 @@ final class SetupRequests {
             @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
             @NotBlank(message = "{validation.required}") @Size(max = 300) String legalName,
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[0-9]{9}$", message = "{validation.tin}") String tin,
-            @Size(max = 500) String address,
-            @Size(max = 32) String phone) {}
+            @Schema(nullable = true) @Size(max = 500) String address,
+            @Schema(nullable = true) @Size(max = 32) String phone) {}
 
     record WarehouseRequest(
             @NotNull(message = "{validation.required}") Long branchId,
             @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
-            @Size(max = 500) String address,
-            Set<ZoneType> extraZones) {}
+            @Schema(nullable = true) @Size(max = 500) String address,
+            @Schema(nullable = true) Set<ZoneType> extraZones) {}
 
     record EmployeeRequest(
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[A-Za-z0-9._-]{3,64}$", message = "{validation.login}") String login,
             @NotBlank(message = "{validation.required}") @Size(max = 200) String fullName,
-            @Size(max = 32) String phone,
-            @Size(max = 100) String position,
+            @Schema(nullable = true) @Size(max = 32) String phone,
+            @Schema(nullable = true) @Size(max = 100) String position,
             @NotBlank(message = "{validation.required}") String roleCode,
-            Long branchId,
+            @Schema(nullable = true) Long branchId,
             @NotBlank(message = "{validation.required}") @Size(min = 8, max = 128, message = "{validation.password.length}") String temporaryPassword) {}
 }
