@@ -9,23 +9,11 @@
     "url" : "/"
   } ],
   "tags" : [ {
-    "description" : "Tizimga kirish va sessiya",
-    "name" : "auth"
-  }, {
-    "description" : "Sozlash ustasi",
-    "name" : "setup"
-  }, {
     "description" : "Mahsulotlar",
     "name" : "products"
   }, {
-    "description" : "Audit jurnali",
-    "name" : "audit"
-  }, {
     "description" : "Profil",
     "name" : "profile"
-  }, {
-    "description" : "Xarajat va kirim moddalari",
-    "name" : "expense-items"
   }, {
     "description" : "Mashinalar",
     "name" : "vehicles"
@@ -36,11 +24,29 @@
     "description" : "Xodimlar",
     "name" : "employees"
   }, {
-    "description" : "Rollar va ruxsatlar",
-    "name" : "roles"
-  }, {
     "description" : "Filiallar",
     "name" : "branches"
+  }, {
+    "description" : "Tizimga kirish va sessiya",
+    "name" : "auth"
+  }, {
+    "description" : "Narxlar",
+    "name" : "pricing"
+  }, {
+    "description" : "Sozlash ustasi",
+    "name" : "setup"
+  }, {
+    "description" : "Audit jurnali",
+    "name" : "audit"
+  }, {
+    "description" : "Xarajat va kirim moddalari",
+    "name" : "expense-items"
+  }, {
+    "description" : "Kontragentlar",
+    "name" : "counterparties"
+  }, {
+    "description" : "Rollar va ruxsatlar",
+    "name" : "roles"
   }, {
     "description" : "Kichik ma'lumotnomalar",
     "name" : "dictionaries"
@@ -48,7 +54,7 @@
   "paths" : {
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_9",
+        "operationId" : "list_11",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -192,7 +198,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "responses" : {
           "200" : {
             "content" : {
@@ -212,7 +218,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_6",
+        "operationId" : "create_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -242,7 +248,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_5",
+        "operationId" : "update_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -280,7 +286,7 @@
     },
     "/api/branches/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_5",
+        "operationId" : "activate_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -309,7 +315,7 @@
     "/api/branches/{id}/deactivate" : {
       "post" : {
         "description" : "Oxirgi faol filial nofaol qilinmaydi.",
-        "operationId" : "deactivate_5",
+        "operationId" : "deactivate_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -343,6 +349,525 @@
         },
         "summary" : "Filialni nofaol qilish",
         "tags" : [ "branches" ]
+      }
+    },
+    "/api/counterparties" : {
+      "get" : {
+        "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
+        "operationId" : "list_6",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ALL",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ACTIVE",
+            "enum" : [ "ACTIVE", "BLOCKED", "INACTIVE", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "regionId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sortByTin",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kontragentlar",
+        "tags" : [ "counterparties" ]
+      },
+      "post" : {
+        "operationId" : "create_6",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CounterpartyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Kontragent qo'shish",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}" : {
+      "get" : {
+        "operationId" : "get_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kontragent kartasi",
+        "tags" : [ "counterparties" ]
+      },
+      "put" : {
+        "operationId" : "update_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CounterpartyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kartani tahrirlash",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/activate" : {
+      "post" : {
+        "operationId" : "activate_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faollashtirish",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/block" : {
+      "post" : {
+        "description" : "Bloklangan mijozga buyurtma kiritilmaydi.",
+        "operationId" : "block_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bloklash",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/contracts" : {
+      "post" : {
+        "operationId" : "addContract",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ContractRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Shartnoma qo'shish",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/contracts/{contractId}" : {
+      "put" : {
+        "operationId" : "updateContract",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "contractId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ContractRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Shartnomani tahrirlash",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/deactivate" : {
+      "post" : {
+        "operationId" : "deactivate_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Nofaol qilish",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/licenses" : {
+      "post" : {
+        "operationId" : "addLicense",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LicenseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Litsenziya qo'shish",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/licenses/{licenseId}" : {
+      "put" : {
+        "operationId" : "updateLicense",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "licenseId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LicenseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Litsenziyani tahrirlash",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/terms/{branchId}" : {
+      "put" : {
+        "description" : "Limit, to'lov muddati, narx turi, minimal yaroqlilik, operator; YB shartlari.",
+        "operationId" : "saveTerms",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TermsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filial shartlari",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/unblock" : {
+      "post" : {
+        "operationId" : "unblock_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Blokdan chiqarish",
+        "tags" : [ "counterparties" ]
       }
     },
     "/api/dictionaries/{kind}" : {
@@ -533,7 +1058,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_8",
+        "operationId" : "list_10",
         "responses" : {
           "200" : {
             "content" : {
@@ -850,6 +1375,28 @@
         "tags" : [ "expense-items" ]
       }
     },
+    "/api/price-types" : {
+      "get" : {
+        "operationId" : "list_9",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PriceType"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Narx turlari",
+        "tags" : [ "pricing" ]
+      }
+    },
     "/api/products" : {
       "get" : {
         "description" : "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.",
@@ -942,7 +1489,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PageResult"
+                  "$ref" : "#/components/schemas/ProductPage"
                 }
               }
             },
@@ -1221,7 +1768,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "responses" : {
           "200" : {
             "content" : {
@@ -2043,6 +2590,286 @@
         },
         "required" : [ "name" ]
       },
+      "Contract" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "signedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "validUntil" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "branchId", "id", "number" ]
+      },
+      "ContractRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "number" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "signedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "validUntil" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "branchId", "number" ]
+      },
+      "CounterpartyDetail" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "bankAccount" : {
+            "type" : "string"
+          },
+          "bankMfo" : {
+            "type" : "string"
+          },
+          "bankName" : {
+            "type" : "string"
+          },
+          "blocked" : {
+            "type" : "boolean"
+          },
+          "blockedReason" : {
+            "type" : "string"
+          },
+          "contactPerson" : {
+            "type" : "string"
+          },
+          "contracts" : {
+            "type" : "array",
+            "description" : "Faqat xodim ko'ra oladigan filiallar",
+            "items" : {
+              "$ref" : "#/components/schemas/Contract"
+            }
+          },
+          "customer" : {
+            "type" : "boolean"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "legalName" : {
+            "type" : "string"
+          },
+          "licenses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/License"
+            }
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "region" : {
+            "$ref" : "#/components/schemas/Ref"
+          },
+          "supplier" : {
+            "type" : "boolean"
+          },
+          "terms" : {
+            "type" : "array",
+            "description" : "Faqat xodim ko'ra oladigan filiallar",
+            "items" : {
+              "$ref" : "#/components/schemas/Terms"
+            }
+          },
+          "tin" : {
+            "type" : "string"
+          },
+          "vatCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "blocked", "contracts", "customer", "id", "licenses", "name", "supplier", "terms", "tin" ]
+      },
+      "CounterpartyPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CounterpartyRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "CounterpartyRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "bankAccount" : {
+            "type" : "string",
+            "pattern" : "^$|^[0-9]{20}$"
+          },
+          "bankMfo" : {
+            "type" : "string",
+            "pattern" : "^$|^[0-9]{5}$"
+          },
+          "bankName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "contactPerson" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "customer" : {
+            "type" : "boolean"
+          },
+          "email" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0,
+            "pattern" : "^$|^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+          },
+          "legalName" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 1000,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
+          "regionId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "supplier" : {
+            "type" : "boolean"
+          },
+          "tin" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^([0-9]{9}|[0-9]{14})$"
+          },
+          "vatCode" : {
+            "type" : "string",
+            "pattern" : "^$|^[0-9]{12}$"
+          }
+        },
+        "required" : [ "customer", "name", "supplier", "tin" ]
+      },
+      "CounterpartyRow" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "blocked" : {
+            "type" : "boolean"
+          },
+          "customer" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "legalName" : {
+            "type" : "string"
+          },
+          "licenseValidUntil" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Eng uzoq amal qiladigan litsenziya muddati"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "region" : {
+            "type" : "string"
+          },
+          "supplier" : {
+            "type" : "boolean"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "blocked", "customer", "id", "name", "supplier", "tin" ]
+      },
       "CreateBranchRequest" : {
         "type" : "object",
         "properties" : {
@@ -2339,6 +3166,60 @@
         },
         "required" : [ "active", "direction", "id", "name", "system" ]
       },
+      "License" : {
+        "type" : "object",
+        "properties" : {
+          "controlledAllowed" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "issuedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "validUntil" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "controlledAllowed", "id", "kind", "number" ]
+      },
+      "LicenseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "controlledAllowed" : {
+            "type" : "boolean"
+          },
+          "issuedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "kind" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "number" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "validUntil" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "controlledAllowed", "kind", "number" ]
+      },
       "LoginRequest" : {
         "type" : "object",
         "properties" : {
@@ -2392,29 +3273,27 @@
         },
         "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
       },
-      "PageResult" : {
+      "PriceType" : {
         "type" : "object",
         "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ProductRow"
-            }
+          "base" : {
+            "type" : "boolean"
           },
-          "page" : {
-            "type" : "integer",
-            "format" : "int32"
+          "batch" : {
+            "type" : "boolean"
           },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
+          "code" : {
+            "type" : "string"
           },
-          "total" : {
+          "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
           }
         },
-        "required" : [ "items", "page", "size", "total" ]
+        "required" : [ "base", "batch", "code", "id", "name" ]
       },
       "ProductDetail" : {
         "type" : "object",
@@ -2493,6 +3372,30 @@
           }
         },
         "required" : [ "active", "barcodes", "code", "codeHistory", "controlled", "id", "marked", "name", "prescription", "unit", "vatRate" ]
+      },
+      "ProductPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
       },
       "ProductRequest" : {
         "type" : "object",
@@ -2670,6 +3573,17 @@
         },
         "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName" ]
       },
+      "ReasonRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
       "Ref" : {
         "type" : "object",
         "properties" : {
@@ -2803,6 +3717,89 @@
           }
         },
         "required" : [ "blockers", "branches", "completed", "employees", "warehouses" ]
+      },
+      "Terms" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "creditLimit" : {
+            "type" : "string",
+            "description" : "Kredit limiti, so'm"
+          },
+          "defaultPaymentType" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "minShelfLifeDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "operator" : {
+            "$ref" : "#/components/schemas/Ref"
+          },
+          "paymentDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "priceType" : {
+            "$ref" : "#/components/schemas/Ref"
+          },
+          "supplierPaymentDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "supplyEmployee" : {
+            "$ref" : "#/components/schemas/Ref"
+          }
+        },
+        "required" : [ "branchId" ]
+      },
+      "TermsRequest" : {
+        "type" : "object",
+        "properties" : {
+          "creditLimit" : {
+            "type" : "string",
+            "description" : "So'm, masalan 15000000 yoki 15000000.50",
+            "pattern" : "^$|^\\d{1,16}(\\.\\d{1,2})?$"
+          },
+          "defaultPaymentType" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "minShelfLifeDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 3650,
+            "minimum" : 0
+          },
+          "operatorId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "paymentDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 365,
+            "minimum" : 0
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "supplierPaymentDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 365,
+            "minimum" : 0
+          },
+          "supplyEmployeeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
       },
       "UpdateBranchRequest" : {
         "type" : "object",

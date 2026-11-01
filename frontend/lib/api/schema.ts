@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_9"];
+        get: operations["list_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -103,10 +103,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ko'rish mumkin bo'lgan filiallar */
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         /** Filial qo'shish */
-        post: operations["create_6"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -125,7 +125,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_5"];
+        put: operations["update_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -143,7 +143,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Filialni faollashtirish */
-        post: operations["activate_5"];
+        post: operations["activate_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -163,7 +163,205 @@ export interface paths {
          * Filialni nofaol qilish
          * @description Oxirgi faol filial nofaol qilinmaydi.
          */
+        post: operations["deactivate_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kontragentlar
+         * @description Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).
+         */
+        get: operations["list_6"];
+        put?: never;
+        /** Kontragent qo'shish */
+        post: operations["create_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kontragent kartasi */
+        get: operations["get_2"];
+        /** Kartani tahrirlash */
+        put: operations["update_5"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Faollashtirish */
+        post: operations["activate_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bloklash
+         * @description Bloklangan mijozga buyurtma kiritilmaydi.
+         */
+        post: operations["block_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Shartnoma qo'shish */
+        post: operations["addContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/contracts/{contractId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Shartnomani tahrirlash */
+        put: operations["updateContract"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nofaol qilish */
         post: operations["deactivate_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/licenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Litsenziya qo'shish */
+        post: operations["addLicense"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/licenses/{licenseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Litsenziyani tahrirlash */
+        put: operations["updateLicense"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/terms/{branchId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Filial shartlari
+         * @description Limit, to'lov muddati, narx turi, minimal yaroqlilik, operator; YB shartlari.
+         */
+        put: operations["saveTerms"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/unblock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Blokdan chiqarish */
+        post: operations["unblock_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -250,7 +448,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_8"];
+        get: operations["list_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -400,6 +598,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/price-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Narx turlari */
+        get: operations["list_9"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/products": {
         parameters: {
             query?: never;
@@ -542,7 +757,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -923,6 +1138,100 @@ export interface components {
         CompanyRequest: {
             name: string;
         };
+        Contract: {
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int64 */
+            id: number;
+            note?: string;
+            number: string;
+            /** Format: date */
+            signedOn?: string;
+            /** Format: date */
+            validUntil?: string;
+        };
+        ContractRequest: {
+            /** Format: int64 */
+            branchId: number;
+            note?: string;
+            number: string;
+            /** Format: date */
+            signedOn?: string;
+            /** Format: date */
+            validUntil?: string;
+        };
+        CounterpartyDetail: {
+            active: boolean;
+            address?: string;
+            bankAccount?: string;
+            bankMfo?: string;
+            bankName?: string;
+            blocked: boolean;
+            blockedReason?: string;
+            contactPerson?: string;
+            /** @description Faqat xodim ko'ra oladigan filiallar */
+            contracts: components["schemas"]["Contract"][];
+            customer: boolean;
+            email?: string;
+            /** Format: int64 */
+            id: number;
+            legalName?: string;
+            licenses: components["schemas"]["License"][];
+            name: string;
+            note?: string;
+            phone?: string;
+            region?: components["schemas"]["Ref"];
+            supplier: boolean;
+            /** @description Faqat xodim ko'ra oladigan filiallar */
+            terms: components["schemas"]["Terms"][];
+            tin: string;
+            vatCode?: string;
+        };
+        CounterpartyPage: {
+            items: components["schemas"]["CounterpartyRow"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CounterpartyRequest: {
+            address?: string;
+            bankAccount?: string;
+            bankMfo?: string;
+            bankName?: string;
+            contactPerson?: string;
+            customer: boolean;
+            email?: string;
+            legalName?: string;
+            name: string;
+            note?: string;
+            phone?: string;
+            /** Format: int64 */
+            regionId?: number;
+            supplier: boolean;
+            tin: string;
+            vatCode?: string;
+        };
+        CounterpartyRow: {
+            active: boolean;
+            blocked: boolean;
+            customer: boolean;
+            /** Format: int64 */
+            id: number;
+            legalName?: string;
+            /**
+             * Format: date
+             * @description Eng uzoq amal qiladigan litsenziya muddati
+             */
+            licenseValidUntil?: string;
+            name: string;
+            phone?: string;
+            region?: string;
+            supplier: boolean;
+            tin: string;
+        };
         CreateBranchRequest: {
             address?: string;
             code: string;
@@ -1012,6 +1321,26 @@ export interface components {
             name: string;
             system: boolean;
         };
+        License: {
+            controlledAllowed: boolean;
+            /** Format: int64 */
+            id: number;
+            /** Format: date */
+            issuedOn?: string;
+            kind: string;
+            number: string;
+            /** Format: date */
+            validUntil?: string;
+        };
+        LicenseRequest: {
+            controlledAllowed: boolean;
+            /** Format: date */
+            issuedOn?: string;
+            kind: string;
+            number: string;
+            /** Format: date */
+            validUntil?: string;
+        };
         LoginRequest: {
             login: string;
             password: string;
@@ -1032,14 +1361,13 @@ export interface components {
             permissions: string[];
             role: components["schemas"]["RoleRef"];
         };
-        PageResult: {
-            items: components["schemas"]["ProductRow"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            size: number;
+        PriceType: {
+            base: boolean;
+            batch: boolean;
+            code: string;
             /** Format: int64 */
-            total: number;
+            id: number;
+            name: string;
         };
         ProductDetail: {
             active: boolean;
@@ -1066,6 +1394,15 @@ export interface components {
             supplyEmployee?: components["schemas"]["Ref"];
             unit: components["schemas"]["Ref"];
             vatRate: string;
+        };
+        ProductPage: {
+            items: components["schemas"]["ProductRow"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
         };
         ProductRequest: {
             barcodes?: string[];
@@ -1128,6 +1465,9 @@ export interface components {
             roleCode: string;
             roleName: string;
         };
+        ReasonRequest: {
+            reason: string;
+        };
         Ref: {
             /** Format: int64 */
             id: number;
@@ -1171,6 +1511,41 @@ export interface components {
             completed: boolean;
             employees: components["schemas"]["Employee"][];
             warehouses: components["schemas"]["Warehouse"][];
+        };
+        Terms: {
+            /** Format: int64 */
+            branchId: number;
+            /** @description Kredit limiti, so'm */
+            creditLimit?: string;
+            /** @enum {string} */
+            defaultPaymentType?: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: int32 */
+            minShelfLifeDays?: number;
+            operator?: components["schemas"]["Ref"];
+            /** Format: int32 */
+            paymentDays?: number;
+            priceType?: components["schemas"]["Ref"];
+            /** Format: int32 */
+            supplierPaymentDays?: number;
+            supplyEmployee?: components["schemas"]["Ref"];
+        };
+        TermsRequest: {
+            /** @description So'm, masalan 15000000 yoki 15000000.50 */
+            creditLimit?: string;
+            /** @enum {string} */
+            defaultPaymentType?: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: int32 */
+            minShelfLifeDays?: number;
+            /** Format: int64 */
+            operatorId?: number;
+            /** Format: int32 */
+            paymentDays?: number;
+            /** Format: int64 */
+            priceTypeId?: number;
+            /** Format: int32 */
+            supplierPaymentDays?: number;
+            /** Format: int64 */
+            supplyEmployeeId?: number;
         };
         UpdateBranchRequest: {
             address?: string;
@@ -1242,7 +1617,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_9: {
+    list_11: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -1353,7 +1728,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1373,7 +1748,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1397,7 +1772,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1423,7 +1798,7 @@ export interface operations {
             };
         };
     };
-    activate_5: {
+    activate_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1445,7 +1820,7 @@ export interface operations {
             };
         };
     };
-    deactivate_5: {
+    deactivate_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1467,6 +1842,335 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    list_6: {
+        parameters: {
+            query?: {
+                q?: string;
+                role?: "CUSTOMER" | "SUPPLIER" | "ALL";
+                status?: "ACTIVE" | "BLOCKED" | "INACTIVE" | "ALL";
+                regionId?: number;
+                sortByTin?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyPage"];
+                };
+            };
+        };
+    };
+    create_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CounterpartyRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    get_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    update_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CounterpartyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    activate_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    block_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    addContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    updateContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                contractId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    deactivate_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    addLicense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LicenseRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    updateLicense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                licenseId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LicenseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    saveTerms: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                branchId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TermsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    unblock_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDetail"];
                 };
             };
         };
@@ -1592,7 +2296,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -1844,6 +2548,26 @@ export interface operations {
             };
         };
     };
+    list_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceType"][];
+                };
+            };
+        };
+    };
     list_2: {
         parameters: {
             query?: {
@@ -1871,7 +2595,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageResult"];
+                    "application/json": components["schemas"]["ProductPage"];
                 };
             };
         };
@@ -2088,7 +2812,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: never;
             header?: never;
