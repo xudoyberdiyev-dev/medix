@@ -1,4 +1,4 @@
--- MEDIX — 2-bosqich: kichik ma'lumotnomalar (SPEC 4, 12): ishlab chiqaruvchilar, kategoriyalar, birliklar,
+-- MEDIX — 2-bosqich: kichik maʼlumotnomalar (SPEC 4, 12): ishlab chiqaruvchilar, kategoriyalar, birliklar,
 -- davlatlar, hududlar, mashinalar, xarajat/kirim moddalari. O'chirilmaydi — faqat nofaol qilinadi (SPEC 6, 13-qoida).
 
 CREATE TABLE manufacturer (
@@ -35,7 +35,7 @@ CREATE TABLE unit (
     version     BIGINT       NOT NULL DEFAULT 0
 );
 CREATE UNIQUE INDEX unit_name_uq ON unit (lower(name));
-COMMENT ON TABLE unit IS 'O'lchov birliklari (dona, qadoq, ...)';
+COMMENT ON TABLE unit IS 'Oʻlchov birliklari (dona, qadoq, ...)';
 
 CREATE TABLE country (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
