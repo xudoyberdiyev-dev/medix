@@ -80,4 +80,50 @@ public class PartyLedger {
                 .query(java.math.BigDecimal.class)
                 .single());
     }
+
+    /** Kredit holati: qarz, muddati o'tgan qismi va eng eski muddati o'tgan qarz kunlari (to'lovlar eng eski qarzdan yopiladi). */
+    public record CreditState(Money debt, Money overdue, int overdueDays) {}
+
+    @Transactional(readOnly = true)
+    public CreditState creditState(long branchId, long counterpartyId, Side side, LocalDate today) {
+        record Row(java.math.BigDecimal amount, Date dueDate) {}
+        java.util.List<Row> rows = jdbc.sql("""
+                SELECT amount, due_date FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s
+                ORDER BY due_date NULLS FIRST, id""")
+                .param("b", branchId)
+                .param("c", counterpartyId)
+                .param("s", side.name())
+                .query(Row.class)
+                .list();
+        Money paid = Money.ZERO;
+        Money debt = Money.ZERO;
+        for (Row r : rows) {
+            Money a = new Money(r.amount());
+            debt = debt.plus(a);
+            if (a.isNegative()) {
+                paid = paid.minus(a);
+            }
+        }
+        // FIFO: to'langan summa eng eski (muddati eng erta) qarzlardan ayriladi.
+        Money overdue = Money.ZERO;
+        int days = 0;
+        Money left = paid;
+        for (Row r : rows) {
+            Money a = new Money(r.amount());
+            if (a.isNegative()) {
+                continue;
+            }
+            Money open = a;
+            if (!left.isZero()) {
+                Money used = left.compareTo(a) >= 0 ? a : left;
+                open = a.minus(used);
+                left = left.minus(used);
+            }
+            if (!open.isZero() && r.dueDate() != null && r.dueDate().toLocalDate().isBefore(today)) {
+                overdue = overdue.plus(open);
+                days = Math.max(days, (int) java.time.temporal.ChronoUnit.DAYS.between(r.dueDate().toLocalDate(), today));
+            }
+        }
+        return new CreditState(debt, overdue, days);
+    }
 }
