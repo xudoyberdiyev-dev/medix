@@ -30,6 +30,11 @@ services:
       MEDIX_DB_URL: jdbc:postgresql://postgres:5432/medix
       MEDIX_DB_USER: medix
       MEDIX_DB_PASSWORD: ${MEDIX_DB_PASSWORD:-medix}
+      # Lokal ishlab chiqish: http orqali (productionda Secure cookie yoqilgan).
+      MEDIX_COOKIE_SECURE: "false"
+      # Birinchi ishga tushirishdagi CEO hisobi (.env faylida beriladi, repoga yozilmaydi).
+      MEDIX_BOOTSTRAP_LOGIN: ${MEDIX_BOOTSTRAP_LOGIN:-}
+      MEDIX_BOOTSTRAP_PASSWORD: ${MEDIX_BOOTSTRAP_PASSWORD:-}
     depends_on:
       postgres: { condition: service_healthy }
     ports: ["8080:8080"]

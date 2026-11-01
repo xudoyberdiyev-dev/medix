@@ -1,0 +1,85 @@
+package uz.medix.identity.auth;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import uz.medix.identity.security.AuthService;
+import uz.medix.identity.security.MedixPrincipal;
+
+/** Kirish, chiqish ({@code POST /api/auth/logout} — Spring Security), joriy foydalanuvchi, parol almashtirish. */
+@RestController
+@RequestMapping("/api/auth")
+@Tag(name = "auth", description = "Tizimga kirish va sessiya")
+class AuthController {
+
+    private final AuthService auth;
+    private final SecurityContextRepository contextRepository;
+    private final SessionAuthenticationStrategy sessionStrategy;
+
+    AuthController(AuthService auth, SecurityContextRepository contextRepository, SessionAuthenticationStrategy sessionStrategy) {
+        this.auth = auth;
+        this.contextRepository = contextRepository;
+        this.sessionStrategy = sessionStrategy;
+    }
+
+    @GetMapping("/csrf")
+    @Operation(summary = "CSRF tokenini olish", description = "XSRF-TOKEN cookie'sini o'rnatadi. Ilova ochilganda bir marta chaqiriladi.")
+    CsrfResponse csrf(CsrfToken token) {
+        return new CsrfResponse(token.getHeaderName(), token.getToken());
+    }
+
+    @PostMapping("/login")
+    @Operation(summary = "Tizimga kirish")
+    MeResponse login(@Valid @RequestBody LoginRequest body, HttpServletRequest request, HttpServletResponse response) {
+        UsernamePasswordAuthenticationToken authentication = auth.login(body.login(), body.password());
+        establish(authentication, request, response);
+        return MeResponse.of((MedixPrincipal) authentication.getPrincipal());
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Joriy foydalanuvchi")
+    MeResponse me(@AuthenticationPrincipal MedixPrincipal principal) {
+        return MeResponse.of(principal);
+    }
+
+    @PostMapping("/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Parolni almashtirish", description = "Birinchi kirishda majburiy.")
+    void changePassword(
+            @AuthenticationPrincipal MedixPrincipal principal,
+            @Valid @RequestBody ChangePasswordRequest body,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        auth.changePassword(principal.id(), body.currentPassword(), body.newPassword());
+        var current = SecurityContextHolder.getContext().getAuthentication();
+        var updated = UsernamePasswordAuthenticationToken.authenticated(
+                principal.withPasswordChanged(), null, current.getAuthorities());
+        var context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(updated);
+        SecurityContextHolder.setContext(context);
+        contextRepository.saveContext(context, request, response);
+    }
+
+    private void establish(UsernamePasswordAuthenticationToken authentication, HttpServletRequest request, HttpServletResponse response) {
+        sessionStrategy.onAuthentication(authentication, request, response);
+        var context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        contextRepository.saveContext(context, request, response);
+    }
+}

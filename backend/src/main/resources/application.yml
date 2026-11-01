@@ -18,10 +18,31 @@ spring:
     locations: classpath:db/migration
   jackson:
     time-zone: Asia/Tashkent
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  session:
+    jdbc:
+      initialize-schema: never
+      cleanup-cron: "0 */10 * * * *"
 
 server:
   port: ${PORT:8080}
   shutdown: graceful
+  servlet:
+    session:
+      timeout: 10h
+      cookie:
+        name: MEDIX_SESSION
+        http-only: true
+        secure: ${MEDIX_COOKIE_SECURE:true}
+        same-site: lax
+
+medix:
+  bootstrap:
+    login: ${MEDIX_BOOTSTRAP_LOGIN:}
+    password: ${MEDIX_BOOTSTRAP_PASSWORD:}
 
 management:
   endpoints:
