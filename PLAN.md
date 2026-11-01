@@ -39,10 +39,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [x] 1.2 Spring Security 7 + Spring Session JDBC: login/logout, httpOnly+Secure cookie, CSRF, parol (Argon2/BCrypt), birinchi kirishda parol almashtirish, bloklangan xodim
 - [ ] 1.3 Ruxsatlar: 131 kalit katalogi (T12-topshirish.md dan), 11 rol standart matritsasi, `@PreAuthorize`, rol nusxasi
 - [~] 1.4 Filial doirasi: `Actor.canAccessBranch` (Direktor/Admin/Buxgalter — barcha filiallar, hozircha rol bo'yicha; 1.3 dan keyin ruxsat kalitiga). Har modul o'z so'rovlarida qo'llaydi
-- [~] 1.5 Audit jurnali servisi (`shared.audit.AuditLog`, kirish/parol/usta amallari yoziladi) — PIN tasdig'i asosi qoldi
+- [x] 1.5 Audit jurnali servisi (`shared.audit.AuditLog`) + PIN: `shared.security.PinVerifier` (4–6 raqam, oson PIN rad etiladi, 5 xato → 15 daqiqa qulf, xato hisobi chaqiruvchi tranzaksiyasidan mustaqil), Profil'da o'rnatish (joriy parol bilan)
 - [x] 1.6 Sozlash ustasi API (faqat CEO, birinchi ishga tushirish): kompaniya → filiallar → omborlar va zonalar → rollar → xodimlar → yakun
-- [~] 1.7 Frontend: ✅ login (ulangan), parol almashtirish, sozlash ustasi (Stepper), proxy + AuthGate, Sozlamalar → Xodimlar (qo'shish, bloklash, vaqtinchalik parol), Audit jurnali, rolga qarab menyu (SPEC 3 bo'yicha, 1.3 dan keyin ruxsat kalitlariga). Qoldi: Rollar va ruxsatlar matritsasi (1.3 ga bog'liq), Filiallar va Omborlar sahifalari (usta tugagandan keyin tahrirlash), Profil
-- [ ] 1.8 e2e (Playwright): login → usta → xodim yaratish
+- [~] 1.7 Frontend: ✅ login (ulangan), parol almashtirish, sozlash ustasi (Stepper), proxy + AuthGate, Sozlamalar → Xodimlar (qo'shish, bloklash, vaqtinchalik parol), Audit jurnali, rolga qarab menyu (SPEC 3 bo'yicha, 1.3 dan keyin ruxsat kalitlariga). ✅ Filiallar (qo'shish, tahrirlash — kod o'zgarmaydi, nofaol qilish), Omborlar va zonalar (Filial rahbari — o'z filiali; Sovuq/Seyf qo'shish, zona nomi, nofaol qilish), Profil (telefon, parol, PIN). Qoldi: Rollar va ruxsatlar matritsasi (1.3 ga bog'liq)
+- [x] 1.8 e2e (Playwright, CI `e2e` ishi: Postgres + backend jar + `next start`): CEO birinchi kirish → parol → usta → xodim → Sozlamalar → PIN; operator vaqtinchalik parol bilan kiradi, Sozlamalar yopiq
 
 ## 2. Katalog
 - [ ] Mahsulotlar (8 raqamli noyob kod, tarix), pro jadval (qidiruv lotin/kirill, filtrlar, ustunlar, ko'rinishlar, .xlsx eksport, URL filtrlar)
