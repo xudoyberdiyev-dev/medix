@@ -213,7 +213,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   const accept = page.getByRole("dialog", { name: "Tovarni qabul qilish" });
   await accept.getByLabel(/^Yaroqli\s*\*?$/).fill("48");
   await accept.getByRole("button", { name: "Qabulni tasdiqlash" }).click();
-  await expect(page.getByText(/· tovar Qabul zonasida$/)).toBeVisible();
+  await expect(page.getByText("Tovar Qabul zonasida — sotuvga yopiq")).toBeVisible();
 
   // Oʻtkazish: haqiqiy soni boʻyicha
   await page.getByRole("button", { name: "Oʻtkazish" }).click();

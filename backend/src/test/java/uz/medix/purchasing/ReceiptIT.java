@@ -65,6 +65,9 @@ class ReceiptIT {
     @Autowired
     TransactionTemplate tx;
 
+    @Autowired
+    uz.medix.purchasing.receipt.ReceiptReminders reminders;
+
     private record Place(long branchId, long warehouseId, long receiving, long main, long quarantine, long safe) {}
 
     private Place place() {
@@ -404,5 +407,39 @@ class ReceiptIT {
                         .query(String.class).single())
                 .isEqualTo("0.00");
         assertThat(debt(p.branchId(), sup)).isEqualTo("0.00");
+    }
+
+    @Test
+    void dueAndBonusRemindersReachOwnerOnce() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 3);
+        long a = product("KR eslatma", false);
+        Cookie admin = loginAs("ADMIN", null);
+        Cookie owner = loginAs("PURCHASER", p.branchId());
+        long ownerId = jdbc.sql("SELECT max(id) FROM employee WHERE role_id = (SELECT id FROM role WHERE code = 'PURCHASER')").query(Long.class).single();
+        String body = doc(p, sup, false, line(a, "E-1", p.main(), 2, 0, "5000"))
+                .replace("\"prepaid\":false", "\"prepaid\":false,\"ownerId\":" + ownerId + ",\"discountDate\":\"" + today() + "\"");
+        String kr = postedReceipt(admin, body);
+        send(post("/api/receipts/" + kr + "/post"), admin, "{}").andExpect(status().isOk());
+
+        // To'lov kuni = bugun + 3 → «3 kundan keyin»; bonus vaqti keldi
+        int first = reminders.run(today());
+        assertThat(first).isGreaterThanOrEqualTo(2);
+        assertThat(reminders.run(today())).isZero();
+        MvcResult list = mvc.perform(get("/api/notifications").cookie(owner)).andExpect(status().isOk()).andReturn();
+        String json = list.getResponse().getContentAsString();
+        assertThat((Integer) JsonPath.read(json, "$.unread")).isEqualTo(2);
+        List<String> titles = JsonPath.read(json, "$.items[*].title");
+        assertThat(titles).anySatisfy(t -> assertThat(t).startsWith("Toʻlov kuni 3 kundan keyin: KR-"));
+        assertThat(titles).anySatisfy(t -> assertThat(t).startsWith("Bonusni tasdiqlash vaqti keldi: KR-"));
+        // 1–2 kun qolganda — jim; to'lov kuni — yana
+        assertThat(reminders.run(today().plusDays(1))).isZero();
+        assertThat(reminders.run(today().plusDays(3))).isGreaterThanOrEqualTo(1);
+        send(post("/api/notifications/read-all"), owner, "").andExpect(status().isOk());
+        mvc.perform(get("/api/notifications").cookie(owner)).andExpect(jsonPath("$.unread").value(0));
+        // Boshqa xodim birovning bildirishnomasini o'qiy olmaydi
+        long notif = ((Number) JsonPath.read(json, "$.items[0].id")).longValue();
+        send(post("/api/notifications/" + notif + "/read"), admin, "").andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT employee_id FROM notification WHERE id = :id").param("id", notif).query(Long.class).single()).isEqualTo(ownerId);
     }
 }
