@@ -17,6 +17,7 @@ import java.util.Set;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.inventory.BatchCosts;
 import uz.medix.pricing.PriceMath;
 import uz.medix.pricing.change.PriceChangeModels.BaseKind;
 import uz.medix.pricing.change.PriceChangeModels.Line;
@@ -43,7 +44,7 @@ import uz.medix.shared.text.SearchText;
 /**
  * NO — narx o'zgarishi hujjati (SPEC 6, 7): Qoralama → (Direktor tasdig'ida) → Tasdiqlangan / Rad etilgan / Bekor qilingan.
  * Narx faqat tasdiqlanganda yoziladi. Tannarxdan past narx Direktor tasdig'ini talab qiladi — tannarx partiyalardan
- * (4–5-bosqich) keladi; hozircha tannarx noma'lum, shuning uchun bu tekshiruv bo'sh ({@link #belowCost}).
+ * (inventory {@link BatchCosts}) keladi — {@link #belowCost}.
  */
 @Service
 class PriceChanges {
@@ -55,8 +56,10 @@ class PriceChanges {
     private final DocumentSequenceService numbers;
     private final PinVerifier pins;
     private final Clock clock;
+    private final BatchCosts costs;
 
-    PriceChanges(JdbcClient jdbc, AuditLog audit, DocumentSequenceService numbers, PinVerifier pins, Clock clock) {
+    PriceChanges(JdbcClient jdbc, AuditLog audit, DocumentSequenceService numbers, PinVerifier pins, Clock clock, BatchCosts costs) {
+        this.costs = costs;
         this.jdbc = jdbc;
         this.audit = audit;
         this.numbers = numbers;
@@ -363,9 +366,16 @@ class PriceChanges {
                 .update();
     }
 
-    /** TODO(4–5-bosqich): partiyalar tannarxi paydo bo'lganda — yangi narx < tannarx qatorlari. Hozircha tannarx yo'q. */
+    /** Tannarxdan past: yangi narx filialdagi qoldig'i bor partiyalarning eng yuqori tannarxidan kichik (SPEC 6). */
     private boolean belowCost(long priceChangeId) {
-        return false;
+        record L(long productId, BigDecimal newPrice) {}
+        long branch = jdbc.sql("SELECT branch_id FROM price_change WHERE id = :id").param("id", priceChangeId).query(Long.class).single();
+        List<L> lines = jdbc.sql("SELECT product_id, new_price FROM price_change_line WHERE price_change_id = :id")
+                .param("id", priceChangeId)
+                .query(L.class)
+                .list();
+        Map<Long, Money> max = costs.maxCost(branch, lines.stream().map(L::productId).distinct().toList());
+        return lines.stream().anyMatch(l -> max.containsKey(l.productId()) && new Money(l.newPrice()).compareTo(max.get(l.productId())) < 0);
     }
 
     private int lineCount(long id) {

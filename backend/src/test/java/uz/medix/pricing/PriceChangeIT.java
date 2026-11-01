@@ -45,6 +45,15 @@ class PriceChangeIT {
     @Autowired
     PasswordEncoder encoder;
 
+    @Autowired
+    uz.medix.inventory.Warehouses warehouses;
+
+    @Autowired
+    uz.medix.inventory.StockLedger ledger;
+
+    @Autowired
+    org.springframework.transaction.support.TransactionTemplate tx;
+
     private Cookie loginAs(String role, Long branchId) throws Exception {
         String login = "nar" + UUID.randomUUID().toString().substring(0, 8);
         jdbc.sql("""
@@ -211,5 +220,35 @@ class PriceChangeIT {
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/price-changes").param("branchId", String.valueOf(branch)).cookie(operator))
                 .andExpect(jsonPath("$.items[0].status").value("CANCELLED"));
+    }
+
+    @Test
+    void belowCostNeedsDirector() throws Exception {
+        long branch = branch();
+        long p = product("Tannarx NO sinov");
+        long base = type("BASE");
+        var w = tx.execute(st -> warehouses.create(branch, "NO ombor " + branch, null, java.util.Set.of()));
+        long main = w.zones().stream().filter(z -> z.type() == uz.medix.inventory.ZoneType.MAIN).findFirst().orElseThrow().id();
+        tx.executeWithoutResult(st -> {
+            long b = ledger.createBatch(p, "T-1", null, LocalDate.of(2029, 1, 31), uz.medix.shared.money.Money.of("12000"), false, "KR", null);
+            long bonus = ledger.createBatch(p, "T-1", null, LocalDate.of(2029, 1, 31), uz.medix.shared.money.Money.ZERO, true, "KR", null);
+            ledger.post(new uz.medix.inventory.StockLedger.DocRef("KR", 1, "KR-TST-000001"),
+                    java.util.List.of(uz.medix.inventory.StockLedger.Move.in(main, b, 5), uz.medix.inventory.StockLedger.Move.in(main, bonus, 1)));
+        });
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        String body = "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today() + "\",\"lines\":[{\"productId\":" + p + ",\"priceTypeId\":" + base
+                + ",\"newPrice\":\"PRICE\"}]}";
+        // Tannarxdan past (bonus partiya 0 hisobga olinmaydi) — Direktor tasdig'iga
+        long low = id(mvc.perform(json(post("/api/price-changes"), purchaser, body.replace("PRICE", "11999.99"))).andReturn());
+        mvc.perform(post("/api/price-changes/" + low + "/submit").with(csrf()).cookie(purchaser))
+                .andExpect(jsonPath("$.status").value("PENDING_APPROVAL"));
+        mvc.perform(get("/api/prices").param("branchId", String.valueOf(branch)).param("q", "tannarx no sinov").cookie(purchaser))
+                .andExpect(jsonPath("$.items[0].prices['" + base + "']").doesNotExist());
+        Cookie director = loginAs("DIRECTOR", null);
+        mvc.perform(json(post("/api/price-changes/" + low + "/reject"), director, "{\"reason\":\"Tannarxdan past\"}"))
+                .andExpect(jsonPath("$.status").value("REJECTED"));
+        // Tannarxga teng — darhol kuchga kiradi
+        long ok = id(mvc.perform(json(post("/api/price-changes"), purchaser, body.replace("PRICE", "12000"))).andReturn());
+        mvc.perform(post("/api/price-changes/" + ok + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
     }
 }
