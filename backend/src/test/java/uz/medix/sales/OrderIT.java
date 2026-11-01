@@ -445,6 +445,7 @@ class OrderIT {
         assertThat(jdbc.sql("SELECT sum(qty) FROM stock_reservation WHERE product_id = :p AND status = 'ACTIVE'").param("p", prod)
                         .query(Long.class).single())
                 .isEqualTo(9);
-        assertThat(tx.execute(s -> reservations.release("BY", 900_001))).isEqualTo(2);
+        Integer released = tx.execute(s -> reservations.release("BY", 900_001));
+        assertThat(released).isEqualTo(2);
     }
 }
