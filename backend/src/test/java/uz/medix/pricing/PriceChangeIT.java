@@ -85,7 +85,7 @@ class PriceChangeIT {
 
     private long product(String name) {
         String code = String.valueOf(10_000_000 + ThreadLocalRandom.current().nextInt(89_999_999));
-        return jdbc.sql("INSERT INTO product (code, name, unit_id) SELECT :c, :n, id FROM unit WHERE short_name = 'dona' RETURNING id")
+        return jdbc.sql("INSERT INTO product (code, name, unit_id, search_text) SELECT :c, :n, id, lower(:n) FROM unit WHERE short_name = 'dona' RETURNING id")
                 .param("c", code)
                 .param("n", name)
                 .query(Long.class)
@@ -128,7 +128,8 @@ class PriceChangeIT {
 
         // Qoralama narxga ta'sir qilmaydi
         mvc.perform(get("/api/prices").param("branchId", String.valueOf(branch)).param("q", "nimesil no sinov").cookie(purchaser))
-                .andExpect(jsonPath("$.items[0].prices").isEmpty());
+                .andExpect(jsonPath("$.items[0].code").exists())
+                .andExpect(jsonPath("$.items[0].prices['" + base + "']").doesNotExist());
 
         mvc.perform(post("/api/price-changes/" + doc + "/submit").with(csrf()).cookie(purchaser))
                 .andExpect(status().isOk())
@@ -159,7 +160,8 @@ class PriceChangeIT {
         // Tarix: oldingi kun bo'yicha so'rov — narx hali yo'q
         mvc.perform(get("/api/prices").param("branchId", String.valueOf(branch)).param("q", "nimesil no sinov")
                         .param("at", LocalDate.parse(today()).minusDays(1).toString()).cookie(purchaser))
-                .andExpect(jsonPath("$.items[0].prices").isEmpty());
+                .andExpect(jsonPath("$.items[0].code").exists())
+                .andExpect(jsonPath("$.items[0].prices['" + base + "']").doesNotExist());
 
         // Ommaviy ustama: bazaviy narxdan +15%, 500 ga yaxlitlash → Promo
         mvc.perform(json(post("/api/price-changes/markup"), purchaser,
