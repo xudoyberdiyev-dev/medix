@@ -62,7 +62,7 @@ export const navigation: NavGroup[] = [
   { title: "Tahlil", items: [{ key: "reports", label: "Hisobotlar", href: "/reports", icon: ChartColumn }] },
   {
     title: "Boshqaruv",
-    items: [{ key: "settings", label: "Sozlamalar", href: "/settings", icon: Settings, roles: ["DIRECTOR", "ADMIN"] }],
+    items: [{ key: "settings", label: "Sozlamalar", href: "/settings", icon: Settings, roles: ["DIRECTOR", "ADMIN", "BRANCH_MANAGER"] }],
   },
 ];
 

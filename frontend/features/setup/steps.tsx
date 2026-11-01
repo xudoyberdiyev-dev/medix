@@ -24,16 +24,8 @@ import {
   type SetupStatus,
   type Warehouse,
 } from "./api";
+import { ZONE_LABELS } from "@/features/organization/api";
 import { describeError } from "./form-error";
-
-const ZONE_LABELS: Record<string, string> = {
-  RECEIVING: "Qabul",
-  MAIN: "Asosiy saqlash",
-  QUARANTINE: "Karantin",
-  SHIPPING: "Joʻnatish",
-  COLD: "Sovuq",
-  SAFE: "Seyf",
-};
 
 function FormGrid({ children, onSubmit }: { children: ReactNode; onSubmit: (e: FormEvent<HTMLFormElement>) => void }) {
   return (

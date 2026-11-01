@@ -53,11 +53,17 @@ export function Sidebar() {
       </nav>
       {me.data ? (
         <div className="flex items-center gap-3 border-t border-sidebar-item-active-bg px-4 py-3">
-          <Avatar name={me.data.fullName} decorative />
-          <div className="min-w-0 flex-1">
-            <div className="truncate font-medium text-white">{me.data.fullName}</div>
-            <div className="truncate text-caption">{me.data.role.name}</div>
-          </div>
+          <Link
+            href="/profile"
+            title="Profil"
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-control focus-visible:outline-sidebar-active"
+          >
+            <Avatar name={me.data.fullName} decorative />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium text-white">{me.data.fullName}</span>
+              <span className="block truncate text-caption">{me.data.role.name}</span>
+            </span>
+          </Link>
           <button
             type="button"
             aria-label="Chiqish"
