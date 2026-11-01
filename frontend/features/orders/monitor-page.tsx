@@ -14,6 +14,7 @@ import { formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { STATUS_LABELS, type OrderStatus } from "./api";
 import { IssuesList } from "./issues";
+import { ReturnsList } from "./returns";
 import { OrderDrawer } from "./order-drawer";
 import { timerText } from "./picking-page";
 
@@ -126,6 +127,12 @@ export function MonitorPage() {
         <section className="mt-6" aria-label="Muammolar">
           <h2 className="mb-3 text-subtitle">Muammolar</h2>
           <IssuesList onOpenOrder={setOpen} />
+        </section>
+      ) : null}
+      {board.data && can(me.data, "orders.check") ? (
+        <section className="mt-6" aria-label="Qaytgan tovar">
+          <h2 className="mb-3 text-subtitle">Qaytgan tovar</h2>
+          <ReturnsList />
         </section>
       ) : null}
       {open !== null ? <OrderDrawer id={open} onClose={() => setOpen(null)} onCreated={() => undefined} /> : null}

@@ -1564,7 +1564,7 @@
     "/api/marking/orders/{id}/finish" : {
       "post" : {
         "description" : "Barcha kodlar skanerlangan bo'lsa → «Hisobdan o'tkazilmoqda».",
-        "operationId" : "finish",
+        "operationId" : "finish_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2377,6 +2377,61 @@
           }
         },
         "summary" : "Mijozning oxirgi 5 ta buyurtmasi",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/returns" : {
+      "get" : {
+        "description" : "Yetkazilmagan buyurtmalar tovari — Ombor mudiri sanab qabul qiladi.",
+        "operationId" : "pendingReturns",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PendingReturn"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qaytayotgan tovar",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/returns/{returnId}/accept" : {
+      "post" : {
+        "description" : "Karantinga; kam kelsa — muammo yoziladi.",
+        "operationId" : "acceptReturn",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "returnId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReturnAcceptRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qaytgan tovarni qabul qilish",
         "tags" : [ "orders" ]
       }
     },
@@ -4765,6 +4820,35 @@
         "tags" : [ "trips" ]
       }
     },
+    "/api/trips/{id}/finish" : {
+      "post" : {
+        "description" : "Qaytgan tovar yoki naqd pul bo'lsa — «Qaytish kutilmoqda».",
+        "operationId" : "finish",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FinishResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Reysni yakunlash»",
+        "tags" : [ "trips" ]
+      }
+    },
     "/api/trips/{id}/start" : {
       "post" : {
         "description" : "Har buyurtmaga sotuv (SV) va hisob-faktura (HF); «Yo'lda».",
@@ -4791,6 +4875,53 @@
           }
         },
         "summary" : "«Yuklab bo'lindi — reysni boshlash»",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/stops/{stopId}/deliver" : {
+      "post" : {
+        "description" : "Kamida 1 rasm majburiy; naqd to'lovda olingan summa.",
+        "operationId" : "deliver",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "stopId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeliverRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Yetkazildi»",
         "tags" : [ "trips" ]
       }
     },
@@ -4838,6 +4969,114 @@
           }
         },
         "summary" : "«Qabul qildim»",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/stops/{stopId}/photos" : {
+      "post" : {
+        "description" : "JPEG/PNG/WEBP, ≤ 5 MB. signature=true — mijoz imzosi (ixtiyoriy).",
+        "operationId" : "photo",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "stopId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "signature",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PhotoResult"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Yetkazish rasmi",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/stops/{stopId}/undeliver" : {
+      "post" : {
+        "description" : "Sabab majburiy; sotuv va qarz bekor, tovar «Qaytmoqda».",
+        "operationId" : "undeliver",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "stopId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Yetkazilmadi»",
         "tags" : [ "trips" ]
       }
     },
@@ -6057,6 +6296,17 @@
         },
         "required" : [ "reason" ]
       },
+      "DeliverRequest" : {
+        "type" : "object",
+        "properties" : {
+          "cash" : {
+            "type" : "string",
+            "description" : "Naqd olingan summa, masalan «25000.00»",
+            "maxLength" : 24,
+            "minLength" : 0
+          }
+        }
+      },
       "DriverOption" : {
         "type" : "object",
         "properties" : {
@@ -6230,6 +6480,16 @@
           }
         },
         "required" : [ "active", "direction", "id", "name", "system" ]
+      },
+      "FinishResult" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PLANNED", "IN_TRANSIT", "RETURN_WAIT", "DONE", "CANCELLED" ]
+          }
+        },
+        "required" : [ "status" ]
       },
       "HandoverResult" : {
         "type" : "object",
@@ -7784,6 +8044,40 @@
         },
         "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "id", "lines", "number", "orderDate", "status", "statusChangedAt", "total", "warehouse" ]
       },
+      "PendingReturn" : {
+        "type" : "object",
+        "properties" : {
+          "batch" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "product" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "batch", "createdAt", "customer", "id", "orderId", "orderNumber", "product", "qty" ]
+      },
       "Permission" : {
         "type" : "object",
         "properties" : {
@@ -7811,6 +8105,16 @@
           }
         },
         "required" : [ "permissions" ]
+      },
+      "PhotoResult" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "id" ]
       },
       "PickFinishRequest" : {
         "type" : "object",
@@ -9038,6 +9342,17 @@
         },
         "required" : [ "resolution" ]
       },
+      "ReturnAcceptRequest" : {
+        "type" : "object",
+        "properties" : {
+          "receivedQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          }
+        },
+        "required" : [ "receivedQty" ]
+      },
       "Role" : {
         "type" : "object",
         "properties" : {
@@ -9487,6 +9802,9 @@
           "address" : {
             "type" : "string"
           },
+          "cashCollected" : {
+            "type" : "string"
+          },
           "customer" : {
             "type" : "string"
           },
@@ -9505,6 +9823,23 @@
           "orderNumber" : {
             "type" : "string"
           },
+          "outcome" : {
+            "type" : "string",
+            "description" : "DELIVERED yoki UNDELIVERED"
+          },
+          "outcomeReason" : {
+            "type" : "string"
+          },
+          "paymentType" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "photos" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "places" : {
             "type" : "integer",
             "format" : "int32"
@@ -9520,7 +9855,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "customer", "id", "orderId", "orderNumber", "places", "seq", "total" ]
+        "required" : [ "customer", "id", "orderId", "orderNumber", "paymentType", "photos", "places", "seq", "total" ]
       },
       "TripSummary" : {
         "type" : "object",

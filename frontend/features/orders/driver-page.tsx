@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleCheck, PackageCheck, Truck } from "lucide-react";
+import { Camera, CircleCheck, CircleX, Flag, PackageCheck, Truck } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
@@ -144,7 +145,15 @@ function TripView(props: {
                   {formatQuantity(s.places)} joy · {formatMoney(s.total)} soʻm
                 </div>
               </div>
-              {s.loadedAt ? (
+              {s.outcome === "DELIVERED" ? (
+                <Badge tone="success" icon={CircleCheck}>
+                  Yetkazildi
+                </Badge>
+              ) : s.outcome === "UNDELIVERED" ? (
+                <Badge tone="danger" icon={CircleX}>
+                  Yetkazilmadi
+                </Badge>
+              ) : s.loadedAt ? (
                 <Badge tone="success" icon={CircleCheck}>
                   Qabul qilindi
                 </Badge>
@@ -183,9 +192,167 @@ function TripView(props: {
             Yuklab boʻlindi — reysni boshlash
           </Button>
         </div>
+      ) : t.status === "IN_TRANSIT" ? (
+        <TransitActions t={t} />
       ) : (
-        <p className="mt-4 text-text-secondary">Reys yoʻlda — manzillar boʻyicha yetkazing.</p>
+        <p className="mt-4 text-text-secondary">Reys yakunlandi — qaytgan tovar va naqd pulni topshiring.</p>
       )}
     </Card>
+  );
+}
+
+/** «Yoʻlda»: har manzilda rasm → «Yetkazildi» (naqd boʻlsa summa) yoki «Yetkazilmadi» (sabab); oxirida «Reysni yakunlash». */
+function TransitActions({ t }: { t: TripDetail }) {
+  const qc = useQueryClient();
+  const [cash, setCash] = useState<Record<number, string>>({});
+  const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [undeliver, setUndeliver] = useState<number | null>(null);
+  const [reason, setReason] = useState("");
+  const open = t.stops.filter((s) => !s.outcome);
+
+  async function run(key: string, fn: () => Promise<TripDetail | void>) {
+    setPending(key);
+    setError(null);
+    try {
+      await ensureCsrf();
+      const d = await fn();
+      if (d) qc.setQueryData(["trips", "mine"], d);
+      else await qc.invalidateQueries({ queryKey: ["trips", "mine"] });
+      return true;
+    } catch (e) {
+      setError(e);
+      return false;
+    } finally {
+      setPending(null);
+    }
+  }
+
+  const photo = (stopId: number, file: File) =>
+    run(`photo-${stopId}`, async () => {
+      await unwrap(
+        api.POST("/api/trips/{id}/stops/{stopId}/photos", {
+          params: { path: { id: t.id, stopId } },
+          body: { file: file as unknown as string },
+          bodySerializer: () => {
+            const fd = new FormData();
+            fd.append("file", file);
+            return fd;
+          },
+        }),
+      );
+    });
+
+  const deliver = (stopId: number) =>
+    run(`deliver-${stopId}`, () => {
+      // «amount» maydoni qiymati — kanonik satr («25000.00»)
+      const raw = cash[stopId]?.trim();
+      return unwrap(
+        api.POST("/api/trips/{id}/stops/{stopId}/deliver", {
+          params: { path: { id: t.id, stopId } },
+          body: { cash: raw || undefined },
+        }),
+      );
+    });
+
+  async function confirmUndeliver() {
+    if (undeliver === null) return;
+    const ok = await run(`undeliver-${undeliver}`, () =>
+      unwrap(
+        api.POST("/api/trips/{id}/stops/{stopId}/undeliver", {
+          params: { path: { id: t.id, stopId: undeliver } },
+          body: { reason: reason.trim() },
+        }),
+      ),
+    );
+    if (ok) {
+      setUndeliver(null);
+      setReason("");
+    }
+  }
+
+  const finish = () =>
+    run("finish", async () => {
+      const r = await unwrap(api.POST("/api/trips/{id}/finish", { params: { path: { id: t.id } } }));
+      toast({
+        tone: "success",
+        title: "Reys yakunlandi",
+        description: r.status === "DONE" ? "Hammasi yetkazildi" : "Qaytgan tovar va naqd pulni topshiring",
+      });
+    });
+
+  const err = describeError(error);
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      {err.message ? <Alert tone="danger" title={err.message} /> : null}
+      {open.map((s) => (
+        <div key={s.id} className="rounded-card border border-border p-3">
+          <div className="mb-2">
+            {s.seq}. {s.customer} {s.phone ? <span className="text-text-secondary">· {s.phone}</span> : null}
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="inline-flex h-control-md cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3">
+              <Camera size={16} strokeWidth={1.5} aria-hidden />
+              {s.photos > 0 ? `Rasm: ${s.photos}` : "Rasm olish"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                className="sr-only"
+                aria-label={`Rasm: ${s.customer}`}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void photo(s.id, f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {s.paymentType === "CASH" ? (
+              <div className="w-40">
+                <TextField
+                  label="Naqd olindi"
+                  variant="amount"
+                  value={cash[s.id] ?? ""}
+                  onChange={(v) => setCash((m) => ({ ...m, [s.id]: v }))}
+                />
+              </div>
+            ) : null}
+            <Button
+              variant="secondary"
+              icon={CircleCheck}
+              disabled={s.photos === 0}
+              loading={pending === `deliver-${s.id}`}
+              onClick={() => void deliver(s.id)}
+            >
+              Yetkazildi
+            </Button>
+            <Button variant="tertiary" icon={CircleX} onClick={() => setUndeliver(s.id)}>
+              Yetkazilmadi
+            </Button>
+          </div>
+          {s.photos === 0 ? <div className="mt-1 text-caption text-text-secondary">«Yetkazildi» uchun kamida 1 rasm kerak.</div> : null}
+        </div>
+      ))}
+      <div className="flex justify-end">
+        <Button icon={Flag} disabled={open.length > 0} loading={pending === "finish"} onClick={() => void finish()}>
+          Reysni yakunlash
+        </Button>
+      </div>
+      <Modal
+        open={undeliver !== null}
+        onClose={() => setUndeliver(null)}
+        title="Yetkazilmadi"
+        tone="danger"
+        primaryAction={{
+          label: "Yetkazilmadi deb belgilash",
+          onClick: () => void confirmUndeliver(),
+          loading: pending?.startsWith("undeliver") ?? false,
+          disabled: !reason.trim(),
+        }}
+      >
+        <p className="mb-3">Sotuv va mijoz qarzi bekor boʻladi, tovar omborga qaytadi (Karantin).</p>
+        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} />
+      </Modal>
+    </div>
   );
 }

@@ -688,7 +688,7 @@ export interface paths {
          * Markirovkani yakunlash
          * @description Barcha kodlar skanerlangan bo'lsa → «Hisobdan o'tkazilmoqda».
          */
-        post: operations["finish"];
+        post: operations["finish_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1077,6 +1077,46 @@ export interface paths {
         get: operations["previous"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qaytayotgan tovar
+         * @description Yetkazilmagan buyurtmalar tovari — Ombor mudiri sanab qabul qiladi.
+         */
+        get: operations["pendingReturns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/returns/{returnId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Qaytgan tovarni qabul qilish
+         * @description Karantinga; kam kelsa — muammo yoziladi.
+         */
+        post: operations["acceptReturn"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2192,6 +2232,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/{id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Reysni yakunlash»
+         * @description Qaytgan tovar yoki naqd pul bo'lsa — «Qaytish kutilmoqda».
+         */
+        post: operations["finish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/{id}/start": {
         parameters: {
             query?: never;
@@ -2212,6 +2272,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/{id}/stops/{stopId}/deliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Yetkazildi»
+         * @description Kamida 1 rasm majburiy; naqd to'lovda olingan summa.
+         */
+        post: operations["deliver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/{id}/stops/{stopId}/load": {
         parameters: {
             query?: never;
@@ -2226,6 +2306,46 @@ export interface paths {
          * @description Haydovchi buyurtmani joylar soni bo'yicha qabul qiladi.
          */
         post: operations["load"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/stops/{stopId}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Yetkazish rasmi
+         * @description JPEG/PNG/WEBP, ≤ 5 MB. signature=true — mijoz imzosi (ixtiyoriy).
+         */
+        post: operations["photo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/stops/{stopId}/undeliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Yetkazilmadi»
+         * @description Sabab majburiy; sotuv va qarz bekor, tovar «Qaytmoqda».
+         */
+        post: operations["undeliver"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2688,6 +2808,10 @@ export interface components {
         DeactivateRequest: {
             reason: string;
         };
+        DeliverRequest: {
+            /** @description Naqd olingan summa, masalan «25000.00» */
+            cash?: string;
+        };
         DriverOption: {
             activeTrip?: string;
             fullName: string;
@@ -2746,6 +2870,10 @@ export interface components {
             id: number;
             name: string;
             system: boolean;
+        };
+        FinishResult: {
+            /** @enum {string} */
+            status: "PLANNED" | "IN_TRANSIT" | "RETURN_WAIT" | "DONE" | "CANCELLED";
         };
         HandoverResult: {
             sale: string;
@@ -3397,6 +3525,20 @@ export interface components {
             total: string;
             warehouse: string;
         };
+        PendingReturn: {
+            batch: string;
+            /** Format: date-time */
+            createdAt: string;
+            customer: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            product: string;
+            /** Format: int32 */
+            qty: number;
+        };
         Permission: {
             description: string;
             key: string;
@@ -3404,6 +3546,10 @@ export interface components {
         };
         PermissionsRequest: {
             permissions: string[];
+        };
+        PhotoResult: {
+            /** Format: int64 */
+            id: number;
         };
         PickFinishRequest: {
             lines?: components["schemas"]["PickLineConfirm"][];
@@ -3889,6 +4035,10 @@ export interface components {
         ResolveRequest: {
             resolution: string;
         };
+        ReturnAcceptRequest: {
+            /** Format: int32 */
+            receivedQty: number;
+        };
         Role: {
             code: string;
             /**
@@ -4061,6 +4211,7 @@ export interface components {
         };
         TripStop: {
             address?: string;
+            cashCollected?: string;
             customer: string;
             /** Format: int64 */
             id: number;
@@ -4069,6 +4220,13 @@ export interface components {
             /** Format: int64 */
             orderId: number;
             orderNumber: string;
+            /** @description DELIVERED yoki UNDELIVERED */
+            outcome?: string;
+            outcomeReason?: string;
+            paymentType: string;
+            phone?: string;
+            /** Format: int32 */
+            photos: number;
             /** Format: int32 */
             places: number;
             /** Format: int32 */
@@ -5208,7 +5366,7 @@ export interface operations {
             };
         };
     };
-    finish: {
+    finish_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5761,6 +5919,50 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PreviousOrder"][];
                 };
+            };
+        };
+    };
+    pendingReturns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingReturn"][];
+                };
+            };
+        };
+    };
+    acceptReturn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                returnId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnAcceptRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -7377,6 +7579,28 @@ export interface operations {
             };
         };
     };
+    finish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinishResult"];
+                };
+            };
+        };
+    };
     start: {
         parameters: {
             query?: never;
@@ -7399,6 +7623,33 @@ export interface operations {
             };
         };
     };
+    deliver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                stopId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeliverRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
     load: {
         parameters: {
             query?: never;
@@ -7412,6 +7663,65 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoadRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
+    photo: {
+        parameters: {
+            query?: {
+                signature?: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+                stopId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoResult"];
+                };
+            };
+        };
+    };
+    undeliver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                stopId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
             };
         };
         responses: {
