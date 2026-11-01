@@ -922,7 +922,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar bilan; ko'pi bilan 50 000 qator.
          */
-        get: operations["export"];
+        get: operations["export_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1283,6 +1283,23 @@ export interface paths {
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
         get: operations["list_10"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Excel'ga eksport (.xlsx) */
+        get: operations["export"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3823,7 +3840,7 @@ export interface operations {
             };
         };
     };
-    export: {
+    export_1: {
         parameters: {
             query?: {
                 q?: string;
@@ -4364,6 +4381,30 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["StockPage"];
                 };
+            };
+        };
+    };
+    export: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                warehouseId?: number;
+                q?: string;
+                sellableOnly?: boolean;
+                expiringWithinDays?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

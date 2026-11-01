@@ -2210,7 +2210,7 @@
     "/api/products/export" : {
       "get" : {
         "description" : "Jadvaldagi filtrlar bilan; ko'pi bilan 50 000 qator.",
-        "operationId" : "export",
+        "operationId" : "export_1",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -2963,6 +2963,58 @@
           }
         },
         "summary" : "Qoldiqlar (zona × partiya)",
+        "tags" : [ "stock" ]
+      }
+    },
+    "/api/stock/export" : {
+      "get" : {
+        "operationId" : "export",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sellableOnly",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "expiringWithinDays",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Excel'ga eksport (.xlsx)",
         "tags" : [ "stock" ]
       }
     },
