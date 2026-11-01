@@ -745,7 +745,7 @@ class OrderIT {
                 .andExpect(jsonPath("$.vehicles[0].capacityBoxes").value(3))
                 .andExpect(jsonPath("$.drivers[0].fullName").value("Haydovchi Sinov"));
         String body = "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today() + "\",\"orderIds\":[" + o1 + "," + o2 + "]}";
-        send(post("/api/trips"), operator, body).andExpect(status().isForbidden());
+        send(post("/api/trips"), picker, body).andExpect(status().isForbidden());
         // Sig'im: 2 + 2 = 4 joy > 3
         send(post("/api/trips"), keeper, body).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("trip.overCapacity"));
         send(post("/api/trips"), keeper, body.replace("[" + o1 + "," + o2 + "]", "[" + o1 + "," + o3 + "]"))
