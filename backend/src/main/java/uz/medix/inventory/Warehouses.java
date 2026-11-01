@@ -188,7 +188,7 @@ public class Warehouses {
 
     /**
      * Omborni faollashtirish / nofaol qilish (SPEC 13-qoida: o'chirilmaydi).
-     * TODO(4-bosqich): qoldig'i bor omborni nofaol qilish taqiqlanadi (StockBalance paydo bo'lganda).
+     * Qoldig'i bor yoki o'tkazilmagan BQ qoralamasi bor omborni nofaol qilib bo'lmaydi.
      */
     @Transactional
     public Warehouse setActive(long id, boolean active, String reason) {
@@ -198,6 +198,22 @@ public class Warehouses {
         }
         if (active && !branchActive(before.branchId())) {
             throw MedixException.conflict("warehouse.branchInactive");
+        }
+        if (!active) {
+            long stock = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_balance WHERE warehouse_id = :w")
+                    .param("w", id)
+                    .query(Long.class)
+                    .single();
+            if (stock > 0) {
+                throw MedixException.conflict("warehouse.hasStock", String.valueOf(stock));
+            }
+            List<String> drafts = jdbc.sql("SELECT number FROM opening_balance WHERE warehouse_id = :w AND status = 'DRAFT' ORDER BY id LIMIT 3")
+                    .param("w", id)
+                    .query(String.class)
+                    .list();
+            if (!drafts.isEmpty()) {
+                throw MedixException.conflict("warehouse.hasDrafts", String.join(", ", drafts));
+            }
         }
         jdbc.sql("UPDATE warehouse SET active = :a, updated_at = now(), version = version + 1 WHERE id = :id")
                 .param("a", active)
