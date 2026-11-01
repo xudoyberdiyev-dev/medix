@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_4"];
+        get: operations["list_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -103,10 +103,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ko'rish mumkin bo'lgan filiallar */
-        get: operations["list_2"];
+        get: operations["list_5"];
         put?: never;
         /** Filial qo'shish */
-        post: operations["create_2"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -125,7 +125,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_2"];
+        put: operations["update_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -143,7 +143,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Filialni faollashtirish */
-        post: operations["activate_1"];
+        post: operations["activate_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -163,7 +163,79 @@ export interface paths {
          * Filialni nofaol qilish
          * @description Oxirgi faol filial nofaol qilinmaydi.
          */
-        post: operations["deactivate_1"];
+        post: operations["deactivate_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dictionaries/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ma'lumotnoma yozuvlari (faollari birinchi) */
+        get: operations["list_4"];
+        put?: never;
+        /** Yozuv qo'shish */
+        post: operations["create_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dictionaries/{kind}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Yozuvni tahrirlash */
+        put: operations["update_3"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dictionaries/{kind}/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Faollashtirish */
+        post: operations["activate_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dictionaries/{kind}/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nofaol qilish
+         * @description Yozuv o'chirilmaydi; yangi hujjatlarda tanlanmaydi.
+         */
+        post: operations["deactivate_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -178,10 +250,10 @@ export interface paths {
             cookie?: never;
         };
         /** Xodimlar ro'yxati */
-        get: operations["list_1"];
+        get: operations["list_3"];
         put?: never;
         /** Xodim qo'shish */
-        post: operations["create_1"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -242,6 +314,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/expense-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Moddalar */
+        get: operations["list_2"];
+        put?: never;
+        /** Modda qo'shish */
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/expense-items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Nomini o'zgartirish */
+        put: operations["rename"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/expense-items/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Faollashtirish */
+        post: operations["activate_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/expense-items/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nofaol qilish */
+        post: operations["deactivate_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile": {
         parameters: {
             query?: never;
@@ -252,7 +393,7 @@ export interface paths {
         /** O'z profilim */
         get: operations["get"];
         /** Telefon raqamini yangilash */
-        put: operations["update_1"];
+        put: operations["update_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -288,7 +429,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_3"];
+        get: operations["list_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -410,6 +551,75 @@ export interface paths {
         put?: never;
         /** Ombor va zonalarni qo'shish */
         post: operations["createWarehouse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vehicles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mashinalar (filial doirasida) */
+        get: operations["list_1"];
+        put?: never;
+        /** Mashina qo'shish */
+        post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vehicles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mashinani tahrirlash */
+        put: operations["update_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vehicles/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Faollashtirish */
+        post: operations["activate_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vehicles/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nofaol qilish */
+        post: operations["deactivate_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -606,6 +816,11 @@ export interface components {
             roleCode: string;
             temporaryPassword: string;
         };
+        CreateRequest: {
+            /** @enum {string} */
+            direction: "EXPENSE" | "INCOME";
+            name: string;
+        };
         CreateWarehouseRequest: {
             address?: string;
             /** Format: int64 */
@@ -644,6 +859,27 @@ export interface components {
             roleCode: string;
             temporaryPassword: string;
         };
+        Entry: {
+            active: boolean;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            shortName?: string;
+        };
+        EntryRequest: {
+            name: string;
+            /** @description Birlik — qisqa yozuvi, davlat — ISO kodi (UZ) */
+            shortName?: string;
+        };
+        ExpenseItem: {
+            active: boolean;
+            /** @enum {string} */
+            direction: "EXPENSE" | "INCOME";
+            /** Format: int64 */
+            id: number;
+            name: string;
+            system: boolean;
+        };
         LoginRequest: {
             login: string;
             password: string;
@@ -679,6 +915,9 @@ export interface components {
             position?: string;
             roleCode: string;
             roleName: string;
+        };
+        RenameRequest: {
+            name: string;
         };
         RenameZoneRequest: {
             name: string;
@@ -730,6 +969,28 @@ export interface components {
             address?: string;
             name: string;
         };
+        Vehicle: {
+            active: boolean;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int32 */
+            capacityBoxes?: number;
+            /** Format: int64 */
+            id: number;
+            model: string;
+            plateNumber: string;
+        };
+        VehicleRequest: {
+            /** Format: int64 */
+            branchId: number;
+            /**
+             * Format: int32
+             * @description Sig'imi — joylar (quti) soni
+             */
+            capacityBoxes?: number;
+            model: string;
+            plateNumber: string;
+        };
         Warehouse: {
             active: boolean;
             address?: string;
@@ -764,7 +1025,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_4: {
+    list_7: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -875,7 +1136,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -895,7 +1156,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -919,7 +1180,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -945,7 +1206,7 @@ export interface operations {
             };
         };
     };
-    activate_1: {
+    activate_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -967,7 +1228,7 @@ export interface operations {
             };
         };
     };
-    deactivate_1: {
+    deactivate_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -993,7 +1254,128 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "MANUFACTURER" | "CATEGORY" | "UNIT" | "COUNTRY" | "REGION";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entry"][];
+                };
+            };
+        };
+    };
+    create_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "MANUFACTURER" | "CATEGORY" | "UNIT" | "COUNTRY" | "REGION";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entry"];
+                };
+            };
+        };
+    };
+    update_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "MANUFACTURER" | "CATEGORY" | "UNIT" | "COUNTRY" | "REGION";
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entry"];
+                };
+            };
+        };
+    };
+    activate_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "MANUFACTURER" | "CATEGORY" | "UNIT" | "COUNTRY" | "REGION";
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entry"];
+                };
+            };
+        };
+    };
+    deactivate_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "MANUFACTURER" | "CATEGORY" | "UNIT" | "COUNTRY" | "REGION";
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entry"];
+                };
+            };
+        };
+    };
+    list_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1013,7 +1395,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1111,6 +1493,120 @@ export interface operations {
             };
         };
     };
+    list_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseItem"][];
+                };
+            };
+        };
+    };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseItem"];
+                };
+            };
+        };
+    };
+    rename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseItem"];
+                };
+            };
+        };
+    };
+    activate_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseItem"];
+                };
+            };
+        };
+    };
+    deactivate_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseItem"];
+                };
+            };
+        };
+    };
     get: {
         parameters: {
             query?: never;
@@ -1131,7 +1627,7 @@ export interface operations {
             };
         };
     };
-    update_1: {
+    update_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1177,7 +1673,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1355,6 +1851,120 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Vehicle"][];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VehicleRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Vehicle"];
+                };
+            };
+        };
+    };
+    update_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VehicleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Vehicle"];
+                };
+            };
+        };
+    };
+    activate_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Vehicle"];
+                };
+            };
+        };
+    };
+    deactivate_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Vehicle"];
                 };
             };
         };

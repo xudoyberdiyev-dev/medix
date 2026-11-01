@@ -21,6 +21,12 @@
     "description" : "Profil",
     "name" : "profile"
   }, {
+    "description" : "Xarajat va kirim moddalari",
+    "name" : "expense-items"
+  }, {
+    "description" : "Mashinalar",
+    "name" : "vehicles"
+  }, {
     "description" : "Omborlar va zonalar",
     "name" : "warehouses"
   }, {
@@ -32,11 +38,14 @@
   }, {
     "description" : "Filiallar",
     "name" : "branches"
+  }, {
+    "description" : "Kichik ma'lumotnomalar",
+    "name" : "dictionaries"
   } ],
   "paths" : {
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_4",
+        "operationId" : "list_7",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -180,7 +189,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_2",
+        "operationId" : "list_5",
         "responses" : {
           "200" : {
             "content" : {
@@ -200,7 +209,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_2",
+        "operationId" : "create_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -230,7 +239,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_2",
+        "operationId" : "update_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -268,7 +277,7 @@
     },
     "/api/branches/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_1",
+        "operationId" : "activate_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -297,7 +306,7 @@
     "/api/branches/{id}/deactivate" : {
       "post" : {
         "description" : "Oxirgi faol filial nofaol qilinmaydi.",
-        "operationId" : "deactivate_1",
+        "operationId" : "deactivate_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -333,9 +342,195 @@
         "tags" : [ "branches" ]
       }
     },
+    "/api/dictionaries/{kind}" : {
+      "get" : {
+        "operationId" : "list_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MANUFACTURER", "CATEGORY", "UNIT", "COUNTRY", "REGION" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Entry"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ma'lumotnoma yozuvlari (faollari birinchi)",
+        "tags" : [ "dictionaries" ]
+      },
+      "post" : {
+        "operationId" : "create_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MANUFACTURER", "CATEGORY", "UNIT", "COUNTRY", "REGION" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EntryRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Entry"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Yozuv qo'shish",
+        "tags" : [ "dictionaries" ]
+      }
+    },
+    "/api/dictionaries/{kind}/{id}" : {
+      "put" : {
+        "operationId" : "update_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MANUFACTURER", "CATEGORY", "UNIT", "COUNTRY", "REGION" ]
+          }
+        }, {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EntryRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Entry"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yozuvni tahrirlash",
+        "tags" : [ "dictionaries" ]
+      }
+    },
+    "/api/dictionaries/{kind}/{id}/activate" : {
+      "post" : {
+        "operationId" : "activate_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MANUFACTURER", "CATEGORY", "UNIT", "COUNTRY", "REGION" ]
+          }
+        }, {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Entry"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faollashtirish",
+        "tags" : [ "dictionaries" ]
+      }
+    },
+    "/api/dictionaries/{kind}/{id}/deactivate" : {
+      "post" : {
+        "description" : "Yozuv o'chirilmaydi; yangi hujjatlarda tanlanmaydi.",
+        "operationId" : "deactivate_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MANUFACTURER", "CATEGORY", "UNIT", "COUNTRY", "REGION" ]
+          }
+        }, {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Entry"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Nofaol qilish",
+        "tags" : [ "dictionaries" ]
+      }
+    },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_1",
+        "operationId" : "list_3",
         "responses" : {
           "200" : {
             "content" : {
@@ -355,7 +550,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_1",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -487,6 +682,149 @@
         "tags" : [ "employees" ]
       }
     },
+    "/api/expense-items" : {
+      "get" : {
+        "operationId" : "list_2",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ExpenseItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Moddalar",
+        "tags" : [ "expense-items" ]
+      },
+      "post" : {
+        "operationId" : "create_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseItem"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Modda qo'shish",
+        "tags" : [ "expense-items" ]
+      }
+    },
+    "/api/expense-items/{id}" : {
+      "put" : {
+        "operationId" : "rename",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RenameRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseItem"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Nomini o'zgartirish",
+        "tags" : [ "expense-items" ]
+      }
+    },
+    "/api/expense-items/{id}/activate" : {
+      "post" : {
+        "operationId" : "activate_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseItem"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faollashtirish",
+        "tags" : [ "expense-items" ]
+      }
+    },
+    "/api/expense-items/{id}/deactivate" : {
+      "post" : {
+        "operationId" : "deactivate_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpenseItem"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Nofaol qilish",
+        "tags" : [ "expense-items" ]
+      }
+    },
     "/api/profile" : {
       "get" : {
         "operationId" : "get",
@@ -506,7 +844,7 @@
         "tags" : [ "profile" ]
       },
       "put" : {
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -558,7 +896,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_3",
+        "operationId" : "list_6",
         "responses" : {
           "200" : {
             "content" : {
@@ -768,6 +1106,149 @@
         },
         "summary" : "Ombor va zonalarni qo'shish",
         "tags" : [ "setup" ]
+      }
+    },
+    "/api/vehicles" : {
+      "get" : {
+        "operationId" : "list_1",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Vehicle"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mashinalar (filial doirasida)",
+        "tags" : [ "vehicles" ]
+      },
+      "post" : {
+        "operationId" : "create_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VehicleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Vehicle"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Mashina qo'shish",
+        "tags" : [ "vehicles" ]
+      }
+    },
+    "/api/vehicles/{id}" : {
+      "put" : {
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VehicleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Vehicle"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mashinani tahrirlash",
+        "tags" : [ "vehicles" ]
+      }
+    },
+    "/api/vehicles/{id}/activate" : {
+      "post" : {
+        "operationId" : "activate_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Vehicle"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faollashtirish",
+        "tags" : [ "vehicles" ]
+      }
+    },
+    "/api/vehicles/{id}/deactivate" : {
+      "post" : {
+        "operationId" : "deactivate_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Vehicle"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Nofaol qilish",
+        "tags" : [ "vehicles" ]
       }
     },
     "/api/warehouses" : {
@@ -1274,6 +1755,21 @@
         },
         "required" : [ "fullName", "login", "roleCode", "temporaryPassword" ]
       },
+      "CreateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "EXPENSE", "INCOME" ]
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "direction", "name" ]
+      },
       "CreateWarehouseRequest" : {
         "type" : "object",
         "properties" : {
@@ -1402,6 +1898,65 @@
         },
         "required" : [ "fullName", "login", "roleCode", "temporaryPassword" ]
       },
+      "Entry" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "shortName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "id", "name" ]
+      },
+      "EntryRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "shortName" : {
+            "type" : "string",
+            "description" : "Birlik — qisqa yozuvi, davlat — ISO kodi (UZ)",
+            "maxLength" : 50,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
+      "ExpenseItem" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "EXPENSE", "INCOME" ]
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "system" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "direction", "id", "name", "system" ]
+      },
       "LoginRequest" : {
         "type" : "object",
         "properties" : {
@@ -1496,6 +2051,17 @@
           }
         },
         "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName" ]
+      },
+      "RenameRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
       },
       "RenameZoneRequest" : {
         "type" : "object",
@@ -1663,6 +2229,60 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "Vehicle" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "capacityBoxes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "model" : {
+            "type" : "string"
+          },
+          "plateNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "branchId", "id", "model", "plateNumber" ]
+      },
+      "VehicleRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "capacityBoxes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sig'imi — joylar (quti) soni",
+            "maximum" : 100000,
+            "minimum" : 1
+          },
+          "model" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "plateNumber" : {
+            "type" : "string",
+            "maxLength" : 20,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "branchId", "model", "plateNumber" ]
       },
       "Warehouse" : {
         "type" : "object",

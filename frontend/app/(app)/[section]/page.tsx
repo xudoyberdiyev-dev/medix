@@ -5,7 +5,7 @@ import { TopBar } from "@/components/shell/topbar";
 import { EmptyState } from "@/components/ui/system-states";
 
 /** Oʻz sahifasi bor boʻlimlar bu yerda emas. */
-const BUILT = new Set(["/", "/settings"]);
+const BUILT = new Set(["/", "/settings", "/dictionaries"]);
 const sections = navigation.flatMap((g) => g.items).filter((i) => !BUILT.has(i.href));
 
 export function generateStaticParams() {

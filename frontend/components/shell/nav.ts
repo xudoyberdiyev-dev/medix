@@ -1,5 +1,6 @@
 import {
   Banknote,
+  BookOpen,
   Boxes,
   CalendarClock,
   ChartColumn,
@@ -57,6 +58,7 @@ export const navigation: NavGroup[] = [
       { key: "customers", label: "Mijozlar", href: "/customers", icon: Users },
       { key: "suppliers", label: "Yetkazib beruvchilar", href: "/suppliers", icon: Truck },
       { key: "prices", label: "Narxlar", href: "/prices", icon: Tags },
+      { key: "dictionaries", label: "Kichik maʼlumotnomalar", href: "/dictionaries", icon: BookOpen },
     ],
   },
   { title: "Tahlil", items: [{ key: "reports", label: "Hisobotlar", href: "/reports", icon: ChartColumn }] },
