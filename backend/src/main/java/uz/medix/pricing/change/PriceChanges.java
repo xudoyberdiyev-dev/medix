@@ -299,7 +299,7 @@ class PriceChanges {
 
     /** Ommaviy ustama (SPEC 6): asos narxga foiz va yaxlitlash. Hech narsa yozilmaydi — natija NO qatorlariga qo'yiladi. */
     @Transactional(readOnly = true)
-    List<MarkupLine> markup(Actor actor, MarkupRequest r) {
+    List<MarkupLine> markup(Actor actor, MarkupRequest r, boolean showCost) {
         branchCode(actor, r.branchId());
         if (r.rounding() != 0 && r.rounding() != 100 && r.rounding() != 500 && r.rounding() != 1000) {
             throw MedixException.badRequest("priceChange.rounding");
@@ -307,6 +307,11 @@ class PriceChanges {
         long baseType = jdbc.sql("SELECT id FROM price_type WHERE base").query(Long.class).single();
         checkPriceType(r.priceTypeId());
         Map<String, Money> current = currentPrices(r.branchId(), r.productIds(), today());
+        Map<Long, Money> receiptCosts = switch (r.base()) {
+            case AVG_RECEIPT -> costs.averageCost(r.branchId(), r.productIds());
+            case LAST_RECEIPT -> costs.lastReceiptCost(r.branchId(), r.productIds());
+            default -> Map.of();
+        };
         record Prod(long id, String code, String name) {}
         List<Prod> prods = jdbc.sql("SELECT id, code, name FROM product WHERE id IN (:ids) ORDER BY lower(name)")
                 .param("ids", r.productIds())
@@ -315,9 +320,14 @@ class PriceChanges {
         List<MarkupLine> out = new ArrayList<>();
         for (Prod p : prods) {
             Money old = current.get(p.id() + ":" + r.priceTypeId());
-            Money base = r.base() == BaseKind.BASE_PRICE ? current.get(p.id() + ":" + baseType) : old;
+            Money base = switch (r.base()) {
+                case BASE_PRICE -> current.get(p.id() + ":" + baseType);
+                case CURRENT_SAME_TYPE -> old;
+                case AVG_RECEIPT, LAST_RECEIPT -> receiptCosts.get(p.id());
+            };
             Money next = base == null ? null : PriceMath.markup(base, r.percent(), r.rounding());
-            out.add(new MarkupLine(p.id(), p.code(), p.name(), str(base), str(old), str(next)));
+            boolean costBased = r.base() == BaseKind.AVG_RECEIPT || r.base() == BaseKind.LAST_RECEIPT;
+            out.add(new MarkupLine(p.id(), p.code(), p.name(), costBased && !showCost ? null : str(base), str(old), str(next)));
         }
         return out;
     }

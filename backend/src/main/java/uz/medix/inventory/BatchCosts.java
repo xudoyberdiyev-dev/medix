@@ -37,4 +37,40 @@ public class BatchCosts {
                 .list();
         return m;
     }
+
+    /** O'rtacha kirim narxi: filialdagi qoldig'i bor (bonus emas) partiyalar tannarxi, miqdor bo'yicha tortilgan (HALF_UP). */
+    @Transactional(readOnly = true)
+    public Map<Long, Money> averageCost(long branchId, Collection<Long> productIds) {
+        Map<Long, Money> m = new HashMap<>();
+        if (productIds.isEmpty()) {
+            return m;
+        }
+        jdbc.sql("""
+                SELECT s.product_id, sum(b.cost * s.qty) / sum(s.qty) AS cost FROM stock_balance s JOIN batch b ON b.id = s.batch_id
+                WHERE s.branch_id = :br AND s.qty > 0 AND NOT b.bonus AND s.product_id IN (:ids) GROUP BY s.product_id""")
+                .param("br", branchId)
+                .param("ids", productIds)
+                .query((rs, n) -> m.put(rs.getLong("product_id"), new Money(rs.getBigDecimal("cost"))))
+                .list();
+        return m;
+    }
+
+    /** Oxirgi kirim narxi: filialga kirim (KR) bilan kelgan eng so'nggi (bonus emas) partiya tannarxi. */
+    @Transactional(readOnly = true)
+    public Map<Long, Money> lastReceiptCost(long branchId, Collection<Long> productIds) {
+        Map<Long, Money> m = new HashMap<>();
+        if (productIds.isEmpty()) {
+            return m;
+        }
+        jdbc.sql("""
+                SELECT DISTINCT ON (b.product_id) b.product_id, b.cost
+                FROM batch b JOIN stock_move sm ON sm.batch_id = b.id AND sm.doc_type = 'KR' AND sm.qty > 0
+                WHERE sm.branch_id = :br AND NOT b.bonus AND b.source_type = 'KR' AND b.product_id IN (:ids)
+                ORDER BY b.product_id, b.created_at DESC, b.id DESC""")
+                .param("br", branchId)
+                .param("ids", productIds)
+                .query((rs, n) -> m.put(rs.getLong("product_id"), new Money(rs.getBigDecimal("cost"))))
+                .list();
+        return m;
+    }
 }

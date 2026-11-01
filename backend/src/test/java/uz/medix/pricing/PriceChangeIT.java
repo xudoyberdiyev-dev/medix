@@ -247,6 +247,14 @@ class PriceChangeIT {
         Cookie director = loginAs("DIRECTOR", null);
         mvc.perform(json(post("/api/price-changes/" + low + "/reject"), director, "{\"reason\":\"Tannarxdan past\"}"))
                 .andExpect(jsonPath("$.status").value("REJECTED"));
+        // Ommaviy ustama kirim narxidan (+10%): Xarid tannarxni ko'rmaydi — faqat natija
+        for (String kind : new String[] {"AVG_RECEIPT", "LAST_RECEIPT"}) {
+            mvc.perform(json(post("/api/price-changes/markup"), purchaser, "{\"branchId\":" + branch + ",\"productIds\":[" + p
+                            + "],\"priceTypeId\":" + base + ",\"base\":\"" + kind + "\",\"percent\":10,\"rounding\":100}"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].basePrice").doesNotExist())
+                    .andExpect(jsonPath("$[0].newPrice").value("13200.00"));
+        }
         // Tannarxga teng — darhol kuchga kiradi
         long ok = id(mvc.perform(json(post("/api/price-changes"), purchaser, body.replace("PRICE", "12000"))).andReturn());
         mvc.perform(post("/api/price-changes/" + ok + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));

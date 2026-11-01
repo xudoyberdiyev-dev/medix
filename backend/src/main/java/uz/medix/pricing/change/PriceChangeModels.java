@@ -22,7 +22,8 @@ final class PriceChangeModels {
 
     enum Status { DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, CANCELLED }
 
-    enum BaseKind { CURRENT_SAME_TYPE, BASE_PRICE }
+    /** Ommaviy ustama asosi (SPEC 6): amaldagi narx, bazaviy narx, o'rtacha yoki oxirgi kirim narxi (partiyalar tannarxi). */
+    enum BaseKind { CURRENT_SAME_TYPE, BASE_PRICE, AVG_RECEIPT, LAST_RECEIPT }
 
     record LineRequest(
             @NotNull(message = "{validation.required}") Long productId,
@@ -81,7 +82,8 @@ final class PriceChangeModels {
             @NotNull(message = "{validation.required}") @DecimalMin("-90") @DecimalMax("1000") BigDecimal percent,
             @Schema(description = "0, 100, 500 yoki 1000") int rounding) {}
 
-    record MarkupLine(long productId, String productCode, String productName, @Schema(nullable = true) String basePrice,
+    record MarkupLine(long productId, String productCode, String productName,
+            @Schema(nullable = true, description = "Kirim narxi asosida — faqat special.cost bilan") String basePrice,
             @Schema(nullable = true) String oldPrice, @Schema(nullable = true) String newPrice) {}
 
     /** «Narxlar» jadvali: mahsulot va narx turlari bo'yicha amaldagi narxlar. */

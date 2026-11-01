@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -448,7 +448,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -592,6 +592,57 @@ export interface paths {
         put?: never;
         /** Nofaol qilish */
         post: operations["deactivate_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
+        get: operations["list_14"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hammasini o'qildi deb belgilash */
+        post: operations["readAll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** O'qildi deb belgilash */
+        post: operations["read"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2001,6 +2052,23 @@ export interface components {
             permissions: string[];
             role: components["schemas"]["RoleRef"];
         };
+        NotificationItem: {
+            body?: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            id: number;
+            kind: string;
+            link?: string;
+            /** Format: date-time */
+            readAt?: string;
+            title: string;
+        };
+        NotificationList: {
+            items: components["schemas"]["NotificationItem"][];
+            /** Format: int64 */
+            unread: number;
+        };
         OpeningCancelRequest: {
             reason: string;
         };
@@ -2738,7 +2806,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_15: {
+    list_16: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -3417,7 +3485,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -3666,6 +3734,64 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ExpenseItem"];
                 };
+            };
+        };
+    };
+    list_14: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
+            };
+        };
+    };
+    readAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

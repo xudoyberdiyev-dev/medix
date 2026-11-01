@@ -140,7 +140,7 @@ class PriceChangeController {
     @PostMapping("/price-changes/markup")
     @PreAuthorize(SET_PRICES)
     @Operation(summary = "Ommaviy ustama hisoblash", description = "Hech narsa yozilmaydi; natija NO qatorlariga qo'yiladi.")
-    List<MarkupLine> markup(@Valid @RequestBody MarkupRequest r) {
-        return changes.markup(actor(), r);
+    List<MarkupLine> markup(@Valid @RequestBody MarkupRequest r, Authentication auth) {
+        return changes.markup(actor(), r, auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority())));
     }
 }

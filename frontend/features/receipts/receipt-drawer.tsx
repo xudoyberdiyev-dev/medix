@@ -288,14 +288,15 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
           icon={BadgePercent}
           loading={confirmBonus.isPending}
           onClick={() =>
-            confirmBonus.mutate(doc.id, {
-              onSuccess: (d) =>
+            void confirmBonus.mutateAsync(doc.id).then(
+              (d) =>
                 toast({
                   tone: "success",
                   title: "Bonus tasdiqlandi",
                   description: `${d.bonusNumber ?? ""}${d.bonusAmount ? ` · ${formatMoney(d.bonusAmount)} soʻm bonus balansga` : ""}`,
                 }),
-            })
+              () => undefined,
+            )
           }
         >
           Bonus tasdiqlandi
@@ -308,9 +309,9 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
           onClick={() =>
             doc.hasDiff
               ? setDialog("post")
-              : post.mutate(
-                  { id: doc.id },
-                  { onSuccess: (d) => toast({ tone: "success", title: "Kirim oʻtkazildi", description: `${d.number} · qoldiqqa kirdi` }) },
+              : void post.mutateAsync({ id: doc.id }).then(
+                  (d) => toast({ tone: "success", title: "Kirim oʻtkazildi", description: `${d.number} · qoldiqqa kirdi` }),
+                  () => undefined,
                 )
           }
         >
@@ -598,9 +599,9 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
           error={cancel.error}
           onClose={() => setDialog(null)}
           onConfirm={(reason) =>
-            cancel.mutate(
-              { id: doc.id, reason },
-              { onSuccess: () => (toast({ tone: "success", title: "Bekor qilindi", description: doc.number }), setDialog(null)) },
+            void cancel.mutateAsync({ id: doc.id, reason }).then(
+              () => (toast({ tone: "success", title: "Bekor qilindi", description: doc.number }), setDialog(null)),
+              () => undefined,
             )
           }
         />
@@ -675,14 +676,10 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
       });
     }
     setLocal(null);
-    accept.mutate(
-      { id, lines: out },
-      {
-        onSuccess: (d) => (
-          toast({ tone: "success", title: "Qabul qilindi", description: `${d.number} · tovar Qabul zonasida` }),
-          onClose()
-        ),
-      },
+    // mutateAsync: muharrir holat o'zgarganda qayta quriladi — per-call onSuccess yo'qolmasin.
+    void accept.mutateAsync({ id, lines: out }).then(
+      (d) => (toast({ tone: "success", title: "Qabul qilindi", description: `${d.number} · tovar Qabul zonasida` }), onClose()),
+      () => undefined,
     );
   }
 
@@ -760,14 +757,9 @@ function PostDialog({ doc, onClose }: { doc: ReceiptDetail; onClose: () => void 
         label: "Oʻtkazish",
         loading: post.isPending,
         onClick: () =>
-          post.mutate(
-            { id: doc.id, resolution },
-            {
-              onSuccess: (d) => (
-                toast({ tone: "success", title: "Kirim oʻtkazildi", description: `${d.number} · qoldiqqa kirdi` }),
-                onClose()
-              ),
-            },
+          void post.mutateAsync({ id: doc.id, resolution }).then(
+            (d) => (toast({ tone: "success", title: "Kirim oʻtkazildi", description: `${d.number} · qoldiqqa kirdi` }), onClose()),
+            () => undefined,
           ),
       }}
     >

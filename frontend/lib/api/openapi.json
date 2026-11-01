@@ -27,6 +27,9 @@
     "description" : "Xodimlar",
     "name" : "employees"
   }, {
+    "description" : "Bildirishnomalar",
+    "name" : "notifications"
+  }, {
     "description" : "Boshlang'ich qoldiq",
     "name" : "opening"
   }, {
@@ -63,7 +66,7 @@
   "paths" : {
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -1067,7 +1070,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "responses" : {
           "200" : {
             "content" : {
@@ -1382,6 +1385,58 @@
         },
         "summary" : "Nofaol qilish",
         "tags" : [ "expense-items" ]
+      }
+    },
+    "/api/notifications" : {
+      "get" : {
+        "operationId" : "list_14",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationList"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni",
+        "tags" : [ "notifications" ]
+      }
+    },
+    "/api/notifications/read-all" : {
+      "post" : {
+        "operationId" : "readAll",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hammasini o'qildi deb belgilash",
+        "tags" : [ "notifications" ]
+      }
+    },
+    "/api/notifications/{id}/read" : {
+      "post" : {
+        "operationId" : "read",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "O'qildi deb belgilash",
+        "tags" : [ "notifications" ]
       }
     },
     "/api/opening-balances" : {
@@ -4868,6 +4923,52 @@
           }
         },
         "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
+      },
+      "NotificationItem" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "readAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "createdAt", "id", "kind", "title" ]
+      },
+      "NotificationList" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NotificationItem"
+            }
+          },
+          "unread" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "unread" ]
       },
       "OpeningCancelRequest" : {
         "type" : "object",

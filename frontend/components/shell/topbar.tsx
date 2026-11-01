@@ -1,5 +1,6 @@
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { BranchSwitcher } from "./branch-switcher";
+import { NotificationBell } from "./notification-bell";
 
 /** Yuqori panel (design/system: TopBar): qidiruv, filial tanlagichi, bildirishnomalar. */
 export function TopBar({ title }: { title: string }) {
@@ -16,13 +17,7 @@ export function TopBar({ title }: { title: string }) {
           <kbd className="ml-auto rounded-sm border border-border px-1.5 text-caption text-text-secondary">Ctrl K</kbd>
         </button>
         <BranchSwitcher />
-        <button
-          type="button"
-          aria-label="Bildirishnomalar"
-          className="flex size-control-md items-center justify-center rounded-control hover:bg-background"
-        >
-          <Bell size={20} strokeWidth={1.5} aria-hidden />
-        </button>
+        <NotificationBell />
       </div>
     </header>
   );
