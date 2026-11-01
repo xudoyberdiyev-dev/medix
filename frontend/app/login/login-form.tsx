@@ -1,62 +1,72 @@
 "use client";
 
-import { Eye, EyeOff, Info } from "lucide-react";
-import { useId, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, type FormEvent } from "react";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { TextField } from "@/components/ui/text-field";
+import { safeNext, useLogin } from "@/features/auth/session";
+import { ApiError } from "@/lib/api/client";
+import { NETWORK_ERROR } from "@/lib/api/errors";
 
-const fieldClass =
-  "h-control-lg w-full rounded-control border border-border bg-surface px-3 text-body placeholder:text-text-disabled hover:border-text-disabled";
+const REQUIRED_LOGIN = "Login kiritilmagan. Administrator bergan loginni yozing.";
+const REQUIRED_PASSWORD = "Parol kiritilmagan. Parolni yozing.";
 
 export function LoginForm() {
-  const loginId = useId();
-  const passwordId = useId();
-  const [showPassword, setShowPassword] = useState(false);
-  const [notice, setNotice] = useState(false);
+  const router = useRouter();
+  const params = useSearchParams();
+  const login = useLogin();
+  const [values, setValues] = useState({ login: "", password: "" });
+  const [errors, setErrors] = useState<{ login?: string; password?: string }>({});
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // Server bilan ulanish 1-bosqichda (Identifikatsiya) qoʻshiladi.
-    setNotice(true);
+    const next = {
+      login: values.login.trim() ? undefined : REQUIRED_LOGIN,
+      password: values.password ? undefined : REQUIRED_PASSWORD,
+    };
+    setErrors(next);
+    if (next.login || next.password) return;
+    login.mutate(
+      { login: values.login.trim(), password: values.password },
+      {
+        onSuccess: (me) => router.replace(me.mustChangePassword ? "/password" : safeNext(params.get("next"))),
+        onError: (err) => {
+          if (err instanceof ApiError) setErrors(err.fieldErrors);
+        },
+      },
+    );
   }
+
+  const error = login.error;
+  const message = error instanceof ApiError ? error.message : error ? NETWORK_ERROR : null;
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <div className="flex flex-col gap-1">
-        <label htmlFor={loginId} className="font-medium">
-          Login
-        </label>
-        <input id={loginId} name="login" autoComplete="username" className={fieldClass} placeholder="Loginni kiriting" />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor={passwordId} className="font-medium">
-          Parol
-        </label>
-        <div className="relative">
-          <input
-            id={passwordId}
-            name="password"
-            type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            className={`${fieldClass} pr-11`}
-            placeholder="Parolni kiriting"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? "Parolni yashirish" : "Parolni koʻrsatish"}
-            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-text-secondary"
-          >
-            {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
-          </button>
-        </div>
-      </div>
-      {notice ? (
-        <div role="status" className="flex gap-3 rounded-card bg-info-bg p-3 text-info">
-          <Info size={20} strokeWidth={1.5} aria-hidden className="shrink-0" />
-          <span>Tizimga kirish keyingi bosqichda ulanadi. Hozir bu sahifa faqat koʻrinish uchun.</span>
-        </div>
-      ) : null}
-      <Button type="submit" size="lg" className="w-full">
+      <TextField
+        label="Login"
+        size="lg"
+        name="login"
+        autoComplete="username"
+        placeholder="Loginni kiriting"
+        value={values.login}
+        onChange={(v) => setValues((s) => ({ ...s, login: v }))}
+        error={errors.login}
+        autoFocus
+      />
+      <TextField
+        label="Parol"
+        size="lg"
+        variant="password"
+        name="password"
+        autoComplete="current-password"
+        placeholder="Parolni kiriting"
+        value={values.password}
+        onChange={(v) => setValues((s) => ({ ...s, password: v }))}
+        error={errors.password}
+      />
+      {message ? <Alert tone="danger" title={message} /> : null}
+      <Button type="submit" size="lg" className="w-full" loading={login.isPending}>
         Tizimga kirish
       </Button>
     </form>

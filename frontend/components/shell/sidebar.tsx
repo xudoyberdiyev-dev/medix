@@ -1,7 +1,10 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { Avatar } from "@/components/ui/avatar";
+import { useLogout, useMe } from "@/features/auth/session";
 import { navigation } from "./nav";
 
 function isActive(pathname: string, href: string): boolean {
@@ -11,6 +14,9 @@ function isActive(pathname: string, href: string): boolean {
 /** Sidebar (design/system: Sidebar) — fon brand-900, faol: oq matn + chapda 3px sidebar-active. */
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const me = useMe();
+  const logout = useLogout();
   return (
     <aside className="flex w-sidebar shrink-0 flex-col bg-brand-900 text-sidebar-text">
       <div className="flex h-topbar items-center gap-3 px-5">
@@ -45,6 +51,25 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
+      {me.data ? (
+        <div className="flex items-center gap-3 border-t border-sidebar-item-active-bg px-4 py-3">
+          <Avatar name={me.data.fullName} decorative />
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-medium text-white">{me.data.fullName}</div>
+            <div className="truncate text-caption">{me.data.role.name}</div>
+          </div>
+          <button
+            type="button"
+            aria-label="Chiqish"
+            title="Chiqish"
+            disabled={logout.isPending}
+            onClick={() => logout.mutate(undefined, { onSettled: () => router.replace("/login") })}
+            className="flex size-control-md items-center justify-center rounded-control hover:bg-sidebar-item-active-bg hover:text-white focus-visible:outline-sidebar-active"
+          >
+            <LogOut size={20} strokeWidth={1.5} aria-hidden />
+          </button>
+        </div>
+      ) : null}
     </aside>
   );
 }

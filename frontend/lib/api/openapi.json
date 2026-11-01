@@ -17,18 +17,10 @@
       "get" : {
         "description" : "XSRF-TOKEN cookie'sini o'rnatadi. Ilova ochilganda bir marta chaqiriladi.",
         "operationId" : "csrf",
-        "parameters" : [ {
-          "in" : "query",
-          "name" : "token",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/CsrfToken"
-          }
-        } ],
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CsrfResponse"
                 }
@@ -57,7 +49,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/MeResponse"
                 }
@@ -76,7 +68,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/MeResponse"
                 }
@@ -139,21 +131,8 @@
           "token" : {
             "type" : "string"
           }
-        }
-      },
-      "CsrfToken" : {
-        "type" : "object",
-        "properties" : {
-          "headerName" : {
-            "type" : "string"
-          },
-          "parameterName" : {
-            "type" : "string"
-          },
-          "token" : {
-            "type" : "string"
-          }
-        }
+        },
+        "required" : [ "headerName", "token" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -176,7 +155,8 @@
         "properties" : {
           "branchId" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "Asosiy filial; null — biriktirilmagan"
           },
           "fullName" : {
             "type" : "string"
@@ -200,7 +180,8 @@
           "role" : {
             "$ref" : "#/components/schemas/RoleRef"
           }
-        }
+        },
+        "required" : [ "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
       },
       "RoleRef" : {
         "type" : "object",
@@ -211,7 +192,8 @@
           "name" : {
             "type" : "string"
           }
-        }
+        },
+        "required" : [ "code", "name" ]
       }
     }
   }

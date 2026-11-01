@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Kirish — MEDIX" };
@@ -16,7 +17,9 @@ export default function LoginPage() {
         <div className="rounded-card border border-border bg-surface p-8">
           <h1 className="text-section-title">Tizimga kirish</h1>
           <p className="mt-1 mb-8 text-text-secondary">Login va parolni administrator beradi.</p>
-          <LoginForm />
+          <Suspense>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </main>

@@ -87,32 +87,30 @@ export interface components {
             newPassword: string;
         };
         CsrfResponse: {
-            headerName?: string;
-            token?: string;
-        };
-        CsrfToken: {
-            headerName?: string;
-            parameterName?: string;
-            token?: string;
+            headerName: string;
+            token: string;
         };
         LoginRequest: {
             login: string;
             password: string;
         };
         MeResponse: {
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Asosiy filial; null — biriktirilmagan
+             */
             branchId?: number;
-            fullName?: string;
+            fullName: string;
             /** Format: int64 */
-            id?: number;
-            login?: string;
-            mustChangePassword?: boolean;
-            permissions?: string[];
-            role?: components["schemas"]["RoleRef"];
+            id: number;
+            login: string;
+            mustChangePassword: boolean;
+            permissions: string[];
+            role: components["schemas"]["RoleRef"];
         };
         RoleRef: {
-            code?: string;
-            name?: string;
+            code: string;
+            name: string;
         };
     };
     responses: never;
@@ -125,9 +123,7 @@ export type $defs = Record<string, never>;
 export interface operations {
     csrf: {
         parameters: {
-            query: {
-                token: components["schemas"]["CsrfToken"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -140,7 +136,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CsrfResponse"];
+                    "application/json": components["schemas"]["CsrfResponse"];
                 };
             };
         };
@@ -164,7 +160,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MeResponse"];
+                    "application/json": components["schemas"]["MeResponse"];
                 };
             };
         };
@@ -184,7 +180,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MeResponse"];
+                    "application/json": components["schemas"]["MeResponse"];
                 };
             };
         };
