@@ -100,6 +100,7 @@ class BranchWarehouseAdminIT {
     @Test
     void branchLifecycle() throws Exception {
         Cookie admin = loginAs("ADMIN", null);
+        branch(admin); // oxirgi faol filial nofaol qilinmaydi — yana bittasi bo'lsin
         String code = code();
         MvcResult created = mvc.perform(json(post("/api/branches"), admin,
                         "{\"code\":\"" + code.toLowerCase() + "\",\"name\":\"Samarqand\",\"legalName\":\"Medix SMQ MChJ\",\"tin\":\"" + tin() + "\"}"))
