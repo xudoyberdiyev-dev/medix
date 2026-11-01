@@ -39,9 +39,11 @@ class OrderController {
     private final Orders orders;
     private final OrderPicking picking;
     private final OrderMonitor monitor;
+    private final OrderIssues issues;
     private final CurrentActor currentActor;
 
-    OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, CurrentActor currentActor) {
+    OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, CurrentActor currentActor) {
+        this.issues = issues;
         this.orders = orders;
         this.picking = picking;
         this.monitor = monitor;
@@ -169,6 +171,28 @@ class OrderController {
     @Operation(summary = "Ombor mudiri monitori", description = "Bosqichlar ustunlari, taymerlar, kechikkanlar (Navbatda … Yuklanmoqda).")
     OrderMonitor.MonitorBoard monitor(@RequestParam(required = false) Long branchId) {
         return monitor.board(actor(), branchId);
+    }
+
+    @PostMapping("/{id}/issues")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyAuthority('picking.do', 'marking.scan', 'trip.driver')")
+    @Operation(summary = "«Muammo bor»", description = "Sabab tanlanadi; xabar Ombor mudiriga keladi, taymer to'xtamaydi.")
+    OrderIssues.OrderIssueItem reportIssue(@PathVariable long id, @Valid @RequestBody OrderIssues.IssueRequest r) {
+        return issues.report(actor(), id, r.reason(), r.note());
+    }
+
+    @GetMapping("/issues")
+    @PreAuthorize("hasAuthority('orders.queue')")
+    @Operation(summary = "Muammolar", description = "Ombor mudiri paneli: ochiq (standart) yoki barchasi; buyurtma bo'yicha.")
+    List<OrderIssues.OrderIssueItem> listIssues(@RequestParam(required = false) Long orderId, @RequestParam(defaultValue = "true") boolean open) {
+        return issues.list(actor(), orderId, open);
+    }
+
+    @PostMapping("/issues/{issueId}/resolve")
+    @PreAuthorize("hasAuthority('orders.queue')")
+    @Operation(summary = "Muammoni hal qilindi deb belgilash")
+    OrderIssues.OrderIssueItem resolveIssue(@PathVariable long issueId, @Valid @RequestBody OrderIssues.ResolveRequest r) {
+        return issues.resolve(actor(), issueId, r.resolution());
     }
 
     @GetMapping("/pick-queue")

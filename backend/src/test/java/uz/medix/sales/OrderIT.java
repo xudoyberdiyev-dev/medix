@@ -607,6 +607,20 @@ class OrderIT {
                 .andExpect(jsonPath("$.cards[?(@.id == " + o1 + ")].late", hasItem(false)));
         mvc.perform(get("/api/orders/monitor").cookie(marker)).andExpect(status().isForbidden());
 
+        // «Muammo bor»: faqat shu ishni bajarayotgan xodim; «Boshqa» — izoh bilan; Ombor mudiri hal qiladi
+        send(post("/api/orders/" + o1 + "/issues"), marker2, "{\"reason\":\"DAMAGED\"}").andExpect(status().isForbidden());
+        send(post("/api/orders/" + o1 + "/issues"), marker, "{\"reason\":\"OTHER\"}")
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("order.issueNoteRequired"));
+        long issue = id(send(post("/api/orders/" + o1 + "/issues"), marker, "{\"reason\":\"DAMAGED\",\"note\":\"2 ta quti ezilgan\"}")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.stage").value("MARKING"))
+                .andReturn());
+        mvc.perform(get("/api/orders/issues").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) issue)));
+        mvc.perform(get("/api/notifications").cookie(keeper)).andExpect(jsonPath("$.items[*].title", hasItem(containsString("Muammo bor"))));
+        send(post("/api/orders/issues/" + issue + "/resolve"), keeper, "{\"resolution\":\"Almashtirildi\"}")
+                .andExpect(jsonPath("$.resolvedBy").value("Sinov WAREHOUSE_MANAGER"));
+        send(post("/api/orders/issues/" + issue + "/resolve"), keeper, "{\"resolution\":\"Yana\"}").andExpect(status().isConflict());
+
         // Tekshiruv tartibi: format → mahsulot → partiya → tur
         send(post("/api/marking/orders/" + o1 + "/scan"), marker, "{\"code\":\"" + ean + "\"}").andExpect(jsonPath("$.code").value("marking.format"));
         send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(otherEan, "S1", "LOT-7", "D"))
