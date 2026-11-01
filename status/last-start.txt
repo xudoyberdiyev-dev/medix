@@ -1,1 +1,1 @@
-▶️ MEDIX: 07:00 sessiya boshlandi — reja: 0.9 OpenAPI → TS mijoz, 0.10 UI komponentlari asosi, keyin 1.1 Identifikatsiya migratsiyalari
+▶️ MEDIX: 12:00 sessiya boshlandi — reja: 1.7 qolgani (Filiallar va Omborlar sahifalari, Profil), 1.5 PIN tasdig'i, 1.8 e2e
