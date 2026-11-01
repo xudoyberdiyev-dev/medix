@@ -4,9 +4,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 01.11.2026
-- **Bosqich:** 0 — tugadi; 1 — Identifikatsiya **tugadi**; 2 — Katalog ~90%; 3 — Narxlar ~75% (tannarxdan past nazorati yoqildi); 4 — Ombor ~85% (BQ, eksport; qoldi: SmartUp ustunlari); 5 — Kirim ~70% (KR to'liq oqim, BNS, bonus kirim; qoldi: eslatmalar, «Mahsulot qo'shish» katalog sahifasi)
+- **Bosqich:** 0, 1 — tugadi; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90% (qoldi: SmartUp ustunlari); 5 — Kirim ~80% (qoldi: kirim uchun katalog sahifasi; YT/avans — 9-bosqich); 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~40% (FEFO zahira, vaqt berish, yig'ish, hisobdan o'tkazish)
 - **PR:** #1 (develop → main) ochiq — 0–4-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 01.11.2026 18:05 — 4-bosqich: BQ hujjati (qoralama → o'tkazish → Direktor bekor qilishi, .xlsx import), Qoldiqlar/Muddat .xlsx eksport, omborni nofaol qilishda qoldiq tekshiruvi; 5-bosqich: Kirim (qoralama → qabul → o'tkazish, farq sababi, Karantin, qarz jurnali, to'lov kuni), BNS va bonus balans hisobidan kirim; 3-bosqich: tannarxdan past narx → Direktor tasdig'i. E2E: BQ va Kirim ssenariylari.
+- **Oxirgi sessiya:** 01.11.2026 18:05–19:55 — BQ, Qoldiqlar eksporti; Kirim (to'liq oqim, qarz jurnali, BNS, bonus kirim, eslatmalar); bildirishnomalar; tannarx nazorati va kirim narxidan ustama; Buyurtma (qoidalar, kredit nazorati, tasdiq darajalari, katalog, takrorlash); FEFO zahira; vaqt berish, Yig'uvchi paneli, hisobdan o'tkazish. CI yashil (e2e 6 ssenariy).
 - **Keyingi vazifa (yangilandi 01.11 kechqurun):** 7-bosqich davomi — Markirovkachi paneli (GS1 tartibi), Hisobdan o'tkazish (har qator «Tekshirildi», joylar soni, «Yig'ishga qaytarish»), Ombor mudiri monitori; so'ng hujjatlashtirish/reys (8-bosqich: sotuv va HF «Yo'lda» da). Eski ro'yxat: 5-bosqich qoldig'i — to'lov kuni va bonus eslatmalari (notification moduli: Direktor, Buxgalter, «Kim nomiga»), «Mahsulot qo'shish» katalog sahifasi (kirim qatorlari uchun), kirim ro'yxatida filtrlar (YB, sana). Keyin 3-bosqich «Kirim bo'yicha» narx rejimi va o'rtacha/oxirgi kirim narxiga ustama; so'ng 6-bosqich — Buyurtma.
 
 ## Egasidan kutilayotganlar
@@ -96,6 +96,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ---
 
 ## Qarorlar jurnali
+- 01.11.2026 — Buyurtma: narx yuborishda hisoblanib muzlatiladi (qoralamada — joriy narx va «Narx o'zgardi»). Maksimal miqdordan ko'p — Filial rahbari tasdig'i. Litsenziya yozuvi bor-u hammasi o'tgan bo'lsa — buyurtma kiritilmaydi; nazoratdagi mahsulot — amal qiluvchi «nazoratdagi» litsenziya kerak. Muddati o'tgan qarz — to'lovlar eng eski qarzdan (FIFO); har qanday kechikish — Filial rahbari, 30+ kun — Direktor.
+- 01.11.2026 — Zahira «Navbatda»ga o'tishda (tasdiqsiz yuborish yoki tasdiq) qo'yiladi; tasdiq paytida qoldiq yetmasa — tasdiqlanmaydi. Yig'uvchi boshqa partiya olsa — ogohlantirish belgisi (`fefoDeviation`), bloklanmaydi.
+- 01.11.2026 — Yig'ish/tekshiruv buyurtma bilan bir modulda (`sales.order`) — holat mashinasi bitta joyda; ombor harakatlari `inventory` ochiq API'lari orqali. «Yig'ishga qaytarish» V1 da butun buyurtma uchun.
+- 01.11.2026 — Bildirishnomalar: kunlik eslatmalar 08:00 (Toshkent), takrorlanmaydi (dedup kaliti). Telegram/SSE — keyin.
 - 01.11.2026 — BQ: bir hujjatda (mahsulot, partiya, zona, bonus) takrorlanmaydi; bir partiya (mahsulot + raqam) — bitta yaroqlilik va tannarx; bir necha zonada bo'lsa — bitta partiya yozuvi. Qoldiq sanasi kelajakda bo'lmaydi. O'tkazilgan BQ ni faqat Direktor (opening.cancel) bekor qiladi — partiyalarda boshqa harakat bo'lmasa. Yaratish — opening.create **va** opening.goods (Buxgalter — keyin qarz/pul BQ si uchun).
 - 01.11.2026 — BQ/kirim importida yaroqlilik «05.2028» ko'rinishida bo'lsa — oyning oxirgi kuni.
 - 01.11.2026 — Excel eksportda pul matn sifatida (`1.250.000,00`): float/double ishlatilmaydi (CLAUDE.md). Excel'da yig'ish kerak bo'lsa — keyin BigDecimal → raqamli katak usulini ko'rib chiqamiz.
@@ -131,7 +135,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
-- 01.11.2026 18:05 — 4-bosqich: BQ (hujjat, import, bekor qilish), Qoldiqlar eksporti, ombor nofaol qilish tekshiruvi; 5-bosqich: Kirim (to'liq oqim + qarz jurnali), BNS va bonus kirim; 3-bosqich: tannarxdan past narx nazorati. E2E: BQ, Kirim.
+- 01.11.2026 18:05–19:55 — 4-bosqich: BQ, Qoldiqlar eksporti, ombor nofaol qilish tekshiruvi; 5-bosqich: Kirim (to'liq oqim + qarz jurnali), BNS, bonus kirim, to'lov/bonus eslatmalari + bildirishnomalar; 3-bosqich: tannarxdan past narx, o'rtacha/oxirgi kirim narxidan ustama; 6-bosqich: buyurtma (qoidalar, kredit, tasdiq, katalog); 7-bosqich: FEFO zahira, vaqt berish, yig'ish, hisobdan o'tkazish. E2E: BQ, Kirim, Buyurtma→yig'ish→tekshiruv. E2E 3 ta UI xatoni topdi (tuzatildi).
 - 01.11.2026 12:08–14:20 — 1.3 ruxsatlar (T12 egasi yubordi) va Rollar sahifasi; 4-bosqich asosi (jurnal, qoldiq, Qoldiqlar/Muddat). 1.5 PIN, 1.7 Filiallar/Omborlar/Profil, 1.8 e2e (CI), filial tanlagichi; 2-bosqich: ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport; 3-bosqich: NO hujjati, narxlar. E2E parol almashtirishdan keyingi qayta yo'naltirish xatosini topdi va tuzatildi.
 - 01.11.2026 07:00–08:15 — 0.9, 0.10 (0-bosqich tugadi, PR #1), 1.1 sxema, 1.2 xavfsizlik, 1.4 filial doirasi, 1.5 audit, 1.6 usta API, 1.7 login/parol/usta/xodimlar/audit UI. CI yashil.
 - 01.11.2026 00:30–00:45 — 0-bosqich poydevori qurildi va push qilindi; CI (develop) yashil. Rejali sessiyalar: 07:00, 12:00, 18:00, 23:00 (har biri boshlanganda xabar, oxirida hisobot).
