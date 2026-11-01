@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ClipboardCheck, Trash2, X } from "lucide-react";
+import { BadgePercent, Check, ClipboardCheck, Trash2, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import { useEmployeeOptions } from "@/features/products/api";
 import { describeError } from "@/features/setup/form-error";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import {
+  BONUS_CONFIRM,
   DIFF_LABELS,
   RECEIPT_ACCEPT,
   RECEIPT_CANCEL,
@@ -32,10 +33,10 @@ import {
   searchSuppliers,
   useAcceptReceipt,
   useCancelReceipt,
+  useConfirmBonus,
   usePostReceipt,
   useReceipt,
   useSaveReceipt,
-  type DiffReason,
   type ReceiptDetail,
   type ReceiptRequest,
   type Resolution,
@@ -128,6 +129,8 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
   const [due, setDue] = useState(doc?.dueManual ? formatIsoDate(doc.dueDate) : "");
   const [owner, setOwner] = useState<string | null>(doc?.ownerId ? String(doc.ownerId) : null);
   const [prepaid, setPrepaid] = useState(doc?.prepaid ?? false);
+  const [fromBonus, setFromBonus] = useState(doc?.fromBonus ?? false);
+  const confirmBonus = useConfirmBonus();
   const [discountKind, setDiscountKind] = useState<string | null>(doc?.discountKind ?? null);
   const [discountValue, setDiscountValue] = useState(doc?.discountValue ?? "");
   const [discountDate, setDiscountDate] = useState(formatIsoDate(doc?.discountDate));
@@ -137,7 +140,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
   const [local, setLocal] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"accept" | "post" | "cancel" | null>(null);
   const seen = useRef(new Map<string, { code: string; name: string }>());
-  const err = describeError(save.error ?? post.error);
+  const err = describeError(save.error ?? post.error ?? confirmBonus.error);
 
   const activeWarehouses = (warehouses.data ?? []).filter((w) => w.active || String(w.id) === warehouseId);
   const warehouse = activeWarehouses.find((w) => String(w.id) === warehouseId) ?? null;
@@ -191,9 +194,10 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
       invoiceNumber: invoice.trim() || undefined,
       invoiceDate: invIso,
       paymentType: (paymentType ?? "TRANSFER") as ReceiptRequest["paymentType"],
-      dueDate: prepaid ? undefined : dueIso,
+      dueDate: prepaid || fromBonus ? undefined : dueIso,
       ownerId: owner ? Number(owner) : undefined,
       prepaid,
+      fromBonus,
       discountKind: (discountKind ?? undefined) as ReceiptRequest["discountKind"],
       discountValue: disc ?? undefined,
       discountDate: discIso,
@@ -279,6 +283,24 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
           Qabul qilish
         </Button>
       ) : null}
+      {doc?.status === "POSTED" && doc.discountKind && !doc.bonusNumber && can(me.data, BONUS_CONFIRM) ? (
+        <Button
+          icon={BadgePercent}
+          loading={confirmBonus.isPending}
+          onClick={() =>
+            confirmBonus.mutate(doc.id, {
+              onSuccess: (d) =>
+                toast({
+                  tone: "success",
+                  title: "Bonus tasdiqlandi",
+                  description: `${d.bonusNumber ?? ""}${d.bonusAmount ? ` · ${formatMoney(d.bonusAmount)} soʻm bonus balansga` : ""}`,
+                }),
+            })
+          }
+        >
+          Bonus tasdiqlandi
+        </Button>
+      ) : null}
       {doc?.status === "ACCEPTED" && canPost ? (
         <Button
           icon={Check}
@@ -342,11 +364,11 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
           <Select label="Toʻlov turi" value={paymentType} onChange={setPaymentType} options={PAYMENT_TYPES} disabled={!editable} />
           <TextField
             label="Toʻlov kuni"
-            value={prepaid ? "" : due}
+            value={prepaid || fromBonus ? "" : due}
             onChange={setDue}
             placeholder={doc?.dueDate && !doc.dueManual ? formatIsoDate(doc.dueDate) : "KK.OO.YYYY"}
             hint="Boʻsh — kirim sanasi + yetkazib beruvchi sharti"
-            disabled={!editable || prepaid}
+            disabled={!editable || prepaid || fromBonus}
           />
           <Select
             label="Kim nomiga"
@@ -360,7 +382,14 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
             label="100% oldindan toʻlangan"
             description="Qarz va eslatma yoʻq — avansdan yopiladi"
             checked={prepaid}
-            onChange={setPrepaid}
+            onChange={(v) => (setPrepaid(v), v && setFromBonus(false))}
+            disabled={!editable}
+          />
+          <Checkbox
+            label="Bonus balans hisobidan"
+            description="Qarz yoʻq, tannarx 0 — partiya «Bonus»"
+            checked={fromBonus}
+            onChange={(v) => (setFromBonus(v), v && (setPrepaid(false), setDiscountKind(null)))}
             disabled={!editable}
           />
           <Select
@@ -368,11 +397,12 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
             value={discountKind}
             onChange={setDiscountKind}
             placeholder="Yoʻq"
+            hint={fromBonus ? "Bonus hisobidan kirimda chegirma boʻlmaydi" : undefined}
             options={[
               { value: "SUM", label: "Summa" },
               { value: "PERCENT", label: "Foiz" },
             ]}
-            disabled={!editable}
+            disabled={!editable || fromBonus}
           />
           <TextField
             label="Chegirma qiymati"
@@ -599,6 +629,9 @@ function StatusNotes({ doc }: { doc: ReceiptDetail | null }) {
       <Alert tone="success" title={doc.debtAmount ? `Oʻtkazildi · qarz ${formatMoney(doc.debtAmount)} soʻm` : "Oʻtkazildi"}>
         {doc.prepaid ? "100% oldindan toʻlangan — summa avansdan yopiladi." : doc.dueDate ? `Toʻlov kuni: ${day(doc.dueDate)}.` : ""}
         {doc.supplierBalance ? ` Yetkazib beruvchi saldosi: ${formatMoney(doc.supplierBalance)} soʻm.` : ""}
+        {doc.fromBonus ? " Bonus balans hisobidan — qarz yozilmadi." : ""}
+        {doc.bonusNumber ? ` Bonus tasdiqlandi: ${doc.bonusNumber}${doc.bonusAmount ? `, ${formatMoney(doc.bonusAmount)} soʻm` : ""}.` : ""}
+        {doc.bonusBalance ? ` Bonus balansi: ${formatMoney(doc.bonusBalance)} soʻm.` : ""}
       </Alert>
     );
   return null;
@@ -607,7 +640,6 @@ function StatusNotes({ doc }: { doc: ReceiptDetail | null }) {
 interface CountRow {
   received: string;
   damaged: string;
-  reason: string | null;
   zone: string;
 }
 
@@ -622,7 +654,7 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
   const lines = doc.data?.lines ?? [];
   const zones = (warehouses.data ?? []).find((w) => w.id === doc.data?.warehouseId)?.zones.filter((z) => TARGET_ZONES.has(z.type)) ?? [];
   const row = (lineId: number, qty: number, zoneId: number): CountRow =>
-    rows[lineId] ?? { received: String(qty), damaged: "0", reason: null, zone: String(zoneId) };
+    rows[lineId] ?? { received: String(qty), damaged: "0", zone: String(zoneId) };
   const set = (lineId: number, base: CountRow, patch: Partial<CountRow>) => setRows((r) => ({ ...r, [lineId]: { ...base, ...patch } }));
 
   function submit() {
@@ -632,13 +664,13 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
       if (!isInt(r.received) || !isInt(r.damaged || "0")) return setLocal(`${l.lineNo}-qator: soni — butun son.`);
       const received = Number(r.received);
       const damaged = Number(r.damaged || "0");
+      // Sabab soniga qarab aniqlanadi (server qoidasi bilan bir xil) — xodim faqat sonlarni kiritadi.
       const expected = expectedReason(l.qty, received, damaged);
-      if (expected && !r.reason) return setLocal(`${l.lineNo}-qator: soni farq qiladi — sababini tanlang.`);
       out.push({
         lineId: l.id,
         receivedQty: received,
         damagedQty: damaged,
-        diffReason: expected ? ((r.reason ?? expected) as DiffReason) : undefined,
+        diffReason: expected ?? undefined,
         zoneId: Number(r.zone),
       });
     }
@@ -688,15 +720,14 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
                 onChange={(v) => set(l.id, r, { damaged: v })}
                 inputMode="numeric"
               />
-              <Select
-                label="Farq sababi"
-                size="sm"
-                value={expected ? (r.reason ?? expected) : null}
-                onChange={(v) => set(l.id, r, { reason: v })}
-                placeholder={expected ? "Tanlang" : "Farq yoʻq"}
-                disabled={!expected}
-                options={Object.entries(DIFF_LABELS).map(([value, label]) => ({ value, label }))}
-              />
+              <div className="flex flex-col gap-1">
+                <span className="text-caption text-text-secondary">Farq sababi</span>
+                {expected ? (
+                  <Badge tone={expected === "DAMAGED" ? "danger" : "warning"}>{DIFF_LABELS[expected]}</Badge>
+                ) : (
+                  <span className="text-text-secondary">Farq yoʻq</span>
+                )}
+              </div>
               <Select
                 label="Zona"
                 size="sm"

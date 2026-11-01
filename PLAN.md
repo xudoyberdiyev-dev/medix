@@ -4,10 +4,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 01.11.2026
-- **Bosqich:** 0 — tugadi; 1 — Identifikatsiya **tugadi** (1.3 ruxsatlar T12 bo'yicha); 2 — Katalog ~90%; 3 — Narxlar ~60%; 4 — Ombor ~35% (jurnal asosi, Qoldiqlar/Muddat sahifalari)
+- **Bosqich:** 0 — tugadi; 1 — Identifikatsiya **tugadi**; 2 — Katalog ~90%; 3 — Narxlar ~75% (tannarxdan past nazorati yoqildi); 4 — Ombor ~85% (BQ, eksport; qoldi: SmartUp ustunlari); 5 — Kirim ~70% (KR to'liq oqim, BNS, bonus kirim; qoldi: eslatmalar, «Mahsulot qo'shish» katalog sahifasi)
 - **PR:** #1 (develop → main) ochiq — 0–4-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 01.11.2026 12:08–14:20 — 1-bosqich yakuni (PIN, Filiallar/Omborlar/Profil, e2e, 1.3 ruxsatlar + Rollar sahifasi), 2-bosqich (ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx), 3-bosqich (NO, narxlar), 4-bosqich asosi (partiya, jurnal, qoldiq). CI yashil.
-- **Keyingi vazifa:** 4-bosqich davomi: Boshlang'ich qoldiq (BQ) hujjati (StockLedger orqali, SmartUp importi namunadan keyin), omborni nofaol qilishda qoldiq tekshiruvi, Qoldiqlar jadvaliga .xlsx eksport. Keyin 5-bosqich — Kirim (ikki bosqichli) — u partiyalar va tannarxni beradi (3-bosqichdagi «tannarxdan past» nazorati shunda yoqiladi).
+- **Oxirgi sessiya:** 01.11.2026 18:05 — 4-bosqich: BQ hujjati (qoralama → o'tkazish → Direktor bekor qilishi, .xlsx import), Qoldiqlar/Muddat .xlsx eksport, omborni nofaol qilishda qoldiq tekshiruvi; 5-bosqich: Kirim (qoralama → qabul → o'tkazish, farq sababi, Karantin, qarz jurnali, to'lov kuni), BNS va bonus balans hisobidan kirim; 3-bosqich: tannarxdan past narx → Direktor tasdig'i. E2E: BQ va Kirim ssenariylari.
+- **Keyingi vazifa:** 5-bosqich qoldig'i — to'lov kuni va bonus eslatmalari (notification moduli: Direktor, Buxgalter, «Kim nomiga»), «Mahsulot qo'shish» katalog sahifasi (kirim qatorlari uchun), kirim ro'yxatida filtrlar (YB, sana). Keyin 3-bosqich «Kirim bo'yicha» narx rejimi va o'rtacha/oxirgi kirim narxiga ustama; so'ng 6-bosqich — Buyurtma.
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
@@ -57,18 +57,19 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ## 3. Narxlar
 - [x] 8 narx turi, narx = mahsulot × tur × filial × sana (QQS bilan), NO hujjati (raqam NO-TSH-000001) va tarix (narx jadvali faqat qo'shiladi; yakunlangan NO trigger bilan himoyalangan)
 - [~] Narx o'rnatish «Mahsulot bo'yicha» ✅ (jadvaldan tanlab yoki qator qo'shib), ommaviy ustama (bazaviy/amaldagi narxga, yaxlitlash 100/500/1000) ✅. Qoldi: «Kirim bo'yicha» rejimi va o'rtacha/oxirgi kirim narxiga ustama (5-bosqichdan keyin)
-- [~] Nazorat: >20% — ogohlantirish ✅; Direktor tasdig'i (PIN) oqimi ✅; tannarxdan past narxni aniqlash — partiyalar (4–5-bosqich) bilan
+- [x] Nazorat: >20% — ogohlantirish ✅; Direktor tasdig'i (PIN) oqimi ✅; tannarxdan past narx — filialdagi qoldig'i bor (bonus emas) partiyalarning eng yuqori tannarxi bilan solishtiriladi (`inventory.BatchCosts`) ✅
 - [~] Narx tanlash qoidasi `PriceMath.select` (partiya → mijoz turi → bazaviy) + birlik testlari ✅; buyurtmada ishlatish — 6-bosqich
 
 ## 4. Ombor
 - [x] Partiyalar (bonus — tannarx 0, «-B»), harakatlar jurnali (stock_move, faqat qo'shiladi), stock_balance (zona × partiya, CHECK ≥ 0) jurnal bilan bitta tranzaksiyada; `StockLedger.post` — tartibli FOR UPDATE, hujjat hammasi yoki hech narsa; parallel test (24 oqim, 10 dona → aniq 10 ta muvaffaqiyat)
-- [~] Qoldiqlar sahifasi va Muddat nazorati ✅ (filial doirasi, tannarx faqat special.cost bilan). Qoldi: .xlsx eksport, ustunlar/ko'rinishlar
-- [ ] Boshlang'ich qoldiq (BQ) — SmartUp importi
+- [x] Qoldiqlar sahifasi va Muddat nazorati ✅ (filial doirasi, tannarx faqat special.cost bilan), .xlsx eksport (filtrlar bilan, 50 000 qatorgacha; pul matn ko'rinishida). Qoldi (ixtiyoriy): ustunlar/saqlangan ko'rinishlar
+- [x] Boshlang'ich qoldiq (BQ): qoralama → o'tkazish (partiyalar `source_type=BQ` + jurnal + qoldiq bitta tranzaksiyada), Direktor bekor qilishi (partiyadan sotilmagan bo'lsa), MEDIX .xlsx shabloni bilan import (hammasi yoki hech narsa), nazoratdagi → faqat Seyf, muddati o'tgan — ogohlantirish. Sahifa: Ombor → Boshlang'ich qoldiq. Qoldi: SmartUp ustunlari (namuna kutilmoqda)
+- [x] Omborni nofaol qilish: qoldig'i yoki o'tkazilmagan BQ qoralamasi bo'lsa taqiqlanadi
 
 ## 5. Kirim
-- [ ] Ikki bosqichli kirim (Qoralama → Qabul qilindi → O'tkazildi), «Mahsulot qo'shish» katalog sahifasi
-- [ ] Farq sabablari, Karantin, «haqiqiy/hujjat bo'yicha» qarori; bekor qilish (Direktor/Admin)
-- [ ] Bonus balans (BNS), aksiya (10+1, «-B» partiya), 100% oldindan to'langan kirim, to'lov kuni eslatmalari
+- [x] Ikki bosqichli kirim (Qoralama → Qabul qilindi → O'tkazildi): qabulda tovar Qabul zonasida (sotuvga yopiq), o'tkazishda saqlash zonalariga; qarz jurnali (`finance.PartyLedger`, faqat qo'shiladi) va to'lov kuni (kirim sanasi + YB sharti, qo'lda o'zgarsa belgi). Narx Ombor mudiriga ko'rinmaydi (API ham yubormaydi). Sahifa: Ombor → Kirim. Qoldi: «Mahsulot qo'shish» katalog sahifasi (hozir qator formasi)
+- [x] Farq sabablari (kam/ortiqcha/shikastlangan), shikastlangani Karantinga, «haqiqiy/hujjat bo'yicha» qarori; bekor qilish: qoralama/qabul — receipt.cancel, o'tkazilgan — receipt.cancelPosted (partiya ishlatilmagan bo'lsa, qarz teskari yoziladi)
+- [~] Bonus balans: BNS («Bonus tasdiqlandi», summa yoki foiz), bonus hisobidan kirim (qarz yo'q, tannarx 0, «-B»), aksiya (10+1 → alohida «-B» partiya), 100% oldindan to'langan kirim ✅. Qoldi: to'lov kuni va bonus eslatmalari (notification), avans yetmasa ogohlantirish (YT/avans — 9-bosqich)
 
 ## 6. Buyurtma
 - [ ] Buyurtma kiritish + katalog sahifasi, «Oldingi buyurtmani takrorlash», miqdor qoidalari, «N ta muammo» paneli
@@ -95,6 +96,15 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ---
 
 ## Qarorlar jurnali
+- 01.11.2026 — BQ: bir hujjatda (mahsulot, partiya, zona, bonus) takrorlanmaydi; bir partiya (mahsulot + raqam) — bitta yaroqlilik va tannarx; bir necha zonada bo'lsa — bitta partiya yozuvi. Qoldiq sanasi kelajakda bo'lmaydi. O'tkazilgan BQ ni faqat Direktor (opening.cancel) bekor qiladi — partiyalarda boshqa harakat bo'lmasa. Yaratish — opening.create **va** opening.goods (Buxgalter — keyin qarz/pul BQ si uchun).
+- 01.11.2026 — BQ/kirim importida yaroqlilik «05.2028» ko'rinishida bo'lsa — oyning oxirgi kuni.
+- 01.11.2026 — Excel eksportda pul matn sifatida (`1.250.000,00`): float/double ishlatilmaydi (CLAUDE.md). Excel'da yig'ish kerak bo'lsa — keyin BigDecimal → raqamli katak usulini ko'rib chiqamiz.
+- 01.11.2026 — Kirim: narxni ko'rish — `special.cost` yoki `receipt.accept` yo'q xodim (Xarid). Ombor mudiri qoralama yaratishi mumkin (narxsiz), narxli qoralamani tahrirlay olmaydi; qabul uchun barcha narxlar kiritilgan bo'lishi shart (partiya tannarxi qabulda yoziladi va o'zgarmaydi).
+- 01.11.2026 — Kirim farqi: «haqiqiy soni» = yaroqli + shikastlangan (kelgan tovar); shikastlangani Karantinga, YB ga qaytarish — QY hujjati bilan (keyin). Aksiya bonusi qabulda alohida sanalmaydi (hujjatdagi soni kiradi).
+- 01.11.2026 — Kirim zonasi: Asosiy, Sovuq, Seyf yoki Karantin; nazoratdagi mahsulot — Seyf yoki Karantin. Qabul va Jo'natish — manzil emas.
+- 01.11.2026 — Bonus: BNS foizi o'tkazilgan qarz summasidan (HALF_UP). Bir kirim — bitta BNS. Bonus hisobidan kirim chegirmali yoki 100% oldindan bo'lmaydi; balans yetmasa o'tkazilmaydi. Bonusi ishlatilgan kirim bekor qilinmaydi.
+- 01.11.2026 — Tannarxdan past narx: filialdagi qoldig'i bor, bonus bo'lmagan partiyalarning eng yuqori tannarxidan past bo'lsa (qoldiq yo'q bo'lsa — tekshirilmaydi).
+- 01.11.2026 — Jackson 3: so'rovdagi yo'q primitiv maydon xato beradi — yangi ixtiyoriy maydonlar `Boolean`/`Integer` (null = standart).
 - 01.11.2026 — 1.3: ruxsatlar T12 matritsasi bo'yicha (oldingi vaqtinchalik rol qarorlari bekor). Farqlar: omborlarni faqat Direktor/Admin boshqaradi (warehouses.view); Filial rahbari xodimlarni ko'radi, lekin o'zgartirmaydi (staff.edit yo'q). Barcha filiallar doirasi — SPEC 13 bo'yicha Direktor/Admin/**Buxgalter** (T12 da Buxgalter «own» — SPEC ustun).
 - 01.11.2026 — Davlatlar ma'lumotnomasi uchun alohida kalit yo'q — `lookups.makers` bilan (Xarid ham o'zgartiradi).
 - 01.11.2026 — Rol ruxsatlari o'zgarsa, xodimning keyingi kirishida kuchga kiradi (ochiq sessiya darhol uzilmaydi). Direktor roli o'zgartirilmaydi; Admin «roles.view» ni yo'qotmaydi.
@@ -121,6 +131,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 01.11.2026 18:05 — 4-bosqich: BQ (hujjat, import, bekor qilish), Qoldiqlar eksporti, ombor nofaol qilish tekshiruvi; 5-bosqich: Kirim (to'liq oqim + qarz jurnali), BNS va bonus kirim; 3-bosqich: tannarxdan past narx nazorati. E2E: BQ, Kirim.
 - 01.11.2026 12:08–14:20 — 1.3 ruxsatlar (T12 egasi yubordi) va Rollar sahifasi; 4-bosqich asosi (jurnal, qoldiq, Qoldiqlar/Muddat). 1.5 PIN, 1.7 Filiallar/Omborlar/Profil, 1.8 e2e (CI), filial tanlagichi; 2-bosqich: ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport; 3-bosqich: NO hujjati, narxlar. E2E parol almashtirishdan keyingi qayta yo'naltirish xatosini topdi va tuzatildi.
 - 01.11.2026 07:00–08:15 — 0.9, 0.10 (0-bosqich tugadi, PR #1), 1.1 sxema, 1.2 xavfsizlik, 1.4 filial doirasi, 1.5 audit, 1.6 usta API, 1.7 login/parol/usta/xodimlar/audit UI. CI yashil.
 - 01.11.2026 00:30–00:45 — 0-bosqich poydevori qurildi va push qilindi; CI (develop) yashil. Rejali sessiyalar: 07:00, 12:00, 18:00, 23:00 (har biri boshlanganda xabar, oxirida hisobot).

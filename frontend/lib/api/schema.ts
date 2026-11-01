@@ -1140,6 +1140,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/receipts/{id}/bonus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bonus tasdiqlandi (BNS)
+         * @description Chegirma YB bonus balansiga qo'shiladi. Faqat o'tkazilgan kirim, bir marta.
+         */
+        post: operations["confirmBonus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/receipts/{id}/cancel": {
         parameters: {
             query?: never;
@@ -2338,6 +2358,13 @@ export interface components {
             actualAmount?: string;
             /** @description Hujjat bo'yicha summa (narx × soni) */
             amount?: string;
+            bonusAmount?: string;
+            /** @description YB bonus balansi shu filialda */
+            bonusBalance?: string;
+            /** Format: date-time */
+            bonusConfirmedAt?: string;
+            /** @description Tasdiqlangan bonus (BNS) raqami */
+            bonusNumber?: string;
             /** Format: int64 */
             branchId: number;
             cancelReason?: string;
@@ -2357,6 +2384,7 @@ export interface components {
             /** Format: date */
             dueDate?: string;
             dueManual: boolean;
+            fromBonus: boolean;
             /** @description Qabulda farq bor */
             hasDiff: boolean;
             /** Format: int64 */
@@ -2467,6 +2495,8 @@ export interface components {
              * @description Bo'sh — kirim sanasi + YB sharti (filial)
              */
             dueDate?: string;
+            /** @description YB bonus balansi hisobidan: qarz yo'q, tannarx 0 */
+            fromBonus?: boolean;
             /** Format: date */
             invoiceDate?: string;
             invoiceNumber?: string;
@@ -4531,6 +4561,28 @@ export interface operations {
                 "application/json": components["schemas"]["AcceptRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDetail"];
+                };
+            };
+        };
+    };
+    confirmBonus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {

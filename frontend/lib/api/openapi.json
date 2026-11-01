@@ -2776,6 +2776,35 @@
         "tags" : [ "receipts" ]
       }
     },
+    "/api/receipts/{id}/bonus" : {
+      "post" : {
+        "description" : "Chegirma YB bonus balansiga qo'shiladi. Faqat o'tkazilgan kirim, bir marta.",
+        "operationId" : "confirmBonus",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bonus tasdiqlandi (BNS)",
+        "tags" : [ "receipts" ]
+      }
+    },
     "/api/receipts/{id}/cancel" : {
       "post" : {
         "description" : "O'tkazilgan kirim — faqat receipt.cancelPosted va tovar ishlatilmagan bo'lsa.",
@@ -5776,6 +5805,21 @@
             "type" : "string",
             "description" : "Hujjat bo'yicha summa (narx × soni)"
           },
+          "bonusAmount" : {
+            "type" : "string"
+          },
+          "bonusBalance" : {
+            "type" : "string",
+            "description" : "YB bonus balansi shu filialda"
+          },
+          "bonusConfirmedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "bonusNumber" : {
+            "type" : "string",
+            "description" : "Tasdiqlangan bonus (BNS) raqami"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -5817,6 +5861,9 @@
             "format" : "date"
           },
           "dueManual" : {
+            "type" : "boolean"
+          },
+          "fromBonus" : {
             "type" : "boolean"
           },
           "hasDiff" : {
@@ -5909,7 +5956,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "branchId", "createdAt", "createdBy", "dueManual", "hasDiff", "id", "lines", "number", "paymentType", "prepaid", "pricesVisible", "receiptDate", "status", "supplier", "supplierId", "totalBonusQty", "totalQty", "warehouse", "warehouseId" ]
+        "required" : [ "branchId", "createdAt", "createdBy", "dueManual", "fromBonus", "hasDiff", "id", "lines", "number", "paymentType", "prepaid", "pricesVisible", "receiptDate", "status", "supplier", "supplierId", "totalBonusQty", "totalQty", "warehouse", "warehouseId" ]
       },
       "ReceiptLine" : {
         "type" : "object",
@@ -6074,6 +6121,10 @@
             "type" : "string",
             "format" : "date",
             "description" : "Bo'sh — kirim sanasi + YB sharti (filial)"
+          },
+          "fromBonus" : {
+            "type" : "boolean",
+            "description" : "YB bonus balansi hisobidan: qarz yo'q, tannarx 0"
           },
           "invoiceDate" : {
             "type" : "string",

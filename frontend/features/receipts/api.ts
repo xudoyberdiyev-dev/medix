@@ -19,6 +19,7 @@ export const RECEIPT_ACCEPT = "receipt.accept";
 export const RECEIPT_POST = "receipt.post";
 export const RECEIPT_CANCEL = "receipt.cancel";
 export const RECEIPT_CANCEL_POSTED = "receipt.cancelPosted";
+export const BONUS_CONFIRM = "supplierBonus.confirm";
 
 export const STATUS_LABELS: Record<ReceiptStatus, string> = {
   DRAFT: "Qoralama",
@@ -97,6 +98,9 @@ export const usePostReceipt = () =>
   useReceiptMutation(({ id, resolution }: { id: number; resolution?: Resolution }) =>
     unwrap(api.POST("/api/receipts/{id}/post", { params: { path: { id } }, body: { resolution } })),
   );
+
+export const useConfirmBonus = () =>
+  useReceiptMutation((id: number) => unwrap(api.POST("/api/receipts/{id}/bonus", { params: { path: { id } } })));
 
 export const useCancelReceipt = () =>
   useReceiptMutation(({ id, reason }: { id: number; reason: string }) =>
