@@ -539,4 +539,146 @@ class OrderIT {
         assertThat(qtyIn(shipping, prod)).isEqualTo(3);
         assertThat(qtyIn(p.main(), prod)).isEqualTo(17);
     }
+
+    /** Tasodifiy EAN-13 (to'g'ri nazorat raqami bilan) → GTIN-14. */
+    private static String ean13() {
+        StringBuilder b = new StringBuilder("478");
+        for (int i = 0; i < 9; i++) {
+            b.append(ThreadLocalRandom.current().nextInt(10));
+        }
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            int d = b.charAt(i) - '0';
+            sum += i % 2 == 0 ? d : d * 3;
+        }
+        return b.append((10 - sum % 10) % 10).toString();
+    }
+
+    private static String mark(String ean, String serial, String batch, String kind) {
+        return "{\"code\":\"(01)0" + ean + "(21)" + serial + "(17)300531(10)" + batch + "(91)" + kind + "\"}";
+    }
+
+    /** Markirovkali buyurtma: yig'ilgan, «Markirovkada». */
+    private long markedOrder(Place p, long c, long prod, int qty, Cookie operator, Cookie keeper, Cookie picker) throws Exception {
+        long o = draft(operator, order(p, c, new long[][] {{prod, qty}}));
+        send(post("/api/orders/" + o + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+        send(post("/api/orders/" + o + "/time"), keeper, "{\"pickMinutes\":10}").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("order.markTimeRequired"));
+        send(post("/api/orders/" + o + "/time"), keeper, "{\"pickMinutes\":10,\"markMinutes\":5}").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
+        return o;
+    }
+
+    @Test
+    void markingScanRulesFinishReleaseAndParallelDuplicate() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie marker = loginAs("MARKER", p.branchId());
+        Cookie marker2 = loginAs("MARKER", p.branchId());
+        long prod = product(p, "BY Markirovka", "1000", 0, null, null);
+        String ean = ean13();
+        jdbc.sql("UPDATE product SET marked = true WHERE id = :p").param("p", prod).update();
+        jdbc.sql("INSERT INTO product_barcode (product_id, barcode) VALUES (:p, :b)").param("p", prod).param("b", ean).update();
+        long other = product(p, "BY Boshqa", "1000", 0, null, null);
+        String otherEan = ean13();
+        jdbc.sql("INSERT INTO product_barcode (product_id, barcode) VALUES (:p, :b)").param("p", other).param("b", otherEan).update();
+        tx.executeWithoutResult(s -> {
+            long b = ledger.createBatch(prod, "LOT-7", null, LocalDate.now().plusYears(2), Money.of("100"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", prod, "BQ-MK"), List.of(Move.in(p.main(), b, 20)));
+        });
+
+        long o1 = markedOrder(p, c, prod, 3, operator, keeper, picker);
+        mvc.perform(get("/api/marking/queue").cookie(marker)).andExpect(jsonPath("$[*].id", hasItem((int) o1)));
+        send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S1", "LOT-7", "D"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("marking.notStarted"));
+        send(post("/api/marking/orders/" + o1 + "/start"), picker, "").andExpect(status().isForbidden());
+        send(post("/api/marking/orders/" + o1 + "/start"), marker, "")
+                .andExpect(jsonPath("$.lines[0].kind").value("UNIT"))
+                .andExpect(jsonPath("$.unitsNeeded").value(3))
+                .andExpect(jsonPath("$.complete").value(false));
+        send(post("/api/marking/orders/" + o1 + "/start"), marker2, "").andExpect(jsonPath("$.code").value("marking.taken"));
+
+        // Tekshiruv tartibi: format → mahsulot → partiya → tur
+        send(post("/api/marking/orders/" + o1 + "/scan"), marker, "{\"code\":\"" + ean + "\"}").andExpect(jsonPath("$.code").value("marking.format"));
+        send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(otherEan, "S1", "LOT-7", "D"))
+                .andExpect(jsonPath("$.code").value("marking.productMismatch"));
+        send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S1", "LOT-8", "D"))
+                .andExpect(jsonPath("$.code").value("marking.batchMismatch"))
+                .andExpect(jsonPath("$.detail", containsString("LOT-7")));
+        send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S1", "LOT-7", "Q"))
+                .andExpect(jsonPath("$.code").value("marking.kindNeedUnit"));
+        // Qabul: 3 ta; takror (shu buyurtmada) va qator to'lgan
+        for (String s : List.of("S1", "S2", "S3")) {
+            send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, s, "lot-7", "D"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.accepted.serial").value(s));
+        }
+        send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S2", "LOT-7", "D"))
+                .andExpect(jsonPath("$.code").value("marking.duplicateHere"));
+        MvcResult full = send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S4", "LOT-7", "D"))
+                .andExpect(jsonPath("$.code").value("marking.lineFull")).andReturn();
+        assertThat(full.getResponse().getStatus()).isEqualTo(409);
+
+        // Olib tashlash (sabab bilan) → to'liq emas → qayta urish → yakunlash
+        long s3 = jdbc.sql("SELECT id FROM sales_order_mark WHERE order_id = :o AND serial = 'S3'").param("o", o1).query(Long.class).single();
+        send(post("/api/marking/orders/" + o1 + "/codes/" + s3 + "/remove"), marker, "{\"reason\":\"Qadoq shikastlangan\"}")
+                .andExpect(jsonPath("$.unitsScanned").value(2));
+        send(post("/api/marking/orders/" + o1 + "/finish"), marker, "").andExpect(jsonPath("$.code").value("marking.incomplete"));
+        send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S3", "LOT-7", "D")).andExpect(status().isOk());
+        send(post("/api/marking/orders/" + o1 + "/finish"), marker, "").andExpect(jsonPath("$.status").value("CHECKING"));
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM sales_order_mark WHERE id = :m").param("m", s3).update()).hasMessageContaining("oʻchirilmaydi");
+
+        // Global takror: boshqa buyurtmada shu kod qabul qilinmaydi
+        long o2 = markedOrder(p, c, prod, 2, operator, keeper, picker);
+        send(post("/api/marking/orders/" + o2 + "/start"), marker, "").andExpect(status().isOk());
+        send(post("/api/marking/orders/" + o2 + "/scan"), marker, mark(ean, "S1", "LOT-7", "D"))
+                .andExpect(jsonPath("$.code").value("marking.duplicate"))
+                .andExpect(jsonPath("$.detail", containsString(JsonPath.read(
+                        mvc.perform(get("/api/orders/" + o1).cookie(keeper)).andReturn().getResponse().getContentAsString(), "$.number").toString())));
+        long o3 = markedOrder(p, c, prod, 2, operator, keeper, picker);
+        send(post("/api/marking/orders/" + o3 + "/start"), marker, "").andExpect(jsonPath("$.code").value("marking.markerBusy"));
+        send(post("/api/marking/orders/" + o3 + "/start"), marker2, "").andExpect(status().isOk());
+
+        // Parallel: ikki markirovkachi bir kodni bir vaqtda — faqat bittasi qabul qiladi
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+        var go = new java.util.concurrent.CountDownLatch(1);
+        var ok = new java.util.concurrent.atomic.AtomicInteger();
+        List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+        for (long[] pair : new long[][] {{o2, 1}, {o3, 2}}) {
+            Cookie who = pair[1] == 1 ? marker : marker2;
+            futures.add(pool.submit(() -> {
+                go.await();
+                int st = send(post("/api/marking/orders/" + pair[0] + "/scan"), who, mark(ean, "P1", "LOT-7", "D")).andReturn().getResponse().getStatus();
+                if (st == 200) {
+                    ok.incrementAndGet();
+                }
+                return null;
+            }));
+        }
+        go.countDown();
+        for (var f : futures) {
+            f.get(60, java.util.concurrent.TimeUnit.SECONDS);
+        }
+        pool.shutdown();
+        assertThat(ok.get()).isEqualTo(1);
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_order_mark WHERE serial = 'P1' AND status = 'ACTIVE' AND gtin = :g").param("g", "0" + ean)
+                        .query(Long.class).single())
+                .isEqualTo(1);
+
+        // Yig'ishga qaytarish (Markirovkada) — kodlar bo'shaydi, shu kodni boshqa buyurtmada urish mumkin
+        send(post("/api/orders/" + o2 + "/return-to-pick"), keeper, "{\"reason\":\"Qayta yig'ish\"}").andExpect(jsonPath("$.status").value("QUEUED"));
+        send(post("/api/orders/" + o1 + "/cancel"), keeper, "{\"reason\":\"Mijoz voz kechdi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_order_mark WHERE order_id IN (:a, :b) AND status = 'ACTIVE'").param("a", o1).param("b", o2)
+                        .query(Long.class).single())
+                .isZero();
+        send(post("/api/marking/orders/" + o3 + "/scan"), marker2, mark(ean, "S1", "LOT-7", "D")).andExpect(status().isOk());
+        mvc.perform(get("/api/marking/codes").param("q", "s1").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2));
+        mvc.perform(get("/api/marking/codes").cookie(picker)).andExpect(status().isForbidden());
+    }
 }

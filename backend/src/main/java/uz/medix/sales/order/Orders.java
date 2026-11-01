@@ -713,6 +713,7 @@ class Orders {
             throw MedixException.conflict("order.cannotCancel", h.status().name());
         }
         reservations.release(DOC_TYPE, id);
+        OrderMarking.releaseCodes(jdbc, id, actor.employeeId(), reason.strip());
         // Yig'ilgan tovar saqlash zonasiga qaytadi (SPEC 5.2): Jo'natish → olingan zona (sof yig'ilgan miqdor).
         List<StockLedger.Move> back = netPicked(id).stream()
                 .flatMap(n -> java.util.stream.Stream.of(StockLedger.Move.out(n.shippingZone(), n.batchId(), n.qty()),

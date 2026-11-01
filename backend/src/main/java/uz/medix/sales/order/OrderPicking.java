@@ -305,9 +305,11 @@ class OrderPicking {
                     .update();
         }
         stock.post(new DocRef(Orders.DOC_TYPE, id, h.number()), moves);
+        // Kodlar bekor qilinadi (tarixda qoladi), qayta markirovkada yana urish mumkin (SPEC 5.2)
+        OrderMarking.releaseCodes(jdbc, id, actor.employeeId(), reason.strip());
         jdbc.sql("""
                 UPDATE sales_order SET status = 'QUEUED', picker_id = NULL, pick_started_at = NULL, pick_finished_at = NULL, fefo_deviation = false,
-                       status_changed_at = now(), updated_at = now(), version = version + 1 WHERE id = :id""")
+                       marker_id = NULL, mark_started_at = NULL, mark_finished_at = NULL, status_changed_at = now(), updated_at = now(), version = version + 1 WHERE id = :id""")
                 .param("id", id)
                 .update();
         orders.reserveAgain(id);
