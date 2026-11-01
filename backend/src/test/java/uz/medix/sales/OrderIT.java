@@ -700,4 +700,86 @@ class OrderIT {
                 .andExpect(jsonPath("$.total").value(2));
         mvc.perform(get("/api/marking/codes").cookie(picker)).andExpect(status().isForbidden());
     }
+
+    /** Buyurtmani «Hujjatlashtirilmoqda»gacha olib boradi (joylar soni bilan). */
+    private long documenting(Place p, long c, long prod, int qty, int places, String delivery, Cookie operator, Cookie keeper, Cookie picker)
+            throws Exception {
+        long o = draft(operator, order(p, c, new long[][] {{prod, qty}}).replace("\"DELIVERY\"", "\"" + delivery + "\""));
+        send(post("/api/orders/" + o + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+        send(post("/api/orders/" + o + "/time"), keeper, "{\"pickMinutes\":10}").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("CHECKING"));
+        long line = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o").param("o", o).query(Long.class).single();
+        send(post("/api/orders/" + o + "/check"), keeper, "{\"checkedLines\":[" + line + "],\"places\":" + places + "}")
+                .andExpect(jsonPath("$.status").value("DOCUMENTING"));
+        return o;
+    }
+
+    private String statusOf(long order) {
+        return jdbc.sql("SELECT status FROM sales_order WHERE id = :o").param("o", order).query(String.class).single();
+    }
+
+    @Test
+    void tripCapacityWaybillCancelAndPickup() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        long prod = product(p, "BY Reys", "1000", 50, null, null);
+        long o1 = documenting(p, c, prod, 2, 2, "DELIVERY", operator, keeper, picker);
+        long o2 = documenting(p, c, prod, 3, 2, "DELIVERY", operator, keeper, picker);
+        long o3 = documenting(p, c, prod, 1, 1, "PICKUP", operator, keeper, picker);
+        String plate = "01" + ThreadLocalRandom.current().nextInt(100_000, 999_999);
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model, capacity_boxes) VALUES (:b, :p, 'Damas', 3) RETURNING id")
+                .param("b", p.branchId()).param("p", plate).query(Long.class).single();
+        jdbc.sql("""
+                INSERT INTO employee (login, full_name, role_id, branch_id, password_hash, must_change_password)
+                SELECT :l, 'Haydovchi Sinov', id, :b, 'x', false FROM role WHERE code = 'DRIVER'""")
+                .param("l", "drv" + UUID.randomUUID().toString().substring(0, 8)).param("b", p.branchId()).update();
+        long driver = jdbc.sql("SELECT id FROM employee WHERE full_name = 'Haydovchi Sinov' AND branch_id = :b").param("b", p.branchId())
+                .query(Long.class).single();
+
+        mvc.perform(get("/api/trips/ready").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) o1)));
+        mvc.perform(get("/api/trips/options").param("branchId", String.valueOf(p.branchId())).cookie(keeper))
+                .andExpect(jsonPath("$.vehicles[0].capacityBoxes").value(3))
+                .andExpect(jsonPath("$.drivers[0].fullName").value("Haydovchi Sinov"));
+        String body = "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today() + "\",\"orderIds\":[" + o1 + "," + o2 + "]}";
+        send(post("/api/trips"), operator, body).andExpect(status().isForbidden());
+        // Sig'im: 2 + 2 = 4 joy > 3
+        send(post("/api/trips"), keeper, body).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("trip.overCapacity"));
+        send(post("/api/trips"), keeper, body.replace("[" + o1 + "," + o2 + "]", "[" + o1 + "," + o3 + "]"))
+                .andExpect(jsonPath("$.code").value("trip.pickupInTrip"));
+        jdbc.sql("UPDATE vehicle SET capacity_boxes = 5 WHERE id = :v").param("v", vehicle).update();
+        MvcResult trip = send(post("/api/trips"), keeper, body)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.number", matchesPattern("RS-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.status").value("PLANNED"))
+                .andExpect(jsonPath("$.places").value(4))
+                .andExpect(jsonPath("$.stops[0].waybillNumber", matchesPattern("NK-[A-Z]{3}-\\d{6}")))
+                .andReturn();
+        long t1 = id(trip);
+        assertThat(statusOf(o1)).isEqualTo("LOADING");
+        String nk1 = jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o1).query(String.class).single();
+
+        // Haydovchi band; bekor qilish → buyurtmalar qaytadi, NK saqlanadi
+        long o4 = documenting(p, c, prod, 1, 1, "DELIVERY", operator, keeper, picker);
+        send(post("/api/trips"), keeper, body.replace("[" + o1 + "," + o2 + "]", "[" + o4 + "]"))
+                .andExpect(jsonPath("$.code").value("trip.driverBusy"));
+        send(post("/api/trips/" + t1 + "/cancel"), keeper, "{\"reason\":\"Mashina buzildi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
+        assertThat(statusOf(o1)).isEqualTo("DOCUMENTING");
+        long t2 = id(send(post("/api/trips"), keeper, body.replace("[" + o1 + "," + o2 + "]", "[" + o1 + "]")).andExpect(status().isCreated())
+                .andReturn());
+        assertThat(jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o1).query(String.class).single()).isEqualTo(nk1);
+
+        // Reysdagi yagona buyurtma bekor qilinsa — reys ham bekor
+        send(post("/api/orders/" + o1 + "/cancel"), keeper, "{\"reason\":\"Mijoz voz kechdi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
+        assertThat(jdbc.sql("SELECT status FROM trip WHERE id = :t").param("t", t2).query(String.class).single()).isEqualTo("CANCELLED");
+
+        // O'zi olib ketadi — reyssiz nakladnoy
+        send(post("/api/trips/pickup"), keeper, "{\"orderId\":" + o2 + "}").andExpect(jsonPath("$.code").value("trip.notPickup"));
+        send(post("/api/trips/pickup"), keeper, "{\"orderId\":" + o3 + "}").andExpect(jsonPath("$.waybillNumber", matchesPattern("NK-[A-Z]{3}-\\d{6}")));
+        assertThat(statusOf(o3)).isEqualTo("LOADING");
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM trip WHERE id = :t").param("t", t1).update()).hasMessageContaining("oʻchirilmaydi");
+    }
 }

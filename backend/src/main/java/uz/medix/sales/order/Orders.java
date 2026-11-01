@@ -75,9 +75,12 @@ class Orders {
     private final Clock clock;
     private final StockReservations reservations;
     private final StockLedger stock;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     Orders(JdbcClient jdbc, PriceBook prices, StockAvailability availability, PartyLedger parties, AuditLog audit,
-            DocumentSequenceService numbers, Clock clock, StockReservations reservations, StockLedger stock) {
+            DocumentSequenceService numbers, Clock clock, StockReservations reservations, StockLedger stock,
+            org.springframework.context.ApplicationEventPublisher events) {
+        this.events = events;
         this.reservations = reservations;
         this.stock = stock;
         this.jdbc = jdbc;
@@ -727,6 +730,7 @@ class Orders {
                 .param("r", reason.strip())
                 .param("id", id)
                 .update();
+        events.publishEvent(new uz.medix.sales.OrderCancelled(id, h.number(), reason.strip()));
         audit.record(AuditEntry.of("order.cancel", "sales_order", id)
                 .change(Map.of("status", h.status().name()), Map.of("status", OrderStatus.CANCELLED.name())).withReason(reason.strip()));
     }
