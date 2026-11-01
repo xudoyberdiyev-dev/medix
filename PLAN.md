@@ -4,9 +4,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 01.11.2026
-- **Bosqich:** 0 — tugadi (PR develop → main egasi ko'rib chiqishini kutmoqda); 1 — Identifikatsiya boshlandi
-- **Oxirgi sessiya:** 01.11.2026 ~00:30 — poydevor qurildi (backend skeleti, frontend qobig'i, CI, Docker Compose).
-- **Keyingi vazifa:** 0.9 (OpenAPI → TS mijoz), 0.10 (UI komponentlari asosi), keyin 1-bosqich 1.1.
+- **Bosqich:** 0 — tugadi (PR #1 develop → main egasi ko'rib chiqishini kutmoqda); 1 — Identifikatsiya ~55%
+- **Oxirgi sessiya:** 01.11.2026 07:00 — 0.9, 0.10, 1.1, 1.2, 1.5 (asosi), 1.6, 1.7 (login, parol, usta).
+- **Keyingi vazifa:** 1.7 qolgani (Xodimlar, Filiallar, Omborlar sahifalari, Audit jurnali, rolga qarab menyu), 1.5 PIN, 1.8 e2e. 1.3 — T12-topshirish.md kutilmoqda.
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
@@ -17,7 +17,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [ ] (Ixtiyoriy) Bulut muhiti tarmoq sozlamasida Maven Central (`repo.maven.apache.org`), `services.gradle.org` va Docker Hub'ga ruxsat — shunda backend sessiya ichida ham tekshiriladi, CI kutish shart bo'lmaydi.
 
 ## Egasiga savollar
-_(hozircha yo'q)_
+- **1.3 Ruxsatlar:** 131 ta kalit katalogi `notes/T12-topshirish.md` da — u repoda yo'q va Claude Design artifactlaridan ham topilmadi. Faylni `docs/notes/` ga qo'shing; shungacha ruxsat tekshiruvi rol bo'yicha (`hasRole('DIRECTOR')` va h.k.).
+- **Boshlang'ich CEO hisobi:** production uchun `MEDIX_BOOTSTRAP_LOGIN` va `MEDIX_BOOTSTRAP_PASSWORD` ni server env'iga bering (birinchi kirishda parol almashtiriladi). Repoga yozilmaydi.
 
 ---
 
@@ -34,13 +35,13 @@ _(hozircha yo'q)_
 - [x] 0.10 Medix UI komponentlari asosi: Badge, TextField, Select, Table (TanStack), Modal, Drawer, Toast, Alert, Tabs, Pagination, SystemStates — `design/system/components.d.ts` shartnomasiga mos
 
 ## 1. Identifikatsiya
-- [ ] 1.1 Flyway: company, branch (kod TSH/SMQ/BXR/FRG, STIR), warehouse, zone (tur, sotuvga ochiqmi), employee, role, permission, role_permission, audit_log (faqat qo'shiladigan, trigger), spring_session
-- [ ] 1.2 Spring Security 7 + Spring Session JDBC: login/logout, httpOnly+Secure cookie, CSRF, parol (Argon2/BCrypt), birinchi kirishda parol almashtirish, bloklangan xodim
+- [x] 1.1 Flyway: company, branch (kod TSH/SMQ/BXR/FRG, STIR), warehouse, zone (tur, sotuvga ochiqmi), employee, role, permission, role_permission, audit_log (faqat qo'shiladigan, trigger), spring_session
+- [x] 1.2 Spring Security 7 + Spring Session JDBC: login/logout, httpOnly+Secure cookie, CSRF, parol (Argon2/BCrypt), birinchi kirishda parol almashtirish, bloklangan xodim
 - [ ] 1.3 Ruxsatlar: 131 kalit katalogi (T12-topshirish.md dan), 11 rol standart matritsasi, `@PreAuthorize`, rol nusxasi
-- [ ] 1.4 Filial doirasi: xodim faqat o'z filiali; barcha filiallar — Direktor/Admin/Buxgalter
-- [ ] 1.5 Audit jurnali servisi (kim, qachon, nima, eski → yangi) + PIN tasdig'i asosi
-- [ ] 1.6 Sozlash ustasi API (faqat CEO, birinchi ishga tushirish): kompaniya → filiallar → omborlar va zonalar → rollar → xodimlar → yakun
-- [ ] 1.7 Frontend: login (ulangan), parol almashtirish, sozlash ustasi (Stepper), Xodimlar, Rollar va ruxsatlar matritsasi, Filiallar, Omborlar va zonalar, Audit jurnali, Profil; rolga qarab menyu
+- [~] 1.4 Filial doirasi: `Actor.canAccessBranch` (Direktor/Admin/Buxgalter — barcha filiallar, hozircha rol bo'yicha; 1.3 dan keyin ruxsat kalitiga). Har modul o'z so'rovlarida qo'llaydi
+- [~] 1.5 Audit jurnali servisi (`shared.audit.AuditLog`, kirish/parol/usta amallari yoziladi) — PIN tasdig'i asosi qoldi
+- [x] 1.6 Sozlash ustasi API (faqat CEO, birinchi ishga tushirish): kompaniya → filiallar → omborlar va zonalar → rollar → xodimlar → yakun
+- [~] 1.7 Frontend: ✅ login (ulangan), parol almashtirish, sozlash ustasi (Stepper), proxy + AuthGate. Qoldi: Xodimlar, Rollar va ruxsatlar matritsasi, Filiallar, Omborlar va zonalar, Audit jurnali, Profil; rolga qarab menyu
 - [ ] 1.8 e2e (Playwright): login → usta → xodim yaratish
 
 ## 2. Katalog
@@ -94,6 +95,13 @@ _(hozircha yo'q)_
 - 01.11.2026 — Bulut sessiyasida Maven bloklangani uchun backend CI orqali tekshiriladi.
 - 01.11.2026 — Jadval: kuniga 4 sessiya (07:00, 12:00, 18:00, 23:00); har sessiya boshida xabar, oxirida hisobot. Egasi usage credits ($100 bonus) ishlatishga ruxsat berdi.
 - 01.11.2026 — Shriftlar `@fontsource` orqali (build vaqtida tashqi tarmoq kerak emas).
+- 01.11.2026 — Komponentlarda `icon` prop — Lucide komponenti (nom satri emas): tree-shaking uchun. Shartnomadan yagona chetlanish.
+- 01.11.2026 — Parol xeshi: `DelegatingPasswordEncoder` (`{bcrypt}`), keyin Argon2 ga o'tish mumkin. Login xatolari hisoblanadi, lekin avtomatik bloklash yo'q (SPEC da qoida yo'q).
+- 01.11.2026 — Sessiya: Spring Session JDBC, cookie `MEDIX_SESSION` (httpOnly, Secure, SameSite=Lax), 10 soat. CSRF: `XSRF-TOKEN` cookie + `X-XSRF-TOKEN` sarlavha.
+- 01.11.2026 — Zonaning «sotuvga ochiq»ligi bazada turidan hisoblanadi (generated column), qo'lda o'zgartirilmaydi. V1 da bitta kompaniya (unique index).
+- 01.11.2026 — Omborlar/zonalar `inventory` moduliga tegishli (`uz.medix.inventory.Warehouses` ochiq API); usta identity'dan chaqiradi.
+- 01.11.2026 — OpenAPI: record maydonlari standart bo'yicha majburiy, ixtiyoriylari `@Schema(nullable = true)`.
 
 ## Sessiya jurnali
+- 01.11.2026 07:00– — 0.9, 0.10 (0-bosqich tugadi, PR #1), 1.1 sxema, 1.2 xavfsizlik, 1.5 audit asosi, 1.6 usta API, 1.7 login/parol/usta UI.
 - 01.11.2026 00:30–00:45 — 0-bosqich poydevori qurildi va push qilindi; CI (develop) yashil. Rejali sessiyalar: 07:00, 12:00, 18:00, 23:00 (har biri boshlanganda xabar, oxirida hisobot).
