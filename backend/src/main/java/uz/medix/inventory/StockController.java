@@ -114,13 +114,10 @@ class StockController {
             where.append("))");
             params.put("exact", q.strip());
         }
-        String from = """
-                 FROM stock_balance s
-                 JOIN batch b ON b.id = s.batch_id
-                 JOIN product p ON p.id = s.product_id
-                 JOIN zone z ON z.id = s.zone_id
-                 JOIN warehouse w ON w.id = s.warehouse_id
-                 LEFT JOIN manufacturer m ON m.id = p.manufacturer_id""";
+        // Bo'sh joy bilan boshlanadi: matn bloki boshidagi bo'shliqlarni olib tashlaydi.
+        String from = " FROM stock_balance s JOIN batch b ON b.id = s.batch_id JOIN product p ON p.id = s.product_id"
+                + " JOIN zone z ON z.id = s.zone_id JOIN warehouse w ON w.id = s.warehouse_id"
+                + " LEFT JOIN manufacturer m ON m.id = p.manufacturer_id";
         record Totals(long total, long totalQty) {}
         Totals totals = jdbc.sql("SELECT count(*) AS total, coalesce(sum(s.qty), 0) AS total_qty" + from + where)
                 .params(params)
