@@ -4,10 +4,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 01.11.2026
-- **Bosqich:** 0 — tugadi; 1 — Identifikatsiya ~90% (faqat 1.3 ruxsatlar katalogi kutilmoqda); 2 — Katalog ~90%; 3 — Narxlar ~60%
-- **PR:** #1 (develop → main) ochiq — 0–3-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 01.11.2026 12:08–~14:30 — Filiallar/Omborlar/Profil/PIN, e2e, filial tanlagichi; Katalog (ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport); Narxlar (NO hujjati, narx tarixi, ustama). CI yashil.
-- **Keyingi vazifa:** 3-bosqich: Narxlar UI tekshiruvi va «Kirim bo'yicha» rejim (5-bosqichdan keyin), tannarx nazorati (partiyalar bilan). Keyin 4-bosqich — Ombor (partiyalar, StockMove jurnali, StockBalance, Qoldiqlar sahifasi, Muddat nazorati).
+- **Bosqich:** 0 — tugadi; 1 — Identifikatsiya **tugadi** (1.3 ruxsatlar T12 bo'yicha); 2 — Katalog ~90%; 3 — Narxlar ~60%; 4 — Ombor ~35% (jurnal asosi, Qoldiqlar/Muddat sahifalari)
+- **PR:** #1 (develop → main) ochiq — 0–4-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
+- **Oxirgi sessiya:** 01.11.2026 12:08–14:20 — 1-bosqich yakuni (PIN, Filiallar/Omborlar/Profil, e2e, 1.3 ruxsatlar + Rollar sahifasi), 2-bosqich (ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx), 3-bosqich (NO, narxlar), 4-bosqich asosi (partiya, jurnal, qoldiq). CI yashil.
+- **Keyingi vazifa:** 4-bosqich davomi: Boshlang'ich qoldiq (BQ) hujjati (StockLedger orqali, SmartUp importi namunadan keyin), omborni nofaol qilishda qoldiq tekshiruvi, Qoldiqlar jadvaliga .xlsx eksport. Keyin 5-bosqich — Kirim (ikki bosqichli) — u partiyalar va tannarxni beradi (3-bosqichdagi «tannarxdan past» nazorati shunda yoqiladi).
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
@@ -18,10 +18,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [ ] (Ixtiyoriy) Bulut muhiti tarmoq sozlamasida Maven Central (`repo.maven.apache.org`), `services.gradle.org` va Docker Hub'ga ruxsat — shunda backend sessiya ichida ham tekshiriladi, CI kutish shart bo'lmaydi.
 
 ## Egasiga savollar
-- **Rollar bo'yicha vaqtinchalik ruxsatlar** (Qarorlar jurnali, 01.11.2026) — 1.3 katalogi kelguncha shunday ishlaydi. Xususan: kontragent limitini kim o'zgartiradi (hozir Direktor/Admin/Filial rahbari), narxni kim o'rnatadi (hozir + Xarid)? Farq bo'lsa yozing.
+- **Buxgalter doirasi:** SPEC 13 — Buxgalter barcha filiallarni ko'radi; T12 matritsasida esa «own». Hozir SPEC bo'yicha (barcha filiallar). To'g'rimi?
 - **Yaxlitlash yo'nalishi:** narx 100/500/1000 ga eng yaqin qiymatga yaxlitlanadi (12 340 → 12 300). Doim yuqoriga kerak bo'lsa ayting.
 - **Narx turlari:** «Ulgurji partiya narxi» partiyaga bog'langan tur deb belgilandi. To'g'rimi?
-- ~~**1.3 Ruxsatlar:** T12-topshirish.md yo'q~~ — HAL QILINDI: fayl `docs/notes/T12-topshirish.md` da. Keyingi sessiya 1.3 ni shu fayldagi 131 kalit bilan yakunlasin.
+- ~~**1.3 Ruxsatlar**~~ — HAL QILINDI (01.11.2026 12:00 sessiyasi): 132 kalit va matritsa joriy qilindi.
 - **Boshlang'ich CEO hisobi:** production uchun `MEDIX_BOOTSTRAP_LOGIN` va `MEDIX_BOOTSTRAP_PASSWORD` ni server env'iga bering (birinchi kirishda parol almashtiriladi). Repoga yozilmaydi.
 
 ---
@@ -41,11 +41,11 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ## 1. Identifikatsiya
 - [x] 1.1 Flyway: company, branch (kod TSH/SMQ/BXR/FRG, STIR), warehouse, zone (tur, sotuvga ochiqmi), employee, role, permission, role_permission, audit_log (faqat qo'shiladigan, trigger), spring_session
 - [x] 1.2 Spring Security 7 + Spring Session JDBC: login/logout, httpOnly+Secure cookie, CSRF, parol (Argon2/BCrypt), birinchi kirishda parol almashtirish, bloklangan xodim
-- [ ] 1.3 Ruxsatlar: 131 kalit katalogi (T12-topshirish.md dan), 11 rol standart matritsasi, `@PreAuthorize`, rol nusxasi
-- [~] 1.4 Filial doirasi: `Actor.canAccessBranch` (Direktor/Admin/Buxgalter — barcha filiallar, hozircha rol bo'yicha; 1.3 dan keyin ruxsat kalitiga). Har modul o'z so'rovlarida qo'llaydi
+- [x] 1.3 Ruxsatlar: 132 kalit katalogi va 11 rol matritsasi (V9, `docs/notes/T12-topshirish.md` §7), API'lar `hasAuthority(kalit)` bilan, kontragentlar — kartadagi rol bo'yicha (clients.* / suppliers.*), rol nusxasi, Direktor roli himoyalangan
+- [x] 1.4 Filial doirasi: `Actor.canAccessBranch` (Direktor/Admin/Buxgalter — barcha filiallar, SPEC 13). Har modul o'z so'rovlarida qo'llaydi; filial tanlagichi (Zustand)
 - [x] 1.5 Audit jurnali servisi (`shared.audit.AuditLog`) + PIN: `shared.security.PinVerifier` (4–6 raqam, oson PIN rad etiladi, 5 xato → 15 daqiqa qulf, xato hisobi chaqiruvchi tranzaksiyasidan mustaqil), Profil'da o'rnatish (joriy parol bilan)
 - [x] 1.6 Sozlash ustasi API (faqat CEO, birinchi ishga tushirish): kompaniya → filiallar → omborlar va zonalar → rollar → xodimlar → yakun
-- [~] 1.7 Frontend: ✅ login (ulangan), parol almashtirish, sozlash ustasi (Stepper), proxy + AuthGate, Sozlamalar → Xodimlar (qo'shish, bloklash, vaqtinchalik parol), Audit jurnali, rolga qarab menyu (SPEC 3 bo'yicha, 1.3 dan keyin ruxsat kalitlariga). ✅ Filiallar (qo'shish, tahrirlash — kod o'zgarmaydi, nofaol qilish), Omborlar va zonalar (Filial rahbari — o'z filiali; Sovuq/Seyf qo'shish, zona nomi, nofaol qilish), Profil (telefon, parol, PIN). Qoldi: Rollar va ruxsatlar matritsasi (1.3 ga bog'liq)
+- [x] 1.7 Frontend: ✅ login (ulangan), parol almashtirish, sozlash ustasi (Stepper), proxy + AuthGate, Sozlamalar → Xodimlar (qo'shish, bloklash, vaqtinchalik parol), Audit jurnali, rolga qarab menyu (SPEC 3 bo'yicha, 1.3 dan keyin ruxsat kalitlariga). ✅ Filiallar (qo'shish, tahrirlash — kod o'zgarmaydi, nofaol qilish), Omborlar va zonalar (Sovuq/Seyf qo'shish, zona nomi, nofaol qilish), Profil (telefon, parol, PIN). ✅ Rollar va ruxsatlar sahifasi (modullar bo'yicha, saqlash, nusxa). Menyu va tugmalar ruxsat kalitlari bo'yicha (`can`/`useCan`)
 - [x] 1.8 e2e (Playwright, CI `e2e` ishi: Postgres + backend jar + `next start`): CEO birinchi kirish → parol → usta → xodim → Sozlamalar → PIN; operator vaqtinchalik parol bilan kiradi, Sozlamalar yopiq
 
 ## 2. Katalog
@@ -61,8 +61,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [~] Narx tanlash qoidasi `PriceMath.select` (partiya → mijoz turi → bazaviy) + birlik testlari ✅; buyurtmada ishlatish — 6-bosqich
 
 ## 4. Ombor
-- [ ] Partiyalar, harakatlar jurnali (StockMove), StockBalance (zona × partiya), CHECK ≥ 0
-- [ ] Qoldiqlar sahifasi (pro jadval), Muddat nazorati
+- [x] Partiyalar (bonus — tannarx 0, «-B»), harakatlar jurnali (stock_move, faqat qo'shiladi), stock_balance (zona × partiya, CHECK ≥ 0) jurnal bilan bitta tranzaksiyada; `StockLedger.post` — tartibli FOR UPDATE, hujjat hammasi yoki hech narsa; parallel test (24 oqim, 10 dona → aniq 10 ta muvaffaqiyat)
+- [~] Qoldiqlar sahifasi va Muddat nazorati ✅ (filial doirasi, tannarx faqat special.cost bilan). Qoldi: .xlsx eksport, ustunlar/ko'rinishlar
 - [ ] Boshlang'ich qoldiq (BQ) — SmartUp importi
 
 ## 5. Kirim
@@ -95,6 +95,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ---
 
 ## Qarorlar jurnali
+- 01.11.2026 — 1.3: ruxsatlar T12 matritsasi bo'yicha (oldingi vaqtinchalik rol qarorlari bekor). Farqlar: omborlarni faqat Direktor/Admin boshqaradi (warehouses.view); Filial rahbari xodimlarni ko'radi, lekin o'zgartirmaydi (staff.edit yo'q). Barcha filiallar doirasi — SPEC 13 bo'yicha Direktor/Admin/**Buxgalter** (T12 da Buxgalter «own» — SPEC ustun).
+- 01.11.2026 — Davlatlar ma'lumotnomasi uchun alohida kalit yo'q — `lookups.makers` bilan (Xarid ham o'zgartiradi).
+- 01.11.2026 — Rol ruxsatlari o'zgarsa, xodimning keyingi kirishida kuchga kiradi (ochiq sessiya darhol uzilmaydi). Direktor roli o'zgartirilmaydi; Admin «roles.view» ni yo'qotmaydi.
 - 01.11.2026 — Filial kodi yaratilgandan keyin o'zgarmaydi (hujjat raqamlarida ishlatiladi). Oxirgi faol filial nofaol qilinmaydi.
 - 01.11.2026 — Omborlarni Filial rahbari ham boshqaradi (o'z filiali) — SPEC 3 «filial sozlamalari». Ombor nofaol qilish: 4-bosqichda qoldiq bo'lsa taqiqlanadi.
 - 01.11.2026 — PIN: 4–6 raqam, 1111/1234 kabi oson PIN rad etiladi, 5 ketma-ket xato → 15 daqiqa qulf (taxmin qilishdan himoya). O'rnatish/almashtirish joriy parol bilan.
@@ -118,6 +121,6 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
-- 01.11.2026 12:08–~14:30 — 1.5 PIN, 1.7 Filiallar/Omborlar/Profil, 1.8 e2e (CI), filial tanlagichi; 2-bosqich: ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport; 3-bosqich: NO hujjati, narxlar. E2E parol almashtirishdan keyingi qayta yo'naltirish xatosini topdi va tuzatildi.
+- 01.11.2026 12:08–14:20 — 1.3 ruxsatlar (T12 egasi yubordi) va Rollar sahifasi; 4-bosqich asosi (jurnal, qoldiq, Qoldiqlar/Muddat). 1.5 PIN, 1.7 Filiallar/Omborlar/Profil, 1.8 e2e (CI), filial tanlagichi; 2-bosqich: ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport; 3-bosqich: NO hujjati, narxlar. E2E parol almashtirishdan keyingi qayta yo'naltirish xatosini topdi va tuzatildi.
 - 01.11.2026 07:00–08:15 — 0.9, 0.10 (0-bosqich tugadi, PR #1), 1.1 sxema, 1.2 xavfsizlik, 1.4 filial doirasi, 1.5 audit, 1.6 usta API, 1.7 login/parol/usta/xodimlar/audit UI. CI yashil.
 - 01.11.2026 00:30–00:45 — 0-bosqich poydevori qurildi va push qilindi; CI (develop) yashil. Rejali sessiyalar: 07:00, 12:00, 18:00, 23:00 (har biri boshlanganda xabar, oxirida hisobot).
