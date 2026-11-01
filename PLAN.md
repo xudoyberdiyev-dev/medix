@@ -21,7 +21,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Rollar bo'yicha vaqtinchalik ruxsatlar** (Qarorlar jurnali, 01.11.2026) — 1.3 katalogi kelguncha shunday ishlaydi. Xususan: kontragent limitini kim o'zgartiradi (hozir Direktor/Admin/Filial rahbari), narxni kim o'rnatadi (hozir + Xarid)? Farq bo'lsa yozing.
 - **Yaxlitlash yo'nalishi:** narx 100/500/1000 ga eng yaqin qiymatga yaxlitlanadi (12 340 → 12 300). Doim yuqoriga kerak bo'lsa ayting.
 - **Narx turlari:** «Ulgurji partiya narxi» partiyaga bog'langan tur deb belgilandi. To'g'rimi?
-- **1.3 Ruxsatlar:** 131 ta kalit katalogi `notes/T12-topshirish.md` da — u repoda yo'q va Claude Design artifactlaridan ham topilmadi. Faylni `docs/notes/` ga qo'shing; shungacha ruxsat tekshiruvi rol bo'yicha (`hasRole('DIRECTOR')` va h.k.).
+- ~~**1.3 Ruxsatlar:** T12-topshirish.md yo'q~~ — HAL QILINDI: fayl `docs/notes/T12-topshirish.md` da. Keyingi sessiya 1.3 ni shu fayldagi 131 kalit bilan yakunlasin.
 - **Boshlang'ich CEO hisobi:** production uchun `MEDIX_BOOTSTRAP_LOGIN` va `MEDIX_BOOTSTRAP_PASSWORD` ni server env'iga bering (birinchi kirishda parol almashtiriladi). Repoga yozilmaydi.
 
 ---
