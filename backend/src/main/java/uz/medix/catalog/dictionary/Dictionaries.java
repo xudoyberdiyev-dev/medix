@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.catalog.product.Products;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
@@ -20,10 +21,12 @@ class Dictionaries {
 
     private final JdbcClient jdbc;
     private final AuditLog audit;
+    private final Products products;
 
-    Dictionaries(JdbcClient jdbc, AuditLog audit) {
+    Dictionaries(JdbcClient jdbc, AuditLog audit, Products products) {
         this.jdbc = jdbc;
         this.audit = audit;
+        this.products = products;
     }
 
     @Transactional(readOnly = true)
@@ -58,6 +61,9 @@ class Dictionaries {
                 .update();
         audit.record(AuditEntry.of(kind.table() + ".update", kind.table(), id)
                 .change(snapshot(before.name(), before.shortName()), snapshot(name.strip(), sn)));
+        if (kind == DictionaryKind.MANUFACTURER) {
+            products.refreshByManufacturer(id);
+        }
         return find(kind, id);
     }
 
