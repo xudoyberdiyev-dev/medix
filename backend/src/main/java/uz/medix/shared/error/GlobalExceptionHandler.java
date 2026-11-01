@@ -62,6 +62,12 @@ public class GlobalExceptionHandler {
         return problem(HttpStatus.BAD_REQUEST, "error.request");
     }
 
+    /** Yo'l yoki so'rov parametri noto'g'ri turda (masalan, mavjud bo'lmagan ma'lumotnoma turi). */
+    @ExceptionHandler(org.springframework.beans.TypeMismatchException.class)
+    ProblemDetail typeMismatch(org.springframework.beans.TypeMismatchException e) {
+        return problem(HttpStatus.BAD_REQUEST, "error.request");
+    }
+
     @ExceptionHandler(Exception.class)
     ProblemDetail unexpected(Exception e) {
         if (e instanceof ErrorResponse er) {
