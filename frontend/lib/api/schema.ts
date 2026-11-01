@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/api/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Audit yozuvlari (yangilari birinchi) */
+        get: operations["list_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/csrf": {
         parameters: {
             query?: never;
@@ -78,6 +95,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ko'rish mumkin bo'lgan filiallar */
+        get: operations["list_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xodimlar ro'yxati */
+        get: operations["list"];
+        put?: never;
+        /** Xodim qo'shish */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xodimni bloklash
+         * @description Ochiq sessiyalari darhol tugatiladi.
+         */
+        post: operations["block"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vaqtinchalik parol berish */
+        post: operations["resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}/unblock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Blokdan chiqarish */
+        post: operations["unblock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/roles": {
         parameters: {
             query?: never;
@@ -86,7 +192,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list"];
+        get: operations["list_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -218,6 +324,31 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AuditPage: {
+            items: components["schemas"]["AuditRow"][];
+            /** Format: int64 */
+            total: number;
+        };
+        AuditRow: {
+            action: string;
+            /** Format: int64 */
+            employeeId?: number;
+            employeeName?: string;
+            entityId?: string;
+            entityType: string;
+            /** Format: int64 */
+            id: number;
+            /** @description JSON */
+            newValue?: string;
+            /** Format: date-time */
+            occurredAt: string;
+            /** @description JSON */
+            oldValue?: string;
+            reason?: string;
+        };
+        BlockRequest: {
+            reason: string;
+        };
         Branch: {
             active: boolean;
             address?: string;
@@ -250,6 +381,16 @@ export interface components {
         };
         CompanyRequest: {
             name: string;
+        };
+        CreateEmployeeRequest: {
+            /** Format: int64 */
+            branchId?: number;
+            fullName: string;
+            login: string;
+            phone?: string;
+            position?: string;
+            roleCode: string;
+            temporaryPassword: string;
         };
         CsrfResponse: {
             headerName: string;
@@ -298,6 +439,9 @@ export interface components {
             mustChangePassword: boolean;
             permissions: string[];
             role: components["schemas"]["RoleRef"];
+        };
+        ResetPasswordRequest: {
+            temporaryPassword: string;
         };
         Role: {
             code: string;
@@ -359,6 +503,31 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_3: {
+        parameters: {
+            query?: {
+                entityType?: string;
+                employeeId?: number;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+        };
+    };
     csrf: {
         parameters: {
             query?: never;
@@ -445,7 +614,145 @@ export interface operations {
             };
         };
     };
+    list_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Branch"][];
+                };
+            };
+        };
+    };
     list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEmployeeRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    block: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    unblock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    list_1: {
         parameters: {
             query?: never;
             header?: never;

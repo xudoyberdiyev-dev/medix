@@ -20,6 +20,10 @@ export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
+  /** Koʻradigan rollar; berilmasa — panel rollaridan boshqa hamma. Ruxsatlar matritsasi (1.3) kelganda kalitga oʻtadi. */
+  roles?: string[];
+  /** Koʻrmaydigan rollar (SPEC 3: Buxgalterga Qoldiqlar yopiq). */
+  hiddenFor?: string[];
 }
 
 export interface NavGroup {
@@ -29,13 +33,13 @@ export interface NavGroup {
 
 /** Menyu tuzilmasi (SPEC 4-boʻlim). Rolga qarab filtrlash 1-bosqichda qoʻshiladi. */
 export const navigation: NavGroup[] = [
-  { items: [{ key: "home", label: "Bosh sahifa", href: "/", icon: LayoutDashboard }] },
+  { items: [{ key: "home", label: "Bosh sahifa", href: "/", icon: LayoutDashboard, roles: ["*"] }] },
   { title: "Savdo", items: [{ key: "orders", label: "Buyurtmalar", href: "/orders", icon: ClipboardList }] },
   {
     title: "Ombor",
     items: [
       { key: "receipts", label: "Kirim", href: "/receipts", icon: PackagePlus },
-      { key: "stock", label: "Qoldiqlar", href: "/stock", icon: Boxes },
+      { key: "stock", label: "Qoldiqlar", href: "/stock", icon: Boxes, hiddenFor: ["ACCOUNTANT"] },
       { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock },
     ],
   },
@@ -56,5 +60,26 @@ export const navigation: NavGroup[] = [
     ],
   },
   { title: "Tahlil", items: [{ key: "reports", label: "Hisobotlar", href: "/reports", icon: ChartColumn }] },
-  { title: "Boshqaruv", items: [{ key: "settings", label: "Sozlamalar", href: "/settings", icon: Settings }] },
+  {
+    title: "Boshqaruv",
+    items: [{ key: "settings", label: "Sozlamalar", href: "/settings", icon: Settings, roles: ["DIRECTOR", "ADMIN"] }],
+  },
 ];
+
+/** Yigʻuvchi, Markirovkachi, Haydovchi — menyuda faqat panel (SPEC 3). Panellar 7–8-bosqichda. */
+export const PANEL_ROLES = ["PICKER", "MARKER", "DRIVER"];
+
+/** Rolga qarab menyu: frontend faqat koʻrinishni boshqaradi, yakuniy ruxsat serverda. */
+export function navigationFor(roleCode: string | undefined): NavGroup[] {
+  if (!roleCode) return [];
+  return navigation
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((i) => {
+        if (i.hiddenFor?.includes(roleCode)) return false;
+        if (i.roles) return i.roles.includes("*") || i.roles.includes(roleCode);
+        return !PANEL_ROLES.includes(roleCode);
+      }),
+    }))
+    .filter((g) => g.items.length > 0);
+}
