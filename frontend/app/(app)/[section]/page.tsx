@@ -2,7 +2,7 @@ import { Construction } from "lucide-react";
 import { notFound } from "next/navigation";
 import { navigation } from "@/components/shell/nav";
 import { TopBar } from "@/components/shell/topbar";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/system-states";
 
 const sections = navigation.flatMap((g) => g.items).filter((i) => i.href !== "/");
 
@@ -22,7 +22,7 @@ export default async function SectionPlaceholder({ params }: PageProps<"/[sectio
         <h1 className="text-page-title">{item.label}</h1>
         <div className="mt-6 rounded-card border border-border bg-surface">
           <EmptyState
-            icon={<Construction size={20} strokeWidth={1.5} aria-hidden />}
+            icon={Construction}
             title="Bu boʻlim hali qurilmoqda"
             description="Ish rejasi va qaysi bosqichda tayyor boʻlishi PLAN.md faylida yozilgan."
           />

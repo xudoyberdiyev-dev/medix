@@ -1,7 +1,7 @@
 # Medix dizayn tizimi (Claude Design'dan nusxa)
 
 Manba: Claude Design → «Medix» dizayn tizimi (artifact slug `0d2b9f01-6b42-4ace-b640-776421274a90`).
-Tokenlar: `tokens.json`. Komponentlar API: `components.d.ts`. Har komponentning batafsil qoidalari asl manbadagi `components/<Nomi>/README.md` da.
+Tokenlar: `tokens.json`. Komponentlar API: `components.d.ts`. Har komponentning batafsil qoidalari: `components/<Nomi>/README.md`, asl uslublar: `components/bundle.css` (01.11.2026 nusxasi). React komponentlari: `frontend/components/ui/`, koʻrgazma: `MEDIX_UI_KIT=1 pnpm build && pnpm start` → `/ui-kit`.
 
 Uslub: Linear, Stripe Dashboard, Dynamics 365 kabi toza va jiddiy — **qimmat koʻrinish intizomdan keladi, bezakdan emas**.
 

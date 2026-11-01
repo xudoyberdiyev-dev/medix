@@ -1,6 +1,6 @@
 import { Construction } from "lucide-react";
 import { TopBar } from "@/components/shell/topbar";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/system-states";
 
 export default function HomePage() {
   return (
@@ -10,7 +10,7 @@ export default function HomePage() {
         <h1 className="text-page-title">Bosh sahifa</h1>
         <div className="mt-6 rounded-card border border-border bg-surface">
           <EmptyState
-            icon={<Construction size={20} strokeWidth={1.5} aria-hidden />}
+            icon={Construction}
             title="Bosh sahifa hali qurilmoqda"
             description="Koʻrsatkichlar kartalari va «Diqqat talab qiladi» bloki 10-bosqichda qoʻshiladi. Hozir tizim poydevori tayyor."
           />
