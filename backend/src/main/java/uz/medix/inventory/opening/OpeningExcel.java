@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,9 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.medix.inventory.ZoneType;
 import uz.medix.inventory.opening.OpeningBalances.Head;
 import uz.medix.inventory.opening.OpeningBalances.ZoneRef;
-import uz.medix.inventory.opening.OpeningModels.ImportResult;
-import uz.medix.inventory.opening.OpeningModels.ImportRowError;
-import uz.medix.inventory.opening.OpeningModels.LineRequest;
+import uz.medix.inventory.opening.OpeningModels.OpeningImportResult;
+import uz.medix.inventory.opening.OpeningModels.OpeningImportError;
+import uz.medix.inventory.opening.OpeningModels.OpeningLineRequest;
 import uz.medix.inventory.opening.OpeningModels.Status;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
@@ -87,7 +86,7 @@ class OpeningExcel {
 
     /** {@code apply=false} — faqat tekshiruv (ko'rib chiqish); {@code true} — xato bo'lmasa qoralama qatorlari almashtiriladi. */
     @Transactional
-    ImportResult importFile(Actor actor, long docId, InputStream in, String fileName, boolean apply) {
+    OpeningImportResult importFile(Actor actor, long docId, InputStream in, String fileName, boolean apply) {
         Head h = openings.lock(docId, actor);
         if (h.status() != Status.DRAFT) {
             throw MedixException.conflict("opening.notDraft", h.status().name());
@@ -105,8 +104,8 @@ class OpeningExcel {
         List<ZoneRef> zones = openings.zones(h.warehouseId());
         Long mainZone = zones.stream().filter(z -> z.type() == ZoneType.MAIN).map(ZoneRef::id).findFirst().orElse(null);
 
-        List<ImportRowError> errors = new ArrayList<>();
-        List<LineRequest> lines = new ArrayList<>();
+        List<OpeningImportError> errors = new ArrayList<>();
+        List<OpeningLineRequest> lines = new ArrayList<>();
         List<Integer> rowNumbers = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
             Map<String, Object> r = rows.get(i);
@@ -140,10 +139,10 @@ class OpeningExcel {
                 boolean bonus = yes(text(r, "Bonus"));
                 String cost = money(text(r, "Tannarx"), bonus);
                 Integer qty = qty(text(r, "Soni"));
-                lines.add(new LineRequest(product, zone, batch, produced, expiry, cost, bonus, qty));
+                lines.add(new OpeningLineRequest(product, zone, batch, produced, expiry, cost, bonus, qty));
                 rowNumbers.add(rowNo);
             } catch (RowError e) {
-                errors.add(new ImportRowError(rowNo, e.getMessage()));
+                errors.add(new OpeningImportError(rowNo, e.getMessage()));
             }
             if (errors.size() >= 200) {
                 break;
@@ -153,7 +152,7 @@ class OpeningExcel {
             // Qatorlararo qoidalar (takror, bir partiya — bitta yaroqlilik, Seyf) — qoralama qoidalari bilan bir xil.
             for (String e : openings.validate(h.warehouseId(), lines)) {
                 int idx = Integer.parseInt(e.substring(0, e.indexOf('-'))) - 1;
-                errors.add(new ImportRowError(rowNumbers.get(idx), e.substring(e.indexOf(':') + 1).strip()));
+                errors.add(new OpeningImportError(rowNumbers.get(idx), e.substring(e.indexOf(':') + 1).strip()));
             }
         }
         if (lines.isEmpty() && errors.isEmpty()) {
@@ -163,7 +162,7 @@ class OpeningExcel {
         if (applied) {
             openings.replaceFromImport(actor, docId, lines, fileName);
         }
-        return new ImportResult(applied, lines.size() + errors.size(), errors);
+        return new OpeningImportResult(applied, lines.size() + errors.size(), errors);
     }
 
     private static Long findZone(List<ZoneRef> zones, String name) {
@@ -210,7 +209,7 @@ class OpeningExcel {
                 return first.withDayOfMonth(first.lengthOfMonth());
             }
             return LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE);
-        } catch (DateTimeParseException | java.time.DateTimeException e) {
+        } catch (java.time.DateTimeException e) {
             throw new RowError(column + " sanasi notoʻgʻri: «" + s + "». Masalan: 01.05.2028.");
         }
     }

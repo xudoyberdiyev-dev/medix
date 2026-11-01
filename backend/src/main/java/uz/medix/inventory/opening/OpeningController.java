@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import uz.medix.inventory.opening.OpeningModels.ImportResult;
+import uz.medix.inventory.opening.OpeningModels.OpeningImportResult;
 import uz.medix.inventory.opening.OpeningModels.OpeningDetail;
 import uz.medix.inventory.opening.OpeningModels.OpeningPage;
 import uz.medix.inventory.opening.OpeningModels.OpeningRequest;
-import uz.medix.inventory.opening.OpeningModels.ReasonRequest;
+import uz.medix.inventory.opening.OpeningModels.OpeningCancelRequest;
 import uz.medix.inventory.opening.OpeningModels.Status;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
@@ -111,7 +111,7 @@ class OpeningController {
     @PreAuthorize("hasAuthority('opening.cancel') or (hasAuthority('opening.create') and hasAuthority('opening.goods'))")
     @Operation(summary = "Bekor qilish",
             description = "Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.")
-    OpeningDetail cancel(@PathVariable long id, @Valid @RequestBody ReasonRequest r, Authentication auth) {
+    OpeningDetail cancel(@PathVariable long id, @Valid @RequestBody OpeningCancelRequest r, Authentication auth) {
         openings.cancel(actor(), id, r.reason(), has(auth, "opening.cancel"));
         return detail(id, auth);
     }
@@ -129,7 +129,7 @@ class OpeningController {
     @PreAuthorize(EDIT)
     @Operation(summary = "Qatorlarni Excel'dan yuklash",
             description = "apply=false — faqat tekshiruv. apply=true — xato bo'lmasa qoralama qatorlari almashtiriladi (hammasi yoki hech narsa).")
-    ImportResult importFile(@PathVariable long id, @RequestPart("file") MultipartFile file,
+    OpeningImportResult importFile(@PathVariable long id, @RequestPart("file") MultipartFile file,
             @RequestParam(defaultValue = "false") boolean apply) throws IOException {
         try (InputStream in = file.getInputStream()) {
             return excel.importFile(actor(), id, in, file.getOriginalFilename(), apply);

@@ -23,8 +23,8 @@ import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockLedger.DocRef;
 import uz.medix.inventory.StockLedger.Move;
 import uz.medix.inventory.ZoneType;
-import uz.medix.inventory.opening.OpeningModels.Line;
-import uz.medix.inventory.opening.OpeningModels.LineRequest;
+import uz.medix.inventory.opening.OpeningModels.OpeningLine;
+import uz.medix.inventory.opening.OpeningModels.OpeningLineRequest;
 import uz.medix.inventory.opening.OpeningModels.OpeningDetail;
 import uz.medix.inventory.opening.OpeningModels.OpeningPage;
 import uz.medix.inventory.opening.OpeningModels.OpeningRequest;
@@ -135,7 +135,7 @@ class OpeningBalances {
         LocalDate cutoff = h.cutoffDate().toLocalDate();
         Money[] totalCost = {Money.ZERO};
         long[] totalQty = {0};
-        List<Line> lines = jdbc.sql("""
+        List<OpeningLine> lines = jdbc.sql("""
                 SELECT l.id, l.line_no, l.product_id, p.code, p.name, l.zone_id, z.name AS zone, z.type, l.batch_number, l.produced_on,
                        l.expiry_date, l.cost, l.bonus, l.qty, l.batch_id
                 FROM opening_balance_line l JOIN product p ON p.id = l.product_id JOIN zone z ON z.id = l.zone_id
@@ -150,13 +150,13 @@ class OpeningBalances {
                     Date produced = rs.getDate("produced_on");
                     long batchId = rs.getLong("batch_id");
                     Long batch = rs.wasNull() ? null : batchId;
-                    return new Line(rs.getLong("id"), rs.getInt("line_no"), rs.getLong("product_id"), rs.getString("code"),
+                    return new OpeningLine(rs.getLong("id"), rs.getInt("line_no"), rs.getLong("product_id"), rs.getString("code"),
                             rs.getString("name"), rs.getLong("zone_id"), rs.getString("zone"), ZoneType.valueOf(rs.getString("type")),
                             rs.getString("batch_number"), produced == null ? null : produced.toLocalDate(), expiry,
                             showCost ? cost.toString() : null, rs.getBoolean("bonus"), qty, batch, expiry.isBefore(cutoff));
                 })
                 .list();
-        int expired = (int) lines.stream().filter(Line::expired).count();
+        int expired = (int) lines.stream().filter(OpeningLine::expired).count();
         return Optional.of(new OpeningDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), cutoff,
                 Status.valueOf(h.status()), Source.valueOf(h.source()), h.fileName(), h.note(), h.createdBy(), h.createdAt().toInstant(),
                 h.postedBy(), instant(h.postedAt()), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), totalQty[0],
@@ -211,7 +211,7 @@ class OpeningBalances {
 
     /** Import natijasida qoralama qatorlari to'liq almashtiriladi (hammasi yoki hech narsa — chaqiruvchi tekshiradi). */
     @Transactional
-    void replaceFromImport(Actor actor, long id, List<LineRequest> lines, String fileName) {
+    void replaceFromImport(Actor actor, long id, List<OpeningLineRequest> lines, String fileName) {
         Head h = lock(id, actor);
         requireStatus(h, Status.DRAFT);
         replaceLines(id, h.warehouseId(), lines, fileName == null ? "" : fileName);
@@ -355,7 +355,7 @@ class OpeningBalances {
         }
     }
 
-    private void replaceLines(long docId, long warehouseId, List<LineRequest> lines, String fileName) {
+    private void replaceLines(long docId, long warehouseId, List<OpeningLineRequest> lines, String fileName) {
         jdbc.sql("DELETE FROM opening_balance_line WHERE opening_id = :id").param("id", docId).update();
         insertLines(docId, warehouseId, lines);
         if (fileName != null) {
@@ -383,13 +383,13 @@ class OpeningBalances {
      * Qatorlarni tekshirish va yozish. Xato bo'lsa — {@link MedixException} (qator raqami bilan); chaqiruvchi tranzaksiyasi
      * qaytariladi. Import ham shu tekshiruvdan o'tadi.
      */
-    private void insertLines(long docId, long warehouseId, List<LineRequest> lines) {
+    private void insertLines(long docId, long warehouseId, List<OpeningLineRequest> lines) {
         List<String> errors = validate(warehouseId, lines);
         if (!errors.isEmpty()) {
             throw MedixException.badRequest("opening.lineInvalid", errors.getFirst());
         }
         int no = 0;
-        for (LineRequest l : lines) {
+        for (OpeningLineRequest l : lines) {
             no++;
             jdbc.sql("""
                     INSERT INTO opening_balance_line (opening_id, line_no, product_id, zone_id, batch_number, produced_on, expiry_date, cost,
@@ -418,19 +418,19 @@ class OpeningBalances {
      *   <li>bir hujjatda (mahsulot, partiya, zona) takrorlanmaydi; bir partiya — bitta yaroqlilik, tannarx va bonus belgisi.</li>
      * </ul>
      */
-    List<String> validate(long warehouseId, List<LineRequest> lines) {
+    List<String> validate(long warehouseId, List<OpeningLineRequest> lines) {
         List<String> errors = new ArrayList<>();
         if (lines.size() > OpeningModels.MAX_LINES) {
             errors.add("qatorlar soni " + OpeningModels.MAX_LINES + " dan oshmasin");
             return errors;
         }
-        Map<Long, ProductRef> products = products(lines.stream().map(LineRequest::productId).filter(Objects::nonNull).distinct().toList());
+        Map<Long, ProductRef> products = products(lines.stream().map(OpeningLineRequest::productId).filter(Objects::nonNull).distinct().toList());
         Map<Long, ZoneRef> zones = new HashMap<>();
         zones(warehouseId).forEach(z -> zones.put(z.id(), z));
         Set<String> seen = new HashSet<>();
         Map<String, String> batchSignature = new HashMap<>();
         int no = 0;
-        for (LineRequest l : lines) {
+        for (OpeningLineRequest l : lines) {
             no++;
             ProductRef p = products.get(l.productId());
             if (p == null) {

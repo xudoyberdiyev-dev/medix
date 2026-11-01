@@ -25,7 +25,7 @@ final class OpeningModels {
 
     enum Source { MANUAL, IMPORT }
 
-    record LineRequest(
+    record OpeningLineRequest(
             @NotNull(message = "{validation.required}") Long productId,
             @NotNull(message = "{validation.required}") Long zoneId,
             @NotBlank(message = "{validation.required}") @Size(max = 60) String batchNumber,
@@ -41,9 +41,9 @@ final class OpeningModels {
             @NotNull(message = "{validation.required}") Long warehouseId,
             @NotNull(message = "{validation.required}") LocalDate cutoffDate,
             @Schema(nullable = true) @Size(max = 500) String note,
-            @NotNull(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid LineRequest> lines) {}
+            @NotNull(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid OpeningLineRequest> lines) {}
 
-    record Line(
+    record OpeningLine(
             long id,
             int lineNo,
             long productId,
@@ -100,11 +100,11 @@ final class OpeningModels {
             long totalQty,
             @Schema(nullable = true, description = "Faqat special.cost ruxsati bilan") String totalCost,
             int expiredLines,
-            List<Line> lines) {}
+            List<OpeningLine> lines) {}
 
-    record ReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
+    record OpeningCancelRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
-    record ImportRowError(int row, String message) {}
+    record OpeningImportError(int row, String message) {}
 
-    record ImportResult(boolean applied, int rows, List<ImportRowError> errors) {}
+    record OpeningImportResult(boolean applied, int rows, List<OpeningImportError> errors) {}
 }
