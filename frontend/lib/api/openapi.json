@@ -15,6 +15,9 @@
     "description" : "Sozlash ustasi",
     "name" : "setup"
   }, {
+    "description" : "Mahsulotlar",
+    "name" : "products"
+  }, {
     "description" : "Audit jurnali",
     "name" : "audit"
   }, {
@@ -45,7 +48,7 @@
   "paths" : {
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_7",
+        "operationId" : "list_9",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -189,7 +192,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_5",
+        "operationId" : "list_6",
         "responses" : {
           "200" : {
             "content" : {
@@ -209,7 +212,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -239,7 +242,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -277,7 +280,7 @@
     },
     "/api/branches/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_4",
+        "operationId" : "activate_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -306,7 +309,7 @@
     "/api/branches/{id}/deactivate" : {
       "post" : {
         "description" : "Oxirgi faol filial nofaol qilinmaydi.",
-        "operationId" : "deactivate_4",
+        "operationId" : "deactivate_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -344,7 +347,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_4",
+        "operationId" : "list_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -373,7 +376,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -411,7 +414,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_3",
+        "operationId" : "update_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -457,7 +460,7 @@
     },
     "/api/dictionaries/{kind}/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_3",
+        "operationId" : "activate_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -494,7 +497,7 @@
     "/api/dictionaries/{kind}/{id}/deactivate" : {
       "post" : {
         "description" : "Yozuv o'chirilmaydi; yangi hujjatlarda tanlanmaydi.",
-        "operationId" : "deactivate_3",
+        "operationId" : "deactivate_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -528,9 +531,31 @@
         "tags" : [ "dictionaries" ]
       }
     },
+    "/api/employee-lookup" : {
+      "get" : {
+        "operationId" : "list_8",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EmployeeOption"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faol xodimlar (tanlash uchun)",
+        "tags" : [ "employees" ]
+      }
+    },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "responses" : {
           "200" : {
             "content" : {
@@ -550,7 +575,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -684,7 +709,7 @@
     },
     "/api/expense-items" : {
       "get" : {
-        "operationId" : "list_2",
+        "operationId" : "list_3",
         "responses" : {
           "200" : {
             "content" : {
@@ -704,7 +729,7 @@
         "tags" : [ "expense-items" ]
       },
       "post" : {
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -771,7 +796,7 @@
     },
     "/api/expense-items/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_2",
+        "operationId" : "activate_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -799,7 +824,7 @@
     },
     "/api/expense-items/{id}/deactivate" : {
       "post" : {
-        "operationId" : "deactivate_2",
+        "operationId" : "deactivate_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -823,6 +848,306 @@
         },
         "summary" : "Nofaol qilish",
         "tags" : [ "expense-items" ]
+      }
+    },
+    "/api/products" : {
+      "get" : {
+        "description" : "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.",
+        "operationId" : "list_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "manufacturerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "categoryId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ACTIVE",
+            "enum" : [ "ACTIVE", "INACTIVE", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "controlled",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "marked",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "NAME",
+            "enum" : [ "CODE", "NAME", "MANUFACTURER" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "desc",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "description" : "0 dan boshlanadi",
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mahsulotlar ro'yxati",
+        "tags" : [ "products" ]
+      },
+      "post" : {
+        "description" : "8 raqamli kod avtomatik beriladi.",
+        "operationId" : "create_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProductRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Mahsulot qo'shish",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/{id}" : {
+      "get" : {
+        "operationId" : "get_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mahsulot kartasi",
+        "tags" : [ "products" ]
+      },
+      "put" : {
+        "operationId" : "update_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProductRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mahsulotni tahrirlash",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/{id}/activate" : {
+      "post" : {
+        "operationId" : "activate_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faollashtirish",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/{id}/code" : {
+      "put" : {
+        "description" : "Tarixga yoziladi; eski kod boshqa mahsulotga berilmaydi.",
+        "operationId" : "changeCode",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ChangeCodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodni o'zgartirish",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/{id}/deactivate" : {
+      "post" : {
+        "operationId" : "deactivate_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeactivateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Nofaol qilish",
+        "tags" : [ "products" ]
       }
     },
     "/api/profile" : {
@@ -896,7 +1221,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "responses" : {
           "200" : {
             "content" : {
@@ -1637,6 +1962,22 @@
         },
         "required" : [ "code", "legalName", "name", "tin" ]
       },
+      "ChangeCodeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[1-9][0-9]{7}$"
+          },
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "code", "reason" ]
+      },
       "ChangePasswordRequest" : {
         "type" : "object",
         "properties" : {
@@ -1651,6 +1992,28 @@
           }
         },
         "required" : [ "currentPassword", "newPassword" ]
+      },
+      "CodeChange" : {
+        "type" : "object",
+        "properties" : {
+          "changedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "changedBy" : {
+            "type" : "string"
+          },
+          "newCode" : {
+            "type" : "string"
+          },
+          "oldCode" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "changedAt", "newCode", "oldCode" ]
       },
       "Company" : {
         "type" : "object",
@@ -1859,6 +2222,25 @@
         },
         "required" : [ "fullName", "id", "login", "mustChangePassword", "roleCode", "roleName", "status" ]
       },
+      "EmployeeOption" : {
+        "type" : "object",
+        "properties" : {
+          "fullName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "roleCode" : {
+            "type" : "string"
+          },
+          "roleName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "fullName", "id", "roleCode", "roleName" ]
+      },
       "EmployeeRequest" : {
         "type" : "object",
         "properties" : {
@@ -2010,6 +2392,242 @@
         },
         "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
       },
+      "PageResult" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "ProductDetail" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "barcodes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "category" : {
+            "$ref" : "#/components/schemas/Ref"
+          },
+          "classifierName" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "codeHistory" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CodeChange"
+            }
+          },
+          "contractName" : {
+            "type" : "string"
+          },
+          "controlled" : {
+            "type" : "boolean"
+          },
+          "country" : {
+            "$ref" : "#/components/schemas/Ref"
+          },
+          "farmId" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "ikpu" : {
+            "type" : "string"
+          },
+          "manufacturer" : {
+            "$ref" : "#/components/schemas/Ref"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "maxQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "prescription" : {
+            "type" : "boolean"
+          },
+          "supplyEmployee" : {
+            "$ref" : "#/components/schemas/Ref"
+          },
+          "unit" : {
+            "$ref" : "#/components/schemas/Ref"
+          },
+          "vatRate" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "barcodes", "code", "codeHistory", "controlled", "id", "marked", "name", "prescription", "unit", "vatRate" ]
+      },
+      "ProductRequest" : {
+        "type" : "object",
+        "properties" : {
+          "barcodes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "pattern" : "^[0-9A-Za-z-]{4,50}$"
+            }
+          },
+          "categoryId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "classifierName" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "contractName" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "controlled" : {
+            "type" : "boolean"
+          },
+          "countryId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "farmId" : {
+            "type" : "string",
+            "maxLength" : 50,
+            "minLength" : 0
+          },
+          "ikpu" : {
+            "type" : "string",
+            "pattern" : "^[0-9]{17}$"
+          },
+          "manufacturerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "maxQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 1000000,
+            "minimum" : 1
+          },
+          "minQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 1000000,
+            "minimum" : 1
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "prescription" : {
+            "type" : "boolean"
+          },
+          "supplyEmployeeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "unitId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "vatRate" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^\\d{1,3}(\\.\\d{1,2})?$"
+          }
+        },
+        "required" : [ "controlled", "marked", "name", "prescription", "unitId", "vatRate" ]
+      },
+      "ProductRow" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "controlled" : {
+            "type" : "boolean"
+          },
+          "country" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "maxQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "prescription" : {
+            "type" : "boolean"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "vatRate" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "code", "controlled", "id", "marked", "name", "prescription", "unit", "vatRate" ]
+      },
       "Profile" : {
         "type" : "object",
         "properties" : {
@@ -2051,6 +2669,19 @@
           }
         },
         "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName" ]
+      },
+      "Ref" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ]
       },
       "RenameRequest" : {
         "type" : "object",

@@ -12,7 +12,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_7"];
+        get: operations["list_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -103,10 +103,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ko'rish mumkin bo'lgan filiallar */
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         /** Filial qo'shish */
-        post: operations["create_5"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -125,7 +125,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_4"];
+        put: operations["update_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -143,7 +143,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Filialni faollashtirish */
-        post: operations["activate_4"];
+        post: operations["activate_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -163,7 +163,7 @@ export interface paths {
          * Filialni nofaol qilish
          * @description Oxirgi faol filial nofaol qilinmaydi.
          */
-        post: operations["deactivate_4"];
+        post: operations["deactivate_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -178,10 +178,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ma'lumotnoma yozuvlari (faollari birinchi) */
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         /** Yozuv qo'shish */
-        post: operations["create_4"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -197,7 +197,7 @@ export interface paths {
         };
         get?: never;
         /** Yozuvni tahrirlash */
-        put: operations["update_3"];
+        put: operations["update_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -215,7 +215,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Faollashtirish */
-        post: operations["activate_3"];
+        post: operations["activate_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -235,7 +235,24 @@ export interface paths {
          * Nofaol qilish
          * @description Yozuv o'chirilmaydi; yangi hujjatlarda tanlanmaydi.
          */
-        post: operations["deactivate_3"];
+        post: operations["deactivate_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employee-lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Faol xodimlar (tanlash uchun) */
+        get: operations["list_8"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -250,10 +267,10 @@ export interface paths {
             cookie?: never;
         };
         /** Xodimlar ro'yxati */
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         /** Xodim qo'shish */
-        post: operations["create_3"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -322,10 +339,10 @@ export interface paths {
             cookie?: never;
         };
         /** Moddalar */
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
         /** Modda qo'shish */
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -359,7 +376,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Faollashtirish */
-        post: operations["activate_2"];
+        post: operations["activate_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -367,6 +384,102 @@ export interface paths {
         trace?: never;
     };
     "/api/expense-items/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nofaol qilish */
+        post: operations["deactivate_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mahsulotlar ro'yxati
+         * @description Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.
+         */
+        get: operations["list_2"];
+        put?: never;
+        /**
+         * Mahsulot qo'shish
+         * @description 8 raqamli kod avtomatik beriladi.
+         */
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mahsulot kartasi */
+        get: operations["get_1"];
+        /** Mahsulotni tahrirlash */
+        put: operations["update_3"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Faollashtirish */
+        post: operations["activate_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/{id}/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Kodni o'zgartirish
+         * @description Tarixga yoziladi; eski kod boshqa mahsulotga berilmaydi.
+         */
+        put: operations["changeCode"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/{id}/deactivate": {
         parameters: {
             query?: never;
             header?: never;
@@ -429,7 +542,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -784,9 +897,21 @@ export interface components {
             phone?: string;
             tin: string;
         };
+        ChangeCodeRequest: {
+            code: string;
+            reason: string;
+        };
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
+        };
+        CodeChange: {
+            /** Format: date-time */
+            changedAt: string;
+            changedBy?: string;
+            newCode: string;
+            oldCode: string;
+            reason?: string;
         };
         Company: {
             /** Format: int64 */
@@ -849,6 +974,13 @@ export interface components {
             roleName: string;
             status: string;
         };
+        EmployeeOption: {
+            fullName: string;
+            /** Format: int64 */
+            id: number;
+            roleCode: string;
+            roleName: string;
+        };
         EmployeeRequest: {
             /** Format: int64 */
             branchId?: number;
@@ -900,6 +1032,86 @@ export interface components {
             permissions: string[];
             role: components["schemas"]["RoleRef"];
         };
+        PageResult: {
+            items: components["schemas"]["ProductRow"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ProductDetail: {
+            active: boolean;
+            barcodes: string[];
+            category?: components["schemas"]["Ref"];
+            classifierName?: string;
+            code: string;
+            codeHistory: components["schemas"]["CodeChange"][];
+            contractName?: string;
+            controlled: boolean;
+            country?: components["schemas"]["Ref"];
+            farmId?: string;
+            /** Format: int64 */
+            id: number;
+            ikpu?: string;
+            manufacturer?: components["schemas"]["Ref"];
+            marked: boolean;
+            /** Format: int32 */
+            maxQty?: number;
+            /** Format: int32 */
+            minQty?: number;
+            name: string;
+            prescription: boolean;
+            supplyEmployee?: components["schemas"]["Ref"];
+            unit: components["schemas"]["Ref"];
+            vatRate: string;
+        };
+        ProductRequest: {
+            barcodes?: string[];
+            /** Format: int64 */
+            categoryId?: number;
+            classifierName?: string;
+            contractName?: string;
+            controlled: boolean;
+            /** Format: int64 */
+            countryId?: number;
+            farmId?: string;
+            ikpu?: string;
+            /** Format: int64 */
+            manufacturerId?: number;
+            marked: boolean;
+            /** Format: int32 */
+            maxQty?: number;
+            /** Format: int32 */
+            minQty?: number;
+            name: string;
+            prescription: boolean;
+            /** Format: int64 */
+            supplyEmployeeId?: number;
+            /** Format: int64 */
+            unitId: number;
+            vatRate: string;
+        };
+        ProductRow: {
+            active: boolean;
+            category?: string;
+            code: string;
+            controlled: boolean;
+            country?: string;
+            /** Format: int64 */
+            id: number;
+            manufacturer?: string;
+            marked: boolean;
+            /** Format: int32 */
+            maxQty?: number;
+            /** Format: int32 */
+            minQty?: number;
+            name: string;
+            prescription: boolean;
+            unit: string;
+            vatRate: string;
+        };
         Profile: {
             branchName?: string;
             fullName: string;
@@ -915,6 +1127,11 @@ export interface components {
             position?: string;
             roleCode: string;
             roleName: string;
+        };
+        Ref: {
+            /** Format: int64 */
+            id: number;
+            name: string;
         };
         RenameRequest: {
             name: string;
@@ -1025,7 +1242,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_7: {
+    list_9: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -1136,7 +1353,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1156,7 +1373,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1180,7 +1397,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1206,7 +1423,7 @@ export interface operations {
             };
         };
     };
-    activate_4: {
+    activate_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1228,7 +1445,7 @@ export interface operations {
             };
         };
     };
-    deactivate_4: {
+    deactivate_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1254,7 +1471,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1276,7 +1493,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1302,7 +1519,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1329,7 +1546,7 @@ export interface operations {
             };
         };
     };
-    activate_3: {
+    activate_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1352,7 +1569,7 @@ export interface operations {
             };
         };
     };
-    deactivate_3: {
+    deactivate_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1375,7 +1592,27 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmployeeOption"][];
+                };
+            };
+        };
+    };
+    list_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1395,7 +1632,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1493,7 +1730,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1513,7 +1750,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1563,7 +1800,7 @@ export interface operations {
             };
         };
     };
-    activate_2: {
+    activate_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1585,7 +1822,7 @@ export interface operations {
             };
         };
     };
-    deactivate_2: {
+    deactivate_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1603,6 +1840,184 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpenseItem"];
+                };
+            };
+        };
+    };
+    list_2: {
+        parameters: {
+            query?: {
+                q?: string;
+                manufacturerId?: number;
+                categoryId?: number;
+                status?: "ACTIVE" | "INACTIVE" | "ALL";
+                controlled?: boolean;
+                marked?: boolean;
+                sort?: "CODE" | "NAME" | "MANUFACTURER";
+                desc?: boolean;
+                /** @description 0 dan boshlanadi */
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResult"];
+                };
+            };
+        };
+    };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetail"];
+                };
+            };
+        };
+    };
+    get_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetail"];
+                };
+            };
+        };
+    };
+    update_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetail"];
+                };
+            };
+        };
+    };
+    activate_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetail"];
+                };
+            };
+        };
+    };
+    changeCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetail"];
+                };
+            };
+        };
+    };
+    deactivate_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetail"];
                 };
             };
         };
@@ -1673,7 +2088,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
