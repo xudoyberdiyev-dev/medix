@@ -197,9 +197,10 @@ class OrderMarking {
                 JOIN product_barcode b ON b.product_id = p.id
                 WHERE l.order_id = :o AND p.marked""")
                 .param("o", id)
-                .query((rs, n) -> Gs1Code.gtin14(rs.getString("barcode")).filter(code.gtin()::equals)
-                        .map(g -> new Target(rs.getLong("id"), rs.getLong("product_id"), rs.getInt("qty"), kindOf(rs.getString("short_name"))))
-                        .orElse(null))
+                .query((rs, n) -> {
+                    Target row = new Target(rs.getLong("id"), rs.getLong("product_id"), rs.getInt("qty"), kindOf(rs.getString("short_name")));
+                    return Gs1Code.gtin14(rs.getString("barcode")).filter(code.gtin()::equals).map(g -> row).orElse(null);
+                })
                 .list()) {
             if (candidate != null) {
                 t = candidate;
