@@ -29,6 +29,7 @@ import {
   useSaveDraft,
   useSubmit,
   type DraftLine,
+  type MarkupBase,
   type PriceChangeDetail,
 } from "./api";
 import { StatusBadge } from "./prices-page";
@@ -427,7 +428,7 @@ function MarkupDialog({
           branchId,
           productIds,
           priceTypeId,
-          base: base === "CURRENT_SAME_TYPE" ? "CURRENT_SAME_TYPE" : "BASE_PRICE",
+          base: (base ?? "BASE_PRICE") as MarkupBase,
           percent: pct,
           rounding: Number(rounding ?? 0),
         });
@@ -465,8 +466,9 @@ function MarkupDialog({
           options={[
             { value: "BASE_PRICE", label: "Bazaviy narx (Narx)" },
             { value: "CURRENT_SAME_TYPE", label: "Shu turdagi amaldagi narx" },
+            { value: "AVG_RECEIPT", label: "Oʻrtacha kirim narxi", sub: "Qoldiqdagi partiyalar" },
+            { value: "LAST_RECEIPT", label: "Oxirgi kirim narxi" },
           ]}
-          hint="Oʻrtacha va oxirgi kirim narxi — kirimlar bosqichidan keyin"
         />
         <TextField label="Ustama" value={percent} onChange={setPercent} suffix="%" inputMode="decimal" hint="Manfiy — chegirma" />
         <Select

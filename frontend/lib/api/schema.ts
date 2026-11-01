@@ -2005,6 +2005,7 @@ export interface components {
             password: string;
         };
         MarkupLine: {
+            /** @description Kirim narxi asosida — faqat special.cost bilan */
             basePrice?: string;
             newPrice?: string;
             oldPrice?: string;
@@ -2015,7 +2016,7 @@ export interface components {
         };
         MarkupRequest: {
             /** @enum {string} */
-            base: "CURRENT_SAME_TYPE" | "BASE_PRICE";
+            base: "CURRENT_SAME_TYPE" | "BASE_PRICE" | "AVG_RECEIPT" | "LAST_RECEIPT";
             /** Format: int64 */
             branchId: number;
             percent: number;

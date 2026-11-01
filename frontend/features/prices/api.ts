@@ -10,6 +10,7 @@ export type PriceChangeDetail = components["schemas"]["PriceChangeDetail"];
 export type PriceChangeSummary = components["schemas"]["PriceChangeSummary"];
 export type PriceChangeStatus = PriceChangeDetail["status"];
 export type MarkupLine = components["schemas"]["MarkupLine"];
+export type MarkupBase = components["schemas"]["MarkupRequest"]["base"];
 
 /** Narx oʻrnatish va tannarxdan past narx tasdigʻi ruxsatlari (1.3). */
 export const PRICE_CREATE = "prices.create";
@@ -112,7 +113,7 @@ export async function computeMarkup(body: {
   branchId: number;
   productIds: number[];
   priceTypeId: number;
-  base: "CURRENT_SAME_TYPE" | "BASE_PRICE";
+  base: MarkupBase;
   percent: number;
   rounding: number;
 }): Promise<MarkupLine[]> {
