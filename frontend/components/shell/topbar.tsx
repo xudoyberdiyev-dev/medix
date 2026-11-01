@@ -1,6 +1,7 @@
-import { Bell, Building2, ChevronDown, Search } from "lucide-react";
+import { Bell, Search } from "lucide-react";
+import { BranchSwitcher } from "./branch-switcher";
 
-/** Yuqori panel (design/system: TopBar). Maʼlumotlar 1-bosqichda sessiyadan olinadi. */
+/** Yuqori panel (design/system: TopBar): qidiruv, filial tanlagichi, bildirishnomalar. */
 export function TopBar({ title }: { title: string }) {
   return (
     <header className="flex h-topbar items-center gap-4 border-b border-border bg-surface px-6">
@@ -14,14 +15,7 @@ export function TopBar({ title }: { title: string }) {
           <span>Qidirish</span>
           <kbd className="ml-auto rounded-sm border border-border px-1.5 text-caption text-text-secondary">Ctrl K</kbd>
         </button>
-        <button
-          type="button"
-          className="flex h-control-md items-center gap-2 rounded-control border border-border px-3 hover:bg-background"
-        >
-          <Building2 size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-          <span>Toshkent</span>
-          <ChevronDown size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-        </button>
+        <BranchSwitcher />
         <button
           type="button"
           aria-label="Bildirishnomalar"
