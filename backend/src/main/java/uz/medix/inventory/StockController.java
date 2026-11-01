@@ -3,6 +3,8 @@ package uz.medix.inventory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.sql.Date;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -10,6 +12,12 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -34,6 +42,7 @@ import uz.medix.shared.text.SearchText;
 class StockController {
 
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
+    static final int MAX_EXPORT_ROWS = 50_000;
 
     record StockRow(
             long productId,
@@ -79,6 +88,87 @@ class StockController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             Authentication auth) {
+        return query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, Math.max(page, 0), Math.clamp(size, 1, 200), auth);
+    }
+
+    /** Qoldiqlar .xlsx — jadvaldagi filtrlar bilan, ko'pi bilan {@value #MAX_EXPORT_ROWS} qator. Tannarx faqat special.cost bilan. */
+    @GetMapping("/export")
+    @PreAuthorize("hasAnyAuthority('stock.view', 'expiry.view')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Excel'ga eksport (.xlsx)")
+    void export(
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) Long warehouseId,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "false") boolean sellableOnly,
+            @RequestParam(required = false) Integer expiringWithinDays,
+            Authentication auth,
+            HttpServletResponse response) throws IOException {
+        StockPage data = query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, 0, MAX_EXPORT_ROWS, auth);
+        boolean showCost = auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition",
+                "attachment; filename=\"" + (expiringWithinDays != null ? "muddat-nazorati.xlsx" : "qoldiqlar.xlsx") + "\"");
+        try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
+            Sheet sheet = wb.createSheet(expiringWithinDays != null ? "Muddat nazorati" : "Qoldiqlar");
+            CellStyle header = wb.createCellStyle();
+            Font font = wb.createFont();
+            font.setBold(true);
+            header.setFont(font);
+            CellStyle date = wb.createCellStyle();
+            date.setDataFormat(wb.createDataFormat().getFormat("dd.mm.yyyy"));
+            CellStyle money = wb.createCellStyle();
+            money.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.RIGHT);
+            List<String> titles = new java.util.ArrayList<>(List.of("Kod", "Mahsulot", "Ishlab chiqaruvchi", "Partiya", "Bonus", "Yaroqlilik",
+                    "Qolgan kun", "Ombor", "Zona", "Sotuvga ochiq", "Miqdor"));
+            if (showCost) {
+                titles.addAll(List.of("Tannarx", "Summa (tannarx)"));
+            }
+            Row h = sheet.createRow(0);
+            for (int i = 0; i < titles.size(); i++) {
+                Cell c = h.createCell(i);
+                c.setCellValue(titles.get(i));
+                c.setCellStyle(header);
+            }
+            int r = 1;
+            for (StockRow s : data.items()) {
+                Row row = sheet.createRow(r++);
+                int i = 0;
+                row.createCell(i++).setCellValue(s.productCode());
+                row.createCell(i++).setCellValue(s.productName());
+                row.createCell(i++).setCellValue(s.manufacturer() == null ? "" : s.manufacturer());
+                row.createCell(i++).setCellValue(s.batchNumber());
+                row.createCell(i++).setCellValue(s.bonus() ? "ha" : "yoʻq");
+                Cell exp = row.createCell(i++);
+                exp.setCellValue(s.expiryDate());
+                exp.setCellStyle(date);
+                row.createCell(i++).setCellValue(s.daysLeft());
+                row.createCell(i++).setCellValue(s.warehouse());
+                row.createCell(i++).setCellValue(s.zone());
+                row.createCell(i++).setCellValue(s.sellable() ? "ha" : "yoʻq");
+                row.createCell(i++).setCellValue(s.qty());
+                if (showCost && s.cost() != null) {
+                    // Pul matn sifatida (1.250.000,00): float/double ishlatilmaydi (CLAUDE.md), hisob BigDecimal da.
+                    Money cost = Money.of(s.cost());
+                    Cell c1 = row.createCell(i++);
+                    c1.setCellValue(cost.format());
+                    c1.setCellStyle(money);
+                    Cell c2 = row.createCell(i);
+                    c2.setCellValue(cost.times(s.qty()).format());
+                    c2.setCellStyle(money);
+                }
+            }
+            int[] widths = {11, 45, 24, 16, 8, 12, 10, 20, 16, 12, 10, 16, 18};
+            for (int i = 0; i < titles.size(); i++) {
+                sheet.setColumnWidth(i, widths[i] * 256);
+            }
+            sheet.createFreezePane(0, 1);
+            wb.write(response.getOutputStream());
+        }
+    }
+
+    private StockPage query(Long branchId, Long warehouseId, String q, boolean sellableOnly, Integer expiringWithinDays, int safePage,
+            int safeSize, Authentication auth) {
         Actor actor = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
         boolean showCost = auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
         LocalDate today = LocalDate.now(clock.withZone(TASHKENT));
@@ -123,8 +213,6 @@ class StockController {
                 .params(params)
                 .query(Totals.class)
                 .single();
-        int safeSize = Math.clamp(size, 1, 200);
-        int safePage = Math.max(page, 0);
         List<StockRow> items = jdbc.sql("""
                 SELECT p.id AS product_id, p.code, p.name, m.name AS manufacturer, b.id AS batch_id, b.number, b.expiry_date,
                        w.id AS warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone, z.type, z.sellable, s.qty, b.cost, b.bonus

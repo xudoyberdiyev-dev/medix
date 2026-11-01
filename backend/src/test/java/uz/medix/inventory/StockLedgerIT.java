@@ -238,7 +238,28 @@ class StockLedgerIT {
         mvc.perform(get("/api/stock").param("expiringWithinDays", "30").param("q", "qoldiq api sinov").cookie(keeper))
                 .andExpect(jsonPath("$.total").value(0));
 
+        // Eksport: filtr va filial doirasi bir xil; tannarx ustuni faqat ruxsat bilan
+        byte[] keeperFile = mvc.perform(get("/api/stock/export").param("q", "qoldiq api sinov").cookie(keeper))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var wb = org.apache.poi.ss.usermodel.WorkbookFactory.create(new java.io.ByteArrayInputStream(keeperFile))) {
+            var sheet = wb.getSheetAt(0);
+            assertThat(sheet.getLastRowNum()).isEqualTo(1);
+            assertThat(sheet.getRow(0).getLastCellNum()).isEqualTo((short) 11);
+            assertThat(sheet.getRow(1).getCell(10).getNumericCellValue()).isEqualTo(4);
+        }
+        byte[] adminFile = mvc.perform(get("/api/stock/export").param("q", "qoldiq api sinov").param("branchId", String.valueOf(p.branchId()))
+                        .cookie(admin))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var wb = org.apache.poi.ss.usermodel.WorkbookFactory.create(new java.io.ByteArrayInputStream(adminFile))) {
+            var row = wb.getSheetAt(0).getRow(1);
+            assertThat(row.getCell(11).getStringCellValue()).isEqualTo("12.500,50");
+            assertThat(row.getCell(12).getStringCellValue()).isEqualTo("50.002,00");
+        }
+
         Cookie accountant = loginAs("ACCOUNTANT", null);
         mvc.perform(get("/api/stock").cookie(accountant)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/stock/export").cookie(accountant)).andExpect(status().isForbidden());
     }
 }

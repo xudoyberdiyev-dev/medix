@@ -1,7 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Boxes, CalendarClock, CircleAlert, Clock, Lock, ShoppingCart } from "lucide-react";
+import { Boxes, CalendarClock, CircleAlert, Clock, Download, Lock, ShoppingCart } from "lucide-react";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { KpiCard } from "@/components/ui/card";
@@ -42,6 +42,17 @@ function ExpiryBadge({ row }: { row: StockRow }) {
       </Badge>
     );
   return <span className="tabular-nums">{date}</span>;
+}
+
+/** Eksport havolasi — jadvaldagi filtrlar bilan (server ham filial doirasi va tannarx ruxsatini tekshiradi). */
+export function stockExportHref(f: { q: string; warehouseId: string | null; sellableOnly: boolean; expiringWithinDays?: number }): string {
+  const p = new URLSearchParams();
+  if (f.q) p.set("q", f.q);
+  if (f.warehouseId) p.set("warehouseId", f.warehouseId);
+  if (f.sellableOnly) p.set("sellableOnly", "true");
+  if (f.expiringWithinDays !== undefined) p.set("expiringWithinDays", String(f.expiringWithinDays));
+  const qs = p.toString();
+  return `/api/stock/export${qs ? `?${qs}` : ""}`;
 }
 
 /** Qoldiqlar (mode="stock") va Muddat nazorati (mode="expiry") — bitta jadval, turli filtr. */
@@ -125,6 +136,12 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
   ];
 
   const filtered = Boolean(q) || Boolean(warehouseId) || sellableOnly;
+  const exportHref = stockExportHref({
+    q,
+    warehouseId,
+    sellableOnly,
+    expiringWithinDays: mode === "expiry" ? Number(days ?? 90) : undefined,
+  });
   return (
     <>
       <h1 className="mb-4 text-page-title">{mode === "stock" ? "Qoldiqlar" : "Muddat nazorati"}</h1>
@@ -194,6 +211,12 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
                 </div>
               ) : null}
               <Checkbox label="Faqat sotuvga ochiq zonalar" checked={sellableOnly} onChange={(v) => (setSellableOnly(v), setPage(1))} />
+              {stock.data && stock.data.total > 0 ? (
+                <a href={exportHref} download className="ml-auto inline-flex items-center gap-1 text-primary hover:underline">
+                  <Download size={16} strokeWidth={1.5} aria-hidden />
+                  Excelʼga yuklab olish
+                </a>
+              ) : null}
             </div>
           }
           emptyState={
