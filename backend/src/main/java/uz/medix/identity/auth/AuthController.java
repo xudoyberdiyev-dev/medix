@@ -1,6 +1,7 @@
 package uz.medix.identity.auth;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,7 +40,7 @@ class AuthController {
 
     @GetMapping("/csrf")
     @Operation(summary = "CSRF tokenini olish", description = "XSRF-TOKEN cookie'sini o'rnatadi. Ilova ochilganda bir marta chaqiriladi.")
-    CsrfResponse csrf(CsrfToken token) {
+    CsrfResponse csrf(@Parameter(hidden = true) CsrfToken token) {
         return new CsrfResponse(token.getHeaderName(), token.getToken());
     }
 
@@ -53,7 +54,7 @@ class AuthController {
 
     @GetMapping("/me")
     @Operation(summary = "Joriy foydalanuvchi")
-    MeResponse me(@AuthenticationPrincipal MedixPrincipal principal) {
+    MeResponse me(@Parameter(hidden = true) @AuthenticationPrincipal MedixPrincipal principal) {
         return MeResponse.of(principal);
     }
 
@@ -61,7 +62,7 @@ class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Parolni almashtirish", description = "Birinchi kirishda majburiy.")
     void changePassword(
-            @AuthenticationPrincipal MedixPrincipal principal,
+            @Parameter(hidden = true) @AuthenticationPrincipal MedixPrincipal principal,
             @Valid @RequestBody ChangePasswordRequest body,
             HttpServletRequest request,
             HttpServletResponse response) {
