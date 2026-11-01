@@ -114,3 +114,34 @@ test("Operator: vaqtinchalik parol bilan kirish va almashtirish; Sozlamalar yopi
   await page.goto("/settings/employees");
   await expect(page.getByText("Xodimlarni Direktor va Bosh administrator boshqaradi.")).toBeVisible();
 });
+
+test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  // Mahsulot
+  await page.goto("/products");
+  await page.getByRole("button", { name: "Mahsulot qoʻshish" }).click();
+  await field(page, "Nomi").fill("Paracetamol E2E 500 mg");
+  await choose(page, "Birlik", /^Dona/);
+  await page.getByRole("button", { name: "Mahsulotni saqlash" }).click();
+  await expect(page.getByText("Mahsulot qoʻshildi")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.goto("/products?q=парацетамол");
+  await expect(page.getByRole("cell", { name: "Paracetamol E2E 500 mg" })).toBeVisible();
+
+  // Narx: NO → o'tkazish → amaldagi narx
+  await page.goto("/prices");
+  await page.getByRole("button", { name: "Narx oʻrnatish" }).click();
+  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("E2E");
+  await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
+  await choose(page, "Narx turi", /^Narx$/);
+  await field(page, "Yangi narx").first().fill("2500");
+  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
+  await page.getByRole("button", { name: "Oʻtkazish" }).click();
+  await expect(page.getByText("Narxlar kuchga kirdi")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.reload();
+  await expect(page.getByRole("cell", { name: "2.500,00" })).toBeVisible();
+});
