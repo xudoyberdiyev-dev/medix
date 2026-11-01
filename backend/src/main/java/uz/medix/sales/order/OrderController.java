@@ -185,6 +185,22 @@ class OrderController {
         return detail(id);
     }
 
+    @PostMapping("/{id}/check")
+    @PreAuthorize("hasAuthority('orders.check')")
+    @Operation(summary = "Hisobdan o'tkazish", description = "Barcha qatorlar «Tekshirildi» va joylar soni → «Hujjatlashtirilmoqda».")
+    OrderDetail check(@PathVariable long id, @Valid @RequestBody OrderModels.CheckRequest r) {
+        picking.check(actor(), id, r.checkedLines(), r.places());
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/return-to-pick")
+    @PreAuthorize("hasAuthority('orders.check')")
+    @Operation(summary = "Yig'ishga qaytarish", description = "Sabab bilan; tovar olingan joyiga qaytadi, zahira qayta qo'yiladi.")
+    OrderDetail returnToPick(@PathVariable long id, @Valid @RequestBody OrderReasonRequest r) {
+        picking.returnToPick(actor(), id, r.reason());
+        return detail(id);
+    }
+
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyAuthority('orders.cancel', 'orders.manage', 'orders.cancelPick')")
     @Operation(summary = "Bekor qilish", description = "Sabab majburiy. «Yo'lda» va undan keyin bekor qilinmaydi.")

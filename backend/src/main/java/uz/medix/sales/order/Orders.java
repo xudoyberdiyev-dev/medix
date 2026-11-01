@@ -338,13 +338,13 @@ class Orders {
                 String status, String approvalLevel, String approvalReasons, BigDecimal total, String createdBy, long createdById,
                 Timestamp createdAt, Timestamp submittedAt, String decidedBy, Timestamp decidedAt, String decisionReason, String cancelledBy,
                 Timestamp cancelledAt, String cancelReason, Integer pickMinutes, Integer markMinutes, String picker, Timestamp pickStartedAt,
-                Timestamp pickFinishedAt, boolean fefoDeviation) {}
+                Timestamp pickFinishedAt, boolean fefoDeviation, Integer places) {}
         Optional<HeadRow> head = jdbc.sql("""
                 SELECT o.id, o.number, o.branch_id, o.warehouse_id, w.name AS warehouse, o.customer_id, c.name AS customer, c.tin AS customer_tin,
                        o.order_date, o.delivery_type, o.delivery_date, o.address, o.payment_type, o.note, o.status, o.approval_level,
                        o.approval_reasons, o.total, cb.full_name AS created_by, o.created_by AS created_by_id, o.created_at, o.submitted_at,
                        db.full_name AS decided_by, o.decided_at, o.decision_reason, xb.full_name AS cancelled_by, o.cancelled_at, o.cancel_reason,
-                       o.pick_minutes, o.mark_minutes, pk.full_name AS picker, o.pick_started_at, o.pick_finished_at, o.fefo_deviation
+                       o.pick_minutes, o.mark_minutes, pk.full_name AS picker, o.pick_started_at, o.pick_finished_at, o.fefo_deviation, o.places
                 FROM sales_order o
                 JOIN warehouse w ON w.id = o.warehouse_id
                 JOIN counterparty c ON c.id = o.customer_id
@@ -403,7 +403,7 @@ class Orders {
                 h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, priceChanged, ev.credit(), issues,
                 h.createdBy(), h.createdById(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
                 h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
-                instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), lines));
+                instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), lines));
     }
 
     private List<LineRow> lineRows(long orderId) {
@@ -713,16 +713,10 @@ class Orders {
             throw MedixException.conflict("order.cannotCancel", h.status().name());
         }
         reservations.release(DOC_TYPE, id);
-        // Yig'ilgan tovar saqlash zonasiga qaytadi (SPEC 5.2): Jo'natish → olingan zona.
-        List<StockLedger.Move> back = jdbc.sql("""
-                SELECT from_zone_id, to_zone_id, batch_id, sum(qty) AS qty FROM sales_order_pick WHERE order_id = :id
-                GROUP BY from_zone_id, to_zone_id, batch_id ORDER BY from_zone_id, batch_id""")
-                .param("id", id)
-                .query((rs, n) -> List.of(StockLedger.Move.out(rs.getLong("to_zone_id"), rs.getLong("batch_id"), rs.getInt("qty")),
-                        StockLedger.Move.in(rs.getLong("from_zone_id"), rs.getLong("batch_id"), rs.getInt("qty"))))
-                .list()
-                .stream()
-                .flatMap(List::stream)
+        // Yig'ilgan tovar saqlash zonasiga qaytadi (SPEC 5.2): Jo'natish → olingan zona (sof yig'ilgan miqdor).
+        List<StockLedger.Move> back = netPicked(id).stream()
+                .flatMap(n -> java.util.stream.Stream.of(StockLedger.Move.out(n.shippingZone(), n.batchId(), n.qty()),
+                        StockLedger.Move.in(n.storageZone(), n.batchId(), n.qty())))
                 .toList();
         stock.post(new StockLedger.DocRef(DOC_TYPE, id, h.number()), back);
         jdbc.sql("""
@@ -736,7 +730,33 @@ class Orders {
                 .change(Map.of("status", h.status().name()), Map.of("status", OrderStatus.CANCELLED.name())).withReason(reason.strip()));
     }
 
+    /** Sof yig'ilgan (yig'ilgan − qaytarilgan): saqlash zonasi, jo'natish zonasi, partiya, miqdor. */
+    record NetPick(long storageZone, long shippingZone, long batchId, int qty) {}
+
+    List<NetPick> netPicked(long orderId) {
+        return jdbc.sql("""
+                SELECT storage_zone, shipping_zone, batch_id, sum(qty) AS qty FROM (
+                    SELECT from_zone_id AS storage_zone, to_zone_id AS shipping_zone, batch_id, qty FROM sales_order_pick WHERE order_id = :id
+                    UNION ALL
+                    SELECT to_zone_id, from_zone_id, batch_id, -qty FROM sales_order_pick_return WHERE order_id = :id) t
+                GROUP BY storage_zone, shipping_zone, batch_id HAVING sum(qty) > 0 ORDER BY storage_zone, batch_id""")
+                .param("id", orderId)
+                .query(NetPick.class)
+                .list();
+    }
+
     /** FEFO zahira (SPEC 6-7): «Navbatda»ga o'tishda — sotuvga ochiq zona va mijozning minimal yaroqlilik talabi bilan. */
+    void reserveAgain(long orderId) {
+        Head h = jdbc.sql("SELECT id, number, branch_id, warehouse_id, customer_id, status, created_by FROM sales_order WHERE id = :id")
+                .param("id", orderId)
+                .query((rs, n) -> new Head(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getLong("warehouse_id"),
+                        rs.getLong("customer_id"), OrderStatus.valueOf(rs.getString("status")), rs.getLong("created_by")))
+                .single();
+        List<LineRow> rows = lineRows(orderId);
+        reserve(h, rows, evaluate(h.branchId(), h.warehouseId(), h.customerId(),
+                rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList()));
+    }
+
     private void reserve(Head h, List<LineRow> rows, Evaluation ev) {
         Terms t = terms(h.customerId(), h.branchId());
         LocalDate minExpiry = today().plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());

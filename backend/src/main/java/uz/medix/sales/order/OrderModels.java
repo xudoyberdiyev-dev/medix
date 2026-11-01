@@ -150,6 +150,7 @@ final class OrderModels {
             @Schema(nullable = true) Instant pickStartedAt,
             @Schema(nullable = true) Instant pickFinishedAt,
             @Schema(description = "Yig'uvchi FEFO taklif qilmagan partiyani olgan") boolean fefoDeviation,
+            @Schema(nullable = true, description = "Joylar soni (quti)") Integer places,
             List<OrderLine> lines) {}
 
     /** Oldingi buyurtmalar (takrorlash uchun). */
@@ -195,4 +196,8 @@ final class OrderModels {
             @Schema(nullable = true) Instant pickStartedAt,
             @Schema(nullable = true, description = "Berilgan vaqt tugash payti") Instant deadline,
             Instant queuedAt) {}
+
+    record CheckRequest(
+            @NotNull(message = "{validation.required}") @Size(min = 1, max = MAX_LINES) List<Long> checkedLines,
+            @NotNull(message = "{validation.required}") @Min(1) @Max(10_000) Integer places) {}
 }

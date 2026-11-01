@@ -518,7 +518,23 @@ class OrderIT {
                         .param("z", p.main()).query(Long.class).single())
                 .isEqualTo(7);
 
-        // Hisobdan o'tkazish bosqichida bekor qilish — tovar olingan zonaga qaytadi
+        // Hisobdan o'tkazish: barcha qatorlar va joylar soni
+        send(post("/api/orders/" + o2 + "/check"), keeper, "{\"checkedLines\":[],\"places\":2}").andExpect(status().isBadRequest());
+        send(post("/api/orders/" + o2 + "/check"), picker, "{\"checkedLines\":[" + line2 + "],\"places\":2}").andExpect(status().isForbidden());
+        send(post("/api/orders/" + o2 + "/check"), keeper, "{\"checkedLines\":[" + line2 + "],\"places\":2}")
+                .andExpect(jsonPath("$.status").value("DOCUMENTING"))
+                .andExpect(jsonPath("$.places").value(2));
+
+        // Yig'ishga qaytarish: tovar joyiga, zahira qayta; qayta yig'ilgach bekor qilinsa — sof miqdor qaytadi
+        send(post("/api/orders/" + o1 + "/return-to-pick"), keeper, "{\"reason\":\"Partiya aralashgan\"}")
+                .andExpect(jsonPath("$.status").value("QUEUED"))
+                .andExpect(jsonPath("$.lines[0].reserved[0].qty").value(4))
+                .andExpect(jsonPath("$.pickMinutes").value(15));
+        assertThat(qtyIn(shipping, prod)).isEqualTo(3);
+        assertThat(qtyIn(p.main(), prod)).isEqualTo(17);
+        send(post("/api/orders/" + o1 + "/pick/start"), picker, "").andExpect(status().isOk());
+        send(post("/api/orders/" + o1 + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("CHECKING"));
+        assertThat(qtyIn(shipping, prod)).isEqualTo(7);
         send(post("/api/orders/" + o1 + "/cancel"), keeper, "{\"reason\":\"Mijoz voz kechdi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
         assertThat(qtyIn(shipping, prod)).isEqualTo(3);
         assertThat(qtyIn(p.main(), prod)).isEqualTo(17);

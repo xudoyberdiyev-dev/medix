@@ -37,8 +37,10 @@ class OrderPicking {
     private final StockLedger stock;
     private final StockReservations reservations;
     private final AuditLog audit;
+    private final Orders orders;
 
-    OrderPicking(JdbcClient jdbc, StockLedger stock, StockReservations reservations, AuditLog audit) {
+    OrderPicking(JdbcClient jdbc, StockLedger stock, StockReservations reservations, AuditLog audit, Orders orders) {
+        this.orders = orders;
         this.jdbc = jdbc;
         this.stock = stock;
         this.reservations = reservations;
@@ -252,6 +254,65 @@ class OrderPicking {
         audit.record(AuditEntry.of("order.pickFinish", "sales_order", id)
                 .change(Map.of("status", OrderStatus.PICKING.name()), Map.of("status", next.name(), "fefoDeviation", deviation)));
         return next;
+    }
+
+    /** Hisobdan o'tkazish (SPEC 5.2 №6): barcha qatorlar «Tekshirildi» va joylar soni → «Hujjatlashtirilmoqda». */
+    @Transactional
+    void check(Actor actor, long id, List<Long> checkedLines, int places) {
+        Head h = lock(id, actor);
+        if (h.status() != OrderStatus.CHECKING) {
+            throw MedixException.conflict("order.badStatus", h.status().name());
+        }
+        Set<Long> all = new HashSet<>(jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :id").param("id", id).query(Long.class).list());
+        if (!new HashSet<>(checkedLines).equals(all)) {
+            throw MedixException.badRequest("order.checkAllLines");
+        }
+        jdbc.sql("""
+                UPDATE sales_order SET status = 'DOCUMENTING', places = :p, checked_by = :by, checked_at = now(), status_changed_at = now(),
+                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("p", places)
+                .param("by", actor.employeeId())
+                .param("id", id)
+                .update();
+        audit.record(AuditEntry.of("order.check", "sales_order", id).change(Map.of("status", OrderStatus.CHECKING.name()),
+                Map.of("status", OrderStatus.DOCUMENTING.name(), "places", places)));
+    }
+
+    /**
+     * «Yig'ishga qaytarish» (sabab bilan): tovar Jo'natish zonasidan olingan joyiga qaytadi, FEFO zahira qayta qo'yiladi,
+     * buyurtma «Navbatda»ga (berilgan vaqt saqlanadi). V1: butun buyurtma; qator bo'yicha qaytarish — keyin.
+     */
+    @Transactional
+    void returnToPick(Actor actor, long id, String reason) {
+        Head h = lock(id, actor);
+        if (h.status() != OrderStatus.CHECKING && h.status() != OrderStatus.MARKING) {
+            throw MedixException.conflict("order.badStatus", h.status().name());
+        }
+        List<Move> moves = new ArrayList<>();
+        for (Orders.NetPick n : orders.netPicked(id)) {
+            moves.add(Move.out(n.shippingZone(), n.batchId(), n.qty()));
+            moves.add(Move.in(n.storageZone(), n.batchId(), n.qty()));
+            jdbc.sql("""
+                    INSERT INTO sales_order_pick_return (order_id, batch_id, from_zone_id, to_zone_id, qty, reason, created_by)
+                    VALUES (:o, :b, :f, :t, :q, :r, :by)""")
+                    .param("o", id)
+                    .param("b", n.batchId())
+                    .param("f", n.shippingZone())
+                    .param("t", n.storageZone())
+                    .param("q", n.qty())
+                    .param("r", reason.strip())
+                    .param("by", actor.employeeId())
+                    .update();
+        }
+        stock.post(new DocRef(Orders.DOC_TYPE, id, h.number()), moves);
+        jdbc.sql("""
+                UPDATE sales_order SET status = 'QUEUED', picker_id = NULL, pick_started_at = NULL, pick_finished_at = NULL, fefo_deviation = false,
+                       status_changed_at = now(), updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("id", id)
+                .update();
+        orders.reserveAgain(id);
+        audit.record(AuditEntry.of("order.returnToPick", "sales_order", id)
+                .change(Map.of("status", h.status().name()), Map.of("status", OrderStatus.QUEUED.name())).withReason(reason.strip()));
     }
 
     private static Instant instant(Timestamp t) {
