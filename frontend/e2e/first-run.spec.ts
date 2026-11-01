@@ -173,3 +173,59 @@ test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await expect(row).toContainText("120");
   await expect(row).toContainText("1.800,50");
 });
+
+test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  // Yetkazib beruvchi
+  await page.goto("/suppliers");
+  await page.getByRole("button", { name: "Yetkazib beruvchi qoʻshish" }).click();
+  await field(page, "STIR / JShShIR").fill("309876543");
+  await field(page, "Nomi").fill("Pharm Supply E2E");
+  await page.getByRole("button", { name: "Kartani saqlash" }).click();
+  await expect(page.getByText("Kontragent qoʻshildi")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // Qoralama
+  await page.goto("/receipts");
+  await page.getByRole("button", { name: "Kirim qoʻshish" }).click();
+  await choose(page, "Ombor", /Markaziy ombor/);
+  await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("Pharm");
+  await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
+  await field(page, "Yuk xati raqami").fill("YX-501");
+  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("E2E");
+  await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
+  await choose(page, "Zona", /Asosiy saqlash/);
+  await field(page, "Partiya").fill("KR-E2E");
+  await field(page, "Yaroqlilik").fill("30.06.2029");
+  await field(page, "Soni").fill("50");
+  await field(page, "Aksiya bonusi").fill("5");
+  await field(page, "Faktura narxi (1 dona)").fill("2.000");
+  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+
+  // Qabul: 48 ta keldi — «Kam keldi»
+  await page.getByRole("button", { name: "Qabul qilish" }).click();
+  const accept = page.getByRole("dialog", { name: "Tovarni qabul qilish" });
+  await accept.getByLabel(/^Yaroqli\s*\*?$/).fill("48");
+  await accept.getByRole("button", { name: "Qabulni tasdiqlash" }).click();
+  await expect(page.getByText(/· tovar Qabul zonasida$/)).toBeVisible();
+
+  // Oʻtkazish: haqiqiy soni boʻyicha
+  await page.getByRole("button", { name: "Oʻtkazish" }).click();
+  const postDialog = page.getByRole("dialog", { name: "Kirimni oʻtkazish" });
+  await postDialog.getByText("Haqiqiy soni boʻyicha").click();
+  await postDialog.getByRole("button", { name: "Oʻtkazish" }).click();
+  await expect(page.getByText("Kirim oʻtkazildi")).toBeVisible();
+  await expect(page.getByText("qarz 96.000,00 soʻm")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/stock");
+  await field(page, "Qidirish").fill("Paracetamol E2E");
+  await expect(page.getByRole("row", { name: /KR-E2E-B/ })).toContainText("5");
+  await expect(page.getByRole("row", { name: /KR-E2E(?!-B)/ }).first()).toContainText("48");
+});
