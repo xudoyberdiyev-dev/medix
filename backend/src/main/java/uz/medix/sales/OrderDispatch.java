@@ -26,4 +26,13 @@ public interface OrderDispatch {
 
     /** Reys bekor qilinganda: «Yuklanmoqda» → «Hujjatlashtirilmoqda» (NK raqami saqlanadi). */
     void backToDocumenting(Actor actor, long orderId, String reason);
+
+    /**
+     * Sotuv va hisob-faktura (SPEC 5.2 №9): «Yuklanmoqda» → «Yo'lda». Tovar Jo'natish zonasidan chiqadi, mijoz qarzi oshadi.
+     * Qaytaradi: SV raqami. tripId — «O'zi olib ketadi» uchun null.
+     */
+    String ship(Actor actor, long orderId, Long tripId);
+
+    /** «O'zi olib ketadi» buyurtmasi (yetkazish turi bo'yicha tekshiruv uchun). */
+    boolean isPickup(long orderId);
 }

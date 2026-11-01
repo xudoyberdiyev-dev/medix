@@ -782,4 +782,64 @@ class OrderIT {
         assertThat(statusOf(o3)).isEqualTo("LOADING");
         assertThatThrownBy(() -> jdbc.sql("DELETE FROM trip WHERE id = :t").param("t", t1).update()).hasMessageContaining("oʻchirilmaydi");
     }
+
+    @Test
+    void driverLoadsStartsTripAndSaleWritesStockDebtAndInvoice() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie driverSession = loginAs("DRIVER", p.branchId());
+        long driver = jdbc.sql("SELECT max(id) FROM employee WHERE full_name = 'Sinov DRIVER' AND branch_id = :b").param("b", p.branchId())
+                .query(Long.class).single();
+        long prod = product(p, "BY Sotuv", "1000", 20, null, null);
+        long shipping = zoneOf(p.warehouseId(), "SHIPPING");
+        long o1 = documenting(p, c, prod, 2, 2, "DELIVERY", operator, keeper, picker);
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model) VALUES (:b, :p, 'Labo') RETURNING id")
+                .param("b", p.branchId()).param("p", "10" + ThreadLocalRandom.current().nextInt(100_000, 999_999)).query(Long.class).single();
+        MvcResult t = send(post("/api/trips"), keeper, "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today()
+                + "\",\"orderIds\":[" + o1 + "]}").andExpect(status().isCreated()).andReturn();
+        long trip = id(t);
+        long stop = ((Number) JsonPath.read(t.getResponse().getContentAsString(), "$.stops[0].id")).longValue();
+
+        mvc.perform(get("/api/trips/mine").cookie(driverSession)).andExpect(jsonPath("$.id").value(trip));
+        mvc.perform(get("/api/trips/mine").cookie(keeper)).andExpect(status().isForbidden());
+        send(post("/api/trips/" + trip + "/start"), driverSession, "").andExpect(jsonPath("$.code").value("trip.notLoaded"));
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/load"), driverSession, "{\"places\":3}")
+                .andExpect(jsonPath("$.code").value("trip.placesMismatch"));
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/load"), driverSession, "{\"places\":2}")
+                .andExpect(jsonPath("$.stops[0].loadedAt").isNotEmpty());
+        assertThat(qtyIn(shipping, prod)).isEqualTo(2);
+
+        // Reysni boshlash: sotuv + HF, qoldiq Jo'natish zonasidan chiqadi, mijoz qarzi oshadi
+        send(post("/api/trips/" + trip + "/start"), driverSession, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sales[0]", matchesPattern("SV-[A-Z]{3}-\\d{6}")));
+        assertThat(statusOf(o1)).isEqualTo("IN_TRANSIT");
+        assertThat(qtyIn(shipping, prod)).isZero();
+        assertThat(qtyIn(p.main(), prod)).isEqualTo(18);
+        var sale = jdbc.sql("SELECT invoice_number, total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sale WHERE order_id = :o")
+                .param("o", o1).query().singleRow();
+        assertThat((String) sale.get("invoice_number")).matches("HF-[A-Z]{3}-\\d{6}");
+        assertThat(sale.get("total")).isEqualTo("2000.00");
+        assertThat(sale.get("vat")).isEqualTo("214.29");
+        assertThat(sale.get("cost")).isEqualTo("200.00");
+        assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
+                        .query(String.class).single())
+                .isEqualTo("2000.00");
+        assertThat(jdbc.sql("SELECT status FROM trip WHERE id = :t").param("t", trip).query(String.class).single()).isEqualTo("IN_TRANSIT");
+        send(post("/api/orders/" + o1 + "/cancel"), keeper, "{\"reason\":\"Kech\"}").andExpect(status().isConflict());
+        assertThatThrownBy(() -> jdbc.sql("UPDATE sale SET total = 1 WHERE order_id = :o").param("o", o1).update()).hasMessageContaining("oʻzgarmaydi");
+
+        // O'zi olib ketadi: nakladnoy → mijoz olib chiqdi
+        long o2 = documenting(p, c, prod, 1, 1, "PICKUP", operator, keeper, picker);
+        send(post("/api/trips/pickup/" + o2 + "/handover"), keeper, "").andExpect(status().isConflict());
+        send(post("/api/trips/pickup"), keeper, "{\"orderId\":" + o2 + "}").andExpect(status().isOk());
+        send(post("/api/trips/pickup/" + o2 + "/handover"), keeper, "").andExpect(jsonPath("$.sale", matchesPattern("SV-[A-Z]{3}-\\d{6}")));
+        assertThat(statusOf(o2)).isEqualTo("IN_TRANSIT");
+        assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
+                        .query(String.class).single())
+                .isEqualTo("3000.00");
+    }
 }

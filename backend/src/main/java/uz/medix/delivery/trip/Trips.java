@@ -210,6 +210,90 @@ class Trips {
         audit.record(AuditEntry.of("trip.cancel", "trip", id).withReason(reason.strip()));
     }
 
+    // ===== Haydovchi (SPEC 5.2 №8–9) =====
+
+    @Transactional(readOnly = true)
+    java.util.Optional<TripDetail> mine(Actor actor) {
+        return jdbc.sql("""
+                SELECT id FROM trip WHERE driver_id = :d AND status IN ('PLANNED', 'IN_TRANSIT', 'RETURN_WAIT') ORDER BY id LIMIT 1""")
+                .param("d", actor.employeeId())
+                .query(Long.class)
+                .optional()
+                .map(id -> find(actor, id));
+    }
+
+    private record Own(long id, String number, TripStatus status) {}
+
+    private Own lockOwn(Actor actor, long id) {
+        Own t = jdbc.sql("SELECT id, number, status, driver_id, branch_id FROM trip WHERE id = :id FOR UPDATE")
+                .param("id", id)
+                .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id")) && rs.getLong("driver_id") == actor.employeeId()
+                        ? new Own(rs.getLong("id"), rs.getString("number"), TripStatus.valueOf(rs.getString("status")))
+                        : null)
+                .list()
+                .stream()
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseThrow(() -> MedixException.forbidden("trip.notDriver"));
+        if (t.status() != TripStatus.PLANNED) {
+            throw MedixException.conflict("trip.notPlanned");
+        }
+        return t;
+    }
+
+    /** «Qabul qildim»: haydovchi buyurtmani joylar soni bo'yicha oladi (son hujjatdagiga teng bo'lishi shart). */
+    @Transactional
+    void load(Actor actor, long tripId, long stopId, int places) {
+        lockOwn(actor, tripId);
+        Integer expected = jdbc.sql("SELECT places FROM trip_stop WHERE id = :s AND trip_id = :t AND active")
+                .param("s", stopId)
+                .param("t", tripId)
+                .query(Integer.class)
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (expected != places) {
+            throw MedixException.conflict("trip.placesMismatch", expected);
+        }
+        jdbc.sql("UPDATE trip_stop SET loaded_by = :by, loaded_at = now() WHERE id = :s AND loaded_at IS NULL")
+                .param("by", actor.employeeId())
+                .param("s", stopId)
+                .update();
+        audit.record(AuditEntry.of("trip.load", "trip", tripId).change(null, Map.of("stop", stopId, "places", places)));
+    }
+
+    /** «Yuklab bo'lindi — reysni boshlash»: barcha buyurtmalar qabul qilingan; har biriga sotuv va HF, «Yo'lda». */
+    @Transactional
+    List<String> start(Actor actor, long tripId) {
+        Own t = lockOwn(actor, tripId);
+        record S(long orderId, boolean loaded) {}
+        List<S> stops = jdbc.sql("SELECT order_id, loaded_at IS NOT NULL AS loaded FROM trip_stop WHERE trip_id = :t AND active ORDER BY seq")
+                .param("t", tripId)
+                .query((rs, n) -> new S(rs.getLong("order_id"), rs.getBoolean("loaded")))
+                .list();
+        long notLoaded = stops.stream().filter(x -> !x.loaded()).count();
+        if (notLoaded > 0) {
+            throw MedixException.conflict("trip.notLoaded", notLoaded);
+        }
+        List<String> sales = new ArrayList<>();
+        for (S x : stops) {
+            sales.add(dispatch.ship(actor, x.orderId(), tripId));
+        }
+        jdbc.sql("UPDATE trip SET status = 'IN_TRANSIT', started_at = now(), updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("id", tripId)
+                .update();
+        audit.record(AuditEntry.of("trip.start", "trip", tripId).change(Map.of("status", "PLANNED"), Map.of("status", "IN_TRANSIT", "sales", sales)));
+        return sales;
+    }
+
+    /** «O'zi olib ketadi»: mijoz tovarni olib chiqdi — sotuv va HF, «Yo'lda» (SPEC 5.2). */
+    @Transactional
+    String handover(Actor actor, long orderId) {
+        if (!dispatch.isPickup(orderId)) {
+            throw MedixException.badRequest("trip.notPickup");
+        }
+        return dispatch.ship(actor, orderId, null);
+    }
+
     private static final String SUMMARY = """
             SELECT t.id, t.number, t.branch_id, t.trip_date, t.status, v.plate_number || ' · ' || v.model AS vehicle, v.capacity_boxes,
                    d.full_name AS driver, t.places, t.created_at, t.note, t.vehicle_id, t.driver_id, cb.full_name AS created_by, t.started_at,

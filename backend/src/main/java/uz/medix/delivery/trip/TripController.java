@@ -36,6 +36,12 @@ class TripController {
 
     record PickupResult(String waybillNumber) {}
 
+    record LoadRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(1) Integer places) {}
+
+    record StartResult(List<String> sales) {}
+
+    record HandoverResult(String sale) {}
+
     private final Trips trips;
     private final CurrentActor currentActor;
 
@@ -97,5 +103,35 @@ class TripController {
     TripDetail cancel(@PathVariable long id, @Valid @RequestBody ReasonRequest r) {
         trips.cancel(actor(), id, r.reason());
         return trips.find(actor(), id);
+    }
+
+    @GetMapping("/mine")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "Reysim (haydovchi)", description = "Faol reys bo'lmasa — 204.")
+    org.springframework.http.ResponseEntity<TripDetail> mine() {
+        return trips.mine(actor()).map(org.springframework.http.ResponseEntity::ok)
+                .orElseGet(() -> org.springframework.http.ResponseEntity.noContent().build());
+    }
+
+    @PostMapping("/{id}/stops/{stopId}/load")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "«Qabul qildim»", description = "Haydovchi buyurtmani joylar soni bo'yicha qabul qiladi.")
+    TripDetail load(@PathVariable long id, @PathVariable long stopId, @Valid @RequestBody LoadRequest r) {
+        trips.load(actor(), id, stopId, r.places());
+        return trips.find(actor(), id);
+    }
+
+    @PostMapping("/{id}/start")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "«Yuklab bo'lindi — reysni boshlash»", description = "Har buyurtmaga sotuv (SV) va hisob-faktura (HF); «Yo'lda».")
+    StartResult start(@PathVariable long id) {
+        return new StartResult(trips.start(actor(), id));
+    }
+
+    @PostMapping("/pickup/{orderId}/handover")
+    @PreAuthorize("hasAuthority('shipments.ship')")
+    @Operation(summary = "«O'zi olib ketadi» — mijoz olib chiqdi", description = "Sotuv va hisob-faktura; «Yo'lda».")
+    HandoverResult handover(@PathVariable long orderId) {
+        return new HandoverResult(trips.handover(actor(), orderId));
     }
 }

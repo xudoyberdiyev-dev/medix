@@ -23,8 +23,10 @@ class OrderDispatchService implements OrderDispatch {
     private final JdbcClient jdbc;
     private final DocumentSequenceService numbers;
     private final AuditLog audit;
+    private final OrderSales sales;
 
-    OrderDispatchService(JdbcClient jdbc, DocumentSequenceService numbers, AuditLog audit) {
+    OrderDispatchService(JdbcClient jdbc, DocumentSequenceService numbers, AuditLog audit, OrderSales sales) {
+        this.sales = sales;
         this.jdbc = jdbc;
         this.numbers = numbers;
         this.audit = audit;
@@ -111,5 +113,16 @@ class OrderDispatchService implements OrderDispatch {
         }
         audit.record(AuditEntry.of("order.backToDocumenting", "sales_order", orderId)
                 .change(Map.of("status", "LOADING"), Map.of("status", "DOCUMENTING")).withReason(reason));
+    }
+
+    @Override
+    public String ship(Actor actor, long orderId, Long tripId) {
+        return sales.post(actor, orderId, tripId);
+    }
+
+    @Override
+    public boolean isPickup(long orderId) {
+        return jdbc.sql("SELECT delivery_type = 'PICKUP' FROM sales_order WHERE id = :id").param("id", orderId).query(Boolean.class).optional()
+                .orElse(false);
     }
 }
