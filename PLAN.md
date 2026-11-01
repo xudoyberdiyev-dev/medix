@@ -4,9 +4,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 01.11.2026
-- **Bosqich:** 0 — tugadi (PR #1 develop → main egasi ko'rib chiqishini kutmoqda); 1 — Identifikatsiya ~55%
-- **Oxirgi sessiya:** 01.11.2026 07:00 — 0.9, 0.10, 1.1, 1.2, 1.5 (asosi), 1.6, 1.7 (login, parol, usta).
-- **Keyingi vazifa:** 1.7 qolgani (Xodimlar, Filiallar, Omborlar sahifalari, Audit jurnali, rolga qarab menyu), 1.5 PIN, 1.8 e2e. 1.3 — T12-topshirish.md kutilmoqda.
+- **Bosqich:** 0 — tugadi (PR #1 develop → main egasi ko'rib chiqishini kutmoqda; PR develop'dagi 1-bosqich ishlarini ham o'z ichiga oladi); 1 — Identifikatsiya ~65%
+- **Oxirgi sessiya:** 01.11.2026 07:00–08:15 — 0.9, 0.10, 1.1, 1.2, 1.4/1.5 (asosi), 1.6, 1.7 (login, parol, usta, xodimlar, audit, menyu). CI yashil.
+- **Keyingi vazifa:** 1.7 qolgani (Filiallar va Omborlar sahifalari, Profil), 1.5 PIN tasdig'i, 1.8 e2e (CI'da backend + frontend + Playwright). 1.3 — T12-topshirish.md kutilmoqda.
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
@@ -41,7 +41,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [~] 1.4 Filial doirasi: `Actor.canAccessBranch` (Direktor/Admin/Buxgalter — barcha filiallar, hozircha rol bo'yicha; 1.3 dan keyin ruxsat kalitiga). Har modul o'z so'rovlarida qo'llaydi
 - [~] 1.5 Audit jurnali servisi (`shared.audit.AuditLog`, kirish/parol/usta amallari yoziladi) — PIN tasdig'i asosi qoldi
 - [x] 1.6 Sozlash ustasi API (faqat CEO, birinchi ishga tushirish): kompaniya → filiallar → omborlar va zonalar → rollar → xodimlar → yakun
-- [~] 1.7 Frontend: ✅ login (ulangan), parol almashtirish, sozlash ustasi (Stepper), proxy + AuthGate. Qoldi: Xodimlar, Rollar va ruxsatlar matritsasi, Filiallar, Omborlar va zonalar, Audit jurnali, Profil; rolga qarab menyu
+- [~] 1.7 Frontend: ✅ login (ulangan), parol almashtirish, sozlash ustasi (Stepper), proxy + AuthGate, Sozlamalar → Xodimlar (qo'shish, bloklash, vaqtinchalik parol), Audit jurnali, rolga qarab menyu (SPEC 3 bo'yicha, 1.3 dan keyin ruxsat kalitlariga). Qoldi: Rollar va ruxsatlar matritsasi (1.3 ga bog'liq), Filiallar va Omborlar sahifalari (usta tugagandan keyin tahrirlash), Profil
 - [ ] 1.8 e2e (Playwright): login → usta → xodim yaratish
 
 ## 2. Katalog
@@ -101,7 +101,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Zonaning «sotuvga ochiq»ligi bazada turidan hisoblanadi (generated column), qo'lda o'zgartirilmaydi. V1 da bitta kompaniya (unique index).
 - 01.11.2026 — Omborlar/zonalar `inventory` moduliga tegishli (`uz.medix.inventory.Warehouses` ochiq API); usta identity'dan chaqiradi.
 - 01.11.2026 — OpenAPI: record maydonlari standart bo'yicha majburiy, ixtiyoriylari `@Schema(nullable = true)`.
+- 01.11.2026 — Xodimni bloklash yoki vaqtinchalik parol berish uning ochiq sessiyalarini darhol tugatadi. Boshqa filial xodimiga murojaat — 404 (mavjudligi oshkor qilinmaydi).
+- 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
-- 01.11.2026 07:00– — 0.9, 0.10 (0-bosqich tugadi, PR #1), 1.1 sxema, 1.2 xavfsizlik, 1.5 audit asosi, 1.6 usta API, 1.7 login/parol/usta UI.
+- 01.11.2026 07:00–08:15 — 0.9, 0.10 (0-bosqich tugadi, PR #1), 1.1 sxema, 1.2 xavfsizlik, 1.4 filial doirasi, 1.5 audit, 1.6 usta API, 1.7 login/parol/usta/xodimlar/audit UI. CI yashil.
 - 01.11.2026 00:30–00:45 — 0-bosqich poydevori qurildi va push qilindi; CI (develop) yashil. Rejali sessiyalar: 07:00, 12:00, 18:00, 23:00 (har biri boshlanganda xabar, oxirida hisobot).
