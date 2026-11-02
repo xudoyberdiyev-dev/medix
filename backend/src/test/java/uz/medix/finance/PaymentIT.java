@@ -280,7 +280,7 @@ class PaymentIT {
                     .param("i", kr[0]).param("n", "KR-TST-" + kr[0]).update();
         }
         String body = "{\"branchId\":" + b + ",\"supplierId\":" + s + ",\"accountId\":" + k + ",\"amount\":\"%s\"}";
-        send(post("/api/payments/supplier"), cashier, body.formatted("5000").replace("" + s, "" + c))
+        send(post("/api/payments/supplier"), cashier, body.formatted("5000").replace("\"supplierId\":" + s, "\"supplierId\":" + c))
                 .andExpect(jsonPath("$.code").value("payment.supplierUnknown"));
         long y1 = id(send(post("/api/payments/supplier"), cashier, body.formatted("5000"))
                 .andExpect(status().isCreated())
