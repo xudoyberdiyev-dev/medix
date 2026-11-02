@@ -149,4 +149,15 @@ class OrderDispatchService implements OrderDispatch {
         return new Money(jdbc.sql("SELECT total FROM sales_order WHERE id = :id").param("id", orderId).query(java.math.BigDecimal.class).single())
                 .toString();
     }
+
+    @Override
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED)
+    public List<SaleLine> saleLines(long orderId) {
+        return sales.saleLines(orderId);
+    }
+
+    @Override
+    public PartialResult partiallyDelivered(Actor actor, long orderId, Long tripId, String reason, java.util.Map<Long, Integer> returned) {
+        return sales.partialReturn(actor, orderId, tripId, reason, returned);
+    }
 }

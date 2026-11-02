@@ -32,6 +32,7 @@ import uz.medix.shared.security.Actor;
 class OrderSales {
 
     static final String DOC_TYPE = "SV";
+    static final String RETURN_DOC_TYPE = "QM";
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
 
     private final JdbcClient jdbc;
@@ -40,8 +41,11 @@ class OrderSales {
     private final DocumentSequenceService numbers;
     private final AuditLog audit;
     private final Clock clock;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
-    OrderSales(JdbcClient jdbc, StockLedger stock, PartyLedger parties, DocumentSequenceService numbers, AuditLog audit, Clock clock) {
+    OrderSales(JdbcClient jdbc, StockLedger stock, PartyLedger parties, DocumentSequenceService numbers, AuditLog audit, Clock clock,
+            org.springframework.context.ApplicationEventPublisher events) {
+        this.events = events;
         this.jdbc = jdbc;
         this.stock = stock;
         this.parties = parties;
@@ -244,14 +248,18 @@ class OrderSales {
     /** Qaytgan tovarni sanab qabul qilish → Karantin (SPEC 5.4). Kam kelsa — muammo yoziladi. */
     @Transactional
     void acceptReturn(Actor actor, long returnId, int receivedQty) {
-        record R(long orderId, long saleId, String saleNumber, long batchId, long warehouseId, int qty, long branchId, String orderNumber) {}
+        record R(long orderId, long saleId, String saleNumber, long batchId, long warehouseId, int qty, long branchId, String orderNumber,
+                Long qmId, String qmNumber) {}
         R r = jdbc.sql("""
-                SELECT r.order_id, r.sale_id, s.number AS sale_number, r.batch_id, r.warehouse_id, r.qty, o.branch_id, o.number AS order_number
+                SELECT r.order_id, r.sale_id, s.number AS sale_number, r.batch_id, r.warehouse_id, r.qty, o.branch_id, o.number AS order_number,
+                       r.return_id, q.number AS qm_number
                 FROM sales_return_pending r JOIN sale s ON s.id = r.sale_id JOIN sales_order o ON o.id = r.order_id
+                LEFT JOIN sales_return q ON q.id = r.return_id
                 WHERE r.id = :id AND r.received_at IS NULL FOR UPDATE OF r""")
                 .param("id", returnId)
                 .query((rs, n) -> new R(rs.getLong("order_id"), rs.getLong("sale_id"), rs.getString("sale_number"), rs.getLong("batch_id"),
-                        rs.getLong("warehouse_id"), rs.getInt("qty"), rs.getLong("branch_id"), rs.getString("order_number")))
+                        rs.getLong("warehouse_id"), rs.getInt("qty"), rs.getLong("branch_id"), rs.getString("order_number"),
+                        (Long) rs.getObject("return_id"), rs.getString("qm_number")))
                 .optional()
                 .filter(x -> actor.canAccessBranch(x.branchId()))
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
@@ -264,7 +272,10 @@ class OrderSales {
                 .optional()
                 .orElseThrow(() -> MedixException.conflict("receipt.zoneMissing", "Karantin"));
         if (receivedQty > 0) {
-            stock.post(new StockLedger.DocRef(DOC_TYPE, r.saleId(), r.saleNumber()), List.of(StockLedger.Move.in(quarantine, r.batchId(), receivedQty)));
+            StockLedger.DocRef doc = r.qmId() != null
+                    ? new StockLedger.DocRef(RETURN_DOC_TYPE, r.qmId(), r.qmNumber())
+                    : new StockLedger.DocRef(DOC_TYPE, r.saleId(), r.saleNumber());
+            stock.post(doc, List.of(StockLedger.Move.in(quarantine, r.batchId(), receivedQty)));
         }
         jdbc.sql("UPDATE sales_return_pending SET received_qty = :q, received_by = :by, received_at = now() WHERE id = :id")
                 .param("q", receivedQty)
@@ -273,12 +284,154 @@ class OrderSales {
                 .update();
         if (receivedQty < r.qty()) {
             jdbc.sql("""
-                    INSERT INTO sales_order_issue (order_id, stage, reason, note, created_by) VALUES (:o, 'UNDELIVERED', 'SHORTAGE', :n, :by)""")
+                    INSERT INTO sales_order_issue (order_id, stage, reason, note, created_by) VALUES (:o, :st, 'SHORTAGE', :n, :by)""")
+                    .param("st", r.qmId() != null ? "DELIVERED" : "UNDELIVERED")
                     .param("o", r.orderId())
                     .param("n", "Qaytgan tovar kam: kutilgan " + r.qty() + ", keldi " + receivedQty)
                     .param("by", actor.employeeId())
                     .update();
         }
         audit.record(AuditEntry.of("order.returnAccept", "sales_order", r.orderId()).change(null, Map.of("expected", r.qty(), "received", receivedQty)));
+        events.publishEvent(new uz.medix.sales.SalesReturnAccepted(r.orderId()));
+    }
+
+    // ===== Qisman yetkazish — QM (SPEC 5.4) =====
+
+    @Transactional(readOnly = true)
+    List<uz.medix.sales.OrderDispatch.SaleLine> saleLines(long orderId) {
+        return jdbc.sql("""
+                SELECT sl.id, p.name AS product, b.number AS batch, sl.qty, sl.price, sl.amount, p.marked
+                FROM sale_line sl JOIN sale s ON s.id = sl.sale_id JOIN product p ON p.id = sl.product_id JOIN batch b ON b.id = sl.batch_id
+                JOIN sales_order_line l ON l.id = sl.order_line_id
+                WHERE s.order_id = :o AND s.status = 'POSTED' ORDER BY l.line_no, sl.id""")
+                .param("o", orderId)
+                .query((rs, n) -> new uz.medix.sales.OrderDispatch.SaleLine(rs.getLong("id"), rs.getString("product"), rs.getString("batch"),
+                        rs.getInt("qty"), new Money(rs.getBigDecimal("price")).toString(), new Money(rs.getBigDecimal("amount")).toString(),
+                        rs.getBoolean("marked")))
+                .list();
+    }
+
+    /**
+     * Qisman yetkazish: qaytgan qism asl sotuv narxida QM (QQS — qaytgan summadan, HALF_UP), mijoz qarzi QM summasiga kamayadi,
+     * tovar «Qaytmoqda», buyurtma «Yetkazildi». Chaqiruvchi tranzaksiyasida. Hammasi qaytsa — «Yetkazilmadi» ishlatiladi.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    uz.medix.sales.OrderDispatch.PartialResult partialReturn(Actor actor, long orderId, Long tripId, String reason, Map<Long, Integer> returned) {
+        record S(long id, String number, long branchId, String branchCode, long customerId, long warehouseId, BigDecimal total, String orderStatus,
+                String orderNumber) {}
+        S sale = jdbc.sql("""
+                SELECT s.id, s.number, s.branch_id, b.code, s.customer_id, s.warehouse_id, s.total, o.status AS order_status, o.number AS order_number
+                FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN branch b ON b.id = s.branch_id
+                WHERE s.order_id = :o AND s.status = 'POSTED' FOR UPDATE OF s, o""")
+                .param("o", orderId)
+                .query((rs, n) -> new S(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getString("code"),
+                        rs.getLong("customer_id"), rs.getLong("warehouse_id"), rs.getBigDecimal("total"), rs.getString("order_status"),
+                        rs.getString("order_number")))
+                .optional()
+                .orElseThrow(() -> MedixException.conflict("trip.orderNotInTransit"));
+        if (!actor.canAccessBranch(sale.branchId()) || !"IN_TRANSIT".equals(sale.orderStatus())) {
+            throw MedixException.conflict("trip.orderNotInTransit");
+        }
+        record L(long id, long productId, long batchId, int qty, BigDecimal price, BigDecimal vatRate, BigDecimal cost) {}
+        Map<Long, L> lines = new java.util.LinkedHashMap<>();
+        jdbc.sql("SELECT id, product_id, batch_id, qty, price, vat_rate, cost FROM sale_line WHERE sale_id = :s ORDER BY id")
+                .param("s", sale.id())
+                .query((rs, n) -> new L(rs.getLong("id"), rs.getLong("product_id"), rs.getLong("batch_id"), rs.getInt("qty"),
+                        rs.getBigDecimal("price"), rs.getBigDecimal("vat_rate"), rs.getBigDecimal("cost")))
+                .list()
+                .forEach(l -> lines.put(l.id(), l));
+        int soldQty = lines.values().stream().mapToInt(L::qty).sum();
+        int backQty = 0;
+        for (Map.Entry<Long, Integer> e : returned.entrySet()) {
+            L l = lines.get(e.getKey());
+            Integer q = e.getValue();
+            if (l == null || q == null || q < 0 || q > l.qty()) {
+                throw MedixException.badRequest("partial.qtyInvalid");
+            }
+            backQty += q;
+        }
+        if (backQty == 0) {
+            throw MedixException.badRequest("partial.nothingReturned");
+        }
+        if (backQty == soldQty) {
+            throw MedixException.badRequest("partial.allReturned");
+        }
+        String why = reason.strip();
+        LocalDate today = LocalDate.now(clock.withZone(TASHKENT));
+        String number = numbers.next(DocumentPrefix.QM, sale.branchCode()).toString();
+        record C(L l, int qty, Money amount, Money vat) {}
+        List<C> calcs = new ArrayList<>();
+        Money total = Money.ZERO;
+        Money vatTotal = Money.ZERO;
+        Money costTotal = Money.ZERO;
+        for (L l : lines.values()) {
+            int q = returned.getOrDefault(l.id(), 0);
+            if (q == 0) {
+                continue;
+            }
+            Money amount = new Money(l.price()).times(q);
+            Money vat = new Money(amount.amount().multiply(l.vatRate())
+                    .divide(BigDecimal.valueOf(100).add(l.vatRate()), Money.SCALE, RoundingMode.HALF_UP));
+            calcs.add(new C(l, q, amount, vat));
+            total = total.plus(amount);
+            vatTotal = vatTotal.plus(vat);
+            costTotal = costTotal.plus(new Money(l.cost()).times(q));
+        }
+        long qmId = jdbc.sql("""
+                INSERT INTO sales_return (number, sale_id, order_id, branch_id, warehouse_id, customer_id, trip_id, return_date, total, vat_total,
+                                          cost_total, reason, created_by)
+                VALUES (:n, :s, :o, :b, :w, :c, :t, :d, :total, :vat, :cost, :r, :by) RETURNING id""")
+                .param("n", number)
+                .param("s", sale.id())
+                .param("o", orderId)
+                .param("b", sale.branchId())
+                .param("w", sale.warehouseId())
+                .param("c", sale.customerId())
+                .param("t", tripId)
+                .param("d", Date.valueOf(today))
+                .param("total", total.amount())
+                .param("vat", vatTotal.amount())
+                .param("cost", costTotal.amount())
+                .param("r", why)
+                .param("by", actor.employeeId())
+                .query(Long.class)
+                .single();
+        for (C c : calcs) {
+            jdbc.sql("""
+                    INSERT INTO sales_return_line (return_id, sale_line_id, product_id, batch_id, qty, price, amount, vat_rate, vat_amount, cost)
+                    VALUES (:r, :sl, :p, :b, :q, :price, :a, :vr, :va, :c)""")
+                    .param("r", qmId)
+                    .param("sl", c.l().id())
+                    .param("p", c.l().productId())
+                    .param("b", c.l().batchId())
+                    .param("q", c.qty())
+                    .param("price", c.l().price())
+                    .param("a", c.amount().amount())
+                    .param("vr", c.l().vatRate())
+                    .param("va", c.vat().amount())
+                    .param("c", c.l().cost())
+                    .update();
+        }
+        jdbc.sql("""
+                INSERT INTO sales_return_pending (order_id, sale_id, return_id, batch_id, product_id, warehouse_id, qty)
+                SELECT :o, :s, :r, batch_id, product_id, :w, sum(qty) FROM sales_return_line WHERE return_id = :r GROUP BY batch_id, product_id""")
+                .param("o", orderId)
+                .param("s", sale.id())
+                .param("r", qmId)
+                .param("w", sale.warehouseId())
+                .update();
+        parties.record(new PartyLedger.DocRef(RETURN_DOC_TYPE, qmId, number), sale.branchId(), sale.customerId(), PartyLedger.Side.CUSTOMER,
+                new Money(total.amount().negate()), null, "Qisman yetkazildi (" + sale.number() + "): " + why);
+        jdbc.sql("""
+                UPDATE sales_order SET status = 'DELIVERED', status_changed_at = now(), updated_at = now(), version = version + 1
+                WHERE id = :id AND status = 'IN_TRANSIT'""")
+                .param("id", orderId)
+                .update();
+        Money net = new Money(sale.total()).minus(total);
+        audit.record(AuditEntry.of("order.partial", "sales_order", orderId)
+                .change(Map.of("status", "IN_TRANSIT"), Map.of("status", "DELIVERED", "return", number, "returnTotal", total.toString(),
+                        "net", net.toString()))
+                .withReason(why));
+        return new uz.medix.sales.OrderDispatch.PartialResult(number, total.toString(), net.toString());
     }
 }

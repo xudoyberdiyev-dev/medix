@@ -332,23 +332,8 @@ class Trips {
     void deliver(Actor actor, long tripId, long stopId, String cash) {
         lockOwn(actor, tripId, TripStatus.IN_TRANSIT);
         OpenStop s = openStop(tripId, stopId);
-        boolean photo = jdbc.sql("SELECT EXISTS (SELECT 1 FROM delivery_photo WHERE stop_id = :s AND kind = 'PHOTO')")
-                .param("s", stopId).query(Boolean.class).single();
-        if (!photo) {
-            throw MedixException.conflict("trip.photoRequired");
-        }
-        Money total = Money.of(dispatch.total(s.orderId()));
-        Money collected = null;
-        if (cash != null && !cash.isBlank()) {
-            try {
-                collected = Money.of(cash.strip());
-            } catch (RuntimeException e) {
-                throw MedixException.badRequest("trip.cashInvalid", total.format());
-            }
-            if (collected.isNegative() || collected.compareTo(total) > 0) {
-                throw MedixException.badRequest("trip.cashInvalid", total.format());
-            }
-        }
+        requirePhoto(stopId);
+        Money collected = cash(cash, Money.of(dispatch.total(s.orderId())));
         dispatch.delivered(actor, s.orderId());
         jdbc.sql("""
                 UPDATE trip_stop SET outcome = 'DELIVERED', outcome_by = :by, outcome_at = now(), cash_collected = :c WHERE id = :s""")
@@ -357,6 +342,70 @@ class Trips {
                 .param("s", stopId)
                 .update();
         audit.record(AuditEntry.of("trip.delivered", "trip", tripId).change(null, Map.of("stop", stopId, "cash", collected == null ? "0" : collected.toString())));
+    }
+
+    private void requirePhoto(long stopId) {
+        boolean photo = jdbc.sql("SELECT EXISTS (SELECT 1 FROM delivery_photo WHERE stop_id = :s AND kind = 'PHOTO')")
+                .param("s", stopId).query(Boolean.class).single();
+        if (!photo) {
+            throw MedixException.conflict("trip.photoRequired");
+        }
+    }
+
+    /** Naqd olingan summa: bo'sh — null; 0 … limit oralig'ida bo'lishi shart. */
+    private static Money cash(String cash, Money limit) {
+        if (cash == null || cash.isBlank()) {
+            return null;
+        }
+        Money collected;
+        try {
+            collected = Money.of(cash.strip());
+        } catch (RuntimeException e) {
+            throw MedixException.badRequest("trip.cashInvalid", limit.format());
+        }
+        if (collected.isNegative() || collected.compareTo(limit) > 0) {
+            throw MedixException.badRequest("trip.cashInvalid", limit.format());
+        }
+        return collected;
+    }
+
+    /** Manzildagi sotuv qatorlari (qisman yetkazish uchun). */
+    @Transactional(readOnly = true)
+    List<OrderDispatch.SaleLine> stopLines(Actor actor, long tripId, long stopId) {
+        long orderId = jdbc.sql("""
+                SELECT s.order_id FROM trip_stop s JOIN trip t ON t.id = s.trip_id
+                WHERE s.id = :s AND s.trip_id = :t AND s.active AND t.driver_id = :d""")
+                .param("s", stopId)
+                .param("t", tripId)
+                .param("d", actor.employeeId())
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        return dispatch.saleLines(orderId);
+    }
+
+    /**
+     * «Qisman» (SPEC 5.4): rasm majburiy, sabab majburiy; qabul qilinmagan qism QM bo'lib qaytadi (asl sotuv narxida), naqd —
+     * qolgan summagacha.
+     */
+    @Transactional
+    String partial(Actor actor, long tripId, long stopId, String reason, Map<Long, Integer> returned, String cash) {
+        lockOwn(actor, tripId, TripStatus.IN_TRANSIT);
+        OpenStop s = openStop(tripId, stopId);
+        requirePhoto(stopId);
+        OrderDispatch.PartialResult r = dispatch.partiallyDelivered(actor, s.orderId(), tripId, reason, returned);
+        Money collected = cash(cash, Money.of(r.netTotal()));
+        jdbc.sql("""
+                UPDATE trip_stop SET outcome = 'PARTIAL', outcome_by = :by, outcome_at = now(), outcome_reason = :r, cash_collected = :c WHERE id = :s""")
+                .param("by", actor.employeeId())
+                .param("r", reason.strip())
+                .param("c", collected == null ? null : collected.amount())
+                .param("s", stopId)
+                .update();
+        audit.record(AuditEntry.of("trip.partial", "trip", tripId)
+                .change(null, Map.of("stop", stopId, "return", r.returnNumber(), "cash", collected == null ? "0" : collected.toString()))
+                .withReason(reason.strip()));
+        return r.returnNumber();
     }
 
     /** «Yetkazilmadi» (sabab majburiy): sotuv va qarz bekor, tovar «Qaytmoqda». */
@@ -380,7 +429,8 @@ class Trips {
         lockOwn(actor, tripId, TripStatus.IN_TRANSIT);
         record F(long open, long undelivered, BigDecimal cash) {}
         F f = jdbc.sql("""
-                SELECT count(*) FILTER (WHERE outcome IS NULL) AS open, count(*) FILTER (WHERE outcome = 'UNDELIVERED') AS undelivered,
+                SELECT count(*) FILTER (WHERE outcome IS NULL) AS open, count(*) FILTER (WHERE outcome IN ('UNDELIVERED', 'PARTIAL') AND EXISTS (
+                           SELECT 1 FROM sales_return_pending r WHERE r.order_id = trip_stop.order_id AND r.received_at IS NULL)) AS undelivered,
                        coalesce(sum(cash_collected), 0) AS cash
                 FROM trip_stop WHERE trip_id = :t AND active""")
                 .param("t", tripId)
@@ -389,6 +439,7 @@ class Trips {
         if (f.open() > 0) {
             throw MedixException.conflict("trip.stopsOpen", f.open());
         }
+        // Qabul qilinmagan qaytgan tovar (yetkazilmadi / qisman) yoki naqd pul bo'lsa — topshirilguncha «Qaytish kutilmoqda»
         TripStatus next = f.undelivered() > 0 || f.cash().signum() > 0 ? TripStatus.RETURN_WAIT : TripStatus.DONE;
         jdbc.sql("UPDATE trip SET status = :s, finished_at = now(), updated_at = now(), version = version + 1 WHERE id = :id")
                 .param("s", next.name())
@@ -456,8 +507,9 @@ class Trips {
         List<TripStop> stops = new ArrayList<>(jdbc.sql("""
                 SELECT s.id, s.seq, s.order_id, o.number, o.waybill_number, c.name AS customer, o.address, c.phone, o.payment_type, s.places, o.total,
                        s.loaded_at, s.outcome, s.outcome_reason, s.cash_collected,
-                       (SELECT count(*) FROM delivery_photo ph WHERE ph.stop_id = s.id AND ph.kind = 'PHOTO')::int AS photos
-                FROM trip_stop s JOIN sales_order o ON o.id = s.order_id JOIN counterparty c ON c.id = o.customer_id
+                       (SELECT count(*) FROM delivery_photo ph WHERE ph.stop_id = s.id AND ph.kind = 'PHOTO')::int AS photos,
+                       q.number AS return_number, q.total AS return_total
+                FROM trip_stop s LEFT JOIN sales_return q ON q.order_id = s.order_id AND q.trip_id = s.trip_id JOIN sales_order o ON o.id = s.order_id JOIN counterparty c ON c.id = o.customer_id
                 WHERE s.trip_id = :id AND (s.active OR :cancelled) ORDER BY s.seq""")
                 .param("id", id)
                 .param("cancelled", head.status() == TripStatus.CANCELLED)
@@ -466,7 +518,8 @@ class Trips {
                         rs.getString("payment_type"), rs.getInt("places"), money(rs.getBigDecimal("total")),
                         rs.getTimestamp("loaded_at") == null ? null : rs.getTimestamp("loaded_at").toInstant(), rs.getString("outcome"),
                         rs.getString("outcome_reason"), rs.getBigDecimal("cash_collected") == null ? null : money(rs.getBigDecimal("cash_collected")),
-                        rs.getInt("photos")))
+                        rs.getInt("photos"), rs.getString("return_number"),
+                        rs.getBigDecimal("return_total") == null ? null : money(rs.getBigDecimal("return_total"))))
                 .list());
         return new TripDetail(head.id(), head.number(), head.branchId(), head.tripDate(), head.status(), head.vehicleId(), head.vehicle(),
                 head.capacityBoxes(), head.driverId(), head.driver(), head.note(), head.places(), head.total(), head.createdBy(), head.createdAt(),

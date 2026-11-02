@@ -47,4 +47,18 @@ public interface OrderDispatch {
 
     /** Buyurtma summasi (QQS bilan) — naqd pul chegarasi uchun. */
     String total(long orderId);
+
+    /** Sotuv qatori (partiya bo'yicha) — haydovchi qisman yetkazishda qaytariladigan miqdorni tanlaydi. */
+    record SaleLine(long id, String product, String batch, int qty, String price, String amount, boolean marked) {}
+
+    /** «Yo'lda» buyurtmaning sotuv qatorlari. */
+    List<SaleLine> saleLines(long orderId);
+
+    record PartialResult(String returnNumber, String returnTotal, String netTotal) {}
+
+    /**
+     * Qisman yetkazish (SPEC 5.4): qabul qilinmagan qism asl sotuv narxida QM bo'lib yoziladi — mijoz qarzi kamayadi, tovar
+     * «Qaytmoqda», buyurtma «Yetkazildi». returned: sotuv qatori id → qaytgan miqdor (kamida bitta, hammasi emas).
+     */
+    PartialResult partiallyDelivered(Actor actor, long orderId, Long tripId, String reason, java.util.Map<Long, Integer> returned);
 }

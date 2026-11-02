@@ -49,6 +49,13 @@ class TripController {
 
     record FinishResult(TripModels.TripStatus status) {}
 
+    record ReturnedLine(@jakarta.validation.constraints.NotNull(message = "{validation.required}") Long saleLineId,
+            @jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0) Integer qty) {}
+
+    record PartialRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason,
+            @jakarta.validation.constraints.NotNull(message = "{validation.required}") @Size(min = 1, max = 200) List<@Valid ReturnedLine> lines,
+            @io.swagger.v3.oas.annotations.media.Schema(nullable = true, description = "Naqd olingan summa (qolgan summagacha)") String cash) {}
+
     private final Trips trips;
     private final CurrentActor currentActor;
 
@@ -172,5 +179,24 @@ class TripController {
     @Operation(summary = "«Reysni yakunlash»", description = "Qaytgan tovar yoki naqd pul bo'lsa — «Qaytish kutilmoqda».")
     FinishResult finish(@PathVariable long id) {
         return new FinishResult(trips.finish(actor(), id));
+    }
+
+    @GetMapping("/{id}/stops/{stopId}/lines")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "Manzildagi sotuv qatorlari (qisman yetkazish uchun)")
+    List<uz.medix.sales.OrderDispatch.SaleLine> stopLines(@PathVariable long id, @PathVariable long stopId) {
+        return trips.stopLines(actor(), id, stopId);
+    }
+
+    @PostMapping("/{id}/stops/{stopId}/partial")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "Qisman yetkazildi: qaytgan qism QM (asl sotuv narxida), mijoz qarzi kamayadi, tovar «Qaytmoqda»")
+    TripModels.TripDetail partial(@PathVariable long id, @PathVariable long stopId, @Valid @RequestBody PartialRequest r) {
+        java.util.Map<Long, Integer> returned = new java.util.LinkedHashMap<>();
+        for (ReturnedLine l : r.lines()) {
+            returned.merge(l.saleLineId(), l.qty(), Integer::sum);
+        }
+        trips.partial(actor(), id, stopId, r.reason(), returned, r.cash());
+        return trips.find(actor(), id);
     }
 }

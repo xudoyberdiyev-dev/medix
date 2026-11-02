@@ -893,4 +893,81 @@ class OrderIT {
                         .query(String.class).single())
                 .isEqualTo("3000.00");
     }
+
+    @Test
+    void partialDeliveryWritesReturnAtSalePriceReducesDebtAndClosesTripAfterAcceptance() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie driverSession = loginAs("DRIVER", p.branchId());
+        long driver = jdbc.sql("SELECT max(id) FROM employee WHERE full_name = 'Sinov DRIVER' AND branch_id = :b").param("b", p.branchId())
+                .query(Long.class).single();
+        long prod = product(p, "BY Qisman", "1000", 20, null, null);
+        long o = documenting(p, c, prod, 5, 1, "DELIVERY", operator, keeper, picker);
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model) VALUES (:b, :p, 'Labo') RETURNING id")
+                .param("b", p.branchId()).param("p", "20" + ThreadLocalRandom.current().nextInt(100_000, 999_999)).query(Long.class).single();
+        MvcResult t = send(post("/api/trips"), keeper, "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today()
+                + "\",\"orderIds\":[" + o + "]}").andExpect(status().isCreated()).andReturn();
+        long trip = id(t);
+        long stop = ((Number) JsonPath.read(t.getResponse().getContentAsString(), "$.stops[0].id")).longValue();
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/load"), driverSession, "{\"places\":1}").andExpect(status().isOk());
+        send(post("/api/trips/" + trip + "/start"), driverSession, "").andExpect(status().isOk());
+
+        MvcResult lines = mvc.perform(get("/api/trips/" + trip + "/stops/" + stop + "/lines").cookie(driverSession))
+                .andExpect(jsonPath("$[0].qty").value(5))
+                .andExpect(jsonPath("$[0].price").value("1000.00"))
+                .andReturn();
+        mvc.perform(get("/api/trips/" + trip + "/stops/" + stop + "/lines").cookie(keeper)).andExpect(status().isForbidden());
+        long saleLine = ((Number) JsonPath.read(lines.getResponse().getContentAsString(), "$[0].id")).longValue();
+        String path = "/api/trips/" + trip + "/stops/" + stop + "/partial";
+        String two = "{\"reason\":\"2 tasini olmadi\",\"lines\":[{\"saleLineId\":" + saleLine + ",\"qty\":2}]";
+
+        // Rasm majburiy; hammasi qaytsa — «Yetkazilmadi»; 0 — xato; ko'p — xato
+        send(post(path), driverSession, two + "}").andExpect(jsonPath("$.code").value("trip.photoRequired"));
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/trips/" + trip + "/stops/" + stop + "/photos")
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[] {1, 2, 3}))
+                        .with(csrf()).cookie(driverSession))
+                .andExpect(status().isCreated());
+        send(post(path), driverSession, two.replace("\"qty\":2", "\"qty\":5") + "}").andExpect(jsonPath("$.code").value("partial.allReturned"));
+        send(post(path), driverSession, two.replace("\"qty\":2", "\"qty\":0") + "}").andExpect(jsonPath("$.code").value("partial.nothingReturned"));
+        send(post(path), driverSession, two.replace("\"qty\":2", "\"qty\":6") + "}").andExpect(jsonPath("$.code").value("partial.qtyInvalid"));
+        send(post(path), driverSession, two.replace("" + saleLine, "" + (saleLine + 100_000)) + "}")
+                .andExpect(jsonPath("$.code").value("partial.qtyInvalid"));
+        // Naqd qolgan summadan (3000) ko'p — butun amal qaytadi (QM yozilmaydi)
+        send(post(path), driverSession, two + ",\"cash\":\"3500\"}").andExpect(jsonPath("$.code").value("trip.cashInvalid"));
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_return WHERE order_id = :o").param("o", o).query(Long.class).single()).isZero();
+        assertThat(statusOf(o)).isEqualTo("IN_TRANSIT");
+
+        send(post(path), driverSession, two + "}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stops[0].outcome").value("PARTIAL"))
+                .andExpect(jsonPath("$.stops[0].returnNumber", matchesPattern("QM-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.stops[0].returnTotal").value("2000.00"));
+        assertThat(statusOf(o)).isEqualTo("DELIVERED");
+        var qm = jdbc.sql("SELECT total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sales_return WHERE order_id = :o")
+                .param("o", o).query().singleRow();
+        assertThat(qm.get("total")).isEqualTo("2000.00");
+        assertThat(qm.get("vat")).isEqualTo("214.29");
+        assertThat(qm.get("cost")).isEqualTo("200.00");
+        // Sotuv o'zgarmaydi (5 000), qarz = 5 000 − 2 000
+        assertThat(jdbc.sql("SELECT total::text FROM sale WHERE order_id = :o").param("o", o).query(String.class).single()).isEqualTo("5000.00");
+        assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
+                        .query(String.class).single())
+                .isEqualTo("3000.00");
+        send(post(path), driverSession, two + "}").andExpect(jsonPath("$.code").value("trip.stopDone"));
+        assertThatThrownBy(() -> jdbc.sql("UPDATE sales_return SET total = 1 WHERE order_id = :o").param("o", o).update())
+                .hasMessageContaining("faqat qo");
+
+        // Reys yakuni — qaytgan tovar kutilmoqda; Ombor mudiri sanab Karantinga qabul qilgach — «Yakunlangan»
+        send(post("/api/trips/" + trip + "/finish"), driverSession, "").andExpect(jsonPath("$.status").value("RETURN_WAIT"));
+        long ret = jdbc.sql("SELECT id FROM sales_return_pending WHERE order_id = :o AND return_id IS NOT NULL").param("o", o).query(Long.class).single();
+        send(post("/api/orders/returns/" + ret + "/accept"), keeper, "{\"receivedQty\":2}").andExpect(status().isOk());
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(2);
+        assertThat(jdbc.sql("SELECT count(*) FROM stock_move WHERE doc_type = 'QM' AND batch_id IN (SELECT id FROM batch WHERE product_id = :p)")
+                        .param("p", prod).query(Long.class).single())
+                .isEqualTo(1);
+        assertThat(jdbc.sql("SELECT status FROM trip WHERE id = :t").param("t", trip).query(String.class).single()).isEqualTo("DONE");
+    }
 }
