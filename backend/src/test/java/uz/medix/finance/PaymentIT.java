@@ -260,4 +260,69 @@ class PaymentIT {
         assertThatThrownBy(() -> jdbc.sql("UPDATE money_account SET balance = -1 WHERE id = :a").param("a", k).update())
                 .hasMessageContaining("check");
     }
+
+    @Test
+    void supplierPaymentApprovalFlowAllocatesReceiptsAndChecksCash() throws Exception {
+        long b = branch();
+        long c = customer();
+        long s = jdbc.sql("INSERT INTO counterparty (tin, name, is_supplier) VALUES (:t, 'YB sinov', true) RETURNING id")
+                .param("t", String.valueOf(600_000_000L + ThreadLocalRandom.current().nextLong(99_999_999L)))
+                .query(Long.class).single();
+        Cookie cashier = loginAs("CASHIER", b);
+        Cookie manager = loginAs("BRANCH_MANAGER", b);
+        Cookie director = loginAs("DIRECTOR", b);
+        long k = kassa(cashier, b);
+        for (long[] kr : new long[][] {{9_300_001L, 8000, -10}, {9_300_002L, 3000, 5}}) {
+            jdbc.sql("""
+                    INSERT INTO party_ledger (branch_id, counterparty_id, side, amount, due_date, doc_type, doc_id, doc_number)
+                    VALUES (:b, :s, 'SUPPLIER', :a, :d, 'KR', :i, :n)""")
+                    .param("b", b).param("s", s).param("a", kr[1]).param("d", java.sql.Date.valueOf(today().plusDays(kr[2])))
+                    .param("i", kr[0]).param("n", "KR-TST-" + kr[0]).update();
+        }
+        String body = "{\"branchId\":" + b + ",\"supplierId\":" + s + ",\"accountId\":" + k + ",\"amount\":\"%s\"}";
+        send(post("/api/payments/supplier"), cashier, body.formatted("5000").replace("" + s, "" + c))
+                .andExpect(jsonPath("$.code").value("payment.supplierUnknown"));
+        long y1 = id(send(post("/api/payments/supplier"), cashier, body.formatted("5000"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.number", matchesPattern("YT-[A-Z]{3}-\\d{6}")))
+                .andReturn());
+        send(post("/api/payments/supplier/" + y1 + "/send"), cashier, "").andExpect(jsonPath("$.status").value("PENDING"));
+        send(post("/api/payments/supplier/" + y1 + "/approve"), cashier, "{}").andExpect(status().isForbidden());
+        // Kassada pul yo'q — o'tkazilmaydi
+        send(post("/api/payments/supplier/" + y1 + "/approve"), manager, "{}").andExpect(jsonPath("$.code").value("money.insufficient"));
+        long mt = id(send(post("/api/payments/customer"), cashier, draft(b, c, k, "20000")).andReturn());
+        send(post("/api/payments/customer/" + mt + "/post"), cashier, "{}").andExpect(jsonPath("$.status").value("POSTED"));
+        send(post("/api/payments/supplier/" + y1 + "/approve"), manager, "{}")
+                .andExpect(jsonPath("$.status").value("POSTED"))
+                .andExpect(jsonPath("$.allocations[0].docNumber").value("KR-TST-9300001"))
+                .andExpect(jsonPath("$.allocations[0].amount").value("5000.00"));
+        assertThat(balance(k)).isEqualTo("15000.00");
+        String supplierDebt = "SELECT sum(amount)::text FROM party_ledger WHERE branch_id = :b AND counterparty_id = :s AND side = 'SUPPLIER'";
+        assertThat(jdbc.sql(supplierDebt).param("b", b).param("s", s).query(String.class).single()).isEqualTo("6000.00");
+
+        // Tasdiqsiz o'tkazish — faqat ytDirect (Direktor); ortig'i avans
+        long y2 = id(send(post("/api/payments/supplier"), cashier, body.formatted("7000")).andReturn());
+        send(post("/api/payments/supplier/" + y2 + "/post"), cashier, "{}").andExpect(status().isForbidden());
+        send(post("/api/payments/supplier/" + y2 + "/post"), director, "{}")
+                .andExpect(jsonPath("$.status").value("POSTED"))
+                .andExpect(jsonPath("$.allocations.length()").value(2))
+                .andExpect(jsonPath("$.advance").value("1000.00"));
+        assertThat(balance(k)).isEqualTo("8000.00");
+        assertThat(jdbc.sql(supplierDebt).param("b", b).param("s", s).query(String.class).single()).isEqualTo("-1000.00");
+
+        // Qaytarish (sabab bilan) va bekor qilish (teskari)
+        long y3 = id(send(post("/api/payments/supplier"), cashier, body.formatted("100")).andReturn());
+        send(post("/api/payments/supplier/" + y3 + "/send"), cashier, "").andExpect(status().isOk());
+        send(post("/api/payments/supplier/" + y3 + "/return"), manager, "{\"reason\":\"Hisob raqami xato\"}")
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.returnedReason").value("Hisob raqami xato"));
+        send(post("/api/payments/supplier/" + y2 + "/cancel"), manager, "{\"reason\":\"Ikki marta toʻlandi\"}")
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+        assertThat(balance(k)).isEqualTo("15000.00");
+        assertThat(jdbc.sql(supplierDebt).param("b", b).param("s", s).query(String.class).single()).isEqualTo("6000.00");
+        mvc.perform(get("/api/payments/supplier/open-docs").param("branchId", "" + b).param("supplierId", "" + s).cookie(cashier))
+                .andExpect(jsonPath("$.docs[0].open").value("3000.00"))
+                .andExpect(jsonPath("$.docs[1].open").value("3000.00"))
+                .andExpect(jsonPath("$.advance").value("0.00"));
+    }
 }

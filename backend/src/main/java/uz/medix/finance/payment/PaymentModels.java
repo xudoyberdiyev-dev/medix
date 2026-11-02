@@ -53,4 +53,27 @@ final class PaymentModels {
             String createdBy, Instant createdAt, @Schema(nullable = true) String postedBy, @Schema(nullable = true) Instant postedAt,
             @Schema(nullable = true) String cancelledBy, @Schema(nullable = true) Instant cancelledAt,
             @Schema(nullable = true) String cancelReason, long version, List<PaymentAllocation> allocations) {}
+
+    // ===== YT =====
+
+    enum SupplierPaymentStatus { DRAFT, PENDING, POSTED, CANCELLED }
+
+    record SupplierPaymentRequest(
+            @NotNull(message = "{validation.required}") Long branchId,
+            @NotNull(message = "{validation.required}") Long supplierId,
+            @NotNull(message = "{validation.required}") Long accountId,
+            @Schema(nullable = true, description = "Bo'sh bo'lsa — bugun") LocalDate paymentDate,
+            @NotBlank(message = "{validation.required}") @Size(max = 24) @Schema(description = "Summa, masalan «250000.00»") String amount,
+            @Schema(nullable = true) @Size(max = 500) String note) {}
+
+    record SupplierPaymentSummary(long id, String number, long branchId, long supplierId, String supplier, long accountId, String account,
+            String accountKind, LocalDate paymentDate, String amount, SupplierPaymentStatus status, String createdBy, Instant createdAt) {}
+
+    record SupplierPaymentDetail(long id, String number, long branchId, long supplierId, String supplier, @Schema(nullable = true) String supplierTin,
+            long accountId, String account, String accountKind, String accountBalance, LocalDate paymentDate, String amount,
+            @Schema(nullable = true) String advance, SupplierPaymentStatus status, @Schema(nullable = true) String note, String createdBy,
+            Instant createdAt, @Schema(nullable = true) String sentBy, @Schema(nullable = true) Instant sentAt,
+            @Schema(nullable = true) String returnedReason, @Schema(nullable = true) String postedBy, @Schema(nullable = true) Instant postedAt,
+            @Schema(nullable = true) String cancelledBy, @Schema(nullable = true) Instant cancelledAt,
+            @Schema(nullable = true) String cancelReason, long version, List<PaymentAllocation> allocations) {}
 }
