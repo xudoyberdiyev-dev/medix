@@ -49,6 +49,10 @@ class TripController {
 
     record FinishResult(TripModels.TripStatus status) {}
 
+    record CashAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") Long accountId) {}
+
+    record CashAcceptResult(String payment) {}
+
     record ReturnedLine(@jakarta.validation.constraints.NotNull(message = "{validation.required}") Long saleLineId,
             @jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0) Integer qty) {}
 
@@ -199,5 +203,19 @@ class TripController {
         }
         trips.partial(actor(), id, stopId, r.reason(), returned, r.cash());
         return trips.find(actor(), id);
+    }
+
+    @GetMapping("/cash")
+    @PreAuthorize("hasAuthority('payments.mt')")
+    @Operation(summary = "Haydovchidagi pul", description = "Naqd olingan, Kassir hali qabul qilmagan summalar.")
+    List<TripModels.DriverCash> driverCash(@RequestParam(required = false) Long branchId) {
+        return trips.driverCash(actor(), branchId);
+    }
+
+    @PostMapping("/cash/{stopId}/accept")
+    @PreAuthorize("hasAuthority('payments.mt')")
+    @Operation(summary = "Haydovchidan pulni qabul qilish", description = "MT yoziladi va o'tkaziladi, mijoz qarzi kamayadi, pul kassaga tushadi.")
+    CashAcceptResult acceptCash(@PathVariable long stopId, @Valid @RequestBody CashAcceptRequest r) {
+        return new CashAcceptResult(trips.acceptCash(actor(), stopId, r.accountId()));
     }
 }

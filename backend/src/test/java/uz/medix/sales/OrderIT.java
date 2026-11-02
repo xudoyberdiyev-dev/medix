@@ -895,6 +895,30 @@ class OrderIT {
         assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
                         .query(String.class).single())
                 .isEqualTo("3000.00");
+
+        // Haydovchidagi pul → Kassir qabul qiladi: MT o'tkaziladi (eng eski qarzdan), kassaga tushadi, reys «Yakunlangan»
+        Cookie cashier = loginAs("CASHIER", p.branchId());
+        MvcResult accounts = mvc.perform(get("/api/money-accounts").param("branchId", String.valueOf(p.branchId())).cookie(cashier))
+                .andExpect(jsonPath("$[0].kind").value("CASH"))
+                .andExpect(jsonPath("$[1].kind").value("TERMINAL"))
+                .andReturn();
+        long kassa = ((Number) JsonPath.read(accounts.getResponse().getContentAsString(), "$[0].id")).longValue();
+        long terminal = ((Number) JsonPath.read(accounts.getResponse().getContentAsString(), "$[1].id")).longValue();
+        mvc.perform(get("/api/trips/cash").cookie(cashier)).andExpect(jsonPath("$[?(@.stopId == " + stop + ")].amount").value(hasItem("2000.00")));
+        mvc.perform(get("/api/trips/cash").cookie(driverSession)).andExpect(status().isForbidden());
+        send(post("/api/trips/cash/" + stop + "/accept"), cashier, "{\"accountId\":" + terminal + "}")
+                .andExpect(jsonPath("$.code").value("payment.cashAccountRequired"));
+        send(post("/api/trips/cash/" + stop + "/accept"), cashier, "{\"accountId\":" + kassa + "}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payment", matchesPattern("MT-[A-Z]{3}-\\d{6}")));
+        send(post("/api/trips/cash/" + stop + "/accept"), cashier, "{\"accountId\":" + kassa + "}")
+                .andExpect(jsonPath("$.code").value("trip.cashNotFound"));
+        assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
+                        .query(String.class).single())
+                .isEqualTo("1000.00");
+        assertThat(jdbc.sql("SELECT balance::text FROM money_account WHERE id = :a").param("a", kassa).query(String.class).single())
+                .isEqualTo("2000.00");
+        assertThat(jdbc.sql("SELECT status FROM trip WHERE id = :t").param("t", trip).query(String.class).single()).isEqualTo("DONE");
     }
 
     @Test

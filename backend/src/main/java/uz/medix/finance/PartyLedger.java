@@ -39,13 +39,25 @@ public class PartyLedger {
     /** Yozuv: musbat — qarz oshdi, manfiy — kamaydi. Nol summa yozilmaydi. */
     @Transactional(propagation = Propagation.REQUIRED)
     public void record(DocRef doc, long branchId, long counterpartyId, Side side, Money amount, LocalDate dueDate, String note) {
+        record(doc, branchId, counterpartyId, side, amount, dueDate, note, null);
+    }
+
+    /**
+     * Yozuv boshqa hujjatni yopadi (appliesTo): MT taqsimoti — sotuvni, QM — o'z sotuvini. appliesTo = null — hujjatning o'z qarzi
+     * yoki (manfiy bo'lsa) avans.
+     */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void record(DocRef doc, long branchId, long counterpartyId, Side side, Money amount, LocalDate dueDate, String note, DocRef appliesTo) {
         if (amount.isZero()) {
             return;
         }
         Long employee = currentActor.current().map(a -> a.employeeId()).orElse(null);
         jdbc.sql("""
-                INSERT INTO party_ledger (branch_id, counterparty_id, side, amount, due_date, doc_type, doc_id, doc_number, employee_id, note)
-                VALUES (:b, :c, :s, :a, :due, :dt, :di, :dn, :e, :note)""")
+                INSERT INTO party_ledger (branch_id, counterparty_id, side, amount, due_date, doc_type, doc_id, doc_number, employee_id, note,
+                                          applies_doc_type, applies_doc_id)
+                VALUES (:b, :c, :s, :a, :due, :dt, :di, :dn, :e, :note, :at, :ai)""")
+                .param("at", appliesTo == null ? null : appliesTo.type())
+                .param("ai", appliesTo == null ? null : appliesTo.id())
                 .param("b", branchId)
                 .param("c", counterpartyId)
                 .param("s", side.name())
@@ -81,47 +93,68 @@ public class PartyLedger {
                 .single());
     }
 
-    /** Kredit holati: qarz, muddati o'tgan qismi va eng eski muddati o'tgan qarz kunlari (to'lovlar eng eski qarzdan yopiladi). */
+    /** Kredit holati: qarz, muddati o'tgan qismi va eng eski muddati o'tgan qarz kunlari. */
     public record CreditState(Money debt, Money overdue, int overdueDays) {}
 
+    /** Ochiq hujjat: o'z yozuvlari + uni yopgan yozuvlar. open > 0 — qarz, open < 0 — avans (taqsimlanmagan to'lov). */
+    public record OpenDoc(String type, long id, String number, LocalDate dueDate, LocalDate date, Money open) {
+        public DocRef ref() {
+            return new DocRef(type, id, number);
+        }
+    }
+
+    /** Hujjatlar bo'yicha ochiq qoldiq, eng eskisi birinchi (muddati, bo'lmasa yozilgan sanasi bo'yicha). */
     @Transactional(readOnly = true)
-    public CreditState creditState(long branchId, long counterpartyId, Side side, LocalDate today) {
-        record Row(java.math.BigDecimal amount, Date dueDate) {}
-        java.util.List<Row> rows = jdbc.sql("""
-                SELECT amount, due_date FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s
-                ORDER BY due_date NULLS FIRST, id""")
+    public java.util.List<OpenDoc> openDocs(long branchId, long counterpartyId, Side side) {
+        return jdbc.sql("""
+                WITH own AS (SELECT doc_type, doc_id, min(doc_number) AS doc_number, min(due_date) AS due, min(occurred_at) AS at, sum(amount) AS amt
+                             FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s AND applies_doc_type IS NULL
+                             GROUP BY doc_type, doc_id),
+                     app AS (SELECT applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
+                             FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s AND applies_doc_type IS NOT NULL
+                             GROUP BY applies_doc_type, applies_doc_id)
+                SELECT own.doc_type, own.doc_id, own.doc_number, own.due, (own.at AT TIME ZONE 'Asia/Tashkent')::date AS d,
+                       own.amt + coalesce(app.amt, 0) AS open
+                FROM own LEFT JOIN app ON app.t = own.doc_type AND app.i = own.doc_id
+                WHERE own.amt + coalesce(app.amt, 0) <> 0
+                ORDER BY coalesce(own.due, (own.at AT TIME ZONE 'Asia/Tashkent')::date), own.at, own.doc_id""")
                 .param("b", branchId)
                 .param("c", counterpartyId)
                 .param("s", side.name())
-                .query(Row.class)
+                .query((rs, n) -> new OpenDoc(rs.getString("doc_type"), rs.getLong("doc_id"), rs.getString("doc_number"),
+                        rs.getDate("due") == null ? null : rs.getDate("due").toLocalDate(), rs.getDate("d").toLocalDate(),
+                        new Money(rs.getBigDecimal("open"))))
                 .list();
-        Money paid = Money.ZERO;
+    }
+
+    @Transactional(readOnly = true)
+    public CreditState creditState(long branchId, long counterpartyId, Side side, LocalDate today) {
+        java.util.List<OpenDoc> docs = openDocs(branchId, counterpartyId, side);
         Money debt = Money.ZERO;
-        for (Row r : rows) {
-            Money a = new Money(r.amount());
-            debt = debt.plus(a);
-            if (a.isNegative()) {
-                paid = paid.minus(a);
+        Money advance = Money.ZERO;
+        for (OpenDoc d : docs) {
+            debt = debt.plus(d.open());
+            if (d.open().isNegative()) {
+                advance = advance.minus(d.open());
             }
         }
-        // FIFO: to'langan summa eng eski (muddati eng erta) qarzlardan ayriladi.
+        // Taqsimlanmagan to'lov (avans) eng eski qarzlardan ayriladi (FIFO)
         Money overdue = Money.ZERO;
         int days = 0;
-        Money left = paid;
-        for (Row r : rows) {
-            Money a = new Money(r.amount());
-            if (a.isNegative()) {
+        Money left = advance;
+        for (OpenDoc d : docs) {
+            if (d.open().isNegative()) {
                 continue;
             }
-            Money open = a;
+            Money open = d.open();
             if (!left.isZero()) {
-                Money used = left.compareTo(a) >= 0 ? a : left;
-                open = a.minus(used);
+                Money used = left.compareTo(open) >= 0 ? open : left;
+                open = open.minus(used);
                 left = left.minus(used);
             }
-            if (!open.isZero() && r.dueDate() != null && r.dueDate().toLocalDate().isBefore(today)) {
+            if (!open.isZero() && d.dueDate() != null && d.dueDate().isBefore(today)) {
                 overdue = overdue.plus(open);
-                days = Math.max(days, (int) java.time.temporal.ChronoUnit.DAYS.between(r.dueDate().toLocalDate(), today));
+                days = Math.max(days, (int) java.time.temporal.ChronoUnit.DAYS.between(d.dueDate(), today));
             }
         }
         return new CreditState(debt, overdue, days);

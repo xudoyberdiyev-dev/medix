@@ -46,4 +46,8 @@ final class TripModels {
             @Schema(nullable = true) Integer capacityBoxes, long driverId, String driver, @Schema(nullable = true) String note, int places,
             String total, String createdBy, Instant createdAt, @Schema(nullable = true) Instant startedAt,
             @Schema(nullable = true) String cancelReason, List<TripStop> stops) {}
+
+    /** Haydovchidagi pul (SPEC 5.4): Kassir qabul qilguncha. */
+    record DriverCash(long stopId, long tripId, String tripNumber, String driver, String orderNumber, long customerId, String customer, String amount,
+            Instant collectedAt, TripStatus tripStatus) {}
 }

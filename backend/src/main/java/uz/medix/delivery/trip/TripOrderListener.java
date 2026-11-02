@@ -57,12 +57,13 @@ class TripOrderListener {
                 .ifPresent(this::closeIfSettled);
     }
 
-    /** Naqd pul (Kassirga topshirish — 9-bosqich) bo'lmasa va barcha qaytgan tovar qabul qilingan bo'lsa — «Yakunlangan». */
+    /** Topshirilmagan naqd pul (Kassir qabul qilmagan) bo'lmasa va barcha qaytgan tovar qabul qilingan bo'lsa — «Yakunlangan». */
     void closeIfSettled(long tripId) {
         boolean open = jdbc.sql("""
                 SELECT EXISTS (SELECT 1 FROM trip_stop s JOIN sales_return_pending r ON r.order_id = s.order_id
                                WHERE s.trip_id = :t AND s.active AND r.received_at IS NULL)
-                    OR EXISTS (SELECT 1 FROM trip_stop s WHERE s.trip_id = :t AND s.active AND coalesce(s.cash_collected, 0) > 0)""")
+                    OR EXISTS (SELECT 1 FROM trip_stop s WHERE s.trip_id = :t AND s.active AND coalesce(s.cash_collected, 0) > 0
+                                  AND s.cash_payment_id IS NULL)""")
                 .param("t", tripId)
                 .query(Boolean.class)
                 .single();

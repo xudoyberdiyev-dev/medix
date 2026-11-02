@@ -421,7 +421,8 @@ class OrderSales {
                 .param("w", sale.warehouseId())
                 .update();
         parties.record(new PartyLedger.DocRef(RETURN_DOC_TYPE, qmId, number), sale.branchId(), sale.customerId(), PartyLedger.Side.CUSTOMER,
-                new Money(total.amount().negate()), null, "Qisman yetkazildi (" + sale.number() + "): " + why);
+                new Money(total.amount().negate()), null, "Qisman yetkazildi (" + sale.number() + "): " + why,
+                new PartyLedger.DocRef(DOC_TYPE, sale.id(), sale.number()));
         jdbc.sql("""
                 UPDATE sales_order SET status = 'DELIVERED', status_changed_at = now(), updated_at = now(), version = version + 1
                 WHERE id = :id AND status = 'IN_TRANSIT'""")

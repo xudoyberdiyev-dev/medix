@@ -43,8 +43,13 @@ class Trips {
     private final OrderDispatch dispatch;
     private final DocumentSequenceService numbers;
     private final AuditLog audit;
+    private final uz.medix.finance.CustomerPayments payments;
+    private final TripOrderListener settle;
 
-    Trips(JdbcClient jdbc, OrderDispatch dispatch, DocumentSequenceService numbers, AuditLog audit) {
+    Trips(JdbcClient jdbc, OrderDispatch dispatch, DocumentSequenceService numbers, AuditLog audit, uz.medix.finance.CustomerPayments payments,
+            TripOrderListener settle) {
+        this.payments = payments;
+        this.settle = settle;
         this.jdbc = jdbc;
         this.dispatch = dispatch;
         this.numbers = numbers;
@@ -431,7 +436,7 @@ class Trips {
         F f = jdbc.sql("""
                 SELECT count(*) FILTER (WHERE outcome IS NULL) AS open, count(*) FILTER (WHERE outcome IN ('UNDELIVERED', 'PARTIAL') AND EXISTS (
                            SELECT 1 FROM sales_return_pending r WHERE r.order_id = trip_stop.order_id AND r.received_at IS NULL)) AS undelivered,
-                       coalesce(sum(cash_collected), 0) AS cash
+                       coalesce(sum(cash_collected) FILTER (WHERE cash_payment_id IS NULL), 0) AS cash
                 FROM trip_stop WHERE trip_id = :t AND active""")
                 .param("t", tripId)
                 .query((rs, n) -> new F(rs.getLong("open"), rs.getLong("undelivered"), rs.getBigDecimal("cash")))
@@ -447,6 +452,53 @@ class Trips {
                 .update();
         audit.record(AuditEntry.of("trip.finish", "trip", tripId).change(Map.of("status", "IN_TRANSIT"), Map.of("status", next.name())));
         return next;
+    }
+
+    // ===== Haydovchidagi pul → Kassir (SPEC 5.4) =====
+
+    @Transactional(readOnly = true)
+    List<TripModels.DriverCash> driverCash(Actor actor, Long branchId) {
+        return jdbc.sql("""
+                SELECT s.id, s.trip_id, t.number AS trip, d.full_name AS driver, o.number AS order_number, o.customer_id, c.name AS customer,
+                       s.cash_collected, s.outcome_at, t.branch_id, t.status
+                FROM trip_stop s JOIN trip t ON t.id = s.trip_id JOIN employee d ON d.id = t.driver_id
+                JOIN sales_order o ON o.id = s.order_id JOIN counterparty c ON c.id = o.customer_id
+                WHERE s.active AND s.cash_collected > 0 AND s.cash_payment_id IS NULL AND t.status IN ('IN_TRANSIT', 'RETURN_WAIT')
+                  AND (CAST(:b AS BIGINT) IS NULL OR t.branch_id = :b)
+                ORDER BY d.full_name, t.id, s.seq""")
+                .param("b", branchId)
+                .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id"))
+                        ? new TripModels.DriverCash(rs.getLong("id"), rs.getLong("trip_id"), rs.getString("trip"), rs.getString("driver"),
+                                rs.getString("order_number"), rs.getLong("customer_id"), rs.getString("customer"), money(rs.getBigDecimal("cash_collected")),
+                                rs.getTimestamp("outcome_at").toInstant(), TripStatus.valueOf(rs.getString("status")))
+                        : null)
+                .list()
+                .stream()
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /** Kassir naqd pulni sanab qabul qiladi → MT o'tkaziladi (eng eski qarzdan), reys yakunlanishi tekshiriladi. */
+    @Transactional
+    String acceptCash(Actor actor, long stopId, long accountId) {
+        record C(long tripId, String trip, long branchId, long customerId, BigDecimal cash, String order) {}
+        C c = jdbc.sql("""
+                SELECT s.trip_id, t.number AS trip, t.branch_id, o.customer_id, s.cash_collected, o.number AS order_number
+                FROM trip_stop s JOIN trip t ON t.id = s.trip_id JOIN sales_order o ON o.id = s.order_id
+                WHERE s.id = :s AND s.active AND s.cash_collected > 0 AND s.cash_payment_id IS NULL AND t.status IN ('IN_TRANSIT', 'RETURN_WAIT')
+                FOR UPDATE OF s, t""")
+                .param("s", stopId)
+                .query((rs, n) -> new C(rs.getLong("trip_id"), rs.getString("trip"), rs.getLong("branch_id"), rs.getLong("customer_id"),
+                        rs.getBigDecimal("cash_collected"), rs.getString("order_number")))
+                .optional()
+                .filter(x -> actor.canAccessBranch(x.branchId()))
+                .orElseThrow(() -> MedixException.conflict("trip.cashNotFound"));
+        uz.medix.finance.CustomerPayments.Posted p = payments.acceptDriverCash(actor, c.branchId(), c.customerId(), accountId, new Money(c.cash()),
+                c.trip(), "Haydovchidan: " + c.trip() + " · " + c.order());
+        jdbc.sql("UPDATE trip_stop SET cash_payment_id = :p WHERE id = :s").param("p", p.id()).param("s", stopId).update();
+        audit.record(AuditEntry.of("trip.cashAccepted", "trip", c.tripId()).change(null, Map.of("stop", stopId, "payment", p.number())));
+        settle.closeIfSettled(c.tripId());
+        return p.number();
     }
 
     /** «O'zi olib ketadi»: mijoz tovarni olib chiqdi — sotuv va HF, «Yo'lda» (SPEC 5.2). */
