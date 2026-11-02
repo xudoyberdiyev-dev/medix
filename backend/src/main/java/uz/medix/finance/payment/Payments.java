@@ -17,7 +17,7 @@ import uz.medix.finance.MoneyLedger;
 import uz.medix.finance.PartyLedger;
 import uz.medix.finance.PartyLedger.Side;
 import uz.medix.finance.account.Accounts;
-import uz.medix.finance.payment.PaymentModels.Allocation;
+import uz.medix.finance.payment.PaymentModels.PaymentAllocation;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocationRequest;
 import uz.medix.finance.payment.PaymentModels.OpenDocView;
 import uz.medix.finance.payment.PaymentModels.OpenDocs;
