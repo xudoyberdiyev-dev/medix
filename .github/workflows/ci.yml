@@ -41,6 +41,8 @@ jobs:
             echo "----- OPENAPI BEGIN -----"
             cat build/openapi/openapi.json
             echo "----- OPENAPI END -----"
+            # Qisqa ko'rinish (log oxirida): diff | gzip | base64 — `base64 -d | gunzip | patch frontend/lib/api/openapi.json`
+            echo "OPENAPI-DIFF-GZ-B64: $(diff -u ../frontend/lib/api/openapi.json build/openapi/openapi.json | gzip -9 | base64 -w0)"
             exit 1
           fi
       - name: Test hisobotlari

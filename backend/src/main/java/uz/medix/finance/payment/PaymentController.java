@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import uz.medix.finance.payment.PaymentModels.CancelRequest;
+import uz.medix.finance.payment.PaymentModels.PaymentCancelRequest;
 import uz.medix.finance.payment.PaymentModels.OpenDocs;
 import uz.medix.finance.payment.PaymentModels.PaymentDetail;
 import uz.medix.finance.payment.PaymentModels.PaymentRequest;
 import uz.medix.finance.payment.PaymentModels.PaymentStatus;
 import uz.medix.finance.payment.PaymentModels.PaymentSummary;
-import uz.medix.finance.payment.PaymentModels.PostRequest;
+import uz.medix.finance.payment.PaymentModels.PaymentPostRequest;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
@@ -87,7 +87,7 @@ class PaymentController {
     @PostMapping("/{id}/post")
     @PreAuthorize("hasAuthority('payments.mt')")
     @Operation(summary = "O'tkazish", description = "Taqsimot: avtomatik (eng eski qarzdan) yoki qo'lda; ortig'i avans. Pul hisobga tushadi.")
-    PaymentDetail post(@PathVariable long id, @Valid @RequestBody PostRequest r) {
+    PaymentDetail post(@PathVariable long id, @Valid @RequestBody PaymentPostRequest r) {
         Actor a = actor();
         payments.post(a, id, r.allocations());
         return payments.find(a, id);
@@ -96,7 +96,7 @@ class PaymentController {
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAuthority('payments.cancel')")
     @Operation(summary = "Bekor qilish", description = "O'tkazilgan bo'lsa: qarz va hisob qoldig'i teskari yoziladi.")
-    PaymentDetail cancel(@PathVariable long id, @Valid @RequestBody CancelRequest r) {
+    PaymentDetail cancel(@PathVariable long id, @Valid @RequestBody PaymentCancelRequest r) {
         Actor a = actor();
         payments.cancel(a, id, r.reason());
         return payments.find(a, id);

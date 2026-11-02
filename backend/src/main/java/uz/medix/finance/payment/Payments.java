@@ -18,7 +18,7 @@ import uz.medix.finance.PartyLedger;
 import uz.medix.finance.PartyLedger.Side;
 import uz.medix.finance.account.Accounts;
 import uz.medix.finance.payment.PaymentModels.Allocation;
-import uz.medix.finance.payment.PaymentModels.AllocationRequest;
+import uz.medix.finance.payment.PaymentModels.PaymentAllocationRequest;
 import uz.medix.finance.payment.PaymentModels.OpenDocView;
 import uz.medix.finance.payment.PaymentModels.OpenDocs;
 import uz.medix.finance.payment.PaymentModels.PaymentDetail;
@@ -195,7 +195,7 @@ class Payments implements CustomerPayments {
     // ===== O'tkazish =====
 
     @Transactional
-    void post(Actor actor, long id, List<AllocationRequest> manual) {
+    void post(Actor actor, long id, List<PaymentAllocationRequest> manual) {
         Head h = lock(actor, id);
         if (h.status() != PaymentStatus.DRAFT) {
             throw MedixException.conflict("payment.notDraft");
@@ -203,7 +203,7 @@ class Payments implements CustomerPayments {
         doPost(actor, h, manual);
     }
 
-    private void doPost(Actor actor, Head h, List<AllocationRequest> manual) {
+    private void doPost(Actor actor, Head h, List<PaymentAllocationRequest> manual) {
         // Bir mijozning (filialda) to'lovlari ketma-ket taqsimlanadi
         lockParty(h.branchId(), h.customerId());
         List<Allocator.Doc> docs = parties.openDocs(h.branchId(), h.customerId(), Side.CUSTOMER).stream()
@@ -216,7 +216,7 @@ class Payments implements CustomerPayments {
                 res = Allocator.auto(docs, h.amount());
             } else {
                 List<Allocator.Manual> wanted = new ArrayList<>();
-                for (AllocationRequest a : manual) {
+                for (PaymentAllocationRequest a : manual) {
                     Money m;
                     try {
                         m = Money.of(a.amount().strip());
@@ -358,9 +358,9 @@ class Payments implements CustomerPayments {
 
     @Transactional(readOnly = true)
     PaymentDetail find(Actor actor, long id) {
-        List<Allocation> allocs = jdbc.sql("SELECT doc_type, doc_id, doc_number, amount FROM customer_payment_alloc WHERE payment_id = :p ORDER BY id")
+        List<PaymentAllocation> allocs = jdbc.sql("SELECT doc_type, doc_id, doc_number, amount FROM customer_payment_alloc WHERE payment_id = :p ORDER BY id")
                 .param("p", id)
-                .query((rs, n) -> new Allocation(rs.getString("doc_type"), rs.getLong("doc_id"), rs.getString("doc_number"),
+                .query((rs, n) -> new PaymentAllocation(rs.getString("doc_type"), rs.getLong("doc_id"), rs.getString("doc_number"),
                         new Money(rs.getBigDecimal("amount")).toString()))
                 .list();
         return jdbc.sql(SUMMARY + " WHERE p.id = :id")

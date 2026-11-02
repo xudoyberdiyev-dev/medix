@@ -25,18 +25,18 @@ final class PaymentModels {
             @NotBlank(message = "{validation.required}") @Size(max = 24) @Schema(description = "Summa, masalan «250000.00»") String amount,
             @Schema(nullable = true) @Size(max = 500) String note) {}
 
-    record AllocationRequest(
+    record PaymentAllocationRequest(
             @NotBlank(message = "{validation.required}") @Size(max = 8) String docType,
             @NotNull(message = "{validation.required}") Long docId,
             @NotBlank(message = "{validation.required}") @Size(max = 24) String amount) {}
 
-    record PostRequest(
+    record PaymentPostRequest(
             @Schema(nullable = true, description = "Bo'sh — avtomatik (eng eski qarzdan); berilsa — qo'lda taqsimot, ortig'i avans")
-            @Size(max = 500) List<@Valid AllocationRequest> allocations) {}
+            @Size(max = 500) List<@Valid PaymentAllocationRequest> allocations) {}
 
-    record CancelRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
+    record PaymentCancelRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
-    record Allocation(String docType, long docId, String docNumber, String amount) {}
+    record PaymentAllocation(String docType, long docId, String docNumber, String amount) {}
 
     record OpenDocView(String docType, long docId, String docNumber, LocalDate date, @Schema(nullable = true) LocalDate dueDate, String open,
             @Schema(description = "Muddati o'tgan kunlar (0 — o'tmagan)") int overdueDays) {}
@@ -52,5 +52,5 @@ final class PaymentModels {
             PaymentStatus status, PaymentSource source, @Schema(nullable = true) String sourceRef, @Schema(nullable = true) String note,
             String createdBy, Instant createdAt, @Schema(nullable = true) String postedBy, @Schema(nullable = true) Instant postedAt,
             @Schema(nullable = true) String cancelledBy, @Schema(nullable = true) Instant cancelledAt,
-            @Schema(nullable = true) String cancelReason, long version, List<Allocation> allocations) {}
+            @Schema(nullable = true) String cancelReason, long version, List<PaymentAllocation> allocations) {}
 }
