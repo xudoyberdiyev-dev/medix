@@ -1469,6 +1469,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/supplier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** YT ro'yxati */
+        get: operations["listSupplierPayments"];
+        put?: never;
+        /** YT qoralamasi */
+        post: operations["createSupplierPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/supplier/open-docs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** YB oldidagi ochiq qarzlar (eng eskisi birinchi) va avans */
+        get: operations["supplierOpenDocs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/supplier/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** YT kartochkasi */
+        get: operations["getSupplierPayment"];
+        /** YT qoralamasini o'zgartirish */
+        put: operations["updateSupplierPayment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/supplier/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tasdiqlash va o'tkazish
+         * @description Pul hisobdan chiqadi; summa eng eski kirim qarzidan (yoki qo'lda) taqsimlanadi.
+         */
+        post: operations["approveSupplierPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/supplier/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * YT ni bekor qilish
+         * @description O'tkazilgan bo'lsa: qarz va hisob qoldig'i teskari yoziladi.
+         */
+        post: operations["cancelSupplierPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/supplier/{id}/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tasdiqsiz o'tkazish */
+        post: operations["postSupplierPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/supplier/{id}/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Qoralamaga qaytarish (sabab bilan) */
+        post: operations["returnSupplierPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/supplier/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tasdiqqa yuborish */
+        post: operations["sendSupplierPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/price-changes": {
         parameters: {
             query?: never;
@@ -4516,6 +4660,84 @@ export interface components {
             /** @enum {string} */
             zoneType: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
+        SupplierPaymentDetail: {
+            account: string;
+            accountBalance: string;
+            /** Format: int64 */
+            accountId: number;
+            accountKind: string;
+            advance?: string;
+            allocations: components["schemas"]["PaymentAllocation"][];
+            amount: string;
+            /** Format: int64 */
+            branchId: number;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: int64 */
+            id: number;
+            note?: string;
+            number: string;
+            /** Format: date */
+            paymentDate: string;
+            /** Format: date-time */
+            postedAt?: string;
+            postedBy?: string;
+            returnedReason?: string;
+            /** Format: date-time */
+            sentAt?: string;
+            sentBy?: string;
+            /** @enum {string} */
+            status: "DRAFT" | "PENDING" | "POSTED" | "CANCELLED";
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
+            supplierTin?: string;
+            /** Format: int64 */
+            version: number;
+        };
+        SupplierPaymentRequest: {
+            /** Format: int64 */
+            accountId: number;
+            /** @description Summa, masalan «250000.00» */
+            amount: string;
+            /** Format: int64 */
+            branchId: number;
+            note?: string;
+            /**
+             * Format: date
+             * @description Bo'sh bo'lsa — bugun
+             */
+            paymentDate?: string;
+            /** Format: int64 */
+            supplierId: number;
+        };
+        SupplierPaymentSummary: {
+            account: string;
+            /** Format: int64 */
+            accountId: number;
+            accountKind: string;
+            amount: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: int64 */
+            id: number;
+            number: string;
+            /** Format: date */
+            paymentDate: string;
+            /** @enum {string} */
+            status: "DRAFT" | "PENDING" | "POSTED" | "CANCELLED";
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
+        };
         Terms: {
             /** Format: int64 */
             branchId: number;
@@ -6893,6 +7115,251 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentDetail"];
+                };
+            };
+        };
+    };
+    listSupplierPayments: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                status?: "DRAFT" | "PENDING" | "POSTED" | "CANCELLED";
+                supplierId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentSummary"][];
+                };
+            };
+        };
+    };
+    createSupplierPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupplierPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentDetail"];
+                };
+            };
+        };
+    };
+    supplierOpenDocs: {
+        parameters: {
+            query: {
+                branchId: number;
+                supplierId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenDocs"];
+                };
+            };
+        };
+    };
+    getSupplierPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentDetail"];
+                };
+            };
+        };
+    };
+    updateSupplierPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupplierPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentDetail"];
+                };
+            };
+        };
+    };
+    approveSupplierPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentPostRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentDetail"];
+                };
+            };
+        };
+    };
+    cancelSupplierPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentDetail"];
+                };
+            };
+        };
+    };
+    postSupplierPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentPostRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentDetail"];
+                };
+            };
+        };
+    };
+    returnSupplierPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentDetail"];
+                };
+            };
+        };
+    };
+    sendSupplierPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierPaymentDetail"];
                 };
             };
         };

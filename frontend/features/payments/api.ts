@@ -85,3 +85,55 @@ export function fifoPreview(docs: { docType: string; docId: number; open: string
   }
   return { parts, advance: fromCents(left < 0n ? 0n : left) };
 }
+
+// ===== YT =====
+
+export type SupplierPaymentSummary = components["schemas"]["SupplierPaymentSummary"];
+export type SupplierPaymentDetail = components["schemas"]["SupplierPaymentDetail"];
+export type SupplierPaymentStatus = SupplierPaymentSummary["status"];
+
+export const PAYMENT_YT = "payments.yt";
+export const PAYMENT_YT_APPROVE = "payments.ytApprove";
+export const PAYMENT_YT_DIRECT = "payments.ytDirect";
+
+export const SUPPLIER_PAYMENT_STATUS: Record<SupplierPaymentStatus, string> = {
+  DRAFT: "Qoralama",
+  PENDING: "Tasdiqlashda",
+  POSTED: "Oʻtkazilgan",
+  CANCELLED: "Bekor qilingan",
+};
+
+export function useSupplierPayments(branchId: number | null, status: SupplierPaymentStatus | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["payments", "supplier", branchId, status],
+    queryFn: () =>
+      unwrap(api.GET("/api/payments/supplier", { params: { query: { branchId: branchId ?? undefined, status: status ?? undefined } } })),
+    enabled,
+  });
+}
+
+export function useSupplierPayment(id: number | null) {
+  return useQuery({
+    queryKey: ["payments", "supplier", "one", id],
+    queryFn: () => unwrap(api.GET("/api/payments/supplier/{id}", { params: { path: { id: id as number } } })),
+    enabled: id != null,
+  });
+}
+
+export function useSupplierOpenDocs(branchId: number | null, supplierId: number | null) {
+  return useQuery({
+    queryKey: ["payments", "supplier-open-docs", branchId, supplierId],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/payments/supplier/open-docs", {
+          params: { query: { branchId: branchId as number, supplierId: supplierId as number } },
+        }),
+      ),
+    enabled: branchId != null && supplierId != null,
+  });
+}
+
+export async function searchSuppliers(q: string) {
+  const page = await unwrap(api.GET("/api/counterparties", { params: { query: { q, role: "SUPPLIER", size: 20 } } }));
+  return page.items.filter((c) => c.active).map((c) => ({ value: String(c.id), label: c.name, sub: c.tin }));
+}

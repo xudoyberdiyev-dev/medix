@@ -77,6 +77,9 @@
   }, {
     "description" : "Kassa, Terminal va bank hisoblari",
     "name" : "money-accounts"
+  }, {
+    "description" : "Yetkazib beruvchiga to'lovlar (YT)",
+    "name" : "supplier-payments"
   } ],
   "paths" : {
     "/api/audit" : {
@@ -3201,6 +3204,362 @@
         },
         "summary" : "O'tkazish",
         "tags" : [ "payments" ]
+      }
+    },
+    "/api/payments/supplier" : {
+      "get" : {
+        "operationId" : "listSupplierPayments",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING", "POSTED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "supplierId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SupplierPaymentSummary"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YT ro'yxati",
+        "tags" : [ "supplier-payments" ]
+      },
+      "post" : {
+        "operationId" : "createSupplierPayment",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SupplierPaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierPaymentDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "YT qoralamasi",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
+    "/api/payments/supplier/open-docs" : {
+      "get" : {
+        "operationId" : "supplierOpenDocs",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "supplierId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpenDocs"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YB oldidagi ochiq qarzlar (eng eskisi birinchi) va avans",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
+    "/api/payments/supplier/{id}" : {
+      "get" : {
+        "operationId" : "getSupplierPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierPaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YT kartochkasi",
+        "tags" : [ "supplier-payments" ]
+      },
+      "put" : {
+        "operationId" : "updateSupplierPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SupplierPaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierPaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YT qoralamasini o'zgartirish",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
+    "/api/payments/supplier/{id}/approve" : {
+      "post" : {
+        "description" : "Pul hisobdan chiqadi; summa eng eski kirim qarzidan (yoki qo'lda) taqsimlanadi.",
+        "operationId" : "approveSupplierPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentPostRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierPaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tasdiqlash va o'tkazish",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
+    "/api/payments/supplier/{id}/cancel" : {
+      "post" : {
+        "description" : "O'tkazilgan bo'lsa: qarz va hisob qoldig'i teskari yoziladi.",
+        "operationId" : "cancelSupplierPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierPaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YT ni bekor qilish",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
+    "/api/payments/supplier/{id}/post" : {
+      "post" : {
+        "operationId" : "postSupplierPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentPostRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierPaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tasdiqsiz o'tkazish",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
+    "/api/payments/supplier/{id}/return" : {
+      "post" : {
+        "operationId" : "returnSupplierPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierPaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamaga qaytarish (sabab bilan)",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
+    "/api/payments/supplier/{id}/send" : {
+      "post" : {
+        "operationId" : "sendSupplierPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierPaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tasdiqqa yuborish",
+        "tags" : [ "supplier-payments" ]
       }
     },
     "/api/price-changes" : {
@@ -10580,6 +10939,193 @@
           }
         },
         "required" : [ "batchId", "batchNumber", "bonus", "daysLeft", "expiryDate", "productCode", "productId", "productName", "qty", "sellable", "warehouse", "warehouseId", "zone", "zoneId", "zoneType" ]
+      },
+      "SupplierPaymentDetail" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountBalance" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "accountKind" : {
+            "type" : "string"
+          },
+          "advance" : {
+            "type" : "string"
+          },
+          "allocations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentAllocation"
+            }
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "postedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "postedBy" : {
+            "type" : "string"
+          },
+          "returnedReason" : {
+            "type" : "string"
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sentBy" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING", "POSTED", "CANCELLED" ]
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "supplierTin" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "account", "accountBalance", "accountId", "accountKind", "allocations", "amount", "branchId", "createdAt", "createdBy", "id", "number", "paymentDate", "status", "supplier", "supplierId", "version" ]
+      },
+      "SupplierPaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "amount" : {
+            "type" : "string",
+            "description" : "Summa, masalan «250000.00»",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bo'sh bo'lsa — bugun"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "accountId", "amount", "branchId", "supplierId" ]
+      },
+      "SupplierPaymentSummary" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "accountKind" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING", "POSTED", "CANCELLED" ]
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "id", "number", "paymentDate", "status", "supplier", "supplierId" ]
       },
       "Terms" : {
         "type" : "object",
