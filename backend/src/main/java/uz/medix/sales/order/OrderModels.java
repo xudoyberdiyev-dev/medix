@@ -151,7 +151,22 @@ final class OrderModels {
             @Schema(nullable = true) Instant pickFinishedAt,
             @Schema(description = "Yig'uvchi FEFO taklif qilmagan partiyani olgan") boolean fefoDeviation,
             @Schema(nullable = true, description = "Joylar soni (quti)") Integer places,
+            @Schema(description = "Hujjatlar zanjiri: NK, SV, HF, QM, reys") OrderDocuments documents,
+            @Schema(description = "«Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2)") String holder,
             List<OrderLine> lines) {}
+
+    /** Buyurtmadan yozilgan hujjatlar (SPEC 7). */
+    record OrderDocuments(
+            @Schema(nullable = true) String waybillNumber,
+            @Schema(nullable = true) String saleNumber,
+            @Schema(nullable = true) String invoiceNumber,
+            @Schema(nullable = true, description = "POSTED yoki CANCELLED") String saleStatus,
+            @Schema(nullable = true) String saleTotal,
+            @Schema(nullable = true) String returnNumber,
+            @Schema(nullable = true) String returnTotal,
+            @Schema(nullable = true) String tripNumber,
+            @Schema(nullable = true) String driver,
+            @Schema(nullable = true) String vehicle) {}
 
     /** Oldingi buyurtmalar (takrorlash uchun). */
     record PreviousOrder(long id, String number, LocalDate orderDate, int lines, String total) {}

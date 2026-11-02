@@ -406,7 +406,58 @@ class Orders {
                 h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, priceChanged, ev.credit(), issues,
                 h.createdBy(), h.createdById(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
                 h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
-                instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), lines));
+                instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), documents(id),
+                holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines));
+    }
+
+    private OrderModels.OrderDocuments documents(long orderId) {
+        return jdbc.sql("""
+                SELECT o.waybill_number, s.number AS sale, s.invoice_number, s.status AS sale_status, s.total AS sale_total,
+                       q.number AS qm, q.total AS qm_total, t.number AS trip, d.full_name AS driver, v.plate_number AS vehicle
+                FROM sales_order o
+                LEFT JOIN sale s ON s.order_id = o.id
+                LEFT JOIN LATERAL (SELECT number, total FROM sales_return WHERE order_id = o.id ORDER BY id DESC LIMIT 1) q ON true
+                LEFT JOIN LATERAL (SELECT ts.trip_id FROM trip_stop ts JOIN trip tt ON tt.id = ts.trip_id
+                                   WHERE ts.order_id = o.id AND ts.active AND tt.status <> 'CANCELLED'
+                                   ORDER BY ts.id DESC LIMIT 1) st ON true
+                LEFT JOIN trip t ON t.id = st.trip_id
+                LEFT JOIN employee d ON d.id = t.driver_id
+                LEFT JOIN vehicle v ON v.id = t.vehicle_id
+                WHERE o.id = :id""")
+                .param("id", orderId)
+                .query((rs, n) -> new OrderModels.OrderDocuments(rs.getString("waybill_number"), rs.getString("sale"), rs.getString("invoice_number"),
+                        rs.getString("sale_status"), rs.getBigDecimal("sale_total") == null ? null : new Money(rs.getBigDecimal("sale_total")).toString(),
+                        rs.getString("qm"), rs.getBigDecimal("qm_total") == null ? null : new Money(rs.getBigDecimal("qm_total")).toString(),
+                        rs.getString("trip"), rs.getString("driver"), rs.getString("vehicle")))
+                .single();
+    }
+
+    /** «Hozir kimda» (SPEC 5.2): bosqich egasi — xodim nomi bilan, bo'lmasa rol. */
+    private String holder(long orderId, OrderStatus status, DeliveryType delivery) {
+        record W(String creator, String picker, String marker, String driver) {}
+        W w = jdbc.sql("""
+                SELECT cb.full_name AS creator, pk.full_name AS picker, mk.full_name AS marker,
+                       (SELECT d.full_name FROM trip_stop ts JOIN trip t ON t.id = ts.trip_id JOIN employee d ON d.id = t.driver_id
+                        WHERE ts.order_id = o.id AND ts.active AND t.status <> 'CANCELLED' ORDER BY ts.id DESC LIMIT 1) AS driver
+                FROM sales_order o JOIN employee cb ON cb.id = o.created_by
+                LEFT JOIN employee pk ON pk.id = o.picker_id LEFT JOIN employee mk ON mk.id = o.marker_id
+                WHERE o.id = :id""")
+                .param("id", orderId)
+                .query((rs, n) -> new W(rs.getString("creator"), rs.getString("picker"), rs.getString("marker"), rs.getString("driver")))
+                .single();
+        boolean pickup = delivery == DeliveryType.PICKUP;
+        return switch (status) {
+            case DRAFT -> "Operator · " + w.creator();
+            case PENDING_APPROVAL -> "Tasdiqlovchi (Filial rahbari / Direktor)";
+            case QUEUED -> "Ombor mudiri — vaqt berish va yigʻuvchi navbati";
+            case PICKING -> w.picker() == null ? "Yigʻuvchilar navbatida" : "Yigʻuvchi · " + w.picker();
+            case MARKING -> w.marker() == null ? "Markirovkachilar navbatida" : "Markirovkachi · " + w.marker();
+            case CHECKING -> "Ombor mudiri — hisobdan oʻtkazish";
+            case DOCUMENTING -> "Ombor mudiri — hujjatlashtirish";
+            case LOADING -> pickup ? "Joʻnatish zonasi — mijoz olib ketadi" : w.driver() == null ? "Joʻnatish zonasi" : "Haydovchi · " + w.driver();
+            case IN_TRANSIT -> pickup ? "Mijoz olib ketdi" : w.driver() == null ? "Yoʻlda" : "Haydovchi · " + w.driver();
+            case DELIVERED, UNDELIVERED, REJECTED, CANCELLED -> "Yakunlangan";
+        };
     }
 
     private List<LineRow> lineRows(long orderId) {

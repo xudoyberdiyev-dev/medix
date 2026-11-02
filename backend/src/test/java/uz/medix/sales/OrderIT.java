@@ -817,6 +817,9 @@ class OrderIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sales[0]", matchesPattern("SV-[A-Z]{3}-\\d{6}")));
         assertThat(statusOf(o1)).isEqualTo("IN_TRANSIT");
+        mvc.perform(get("/api/orders/" + o1).cookie(keeper))
+                .andExpect(jsonPath("$.holder").value("Haydovchi · Sinov DRIVER"))
+                .andExpect(jsonPath("$.documents.saleStatus").value("POSTED"));
         assertThat(qtyIn(shipping, prod)).isZero();
         assertThat(qtyIn(p.main(), prod)).isEqualTo(18);
         var sale = jdbc.sql("SELECT invoice_number, total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sale WHERE order_id = :o")
@@ -946,6 +949,15 @@ class OrderIT {
                 .andExpect(jsonPath("$.stops[0].returnNumber", matchesPattern("QM-[A-Z]{3}-\\d{6}")))
                 .andExpect(jsonPath("$.stops[0].returnTotal").value("2000.00"));
         assertThat(statusOf(o)).isEqualTo("DELIVERED");
+        mvc.perform(get("/api/orders/" + o).cookie(keeper))
+                .andExpect(jsonPath("$.documents.waybillNumber", matchesPattern("NK-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.documents.saleNumber", matchesPattern("SV-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.documents.invoiceNumber", matchesPattern("HF-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.documents.returnNumber", matchesPattern("QM-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.documents.returnTotal").value("2000.00"))
+                .andExpect(jsonPath("$.documents.tripNumber", matchesPattern("RS-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.documents.driver").value("Sinov DRIVER"))
+                .andExpect(jsonPath("$.holder").value("Yakunlangan"));
         var qm = jdbc.sql("SELECT total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sales_return WHERE order_id = :o")
                 .param("o", o).query().singleRow();
         assertThat(qm.get("total")).isEqualTo("2000.00");
