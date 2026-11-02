@@ -21,6 +21,9 @@
     "description" : "Buyurtmalar",
     "name" : "orders"
   }, {
+    "description" : "Mijozdan to'lovlar (MT)",
+    "name" : "payments"
+  }, {
     "description" : "Qoldiqlar",
     "name" : "stock"
   }, {
@@ -71,11 +74,14 @@
   }, {
     "description" : "Kichik ma'lumotnomalar",
     "name" : "dictionaries"
+  }, {
+    "description" : "Kassa, Terminal va bank hisoblari",
+    "name" : "money-accounts"
   } ],
   "paths" : {
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_18",
+        "operationId" : "list_20",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -219,7 +225,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_12",
+        "operationId" : "list_14",
         "responses" : {
           "200" : {
             "content" : {
@@ -239,7 +245,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_12",
+        "operationId" : "create_14",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -269,7 +275,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_10",
+        "operationId" : "update_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -375,7 +381,7 @@
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
-        "operationId" : "list_11",
+        "operationId" : "list_13",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -452,7 +458,7 @@
         "tags" : [ "counterparties" ]
       },
       "post" : {
-        "operationId" : "create_11",
+        "operationId" : "create_13",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -481,7 +487,7 @@
     },
     "/api/counterparties/{id}" : {
       "get" : {
-        "operationId" : "get_6",
+        "operationId" : "get_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -507,7 +513,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_9",
+        "operationId" : "update_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -893,7 +899,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_10",
+        "operationId" : "list_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -922,7 +928,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_10",
+        "operationId" : "create_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -960,7 +966,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_8",
+        "operationId" : "update_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -1079,7 +1085,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_17",
+        "operationId" : "list_19",
         "responses" : {
           "200" : {
             "content" : {
@@ -1101,7 +1107,7 @@
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_9",
+        "operationId" : "list_11",
         "responses" : {
           "200" : {
             "content" : {
@@ -1121,7 +1127,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_9",
+        "operationId" : "create_11",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1255,7 +1261,7 @@
     },
     "/api/expense-items" : {
       "get" : {
-        "operationId" : "list_8",
+        "operationId" : "list_10",
         "responses" : {
           "200" : {
             "content" : {
@@ -1275,7 +1281,7 @@
         "tags" : [ "expense-items" ]
       },
       "post" : {
-        "operationId" : "create_8",
+        "operationId" : "create_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1488,7 +1494,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_8",
+        "operationId" : "get_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1681,9 +1687,67 @@
         "tags" : [ "marking" ]
       }
     },
+    "/api/money-accounts" : {
+      "get" : {
+        "operationId" : "list_9",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Account"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filial hisoblari (qoldiq bilan)",
+        "tags" : [ "money-accounts" ]
+      },
+      "post" : {
+        "operationId" : "create_9",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AccountRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Account"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Yangi hisob (kassa, Terminal yoki bank)",
+        "tags" : [ "money-accounts" ]
+      }
+    },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_16",
+        "operationId" : "list_18",
         "responses" : {
           "200" : {
             "content" : {
@@ -1735,7 +1799,7 @@
     },
     "/api/opening-balances" : {
       "get" : {
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -1788,7 +1852,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BQ-TSH-000001). Qoralama qoldiqqa ta'sir qilmaydi.",
-        "operationId" : "create_7",
+        "operationId" : "create_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1829,7 +1893,7 @@
     },
     "/api/opening-balances/{id}" : {
       "get" : {
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1856,7 +1920,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_7",
+        "operationId" : "update_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1895,7 +1959,7 @@
     "/api/opening-balances/{id}/cancel" : {
       "post" : {
         "description" : "Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.",
-        "operationId" : "cancel_4",
+        "operationId" : "cancel_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1987,7 +2051,7 @@
     "/api/opening-balances/{id}/post" : {
       "post" : {
         "description" : "Partiyalar yaratiladi va qoldiqqa kirim yoziladi (bitta tranzaksiya).",
-        "operationId" : "post_1",
+        "operationId" : "post_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2015,7 +2079,7 @@
     },
     "/api/orders" : {
       "get" : {
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2091,7 +2155,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BY-TSH-000001). Qoldiq va qarzga ta'sir qilmaydi.",
-        "operationId" : "create_6",
+        "operationId" : "create_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2438,7 +2502,7 @@
     "/api/orders/{id}" : {
       "get" : {
         "description" : "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.",
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2464,7 +2528,7 @@
         "tags" : [ "orders" ]
       },
       "put" : {
-        "operationId" : "update_6",
+        "operationId" : "update_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2531,7 +2595,7 @@
     "/api/orders/{id}/cancel" : {
       "post" : {
         "description" : "Sabab majburiy. «Yo'lda» va undan keyin bekor qilinmaydi.",
-        "operationId" : "cancel_3",
+        "operationId" : "cancel_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2887,6 +2951,258 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/payments/customer" : {
+      "get" : {
+        "operationId" : "list_6",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "POSTED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentSummary"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "MT ro'yxati",
+        "tags" : [ "payments" ]
+      },
+      "post" : {
+        "operationId" : "create_6",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "MT qoralamasi",
+        "tags" : [ "payments" ]
+      }
+    },
+    "/api/payments/customer/open-docs" : {
+      "get" : {
+        "operationId" : "openDocs",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpenDocs"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijozning ochiq qarzlari (eng eskisi birinchi) va avansi",
+        "tags" : [ "payments" ]
+      }
+    },
+    "/api/payments/customer/{id}" : {
+      "get" : {
+        "operationId" : "get_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "MT kartochkasi (taqsimot bilan)",
+        "tags" : [ "payments" ]
+      },
+      "put" : {
+        "operationId" : "update_6",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani o'zgartirish",
+        "tags" : [ "payments" ]
+      }
+    },
+    "/api/payments/customer/{id}/cancel" : {
+      "post" : {
+        "description" : "O'tkazilgan bo'lsa: qarz va hisob qoldig'i teskari yoziladi.",
+        "operationId" : "cancel_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekor qilish",
+        "tags" : [ "payments" ]
+      }
+    },
+    "/api/payments/customer/{id}/post" : {
+      "post" : {
+        "description" : "Taqsimot: avtomatik (eng eski qarzdan) yoki qo'lda; ortig'i avans. Pul hisobga tushadi.",
+        "operationId" : "post_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentPostRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "O'tkazish",
+        "tags" : [ "payments" ]
+      }
+    },
     "/api/price-changes" : {
       "get" : {
         "operationId" : "list_5",
@@ -3212,7 +3528,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_17",
         "responses" : {
           "200" : {
             "content" : {
@@ -4108,7 +4424,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_14",
+        "operationId" : "list_16",
         "responses" : {
           "200" : {
             "content" : {
@@ -4418,7 +4734,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_13",
+        "operationId" : "list_15",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4613,6 +4929,77 @@
         "tags" : [ "trips" ]
       }
     },
+    "/api/trips/cash" : {
+      "get" : {
+        "description" : "Naqd olingan, Kassir hali qabul qilmagan summalar.",
+        "operationId" : "driverCash",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DriverCash"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Haydovchidagi pul",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/cash/{stopId}/accept" : {
+      "post" : {
+        "description" : "MT yoziladi va o'tkaziladi, mijoz qarzi kamayadi, pul kassaga tushadi.",
+        "operationId" : "acceptCash",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "stopId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CashAcceptRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashAcceptResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Haydovchidan pulni qabul qilish",
+        "tags" : [ "trips" ]
+      }
+    },
     "/api/trips/mine" : {
       "get" : {
         "description" : "Faol reys bo'lmasa — 204.",
@@ -4755,7 +5142,7 @@
     },
     "/api/trips/{id}" : {
       "get" : {
-        "operationId" : "get_7",
+        "operationId" : "get_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5594,6 +5981,71 @@
         },
         "required" : [ "lines" ]
       },
+      "Account" : {
+        "type" : "object",
+        "properties" : {
+          "accountNo" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "balance" : {
+            "type" : "string"
+          },
+          "bankName" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TERMINAL", "BANK" ]
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "balance", "branchId", "code", "id", "kind", "name" ]
+      },
+      "AccountRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountNo" : {
+            "type" : "string",
+            "description" : "Bank hisob raqami (20 raqam)",
+            "pattern" : "\\d{20}"
+          },
+          "bankName" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TERMINAL", "BANK" ]
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "branchId", "kind", "name" ]
+      },
       "AddZoneRequest" : {
         "type" : "object",
         "properties" : {
@@ -5738,6 +6190,25 @@
           }
         },
         "required" : [ "code", "legalName", "name", "tin" ]
+      },
+      "CashAcceptRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "accountId" ]
+      },
+      "CashAcceptResult" : {
+        "type" : "object",
+        "properties" : {
+          "payment" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "payment" ]
       },
       "CatalogPage" : {
         "type" : "object",
@@ -6391,6 +6862,47 @@
             "minLength" : 0
           }
         }
+      },
+      "DriverCash" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "collectedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "driver" : {
+            "type" : "string"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "stopId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tripId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tripNumber" : {
+            "type" : "string"
+          },
+          "tripStatus" : {
+            "type" : "string",
+            "enum" : [ "PLANNED", "IN_TRANSIT", "RETURN_WAIT", "DONE", "CANCELLED" ]
+          }
+        },
+        "required" : [ "amount", "collectedAt", "customer", "customerId", "driver", "orderNumber", "stopId", "tripId", "tripNumber", "tripStatus" ]
       },
       "DriverOption" : {
         "type" : "object",
@@ -7319,6 +7831,57 @@
         },
         "required" : [ "items", "unread" ]
       },
+      "OpenDocView" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "open" : {
+            "type" : "string"
+          },
+          "overdueDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Muddati o'tgan kunlar (0 — o'tmagan)"
+          }
+        },
+        "required" : [ "date", "docId", "docNumber", "docType", "open", "overdueDays" ]
+      },
+      "OpenDocs" : {
+        "type" : "object",
+        "properties" : {
+          "advance" : {
+            "type" : "string",
+            "description" : "Taqsimlanmagan to'lovlar (avans)"
+          },
+          "debt" : {
+            "type" : "string"
+          },
+          "docs" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OpenDocView"
+            }
+          }
+        },
+        "required" : [ "advance", "debt", "docs" ]
+      },
       "OpeningCancelRequest" : {
         "type" : "object",
         "properties" : {
@@ -8196,6 +8759,255 @@
           }
         },
         "required" : [ "lines", "reason" ]
+      },
+      "PaymentAllocation" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "docId", "docNumber", "docType" ]
+      },
+      "PaymentAllocationRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docType" : {
+            "type" : "string",
+            "maxLength" : 8,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "amount", "docId", "docType" ]
+      },
+      "PaymentCancelRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
+      "PaymentDetail" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "accountKind" : {
+            "type" : "string"
+          },
+          "advance" : {
+            "type" : "string"
+          },
+          "allocations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentAllocation"
+            }
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customerTin" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "postedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "postedBy" : {
+            "type" : "string"
+          },
+          "source" : {
+            "type" : "string",
+            "enum" : [ "MANUAL", "DRIVER" ]
+          },
+          "sourceRef" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "POSTED", "CANCELLED" ]
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "account", "accountId", "accountKind", "allocations", "amount", "branchId", "createdAt", "createdBy", "customer", "customerId", "id", "number", "paymentDate", "source", "status", "version" ]
+      },
+      "PaymentPostRequest" : {
+        "type" : "object",
+        "properties" : {
+          "allocations" : {
+            "type" : "array",
+            "description" : "Bo'sh — avtomatik (eng eski qarzdan); berilsa — qo'lda taqsimot, ortig'i avans",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentAllocationRequest"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          }
+        }
+      },
+      "PaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "amount" : {
+            "type" : "string",
+            "description" : "Summa, masalan «250000.00»",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bo'sh bo'lsa — bugun"
+          }
+        },
+        "required" : [ "accountId", "amount", "branchId", "customerId" ]
+      },
+      "PaymentSummary" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "accountKind" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "source" : {
+            "type" : "string",
+            "enum" : [ "MANUAL", "DRIVER" ]
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "POSTED", "CANCELLED" ]
+          }
+        },
+        "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "customer", "customerId", "id", "number", "paymentDate", "source", "status" ]
       },
       "PendingReturn" : {
         "type" : "object",
