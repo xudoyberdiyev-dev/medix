@@ -54,7 +54,8 @@ class TripController {
 
     record PartialRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason,
             @jakarta.validation.constraints.NotNull(message = "{validation.required}") @Size(min = 1, max = 200) List<@Valid ReturnedLine> lines,
-            @io.swagger.v3.oas.annotations.media.Schema(nullable = true, description = "Naqd olingan summa (qolgan summagacha)") String cash) {}
+            @io.swagger.v3.oas.annotations.media.Schema(nullable = true, description = "Naqd olingan summa (qolgan summagacha)") @Size(max = 24)
+            String cash) {}
 
     private final Trips trips;
     private final CurrentActor currentActor;

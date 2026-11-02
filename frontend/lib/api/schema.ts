@@ -2292,6 +2292,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/{id}/stops/{stopId}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Manzildagi sotuv qatorlari (qisman yetkazish uchun) */
+        get: operations["stopLines"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/{id}/stops/{stopId}/load": {
         parameters: {
             query?: never;
@@ -2306,6 +2323,23 @@ export interface paths {
          * @description Haydovchi buyurtmani joylar soni bo'yicha qabul qiladi.
          */
         post: operations["load"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/stops/{stopId}/partial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Qisman yetkazildi: qaytgan qism QM (asl sotuv narxida), mijoz qarzi kamayadi, tovar «Qaytmoqda» */
+        post: operations["partial"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3360,8 +3394,11 @@ export interface components {
             deliveryDate?: string;
             /** @enum {string} */
             deliveryType: "DELIVERY" | "PICKUP";
+            documents: components["schemas"]["OrderDocuments"];
             /** @description Yig'uvchi FEFO taklif qilmagan partiyani olgan */
             fefoDeviation: boolean;
+            /** @description «Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2) */
+            holder: string;
             /** Format: int64 */
             id: number;
             issues: components["schemas"]["OrderIssue"][];
@@ -3399,6 +3436,19 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        OrderDocuments: {
+            driver?: string;
+            invoiceNumber?: string;
+            returnNumber?: string;
+            returnTotal?: string;
+            saleNumber?: string;
+            /** @description POSTED yoki CANCELLED */
+            saleStatus?: string;
+            saleTotal?: string;
+            tripNumber?: string;
+            vehicle?: string;
+            waybillNumber?: string;
         };
         OrderIssue: {
             code: string;
@@ -3524,6 +3574,12 @@ export interface components {
             statusChangedAt: string;
             total: string;
             warehouse: string;
+        };
+        PartialRequest: {
+            /** @description Naqd olingan summa (qolgan summagacha) */
+            cash?: string;
+            lines: components["schemas"]["ReturnedLine"][];
+            reason: string;
         };
         PendingReturn: {
             batch: string;
@@ -4039,6 +4095,12 @@ export interface components {
             /** Format: int32 */
             receivedQty: number;
         };
+        ReturnedLine: {
+            /** Format: int32 */
+            qty: number;
+            /** Format: int64 */
+            saleLineId: number;
+        };
         Role: {
             code: string;
             /**
@@ -4055,6 +4117,17 @@ export interface components {
         RoleRef: {
             code: string;
             name: string;
+        };
+        SaleLine: {
+            amount: string;
+            batch: string;
+            /** Format: int64 */
+            id: number;
+            marked: boolean;
+            price: string;
+            product: string;
+            /** Format: int32 */
+            qty: number;
         };
         ScanRequest: {
             code: string;
@@ -4220,7 +4293,7 @@ export interface components {
             /** Format: int64 */
             orderId: number;
             orderNumber: string;
-            /** @description DELIVERED yoki UNDELIVERED */
+            /** @description DELIVERED, PARTIAL yoki UNDELIVERED */
             outcome?: string;
             outcomeReason?: string;
             paymentType: string;
@@ -4229,6 +4302,10 @@ export interface components {
             photos: number;
             /** Format: int32 */
             places: number;
+            /** @description Qisman yetkazishda QM raqami */
+            returnNumber?: string;
+            /** @description QM summasi (QQS bilan) */
+            returnTotal?: string;
             /** Format: int32 */
             seq: number;
             total: string;
@@ -7650,6 +7727,29 @@ export interface operations {
             };
         };
     };
+    stopLines: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                stopId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleLine"][];
+                };
+            };
+        };
+    };
     load: {
         parameters: {
             query?: never;
@@ -7663,6 +7763,33 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoadRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
+    partial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                stopId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartialRequest"];
             };
         };
         responses: {

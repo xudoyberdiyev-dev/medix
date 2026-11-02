@@ -4925,6 +4925,45 @@
         "tags" : [ "trips" ]
       }
     },
+    "/api/trips/{id}/stops/{stopId}/lines" : {
+      "get" : {
+        "operationId" : "stopLines",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "stopId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SaleLine"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Manzildagi sotuv qatorlari (qisman yetkazish uchun)",
+        "tags" : [ "trips" ]
+      }
+    },
     "/api/trips/{id}/stops/{stopId}/load" : {
       "post" : {
         "description" : "Haydovchi buyurtmani joylar soni bo'yicha qabul qiladi.",
@@ -4969,6 +5008,52 @@
           }
         },
         "summary" : "«Qabul qildim»",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/stops/{stopId}/partial" : {
+      "post" : {
+        "operationId" : "partial",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "stopId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PartialRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qisman yetkazildi: qaytgan qism QM (asl sotuv narxida), mijoz qarzi kamayadi, tovar «Qaytmoqda»",
         "tags" : [ "trips" ]
       }
     },
@@ -7654,9 +7739,16 @@
             "type" : "string",
             "enum" : [ "DELIVERY", "PICKUP" ]
           },
+          "documents" : {
+            "$ref" : "#/components/schemas/OrderDocuments"
+          },
           "fefoDeviation" : {
             "type" : "boolean",
             "description" : "Yig'uvchi FEFO taklif qilmagan partiyani olgan"
+          },
+          "holder" : {
+            "type" : "string",
+            "description" : "«Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2)"
           },
           "id" : {
             "type" : "integer",
@@ -7736,7 +7828,43 @@
             "format" : "int64"
           }
         },
-        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "fefoDeviation", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "status", "total", "warehouse", "warehouseId" ]
+        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "documents", "fefoDeviation", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "status", "total", "warehouse", "warehouseId" ]
+      },
+      "OrderDocuments" : {
+        "type" : "object",
+        "properties" : {
+          "driver" : {
+            "type" : "string"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "returnNumber" : {
+            "type" : "string"
+          },
+          "returnTotal" : {
+            "type" : "string"
+          },
+          "saleNumber" : {
+            "type" : "string"
+          },
+          "saleStatus" : {
+            "type" : "string",
+            "description" : "POSTED yoki CANCELLED"
+          },
+          "saleTotal" : {
+            "type" : "string"
+          },
+          "tripNumber" : {
+            "type" : "string"
+          },
+          "vehicle" : {
+            "type" : "string"
+          },
+          "waybillNumber" : {
+            "type" : "string"
+          }
+        }
       },
       "OrderIssue" : {
         "type" : "object",
@@ -8043,6 +8171,31 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "id", "lines", "number", "orderDate", "status", "statusChangedAt", "total", "warehouse" ]
+      },
+      "PartialRequest" : {
+        "type" : "object",
+        "properties" : {
+          "cash" : {
+            "type" : "string",
+            "description" : "Naqd olingan summa (qolgan summagacha)",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReturnedLine"
+            },
+            "maxItems" : 200,
+            "minItems" : 1
+          },
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "lines", "reason" ]
       },
       "PendingReturn" : {
         "type" : "object",
@@ -9353,6 +9506,21 @@
         },
         "required" : [ "receivedQty" ]
       },
+      "ReturnedLine" : {
+        "type" : "object",
+        "properties" : {
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          },
+          "saleLineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "qty", "saleLineId" ]
+      },
       "Role" : {
         "type" : "object",
         "properties" : {
@@ -9389,6 +9557,35 @@
           }
         },
         "required" : [ "code", "name" ]
+      },
+      "SaleLine" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "batch" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "price" : {
+            "type" : "string"
+          },
+          "product" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "amount", "batch", "id", "marked", "price", "product", "qty" ]
       },
       "ScanRequest" : {
         "type" : "object",
@@ -9825,7 +10022,7 @@
           },
           "outcome" : {
             "type" : "string",
-            "description" : "DELIVERED yoki UNDELIVERED"
+            "description" : "DELIVERED, PARTIAL yoki UNDELIVERED"
           },
           "outcomeReason" : {
             "type" : "string"
@@ -9843,6 +10040,14 @@
           "places" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "returnNumber" : {
+            "type" : "string",
+            "description" : "Qisman yetkazishda QM raqami"
+          },
+          "returnTotal" : {
+            "type" : "string",
+            "description" : "QM summasi (QQS bilan)"
           },
           "seq" : {
             "type" : "integer",

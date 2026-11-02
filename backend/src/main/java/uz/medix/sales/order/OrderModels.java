@@ -151,7 +151,7 @@ final class OrderModels {
             @Schema(nullable = true) Instant pickFinishedAt,
             @Schema(description = "Yig'uvchi FEFO taklif qilmagan partiyani olgan") boolean fefoDeviation,
             @Schema(nullable = true, description = "Joylar soni (quti)") Integer places,
-            @Schema(description = "Hujjatlar zanjiri: NK, SV, HF, QM, reys") OrderDocuments documents,
+            OrderDocuments documents,
             @Schema(description = "«Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2)") String holder,
             List<OrderLine> lines) {}
 

@@ -267,6 +267,7 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
     >
       <div className="flex flex-col gap-4">
         <Decision doc={doc} />
+        {doc && doc.status !== "DRAFT" ? <DocumentsRow doc={doc} /> : null}
         <div className="grid grid-cols-3 gap-4">
           <Select
             label="Mijoz"
@@ -553,6 +554,40 @@ function Decision({ doc }: { doc: OrderDetail | null }) {
       </Alert>
     );
   return null;
+}
+
+/** «Hozir kimda» va hujjatlar zanjiri (SPEC 5.2, 7): NK → SV / HF → QM, reys va haydovchi. */
+function DocumentsRow({ doc }: { doc: OrderDetail }) {
+  const d = doc.documents;
+  const items: { label: string; value: string; note?: string }[] = [];
+  if (d.waybillNumber) items.push({ label: "Nakladnoy", value: d.waybillNumber });
+  if (d.tripNumber) items.push({ label: "Reys", value: d.tripNumber, note: [d.driver, d.vehicle].filter(Boolean).join(" · ") });
+  if (d.saleNumber)
+    items.push({
+      label: d.saleStatus === "CANCELLED" ? "Sotuv (bekor)" : "Sotuv",
+      value: d.saleNumber,
+      note: d.saleTotal ? `${formatMoney(d.saleTotal)} soʻm` : undefined,
+    });
+  if (d.invoiceNumber) items.push({ label: "Hisob-faktura", value: d.invoiceNumber });
+  if (d.returnNumber)
+    items.push({ label: "Qaytarish", value: d.returnNumber, note: d.returnTotal ? `${formatMoney(d.returnTotal)} soʻm` : undefined });
+  return (
+    <div className="rounded-card border border-border p-3" aria-label="Hujjatlar">
+      <div className="text-caption text-text-secondary">Hozir kimda</div>
+      <div className="mb-2">{doc.holder}</div>
+      {items.length > 0 ? (
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 md:grid-cols-5">
+          {items.map((i) => (
+            <div key={i.label}>
+              <dt className="text-caption text-text-secondary">{i.label}</dt>
+              <dd className="font-mono">{i.value}</dd>
+              {i.note ? <dd className="text-caption text-text-secondary">{i.note}</dd> : null}
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </div>
+  );
 }
 
 /** Mijoz qatori (SPEC 5.3): narx turi, qarz, muddati oʻtgan qarz, limit va qolgan limit. */

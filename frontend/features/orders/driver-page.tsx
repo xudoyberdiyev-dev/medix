@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, CircleCheck, CircleX, Flag, PackageCheck, Truck } from "lucide-react";
+import { Camera, CircleCheck, CircleX, Flag, PackageCheck, PackageMinus, Truck } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
+import { partialTotals } from "./partial";
 import { TRIP_STATUS } from "./shipments-page";
 
 export type TripDetail = components["schemas"]["TripDetail"];
@@ -149,6 +150,10 @@ function TripView(props: {
                 <Badge tone="success" icon={CircleCheck}>
                   Yetkazildi
                 </Badge>
+              ) : s.outcome === "PARTIAL" ? (
+                <Badge tone="warning" icon={PackageMinus}>
+                  Qisman · <span className="font-mono">{s.returnNumber}</span>
+                </Badge>
               ) : s.outcome === "UNDELIVERED" ? (
                 <Badge tone="danger" icon={CircleX}>
                   Yetkazilmadi
@@ -209,6 +214,7 @@ function TransitActions({ t }: { t: TripDetail }) {
   const [error, setError] = useState<unknown>(null);
   const [undeliver, setUndeliver] = useState<number | null>(null);
   const [reason, setReason] = useState("");
+  const [partial, setPartial] = useState<TripStop | null>(null);
   const open = t.stops.filter((s) => !s.outcome);
 
   async function run(key: string, fn: () => Promise<TripDetail | void>) {
@@ -326,11 +332,16 @@ function TransitActions({ t }: { t: TripDetail }) {
             >
               Yetkazildi
             </Button>
+            <Button variant="tertiary" icon={PackageMinus} disabled={s.photos === 0} onClick={() => setPartial(s)}>
+              Qisman
+            </Button>
             <Button variant="tertiary" icon={CircleX} onClick={() => setUndeliver(s.id)}>
               Yetkazilmadi
             </Button>
           </div>
-          {s.photos === 0 ? <div className="mt-1 text-caption text-text-secondary">«Yetkazildi» uchun kamida 1 rasm kerak.</div> : null}
+          {s.photos === 0 ? (
+            <div className="mt-1 text-caption text-text-secondary">«Yetkazildi» va «Qisman» uchun kamida 1 rasm kerak.</div>
+          ) : null}
         </div>
       ))}
       <div className="flex justify-end">
@@ -353,6 +364,116 @@ function TransitActions({ t }: { t: TripDetail }) {
         <p className="mb-3">Sotuv va mijoz qarzi bekor boʻladi, tovar omborga qaytadi (Karantin).</p>
         <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} />
       </Modal>
+      {partial ? (
+        <PartialDialog
+          tripId={t.id}
+          stop={partial}
+          onClose={() => setPartial(null)}
+          onDone={(d) => {
+            qc.setQueryData(["trips", "mine"], d);
+            setPartial(null);
+          }}
+        />
+      ) : null}
     </div>
+  );
+}
+
+type TripStop = TripDetail["stops"][number];
+
+function PartialDialog(props: { tripId: number; stop: TripStop; onClose: () => void; onDone: (d: TripDetail) => void }) {
+  const { stop } = props;
+  const lines = useQuery({
+    queryKey: ["trips", props.tripId, "stops", stop.id, "lines"],
+    queryFn: () => unwrap(api.GET("/api/trips/{id}/stops/{stopId}/lines", { params: { path: { id: props.tripId, stopId: stop.id } } })),
+  });
+  const [back, setBack] = useState<Record<number, string>>({});
+  const [reason, setReason] = useState("");
+  const [cash, setCash] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const sum = partialTotals(lines.data ?? [], back, stop.total);
+  const err = describeError(error);
+
+  async function submit() {
+    setPending(true);
+    setError(null);
+    try {
+      await ensureCsrf();
+      const d = await unwrap(
+        api.POST("/api/trips/{id}/stops/{stopId}/partial", {
+          params: { path: { id: props.tripId, stopId: stop.id } },
+          body: {
+            reason: reason.trim(),
+            lines: (lines.data ?? []).map((l) => ({ saleLineId: l.id, qty: Number(back[l.id] || "0") })),
+            cash: cash.trim() || undefined,
+          },
+        }),
+      );
+      toast({ tone: "success", title: "Qisman yetkazildi", description: `Qaytgan tovar: ${formatMoney(sum.returned)} soʻm` });
+      props.onDone(d);
+    } catch (e) {
+      setError(e);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const blocked = sum.invalid || sum.units === 0 || sum.all || !reason.trim();
+  return (
+    <Modal
+      open
+      onClose={props.onClose}
+      title={`Qisman yetkazish · ${stop.customer}`}
+      size="lg"
+      primaryAction={{ label: "Qisman yetkazildi deb belgilash", onClick: () => void submit(), loading: pending, disabled: blocked }}
+    >
+      {err.message ? <Alert tone="danger" title={err.message} className="mb-3" /> : null}
+      <p className="mb-3 text-text-secondary">
+        Mijoz olmagan miqdorni kiriting. Qaytgan qism asl sotuv narxida qaytarish (QM) boʻlib yoziladi, mijoz qarzi kamayadi, tovar omborga
+        qaytadi (Karantin).
+      </p>
+      {lines.error ? (
+        <ErrorState onRetry={() => lines.refetch()} />
+      ) : lines.isPending ? (
+        <Skeleton className="h-24 w-full" />
+      ) : (
+        <ul className="mb-3 flex flex-col">
+          {lines.data.map((l) => (
+            <li key={l.id} className="flex flex-wrap items-end justify-between gap-2 border-t border-border py-2">
+              <div className="min-w-0">
+                <div>{l.product}</div>
+                <div className="text-caption text-text-secondary">
+                  Partiya <span className="font-mono">{l.batch}</span> · {formatQuantity(l.qty)} dona × {formatMoney(l.price)} soʻm
+                  {l.marked ? " · markirovkali" : ""}
+                </div>
+              </div>
+              <div className="w-28">
+                <TextField
+                  label="Qaytdi"
+                  value={back[l.id] ?? ""}
+                  onChange={(v) => setBack((m) => ({ ...m, [l.id]: v.replace(/\D/g, "") }))}
+                  inputMode="numeric"
+                  error={Number(back[l.id] || "0") > l.qty ? `${formatQuantity(l.qty)} dan koʻp emas` : undefined}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="mb-3 text-caption">
+        Qaytdi: <span className="font-mono">{formatMoney(sum.returned)}</span> soʻm · Mijoz toʻlaydi:{" "}
+        <span className="font-mono">{formatMoney(sum.net)}</span> soʻm
+      </div>
+      {sum.all ? (
+        <Alert tone="warning" title="Hamma tovar qaytmoqda" className="mb-3">
+          «Qisman» emas, «Yetkazilmadi» ni sabab bilan belgilang.
+        </Alert>
+      ) : null}
+      <div className="flex flex-col gap-3">
+        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} />
+        {stop.paymentType === "CASH" ? <TextField label="Naqd olindi" variant="amount" value={cash} onChange={setCash} /> : null}
+      </div>
+    </Modal>
   );
 }
