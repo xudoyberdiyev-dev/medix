@@ -293,3 +293,44 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await expect(page.getByRole("region", { name: "Joʻnatishga tayyor" })).toContainText("Shifo Dorixona E2E");
   await expect(page.getByRole("button", { name: "Reysni rejalashtirish" })).toBeDisabled();
 });
+
+test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/cash");
+  await page.getByRole("button", { name: /^Filial:/ }).click();
+  await page.getByRole("option").nth(1).click();
+  await expect(page.getByRole("heading", { name: "Kassa" })).toBeVisible();
+
+  // Boshqa kirim — darhol oʻtkaziladi
+  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
+  await choose(page, "Yoʻnalish", /^Kirim$/);
+  await choose(page, "Hisob", /Asosiy kassa/);
+  await choose(page, "Kirim moddasi", /Boshqa kirim/);
+  await field(page, "Summa").fill("3.000.000,00");
+  await page.getByRole("button", { name: "Yozish" }).click();
+  await expect(page.getByText("Kirim yozildi").first()).toBeVisible();
+
+  // 2 000 000 dan katta chiqim — tasdiqqa; Direktor tasdiqlaydi
+  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
+  await choose(page, "Hisob", /Asosiy kassa/);
+  await choose(page, "Xarajat moddasi", /Ijara/);
+  await field(page, "Summa").fill("2.500.000,00");
+  await page.getByRole("button", { name: "Tasdiqqa yuborish" }).click();
+  await expect(page.getByText("Chiqim tasdiqqa yuborildi").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Tasdiqlashni kutmoqda/ })).toBeVisible();
+  await page.getByRole("button", { name: "Tasdiqlash" }).click();
+  await expect(page.getByText("Chiqim tasdiqlandi").first()).toBeVisible();
+  await expect(page.getByText("500.000,00 soʻm").first()).toBeVisible();
+
+  // Kunni yopish: 2 × 200 000 + 1 × 100 000 = kutilgan 500 000 — farqsiz
+  await page.getByRole("button", { name: "Kunni yopish" }).first().click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByText("Kutilgan qoldiq")).toBeVisible();
+  await field(page, "200.000 soʻm").fill("2");
+  await field(page, "100.000 soʻm").fill("1");
+  await drawer.getByRole("button", { name: "Kunni yopish" }).click();
+  await expect(page.getByText(/Kun yopildi/).first()).toBeVisible();
+  await page.getByRole("tab", { name: "Yopilgan kunlar" }).click();
+  await expect(page.getByRole("cell", { name: "500.000,00" }).first()).toBeVisible();
+});
