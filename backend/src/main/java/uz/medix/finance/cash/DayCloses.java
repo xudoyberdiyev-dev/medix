@@ -253,8 +253,8 @@ class DayCloses {
         if (!actor.canAccessBranch(branchId)) {
             throw MedixException.notFound("error.notFound");
         }
-        return jdbc.sql(SELECT + """
-                 WHERE a.branch_id = :b AND (CAST(:a AS BIGINT) IS NULL OR c.account_id = :a) ORDER BY c.close_date DESC, c.id DESC LIMIT 100""")
+        return jdbc.sql(SELECT + " WHERE a.branch_id = :b AND (CAST(:a AS BIGINT) IS NULL OR c.account_id = :a)"
+                + " ORDER BY c.close_date DESC, c.id DESC LIMIT 100")
                 .param("b", branchId)
                 .param("a", accountId)
                 .query((rs, n) -> map(rs))
