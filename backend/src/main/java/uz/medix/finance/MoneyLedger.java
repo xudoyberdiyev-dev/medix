@@ -19,6 +19,8 @@ public class MoneyLedger {
 
     public record DocRef(String type, long id, String number) {}
 
+    private static final java.time.format.DateTimeFormatter DAY = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
     private final JdbcClient jdbc;
     private final CurrentActor currentActor;
 
@@ -39,6 +41,16 @@ public class MoneyLedger {
                 .query((rs, n) -> new A(rs.getBigDecimal("balance"), rs.getBoolean("active"), rs.getString("name")))
                 .optional()
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        // Yopilgan kunga (va undan oldingi kunlarga) yangi harakat yozilmaydi (SPEC 5.5)
+        jdbc.sql("SELECT close_date FROM cash_day_close WHERE account_id = :id ORDER BY close_date DESC LIMIT 1")
+                .param("id", accountId)
+                .query(Date.class)
+                .optional()
+                .map(Date::toLocalDate)
+                .filter(closed -> !date.isAfter(closed))
+                .ifPresent(closed -> {
+                    throw MedixException.conflict("money.dayClosed", a.name(), closed.format(DAY));
+                });
         Money next = new Money(a.balance()).plus(amount);
         if (next.isNegative()) {
             throw MedixException.conflict("money.insufficient", a.name(), new Money(a.balance()).format());
