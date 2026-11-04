@@ -36,7 +36,7 @@ public class MoneyLedger {
             throw new IllegalArgumentException("Nol summa");
         }
         record A(java.math.BigDecimal balance, boolean active, String name) {}
-        A a = jdbc.sql("SELECT balance, active, name FROM money_account WHERE id = :id FOR UPDATE")
+        A a = jdbc.sql("SELECT balance, active, name FROM money_account WHERE id = :id FOR NO KEY UPDATE")
                 .param("id", accountId)
                 .query((rs, n) -> new A(rs.getBigDecimal("balance"), rs.getBoolean("active"), rs.getString("name")))
                 .optional()

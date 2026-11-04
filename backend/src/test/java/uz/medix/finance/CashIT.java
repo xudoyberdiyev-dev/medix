@@ -255,7 +255,11 @@ class CashIT {
                 .andExpect(jsonPath("$.diff").value("-350.50"))
                 .andExpect(jsonPath("$.correctionNumber", matchesPattern("KO-[A-Z]{3}-\\d{6}")));
         assertThat(balance(k)).isEqualTo("1350000.00");
-        mvc.perform(get("/api/cash-close").param("branchId", "" + b).cookie(cashier)).andExpect(jsonPath("$.length()").value(2));
+        mvc.perform(get("/api/cash-close").param("branchId", "" + b).cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].diff").value("-350.50"))
+                .andExpect(jsonPath("$[1].denominations[0].nominal").value(200000));
         // Tuzatuvchi KO bekor qilinmaydi; bugungi kunga ham endi harakat yo'q (Terminal esa ochiq)
         long corr = jdbc.sql("SELECT correction_op_id FROM cash_day_close WHERE account_id = :a AND correction_op_id IS NOT NULL")
                 .param("a", k).query(Long.class).single();

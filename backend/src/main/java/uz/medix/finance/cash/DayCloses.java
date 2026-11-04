@@ -142,7 +142,7 @@ class DayCloses {
             throw MedixException.badRequest("cashClose.onlyCash");
         }
         // Hisob qulflanadi: yopish paytida shu kassaga harakat yozilmaydi
-        jdbc.sql("SELECT id FROM money_account WHERE id = :a FOR UPDATE").param("a", acc.id()).query(Long.class).single();
+        jdbc.sql("SELECT id FROM money_account WHERE id = :a FOR NO KEY UPDATE").param("a", acc.id()).query(Long.class).single();
         LocalDate d = r.closeDate() == null ? ops.today() : r.closeDate();
         if (d.isAfter(ops.today())) {
             throw MedixException.badRequest("payment.dateFuture");
@@ -235,12 +235,17 @@ class DayCloses {
                 .list();
     }
 
+    /** Kupyuralar alohida so'rov bilan — asosiy ResultSet yopilgandan keyin. */
     private DayClose map(java.sql.ResultSet rs) throws java.sql.SQLException {
-        long id = rs.getLong("id");
-        return new DayClose(id, rs.getLong("account_id"), rs.getString("account"), rs.getDate("close_date").toLocalDate(),
+        return new DayClose(rs.getLong("id"), rs.getLong("account_id"), rs.getString("account"), rs.getDate("close_date").toLocalDate(),
                 new Money(rs.getBigDecimal("expected")).toString(), new Money(rs.getBigDecimal("counted")).toString(),
-                new Money(rs.getBigDecimal("diff")).toString(), denominations(id), rs.getString("note"), rs.getString("correction"),
+                new Money(rs.getBigDecimal("diff")).toString(), List.of(), rs.getString("note"), rs.getString("correction"),
                 rs.getString("closed_by"), rs.getTimestamp("closed_at").toInstant());
+    }
+
+    private DayClose withDenominations(DayClose c) {
+        return new DayClose(c.id(), c.accountId(), c.account(), c.closeDate(), c.expected(), c.counted(), c.diff(), denominations(c.id()), c.note(),
+                c.correctionNumber(), c.closedBy(), c.closedAt());
     }
 
     @Transactional(readOnly = true)
@@ -253,7 +258,10 @@ class DayCloses {
                 .param("b", branchId)
                 .param("a", accountId)
                 .query((rs, n) -> map(rs))
-                .list();
+                .list()
+                .stream()
+                .map(this::withDenominations)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -265,6 +273,7 @@ class DayCloses {
                 .stream()
                 .filter(Objects::nonNull)
                 .findFirst()
+                .map(this::withDenominations)
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
     }
 }
