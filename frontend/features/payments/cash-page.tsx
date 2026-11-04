@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Banknote, HandCoins, Landmark, Truck } from "lucide-react";
+import { ArrowLeftRight, Banknote, HandCoins, Landmark, LockKeyhole, Plus, Truck } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
+import { Tabs } from "@/components/ui/tabs";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
@@ -14,10 +15,17 @@ import { ensureCsrf, useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatDateTime, formatMoney } from "@/lib/format";
+import { CASH_CLOSE, CASH_IO } from "@/features/cash/api";
+import { ClosesTab, OpsTab, PendingOps, StatementTab, TransfersTab } from "@/features/cash/cash-sections";
+import { CloseDrawer } from "@/features/cash/close-drawer";
+import { CashOpDialog, TransferDialog } from "@/features/cash/op-dialogs";
 import { useBranchStore } from "@/lib/stores/branch";
 import { ACCOUNT_KIND, PAYMENT_MT, useAccounts, type DriverCash } from "./api";
 
-/** Pul → Kassa: hisoblar qoldigʻi (faqat hujjatlardan) va «Haydovchidagi pul» — Kassir sanab qabul qiladi → MT (SPEC 5.4, 5.5). */
+/**
+ * Pul → Kassa (SPEC 5.4, 5.5): hisoblar qoldigʻi (faqat hujjatlardan), KO/BO (kirim/chiqim, moddalar bilan; katta chiqim — tasdiq),
+ * IO (hisoblar orasida), koʻchirma, kunni yopish va «Haydovchidagi pul» — Kassir sanab qabul qiladi → MT.
+ */
 export function CashPage() {
   const me = useMe();
   const qc = useQueryClient();
@@ -36,6 +44,13 @@ export function CashPage() {
   const [target, setTarget] = useState<string | null>(null);
   const kassa = target ?? (kassas[0] ? String(kassas[0].id) : null);
   const [pending, setPending] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [tab, setTab] = useState("statement");
+  const [dialog, setDialog] = useState<"op" | "io" | "close" | null>(null);
+  const canIo = can(me.data, CASH_IO);
+  const canClose = can(me.data, CASH_CLOSE);
+  const accountList = accounts.data ?? [];
+  const current = selected ?? accountList[0]?.id ?? null;
   const [error, setError] = useState<unknown>(null);
 
   if (me.data && !allowed) return <ForbiddenState description="Kassa sahifasi sizning rolingiz uchun yopiq." />;
@@ -67,32 +82,60 @@ export function CashPage() {
   const err = describeError(error);
   return (
     <>
-      <h1 className="mb-4 text-page-title">Kassa</h1>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-page-title">Kassa</h1>
+        <div className="flex flex-wrap gap-3">
+          {canClose && kassas.length > 0 ? (
+            <Button variant="secondary" icon={LockKeyhole} onClick={() => setDialog("close")}>
+              Kunni yopish
+            </Button>
+          ) : null}
+          {canIo ? (
+            <>
+              <Button variant="secondary" icon={ArrowLeftRight} disabled={accountList.length < 2} onClick={() => setDialog("io")}>
+                Oʻtkazma
+              </Button>
+              <Button icon={Plus} disabled={accountList.length === 0} onClick={() => setDialog("op")}>
+                Kirim / chiqim
+              </Button>
+            </>
+          ) : null}
+        </div>
+      </div>
       {accounts.error ? (
         <ErrorState onRetry={() => accounts.refetch()} />
       ) : accounts.isPending ? (
         <Skeleton className="h-24 w-full" />
       ) : (
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {(accounts.data ?? []).map((a) => (
-            <Card key={a.id}>
-              <div className="flex items-center gap-2 text-caption text-text-secondary">
-                {a.kind === "BANK" ? (
-                  <Landmark size={16} strokeWidth={1.5} aria-hidden />
-                ) : (
-                  <Banknote size={16} strokeWidth={1.5} aria-hidden />
-                )}
-                {ACCOUNT_KIND[a.kind]} · <span className="font-mono">{a.code}</span>
-                {a.active ? "" : " · nofaol"}
-              </div>
-              <div className="mt-1">{a.name}</div>
-              <div className="mt-2 font-mono text-subtitle tabular-nums">{formatMoney(a.balance)} soʻm</div>
-            </Card>
+          {accountList.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              aria-pressed={a.id === current}
+              onClick={() => setSelected(a.id)}
+              className={`rounded-lg text-left outline-offset-2 ${a.id === current ? "ring-2 ring-primary" : ""}`}
+            >
+              <Card>
+                <div className="flex items-center gap-2 text-caption text-text-secondary">
+                  {a.kind === "BANK" ? (
+                    <Landmark size={16} strokeWidth={1.5} aria-hidden />
+                  ) : (
+                    <Banknote size={16} strokeWidth={1.5} aria-hidden />
+                  )}
+                  {ACCOUNT_KIND[a.kind]} · <span className="font-mono">{a.code}</span>
+                  {a.active ? "" : " · nofaol"}
+                </div>
+                <div className="mt-1">{a.name}</div>
+                <div className="mt-2 font-mono text-subtitle tabular-nums">{formatMoney(a.balance)} soʻm</div>
+              </Card>
+            </button>
           ))}
         </div>
       )}
+      {branchId != null ? <PendingOps branchId={branchId} /> : null}
       {canAccept ? (
-        <Card>
+        <Card className="mb-6">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
             <h2 className="text-subtitle">Haydovchidagi pul</h2>
             <div className="w-64">
@@ -144,6 +187,39 @@ export function CashPage() {
             </ul>
           )}
         </Card>
+      ) : null}
+      {branchId != null ? (
+        <>
+          <Tabs
+            aria-label="Kassa boʻlimlari"
+            value={tab}
+            onChange={setTab}
+            items={[
+              { key: "statement", label: "Koʻchirma" },
+              { key: "ops", label: "Kirim / chiqim (KO, BO)" },
+              { key: "io", label: "Oʻtkazmalar (IO)" },
+              { key: "closes", label: "Yopilgan kunlar" },
+            ]}
+          />
+          <div className="mt-4">
+            {tab === "statement" ? (
+              <StatementTab accountId={current} />
+            ) : tab === "ops" ? (
+              <OpsTab branchId={branchId} />
+            ) : tab === "io" ? (
+              <TransfersTab branchId={branchId} />
+            ) : (
+              <ClosesTab branchId={branchId} />
+            )}
+          </div>
+          {dialog === "op" ? (
+            <CashOpDialog branchId={branchId} accounts={accountList} defaultAccount={current} onClose={() => setDialog(null)} />
+          ) : dialog === "io" ? (
+            <TransferDialog branchId={branchId} accounts={accountList} defaultFrom={current} onClose={() => setDialog(null)} />
+          ) : dialog === "close" ? (
+            <CloseDrawer accounts={accountList} defaultAccount={current} onClose={() => setDialog(null)} />
+          ) : null}
+        </>
       ) : null}
     </>
   );

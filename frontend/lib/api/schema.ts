@@ -170,6 +170,136 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cash-close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yopilgan kunlar */
+        get: operations["listCloses"];
+        put?: never;
+        /**
+         * Kunni yopish
+         * @description Kupyuralar sanog'i. Farq bo'lsa — cash.closeDiff ruxsati, izoh va PIN; farq tuzatuvchi KO bilan yoziladi.
+         */
+        post: operations["close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-close/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kunni yopish oldidan: kutilgan qoldiq, kun aylanmasi, tasdiq kutayotganlar */
+        get: operations["preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-ops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KO/BO ro'yxati */
+        get: operations["listOps"];
+        put?: never;
+        /**
+         * Kirim yoki chiqim (KO/BO)
+         * @description Kassadan 2 000 000 so'mdan katta chiqim «Tasdiqlashda» turadi, qolgani darhol o'tkaziladi.
+         */
+        post: operations["createOp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-ops/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** KO/BO kartochkasi */
+        get: operations["getOp"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-ops/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Chiqimni tasdiqlash (o'tkaziladi) */
+        post: operations["approveOp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-ops/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bekor qilish
+         * @description Hisob qoldig'i bugungi sana bilan teskari yoziladi.
+         */
+        post: operations["cancelOp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-ops/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Chiqimni rad etish */
+        post: operations["rejectOp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties": {
         parameters: {
             query?: never;
@@ -767,6 +897,64 @@ export interface paths {
         put?: never;
         /** Yangi hisob (kassa, Terminal yoki bank) */
         post: operations["create_9"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money-accounts/{id}/statement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob ko'chirmasi
+         * @description Davr boshi + kirim − chiqim = davr oxiri; harakatlar hujjat bilan.
+         */
+        get: operations["statement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money-transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hisoblar orasida o'tkazmalar (IO) */
+        get: operations["listTransfers"];
+        put?: never;
+        /**
+         * O'tkazma (IO)
+         * @description Darhol o'tkaziladi: bir hisobdan chiqim, ikkinchisiga kirim.
+         */
+        post: operations["createTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money-transfers/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** O'tkazmani bekor qilish */
+        post: operations["cancelTransfer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2960,6 +3148,64 @@ export interface components {
         CashAcceptResult: {
             payment: string;
         };
+        CashOp: {
+            account: string;
+            /** Format: int64 */
+            accountId: number;
+            accountKind: string;
+            amount: string;
+            /** Format: date-time */
+            approvedAt?: string;
+            approvedBy?: string;
+            /** Format: int64 */
+            branchId: number;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** @enum {string} */
+            direction: "IN" | "OUT";
+            docType: string;
+            /** Format: int64 */
+            id: number;
+            item: string;
+            /** Format: int64 */
+            itemId: number;
+            note?: string;
+            number: string;
+            /** Format: date */
+            opDate: string;
+            party?: string;
+            /** @enum {string} */
+            source: "MANUAL" | "CLOSE";
+            /** @enum {string} */
+            status: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
+            /** Format: int64 */
+            version: number;
+        };
+        CashOpRequest: {
+            /** Format: int64 */
+            accountId: number;
+            /** @description Summa, masalan «250000.00» */
+            amount: string;
+            /** Format: int64 */
+            branchId: number;
+            /** @enum {string} */
+            direction: "IN" | "OUT";
+            /** Format: int64 */
+            itemId: number;
+            note?: string;
+            /**
+             * Format: date
+             * @description Bo'sh bo'lsa — bugun
+             */
+            opDate?: string;
+            /** @description Kimdan / kimga (ixtiyoriy) */
+            party?: string;
+        };
         CatalogPage: {
             items: components["schemas"]["CatalogRow"][];
             /** Format: int32 */
@@ -2999,6 +3245,37 @@ export interface components {
             checkedLines: number[];
             /** Format: int32 */
             places: number;
+        };
+        ClosePreview: {
+            account: string;
+            /** Format: int64 */
+            accountId: number;
+            /** Format: date */
+            closeDate: string;
+            expected: string;
+            expense: string;
+            income: string;
+            /** Format: date */
+            lastClosed?: string;
+            nominals: number[];
+            /** Format: int32 */
+            pendingOps: number;
+        };
+        CloseRequest: {
+            /** Format: int64 */
+            accountId: number;
+            /**
+             * Format: date
+             * @description Bo'sh bo'lsa — bugun
+             */
+            closeDate?: string;
+            /** @description Tiyin va mayda pul summasi, masalan «350.50» */
+            coins?: string;
+            denominations: components["schemas"]["Denomination"][];
+            /** @description Farq bo'lsa majburiy */
+            note?: string;
+            /** @description Farq bo'lsa majburiy */
+            pin?: string;
         };
         CodeChange: {
             /** Format: date-time */
@@ -3165,12 +3442,36 @@ export interface components {
             paymentDays?: number;
             priceType?: string;
         };
+        DayClose: {
+            account: string;
+            /** Format: int64 */
+            accountId: number;
+            /** Format: date */
+            closeDate: string;
+            /** Format: date-time */
+            closedAt: string;
+            closedBy: string;
+            correctionNumber?: string;
+            counted: string;
+            denominations: components["schemas"]["Denomination"][];
+            diff: string;
+            expected: string;
+            /** Format: int64 */
+            id: number;
+            note?: string;
+        };
         DeactivateRequest: {
             reason: string;
         };
         DeliverRequest: {
             /** @description Naqd olingan summa, masalan «25000.00» */
             cash?: string;
+        };
+        Denomination: {
+            /** Format: int32 */
+            count: number;
+            /** Format: int32 */
+            nominal: number;
         };
         DriverCash: {
             amount: string;
@@ -3548,6 +3849,21 @@ export interface components {
             timeGiven: boolean;
             /** Format: int64 */
             totalQty: number;
+        };
+        Move: {
+            amount: string;
+            /** Format: int64 */
+            docId: number;
+            docNumber: string;
+            docType: string;
+            employee?: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: date */
+            moveDate: string;
+            note?: string;
+            /** Format: date-time */
+            occurredAt: string;
         };
         NotificationItem: {
             body?: string;
@@ -4615,6 +4931,22 @@ export interface components {
         StartResult: {
             sales: string[];
         };
+        Statement: {
+            account: string;
+            /** Format: int64 */
+            accountId: number;
+            /** Format: date */
+            closedThrough?: string;
+            closing: string;
+            expense: string;
+            /** Format: date */
+            from: string;
+            income: string;
+            moves: components["schemas"]["Move"][];
+            opening: string;
+            /** Format: date */
+            to: string;
+        };
         StockPage: {
             items: components["schemas"]["StockRow"][];
             /** Format: int32 */
@@ -4778,6 +5110,47 @@ export interface components {
             markMinutes?: number;
             /** Format: int32 */
             pickMinutes: number;
+        };
+        Transfer: {
+            amount: string;
+            /** Format: int64 */
+            branchId: number;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            fromAccount: string;
+            /** Format: int64 */
+            fromAccountId: number;
+            /** Format: int64 */
+            id: number;
+            note?: string;
+            number: string;
+            /** @enum {string} */
+            status: "POSTED" | "CANCELLED";
+            toAccount: string;
+            /** Format: int64 */
+            toAccountId: number;
+            /** Format: date */
+            transferDate: string;
+        };
+        TransferRequest: {
+            amount: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int64 */
+            fromAccountId: number;
+            note?: string;
+            /** Format: int64 */
+            toAccountId: number;
+            /**
+             * Format: date
+             * @description Bo'sh bo'lsa — bugun
+             */
+            transferDate?: string;
         };
         TripDetail: {
             /** Format: int64 */
@@ -5182,6 +5555,222 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    listCloses: {
+        parameters: {
+            query: {
+                branchId: number;
+                accountId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayClose"][];
+                };
+            };
+        };
+    };
+    close: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayClose"];
+                };
+            };
+        };
+    };
+    preview: {
+        parameters: {
+            query: {
+                accountId: number;
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosePreview"];
+                };
+            };
+        };
+    };
+    listOps: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                accountId?: number;
+                status?: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOp"][];
+                };
+            };
+        };
+    };
+    createOp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashOpRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOp"];
+                };
+            };
+        };
+    };
+    getOp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOp"];
+                };
+            };
+        };
+    };
+    approveOp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOp"];
+                };
+            };
+        };
+    };
+    cancelOp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOp"];
+                };
+            };
+        };
+    };
+    rejectOp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOp"];
                 };
             };
         };
@@ -6116,6 +6705,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Account"];
+                };
+            };
+        };
+    };
+    statement: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Statement"];
+                };
+            };
+        };
+    };
+    listTransfers: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"][];
+                };
+            };
+        };
+    };
+    createTransfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
+        };
+    };
+    cancelTransfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
                 };
             };
         };

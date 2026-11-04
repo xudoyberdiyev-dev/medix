@@ -87,12 +87,22 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## 8. Yetkazish
 - [x] Sotuv (SV) va hisob-faktura (HF) — «Yuklab bo'lindi — reysni boshlash» yoki «Mijoz olib ketdi» paytida: tovar Jo'natish zonasidan chiqadi (jurnal), mijoz qarzi (to'lov muddati — filial shartidagi kunlar), QQS (narx ichida, HALF_UP), tannarx, kodlar «sotilgan», «Yo'lda» — bitta tranzaksiyada
-- [~] Haydovchi paneli ✅ (Reysim: «Qabul qildim» joylar soni bilan, reysni boshlash, rasm, «Yetkazildi» + naqd summa, «Yetkazilmadi» + sabab, «Reysni yakunlash» → Qaytish kutilmoqda / Yakunlangan). Qoldi: imzo (API bor — signature=true), qisman yetkazish (QM)
+- [~] Haydovchi paneli ✅ (Reysim: «Qabul qildim» joylar soni bilan, reysni boshlash, rasm, «Yetkazildi» + naqd summa, «Qisman» (QM), «Yetkazilmadi» + sabab, «Reysni yakunlash» → Qaytish kutilmoqda / Yakunlangan). Qoldi: imzo UI (API bor — signature=true)
+- [x] Qisman yetkazish — QM (asl sotuv narxida, QQS HALF_UP), mijoz qarzi kamayadi, tovar «Qaytmoqda» → Karantin (02.11)
+- [x] Buyurtma kartochkasida hujjatlar zanjiri (NK, SV, HF, QM, reys) va «Hozir kimda» (02.11)
 - [x] Yetkazilmadi: sotuv bekor, qarz teskari yoziladi, kodlar bo'shaydi, tovar «Qaytmoqda» → Ombor mudiri sanab Karantinga (kam kelsa — muammo)
-- [ ] Haydovchidagi pul → Kassir (MT) — 9-bosqich bilan; reysni «Yakunlangan»ga o'tkazish
+- [x] Haydovchidagi pul → Kassir «Qabul qildim» (MT, darhol o'tkaziladi); reys «Yakunlangan» (02.11)
 
 ## 9. Pul
-- [ ] MT (eng eski qarzdan taqsimlash, avans), YT, KO/BO, IO, kassa/Terminal/bank, kunni yopish, qarz jurnali, Kassir paneli
+- [x] Pul hisoblari: kassa(lar), Terminal, bank — qoldiq faqat pul jurnalidan (bitta tranzaksiyada, CHECK ≥ 0) (02.11)
+- [x] MT: qoralama → o'tkazish (eng eski qarzdan / qo'lda, ortig'i avans) → bekor qilish; parallel test (02.11)
+- [x] YT: qoralama → tasdiqlashda → o'tkazilgan (qaytarish, tasdiqsiz — ytDirect), eng eski kirim qarzidan; kassada pul yetmasa — yo'q (02.11)
+- [x] KO/BO: kirim/chiqim moddalar bilan; kassadan 2 000 000 dan katta chiqim — «Tasdiqlashda» (cash.approve: tasdiqlash / rad etish); bekor qilish — teskari (05.11)
+- [x] IO: hisoblar orasida (kassa → bank, Terminal → bank …); parallel o'tkazmalarda qoldiq manfiy bo'lmaydi (test) (05.11)
+- [x] Kunni yopish: kupyuralar sanog'i, kutilgan qoldiq jurnaldan; farq — cash.closeDiff + izoh + PIN, tuzatuvchi KO; yopilgan kunga va undan oldingi kunlarga yangi pul harakati yo'q; tasdiq kutayotgan chiqim bo'lsa yopilmaydi (05.11)
+- [x] Hisob ko'chirmasi (davr boshi + kirim − chiqim = davr oxiri, har harakat hujjat bilan) (05.11)
+- [~] Kassa sahifasi: hisoblar, «Tasdiqlashni kutmoqda», Ko'chirma / KO-BO / IO / Yopilgan kunlar yorliqlari, Kunni yopish oynasi (05.11). Qoldi: Kassir paneli (alohida bosh sahifa), kassir faqat o'z kassasida (money_account.cashier_id)
+- [ ] Bank: ko'chirma bilan solishtirish; Avans (AH); Mijozlar / YB qarzi sahifalari (muddat guruhlari 1–30 / 31–60 / 61–90 / 90+); bonus balans; akt sverka (prototip holatida)
 
 ## 10. Bosh sahifa va hisobotlar
 - [ ] Rollar bosh sahifalari, «Diqqat talab qiladi», hisobotlar katalogi (jOOQ), chop etish shakllari (OpenHTMLtoPDF)

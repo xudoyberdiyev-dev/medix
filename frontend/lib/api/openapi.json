@@ -9,23 +9,14 @@
     "url" : "/"
   } ],
   "tags" : [ {
-    "description" : "Mahsulotlar",
-    "name" : "products"
-  }, {
-    "description" : "Profil",
-    "name" : "profile"
-  }, {
-    "description" : "Mashinalar",
-    "name" : "vehicles"
-  }, {
     "description" : "Buyurtmalar",
     "name" : "orders"
   }, {
+    "description" : "Kassa/bank operatsiyalari (KO/BO), o'tkazmalar (IO), ko'chirma, kunni yopish",
+    "name" : "cash"
+  }, {
     "description" : "Mijozdan to'lovlar (MT)",
     "name" : "payments"
-  }, {
-    "description" : "Qoldiqlar",
-    "name" : "stock"
   }, {
     "description" : "Omborlar va zonalar",
     "name" : "warehouses"
@@ -33,29 +24,14 @@
     "description" : "Xodimlar",
     "name" : "employees"
   }, {
-    "description" : "Bildirishnomalar",
-    "name" : "notifications"
-  }, {
     "description" : "Boshlang'ich qoldiq",
     "name" : "opening"
-  }, {
-    "description" : "Filiallar",
-    "name" : "branches"
-  }, {
-    "description" : "Tizimga kirish va sessiya",
-    "name" : "auth"
   }, {
     "description" : "Narxlar",
     "name" : "pricing"
   }, {
     "description" : "Sozlash ustasi",
     "name" : "setup"
-  }, {
-    "description" : "Markirovka",
-    "name" : "marking"
-  }, {
-    "description" : "Audit jurnali",
-    "name" : "audit"
   }, {
     "description" : "Xarajat va kirim moddalari",
     "name" : "expense-items"
@@ -66,20 +42,47 @@
     "description" : "Kontragentlar",
     "name" : "counterparties"
   }, {
-    "description" : "Reyslar",
-    "name" : "trips"
-  }, {
     "description" : "Rollar va ruxsatlar",
     "name" : "roles"
   }, {
     "description" : "Kichik ma'lumotnomalar",
     "name" : "dictionaries"
   }, {
-    "description" : "Kassa, Terminal va bank hisoblari",
-    "name" : "money-accounts"
-  }, {
     "description" : "Yetkazib beruvchiga to'lovlar (YT)",
     "name" : "supplier-payments"
+  }, {
+    "description" : "Mahsulotlar",
+    "name" : "products"
+  }, {
+    "description" : "Profil",
+    "name" : "profile"
+  }, {
+    "description" : "Mashinalar",
+    "name" : "vehicles"
+  }, {
+    "description" : "Qoldiqlar",
+    "name" : "stock"
+  }, {
+    "description" : "Bildirishnomalar",
+    "name" : "notifications"
+  }, {
+    "description" : "Filiallar",
+    "name" : "branches"
+  }, {
+    "description" : "Tizimga kirish va sessiya",
+    "name" : "auth"
+  }, {
+    "description" : "Markirovka",
+    "name" : "marking"
+  }, {
+    "description" : "Audit jurnali",
+    "name" : "audit"
+  }, {
+    "description" : "Reyslar",
+    "name" : "trips"
+  }, {
+    "description" : "Kassa, Terminal va bank hisoblari",
+    "name" : "money-accounts"
   } ],
   "paths" : {
     "/api/audit" : {
@@ -379,6 +382,333 @@
         },
         "summary" : "Filialni nofaol qilish",
         "tags" : [ "branches" ]
+      }
+    },
+    "/api/cash-close" : {
+      "get" : {
+        "operationId" : "listCloses",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "accountId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DayClose"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yopilgan kunlar",
+        "tags" : [ "cash" ]
+      },
+      "post" : {
+        "description" : "Kupyuralar sanog'i. Farq bo'lsa — cash.closeDiff ruxsati, izoh va PIN; farq tuzatuvchi KO bilan yoziladi.",
+        "operationId" : "close",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CloseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayClose"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Kunni yopish",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/cash-close/preview" : {
+      "get" : {
+        "operationId" : "preview",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "accountId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClosePreview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kunni yopish oldidan: kutilgan qoldiq, kun aylanmasi, tasdiq kutayotganlar",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/cash-ops" : {
+      "get" : {
+        "operationId" : "listOps",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "accountId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "POSTED", "REJECTED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CashOp"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KO/BO ro'yxati",
+        "tags" : [ "cash" ]
+      },
+      "post" : {
+        "description" : "Kassadan 2 000 000 so'mdan katta chiqim «Tasdiqlashda» turadi, qolgani darhol o'tkaziladi.",
+        "operationId" : "createOp",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CashOpRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashOp"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Kirim yoki chiqim (KO/BO)",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/cash-ops/{id}" : {
+      "get" : {
+        "operationId" : "getOp",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashOp"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KO/BO kartochkasi",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/cash-ops/{id}/approve" : {
+      "post" : {
+        "operationId" : "approveOp",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashOp"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Chiqimni tasdiqlash (o'tkaziladi)",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/cash-ops/{id}/cancel" : {
+      "post" : {
+        "description" : "Hisob qoldig'i bugungi sana bilan teskari yoziladi.",
+        "operationId" : "cancelOp",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashOp"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekor qilish",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/cash-ops/{id}/reject" : {
+      "post" : {
+        "operationId" : "rejectOp",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashOp"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Chiqimni rad etish",
+        "tags" : [ "cash" ]
       }
     },
     "/api/counterparties" : {
@@ -1746,6 +2076,148 @@
         },
         "summary" : "Yangi hisob (kassa, Terminal yoki bank)",
         "tags" : [ "money-accounts" ]
+      }
+    },
+    "/api/money-accounts/{id}/statement" : {
+      "get" : {
+        "description" : "Davr boshi + kirim − chiqim = davr oxiri; harakatlar hujjat bilan.",
+        "operationId" : "statement",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Statement"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob ko'chirmasi",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/money-transfers" : {
+      "get" : {
+        "operationId" : "listTransfers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Transfer"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisoblar orasida o'tkazmalar (IO)",
+        "tags" : [ "cash" ]
+      },
+      "post" : {
+        "description" : "Darhol o'tkaziladi: bir hisobdan chiqim, ikkinchisiga kirim.",
+        "operationId" : "createTransfer",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Transfer"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "O'tkazma (IO)",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/money-transfers/{id}/cancel" : {
+      "post" : {
+        "operationId" : "cancelTransfer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Transfer"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "O'tkazmani bekor qilish",
+        "tags" : [ "cash" ]
       }
     },
     "/api/notifications" : {
@@ -6569,6 +7041,140 @@
         },
         "required" : [ "payment" ]
       },
+      "CashOp" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "accountKind" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "approvedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "approvedBy" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "item" : {
+            "type" : "string"
+          },
+          "itemId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "opDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "party" : {
+            "type" : "string"
+          },
+          "source" : {
+            "type" : "string",
+            "enum" : [ "MANUAL", "CLOSE" ]
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "POSTED", "REJECTED", "CANCELLED" ]
+          },
+          "version" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "direction", "docType", "id", "item", "itemId", "number", "opDate", "source", "status", "version" ]
+      },
+      "CashOpRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "amount" : {
+            "type" : "string",
+            "description" : "Summa, masalan «250000.00»",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "itemId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "opDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bo'sh bo'lsa — bugun"
+          },
+          "party" : {
+            "type" : "string",
+            "description" : "Kimdan / kimga (ixtiyoriy)",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "accountId", "amount", "branchId", "direction", "itemId" ]
+      },
       "CatalogPage" : {
         "type" : "object",
         "properties" : {
@@ -6688,6 +7294,88 @@
           }
         },
         "required" : [ "checkedLines", "places" ]
+      },
+      "ClosePreview" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "closeDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "expected" : {
+            "type" : "string"
+          },
+          "expense" : {
+            "type" : "string"
+          },
+          "income" : {
+            "type" : "string"
+          },
+          "lastClosed" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "nominals" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          },
+          "pendingOps" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "account", "accountId", "closeDate", "expected", "expense", "income", "nominals", "pendingOps" ]
+      },
+      "CloseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "closeDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bo'sh bo'lsa — bugun"
+          },
+          "coins" : {
+            "type" : "string",
+            "description" : "Tiyin va mayda pul summasi, masalan «350.50»",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "denominations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Denomination"
+            },
+            "maxItems" : 20,
+            "minItems" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "description" : "Farq bo'lsa majburiy",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "pin" : {
+            "type" : "string",
+            "description" : "Farq bo'lsa majburiy",
+            "maxLength" : 6,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "accountId", "denominations" ]
       },
       "CodeChange" : {
         "type" : "object",
@@ -7200,6 +7888,55 @@
         },
         "required" : [ "blocked", "debt", "overdue", "overdueDays" ]
       },
+      "DayClose" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "closeDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "closedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "closedBy" : {
+            "type" : "string"
+          },
+          "correctionNumber" : {
+            "type" : "string"
+          },
+          "counted" : {
+            "type" : "string"
+          },
+          "denominations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Denomination"
+            }
+          },
+          "diff" : {
+            "type" : "string"
+          },
+          "expected" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "account", "accountId", "closeDate", "closedAt", "closedBy", "counted", "denominations", "diff", "expected", "id" ]
+      },
       "DeactivateRequest" : {
         "type" : "object",
         "properties" : {
@@ -7221,6 +7958,22 @@
             "minLength" : 0
           }
         }
+      },
+      "Denomination" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          },
+          "nominal" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          }
+        },
+        "required" : [ "count", "nominal" ]
       },
       "DriverCash" : {
         "type" : "object",
@@ -8143,6 +8896,43 @@
           }
         },
         "required" : [ "customer", "id", "late", "lines", "marked", "number", "since", "stale", "status", "timeGiven", "totalQty" ]
+      },
+      "Move" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "moveDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "amount", "docId", "docNumber", "docType", "id", "moveDate", "occurredAt" ]
       },
       "NotificationItem" : {
         "type" : "object",
@@ -10844,6 +11634,49 @@
         },
         "required" : [ "sales" ]
       },
+      "Statement" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "closedThrough" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "closing" : {
+            "type" : "string"
+          },
+          "expense" : {
+            "type" : "string"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "income" : {
+            "type" : "string"
+          },
+          "moves" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Move"
+            }
+          },
+          "opening" : {
+            "type" : "string"
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "account", "accountId", "closing", "expense", "from", "income", "moves", "opening", "to" ]
+      },
       "StockPage" : {
         "type" : "object",
         "properties" : {
@@ -11227,6 +12060,101 @@
           }
         },
         "required" : [ "pickMinutes" ]
+      },
+      "Transfer" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fromAccount" : {
+            "type" : "string"
+          },
+          "fromAccountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "POSTED", "CANCELLED" ]
+          },
+          "toAccount" : {
+            "type" : "string"
+          },
+          "toAccountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "transferDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "amount", "branchId", "createdAt", "createdBy", "fromAccount", "fromAccountId", "id", "number", "status", "toAccount", "toAccountId", "transferDate" ]
+      },
+      "TransferRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fromAccountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "toAccountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "transferDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bo'sh bo'lsa — bugun"
+          }
+        },
+        "required" : [ "amount", "branchId", "fromAccountId", "toAccountId" ]
       },
       "TripDetail" : {
         "type" : "object",
