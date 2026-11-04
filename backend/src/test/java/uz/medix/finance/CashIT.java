@@ -256,6 +256,11 @@ class CashIT {
                 .andExpect(jsonPath("$.correctionNumber", matchesPattern("KO-[A-Z]{3}-\\d{6}")));
         assertThat(balance(k)).isEqualTo("1350000.00");
         mvc.perform(get("/api/cash-close").param("branchId", "" + b).cookie(cashier))
+                .andDo(r -> {
+                    if (r.getResponse().getStatus() >= 500) {
+                        throw new AssertionError("500: " + r.getResolvedException(), r.getResolvedException());
+                    }
+                })
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].diff").value("-350.50"))
