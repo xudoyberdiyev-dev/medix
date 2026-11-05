@@ -53,3 +53,16 @@ describe("bank koʻchirmasi farqi", () => {
     expect(reconDiff("-5", "1.00")).toBeNull();
   });
 });
+
+describe("kassir paneli dinamikasi", () => {
+  it("ustun nisbati tiyinlarda", async () => {
+    const { barPercent, dayMax } = await import("./cashier-panel");
+    const days = [
+      { date: "2026-11-04", income: "200.00", expense: "50.00" },
+      { date: "2026-11-05", income: "0.00", expense: "100.00" },
+    ];
+    expect(dayMax(days)).toBe(20000n);
+    expect(barPercent("50.00", 20000n)).toBe(25);
+    expect(barPercent("1.00", 0n)).toBe(0);
+  });
+});

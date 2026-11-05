@@ -422,6 +422,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cash-panel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
+        get: operations["get_10"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties": {
         parameters: {
             query?: never;
@@ -3400,6 +3417,19 @@ export interface components {
             kind: "CASH" | "TERMINAL" | "BANK";
             name: string;
         };
+        AccountTurnover: {
+            cashierName?: string;
+            closing: string;
+            code: string;
+            expense: string;
+            /** Format: int64 */
+            id: number;
+            income: string;
+            /** @enum {string} */
+            kind: "CASH" | "TERMINAL" | "BANK";
+            name: string;
+            opening: string;
+        };
         Act: {
             branch: string;
             /** Format: int64 */
@@ -3875,6 +3905,12 @@ export interface components {
             id: number;
             note?: string;
         };
+        DayPoint: {
+            /** Format: date */
+            date: string;
+            expense: string;
+            income: string;
+        };
         DeactivateRequest: {
             reason: string;
         };
@@ -4029,6 +4065,16 @@ export interface components {
             note?: string;
             /** @enum {string} */
             reason: "NOT_FOUND" | "SHORTAGE" | "DAMAGED" | "WRONG_BATCH" | "EXPIRY" | "CODE_UNREADABLE" | "OTHER";
+        };
+        ItemTotal: {
+            amount: string;
+            item: string;
+        };
+        KindTotals: {
+            bank: string;
+            cash: string;
+            terminal: string;
+            total: string;
         };
         License: {
             controlledAllowed: boolean;
@@ -4754,6 +4800,26 @@ export interface components {
             total: string;
             warehouse: string;
         };
+        Panel: {
+            accounts: components["schemas"]["AccountTurnover"][];
+            balances: components["schemas"]["KindTotals"];
+            days: components["schemas"]["DayPoint"][];
+            /** Format: int32 */
+            draftPayments: number;
+            draftPaymentsAmount: string;
+            expense: string;
+            expenses: components["schemas"]["ItemTotal"][];
+            expensesTotal: string;
+            /** Format: date */
+            from: string;
+            income: string;
+            /** Format: int32 */
+            pendingOps: number;
+            pendingOpsAmount: string;
+            recent: components["schemas"]["RecentMove"][];
+            /** Format: date */
+            to: string;
+        };
         PartialRequest: {
             /** @description Naqd olingan summa (qolgan summagacha) */
             cash?: string;
@@ -5353,6 +5419,18 @@ export interface components {
             /** Format: int64 */
             totalQty: number;
             warehouse: string;
+        };
+        RecentMove: {
+            account: string;
+            amount: string;
+            docNumber: string;
+            docType: string;
+            employee?: string;
+            /** Format: int64 */
+            id: number;
+            note?: string;
+            /** Format: date-time */
+            occurredAt: string;
         };
         ReconPreview: {
             account: string;
@@ -6554,6 +6632,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CashOp"];
+                };
+            };
+        };
+    };
+    get_10: {
+        parameters: {
+            query: {
+                branchId: number;
+                from?: string;
+                to?: string;
+                accountId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Panel"];
                 };
             };
         };

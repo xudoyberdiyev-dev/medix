@@ -1,0 +1,28 @@
+"use client";
+
+import { Construction } from "lucide-react";
+import { EmptyState } from "@/components/ui/system-states";
+import { useMe } from "@/features/auth/session";
+import { CashierPanel } from "@/features/cash/cashier-panel";
+import { SetupBanner } from "@/features/setup/setup-banner";
+
+/** Bosh sahifa rolga qarab (SPEC 8): Kassir — Kassir paneli; boshqa rollar sahifalari 10-bosqichda qoʻshiladi. */
+export function HomeContent() {
+  const me = useMe();
+  if (me.data?.role.code === "CASHIER") return <CashierPanel />;
+  return (
+    <>
+      <h1 className="text-page-title">Bosh sahifa</h1>
+      <div className="mt-6 empty:hidden">
+        <SetupBanner />
+      </div>
+      <div className="mt-6 rounded-card border border-border bg-surface">
+        <EmptyState
+          icon={Construction}
+          title="Bosh sahifa hali qurilmoqda"
+          description="Koʻrsatkichlar kartalari va «Diqqat talab qiladi» bloki 10-bosqichda qoʻshiladi."
+        />
+      </div>
+    </>
+  );
+}

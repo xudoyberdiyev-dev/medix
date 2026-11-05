@@ -60,6 +60,9 @@
     "description" : "Mahsulotlar",
     "name" : "products"
   }, {
+    "description" : "Kassir paneli",
+    "name" : "cash-panel"
+  }, {
     "description" : "Profil",
     "name" : "profile"
   }, {
@@ -1041,6 +1044,58 @@
         },
         "summary" : "Chiqimni rad etish",
         "tags" : [ "cash" ]
+      }
+    },
+    "/api/cash-panel" : {
+      "get" : {
+        "operationId" : "get_10",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "accountId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Panel"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar",
+        "tags" : [ "cash-panel" ]
       }
     },
     "/api/counterparties" : {
@@ -7598,6 +7653,41 @@
         },
         "required" : [ "branchId", "kind", "name" ]
       },
+      "AccountTurnover" : {
+        "type" : "object",
+        "properties" : {
+          "cashierName" : {
+            "type" : "string"
+          },
+          "closing" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "expense" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "income" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TERMINAL", "BANK" ]
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "opening" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "closing", "code", "expense", "id", "income", "kind", "name", "opening" ]
+      },
       "Act" : {
         "type" : "object",
         "properties" : {
@@ -8927,6 +9017,22 @@
         },
         "required" : [ "account", "accountId", "closeDate", "closedAt", "closedBy", "counted", "denominations", "diff", "expected", "id" ]
       },
+      "DayPoint" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "expense" : {
+            "type" : "string"
+          },
+          "income" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "date", "expense", "income" ]
+      },
       "DeactivateRequest" : {
         "type" : "object",
         "properties" : {
@@ -9357,6 +9463,36 @@
           }
         },
         "required" : [ "reason" ]
+      },
+      "ItemTotal" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "item" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "item" ]
+      },
+      "KindTotals" : {
+        "type" : "object",
+        "properties" : {
+          "bank" : {
+            "type" : "string"
+          },
+          "cash" : {
+            "type" : "string"
+          },
+          "terminal" : {
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "bank", "cash", "terminal", "total" ]
       },
       "License" : {
         "type" : "object",
@@ -11094,6 +11230,70 @@
         },
         "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "id", "lines", "number", "orderDate", "status", "statusChangedAt", "total", "warehouse" ]
       },
+      "Panel" : {
+        "type" : "object",
+        "properties" : {
+          "accounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AccountTurnover"
+            }
+          },
+          "balances" : {
+            "$ref" : "#/components/schemas/KindTotals"
+          },
+          "days" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DayPoint"
+            }
+          },
+          "draftPayments" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "draftPaymentsAmount" : {
+            "type" : "string"
+          },
+          "expense" : {
+            "type" : "string"
+          },
+          "expenses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ItemTotal"
+            }
+          },
+          "expensesTotal" : {
+            "type" : "string"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "income" : {
+            "type" : "string"
+          },
+          "pendingOps" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pendingOpsAmount" : {
+            "type" : "string"
+          },
+          "recent" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RecentMove"
+            }
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "accounts", "balances", "days", "draftPayments", "draftPaymentsAmount", "expense", "expenses", "expensesTotal", "from", "income", "pendingOps", "pendingOpsAmount", "recent", "to" ]
+      },
       "PartialRequest" : {
         "type" : "object",
         "properties" : {
@@ -12615,6 +12815,38 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "id", "lines", "number", "prepaid", "receiptDate", "status", "supplier", "supplierId", "totalQty", "warehouse" ]
+      },
+      "RecentMove" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "account", "amount", "docNumber", "docType", "id", "occurredAt" ]
       },
       "ReconPreview" : {
         "type" : "object",
