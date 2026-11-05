@@ -5,7 +5,7 @@ import { NotificationBell } from "./notification-bell";
 /** Yuqori panel (design/system: TopBar): qidiruv, filial tanlagichi, bildirishnomalar. */
 export function TopBar({ title }: { title: string }) {
   return (
-    <header className="flex h-topbar items-center gap-4 border-b border-border bg-surface px-6">
+    <header className="flex h-topbar items-center gap-4 border-b border-border bg-surface px-6 print:hidden">
       <div className="text-body font-medium">{title}</div>
       <div className="ml-auto flex items-center gap-3">
         <button

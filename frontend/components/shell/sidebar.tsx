@@ -18,7 +18,7 @@ export function Sidebar() {
   const me = useMe();
   const logout = useLogout();
   return (
-    <aside className="flex w-sidebar shrink-0 flex-col bg-brand-900 text-sidebar-text">
+    <aside className="flex w-sidebar shrink-0 flex-col bg-brand-900 text-sidebar-text print:hidden">
       <div className="flex h-topbar items-center gap-3 px-5">
         <span className="flex size-8 items-center justify-center rounded-control bg-primary-button font-semibold text-white">M</span>
         <span className="text-subtitle text-white">MEDIX</span>

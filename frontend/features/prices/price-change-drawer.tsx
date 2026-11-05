@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Check, Trash2, TriangleAlert, X } from "lucide-react";
+import { Calculator, Check, Printer, Trash2, TriangleAlert, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -177,6 +177,15 @@ function Editor({
           {doc && canSet && (doc.status === "DRAFT" || doc.status === "PENDING_APPROVAL") ? (
             <Button variant="tertiary" icon={X} className="mr-auto" onClick={() => (cancel.reset(), setDialog("cancel"))}>
               Hujjatni bekor qilish
+            </Button>
+          ) : null}
+          {doc ? (
+            <Button
+              variant="secondary"
+              icon={Printer}
+              onClick={() => window.open(`/print/price-change?id=${doc.id}`, "_blank", "noopener")}
+            >
+              Chop etish
             </Button>
           ) : null}
           <Button variant="secondary" onClick={onClose}>
