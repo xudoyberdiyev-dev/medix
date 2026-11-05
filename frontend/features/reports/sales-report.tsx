@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChartColumn, Download } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -33,10 +34,18 @@ export function salesExportHref(f: { branchId: number | null; from: string; to: 
 
 const money = (v: string | undefined) => <span className="font-mono tabular-nums">{v == null ? "—" : formatMoney(v)}</span>;
 
+/** Mijoz qatoridan — shu mijozning buyurtmalari (hujjatlar). Boshqa guruhlar uchun — null. */
+export function salesRowHref(groupBy: GroupBy, row: { key: string; name: string }): string | null {
+  if (groupBy !== "CUSTOMER" || !/^[1-9][0-9]*$/.test(row.key)) return null;
+  return `/orders?${new URLSearchParams({ customerId: row.key, customer: row.name }).toString()}`;
+}
+
 /** Savdo hisoboti (SPEC 8): filtr (davr, guruh), jami qatori, .xlsx eksport; tannarx/yalpi foyda faqat ruxsat bilan (API oʻzi yubormaydi). */
 export function SalesReportPage() {
   const me = useMe();
+  const router = useRouter();
   const allowed = can(me.data, "reports.all") || can(me.data, "reports.view") || can(me.data, "reports.own");
+  const canOpenOrders = can(me.data, "orders.view");
   const fullScope = can(me.data, "reports.all") || can(me.data, "reports.view");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
@@ -125,6 +134,14 @@ export function SalesReportPage() {
           rows={r?.rows ?? []}
           rowKey={(x) => x.key}
           loading={report.isLoading}
+          onRowClick={
+            canOpenOrders && groupBy === "CUSTOMER"
+              ? (x) => {
+                  const href = salesRowHref(groupBy, x);
+                  if (href) router.push(href);
+                }
+              : undefined
+          }
           totals={r && r.rows.length > 0 ? totals : undefined}
           emptyState={
             <EmptyState icon={ChartColumn} title="Davrda savdo yoʻq" description="Boshqa davrni tanlang yoki filialni oʻzgartiring." />

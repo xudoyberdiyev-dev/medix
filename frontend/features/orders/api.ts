@@ -54,7 +54,14 @@ export function canApprove(level: OrderDetail["approvalLevel"] | null, branch: b
   return level === "DIRECTOR" ? director : branch || director;
 }
 
-export function useOrders(f: { branchId: number | null; status: OrderStatus | null; q: string; mine: boolean; page: number }) {
+export function useOrders(f: {
+  branchId: number | null;
+  status: OrderStatus | null;
+  q: string;
+  mine: boolean;
+  page: number;
+  customerId?: number | null;
+}) {
   return useQuery({
     queryKey: ["orders", "list", f],
     queryFn: () =>
@@ -66,6 +73,7 @@ export function useOrders(f: { branchId: number | null; status: OrderStatus | nu
               status: f.status ?? undefined,
               q: f.q.trim() || undefined,
               mine: f.mine,
+              customerId: f.customerId ?? undefined,
               page: f.page - 1,
               size: 50,
             },

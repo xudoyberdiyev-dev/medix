@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { visibleReports } from "./catalog";
-import { salesExportHref } from "./sales-report";
+import { salesExportHref, salesRowHref } from "./sales-report";
 import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
 import { formatMinutes, workerExportHref } from "./worker-report";
 
@@ -36,5 +36,11 @@ describe("hisobotlar", () => {
     expect(supplierGoodsExportHref("COMPANY", { branchId: 1, from: "2026-11-01", to: "2026-11-05" })).toBe(
       "/api/reports/supplier-goods/export?kind=COMPANY&branchId=1&from=2026-11-01&to=2026-11-05",
     );
+  });
+
+  it("savdo hisoboti: mijoz qatoridan buyurtmalarga", () => {
+    expect(salesRowHref("CUSTOMER", { key: "12", name: "Dorixona A" })).toBe("/orders?customerId=12&customer=Dorixona+A");
+    expect(salesRowHref("DAY", { key: "2026-11-05", name: "05.11.2026" })).toBeNull();
+    expect(salesRowHref("CUSTOMER", { key: "", name: "Jami" })).toBeNull();
   });
 });

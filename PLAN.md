@@ -7,7 +7,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~80%; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
 - **Oxirgi sessiya:** 05.11.2026 12:05–12:50 — kassir faqat o'z kassasida (cashier_id + CashierGuard), Bonus balans sahifasi, bank ko'chirmasi bilan solishtirish, Kassir paneli (Kassirning bosh sahifasi). Backend testlari CI da yashil; oxirgi push'da GitHub Actions billing sababli ishga tushmadi.
-- **Keyingi vazifa:** (avval) GitHub Actions ishlayotganini tekshirish — 05.11 dagi bosh sahifa backend kodi (DirectorHome, DebtSummaries, DirectorHomeIT) va qo'lda yozilgan openapi.json CI'da hali tekshirilmagan; diff chiqsa — CI'dagi tavsifni ko'chirish. So'ng 10-bosqich: Savdo hisobotida qator → hujjatlar, chop etish shakllari (OpenHTMLtoPDF). Eski qoldiqlar: 7-bosqich kodlar .xlsx, terish varag'i; 5-bosqich «Mahsulot qo'shish»; 3-bosqich «Kirim bo'yicha» narx rejimi.
+- **Keyingi vazifa:** (avval) GitHub Actions ishlayotganini tekshirish — 05.11 dagi bosh sahifa backend kodi (DirectorHome, DebtSummaries, DirectorHomeIT) va qo'lda yozilgan openapi.json CI'da hali tekshirilmagan; diff chiqsa — CI'dagi tavsifni ko'chirish. So'ng 10-bosqich: chop etish shakllari (OpenHTMLtoPDF). Eski qoldiqlar: 7-bosqich kodlar .xlsx, terish varag'i; 5-bosqich «Mahsulot qo'shish»; 3-bosqich «Kirim bo'yicha» narx rejimi.
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
@@ -121,7 +121,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [x] Hisobotlar katalogi sahifasi (/reports, ruxsat bo'yicha) va Savdo hisoboti (/api/reports/sales + .xlsx: mijoz/operator/filial/kun, jami, tannarx va yalpi foyda QQSsiz — prices.cost, reports.own — o'z buyurtmalari) (05.11). JdbcClient bilan (jOOQ hali ulanmagan). Qoldi: qator bosilsa hujjatlar ochilishi
 - [x] Yig'uvchilar va Markirovkachilar natijasi (/api/reports/pickers|markers + .xlsx, reports.pickers / reports.markers; xodim bo'yicha buyurtma, qator, dona/kodlar, berilgan/haqiqiy vaqt, vaqtida/kechikkan, FEFO / olib tashlangan kodlar; UI /reports/pickers, /reports/markers) (05.11). Backend CI'da tekshirilmagan (billing); SQL mahalliy PG16 da tekshirildi
 - [x] Ta'minotchi xodim / korxona tovari (/api/reports/supplier-goods?kind=STAFF|COMPANY + .xlsx; tannarxda: olib keldi, sotildi, boshqa, qoldi; Aktiv/Passiv; reports.all|view + prices.cost; UI /reports/supplier-goods) (05.11). Backend CI'da tekshirilmagan; SQL mahalliy PG16 da tekshirildi
-- [ ] Chop etish shakllari (OpenHTMLtoPDF); Savdo hisobotida qator → hujjatlar
+- [x] Savdo hisoboti: mijoz qatori bosilsa — shu mijozning buyurtmalari (/orders?customerId=…, filtr belgisi bilan) (05.11)
+- [ ] Chop etish shakllari (OpenHTMLtoPDF)
 
 ## 11. Ishga tushirish
 - [ ] SmartUp'dan to'liq import, sinov, o'qitish, parallel ishlash
@@ -180,7 +181,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
-- 05.11.2026 16:08–16:30 — 10-bosqich: Ta'minotchi xodim/korxona tovari hisoboti; Yig'uvchilar va Markirovkachilar natijasi (API + .xlsx + UI + IT test, OpenAPI qo'lda — Jackson formatida). Frontend 120 test, build yashil; skrinshot (mock). CI hali billing sababli to'xtagan.
+- 05.11.2026 16:08–16:35 — 10-bosqich: Savdo hisobotidan mijoz buyurtmalariga o'tish; Ta'minotchi xodim/korxona tovari hisoboti; Yig'uvchilar va Markirovkachilar natijasi (API + .xlsx + UI + IT test, OpenAPI qo'lda — Jackson formatida). Frontend 120 test, build yashil; skrinshot (mock). CI hali billing sababli to'xtagan.
 - 05.11.2026 14:30–14:50 — 10-bosqich: Hisobotlar katalogi va Savdo hisoboti (API + .xlsx + UI + IT test, OpenAPI qo'lda). Frontend 119 test, build yashil; skrinshot (mock). CI billing sababli to'xtagan.
 - 05.11.2026 14:36 — Keyingi sessiyani ishga tushirish (fire_trigger) xavfsizlik tekshiruvi tomonidan rad etildi; zanjirni 16:00 zaxira ishga tushirish davom ettiradi.
 - 05.11.2026 14:18–14:35 — 10-bosqich: Operator va Xarid bosh sahifalari (API + UI + IT testlar, OpenAPI qo'lda). Davr tanlagichi umumiy komponentga ajratildi. Frontend 117 test, build yashil; skrinshot (mock). CI hali billing sababli to'xtagan.

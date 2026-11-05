@@ -13,6 +13,7 @@ import {
   PackageX,
   Plus,
   Truck,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { useRef, useState } from "react";
@@ -67,13 +68,18 @@ export function OrdersPage() {
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [mine, setMine] = useState(params.get("mine") === "1");
+  // Hisobotdan oʻtish: ?customerId=…&customer=Nomi (Savdo hisoboti — mijoz qatori)
+  const [customer, setCustomer] = useState<{ id: number; name: string } | null>(() => {
+    const id = Number(params.get("customerId"));
+    return Number.isInteger(id) && id > 0 ? { id, name: params.get("customer") ?? `Mijoz #${id}` } : null;
+  });
   const [page, setPage] = useState(1);
   const [editor, setEditor] = useState<{ id: number | null } | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const allowed = canAny(me.data, ["orders.view", "approvals.view"]);
   const canCreate = can(me.data, ORDER_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
-  const orders = useOrders({ branchId, status: (status as OrderStatus | null) ?? null, q, mine, page });
+  const orders = useOrders({ branchId, status: (status as OrderStatus | null) ?? null, q, mine, page, customerId: customer?.id ?? null });
 
   if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
 
@@ -102,7 +108,7 @@ export function OrdersPage() {
     },
   ];
 
-  const filtered = Boolean(status) || Boolean(q) || mine;
+  const filtered = Boolean(status) || Boolean(q) || mine || customer != null;
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
@@ -156,11 +162,24 @@ export function OrdersPage() {
                 />
               </div>
               {canCreate ? <Checkbox label="Mening buyurtmalarim" checked={mine} onChange={(v) => (setMine(v), setPage(1))} /> : null}
+              {customer ? (
+                <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-caption">
+                  Mijoz: {customer.name}
+                  <button
+                    type="button"
+                    aria-label="Mijoz filtrini olib tashlash"
+                    className="text-text-secondary hover:text-text-primary"
+                    onClick={() => (setCustomer(null), setPage(1))}
+                  >
+                    <X size={14} strokeWidth={1.5} aria-hidden />
+                  </button>
+                </span>
+              ) : null}
             </div>
           }
           emptyState={
             filtered ? (
-              <NoResultsState onClearFilters={() => (setStatus(null), setSearch(""), setQ(""), setMine(false))} />
+              <NoResultsState onClearFilters={() => (setStatus(null), setSearch(""), setQ(""), setMine(false), setCustomer(null))} />
             ) : (
               <EmptyState
                 icon={ClipboardList}
