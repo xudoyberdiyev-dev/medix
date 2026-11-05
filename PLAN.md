@@ -4,10 +4,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 05.11.2026
-- **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa ~55%; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
+- **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~65%; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
 - **Oxirgi sessiya:** 05.11.2026 12:05–12:50 — kassir faqat o'z kassasida (cashier_id + CashierGuard), Bonus balans sahifasi, bank ko'chirmasi bilan solishtirish, Kassir paneli (Kassirning bosh sahifasi). Backend testlari CI da yashil; oxirgi push'da GitHub Actions billing sababli ishga tushmadi.
-- **Keyingi vazifa:** (avval) GitHub Actions ishlayotganini tekshirish — 05.11 dagi bosh sahifa backend kodi (DirectorHome, DebtSummaries, DirectorHomeIT) va qo'lda yozilgan openapi.json CI'da hali tekshirilmagan; diff chiqsa — CI'dagi tavsifni ko'chirish. So'ng 10-bosqich: hisobotlar katalogi (Savdo hisoboti birinchi), chop etish shakllari. Eski qoldiqlar: 7-bosqich kodlar .xlsx, terish varag'i; 5-bosqich «Mahsulot qo'shish»; 3-bosqich «Kirim bo'yicha» narx rejimi.
+- **Keyingi vazifa:** (avval) GitHub Actions ishlayotganini tekshirish — 05.11 dagi bosh sahifa backend kodi (DirectorHome, DebtSummaries, DirectorHomeIT) va qo'lda yozilgan openapi.json CI'da hali tekshirilmagan; diff chiqsa — CI'dagi tavsifni ko'chirish. So'ng 10-bosqich: qolgan hisobotlar (Ta'minotchi xodim/korxona, Yig'uvchilar, Markirovkachilar), Savdo hisobotida qator → hujjatlar, chop etish shakllari. Eski qoldiqlar: 7-bosqich kodlar .xlsx, terish varag'i; 5-bosqich «Mahsulot qo'shish»; 3-bosqich «Kirim bo'yicha» narx rejimi.
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
@@ -118,7 +118,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [x] Filial rahbari (o'z filiali, reports.view) va Buxgalter (reports.all) — shu bosh sahifa (05.11)
 - [x] Operator bosh sahifasi (/api/home/operator, reports.own: o'z sof savdosi, kiritilgan buyurtmalar, holatlar, «Diqqat» — qoralama/tasdiq/rad etilgan/kechikkan, top mijozlar; Buyurtmalar ?mine=1) (05.11)
 - [x] Xarid bosh sahifasi (/api/home/purchaser: qabul/o'tkazish kutayotgan kirimlar, YB qarzi va to'lov kunlari, top 5 YB, bonus balansi va tasdiq kutayotgan chegirmalar, «O'z nomimdagi tovar» — donada, tannarxsiz) (05.11). Ikkalasi ham backend CI'da tekshirilmagan (billing); SQL mahalliy PG16 da tekshirildi
-- [ ] Hisobotlar katalogi (jOOQ), chop etish shakllari (OpenHTMLtoPDF)
+- [x] Hisobotlar katalogi sahifasi (/reports, ruxsat bo'yicha) va Savdo hisoboti (/api/reports/sales + .xlsx: mijoz/operator/filial/kun, jami, tannarx va yalpi foyda QQSsiz — prices.cost, reports.own — o'z buyurtmalari) (05.11). JdbcClient bilan (jOOQ hali ulanmagan). Qoldi: qator bosilsa hujjatlar ochilishi
+- [ ] Qolgan hisobotlar: Ta'minotchi xodim/korxona tovari, Yig'uvchilar, Markirovkachilar natijasi; chop etish shakllari (OpenHTMLtoPDF)
 
 ## 11. Ishga tushirish
 - [ ] SmartUp'dan to'liq import, sinov, o'qitish, parallel ishlash
@@ -177,6 +178,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 05.11.2026 14:30–14:50 — 10-bosqich: Hisobotlar katalogi va Savdo hisoboti (API + .xlsx + UI + IT test, OpenAPI qo'lda). Frontend 119 test, build yashil; skrinshot (mock). CI billing sababli to'xtagan.
 - 05.11.2026 14:36 — Keyingi sessiyani ishga tushirish (fire_trigger) xavfsizlik tekshiruvi tomonidan rad etildi; zanjirni 16:00 zaxira ishga tushirish davom ettiradi.
 - 05.11.2026 14:18–14:35 — 10-bosqich: Operator va Xarid bosh sahifalari (API + UI + IT testlar, OpenAPI qo'lda). Davr tanlagichi umumiy komponentga ajratildi. Frontend 117 test, build yashil; skrinshot (mock). CI hali billing sababli to'xtagan.
 - 05.11.2026 14:00–14:20 — 10-bosqich: Direktor/Admin/Buxgalter/Filial rahbari bosh sahifasi (API /api/home/director + UI, DebtSummaries API, DirectorHomeIT). Frontend mahalliy yashil (114 test, build, skrinshot mock bilan). CI billing sababli backend tekshirilmadi. Buyurtmalar/Kirimlar sahifalari ?status= ni qabul qiladi.
