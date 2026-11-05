@@ -397,7 +397,15 @@ class OrderIT {
         mvc.perform(get("/api/orders/" + doc).cookie(outsider)).andExpect(status().isNotFound());
         mvc.perform(get("/api/orders").param("mine", "true").cookie(operator))
                 .andExpect(jsonPath("$.items[0].number").exists())
-                .andExpect(jsonPath("$.items[0].status").value("CANCELLED"));
+                .andExpect(jsonPath("$.items[0].status").value("CANCELLED"))
+                .andExpect(jsonPath("$.items[0].holder").value("Yakunlangan"));
+        // Holat yorliqlari: «Hammasi» + 13 holat; holat filtri yorliq raqamlariga ta'sir qilmaydi
+        mvc.perform(get("/api/orders").param("customerId", String.valueOf(c)).param("status", "QUEUED").cookie(operator))
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.statuses.length()").value(14))
+                .andExpect(jsonPath("$.statuses[0].count").value(org.hamcrest.Matchers.greaterThan(0)))
+                .andExpect(jsonPath("$.statuses[?(@.status == 'CANCELLED')].count").value(org.hamcrest.Matchers.contains(org.hamcrest.Matchers.greaterThan(0))))
+                .andExpect(jsonPath("$.statuses[?(@.status == 'QUEUED')].total").value(org.hamcrest.Matchers.contains("0.00")));
         mvc.perform(get("/api/orders/previous").param("customerId", String.valueOf(c)).cookie(operator))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));

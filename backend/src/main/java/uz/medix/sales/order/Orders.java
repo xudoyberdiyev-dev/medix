@@ -43,6 +43,7 @@ import uz.medix.sales.order.OrderModels.OrderStatus;
 import uz.medix.sales.order.OrderModels.OrderSummary;
 import uz.medix.sales.order.OrderModels.PaymentType;
 import uz.medix.sales.order.OrderModels.PreviousOrder;
+import uz.medix.sales.order.OrderModels.StatusCount;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
@@ -293,10 +294,6 @@ class Orders {
             where.append(" AND o.branch_id = :b");
             params.put("b", branchId);
         }
-        if (status != null) {
-            where.append(" AND o.status = :s");
-            params.put("s", status.name());
-        }
         if (customerId != null) {
             where.append(" AND o.customer_id = :c");
             params.put("c", customerId);
@@ -312,11 +309,26 @@ class Orders {
         }
         String from = " FROM sales_order o JOIN counterparty c ON c.id = o.customer_id JOIN warehouse w ON w.id = o.warehouse_id"
                 + " JOIN employee e ON e.id = o.created_by";
+        // Holat yorliqlari — holat filtrisiz (SPEC 5.2: «raqamlar filtrga bog'liq»)
+        List<StatusCount> statuses = jdbc.sql("SELECT o.status, count(*) AS cnt, coalesce(sum(o.total), 0) AS total" + from + where
+                        + " GROUP BY o.status")
+                .params(params)
+                .query((rs, n) -> new StatusCount(OrderStatus.valueOf(rs.getString("status")), rs.getLong("cnt"),
+                        new Money(rs.getBigDecimal("total")).toString()))
+                .list();
+        if (status != null) {
+            where.append(" AND o.status = :s");
+            params.put("s", status.name());
+        }
         long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
         List<OrderSummary> items = jdbc.sql("""
                 SELECT o.id, o.number, o.branch_id, w.name AS warehouse, o.customer_id, c.name AS customer, o.order_date, o.delivery_type,
                        o.delivery_date, o.status, o.approval_level, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
-                       o.total, e.full_name AS created_by, o.created_at, o.status_changed_at""" + from + where
+                       o.total, e.full_name AS created_by, o.created_at, o.status_changed_at,
+                       (SELECT full_name FROM employee WHERE id = o.picker_id) AS picker,
+                       (SELECT full_name FROM employee WHERE id = o.marker_id) AS marker,
+                       (SELECT d.full_name FROM trip_stop ts JOIN trip t ON t.id = ts.trip_id JOIN employee d ON d.id = t.driver_id
+                        WHERE ts.order_id = o.id AND ts.active AND t.status <> 'CANCELLED' ORDER BY ts.id DESC LIMIT 1) AS driver""" + from + where
                         + " ORDER BY o.created_at DESC, o.id DESC LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", size)
@@ -327,9 +339,11 @@ class Orders {
                         OrderStatus.valueOf(rs.getString("status")),
                         rs.getString("approval_level") == null ? null : ApprovalLevel.valueOf(rs.getString("approval_level")), rs.getInt("lines"),
                         new Money(rs.getBigDecimal("total")).toString(), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
-                        rs.getTimestamp("status_changed_at").toInstant()))
+                        rs.getTimestamp("status_changed_at").toInstant(),
+                        holderText(OrderStatus.valueOf(rs.getString("status")), DeliveryType.valueOf(rs.getString("delivery_type")),
+                                rs.getString("created_by"), rs.getString("picker"), rs.getString("marker"), rs.getString("driver"))))
                 .list();
-        return new OrderPage(items, total, page, size);
+        return new OrderPage(items, total, page, size, statusTabs(statuses));
     }
 
     record LineRow(long id, int lineNo, long productId, int qty, BigDecimal price, Long priceTypeId, String priceType) {}
@@ -445,6 +459,25 @@ class Orders {
                 .param("id", orderId)
                 .query((rs, n) -> new W(rs.getString("creator"), rs.getString("picker"), rs.getString("marker"), rs.getString("driver")))
                 .single();
+        return holderText(status, delivery, w.creator(), w.picker(), w.marker(), w.driver());
+    }
+
+    /** «Hammasi» (status = null) + har holat; bo'sh holat — 0. */
+    static List<StatusCount> statusTabs(List<StatusCount> found) {
+        Map<OrderStatus, StatusCount> by = new java.util.EnumMap<>(OrderStatus.class);
+        found.forEach(c -> by.put(c.status(), c));
+        Money all = found.stream().map(c -> Money.of(c.total())).reduce(Money.ZERO, Money::plus);
+        List<StatusCount> out = new java.util.ArrayList<>();
+        out.add(new StatusCount(null, found.stream().mapToLong(StatusCount::count).sum(), all.toString()));
+        for (OrderStatus st : OrderStatus.values()) {
+            out.add(by.getOrDefault(st, new StatusCount(st, 0, Money.ZERO.toString())));
+        }
+        return out;
+    }
+
+    static String holderText(OrderStatus status, DeliveryType delivery, String creator, String picker, String marker, String driver) {
+        record W(String creator, String picker, String marker, String driver) {}
+        W w = new W(creator, picker, marker, driver);
         boolean pickup = delivery == DeliveryType.PICKUP;
         return switch (status) {
             case DRAFT -> "Operator · " + w.creator();

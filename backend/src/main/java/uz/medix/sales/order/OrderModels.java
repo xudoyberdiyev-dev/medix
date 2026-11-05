@@ -108,9 +108,14 @@ final class OrderModels {
             String total,
             String createdBy,
             Instant createdAt,
-            Instant statusChangedAt) {}
+            Instant statusChangedAt,
+            @Schema(description = "«Hozir kimda» (SPEC 5.2)") String holder) {}
 
-    record OrderPage(List<OrderSummary> items, long total, int page, int size) {}
+    /** Holat yorlig'i: soni va summasi — boshqa filtrlar (holatdan tashqari) bo'yicha. */
+    record StatusCount(@Schema(nullable = true, description = "null — «Hammasi»") OrderStatus status, long count, String total) {}
+
+    record OrderPage(List<OrderSummary> items, long total, int page, int size,
+            @Schema(description = "Holat yorliqlari («Hammasi» + har holat): soni va summasi") List<StatusCount> statuses) {}
 
     record OrderDetail(
             long id,
