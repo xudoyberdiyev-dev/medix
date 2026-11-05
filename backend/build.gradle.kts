@@ -38,6 +38,9 @@ dependencies {
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")
     implementation("org.apache.poi:poi-ooxml:5.4.1")
+    // Chop etish shakllari: Thymeleaf shablon → OpenHTMLtoPDF (SPEC 10). Shrift — DejaVu Sans (lotin/kirill, ʻ ʼ).
+    implementation("org.thymeleaf:thymeleaf")
+    implementation("io.github.openhtmltopdf:openhtmltopdf-pdfbox:1.1.22")
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")

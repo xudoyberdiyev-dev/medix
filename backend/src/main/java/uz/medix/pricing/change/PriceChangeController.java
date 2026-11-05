@@ -5,7 +5,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,10 +47,12 @@ class PriceChangeController {
     private static final String SET_PRICES = "hasAuthority('prices.create')";
 
     private final PriceChanges changes;
+    private final PriceChangePdf pdf;
     private final CurrentActor currentActor;
 
-    PriceChangeController(PriceChanges changes, CurrentActor currentActor) {
+    PriceChangeController(PriceChanges changes, PriceChangePdf pdf, CurrentActor currentActor) {
         this.changes = changes;
+        this.pdf = pdf;
         this.currentActor = currentActor;
     }
 
@@ -87,6 +93,17 @@ class PriceChangeController {
     @Operation(summary = "NO hujjati")
     PriceChangeDetail get(@PathVariable long id) {
         return detail(id);
+    }
+
+    @GetMapping(value = "/price-changes/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "NO hujjati — PDF (chop etish)")
+    ResponseEntity<byte[]> pdf(@PathVariable long id) {
+        byte[] body = pdf.render(actor(), id);
+        String number = detail(id).number();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(number + ".pdf").build().toString())
+                .body(body);
     }
 
     @PostMapping("/price-changes")

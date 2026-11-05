@@ -338,6 +338,15 @@ class PriceChangeIT {
                 .andReturn();
         long doc = id(created);
         mvc.perform(post("/api/price-changes/" + doc + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+        // Server PDF (OpenHTMLtoPDF): raqam, oʻzbekcha harflar, partiya, pul formati
+        byte[] pdfBytes = mvc.perform(get("/api/price-changes/" + doc + "/pdf").cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType("application/pdf"))
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var pdfDoc = org.apache.pdfbox.Loader.loadPDF(pdfBytes)) {
+            String text = new org.apache.pdfbox.text.PDFTextStripper().getText(pdfDoc);
+            org.assertj.core.api.Assertions.assertThat(text).contains("Narx oʻzgarishi", "NO-", "KB-1", "1.100,00", "Kirim boʻyicha");
+        }
         mvc.perform(get("/api/price-changes").param("branchId", String.valueOf(branch)).cookie(purchaser))
                 .andExpect(jsonPath("$.items[0].receiptNumber").value(matchesPattern("^KR-T-.*")));
         // Mahsulot narxi o'zgarmaydi; partiya narxlari alohida
