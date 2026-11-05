@@ -66,6 +66,9 @@
     "description" : "Mijozlar va yetkazib beruvchilar qarzi (muddat guruhlari)",
     "name" : "debts"
   }, {
+    "description" : "Yetkazib beruvchi bonus balansi",
+    "name" : "supplier-bonuses"
+  }, {
     "description" : "Qoldiqlar",
     "name" : "stock"
   }, {
@@ -319,7 +322,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -1891,7 +1894,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_19",
+        "operationId" : "list_20",
         "responses" : {
           "200" : {
             "content" : {
@@ -2764,7 +2767,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "responses" : {
           "200" : {
             "content" : {
@@ -4901,7 +4904,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "responses" : {
           "200" : {
             "content" : {
@@ -5797,7 +5800,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "responses" : {
           "200" : {
             "content" : {
@@ -6107,7 +6110,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -6232,6 +6235,77 @@
         },
         "summary" : "Excel'ga eksport (.xlsx)",
         "tags" : [ "stock" ]
+      }
+    },
+    "/api/supplier-bonuses" : {
+      "get" : {
+        "operationId" : "list_15",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BonusSummary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filialdagi YB bonus balanslari va kutilayotgan bonuslar",
+        "tags" : [ "supplier-bonuses" ]
+      }
+    },
+    "/api/supplier-bonuses/{supplierId}" : {
+      "get" : {
+        "operationId" : "detail",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "supplierId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BonusDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bitta YB: bonus harakatlari (BNS, bonus hisobidan kirim) va kutilayotgan bonuslar",
+        "tags" : [ "supplier-bonuses" ]
       }
     },
     "/api/trips" : {
@@ -7591,6 +7665,132 @@
           }
         },
         "required" : [ "reason" ]
+      },
+      "BonusDetail" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "moves" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BonusMove"
+            }
+          },
+          "pending" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PendingBonus"
+            }
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "balance", "moves", "pending", "supplier", "supplierId" ]
+      },
+      "BonusMove" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "balance" : {
+            "type" : "string"
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "note" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "at", "balance", "docId", "docNumber", "docType" ]
+      },
+      "BonusRow" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "idleDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Balans musbat va oxirgi harakatdan beri o'tgan kunlar"
+          },
+          "lastMoveAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "nextBonusDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Eng yaqin kutilayotgan bonus olish sanasi"
+          },
+          "pending" : {
+            "type" : "string"
+          },
+          "pendingCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "balance", "pending", "pendingCount", "supplier", "supplierId", "tin" ]
+      },
+      "BonusSummary" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "idle" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pending" : {
+            "type" : "string"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BonusRow"
+            }
+          },
+          "suppliers" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "balance", "idle", "pending", "rows", "suppliers" ]
       },
       "Branch" : {
         "type" : "object",
@@ -11070,6 +11270,33 @@
           }
         },
         "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "customer", "customerId", "id", "number", "paymentDate", "source", "status" ]
+      },
+      "PendingBonus" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "bonusDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "overdue" : {
+            "type" : "boolean"
+          },
+          "receiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "overdue", "receiptDate", "receiptId", "receiptNumber" ]
       },
       "PendingReturn" : {
         "type" : "object",

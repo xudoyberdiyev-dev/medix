@@ -99,7 +99,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -776,7 +776,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1201,7 +1201,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2174,7 +2174,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari */
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2524,7 +2524,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2720,7 +2720,7 @@ export interface paths {
          * Qoldiqlar (zona × partiya)
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2738,6 +2738,40 @@ export interface paths {
         };
         /** Excel'ga eksport (.xlsx) */
         get: operations["export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supplier-bonuses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
+        get: operations["list_15"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supplier-bonuses/{supplierId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bitta YB: bonus harakatlari (BNS, bonus hisobidan kirim) va kutilayotgan bonuslar */
+        get: operations["detail"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3393,6 +3427,57 @@ export interface components {
         };
         BlockRequest: {
             reason: string;
+        };
+        BonusDetail: {
+            balance: string;
+            moves: components["schemas"]["BonusMove"][];
+            pending: components["schemas"]["PendingBonus"][];
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
+        };
+        BonusMove: {
+            amount: string;
+            /** Format: date-time */
+            at: string;
+            balance: string;
+            /** Format: int64 */
+            docId: number;
+            docNumber: string;
+            docType: string;
+            employee?: string;
+            note?: string;
+        };
+        BonusRow: {
+            balance: string;
+            /**
+             * Format: int32
+             * @description Balans musbat va oxirgi harakatdan beri o'tgan kunlar
+             */
+            idleDays?: number;
+            /** Format: date-time */
+            lastMoveAt?: string;
+            /**
+             * Format: date
+             * @description Eng yaqin kutilayotgan bonus olish sanasi
+             */
+            nextBonusDate?: string;
+            pending: string;
+            /** Format: int32 */
+            pendingCount: number;
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
+            tin: string;
+        };
+        BonusSummary: {
+            balance: string;
+            /** Format: int32 */
+            idle: number;
+            pending: string;
+            rows: components["schemas"]["BonusRow"][];
+            /** Format: int32 */
+            suppliers: number;
         };
         Branch: {
             active: boolean;
@@ -4738,6 +4823,17 @@ export interface components {
             /** @enum {string} */
             status: "DRAFT" | "POSTED" | "CANCELLED";
         };
+        PendingBonus: {
+            amount: string;
+            /** Format: date */
+            bonusDate?: string;
+            overdue: boolean;
+            /** Format: date */
+            receiptDate: string;
+            /** Format: int64 */
+            receiptId: number;
+            receiptNumber: string;
+        };
         PendingReturn: {
             batch: string;
             /** Format: date-time */
@@ -5872,7 +5968,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -6911,7 +7007,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -7540,7 +7636,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -9005,7 +9101,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -9568,7 +9664,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -9822,7 +9918,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -9871,6 +9967,53 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_15: {
+        parameters: {
+            query: {
+                branchId: number;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BonusSummary"];
+                };
+            };
+        };
+    };
+    detail: {
+        parameters: {
+            query: {
+                branchId: number;
+            };
+            header?: never;
+            path: {
+                supplierId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BonusDetail"];
+                };
             };
         };
     };

@@ -1,6 +1,7 @@
 import {
   Banknote,
   BadgeDollarSign,
+  Gift,
   BookOpen,
   Boxes,
   CalendarClock,
@@ -72,6 +73,7 @@ export const navigation: NavGroup[] = [
       { key: "cash", label: "Kassa", href: "/cash", icon: Banknote, anyOf: ["cash.view"] },
       { key: "customer-debts", label: "Mijozlar qarzi", href: "/debts/customers", icon: HandCoins, anyOf: ["cdebt.view"] },
       { key: "supplier-debts", label: "YB qarzi", href: "/debts/suppliers", icon: BadgeDollarSign, anyOf: ["sdebt.view"] },
+      { key: "bonuses", label: "Bonus balans", href: "/bonuses", icon: Gift, anyOf: ["sdebt.view", "supplierBonus.confirm"] },
     ],
   },
   {
