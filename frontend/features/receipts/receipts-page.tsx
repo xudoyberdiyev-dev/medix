@@ -35,10 +35,15 @@ export const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`)
 export function ReceiptsPage() {
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
-  const initialStatus = useSearchParams().get("status");
+  const params = useSearchParams();
+  const initialStatus = params.get("status");
   const [status, setStatus] = useState<string | null>(initialStatus);
   const [page, setPage] = useState(1);
-  const [editor, setEditor] = useState<{ id: number | null } | null>(null);
+  // Bildirishnomadan oʻtish: ?open=<id> — kirim darhol ochiladi
+  const [editor, setEditor] = useState<{ id: number | null } | null>(() => {
+    const id = Number(params.get("open"));
+    return Number.isInteger(id) && id > 0 ? { id } : null;
+  });
   const allowed = can(me.data, "receipt.view");
   const canCreate = can(me.data, RECEIPT_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;

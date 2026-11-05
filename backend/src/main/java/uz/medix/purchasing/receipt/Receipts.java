@@ -24,6 +24,7 @@ import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockLedger.DocRef;
 import uz.medix.inventory.StockLedger.Move;
 import uz.medix.inventory.ZoneType;
+import uz.medix.notification.Notifications;
 import uz.medix.purchasing.receipt.ReceiptModels.AcceptLine;
 import uz.medix.purchasing.receipt.ReceiptModels.DiffReason;
 import uz.medix.purchasing.receipt.ReceiptModels.DiscountKind;
@@ -63,10 +64,12 @@ class Receipts {
     private final DocumentSequenceService numbers;
     private final Clock clock;
     private final SupplierBonuses bonuses;
+    private final Notifications notifications;
 
     Receipts(JdbcClient jdbc, StockLedger stock, PartyLedger parties, AuditLog audit, DocumentSequenceService numbers, Clock clock,
-            SupplierBonuses bonuses) {
+            SupplierBonuses bonuses, Notifications notifications) {
         this.bonuses = bonuses;
+        this.notifications = notifications;
         this.jdbc = jdbc;
         this.stock = stock;
         this.parties = parties;
@@ -490,6 +493,11 @@ class Receipts {
                 .update();
         audit.record(AuditEntry.of("receipt.accept", "receipt", id)
                 .change(Map.of("status", ReceiptStatus.DRAFT.name()), Map.of("status", ReceiptStatus.ACCEPTED.name())));
+        // O'tkazishga tayyor: receipt.post egalari va kirim muallifi (Xarid)
+        long author = jdbc.sql("SELECT created_by FROM receipt WHERE id = :id").param("id", id).query(Long.class).single();
+        notifications.notify("receipt.post", h.branchId(), author == actor.employeeId() ? List.of() : List.of(author),
+                new Notifications.Message("receipt.accepted", "Kirim qabul qilindi: " + h.number(), "Oʻtkazish kutmoqda",
+                        "/receipts?status=ACCEPTED&open=" + id, "receipt.accepted:" + id));
     }
 
     // ===== O'tkazish =====

@@ -239,6 +239,11 @@ class ReceiptIT {
                 .andExpect(jsonPath("$.status").value("ACCEPTED"))
                 .andExpect(jsonPath("$.hasDiff").value(true))
                 .andExpect(jsonPath("$.lines[0].bonusBatch").value("IB-1-B"));
+        // Bildirishnoma: o'tkazish kutmoqda — kirim muallifiga (Xarid)
+        assertThat(jdbc.sql("""
+                SELECT count(*) FROM notification n JOIN receipt r ON r.created_by = n.employee_id
+                WHERE n.dedup_key = :d AND r.id = :id""").param("d", "receipt.accepted:" + doc).param("id", doc).query(Integer.class).single())
+                .isEqualTo(1);
         // Qabul zonasida, sotuvga yopiq; qarz yo'q
         assertThat(stock(p.receiving(), a)).isEqualTo(11);
         assertThat(stock(p.main(), a)).isZero();
