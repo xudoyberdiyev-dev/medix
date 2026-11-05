@@ -6,8 +6,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Sana:** 06.11.2026
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~90%; 2 — Katalog ~90%; 3 — Narxlar ~97%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~95% (imzo UI ✅); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 06.11.2026 03:15–03:55 (tungi oyna, zanjir) — 8-bosqich mijoz imzosi (imzo maydoni, `TripStop.signed`); jadvallar standarti: saqlangan ko'rinishlar (Mahsulotlar, Mijozlar/YB) va «topilgan joy qator ostida» (`SearchMatch`); Ombor mudiri paneli yorliqlari (Monitor, Vaqt berish, Muammolar, Kirim qabuli, Qaytgan tovar); tasdiq bildirishnomalari — buyurtma, NO, kassa chiqimi (tasdiqlovchiga; qaror — muallifga), `?open=<id>` havolalari.
-- **Keyingi vazifa:** qolgan kichik ishlar: buyurtmalar holat yorliqlari e2e; boshqa tasdiqlar bildirishnomasi (YT to'lovi, kirim o'tkazish kutmoqda). 4-bosqich ko'chirishlar (ZK/OK) — SPEC 18 bo'yicha V2, shoshilinch emas. Brauzerdagi `/print/*` sahifalari zaxira sifatida qoldi.
+- **Oxirgi sessiya:** 06.11.2026 03:15–04:00 (tungi oyna, zanjir) — 8-bosqich mijoz imzosi (imzo maydoni, `TripStop.signed`); jadvallar standarti: saqlangan ko'rinishlar (Mahsulotlar, Mijozlar/YB) va «topilgan joy qator ostida» (`SearchMatch`); Ombor mudiri paneli yorliqlari (Monitor, Vaqt berish, Muammolar, Kirim qabuli, Qaytgan tovar); tasdiq bildirishnomalari — buyurtma, NO, kassa chiqimi (tasdiqlovchiga; qaror — muallifga), `?open=<id>` havolalari; Qoldiqlar/Muddat — URL filtrlar va saqlangan ko'rinishlar; kirim qabul qilindi va YT tasdig'i bildirishnomalari.
+- **Keyingi vazifa:** buyurtmalar holat yorliqlari e2e; bildirishnomalar real vaqtda (SSE, SPEC 10) yoki qo'ng'iroqcha so'rov oralig'ini tekshirish; 4-bosqich ko'chirishlar (ZK/OK) — SPEC 18 bo'yicha V2. Brauzerdagi `/print/*` sahifalari zaxira sifatida qoldi.
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
@@ -183,6 +183,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 06.11.2026 03:50–04:00 — davom (qo'lda ishga tushirish shu sessiyaga keldi): Qoldiqlar/Muddat URL filtrlar + saqlangan ko'rinishlar; kirim «qabul qilindi» (receipt.post + muallif) va YT tasdig'i bildirishnomalari. Frontend 146 test; CI (backend + e2e) yashil. zanjir: davom → 04:30 zaxira (oyna hisobotini yozadi).
 - 06.11.2026 03:56 — fire_trigger yana rad etildi (auto mode); zanjirni 04:30 zaxira ishga tushirish davom ettiradi (oyna 05:00 da tugaydi — o'sha sessiya oyna hisobotini yozadi).
 - 06.11.2026 03:15–03:55 — zanjir sessiyasi: imzo UI, saqlangan ko'rinishlar, «topilgan joy qator ostida» (Mahsulotlar, Kontragentlar), Ombor mudiri paneli yorliqlari (skrinshot mock), tasdiq bildirishnomalari (buyurtma, NO, kassa). Frontend 144 test, build yashil; CI (backend + e2e) yashil.
 - 06.11.2026 03:17 — zanjir: davom (kontekst og'irlashdi) — keyingi sessiya: 8-bosqich imzo UI yoki 4-bosqich ko'chirishlar. CI (develop) to'liq yashil.
