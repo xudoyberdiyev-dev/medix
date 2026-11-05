@@ -4130,7 +4130,11 @@ export interface components {
             expenses: components["schemas"]["ByPayment"];
             /** Format: date */
             from: string;
+            operators: components["schemas"]["OperatorRow"][];
+            orderStatuses: components["schemas"]["StatusCell"][];
             sales: components["schemas"]["ByPayment"];
+            /** Format: int32 */
+            staleDays: number;
             supplierDebt: components["schemas"]["DebtCard"];
             /** Format: date */
             to: string;
@@ -4682,6 +4686,12 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        OperatorRow: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            sales: string;
         };
         OrderDetail: {
             address?: string;
@@ -5667,6 +5677,18 @@ export interface components {
             opening: string;
             /** Format: date */
             to: string;
+        };
+        StatusCell: {
+            amount: string;
+            /** Format: int32 */
+            count: number;
+            staleAmount: string;
+            /** Format: int32 */
+            staleCount: number;
+            status: string;
+            todayAmount: string;
+            /** Format: int32 */
+            todayCount: number;
         };
         StockPage: {
             items: components["schemas"]["StockRow"][];

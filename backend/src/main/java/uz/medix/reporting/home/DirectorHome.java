@@ -3,6 +3,8 @@ package uz.medix.reporting.home;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -30,6 +32,10 @@ class DirectorHome {
 
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
     private static final int TOP = 5;
+    static final int STALE_DAYS = 2;
+    /** «Hammasi» filtridagi 11 katak (Rad etilgan va Bekor qilingan kirmaydi). */
+    static final List<String> STATUSES = List.of("DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING",
+            "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED");
 
     /** Jami va to'lov turi bo'yicha: Naqd / Perechisleniye / Online. */
     record ByPayment(String total, String cash, String transfer, String online) {}
@@ -48,8 +54,18 @@ class DirectorHome {
             CountAmount cashApprovals, ExpiringBatches expiring, String supplierOverdue, String supplierToday, String supplierNext3Days,
             int receiptsToPost, String driverCash) {}
 
+    /**
+     * Buyurtma holati katagi: soni va summasi — Hammasi / Bugungi (bugun kiritilgan) / Kechikkanlar (holatda 2 kundan
+     * oshgan). Faol holatlar — hozirgi; Yetkazildi / Yetkazilmadi — davr ichida.
+     */
+    record StatusCell(String status, int count, String amount, int todayCount, String todayAmount, int staleCount, String staleAmount) {}
+
+    /** Operator: sof savdo (QQS bilan) — o'zi kiritgan buyurtmalar bo'yicha. */
+    record OperatorRow(long id, String name, String sales) {}
+
     record Home(LocalDate from, LocalDate to, LocalDate today, @Schema(nullable = true) Long branchId, ByPayment sales, DebtCard customerDebt,
-            DebtCard supplierDebt, ByPayment expenses, List<BranchRow> branches, Attention attention, List<Debtor> topDebtors) {}
+            DebtCard supplierDebt, ByPayment expenses, List<BranchRow> branches, Attention attention, List<Debtor> topDebtors,
+            int staleDays, List<StatusCell> orderStatuses, List<OperatorRow> operators) {}
 
     private final JdbcClient jdbc;
     private final DebtSummaries debts;
@@ -131,7 +147,53 @@ class DirectorHome {
         List<Debtor> top = customers.top().stream()
                 .map(x -> new Debtor(x.counterpartyId(), x.name(), x.debt(), x.overdue(), x.maxOverdueDays())).toList();
         return new Home(f, t, today, branchId, byPayment(sales), new DebtCard(customers.debt(), customers.overdue(), customers.advance()),
-                new DebtCard(suppliers.debt(), suppliers.overdue(), suppliers.advance()), byPayment(expenses), rows, attention, top);
+                new DebtCard(suppliers.debt(), suppliers.overdue(), suppliers.advance()), byPayment(expenses), rows, attention, top,
+                STALE_DAYS, statuses(branchId, f, t, today), operators(branchId, f, t));
+    }
+
+    private List<StatusCell> statuses(Long branchId, LocalDate f, LocalDate t, LocalDate today) {
+        Map<String, StatusCell> by = new HashMap<>();
+        jdbc.sql("""
+                SELECT status, count(*) AS cnt, sum(total) AS amt,
+                       count(*) FILTER (WHERE (created_at AT TIME ZONE 'Asia/Tashkent')::date = :d) AS today_cnt,
+                       sum(total) FILTER (WHERE (created_at AT TIME ZONE 'Asia/Tashkent')::date = :d) AS today_amt,
+                       count(*) FILTER (WHERE status NOT IN ('DELIVERED', 'UNDELIVERED') AND status_changed_at < :stale) AS stale_cnt,
+                       sum(total) FILTER (WHERE status NOT IN ('DELIVERED', 'UNDELIVERED') AND status_changed_at < :stale) AS stale_amt
+                FROM sales_order
+                WHERE status NOT IN ('REJECTED', 'CANCELLED') AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                  AND (status NOT IN ('DELIVERED', 'UNDELIVERED') OR (status_changed_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t)
+                GROUP BY status""")
+                .param("d", Date.valueOf(today))
+                .param("stale", Timestamp.from(clock.instant().minus(Duration.ofDays(STALE_DAYS))))
+                .param("b", branchId)
+                .param("f", Date.valueOf(f))
+                .param("t", Date.valueOf(t))
+                .query((rs, n) -> {
+                    String st = rs.getString("status");
+                    by.put(st, new StatusCell(st, rs.getInt("cnt"), m(rs.getBigDecimal("amt")).toString(), rs.getInt("today_cnt"),
+                            m(rs.getBigDecimal("today_amt")).toString(), rs.getInt("stale_cnt"), m(rs.getBigDecimal("stale_amt")).toString()));
+                    return st;
+                })
+                .list();
+        return STATUSES.stream().map(st -> by.getOrDefault(st, new StatusCell(st, 0, "0.00", 0, "0.00", 0, "0.00"))).toList();
+    }
+
+    private List<OperatorRow> operators(Long branchId, LocalDate f, LocalDate t) {
+        // Savdo kartasi bilan bir manba: o'tkazilgan sotuv − qaytarishlar, buyurtmani kiritgan xodim bo'yicha
+        return jdbc.sql("""
+                SELECT e.id, e.full_name AS name, sum(x.amount) AS amount FROM (
+                    SELECT o.created_by AS emp, s.total AS amount
+                    FROM sale s JOIN sales_order o ON o.id = s.order_id
+                    WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b)
+                    UNION ALL
+                    SELECT o.created_by, -r.total
+                    FROM sales_return r JOIN sales_order o ON o.id = r.order_id
+                    WHERE r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                ) x JOIN employee e ON e.id = x.emp
+                GROUP BY e.id, e.full_name ORDER BY amount DESC, e.full_name LIMIT :top""")
+                .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId).param("top", TOP)
+                .query((rs, n) -> new OperatorRow(rs.getLong("id"), rs.getString("name"), m(rs.getBigDecimal("amount")).toString()))
+                .list();
     }
 
     private Attention attention(Actor actor, Long branchId, LocalDate today, DebtSummaries.Summary customers) {

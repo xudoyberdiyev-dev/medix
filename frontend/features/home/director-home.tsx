@@ -12,6 +12,7 @@ import { TextField } from "@/components/ui/text-field";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
+import { type OrderStatus, STATUS_LABELS } from "@/features/orders/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -22,6 +23,17 @@ type Home = components["schemas"]["Home"];
 type ByPayment = components["schemas"]["ByPayment"];
 type BranchRow = components["schemas"]["BranchRow"];
 type Debtor = components["schemas"]["Debtor"];
+type StatusCell = components["schemas"]["StatusCell"];
+type OperatorRow = components["schemas"]["OperatorRow"];
+
+export type StatusFilter = "all" | "today" | "stale";
+
+/** Buyurtma holati katagi tanlangan filtr bo'yicha (SPEC 8: Hammasi / Bugungi / Kechikkanlar). */
+export function cellValue(c: StatusCell, f: StatusFilter): { count: number; amount: string } {
+  if (f === "today") return { count: c.todayCount, amount: c.todayAmount };
+  if (f === "stale") return { count: c.staleCount, amount: c.staleAmount };
+  return { count: c.count, amount: c.amount };
+}
 
 export const REPORTS_ALL = "reports.all";
 
@@ -174,7 +186,11 @@ export function DirectorHome() {
             <Attention home={h} />
             <TopDebtors rows={h.topDebtors} />
           </div>
-          <Branches rows={h.branches} />
+          <OrderStatuses cells={h.orderStatuses} staleDays={h.staleDays} />
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <Branches rows={h.branches} />
+            <Operators rows={h.operators} />
+          </div>
         </div>
       )}
     </>
@@ -309,6 +325,71 @@ function Branches({ rows }: { rows: BranchRow[] }) {
         rows={rows}
         rowKey={(b) => String(b.id)}
         emptyState={<EmptyState icon={Building2} title="Filial yoʻq" description="Faol filiallar shu yerda koʻrinadi." />}
+      />
+    </section>
+  );
+}
+
+function OrderStatuses({ cells, staleDays }: { cells: StatusCell[]; staleDays: number }) {
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  return (
+    <section>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-subtitle">Buyurtma holatlari</h2>
+        <Tabs
+          aria-label="Buyurtmalar filtri"
+          items={[
+            { key: "all", label: "Hammasi" },
+            { key: "today", label: "Bugungi" },
+            { key: "stale", label: "Kechikkanlar" },
+          ]}
+          value={filter}
+          onChange={(k) => setFilter(k as StatusFilter)}
+        />
+      </div>
+      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
+        {cells.map((c) => {
+          const v = cellValue(c, filter);
+          return (
+            <li key={c.status}>
+              <Link
+                href={`/orders?status=${c.status}`}
+                className="block rounded-card border border-border bg-surface p-3 hover:bg-background"
+              >
+                <div className="truncate text-caption text-text-secondary">{STATUS_LABELS[c.status as OrderStatus] ?? c.status}</div>
+                <div className="mt-1 font-mono text-subtitle tabular-nums">{v.count}</div>
+                <div className="font-mono text-caption tabular-nums text-text-secondary">{formatMoney(v.amount)}</div>
+                {filter === "all" && c.staleCount > 0 ? (
+                  <div className="mt-1 text-caption text-warning">
+                    {c.staleCount} ta {staleDays} kundan oshgan
+                  </div>
+                ) : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function Operators({ rows }: { rows: OperatorRow[] }) {
+  const columns: TableColumn<OperatorRow>[] = [
+    { key: "name", title: "Operator" },
+    { key: "sales", title: "Savdo (QQS bilan)", align: "right", render: (o) => money(o.sales) },
+  ];
+  return (
+    <section>
+      <h2 className="mb-2 flex items-center gap-2 text-subtitle">
+        <Users size={18} strokeWidth={1.5} aria-hidden /> Operatorlar (top 5)
+      </h2>
+      <Table
+        caption="Operatorlar: sof savdo"
+        density="compact"
+        columns={columns}
+        rows={rows}
+        rowKey={(o) => String(o.id)}
+        emptyState={<EmptyState icon={Users} title="Savdo yoʻq" description="Davrda sotuv boʻlsa, operatorlar shu yerda koʻrinadi." />}
       />
     </section>
   );

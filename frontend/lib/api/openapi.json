@@ -9632,8 +9632,24 @@
             "type" : "string",
             "format" : "date"
           },
+          "operators" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OperatorRow"
+            }
+          },
+          "orderStatuses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StatusCell"
+            }
+          },
           "sales" : {
             "$ref" : "#/components/schemas/ByPayment"
+          },
+          "staleDays" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "supplierDebt" : {
             "$ref" : "#/components/schemas/DebtCard"
@@ -9653,7 +9669,7 @@
             }
           }
         },
-        "required" : [ "attention", "branches", "customerDebt", "expenses", "from", "sales", "supplierDebt", "to", "today", "topDebtors" ]
+        "required" : [ "attention", "branches", "customerDebt", "expenses", "from", "operators", "orderStatuses", "sales", "staleDays", "supplierDebt", "to", "today", "topDebtors" ]
       },
       "ImportResult" : {
         "type" : "object",
@@ -10979,6 +10995,22 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "cutoffDate", "id", "lines", "number", "source", "status", "totalQty", "warehouse", "warehouseId" ]
+      },
+      "OperatorRow" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "sales" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name", "sales" ]
       },
       "OrderDetail" : {
         "type" : "object",
@@ -13511,6 +13543,36 @@
           }
         },
         "required" : [ "account", "accountId", "closing", "expense", "from", "income", "moves", "opening", "to" ]
+      },
+      "StatusCell" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "staleAmount" : {
+            "type" : "string"
+          },
+          "staleCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "todayAmount" : {
+            "type" : "string"
+          },
+          "todayCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "amount", "count", "staleAmount", "staleCount", "status", "todayAmount", "todayCount" ]
       },
       "StockPage" : {
         "type" : "object",

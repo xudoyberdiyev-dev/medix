@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attentionRows, nonZero } from "./director-home";
+import { attentionRows, cellValue, nonZero } from "./director-home";
 import { periodRange } from "./period";
 
 describe("periodRange", () => {
@@ -51,5 +51,14 @@ describe("Diqqat talab qiladi", () => {
     expect(nonZero("0.00")).toBe(false);
     expect(nonZero("0.01")).toBe(true);
     expect(nonZero("-5.00")).toBe(true);
+  });
+});
+
+describe("Buyurtma holatlari katagi", () => {
+  const c = { status: "QUEUED", count: 5, amount: "500.00", todayCount: 2, todayAmount: "200.00", staleCount: 1, staleAmount: "50.00" };
+  it("filtr boʻyicha", () => {
+    expect(cellValue(c, "all")).toEqual({ count: 5, amount: "500.00" });
+    expect(cellValue(c, "today")).toEqual({ count: 2, amount: "200.00" });
+    expect(cellValue(c, "stale")).toEqual({ count: 1, amount: "50.00" });
   });
 });

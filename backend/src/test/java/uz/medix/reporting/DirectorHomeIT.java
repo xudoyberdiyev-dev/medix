@@ -182,7 +182,12 @@ class DirectorHomeIT {
                 .andExpect(jsonPath("$.attention.directorOrders.count").value(0))
                 .andExpect(jsonPath("$.attention.driverCash").value("0.00"))
                 .andExpect(jsonPath("$.topDebtors[0].id").value(c))
-                .andExpect(jsonPath("$.topDebtors[0].debt").value("1400000.00"));
+                .andExpect(jsonPath("$.topDebtors[0].debt").value("1400000.00"))
+                .andExpect(jsonPath("$.staleDays").value(2))
+                .andExpect(jsonPath("$.orderStatuses.length()").value(11))
+                .andExpect(jsonPath("$.orderStatuses[0].status").value("DRAFT"))
+                .andExpect(jsonPath("$.orderStatuses[0].count").value(0))
+                .andExpect(jsonPath("$.operators.length()").value(0));
 
         // Boshqa filialda hech narsa yo'q
         mvc.perform(get("/api/home/director").param("branchId", "" + other).cookie(director))
