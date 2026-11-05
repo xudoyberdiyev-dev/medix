@@ -325,4 +325,79 @@ class PaymentIT {
                 .andExpect(jsonPath("$.docs[1].open").value("3000.00"))
                 .andExpect(jsonPath("$.advance").value("0.00"));
     }
+
+    @Test
+    void advanceOffsetClosesOldestDebtsAndParallelNeverOverOffsets() throws Exception {
+        long b = branch();
+        long c = customer();
+        Cookie cashier = loginAs("CASHIER", b);
+        Cookie manager = loginAs("BRANCH_MANAGER", b);
+        long k = kassa(cashier, b);
+        // Avval to'lov (hammasi avans), keyin qarzlar
+        long mt = id(send(post("/api/payments/customer"), cashier, draft(b, c, k, "4000")).andReturn());
+        send(post("/api/payments/customer/" + mt + "/post"), cashier, "{}").andExpect(jsonPath("$.advance").value("4000.00"));
+        debt(b, c, 9_600_001L, "3000.00", today().minusDays(40));
+        debt(b, c, 9_600_002L, "2000.00", today().plusDays(5));
+        String body = "{\"branchId\":" + b + ",\"counterpartyId\":" + c + "%s}";
+
+        mvc.perform(get("/api/advance-offsets/customer/preview").param("branchId", "" + b).param("counterpartyId", "" + c).cookie(cashier))
+                .andExpect(jsonPath("$.advance").value("4000.00"))
+                .andExpect(jsonPath("$.debt").value("5000.00"))
+                .andExpect(jsonPath("$.available").value("4000.00"))
+                .andExpect(jsonPath("$.lines.length()").value(2));
+        send(post("/api/advance-offsets/customer"), cashier, body.formatted(",\"amount\":\"1000\""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.number", matchesPattern("AH-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.lines[0].debtDocNumber").value("SV-TST-9600001"))
+                .andExpect(jsonPath("$.amount").value("1000.00"));
+        long ah2 = id(send(post("/api/advance-offsets/customer"), cashier, body.formatted(""))
+                .andExpect(jsonPath("$.amount").value("3000.00"))
+                .andExpect(jsonPath("$.lines.length()").value(2))
+                .andReturn());
+        assertThat(debtOf(b, c)).isEqualTo("1000.00");
+        mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
+                .andExpect(jsonPath("$.advance").value("0.00"))
+                .andExpect(jsonPath("$.docs.length()").value(1))
+                .andExpect(jsonPath("$.docs[0].docNumber").value("SV-TST-9600002"))
+                .andExpect(jsonPath("$.docs[0].open").value("1000.00"));
+        send(post("/api/advance-offsets/customer"), cashier, body.formatted("")).andExpect(jsonPath("$.code").value("advance.nothing"));
+
+        // Bekor qilish: faqat ruxsat bilan; avans va qarzlar qaytadi, saldo o'zgarmaydi
+        send(post("/api/advance-offsets/" + ah2 + "/cancel"), cashier, "{\"reason\":\"x\"}").andExpect(status().isForbidden());
+        send(post("/api/advance-offsets/" + ah2 + "/cancel"), manager, "{\"reason\":\"Xato\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
+        assertThat(debtOf(b, c)).isEqualTo("1000.00");
+        mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
+                .andExpect(jsonPath("$.advance").value("3000.00"))
+                .andExpect(jsonPath("$.docs[0].open").value("2000.00"));
+
+        // Parallel: faqat bittasi hisobga oladi, qolganlari — «hisobga oladigan narsa yo'q»
+        int n = 4;
+        List<Cookie> who = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            who.add(loginAs("CASHIER", b));
+        }
+        ExecutorService pool = Executors.newFixedThreadPool(n);
+        CountDownLatch go = new CountDownLatch(1);
+        List<Future<Integer>> results = new ArrayList<>();
+        for (Cookie session : who) {
+            Callable<Integer> task = () -> {
+                go.await();
+                return send(post("/api/advance-offsets/customer"), session, body.formatted("")).andReturn().getResponse().getStatus();
+            };
+            results.add(pool.submit(task));
+        }
+        go.countDown();
+        int created = 0;
+        for (Future<Integer> f : results) {
+            int st = f.get();
+            assertThat(st).isIn(201, 409);
+            created += st == 201 ? 1 : 0;
+        }
+        pool.shutdown();
+        assertThat(created).isEqualTo(1);
+        assertThat(debtOf(b, c)).isEqualTo("1000.00");
+        mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
+                .andExpect(jsonPath("$.advance").value("0.00"))
+                .andExpect(jsonPath("$.docs[0].open").value("1000.00"));
+    }
 }
