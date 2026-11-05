@@ -378,4 +378,60 @@ class CashIT {
         assertThatThrownBy(() -> jdbc.sql("UPDATE money_account SET cashier_id = :c WHERE id = :t").param("c", c1.id()).param("t", t).update())
                 .hasMessageContaining("money_account_cashier_cash_only");
     }
+
+    @Test
+    void bankStatementReconciliation() throws Exception {
+        long b = branch();
+        Cookie acct = loginAs("ACCOUNTANT", b).cookie();
+        Cookie picker = loginAs("PICKER", b).cookie();
+        Cookie director = loginAs("DIRECTOR", b).cookie();
+        long k = account(acct, b, 0);
+        long bank = id(send(post("/api/money-accounts"), director,
+                        "{\"branchId\":" + b + ",\"kind\":\"BANK\",\"name\":\"Hamkorbank\",\"accountNo\":\"20208000900111222001\"}")
+                .andExpect(status().isCreated()).andReturn());
+        LocalDate yesterday = today().minusDays(1);
+        send(post("/api/cash-ops"), acct, op(b, bank, "IN", "Boshqa kirim", "1000000", yesterday)).andExpect(status().isCreated());
+        send(post("/api/cash-ops"), acct, op(b, bank, "IN", "Boshqa kirim", "500000", null)).andExpect(status().isCreated());
+        send(post("/api/cash-ops"), acct, op(b, bank, "OUT", "Ijara", "200000", null)).andExpect(status().isCreated());
+
+        mvc.perform(get("/api/bank-reconciliations/preview").param("accountId", "" + bank).cookie(picker)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/bank-reconciliations/preview").param("accountId", "" + k).cookie(acct))
+                .andExpect(jsonPath("$.code").value("bankRecon.onlyBank"));
+        MvcResult pv = mvc.perform(get("/api/bank-reconciliations/preview").param("accountId", "" + bank).param("date", yesterday.toString()).cookie(acct))
+                .andExpect(jsonPath("$.medixBalance").value("1000000.00"))
+                .andExpect(jsonPath("$.unmatched.length()").value(1))
+                .andExpect(jsonPath("$.lastDate").doesNotExist())
+                .andReturn();
+        long m1 = ((Number) JsonPath.read(pv.getResponse().getContentAsString(), "$.unmatched[0].id")).longValue();
+        String recon = "{\"accountId\":" + bank + ",\"statementDate\":\"%s\",\"bankBalance\":\"%s\",\"moveIds\":[%s]%s}";
+        send(post("/api/bank-reconciliations"), acct, recon.formatted(yesterday, "1000000", m1, ""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.difference").value("0.00"))
+                .andExpect(jsonPath("$.moves").value(1));
+        send(post("/api/bank-reconciliations"), acct, recon.formatted(yesterday, "1000000", "", ""))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("bankRecon.dateNotAfterLast"));
+
+        MvcResult pv2 = mvc.perform(get("/api/bank-reconciliations/preview").param("accountId", "" + bank).cookie(acct))
+                .andExpect(jsonPath("$.medixBalance").value("1300000.00"))
+                .andExpect(jsonPath("$.unmatched.length()").value(2))
+                .andExpect(jsonPath("$.unmatchedTotal").value("300000.00"))
+                .andExpect(jsonPath("$.lastBankBalance").value("1000000.00"))
+                .andReturn();
+        long m2 = ((Number) JsonPath.read(pv2.getResponse().getContentAsString(), "$.unmatched[0].id")).longValue();
+        send(post("/api/bank-reconciliations"), acct, recon.formatted(today(), "1500000", m1, ",\"note\":\"x\""))
+                .andExpect(jsonPath("$.code").value("bankRecon.moveUnknown"));
+        send(post("/api/bank-reconciliations"), acct, recon.formatted(today(), "1500000", m2, ""))
+                .andExpect(jsonPath("$.code").value("bankRecon.noteRequired"));
+        send(post("/api/bank-reconciliations"), acct, recon.formatted(today(), "1500000", m2, ",\"note\":\"Ijara toʻlovi bankda hali oʻtmagan\""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.difference").value("200000.00"));
+        mvc.perform(get("/api/bank-reconciliations/preview").param("accountId", "" + bank).cookie(acct))
+                .andExpect(jsonPath("$.unmatched.length()").value(1));
+        mvc.perform(get("/api/bank-reconciliations").param("accountId", "" + bank).cookie(acct))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].note").value("Ijara toʻlovi bankda hali oʻtmagan"));
+        assertThatThrownBy(() -> jdbc.sql("UPDATE bank_reconciliation SET bank_balance = 0 WHERE account_id = :a").param("a", bank).update())
+                .hasMessageContaining("oʻzgarmaydi");
+    }
 }
