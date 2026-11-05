@@ -1,17 +1,24 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlarmClock, CalendarX, Clock, LayoutDashboard, Tag, Timer } from "lucide-react";
+import { AlarmClock, CalendarX, Clock, LayoutDashboard, PackageOpen, Tag, Timer, Truck } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Table, type TableColumn } from "@/components/ui/table";
+import { Tabs, type TabItem } from "@/components/ui/tabs";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { formatIsoDate } from "@/features/counterparties/api";
 import { formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { ReceiptDrawer } from "@/features/receipts/receipt-drawer";
+import { RECEIPT_ACCEPT, useReceipts, type ReceiptSummary } from "@/features/receipts/api";
 import { STATUS_LABELS, type OrderStatus } from "./api";
 import { IssuesList } from "./issues";
 import { ReturnsList } from "./returns";
@@ -50,7 +57,20 @@ function useNow(): Date {
   return now;
 }
 
-/** Ombor mudiri paneli → Monitor (SPEC 5.4): bosqichlar ustunlari, jonli taymerlar, kechikkanlar, «Ombor holati». */
+export type KeeperTab = "monitor" | "time" | "issues" | "receipts" | "returns";
+
+/** Ombor mudiri paneli yorliqlari (SPEC 3): ruxsat boʻyicha; «Hujjatlashtirish» — Joʻnatish sahifasiga havola. */
+export function keeperTabs(opts: { waitingTime: number; receipts: boolean; returns: boolean; receiptCount?: number }): TabItem[] {
+  return [
+    { key: "monitor", label: "Monitor" },
+    { key: "time", label: "Vaqt berish", count: opts.waitingTime },
+    { key: "issues", label: "Muammolar" },
+    ...(opts.receipts ? [{ key: "receipts", label: "Kirim qabuli", count: opts.receiptCount }] : []),
+    ...(opts.returns ? [{ key: "returns", label: "Qaytgan tovar" }] : []),
+  ];
+}
+
+/** Ombor mudiri paneli (SPEC 3, 5.4): «Ombor holati» + yorliqlar — Monitor, Vaqt berish, Muammolar, Kirim qabuli, Qaytgan tovar. */
 export function MonitorPage() {
   const me = useMe();
   const now = useNow();
@@ -58,6 +78,13 @@ export function MonitorPage() {
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const [open, setOpen] = useState<number | null>(null);
+  const [receipt, setReceipt] = useState<number | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const canReceipts = can(me.data, RECEIPT_ACCEPT);
+  const canReturns = can(me.data, "orders.check");
+  const drafts = useReceipts(branchId, "DRAFT", 1, allowed && canReceipts);
+  const rawTab = useSearchParams().get("tab");
   const board = useQuery({
     queryKey: ["orders", "monitor", branchId],
     queryFn: () => unwrap(api.GET("/api/orders/monitor", { params: { query: { branchId: branchId ?? undefined } } })),
@@ -67,9 +94,29 @@ export function MonitorPage() {
 
   if (me.data && !allowed) return <ForbiddenState description="Monitor Ombor mudiri, Filial rahbari va Direktor uchun." />;
 
+  const tabs = keeperTabs({
+    waitingTime: board.data?.waitingTime ?? 0,
+    receipts: canReceipts,
+    returns: canReturns,
+    receiptCount: canReceipts ? drafts.data?.total : undefined,
+  });
+  const tab = (tabs.some((t) => t.key === rawTab) ? rawTab : "monitor") as KeeperTab;
+  const setTab = (k: string) => router.replace(k === "monitor" ? pathname : `${pathname}?tab=${k}`, { scroll: false });
+  const waiting = (board.data?.cards ?? []).filter((c) => c.status === "QUEUED" && !c.timeGiven);
+
   return (
     <>
-      <h1 className="mb-4 text-page-title">Ombor monitori</h1>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-page-title">Ombor mudiri paneli</h1>
+        {can(me.data, "shipments.view") ? (
+          <Link
+            href="/shipments"
+            className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-3 hover:border-primary"
+          >
+            <Truck size={16} strokeWidth={1.5} aria-hidden /> Hujjatlashtirish va reys
+          </Link>
+        ) : null}
+      </div>
       {board.error ? (
         <ErrorState onRetry={() => board.refetch()} />
       ) : board.isPending ? (
@@ -92,7 +139,10 @@ export function MonitorPage() {
               tone={board.data.stale ? "danger" : undefined}
             />
           </section>
-          {board.data.cards.length === 0 ? (
+          <div className="mb-4">
+            <Tabs items={tabs} value={tab} onChange={setTab} aria-label="Ombor mudiri paneli" />
+          </div>
+          {tab !== "monitor" ? null : board.data.cards.length === 0 ? (
             <Card>
               <EmptyState
                 icon={LayoutDashboard}
@@ -123,19 +173,26 @@ export function MonitorPage() {
           )}
         </>
       )}
-      {board.data ? (
-        <section className="mt-6" aria-label="Muammolar">
-          <h2 className="mb-3 text-subtitle">Muammolar</h2>
-          <IssuesList onOpenOrder={setOpen} />
-        </section>
+      {board.data && tab === "time" ? (
+        waiting.length === 0 ? (
+          <Card>
+            <EmptyState icon={Clock} title="Hammasiga vaqt berilgan" description="Navbatdagi yangi buyurtmalar shu yerda paydo boʻladi." />
+          </Card>
+        ) : (
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Vaqt berilmagan buyurtmalar">
+            {waiting.map((c) => (
+              <li key={c.id}>
+                <MonitorCardView card={c} now={now} onOpen={() => setOpen(c.id)} />
+              </li>
+            ))}
+          </ul>
+        )
       ) : null}
-      {board.data && can(me.data, "orders.check") ? (
-        <section className="mt-6" aria-label="Qaytgan tovar">
-          <h2 className="mb-3 text-subtitle">Qaytgan tovar</h2>
-          <ReturnsList />
-        </section>
-      ) : null}
+      {board.data && tab === "issues" ? <IssuesList onOpenOrder={setOpen} /> : null}
+      {board.data && tab === "receipts" ? <ReceiptQueue query={drafts} onOpen={setReceipt} /> : null}
+      {board.data && tab === "returns" ? <ReturnsList /> : null}
       {open !== null ? <OrderDrawer id={open} onClose={() => setOpen(null)} onCreated={() => undefined} /> : null}
+      {receipt !== null ? <ReceiptDrawer id={receipt} onClose={() => setReceipt(null)} onCreated={() => undefined} /> : null}
     </>
   );
 }
@@ -198,5 +255,38 @@ function MonitorCardView({ card: c, now, onOpen }: { card: MonitorCard; now: Dat
         ) : null}
       </div>
     </button>
+  );
+}
+
+/** Kirim qabuli: qabul kutayotgan (Qoralama) kirimlar — qator bosilsa kirim oynasi ochiladi. */
+function ReceiptQueue({ query, onOpen }: { query: ReturnType<typeof useReceipts>; onOpen: (id: number) => void }) {
+  const columns: TableColumn<ReceiptSummary>[] = [
+    { key: "number", title: "Raqam", mono: true },
+    { key: "receiptDate", title: "Sana", render: (d) => formatIsoDate(d.receiptDate) },
+    { key: "supplier", title: "Yetkazib beruvchi" },
+    { key: "invoiceNumber", title: "Yuk xati", mono: true, render: (d) => d.invoiceNumber ?? "—" },
+    { key: "warehouse", title: "Ombor" },
+    { key: "totalQty", title: "Miqdor", align: "right", render: (d) => <span className="tabular-nums">{formatQuantity(d.totalQty)}</span> },
+  ];
+  return (
+    <Table
+      columns={columns}
+      rows={query.data?.items ?? []}
+      rowKey={(d) => String(d.id)}
+      caption="Qabul kutayotgan kirimlar"
+      loading={query.isPending}
+      onRowClick={(d) => onOpen(d.id)}
+      emptyState={
+        query.error ? (
+          <ErrorState onRetry={() => void query.refetch()} />
+        ) : (
+          <EmptyState
+            icon={PackageOpen}
+            title="Qabul kutayotgan kirim yoʻq"
+            description="Yangi kirim kiritilganda shu yerda paydo boʻladi."
+          />
+        )
+      }
+    />
   );
 }

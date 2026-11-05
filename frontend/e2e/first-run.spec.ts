@@ -285,7 +285,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
 
   // Ombor monitori: buyurtma «Hujjatlashtirilmoqda» ustunida
   await page.goto("/warehouse");
-  await expect(page.getByRole("heading", { name: "Ombor monitori" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ombor mudiri paneli" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Hujjatlashtirilmoqda" })).toContainText("Shifo Dorixona E2E");
 
   // Joʻnatish: buyurtma reysga tayyor

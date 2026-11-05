@@ -42,7 +42,7 @@ export function expectedReason(qty: number, received: number, damaged: number): 
   return null;
 }
 
-export function useReceipts(branchId: number | null, status: ReceiptStatus | null, page: number) {
+export function useReceipts(branchId: number | null, status: ReceiptStatus | null, page: number, enabled = true) {
   return useQuery({
     queryKey: ["receipts", "list", branchId, status, page],
     queryFn: () =>
@@ -52,6 +52,7 @@ export function useReceipts(branchId: number | null, status: ReceiptStatus | nul
         }),
       ),
     placeholderData: keepPreviousData,
+    enabled,
   });
 }
 
