@@ -181,6 +181,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 05.11.2026 16:26 — zanjir: davom (kontekst og'irlashdi) — keyingi sessiya: chop etish shakllari (OpenHTMLtoPDF) yoki eski qoldiqlar (7-bosqich kodlar .xlsx, terish varag'i).
 - 05.11.2026 16:08–16:35 — 10-bosqich: Savdo hisobotidan mijoz buyurtmalariga o'tish; Ta'minotchi xodim/korxona tovari hisoboti; Yig'uvchilar va Markirovkachilar natijasi (API + .xlsx + UI + IT test, OpenAPI qo'lda — Jackson formatida). Frontend 120 test, build yashil; skrinshot (mock). CI hali billing sababli to'xtagan.
 - 05.11.2026 14:30–14:50 — 10-bosqich: Hisobotlar katalogi va Savdo hisoboti (API + .xlsx + UI + IT test, OpenAPI qo'lda). Frontend 119 test, build yashil; skrinshot (mock). CI billing sababli to'xtagan.
 - 05.11.2026 14:36 — Keyingi sessiyani ishga tushirish (fire_trigger) xavfsizlik tekshiruvi tomonidan rad etildi; zanjirni 16:00 zaxira ishga tushirish davom ettiradi.
