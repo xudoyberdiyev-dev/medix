@@ -93,7 +93,11 @@ export function OrdersPage() {
     return Number.isInteger(id) && id > 0 ? { id, name: params.get("customer") ?? `Mijoz #${id}` } : null;
   });
   const [page, setPage] = useState(1);
-  const [editor, setEditor] = useState<{ id: number | null } | null>(null);
+  // Bildirishnomadan oʻtish: ?open=<id> — buyurtma kartochkasi darhol ochiladi
+  const [editor, setEditor] = useState<{ id: number | null } | null>(() => {
+    const id = Number(params.get("open"));
+    return Number.isInteger(id) && id > 0 ? { id } : null;
+  });
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const allowed = canAny(me.data, ["orders.view", "approvals.view"]);
   const canCreate = can(me.data, ORDER_CREATE);

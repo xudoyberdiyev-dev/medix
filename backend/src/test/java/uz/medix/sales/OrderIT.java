@@ -303,8 +303,10 @@ class OrderIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("QUEUED"))
                 .andExpect(jsonPath("$.decidedBy").value("Sinov BRANCH_MANAGER"));
-
-        // +50% — Direktor; rad etish va qoralamaga qaytarish
+        // Bildirishnomalar: tasdiq kutmoqda — Filial rahbariga (filialida); tasdiqlandi — muallifga
+        assertThat(notified("order.approval", small, "BRANCH_MANAGER")).isPositive();
+        assertThat(notified("order.approval", small, "OPERATOR")).isZero();
+        assertThat(notified("order.approved", small, "OPERATOR")).isEqualTo(1);
         long big = draft(operator, order(p, c, new long[][] {{a, 150}}));
         send(post("/api/orders/" + big + "/submit"), operator, "").andExpect(jsonPath("$.approvalLevel").value("DIRECTOR"));
         send(post("/api/orders/" + big + "/approve"), manager, "")
@@ -315,6 +317,10 @@ class OrderIT {
         send(post("/api/orders/" + big + "/reject"), director, "{\"reason\":\"Avval qarzni yopsin\"}")
                 .andExpect(jsonPath("$.status").value("REJECTED"))
                 .andExpect(jsonPath("$.decisionReason").value("Avval qarzni yopsin"));
+        // Direktor darajasi — Filial rahbariga yuborilmaydi; rad etildi — muallifga sabab bilan
+        assertThat(notified("order.approval", big, "DIRECTOR")).isPositive();
+        assertThat(notified("order.approval", big, "BRANCH_MANAGER")).isZero();
+        assertThat(notified("order.rejected", big, "OPERATOR")).isEqualTo(1);
 
         // Muddati o'tgan qarz 40 kun — limit ichida bo'lsa ham Direktor
         long c2 = customer(p.branchId(), null);
@@ -1168,5 +1174,17 @@ class OrderIT {
         // 1 dona — faqat PN-1 qolmadi (zahirada) → PN-2, mahsulot narxi
         long second = draft(operator, order(p, c, new long[][] {{a, 1}}));
         mvc.perform(get("/api/orders/" + second).cookie(operator)).andExpect(jsonPath("$.total").value("2000.00"));
+    }
+
+    /** Buyurtma bo'yicha bildirishnoma olgan, berilgan roldagi xodimlar soni. */
+    private int notified(String kind, long orderId, String role) {
+        return jdbc.sql("""
+                SELECT count(*) FROM notification n JOIN employee e ON e.id = n.employee_id JOIN role r ON r.id = e.role_id
+                WHERE n.kind = :k AND n.link = :l AND r.code = :r""")
+                .param("k", kind)
+                .param("l", "/orders?open=" + orderId)
+                .param("r", role)
+                .query(Integer.class)
+                .single();
     }
 }

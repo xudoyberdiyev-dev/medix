@@ -27,6 +27,7 @@ import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockAvailability.Available;
 import uz.medix.inventory.StockReservations;
 import uz.medix.inventory.StockReservations.Allocation;
+import uz.medix.notification.Notifications;
 import uz.medix.pricing.PriceBook;
 import uz.medix.pricing.PriceBook.Quote;
 import uz.medix.sales.order.OrderModels.ApprovalLevel;
@@ -77,11 +78,13 @@ class Orders {
     private final StockReservations reservations;
     private final StockLedger stock;
     private final org.springframework.context.ApplicationEventPublisher events;
+    private final Notifications notifications;
 
     Orders(JdbcClient jdbc, PriceBook prices, StockAvailability availability, PartyLedger parties, AuditLog audit,
             DocumentSequenceService numbers, Clock clock, StockReservations reservations, StockLedger stock,
-            org.springframework.context.ApplicationEventPublisher events) {
+            org.springframework.context.ApplicationEventPublisher events, Notifications notifications) {
         this.events = events;
+        this.notifications = notifications;
         this.reservations = reservations;
         this.stock = stock;
         this.jdbc = jdbc;
@@ -720,6 +723,16 @@ class Orders {
                 .update();
         audit.record(AuditEntry.of("order.submit", "sales_order", id).change(Map.of("status", OrderStatus.DRAFT.name()),
                 Map.of("status", next.name(), "total", ev.total().toString())));
+        if (next == OrderStatus.PENDING_APPROVAL) {
+            // Tasdiqlovchiga bildirishnoma: Direktor darajasi — faqat approvals.director, aks holda approvals.branch (Direktor ham ko'radi)
+            String permission = ev.level() == ApprovalLevel.DIRECTOR ? "approvals.director" : "approvals.branch";
+            Notifications.Message m = new Notifications.Message("order.approval", "Tasdiq kutmoqda: " + h.number(),
+                    clip(String.join("; ", ev.approvalReasons())), "/orders?open=" + id, "order.approval:" + id + ":" + clock.millis());
+            notifications.notify(permission, h.branchId(), List.of(), m);
+            if (ev.level() != ApprovalLevel.DIRECTOR) {
+                notifications.notify("approvals.director", h.branchId(), List.of(), m);
+            }
+        }
         return next;
     }
 
@@ -744,6 +757,8 @@ class Orders {
                 .update();
         audit.record(AuditEntry.of("order.approve", "sales_order", id).change(Map.of("status", OrderStatus.PENDING_APPROVAL.name()),
                 Map.of("status", OrderStatus.QUEUED.name(), "level", level.name())));
+        notifyAuthor(h, actor, new Notifications.Message("order.approved", "Tasdiqlandi: " + h.number(), "Buyurtma navbatga oʻtdi",
+                "/orders?open=" + id, "order.approved:" + id + ":" + clock.millis()));
     }
 
     @Transactional
@@ -763,6 +778,19 @@ class Orders {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("order.reject", "sales_order", id).withReason(reason.strip()));
+        notifyAuthor(h, actor, new Notifications.Message("order.rejected", "Rad etildi: " + h.number(), clip(reason.strip()),
+                "/orders?open=" + id, "order.rejected:" + id + ":" + clock.millis()));
+    }
+
+    private static String clip(String text) {
+        return text.length() <= 500 ? text : text.substring(0, 499) + "…";
+    }
+
+    /** Muallifga (o'zi qaror qilmagan bo'lsa) — bildirishnoma; ruxsat kaliti yo'q, faqat aniq xodim. */
+    private void notifyAuthor(Head h, Actor actor, Notifications.Message m) {
+        if (h.createdBy() != actor.employeeId()) {
+            notifications.notify("-", h.branchId(), List.of(h.createdBy()), m);
+        }
     }
 
     /** Qoralamaga qaytarish — faqat «Tasdiqlashda» holatidan (SPEC 5.2): muallif yoki tasdiqlovchi. */

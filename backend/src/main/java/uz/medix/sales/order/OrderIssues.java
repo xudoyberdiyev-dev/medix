@@ -105,7 +105,7 @@ class OrderIssues {
                 .single();
         audit.record(AuditEntry.of("order.issue", "sales_order", orderId).change(null, Map.of("reason", reason.name())));
         notifications.notify("orders.queue", h.branchId(), List.of(), new Notifications.Message("order.issue",
-                "Muammo bor: " + h.number(), LABELS.get(reason) + (n == null ? "" : " — " + n), "/warehouse?issue=" + id, "order.issue:" + id));
+                "Muammo bor: " + h.number(), LABELS.get(reason) + (n == null ? "" : " — " + n), "/warehouse?tab=issues&issue=" + id, "order.issue:" + id));
         return find(actor, id);
     }
 
