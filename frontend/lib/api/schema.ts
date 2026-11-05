@@ -1101,6 +1101,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/money-accounts/cashier-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kassaga biriktirish mumkin boʻlgan xodimlar (cash.io ruxsatli) */
+        get: operations["cashierOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money-accounts/{id}/cashier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Kassaga kassir biriktirish (null — olib tashlash). Kassir amallarni faqat oʻz kassasida bajaradi */
+        put: operations["assignCashier"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/money-accounts/{id}/statement": {
         parameters: {
             query?: never;
@@ -3274,6 +3308,12 @@ export interface components {
             bankName?: string;
             /** Format: int64 */
             branchId: number;
+            /**
+             * Format: int64
+             * @description Biriktirilgan kassir (faqat kassa)
+             */
+            cashierId?: number;
+            cashierName?: string;
             code: string;
             /** Format: int64 */
             id: number;
@@ -3447,6 +3487,19 @@ export interface components {
             opDate?: string;
             /** @description Kimdan / kimga (ixtiyoriy) */
             party?: string;
+        };
+        CashierOption: {
+            cashName?: string;
+            fullName: string;
+            /** Format: int64 */
+            id: number;
+        };
+        CashierRequest: {
+            /**
+             * Format: int64
+             * @description null — biriktirishni olib tashlash
+             */
+            cashierId?: number;
         };
         CatalogPage: {
             items: components["schemas"]["CatalogRow"][];
@@ -7333,6 +7386,54 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"];
+                };
+            };
+        };
+    };
+    cashierOptions: {
+        parameters: {
+            query: {
+                branchId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashierOption"][];
+                };
+            };
+        };
+    };
+    assignCashier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashierRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

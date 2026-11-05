@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countedTotal, fromCents, isOverApprovalLimit, toCents } from "./api";
+import { countedTotal, fromCents, isOverApprovalLimit, toCents, usableAccount } from "./api";
 
 describe("kassa: tiyinlarda hisob", () => {
   it("satr ↔ tiyin", () => {
@@ -18,5 +18,27 @@ describe("kassa: tiyinlarda hisob", () => {
   it("2 000 000 dan katta chiqim — tasdiq kerak", () => {
     expect(isOverApprovalLimit("2000000")).toBe(false);
     expect(isOverApprovalLimit("2000000.01")).toBe(true);
+  });
+});
+
+describe("kassir faqat oʻz kassasida", () => {
+  const k1 = { id: 1, kind: "CASH" as const, active: true, cashierId: 10 };
+  const k2 = { id: 2, kind: "CASH" as const, active: true };
+  const t = { id: 3, kind: "TERMINAL" as const, active: true };
+  const all = [k1, k2, t];
+
+  it("biriktirilgan kassa — faqat oʻz kassiriga", () => {
+    expect(usableAccount(k1, all, 10, false)).toBe(true);
+    expect(usableAccount(k1, all, 11, false)).toBe(false);
+    expect(usableAccount(k1, all, 11, true)).toBe(true);
+  });
+
+  it("kassasi bor xodim biriktirilmagan kassani ishlatmaydi; kassasi yoʻq — ishlatadi", () => {
+    expect(usableAccount(k2, all, 10, false)).toBe(false);
+    expect(usableAccount(k2, all, 11, false)).toBe(true);
+  });
+
+  it("Terminal va bank — cheklanmaydi", () => {
+    expect(usableAccount(t, all, 10, false)).toBe(true);
   });
 });

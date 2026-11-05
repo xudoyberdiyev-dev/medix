@@ -14,6 +14,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
+import { CASH_APPROVE, usableAccount } from "@/features/cash/api";
 import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
@@ -296,7 +297,12 @@ function Editor(props: {
             value={account}
             onChange={setAccount}
             options={(accounts.data ?? [])
-              .filter((a) => a.active && a.kind !== "TERMINAL")
+              .filter(
+                (a) =>
+                  a.active &&
+                  (String(a.id) === account || usableAccount(a, accounts.data ?? [], me.data?.id, can(me.data, CASH_APPROVE))) &&
+                  a.kind !== "TERMINAL",
+              )
               .map((a) => ({ value: String(a.id), label: `${ACCOUNT_KIND[a.kind]} · ${a.name}`, sub: `qoldiq ${formatMoney(a.balance)}` }))}
             disabled={!editable}
             required

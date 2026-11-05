@@ -110,3 +110,23 @@ export function countedTotal(counts: Record<number, string>, coins: string): str
 export function isOverApprovalLimit(amount: string): boolean {
   return toCents(amount) > toCents(APPROVAL_LIMIT);
 }
+
+type AccountLike = { id: number; kind: "CASH" | "TERMINAL" | "BANK"; active: boolean; cashierId?: number };
+
+/**
+ * Kassir faqat oʻz kassasida (SPEC 3, 13; backend `CashierGuard` bilan bir xil): biriktirilgan kassa — faqat oʻz kassiriga;
+ * filialda kassasi bor xodim biriktirilmagan kassani ham ishlatmaydi; nazoratchi (cash.approve) — hammasini. Terminal va bank — cheklanmaydi.
+ */
+export function usableAccount(account: AccountLike, all: AccountLike[], meId: number | undefined, supervisor: boolean): boolean {
+  if (account.kind !== "CASH" || supervisor) return true;
+  if (account.cashierId != null) return account.cashierId === meId;
+  return !all.some((a) => a.kind === "CASH" && a.active && a.cashierId != null && a.cashierId === meId);
+}
+
+export function useCashierOptions(branchId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["money-accounts", "cashier-options", branchId],
+    queryFn: () => unwrap(api.GET("/api/money-accounts/cashier-options", { params: { query: { branchId: branchId as number } } })),
+    enabled: enabled && branchId != null,
+  });
+}

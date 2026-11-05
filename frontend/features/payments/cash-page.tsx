@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, Banknote, HandCoins, Landmark, LockKeyhole, Plus, Truck } from "lucide-react";
+import { ArrowLeftRight, Banknote, HandCoins, Landmark, LockKeyhole, Plus, Truck, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,9 @@ import { ensureCsrf, useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatDateTime, formatMoney } from "@/lib/format";
-import { CASH_CLOSE, CASH_IO } from "@/features/cash/api";
+import { CASH_APPROVE, CASH_CLOSE, CASH_IO, usableAccount } from "@/features/cash/api";
 import { ClosesTab, OpsTab, PendingOps, StatementTab, TransfersTab } from "@/features/cash/cash-sections";
+import { CashierDialog } from "@/features/cash/cashier-dialog";
 import { CloseDrawer } from "@/features/cash/close-drawer";
 import { CashOpDialog, TransferDialog } from "@/features/cash/op-dialogs";
 import { useBranchStore } from "@/lib/stores/branch";
@@ -40,17 +41,23 @@ export function CashPage() {
     enabled: canAccept && branchId != null,
     refetchInterval: 30_000,
   });
-  const kassas = (accounts.data ?? []).filter((a) => a.kind === "CASH" && a.active);
+  const supervisor = can(me.data, CASH_APPROVE);
+  const canAssign = supervisor || can(me.data, "settings.view");
+  const all = accounts.data ?? [];
+  // Kassir faqat oʻz kassasida (backend ham tekshiradi): amallar uchun faqat ishlatish mumkin boʻlgan hisoblar
+  const usable = all.filter((a) => usableAccount(a, all, me.data?.id, supervisor));
+  const kassas = usable.filter((a) => a.kind === "CASH" && a.active);
   const [target, setTarget] = useState<string | null>(null);
   const kassa = target ?? (kassas[0] ? String(kassas[0].id) : null);
   const [pending, setPending] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [tab, setTab] = useState("statement");
-  const [dialog, setDialog] = useState<"op" | "io" | "close" | null>(null);
+  const [dialog, setDialog] = useState<"op" | "io" | "close" | "cashiers" | null>(null);
   const canIo = can(me.data, CASH_IO);
   const canClose = can(me.data, CASH_CLOSE);
-  const accountList = accounts.data ?? [];
-  const current = selected ?? accountList[0]?.id ?? null;
+  const accountList = all;
+  const current = selected ?? kassas[0]?.id ?? accountList[0]?.id ?? null;
+  const actionDefault = current != null && usable.some((a) => a.id === current) ? current : (usable[0]?.id ?? null);
   const [error, setError] = useState<unknown>(null);
 
   if (me.data && !allowed) return <ForbiddenState description="Kassa sahifasi sizning rolingiz uchun yopiq." />;
@@ -85,6 +92,11 @@ export function CashPage() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-page-title">Kassa</h1>
         <div className="flex flex-wrap gap-3">
+          {canAssign && accountList.some((a) => a.kind === "CASH") ? (
+            <Button variant="secondary" icon={UserRound} onClick={() => setDialog("cashiers")}>
+              Kassirlar
+            </Button>
+          ) : null}
           {canClose && kassas.length > 0 ? (
             <Button variant="secondary" icon={LockKeyhole} onClick={() => setDialog("close")}>
               Kunni yopish
@@ -92,10 +104,10 @@ export function CashPage() {
           ) : null}
           {canIo ? (
             <>
-              <Button variant="secondary" icon={ArrowLeftRight} disabled={accountList.length < 2} onClick={() => setDialog("io")}>
+              <Button variant="secondary" icon={ArrowLeftRight} disabled={usable.length < 2} onClick={() => setDialog("io")}>
                 Oʻtkazma
               </Button>
-              <Button icon={Plus} disabled={accountList.length === 0} onClick={() => setDialog("op")}>
+              <Button icon={Plus} disabled={usable.length === 0} onClick={() => setDialog("op")}>
                 Kirim / chiqim
               </Button>
             </>
@@ -127,6 +139,12 @@ export function CashPage() {
                   {a.active ? "" : " · nofaol"}
                 </div>
                 <div className="mt-1">{a.name}</div>
+                {a.kind === "CASH" ? (
+                  <div className="mt-1 flex items-center gap-1 text-caption text-text-secondary">
+                    <UserRound size={14} strokeWidth={1.5} aria-hidden />
+                    {a.cashierName ? `Kassir: ${a.cashierName}` : "Kassir biriktirilmagan"}
+                  </div>
+                ) : null}
                 <div className="mt-2 font-mono text-subtitle tabular-nums">{formatMoney(a.balance)} soʻm</div>
               </Card>
             </button>
@@ -213,11 +231,13 @@ export function CashPage() {
             )}
           </div>
           {dialog === "op" ? (
-            <CashOpDialog branchId={branchId} accounts={accountList} defaultAccount={current} onClose={() => setDialog(null)} />
+            <CashOpDialog branchId={branchId} accounts={usable} defaultAccount={actionDefault} onClose={() => setDialog(null)} />
           ) : dialog === "io" ? (
-            <TransferDialog branchId={branchId} accounts={accountList} defaultFrom={current} onClose={() => setDialog(null)} />
+            <TransferDialog branchId={branchId} accounts={usable} defaultFrom={actionDefault} onClose={() => setDialog(null)} />
           ) : dialog === "close" ? (
-            <CloseDrawer accounts={accountList} defaultAccount={current} onClose={() => setDialog(null)} />
+            <CloseDrawer accounts={usable} defaultAccount={actionDefault} onClose={() => setDialog(null)} />
+          ) : dialog === "cashiers" ? (
+            <CashierDialog branchId={branchId} accounts={accountList} onClose={() => setDialog(null)} />
           ) : null}
         </>
       ) : null}

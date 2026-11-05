@@ -2551,6 +2551,75 @@
         "tags" : [ "money-accounts" ]
       }
     },
+    "/api/money-accounts/cashier-options" : {
+      "get" : {
+        "operationId" : "cashierOptions",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CashierOption"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kassaga biriktirish mumkin boʻlgan xodimlar (cash.io ruxsatli)",
+        "tags" : [ "money-accounts" ]
+      }
+    },
+    "/api/money-accounts/{id}/cashier" : {
+      "put" : {
+        "operationId" : "assignCashier",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CashierRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Account"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kassaga kassir biriktirish (null — olib tashlash). Kassir amallarni faqat oʻz kassasida bajaradi",
+        "tags" : [ "money-accounts" ]
+      }
+    },
     "/api/money-accounts/{id}/statement" : {
       "get" : {
         "description" : "Davr boshi + kirim − chiqim = davr oxiri; harakatlar hujjat bilan.",
@@ -7304,6 +7373,14 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "cashierId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Biriktirilgan kassir (faqat kassa)"
+          },
+          "cashierName" : {
+            "type" : "string"
+          },
           "code" : {
             "type" : "string"
           },
@@ -7764,6 +7841,32 @@
           }
         },
         "required" : [ "accountId", "amount", "branchId", "direction", "itemId" ]
+      },
+      "CashierOption" : {
+        "type" : "object",
+        "properties" : {
+          "cashName" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "fullName", "id" ]
+      },
+      "CashierRequest" : {
+        "type" : "object",
+        "properties" : {
+          "cashierId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "null — biriktirishni olib tashlash"
+          }
+        }
       },
       "CatalogPage" : {
         "type" : "object",
