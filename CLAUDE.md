@@ -1,6 +1,6 @@
 # MEDIX — Claude uchun ish qoidalari
 
-Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + Claude. Kod avtonom **zanjir** sessiyalarida yoziladi (pastdagi «Zanjir rejimi»: har kuni 06:00–11:00 va 14:00–18:00, ba'zan egasi so'rasa 20:00–22:30, Toshkent) va egasi ochgan sessiyalarda.
+Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + Claude. Kod avtonom **zanjir** sessiyalarida yoziladi (pastdagi «Zanjir rejimi»: har kuni 01:00–05:00, 06:00–11:00 va 14:00–18:00, ba'zan egasi so'rasa 20:00–22:30, Toshkent) va egasi ochgan sessiyalarda.
 
 ## Haqiqat manbalari (shu tartibda)
 1. `docs/SPEC.md` — loyihaning to'liq tavsifi (rollar, jarayonlar, biznes qoidalari, texnologiyalar, arxitektura). **Har sessiyada kerakli bo'limini o'qing.**
@@ -12,6 +12,7 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 **Ish oynalari (Asia/Tashkent):**
 | Oyna | Vaqt | Izoh |
 |---|---|---|
+| Tungi | 01:00–05:00 | har kuni (egasi qarori 05.11) |
 | Ertalab | 06:00–11:00 | har kuni |
 | Kunduz | 14:00–18:00 | har kuni |
 | Kechki | 20:00–22:30 | **faqat egasi o'sha kuni so'rasa** (alohida bir martalik ishga tushirish) |
@@ -24,7 +25,7 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 3. **Boshlanish xabari** (`status/last-start.txt` → Telegram) faqat oynaning BIRINCHI sessiyasida.
 4. **Kontekst tugay boshlasa** (ko'p ish qilingan, xotira og'irlashgan) yoki vazifa tugab kontekstning katta qismi ishlatilgan bo'lsa: ishni commit+push qiling, `PLAN.md` → «Sessiya jurnali» ga 1–3 qator yozing, `zanjir: davom` commit qiling, so'ng **keyingi sessiyani ishga tushiring**: `mcp__claude-code-remote__fire_trigger` (ToolSearch bilan yuklang), `trigger_id: trig_019P1iLSzuMPtmKdMR7if1hA`, `text: "Oyna tugashi: HH:MM"` (shu oynaning tugash vaqti). Faqat oyna tugashiga ≥ 20 daqiqa qolgan bo'lsa.
 5. **Oyna tugaganda** (yoki oxirgi sessiya): zanjirni davom ettirmang; `reports/YYYY-MM-DD-HHMM.md` hisobot yozing — butun oyna bo'yicha (shu oynadagi barcha sessiyalar, «Sessiya jurnali» qaydlaridan) — `PLAN.md` ni yangilang, commit `hisobot: …` + push (Telegram'ga ketadi).
-6. Limit tugasa sessiya o'zi yopiladi — zaxira ishga tushirishlar (08:30, 16:00) zanjirni qayta ulaydi.
+6. Limit tugasa sessiya o'zi yopiladi — zaxira ishga tushirishlar (har oyna ichida soatlik :30 da) zanjirni qayta ulaydi.
 
 ## Kontekstni tejash (sessiyani uzoqroq ishlatish uchun)
 - Buyruq chiqishini doim qisqartiring: `| tail -40`, `| grep -E "error|FAIL|Exception" | head -30`. CI logini to'liq o'qimang: `gh run view <id> --log-failed | grep -E -A5 "FAILED|error:|Exception" | head -60`.

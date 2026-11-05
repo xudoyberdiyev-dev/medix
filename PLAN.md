@@ -181,6 +181,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 05.11.2026 20:40 — Repo public qilindi (GitHub Actions billing). Tungi oyna 01:00–05:00 qo'shildi.
 - 05.11.2026 16:36–17:15 — zaxira sessiya: chop etish shakllari brauzerda (terish varag'i, yo'l varaqasi, nakladnoy, kassa orderi, NO); kodlar .xlsx (backend + UI); Alt+1…5; «Bugungi natijam» (Yig'uvchi, Markirovkachi). Qo'shimcha hisobot: reports/2026-11-05-1715.md. Frontend 127 test, build yashil; skrinshotlar (mock). Backend CI'da tekshirilmagan (billing).
 - 05.11.2026 16:27 — fire_trigger yana rad etildi; 16:00 dan keyin zaxira yo'q — oyna hisoboti yozildi, sessiya to'xtadi.
 - 05.11.2026 16:26 — zanjir: davom (kontekst og'irlashdi) — keyingi sessiya: chop etish shakllari (OpenHTMLtoPDF) yoki eski qoldiqlar (7-bosqich kodlar .xlsx, terish varag'i).
