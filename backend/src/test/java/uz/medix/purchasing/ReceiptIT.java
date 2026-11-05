@@ -365,6 +365,14 @@ class ReceiptIT {
         send(post("/api/receipts/" + kr1 + "/post"), admin, "{}").andExpect(jsonPath("$.debtAmount").value("10000.00"));
         Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
         send(post("/api/receipts/" + kr1 + "/bonus"), keeper, "").andExpect(status().isForbidden());
+        // Bonus balans sahifasi: tasdiqlanmagan chegirma — «kutilayotgan»
+        String row = "$.rows[?(@.supplierId == " + sup + ")]";
+        mvc.perform(get("/api/supplier-bonuses").param("branchId", "" + p.branchId()).cookie(keeper)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/supplier-bonuses").param("branchId", "" + p.branchId()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(row + ".balance").value(org.hamcrest.Matchers.contains("0.00")))
+                .andExpect(jsonPath(row + ".pending").value(org.hamcrest.Matchers.contains("300.00")))
+                .andExpect(jsonPath(row + ".pendingCount").value(org.hamcrest.Matchers.contains(1)));
         send(post("/api/receipts/" + kr1 + "/bonus"), admin, "")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.bonusNumber").value(matchesPattern("^BNS-[A-Z]{3}-\\d{6}$")))
@@ -390,6 +398,19 @@ class ReceiptIT {
                         .query(String.class).list())
                 .containsExactly("B2-B:0.00:true");
         assertThat(stock(p.main(), a)).isEqualTo(12);
+        mvc.perform(get("/api/supplier-bonuses/" + sup).param("branchId", "" + p.branchId()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.balance").value("50.00"))
+                .andExpect(jsonPath("$.moves", hasSize(2)))
+                .andExpect(jsonPath("$.moves[0].docType").value("BNS"))
+                .andExpect(jsonPath("$.moves[0].amount").value("300.00"))
+                .andExpect(jsonPath("$.moves[1].amount").value("-250.00"))
+                .andExpect(jsonPath("$.moves[1].balance").value("50.00"))
+                .andExpect(jsonPath("$.pending", hasSize(0)));
+        mvc.perform(get("/api/supplier-bonuses").param("branchId", "" + p.branchId()).param("q", "").cookie(admin))
+                .andExpect(jsonPath(row + ".balance").value(org.hamcrest.Matchers.contains("50.00")))
+                .andExpect(jsonPath(row + ".pending").value(org.hamcrest.Matchers.contains("0.00")))
+                .andExpect(jsonPath(row + ".idleDays").value(org.hamcrest.Matchers.contains(0)));
 
         // 3) Balans yetmaydi — o'tkazilmaydi
         String kr3 = postedReceipt(admin, bonusDoc.replace("\"B2\"", "\"B3\"").replace("\"250\"", "\"100\""));
