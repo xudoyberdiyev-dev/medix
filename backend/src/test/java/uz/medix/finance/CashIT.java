@@ -432,6 +432,6 @@ class CashIT {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].note").value("Ijara toʻlovi bankda hali oʻtmagan"));
         assertThatThrownBy(() -> jdbc.sql("UPDATE bank_reconciliation SET bank_balance = 0 WHERE account_id = :a").param("a", bank).update())
-                .hasMessageContaining("oʻzgarmaydi");
+                .hasMessageContaining("faqat qo'shiladigan");
     }
 }
