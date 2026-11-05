@@ -792,6 +792,69 @@ class OrderIT {
     }
 
     @Test
+    void addAndRemoveOrdersOnPlannedTrip() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        long prod = product(p, "BY Reys tahrir", "1000", 50, null, null);
+        long o1 = documenting(p, c, prod, 1, 2, "DELIVERY", operator, keeper, picker);
+        long o2 = documenting(p, c, prod, 1, 2, "DELIVERY", operator, keeper, picker);
+        long o3 = documenting(p, c, prod, 1, 2, "DELIVERY", operator, keeper, picker);
+        long o4 = documenting(p, c, prod, 1, 1, "PICKUP", operator, keeper, picker);
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model, capacity_boxes) VALUES (:b, :p, 'Damas', 5) RETURNING id")
+                .param("b", p.branchId()).param("p", "01" + ThreadLocalRandom.current().nextInt(100_000, 999_999)).query(Long.class).single();
+        String login = "drv" + UUID.randomUUID().toString().substring(0, 8);
+        long driver = jdbc.sql("""
+                INSERT INTO employee (login, full_name, role_id, branch_id, password_hash, must_change_password)
+                SELECT :l, 'Haydovchi Tahrir', id, :b, 'x', false FROM role WHERE code = 'DRIVER' RETURNING id""")
+                .param("l", login).param("b", p.branchId()).query(Long.class).single();
+        long t = id(send(post("/api/trips"), keeper,
+                "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today() + "\",\"orderIds\":[" + o1 + "]}")
+                .andExpect(status().isCreated()).andReturn());
+
+        // Qo'shish: ruxsat, «O'zi olib ketadi» emas, sig'im (2 + 2 + 2 = 6 > 5)
+        send(post("/api/trips/" + t + "/orders"), picker, "{\"orderIds\":[" + o2 + "]}").andExpect(status().isForbidden());
+        send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o4 + "]}").andExpect(jsonPath("$.code").value("trip.pickupInTrip"));
+        send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o2 + "," + o3 + "]}")
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("trip.overCapacity"));
+        assertThat(statusOf(o2)).isEqualTo("DOCUMENTING");
+        send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o2 + "]}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.places").value(4))
+                .andExpect(jsonPath("$.stops.length()").value(2))
+                .andExpect(jsonPath("$.stops[1].seq").value(2))
+                .andExpect(jsonPath("$.stops[1].waybillNumber", matchesPattern("NK-[A-Z]{3}-\\d{6}")));
+        assertThat(statusOf(o2)).isEqualTo("LOADING");
+        // Boshqa reysdagi buyurtma qo'shilmaydi (holati «Yuklanmoqda»)
+        send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o2 + "]}").andExpect(status().is4xxClientError());
+
+        // Olib tashlash: haydovchi qabul qilgan buyurtma — yo'q; qabul qilinmagan — «Hujjatlashtirilmoqda»ga, NK saqlanadi
+        jdbc.sql("UPDATE trip_stop SET loaded_at = now() WHERE trip_id = :t AND order_id = :o").param("t", t).param("o", o1).update();
+        send(post("/api/trips/" + t + "/orders/" + o1 + "/remove"), keeper, "{\"reason\":\"Joy yetmadi\"}")
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("trip.stopLoaded"));
+        String nk2 = jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o2).query(String.class).single();
+        send(post("/api/trips/" + t + "/orders/" + o2 + "/remove"), keeper, "{\"reason\":\"\"}").andExpect(status().isBadRequest());
+        send(post("/api/trips/" + t + "/orders/" + o2 + "/remove"), keeper, "{\"reason\":\"Mijoz ertaga oladi\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.places").value(2))
+                .andExpect(jsonPath("$.stops.length()").value(1));
+        assertThat(statusOf(o2)).isEqualTo("DOCUMENTING");
+        assertThat(jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o2).query(String.class).single()).isEqualTo(nk2);
+        // Oxirgi buyurtma olib tashlanmaydi; qayta qo'shish mumkin (yangi tartib raqami)
+        send(post("/api/trips/" + t + "/orders/" + o1 + "/remove"), keeper, "{\"reason\":\"x\"}").andExpect(jsonPath("$.code").value("trip.stopLoaded"));
+        jdbc.sql("UPDATE trip_stop SET loaded_at = NULL WHERE trip_id = :t AND order_id = :o").param("t", t).param("o", o1).update();
+        send(post("/api/trips/" + t + "/orders/" + o1 + "/remove"), keeper, "{\"reason\":\"x\"}").andExpect(jsonPath("$.code").value("trip.lastOrder"));
+        send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o2 + "]}")
+                .andExpect(jsonPath("$.stops[1].seq").value(3)).andExpect(jsonPath("$.places").value(4));
+
+        // Bekor qilingan reys o'zgarmaydi
+        send(post("/api/trips/" + t + "/cancel"), keeper, "{\"reason\":\"Mashina buzildi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
+        send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o3 + "]}").andExpect(jsonPath("$.code").value("trip.notEditable"));
+    }
+
+    @Test
     void driverLoadsStartsTripAndSaleWritesStockDebtAndInvoice() throws Exception {
         Place p = place();
         long c = customer(p.branchId(), null);

@@ -215,6 +215,96 @@ class Trips {
         audit.record(AuditEntry.of("trip.cancel", "trip", id).withReason(reason.strip()));
     }
 
+    private record Planned(long id, long branchId, long vehicleId) {}
+
+    /** Reys «Rejalashtirilgan» va foydalanuvchi filialida bo'lishi shart (qulflanadi). */
+    private Planned lockPlanned(Actor actor, long id) {
+        record X(long id, long branchId, long vehicleId, TripStatus status) {}
+        X t = jdbc.sql("SELECT id, branch_id, vehicle_id, status FROM trip WHERE id = :id FOR UPDATE")
+                .param("id", id)
+                .query((rs, n) -> new X(rs.getLong("id"), rs.getLong("branch_id"), rs.getLong("vehicle_id"), TripStatus.valueOf(rs.getString("status"))))
+                .optional()
+                .filter(x -> actor.canAccessBranch(x.branchId()))
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (t.status() != TripStatus.PLANNED) {
+            throw MedixException.conflict("trip.notEditable");
+        }
+        return new Planned(t.id(), t.branchId(), t.vehicleId());
+    }
+
+    /**
+     * Rejalashtirilgan reysga buyurtma qo'shish: «Hujjatlashtirilmoqda» buyurtmalar, reys filialidan, «O'zi olib ketadi» emas; sig'im
+     * mashinaning barcha faol reyslari bilan birga tekshiriladi. Har buyurtma nakladnoy raqami bilan «Yuklanmoqda»ga.
+     */
+    @Transactional
+    void addOrders(Actor actor, long tripId, List<Long> orderIds) {
+        Planned t = lockPlanned(actor, tripId);
+        List<DispatchOrder> orders = dispatch.lockDocumenting(actor, orderIds);
+        if (orders.stream().anyMatch(o -> o.branchId() != t.branchId())) {
+            throw MedixException.badRequest("trip.mixedBranches");
+        }
+        if (orders.stream().anyMatch(o -> o.delivery() == OrderDispatch.Delivery.PICKUP)) {
+            throw MedixException.badRequest("trip.pickupInTrip");
+        }
+        Vehicle v = jdbc.sql("SELECT id, branch_id, plate_number, capacity_boxes, active FROM vehicle WHERE id = :id FOR UPDATE")
+                .param("id", t.vehicleId())
+                .query((rs, n) -> new Vehicle(rs.getLong("id"), rs.getLong("branch_id"), rs.getString("plate_number"),
+                        (Integer) rs.getObject("capacity_boxes"), rs.getBoolean("active")))
+                .single();
+        int places = orders.stream().mapToInt(DispatchOrder::places).sum();
+        if (v.capacity() != null) {
+            int busy = jdbc.sql("SELECT coalesce(sum(places), 0) FROM trip WHERE vehicle_id = :v AND status IN ('PLANNED', 'IN_TRANSIT')")
+                    .param("v", v.id())
+                    .query(Integer.class)
+                    .single();
+            if (busy + places > v.capacity()) {
+                throw MedixException.conflict("trip.overCapacity", busy + places, v.capacity(), v.plate());
+            }
+        }
+        int seq = jdbc.sql("SELECT coalesce(max(seq), 0) FROM trip_stop WHERE trip_id = :t").param("t", tripId).query(Integer.class).single();
+        for (DispatchOrder o : orders) {
+            jdbc.sql("INSERT INTO trip_stop (trip_id, order_id, seq, places) VALUES (:t, :o, :s, :p)")
+                    .param("t", tripId)
+                    .param("o", o.id())
+                    .param("s", ++seq)
+                    .param("p", o.places())
+                    .update();
+            dispatch.toLoading(actor, o.id());
+        }
+        jdbc.sql("UPDATE trip SET places = places + :p, updated_at = now(), version = version + 1 WHERE id = :t")
+                .param("p", places).param("t", tripId).update();
+        audit.record(AuditEntry.of("trip.addOrders", "trip", tripId)
+                .change(null, Map.of("orders", orders.stream().map(DispatchOrder::number).toList(), "places", places)));
+    }
+
+    /**
+     * Rejalashtirilgan reysdan buyurtmani olib tashlash (haydovchi hali qabul qilmagan): buyurtma «Hujjatlashtirilmoqda»ga qaytadi, NK
+     * raqami saqlanadi. Oxirgi buyurtma olib tashlanmaydi — reysni bekor qilish kerak.
+     */
+    @Transactional
+    void removeOrder(Actor actor, long tripId, long orderId, String reason) {
+        lockPlanned(actor, tripId);
+        record S(long id, int places, boolean loaded) {}
+        S s = jdbc.sql("SELECT id, places, loaded_at IS NOT NULL AS loaded FROM trip_stop WHERE trip_id = :t AND order_id = :o AND active")
+                .param("t", tripId)
+                .param("o", orderId)
+                .query((rs, n) -> new S(rs.getLong("id"), rs.getInt("places"), rs.getBoolean("loaded")))
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (s.loaded()) {
+            throw MedixException.conflict("trip.stopLoaded");
+        }
+        int left = jdbc.sql("SELECT count(*) FROM trip_stop WHERE trip_id = :t AND active").param("t", tripId).query(Integer.class).single();
+        if (left <= 1) {
+            throw MedixException.conflict("trip.lastOrder");
+        }
+        jdbc.sql("UPDATE trip_stop SET active = false WHERE id = :id").param("id", s.id()).update();
+        jdbc.sql("UPDATE trip SET places = places - :p, updated_at = now(), version = version + 1 WHERE id = :t")
+                .param("p", s.places()).param("t", tripId).update();
+        dispatch.backToDocumenting(actor, orderId, reason.strip());
+        audit.record(AuditEntry.of("trip.removeOrder", "trip", tripId).change(Map.of("order", orderId), null).withReason(reason.strip()));
+    }
+
     // ===== Haydovchi (SPEC 5.2 №8–9) =====
 
     @Transactional(readOnly = true)

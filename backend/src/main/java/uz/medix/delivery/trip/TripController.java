@@ -124,6 +124,25 @@ class TripController {
         return trips.find(actor(), id);
     }
 
+    record AddOrdersRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @Size(min = 1, max = 100) List<Long> orderIds) {}
+
+    @PostMapping("/{id}/orders")
+    @PreAuthorize("hasAuthority('shipments.trip')")
+    @Operation(summary = "Reysga buyurtma qo'shish", description = "Faqat «Rejalashtirilgan» reys; sig'im tekshiruvi; nakladnoy raqami, «Yuklanmoqda».")
+    TripDetail addOrders(@PathVariable long id, @Valid @RequestBody AddOrdersRequest r) {
+        trips.addOrders(actor(), id, r.orderIds());
+        return trips.find(actor(), id);
+    }
+
+    @PostMapping("/{id}/orders/{orderId}/remove")
+    @PreAuthorize("hasAuthority('shipments.trip')")
+    @Operation(summary = "Reysdan buyurtmani olib tashlash",
+            description = "Faqat «Rejalashtirilgan» reys, haydovchi qabul qilmagan buyurtma; buyurtma «Hujjatlashtirilmoqda»ga qaytadi.")
+    TripDetail removeOrder(@PathVariable long id, @PathVariable long orderId, @Valid @RequestBody ReasonRequest r) {
+        trips.removeOrder(actor(), id, orderId, r.reason());
+        return trips.find(actor(), id);
+    }
+
     @GetMapping("/mine")
     @PreAuthorize("hasAuthority('trip.driver')")
     @Operation(summary = "Reysim (haydovchi)", description = "Faol reys bo'lmasa — 204.")
