@@ -6,8 +6,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Sana:** 06.11.2026
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~90%; 2 — Katalog ~90%; 3 — Narxlar ~97%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 06.11.2026 02:34–03:20 (tungi oyna, zaxira sessiya) — server PDF barcha shakllarga: nakladnoy, yo'l varaqasi, terish varag'i, kassa orderi (summa so'z bilan — `MoneyWords`), akt sverka; chop etish tugmalari server PDF'ni ochadi. 5-bosqich: kirim «Mahsulot qo'shish» katalogi (/api/receipts/catalog + dialog).
-- **Keyingi vazifa:** 6-bosqich qoldiqlari: buyurtmalar holat yorliqlari (tab) va «Hozir kimda» ustuni; so'ng 10-bosqich «yo'ldagi ko'chirishlar» uchun ko'chirish moduli (ZK/OK) yoki 8-bosqich imzo UI.
+- **Oxirgi sessiya:** 06.11.2026 02:34–03:17 (tungi oyna, zaxira sessiya) — server PDF barcha shakllarga: nakladnoy, yo'l varaqasi, terish varag'i, kassa orderi (summa so'z bilan — `MoneyWords`), akt sverka; chop etish tugmalari server PDF'ni ochadi. 5-bosqich: kirim «Mahsulot qo'shish» katalogi (/api/receipts/catalog + dialog). 6-bosqich: buyurtmalar holat yorliqlari va «Hozir kimda».
+- **Keyingi vazifa:** 8-bosqich imzo UI (haydovchi: mijoz imzosi) yoki 4-bosqich ko'chirishlar (ZK/OK — 10-bosqich «yo'ldagi ko'chirishlar» shunga bog'liq). Brauzerdagi `/print/*` sahifalari zaxira sifatida qoldi (tugmalar endi server PDF'ni ochadi).
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
@@ -79,7 +79,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ## 6. Buyurtma
 - [~] Buyurtma kiritish ✅ (mijoz, ombor, yetkazish turi/sanasi, manzil — standarti kartadan, to'lov turi — oxirgi buyurtmadan), «Oldingi buyurtmani takrorlash» ✅ (oxirgi 5 ta), miqdor qoidalari ✅ (qoldiqdan ko'p / min dan kam — yuborilmaydi, max dan ko'p — tasdiqqa), «N ta muammo» paneli ✅, narx muzlatish va «Narx o'zgardi» ✅. «Mahsulot qo'shish» katalog oynasi ✅, Alt+1…5 ✅ (05.11)
 - [x] Kredit nazorati va tasdiq: limit ≤20% — Filial rahbari (approvals.branch), >20% yoki muddati o'tgan qarz 30+ kun — Direktor (approvals.director); muddati o'tgan qarz FIFO bilan (`PartyLedger.creditState`); rad etish, qoralamaga qaytarish, bekor qilish qoidalari (SPEC 5.2)
-- [~] Buyurtmalar sahifasi ✅ (holat filtri, qidiruv, «Mening buyurtmalarim»), buyurtma kartochkasi (mijoz qatori, muammolar, tasdiq sabablari) ✅. Qoldi: «Hozir kimda», holat yorliqlari (tab), e2e
+- [~] Buyurtmalar sahifasi ✅ (holat filtri, qidiruv, «Mening buyurtmalarim»), buyurtma kartochkasi (mijoz qatori, muammolar, tasdiq sabablari) ✅. holat yorliqlari («Hammasi» + 13 holat, soni; tanlangan yorliq summasi) va «Hozir kimda» ustuni ✅ (06.11). Qoldi: e2e
 
 ## 7. Ombor zanjiri
 - [x] FEFO zahira (`inventory.StockReservations`: Navbatga o'tishda muddati eng yaqin partiyalar, sotuvga ochiq zona, minimal yaroqlilik; tartibli FOR UPDATE, parallel test; bekor qilishda bo'shaydi; mavjud qoldiqdan ayriladi), vaqt berish (yig'ish/markirovka daqiqasi, Ombor mudiri)
@@ -181,7 +181,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
-- 06.11.2026 02:34–03:20 — zaxira sessiya (tungi oyna): server PDF — nakladnoy, yo'l varaqasi, terish varag'i, kassa orderi, akt sverka (`PdfFormat`, `PdfDocument`, `MoneyWords`); kirim «Mahsulot qo'shish» katalogi (API + dialog + testlar). CI: backend testlari yashil.
+- 06.11.2026 03:17 — zanjir: davom (kontekst og'irlashdi) — keyingi sessiya: 8-bosqich imzo UI yoki 4-bosqich ko'chirishlar. CI (develop) to'liq yashil.
+- 06.11.2026 02:34–03:17 — zaxira sessiya (tungi oyna): server PDF — nakladnoy, yo'l varaqasi, terish varag'i, kassa orderi, akt sverka (`PdfFormat`, `PdfDocument`, `MoneyWords`); kirim «Mahsulot qo'shish» katalogi (API + dialog + testlar); buyurtmalar holat yorliqlari + «Hozir kimda» (API + UI). Frontend 134 test, build yashil; CI backend yashil. Skrinshot olinmadi (mock sozlash qimmat).
 - 06.11.2026 01:51–02:07 — 2-sessiya davomi (qo'lda ishga tushirish shu sessiyaga keldi): server PDF poydevori — `PdfRenderer` (Thymeleaf shablon `resources/pdf/`, DejaVu Sans shrifti, A4, sahifa raqami), NO PDF `/api/price-changes/{id}/pdf`, «Chop etish» endi PDF ochadi; IT PDFBox bilan o'zbekcha matnni tekshiradi. CI yashil. zanjir: davom → 02:30 zaxira (yangi kontekst).
 - 06.11.2026 01:56 — fire_trigger yana rad etildi (auto mode); zanjirni 02:30 zaxira ishga tushirish davom ettiradi. Keyingi: server PDF.
 - 06.11.2026 01:33–01:55 — tungi oyna 2-sessiya: 3-bosqich «Kirim bo'yicha» narx — V31 (price_change.receipt_id, price_change_line.batch_id, batch_price), NO validatsiyasi (faqat o'tkazilgan kirim, partiya shu kirimdan), partiya tannarxidan past → Direktor; `/api/price-changes/receipt-batches/{id}`; buyurtma narxi FEFO rejasi bo'yicha o'rtacha tortilgan. UI: rejim, kirim tanlash, partiya qatorlari, chop etish. Backend 127 test, frontend 130 test, CI yashil; skrinshot (mock).
