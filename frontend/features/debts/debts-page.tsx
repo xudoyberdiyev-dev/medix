@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { can } from "@/features/auth/can";
@@ -16,6 +17,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { ActSection } from "./act-section";
 
 export type DebtRow = components["schemas"]["DebtRow"];
 export type DebtDoc = components["schemas"]["DebtDoc"];
@@ -171,6 +173,7 @@ export function DebtsPage({ side }: { side: Side }) {
 }
 
 function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; onClose: () => void }) {
+  const [tab, setTab] = useState("docs");
   const docs = useQuery({
     queryKey: ["debts", CONFIG[props.side].path, "docs", props.row.counterpartyId, props.branchId],
     queryFn: () =>
@@ -231,19 +234,36 @@ function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; 
           <dd className="font-mono tabular-nums">{formatMoney(props.row.buckets.advance)} soʻm</dd>
         </div>
       </dl>
-      {docs.error ? (
-        <ErrorState onRetry={() => docs.refetch()} />
-      ) : (
-        <Table
-          caption="Ochiq hujjatlar"
-          density="compact"
-          columns={columns}
-          rows={docs.data ?? []}
-          rowKey={(d) => `${d.branchId}:${d.docType}:${d.docId}`}
-          loading={docs.isPending}
-          emptyState={<EmptyState icon={HandCoins} title="Ochiq hujjat yoʻq" description="Barcha hujjatlar yopilgan." />}
-        />
-      )}
+      <Tabs
+        aria-label="Kontragent boʻlimlari"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { key: "docs", label: "Ochiq hujjatlar" },
+          { key: "act", label: "Akt sverka" },
+        ]}
+      />
+      <div className="mt-4">
+        {tab === "act" ? (
+          <ActSection side={props.side} counterpartyId={props.row.counterpartyId} branchId={props.branchId} />
+        ) : (
+          <>
+            {docs.error ? (
+              <ErrorState onRetry={() => docs.refetch()} />
+            ) : (
+              <Table
+                caption="Ochiq hujjatlar"
+                density="compact"
+                columns={columns}
+                rows={docs.data ?? []}
+                rowKey={(d) => `${d.branchId}:${d.docType}:${d.docId}`}
+                loading={docs.isPending}
+                emptyState={<EmptyState icon={HandCoins} title="Ochiq hujjat yoʻq" description="Barcha hujjatlar yopilgan." />}
+              />
+            )}
+          </>
+        )}
+      </div>
     </Drawer>
   );
 }

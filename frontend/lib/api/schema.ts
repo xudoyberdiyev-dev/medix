@@ -518,6 +518,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/debts/customers/{id}/act": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Akt sverka (mijoz)
+         * @description Davr boshi + qarz oshdi − kamaydi = davr oxiri. Standart davr — joriy oy.
+         */
+        get: operations["customerAct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/debts/customers/{id}/docs": {
         parameters: {
             query?: never;
@@ -547,6 +567,23 @@ export interface paths {
          * @description Kompaniyaning YB oldidagi qarzi, muddat guruhlari bilan.
          */
         get: operations["suppliers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/debts/suppliers/{id}/act": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Akt sverka (yetkazib beruvchi) */
+        get: operations["supplierAct"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3166,6 +3203,40 @@ export interface components {
             /** @enum {string} */
             kind: "CASH" | "TERMINAL" | "BANK";
             name: string;
+        };
+        Act: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            closing: string;
+            /** Format: int64 */
+            counterpartyId: number;
+            creditTotal: string;
+            debitTotal: string;
+            /** Format: date */
+            from: string;
+            lines: components["schemas"]["ActLine"][];
+            name: string;
+            opening: string;
+            tin: string;
+            /** Format: date */
+            to: string;
+        };
+        ActLine: {
+            balance: string;
+            /** @description Qarz kamaydi */
+            credit: string;
+            /** Format: date */
+            date: string;
+            /** @description Qarz oshdi */
+            debit: string;
+            /** Format: int64 */
+            docId: number;
+            docNumber: string;
+            docType: string;
+            note?: string;
+            /** Format: date-time */
+            occurredAt: string;
         };
         AddZoneRequest: {
             /** @enum {string} */
@@ -6248,6 +6319,32 @@ export interface operations {
             };
         };
     };
+    customerAct: {
+        parameters: {
+            query: {
+                branchId: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Act"];
+                };
+            };
+        };
+    };
     customerDocs: {
         parameters: {
             query?: {
@@ -6290,6 +6387,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DebtReport"];
+                };
+            };
+        };
+    };
+    supplierAct: {
+        parameters: {
+            query: {
+                branchId: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Act"];
                 };
             };
         };
