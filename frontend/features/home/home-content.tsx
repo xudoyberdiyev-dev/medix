@@ -6,20 +6,21 @@ import { useMe } from "@/features/auth/session";
 import { CashierPanel } from "@/features/cash/cashier-panel";
 import { DirectorHome } from "@/features/home/director-home";
 import { OperatorHome } from "@/features/home/operator-home";
+import { PurchaserHome } from "@/features/home/purchaser-home";
 import { SetupBanner } from "@/features/setup/setup-banner";
 
-/** Bosh sahifa rolga qarab (SPEC 8): Kassir — Kassir paneli; Direktor/Admin/Buxgalter/Filial rahbari — koʻrsatkichlar bosh sahifasi; Operator — oʻz savdosi; boshqa rollar sahifalari 10-bosqichda qoʻshiladi. */
+/** Bosh sahifa rolga qarab (SPEC 8): Kassir — Kassir paneli; Direktor/Admin/Buxgalter/Filial rahbari — koʻrsatkichlar bosh sahifasi; Operator — oʻz savdosi; Xarid — kirimlar, YB qarzi, bonus; boshqa rollar sahifalari 10-bosqichda qoʻshiladi. */
 export function HomeContent() {
   const me = useMe();
   const role = me.data?.role.code;
   if (role === "CASHIER") return <CashierPanel />;
-  if (role === "OPERATOR")
+  if (role === "OPERATOR" || role === "PURCHASER")
     return (
       <>
         <div className="mb-6 empty:hidden">
           <SetupBanner />
         </div>
-        <OperatorHome />
+        {role === "OPERATOR" ? <OperatorHome /> : <PurchaserHome />}
       </>
     );
   if (role === "DIRECTOR" || role === "ADMIN" || role === "ACCOUNTANT" || role === "BRANCH_MANAGER")
