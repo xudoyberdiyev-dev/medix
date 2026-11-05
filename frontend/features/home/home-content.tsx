@@ -7,12 +7,12 @@ import { CashierPanel } from "@/features/cash/cashier-panel";
 import { DirectorHome } from "@/features/home/director-home";
 import { SetupBanner } from "@/features/setup/setup-banner";
 
-/** Bosh sahifa rolga qarab (SPEC 8): Kassir — Kassir paneli; Direktor/Admin/Filial rahbari — koʻrsatkichlar bosh sahifasi; boshqa rollar sahifalari 10-bosqichda qoʻshiladi. */
+/** Bosh sahifa rolga qarab (SPEC 8): Kassir — Kassir paneli; Direktor/Admin/Buxgalter/Filial rahbari — koʻrsatkichlar bosh sahifasi; boshqa rollar sahifalari 10-bosqichda qoʻshiladi. */
 export function HomeContent() {
   const me = useMe();
   const role = me.data?.role.code;
   if (role === "CASHIER") return <CashierPanel />;
-  if (role === "DIRECTOR" || role === "ADMIN" || role === "BRANCH_MANAGER")
+  if (role === "DIRECTOR" || role === "ADMIN" || role === "ACCOUNTANT" || role === "BRANCH_MANAGER")
     return (
       <>
         <div className="mb-6 empty:hidden">
