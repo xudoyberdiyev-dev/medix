@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,9 +65,11 @@ class TripController {
 
     private final Trips trips;
     private final CurrentActor currentActor;
+    private final TripSheetPdf sheet;
 
-    TripController(Trips trips, CurrentActor currentActor) {
+    TripController(Trips trips, TripSheetPdf sheet, CurrentActor currentActor) {
         this.trips = trips;
+        this.sheet = sheet;
         this.currentActor = currentActor;
     }
 
@@ -85,6 +89,13 @@ class TripController {
     @Operation(summary = "Reys")
     TripDetail get(@PathVariable long id) {
         return trips.find(actor(), id);
+    }
+
+    @GetMapping(value = "/{id}/sheet/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('shipments.view')")
+    @Operation(summary = "Yo'l varaqasi — PDF (chop etish)")
+    ResponseEntity<byte[]> sheetPdf(@PathVariable long id) {
+        return sheet.render(actor(), id).response();
     }
 
     @GetMapping("/ready")

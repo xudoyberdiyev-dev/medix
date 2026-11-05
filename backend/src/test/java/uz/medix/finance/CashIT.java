@@ -178,6 +178,17 @@ class CashIT {
         assertThat(balance(k)).isEqualTo("2500000.00");
         assertThatThrownBy(() -> jdbc.sql("UPDATE cash_op SET amount = 1 WHERE id = :i").param("i", big2).update()).hasMessageContaining("oʻzgarmaydi");
 
+        // Kassa orderi — server PDF: summa so'z bilan, bekor qilingan belgisi
+        byte[] pdfBytes = mvc.perform(get("/api/cash-ops/" + small + "/pdf").cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType("application/pdf"))
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var pdfDoc = org.apache.pdfbox.Loader.loadPDF(pdfBytes)) {
+            assertThat(new org.apache.pdfbox.text.PDFTextStripper().getText(pdfDoc))
+                    .contains("Kassa chiqim orderi", "2.000.000,00", "Ikki million soʻm 00 tiyin", "BEKOR QILINGAN", "Xoʻjalik");
+        }
+        mvc.perform(get("/api/cash-ops/" + small + "/pdf").cookie(picker)).andExpect(status().isForbidden());
+
         // Terminal — BO; IO: Terminal → kassa
         send(post("/api/cash-ops"), cashier, op(b, t, "IN", "Qaytarilgan mablagʻ", "300000", null))
                 .andExpect(jsonPath("$.number", matchesPattern("BO-[A-Z]{3}-\\d{6}")));

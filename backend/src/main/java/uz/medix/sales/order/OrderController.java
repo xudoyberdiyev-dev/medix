@@ -44,13 +44,15 @@ class OrderController {
     private final OrderIssues issues;
     private final OrderSales sales;
     private final OrderWaybillPdf waybill;
+    private final OrderPickSheetPdf pickSheet;
     private final CurrentActor currentActor;
 
     record ReturnAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0)
             Integer receivedQty) {}
 
     OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, OrderWaybillPdf waybill,
-            CurrentActor currentActor) {
+            OrderPickSheetPdf pickSheet, CurrentActor currentActor) {
+        this.pickSheet = pickSheet;
         this.sales = sales;
         this.waybill = waybill;
         this.issues = issues;
@@ -98,6 +100,13 @@ class OrderController {
     @Operation(summary = "Nakladnoy — PDF (chop etish)", description = "Nakladnoy raqamlanmagan bo'lsa — 409.")
     ResponseEntity<byte[]> waybillPdf(@PathVariable long id) {
         return waybill.render(actor(), id).response();
+    }
+
+    @GetMapping(value = "/pick-sheet/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyAuthority('orders.view', 'picking.do', 'orders.queue')")
+    @Operation(summary = "Terish varag'i — PDF (bir necha buyurtma, 20 tagacha)")
+    ResponseEntity<byte[]> pickSheetPdf(@RequestParam List<Long> ids) {
+        return pickSheet.render(actor(), ids).response();
     }
 
     @GetMapping("/catalog")

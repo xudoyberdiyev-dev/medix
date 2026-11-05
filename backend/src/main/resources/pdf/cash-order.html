@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${number}">KO</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<table class="parties head">
+    <tr>
+        <td class="caption">
+            <div class="b" th:text="${orgName}">MChJ</div>
+            <div th:text="'STIR: ' + ${orgTin}">STIR</div>
+        </td>
+        <td class="r">
+            <h1 th:text="${title}">Kassa kirim orderi</h1>
+            <div><span class="mono" th:text="${number}">KO-TSH-000001</span> · <span th:text="${date}">06.11.2026</span></div>
+        </td>
+    </tr>
+</table>
+<p class="mark" th:if="${mark != null}" th:text="'⚠ ' + ${mark}">BEKOR QILINGAN</p>
+<table class="fields">
+    <tr><td class="muted" th:text="${partyLabel}">Kimdan</td><td th:text="${party}">—</td></tr>
+    <tr><td class="muted">Asos (modda)</td><td th:text="${item}">Modda</td></tr>
+    <tr><td class="muted">Hisob</td><td th:text="${account}">Kassa</td></tr>
+    <tr><td class="muted">Summa</td><td class="big" th:text="${amount}">0,00 soʻm</td></tr>
+    <tr><td class="muted">Soʻz bilan</td><td class="line" th:text="${words}">Nol soʻm 00 tiyin</td></tr>
+    <tr th:if="${note != null}"><td class="muted">Izoh</td><td th:text="${note}">Izoh</td></tr>
+    <tr><td class="muted">Yozdi</td><td th:text="${createdBy}">F.I.Sh.</td></tr>
+    <tr th:if="${approvedBy != null}"><td class="muted">Tasdiqladi</td><td th:text="${approvedBy}">F.I.Sh.</td></tr>
+</table>
+<table class="signs">
+    <tr>
+        <td>Rahbar<br/>______________</td>
+        <td>Bosh buxgalter<br/>______________</td>
+        <td>Kassir<br/>______________</td>
+        <td><span th:text="${lastSign}">Topshirdi</span><br/>______________</td>
+    </tr>
+</table>
+</body>
+</html>

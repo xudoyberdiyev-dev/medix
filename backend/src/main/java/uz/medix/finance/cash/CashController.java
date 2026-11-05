@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,8 +46,10 @@ class CashController {
     private final Transfers transfers;
     private final DayCloses closes;
     private final CurrentActor currentActor;
+    private final CashOrderPdf orderPdf;
 
-    CashController(CashOps ops, Transfers transfers, DayCloses closes, CurrentActor currentActor) {
+    CashController(CashOps ops, Transfers transfers, DayCloses closes, CashOrderPdf orderPdf, CurrentActor currentActor) {
+        this.orderPdf = orderPdf;
         this.ops = ops;
         this.transfers = transfers;
         this.closes = closes;
@@ -66,6 +70,13 @@ class CashController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return ops.list(actor(), branchId, accountId, status, from, to);
+    }
+
+    @GetMapping(value = "/api/cash-ops/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize(VIEW)
+    @Operation(summary = "Kassa kirim / chiqim orderi — PDF (chop etish)")
+    ResponseEntity<byte[]> opPdf(@PathVariable long id) {
+        return orderPdf.render(actor(), id).response();
     }
 
     @GetMapping("/api/cash-ops/{id}")

@@ -795,6 +795,11 @@ class OrderIT {
         String nk1 = jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o1).query(String.class).single();
         // Nakladnoy — server PDF (raqam, mahsulot, miqdor, imzolar)
         assertThat(pdfText("/api/orders/" + o1 + "/waybill/pdf", keeper)).contains("Nakladnoy", nk1, "BY Reys", "Jami", "Qabul qildi");
+        // Terish varag'i — server PDF (bir necha buyurtma jamlanadi)
+        assertThat(pdfText("/api/orders/pick-sheet/pdf?ids=" + o1 + "," + o2, keeper)).contains("Terish varagʻi", "BY Reys", "2 buyurtma");
+        mvc.perform(get("/api/orders/pick-sheet/pdf?ids=").cookie(keeper)).andExpect(status().is4xxClientError());
+        // Yo'l varaqasi — server PDF
+        assertThat(pdfText("/api/trips/" + t1 + "/sheet/pdf", keeper)).contains("Yoʻl varaqasi", nk1, "Haydovchi Sinov", "Shundan naqd");
 
         // Haydovchi band; bekor qilish → buyurtmalar qaytadi, NK saqlanadi
         long o4 = documenting(p, c, prod, 1, 1, "DELIVERY", operator, keeper, picker);
