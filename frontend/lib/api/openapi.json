@@ -6064,6 +6064,168 @@
         "tags" : [ "receipts" ]
       }
     },
+    "/api/reports/markers" : {
+      "get" : {
+        "operationId" : "markers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WorkerReportView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovkachilar natijasi: yakunlangan buyurtmalar, qatorlar, kodlar, olib tashlangan kodlar, vaqt, vaqtida / kechikkan",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/markers/export" : {
+      "get" : {
+        "operationId" : "markersExport",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovkachilar natijasi .xlsx",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/pickers" : {
+      "get" : {
+        "operationId" : "pickers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WorkerReportView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yig'uvchilar natijasi: yakunlangan buyurtmalar, qatorlar, dona, vaqt (berilgan / haqiqiy), vaqtida / kechikkan, FEFO'dan chetlashish",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/pickers/export" : {
+      "get" : {
+        "operationId" : "pickersExport",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yig'uvchilar natijasi .xlsx",
+        "tags" : [ "reports" ]
+      }
+    },
     "/api/reports/sales" : {
       "get" : {
         "operationId" : "salesReport",
@@ -14970,6 +15132,103 @@
           }
         },
         "required" : [ "branchId", "name" ]
+      },
+      "WorkerReportView" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "PICKERS", "MARKERS" ]
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WorkerRow"
+            }
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "$ref" : "#/components/schemas/WorkerRow"
+          },
+          "truncated" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "from", "kind", "rows", "to", "total", "truncated" ]
+      },
+      "WorkerRow" : {
+        "type" : "object",
+        "properties" : {
+          "actualMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Haqiqiy vaqt jami, daqiqa"
+          },
+          "avgMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Bir buyurtmaga o'rtacha haqiqiy vaqt, daqiqa"
+          },
+          "codes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faqat markirovkachilar: buyurtmada qolgan kodlar"
+          },
+          "employeeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fefoDeviations" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faqat yig'uvchilar: FEFO'dan boshqa partiya olingan buyurtmalar"
+          },
+          "givenMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Berilgan vaqt jami, daqiqa (vaqt berilgan buyurtmalar)"
+          },
+          "late" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "onTime" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "orders" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "removedCodes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faqat markirovkachilar: sabab bilan olib tashlangan kodlar"
+          },
+          "units" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "actualMinutes", "avgMinutes", "employeeId", "givenMinutes", "late", "lines", "name", "onTime", "orders", "units" ]
       },
       "Zone" : {
         "type" : "object",

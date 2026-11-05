@@ -2619,6 +2619,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/markers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Markirovkachilar natijasi: yakunlangan buyurtmalar, qatorlar, kodlar, olib tashlangan kodlar, vaqt, vaqtida / kechikkan */
+        get: operations["markers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/markers/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Markirovkachilar natijasi .xlsx */
+        get: operations["markersExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/pickers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yig'uvchilar natijasi: yakunlangan buyurtmalar, qatorlar, dona, vaqt (berilgan / haqiqiy), vaqtida / kechikkan, FEFO'dan chetlashish */
+        get: operations["pickers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/pickers/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yig'uvchilar natijasi .xlsx */
+        get: operations["pickersExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/sales": {
         parameters: {
             query?: never;
@@ -6242,6 +6310,64 @@ export interface components {
             branchId: number;
             extraZones?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
             name: string;
+        };
+        WorkerReportView: {
+            /** Format: int64 */
+            branchId?: number;
+            /** Format: date */
+            from: string;
+            /** @enum {string} */
+            kind: "PICKERS" | "MARKERS";
+            rows: components["schemas"]["WorkerRow"][];
+            /** Format: date */
+            to: string;
+            total: components["schemas"]["WorkerRow"];
+            truncated: boolean;
+        };
+        WorkerRow: {
+            /**
+             * Format: int32
+             * @description Haqiqiy vaqt jami, daqiqa
+             */
+            actualMinutes: number;
+            /**
+             * Format: int32
+             * @description Bir buyurtmaga o'rtacha haqiqiy vaqt, daqiqa
+             */
+            avgMinutes: number;
+            /**
+             * Format: int32
+             * @description Faqat markirovkachilar: buyurtmada qolgan kodlar
+             */
+            codes?: number;
+            /** Format: int64 */
+            employeeId: number;
+            /**
+             * Format: int32
+             * @description Faqat yig'uvchilar: FEFO'dan boshqa partiya olingan buyurtmalar
+             */
+            fefoDeviations?: number;
+            /**
+             * Format: int32
+             * @description Berilgan vaqt jami, daqiqa (vaqt berilgan buyurtmalar)
+             */
+            givenMinutes: number;
+            /** Format: int32 */
+            late: number;
+            /** Format: int32 */
+            lines: number;
+            name: string;
+            /** Format: int32 */
+            onTime: number;
+            /** Format: int32 */
+            orders: number;
+            /**
+             * Format: int32
+             * @description Faqat markirovkachilar: sabab bilan olib tashlangan kodlar
+             */
+            removedCodes?: number;
+            /** Format: int32 */
+            units: number;
         };
         Zone: {
             /** Format: int64 */
@@ -10280,6 +10406,98 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReceiptDetail"];
                 };
+            };
+        };
+    };
+    markers: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerReportView"];
+                };
+            };
+        };
+    };
+    markersExport: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    pickers: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerReportView"];
+                };
+            };
+        };
+    };
+    pickersExport: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
