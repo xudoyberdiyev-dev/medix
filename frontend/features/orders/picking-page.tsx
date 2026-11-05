@@ -17,6 +17,7 @@ import { api, unwrap } from "@/lib/api/client";
 import { formatQuantity } from "@/lib/format";
 import { useOrder } from "./api";
 import { IssueButton } from "./issues";
+import { MyToday } from "./my-today";
 import { day } from "./orders-page";
 
 /** Qolgan vaqt: musbat — «12:05», manfiy — «Kechikdi: N daqiqa» (SPEC 5.2). */
@@ -97,7 +98,7 @@ export function PickingPage() {
             )}
           </section>
           <section>
-            <MyToday />
+            <MyToday kind="pickers" />
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="text-subtitle">Navbat</h2>
               <Button variant="secondary" size="sm" icon={Printer} disabled={selected.length === 0} onClick={() => openPickSheet(selected)}>
@@ -143,44 +144,6 @@ export function PickingPage() {
         </div>
       )}
     </>
-  );
-}
-
-/** «Bugungi natijam»: yakunlangan buyurtmalar, qator, dona, vaqtida / kechikkan, oʻrtacha vaqt. */
-function MyToday() {
-  const today = useQuery({
-    queryKey: ["reports", "pickers", "mine"],
-    queryFn: () => unwrap(api.GET("/api/reports/pickers/mine")),
-    refetchInterval: 60_000,
-  });
-  if (today.error) return null;
-  const r = today.data;
-  const items: [string, string][] = r
-    ? [
-        ["Buyurtma", formatQuantity(r.orders)],
-        ["Qator", formatQuantity(r.lines)],
-        ["Dona", formatQuantity(r.units)],
-        ["Vaqtida", formatQuantity(r.onTime)],
-        ["Kechikkan", formatQuantity(r.late)],
-        ["Oʻrtacha", `${formatQuantity(r.avgMinutes)} daq.`],
-      ]
-    : [];
-  return (
-    <div className="mb-6 rounded-card border border-border bg-surface p-3" aria-label="Bugungi natijam">
-      <h2 className="mb-2 text-subtitle">Bugungi natijam</h2>
-      {r ? (
-        <dl className="grid grid-cols-3 gap-x-4 gap-y-2">
-          {items.map(([k, v]) => (
-            <div key={k}>
-              <dt className="text-caption text-text-secondary">{k}</dt>
-              <dd className={`tabular-nums ${k === "Kechikkan" && r.late > 0 ? "text-danger" : ""}`}>{v}</dd>
-            </div>
-          ))}
-        </dl>
-      ) : (
-        <Skeleton className="h-12 w-full" />
-      )}
-    </div>
   );
 }
 

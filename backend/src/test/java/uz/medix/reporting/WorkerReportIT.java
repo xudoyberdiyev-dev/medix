@@ -141,6 +141,12 @@ class WorkerReportIT {
                 .andExpect(jsonPath("$.employeeId").value(p3.id()))
                 .andExpect(jsonPath("$.orders").value(0));
         mvc.perform(get("/api/reports/pickers/mine").cookie(op.cookie())).andExpect(status().isForbidden());
+        mvc.perform(get("/api/reports/markers/mine").cookie(m1.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.employeeId").value(m1.id()))
+                .andExpect(jsonPath("$.orders").value(1))
+                .andExpect(jsonPath("$.codes").value(0));
+        mvc.perform(get("/api/reports/markers/mine").cookie(p1.cookie())).andExpect(status().isForbidden());
         mvc.perform(get("/api/reports/pickers").param("from", t).param("to", t).cookie(keeper))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.kind").value("PICKERS"))

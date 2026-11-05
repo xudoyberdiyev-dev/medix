@@ -6189,6 +6189,25 @@
         "tags" : [ "reports" ]
       }
     },
+    "/api/reports/markers/mine" : {
+      "get" : {
+        "operationId" : "markerToday",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WorkerRow"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bugungi natijam (Markirovkachi)",
+        "tags" : [ "reports" ]
+      }
+    },
     "/api/reports/pickers" : {
       "get" : {
         "operationId" : "pickers",

@@ -48,6 +48,14 @@ class WorkerReportController {
         return report.mine(actor, WorkerReport.Kind.PICKERS);
     }
 
+    @GetMapping("/api/reports/markers/mine")
+    @PreAuthorize("hasAuthority('marking.scan')")
+    @Operation(summary = "Bugungi natijam (Markirovkachi)")
+    WorkerReport.WorkerRow markerToday() {
+        Actor actor = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
+        return report.mine(actor, WorkerReport.Kind.MARKERS);
+    }
+
     @GetMapping("/api/reports/pickers")
     @PreAuthorize("hasAuthority('reports.pickers')")
     @Operation(summary = "Yig'uvchilar natijasi: yakunlangan buyurtmalar, qatorlar, dona, vaqt (berilgan / haqiqiy), vaqtida / kechikkan, FEFO'dan chetlashish")

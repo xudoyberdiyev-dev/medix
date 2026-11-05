@@ -23,6 +23,7 @@ import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, GS1_ERROR_TEXT, parseGs1 } from "@/lib/gs1";
 import { codesExportUrl } from "./api";
 import { IssueButton } from "./issues";
+import { MyToday } from "./my-today";
 import { day } from "./orders-page";
 import { timerText } from "./picking-page";
 
@@ -97,6 +98,9 @@ export function MarkingPage() {
   return (
     <>
       <h1 className="mb-4 text-page-title">Markirovka</h1>
+      <div className="mb-4 max-w-xl">
+        <MyToday kind="markers" />
+      </div>
       <div className="mb-4">
         <Tabs
           aria-label="Markirovka boʻlimlari"
