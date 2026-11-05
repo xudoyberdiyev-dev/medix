@@ -6323,6 +6323,103 @@
         "tags" : [ "reports" ]
       }
     },
+    "/api/reports/supplier-goods" : {
+      "get" : {
+        "operationId" : "supplierGoods",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "STAFF", "COMPANY" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierGoodsView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ta'minotchi xodim (STAFF — «Kim nomiga») yoki korxona (COMPANY) tovari, tannarxda: olib keldi, sotildi, boshqa, qoldi; Aktiv / Passiv",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/supplier-goods/export" : {
+      "get" : {
+        "operationId" : "supplierGoodsExport",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "STAFF", "COMPANY" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ta'minotchi xodim / korxona tovari .xlsx",
+        "tags" : [ "reports" ]
+      }
+    },
     "/api/roles" : {
       "get" : {
         "operationId" : "list_18",
@@ -14292,6 +14389,70 @@
           }
         },
         "required" : [ "active", "passive" ]
+      },
+      "SupplierGoodsRow" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean",
+            "description" : "Davrda kirim qilgan — Aktiv, aks holda Passiv"
+          },
+          "brought" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "left" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "other" : {
+            "type" : "string",
+            "description" : "Boshqa chiqim: hisobdan o'tkazish va h.k."
+          },
+          "sold" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "brought", "id", "left", "name", "other", "sold" ]
+      },
+      "SupplierGoodsView" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "STAFF", "COMPANY" ]
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SupplierGoodsRow"
+            }
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "$ref" : "#/components/schemas/SupplierGoodsRow"
+          },
+          "truncated" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "from", "kind", "rows", "to", "total", "truncated" ]
       },
       "SupplierPaymentDetail" : {
         "type" : "object",

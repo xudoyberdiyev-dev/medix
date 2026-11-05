@@ -2721,6 +2721,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/supplier-goods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ta'minotchi xodim (STAFF — «Kim nomiga») yoki korxona (COMPANY) tovari, tannarxda: olib keldi, sotildi, boshqa, qoldi; Aktiv / Passiv */
+        get: operations["supplierGoods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/supplier-goods/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ta'minotchi xodim / korxona tovari .xlsx */
+        get: operations["supplierGoodsExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/roles": {
         parameters: {
             query?: never;
@@ -5981,6 +6015,31 @@ export interface components {
         SupplierBlock: {
             active: components["schemas"]["SupplierStat"][];
             passive: components["schemas"]["SupplierStat"][];
+        };
+        SupplierGoodsRow: {
+            /** @description Davrda kirim qilgan — Aktiv, aks holda Passiv */
+            active: boolean;
+            brought: string;
+            /** Format: int64 */
+            id: number;
+            left: string;
+            name: string;
+            /** @description Boshqa chiqim: hisobdan o'tkazish va h.k. */
+            other: string;
+            sold: string;
+        };
+        SupplierGoodsView: {
+            /** Format: int64 */
+            branchId?: number;
+            /** Format: date */
+            from: string;
+            /** @enum {string} */
+            kind: "STAFF" | "COMPANY";
+            rows: components["schemas"]["SupplierGoodsRow"][];
+            /** Format: date */
+            to: string;
+            total: components["schemas"]["SupplierGoodsRow"];
+            truncated: boolean;
         };
         SupplierPaymentDetail: {
             account: string;
@@ -10533,6 +10592,54 @@ export interface operations {
                 from?: string;
                 to?: string;
                 groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    supplierGoods: {
+        parameters: {
+            query: {
+                kind: "STAFF" | "COMPANY";
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierGoodsView"];
+                };
+            };
+        };
+    };
+    supplierGoodsExport: {
+        parameters: {
+            query: {
+                kind: "STAFF" | "COMPANY";
+                branchId?: number;
+                from?: string;
+                to?: string;
             };
             header?: never;
             path?: never;
