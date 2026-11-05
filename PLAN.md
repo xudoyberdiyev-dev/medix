@@ -83,10 +83,10 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## 7. Ombor zanjiri
 - [x] FEFO zahira (`inventory.StockReservations`: Navbatga o'tishda muddati eng yaqin partiyalar, sotuvga ochiq zona, minimal yaroqlilik; tartibli FOR UPDATE, parallel test; bekor qilishda bo'shaydi; mavjud qoldiqdan ayriladi), vaqt berish (yig'ish/markirovka daqiqasi, Ombor mudiri)
-- [~] Yig'uvchi paneli ✅ (navbat, «Band: …», bitta faol yig'ish, taymer / «Kechikdi: N daqiqa», «Olindi», yakunlash → Jo'natish zonasi; API'da «Boshqa partiyadan oldim»), «Muammo bor» ✅. Qoldi: UI'da boshqa partiyani tanlash, terish varag'i (chop etish), «Bugungi natijam»
+- [~] Yig'uvchi paneli ✅ (navbat, «Band: …», bitta faol yig'ish, taymer / «Kechikdi: N daqiqa», «Olindi», yakunlash → Jo'natish zonasi; API'da «Boshqa partiyadan oldim»), «Muammo bor» ✅. Terish varag'i ✅ (05.11: /print/picking?ids=… — bir necha buyurtma bitta varaqda, zona → mahsulot → muddat, buyurtmalarga taqsim, imzo joylari; Yig'ish sahifasida navbatdan belgilab yoki faol yig'ishdan). Qoldi: UI'da boshqa partiyani tanlash, «Bugungi natijam»
 - [x] Markirovkachi paneli ✅ (01.11 23:00): GS1 tahlili (`shared.gs1.Gs1Code` = `lib/gs1.ts`; qavsli va GS ko'rinish), tekshiruv tartibi format → takror (global, parallel test) → GTIN → partiya → tur (Q/D) → qator to'lganmi; bitta faol ish, taymer, doimiy fokusli maydon, katta yashil/qizil ekran va ovoz, «10 / 10 quti · 25 dona», kodni sabab bilan olib tashlash, yakunlash → Hisobdan o'tkazish; bekor qilish / «Yig'ishga qaytarish»da kodlar bo'shaydi; Kodlar jurnali. Qoldi: kodlar .xlsx eksporti (marking.export)
 - [~] Ombor mudiri paneli: Monitor ✅ (bosqichlar ustunlari, jonli taymerlar, kechikkanlar, «N kundan oshgan» — `medix.orders.late-days`, Ombor holati), Muammolar ✅ («Hal qilindi»). Yangilanish — 10 s so'rov (SSE keyin). Vaqt berish / Hisobdan o'tkazish — buyurtma kartochkasida
-- [~] Hisobdan o'tkazish ✅. Hujjatlashtirish va reys ✅ (`delivery.trip`, sahifa Ombor → Jo'natish): mashina, haydovchi (bitta faol reys), sig'im tekshiruvi (band joylar bilan), nakladnoy NK (bir marta beriladi), «Yuklanmoqda»; «O'zi olib ketadi» — reyssiz NK; reysni bekor qilish; bekor qilingan buyurtma reysdan chiqadi. Qoldi: nakladnoy/yo'l varaqasi/terish varag'i chop etish (10-bosqich PDF bilan), reysga buyurtma qo'shish/olib tashlash
+- [~] Hisobdan o'tkazish ✅. Hujjatlashtirish va reys ✅ (`delivery.trip`, sahifa Ombor → Jo'natish): mashina, haydovchi (bitta faol reys), sig'im tekshiruvi (band joylar bilan), nakladnoy NK (bir marta beriladi), «Yuklanmoqda»; «O'zi olib ketadi» — reyssiz NK; reysni bekor qilish; bekor qilingan buyurtma reysdan chiqadi. Qoldi: nakladnoy/yo'l varaqasi chop etish (10-bosqich PDF bilan), reysga buyurtma qo'shish/olib tashlash
 
 ## 8. Yetkazish
 - [x] Sotuv (SV) va hisob-faktura (HF) — «Yuklab bo'lindi — reysni boshlash» yoki «Mijoz olib ketdi» paytida: tovar Jo'natish zonasidan chiqadi (jurnal), mijoz qarzi (to'lov muddati — filial shartidagi kunlar), QQS (narx ichida, HALF_UP), tannarx, kodlar «sotilgan», «Yo'lda» — bitta tranzaksiyada
@@ -181,6 +181,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 05.11.2026 16:36–16:45 — zaxira sessiya: terish varag'i (chop etish, /print — sidebar'siz chop etish shakllari uchun umumiy layout). Frontend 124 test, build yashil; skrinshot (mock).
 - 05.11.2026 16:27 — fire_trigger yana rad etildi; 16:00 dan keyin zaxira yo'q — oyna hisoboti yozildi, sessiya to'xtadi.
 - 05.11.2026 16:26 — zanjir: davom (kontekst og'irlashdi) — keyingi sessiya: chop etish shakllari (OpenHTMLtoPDF) yoki eski qoldiqlar (7-bosqich kodlar .xlsx, terish varag'i).
 - 05.11.2026 16:08–16:35 — 10-bosqich: Savdo hisobotidan mijoz buyurtmalariga o'tish; Ta'minotchi xodim/korxona tovari hisoboti; Yig'uvchilar va Markirovkachilar natijasi (API + .xlsx + UI + IT test, OpenAPI qo'lda — Jackson formatida). Frontend 120 test, build yashil; skrinshot (mock). CI hali billing sababli to'xtagan.
