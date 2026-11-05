@@ -2,7 +2,9 @@ package uz.medix.finance.debt;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,5 +58,23 @@ class DebtController {
     @Operation(summary = "Yetkazib beruvchi bo'yicha ochiq hujjatlar")
     List<Debts.DebtDoc> supplierDocs(@PathVariable long id, @RequestParam(required = false) Long branchId) {
         return debts.docs(actor(), Side.SUPPLIER, branchId, id);
+    }
+
+    @GetMapping("/api/debts/customers/{id}/act")
+    @PreAuthorize("hasAuthority('cdebt.view')")
+    @Operation(summary = "Akt sverka (mijoz)", description = "Davr boshi + qarz oshdi − kamaydi = davr oxiri. Standart davr — joriy oy.")
+    Debts.Act customerAct(@PathVariable long id, @RequestParam long branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return debts.act(actor(), Side.CUSTOMER, branchId, id, from, to);
+    }
+
+    @GetMapping("/api/debts/suppliers/{id}/act")
+    @PreAuthorize("hasAuthority('sdebt.view')")
+    @Operation(summary = "Akt sverka (yetkazib beruvchi)")
+    Debts.Act supplierAct(@PathVariable long id, @RequestParam long branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return debts.act(actor(), Side.SUPPLIER, branchId, id, from, to);
     }
 }

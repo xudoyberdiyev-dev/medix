@@ -157,6 +157,20 @@ class DebtIT {
                 .andExpect(jsonPath("$[0].overdueDays").value(95))
                 .andExpect(jsonPath("$[1].open").value("1500.00"));
 
+        // Akt sverka: davr boshi 0, qarz oshdi 3 700, kamaydi 800, oxiri 2 900; boshqa filial xodimiga yopiq
+        mvc.perform(get("/api/debts/customers/" + c1 + "/act").param("branchId", "" + b).cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.opening").value("0.00"))
+                .andExpect(jsonPath("$.debitTotal").value("3700.00"))
+                .andExpect(jsonPath("$.creditTotal").value("800.00"))
+                .andExpect(jsonPath("$.closing").value("2900.00"))
+                .andExpect(jsonPath("$.lines.length()").value(5))
+                .andExpect(jsonPath("$.lines[4].balance").value("2900.00"));
+        mvc.perform(get("/api/debts/customers/" + c1 + "/act").param("branchId", "" + other).cookie(cashier)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/debts/customers/" + c1 + "/act").param("branchId", "" + b).param("from", t.plusDays(1).toString())
+                        .param("to", t.toString()).cookie(cashier))
+                .andExpect(jsonPath("$.code").value("cash.periodInvalid"));
+
         // Direktor — barcha filiallar: c2 ning boshqa filialdagi qarzi ham (filiallar alohida hisoblanadi: avans boshqa filial qarzini yopmaydi)
         mvc.perform(get("/api/debts/customers").cookie(director))
                 .andExpect(status().isOk())

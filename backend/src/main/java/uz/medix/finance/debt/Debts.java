@@ -45,6 +45,12 @@ class Debts {
     record DebtDoc(long branchId, String branch, String docType, long docId, String docNumber, LocalDate date, @Schema(nullable = true) LocalDate dueDate,
             String open, int overdueDays) {}
 
+    record ActLine(java.time.Instant occurredAt, LocalDate date, String docType, long docId, String docNumber, @Schema(nullable = true) String note,
+            @Schema(description = "Qarz oshdi") String debit, @Schema(description = "Qarz kamaydi") String credit, String balance) {}
+
+    record Act(long counterpartyId, String name, String tin, long branchId, String branch, LocalDate from, LocalDate to, String opening,
+            String debitTotal, String creditTotal, String closing, List<ActLine> lines) {}
+
     private final JdbcClient jdbc;
     private final PartyLedger parties;
     private final Clock clock;
@@ -154,5 +160,68 @@ class Debts {
             }
         }
         return out;
+    }
+
+    /**
+     * Akt sverka (prototip holatida, SPEC 5.5): davr boshi qoldig'i, har hujjat (qarz oshdi / kamaydi) va davr oxiri. Musbat qoldiq —
+     * mijoz (yoki kompaniya YB ga) qarzdor, manfiy — avans.
+     */
+    @Transactional(readOnly = true)
+    Act act(Actor actor, Side side, long branchId, long counterpartyId, LocalDate from, LocalDate to) {
+        if (!actor.canAccessBranch(branchId)) {
+            throw MedixException.notFound("error.notFound");
+        }
+        LocalDate t = to == null ? today() : to;
+        LocalDate f = from == null ? t.withDayOfMonth(1) : from;
+        if (f.isAfter(t)) {
+            throw MedixException.badRequest("cash.periodInvalid");
+        }
+        record Party(String name, String tin) {}
+        Party p = jdbc.sql("SELECT name, tin FROM counterparty WHERE id = :c")
+                .param("c", counterpartyId)
+                .query((rs, n) -> new Party(rs.getString("name"), rs.getString("tin")))
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        String branch = jdbc.sql("SELECT name FROM branch WHERE id = :b").param("b", branchId).query(String.class).single();
+        Money opening = new Money(jdbc.sql("""
+                SELECT coalesce(sum(amount), 0) FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s
+                  AND (occurred_at AT TIME ZONE 'Asia/Tashkent')::date < :f""")
+                .param("b", branchId)
+                .param("c", counterpartyId)
+                .param("s", side.name())
+                .param("f", java.sql.Date.valueOf(f))
+                .query(BigDecimal.class)
+                .single());
+        record Raw(java.time.Instant at, LocalDate date, String type, long id, String number, String note, Money amount) {}
+        List<Raw> raw = jdbc.sql("""
+                SELECT occurred_at, (occurred_at AT TIME ZONE 'Asia/Tashkent')::date AS d, doc_type, doc_id, doc_number, note, amount
+                FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s
+                  AND (occurred_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t
+                ORDER BY occurred_at, id LIMIT 5000""")
+                .param("b", branchId)
+                .param("c", counterpartyId)
+                .param("s", side.name())
+                .param("f", java.sql.Date.valueOf(f))
+                .param("t", java.sql.Date.valueOf(t))
+                .query((rs, n) -> new Raw(rs.getTimestamp("occurred_at").toInstant(), rs.getDate("d").toLocalDate(), rs.getString("doc_type"),
+                        rs.getLong("doc_id"), rs.getString("doc_number"), rs.getString("note"), new Money(rs.getBigDecimal("amount"))))
+                .list();
+        Money balance = opening;
+        Money debit = Money.ZERO;
+        Money credit = Money.ZERO;
+        List<ActLine> lines = new ArrayList<>();
+        for (Raw r : raw) {
+            balance = balance.plus(r.amount());
+            Money abs = r.amount().isNegative() ? Money.ZERO.minus(r.amount()) : r.amount();
+            if (r.amount().isNegative()) {
+                credit = credit.plus(abs);
+            } else {
+                debit = debit.plus(abs);
+            }
+            lines.add(new ActLine(r.at(), r.date(), r.type(), r.id(), r.number(), r.note(), r.amount().isNegative() ? "0.00" : abs.toString(),
+                    r.amount().isNegative() ? abs.toString() : "0.00", balance.toString()));
+        }
+        return new Act(counterpartyId, p.name(), p.tin(), branchId, branch, f, t, opening.toString(), debit.toString(), credit.toString(),
+                balance.toString(), lines);
     }
 }
