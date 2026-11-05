@@ -7,7 +7,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~90%; 2 — Katalog ~90%; 3 — Narxlar ~97%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~95% (imzo UI ✅); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
 - **Oxirgi sessiya:** 06.11.2026 03:15–03:55 (tungi oyna, zanjir) — 8-bosqich mijoz imzosi (imzo maydoni, `TripStop.signed`); jadvallar standarti: saqlangan ko'rinishlar (Mahsulotlar, Mijozlar/YB) va «topilgan joy qator ostida» (`SearchMatch`); Ombor mudiri paneli yorliqlari (Monitor, Vaqt berish, Muammolar, Kirim qabuli, Qaytgan tovar); tasdiq bildirishnomalari — buyurtma, NO, kassa chiqimi (tasdiqlovchiga; qaror — muallifga), `?open=<id>` havolalari.
-- **Keyingi vazifa:** qolgan kichik ishlar: Qoldiqlar sahifasiga URL filtrlar + saqlangan ko'rinishlar; buyurtmalar holat yorliqlari e2e; boshqa tasdiqlar bildirishnomasi (YT to'lovi, kirim o'tkazish kutmoqda). 4-bosqich ko'chirishlar (ZK/OK) — SPEC 18 bo'yicha V2, shoshilinch emas. Brauzerdagi `/print/*` sahifalari zaxira sifatida qoldi.
+- **Keyingi vazifa:** qolgan kichik ishlar: buyurtmalar holat yorliqlari e2e; boshqa tasdiqlar bildirishnomasi (YT to'lovi, kirim o'tkazish kutmoqda). 4-bosqich ko'chirishlar (ZK/OK) — SPEC 18 bo'yicha V2, shoshilinch emas. Brauzerdagi `/print/*` sahifalari zaxira sifatida qoldi.
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
@@ -67,7 +67,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## 4. Ombor
 - [x] Partiyalar (bonus — tannarx 0, «-B»), harakatlar jurnali (stock_move, faqat qo'shiladi), stock_balance (zona × partiya, CHECK ≥ 0) jurnal bilan bitta tranzaksiyada; `StockLedger.post` — tartibli FOR UPDATE, hujjat hammasi yoki hech narsa; parallel test (24 oqim, 10 dona → aniq 10 ta muvaffaqiyat)
-- [x] Qoldiqlar sahifasi va Muddat nazorati ✅ (filial doirasi, tannarx faqat special.cost bilan), .xlsx eksport (filtrlar bilan, 50 000 qatorgacha; pul matn ko'rinishida). Qoldi (ixtiyoriy): ustunlar/saqlangan ko'rinishlar
+- [x] Qoldiqlar sahifasi va Muddat nazorati ✅ (filial doirasi, tannarx faqat special.cost bilan), .xlsx eksport (filtrlar bilan, 50 000 qatorgacha; pul matn ko'rinishida). Filtrlar URL'da va saqlangan ko'rinishlar ✅ (06.11)
 - [x] Boshlang'ich qoldiq (BQ): qoralama → o'tkazish (partiyalar `source_type=BQ` + jurnal + qoldiq bitta tranzaksiyada), Direktor bekor qilishi (partiyadan sotilmagan bo'lsa), MEDIX .xlsx shabloni bilan import (hammasi yoki hech narsa), nazoratdagi → faqat Seyf, muddati o'tgan — ogohlantirish. Sahifa: Ombor → Boshlang'ich qoldiq. Qoldi: SmartUp ustunlari (namuna kutilmoqda)
 - [x] Omborni nofaol qilish: qoldig'i yoki o'tkazilmagan BQ qoralamasi bo'lsa taqiqlanadi
 

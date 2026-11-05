@@ -2,9 +2,11 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Boxes, CalendarClock, CircleAlert, Clock, Download, Lock, ShoppingCart } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { KpiCard } from "@/components/ui/card";
+import { SavedViews } from "@/components/ui/saved-views";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
@@ -16,6 +18,7 @@ import { useWarehouses } from "@/features/organization/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
+import { parseStockFilters, serializeStockFilters, type StockFilters } from "./url-state";
 
 type StockRow = components["schemas"]["StockRow"];
 
@@ -59,13 +62,16 @@ export function stockExportHref(f: { q: string; warehouseId: string | null; sell
 export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
   const me = useMe();
   const warehouses = useWarehouses();
-  const [search, setSearch] = useState("");
-  const [q, setQ] = useState("");
-  const [warehouseId, setWarehouseId] = useState<string | null>(null);
-  const [sellableOnly, setSellableOnly] = useState(false);
-  const [days, setDays] = useState<string | null>("90");
-  const [page, setPage] = useState(1);
-  const [size, setSize] = useState<25 | 50 | 100>(50);
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const f = parseStockFilters(new URLSearchParams(params.toString()));
+  const { q, warehouseId, sellableOnly, days, page, size } = f;
+  const [search, setSearch] = useState(q);
+  const apply = (patch: Partial<StockFilters>) => {
+    const qs = serializeStockFilters({ ...f, page: 1, ...patch });
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const allowed = canAny(me.data, mode === "stock" ? ["stock.view"] : ["expiry.view", "stock.view"]);
 
@@ -79,7 +85,7 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
               q: q || undefined,
               warehouseId: warehouseId ? Number(warehouseId) : undefined,
               sellableOnly,
-              expiringWithinDays: mode === "expiry" ? Number(days ?? 90) : undefined,
+              expiringWithinDays: mode === "expiry" ? Number(days) : undefined,
               page: page - 1,
               size,
             },
@@ -140,7 +146,7 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
     q,
     warehouseId,
     sellableOnly,
-    expiringWithinDays: mode === "expiry" ? Number(days ?? 90) : undefined,
+    expiringWithinDays: mode === "expiry" ? Number(days) : undefined,
   });
   return (
     <>
@@ -176,7 +182,7 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
                   onChange={(v) => {
                     setSearch(v);
                     clearTimeout(debounce.current);
-                    debounce.current = setTimeout(() => (setQ(v.trim()), setPage(1)), 300);
+                    debounce.current = setTimeout(() => apply({ q: v.trim() }), 300);
                   }}
                   placeholder="Mahsulot, kod yoki partiya"
                   className="[&>label]:sr-only"
@@ -187,7 +193,7 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
                   label="Ombor"
                   size="sm"
                   value={warehouseId}
-                  onChange={(v) => (setWarehouseId(v), setPage(1))}
+                  onChange={(v) => apply({ warehouseId: v })}
                   placeholder="Barcha omborlar"
                   className="[&>span:first-child]:sr-only"
                   options={(warehouses.data ?? []).map((w) => ({ value: String(w.id), label: w.name }))}
@@ -199,7 +205,7 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
                     label="Muddat"
                     size="sm"
                     value={days}
-                    onChange={(v) => (setDays(v), setPage(1))}
+                    onChange={(v) => apply({ days: v ?? "90" })}
                     className="[&>span:first-child]:sr-only"
                     options={[
                       { value: "0", label: "Faqat oʻtganlar" },
@@ -210,9 +216,20 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
                   />
                 </div>
               ) : null}
-              <Checkbox label="Faqat sotuvga ochiq zonalar" checked={sellableOnly} onChange={(v) => (setSellableOnly(v), setPage(1))} />
+              <Checkbox label="Faqat sotuvga ochiq zonalar" checked={sellableOnly} onChange={(v) => apply({ sellableOnly: v })} />
+              <div className="ml-auto">
+                <SavedViews
+                  storageKey={`medix-${mode}-views`}
+                  query={params.toString()}
+                  hidden={[]}
+                  onApply={(v) => {
+                    setSearch(parseStockFilters(new URLSearchParams(v.query)).q);
+                    router.replace(v.query ? `${pathname}?${v.query}` : pathname, { scroll: false });
+                  }}
+                />
+              </div>
               {stock.data && stock.data.total > 0 ? (
-                <a href={exportHref} download className="ml-auto inline-flex items-center gap-1 text-primary hover:underline">
+                <a href={exportHref} download className="inline-flex items-center gap-1 text-primary hover:underline">
                   <Download size={16} strokeWidth={1.5} aria-hidden />
                   Excelʼga yuklab olish
                 </a>
@@ -221,7 +238,7 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
           }
           emptyState={
             filtered ? (
-              <NoResultsState onClearFilters={() => (setSearch(""), setQ(""), setWarehouseId(null), setSellableOnly(false))} />
+              <NoResultsState onClearFilters={() => (setSearch(""), apply({ q: "", warehouseId: null, sellableOnly: false }))} />
             ) : mode === "stock" ? (
               <EmptyState
                 icon={Boxes}
@@ -238,7 +255,13 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
           }
           pagination={
             stock.data && stock.data.total > 0
-              ? { page, pageSize: size, total: stock.data.total, onPageChange: setPage, onPageSizeChange: (s) => (setSize(s), setPage(1)) }
+              ? {
+                  page,
+                  pageSize: size,
+                  total: stock.data.total,
+                  onPageChange: (n) => apply({ page: n }),
+                  onPageSizeChange: (s) => apply({ size: s }),
+                }
               : undefined
           }
         />
