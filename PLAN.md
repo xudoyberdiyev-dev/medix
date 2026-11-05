@@ -4,12 +4,13 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Hozirgi holat
 - **Sana:** 05.11.2026
-- **Bosqich:** 0, 1 — tugadi; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~95% (MT, YT, KO/BO, IO, kunni yopish, ko'chirma, qarzlar, akt sverka, AH, kassir o'z kassasida, bonus balans, bank solishtirish tayyor; qoldi: Kassir paneli — 10-bosqich bosh sahifalari bilan)
+- **Bosqich:** 0, 1 — tugadi; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 05.11.2026 12:05–… — kassir faqat o'z kassasida (cashier_id + CashierGuard), Bonus balans sahifasi, bank ko'chirmasi bilan solishtirish.
-- **Keyingi vazifa:** 10-bosqich (rollar bosh sahifalari, «Diqqat talab qiladi», chop etish shakllari). Eski qoldiqlar: 7-bosqich kodlar .xlsx, terish varag'i; 5-bosqich «Mahsulot qo'shish»; 3-bosqich «Kirim bo'yicha» narx rejimi.
+- **Oxirgi sessiya:** 05.11.2026 12:05–12:50 — kassir faqat o'z kassasida (cashier_id + CashierGuard), Bonus balans sahifasi, bank ko'chirmasi bilan solishtirish, Kassir paneli (Kassirning bosh sahifasi). Backend testlari CI da yashil; oxirgi push'da GitHub Actions billing sababli ishga tushmadi.
+- **Keyingi vazifa:** (avval) GitHub Actions ishlayotganini tekshirish — oxirgi commit CI'da qayta o'tsin. So'ng 10-bosqich: Direktor/Admin bosh sahifasi (4 karta, «Diqqat talab qiladi»), Filial rahbari, Operator, Buxgalter, Xarid bosh sahifalari (rollar bosh sahifalari, «Diqqat talab qiladi», chop etish shakllari). Eski qoldiqlar: 7-bosqich kodlar .xlsx, terish varag'i; 5-bosqich «Mahsulot qo'shish»; 3-bosqich «Kirim bo'yicha» narx rejimi.
 
 ## Egasidan kutilayotganlar
+- [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
 - [ ] Telegram: `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` ni repo Secrets'ga qo'shish.
 - [x] `notes/T12-topshirish.md`, `T12-audit.md` va boshqa notes — `docs/notes/` ga qo'shildi (01.11.2026, egasi yubordi).
@@ -102,7 +103,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [x] IO: hisoblar orasida (kassa → bank, Terminal → bank …); parallel o'tkazmalarda qoldiq manfiy bo'lmaydi (test) (05.11)
 - [x] Kunni yopish: kupyuralar sanog'i, kutilgan qoldiq jurnaldan; farq — cash.closeDiff + izoh + PIN, tuzatuvchi KO; yopilgan kunga va undan oldingi kunlarga yangi pul harakati yo'q; tasdiq kutayotgan chiqim bo'lsa yopilmaydi (05.11)
 - [x] Hisob ko'chirmasi (davr boshi + kirim − chiqim = davr oxiri, har harakat hujjat bilan) (05.11)
-- [~] Kassa sahifasi: hisoblar, «Tasdiqlashni kutmoqda», Ko'chirma / KO-BO / IO / Yopilgan kunlar / Bank ko'chirmasi yorliqlari, Kunni yopish oynasi (05.11). Qoldi: Kassir paneli (alohida bosh sahifa — 10-bosqich)
+- [x] Kassa sahifasi: hisoblar, «Tasdiqlashni kutmoqda», Ko'chirma / KO-BO / IO / Yopilgan kunlar / Bank ko'chirmasi yorliqlari, Kunni yopish oynasi (05.11)
+- [x] Kassir paneli — Kassirning bosh sahifasi: davr/hisob filtri, 5 karta (qoldiq Naqd/Terminal/Bank, kirim, chiqim — IO siz, xarajatlar moddalar bo'yicha, kutilayotgan: haydovchidagi pul, qoralama MT, tasdiq kutayotgan chiqim), hisoblar jadvali, kunlik dinamika, oxirgi operatsiyalar (05.11). Qoldi (ixtiyoriy): Recharts grafigi, «mijozlarning to'lov kuni» kartada
 - [x] Kassir faqat o'z kassasida: kassaga kassir biriktirish («Kassirlar» oynasi — Filial rahbari/Direktor/Admin), `finance.CashierGuard` pul jurnalida (MT, YT, KO/BO, IO, haydovchidagi pul, kunni yopish); UI'da faqat ishlatish mumkin bo'lgan hisoblar (05.11)
 - [x] Bonus balans sahifasi (Pul → Bonus balans): balanslar, kutilayotgan bonuslar (chegirmali, BNS siz kirimlar), 30 kundan ko'p ishlatilmagan, harakatlar oynasi (05.11)
 - [x] Bank ko'chirmasi bilan solishtirish (qo'lda): bankdagi qoldiq vs MEDIX jurnali, bank tasdiqlagan harakatlar belgilanadi, farq — izoh majburiy, ketma-ket sanalar, faqat qo'shiladi (V30) (05.11). Fayl importi — namuna kelgach
@@ -119,6 +121,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ---
 
 ## Qarorlar jurnali
+- 05.11.2026 — Kassir paneli: «Kirim/Chiqim pullar» — hisoblar orasidagi o'tkazmasiz (IO); hisoblar jadvalida IO bor (qoldiq uchun). Bosh sahifa rolga qarab: CASHIER → Kassir paneli. Dinamika — Recharts o'rniga oddiy ustunlar (yangi bog'liqliksiz); keyin grafik qo'shish mumkin.
 - 05.11.2026 — Kassir faqat o'z kassasida: kassaga biriktirilgan kassir bo'lsa, undagi har qanday pul harakati (kirim ham, chiqim ham, IO ning ikkala tomoni) faqat shu kassir yoki cash.approve egasi (Direktor, Admin, Filial rahbari) tomonidan. Filialda kassasi bor xodim biriktirilmagan kassani ishlatmaydi; kassasi yo'q xodim (masalan, Buxgalter) biriktirilmagan kassani ishlatadi. Terminal va bank — faqat ruxsat kalitlari bo'yicha. Biriktirish — settings.view yoki cash.approve; nomzod — filialning faol, cash.io ruxsatli xodimi; bir xodim bir necha kassaga mumkin.
 - 05.11.2026 — Bonus balans sahifasi: ko'rish — sdebt.view yoki supplierBonus.confirm; «kutilayotgan» = o'tkazilgan, chegirmali, BNS qilinmagan kirim (foiz — qarz summasidan, HALF_UP). Ishlatilmagan kunlar — balans musbat bo'lsa oxirgi harakatdan.
 - 05.11.2026 — Bank solishtirish V1 da qo'lda (bank fayl formati noma'lum): ko'rish — bank.view; yozish — bank.view + (cash.io yoki payments.noncash). Har hisobda solishtirish sanasi oldingisidan keyin; farq bo'lsa izoh majburiy (bazada CHECK).
@@ -169,7 +172,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
-- 05.11.2026 12:05–… — 9-bosqich: kassir faqat o'z kassasida, Bonus balans sahifasi, bank ko'chirmasi bilan solishtirish.
+- 05.11.2026 12:05–12:50 — 9-bosqich: Kassir paneli, kassir faqat o'z kassasida, Bonus balans sahifasi, bank ko'chirmasi bilan solishtirish.
 - 01.11.2026 23:00 – 02.11.2026 00:10 — 7-bosqich: markirovka (GS1, tekshiruv tartibi, global takror, parallel test), Markirovkachi paneli, Ombor monitori, «Muammo bor», reys (RS) va nakladnoy (NK), «O'zi olib ketadi», Jo'natish sahifasi; 8-bosqich: sotuv/HF, Haydovchi paneli, yetkazildi/yetkazilmadi, qaytgan tovar qabuli. CI yashil.
 - 01.11.2026 18:05–19:55 — 4-bosqich: BQ, Qoldiqlar eksporti, ombor nofaol qilish tekshiruvi; 5-bosqich: Kirim (to'liq oqim + qarz jurnali), BNS, bonus kirim, to'lov/bonus eslatmalari + bildirishnomalar; 3-bosqich: tannarxdan past narx, o'rtacha/oxirgi kirim narxidan ustama; 6-bosqich: buyurtma (qoidalar, kredit, tasdiq, katalog); 7-bosqich: FEFO zahira, vaqt berish, yig'ish, hisobdan o'tkazish. E2E: BQ, Kirim, Buyurtma→yig'ish→tekshiruv. E2E 3 ta UI xatoni topdi (tuzatildi).
 - 01.11.2026 12:08–14:20 — 1.3 ruxsatlar (T12 egasi yubordi) va Rollar sahifasi; 4-bosqich asosi (jurnal, qoldiq, Qoldiqlar/Muddat). 1.5 PIN, 1.7 Filiallar/Omborlar/Profil, 1.8 e2e (CI), filial tanlagichi; 2-bosqich: ma'lumotnomalar, mahsulotlar, kontragentlar, .xlsx import/eksport; 3-bosqich: NO hujjati, narxlar. E2E parol almashtirishdan keyingi qayta yo'naltirish xatosini topdi va tuzatildi.
