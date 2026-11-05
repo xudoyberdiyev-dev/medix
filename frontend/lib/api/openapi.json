@@ -2446,6 +2446,34 @@
         "tags" : [ "home" ]
       }
     },
+    "/api/home/purchaser" : {
+      "get" : {
+        "operationId" : "purchaserHome",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PurchaserHomeView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xarid bosh sahifasi: kutayotgan kirimlar, YB qarzi va to'lov kunlari, bonus, «O'z nomimdagi tovar»",
+        "tags" : [ "home" ]
+      }
+    },
     "/api/marking/codes" : {
       "get" : {
         "operationId" : "codes",
@@ -8010,6 +8038,23 @@
         },
         "required" : [ "balance", "moves", "pending", "supplier", "supplierId" ]
       },
+      "BonusInfo" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "pending" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pendingOverdue" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "balance", "pending", "pendingOverdue" ]
+      },
       "BonusMove" : {
         "type" : "object",
         "properties" : {
@@ -11649,6 +11694,28 @@
         },
         "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "id", "lines", "number", "orderDate", "status", "statusChangedAt", "total", "warehouse" ]
       },
+      "OwnGoods" : {
+        "type" : "object",
+        "properties" : {
+          "broughtQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expiring90" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "leftQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "products" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "broughtQty", "expiring90", "leftQty", "products" ]
+      },
       "Panel" : {
         "type" : "object",
         "properties" : {
@@ -11882,6 +11949,21 @@
           }
         },
         "required" : [ "account", "accountId", "accountKind", "allocations", "amount", "branchId", "createdAt", "createdBy", "customer", "customerId", "id", "number", "paymentDate", "source", "status", "version" ]
+      },
+      "PaymentDue" : {
+        "type" : "object",
+        "properties" : {
+          "next3Days" : {
+            "type" : "string"
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "today" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "next3Days", "overdue", "today" ]
       },
       "PaymentPostRequest" : {
         "type" : "object",
@@ -12729,6 +12811,41 @@
         },
         "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName" ]
       },
+      "PurchaserHomeView" : {
+        "type" : "object",
+        "properties" : {
+          "bonus" : {
+            "$ref" : "#/components/schemas/BonusInfo"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "due" : {
+            "$ref" : "#/components/schemas/PaymentDue"
+          },
+          "ownGoods" : {
+            "$ref" : "#/components/schemas/OwnGoods"
+          },
+          "receipts" : {
+            "$ref" : "#/components/schemas/ReceiptCounts"
+          },
+          "supplierDebt" : {
+            "$ref" : "#/components/schemas/DebtCard"
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "topSuppliers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Debtor"
+            }
+          }
+        },
+        "required" : [ "bonus", "due", "ownGoods", "receipts", "supplierDebt", "today", "topSuppliers" ]
+      },
       "ReadyOrder" : {
         "type" : "object",
         "properties" : {
@@ -12783,6 +12900,28 @@
           }
         },
         "required" : [ "reason" ]
+      },
+      "ReceiptCounts" : {
+        "type" : "object",
+        "properties" : {
+          "toAccept" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "toAcceptMine" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "toPost" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "toPostMine" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "toAccept", "toAcceptMine", "toPost", "toPostMine" ]
       },
       "ReceiptDetail" : {
         "type" : "object",

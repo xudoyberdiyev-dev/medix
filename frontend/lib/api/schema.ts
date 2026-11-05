@@ -1012,6 +1012,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/home/purchaser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xarid bosh sahifasi: kutayotgan kirimlar, YB qarzi va to'lov kunlari, bonus, «O'z nomimdagi tovar» */
+        get: operations["purchaserHome"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marking/codes": {
         parameters: {
             query?: never;
@@ -3551,6 +3568,13 @@ export interface components {
             /** Format: int64 */
             supplierId: number;
         };
+        BonusInfo: {
+            balance: string;
+            /** Format: int32 */
+            pending: number;
+            /** Format: int32 */
+            pendingOverdue: number;
+        };
         BonusMove: {
             amount: string;
             /** Format: date-time */
@@ -4956,6 +4980,16 @@ export interface components {
             total: string;
             warehouse: string;
         };
+        OwnGoods: {
+            /** Format: int64 */
+            broughtQty: number;
+            /** Format: int32 */
+            expiring90: number;
+            /** Format: int64 */
+            leftQty: number;
+            /** Format: int32 */
+            products: number;
+        };
         Panel: {
             accounts: components["schemas"]["AccountTurnover"][];
             balances: components["schemas"]["KindTotals"];
@@ -5035,6 +5069,11 @@ export interface components {
             status: "DRAFT" | "POSTED" | "CANCELLED";
             /** Format: int64 */
             version: number;
+        };
+        PaymentDue: {
+            next3Days: string;
+            overdue: string;
+            today: string;
         };
         PaymentPostRequest: {
             /** @description Bo'sh — avtomatik (eng eski qarzdan); berilsa — qo'lda taqsimot, ortig'i avans */
@@ -5363,6 +5402,18 @@ export interface components {
             roleCode: string;
             roleName: string;
         };
+        PurchaserHomeView: {
+            bonus: components["schemas"]["BonusInfo"];
+            /** Format: int64 */
+            branchId?: number;
+            due: components["schemas"]["PaymentDue"];
+            ownGoods: components["schemas"]["OwnGoods"];
+            receipts: components["schemas"]["ReceiptCounts"];
+            supplierDebt: components["schemas"]["DebtCard"];
+            /** Format: date */
+            today: string;
+            topSuppliers: components["schemas"]["Debtor"][];
+        };
         ReadyOrder: {
             address?: string;
             /** Format: int64 */
@@ -5381,6 +5432,16 @@ export interface components {
         };
         ReceiptCancelRequest: {
             reason: string;
+        };
+        ReceiptCounts: {
+            /** Format: int32 */
+            toAccept: number;
+            /** Format: int32 */
+            toAcceptMine: number;
+            /** Format: int32 */
+            toPost: number;
+            /** Format: int32 */
+            toPostMine: number;
         };
         ReceiptDetail: {
             /** Format: date-time */
@@ -7730,6 +7791,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OperatorHomeView"];
+                };
+            };
+        };
+    };
+    purchaserHome: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaserHomeView"];
                 };
             };
         };
