@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, History, Info, LayoutList, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
+import { Check, CircleAlert, History, Info, LayoutList, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -585,6 +585,17 @@ function DocumentsRow({ doc }: { doc: OrderDetail }) {
             </div>
           ))}
         </dl>
+      ) : null}
+      {d.waybillNumber ? (
+        <Button
+          variant="tertiary"
+          size="sm"
+          icon={Printer}
+          className="mt-2"
+          onClick={() => window.open(`/print/waybill?id=${doc.id}`, "_blank", "noopener")}
+        >
+          Nakladnoyni chop etish
+        </Button>
       ) : null}
     </div>
   );
