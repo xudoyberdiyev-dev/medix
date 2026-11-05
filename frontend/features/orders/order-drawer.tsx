@@ -2,7 +2,7 @@
 
 import { Check, CircleAlert, History, Info, LayoutList, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -672,11 +672,12 @@ function RepeatDialog({ customerId, onClose, onPick }: { customerId: number; onC
   if (list === null && error === null) {
     void previousOrders(customerId).then(setList, (e: unknown) => setError(describeError(e).message ?? "Yuklab boʻlmadi."));
   }
-  async function apply() {
-    if (picked === null) return;
+  async function apply(id: number | null = picked) {
+    if (id === null || pending) return;
+    setPicked(id);
     setPending(true);
     try {
-      const d = await loadOrder(picked);
+      const d = await loadOrder(id);
       onPick(d.lines.map((l) => ({ productId: l.productId, productCode: l.productCode, productName: l.productName, qty: String(l.qty) })));
     } catch (e) {
       setError(describeError(e).message ?? "Yuklab boʻlmadi.");
@@ -684,6 +685,23 @@ function RepeatDialog({ customerId, onClose, onPick }: { customerId: number; onC
       setPending(false);
     }
   }
+  const applyRef = useRef(apply);
+  useEffect(() => {
+    applyRef.current = apply;
+  });
+  useEffect(() => {
+    // SPEC 5.3: Alt+1…5 — oxirgi 5 buyurtmadan birini darhol takrorlash.
+    function onKey(e: KeyboardEvent) {
+      if (!e.altKey || !list) return;
+      const n = Number(e.code.startsWith("Digit") ? e.code.slice(5) : e.key);
+      const o = Number.isInteger(n) && n >= 1 && n <= 5 ? list[n - 1] : undefined;
+      if (!o) return;
+      e.preventDefault();
+      void applyRef.current(o.id);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [list]);
   return (
     <Modal
       open
@@ -699,14 +717,18 @@ function RepeatDialog({ customerId, onClose, onPick }: { customerId: number; onC
         <p className="text-text-secondary">Bu mijozning oldingi buyurtmasi yoʻq.</p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {list.map((o) => (
+          {list.slice(0, 5).map((o, i) => (
             <li key={o.id}>
               <button
                 type="button"
                 onClick={() => setPicked(o.id)}
+                aria-keyshortcuts={`Alt+${i + 1}`}
                 className={`flex w-full items-center justify-between rounded-control border px-3 py-2 text-left ${picked === o.id ? "border-primary" : "border-border"}`}
               >
-                <span className="font-mono">{o.number}</span>
+                <span className="flex items-center gap-2">
+                  <kbd className="rounded-sm border border-border px-1.5 text-caption text-text-secondary">Alt+{i + 1}</kbd>
+                  <span className="font-mono">{o.number}</span>
+                </span>
                 <span className="text-text-secondary">
                   {day(o.orderDate)} · {formatQuantity(o.lines)} qator · {formatMoney(o.total)} soʻm
                 </span>
@@ -716,7 +738,7 @@ function RepeatDialog({ customerId, onClose, onPick }: { customerId: number; onC
         </ul>
       )}
       <p className="mt-3 text-caption text-text-secondary">
-        Qoldiq va narx yangidan hisoblanadi; yetmaydiganlar muammolar panelida koʻrinadi.
+        Alt+1…5 — tanlab darhol qoʻshish. Qoldiq va narx yangidan hisoblanadi; yetmaydiganlar muammolar panelida koʻrinadi.
       </p>
     </Modal>
   );
