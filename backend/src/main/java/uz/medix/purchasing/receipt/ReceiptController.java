@@ -38,9 +38,11 @@ class ReceiptController {
 
     private final Receipts receipts;
     private final CurrentActor currentActor;
+    private final ReceiptCatalog catalog;
 
-    ReceiptController(Receipts receipts, CurrentActor currentActor) {
+    ReceiptController(Receipts receipts, ReceiptCatalog catalog, CurrentActor currentActor) {
         this.receipts = receipts;
+        this.catalog = catalog;
         this.currentActor = currentActor;
     }
 
@@ -72,6 +74,21 @@ class ReceiptController {
             @RequestParam(defaultValue = "50") int size,
             Authentication auth) {
         return receipts.list(actor(), branchId, status, supplierId, Math.max(page, 0), Math.clamp(size, 1, 200), pricesVisible(auth));
+    }
+
+    @GetMapping("/catalog")
+    @PreAuthorize("hasAuthority('receipt.create')")
+    @Operation(summary = "«Mahsulot qo'shish» katalogi (kirim)",
+            description = "Ombordagi qoldiq va shu YB dan oxirgi kirim (narx — faqat narx ko'rinadiganlarga). supplierOnly — oldin shu YB dan kelganlar.")
+    ReceiptCatalog.ReceiptCatalogPage catalog(
+            @RequestParam long warehouseId,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "false") boolean supplierOnly,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            Authentication auth) {
+        return catalog.find(actor(), warehouseId, supplierId, q, supplierOnly, Math.max(page, 0), Math.clamp(size, 1, 200), pricesVisible(auth));
     }
 
     @GetMapping("/{id}")
