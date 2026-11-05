@@ -162,6 +162,15 @@ class CashIT {
                 .andExpect(jsonPath("$.status").value("REJECTED"))
                 .andExpect(jsonPath("$.cancelReason").value("Shartnoma yoʻq"));
         send(post("/api/cash-ops/" + big1 + "/approve"), manager, "").andExpect(jsonPath("$.code").value("cash.notPending"));
+        // Bildirishnomalar: tasdiq kutmoqda — cash.approve egalariga (Filial rahbari), rad etildi — muallifga (kassir) sabab bilan
+        assertThat(jdbc.sql("""
+                SELECT count(*) FROM notification n JOIN employee e ON e.id = n.employee_id JOIN role r ON r.id = e.role_id
+                WHERE n.dedup_key = :d AND r.code = 'BRANCH_MANAGER'""").param("d", "cash.approval:" + big1).query(Integer.class).single())
+                .isPositive();
+        assertThat(jdbc.sql("""
+                SELECT n.body FROM notification n JOIN cash_op o ON o.created_by = n.employee_id
+                WHERE n.dedup_key = :d AND o.id = :id""").param("d", "cash.rejected:" + big1).param("id", big1).query(String.class).single())
+                .isEqualTo("Shartnoma yoʻq");
 
         long big2 = id(send(post("/api/cash-ops"), cashier, op(b, k, "OUT", "Ijara", "2500000", null)).andReturn());
         send(post("/api/cash-ops/" + big2 + "/approve"), manager, "")

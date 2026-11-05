@@ -19,6 +19,7 @@ import uz.medix.finance.cash.CashModels.CashOpRequest;
 import uz.medix.finance.cash.CashModels.Direction;
 import uz.medix.finance.cash.CashModels.OpSource;
 import uz.medix.finance.cash.CashModels.OpStatus;
+import uz.medix.notification.Notifications;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
@@ -47,8 +48,11 @@ class CashOps {
     private final DocumentSequenceService numbers;
     private final AuditLog audit;
     private final Clock clock;
+    private final Notifications notifications;
 
-    CashOps(JdbcClient jdbc, MoneyLedger money, Accounts accounts, CashierGuard cashiers, DocumentSequenceService numbers, AuditLog audit, Clock clock) {
+    CashOps(JdbcClient jdbc, MoneyLedger money, Accounts accounts, CashierGuard cashiers, DocumentSequenceService numbers, AuditLog audit, Clock clock,
+            Notifications notifications) {
+        this.notifications = notifications;
         this.jdbc = jdbc;
         this.money = money;
         this.accounts = accounts;
@@ -109,6 +113,11 @@ class CashOps {
                 needsApproval ? OpStatus.PENDING : OpStatus.POSTED);
         if (!needsApproval) {
             post(id);
+        } else {
+            String number = jdbc.sql("SELECT number FROM cash_op WHERE id = :id").param("id", id).query(String.class).single();
+            notifications.notify("cash.approve", r.branchId(), List.of(), new Notifications.Message("cash.approval",
+                    "Chiqim tasdigʻi kutmoqda: " + number, amount.format() + " soʻm · " + acc.name(), "/cash",
+                    "cash.approval:" + id));
         }
         return id;
     }
@@ -193,6 +202,8 @@ class CashOps {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("cash.op.approve", "cash_op", id).change(Map.of("status", "PENDING"), Map.of("status", "POSTED")));
+        notifyAuthor(h, actor, new Notifications.Message("cash.approved", "Chiqim tasdiqlandi: " + h.number(), h.amount().format() + " soʻm",
+                "/cash", "cash.approved:" + id));
     }
 
     @Transactional
@@ -210,6 +221,16 @@ class CashOps {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("cash.op.reject", "cash_op", id).change(Map.of("status", "PENDING"), Map.of("status", "REJECTED")).withReason(why));
+        notifyAuthor(h, actor, new Notifications.Message("cash.rejected", "Chiqim rad etildi: " + h.number(),
+                why.length() <= 500 ? why : why.substring(0, 499) + "…", "/cash", "cash.rejected:" + id));
+    }
+
+    /** Chiqim muallifiga (o'zi qaror qilmagan bo'lsa). */
+    private void notifyAuthor(Head h, Actor actor, Notifications.Message m) {
+        long author = jdbc.sql("SELECT created_by FROM cash_op WHERE id = :id").param("id", h.id()).query(Long.class).single();
+        if (author != actor.employeeId()) {
+            notifications.notify("-", h.branchId(), List.of(author), m);
+        }
     }
 
     // ===== Bekor qilish =====
