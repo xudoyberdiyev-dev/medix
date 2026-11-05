@@ -2619,6 +2619,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Savdo hisoboti: sof savdo (sotuv − qaytarish), mijoz / operator / filial / kun bo'yicha; tannarx va yalpi foyda — prices.cost */
+        get: operations["salesReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/sales/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Savdo hisoboti .xlsx */
+        get: operations["salesReportExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/roles": {
         parameters: {
             query?: never;
@@ -5752,6 +5786,33 @@ export interface components {
             product: string;
             /** Format: int32 */
             qty: number;
+        };
+        SalesReportView: {
+            /** Format: int64 */
+            branchId?: number;
+            costVisible: boolean;
+            /** Format: date */
+            from: string;
+            /** @enum {string} */
+            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+            mineOnly: boolean;
+            rows: components["schemas"]["SalesRow"][];
+            /** Format: date */
+            to: string;
+            total: components["schemas"]["SalesRow"];
+            truncated: boolean;
+        };
+        SalesRow: {
+            cost?: string;
+            key: string;
+            name: string;
+            net: string;
+            /** Format: int32 */
+            orders: number;
+            /** @description Yalpi foyda: sof savdo QQSsiz − tannarx */
+            profit?: string;
+            returns: string;
+            sales: string;
         };
         ScanRequest: {
             code: string;
@@ -10219,6 +10280,54 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReceiptDetail"];
                 };
+            };
+        };
+    };
+    salesReport: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesReportView"];
+                };
+            };
+        };
+    };
+    salesReportExport: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
