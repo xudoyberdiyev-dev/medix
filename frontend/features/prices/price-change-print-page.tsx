@@ -62,6 +62,11 @@ export function PriceChangePrintPage() {
           <div className="text-text-secondary">
             Kuchga kiradi: {formatIsoDate(d.effectiveFrom)} · Filial: {branch?.name ?? "—"}
           </div>
+          {d.receiptNumber ? (
+            <div className="text-text-secondary">
+              Kirim boʻyicha: <span className="font-mono">{d.receiptNumber}</span> — faqat shu kirim partiyalariga
+            </div>
+          ) : null}
         </div>
         <div className="text-right text-caption text-text-secondary">
           <div>Holat: {STATUS_LABELS[d.status]}</div>
@@ -75,6 +80,7 @@ export function PriceChangePrintPage() {
           <tr className="border-b border-text-primary text-caption text-text-secondary">
             <th className="py-1 pr-2 font-medium">№</th>
             <th className="py-1 pr-2 font-medium">Mahsulot</th>
+            {d.receiptNumber ? <th className="py-1 pr-2 font-medium">Partiya</th> : null}
             <th className="py-1 pr-2 font-medium">Narx turi</th>
             <th className="py-1 pr-2 text-right font-medium">Eski narx</th>
             <th className="py-1 pr-2 text-right font-medium">Yangi narx</th>
@@ -88,6 +94,12 @@ export function PriceChangePrintPage() {
               <td className="py-1.5 pr-2">
                 <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
               </td>
+              {d.receiptNumber ? (
+                <td className="py-1.5 pr-2 font-mono whitespace-nowrap">
+                  {l.batchNumber ?? "—"}
+                  {l.expiryDate ? ` · ${formatIsoDate(l.expiryDate)}` : ""}
+                </td>
+              ) : null}
               <td className="py-1.5 pr-2">{l.priceType}</td>
               <td className="py-1.5 pr-2 text-right whitespace-nowrap tabular-nums">{l.oldPrice ? formatMoney(l.oldPrice) : "—"}</td>
               <td className="py-1.5 pr-2 text-right whitespace-nowrap tabular-nums">{formatMoney(l.newPrice)}</td>

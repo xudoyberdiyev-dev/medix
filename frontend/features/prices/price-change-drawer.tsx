@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
+import { Radio } from "@/components/ui/selection-controls";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
@@ -16,11 +17,15 @@ import { useMe } from "@/features/auth/session";
 import { formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent, usePriceTypes } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { describeError } from "@/features/setup/form-error";
-import { formatMoney } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
 import {
   PRICE_BELOW,
+  batchLines,
   computeMarkup,
+  fetchReceiptBatches,
+  lineKey,
   percentChange,
+  searchPostedReceipts,
   searchProducts,
   useApprove,
   useCancel,
@@ -67,6 +72,9 @@ function toDraftLines(d: PriceChangeDetail): DraftLine[] {
     priceTypeId: l.priceTypeId,
     oldPrice: l.oldPrice ?? null,
     newPrice: l.newPrice,
+    batchId: l.batchId ?? null,
+    batchNumber: l.batchNumber ?? null,
+    expiryDate: l.expiryDate ?? null,
   }));
 }
 
@@ -106,6 +114,13 @@ function Editor({
     price: "",
   });
   const [local, setLocal] = useState<string | null>(null);
+  // «Kirim boʻyicha» rejimi (SPEC 6): narx faqat tanlangan oʻtkazilgan kirim partiyalariga.
+  const [mode, setMode] = useState<"PRODUCT" | "RECEIPT">(doc?.receiptId ? "RECEIPT" : "PRODUCT");
+  const [receipt, setReceipt] = useState<string | null>(doc?.receiptId ? String(doc.receiptId) : null);
+  const [receiptLabel, setReceiptLabel] = useState<string | null>(doc?.receiptNumber ?? null);
+  const [batchType, setBatchType] = useState<string | null>(null);
+  const [loadingBatches, setLoadingBatches] = useState(false);
+  const receiptOptions = useRef(new Map<string, string>());
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const [dialog, setDialog] = useState<"markup" | "approve" | "reject" | "cancel" | null>(null);
   const isDirector = can(me.data, PRICE_BELOW);
@@ -121,10 +136,17 @@ function Editor({
     for (const l of lines) {
       const p = parseMoneyInput(l.newPrice);
       if (!p || Number(p) <= 0) return (setLocal(`«${l.productName}» uchun narx notoʻgʻri. Musbat summa kiriting.`), null);
-      out.push({ productId: l.productId, priceTypeId: l.priceTypeId, newPrice: p });
+      out.push({ productId: l.productId, priceTypeId: l.priceTypeId, newPrice: p, batchId: l.batchId ?? undefined });
     }
+    if (mode === "RECEIPT" && !receipt) return (setLocal("Kirimni tanlang — narx faqat uning partiyalariga qoʻyiladi."), null);
     setLocal(null);
-    return { branchId: doc?.branchId ?? branchId, effectiveFrom: iso, note: note.trim() || undefined, lines: out };
+    return {
+      branchId: doc?.branchId ?? branchId,
+      effectiveFrom: iso,
+      note: note.trim() || undefined,
+      lines: out,
+      receiptId: mode === "RECEIPT" && receipt ? Number(receipt) : undefined,
+    };
   }
 
   async function saveDraft(then?: (id: number) => void) {
@@ -147,7 +169,7 @@ function Editor({
     if (!adding.product || !adding.type || !adding.productLabel) return setLocal("Mahsulot va narx turini tanlang.");
     const productId = Number(adding.product);
     const priceTypeId = Number(adding.type);
-    if (lines.some((l) => l.productId === productId && l.priceTypeId === priceTypeId))
+    if (lines.some((l) => l.productId === productId && l.priceTypeId === priceTypeId && !l.batchId))
       return setLocal("Bu mahsulot va narx turi allaqachon qoʻshilgan.");
     setLines((ls) => [
       ...ls,
@@ -163,6 +185,34 @@ function Editor({
     setAdding({ product: null, type: adding.type, price: "" });
     setLocal(null);
   }
+
+  async function addBatches() {
+    if (!receipt || !batchType) return setLocal("Kirim va narx turini tanlang.");
+    setLoadingBatches(true);
+    try {
+      const rb = await fetchReceiptBatches(Number(receipt));
+      const have = new Set(lines.map(lineKey));
+      const fresh = batchLines(rb, Number(batchType)).filter((l) => !have.has(lineKey(l)));
+      if (fresh.length === 0) setLocal("Bu kirim partiyalari shu narx turi bilan allaqachon qoʻshilgan.");
+      else {
+        setLines((ls) => [...ls, ...fresh]);
+        setLocal(null);
+      }
+    } catch (e) {
+      setLocal(describeError(e).message ?? "Partiyalarni yuklab boʻlmadi. Qayta urinib koʻring.");
+    } finally {
+      setLoadingBatches(false);
+    }
+  }
+
+  function switchMode(next: "PRODUCT" | "RECEIPT") {
+    if (next === mode) return;
+    if (lines.length > 0) return setLocal("Rejimni almashtirish uchun avval qatorlarni olib tashlang.");
+    setMode(next);
+    setLocal(null);
+  }
+
+  const batchMode = mode === "RECEIPT";
 
   return (
     <Drawer
@@ -241,6 +291,59 @@ function Editor({
           <TextField label="Izoh" value={note} onChange={setNote} disabled={!editable} />
         </div>
         {editable ? (
+          <div role="radiogroup" aria-label="Narx oʻrnatish rejimi" className="flex gap-6">
+            <Radio
+              name="pc-mode"
+              value="PRODUCT"
+              label="Mahsulot boʻyicha"
+              description="Mahsulotning barcha partiyalariga"
+              checked={!batchMode}
+              onChange={() => switchMode("PRODUCT")}
+            />
+            <Radio
+              name="pc-mode"
+              value="RECEIPT"
+              label="Kirim boʻyicha"
+              description="Faqat tanlangan oʻtkazilgan kirim partiyalariga"
+              checked={batchMode}
+              onChange={() => switchMode("RECEIPT")}
+            />
+          </div>
+        ) : batchMode ? (
+          <Alert tone="info" title={`Kirim boʻyicha · ${receiptLabel ?? ""}`}>
+            Narxlar faqat shu kirim partiyalariga qoʻyilgan. Partiya narxi mahsulot narxidan ustun turadi.
+          </Alert>
+        ) : null}
+        {editable && batchMode ? (
+          <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-3 rounded-card border border-border p-3">
+            <Select
+              label="Kirim"
+              value={receipt}
+              loadOptions={async (q) => {
+                const found = await searchPostedReceipts(doc?.branchId ?? branchId, q);
+                found.forEach((o) => receiptOptions.current.set(o.value, o.label));
+                return found;
+              }}
+              onChange={(v) => {
+                if (lines.length > 0 && v !== receipt) return setLocal("Kirimni almashtirish uchun avval qatorlarni olib tashlang.");
+                setReceipt(v);
+                setReceiptLabel(v ? (receiptOptions.current.get(v) ?? null) : null);
+              }}
+              placeholder="Raqam yoki taʼminotchi boʻyicha qidiring"
+              options={receipt && receiptLabel ? [{ value: receipt, label: receiptLabel }] : []}
+            />
+            <Select
+              label="Narx turi"
+              value={batchType}
+              onChange={setBatchType}
+              options={(types.data ?? []).map((t) => ({ value: String(t.id), label: t.name }))}
+            />
+            <Button variant="secondary" loading={loadingBatches} onClick={addBatches}>
+              Partiyalarni qoʻshish
+            </Button>
+          </div>
+        ) : null}
+        {editable && !batchMode ? (
           <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-3 rounded-card border border-border p-3">
             <Select
               label="Mahsulot"
@@ -293,6 +396,7 @@ function Editor({
             <thead className="bg-table-header text-left text-text-secondary">
               <tr>
                 <th className="px-3 py-2 font-medium">Mahsulot</th>
+                {batchMode ? <th className="px-3 py-2 font-medium">Partiya</th> : null}
                 <th className="px-3 py-2 font-medium">Narx turi</th>
                 <th className="px-3 py-2 text-right font-medium">Eski narx</th>
                 <th className="px-3 py-2 text-right font-medium">Yangi narx</th>
@@ -303,18 +407,30 @@ function Editor({
             <tbody>
               {lines.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-text-secondary">
-                    Qator yoʻq. Yuqorida mahsulot tanlab qoʻshing yoki «Amaldagi narxlar» jadvalidan belgilang.
+                  <td colSpan={7} className="px-3 py-6 text-center text-text-secondary">
+                    {batchMode
+                      ? "Qator yoʻq. Kirim va narx turini tanlab, «Partiyalarni qoʻshish» ni bosing."
+                      : "Qator yoʻq. Yuqorida mahsulot tanlab qoʻshing yoki «Amaldagi narxlar» jadvalidan belgilang."}
                   </td>
                 </tr>
               ) : (
                 lines.map((l, i) => {
                   const pct = percentChange(l.oldPrice, parseMoneyInput(l.newPrice) ?? "");
                   return (
-                    <tr key={`${l.productId}-${l.priceTypeId}`} className="border-t border-border">
+                    <tr key={lineKey(l)} className="border-t border-border">
                       <td className="px-3 py-2">
                         <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
                       </td>
+                      {batchMode ? (
+                        <td className="px-3 py-2">
+                          <span className="font-mono">{l.batchNumber ?? "—"}</span>
+                          {l.expiryDate ? (
+                            <span className="block text-caption text-text-secondary">
+                              {formatDate(new Date(`${l.expiryDate}T00:00:00+05:00`))} gacha
+                            </span>
+                          ) : null}
+                        </td>
+                      ) : null}
                       <td className="px-3 py-2">{typeName(l.priceTypeId)}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{l.oldPrice ? formatMoney(l.oldPrice) : "—"}</td>
                       <td className="px-3 py-1 text-right">

@@ -2214,6 +2214,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/price-changes/receipt-batches/{receiptId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * «Kirim bo'yicha»: o'tkazilgan kirim partiyalari
+         * @description Tannarx — faqat special.cost bilan.
+         */
+        get: operations["receiptBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/price-changes/{id}": {
         parameters: {
             query?: never;
@@ -4498,10 +4518,15 @@ export interface components {
             validUntil?: string;
         };
         Line: {
+            /** Format: int64 */
+            batchId?: number;
+            batchNumber?: string;
             /** @description 20% dan ko'p o'zgarish */
             bigChange: boolean;
             /** @description O'zgarish, % */
             changePercent?: string;
+            /** Format: date */
+            expiryDate?: string;
             /** Format: int64 */
             id: number;
             newPrice: string;
@@ -4515,6 +4540,11 @@ export interface components {
             productName: string;
         };
         LineRequest: {
+            /**
+             * Format: int64
+             * @description «Kirim bo'yicha» rejimida — kirim partiyasi
+             */
+            batchId?: number;
             newPrice: string;
             /** Format: int64 */
             priceTypeId: number;
@@ -5500,6 +5530,9 @@ export interface components {
             lines: components["schemas"]["Line"][];
             note?: string;
             number: string;
+            /** Format: int64 */
+            receiptId?: number;
+            receiptNumber?: string;
             /** @enum {string} */
             status: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED";
             /** Format: date-time */
@@ -5521,6 +5554,11 @@ export interface components {
             effectiveFrom: string;
             lines: components["schemas"]["LineRequest"][];
             note?: string;
+            /**
+             * Format: int64
+             * @description To'ldirilsa — «Kirim bo'yicha» rejimi: narx faqat shu o'tkazilgan kirim partiyalariga
+             */
+            receiptId?: number;
         };
         PriceChangeSummary: {
             /** Format: int64 */
@@ -5537,6 +5575,8 @@ export interface components {
             /** Format: int32 */
             lines: number;
             number: string;
+            /** @description «Kirim bo'yicha» — kirim raqami */
+            receiptNumber?: string;
             /** @enum {string} */
             status: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED";
         };
@@ -5691,6 +5731,44 @@ export interface components {
         };
         ReasonRequest: {
             reason: string;
+        };
+        ReceiptBatch: {
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            /** @description Narx turi id → partiya narxi */
+            batchPrices: {
+                [key: string]: string;
+            };
+            bonus: boolean;
+            /** @description Tannarx — faqat special.cost bilan */
+            cost?: string;
+            /** Format: date */
+            expiryDate: string;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** @description Narx turi id → mahsulot narxi */
+            productPrices: {
+                [key: string]: string;
+            };
+            /**
+             * Format: int32
+             * @description Kirimdagi miqdor
+             */
+            qty: number;
+        };
+        ReceiptBatches: {
+            /** Format: int64 */
+            branchId: number;
+            items: components["schemas"]["ReceiptBatch"][];
+            /** Format: date */
+            receiptDate: string;
+            /** Format: int64 */
+            receiptId: number;
+            receiptNumber: string;
+            supplier: string;
         };
         ReceiptCancelRequest: {
             reason: string;
@@ -9925,6 +10003,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MarkupLine"][];
+                };
+            };
+        };
+    };
+    receiptBatches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receiptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptBatches"];
                 };
             };
         };

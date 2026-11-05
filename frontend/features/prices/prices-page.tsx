@@ -242,6 +242,11 @@ function DocumentsTab({ branchId, onOpen }: { branchId: number | null; onOpen: (
   const columns: TableColumn<PriceChangeSummary>[] = [
     { key: "number", title: "Raqam", mono: true },
     { key: "effectiveFrom", title: "Kuchga kirish", render: (d) => formatDate(new Date(`${d.effectiveFrom}T00:00:00+05:00`)) },
+    {
+      key: "receiptNumber",
+      title: "Rejim",
+      render: (d) => (d.receiptNumber ? `Kirim boʻyicha · ${d.receiptNumber}` : "Mahsulot boʻyicha"),
+    },
     { key: "lines", title: "Qatorlar", align: "right" },
     { key: "createdBy", title: "Kiritdi" },
     { key: "status", title: "Holat", render: (d) => <StatusBadge status={d.status} /> },

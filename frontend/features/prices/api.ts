@@ -11,6 +11,8 @@ export type PriceChangeSummary = components["schemas"]["PriceChangeSummary"];
 export type PriceChangeStatus = PriceChangeDetail["status"];
 export type MarkupLine = components["schemas"]["MarkupLine"];
 export type MarkupBase = components["schemas"]["MarkupRequest"]["base"];
+export type ReceiptBatches = components["schemas"]["ReceiptBatches"];
+export type ReceiptBatch = components["schemas"]["ReceiptBatch"];
 
 /** Narx oʻrnatish va tannarxdan past narx tasdigʻi ruxsatlari (1.3). */
 export const PRICE_CREATE = "prices.create";
@@ -62,13 +64,23 @@ export interface DraftLine {
   priceTypeId: number;
   oldPrice?: string | null;
   newPrice: string;
+  /** «Kirim boʻyicha» rejimida — kirim partiyasi. */
+  batchId?: number | null;
+  batchNumber?: string | null;
+  expiryDate?: string | null;
 }
+
+/** Qator kaliti: mahsulot × narx turi × partiya. */
+export const lineKey = (l: { productId: number; priceTypeId: number; batchId?: number | null }) =>
+  `${l.productId}:${l.priceTypeId}:${l.batchId ?? ""}`;
 
 export interface DraftBody {
   branchId: number;
   effectiveFrom: string;
   note?: string;
-  lines: { productId: number; priceTypeId: number; newPrice: string }[];
+  lines: { productId: number; priceTypeId: number; newPrice: string; batchId?: number }[];
+  /** Toʻldirilsa — «Kirim boʻyicha» rejimi. */
+  receiptId?: number;
 }
 
 function usePcMutation<T>(fn: (v: T) => Promise<PriceChangeDetail>) {
@@ -132,4 +144,38 @@ export function percentChange(oldPrice: string | null | undefined, newPrice: str
   const o = Number(oldPrice);
   if (o === 0) return null;
   return Math.round(((Number(newPrice) - o) / o) * 10000) / 100;
+}
+
+/** «Kirim boʻyicha»: filialning oʻtkazilgan kirimlari (oxirgi 50 ta), raqam yoki taʼminotchi boʻyicha. */
+export async function searchPostedReceipts(branchId: number, q: string) {
+  const page = await unwrap(api.GET("/api/receipts", { params: { query: { branchId, status: "POSTED", page: 0, size: 50 } } }));
+  const needle = q.trim().toLowerCase();
+  return page.items
+    .filter((r) => !needle || r.number.toLowerCase().includes(needle) || r.supplier.toLowerCase().includes(needle))
+    .map((r) => ({ value: String(r.id), label: r.number, sub: r.supplier, meta: r.receiptDate }));
+}
+
+export async function fetchReceiptBatches(receiptId: number): Promise<ReceiptBatches> {
+  return unwrap(api.GET("/api/price-changes/receipt-batches/{receiptId}", { params: { path: { receiptId } } }));
+}
+
+/**
+ * Kirim partiyalaridan NO qatorlari: tanlangan narx turi uchun har partiyaga bitta qator; yangi narx — amaldagi partiya narxi,
+ * boʻlmasa mahsulot narxi (foydalanuvchi oʻzgartiradi). Eski narx — xuddi shu.
+ */
+export function batchLines(rb: ReceiptBatches, priceTypeId: number): DraftLine[] {
+  return rb.items.map((b) => {
+    const current = b.batchPrices[String(priceTypeId)] ?? b.productPrices[String(priceTypeId)] ?? null;
+    return {
+      productId: b.productId,
+      productCode: b.productCode,
+      productName: b.productName,
+      priceTypeId,
+      oldPrice: current,
+      newPrice: current ?? "",
+      batchId: b.batchId,
+      batchNumber: b.batchNumber,
+      expiryDate: b.expiryDate,
+    };
+  });
 }

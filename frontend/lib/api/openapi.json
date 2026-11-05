@@ -5044,6 +5044,35 @@
         "tags" : [ "pricing" ]
       }
     },
+    "/api/price-changes/receipt-batches/{receiptId}" : {
+      "get" : {
+        "description" : "Tannarx — faqat special.cost bilan.",
+        "operationId" : "receiptBatches",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "receiptId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReceiptBatches"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Kirim bo'yicha»: o'tkazilgan kirim partiyalari",
+        "tags" : [ "pricing" ]
+      }
+    },
     "/api/price-changes/{id}" : {
       "get" : {
         "operationId" : "get_3",
@@ -10516,6 +10545,13 @@
       "Line" : {
         "type" : "object",
         "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
           "bigChange" : {
             "type" : "boolean",
             "description" : "20% dan ko'p o'zgarish"
@@ -10523,6 +10559,10 @@
           "changePercent" : {
             "type" : "string",
             "description" : "O'zgarish, %"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
           },
           "id" : {
             "type" : "integer",
@@ -10557,6 +10597,11 @@
       "LineRequest" : {
         "type" : "object",
         "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "«Kirim bo'yicha» rejimida — kirim partiyasi"
+          },
           "newPrice" : {
             "type" : "string",
             "minLength" : 1,
@@ -12969,6 +13014,13 @@
           "number" : {
             "type" : "string"
           },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          },
           "status" : {
             "type" : "string",
             "enum" : [ "DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED" ]
@@ -13027,6 +13079,11 @@
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "To'ldirilsa — «Kirim bo'yicha» rejimi: narx faqat shu o'tkazilgan kirim partiyalariga"
           }
         },
         "required" : [ "branchId", "effectiveFrom", "lines" ]
@@ -13063,6 +13120,10 @@
           },
           "number" : {
             "type" : "string"
+          },
+          "receiptNumber" : {
+            "type" : "string",
+            "description" : "«Kirim bo'yicha» — kirim raqami"
           },
           "status" : {
             "type" : "string",
@@ -13499,6 +13560,89 @@
           }
         },
         "required" : [ "reason" ]
+      },
+      "ReceiptBatch" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "batchPrices" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Narx turi id → partiya narxi"
+          },
+          "bonus" : {
+            "type" : "boolean"
+          },
+          "cost" : {
+            "type" : "string",
+            "description" : "Tannarx — faqat special.cost bilan"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "productPrices" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Narx turi id → mahsulot narxi"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Kirimdagi miqdor"
+          }
+        },
+        "required" : [ "batchId", "batchNumber", "batchPrices", "bonus", "expiryDate", "productCode", "productId", "productName", "productPrices", "qty" ]
+      },
+      "ReceiptBatches" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReceiptBatch"
+            }
+          },
+          "receiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          },
+          "supplier" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "branchId", "items", "receiptDate", "receiptId", "receiptNumber", "supplier" ]
       },
       "ReceiptCancelRequest" : {
         "type" : "object",
