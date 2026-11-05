@@ -957,13 +957,19 @@ class OrderIT {
                         .file(new org.springframework.mock.web.MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[] {1, 2, 3}))
                         .with(csrf()).cookie(driverSession))
                 .andExpect(status().isCreated());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/trips/" + trip + "/stops/" + stop + "/photos")
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "imzo.png", "image/png", new byte[] {4, 5}))
+                        .param("signature", "true")
+                        .with(csrf()).cookie(driverSession))
+                .andExpect(status().isCreated());
         send(post("/api/trips/" + trip + "/stops/" + stop + "/deliver"), driverSession, "{\"cash\":\"5000\"}")
                 .andExpect(jsonPath("$.code").value("trip.cashInvalid"));
         send(post("/api/trips/" + trip + "/finish"), driverSession, "").andExpect(jsonPath("$.code").value("trip.stopsOpen"));
         send(post("/api/trips/" + trip + "/stops/" + stop + "/deliver"), driverSession, "{\"cash\":\"2000\"}")
                 .andExpect(jsonPath("$.stops[0].outcome").value("DELIVERED"))
                 .andExpect(jsonPath("$.stops[0].cashCollected").value("2000.00"))
-                .andExpect(jsonPath("$.stops[0].photos").value(1));
+                .andExpect(jsonPath("$.stops[0].photos").value(1))
+                .andExpect(jsonPath("$.stops[0].signed").value(true));
         assertThat(statusOf(o1)).isEqualTo("DELIVERED");
         send(post("/api/trips/" + trip + "/finish"), driverSession, "").andExpect(jsonPath("$.status").value("RETURN_WAIT"));
 

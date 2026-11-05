@@ -15848,6 +15848,10 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "signed" : {
+            "type" : "boolean",
+            "description" : "Mijoz imzosi olinganmi (ixtiyoriy)"
+          },
           "total" : {
             "type" : "string"
           },
@@ -15855,7 +15859,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "customer", "id", "orderId", "orderNumber", "paymentType", "photos", "places", "seq", "total" ]
+        "required" : [ "customer", "id", "orderId", "orderNumber", "paymentType", "photos", "places", "seq", "signed", "total" ]
       },
       "TripSummary" : {
         "type" : "object",

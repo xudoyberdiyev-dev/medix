@@ -650,6 +650,7 @@ class Trips {
                 SELECT s.id, s.seq, s.order_id, o.number, o.waybill_number, c.name AS customer, o.address, c.phone, o.payment_type, s.places, o.total,
                        s.loaded_at, s.outcome, s.outcome_reason, s.cash_collected,
                        (SELECT count(*) FROM delivery_photo ph WHERE ph.stop_id = s.id AND ph.kind = 'PHOTO')::int AS photos,
+                       EXISTS (SELECT 1 FROM delivery_photo ph WHERE ph.stop_id = s.id AND ph.kind = 'SIGNATURE') AS signed,
                        q.number AS return_number, q.total AS return_total
                 FROM trip_stop s LEFT JOIN sales_return q ON q.order_id = s.order_id AND q.trip_id = s.trip_id JOIN sales_order o ON o.id = s.order_id JOIN counterparty c ON c.id = o.customer_id
                 WHERE s.trip_id = :id AND (s.active OR :cancelled) ORDER BY s.seq""")
@@ -661,7 +662,7 @@ class Trips {
                         rs.getTimestamp("loaded_at") == null ? null : rs.getTimestamp("loaded_at").toInstant(), rs.getString("outcome"),
                         rs.getString("outcome_reason"), rs.getBigDecimal("cash_collected") == null ? null : money(rs.getBigDecimal("cash_collected")),
                         rs.getInt("photos"), rs.getString("return_number"),
-                        rs.getBigDecimal("return_total") == null ? null : money(rs.getBigDecimal("return_total"))))
+                        rs.getBigDecimal("return_total") == null ? null : money(rs.getBigDecimal("return_total")), rs.getBoolean("signed")))
                 .list());
         return new TripDetail(head.id(), head.number(), head.branchId(), head.tripDate(), head.status(), head.vehicleId(), head.vehicle(),
                 head.capacityBoxes(), head.driverId(), head.driver(), head.note(), head.places(), head.total(), head.createdBy(), head.createdAt(),

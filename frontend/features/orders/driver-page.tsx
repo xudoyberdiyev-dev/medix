@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, CircleCheck, CircleX, Flag, PackageCheck, PackageMinus, Truck } from "lucide-react";
+import { Camera, CircleCheck, CircleX, Flag, PackageCheck, PackageMinus, Signature, Truck } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { partialTotals } from "./partial";
+import { SignatureModal } from "./signature-modal";
 import { TRIP_STATUS } from "./shipments-page";
 
 export type TripDetail = components["schemas"]["TripDetail"];
@@ -215,6 +216,7 @@ function TransitActions({ t }: { t: TripDetail }) {
   const [undeliver, setUndeliver] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [partial, setPartial] = useState<TripStop | null>(null);
+  const [signing, setSigning] = useState<TripStop | null>(null);
   const open = t.stops.filter((s) => !s.outcome);
 
   async function run(key: string, fn: () => Promise<TripDetail | void>) {
@@ -234,15 +236,15 @@ function TransitActions({ t }: { t: TripDetail }) {
     }
   }
 
-  const photo = (stopId: number, file: File) =>
-    run(`photo-${stopId}`, async () => {
+  const photo = (stopId: number, file: Blob, signature = false) =>
+    run(signature ? `sign-${stopId}` : `photo-${stopId}`, async () => {
       await unwrap(
         api.POST("/api/trips/{id}/stops/{stopId}/photos", {
-          params: { path: { id: t.id, stopId } },
+          params: { path: { id: t.id, stopId }, query: { signature } },
           body: { file: file as unknown as string },
           bodySerializer: () => {
             const fd = new FormData();
-            fd.append("file", file);
+            fd.append("file", file, signature ? "imzo.png" : file instanceof File ? file.name : "rasm");
             return fd;
           },
         }),
@@ -313,6 +315,9 @@ function TransitActions({ t }: { t: TripDetail }) {
                 }}
               />
             </label>
+            <Button variant="tertiary" icon={Signature} onClick={() => setSigning(s)}>
+              {s.signed ? "Imzo olindi" : "Imzo olish"}
+            </Button>
             {s.paymentType === "CASH" ? (
               <div className="w-40">
                 <TextField
@@ -349,6 +354,24 @@ function TransitActions({ t }: { t: TripDetail }) {
           Reysni yakunlash
         </Button>
       </div>
+      {signing ? (
+        <SignatureModal
+          key={signing.id}
+          open
+          customer={signing.customer}
+          saving={pending === `sign-${signing.id}`}
+          onClose={() => setSigning(null)}
+          onSave={(png) => {
+            if (!signing) return;
+            void photo(signing.id, png, true).then((ok) => {
+              if (ok) {
+                setSigning(null);
+                toast({ tone: "success", title: "Imzo saqlandi" });
+              }
+            });
+          }}
+        />
+      ) : null}
       <Modal
         open={undeliver !== null}
         onClose={() => setUndeliver(null)}

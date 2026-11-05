@@ -37,7 +37,8 @@ final class TripModels {
             @Schema(nullable = true) Instant loadedAt, @Schema(nullable = true, description = "DELIVERED, PARTIAL yoki UNDELIVERED") String outcome,
             @Schema(nullable = true) String outcomeReason, @Schema(nullable = true) String cashCollected, int photos,
             @Schema(nullable = true, description = "Qisman yetkazishda QM raqami") String returnNumber,
-            @Schema(nullable = true, description = "QM summasi (QQS bilan)") String returnTotal) {}
+            @Schema(nullable = true, description = "QM summasi (QQS bilan)") String returnTotal,
+            @Schema(description = "Mijoz imzosi olinganmi (ixtiyoriy)") boolean signed) {}
 
     record TripSummary(long id, String number, long branchId, LocalDate tripDate, TripStatus status, String vehicle,
             @Schema(nullable = true) Integer capacityBoxes, String driver, int orders, int places, String total, Instant createdAt) {}

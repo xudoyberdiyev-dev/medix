@@ -6667,6 +6667,8 @@ export interface components {
             returnTotal?: string;
             /** Format: int32 */
             seq: number;
+            /** @description Mijoz imzosi olinganmi (ixtiyoriy) */
+            signed: boolean;
             total: string;
             waybillNumber?: string;
         };
