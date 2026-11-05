@@ -200,8 +200,8 @@ class Orders {
         }
         List<Long> ids = lines.stream().map(OrderLineRequest::productId).distinct().toList();
         Map<Long, Product> products = products(ids);
-        Map<Long, Quote> quotes = prices.quotes(branchId, t.priceTypeId(), ids, today);
         LocalDate minExpiry = today.plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
+        Map<Long, Quote> quotes = prices.quotes(branchId, t.priceTypeId(), batchShares(warehouseId, minExpiry, lines), today);
         Map<Long, Available> available = availability.available(warehouseId, ids, minExpiry);
         Boolean license = controlledLicense(customerId, today);
         Money total = Money.ZERO;
@@ -614,7 +614,8 @@ class Orders {
             merged.merge(l.productId(), l.qty(), Integer::sum);
         }
         Terms t = terms(r.customerId(), branchId);
-        Map<Long, Quote> quotes = prices.quotes(branchId, t.priceTypeId(), merged.keySet(), today());
+        LocalDate minExpiry = today().plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
+        Map<Long, Quote> quotes = prices.quotes(branchId, t.priceTypeId(), batchShares(r.warehouseId(), minExpiry, r.lines()), today());
         Map<Long, Product> products = products(List.copyOf(merged.keySet()));
         int no = 0;
         Money total = Money.ZERO;
@@ -811,6 +812,29 @@ class Orders {
         List<LineRow> rows = lineRows(orderId);
         reserve(h, rows, evaluate(h.branchId(), h.warehouseId(), h.customerId(),
                 rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList()));
+    }
+
+    /** Narx partiyalar bo'yicha (SPEC 6): FEFO rejasi — zahira qaysi partiyalardan olinsa, narx ham shulardan; qoldiq yetmagan qism — partiyasiz. */
+    private Map<Long, List<PriceBook.BatchShare>> batchShares(long warehouseId, LocalDate minExpiry, List<OrderLineRequest> lines) {
+        Map<Long, Integer> qty = new HashMap<>();
+        for (OrderLineRequest l : lines) {
+            qty.merge(l.productId(), Math.max(0, l.qty()), Integer::sum);
+        }
+        Map<Long, List<StockReservations.Planned>> plan = reservations.plan(warehouseId, minExpiry, qty);
+        Map<Long, List<PriceBook.BatchShare>> out = new HashMap<>();
+        qty.forEach((productId, need) -> {
+            List<PriceBook.BatchShare> list = new ArrayList<>();
+            int left = need;
+            for (StockReservations.Planned pl : plan.getOrDefault(productId, List.of())) {
+                list.add(new PriceBook.BatchShare(pl.batchId(), pl.qty()));
+                left -= pl.qty();
+            }
+            if (left > 0 || list.isEmpty()) {
+                list.add(new PriceBook.BatchShare(null, Math.max(left, 1)));
+            }
+            out.put(productId, list);
+        });
+        return out;
     }
 
     private void reserve(Head h, List<LineRow> rows, Evaluation ev) {

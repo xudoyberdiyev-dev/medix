@@ -1091,4 +1091,49 @@ class OrderIT {
                 .isEqualTo(1);
         assertThat(jdbc.sql("SELECT status FROM trip WHERE id = :t").param("t", trip).query(String.class).single()).isEqualTo("DONE");
     }
+
+    @Test
+    void batchPriceAppliesByFefoPlanWithWeightedAverage() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        long a = product(p, "BY Partiya narxi", "2000", 0, null, null);
+        long[] b = new long[2];
+        tx.executeWithoutResult(s -> {
+            b[0] = ledger.createBatch(a, "PN-1", null, LocalDate.now().plusYears(1), Money.of("1000"), false, "BQ", null);
+            b[1] = ledger.createBatch(a, "PN-2", null, LocalDate.now().plusYears(2), Money.of("1000"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", a, "BQ-TST-" + a), List.of(Move.in(p.main(), b[0], 2), Move.in(p.main(), b[1], 5)));
+        });
+        long doc = jdbc.sql("""
+                INSERT INTO price_change (number, branch_id, effective_from, created_by, status)
+                VALUES (:n, :b, :d, :e, 'APPROVED') RETURNING id""")
+                .param("n", "NO-T-" + UUID.randomUUID().toString().substring(0, 8))
+                .param("b", p.branchId())
+                .param("d", java.sql.Date.valueOf(today()))
+                .param("e", employee())
+                .query(Long.class)
+                .single();
+        jdbc.sql("""
+                INSERT INTO batch_price (batch_id, price_type_id, branch_id, effective_from, amount, price_change_id)
+                SELECT :bt, id, :b, :d, 1500, :doc FROM price_type WHERE base""")
+                .param("bt", b[0])
+                .param("b", p.branchId())
+                .param("d", java.sql.Date.valueOf(today()))
+                .param("doc", doc)
+                .update();
+        // 4 dona: FEFO — 2 × 1500 (PN-1, partiya narxi) + 2 × 2000 (PN-2, mahsulot narxi) → 1750
+        long order = draft(operator, order(p, c, new long[][] {{a, 4}}));
+        mvc.perform(get("/api/orders/" + order).cookie(operator))
+                .andExpect(jsonPath("$.total").value("7000.00"))
+                .andExpect(jsonPath("$.priceChanged").value(false));
+        send(post("/api/orders/" + order + "/submit"), operator, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("QUEUED"))
+                .andExpect(jsonPath("$.lines[0].price").value("1750.00"))
+                .andExpect(jsonPath("$.total").value("7000.00"))
+                .andExpect(jsonPath("$.lines[0].reserved[0].batch").value("PN-1"));
+        // 1 dona — faqat PN-1 qolmadi (zahirada) → PN-2, mahsulot narxi
+        long second = draft(operator, order(p, c, new long[][] {{a, 1}}));
+        mvc.perform(get("/api/orders/" + second).cookie(operator)).andExpect(jsonPath("$.total").value("2000.00"));
+    }
 }

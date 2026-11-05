@@ -94,6 +94,47 @@ public class StockReservations {
         return out;
     }
 
+    /** FEFO rejasi ulushi: partiya va miqdor. */
+    public record Planned(long batchId, int qty) {}
+
+    /**
+     * Zahira rejasi (qulfsiz, hech narsa yozilmaydi): {@link #reserve} bilan bir xil FEFO tartibida qaysi partiyalardan olinishi.
+     * Narxni partiyalar bo'yicha hisoblash uchun (SPEC 6). Qoldiq yetmasa — bor qismi qaytadi.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<Long, List<Planned>> plan(long warehouseId, LocalDate minExpiry, java.util.Map<Long, Integer> qtyByProduct) {
+        java.util.Map<Long, List<Planned>> out = new java.util.HashMap<>();
+        if (qtyByProduct.isEmpty()) {
+            return out;
+        }
+        record Row(long productId, long batchId, int free) {}
+        List<Row> rows = jdbc.sql("""
+                SELECT s.product_id, s.batch_id,
+                       sum(s.qty) - coalesce((SELECT sum(x.qty) FROM stock_reservation x
+                                              WHERE x.warehouse_id = :w AND x.batch_id = s.batch_id AND x.status = 'ACTIVE'
+                                                AND x.zone_id IN (SELECT z2.id FROM zone z2 WHERE z2.warehouse_id = :w AND z2.sellable AND z2.active)), 0) AS free
+                FROM stock_balance s JOIN batch b ON b.id = s.batch_id JOIN zone z ON z.id = s.zone_id
+                WHERE s.warehouse_id = :w AND s.product_id IN (:p) AND s.qty > 0 AND z.sellable AND z.active AND b.expiry_date >= :min
+                GROUP BY s.product_id, s.batch_id, b.expiry_date
+                ORDER BY s.product_id, b.expiry_date, s.batch_id""")
+                .param("w", warehouseId)
+                .param("p", qtyByProduct.keySet())
+                .param("min", Date.valueOf(minExpiry))
+                .query(Row.class)
+                .list();
+        java.util.Map<Long, Integer> left = new java.util.HashMap<>(qtyByProduct);
+        for (Row r : rows) {
+            int need = left.getOrDefault(r.productId(), 0);
+            int take = Math.min(need, r.free());
+            if (take <= 0) {
+                continue;
+            }
+            out.computeIfAbsent(r.productId(), k -> new ArrayList<>()).add(new Planned(r.batchId(), take));
+            left.put(r.productId(), need - take);
+        }
+        return out;
+    }
+
     /** Hujjatning faol zahirasini bo'shatish (bekor qilish). Qaytaradi — bo'shagan satrlar soni. */
     @Transactional(propagation = Propagation.REQUIRED)
     public int release(String docType, long docId) {

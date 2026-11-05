@@ -29,13 +29,16 @@ final class PriceChangeModels {
             @NotNull(message = "{validation.required}") Long productId,
             @NotNull(message = "{validation.required}") Long priceTypeId,
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^\\d{1,16}(\\.\\d{1,2})?$", message = "{validation.money}")
-                    String newPrice) {}
+                    String newPrice,
+            @Schema(nullable = true, description = "«Kirim bo'yicha» rejimida — kirim partiyasi") Long batchId) {}
 
     record PriceChangeRequest(
             @NotNull(message = "{validation.required}") Long branchId,
             @NotNull(message = "{validation.required}") LocalDate effectiveFrom,
             @Schema(nullable = true) @Size(max = 500) String note,
-            @NotEmpty(message = "{priceChange.noLines}") @Size(max = 5000) List<@Valid LineRequest> lines) {}
+            @NotEmpty(message = "{priceChange.noLines}") @Size(max = 5000) List<@Valid LineRequest> lines,
+            @Schema(nullable = true, description = "To'ldirilsa — «Kirim bo'yicha» rejimi: narx faqat shu o'tkazilgan kirim partiyalariga")
+                    Long receiptId) {}
 
     record Line(
             long id,
@@ -47,10 +50,14 @@ final class PriceChangeModels {
             @Schema(nullable = true) String oldPrice,
             String newPrice,
             @Schema(nullable = true, description = "O'zgarish, %") String changePercent,
-            @Schema(description = "20% dan ko'p o'zgarish") boolean bigChange) {}
+            @Schema(description = "20% dan ko'p o'zgarish") boolean bigChange,
+            @Schema(nullable = true) Long batchId,
+            @Schema(nullable = true) String batchNumber,
+            @Schema(nullable = true) LocalDate expiryDate) {}
 
     record PriceChangeSummary(long id, String number, long branchId, Status status, LocalDate effectiveFrom, int lines,
-            String createdBy, Instant createdAt, @Schema(nullable = true) Instant decidedAt) {}
+            String createdBy, Instant createdAt, @Schema(nullable = true) Instant decidedAt,
+            @Schema(nullable = true, description = "«Kirim bo'yicha» — kirim raqami") String receiptNumber) {}
 
     record PriceChangePage(List<PriceChangeSummary> items, long total, int page, int size) {}
 
@@ -68,7 +75,9 @@ final class PriceChangeModels {
             @Schema(nullable = true) Instant decidedAt,
             @Schema(nullable = true) String decisionReason,
             int bigChanges,
-            List<Line> lines) {}
+            List<Line> lines,
+            @Schema(nullable = true) Long receiptId,
+            @Schema(nullable = true) String receiptNumber) {}
 
     record ReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
@@ -91,4 +100,20 @@ final class PriceChangeModels {
             @Schema(description = "Narx turi id → narx") Map<String, String> prices) {}
 
     record PricePage(List<PriceRow> items, long total, int page, int size) {}
+
+    /** «Kirim bo'yicha» rejimi: o'tkazilgan kirim partiyasi va uning amaldagi partiya narxlari. */
+    record ReceiptBatch(
+            long batchId,
+            long productId,
+            String productCode,
+            String productName,
+            String batchNumber,
+            LocalDate expiryDate,
+            boolean bonus,
+            @Schema(description = "Kirimdagi miqdor") int qty,
+            @Schema(nullable = true, description = "Tannarx — faqat special.cost bilan") String cost,
+            @Schema(description = "Narx turi id → partiya narxi") Map<String, String> batchPrices,
+            @Schema(description = "Narx turi id → mahsulot narxi") Map<String, String> productPrices) {}
+
+    record ReceiptBatches(long receiptId, String receiptNumber, long branchId, String supplier, LocalDate receiptDate, List<ReceiptBatch> items) {}
 }

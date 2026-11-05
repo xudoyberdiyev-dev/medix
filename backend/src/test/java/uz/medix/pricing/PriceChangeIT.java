@@ -259,4 +259,116 @@ class PriceChangeIT {
         long ok = id(mvc.perform(json(post("/api/price-changes"), purchaser, body.replace("PRICE", "12000"))).andReturn());
         mvc.perform(post("/api/price-changes/" + ok + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
     }
+
+    @Autowired
+    PriceBook priceBook;
+
+    private long receipt(long branch, long warehouse, String status) {
+        long supplier = jdbc.sql("INSERT INTO counterparty (tin, name, is_supplier) VALUES (:t, :n, true) RETURNING id")
+                .param("t", String.valueOf(700_000_000L + ThreadLocalRandom.current().nextLong(99_999_999L)))
+                .param("n", "Ta'minotchi " + UUID.randomUUID().toString().substring(0, 6))
+                .query(Long.class)
+                .single();
+        boolean posted = "POSTED".equals(status);
+        return jdbc.sql("""
+                INSERT INTO receipt (number, branch_id, warehouse_id, supplier_id, receipt_date, payment_type, prepaid, status,
+                                     accepted_at, posted_at, debt_amount, created_by)
+                VALUES (:n, :b, :w, :s, CURRENT_DATE, 'TRANSFER', true, :st, CASE WHEN :p THEN now() END, CASE WHEN :p THEN now() END,
+                        CASE WHEN :p THEN 0 END, (SELECT min(id) FROM employee)) RETURNING id""")
+                .param("n", "KR-T-" + UUID.randomUUID().toString().substring(0, 8))
+                .param("b", branch)
+                .param("w", warehouse)
+                .param("s", supplier)
+                .param("st", status)
+                .param("p", posted)
+                .query(Long.class)
+                .single();
+    }
+
+    @Test
+    void receiptModeSetsBatchPricesAndWeightedAverage() throws Exception {
+        long branch = branch();
+        long p = product("Kirimnarx sinov");
+        long other = product("Boshqa kirim sinov");
+        long base = type("BASE");
+        var w = tx.execute(st -> warehouses.create(branch, "KB ombor " + branch, null, java.util.Set.of()));
+        long main = w.zones().stream().filter(z -> z.type() == uz.medix.inventory.ZoneType.MAIN).findFirst().orElseThrow().id();
+        long rc = receipt(branch, w.id(), "POSTED");
+        long draftRc = receipt(branch, w.id(), "DRAFT");
+        long[] b = new long[3];
+        tx.executeWithoutResult(st -> {
+            b[0] = ledger.createBatch(p, "KB-1", null, LocalDate.of(2028, 1, 31), uz.medix.shared.money.Money.of("1000"), false, "KR", rc);
+            b[1] = ledger.createBatch(p, "KB-2", null, LocalDate.of(2029, 1, 31), uz.medix.shared.money.Money.of("1000"), false, "KR", rc);
+            b[2] = ledger.createBatch(other, "KB-3", null, LocalDate.of(2029, 1, 31), uz.medix.shared.money.Money.of("500"), false, "KR", draftRc);
+            ledger.post(new uz.medix.inventory.StockLedger.DocRef("KR", rc, "KR-TST-" + rc),
+                    java.util.List.of(uz.medix.inventory.StockLedger.Move.in(main, b[0], 3), uz.medix.inventory.StockLedger.Move.in(main, b[1], 7)));
+        });
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        // Bazaviy mahsulot narxi 1200
+        long plain = id(mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today()
+                + "\",\"lines\":[{\"productId\":" + p + ",\"priceTypeId\":" + base + ",\"newPrice\":\"1200\"}]}")).andReturn());
+        mvc.perform(post("/api/price-changes/" + plain + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+
+        String head = "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today() + "\",\"receiptId\":RC,\"lines\":[";
+        String line = "{\"productId\":P,\"priceTypeId\":" + base + ",\"newPrice\":\"PRICE\",\"batchId\":B}";
+        // O'tkazilmagan kirim — rad
+        mvc.perform(json(post("/api/price-changes"), purchaser, head.replace("RC", "" + draftRc)
+                        + line.replace("P", "" + other).replace("PRICE", "600").replace("B", "" + b[2]) + "]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("priceChange.receiptNotPosted"));
+        // Boshqa kirim partiyasi — rad
+        mvc.perform(json(post("/api/price-changes"), purchaser, head.replace("RC", "" + rc)
+                        + line.replace("P", "" + other).replace("PRICE", "600").replace("B", "" + b[2]) + "]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("priceChange.batchNotInReceipt"));
+        // Rejimsiz partiya — rad
+        mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today() + "\",\"lines\":["
+                        + line.replace("P", "" + p).replace("PRICE", "600").replace("B", "" + b[0]) + "]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("priceChange.batchWithoutReceipt"));
+        // Partiyalarga narx: KB-1 → 1000 (tannarxga teng), KB-2 → 1100
+        MvcResult created = mvc.perform(json(post("/api/price-changes"), purchaser, head.replace("RC", "" + rc)
+                        + line.replace("P", "" + p).replace("PRICE", "1000").replace("B", "" + b[0]) + ","
+                        + line.replace("P", "" + p).replace("PRICE", "1100").replace("B", "" + b[1]) + "]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.receiptId").value(rc))
+                .andExpect(jsonPath("$.lines", hasSize(2)))
+                .andExpect(jsonPath("$.lines[0].batchNumber").value("KB-1"))
+                .andExpect(jsonPath("$.lines[0].oldPrice").value("1200.00"))
+                .andReturn();
+        long doc = id(created);
+        mvc.perform(post("/api/price-changes/" + doc + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+        mvc.perform(get("/api/price-changes").param("branchId", String.valueOf(branch)).cookie(purchaser))
+                .andExpect(jsonPath("$.items[0].receiptNumber").value(matchesPattern("^KR-T-.*")));
+        // Mahsulot narxi o'zgarmaydi; partiya narxlari alohida
+        mvc.perform(get("/api/prices").param("branchId", String.valueOf(branch)).param("q", "kirimnarx sinov").cookie(purchaser))
+                .andExpect(jsonPath("$.items[0].prices['" + base + "']").value("1200.00"));
+        mvc.perform(get("/api/price-changes/receipt-batches/" + rc).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(2)))
+                .andExpect(jsonPath("$.items[0].qty").value(3))
+                .andExpect(jsonPath("$.items[0].cost").doesNotExist())
+                .andExpect(jsonPath("$.items[1].batchPrices['" + base + "']").value("1100.00"))
+                .andExpect(jsonPath("$.items[1].productPrices['" + base + "']").value("1200.00"));
+        mvc.perform(get("/api/price-changes/receipt-batches/" + draftRc).cookie(purchaser)).andExpect(status().isBadRequest());
+
+        // Narx tanlash: partiya narxi ustun; bir necha partiya — o'rtacha tortilgan; partiyasiz qism — mahsulot narxida
+        LocalDate t = LocalDate.parse(today());
+        var q = priceBook.quotes(branch, null, java.util.Map.of(p, java.util.List.of(new PriceBook.BatchShare(b[0], 3),
+                new PriceBook.BatchShare(b[1], 7))), t).get(p);
+        org.assertj.core.api.Assertions.assertThat(q.price()).isEqualTo(uz.medix.shared.money.Money.of("1070"));
+        org.assertj.core.api.Assertions.assertThat(q.batchPriced()).isTrue();
+        var mixed = priceBook.quotes(branch, null, java.util.Map.of(p, java.util.List.of(new PriceBook.BatchShare(b[1], 1),
+                new PriceBook.BatchShare(null, 1))), t).get(p);
+        org.assertj.core.api.Assertions.assertThat(mixed.price()).isEqualTo(uz.medix.shared.money.Money.of("1150"));
+        var none = priceBook.quotes(branch, null, java.util.Map.of(p, java.util.List.of(new PriceBook.BatchShare(null, 5))), t).get(p);
+        org.assertj.core.api.Assertions.assertThat(none.price()).isEqualTo(uz.medix.shared.money.Money.of("1200"));
+        org.assertj.core.api.Assertions.assertThat(none.batchPriced()).isFalse();
+
+        // Partiya tannarxidan past — Direktor tasdig'iga
+        long low = id(mvc.perform(json(post("/api/price-changes"), purchaser, head.replace("RC", "" + rc)
+                        + line.replace("P", "" + p).replace("PRICE", "999.99").replace("B", "" + b[0]) + "]}")).andReturn());
+        mvc.perform(post("/api/price-changes/" + low + "/submit").with(csrf()).cookie(purchaser))
+                .andExpect(jsonPath("$.status").value("PENDING_APPROVAL"));
+    }
 }

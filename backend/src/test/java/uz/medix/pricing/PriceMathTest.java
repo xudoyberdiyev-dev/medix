@@ -45,4 +45,16 @@ class PriceMathTest {
         assertThat(PriceMath.select(none, none, none, d)).isEqualTo(d);
         assertThat(PriceMath.select(none, none, none, none)).isEmpty();
     }
+
+    @Test
+    void weightedAverageOverBatches() {
+        // 3 × 1000 + 7 × 1100 = 10700 / 10 = 1070
+        assertThat(PriceMath.weightedAverage(java.util.List.of(new PriceMath.Part(Money.of("1000"), 3), new PriceMath.Part(Money.of("1100"), 7))))
+                .contains(Money.of("1070"));
+        // 1 × 100 + 2 × 100.01 = 300.02 / 3 = 100.0066… → 100.01 (HALF_UP)
+        assertThat(PriceMath.weightedAverage(java.util.List.of(new PriceMath.Part(Money.of("100"), 1), new PriceMath.Part(Money.of("100.01"), 2))))
+                .contains(Money.of("100.01"));
+        assertThat(PriceMath.weightedAverage(java.util.List.of(new PriceMath.Part(Money.of("5"), 0)))).isEmpty();
+        assertThat(PriceMath.weightedAverage(java.util.List.of())).isEmpty();
+    }
 }

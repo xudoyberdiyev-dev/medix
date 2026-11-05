@@ -50,4 +50,27 @@ public final class PriceMath {
             Optional<Money> base) {
         return batchCustomerType.or(() -> batchBase).or(() -> customerType).or(() -> base);
     }
+
+    /** Partiya ulushi: narx va miqdor. */
+    public record Part(Money price, int qty) {}
+
+    /**
+     * Bir qator bir necha partiyaga tushsa (SPEC 6): qator narxi — o'rtacha tortilgan narx {@code Σ(narx × miqdor) / Σ miqdor},
+     * 2 xona, HALF_UP. Bo'sh yoki jami miqdor 0 bo'lsa — bo'sh.
+     */
+    public static Optional<Money> weightedAverage(java.util.List<Part> parts) {
+        long qty = 0;
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Part p : parts) {
+            if (p.qty() <= 0) {
+                continue;
+            }
+            qty += p.qty();
+            sum = sum.add(p.price().amount().multiply(BigDecimal.valueOf(p.qty())));
+        }
+        if (qty == 0) {
+            return Optional.empty();
+        }
+        return Optional.of(new Money(sum.divide(BigDecimal.valueOf(qty), Money.SCALE, Money.ROUNDING)));
+    }
 }

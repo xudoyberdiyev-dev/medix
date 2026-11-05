@@ -24,6 +24,7 @@ import uz.medix.pricing.change.PriceChangeModels.PriceChangeDetail;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeRequest;
 import uz.medix.pricing.change.PriceChangeModels.PricePage;
+import uz.medix.pricing.change.PriceChangeModels.ReceiptBatches;
 import uz.medix.pricing.change.PriceChangeModels.ReasonRequest;
 import uz.medix.pricing.change.PriceChangeModels.Status;
 import uz.medix.shared.error.MedixException;
@@ -135,6 +136,13 @@ class PriceChangeController {
     PriceChangeDetail cancel(@PathVariable long id, @Valid @RequestBody ReasonRequest r) {
         changes.cancel(actor(), id, r.reason());
         return detail(id);
+    }
+
+    @GetMapping("/price-changes/receipt-batches/{receiptId}")
+    @PreAuthorize(SET_PRICES)
+    @Operation(summary = "«Kirim bo'yicha»: o'tkazilgan kirim partiyalari", description = "Tannarx — faqat special.cost bilan.")
+    ReceiptBatches receiptBatches(@PathVariable long receiptId, Authentication auth) {
+        return changes.receiptBatches(actor(), receiptId, auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority())));
     }
 
     @PostMapping("/price-changes/markup")

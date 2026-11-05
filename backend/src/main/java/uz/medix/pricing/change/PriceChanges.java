@@ -30,6 +30,8 @@ import uz.medix.pricing.change.PriceChangeModels.PriceChangeRequest;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeSummary;
 import uz.medix.pricing.change.PriceChangeModels.PricePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceRow;
+import uz.medix.pricing.change.PriceChangeModels.ReceiptBatch;
+import uz.medix.pricing.change.PriceChangeModels.ReceiptBatches;
 import uz.medix.pricing.change.PriceChangeModels.Status;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
@@ -155,15 +157,15 @@ class PriceChanges {
         List<PriceChangeSummary> items = jdbc.sql("""
                 SELECT c.id, c.number, c.branch_id, c.status, c.effective_from,
                        (SELECT count(*) FROM price_change_line l WHERE l.price_change_id = c.id) AS lines,
-                       e.full_name AS created_by, c.created_at, c.decided_at
-                FROM price_change c JOIN employee e ON e.id = c.created_by""" + where + " ORDER BY c.created_at DESC, c.id DESC LIMIT :l OFFSET :o")
+                       e.full_name AS created_by, c.created_at, c.decided_at, r.number AS receipt_number
+                FROM price_change c JOIN employee e ON e.id = c.created_by LEFT JOIN receipt r ON r.id = c.receipt_id""" + where + " ORDER BY c.created_at DESC, c.id DESC LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", size)
                 .param("o", (long) page * size)
                 .query((rs, n) -> new PriceChangeSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"),
                         Status.valueOf(rs.getString("status")), rs.getDate("effective_from").toLocalDate(), rs.getInt("lines"),
                         rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
-                        Optional.ofNullable(rs.getTimestamp("decided_at")).map(Timestamp::toInstant).orElse(null)))
+                        Optional.ofNullable(rs.getTimestamp("decided_at")).map(Timestamp::toInstant).orElse(null), rs.getString("receipt_number")))
                 .list();
         return new PriceChangePage(items, total, page, size);
     }
@@ -171,11 +173,13 @@ class PriceChanges {
     @Transactional(readOnly = true)
     Optional<PriceChangeDetail> find(long id, Actor actor) {
         record HeadRow(long id, String number, long branchId, String status, Date effectiveFrom, String note, String createdBy,
-                Timestamp createdAt, Timestamp submittedAt, String decidedBy, Timestamp decidedAt, String decisionReason) {}
+                Timestamp createdAt, Timestamp submittedAt, String decidedBy, Timestamp decidedAt, String decisionReason, Long receiptId,
+                String receiptNumber) {}
         Optional<HeadRow> head = jdbc.sql("""
                 SELECT c.id, c.number, c.branch_id, c.status, c.effective_from, c.note, cb.full_name AS created_by, c.created_at,
-                       c.submitted_at, db.full_name AS decided_by, c.decided_at, c.decision_reason
+                       c.submitted_at, db.full_name AS decided_by, c.decided_at, c.decision_reason, c.receipt_id, r.number AS receipt_number
                 FROM price_change c JOIN employee cb ON cb.id = c.created_by LEFT JOIN employee db ON db.id = c.decided_by
+                     LEFT JOIN receipt r ON r.id = c.receipt_id
                 WHERE c.id = :id""")
                 .param("id", id)
                 .query(HeadRow.class)
@@ -186,22 +190,26 @@ class PriceChanges {
         }
         HeadRow h = head.get();
         List<Line> lines = jdbc.sql("""
-                SELECT l.id, l.product_id, p.code, p.name, l.price_type_id, t.name AS price_type, l.old_price, l.new_price
+                SELECT l.id, l.product_id, p.code, p.name, l.price_type_id, t.name AS price_type, l.old_price, l.new_price,
+                       l.batch_id, b.number AS batch_number, b.expiry_date
                 FROM price_change_line l JOIN product p ON p.id = l.product_id JOIN price_type t ON t.id = l.price_type_id
-                WHERE l.price_change_id = :id ORDER BY lower(p.name), t.sort_order""")
+                     LEFT JOIN batch b ON b.id = l.batch_id
+                WHERE l.price_change_id = :id ORDER BY lower(p.name), b.expiry_date NULLS FIRST, l.batch_id NULLS FIRST, t.sort_order""")
                 .param("id", id)
                 .query((rs, n) -> {
                     Money oldP = Optional.ofNullable(rs.getBigDecimal("old_price")).map(Money::new).orElse(null);
                     Money newP = new Money(rs.getBigDecimal("new_price"));
                     return new Line(rs.getLong("id"), rs.getLong("product_id"), rs.getString("code"), rs.getString("name"),
                             rs.getLong("price_type_id"), rs.getString("price_type"), oldP == null ? null : oldP.toString(), newP.toString(),
-                            PriceMath.changePercent(oldP, newP).map(BigDecimal::toPlainString).orElse(null), PriceMath.bigChange(oldP, newP));
+                            PriceMath.changePercent(oldP, newP).map(BigDecimal::toPlainString).orElse(null), PriceMath.bigChange(oldP, newP),
+                            rs.getObject("batch_id", Long.class), rs.getString("batch_number"),
+                            Optional.ofNullable(rs.getDate("expiry_date")).map(Date::toLocalDate).orElse(null));
                 })
                 .list();
         int big = (int) lines.stream().filter(Line::bigChange).count();
         return Optional.of(new PriceChangeDetail(h.id(), h.number(), h.branchId(), Status.valueOf(h.status()), h.effectiveFrom().toLocalDate(),
                 h.note(), h.createdBy(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
-                h.decisionReason(), big, lines));
+                h.decisionReason(), big, lines, h.receiptId(), h.receiptNumber()));
     }
 
     // ===== NO: yozish =====
@@ -212,18 +220,20 @@ class PriceChanges {
         if (r.effectiveFrom().isBefore(today())) {
             throw MedixException.badRequest("priceChange.pastDate");
         }
+        checkReceipt(r.branchId(), r.receiptId());
         String number = numbers.next(DocumentPrefix.NO, branchCode).toString();
         long id = jdbc.sql("""
-                INSERT INTO price_change (number, branch_id, effective_from, note, created_by)
-                VALUES (:n, :b, :d, :note, :by) RETURNING id""")
+                INSERT INTO price_change (number, branch_id, effective_from, note, created_by, receipt_id)
+                VALUES (:n, :b, :d, :note, :by, :rc) RETURNING id""")
                 .param("n", number)
                 .param("b", r.branchId())
                 .param("d", Date.valueOf(r.effectiveFrom()))
                 .param("note", blankToNull(r.note()))
                 .param("by", actor.employeeId())
+                .param("rc", r.receiptId())
                 .query(Long.class)
                 .single();
-        insertLines(id, r.branchId(), r.effectiveFrom(), r.lines());
+        insertLines(id, r.branchId(), r.effectiveFrom(), r.lines(), r.receiptId());
         audit.record(AuditEntry.of("priceChange.create", "price_change", id).change(null, Map.of("number", number, "lines", r.lines().size())));
         return id;
     }
@@ -238,14 +248,18 @@ class PriceChanges {
         if (r.effectiveFrom().isBefore(today())) {
             throw MedixException.badRequest("priceChange.pastDate");
         }
-        jdbc.sql("UPDATE price_change SET branch_id = :b, effective_from = :d, note = :note, updated_at = now(), version = version + 1 WHERE id = :id")
+        checkReceipt(r.branchId(), r.receiptId());
+        jdbc.sql("""
+                UPDATE price_change SET branch_id = :b, effective_from = :d, note = :note, receipt_id = :rc, updated_at = now(), version = version + 1
+                WHERE id = :id""")
+                .param("rc", r.receiptId())
                 .param("b", r.branchId())
                 .param("d", Date.valueOf(r.effectiveFrom()))
                 .param("note", blankToNull(r.note()))
                 .param("id", id)
                 .update();
         jdbc.sql("DELETE FROM price_change_line WHERE price_change_id = :id").param("id", id).update();
-        insertLines(id, r.branchId(), r.effectiveFrom(), r.lines());
+        insertLines(id, r.branchId(), r.effectiveFrom(), r.lines(), r.receiptId());
         audit.record(AuditEntry.of("priceChange.update", "price_change", id).change(null, Map.of("lines", r.lines().size())));
     }
 
@@ -369,7 +383,15 @@ class PriceChanges {
         LocalDate from = h.effectiveFrom().isBefore(today()) ? today() : h.effectiveFrom();
         jdbc.sql("""
                 INSERT INTO price (product_id, price_type_id, branch_id, effective_from, amount, price_change_id)
-                SELECT product_id, price_type_id, :b, :d, new_price, :id FROM price_change_line WHERE price_change_id = :id""")
+                SELECT product_id, price_type_id, :b, :d, new_price, :id FROM price_change_line WHERE price_change_id = :id AND batch_id IS NULL""")
+                .param("b", h.branchId())
+                .param("d", Date.valueOf(from))
+                .param("id", h.id())
+                .update();
+        // «Kirim bo'yicha» — partiya narxlari (SPEC 6)
+        jdbc.sql("""
+                INSERT INTO batch_price (batch_id, price_type_id, branch_id, effective_from, amount, price_change_id)
+                SELECT batch_id, price_type_id, :b, :d, new_price, :id FROM price_change_line WHERE price_change_id = :id AND batch_id IS NOT NULL""")
                 .param("b", h.branchId())
                 .param("d", Date.valueOf(from))
                 .param("id", h.id())
@@ -378,22 +400,32 @@ class PriceChanges {
 
     /** Tannarxdan past: yangi narx filialdagi qoldig'i bor partiyalarning eng yuqori tannarxidan kichik (SPEC 6). */
     private boolean belowCost(long priceChangeId) {
-        record L(long productId, BigDecimal newPrice) {}
+        record L(long productId, BigDecimal newPrice, BigDecimal batchCost) {}
         long branch = jdbc.sql("SELECT branch_id FROM price_change WHERE id = :id").param("id", priceChangeId).query(Long.class).single();
-        List<L> lines = jdbc.sql("SELECT product_id, new_price FROM price_change_line WHERE price_change_id = :id")
+        List<L> lines = jdbc.sql("""
+                SELECT l.product_id, l.new_price, b.cost AS batch_cost FROM price_change_line l LEFT JOIN batch b ON b.id = l.batch_id
+                WHERE l.price_change_id = :id""")
                 .param("id", priceChangeId)
                 .query(L.class)
                 .list();
-        Map<Long, Money> max = costs.maxCost(branch, lines.stream().map(L::productId).distinct().toList());
-        return lines.stream().anyMatch(l -> max.containsKey(l.productId()) && new Money(l.newPrice()).compareTo(max.get(l.productId())) < 0);
+        // Partiya qatori — o'sha partiya tannarxi bilan; mahsulot qatori — qoldig'i bor partiyalarning eng yuqori tannarxi bilan.
+        if (lines.stream().anyMatch(l -> l.batchCost() != null && l.newPrice().compareTo(l.batchCost()) < 0)) {
+            return true;
+        }
+        List<L> plain = lines.stream().filter(l -> l.batchCost() == null).toList();
+        Map<Long, Money> max = costs.maxCost(branch, plain.stream().map(L::productId).distinct().toList());
+        return plain.stream().anyMatch(l -> max.containsKey(l.productId()) && new Money(l.newPrice()).compareTo(max.get(l.productId())) < 0);
     }
 
     private int lineCount(long id) {
         return jdbc.sql("SELECT count(*) FROM price_change_line WHERE price_change_id = :id").param("id", id).query(Integer.class).single();
     }
 
-    private void insertLines(long docId, long branchId, LocalDate at, List<LineRequest> lines) {
+    private void insertLines(long docId, long branchId, LocalDate at, List<LineRequest> lines, Long receiptId) {
         Set<String> seen = new HashSet<>();
+        // «Kirim bo'yicha»: partiya → mahsulot (faqat shu kirim partiyalari); amaldagi partiya narxlari — eski narx uchun.
+        Map<Long, Long> receiptBatches = receiptId == null ? Map.of() : batchProducts(receiptId);
+        Map<String, Money> currentBatch = receiptId == null ? Map.of() : currentBatchPrices(branchId, receiptBatches.keySet(), at);
         List<Long> productIds = lines.stream().map(LineRequest::productId).distinct().toList();
         Map<Long, String> products = new HashMap<>();
         jdbc.sql("SELECT id, code FROM product WHERE id IN (:ids) AND active")
@@ -406,13 +438,21 @@ class PriceChanges {
                 throw MedixException.badRequest("priceChange.productUnknown", l.productId());
             }
             checkPriceType(l.priceTypeId());
-            if (!seen.add(l.productId() + ":" + l.priceTypeId())) {
+            if (receiptId == null && l.batchId() != null) {
+                throw MedixException.badRequest("priceChange.batchWithoutReceipt");
+            }
+            if (receiptId != null && (l.batchId() == null || !l.productId().equals(receiptBatches.get(l.batchId())))) {
+                throw MedixException.badRequest("priceChange.batchNotInReceipt", products.get(l.productId()));
+            }
+            if (!seen.add(l.productId() + ":" + l.priceTypeId() + ":" + l.batchId())) {
                 throw MedixException.badRequest("priceChange.duplicateLine", products.get(l.productId()));
             }
-            Money old = current.get(l.productId() + ":" + l.priceTypeId());
+            Money old = Optional.ofNullable(l.batchId() == null ? null : currentBatch.get(l.batchId() + ":" + l.priceTypeId()))
+                    .orElse(current.get(l.productId() + ":" + l.priceTypeId()));
             jdbc.sql("""
-                    INSERT INTO price_change_line (price_change_id, product_id, price_type_id, old_price, new_price)
-                    VALUES (:doc, :p, :t, :old, :new)""")
+                    INSERT INTO price_change_line (price_change_id, product_id, price_type_id, old_price, new_price, batch_id)
+                    VALUES (:doc, :p, :t, :old, :new, :batch)""")
+                    .param("batch", l.batchId())
                     .param("doc", docId)
                     .param("p", l.productId())
                     .param("t", l.priceTypeId())
@@ -420,6 +460,96 @@ class PriceChanges {
                     .param("new", Money.of(l.newPrice()).amount())
                     .update();
         }
+    }
+
+    // ===== «Kirim bo'yicha» rejimi =====
+
+    /** Kirim faqat o'tkazilgan (POSTED) va shu filialniki bo'lishi kerak (SPEC 6). */
+    private void checkReceipt(long branchId, Long receiptId) {
+        if (receiptId == null) {
+            return;
+        }
+        String st = jdbc.sql("SELECT status FROM receipt WHERE id = :r AND branch_id = :b").param("r", receiptId).param("b", branchId)
+                .query(String.class).optional().orElseThrow(() -> MedixException.badRequest("priceChange.receiptUnknown"));
+        if (!"POSTED".equals(st)) {
+            throw MedixException.badRequest("priceChange.receiptNotPosted");
+        }
+    }
+
+    /** Kirim partiyalari: partiya → mahsulot. */
+    private Map<Long, Long> batchProducts(long receiptId) {
+        Map<Long, Long> m = new HashMap<>();
+        jdbc.sql("SELECT id, product_id FROM batch WHERE source_type = 'KR' AND source_id = :r")
+                .param("r", receiptId)
+                .query((rs, n) -> m.put(rs.getLong("id"), rs.getLong("product_id")))
+                .list();
+        return m;
+    }
+
+    /** (partiya, tur) → amaldagi partiya narxi. */
+    private Map<String, Money> currentBatchPrices(long branchId, java.util.Collection<Long> batchIds, LocalDate at) {
+        Map<String, Money> m = new HashMap<>();
+        if (batchIds.isEmpty()) {
+            return m;
+        }
+        jdbc.sql("""
+                SELECT DISTINCT ON (batch_id, price_type_id) batch_id, price_type_id, amount
+                FROM batch_price WHERE branch_id = :b AND batch_id IN (:ids) AND effective_from <= :at
+                ORDER BY batch_id, price_type_id, effective_from DESC, id DESC""")
+                .param("b", branchId)
+                .param("ids", batchIds)
+                .param("at", Date.valueOf(at))
+                .query((rs, n) -> m.put(rs.getLong("batch_id") + ":" + rs.getLong("price_type_id"), new Money(rs.getBigDecimal("amount"))))
+                .list();
+        return m;
+    }
+
+    /** O'tkazilgan kirim partiyalari va amaldagi narxlari — «Kirim bo'yicha» NO uchun. Tannarx — faqat {@code showCost} bilan. */
+    @Transactional(readOnly = true)
+    ReceiptBatches receiptBatches(Actor actor, long receiptId, boolean showCost) {
+        record RHead(long id, String number, long branchId, String status, String supplier, Date receiptDate) {}
+        RHead h = jdbc.sql("""
+                SELECT r.id, r.number, r.branch_id, r.status, c.name AS supplier, r.receipt_date
+                FROM receipt r JOIN counterparty c ON c.id = r.supplier_id WHERE r.id = :r""")
+                .param("r", receiptId)
+                .query(RHead.class)
+                .optional()
+                .filter(x -> actor.canAccessBranch(x.branchId()))
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (!"POSTED".equals(h.status())) {
+            throw MedixException.badRequest("priceChange.receiptNotPosted");
+        }
+        record Row(long batchId, long productId, String code, String name, String batchNumber, Date expiryDate, boolean bonus, int qty,
+                BigDecimal cost) {}
+        List<Row> rows = jdbc.sql("""
+                SELECT b.id AS batch_id, b.product_id, p.code, p.name, b.number AS batch_number, b.expiry_date, b.bonus,
+                       coalesce((SELECT sum(m.qty) FROM stock_move m WHERE m.batch_id = b.id AND m.doc_type = 'KR' AND m.qty > 0), 0) AS qty,
+                       b.cost
+                FROM batch b JOIN product p ON p.id = b.product_id
+                WHERE b.source_type = 'KR' AND b.source_id = :r ORDER BY lower(p.name), b.expiry_date, b.id""")
+                .param("r", receiptId)
+                .query(Row.class)
+                .list();
+        LocalDate today = today();
+        Map<String, Money> bp = currentBatchPrices(h.branchId(), rows.stream().map(Row::batchId).toList(), today);
+        Map<String, Money> pp = currentPrices(h.branchId(), rows.stream().map(Row::productId).distinct().toList(), today);
+        List<ReceiptBatch> items = rows.stream().map(r -> {
+            Map<String, String> batchPrices = new java.util.TreeMap<>();
+            bp.forEach((k, v) -> {
+                if (k.startsWith(r.batchId() + ":")) {
+                    batchPrices.put(k.substring(k.indexOf(':') + 1), v.toString());
+                }
+            });
+            Map<String, String> productPrices = new java.util.TreeMap<>();
+            pp.forEach((k, v) -> {
+                if (k.startsWith(r.productId() + ":")) {
+                    productPrices.put(k.substring(k.indexOf(':') + 1), v.toString());
+                }
+            });
+            return new ReceiptBatch(r.batchId(), r.productId(), r.code(), r.name(), r.batchNumber(), r.expiryDate().toLocalDate(), r.bonus(),
+                    r.qty(), showCost ? new Money(r.cost()).toString() : null, batchPrices, productPrices);
+        }).toList();
+        return new ReceiptBatches(h.id(), h.number(), h.branchId(), h.supplier(), h.receiptDate().toLocalDate(), items);
     }
 
     private void checkPriceType(long id) {
