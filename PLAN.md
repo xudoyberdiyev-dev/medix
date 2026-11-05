@@ -104,7 +104,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [~] Kassa sahifasi: hisoblar, «Tasdiqlashni kutmoqda», Ko'chirma / KO-BO / IO / Yopilgan kunlar yorliqlari, Kunni yopish oynasi (05.11). Qoldi: Kassir paneli (alohida bosh sahifa), kassir faqat o'z kassasida (money_account.cashier_id)
 - [x] Mijozlar qarzi va YB qarzi sahifalari: muddat guruhlari (muddati kelmagan / 1–30 / 31–60 / 61–90 / 90+), avans eng eski qarzdan, filiallar alohida hisoblanadi; jami; ochiq hujjatlar (05.11)
 - [x] Akt sverka (prototip holatida): davr boshi, hujjatlar bo'yicha qarz oshdi / kamaydi, davr oxiri; chop etish — brauzer (05.11). To'liq SmartUp shakli — V1 dan keyin (SPEC 18)
-- [ ] Avans (AH) — avansni qarzga hisoblash; bank ko'chirmasi bilan solishtirish; bonus balans sahifasi; kassir faqat o'z kassasida (cashier_id)
+- [x] Avans (AH): avans eng eski qarzlarga (summa chegarasi bilan), bekor qilish teskari, parallel test; qarz oynasida «Avansni hisobga olish» (05.11)
+- [ ] Bank ko'chirmasi bilan solishtirish; bonus balans sahifasi; kassir faqat o'z kassasida (cashier_id)
 
 ## 10. Bosh sahifa va hisobotlar
 - [ ] Rollar bosh sahifalari, «Diqqat talab qiladi», hisobotlar katalogi (jOOQ), chop etish shakllari (OpenHTMLtoPDF)

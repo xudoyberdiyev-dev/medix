@@ -51,6 +51,9 @@
     "description" : "Yetkazib beruvchiga to'lovlar (YT)",
     "name" : "supplier-payments"
   }, {
+    "description" : "Avansni hisobga olish (AH)",
+    "name" : "advance-offsets"
+  }, {
     "description" : "Mahsulotlar",
     "name" : "products"
   }, {
@@ -88,6 +91,232 @@
     "name" : "money-accounts"
   } ],
   "paths" : {
+    "/api/advance-offsets/customer" : {
+      "get" : {
+        "operationId" : "listCustomer",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Offset"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijoz avanslari hisobga olingan hujjatlar (AH)",
+        "tags" : [ "advance-offsets" ]
+      },
+      "post" : {
+        "operationId" : "createCustomer",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OffsetRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Offset"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Mijoz avansini qarzga hisoblash (AH)",
+        "tags" : [ "advance-offsets" ]
+      }
+    },
+    "/api/advance-offsets/customer/preview" : {
+      "get" : {
+        "operationId" : "previewCustomer",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "counterpartyId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffsetPreview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijoz: avans, qarz va hisobga olinadigan qatorlar (eng eskisidan)",
+        "tags" : [ "advance-offsets" ]
+      }
+    },
+    "/api/advance-offsets/supplier" : {
+      "get" : {
+        "operationId" : "listSupplier",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Offset"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YB avanslari hisobga olingan hujjatlar (AH)",
+        "tags" : [ "advance-offsets" ]
+      },
+      "post" : {
+        "operationId" : "createSupplier",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OffsetRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Offset"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "YB avansini qarzga hisoblash (AH)",
+        "tags" : [ "advance-offsets" ]
+      }
+    },
+    "/api/advance-offsets/supplier/preview" : {
+      "get" : {
+        "operationId" : "previewSupplier",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "counterpartyId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffsetPreview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YB: avans, qarz va hisobga olinadigan qatorlar (eng eskisidan)",
+        "tags" : [ "advance-offsets" ]
+      }
+    },
+    "/api/advance-offsets/{id}/cancel" : {
+      "post" : {
+        "operationId" : "cancel_6",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PaymentCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Offset"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "AH ni bekor qilish (teskari yozuvlar)",
+        "tags" : [ "advance-offsets" ]
+      }
+    },
     "/api/audit" : {
       "get" : {
         "operationId" : "list_20",
@@ -9435,6 +9664,131 @@
           }
         },
         "required" : [ "items", "unread" ]
+      },
+      "Offset" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "counterparty" : {
+            "type" : "string"
+          },
+          "counterpartyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OffsetLine"
+            }
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "offsetDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "side" : {
+            "type" : "string",
+            "enum" : [ "SUPPLIER", "CUSTOMER" ]
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "branchId", "counterparty", "counterpartyId", "createdAt", "createdBy", "id", "lines", "number", "offsetDate", "side", "status" ]
+      },
+      "OffsetLine" : {
+        "type" : "object",
+        "properties" : {
+          "advanceDocNumber" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "debtDocId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "debtDocNumber" : {
+            "type" : "string"
+          },
+          "debtDocType" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "advanceDocNumber", "amount", "debtDocId", "debtDocNumber", "debtDocType" ]
+      },
+      "OffsetPreview" : {
+        "type" : "object",
+        "properties" : {
+          "advance" : {
+            "type" : "string"
+          },
+          "available" : {
+            "type" : "string"
+          },
+          "debt" : {
+            "type" : "string"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OffsetLine"
+            }
+          }
+        },
+        "required" : [ "advance", "available", "debt", "lines" ]
+      },
+      "OffsetRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "description" : "Eng ko'pi bilan shu summa; bo'sh — butun avans",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "counterpartyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "branchId", "counterpartyId" ]
       },
       "OpenDocView" : {
         "type" : "object",

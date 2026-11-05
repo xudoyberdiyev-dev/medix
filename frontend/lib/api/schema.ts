@@ -4,6 +4,93 @@
  */
 
 export interface paths {
+    "/api/advance-offsets/customer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mijoz avanslari hisobga olingan hujjatlar (AH) */
+        get: operations["listCustomer"];
+        put?: never;
+        /** Mijoz avansini qarzga hisoblash (AH) */
+        post: operations["createCustomer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/advance-offsets/customer/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mijoz: avans, qarz va hisobga olinadigan qatorlar (eng eskisidan) */
+        get: operations["previewCustomer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/advance-offsets/supplier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** YB avanslari hisobga olingan hujjatlar (AH) */
+        get: operations["listSupplier"];
+        put?: never;
+        /** YB avansini qarzga hisoblash (AH) */
+        post: operations["createSupplier"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/advance-offsets/supplier/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** YB: avans, qarz va hisobga olinadigan qatorlar (eng eskisidan) */
+        get: operations["previewSupplier"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/advance-offsets/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** AH ni bekor qilish (teskari yozuvlar) */
+        post: operations["cancel_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audit": {
         parameters: {
             query?: never;
@@ -4075,6 +4162,51 @@ export interface components {
             /** Format: int64 */
             unread: number;
         };
+        Offset: {
+            amount: string;
+            /** Format: int64 */
+            branchId: number;
+            cancelReason?: string;
+            counterparty: string;
+            /** Format: int64 */
+            counterpartyId: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: int64 */
+            id: number;
+            lines: components["schemas"]["OffsetLine"][];
+            note?: string;
+            number: string;
+            /** Format: date */
+            offsetDate: string;
+            /** @enum {string} */
+            side: "SUPPLIER" | "CUSTOMER";
+            status: string;
+        };
+        OffsetLine: {
+            advanceDocNumber: string;
+            amount: string;
+            /** Format: int64 */
+            debtDocId: number;
+            debtDocNumber: string;
+            debtDocType: string;
+        };
+        OffsetPreview: {
+            advance: string;
+            available: string;
+            debt: string;
+            lines: components["schemas"]["OffsetLine"][];
+        };
+        OffsetRequest: {
+            /** @description Eng ko'pi bilan shu summa; bo'sh — butun avans */
+            amount?: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int64 */
+            counterpartyId: number;
+            note?: string;
+        };
         OpenDocView: {
             /** Format: date */
             date: string;
@@ -5523,6 +5655,170 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listCustomer: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offset"][];
+                };
+            };
+        };
+    };
+    createCustomer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OffsetRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offset"];
+                };
+            };
+        };
+    };
+    previewCustomer: {
+        parameters: {
+            query: {
+                branchId: number;
+                counterpartyId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OffsetPreview"];
+                };
+            };
+        };
+    };
+    listSupplier: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offset"][];
+                };
+            };
+        };
+    };
+    createSupplier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OffsetRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offset"];
+                };
+            };
+        };
+    };
+    previewSupplier: {
+        parameters: {
+            query: {
+                branchId: number;
+                counterpartyId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OffsetPreview"];
+                };
+            };
+        };
+    };
+    cancel_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offset"];
+                };
+            };
+        };
+    };
     list_20: {
         parameters: {
             query?: {

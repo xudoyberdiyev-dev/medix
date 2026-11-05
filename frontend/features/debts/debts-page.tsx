@@ -18,6 +18,7 @@ import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { ActSection } from "./act-section";
+import { AdvanceOffsetButton } from "./advance-offset";
 
 export type DebtRow = components["schemas"]["DebtRow"];
 export type DebtDoc = components["schemas"]["DebtDoc"];
@@ -219,6 +220,7 @@ function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; 
       kind={CONFIG[props.side].party}
       title={props.row.name}
       subtitle={`STIR ${props.row.tin}`}
+      actions={<AdvanceOffsetButton side={props.side} branchId={props.branchId} counterpartyId={props.row.counterpartyId} />}
     >
       <dl className="mb-4 grid grid-cols-3 gap-4">
         <div>
