@@ -181,6 +181,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 06.11.2026 01:56 — fire_trigger yana rad etildi (auto mode); zanjirni 02:30 zaxira ishga tushirish davom ettiradi. Keyingi: server PDF.
 - 06.11.2026 01:33–01:55 — tungi oyna 2-sessiya: 3-bosqich «Kirim bo'yicha» narx — V31 (price_change.receipt_id, price_change_line.batch_id, batch_price), NO validatsiyasi (faqat o'tkazilgan kirim, partiya shu kirimdan), partiya tannarxidan past → Direktor; `/api/price-changes/receipt-batches/{id}`; buyurtma narxi FEFO rejasi bo'yicha o'rtacha tortilgan. UI: rejim, kirim tanlash, partiya qatorlari, chop etish. Backend 127 test, frontend 130 test, CI yashil; skrinshot (mock).
 - 06.11.2026 01:08–01:35 — tungi oyna 1-sessiya: CI tiklandi (DirectorHome `:d + 30` — JDBC turi aniqlanmagan parametr, PG xatosi; openapi.json CI'dan). Reys: «Rejalashtirilgan» reysga buyurtma qo'shish/olib tashlash (API + IT + «Tarkibni o'zgartirish» oynasi, skrinshot mock). Yig'uvchi: qator partiyalari API (stock.view siz, tannarxsiz) + «Boshqa partiyadan oldim» oynasi. Frontend 129 test, build yashil. zanjir: davom → «Kirim bo'yicha» narx (katta, yangi kontekstda).
 - 05.11.2026 20:40 — Repo public qilindi (GitHub Actions billing). Tungi oyna 01:00–05:00 qo'shildi.
