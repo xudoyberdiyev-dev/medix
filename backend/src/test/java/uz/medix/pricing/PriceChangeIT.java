@@ -310,26 +310,26 @@ class PriceChangeIT {
         mvc.perform(post("/api/price-changes/" + plain + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
 
         String head = "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today() + "\",\"receiptId\":RC,\"lines\":[";
-        String line = "{\"productId\":P,\"priceTypeId\":" + base + ",\"newPrice\":\"PRICE\",\"batchId\":B}";
+        String line = "{\"productId\":@ID,\"priceTypeId\":" + base + ",\"newPrice\":\"@PRICE\",\"batchId\":@B}";
         // O'tkazilmagan kirim — rad
         mvc.perform(json(post("/api/price-changes"), purchaser, head.replace("RC", "" + draftRc)
-                        + line.replace("P", "" + other).replace("PRICE", "600").replace("B", "" + b[2]) + "]}"))
+                        + line.replace("@ID", "" + other).replace("@PRICE", "600").replace("@B", "" + b[2]) + "]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("priceChange.receiptNotPosted"));
         // Boshqa kirim partiyasi — rad
         mvc.perform(json(post("/api/price-changes"), purchaser, head.replace("RC", "" + rc)
-                        + line.replace("P", "" + other).replace("PRICE", "600").replace("B", "" + b[2]) + "]}"))
+                        + line.replace("@ID", "" + other).replace("@PRICE", "600").replace("@B", "" + b[2]) + "]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("priceChange.batchNotInReceipt"));
         // Rejimsiz partiya — rad
         mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today() + "\",\"lines\":["
-                        + line.replace("P", "" + p).replace("PRICE", "600").replace("B", "" + b[0]) + "]}"))
+                        + line.replace("@ID", "" + p).replace("@PRICE", "600").replace("@B", "" + b[0]) + "]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("priceChange.batchWithoutReceipt"));
         // Partiyalarga narx: KB-1 → 1000 (tannarxga teng), KB-2 → 1100
         MvcResult created = mvc.perform(json(post("/api/price-changes"), purchaser, head.replace("RC", "" + rc)
-                        + line.replace("P", "" + p).replace("PRICE", "1000").replace("B", "" + b[0]) + ","
-                        + line.replace("P", "" + p).replace("PRICE", "1100").replace("B", "" + b[1]) + "]}"))
+                        + line.replace("@ID", "" + p).replace("@PRICE", "1000").replace("@B", "" + b[0]) + ","
+                        + line.replace("@ID", "" + p).replace("@PRICE", "1100").replace("@B", "" + b[1]) + "]}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.receiptId").value(rc))
                 .andExpect(jsonPath("$.lines", hasSize(2)))
@@ -367,7 +367,7 @@ class PriceChangeIT {
 
         // Partiya tannarxidan past — Direktor tasdig'iga
         long low = id(mvc.perform(json(post("/api/price-changes"), purchaser, head.replace("RC", "" + rc)
-                        + line.replace("P", "" + p).replace("PRICE", "999.99").replace("B", "" + b[0]) + "]}")).andReturn());
+                        + line.replace("@ID", "" + p).replace("@PRICE", "999.99").replace("@B", "" + b[0]) + "]}")).andReturn());
         mvc.perform(post("/api/price-changes/" + low + "/submit").with(csrf()).cookie(purchaser))
                 .andExpect(jsonPath("$.status").value("PENDING_APPROVAL"));
     }
