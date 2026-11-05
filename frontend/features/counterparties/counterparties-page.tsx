@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SavedViews } from "@/components/ui/saved-views";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -207,6 +208,17 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
                   onChange={(v) => apply({ status: (v as CounterpartyStatus | null) ?? "ACTIVE" })}
                   className="[&>span:first-child]:sr-only"
                   options={STATUS_OPTIONS}
+                />
+              </div>
+              <div className="ml-auto">
+                <SavedViews
+                  storageKey={`medix-counterparties-${role}-views`}
+                  query={params.toString()}
+                  hidden={[]}
+                  onApply={(v) => {
+                    setSearch(parse(new URLSearchParams(v.query), role).q);
+                    router.replace(v.query ? `${pathname}?${v.query}` : pathname, { scroll: false });
+                  }}
                 />
               </div>
             </div>

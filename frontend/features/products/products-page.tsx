@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { SavedViews } from "@/components/ui/saved-views";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { EmptyState, ErrorState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -260,7 +261,19 @@ export function ProductsPage() {
                     options={STATUS_OPTIONS}
                   />
                 </div>
-                <div className="relative ml-auto">
+                <div className="ml-auto">
+                  <SavedViews
+                    storageKey="medix-products-views"
+                    query={params.toString()}
+                    hidden={hidden}
+                    onApply={(v) => {
+                      setSearch(parseFilters(new URLSearchParams(v.query)).q);
+                      setHidden(v.hidden);
+                      router.replace(v.query ? `${pathname}?${v.query}` : pathname, { scroll: false });
+                    }}
+                  />
+                </div>
+                <div className="relative">
                   <Button
                     variant="secondary"
                     size="sm"
