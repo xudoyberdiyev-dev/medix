@@ -6270,6 +6270,25 @@
         "tags" : [ "reports" ]
       }
     },
+    "/api/reports/pickers/mine" : {
+      "get" : {
+        "operationId" : "pickerToday",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WorkerRow"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bugungi natijam (Yig'uvchi)",
+        "tags" : [ "reports" ]
+      }
+    },
     "/api/reports/sales" : {
       "get" : {
         "operationId" : "salesReport",

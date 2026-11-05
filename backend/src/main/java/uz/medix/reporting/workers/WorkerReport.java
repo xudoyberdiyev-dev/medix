@@ -125,6 +125,17 @@ class WorkerReport {
         return new WorkerReportView(kind, f, t, branchId, rows, row(sum, kind), truncated);
     }
 
+    /** «Bugungi natijam» (Yig'uvchi / Markirovkachi paneli): shu xodimning bugungi natijasi, ish bo'lmasa — nollar. */
+    @Transactional(readOnly = true)
+    public WorkerRow mine(Actor actor, Kind kind) {
+        LocalDate today = LocalDate.now(clock.withZone(TASHKENT));
+        WorkerReportView v = report(actor, kind, null, today, today);
+        return v.rows().stream()
+                .filter(r -> r.employeeId() == actor.employeeId())
+                .findFirst()
+                .orElseGet(() -> row(new Raw(actor.employeeId(), "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), kind));
+    }
+
     /** O'rtacha — butun daqiqa, yarmidan yuqoriga (HALF_UP). */
     static int avg(int total, int count) {
         return count == 0 ? 0 : (2 * total + count) / (2 * count);

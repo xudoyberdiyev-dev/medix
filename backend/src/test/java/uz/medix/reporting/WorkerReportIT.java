@@ -128,6 +128,19 @@ class WorkerReportIT {
 
         mvc.perform(get("/api/reports/pickers").cookie(op.cookie())).andExpect(status().isForbidden());
         mvc.perform(get("/api/reports/markers").cookie(p1.cookie())).andExpect(status().isForbidden());
+        // «Bugungi natijam»: faqat o'zi; ish bo'lmasa — nollar; picking.do siz — yopiq
+        mvc.perform(get("/api/reports/pickers/mine").cookie(p1.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.employeeId").value(p1.id()))
+                .andExpect(jsonPath("$.orders").value(2))
+                .andExpect(jsonPath("$.onTime").value(1))
+                .andExpect(jsonPath("$.late").value(1));
+        Session p3 = loginAs("PICKER", b);
+        mvc.perform(get("/api/reports/pickers/mine").cookie(p3.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.employeeId").value(p3.id()))
+                .andExpect(jsonPath("$.orders").value(0));
+        mvc.perform(get("/api/reports/pickers/mine").cookie(op.cookie())).andExpect(status().isForbidden());
         mvc.perform(get("/api/reports/pickers").param("from", t).param("to", t).cookie(keeper))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.kind").value("PICKERS"))
