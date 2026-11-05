@@ -12519,12 +12519,19 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "statuses" : {
+            "type" : "array",
+            "description" : "Holat yorliqlari («Hammasi» + har holat): soni va summasi",
+            "items" : {
+              "$ref" : "#/components/schemas/StatusCount"
+            }
+          },
           "total" : {
             "type" : "integer",
             "format" : "int64"
           }
         },
-        "required" : [ "items", "page", "size", "total" ]
+        "required" : [ "items", "page", "size", "statuses", "total" ]
       },
       "OrderReasonRequest" : {
         "type" : "object",
@@ -12614,6 +12621,10 @@
             "type" : "string",
             "enum" : [ "DELIVERY", "PICKUP" ]
           },
+          "holder" : {
+            "type" : "string",
+            "description" : "«Hozir kimda» (SPEC 5.2)"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -12644,7 +12655,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "id", "lines", "number", "orderDate", "status", "statusChangedAt", "total", "warehouse" ]
+        "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "holder", "id", "lines", "number", "orderDate", "status", "statusChangedAt", "total", "warehouse" ]
       },
       "OwnGoods" : {
         "type" : "object",
@@ -15052,6 +15063,24 @@
           }
         },
         "required" : [ "amount", "count", "staleAmount", "staleCount", "status", "todayAmount", "todayCount" ]
+      },
+      "StatusCount" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "null — «Hammasi»",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "total" ]
       },
       "StockPage" : {
         "type" : "object",

@@ -19,16 +19,17 @@ import {
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { type TabItem, Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
+import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { ORDER_CREATE, STATUS_LABELS, WAREHOUSE_STAGES, useOrders, type OrderStatus, type OrderSummary } from "./api";
+import { ORDER_CREATE, STATUS_LABELS, useOrders, type OrderStatus, type OrderSummary } from "./api";
 import { OrderDrawer } from "./order-drawer";
 
 const STATUS_STYLE: Record<OrderStatus, { tone: "neutral" | "warning" | "info" | "success" | "danger"; icon: LucideIcon }> = {
@@ -58,7 +59,25 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
 
 export const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
 
-/** Buyurtmalar (SPEC 5.2): holat filtri, qidiruv (raqam, mijoz, STIR), «Mening buyurtmalarim». */
+const ALL = "ALL";
+type StatusCount = components["schemas"]["StatusCount"];
+
+/** Holat yorliqlari: «Hammasi» + 13 holat, har birida soni (summasi — tanlangan yorliq ostida). */
+export function statusTabs(counts: StatusCount[]): TabItem[] {
+  return counts.map((c) => ({
+    key: c.status ?? ALL,
+    label: c.status ? STATUS_LABELS[c.status] : "Hammasi",
+    count: c.count,
+  }));
+}
+
+export function tabSummary(counts: StatusCount[], status: string | null): string {
+  const c = counts.find((x) => (x.status ?? null) === status) ?? counts[0];
+  if (!c) return "";
+  return `${c.status ? STATUS_LABELS[c.status] : "Hammasi"}: ${formatQuantity(c.count)} ta · ${formatMoney(c.total)} soʻm`;
+}
+
+/** Buyurtmalar (SPEC 5.2): holat yorliqlari (soni, summasi), «Hozir kimda», qidiruv (raqam, mijoz, STIR), «Mening buyurtmalarim». */
 export function OrdersPage() {
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
@@ -96,6 +115,7 @@ export function OrdersPage() {
     { key: "lines", title: "Qatorlar", align: "right", render: (o) => <span className="tabular-nums">{formatQuantity(o.lines)}</span> },
     { key: "total", title: "Summa", align: "right", render: (o) => <span className="tabular-nums">{formatMoney(o.total)}</span> },
     { key: "createdBy", title: "Operator" },
+    { key: "holder", title: "Hozir kimda", render: (o) => <span className="text-caption text-text-secondary">{o.holder}</span> },
     {
       key: "status",
       title: "Holat",
@@ -119,6 +139,17 @@ export function OrdersPage() {
           </Button>
         ) : null}
       </div>
+      {orders.data ? (
+        <div className="mb-3 flex flex-col gap-2">
+          <Tabs
+            aria-label="Buyurtma holatlari"
+            items={statusTabs(orders.data.statuses)}
+            value={status ?? ALL}
+            onChange={(k) => (setStatus(k === ALL ? null : k), setPage(1))}
+          />
+          <p className="text-caption text-text-secondary tabular-nums">{tabSummary(orders.data.statuses, status)}</p>
+        </div>
+      ) : null}
       {orders.error ? (
         <ErrorState onRetry={() => orders.refetch()} />
       ) : (
@@ -144,21 +175,6 @@ export function OrdersPage() {
                   }}
                   placeholder="Raqam, mijoz yoki STIR"
                   className="[&>label]:sr-only"
-                />
-              </div>
-              <div className="w-56">
-                <Select
-                  label="Holat"
-                  size="sm"
-                  value={status}
-                  onChange={(v) => (setStatus(v), setPage(1))}
-                  placeholder="Barcha holatlar"
-                  className="[&>span:first-child]:sr-only"
-                  options={(Object.keys(STATUS_LABELS) as OrderStatus[]).map((value) => ({
-                    value,
-                    label: STATUS_LABELS[value],
-                    sub: WAREHOUSE_STAGES.includes(value) ? "Ombor" : undefined,
-                  }))}
                 />
               </div>
               {canCreate ? <Checkbox label="Mening buyurtmalarim" checked={mine} onChange={(v) => (setMine(v), setPage(1))} /> : null}

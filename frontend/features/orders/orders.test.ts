@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { canApprove, canCancelOrder, codesExportUrl } from "./api";
 import { counterText } from "./marking-page";
+import { statusTabs, tabSummary } from "./orders-page";
 import { groupByStage, sinceText, type MonitorCard } from "./monitor-page";
 import { timerText } from "./picking-page";
 import { capacityState } from "./shipments-page";
@@ -88,5 +89,23 @@ describe("codesExportUrl", () => {
     expect(codesExportUrl({})).toBe("/api/marking/codes/export");
     expect(codesExportUrl({ orderId: 7 })).toBe("/api/marking/codes/export?orderId=7");
     expect(codesExportUrl({ today: true, mine: true, q: " ab1 " })).toBe("/api/marking/codes/export?today=true&mine=true&q=ab1");
+  });
+});
+
+describe("buyurtma holat yorliqlari", () => {
+  const counts = [
+    { count: 3, total: "3500.00" },
+    { status: "DRAFT" as const, count: 1, total: "500.00" },
+    { status: "CANCELLED" as const, count: 2, total: "3000.00" },
+  ];
+
+  it("«Hammasi» birinchi, har yorliqda soni; tanlangan yorliq ostida summasi", () => {
+    expect(statusTabs(counts).map((t) => [t.key, t.label, t.count])).toEqual([
+      ["ALL", "Hammasi", 3],
+      ["DRAFT", "Qoralama", 1],
+      ["CANCELLED", "Bekor qilingan", 2],
+    ]);
+    expect(tabSummary(counts, null)).toBe("Hammasi: 3 ta · 3.500,00 soʻm");
+    expect(tabSummary(counts, "CANCELLED")).toBe("Bekor qilingan: 2 ta · 3.000,00 soʻm");
   });
 });

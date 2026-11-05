@@ -5352,6 +5352,8 @@ export interface components {
             page: number;
             /** Format: int32 */
             size: number;
+            /** @description Holat yorliqlari («Hammasi» + har holat): soni va summasi */
+            statuses: components["schemas"]["StatusCount"][];
             /** Format: int64 */
             total: number;
         };
@@ -5388,6 +5390,8 @@ export interface components {
             deliveryDate?: string;
             /** @enum {string} */
             deliveryType: "DELIVERY" | "PICKUP";
+            /** @description «Hozir kimda» (SPEC 5.2) */
+            holder: string;
             /** Format: int64 */
             id: number;
             /** Format: int32 */
@@ -6340,6 +6344,16 @@ export interface components {
             todayAmount: string;
             /** Format: int32 */
             todayCount: number;
+        };
+        StatusCount: {
+            /** Format: int64 */
+            count: number;
+            /**
+             * @description null — «Hammasi»
+             * @enum {string}
+             */
+            status?: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
+            total: string;
         };
         StockPage: {
             items: components["schemas"]["StockRow"][];
