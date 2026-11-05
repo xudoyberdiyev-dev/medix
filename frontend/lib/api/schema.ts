@@ -3291,6 +3291,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/{id}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reysga buyurtma qo'shish
+         * @description Faqat «Rejalashtirilgan» reys; sig'im tekshiruvi; nakladnoy raqami, «Yuklanmoqda».
+         */
+        post: operations["addOrders"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/orders/{orderId}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reysdan buyurtmani olib tashlash
+         * @description Faqat «Rejalashtirilgan» reys, haydovchi qabul qilmagan buyurtma; buyurtma «Hujjatlashtirilmoqda»ga qaytadi.
+         */
+        post: operations["removeOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/{id}/start": {
         parameters: {
             query?: never;
@@ -3701,6 +3741,9 @@ export interface components {
             note?: string;
             /** Format: date-time */
             occurredAt: string;
+        };
+        AddOrdersRequest: {
+            orderIds: number[];
         };
         AddZoneRequest: {
             /** @enum {string} */
@@ -11394,6 +11437,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FinishResult"];
+                };
+            };
+        };
+    };
+    addOrders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddOrdersRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
+    removeOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
                 };
             };
         };

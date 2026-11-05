@@ -7387,6 +7387,92 @@
         "tags" : [ "trips" ]
       }
     },
+    "/api/trips/{id}/orders" : {
+      "post" : {
+        "description" : "Faqat «Rejalashtirilgan» reys; sig'im tekshiruvi; nakladnoy raqami, «Yuklanmoqda».",
+        "operationId" : "addOrders",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddOrdersRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Reysga buyurtma qo'shish",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/orders/{orderId}/remove" : {
+      "post" : {
+        "description" : "Faqat «Rejalashtirilgan» reys, haydovchi qabul qilmagan buyurtma; buyurtma «Hujjatlashtirilmoqda»ga qaytadi.",
+        "operationId" : "removeOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Reysdan buyurtmani olib tashlash",
+        "tags" : [ "trips" ]
+      }
+    },
     "/api/trips/{id}/start" : {
       "post" : {
         "description" : "Har buyurtmaga sotuv (SV) va hisob-faktura (HF); «Yo'lda».",
@@ -8326,6 +8412,21 @@
           }
         },
         "required" : [ "balance", "credit", "date", "debit", "docId", "docNumber", "docType", "occurredAt" ]
+      },
+      "AddOrdersRequest" : {
+        "type" : "object",
+        "properties" : {
+          "orderIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 100,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "orderIds" ]
       },
       "AddZoneRequest" : {
         "type" : "object",

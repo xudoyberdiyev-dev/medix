@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, CalendarClock, PackageCheck, Printer, Truck } from "lucide-react";
+import { Ban, CalendarClock, ListPlus, PackageCheck, Printer, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { TripEditModal } from "./trip-edit-modal";
 
 export type ReadyOrder = components["schemas"]["ReadyOrder"];
 export type TripSummary = components["schemas"]["TripSummary"];
@@ -75,6 +76,7 @@ export function ShipmentsPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [cancelling, setCancelling] = useState<TripSummary | null>(null);
+  const [editing, setEditing] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [cancelError, setCancelError] = useState<unknown>(null);
   const [cancelPending, setCancelPending] = useState(false);
@@ -378,6 +380,11 @@ export function ShipmentsPage() {
                       Yoʻl varaqasini chop etish
                     </Button>
                     {canTrip && t.status === "PLANNED" ? (
+                      <Button size="sm" variant="secondary" icon={ListPlus} onClick={() => setEditing(t.id)}>
+                        Tarkibni oʻzgartirish
+                      </Button>
+                    ) : null}
+                    {canTrip && t.status === "PLANNED" ? (
                       <Button size="sm" variant="tertiary" icon={Ban} onClick={() => setCancelling(t)}>
                         Reysni bekor qilish
                       </Button>
@@ -389,6 +396,7 @@ export function ShipmentsPage() {
           </ul>
         )}
       </section>
+      <TripEditModal tripId={editing} ready={ready.data ?? []} onClose={() => setEditing(null)} />
       <Modal
         open={cancelling !== null}
         onClose={() => setCancelling(null)}
