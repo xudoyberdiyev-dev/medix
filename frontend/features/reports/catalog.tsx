@@ -49,15 +49,15 @@ export const REPORTS: ReportEntry[] = [
   {
     key: "pickers",
     title: "Yigʻuvchilar natijasi",
-    description: "Yigʻilgan buyurtma va qatorlar soni.",
-    href: null,
+    description: "Yigʻilgan buyurtma, qator va dona; vaqtida / kechikkan.",
+    href: "/reports/pickers",
     anyOf: ["reports.pickers"],
   },
   {
     key: "markers",
     title: "Markirovkachilar natijasi",
-    description: "Skanerlangan kodlar va tekshiruvlar.",
-    href: null,
+    description: "Skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan.",
+    href: "/reports/markers",
     anyOf: ["reports.markers"],
   },
 ];
