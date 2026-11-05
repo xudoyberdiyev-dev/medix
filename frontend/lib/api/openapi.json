@@ -9651,8 +9651,16 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "supplierCompanies" : {
+            "$ref" : "#/components/schemas/SupplierBlock",
+            "description" : "Faqat tannarx ko'rish ruxsati (prices.cost) bilan"
+          },
           "supplierDebt" : {
             "$ref" : "#/components/schemas/DebtCard"
+          },
+          "supplierStaff" : {
+            "$ref" : "#/components/schemas/SupplierBlock",
+            "description" : "Faqat tannarx ko'rish ruxsati (prices.cost) bilan"
           },
           "to" : {
             "type" : "string",
@@ -13670,6 +13678,24 @@
         },
         "required" : [ "batchId", "batchNumber", "bonus", "daysLeft", "expiryDate", "productCode", "productId", "productName", "qty", "sellable", "warehouse", "warehouseId", "zone", "zoneId", "zoneType" ]
       },
+      "SupplierBlock" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SupplierStat"
+            }
+          },
+          "passive" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SupplierStat"
+            }
+          }
+        },
+        "required" : [ "active", "passive" ]
+      },
       "SupplierPaymentDetail" : {
         "type" : "object",
         "properties" : {
@@ -13856,6 +13882,28 @@
           }
         },
         "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "id", "number", "paymentDate", "status", "supplier", "supplierId" ]
+      },
+      "SupplierStat" : {
+        "type" : "object",
+        "properties" : {
+          "brought" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "left" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "sold" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "brought", "id", "left", "name", "sold" ]
       },
       "Terms" : {
         "type" : "object",

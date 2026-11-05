@@ -25,6 +25,8 @@ type BranchRow = components["schemas"]["BranchRow"];
 type Debtor = components["schemas"]["Debtor"];
 type StatusCell = components["schemas"]["StatusCell"];
 type OperatorRow = components["schemas"]["OperatorRow"];
+type SupplierBlock = components["schemas"]["SupplierBlock"];
+type SupplierStat = components["schemas"]["SupplierStat"];
 
 export type StatusFilter = "all" | "today" | "stale";
 
@@ -191,6 +193,12 @@ export function DirectorHome() {
             <Branches rows={h.branches} />
             <Operators rows={h.operators} />
           </div>
+          {h.supplierStaff && h.supplierCompanies ? (
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <Suppliers title="Taʼminotchi xodim" party="Xodim" block={h.supplierStaff} />
+              <Suppliers title="Taʼminotchi korxona" party="Korxona" block={h.supplierCompanies} />
+            </div>
+          ) : null}
         </div>
       )}
     </>
@@ -391,6 +399,49 @@ function Operators({ rows }: { rows: OperatorRow[] }) {
         rowKey={(o) => String(o.id)}
         emptyState={<EmptyState icon={Users} title="Savdo yoʻq" description="Davrda sotuv boʻlsa, operatorlar shu yerda koʻrinadi." />}
       />
+    </section>
+  );
+}
+
+function Suppliers({ title, party, block }: { title: string; party: string; block: SupplierBlock }) {
+  const [tab, setTab] = useState<"active" | "passive">("active");
+  const columns: TableColumn<SupplierStat>[] = [
+    { key: "name", title: party },
+    { key: "brought", title: "Olib keldi", align: "right", render: (r) => money(r.brought) },
+    { key: "sold", title: "Sotildi", align: "right", render: (r) => money(r.sold) },
+    { key: "left", title: "Qoldi", align: "right", render: (r) => money(r.left) },
+  ];
+  return (
+    <section>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-subtitle">{title}</h2>
+        <Tabs
+          aria-label={title}
+          items={[
+            { key: "active", label: "Aktiv", count: block.active.length },
+            { key: "passive", label: "Passiv", count: block.passive.length },
+          ]}
+          value={tab}
+          onChange={(k) => setTab(k as "active" | "passive")}
+        />
+      </div>
+      <Table
+        caption={`${title}: tannarxda, top 5`}
+        density="compact"
+        columns={columns}
+        rows={block[tab]}
+        rowKey={(r) => String(r.id)}
+        emptyState={
+          <EmptyState
+            icon={HandCoins}
+            title={tab === "active" ? "Davrda kirim yoʻq" : "Passiv taʼminotchi yoʻq"}
+            description={
+              tab === "active" ? "Davrda kirim qilinsa, shu yerda koʻrinadi." : "Davrda kirim qilmagan, qoldigʻi borlar shu yerda."
+            }
+          />
+        }
+      />
+      <p className="mt-1 text-caption text-text-secondary">Tannarxda: olib keldi va sotildi — davrda, qoldi — hozir.</p>
     </section>
   );
 }

@@ -63,9 +63,17 @@ class DirectorHome {
     /** Operator: sof savdo (QQS bilan) — o'zi kiritgan buyurtmalar bo'yicha. */
     record OperatorRow(long id, String name, String sales) {}
 
+    /** Ta'minotchi (xodim — «Kim nomiga» yoki korxona) hisobi, tannarxda (SPEC 6): davrda olib keldi / sotildi, hozir qoldi. */
+    record SupplierStat(long id, String name, String brought, String sold, String left) {}
+
+    /** Aktiv — davrda kirim qilgan; Passiv — davrda kirim yo'q, lekin qoldig'i bor. Har biri top 5. */
+    record SupplierBlock(List<SupplierStat> active, List<SupplierStat> passive) {}
+
     record Home(LocalDate from, LocalDate to, LocalDate today, @Schema(nullable = true) Long branchId, ByPayment sales, DebtCard customerDebt,
             DebtCard supplierDebt, ByPayment expenses, List<BranchRow> branches, Attention attention, List<Debtor> topDebtors,
-            int staleDays, List<StatusCell> orderStatuses, List<OperatorRow> operators) {}
+            int staleDays, List<StatusCell> orderStatuses, List<OperatorRow> operators,
+            @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") SupplierBlock supplierStaff,
+            @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") SupplierBlock supplierCompanies) {}
 
     private final JdbcClient jdbc;
     private final DebtSummaries debts;
@@ -89,7 +97,7 @@ class DirectorHome {
     private record Amount(long branchId, String kind, BigDecimal amount) {}
 
     @Transactional(readOnly = true)
-    Home home(Actor actor, Long branchId, LocalDate from, LocalDate to) {
+    Home home(Actor actor, Long branchId, LocalDate from, LocalDate to, boolean canSeeCost) {
         if (branchId == null ? !actor.allBranches() : !actor.canAccessBranch(branchId)) {
             throw MedixException.notFound("error.notFound");
         }
@@ -148,7 +156,9 @@ class DirectorHome {
                 .map(x -> new Debtor(x.counterpartyId(), x.name(), x.debt(), x.overdue(), x.maxOverdueDays())).toList();
         return new Home(f, t, today, branchId, byPayment(sales), new DebtCard(customers.debt(), customers.overdue(), customers.advance()),
                 new DebtCard(suppliers.debt(), suppliers.overdue(), suppliers.advance()), byPayment(expenses), rows, attention, top,
-                STALE_DAYS, statuses(branchId, f, t, today), operators(branchId, f, t));
+                STALE_DAYS, statuses(branchId, f, t, today), operators(branchId, f, t),
+                canSeeCost ? suppliers(branchId, f, t, "owner_id", "employee", "full_name") : null,
+                canSeeCost ? suppliers(branchId, f, t, "supplier_id", "counterparty", "name") : null);
     }
 
     private List<StatusCell> statuses(Long branchId, LocalDate f, LocalDate t, LocalDate today) {
@@ -176,6 +186,46 @@ class DirectorHome {
                 })
                 .list();
         return STATUSES.stream().map(st -> by.getOrDefault(st, new StatusCell(st, 0, "0.00", 0, "0.00", 0, "0.00"))).toList();
+    }
+
+    private record SupplierRaw(long id, BigDecimal brought, BigDecimal sold, BigDecimal remain) {}
+
+    /** key — receipt ustuni (owner_id / supplier_id), nameTable/nameColumn — nom manbai. Faqat ichki konstantalar bilan chaqiriladi. */
+    private SupplierBlock suppliers(Long branchId, LocalDate f, LocalDate t, String key, String nameTable, String nameColumn) {
+        List<SupplierRaw> raw = jdbc.sql("""
+                WITH src AS (SELECT b.id AS batch_id, b.cost, r.%1$s AS party
+                             FROM batch b JOIN receipt_line l ON l.id = b.source_id JOIN receipt r ON r.id = l.receipt_id
+                             WHERE b.source_type = 'KR' AND r.%1$s IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)),
+                     mv AS (SELECT m.batch_id,
+                                   sum(m.qty) FILTER (WHERE m.doc_type = 'KR') AS brought,
+                                   -sum(m.qty) FILTER (WHERE m.doc_type IN ('SV', 'QM')) AS sold
+                            FROM stock_move m JOIN src ON src.batch_id = m.batch_id
+                            WHERE (m.occurred_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t
+                            GROUP BY m.batch_id),
+                     bal AS (SELECT sb.batch_id, sum(sb.qty) AS qty FROM stock_balance sb JOIN src ON src.batch_id = sb.batch_id GROUP BY sb.batch_id)
+                SELECT src.party AS id, sum(coalesce(mv.brought, 0) * src.cost) AS brought, sum(coalesce(mv.sold, 0) * src.cost) AS sold,
+                       sum(coalesce(bal.qty, 0) * src.cost) AS remain
+                FROM src LEFT JOIN mv ON mv.batch_id = src.batch_id LEFT JOIN bal ON bal.batch_id = src.batch_id
+                GROUP BY src.party""".formatted(key))
+                .param("b", branchId).param("f", Date.valueOf(f)).param("t", Date.valueOf(t))
+                .query(SupplierRaw.class).list();
+        if (raw.isEmpty()) {
+            return new SupplierBlock(List.of(), List.of());
+        }
+        Map<Long, String> names = new HashMap<>();
+        jdbc.sql("SELECT id, %s AS name FROM %s WHERE id IN (:ids)".formatted(nameColumn, nameTable))
+                .param("ids", raw.stream().map(SupplierRaw::id).toList())
+                .query((rs, n) -> names.put(rs.getLong("id"), rs.getString("name")))
+                .list();
+        java.util.function.Function<SupplierRaw, SupplierStat> stat = r -> new SupplierStat(r.id(), names.getOrDefault(r.id(), "—"),
+                m(r.brought()).toString(), m(r.sold()).toString(), m(r.remain()).toString());
+        List<SupplierStat> active = raw.stream().filter(r -> m(r.brought()).isPositive())
+                .sorted(java.util.Comparator.comparing((SupplierRaw r) -> m(r.brought())).reversed())
+                .limit(TOP).map(stat).toList();
+        List<SupplierStat> passive = raw.stream().filter(r -> !m(r.brought()).isPositive() && m(r.remain()).isPositive())
+                .sorted(java.util.Comparator.comparing((SupplierRaw r) -> m(r.remain())).reversed())
+                .limit(TOP).map(stat).toList();
+        return new SupplierBlock(active, passive);
     }
 
     private List<OperatorRow> operators(Long branchId, LocalDate f, LocalDate t) {

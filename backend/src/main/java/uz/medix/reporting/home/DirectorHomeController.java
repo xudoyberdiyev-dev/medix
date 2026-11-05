@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +30,8 @@ class DirectorHomeController {
     @Operation(summary = "Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar")
     DirectorHome.Home get(@RequestParam(required = false) Long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return home.home(currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized")), branchId, from, to);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to, Authentication auth) {
+        boolean cost = auth.getAuthorities().stream().anyMatch(a -> "prices.cost".equals(a.getAuthority()));
+        return home.home(currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized")), branchId, from, to, cost);
     }
 }

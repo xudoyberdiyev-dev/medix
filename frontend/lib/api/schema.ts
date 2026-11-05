@@ -4135,7 +4135,11 @@ export interface components {
             sales: components["schemas"]["ByPayment"];
             /** Format: int32 */
             staleDays: number;
+            /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
+            supplierCompanies?: components["schemas"]["SupplierBlock"];
             supplierDebt: components["schemas"]["DebtCard"];
+            /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
+            supplierStaff?: components["schemas"]["SupplierBlock"];
             /** Format: date */
             to: string;
             /** Format: date */
@@ -5735,6 +5739,10 @@ export interface components {
             /** @enum {string} */
             zoneType: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
+        SupplierBlock: {
+            active: components["schemas"]["SupplierStat"][];
+            passive: components["schemas"]["SupplierStat"][];
+        };
         SupplierPaymentDetail: {
             account: string;
             accountBalance: string;
@@ -5812,6 +5820,14 @@ export interface components {
             supplier: string;
             /** Format: int64 */
             supplierId: number;
+        };
+        SupplierStat: {
+            brought: string;
+            /** Format: int64 */
+            id: number;
+            left: string;
+            name: string;
+            sold: string;
         };
         Terms: {
             /** Format: int64 */
