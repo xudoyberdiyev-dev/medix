@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, CalendarClock, PackageCheck, Truck } from "lucide-react";
+import { Ban, CalendarClock, PackageCheck, Printer, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -368,11 +368,21 @@ export function ShipmentsPage() {
                       {formatQuantity(t.places)} joy · {formatMoney(t.total)} soʻm
                     </div>
                   </div>
-                  {canTrip && t.status === "PLANNED" ? (
-                    <Button size="sm" variant="tertiary" icon={Ban} onClick={() => setCancelling(t)}>
-                      Reysni bekor qilish
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={Printer}
+                      onClick={() => window.open(`/print/trip?id=${t.id}`, "_blank", "noopener")}
+                    >
+                      Yoʻl varaqasi
                     </Button>
-                  ) : null}
+                    {canTrip && t.status === "PLANNED" ? (
+                      <Button size="sm" variant="tertiary" icon={Ban} onClick={() => setCancelling(t)}>
+                        Reysni bekor qilish
+                      </Button>
+                    ) : null}
+                  </div>
                 </li>
               );
             })}

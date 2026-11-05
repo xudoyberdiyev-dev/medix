@@ -1,16 +1,15 @@
 "use client";
 
 import { useQueries } from "@tanstack/react-query";
-import { ClipboardList, Printer } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
 import { useMe } from "@/features/auth/session";
 import { api, ApiError, unwrap } from "@/lib/api/client";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { day } from "./orders-page";
 import { buildPickSheet, parseIds } from "./pick-sheet";
+import { PrintShell as Shell, Signatures } from "./print-shell";
 
 /** Terish varagʻi (/print/picking?ids=1,2): bir necha buyurtma bitta varaqda, zona boʻyicha. */
 export function PickSheetPage() {
@@ -25,15 +24,6 @@ export function PickSheetPage() {
   });
   const failed = results.find((r) => r.error);
   const ready = ids.length > 0 && results.every((r) => r.data);
-  const printed = useRef(false);
-
-  useEffect(() => {
-    if (ready && !printed.current) {
-      printed.current = true;
-      window.print();
-    }
-  }, [ready]);
-
   if (ids.length === 0) {
     return (
       <Shell>
@@ -72,12 +62,7 @@ export function PickSheetPage() {
   const warehouses = [...new Set(orders.map((o) => o.warehouse))].join(", ");
 
   return (
-    <Shell>
-      <div className="mb-4 flex items-center justify-end gap-2 print:hidden">
-        <Button icon={Printer} onClick={() => window.print()}>
-          Chop etish
-        </Button>
-      </div>
+    <Shell ready>
       <header className="flex items-start justify-between gap-4 border-b border-text-primary pb-3">
         <div>
           <div className="text-caption text-text-secondary">MEDIX</div>
@@ -159,14 +144,7 @@ export function PickSheetPage() {
         ) : null}
       </section>
 
-      <footer className="mt-10 grid grid-cols-2 gap-10 text-caption">
-        <div className="border-t border-text-primary pt-1">Yigʻuvchi (F.I.Sh., imzo)</div>
-        <div className="border-t border-text-primary pt-1">Tekshirdi (F.I.Sh., imzo)</div>
-      </footer>
+      <Signatures roles={["Yigʻuvchi", "Tekshirdi"]} />
     </Shell>
   );
-}
-
-function Shell({ children }: { children: ReactNode }) {
-  return <main className="mx-auto max-w-[210mm] p-6 print:max-w-none print:p-0">{children}</main>;
 }
