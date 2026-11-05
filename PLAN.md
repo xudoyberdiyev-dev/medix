@@ -172,6 +172,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 05.11.2026 13:30 — Egasi qarori: zanjir rejimi (06:00–11:00, 14:00–18:00; kechki 20:00–22:30 faqat so'rov bilan; 11–14 tanaffus).
 - 05.11.2026 12:05–12:50 — 9-bosqich: Kassir paneli, kassir faqat o'z kassasida, Bonus balans sahifasi, bank ko'chirmasi bilan solishtirish.
 - 01.11.2026 23:00 – 02.11.2026 00:10 — 7-bosqich: markirovka (GS1, tekshiruv tartibi, global takror, parallel test), Markirovkachi paneli, Ombor monitori, «Muammo bor», reys (RS) va nakladnoy (NK), «O'zi olib ketadi», Jo'natish sahifasi; 8-bosqich: sotuv/HF, Haydovchi paneli, yetkazildi/yetkazilmadi, qaytgan tovar qabuli. CI yashil.
 - 01.11.2026 18:05–19:55 — 4-bosqich: BQ, Qoldiqlar eksporti, ombor nofaol qilish tekshiruvi; 5-bosqich: Kirim (to'liq oqim + qarz jurnali), BNS, bonus kirim, to'lov/bonus eslatmalari + bildirishnomalar; 3-bosqich: tannarxdan past narx, o'rtacha/oxirgi kirim narxidan ustama; 6-bosqich: buyurtma (qoidalar, kredit, tasdiq, katalog); 7-bosqich: FEFO zahira, vaqt berish, yig'ish, hisobdan o'tkazish. E2E: BQ, Kirim, Buyurtma→yig'ish→tekshiruv. E2E 3 ta UI xatoni topdi (tuzatildi).

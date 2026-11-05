@@ -1,6 +1,6 @@
 # MEDIX — Claude uchun ish qoidalari
 
-Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + Claude. Kod avtonom sessiyalarda (kuniga 4 marta: 07:00, 12:00, 18:00, 23:00 Toshkent) va egasi ochgan sessiyalarda yoziladi.
+Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + Claude. Kod avtonom **zanjir** sessiyalarida yoziladi (pastdagi «Zanjir rejimi»: har kuni 06:00–11:00 va 14:00–18:00, ba'zan egasi so'rasa 20:00–22:30, Toshkent) va egasi ochgan sessiyalarda.
 
 ## Haqiqat manbalari (shu tartibda)
 1. `docs/SPEC.md` — loyihaning to'liq tavsifi (rollar, jarayonlar, biznes qoidalari, texnologiyalar, arxitektura). **Har sessiyada kerakli bo'limini o'qing.**
@@ -8,13 +8,38 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 3. `design/` — dizayn tizimi (`design/system/`) va ekran manbalari (`design/README.md`).
 4. Ziddiyat bo'lsa — eng keyingi sanali qaror ustun; hal qilib bo'lmasa, PLAN.md → «Egasiga savollar» ga yozing va boshqa vazifaga o'ting.
 
+## Zanjir rejimi (egasi qarori, 05.11.2026)
+**Ish oynalari (Asia/Tashkent):**
+| Oyna | Vaqt | Izoh |
+|---|---|---|
+| Ertalab | 06:00–11:00 | har kuni |
+| Kunduz | 14:00–18:00 | har kuni |
+| Kechki | 20:00–22:30 | **faqat egasi o'sha kuni so'rasa** (alohida bir martalik ishga tushirish) |
+
+**11:00–14:00 — tanaffus, QAT'IY ishlamaslik** (egasi limitni o'zi ishlatadi). Oynadan tashqarida yangi ish boshlanmaydi.
+
+**Qoidalar:**
+1. **Bitta sessiya qoidasi.** Boshlanishda `git fetch` qiling. Agar `origin/develop` dagi oxirgi commit 20 daqiqadan yangi bo'lsa va u `hisobot:` yoki `zanjir: tugadi` emas — boshqa sessiya ishlayapti: hech narsa o'zgartirmay darhol tugating («Faol sessiya bor — chiqdim»). Ishlayotgan sessiya **kamida har 20 daqiqada** commit qiladi (vazifa yarim bo'lsa — `status/heartbeat.txt` ga vaqtni yozib commit+push).
+2. **Oyna tugash vaqti** — ishga tushirish xabaridagi «Oyna tugashi: HH:MM». Shu vaqtdan 10 daqiqa oldin yangi vazifa boshlamang; tugash vaqtida ishni albatta commit+push qilib to'xtang.
+3. **Boshlanish xabari** (`status/last-start.txt` → Telegram) faqat oynaning BIRINCHI sessiyasida.
+4. **Kontekst tugay boshlasa** (ko'p ish qilingan, xotira og'irlashgan) yoki vazifa tugab kontekstning katta qismi ishlatilgan bo'lsa: ishni commit+push qiling, `PLAN.md` → «Sessiya jurnali» ga 1–3 qator yozing, `zanjir: davom` commit qiling, so'ng **keyingi sessiyani ishga tushiring**: `mcp__claude-code-remote__fire_trigger` (ToolSearch bilan yuklang), `trigger_id: trig_019P1iLSzuMPtmKdMR7if1hA`, `text: "Oyna tugashi: HH:MM"` (shu oynaning tugash vaqti). Faqat oyna tugashiga ≥ 20 daqiqa qolgan bo'lsa.
+5. **Oyna tugaganda** (yoki oxirgi sessiya): zanjirni davom ettirmang; `reports/YYYY-MM-DD-HHMM.md` hisobot yozing — butun oyna bo'yicha (shu oynadagi barcha sessiyalar, «Sessiya jurnali» qaydlaridan) — `PLAN.md` ni yangilang, commit `hisobot: …` + push (Telegram'ga ketadi).
+6. Limit tugasa sessiya o'zi yopiladi — zaxira ishga tushirishlar (08:30, 16:00) zanjirni qayta ulaydi.
+
+## Kontekstni tejash (sessiyani uzoqroq ishlatish uchun)
+- Buyruq chiqishini doim qisqartiring: `| tail -40`, `| grep -E "error|FAIL|Exception" | head -30`. CI logini to'liq o'qimang: `gh run view <id> --log-failed | grep -E -A5 "FAILED|error:|Exception" | head -60`.
+- Katta fayllarni to'liq o'qimang: avval `grep -n`, keyin `Read` da `offset/limit`. `docs/SPEC.md` dan faqat kerakli bo'limni.
+- `pnpm install`, `build`, `gradle` chiqishini `> /tmp/x.log 2>&1; tail -20 /tmp/x.log` ko'rinishida.
+- Skrinshotni faqat UI vazifasida va bitta-ikkita.
+- O'zgartirgan faylingizni qayta o'qimang.
+
 ## Sessiya tartibi (avtonom ish)
-0. **Boshlanish xabari:** `status/last-start.txt` ga «▶️ MEDIX: HH:MM sessiya boshlandi — reja: <keyingi vazifa>» yozing, develop'ga commit+push qiling (Telegram'ga ketadi) va `PushNotification` vositasi bo'lsa, shu matnni u orqali ham yuboring.
+0. **Boshlanish xabari (faqat oynaning birinchi sessiyasida):** `status/last-start.txt` ga «▶️ MEDIX: HH:MM sessiya boshlandi — reja: <keyingi vazifa>» yozing, develop'ga commit+push qiling (Telegram'ga ketadi) va `PushNotification` vositasi bo'lsa, shu matnni u orqali ham yuboring.
 1. `git fetch origin && git checkout develop && git pull` (develop bo'lmasa — main'dan yarating).
 2. `PLAN.md` → «Hozirgi holat» va «Keyingi vazifalar» ni o'qing. Oldingi sessiyaning oxirgi hisobotini (`reports/` dagi eng yangi fayl) o'qing.
 3. Oldingi CI natijasini tekshiring: `gh run list --branch develop -L 3`. Yiqilgan bo'lsa — **birinchi navbatda shuni tuzating** (`gh run view <id> --log-failed`).
 4. Keyingi vazifani bajaring: kod → testlar → tekshiruv (pastga qarang) → commit → push. **Har tugagan kichik vazifadan keyin darhol commit va push** — limit tugasa ham ish yo'qolmasin.
-5. Sessiya oxirida: `PLAN.md` ni yangilang (belgilar, «Hozirgi holat») va `reports/YYYY-MM-DD-HHMM.md` hisobot yozing (format pastda), commit + push.
+5. Sessiya oxirida: «Zanjir rejimi» 4–5-qoidalari (davom ettirish yoki oyna hisoboti).
 6. Bosqich to'liq tugasa — `develop → main` PR oching (`gh pr create`), sarlavha «N-bosqich: …», tavsifda nima qilindi va qanday tekshirildi. Merge'ni **egasi** qiladi.
 
 **Egasining qarori (01.11.2026):** SPEC 17-bo'limidagi «har vazifa uchun egasi tasdiqlaydi» o'rniga — vazifalar avtonom bajariladi, egasi bosqich oxirida PR orqali ko'rib chiqadi. Kichik qarorlarni o'zingiz qabul qiling va hisobotda yozing.

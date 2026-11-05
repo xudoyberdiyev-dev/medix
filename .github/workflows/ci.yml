@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    paths-ignore: ["status/**", "reports/**", "PLAN.md"]
   pull_request:
   workflow_dispatch:
 
