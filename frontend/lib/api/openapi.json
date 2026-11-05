@@ -4078,6 +4078,46 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/{id}/pick/lines/{lineId}/batches" : {
+      "get" : {
+        "description" : "«Boshqa partiyadan oldim»: muddati o'tmagan partiyalar va bo'sh qoldiq; faqat o'z yig'ishi.",
+        "operationId" : "pickBatches",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "lineId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PickBatch"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qator uchun partiyalar",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/{id}/pick/start" : {
       "post" : {
         "description" : "Bir yig'uvchida bitta faol buyurtma.",
@@ -12709,6 +12749,34 @@
           }
         },
         "required" : [ "id" ]
+      },
+      "PickBatch" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bonus" : {
+            "type" : "boolean"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "free" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "reserved" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "batchId", "bonus", "expiryDate", "free", "number", "reserved" ]
       },
       "PickFinishRequest" : {
         "type" : "object",

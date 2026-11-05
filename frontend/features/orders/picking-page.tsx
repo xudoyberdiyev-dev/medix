@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ClipboardList, Play, Printer, Timer } from "lucide-react";
+import { CheckCircle2, ClipboardList, Play, Printer, Replace, Timer, TriangleAlert, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { formatQuantity } from "@/lib/format";
 import { useOrder } from "./api";
 import { IssueButton } from "./issues";
 import { MyToday } from "./my-today";
+import { batchLabel, OtherBatchModal, type PickBatch } from "./other-batch-modal";
 import { day } from "./orders-page";
 
 /** Qolgan vaqt: musbat — «12:05», manfiy — «Kechikdi: N daqiqa» (SPEC 5.2). */
@@ -158,6 +159,8 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
   const [taken, setTaken] = useState<Record<number, boolean>>({});
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [other, setOther] = useState<Record<number, PickBatch>>({});
+  const [choosing, setChoosing] = useState<{ id: number; name: string; qty: number } | null>(null);
   if (order.error) return <ErrorState onRetry={() => order.refetch()} />;
   if (!order.data) return <Skeleton className="h-40 w-full" />;
   const d = order.data;
@@ -170,7 +173,12 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
     setError(null);
     try {
       await ensureCsrf();
-      const r = await unwrap(api.POST("/api/orders/{id}/pick/finish", { params: { path: { id } }, body: {} }));
+      const r = await unwrap(
+        api.POST("/api/orders/{id}/pick/finish", {
+          params: { path: { id } },
+          body: { lines: Object.entries(other).map(([lineId, b]) => ({ lineId: Number(lineId), batchId: b.batchId })) },
+        }),
+      );
       toast({ tone: "success", title: "Yigʻish yakunlandi", description: `${r.number} · tovar Joʻnatish zonasida` });
       await qc.invalidateQueries({ queryKey: ["orders"] });
     } catch (e) {
@@ -202,9 +210,42 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
               <div>
                 <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
               </div>
-              <div className="text-caption text-text-secondary">
-                {l.reserved.map((r) => `${r.batch} · ${day(r.expiryDate)} · ${r.zone} — ${formatQuantity(r.qty)} dona`).join("; ")}
-              </div>
+              {other[l.id] ? (
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <Badge tone="warning" icon={TriangleAlert}>
+                    Boshqa partiya: {batchLabel(other[l.id])}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="tertiary"
+                    icon={Undo2}
+                    onClick={() =>
+                      setOther((m) => {
+                        const next = { ...m };
+                        delete next[l.id];
+                        return next;
+                      })
+                    }
+                  >
+                    Koʻrsatilganiga qaytarish
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-caption text-text-secondary">
+                  {l.reserved.map((r) => `${r.batch} · ${day(r.expiryDate)} · ${r.zone} — ${formatQuantity(r.qty)} dona`).join("; ")}
+                </div>
+              )}
+              {!other[l.id] ? (
+                <Button
+                  size="sm"
+                  variant="tertiary"
+                  icon={Replace}
+                  className="mt-1"
+                  onClick={() => setChoosing({ id: l.id, name: l.productName, qty: l.qty })}
+                >
+                  Boshqa partiyadan oldim
+                </Button>
+              ) : null}
             </div>
             <div className="text-subtitle tabular-nums">{formatQuantity(l.qty)}</div>
           </li>
@@ -212,7 +253,10 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
       </ul>
       {err.message ? <Alert tone="danger" title={err.message} className="mt-3" /> : null}
       <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="text-caption text-text-secondary">Partiya tasdigʻi: «Ha, shundan oldim» — koʻrsatilgan partiyalardan.</span>
+        <span className="text-caption text-text-secondary">
+          Partiya tasdigʻi: «Ha, shundan oldim» — koʻrsatilgan partiyalardan
+          {Object.keys(other).length > 0 ? `; ${formatQuantity(Object.keys(other).length)} qator — boshqa partiyadan` : ""}.
+        </span>
         <div className="flex flex-wrap items-center gap-2">
           <IssueButton orderId={id} />
           <Button variant="secondary" icon={Printer} onClick={() => openPickSheet([id])}>
@@ -223,6 +267,12 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
           </Button>
         </div>
       </div>
+      <OtherBatchModal
+        orderId={id}
+        line={choosing}
+        onPick={(b) => choosing && setOther((m) => ({ ...m, [choosing.id]: b }))}
+        onClose={() => setChoosing(null)}
+      />
     </Card>
   );
 }

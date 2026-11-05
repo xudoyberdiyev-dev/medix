@@ -1799,6 +1799,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{id}/pick/lines/{lineId}/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qator uchun partiyalar
+         * @description «Boshqa partiyadan oldim»: muddati o'tmagan partiyalar va bo'sh qoldiq; faqat o'z yig'ishi.
+         */
+        get: operations["pickBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{id}/pick/start": {
         parameters: {
             query?: never;
@@ -5385,6 +5405,18 @@ export interface components {
         PhotoResult: {
             /** Format: int64 */
             id: number;
+        };
+        PickBatch: {
+            /** Format: int64 */
+            batchId: number;
+            bonus: boolean;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int32 */
+            free: number;
+            number: string;
+            /** Format: int32 */
+            reserved: number;
         };
         PickFinishRequest: {
             lines?: components["schemas"]["PickLineConfirm"][];
@@ -9237,6 +9269,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    pickBatches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                lineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickBatch"][];
                 };
             };
         };
