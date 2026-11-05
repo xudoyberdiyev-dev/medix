@@ -430,7 +430,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -986,7 +986,7 @@ export interface paths {
             cookie?: never;
         };
         /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
-        get: operations["get_11"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7174,7 +7174,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query: {
                 branchId: number;
@@ -8045,7 +8045,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_10: {
         parameters: {
             query?: {
                 branchId?: number;

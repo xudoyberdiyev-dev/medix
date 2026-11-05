@@ -54,6 +54,9 @@
     "description" : "Yetkazib beruvchiga to'lovlar (YT)",
     "name" : "supplier-payments"
   }, {
+    "description" : "Bosh sahifalar",
+    "name" : "home"
+  }, {
     "description" : "Avansni hisobga olish (AH)",
     "name" : "advance-offsets"
   }, {
@@ -74,6 +77,9 @@
   }, {
     "description" : "Yetkazib beruvchi bonus balansi",
     "name" : "supplier-bonuses"
+  }, {
+    "description" : "Hisobotlar",
+    "name" : "reports"
   }, {
     "description" : "Qoldiqlar",
     "name" : "stock"
@@ -98,12 +104,6 @@
   }, {
     "description" : "Kassa, Terminal va bank hisoblari",
     "name" : "money-accounts"
-  }, {
-    "description" : "Bosh sahifalar",
-    "name" : "home"
-  }, {
-    "description" : "Hisobotlar",
-    "name" : "reports"
   } ],
   "paths" : {
     "/api/advance-offsets/customer" : {
@@ -1054,7 +1054,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_10",
+        "operationId" : "get_11",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2371,7 +2371,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_11",
+        "operationId" : "get_10",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
