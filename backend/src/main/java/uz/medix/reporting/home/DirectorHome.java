@@ -265,14 +265,15 @@ class DirectorHome {
                 .param("b", branchId).query(Ca.class).single();
         // Muddati tugaydigan partiyalar (qoldig'i bor): 0–30 / 31–60 / 61–90 kun; muddati o'tganlar alohida
         ExpiringBatches expiring = jdbc.sql("""
-                SELECT count(*) FILTER (WHERE e.expiry_date >= :d AND e.expiry_date <= :d + 30) AS d0to30,
-                       count(*) FILTER (WHERE e.expiry_date > :d + 30 AND e.expiry_date <= :d + 60) AS d31to60,
-                       count(*) FILTER (WHERE e.expiry_date > :d + 60 AND e.expiry_date <= :d + 90) AS d61to90,
+                SELECT count(*) FILTER (WHERE e.expiry_date >= :d AND e.expiry_date <= :d30) AS d0to30,
+                       count(*) FILTER (WHERE e.expiry_date > :d30 AND e.expiry_date <= :d60) AS d31to60,
+                       count(*) FILTER (WHERE e.expiry_date > :d60 AND e.expiry_date <= :d90) AS d61to90,
                        count(*) FILTER (WHERE e.expiry_date < :d) AS expired
                 FROM (SELECT DISTINCT sb.branch_id, b.id, b.expiry_date
                       FROM stock_balance sb JOIN batch b ON b.id = sb.batch_id
-                      WHERE sb.qty > 0 AND b.expiry_date <= :d + 90 AND (CAST(:b AS BIGINT) IS NULL OR sb.branch_id = :b)) e""")
-                .param("d", Date.valueOf(today)).param("b", branchId)
+                      WHERE sb.qty > 0 AND b.expiry_date <= :d90 AND (CAST(:b AS BIGINT) IS NULL OR sb.branch_id = :b)) e""")
+                .param("d", Date.valueOf(today)).param("d30", Date.valueOf(today.plusDays(30)))
+                .param("d60", Date.valueOf(today.plusDays(60))).param("d90", Date.valueOf(today.plusDays(90))).param("b", branchId)
                 .query(ExpiringBatches.class).single();
         int receipts = jdbc.sql("""
                 SELECT count(*) FROM receipt WHERE status = 'ACCEPTED' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
