@@ -25,6 +25,7 @@ import uz.medix.finance.payment.PaymentModels.SupplierPaymentDetail;
 import uz.medix.finance.payment.PaymentModels.SupplierPaymentRequest;
 import uz.medix.finance.payment.PaymentModels.SupplierPaymentStatus;
 import uz.medix.finance.payment.PaymentModels.SupplierPaymentSummary;
+import uz.medix.notification.Notifications;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
@@ -52,9 +53,11 @@ class SupplierPayments {
     private final DocumentSequenceService numbers;
     private final AuditLog audit;
     private final Clock clock;
+    private final Notifications notifications;
 
     SupplierPayments(JdbcClient jdbc, PartyLedger parties, MoneyLedger money, Accounts accounts, CashierGuard cashiers, DocumentSequenceService numbers, AuditLog audit,
-            Clock clock) {
+            Clock clock, Notifications notifications) {
+        this.notifications = notifications;
         this.jdbc = jdbc;
         this.parties = parties;
         this.money = money;
@@ -197,6 +200,9 @@ class SupplierPayments {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("ytpayment.send", "supplier_payment", id).change(Map.of("status", "DRAFT"), Map.of("status", "PENDING")));
+        notifications.notify("payments.ytApprove", h.branchId(), List.of(), new Notifications.Message("ytpayment.approval",
+                "YT tasdigʻi kutmoqda: " + h.number(), h.amount().format() + " soʻm", "/payments?tab=yt",
+                "ytpayment.approval:" + id + ":" + clock.millis()));
     }
 
     /** Tasdiqlashda → Qoralama (sabab bilan). */
@@ -213,6 +219,13 @@ class SupplierPayments {
                 .update();
         audit.record(AuditEntry.of("ytpayment.return", "supplier_payment", id).change(Map.of("status", "PENDING"), Map.of("status", "DRAFT"))
                 .withReason(reason.strip()));
+        long author = jdbc.sql("SELECT sent_by FROM supplier_payment WHERE id = :id").param("id", id).query(Long.class).single();
+        if (author != actor.employeeId()) {
+            String why = reason.strip();
+            notifications.notify("-", h.branchId(), List.of(author), new Notifications.Message("ytpayment.returned",
+                    "YT qaytarildi: " + h.number(), why.length() <= 500 ? why : why.substring(0, 499) + "…", "/payments?tab=yt",
+                    "ytpayment.returned:" + id + ":" + clock.millis()));
+        }
     }
 
     /** Tasdiq (Tasdiqlashda → O'tkazilgan) yoki tasdiqsiz o'tkazish (Qoralama → O'tkazilgan). */

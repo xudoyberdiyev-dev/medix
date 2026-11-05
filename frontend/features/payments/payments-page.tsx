@@ -1,6 +1,7 @@
 "use client";
 
 import { Ban, CircleCheck, FilePen, Plus, Truck, Wallet } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,9 @@ export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
 /** Pul → Toʻlovlar (SPEC 5.5): mijozdan (MT) va yetkazib beruvchiga (YT). */
 export function PaymentsPage() {
   const me = useMe();
-  const [tab, setTab] = useState("mt");
+  // Bildirishnomadan oʻtish: ?tab=yt
+  const initialTab = useSearchParams().get("tab");
+  const [tab, setTab] = useState(initialTab === "yt" ? "yt" : "mt");
   if (me.data && !can(me.data, "payments.view")) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
   return (
     <>

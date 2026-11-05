@@ -287,6 +287,12 @@ class PaymentIT {
                 .andExpect(jsonPath("$.number", matchesPattern("YT-[A-Z]{3}-\\d{6}")))
                 .andReturn());
         send(post("/api/payments/supplier/" + y1 + "/send"), cashier, "").andExpect(jsonPath("$.status").value("PENDING"));
+        // Bildirishnoma: YT tasdig'i kutmoqda — payments.ytApprove egalariga (Filial rahbari)
+        assertThat(jdbc.sql("""
+                SELECT count(*) FROM notification n JOIN employee e ON e.id = n.employee_id JOIN role r ON r.id = e.role_id
+                WHERE n.kind = 'ytpayment.approval' AND n.title LIKE :t AND r.code = 'BRANCH_MANAGER'""")
+                .param("t", "%" + jdbc.sql("SELECT number FROM supplier_payment WHERE id = :id").param("id", y1).query(String.class).single())
+                .query(Integer.class).single()).isPositive();
         send(post("/api/payments/supplier/" + y1 + "/approve"), cashier, "{}").andExpect(status().isForbidden());
         // Kassada pul yo'q — o'tkazilmaydi
         send(post("/api/payments/supplier/" + y1 + "/approve"), manager, "{}").andExpect(jsonPath("$.code").value("money.insufficient"));
