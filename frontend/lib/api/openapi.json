@@ -39,6 +39,9 @@
     "description" : "Kirim",
     "name" : "receipts"
   }, {
+    "description" : "Bank koʻchirmasi bilan solishtirish",
+    "name" : "bank-reconciliations"
+  }, {
     "description" : "Kontragentlar",
     "name" : "counterparties"
   }, {
@@ -322,7 +325,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -462,6 +465,100 @@
         },
         "summary" : "Parolni almashtirish",
         "tags" : [ "auth" ]
+      }
+    },
+    "/api/bank-reconciliations" : {
+      "get" : {
+        "operationId" : "list_15",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "accountId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Reconciliation"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob boʻyicha solishtirishlar tarixi",
+        "tags" : [ "bank-reconciliations" ]
+      },
+      "post" : {
+        "operationId" : "create_15",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReconRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Reconciliation"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Solishtirishni yozish (farq boʻlsa — izoh majburiy)",
+        "tags" : [ "bank-reconciliations" ]
+      }
+    },
+    "/api/bank-reconciliations/preview" : {
+      "get" : {
+        "operationId" : "preview_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "accountId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReconPreview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar",
+        "tags" : [ "bank-reconciliations" ]
       }
     },
     "/api/branches" : {
@@ -1894,7 +1991,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "responses" : {
           "200" : {
             "content" : {
@@ -2767,7 +2864,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_19",
+        "operationId" : "list_20",
         "responses" : {
           "200" : {
             "content" : {
@@ -4904,7 +5001,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "responses" : {
           "200" : {
             "content" : {
@@ -5800,7 +5897,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "responses" : {
           "200" : {
             "content" : {
@@ -6110,7 +6207,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -6239,7 +6336,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -12518,6 +12615,117 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "id", "lines", "number", "prepaid", "receiptDate", "status", "supplier", "supplierId", "totalQty", "warehouse" ]
+      },
+      "ReconPreview" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastBankBalance" : {
+            "type" : "string"
+          },
+          "lastDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "medixBalance" : {
+            "type" : "string"
+          },
+          "unmatched" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Move"
+            }
+          },
+          "unmatchedTotal" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "account", "accountId", "date", "medixBalance", "unmatched", "unmatchedTotal" ]
+      },
+      "ReconRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bankBalance" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "moveIds" : {
+            "type" : "array",
+            "description" : "Bank ko'chirmasida bor harakatlar (money_move id)",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "statementDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "accountId", "bankBalance", "statementDate" ]
+      },
+      "Reconciliation" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bankBalance" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "difference" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "medixBalance" : {
+            "type" : "string"
+          },
+          "moves" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "statementDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "account", "accountId", "bankBalance", "createdAt", "createdBy", "difference", "id", "medixBalance", "moves", "statementDate" ]
       },
       "Ref" : {
         "type" : "object",

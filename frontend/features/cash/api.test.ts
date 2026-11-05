@@ -42,3 +42,14 @@ describe("kassir faqat oʻz kassasida", () => {
     expect(usableAccount(t, all, 10, false)).toBe(true);
   });
 });
+
+describe("bank koʻchirmasi farqi", () => {
+  it("bank − MEDIX, tiyinlarda", async () => {
+    const { reconDiff } = await import("./bank-recon");
+    expect(reconDiff("1500000.00", "1300000.00")).toBe("200000.00");
+    expect(reconDiff("1000000", "1000000.00")).toBe("0.00");
+    expect(reconDiff("99.5", "100.00")).toBe("-0.50");
+    expect(reconDiff("", "1.00")).toBeNull();
+    expect(reconDiff("-5", "1.00")).toBeNull();
+  });
+});

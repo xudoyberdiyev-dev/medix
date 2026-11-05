@@ -99,7 +99,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -176,6 +176,41 @@ export interface paths {
          * @description Birinchi kirishda majburiy.
          */
         post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bank-reconciliations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hisob boʻyicha solishtirishlar tarixi */
+        get: operations["list_15"];
+        put?: never;
+        /** Solishtirishni yozish (farq boʻlsa — izoh majburiy) */
+        post: operations["create_15"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bank-reconciliations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar */
+        get: operations["preview_1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -776,7 +811,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1201,7 +1236,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2174,7 +2209,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari */
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2524,7 +2559,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2720,7 +2755,7 @@ export interface paths {
          * Qoldiqlar (zona × partiya)
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2754,7 +2789,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5319,6 +5354,47 @@ export interface components {
             totalQty: number;
             warehouse: string;
         };
+        ReconPreview: {
+            account: string;
+            /** Format: int64 */
+            accountId: number;
+            /** Format: date */
+            date: string;
+            lastBankBalance?: string;
+            /** Format: date */
+            lastDate?: string;
+            medixBalance: string;
+            unmatched: components["schemas"]["Move"][];
+            unmatchedTotal: string;
+        };
+        ReconRequest: {
+            /** Format: int64 */
+            accountId: number;
+            bankBalance: string;
+            /** @description Bank ko'chirmasida bor harakatlar (money_move id) */
+            moveIds?: number[];
+            note?: string;
+            /** Format: date */
+            statementDate: string;
+        };
+        Reconciliation: {
+            account: string;
+            /** Format: int64 */
+            accountId: number;
+            bankBalance: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            difference: string;
+            /** Format: int64 */
+            id: number;
+            medixBalance: string;
+            /** Format: int32 */
+            moves: number;
+            note?: string;
+            /** Format: date */
+            statementDate: string;
+        };
         Ref: {
             /** Format: int64 */
             id: number;
@@ -5968,7 +6044,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -6076,6 +6152,75 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_15: {
+        parameters: {
+            query: {
+                accountId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reconciliation"][];
+                };
+            };
+        };
+    };
+    create_15: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReconRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reconciliation"];
+                };
+            };
+        };
+    };
+    preview_1: {
+        parameters: {
+            query: {
+                accountId: number;
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconPreview"];
+                };
             };
         };
     };
@@ -7007,7 +7152,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -7636,7 +7781,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -9101,7 +9246,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -9664,7 +9809,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -9918,7 +10063,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -9970,7 +10115,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query: {
                 branchId: number;

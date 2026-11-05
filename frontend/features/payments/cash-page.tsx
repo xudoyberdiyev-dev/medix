@@ -17,6 +17,7 @@ import { api, unwrap } from "@/lib/api/client";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { CASH_APPROVE, CASH_CLOSE, CASH_IO, usableAccount } from "@/features/cash/api";
 import { ClosesTab, OpsTab, PendingOps, StatementTab, TransfersTab } from "@/features/cash/cash-sections";
+import { BankReconTab } from "@/features/cash/bank-recon";
 import { CashierDialog } from "@/features/cash/cashier-dialog";
 import { CloseDrawer } from "@/features/cash/close-drawer";
 import { CashOpDialog, TransferDialog } from "@/features/cash/op-dialogs";
@@ -55,6 +56,7 @@ export function CashPage() {
   const [dialog, setDialog] = useState<"op" | "io" | "close" | "cashiers" | null>(null);
   const canIo = can(me.data, CASH_IO);
   const canClose = can(me.data, CASH_CLOSE);
+  const canBank = can(me.data, "bank.view");
   const accountList = all;
   const current = selected ?? kassas[0]?.id ?? accountList[0]?.id ?? null;
   const actionDefault = current != null && usable.some((a) => a.id === current) ? current : (usable[0]?.id ?? null);
@@ -217,6 +219,7 @@ export function CashPage() {
               { key: "ops", label: "Kirim / chiqim (KO, BO)" },
               { key: "io", label: "Oʻtkazmalar (IO)" },
               { key: "closes", label: "Yopilgan kunlar" },
+              ...(canBank ? [{ key: "bank", label: "Bank koʻchirmasi" }] : []),
             ]}
           />
           <div className="mt-4">
@@ -226,6 +229,8 @@ export function CashPage() {
               <OpsTab branchId={branchId} />
             ) : tab === "io" ? (
               <TransfersTab branchId={branchId} />
+            ) : tab === "bank" && canBank ? (
+              <BankReconTab key={branchId} accounts={accountList} canEdit={canIo || can(me.data, "payments.noncash")} />
             ) : (
               <ClosesTab branchId={branchId} />
             )}
