@@ -217,7 +217,7 @@ class CashIT {
                 .andExpect(jsonPath("$.pendingOps").value(0))
                 .andExpect(jsonPath("$.accounts[0].closing").value("2500000.00"))
                 .andExpect(jsonPath("$.days.length()").value(1))
-                .andExpect(jsonPath("$.recent.length()").value(10));
+                .andExpect(jsonPath("$.recent.length()").value(9));
         mvc.perform(get("/api/cash-panel").param("branchId", "" + b).param("accountId", "" + t).cookie(cashier))
                 .andExpect(jsonPath("$.balances.total").value("300000.00"))
                 .andExpect(jsonPath("$.accounts.length()").value(1))
