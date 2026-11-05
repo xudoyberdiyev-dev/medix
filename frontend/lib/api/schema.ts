@@ -498,6 +498,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/debts/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mijozlar qarzi
+         * @description Muddati kelmagan / 1–30 / 31–60 / 61–90 / 90+ kun; avans qarzdan eng eskisidan ayriladi.
+         */
+        get: operations["customers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/debts/customers/{id}/docs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mijozning ochiq hujjatlari (eng eskisi birinchi) */
+        get: operations["customerDocs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/debts/suppliers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Yetkazib beruvchilar qarzi
+         * @description Kompaniyaning YB oldidagi qarzi, muddat guruhlari bilan.
+         */
+        get: operations["suppliers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/debts/suppliers/{id}/docs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yetkazib beruvchi bo'yicha ochiq hujjatlar */
+        get: operations["supplierDocs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dictionaries/{kind}": {
         parameters: {
             query?: never;
@@ -3141,6 +3215,16 @@ export interface components {
             phone?: string;
             tin: string;
         };
+        Buckets: {
+            advance: string;
+            d1to30: string;
+            d31to60: string;
+            d61to90: string;
+            d90plus: string;
+            debt: string;
+            notDue: string;
+            overdue: string;
+        };
         CashAcceptRequest: {
             /** Format: int64 */
             accountId: number;
@@ -3462,6 +3546,44 @@ export interface components {
         };
         DeactivateRequest: {
             reason: string;
+        };
+        DebtDoc: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date */
+            date: string;
+            /** Format: int64 */
+            docId: number;
+            docNumber: string;
+            docType: string;
+            /** Format: date */
+            dueDate?: string;
+            open: string;
+            /** Format: int32 */
+            overdueDays: number;
+        };
+        DebtReport: {
+            /** Format: int64 */
+            branchId?: number;
+            rows: components["schemas"]["DebtRow"][];
+            /** Format: date */
+            today: string;
+            totals: components["schemas"]["Buckets"];
+        };
+        DebtRow: {
+            buckets: components["schemas"]["Buckets"];
+            /** Format: int64 */
+            counterpartyId: number;
+            /** @description Kredit limiti (faqat bitta filial tanlanganda; mijoz) */
+            creditLimit?: string;
+            /** Format: date */
+            lastPayment?: string;
+            /** Format: int32 */
+            maxOverdueDays: number;
+            name: string;
+            phone?: string;
+            tin: string;
         };
         DeliverRequest: {
             /** @description Naqd olingan summa, masalan «25000.00» */
@@ -6100,6 +6222,98 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    customers: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtReport"];
+                };
+            };
+        };
+    };
+    customerDocs: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDoc"][];
+                };
+            };
+        };
+    };
+    suppliers: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtReport"];
+                };
+            };
+        };
+    };
+    supplierDocs: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDoc"][];
                 };
             };
         };

@@ -316,6 +316,7 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
   await choose(page, "Hisob", /Asosiy kassa/);
   await choose(page, "Xarajat moddasi", /Ijara/);
   await field(page, "Summa").fill("2.500.000,00");
+  await field(page, "Summa").press("Tab");
   await page.getByRole("button", { name: "Tasdiqqa yuborish" }).click();
   await expect(page.getByText("Chiqim tasdiqqa yuborildi").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: /Tasdiqlashni kutmoqda/ })).toBeVisible();

@@ -60,6 +60,9 @@
     "description" : "Mashinalar",
     "name" : "vehicles"
   }, {
+    "description" : "Mijozlar va yetkazib beruvchilar qarzi (muddat guruhlari)",
+    "name" : "debts"
+  }, {
     "description" : "Qoldiqlar",
     "name" : "stock"
   }, {
@@ -1228,6 +1231,142 @@
         },
         "summary" : "Blokdan chiqarish",
         "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/debts/customers" : {
+      "get" : {
+        "description" : "Muddati kelmagan / 1–30 / 31–60 / 61–90 / 90+ kun; avans qarzdan eng eskisidan ayriladi.",
+        "operationId" : "customers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DebtReport"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijozlar qarzi",
+        "tags" : [ "debts" ]
+      }
+    },
+    "/api/debts/customers/{id}/docs" : {
+      "get" : {
+        "operationId" : "customerDocs",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DebtDoc"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijozning ochiq hujjatlari (eng eskisi birinchi)",
+        "tags" : [ "debts" ]
+      }
+    },
+    "/api/debts/suppliers" : {
+      "get" : {
+        "description" : "Kompaniyaning YB oldidagi qarzi, muddat guruhlari bilan.",
+        "operationId" : "suppliers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DebtReport"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yetkazib beruvchilar qarzi",
+        "tags" : [ "debts" ]
+      }
+    },
+    "/api/debts/suppliers/{id}/docs" : {
+      "get" : {
+        "operationId" : "supplierDocs",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DebtDoc"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yetkazib beruvchi bo'yicha ochiq hujjatlar",
+        "tags" : [ "debts" ]
       }
     },
     "/api/dictionaries/{kind}" : {
@@ -7022,6 +7161,36 @@
         },
         "required" : [ "code", "legalName", "name", "tin" ]
       },
+      "Buckets" : {
+        "type" : "object",
+        "properties" : {
+          "advance" : {
+            "type" : "string"
+          },
+          "d1to30" : {
+            "type" : "string"
+          },
+          "d31to60" : {
+            "type" : "string"
+          },
+          "d61to90" : {
+            "type" : "string"
+          },
+          "d90plus" : {
+            "type" : "string"
+          },
+          "debt" : {
+            "type" : "string"
+          },
+          "notDue" : {
+            "type" : "string"
+          },
+          "overdue" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "advance", "d1to30", "d31to60", "d61to90", "d90plus", "debt", "notDue", "overdue" ]
+      },
       "CashAcceptRequest" : {
         "type" : "object",
         "properties" : {
@@ -7947,6 +8116,101 @@
           }
         },
         "required" : [ "reason" ]
+      },
+      "DebtDoc" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "open" : {
+            "type" : "string"
+          },
+          "overdueDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "branch", "branchId", "date", "docId", "docNumber", "docType", "open", "overdueDays" ]
+      },
+      "DebtReport" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DebtRow"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "totals" : {
+            "$ref" : "#/components/schemas/Buckets"
+          }
+        },
+        "required" : [ "rows", "today", "totals" ]
+      },
+      "DebtRow" : {
+        "type" : "object",
+        "properties" : {
+          "buckets" : {
+            "$ref" : "#/components/schemas/Buckets"
+          },
+          "counterpartyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "creditLimit" : {
+            "type" : "string",
+            "description" : "Kredit limiti (faqat bitta filial tanlanganda; mijoz)"
+          },
+          "lastPayment" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxOverdueDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "buckets", "counterpartyId", "maxOverdueDays", "name", "tin" ]
       },
       "DeliverRequest" : {
         "type" : "object",

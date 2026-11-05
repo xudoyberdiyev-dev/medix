@@ -15,5 +15,6 @@ describe("ruxsatga qarab menyu", () => {
     expect(keys(["staff.view"])).toContain("settings");
     expect(keys(["stock.view"])).toContain("stock");
     expect(navigationFor(undefined)).toEqual([]);
+    expect(keys(["cdebt.view", "sdebt.view"])).toEqual(["home", "customer-debts", "supplier-debts"]);
   });
 });

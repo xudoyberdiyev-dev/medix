@@ -1,5 +1,6 @@
 import {
   Banknote,
+  BadgeDollarSign,
   BookOpen,
   Boxes,
   CalendarClock,
@@ -17,6 +18,7 @@ import {
   Truck,
   Users,
   Wallet,
+  HandCoins,
   type LucideIcon,
 } from "lucide-react";
 
@@ -68,6 +70,8 @@ export const navigation: NavGroup[] = [
     items: [
       { key: "payments", label: "Toʻlovlar", href: "/payments", icon: Wallet, anyOf: ["payments.view"] },
       { key: "cash", label: "Kassa", href: "/cash", icon: Banknote, anyOf: ["cash.view"] },
+      { key: "customer-debts", label: "Mijozlar qarzi", href: "/debts/customers", icon: HandCoins, anyOf: ["cdebt.view"] },
+      { key: "supplier-debts", label: "YB qarzi", href: "/debts/suppliers", icon: BadgeDollarSign, anyOf: ["sdebt.view"] },
     ],
   },
   {
