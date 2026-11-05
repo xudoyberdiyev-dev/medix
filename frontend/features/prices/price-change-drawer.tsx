@@ -233,7 +233,7 @@ function Editor({
             <Button
               variant="secondary"
               icon={Printer}
-              onClick={() => window.open(`/print/price-change?id=${doc.id}`, "_blank", "noopener")}
+              onClick={() => window.open(`/api/price-changes/${doc.id}/pdf`, "_blank", "noopener")}
             >
               Chop etish
             </Button>

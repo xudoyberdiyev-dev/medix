@@ -2289,6 +2289,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/price-changes/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** NO hujjati — PDF (chop etish) */
+        get: operations["pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/price-changes/{id}/reject": {
         parameters: {
             query?: never;
@@ -10125,6 +10142,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PriceChangeDetail"];
+                };
+            };
+        };
+    };
+    pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

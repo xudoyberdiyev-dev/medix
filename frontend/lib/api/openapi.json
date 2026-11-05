@@ -5214,6 +5214,35 @@
         "tags" : [ "pricing" ]
       }
     },
+    "/api/price-changes/{id}/pdf" : {
+      "get" : {
+        "operationId" : "pdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "NO hujjati — PDF (chop etish)",
+        "tags" : [ "pricing" ]
+      }
+    },
     "/api/price-changes/{id}/reject" : {
       "post" : {
         "operationId" : "reject",
