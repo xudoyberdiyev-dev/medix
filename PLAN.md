@@ -6,12 +6,12 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Sana:** 05.11.2026
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~80%; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 05.11.2026 12:05–12:50 — kassir faqat o'z kassasida (cashier_id + CashierGuard), Bonus balans sahifasi, bank ko'chirmasi bilan solishtirish, Kassir paneli (Kassirning bosh sahifasi). Backend testlari CI da yashil; oxirgi push'da GitHub Actions billing sababli ishga tushmadi.
+- **Oxirgi sessiya:** 05.11.2026 16:08–16:30 — Yig'uvchilar/Markirovkachilar natijasi, Ta'minotchi xodim/korxona tovari hisoboti, Savdo hisobotidan mijoz buyurtmalariga o'tish. Backend CI'da tekshirilmagan (GitHub billing). Kunduzgi oyna hisoboti: reports/2026-11-05-1630.md
 - **Keyingi vazifa:** (avval) GitHub Actions ishlayotganini tekshirish — 05.11 dagi bosh sahifa backend kodi (DirectorHome, DebtSummaries, DirectorHomeIT) va qo'lda yozilgan openapi.json CI'da hali tekshirilmagan; diff chiqsa — CI'dagi tavsifni ko'chirish. So'ng 10-bosqich: chop etish shakllari (OpenHTMLtoPDF). Eski qoldiqlar: 7-bosqich kodlar .xlsx, terish varag'i; 5-bosqich «Mahsulot qo'shish»; 3-bosqich «Kirim bo'yicha» narx rejimi.
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
-- [ ] **Zanjir davomi rad etildi (05.11 14:36):** sessiya ichidan `fire_trigger` chaqiruvi avtomatik ruxsat tekshiruvida bloklandi. Zanjir ishlashi uchun shu vazifaga «Automatically approve» ruxsatini yoqing yoki zaxira ishga tushirishlarga tayaning.
+- [ ] **Zanjir davomi rad etildi (05.11 14:36 va 16:26):** sessiya ichidan `fire_trigger` chaqiruvi avtomatik ruxsat tekshiruvida bloklandi. Zanjir ishlashi uchun shu vazifaga «Automatically approve» ruxsatini yoqing yoki zaxira ishga tushirishlarga tayaning.
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
 - [ ] Telegram: `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` ni repo Secrets'ga qo'shish.
 - [x] `notes/T12-topshirish.md`, `T12-audit.md` va boshqa notes — `docs/notes/` ga qo'shildi (01.11.2026, egasi yubordi).
@@ -181,6 +181,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 05.11.2026 16:27 — fire_trigger yana rad etildi; 16:00 dan keyin zaxira yo'q — oyna hisoboti yozildi, sessiya to'xtadi.
 - 05.11.2026 16:26 — zanjir: davom (kontekst og'irlashdi) — keyingi sessiya: chop etish shakllari (OpenHTMLtoPDF) yoki eski qoldiqlar (7-bosqich kodlar .xlsx, terish varag'i).
 - 05.11.2026 16:08–16:35 — 10-bosqich: Savdo hisobotidan mijoz buyurtmalariga o'tish; Ta'minotchi xodim/korxona tovari hisoboti; Yig'uvchilar va Markirovkachilar natijasi (API + .xlsx + UI + IT test, OpenAPI qo'lda — Jackson formatida). Frontend 120 test, build yashil; skrinshot (mock). CI hali billing sababli to'xtagan.
 - 05.11.2026 14:30–14:50 — 10-bosqich: Hisobotlar katalogi va Savdo hisoboti (API + .xlsx + UI + IT test, OpenAPI qo'lda). Frontend 119 test, build yashil; skrinshot (mock). CI billing sababli to'xtagan.
