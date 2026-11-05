@@ -150,7 +150,7 @@ export function PickingPage() {
 
 /** Terish varagʻi yangi oynada ochiladi va oʻzi chop etish oynasini chaqiradi. */
 function openPickSheet(ids: number[]) {
-  window.open(`/print/picking?ids=${ids.join(",")}`, "_blank", "noopener");
+  window.open(`/api/orders/pick-sheet/pdf?ids=${ids.join(",")}`, "_blank", "noopener");
 }
 
 function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; now: Date }) {

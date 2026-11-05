@@ -405,6 +405,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cash-ops/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kassa kirim / chiqim orderi — PDF (chop etish) */
+        get: operations["opPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cash-ops/{id}/reject": {
         parameters: {
             query?: never;
@@ -677,6 +694,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/debts/customers/{id}/act/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Akt sverka (mijoz) — PDF */
+        get: operations["customerActPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/debts/customers/{id}/docs": {
         parameters: {
             query?: never;
@@ -723,6 +757,23 @@ export interface paths {
         };
         /** Akt sverka (yetkazib beruvchi) */
         get: operations["supplierAct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/debts/suppliers/{id}/act/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Akt sverka (yetkazib beruvchi) — PDF */
+        get: operations["supplierActPdf"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1621,6 +1672,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/pick-sheet/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Terish varag'i — PDF (bir necha buyurtma, 20 tagacha) */
+        get: operations["pickSheetPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/previous": {
         parameters: {
             query?: never;
@@ -1930,6 +1998,26 @@ export interface paths {
          * @description Yig'ish va markirovka uchun daqiqa (har buyurtmaga alohida). Faqat «Navbatda».
          */
         post: operations["giveTime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/waybill/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Nakladnoy — PDF (chop etish)
+         * @description Nakladnoy raqamlanmagan bo'lsa — 409.
+         */
+        get: operations["waybillPdf"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3382,6 +3470,23 @@ export interface paths {
          * @description Faqat «Rejalashtirilgan» reys, haydovchi qabul qilmagan buyurtma; buyurtma «Hujjatlashtirilmoqda»ga qaytadi.
          */
         post: operations["removeOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/sheet/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yo'l varaqasi — PDF (chop etish) */
+        get: operations["sheetPdf"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7318,6 +7423,28 @@ export interface operations {
             };
         };
     };
+    opPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     rejectOp: {
         parameters: {
             query?: never;
@@ -7746,6 +7873,32 @@ export interface operations {
             };
         };
     };
+    customerActPdf: {
+        parameters: {
+            query: {
+                branchId: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     customerDocs: {
         parameters: {
             query?: {
@@ -7814,6 +7967,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Act"];
+                };
+            };
+        };
+    };
+    supplierActPdf: {
+        parameters: {
+            query: {
+                branchId: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
@@ -9128,6 +9307,28 @@ export interface operations {
             };
         };
     };
+    pickSheetPdf: {
+        parameters: {
+            query: {
+                ids: number[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     previous: {
         parameters: {
             query: {
@@ -9531,6 +9732,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    waybillPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
@@ -11684,6 +11907,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
+    sheetPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

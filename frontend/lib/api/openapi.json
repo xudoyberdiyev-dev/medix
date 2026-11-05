@@ -1014,6 +1014,35 @@
         "tags" : [ "cash" ]
       }
     },
+    "/api/cash-ops/{id}/pdf" : {
+      "get" : {
+        "operationId" : "opPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kassa kirim / chiqim orderi — PDF (chop etish)",
+        "tags" : [ "cash" ]
+      }
+    },
     "/api/cash-ops/{id}/reject" : {
       "post" : {
         "operationId" : "rejectOp",
@@ -1705,6 +1734,59 @@
         "tags" : [ "debts" ]
       }
     },
+    "/api/debts/customers/{id}/act/pdf" : {
+      "get" : {
+        "operationId" : "customerActPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Akt sverka (mijoz) — PDF",
+        "tags" : [ "debts" ]
+      }
+    },
     "/api/debts/customers/{id}/docs" : {
       "get" : {
         "operationId" : "customerDocs",
@@ -1822,6 +1904,59 @@
           }
         },
         "summary" : "Akt sverka (yetkazib beruvchi)",
+        "tags" : [ "debts" ]
+      }
+    },
+    "/api/debts/suppliers/{id}/act/pdf" : {
+      "get" : {
+        "operationId" : "supplierActPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Akt sverka (yetkazib beruvchi) — PDF",
         "tags" : [ "debts" ]
       }
     },
@@ -3742,6 +3877,38 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/pick-sheet/pdf" : {
+      "get" : {
+        "operationId" : "pickSheetPdf",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "ids",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Terish varag'i — PDF (bir necha buyurtma, 20 tagacha)",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/previous" : {
       "get" : {
         "description" : "«Oldingi buyurtmani takrorlash» uchun.",
@@ -4318,6 +4485,36 @@
           }
         },
         "summary" : "Vaqt berish",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/waybill/pdf" : {
+      "get" : {
+        "description" : "Nakladnoy raqamlanmagan bo'lsa — 409.",
+        "operationId" : "waybillPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Nakladnoy — PDF (chop etish)",
         "tags" : [ "orders" ]
       }
     },
@@ -7568,6 +7765,35 @@
           }
         },
         "summary" : "Reysdan buyurtmani olib tashlash",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/sheet/pdf" : {
+      "get" : {
+        "operationId" : "sheetPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yo'l varaqasi — PDF (chop etish)",
         "tags" : [ "trips" ]
       }
     },

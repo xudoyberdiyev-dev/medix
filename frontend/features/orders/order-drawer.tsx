@@ -605,7 +605,7 @@ function DocumentsRow({ doc }: { doc: OrderDetail }) {
           size="sm"
           icon={Printer}
           className="mt-2"
-          onClick={() => window.open(`/print/waybill?id=${doc.id}`, "_blank", "noopener")}
+          onClick={() => window.open(`/api/orders/${doc.id}/waybill/pdf`, "_blank", "noopener")}
         >
           Nakladnoyni chop etish
         </Button>

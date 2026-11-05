@@ -259,7 +259,7 @@ export function OpsTab(props: { branchId: number }) {
                 variant="tertiary"
                 size="sm"
                 icon={Printer}
-                onClick={() => window.open(`/print/cash-op?id=${o.id}`, "_blank", "noopener")}
+                onClick={() => window.open(`/api/cash-ops/${o.id}/pdf`, "_blank", "noopener")}
               >
                 Chop etish
               </Button>

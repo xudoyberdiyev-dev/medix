@@ -16,7 +16,7 @@ type ActLine = components["schemas"]["ActLine"];
 
 const amount = (v: string) => (v === "0.00" ? "" : <span className="tabular-nums">{formatMoney(v)}</span>);
 
-/** Akt sverka (prototip holatida): davr boshi + qarz oshdi − kamaydi = davr oxiri. Chop etish — brauzer orqali. */
+/** Akt sverka: davr boshi + qarz oshdi − kamaydi = davr oxiri. Chop etish — server PDF (ikki tomon imzosi bilan). */
 export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyId: number; branchId: number | null }) {
   const today = todayTashkent();
   const [from, setFrom] = useState(formatIsoDate(`${today.slice(0, 8)}01`));
@@ -66,7 +66,13 @@ export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyI
         <div className="w-40">
           <TextField label="Gacha" size="sm" value={to} onChange={setTo} error={isoTo === null ? "Sana notoʻgʻri" : undefined} />
         </div>
-        <Button variant="secondary" size="sm" icon={Printer} disabled={!act.data} onClick={() => window.print()}>
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={Printer}
+          disabled={!act.data}
+          onClick={() => openActPdf(props, isoFrom ?? null, isoTo ?? null)}
+        >
           Chop etish
         </Button>
       </div>
@@ -96,6 +102,28 @@ export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyI
       </p>
     </div>
   );
+}
+
+/** Server PDF yangi oynada: /api/debts/{customers|suppliers}/{id}/act/pdf?branchId&from&to. */
+export function actPdfUrl(
+  props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyId: number; branchId: number | null },
+  from: string | null,
+  to: string | null,
+): string {
+  const q = new URLSearchParams();
+  if (props.branchId != null) q.set("branchId", String(props.branchId));
+  if (from) q.set("from", from);
+  if (to) q.set("to", to);
+  const kind = props.side === "CUSTOMER" ? "customers" : "suppliers";
+  return `/api/debts/${kind}/${props.counterpartyId}/act/pdf?${q.toString()}`;
+}
+
+function openActPdf(
+  props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyId: number; branchId: number | null },
+  from: string | null,
+  to: string | null,
+) {
+  window.open(actPdfUrl(props, from, to), "_blank", "noopener");
 }
 
 function Sum(props: { label: string; value: string; strong?: boolean }) {

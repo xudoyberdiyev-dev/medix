@@ -375,7 +375,7 @@ export function ShipmentsPage() {
                       size="sm"
                       variant="secondary"
                       icon={Printer}
-                      onClick={() => window.open(`/print/trip?id=${t.id}`, "_blank", "noopener")}
+                      onClick={() => window.open(`/api/trips/${t.id}/sheet/pdf`, "_blank", "noopener")}
                     >
                       Yoʻl varaqasini chop etish
                     </Button>
