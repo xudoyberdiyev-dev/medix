@@ -89,12 +89,12 @@ class DirectorHome {
         return LocalDate.now(clock.withZone(TASHKENT));
     }
 
-    private static Money m(BigDecimal v) {
+    static Money m(BigDecimal v) {
         return new Money(v == null ? BigDecimal.ZERO : v);
     }
 
     /** (filial, to'lov turi) → summa. */
-    private record Amount(long branchId, String kind, BigDecimal amount) {}
+    record Amount(long branchId, String kind, BigDecimal amount) {}
 
     @Transactional(readOnly = true)
     Home home(Actor actor, Long branchId, LocalDate from, LocalDate to, boolean canSeeCost) {
@@ -156,12 +156,13 @@ class DirectorHome {
                 .map(x -> new Debtor(x.counterpartyId(), x.name(), x.debt(), x.overdue(), x.maxOverdueDays())).toList();
         return new Home(f, t, today, branchId, byPayment(sales), new DebtCard(customers.debt(), customers.overdue(), customers.advance()),
                 new DebtCard(suppliers.debt(), suppliers.overdue(), suppliers.advance()), byPayment(expenses), rows, attention, top,
-                STALE_DAYS, statuses(branchId, f, t, today), operators(branchId, f, t),
+                STALE_DAYS, statuses(branchId, null, f, t, today), operators(branchId, f, t),
                 canSeeCost ? suppliers(branchId, f, t, "owner_id", "employee", "full_name") : null,
                 canSeeCost ? suppliers(branchId, f, t, "supplier_id", "counterparty", "name") : null);
     }
 
-    private List<StatusCell> statuses(Long branchId, LocalDate f, LocalDate t, LocalDate today) {
+    /** Buyurtma holatlari: createdBy berilsa — faqat shu xodim kiritgan buyurtmalar (Operator bosh sahifasi). */
+    List<StatusCell> statuses(Long branchId, Long createdBy, LocalDate f, LocalDate t, LocalDate today) {
         Map<String, StatusCell> by = new HashMap<>();
         jdbc.sql("""
                 SELECT status, count(*) AS cnt, sum(total) AS amt,
@@ -171,11 +172,13 @@ class DirectorHome {
                        sum(total) FILTER (WHERE status NOT IN ('DELIVERED', 'UNDELIVERED') AND status_changed_at < :stale) AS stale_amt
                 FROM sales_order
                 WHERE status NOT IN ('REJECTED', 'CANCELLED') AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                  AND (CAST(:e AS BIGINT) IS NULL OR created_by = :e)
                   AND (status NOT IN ('DELIVERED', 'UNDELIVERED') OR (status_changed_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t)
                 GROUP BY status""")
                 .param("d", Date.valueOf(today))
                 .param("stale", Timestamp.from(clock.instant().minus(Duration.ofDays(STALE_DAYS))))
                 .param("b", branchId)
+                .param("e", createdBy)
                 .param("f", Date.valueOf(f))
                 .param("t", Date.valueOf(t))
                 .query((rs, n) -> {
@@ -296,7 +299,7 @@ class DirectorHome {
         return total;
     }
 
-    private static ByPayment byPayment(List<Amount> list) {
+    static ByPayment byPayment(List<Amount> list) {
         Map<String, Money> by = new HashMap<>();
         for (Amount a : list) {
             by.merge(a.kind(), m(a.amount()), Money::plus);

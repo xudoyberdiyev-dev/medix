@@ -995,6 +995,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/home/operator": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operator bosh sahifasi: o'z sof savdosi, buyurtma holatlari, «Diqqat talab qiladi», eng katta mijozlar */
+        get: operations["operatorHome"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marking/codes": {
         parameters: {
             query?: never;
@@ -3940,6 +3957,14 @@ export interface components {
             paymentDays?: number;
             priceType?: string;
         };
+        CustomerRow: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int32 */
+            orders: number;
+            sales: string;
+        };
         DayClose: {
             account: string;
             /** Format: int64 */
@@ -4691,6 +4716,29 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        OperatorAttention: {
+            drafts: components["schemas"]["CountAmount"];
+            pendingApproval: components["schemas"]["CountAmount"];
+            rejected: components["schemas"]["CountAmount"];
+            /** Format: int32 */
+            rejectedDays: number;
+            stale: components["schemas"]["CountAmount"];
+        };
+        OperatorHomeView: {
+            attention: components["schemas"]["OperatorAttention"];
+            /** Format: date */
+            from: string;
+            orderStatuses: components["schemas"]["StatusCell"][];
+            ordersCreated: components["schemas"]["CountAmount"];
+            sales: components["schemas"]["ByPayment"];
+            /** Format: int32 */
+            staleDays: number;
+            /** Format: date */
+            to: string;
+            /** Format: date */
+            today: string;
+            topCustomers: components["schemas"]["CustomerRow"][];
         };
         OperatorRow: {
             /** Format: int64 */
@@ -7659,6 +7707,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Home"];
+                };
+            };
+        };
+    };
+    operatorHome: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperatorHomeView"];
                 };
             };
         };
