@@ -194,6 +194,9 @@ final class OrderModels {
     /** Partiya tasdig'i: batchId bo'sh — «Ha, shundan oldim» (FEFO zahira); to'ldirilgan — «Boshqa partiyadan oldim». */
     record PickLineConfirm(@NotNull(message = "{validation.required}") Long lineId, @Schema(nullable = true) Long batchId) {}
 
+    /** «Boshqa partiyadan oldim» tanlovi: partiya, muddat, bo'sh qoldiq (shu qator zahirasi bilan), FEFO zahirasidagi miqdor. */
+    record PickBatch(long batchId, String number, java.time.LocalDate expiryDate, boolean bonus, int free, int reserved) {}
+
     record PickFinishRequest(@Schema(nullable = true) List<@Valid PickLineConfirm> lines) {}
 
     /** Yig'uvchi navbati kartasi (SPEC 5.4). */

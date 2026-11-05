@@ -150,4 +150,39 @@ public class StockReservations {
                 .query((rs, n) -> new Free(rs.getLong("zone_id"), rs.getInt("qty")))
                 .list();
     }
+
+    /**
+     * Yig'uvchi «Boshqa partiyadan oldim» uchun: mahsulotning ombordagi muddati o'tmagan partiyalari va sotuvga ochiq zonalardagi bo'sh
+     * qoldig'i. {@code ownDocType/ownDocId/ownLineId} qatorining o'z zahirasi bo'sh qoldiqqa qaytarib qo'shiladi (u yig'ishda bo'shaydi).
+     */
+    public record BatchFree(long batchId, String number, LocalDate expiry, boolean bonus, int free, int reservedForLine) {}
+
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED)
+    public List<BatchFree> freeByProduct(long warehouseId, long productId, String ownDocType, long ownDocId, long ownLineId) {
+        return jdbc.sql("""
+                WITH own AS (SELECT batch_id, zone_id, sum(qty) AS qty FROM stock_reservation
+                             WHERE doc_type = :t AND doc_id = :d AND doc_line_id = :l AND status = 'ACTIVE' GROUP BY batch_id, zone_id),
+                     z AS (SELECT s.batch_id, s.zone_id,
+                                  s.qty - coalesce((SELECT sum(x.qty) FROM stock_reservation x
+                                                    WHERE x.zone_id = s.zone_id AND x.batch_id = s.batch_id AND x.status = 'ACTIVE'), 0)
+                                        + coalesce(own.qty, 0) AS free,
+                                  coalesce(own.qty, 0) AS mine
+                           FROM stock_balance s JOIN zone zn ON zn.id = s.zone_id
+                           LEFT JOIN own ON own.batch_id = s.batch_id AND own.zone_id = s.zone_id
+                           WHERE s.warehouse_id = :w AND zn.sellable AND zn.active AND s.qty > 0)
+                SELECT b.id, b.number, b.expiry_date, b.bonus, sum(z.free)::int AS free, sum(z.mine)::int AS mine
+                FROM z JOIN batch b ON b.id = z.batch_id
+                WHERE b.product_id = :p AND b.expiry_date >= current_date
+                GROUP BY b.id, b.number, b.expiry_date, b.bonus
+                HAVING sum(z.free) > 0
+                ORDER BY b.expiry_date, b.id""")
+                .param("t", ownDocType)
+                .param("d", ownDocId)
+                .param("l", ownLineId)
+                .param("w", warehouseId)
+                .param("p", productId)
+                .query((rs, n) -> new BatchFree(rs.getLong("id"), rs.getString("number"), rs.getObject("expiry_date", LocalDate.class),
+                        rs.getBoolean("bonus"), rs.getInt("free"), rs.getInt("mine")))
+                .list();
+    }
 }

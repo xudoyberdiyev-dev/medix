@@ -141,6 +141,37 @@ class OrderPicking {
         audit.record(AuditEntry.of("order.pickStart", "sales_order", id));
     }
 
+    /**
+     * Yig'uvchi uchun qator mahsulotining boshqa partiyalari (stock.view ruxsatisiz): faqat o'zi yig'ayotgan «Yig'ilmoqda» buyurtma;
+     * tannarx yuborilmaydi.
+     */
+    @Transactional(readOnly = true)
+    List<OrderModels.PickBatch> batches(Actor actor, long id, long lineId) {
+        record H(long branchId, long warehouseId, OrderStatus status, Long pickerId) {}
+        H h = jdbc.sql("SELECT branch_id, warehouse_id, status, picker_id FROM sales_order WHERE id = :id")
+                .param("id", id)
+                .query((rs, n) -> new H(rs.getLong("branch_id"), rs.getLong("warehouse_id"), OrderStatus.valueOf(rs.getString("status")),
+                        (Long) rs.getObject("picker_id")))
+                .optional()
+                .filter(x -> actor.canAccessBranch(x.branchId()))
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (h.status() != OrderStatus.PICKING) {
+            throw MedixException.conflict("order.badStatus", h.status().name());
+        }
+        if (h.pickerId() == null || h.pickerId() != actor.employeeId()) {
+            throw MedixException.forbidden("order.notPicker");
+        }
+        long productId = jdbc.sql("SELECT product_id FROM sales_order_line WHERE id = :l AND order_id = :o")
+                .param("l", lineId)
+                .param("o", id)
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        return reservations.freeByProduct(h.warehouseId(), productId, Orders.DOC_TYPE, id, lineId).stream()
+                .map(b -> new OrderModels.PickBatch(b.batchId(), b.number(), b.expiry(), b.bonus(), b.free(), b.reservedForLine()))
+                .toList();
+    }
+
     private record LineRow(long id, long productId, int qty, boolean marked) {}
 
     /**

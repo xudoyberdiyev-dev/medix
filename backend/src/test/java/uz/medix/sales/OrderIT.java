@@ -510,6 +510,20 @@ class OrderIT {
         // «Boshqa partiyadan oldim» — Y-LATE; ogohlantirish belgisi
         send(post("/api/orders/" + o2 + "/pick/start"), picker, "").andExpect(status().isOk());
         long line2 = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o").param("o", o2).query(Long.class).single();
+        // Partiyalar ro'yxati (stock.view siz): FEFO tartibi, o'z zahirasi bo'sh qoldiqqa qo'shiladi; faqat o'z yig'ishi
+        mvc.perform(get("/api/orders/" + o2 + "/pick/lines/" + line2 + "/batches").cookie(picker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].number").value("Y-EARLY"))
+                .andExpect(jsonPath("$[0].free").value(6))
+                .andExpect(jsonPath("$[0].reserved").value(3))
+                .andExpect(jsonPath("$[1].number").value("Y-LATE"))
+                .andExpect(jsonPath("$[1].free").value(10))
+                .andExpect(jsonPath("$[1].reserved").value(0))
+                .andExpect(jsonPath("$[0].cost").doesNotExist());
+        mvc.perform(get("/api/orders/" + o2 + "/pick/lines/" + line2 + "/batches").cookie(otherPicker)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/orders/" + o2 + "/pick/lines/" + line2 + "/batches").cookie(keeper)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/orders/" + o1 + "/pick/lines/" + line2 + "/batches").cookie(picker)).andExpect(status().isConflict());
         send(post("/api/orders/" + o2 + "/pick/finish"), picker, "{\"lines\":[{\"lineId\":" + line2 + ",\"batchId\":" + batches[1] + "}]}")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.fefoDeviation").value(true));

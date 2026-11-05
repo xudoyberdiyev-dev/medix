@@ -229,6 +229,13 @@ class OrderController {
         return detail(id);
     }
 
+    @GetMapping("/{id}/pick/lines/{lineId}/batches")
+    @PreAuthorize("hasAuthority('picking.do')")
+    @Operation(summary = "Qator uchun partiyalar", description = "«Boshqa partiyadan oldim»: muddati o'tmagan partiyalar va bo'sh qoldiq; faqat o'z yig'ishi.")
+    List<OrderModels.PickBatch> pickBatches(@PathVariable long id, @PathVariable long lineId) {
+        return picking.batches(actor(), id, lineId);
+    }
+
     @PostMapping("/{id}/pick/finish")
     @PreAuthorize("hasAuthority('picking.do')")
     @Operation(summary = "Yig'ishni yakunlash", description = "Partiya tasdig'i; tovar Jo'natish zonasiga o'tadi.")
