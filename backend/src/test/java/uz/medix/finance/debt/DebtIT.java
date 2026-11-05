@@ -1,5 +1,6 @@
 package uz.medix.finance.debt;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -167,6 +168,16 @@ class DebtIT {
                 .andExpect(jsonPath("$.lines.length()").value(5))
                 .andExpect(jsonPath("$.lines[4].balance").value("2900.00"));
         mvc.perform(get("/api/debts/customers/" + c1 + "/act").param("branchId", "" + other).cookie(cashier)).andExpect(status().isNotFound());
+        // Server PDF: davr oxiri, yakuniy jumla, ikki tomon imzosi
+        byte[] actPdf = mvc.perform(get("/api/debts/customers/" + c1 + "/act/pdf").param("branchId", "" + b).cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType("application/pdf"))
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var pdfDoc = org.apache.pdfbox.Loader.loadPDF(actPdf)) {
+            assertThat(new org.apache.pdfbox.text.PDFTextStripper().getText(pdfDoc))
+                    .contains("Davr aylanmasi", "3.700,00", "2.900,00", "qarzdor", "M.Oʻ.");
+        }
+        mvc.perform(get("/api/debts/customers/" + c1 + "/act/pdf").param("branchId", "" + other).cookie(cashier)).andExpect(status().isNotFound());
         mvc.perform(get("/api/debts/customers/" + c1 + "/act").param("branchId", "" + b).param("from", t.plusDays(1).toString())
                         .param("to", t.toString()).cookie(cashier))
                 .andExpect(jsonPath("$.code").value("cash.periodInvalid"));

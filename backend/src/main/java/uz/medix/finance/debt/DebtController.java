@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +25,10 @@ class DebtController {
     private final Debts debts;
     private final CurrentActor currentActor;
 
-    DebtController(Debts debts, CurrentActor currentActor) {
+    private final DebtActPdf actPdf;
+
+    DebtController(Debts debts, DebtActPdf actPdf, CurrentActor currentActor) {
+        this.actPdf = actPdf;
         this.debts = debts;
         this.currentActor = currentActor;
     }
@@ -76,5 +81,23 @@ class DebtController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return debts.act(actor(), Side.SUPPLIER, branchId, id, from, to);
+    }
+
+    @GetMapping(value = "/api/debts/customers/{id}/act/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('cdebt.view')")
+    @Operation(summary = "Akt sverka (mijoz) — PDF")
+    ResponseEntity<byte[]> customerActPdf(@PathVariable long id, @RequestParam long branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return actPdf.render(actor(), Side.CUSTOMER, branchId, id, from, to).response();
+    }
+
+    @GetMapping(value = "/api/debts/suppliers/{id}/act/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('sdebt.view')")
+    @Operation(summary = "Akt sverka (yetkazib beruvchi) — PDF")
+    ResponseEntity<byte[]> supplierActPdf(@PathVariable long id, @RequestParam long branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return actPdf.render(actor(), Side.SUPPLIER, branchId, id, from, to).response();
     }
 }
