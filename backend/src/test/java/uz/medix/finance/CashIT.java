@@ -201,6 +201,31 @@ class CashIT {
                 .andExpect(jsonPath("$.moves.length()").value(6));
         mvc.perform(get("/api/cash-ops").param("branchId", "" + b).param("status", "PENDING").cookie(cashier))
                 .andExpect(jsonPath("$.length()").value(0));
+
+        // Kassir paneli: IO kirim/chiqimga kirmaydi; bekor qilingan chiqim moddalarda yoʻq
+        mvc.perform(get("/api/cash-panel").param("branchId", "" + b).cookie(picker)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/cash-panel").param("branchId", "" + b).cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.balances.cash").value("2500000.00"))
+                .andExpect(jsonPath("$.balances.terminal").value("300000.00"))
+                .andExpect(jsonPath("$.balances.total").value("2800000.00"))
+                .andExpect(jsonPath("$.income").value("7300000.00"))
+                .andExpect(jsonPath("$.expense").value("4500000.00"))
+                .andExpect(jsonPath("$.expenses.length()").value(1))
+                .andExpect(jsonPath("$.expenses[0].item").value("Ijara"))
+                .andExpect(jsonPath("$.expensesTotal").value("2500000.00"))
+                .andExpect(jsonPath("$.pendingOps").value(0))
+                .andExpect(jsonPath("$.accounts[0].closing").value("2500000.00"))
+                .andExpect(jsonPath("$.days.length()").value(1))
+                .andExpect(jsonPath("$.recent.length()").value(10));
+        mvc.perform(get("/api/cash-panel").param("branchId", "" + b).param("accountId", "" + t).cookie(cashier))
+                .andExpect(jsonPath("$.balances.total").value("300000.00"))
+                .andExpect(jsonPath("$.accounts.length()").value(1))
+                .andExpect(jsonPath("$.accounts[0].income").value("600000.00"))
+                .andExpect(jsonPath("$.accounts[0].expense").value("300000.00"));
+        mvc.perform(get("/api/cash-panel").param("branchId", "" + b).param("from", today().toString()).param("to", today().minusDays(1).toString())
+                        .cookie(cashier))
+                .andExpect(jsonPath("$.code").value("cash.periodInvalid"));
     }
 
     @Test
