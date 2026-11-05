@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canApprove, canCancelOrder } from "./api";
+import { canApprove, canCancelOrder, codesExportUrl } from "./api";
 import { counterText } from "./marking-page";
 import { groupByStage, sinceText, type MonitorCard } from "./monitor-page";
 import { timerText } from "./picking-page";
@@ -80,5 +80,13 @@ describe("reys sigʻimi", () => {
     expect(capacityState(3, 1, 5)).toEqual({ text: "4 / 5 joy", over: false });
     expect(capacityState(4, 2, 5)).toEqual({ text: "6 / 5 joy", over: true });
     expect(capacityState(7, 0, null)).toEqual({ text: "7 joy · sigʻim belgilanmagan", over: false });
+  });
+});
+
+describe("codesExportUrl", () => {
+  it("faqat berilgan filtrlar", () => {
+    expect(codesExportUrl({})).toBe("/api/marking/codes/export");
+    expect(codesExportUrl({ orderId: 7 })).toBe("/api/marking/codes/export?orderId=7");
+    expect(codesExportUrl({ today: true, mine: true, q: " ab1 " })).toBe("/api/marking/codes/export?today=true&mine=true&q=ab1");
   });
 });

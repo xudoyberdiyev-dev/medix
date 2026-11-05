@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, History, Info, LayoutList, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
+import { Check, CircleAlert, FileDown, History, Info, LayoutList, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -45,6 +45,7 @@ import {
   type OrderDetail,
   type OrderIssue,
   type OrderRequest,
+  codesExportUrl,
 } from "./api";
 import { CatalogDialog } from "./catalog-dialog";
 import { OrderStatusBadge, day } from "./orders-page";
@@ -558,6 +559,8 @@ function Decision({ doc }: { doc: OrderDetail | null }) {
 
 /** «Hozir kimda» va hujjatlar zanjiri (SPEC 5.2, 7): NK → SV / HF → QM, reys va haydovchi. */
 function DocumentsRow({ doc }: { doc: OrderDetail }) {
+  const me = useMe();
+  const canExportCodes = can(me.data, "marking.export");
   const d = doc.documents;
   const items: { label: string; value: string; note?: string }[] = [];
   if (d.waybillNumber) items.push({ label: "Nakladnoy", value: d.waybillNumber });
@@ -585,6 +588,16 @@ function DocumentsRow({ doc }: { doc: OrderDetail }) {
             </div>
           ))}
         </dl>
+      ) : null}
+      {doc.lines.some((l) => l.marked) && canExportCodes ? (
+        <a
+          href={codesExportUrl({ orderId: doc.id })}
+          download
+          className="mt-2 mr-2 inline-flex h-control-sm items-center gap-2 rounded-control px-3 text-primary hover:bg-primary-soft"
+        >
+          <FileDown size={16} strokeWidth={1.5} aria-hidden />
+          Kodlarni yuklash (.xlsx)
+        </a>
       ) : null}
       {d.waybillNumber ? (
         <Button

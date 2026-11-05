@@ -1,7 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CircleX, Play, ScanLine, Tag, Timer, Trash2 } from "lucide-react";
+import { CheckCircle2, CircleX, FileDown, Play, ScanLine, Tag, Timer, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { ApiError } from "@/lib/api/errors";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, GS1_ERROR_TEXT, parseGs1 } from "@/lib/gs1";
+import { codesExportUrl } from "./api";
 import { IssueButton } from "./issues";
 import { day } from "./orders-page";
 import { timerText } from "./picking-page";
@@ -454,6 +455,7 @@ const STATUS_TONE: Record<MarkCode["status"], "success" | "neutral" | "warning" 
 };
 
 function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
+  const me = useMe();
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const codes = useQuery({
@@ -464,17 +466,29 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
   });
   return (
     <>
-      <div className="mb-4 max-w-md">
-        <TextField
-          label="Qidiruv"
-          variant="search"
-          value={q}
-          onChange={(v) => {
-            setQ(v);
-            setPage(1);
-          }}
-          placeholder="GTIN, seriya, partiya yoki buyurtma raqami"
-        />
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div className="w-full max-w-md">
+          <TextField
+            label="Qidiruv"
+            variant="search"
+            value={q}
+            onChange={(v) => {
+              setQ(v);
+              setPage(1);
+            }}
+            placeholder="GTIN, seriya, partiya yoki buyurtma raqami"
+          />
+        </div>
+        {can(me.data, "marking.export") ? (
+          <a
+            href={codesExportUrl({ today, mine, q })}
+            download
+            className="inline-flex h-control-md shrink-0 items-center gap-2 rounded-control border border-border bg-surface px-4 font-medium hover:bg-background"
+          >
+            <FileDown size={16} strokeWidth={1.5} aria-hidden />
+            Excelʼga yuklash
+          </a>
+        ) : null}
       </div>
       {codes.error ? (
         <ErrorState onRetry={() => codes.refetch()} />

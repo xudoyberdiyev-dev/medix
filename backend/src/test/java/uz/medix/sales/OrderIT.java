@@ -699,6 +699,14 @@ class OrderIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(2));
         mvc.perform(get("/api/marking/codes").cookie(picker)).andExpect(status().isForbidden());
+        // Kodlar .xlsx — marking.export (Markirovkachi); Ombor mudirida yo'q
+        mvc.perform(get("/api/marking/codes/export").param("orderId", "" + o3).cookie(marker))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Disposition", containsString("kodlar-")));
+        mvc.perform(get("/api/marking/codes/export").cookie(keeper)).andExpect(status().isForbidden());
     }
 
     /** Buyurtmani «Hujjatlashtirilmoqda»gacha olib boradi (joylar soni bilan). */

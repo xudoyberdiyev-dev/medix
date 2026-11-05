@@ -148,3 +148,14 @@ export async function defaultPaymentType(customerId: number) {
 export async function loadOrder(id: number) {
   return unwrap(api.GET("/api/orders/{id}", { params: { path: { id } } }));
 }
+
+/** Kodlar .xlsx manzili (jurnal filtrlari bilan; orderId — bitta buyurtma). */
+export function codesExportUrl(f: { today?: boolean; mine?: boolean; q?: string; orderId?: number }): string {
+  const p = new URLSearchParams();
+  if (f.orderId) p.set("orderId", String(f.orderId));
+  if (f.today) p.set("today", "true");
+  if (f.mine) p.set("mine", "true");
+  if (f.q?.trim()) p.set("q", f.q.trim());
+  const qs = p.toString();
+  return `/api/marking/codes/export${qs ? `?${qs}` : ""}`;
+}

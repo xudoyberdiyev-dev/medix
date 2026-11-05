@@ -2546,6 +2546,50 @@
         "tags" : [ "marking" ]
       }
     },
+    "/api/marking/codes/export" : {
+      "get" : {
+        "operationId" : "exportCodes",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "orderId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "mine",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "today",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodlar .xlsx",
+        "tags" : [ "marking" ]
+      }
+    },
     "/api/marking/mine" : {
       "get" : {
         "description" : "Faol ish bo'lmasa — 204.",
