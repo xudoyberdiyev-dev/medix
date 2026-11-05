@@ -6,8 +6,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **Sana:** 06.11.2026
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~90%; 2 — Katalog ~90%; 3 — Narxlar ~97%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~95% (imzo UI ✅); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 06.11.2026 02:34–03:17 (tungi oyna, zaxira sessiya) — server PDF barcha shakllarga: nakladnoy, yo'l varaqasi, terish varag'i, kassa orderi (summa so'z bilan — `MoneyWords`), akt sverka; chop etish tugmalari server PDF'ni ochadi. 5-bosqich: kirim «Mahsulot qo'shish» katalogi (/api/receipts/catalog + dialog). 6-bosqich: buyurtmalar holat yorliqlari va «Hozir kimda».
-- **Keyingi vazifa:** 8-bosqich imzo UI (haydovchi: mijoz imzosi) yoki 4-bosqich ko'chirishlar (ZK/OK — 10-bosqich «yo'ldagi ko'chirishlar» shunga bog'liq). Brauzerdagi `/print/*` sahifalari zaxira sifatida qoldi (tugmalar endi server PDF'ni ochadi).
+- **Oxirgi sessiya:** 06.11.2026 03:15–03:55 (tungi oyna, zanjir) — 8-bosqich mijoz imzosi (imzo maydoni, `TripStop.signed`); jadvallar standarti: saqlangan ko'rinishlar (Mahsulotlar, Mijozlar/YB) va «topilgan joy qator ostida» (`SearchMatch`); Ombor mudiri paneli yorliqlari (Monitor, Vaqt berish, Muammolar, Kirim qabuli, Qaytgan tovar); tasdiq bildirishnomalari — buyurtma, NO, kassa chiqimi (tasdiqlovchiga; qaror — muallifga), `?open=<id>` havolalari.
+- **Keyingi vazifa:** qolgan kichik ishlar: Qoldiqlar sahifasiga URL filtrlar + saqlangan ko'rinishlar; buyurtmalar holat yorliqlari e2e; boshqa tasdiqlar bildirishnomasi (YT to'lovi, kirim o'tkazish kutmoqda). 4-bosqich ko'chirishlar (ZK/OK) — SPEC 18 bo'yicha V2, shoshilinch emas. Brauzerdagi `/print/*` sahifalari zaxira sifatida qoldi.
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
@@ -130,6 +130,8 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 ---
 
 ## Qarorlar jurnali
+- 06.11.2026 — Saqlangan ko'rinishlar brauzer xotirasida (har jadval uchun kalit, 20 tagacha, sahifa raqamisiz) — foydalanuvchi qulayligi; serverga ko'chirish kerak bo'lsa keyin. «Topilgan joy»: so'z ko'rinadigan ustunlarda bo'lmasa, yashirin maydon (shtrix-kod, shartnoma/klassifikator nomi, aloqa shaxsi) qator ostida.
+- 06.11.2026 — Tasdiq bildirishnomalari: buyurtma (Filial darajasi — approvals.branch + Direktor, Direktor darajasi — faqat approvals.director), NO (prices.below), kassa chiqimi (cash.approve); qaror muallifga (o'zi qaror qilmagan bo'lsa). Ombor «Muammo bor» havolasi endi `/warehouse?tab=issues`.
 - 05.11.2026 — Kassir paneli: «Kirim/Chiqim pullar» — hisoblar orasidagi o'tkazmasiz (IO); hisoblar jadvalida IO bor (qoldiq uchun). Bosh sahifa rolga qarab: CASHIER → Kassir paneli. Dinamika — Recharts o'rniga oddiy ustunlar (yangi bog'liqliksiz); keyin grafik qo'shish mumkin.
 - 05.11.2026 — Kassir faqat o'z kassasida: kassaga biriktirilgan kassir bo'lsa, undagi har qanday pul harakati (kirim ham, chiqim ham, IO ning ikkala tomoni) faqat shu kassir yoki cash.approve egasi (Direktor, Admin, Filial rahbari) tomonidan. Filialda kassasi bor xodim biriktirilmagan kassani ishlatmaydi; kassasi yo'q xodim (masalan, Buxgalter) biriktirilmagan kassani ishlatadi. Terminal va bank — faqat ruxsat kalitlari bo'yicha. Biriktirish — settings.view yoki cash.approve; nomzod — filialning faol, cash.io ruxsatli xodimi; bir xodim bir necha kassaga mumkin.
 - 05.11.2026 — Bonus balans sahifasi: ko'rish — sdebt.view yoki supplierBonus.confirm; «kutilayotgan» = o'tkazilgan, chegirmali, BNS qilinmagan kirim (foiz — qarz summasidan, HALF_UP). Ishlatilmagan kunlar — balans musbat bo'lsa oxirgi harakatdan.
@@ -181,6 +183,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 06.11.2026 03:15–03:55 — zanjir sessiyasi: imzo UI, saqlangan ko'rinishlar, «topilgan joy qator ostida» (Mahsulotlar, Kontragentlar), Ombor mudiri paneli yorliqlari (skrinshot mock), tasdiq bildirishnomalari (buyurtma, NO, kassa). Frontend 144 test, build yashil; CI (backend + e2e) yashil.
 - 06.11.2026 03:17 — zanjir: davom (kontekst og'irlashdi) — keyingi sessiya: 8-bosqich imzo UI yoki 4-bosqich ko'chirishlar. CI (develop) to'liq yashil.
 - 06.11.2026 02:34–03:17 — zaxira sessiya (tungi oyna): server PDF — nakladnoy, yo'l varaqasi, terish varag'i, kassa orderi, akt sverka (`PdfFormat`, `PdfDocument`, `MoneyWords`); kirim «Mahsulot qo'shish» katalogi (API + dialog + testlar); buyurtmalar holat yorliqlari + «Hozir kimda» (API + UI). Frontend 134 test, build yashil; CI backend yashil. Skrinshot olinmadi (mock sozlash qimmat).
 - 06.11.2026 01:51–02:07 — 2-sessiya davomi (qo'lda ishga tushirish shu sessiyaga keldi): server PDF poydevori — `PdfRenderer` (Thymeleaf shablon `resources/pdf/`, DejaVu Sans shrifti, A4, sahifa raqami), NO PDF `/api/price-changes/{id}/pdf`, «Chop etish» endi PDF ochadi; IT PDFBox bilan o'zbekcha matnni tekshiradi. CI yashil. zanjir: davom → 02:30 zaxira (yangi kontekst).
