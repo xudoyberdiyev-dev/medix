@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Ban, CircleCheck, CircleX, Hourglass, ArrowLeftRight, ReceiptText, LockKeyhole, ScrollText } from "lucide-react";
+import { Ban, CircleCheck, CircleX, Hourglass, ArrowLeftRight, Printer, ReceiptText, LockKeyhole, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -253,13 +253,23 @@ export function OpsTab(props: { branchId: number }) {
           rows={list.data ?? []}
           rowKey={(o) => String(o.id)}
           loading={list.isPending}
-          rowActions={(o) =>
-            mayCancel && o.status === "POSTED" && o.source === "MANUAL" ? (
-              <Button variant="tertiary" size="sm" icon={Ban} onClick={() => setCancelling(o)}>
-                Bekor qilish
+          rowActions={(o) => (
+            <>
+              <Button
+                variant="tertiary"
+                size="sm"
+                icon={Printer}
+                onClick={() => window.open(`/print/cash-op?id=${o.id}`, "_blank", "noopener")}
+              >
+                Chop etish
               </Button>
-            ) : null
-          }
+              {mayCancel && o.status === "POSTED" && o.source === "MANUAL" ? (
+                <Button variant="tertiary" size="sm" icon={Ban} onClick={() => setCancelling(o)}>
+                  Bekor qilish
+                </Button>
+              ) : null}
+            </>
+          )}
           emptyState={
             <EmptyState
               icon={ReceiptText}

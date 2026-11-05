@@ -30,7 +30,7 @@ export function PickSheetPage() {
         <EmptyState
           icon={ClipboardList}
           title="Buyurtma tanlanmagan"
-          description="Yigʻish sahifasida buyurtmalarni belgilab, «Terish varagʻi»ni bosing."
+          description="Yigʻish sahifasida buyurtmalarni belgilab, «Varaqni chop etish»ni bosing."
         />
       </Shell>
     );

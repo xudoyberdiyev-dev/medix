@@ -375,7 +375,7 @@ export function ShipmentsPage() {
                       icon={Printer}
                       onClick={() => window.open(`/print/trip?id=${t.id}`, "_blank", "noopener")}
                     >
-                      Yoʻl varaqasi
+                      Yoʻl varaqasini chop etish
                     </Button>
                     {canTrip && t.status === "PLANNED" ? (
                       <Button size="sm" variant="tertiary" icon={Ban} onClick={() => setCancelling(t)}>

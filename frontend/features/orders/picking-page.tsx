@@ -100,7 +100,7 @@ export function PickingPage() {
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="text-subtitle">Navbat</h2>
               <Button variant="secondary" size="sm" icon={Printer} disabled={selected.length === 0} onClick={() => openPickSheet(selected)}>
-                Terish varagʻi{selected.length > 0 ? ` (${selected.length})` : ""}
+                Varaqni chop etish{selected.length > 0 ? ` (${selected.length})` : ""}
               </Button>
             </div>
             <ul className="flex flex-col gap-3">
@@ -214,7 +214,7 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
         <div className="flex flex-wrap items-center gap-2">
           <IssueButton orderId={id} />
           <Button variant="secondary" icon={Printer} onClick={() => openPickSheet([id])}>
-            Terish varagʻi
+            Terish varagʻini chop etish
           </Button>
           <Button icon={CheckCircle2} disabled={!all} loading={pending} onClick={() => void finish()}>
             Yigʻishni yakunlash

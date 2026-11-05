@@ -28,7 +28,11 @@ export function TripSheetPage() {
   if (id === null) {
     return (
       <Shell>
-        <EmptyState icon={Truck} title="Reys tanlanmagan" description="Joʻnatish sahifasida reys qatoridagi «Yoʻl varaqasi»ni bosing." />
+        <EmptyState
+          icon={Truck}
+          title="Reys tanlanmagan"
+          description="Joʻnatish sahifasida reys qatoridagi «Yoʻl varaqasini chop etish»ni bosing."
+        />
       </Shell>
     );
   }
