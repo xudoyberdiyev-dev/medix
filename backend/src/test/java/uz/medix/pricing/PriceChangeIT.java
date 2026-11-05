@@ -1,5 +1,6 @@
 package uz.medix.pricing;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
@@ -247,6 +248,16 @@ class PriceChangeIT {
         Cookie director = loginAs("DIRECTOR", null);
         mvc.perform(json(post("/api/price-changes/" + low + "/reject"), director, "{\"reason\":\"Tannarxdan past\"}"))
                 .andExpect(jsonPath("$.status").value("REJECTED"));
+        // Bildirishnomalar: tasdiq kutmoqda — Direktorga (prices.below), rad etildi — muallifga (Xarid)
+        String link = "/prices?tab=documents&open=" + low;
+        assertThat(jdbc.sql("""
+                SELECT count(*) FROM notification n JOIN employee e ON e.id = n.employee_id JOIN role r ON r.id = e.role_id
+                WHERE n.kind = 'priceChange.approval' AND n.link = :l AND r.code = 'DIRECTOR'""").param("l", link).query(Integer.class).single())
+                .isPositive();
+        assertThat(jdbc.sql("""
+                SELECT n.body FROM notification n JOIN price_change c ON c.created_by = n.employee_id
+                WHERE n.kind = 'priceChange.rejected' AND n.link = :l AND c.id = :id""").param("l", link).param("id", low)
+                .query(String.class).single()).isEqualTo("Tannarxdan past");
         // Ommaviy ustama kirim narxidan (+10%): Xarid tannarxni ko'rmaydi — faqat natija
         for (String kind : new String[] {"AVG_RECEIPT", "LAST_RECEIPT"}) {
             mvc.perform(json(post("/api/price-changes/markup"), purchaser, "{\"branchId\":" + branch + ",\"productIds\":[" + p

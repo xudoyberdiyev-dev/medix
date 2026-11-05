@@ -18,6 +18,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.inventory.BatchCosts;
+import uz.medix.notification.Notifications;
 import uz.medix.pricing.PriceMath;
 import uz.medix.pricing.change.PriceChangeModels.BaseKind;
 import uz.medix.pricing.change.PriceChangeModels.Line;
@@ -59,8 +60,11 @@ class PriceChanges {
     private final PinVerifier pins;
     private final Clock clock;
     private final BatchCosts costs;
+    private final Notifications notifications;
 
-    PriceChanges(JdbcClient jdbc, AuditLog audit, DocumentSequenceService numbers, PinVerifier pins, Clock clock, BatchCosts costs) {
+    PriceChanges(JdbcClient jdbc, AuditLog audit, DocumentSequenceService numbers, PinVerifier pins, Clock clock, BatchCosts costs,
+            Notifications notifications) {
+        this.notifications = notifications;
         this.costs = costs;
         this.jdbc = jdbc;
         this.audit = audit;
@@ -275,6 +279,9 @@ class PriceChanges {
         if (belowCost(id) && !actorIsDirector) {
             setStatus(id, Status.PENDING_APPROVAL, null, null);
             audit.record(AuditEntry.of("priceChange.submit", "price_change", id));
+            notifications.notify("prices.below", h.branchId(), List.of(), new Notifications.Message("priceChange.approval",
+                    "Narx tasdigʻi kutmoqda: " + h.number(), "Tannarxdan past narx — Direktor tasdigʻi (PIN) kerak", link(id),
+                    "priceChange.approval:" + id + ":" + clock.millis()));
             return;
         }
         apply(h);
@@ -291,6 +298,8 @@ class PriceChanges {
         apply(h);
         setStatus(id, Status.APPROVED, actor.employeeId(), null);
         audit.record(AuditEntry.of("priceChange.approve", "price_change", id));
+        notifyAuthor(h, actor, new Notifications.Message("priceChange.approved", "Narx tasdiqlandi: " + h.number(), null, link(id),
+                "priceChange.approved:" + id + ":" + clock.millis()));
     }
 
     @Transactional
@@ -299,6 +308,21 @@ class PriceChanges {
         requireStatus(h, Status.PENDING_APPROVAL);
         setStatus(id, Status.REJECTED, actor.employeeId(), reason.strip());
         audit.record(AuditEntry.of("priceChange.reject", "price_change", id).withReason(reason.strip()));
+        String body = reason.strip();
+        notifyAuthor(h, actor, new Notifications.Message("priceChange.rejected", "Narx rad etildi: " + h.number(),
+                body.length() <= 500 ? body : body.substring(0, 499) + "…", link(id), "priceChange.rejected:" + id + ":" + clock.millis()));
+    }
+
+    private static String link(long id) {
+        return "/prices?tab=documents&open=" + id;
+    }
+
+    /** NO muallifiga (o'zi qaror qilmagan bo'lsa). */
+    private void notifyAuthor(Head h, Actor actor, Notifications.Message m) {
+        long author = jdbc.sql("SELECT created_by FROM price_change WHERE id = :id").param("id", h.id()).query(Long.class).single();
+        if (author != actor.employeeId()) {
+            notifications.notify("-", h.branchId(), List.of(author), m);
+        }
     }
 
     @Transactional

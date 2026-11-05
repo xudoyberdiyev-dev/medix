@@ -55,7 +55,11 @@ export function PricesPage() {
   const [branchOverride, setBranchOverride] = useState<number | null>(null);
   const branchId = branchOverride ?? (me.data && !me.data.allBranches ? (me.data.branchId ?? null) : (selected ?? active[0]?.id ?? null));
   const canSet = can(me.data, PRICE_CREATE);
-  const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[] } | null>(null);
+  // Bildirishnomadan oʻtish: ?tab=documents&open=<id> — NO darhol ochiladi
+  const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[] } | null>(() => {
+    const id = Number(params.get("open"));
+    return Number.isInteger(id) && id > 0 ? { id } : null;
+  });
 
   return (
     <>
