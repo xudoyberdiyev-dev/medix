@@ -3,11 +3,11 @@
 Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testlar → CI yashil → hisobot. Bosqich tugasa — `develop → main` PR.
 
 ## Hozirgi holat
-- **Sana:** 02.11.2026
-- **Bosqich:** 0, 1 — tugadi; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90% (qoldi: SmartUp ustunlari); 5 — Kirim ~80%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85% (FEFO, vaqt, yig'ish, markirovka, monitor, muammolar, hisobdan o'tkazish, reys/nakladnoy); 8 — Yetkazish ~50% (sotuv/HF, haydovchi paneli, yetkazildi/yetkazilmadi, qaytgan tovar)
-- **PR:** #1 (develop → main) ochiq — 0–8-bosqich ishlarini o'z ichiga oladi, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 01.11.2026 23:00 – 02.11.2026 00:10 — markirovka, monitor, «Muammo bor», reys, sotuv/HF, haydovchi paneli. CI yashil (backend + frontend + e2e).
-- **Keyingi vazifa:** 8-bosqich davomi — qisman yetkazish (QM asl sotuv narxida), «Haydovchidagi pul» → Kassir qabul qiladi (MT, 9-bosqich bilan), reys «Qaytish kutilmoqda» → «Yakunlangan» (qaytgan tovar va pul topshirilgach); buyurtma kartochkasida NK/SV/HF raqamlari, reys va «Hozir kimda». So'ng 7-bosqich qoldiqlari: kodlar .xlsx eksporti, terish varag'i va nakladnoy chop etish (10-bosqich PDF bilan), Yig'uvchi UI'da boshqa partiya, «Bugungi natijam». Eski qoldiqlar: 5-bosqich «Mahsulot qo'shish» katalog sahifasi, kirim filtrlari; 3-bosqich «Kirim bo'yicha» narx rejimi.
+- **Sana:** 05.11.2026
+- **Bosqich:** 0, 1 — tugadi; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90%; 5 — Kirim ~80%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~80% (MT, YT, KO/BO, IO, kunni yopish, ko'chirma, qarzlar, akt sverka tayyor)
+- **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
+- **Oxirgi sessiya:** 05.11.2026 04:14–05:20 — KO/BO, IO, kunni yopish, Kassa sahifasi, Mijozlar/YB qarzi, akt sverka. CI yashil (backend + frontend + e2e).
+- **Keyingi vazifa:** 9-bosqich qoldiqlari — Avans (AH: avansni qarzga hisoblash, parallel test bilan), kassir faqat o'z kassasida (money_account.cashier_id + Sozlamalarda biriktirish), bonus balans sahifasi, bank ko'chirmasi bilan solishtirish. So'ng 10-bosqich (rollar bosh sahifalari, «Diqqat talab qiladi», chop etish shakllari). Eski qoldiqlar: 7-bosqich kodlar .xlsx, terish varag'i; 5-bosqich «Mahsulot qo'shish»; 3-bosqich «Kirim bo'yicha» narx rejimi.
 
 ## Egasidan kutilayotganlar
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
