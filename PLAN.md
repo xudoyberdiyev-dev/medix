@@ -183,6 +183,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 06.11.2026 03:56 — fire_trigger yana rad etildi (auto mode); zanjirni 04:30 zaxira ishga tushirish davom ettiradi (oyna 05:00 da tugaydi — o'sha sessiya oyna hisobotini yozadi).
 - 06.11.2026 03:15–03:55 — zanjir sessiyasi: imzo UI, saqlangan ko'rinishlar, «topilgan joy qator ostida» (Mahsulotlar, Kontragentlar), Ombor mudiri paneli yorliqlari (skrinshot mock), tasdiq bildirishnomalari (buyurtma, NO, kassa). Frontend 144 test, build yashil; CI (backend + e2e) yashil.
 - 06.11.2026 03:17 — zanjir: davom (kontekst og'irlashdi) — keyingi sessiya: 8-bosqich imzo UI yoki 4-bosqich ko'chirishlar. CI (develop) to'liq yashil.
 - 06.11.2026 02:34–03:17 — zaxira sessiya (tungi oyna): server PDF — nakladnoy, yo'l varaqasi, terish varag'i, kassa orderi, akt sverka (`PdfFormat`, `PdfDocument`, `MoneyWords`); kirim «Mahsulot qo'shish» katalogi (API + dialog + testlar); buyurtmalar holat yorliqlari + «Hozir kimda» (API + UI). Frontend 134 test, build yashil; CI backend yashil. Skrinshot olinmadi (mock sozlash qimmat).
