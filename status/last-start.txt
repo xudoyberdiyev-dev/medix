@@ -1,1 +1,1 @@
-▶️ MEDIX: 12:00 sessiya boshlandi — reja: 9-bosqich qoldiqlari (kassir faqat oʻz kassasida — cashier_id, bonus balans sahifasi, bank koʻchirmasi bilan solishtirish), soʻng 10-bosqich
+▶️ MEDIX: 14:00 sessiya boshlandi — reja: 10-bosqich, Direktor/Admin bosh sahifasi (4 karta, «Diqqat talab qiladi»). CI hali ham GitHub billing sababli to'xtagan.
