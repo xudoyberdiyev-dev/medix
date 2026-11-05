@@ -200,8 +200,13 @@ class DirectorHomeIT {
         mvc.perform(get("/api/home/director").cookie(director))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.branchId").doesNotExist());
-        // Filial rahbarida reports.all yo'q
-        mvc.perform(get("/api/home/director").param("branchId", "" + b).cookie(manager)).andExpect(status().isForbidden());
+        // Filial rahbari: o'z filiali (reports.view), boshqa filial va «barcha filiallar» — yo'q
+        mvc.perform(get("/api/home/director").param("branchId", "" + b).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expenses.total").value("500000.00"))
+                .andExpect(jsonPath("$.attention.branchOrders.count").value(0));
+        mvc.perform(get("/api/home/director").param("branchId", "" + other).cookie(manager)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/home/director").cookie(manager)).andExpect(status().isNotFound());
         // Davr noto'g'ri
         mvc.perform(get("/api/home/director").param("branchId", "" + b).param("from", t.toString()).param("to", t.minusDays(1).toString())
                         .cookie(director))

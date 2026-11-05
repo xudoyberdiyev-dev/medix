@@ -38,6 +38,7 @@ export function cellValue(c: StatusCell, f: StatusFilter): { count: number; amou
 }
 
 export const REPORTS_ALL = "reports.all";
+export const REPORTS_VIEW = "reports.view";
 
 const money = (v: string) => <span className="font-mono tabular-nums">{formatMoney(v)}</span>;
 
@@ -57,7 +58,10 @@ export interface AttentionRow {
 }
 
 /** «Diqqat talab qiladi» qatorlari (SPEC 8): har biri tegishli sahifaga filtr bilan olib boradi; nol bo'lganlari yashiriladi. */
-export function attentionRows(a: Home["attention"]): AttentionRow[] {
+export function attentionRows(
+  a: Home["attention"],
+  perms: { director: boolean; branch: boolean } = { director: true, branch: true },
+): AttentionRow[] {
   const rows: AttentionRow[] = [
     { key: "o1", label: "Muddati oʻtgan qarz: 1–30 kun", value: a.overdue1to30, href: "/debts/customers", money: true },
     { key: "o2", label: "Muddati oʻtgan qarz: 31–60 kun", value: a.overdue31to60, href: "/debts/customers", money: true },
@@ -67,6 +71,13 @@ export function attentionRows(a: Home["attention"]): AttentionRow[] {
       key: "dir",
       label: `Direktor tasdigʻini kutayotgan buyurtmalar (${a.directorOrders.count})`,
       value: a.directorOrders.amount,
+      href: "/orders?status=PENDING_APPROVAL",
+      money: true,
+    },
+    {
+      key: "br",
+      label: `Filial rahbari tasdigʻini kutayotgan buyurtmalar (${a.branchOrders.count})`,
+      value: a.branchOrders.amount,
       href: "/orders?status=PENDING_APPROVAL",
       money: true,
     },
@@ -93,7 +104,7 @@ export function attentionRows(a: Home["attention"]): AttentionRow[] {
     },
     { key: "drv", label: "Haydovchilardagi pul", value: a.driverCash, href: "/cash", money: true },
   ];
-  return rows.filter((r) => nonZero(r.value));
+  return rows.filter((r) => nonZero(r.value) && (r.key !== "dir" || perms.director) && (r.key !== "br" || perms.branch));
 }
 
 const BRANCH_TABS = [
@@ -104,11 +115,11 @@ const BRANCH_TABS = [
 ] as const;
 type BranchTab = (typeof BRANCH_TABS)[number]["key"];
 
-/** Direktor va Admin bosh sahifasi (SPEC 8). */
+/** Direktor / Admin / Buxgalter (barcha filiallar) va Filial rahbari (oʻz filiali) bosh sahifasi (SPEC 8). */
 export function DirectorHome() {
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
-  const allowed = can(me.data, REPORTS_ALL);
+  const allowed = can(me.data, REPORTS_ALL) || can(me.data, REPORTS_VIEW);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
   const today = todayTashkent();
   const [preset, setPreset] = useState<PeriodPreset>("today");
@@ -128,7 +139,7 @@ export function DirectorHome() {
     refetchInterval: 120_000,
   });
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu bosh sahifa Direktor va Admin uchun." />;
+  if (me.data && !allowed) return <ForbiddenState description="Bosh sahifa koʻrsatkichlari sizning rolingiz uchun yopiq." />;
   const h = home.data;
 
   return (
@@ -251,7 +262,8 @@ function DebtCard({ icon, title, card, href }: { icon: typeof Banknote; title: s
 }
 
 function Attention({ home }: { home: Home }) {
-  const rows = attentionRows(home.attention);
+  const me = useMe();
+  const rows = attentionRows(home.attention, { director: can(me.data, "approvals.director"), branch: can(me.data, "approvals.branch") });
   return (
     <section>
       <h2 className="mb-2 flex items-center gap-2 text-subtitle">

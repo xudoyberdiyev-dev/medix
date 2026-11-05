@@ -22,7 +22,7 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.security.Actor;
 
 /**
- * Direktor va Admin bosh sahifasi (SPEC 8): 4 karta (Savdo — sof, Mijozlar qarzi, Ta'minotchilarga qarz, Xarajatlar), filiallar kesimi,
+ * Direktor / Admin / Buxgalter bosh sahifasi (barcha filiallar) va Filial rahbari bosh sahifasi (o'z filiali) (SPEC 8): 4 karta (Savdo — sof, Mijozlar qarzi, Ta'minotchilarga qarz, Xarajatlar), filiallar kesimi,
  * «Diqqat talab qiladi», eng katta qarzdorlar. Savdo = sotuv − qaytarishlar (QM) − yetkazilmaganlar (bekor qilingan sotuv), QQS bilan
  * (SPEC 6). To'lov turi: Naqd / Perechisleniye / Online — sotuvda buyurtmaning to'lov turi, xarajatda hisob turi (kassa / bank / Terminal).
  * Qarzlar — finance modulining {@link DebtSummaries} API'sidan («Mijozlar qarzi» sahifasi bilan bir manba).
@@ -51,7 +51,7 @@ class DirectorHome {
     record ExpiringBatches(int d0to30, int d31to60, int d61to90, int expired) {}
 
     record Attention(String overdue1to30, String overdue31to60, String overdue61to90, String overdue90plus, CountAmount directorOrders,
-            CountAmount cashApprovals, ExpiringBatches expiring, String supplierOverdue, String supplierToday, String supplierNext3Days,
+            CountAmount branchOrders, CountAmount cashApprovals, ExpiringBatches expiring, String supplierOverdue, String supplierToday, String supplierNext3Days,
             int receiptsToPost, String driverCash) {}
 
     /**
@@ -252,6 +252,10 @@ class DirectorHome {
                 SELECT count(*) AS count, sum(total) AS amount FROM sales_order
                 WHERE status = 'PENDING_APPROVAL' AND approval_level = 'DIRECTOR' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
                 .param("b", branchId).query(Ca.class).single();
+        Ca branchOrders = jdbc.sql("""
+                SELECT count(*) AS count, sum(total) AS amount FROM sales_order
+                WHERE status = 'PENDING_APPROVAL' AND approval_level = 'BRANCH' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
+                .param("b", branchId).query(Ca.class).single();
         Ca cash = jdbc.sql("""
                 SELECT count(*) AS count, sum(amount) AS amount FROM cash_op
                 WHERE status = 'PENDING' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
@@ -277,7 +281,8 @@ class DirectorHome {
                 .param("b", branchId).query(BigDecimal.class).single();
         DebtSummaries.DueSoon due = debts.supplierDue(actor, branchId, today);
         return new Attention(customers.d1to30(), customers.d31to60(), customers.d61to90(), customers.d90plus(),
-                new CountAmount(orders.count(), m(orders.amount()).toString()), new CountAmount(cash.count(), m(cash.amount()).toString()),
+                new CountAmount(orders.count(), m(orders.amount()).toString()),
+                new CountAmount(branchOrders.count(), m(branchOrders.amount()).toString()), new CountAmount(cash.count(), m(cash.amount()).toString()),
                 expiring, due.overdue(), due.today(), due.next3Days(), receipts, m(driver).toString());
     }
 

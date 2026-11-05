@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.CurrentActor;
 
-/** Direktor / Admin bosh sahifasi (SPEC 8): reports.all. branchId bo'lmasa — barcha filiallar. */
+/**
+ * Bosh sahifa (SPEC 8): reports.all yoki reports.view (Filial rahbari). branchId bo'lmasa — barcha filiallar (faqat barcha filiallarni
+ * ko'radiganlarga); Filial rahbari — faqat o'z filiali (filial doirasi serverda).
+ */
 @RestController
 @Tag(name = "home", description = "Bosh sahifalar")
 class DirectorHomeController {
@@ -26,7 +29,7 @@ class DirectorHomeController {
     }
 
     @GetMapping("/api/home/director")
-    @PreAuthorize("hasAuthority('reports.all')")
+    @PreAuthorize("hasAnyAuthority('reports.all', 'reports.view')")
     @Operation(summary = "Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar")
     DirectorHome.Home get(@RequestParam(required = false) Long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,

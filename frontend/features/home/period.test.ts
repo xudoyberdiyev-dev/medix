@@ -24,6 +24,7 @@ describe("Diqqat talab qiladi", () => {
     overdue61to90: "0.00",
     overdue90plus: "0.00",
     directorOrders: { count: 0, amount: "0.00" },
+    branchOrders: { count: 0, amount: "0.00" },
     cashApprovals: { count: 0, amount: "0.00" },
     expiring: { d0to30: 0, d31to60: 0, d61to90: 0, expired: 0 },
     supplierOverdue: "0.00",
@@ -46,6 +47,11 @@ describe("Diqqat talab qiladi", () => {
     expect(rows[1].href).toBe("/orders?status=PENDING_APPROVAL");
     expect(rows[1].label).toContain("(2)");
     expect(rows[2].href).toBe("/receipts?status=ACCEPTED");
+  });
+  it("tasdiq qatorlari ruxsatga qarab", () => {
+    const a = { ...zero, directorOrders: { count: 1, amount: "10.00" }, branchOrders: { count: 2, amount: "20.00" } };
+    expect(attentionRows(a, { director: false, branch: true }).map((r) => r.key)).toEqual(["br"]);
+    expect(attentionRows(a, { director: true, branch: false }).map((r) => r.key)).toEqual(["dir"]);
   });
   it("nonZero", () => {
     expect(nonZero("0.00")).toBe(false);

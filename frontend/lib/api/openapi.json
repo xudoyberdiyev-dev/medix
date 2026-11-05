@@ -7835,6 +7835,9 @@
       "Attention" : {
         "type" : "object",
         "properties" : {
+          "branchOrders" : {
+            "$ref" : "#/components/schemas/CountAmount"
+          },
           "cashApprovals" : {
             "$ref" : "#/components/schemas/CountAmount"
           },
@@ -7873,7 +7876,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday" ]
+        "required" : [ "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday" ]
       },
       "AuditPage" : {
         "type" : "object",

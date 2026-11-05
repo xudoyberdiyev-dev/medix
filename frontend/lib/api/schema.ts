@@ -3486,6 +3486,7 @@ export interface components {
             type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
         Attention: {
+            branchOrders: components["schemas"]["CountAmount"];
             cashApprovals: components["schemas"]["CountAmount"];
             directorOrders: components["schemas"]["CountAmount"];
             driverCash: string;
