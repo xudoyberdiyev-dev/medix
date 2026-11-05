@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,13 +43,16 @@ class OrderController {
     private final OrderMonitor monitor;
     private final OrderIssues issues;
     private final OrderSales sales;
+    private final OrderWaybillPdf waybill;
     private final CurrentActor currentActor;
 
     record ReturnAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0)
             Integer receivedQty) {}
 
-    OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, CurrentActor currentActor) {
+    OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, OrderWaybillPdf waybill,
+            CurrentActor currentActor) {
         this.sales = sales;
+        this.waybill = waybill;
         this.issues = issues;
         this.orders = orders;
         this.picking = picking;
@@ -86,6 +91,13 @@ class OrderController {
     @Operation(summary = "Buyurtma", description = "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.")
     OrderDetail get(@PathVariable long id) {
         return detail(id);
+    }
+
+    @GetMapping(value = "/{id}/waybill/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
+    @Operation(summary = "Nakladnoy — PDF (chop etish)", description = "Nakladnoy raqamlanmagan bo'lsa — 409.")
+    ResponseEntity<byte[]> waybillPdf(@PathVariable long id) {
+        return waybill.render(actor(), id).response();
     }
 
     @GetMapping("/catalog")

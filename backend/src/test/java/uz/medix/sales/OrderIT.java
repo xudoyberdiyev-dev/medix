@@ -130,6 +130,16 @@ class OrderIT {
         return id;
     }
 
+    private String pdfText(String url, Cookie who) throws Exception {
+        byte[] bytes = mvc.perform(get(url).cookie(who))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType("application/pdf"))
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var doc = org.apache.pdfbox.Loader.loadPDF(bytes)) {
+            return new org.apache.pdfbox.text.PDFTextStripper().getText(doc);
+        }
+    }
+
     private void setPrice(Place p, long product, String price) {
         long doc = jdbc.sql("""
                 INSERT INTO price_change (number, branch_id, effective_from, created_by, status)
@@ -783,9 +793,13 @@ class OrderIT {
         long t1 = id(trip);
         assertThat(statusOf(o1)).isEqualTo("LOADING");
         String nk1 = jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o1).query(String.class).single();
+        // Nakladnoy — server PDF (raqam, mahsulot, miqdor, imzolar)
+        assertThat(pdfText("/api/orders/" + o1 + "/waybill/pdf", keeper)).contains("Nakladnoy", nk1, "BY Reys", "Jami", "Qabul qildi");
 
         // Haydovchi band; bekor qilish → buyurtmalar qaytadi, NK saqlanadi
         long o4 = documenting(p, c, prod, 1, 1, "DELIVERY", operator, keeper, picker);
+        mvc.perform(get("/api/orders/" + o4 + "/waybill/pdf").cookie(keeper))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("order.waybillNotIssued"));
         send(post("/api/trips"), keeper, body.replace("[" + o1 + "," + o2 + "]", "[" + o4 + "]"))
                 .andExpect(jsonPath("$.code").value("trip.driverBusy"));
         send(post("/api/trips/" + t1 + "/cancel"), keeper, "{\"reason\":\"Mashina buzildi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
