@@ -263,7 +263,7 @@ class ReceiptIT {
         assertThat(stock(p.safe(), c)).isEqualTo(4);
         assertThat(debt(p.branchId(), sup)).isEqualTo("950005.00");
 
-        // «Mahsulot qo'shish» katalogi: shu YB mahsulotlari, ombordagi qoldiq, oxirgi narx (Ombor mudiriga katalog yopiq)
+        // «Mahsulot qo'shish» katalogi: shu YB mahsulotlari, ombordagi qoldiq, oxirgi narx (Ombor mudiriga narxsiz)
         mvc.perform(get("/api/receipts/catalog").param("warehouseId", "" + p.warehouseId()).param("supplierId", "" + sup)
                         .param("supplierOnly", "true").cookie(purchaser))
                 .andExpect(status().isOk())
@@ -275,7 +275,13 @@ class ReceiptIT {
                 .andExpect(jsonPath("$.items[0].stock").value(11))
                 .andExpect(jsonPath("$.items[0].lastPrice").value("15000.50"))
                 .andExpect(jsonPath("$.items[0].lastDate").value(today().toString()));
-        mvc.perform(get("/api/receipts/catalog").param("warehouseId", "" + p.warehouseId()).cookie(keeper)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/receipts/catalog").param("warehouseId", "" + p.warehouseId()).param("supplierId", "" + sup)
+                        .param("supplierOnly", "true").param("q", "ibuprofen").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].stock").value(11))
+                .andExpect(jsonPath("$.items[0].lastPrice").value(org.hamcrest.Matchers.nullValue()));
+        mvc.perform(get("/api/receipts/catalog").param("warehouseId", "" + p.warehouseId()).cookie(loginAs("PICKER", p.branchId())))
+                .andExpect(status().isForbidden());
         assertThat(jdbc.sql("SELECT due_date FROM party_ledger WHERE doc_type = 'KR' AND doc_id = :d").param("d", doc).query(LocalDate.class).single())
                 .isEqualTo(today().plusDays(30));
         // Partiya tannarxi — faktura narxi; bonus — 0
