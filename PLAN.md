@@ -3,11 +3,11 @@
 Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testlar → CI yashil → hisobot. Bosqich tugasa — `develop → main` PR.
 
 ## Hozirgi holat
-- **Sana:** 05.11.2026
-- **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~90%; 2 — Katalog ~90%; 3 — Narxlar ~85%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
+- **Sana:** 06.11.2026
+- **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~90%; 2 — Katalog ~90%; 3 — Narxlar ~97%; 4 — Ombor ~90%; 5 — Kirim ~85%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~90% (qoldi: imzo UI); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 06.11.2026 01:08–01:35 (tungi oyna, 1-sessiya) — CI qayta ishladi (repo public): DirectorHomeIT tuzatildi, openapi.json moslandi; reysga buyurtma qo'shish/olib tashlash; Yig'uvchida «Boshqa partiyadan oldim» UI. Backend testlari CI'da yashil.
-- **Keyingi vazifa:** 3-bosqich «Kirim bo'yicha» narx rejimi — partiya narxi (SPEC 6: narx faqat tanlangan o'tkazilgan kirim partiyalariga; tanlash tartibi partiya → mijoz turi → bazaviy; bir qator bir necha partiyaga tushsa — o'rtacha tortilgan narx). Hozir `price` jadvalida partiya yo'q — yangi migratsiya (price.batch_id yoki alohida batch_price), NO da `receipt_id`, buyurtma narxi zahiradan keyin (submit) partiyalar bo'yicha. Katta vazifa — yangi sessiya boshida. So'ng: server PDF (OpenHTMLtoPDF); 5-bosqich «Mahsulot qo'shish» (kirim).
+- **Oxirgi sessiya:** 06.11.2026 01:33–01:55 (tungi oyna, 2-sessiya) — «Kirim bo'yicha» narx rejimi (V31 batch_price, NO kirim rejimi, buyurtmada partiyalar bo'yicha o'rtacha tortilgan narx; UI). CI yashil.
+- **Keyingi vazifa:** server PDF (OpenHTMLtoPDF) — chop etish shakllari serverda (hozir brauzerda); so'ng 5-bosqich «Mahsulot qo'shish» (kirim). Ixtiyoriy: Drawer pastki tugmalari tor ekranda kesiladi («Hujjatni bekor qilish»).
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
@@ -61,9 +61,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## 3. Narxlar
 - [x] 8 narx turi, narx = mahsulot × tur × filial × sana (QQS bilan), NO hujjati (raqam NO-TSH-000001) va tarix (narx jadvali faqat qo'shiladi; yakunlangan NO trigger bilan himoyalangan)
-- [~] Narx o'rnatish «Mahsulot bo'yicha» ✅ (jadvaldan tanlab yoki qator qo'shib), ommaviy ustama (bazaviy/amaldagi narxga, yaxlitlash 100/500/1000) ✅. Qoldi: «Kirim bo'yicha» rejimi va o'rtacha/oxirgi kirim narxiga ustama (5-bosqichdan keyin)
+- [x] Narx o'rnatish «Mahsulot bo'yicha» ✅ (jadvaldan tanlab yoki qator qo'shib), ommaviy ustama (bazaviy/amaldagi/o'rtacha/oxirgi kirim narxiga, yaxlitlash 100/500/1000) ✅; **«Kirim bo'yicha»** ✅ (06.11): NO `receipt_id` + qator `batch_id`, faqat o'tkazilgan kirim partiyalari, `batch_price` (faqat qo'shiladi), tannarxdan past — partiya tannarxi bilan; UI: rejim tanlash, kirim → «Partiyalarni qo'shish», chop etishda partiya ustuni
 - [x] Nazorat: >20% — ogohlantirish ✅; Direktor tasdig'i (PIN) oqimi ✅; tannarxdan past narx — filialdagi qoldig'i bor (bonus emas) partiyalarning eng yuqori tannarxi bilan solishtiriladi (`inventory.BatchCosts`) ✅
-- [~] Narx tanlash qoidasi `PriceMath.select` (partiya → mijoz turi → bazaviy) + birlik testlari ✅; buyurtmada ishlatish — 6-bosqich
+- [x] Narx tanlash qoidasi `PriceMath.select` (partiya → mijoz turi → bazaviy) ✅; buyurtmada: FEFO rejasi (`StockReservations.plan`) bo'yicha partiya ulushlari → `PriceBook.quotes(…, shares)` → o'rtacha tortilgan narx (`PriceMath.weightedAverage`), qoralama/yuborish/«Narx o'zgardi» bir xil hisob ✅ (IT: PriceChangeIT, OrderIT). Eslatma: «Mahsulot qo'shish» katalogidagi narx — mahsulot narxi (ma'lumot uchun)
 
 ## 4. Ombor
 - [x] Partiyalar (bonus — tannarx 0, «-B»), harakatlar jurnali (stock_move, faqat qo'shiladi), stock_balance (zona × partiya, CHECK ≥ 0) jurnal bilan bitta tranzaksiyada; `StockLedger.post` — tartibli FOR UPDATE, hujjat hammasi yoki hech narsa; parallel test (24 oqim, 10 dona → aniq 10 ta muvaffaqiyat)
@@ -181,6 +181,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 06.11.2026 01:33–01:55 — tungi oyna 2-sessiya: 3-bosqich «Kirim bo'yicha» narx — V31 (price_change.receipt_id, price_change_line.batch_id, batch_price), NO validatsiyasi (faqat o'tkazilgan kirim, partiya shu kirimdan), partiya tannarxidan past → Direktor; `/api/price-changes/receipt-batches/{id}`; buyurtma narxi FEFO rejasi bo'yicha o'rtacha tortilgan. UI: rejim, kirim tanlash, partiya qatorlari, chop etish. Backend 127 test, frontend 130 test, CI yashil; skrinshot (mock).
 - 06.11.2026 01:08–01:35 — tungi oyna 1-sessiya: CI tiklandi (DirectorHome `:d + 30` — JDBC turi aniqlanmagan parametr, PG xatosi; openapi.json CI'dan). Reys: «Rejalashtirilgan» reysga buyurtma qo'shish/olib tashlash (API + IT + «Tarkibni o'zgartirish» oynasi, skrinshot mock). Yig'uvchi: qator partiyalari API (stock.view siz, tannarxsiz) + «Boshqa partiyadan oldim» oynasi. Frontend 129 test, build yashil. zanjir: davom → «Kirim bo'yicha» narx (katta, yangi kontekstda).
 - 05.11.2026 20:40 — Repo public qilindi (GitHub Actions billing). Tungi oyna 01:00–05:00 qo'shildi.
 - 05.11.2026 16:36–17:15 — zaxira sessiya: chop etish shakllari brauzerda (terish varag'i, yo'l varaqasi, nakladnoy, kassa orderi, NO); kodlar .xlsx (backend + UI); Alt+1…5; «Bugungi natijam» (Yig'uvchi, Markirovkachi). Qo'shimcha hisobot: reports/2026-11-05-1715.md. Frontend 127 test, build yashil; skrinshotlar (mock). Backend CI'da tekshirilmagan (billing).
