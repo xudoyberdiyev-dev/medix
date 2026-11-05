@@ -24,6 +24,7 @@ import {
   type CounterpartyRow,
   type CounterpartyStatus,
 } from "./api";
+import { searchMatchLabel } from "@/lib/search";
 import { CounterpartyDrawer } from "./counterparty-drawer";
 
 const STATUS_OPTIONS = [
@@ -135,6 +136,7 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
             {c.customer && c.supplier ? <Badge tone="info">{isCustomer ? "YB ham" : "Mijoz ham"}</Badge> : null}
           </span>
           {c.legalName ? <span className="text-caption text-text-secondary">{c.legalName}</span> : null}
+          {c.match ? <span className="text-caption text-text-secondary">{searchMatchLabel(c.match)}</span> : null}
         </span>
       ),
     },

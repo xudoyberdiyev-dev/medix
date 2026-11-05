@@ -9946,6 +9946,9 @@
             "format" : "date",
             "description" : "Eng uzoq amal qiladigan litsenziya muddati"
           },
+          "match" : {
+            "$ref" : "#/components/schemas/SearchMatch"
+          },
           "name" : {
             "type" : "string"
           },

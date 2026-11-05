@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.money.Money;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.text.SearchMatch;
 import uz.medix.shared.text.SearchText;
 
 /** Kontragentlar (SPEC 2): bitta STIR — bitta karta; litsenziyalar, shartnomalar, filial shartlari. */
@@ -88,13 +90,13 @@ class Counterparties {
         List<CounterpartyRow> items = jdbc.sql("""
                 SELECT c.id, c.tin, c.name, c.legal_name, c.is_customer, c.is_supplier, r.name AS region, c.phone,
                        (SELECT max(l.valid_until) FROM counterparty_license l WHERE l.counterparty_id = c.id) AS license_valid_until,
-                       c.blocked, c.active
+                       c.blocked, c.active, c.contact_person
                 FROM counterparty c LEFT JOIN region r ON r.id = c.region_id""" + where
                         + (sortByTin ? " ORDER BY c.tin" : " ORDER BY lower(c.name)") + ", c.id LIMIT :limit OFFSET :offset")
                 .params(params)
                 .param("limit", size)
                 .param("offset", (long) page * size)
-                .query(Counterparties::row)
+                .query((rs, n) -> row(rs, nq.isEmpty() ? null : q))
                 .list();
         return new CounterpartyPage(items, total, page, size);
     }
@@ -500,10 +502,18 @@ class Counterparties {
                 .update();
     }
 
-    private static CounterpartyRow row(ResultSet rs, int n) throws SQLException {
-        return new CounterpartyRow(rs.getLong("id"), rs.getString("tin"), rs.getString("name"), rs.getString("legal_name"),
-                rs.getBoolean("is_customer"), rs.getBoolean("is_supplier"), rs.getString("region"), rs.getString("phone"),
-                date(rs, "license_valid_until"), rs.getBoolean("blocked"), rs.getBoolean("active"));
+    /** {@code query} bo'lsa — «topilgan joy qator ostida» (jadvalda ko'rinmaydigan aloqa shaxsida topilganmi). */
+    private static CounterpartyRow row(ResultSet rs, String query) throws SQLException {
+        String tin = rs.getString("tin");
+        String name = rs.getString("name");
+        String legalName = rs.getString("legal_name");
+        String phone = rs.getString("phone");
+        SearchMatch match = query == null ? null
+                : SearchMatch.hidden(query, Arrays.asList(tin, name, legalName, phone, phone == null ? null : phone.replaceAll("\\D", "")),
+                        List.of(new SearchMatch("CONTACT_PERSON", Objects.toString(rs.getString("contact_person"), "")))).orElse(null);
+        return new CounterpartyRow(rs.getLong("id"), tin, name, legalName,
+                rs.getBoolean("is_customer"), rs.getBoolean("is_supplier"), rs.getString("region"), phone,
+                date(rs, "license_valid_until"), rs.getBoolean("blocked"), rs.getBoolean("active"), match);
     }
 
     private static LocalDate date(ResultSet rs, String col) throws SQLException {

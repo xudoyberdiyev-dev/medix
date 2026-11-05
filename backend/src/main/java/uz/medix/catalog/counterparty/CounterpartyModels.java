@@ -34,7 +34,8 @@ final class CounterpartyModels {
             @Schema(nullable = true) String phone,
             @Schema(nullable = true, description = "Eng uzoq amal qiladigan litsenziya muddati") LocalDate licenseValidUntil,
             boolean blocked,
-            boolean active) {}
+            boolean active,
+            @Schema(nullable = true) uz.medix.shared.text.SearchMatch match) {}
 
     record CounterpartyPage(List<CounterpartyRow> items, long total, int page, int size) {}
 

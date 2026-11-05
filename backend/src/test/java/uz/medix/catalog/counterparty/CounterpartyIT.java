@@ -98,7 +98,8 @@ class CounterpartyIT {
         String tag = UUID.randomUUID().toString().substring(0, 5);
         long id = id(mvc.perform(json(post("/api/counterparties"), accountant,
                         "{\"tin\":\"" + tin + "\",\"name\":\"Dorixona Shifo " + tag + "\",\"customer\":true,\"supplier\":false,"
-                                + "\"phone\":\"+998 90 111 22 33\",\"bankAccount\":\"20208000900100200300\",\"bankMfo\":\"00450\"}"))
+                                + "\"phone\":\"+998 90 111 22 33\",\"contactPerson\":\"Gʻaybullayev " + tag + "\","
+                                + "\"bankAccount\":\"20208000900100200300\",\"bankMfo\":\"00450\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.customer").value(true))
                 .andReturn());
@@ -118,7 +119,13 @@ class CounterpartyIT {
         Cookie operator = loginAs("OPERATOR", null);
         mvc.perform(get("/api/counterparties").param("q", "шифо " + tag).cookie(operator))
                 .andExpect(jsonPath("$.total").value(1))
-                .andExpect(jsonPath("$.items[0].id").value(id));
+                .andExpect(jsonPath("$.items[0].id").value(id))
+                .andExpect(jsonPath("$.items[0].match").doesNotExist());
+        // Aloqa shaxsi jadvalda ko'rinmaydi — «topilgan joy» qator ostida
+        mvc.perform(get("/api/counterparties").param("q", "gaybullayev " + tag).cookie(operator))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].match.field").value("CONTACT_PERSON"))
+                .andExpect(jsonPath("$.items[0].match.value").value("Gʻaybullayev " + tag));
         mvc.perform(get("/api/counterparties").param("q", "901112233").cookie(operator)).andExpect(jsonPath("$.items[?(@.id == " + id + ")]", hasSize(1)));
         mvc.perform(get("/api/counterparties").param("q", tin).param("role", "SUPPLIER").cookie(operator)).andExpect(jsonPath("$.total").value(0));
         mvc.perform(json(post("/api/counterparties/" + id + "/block"), operator, "{\"reason\":\"X\"}")).andExpect(status().isForbidden());

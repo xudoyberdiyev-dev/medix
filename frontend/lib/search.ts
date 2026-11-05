@@ -71,6 +71,7 @@ const MATCH_FIELDS: Record<string, string> = {
   TIN: "STIR",
   PHONE: "Telefon",
   ADDRESS: "Manzil",
+  CONTACT_PERSON: "Aloqa shaxsi",
 };
 
 export function searchMatchLabel(match: { field: string; value: string }): string {

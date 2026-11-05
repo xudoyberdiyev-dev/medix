@@ -4337,6 +4337,7 @@ export interface components {
              * @description Eng uzoq amal qiladigan litsenziya muddati
              */
             licenseValidUntil?: string;
+            match?: components["schemas"]["SearchMatch"];
             name: string;
             phone?: string;
             region?: string;
