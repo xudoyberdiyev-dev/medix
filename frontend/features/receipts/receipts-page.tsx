@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { Ban, CircleCheck, FilePen, PackageCheck, PackagePlus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,8 @@ export const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`)
 export function ReceiptsPage() {
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
-  const [status, setStatus] = useState<string | null>(null);
+  const initialStatus = useSearchParams().get("status");
+  const [status, setStatus] = useState<string | null>(initialStatus);
   const [page, setPage] = useState(1);
   const [editor, setEditor] = useState<{ id: number | null } | null>(null);
   const allowed = can(me.data, "receipt.view");

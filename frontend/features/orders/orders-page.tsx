@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import {
   Ban,
   CircleCheck,
@@ -60,7 +61,8 @@ export const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`)
 export function OrdersPage() {
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
-  const [status, setStatus] = useState<string | null>(null);
+  const initialStatus = useSearchParams().get("status");
+  const [status, setStatus] = useState<string | null>(initialStatus);
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [mine, setMine] = useState(false);

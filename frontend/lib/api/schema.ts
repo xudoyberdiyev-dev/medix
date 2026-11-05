@@ -978,6 +978,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/home/director": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
+        get: operations["get_11"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marking/codes": {
         parameters: {
             query?: never;
@@ -3468,6 +3485,21 @@ export interface components {
             /** @enum {string} */
             type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
+        Attention: {
+            cashApprovals: components["schemas"]["CountAmount"];
+            directorOrders: components["schemas"]["CountAmount"];
+            driverCash: string;
+            expiring: components["schemas"]["ExpiringBatches"];
+            overdue1to30: string;
+            overdue31to60: string;
+            overdue61to90: string;
+            overdue90plus: string;
+            /** Format: int32 */
+            receiptsToPost: number;
+            supplierNext3Days: string;
+            supplierOverdue: string;
+            supplierToday: string;
+        };
         AuditPage: {
             items: components["schemas"]["AuditRow"][];
             /** Format: int64 */
@@ -3563,6 +3595,15 @@ export interface components {
             phone?: string;
             tin: string;
         };
+        BranchRow: {
+            customerDebt: string;
+            expenses: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            sales: string;
+            supplierDebt: string;
+        };
         Buckets: {
             advance: string;
             d1to30: string;
@@ -3572,6 +3613,12 @@ export interface components {
             debt: string;
             notDue: string;
             overdue: string;
+        };
+        ByPayment: {
+            cash: string;
+            online: string;
+            total: string;
+            transfer: string;
         };
         CashAcceptRequest: {
             /** Format: int64 */
@@ -3765,6 +3812,11 @@ export interface components {
         CopyRequest: {
             name: string;
         };
+        CountAmount: {
+            amount: string;
+            /** Format: int32 */
+            count: number;
+        };
         CounterpartyDetail: {
             active: boolean;
             address?: string;
@@ -3914,6 +3966,11 @@ export interface components {
         DeactivateRequest: {
             reason: string;
         };
+        DebtCard: {
+            advance: string;
+            debt: string;
+            overdue: string;
+        };
         DebtDoc: {
             branch: string;
             /** Format: int64 */
@@ -3951,6 +4008,15 @@ export interface components {
             name: string;
             phone?: string;
             tin: string;
+        };
+        Debtor: {
+            debt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            maxOverdueDays: number;
+            name: string;
+            overdue: string;
         };
         DeliverRequest: {
             /** @description Naqd olingan summa, masalan «25000.00» */
@@ -4038,12 +4104,39 @@ export interface components {
             name: string;
             system: boolean;
         };
+        ExpiringBatches: {
+            /** Format: int32 */
+            d0to30: number;
+            /** Format: int32 */
+            d31to60: number;
+            /** Format: int32 */
+            d61to90: number;
+            /** Format: int32 */
+            expired: number;
+        };
         FinishResult: {
             /** @enum {string} */
             status: "PLANNED" | "IN_TRANSIT" | "RETURN_WAIT" | "DONE" | "CANCELLED";
         };
         HandoverResult: {
             sale: string;
+        };
+        Home: {
+            attention: components["schemas"]["Attention"];
+            /** Format: int64 */
+            branchId?: number;
+            branches: components["schemas"]["BranchRow"][];
+            customerDebt: components["schemas"]["DebtCard"];
+            expenses: components["schemas"]["ByPayment"];
+            /** Format: date */
+            from: string;
+            sales: components["schemas"]["ByPayment"];
+            supplierDebt: components["schemas"]["DebtCard"];
+            /** Format: date */
+            to: string;
+            /** Format: date */
+            today: string;
+            topDebtors: components["schemas"]["Debtor"][];
         };
         ImportResult: {
             applied: boolean;
@@ -7503,6 +7596,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpenseItem"];
+                };
+            };
+        };
+    };
+    get_11: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Home"];
                 };
             };
         };

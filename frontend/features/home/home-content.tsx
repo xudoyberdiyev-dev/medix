@@ -4,12 +4,23 @@ import { Construction } from "lucide-react";
 import { EmptyState } from "@/components/ui/system-states";
 import { useMe } from "@/features/auth/session";
 import { CashierPanel } from "@/features/cash/cashier-panel";
+import { DirectorHome } from "@/features/home/director-home";
 import { SetupBanner } from "@/features/setup/setup-banner";
 
-/** Bosh sahifa rolga qarab (SPEC 8): Kassir — Kassir paneli; boshqa rollar sahifalari 10-bosqichda qoʻshiladi. */
+/** Bosh sahifa rolga qarab (SPEC 8): Kassir — Kassir paneli; Direktor/Admin — toʻliq bosh sahifa; boshqa rollar sahifalari 10-bosqichda qoʻshiladi. */
 export function HomeContent() {
   const me = useMe();
-  if (me.data?.role.code === "CASHIER") return <CashierPanel />;
+  const role = me.data?.role.code;
+  if (role === "CASHIER") return <CashierPanel />;
+  if (role === "DIRECTOR" || role === "ADMIN")
+    return (
+      <>
+        <div className="mb-6 empty:hidden">
+          <SetupBanner />
+        </div>
+        <DirectorHome />
+      </>
+    );
   return (
     <>
       <h1 className="text-page-title">Bosh sahifa</h1>
