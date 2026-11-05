@@ -40,8 +40,8 @@ test.describe("demo skrinshotlar", () => {
     mkdirSync(OUT, { recursive: true });
     await page.goto("/login");
     await shot(page, "00-login");
-    await page.getByLabel("Login").fill(CEO_LOGIN);
-    await page.getByLabel("Parol").fill(CEO_PASSWORD);
+    await page.getByLabel("Login", { exact: true }).fill(CEO_LOGIN);
+    await page.getByLabel("Parol", { exact: true }).fill(CEO_PASSWORD);
     await page.getByRole("button", { name: /kirish/i }).click();
     await expect(page).not.toHaveURL(/\/login/);
     for (const [path, name] of pages) {
