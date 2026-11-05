@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ClipboardList, Play, Timer } from "lucide-react";
+import { CheckCircle2, ClipboardList, Play, Printer, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +52,7 @@ export function PickingPage() {
   });
   const [pending, setPending] = useState<number | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const [selected, setSelected] = useState<number[]>([]);
   const mine = (queue.data ?? []).find((o) => o.status === "PICKING" && o.pickerId === me.data?.id) ?? null;
 
   if (me.data && !allowed) return <ForbiddenState description="Yigʻish paneli faqat yigʻuvchilar uchun." />;
@@ -96,7 +97,12 @@ export function PickingPage() {
             )}
           </section>
           <section>
-            <h2 className="mb-3 text-subtitle">Navbat</h2>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-subtitle">Navbat</h2>
+              <Button variant="secondary" size="sm" icon={Printer} disabled={selected.length === 0} onClick={() => openPickSheet(selected)}>
+                Terish varagʻi{selected.length > 0 ? ` (${selected.length})` : ""}
+              </Button>
+            </div>
             <ul className="flex flex-col gap-3">
               {(queue.data ?? []).filter((o) => o.id !== mine?.id).length === 0 ? (
                 <li className="text-text-secondary">Navbat boʻsh.</li>
@@ -106,7 +112,14 @@ export function PickingPage() {
                 .map((o) => (
                   <li key={o.id} className="rounded-card border border-border p-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono">{o.number}</span>
+                      <span className="flex items-center gap-2">
+                        <Checkbox
+                          aria-label={`${o.number} — terish varagʻiga`}
+                          checked={selected.includes(o.id)}
+                          onChange={(v) => setSelected((ids) => (v ? [...ids, o.id] : ids.filter((x) => x !== o.id)))}
+                        />
+                        <span className="font-mono">{o.number}</span>
+                      </span>
                       {o.marked ? <Badge tone="info">Markirovka</Badge> : null}
                     </div>
                     <div className="mt-1">{o.customer}</div>
@@ -130,6 +143,11 @@ export function PickingPage() {
       )}
     </>
   );
+}
+
+/** Terish varagʻi yangi oynada ochiladi va oʻzi chop etish oynasini chaqiradi. */
+function openPickSheet(ids: number[]) {
+  window.open(`/print/picking?ids=${ids.join(",")}`, "_blank", "noopener");
 }
 
 function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; now: Date }) {
@@ -195,6 +213,9 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
         <span className="text-caption text-text-secondary">Partiya tasdigʻi: «Ha, shundan oldim» — koʻrsatilgan partiyalardan.</span>
         <div className="flex flex-wrap items-center gap-2">
           <IssueButton orderId={id} />
+          <Button variant="secondary" icon={Printer} onClick={() => openPickSheet([id])}>
+            Terish varagʻi
+          </Button>
           <Button icon={CheckCircle2} disabled={!all} loading={pending} onClick={() => void finish()}>
             Yigʻishni yakunlash
           </Button>
