@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgePercent, Check, ClipboardCheck, Trash2, X } from "lucide-react";
+import { BadgePercent, Check, ClipboardCheck, PackagePlus, Trash2, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,7 @@ import {
   type ReceiptRequest,
   type Resolution,
 } from "./api";
+import { ReceiptCatalogDialog } from "./receipt-catalog-dialog";
 import { ReceiptStatusBadge, day } from "./receipts-page";
 
 const KIND = "Kirim";
@@ -139,6 +140,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
   const [adding, setAdding] = useState(emptyAdd);
   const [local, setLocal] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"accept" | "post" | "cancel" | null>(null);
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const err = describeError(save.error ?? post.error ?? confirmBonus.error);
 
@@ -500,6 +502,11 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
               <span className="ml-3 text-body font-normal text-text-secondary">{formatMoney(amountStr)} soʻm</span>
             ) : null}
           </h3>
+          {editable && warehouse ? (
+            <Button variant="secondary" size="sm" icon={PackagePlus} onClick={() => setCatalogOpen(true)}>
+              Mahsulot qoʻshish
+            </Button>
+          ) : null}
         </div>
         <div className="overflow-x-auto rounded-card border border-border">
           <table className="w-full text-table">
@@ -522,7 +529,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
                   <td colSpan={9} className="px-3 py-6 text-center text-text-secondary">
                     {editable
                       ? warehouse
-                        ? "Qator yoʻq. Yuqorida mahsulot va partiyani kiriting."
+                        ? "Qator yoʻq. «Mahsulot qoʻshish» katalogidan yoki yuqoridagi formadan kiriting."
                         : "Avval omborni tanlang."
                       : "Qator yoʻq."}
                   </td>
@@ -582,6 +589,29 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
           </table>
         </div>
       </div>
+      {catalogOpen && warehouse ? (
+        <ReceiptCatalogDialog
+          warehouseId={warehouse.id}
+          supplierId={supplier ? Number(supplier) : null}
+          zones={zones}
+          defaultZone={adding.zone || null}
+          pricesVisible={pricesVisible}
+          existing={new Set(lines.map((l) => `${l.productId}|${l.batchNumber.trim().toUpperCase()}`))}
+          header={[
+            doc?.number ?? "Yangi kirim",
+            supplierLabel || "YB tanlanmagan",
+            warehouse.name,
+            `${formatQuantity(lines.length)} qator`,
+          ].join(" · ")}
+          onClose={() => setCatalogOpen(false)}
+          onAdd={(picked) => {
+            setLines((ls) => [...ls, ...picked]);
+            setCatalogOpen(false);
+            setLocal(null);
+            toast({ tone: "success", title: `${formatQuantity(picked.length)} qator qoʻshildi` });
+          }}
+        />
+      ) : null}
       {dialog === "accept" && doc ? <AcceptDialog id={doc.id} onClose={() => setDialog(null)} /> : null}
       {dialog === "post" && doc ? <PostDialog doc={doc} onClose={() => setDialog(null)} /> : null}
       {dialog === "cancel" && doc ? (

@@ -3650,7 +3650,7 @@
     "/api/orders/catalog" : {
       "get" : {
         "description" : "Mavjud qoldiq, mijoz narxi, eng yaqin muddat, min/max.",
-        "operationId" : "catalog",
+        "operationId" : "catalog_1",
         "parameters" : [ {
           "in" : "query",
           "name" : "warehouseId",
@@ -6189,6 +6189,76 @@
           }
         },
         "summary" : "Kirim qoralamasi",
+        "tags" : [ "receipts" ]
+      }
+    },
+    "/api/receipts/catalog" : {
+      "get" : {
+        "description" : "Ombordagi qoldiq va shu YB dan oxirgi kirim (narx — faqat narx ko'rinadiganlarga). supplierOnly — oldin shu YB dan kelganlar.",
+        "operationId" : "catalog",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "supplierId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "supplierOnly",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReceiptCatalogPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Mahsulot qo'shish» katalogi (kirim)",
         "tags" : [ "receipts" ]
       }
     },
@@ -13909,6 +13979,63 @@
           }
         },
         "required" : [ "reason" ]
+      },
+      "ReceiptCatalogPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReceiptCatalogRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "ReceiptCatalogRow" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "lastDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Shu YB dan oxirgi kirim sanasi"
+          },
+          "lastPrice" : {
+            "type" : "string",
+            "description" : "Oxirgi faktura narxi (1 dona); narx ko'rinmasa — null"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "stock" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Ombordagi jami qoldiq (barcha zonalar)"
+          }
+        },
+        "required" : [ "code", "name", "productId", "stock" ]
       },
       "ReceiptCounts" : {
         "type" : "object",

@@ -1566,7 +1566,7 @@ export interface paths {
          * «Mahsulot qo'shish» katalogi
          * @description Mavjud qoldiq, mijoz narxi, eng yaqin muddat, min/max.
          */
-        get: operations["catalog"];
+        get: operations["catalog_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2674,6 +2674,26 @@ export interface paths {
          * @description Raqam darhol beriladi (KR-TSH-000001). Qoralama qoldiq va qarzga ta'sir qilmaydi.
          */
         post: operations["create_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/receipts/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * «Mahsulot qo'shish» katalogi (kirim)
+         * @description Ombordagi qoldiq va shu YB dan oxirgi kirim (narx — faqat narx ko'rinadiganlarga). supplierOnly — oldin shu YB dan kelganlar.
+         */
+        get: operations["catalog"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5894,6 +5914,34 @@ export interface components {
         };
         ReceiptCancelRequest: {
             reason: string;
+        };
+        ReceiptCatalogPage: {
+            items: components["schemas"]["ReceiptCatalogRow"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ReceiptCatalogRow: {
+            code: string;
+            /**
+             * Format: date
+             * @description Shu YB dan oxirgi kirim sanasi
+             */
+            lastDate?: string;
+            /** @description Oxirgi faktura narxi (1 dona); narx ko'rinmasa — null */
+            lastPrice?: string;
+            manufacturer?: string;
+            name: string;
+            /** Format: int64 */
+            productId: number;
+            /**
+             * Format: int32
+             * @description Ombordagi jami qoldiq (barcha zonalar)
+             */
+            stock: number;
         };
         ReceiptCounts: {
             /** Format: int32 */
@@ -9167,7 +9215,7 @@ export interface operations {
             };
         };
     };
-    catalog: {
+    catalog_1: {
         parameters: {
             query: {
                 warehouseId: number;
@@ -10850,6 +10898,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReceiptDetail"];
+                };
+            };
+        };
+    };
+    catalog: {
+        parameters: {
+            query: {
+                warehouseId: number;
+                supplierId?: number;
+                q?: string;
+                supplierOnly?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptCatalogPage"];
                 };
             };
         };
