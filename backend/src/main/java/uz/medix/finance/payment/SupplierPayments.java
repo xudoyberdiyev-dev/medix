@@ -12,6 +12,7 @@ import java.util.Objects;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.finance.CashierGuard;
 import uz.medix.finance.MoneyLedger;
 import uz.medix.finance.PartyLedger;
 import uz.medix.finance.PartyLedger.Side;
@@ -47,16 +48,18 @@ class SupplierPayments {
     private final PartyLedger parties;
     private final MoneyLedger money;
     private final Accounts accounts;
+    private final CashierGuard cashiers;
     private final DocumentSequenceService numbers;
     private final AuditLog audit;
     private final Clock clock;
 
-    SupplierPayments(JdbcClient jdbc, PartyLedger parties, MoneyLedger money, Accounts accounts, DocumentSequenceService numbers, AuditLog audit,
+    SupplierPayments(JdbcClient jdbc, PartyLedger parties, MoneyLedger money, Accounts accounts, CashierGuard cashiers, DocumentSequenceService numbers, AuditLog audit,
             Clock clock) {
         this.jdbc = jdbc;
         this.parties = parties;
         this.money = money;
         this.accounts = accounts;
+        this.cashiers = cashiers;
         this.numbers = numbers;
         this.audit = audit;
         this.clock = clock;
@@ -102,6 +105,7 @@ class SupplierPayments {
         Accounts.Account acc = accounts.find(r.accountId())
                 .filter(a -> a.branchId() == r.branchId() && a.active())
                 .orElseThrow(() -> MedixException.badRequest("payment.accountUnknown"));
+        cashiers.check(acc.id());
         Money amount;
         try {
             amount = Money.of(r.amount().strip());

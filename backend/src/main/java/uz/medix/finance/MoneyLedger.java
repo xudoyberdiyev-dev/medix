@@ -23,10 +23,12 @@ public class MoneyLedger {
 
     private final JdbcClient jdbc;
     private final CurrentActor currentActor;
+    private final CashierGuard cashiers;
 
-    MoneyLedger(JdbcClient jdbc, CurrentActor currentActor) {
+    MoneyLedger(JdbcClient jdbc, CurrentActor currentActor, CashierGuard cashiers) {
         this.jdbc = jdbc;
         this.currentActor = currentActor;
+        this.cashiers = cashiers;
     }
 
     /** Musbat — hisobga kirim, manfiy — chiqim. Chaqiruvchi tranzaksiyasida. */
@@ -35,6 +37,7 @@ public class MoneyLedger {
         if (amount.isZero()) {
             throw new IllegalArgumentException("Nol summa");
         }
+        cashiers.check(accountId);
         record A(java.math.BigDecimal balance, boolean active, String name) {}
         A a = jdbc.sql("SELECT balance, active, name FROM money_account WHERE id = :id FOR NO KEY UPDATE")
                 .param("id", accountId)

@@ -7,7 +7,9 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,6 +51,21 @@ class AccountController {
     Accounts.Account create(@Valid @RequestBody Accounts.AccountRequest r) {
         Actor a = actor();
         long id = accounts.create(a, r);
+        return accounts.find(id).orElseThrow();
+    }
+
+    @GetMapping("/cashier-options")
+    @PreAuthorize("hasAnyAuthority('settings.view', 'cash.approve')")
+    @Operation(summary = "Kassaga biriktirish mumkin boʻlgan xodimlar (cash.io ruxsatli)")
+    List<Accounts.CashierOption> cashierOptions(@RequestParam long branchId) {
+        return accounts.cashierOptions(actor(), branchId);
+    }
+
+    @PutMapping("/{id}/cashier")
+    @PreAuthorize("hasAnyAuthority('settings.view', 'cash.approve')")
+    @Operation(summary = "Kassaga kassir biriktirish (null — olib tashlash). Kassir amallarni faqat oʻz kassasida bajaradi")
+    Accounts.Account assignCashier(@PathVariable long id, @RequestBody Accounts.CashierRequest r) {
+        accounts.assignCashier(actor(), id, r.cashierId());
         return accounts.find(id).orElseThrow();
     }
 }

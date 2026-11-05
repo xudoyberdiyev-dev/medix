@@ -8,6 +8,7 @@ import java.util.Objects;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.finance.CashierGuard;
 import uz.medix.finance.MoneyLedger;
 import uz.medix.finance.account.Accounts;
 import uz.medix.finance.cash.CashModels.Transfer;
@@ -31,14 +32,16 @@ class Transfers {
     private final JdbcClient jdbc;
     private final MoneyLedger money;
     private final Accounts accounts;
+    private final CashierGuard cashiers;
     private final DocumentSequenceService numbers;
     private final AuditLog audit;
     private final CashOps ops;
 
-    Transfers(JdbcClient jdbc, MoneyLedger money, Accounts accounts, DocumentSequenceService numbers, AuditLog audit, CashOps ops) {
+    Transfers(JdbcClient jdbc, MoneyLedger money, Accounts accounts, CashierGuard cashiers, DocumentSequenceService numbers, AuditLog audit, CashOps ops) {
         this.jdbc = jdbc;
         this.money = money;
         this.accounts = accounts;
+        this.cashiers = cashiers;
         this.numbers = numbers;
         this.audit = audit;
         this.ops = ops;
@@ -55,6 +58,7 @@ class Transfers {
         Accounts.Account from = accounts.find(r.fromAccountId())
                 .filter(a -> a.branchId() == r.branchId() && a.active())
                 .orElseThrow(() -> MedixException.badRequest("payment.accountUnknown"));
+        cashiers.check(from.id());
         Accounts.Account to = accounts.find(r.toAccountId())
                 .filter(a -> a.branchId() == r.branchId() && a.active())
                 .orElseThrow(() -> MedixException.badRequest("payment.accountUnknown"));

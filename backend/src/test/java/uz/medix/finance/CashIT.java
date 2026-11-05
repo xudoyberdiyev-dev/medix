@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -316,5 +317,65 @@ class CashIT {
         assertThat(balance(t)).isEqualTo("10000.00");
         assertThat(jdbc.sql("SELECT sum(amount)::text FROM money_move WHERE account_id = :a").param("a", k).query(String.class).single())
                 .isEqualTo("0.00");
+    }
+
+    @Test
+    void cashierWorksOnlyInOwnCash() throws Exception {
+        long b = branch();
+        Session c1 = loginAs("CASHIER", b);
+        Session c2 = loginAs("CASHIER", b);
+        Session acct = loginAs("ACCOUNTANT", b);
+        Session picker = loginAs("PICKER", b);
+        Cookie manager = loginAs("BRANCH_MANAGER", b).cookie();
+        Cookie director = loginAs("DIRECTOR", b).cookie();
+        account(manager, b, 0);
+        send(post("/api/money-accounts"), director, "{\"branchId\":" + b + ",\"kind\":\"CASH\",\"name\":\"Kassa 2\"}")
+                .andExpect(status().isCreated());
+        long k1 = account(manager, b, 0);
+        long k2 = account(manager, b, 1);
+        long t = account(manager, b, 2);
+
+        // Biriktirish: faqat kassa, faqat cash.io ruxsatli faol xodim; kassir oʻzi biriktira olmaydi
+        mvc.perform(get("/api/money-accounts/cashier-options").param("branchId", "" + b).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == " + c1.id() + ")]").exists())
+                .andExpect(jsonPath("$[?(@.id == " + acct.id() + ")]").exists())
+                .andExpect(jsonPath("$[?(@.id == " + picker.id() + ")]").doesNotExist());
+        send(put("/api/money-accounts/" + t + "/cashier"), manager, "{\"cashierId\":" + c1.id() + "}")
+                .andExpect(jsonPath("$.code").value("money.cashierOnlyCash"));
+        send(put("/api/money-accounts/" + k1 + "/cashier"), manager, "{\"cashierId\":" + picker.id() + "}")
+                .andExpect(jsonPath("$.code").value("money.cashierUnknown"));
+        send(put("/api/money-accounts/" + k1 + "/cashier"), c1.cookie(), "{\"cashierId\":" + c1.id() + "}").andExpect(status().isForbidden());
+        send(put("/api/money-accounts/" + k1 + "/cashier"), manager, "{\"cashierId\":" + c1.id() + "}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cashierId").value(c1.id()))
+                .andExpect(jsonPath("$.cashierName").value("Sinov CASHIER"));
+        send(put("/api/money-accounts/" + k2 + "/cashier"), manager, "{\"cashierId\":" + c2.id() + "}").andExpect(status().isOk());
+
+        // Har kassir — faqat oʻz kassasida
+        send(post("/api/cash-ops"), c1.cookie(), op(b, k1, "IN", "Boshqa kirim", "1000", null)).andExpect(status().isCreated());
+        send(post("/api/cash-ops"), c2.cookie(), op(b, k1, "IN", "Boshqa kirim", "1000", null))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("money.notYourCash"));
+        send(post("/api/cash-ops"), c1.cookie(), op(b, k2, "IN", "Boshqa kirim", "1000", null)).andExpect(jsonPath("$.code").value("money.notYourCash"));
+        send(post("/api/cash-ops"), acct.cookie(), op(b, k1, "IN", "Boshqa kirim", "1000", null)).andExpect(jsonPath("$.code").value("money.notYourCash"));
+        // Nazoratchi (cash.approve) — istalgan kassada; Terminal — cheklanmaydi
+        send(post("/api/cash-ops"), manager, op(b, k2, "IN", "Boshqa kirim", "500", null)).andExpect(status().isCreated());
+        send(post("/api/cash-ops"), c2.cookie(), op(b, t, "IN", "Boshqa kirim", "700", null)).andExpect(status().isCreated());
+        // IO: oʻz kassasidan Terminalga — mumkin; boshqa kassirning kassasiga kirim ham — yoʻq
+        send(post("/api/money-transfers"), c1.cookie(), transfer(b, k1, t, "100")).andExpect(status().isCreated());
+        send(post("/api/money-transfers"), c2.cookie(), transfer(b, t, k1, "100")).andExpect(jsonPath("$.code").value("money.notYourCash"));
+        assertThat(balance(k1)).isEqualTo("900.00");
+        assertThat(balance(t)).isEqualTo("800.00");
+
+        // Biriktirilmagan kassa: kassasi bor kassir ishlatmaydi, kassasi yoʻq xodim (Buxgalter) — ishlatadi
+        send(put("/api/money-accounts/" + k2 + "/cashier"), manager, "{\"cashierId\":null}")
+                .andExpect(jsonPath("$.cashierId").doesNotExist());
+        send(post("/api/cash-ops"), c1.cookie(), op(b, k2, "IN", "Boshqa kirim", "1000", null)).andExpect(jsonPath("$.code").value("money.useOwnCash"));
+        send(post("/api/cash-ops"), c2.cookie(), op(b, k2, "IN", "Boshqa kirim", "1000", null)).andExpect(status().isCreated());
+        send(post("/api/cash-ops"), acct.cookie(), op(b, k2, "IN", "Boshqa kirim", "1000", null)).andExpect(status().isCreated());
+        assertThat(balance(k2)).isEqualTo("2500.00");
+        assertThatThrownBy(() -> jdbc.sql("UPDATE money_account SET cashier_id = :c WHERE id = :t").param("c", c1.id()).param("t", t).update())
+                .hasMessageContaining("money_account_cashier_cash_only");
     }
 }

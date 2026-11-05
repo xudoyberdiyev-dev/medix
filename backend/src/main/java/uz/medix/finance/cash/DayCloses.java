@@ -11,6 +11,7 @@ import java.util.Set;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.finance.CashierGuard;
 import uz.medix.finance.account.Accounts;
 import uz.medix.finance.cash.CashModels.CloseRequest;
 import uz.medix.finance.cash.CashModels.ClosePreview;
@@ -38,13 +39,15 @@ class DayCloses {
 
     private final JdbcClient jdbc;
     private final Accounts accounts;
+    private final CashierGuard cashiers;
     private final CashOps ops;
     private final PinVerifier pins;
     private final AuditLog audit;
 
-    DayCloses(JdbcClient jdbc, Accounts accounts, CashOps ops, PinVerifier pins, AuditLog audit) {
+    DayCloses(JdbcClient jdbc, Accounts accounts, CashierGuard cashiers, CashOps ops, PinVerifier pins, AuditLog audit) {
         this.jdbc = jdbc;
         this.accounts = accounts;
+        this.cashiers = cashiers;
         this.ops = ops;
         this.pins = pins;
         this.audit = audit;
@@ -141,6 +144,7 @@ class DayCloses {
         if (acc.kind() != Accounts.Kind.CASH) {
             throw MedixException.badRequest("cashClose.onlyCash");
         }
+        cashiers.check(acc.id());
         // Hisob qulflanadi: yopish paytida shu kassaga harakat yozilmaydi
         jdbc.sql("SELECT id FROM money_account WHERE id = :a FOR NO KEY UPDATE").param("a", acc.id()).query(Long.class).single();
         LocalDate d = r.closeDate() == null ? ops.today() : r.closeDate();

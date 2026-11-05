@@ -26,7 +26,13 @@ public class Accounts {
     public enum Kind { CASH, TERMINAL, BANK }
 
     public record Account(long id, long branchId, Kind kind, String code, String name, @Schema(nullable = true) String bankName,
-            @Schema(nullable = true) String accountNo, boolean active, String balance) {}
+            @Schema(nullable = true) String accountNo, boolean active, String balance,
+            @Schema(nullable = true, description = "Biriktirilgan kassir (faqat kassa)") Long cashierId,
+            @Schema(nullable = true) String cashierName) {}
+
+    public record CashierRequest(@Schema(nullable = true, description = "null — biriktirishni olib tashlash") Long cashierId) {}
+
+    public record CashierOption(long id, String fullName, @Schema(nullable = true) String cashName) {}
 
     public record AccountRequest(@NotNull(message = "{validation.required}") Long branchId, @NotNull(message = "{validation.required}") Kind kind,
             @NotBlank(message = "{validation.required}") @Size(max = 120) String name, @Schema(nullable = true) @Size(max = 120) String bankName,
@@ -48,12 +54,11 @@ public class Accounts {
         }
         ensureDefaults(branchId);
         return jdbc.sql("""
-                SELECT id, branch_id, kind, code, name, bank_name, account_no, active, balance FROM money_account WHERE branch_id = :b
-                ORDER BY CASE kind WHEN 'CASH' THEN 0 WHEN 'TERMINAL' THEN 1 ELSE 2 END, id""")
+                SELECT a.id, a.branch_id, a.kind, a.code, a.name, a.bank_name, a.account_no, a.active, a.balance, a.cashier_id, e.full_name AS cashier_name
+                FROM money_account a LEFT JOIN employee e ON e.id = a.cashier_id WHERE a.branch_id = :b
+                ORDER BY CASE a.kind WHEN 'CASH' THEN 0 WHEN 'TERMINAL' THEN 1 ELSE 2 END, a.id""")
                 .param("b", branchId)
-                .query((rs, n) -> new Account(rs.getLong("id"), rs.getLong("branch_id"), Kind.valueOf(rs.getString("kind")), rs.getString("code"),
-                        rs.getString("name"), rs.getString("bank_name"), rs.getString("account_no"), rs.getBoolean("active"),
-                        new Money(rs.getBigDecimal("balance")).toString()))
+                .query(Accounts::map)
                 .list();
     }
 
@@ -105,12 +110,52 @@ public class Accounts {
     /** Hisob filiali va faolligi (to'lov hujjatlari tekshiruvi uchun). */
     @Transactional(readOnly = true)
     public java.util.Optional<Account> find(long id) {
-        return jdbc.sql("SELECT id, branch_id, kind, code, name, bank_name, account_no, active, balance FROM money_account WHERE id = :id")
+        return jdbc.sql("""
+                SELECT a.id, a.branch_id, a.kind, a.code, a.name, a.bank_name, a.account_no, a.active, a.balance, a.cashier_id, e.full_name AS cashier_name
+                FROM money_account a LEFT JOIN employee e ON e.id = a.cashier_id WHERE a.id = :id""")
                 .param("id", id)
-                .query((rs, n) -> new Account(rs.getLong("id"), rs.getLong("branch_id"), Kind.valueOf(rs.getString("kind")), rs.getString("code"),
-                        rs.getString("name"), rs.getString("bank_name"), rs.getString("account_no"), rs.getBoolean("active"),
-                        new Money(rs.getBigDecimal("balance")).toString()))
+                .query(Accounts::map)
                 .optional();
+    }
+
+    private static Account map(java.sql.ResultSet rs, int n) throws java.sql.SQLException {
+        return new Account(rs.getLong("id"), rs.getLong("branch_id"), Kind.valueOf(rs.getString("kind")), rs.getString("code"), rs.getString("name"),
+                rs.getString("bank_name"), rs.getString("account_no"), rs.getBoolean("active"), new Money(rs.getBigDecimal("balance")).toString(),
+                (Long) rs.getObject("cashier_id"), rs.getString("cashier_name"));
+    }
+
+    /**
+     * Kassaga kassir biriktirish (SPEC 3: kassir amallarni faqat o'z kassasida bajaradi). Nomzod — shu filialning faol xodimi, roli
+     * kassa amallariga ruxsatli ({@code cash.io}). Bir xodim bir necha kassaga biriktirilishi mumkin.
+     */
+    @Transactional
+    public void assignCashier(Actor actor, long accountId, Long cashierId) {
+        Account acc = find(accountId).filter(a -> actor.canAccessBranch(a.branchId())).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (acc.kind() != Kind.CASH) {
+            throw MedixException.badRequest("money.cashierOnlyCash");
+        }
+        if (cashierId != null && cashierOptions(actor, acc.branchId()).stream().noneMatch(o -> o.id() == cashierId)) {
+            throw MedixException.badRequest("money.cashierUnknown");
+        }
+        jdbc.sql("UPDATE money_account SET cashier_id = :c, version = version + 1 WHERE id = :id").param("c", cashierId).param("id", accountId).update();
+        audit.record(AuditEntry.of("money.account.cashier", "money_account", accountId)
+                .change(acc.cashierId() == null ? null : Map.of("cashierId", acc.cashierId()), cashierId == null ? null : Map.of("cashierId", cashierId)));
+    }
+
+    /** Kassaga biriktirish mumkin bo'lgan xodimlar: filialning faol xodimlari, roli cash.io ga ega. */
+    @Transactional(readOnly = true)
+    public List<CashierOption> cashierOptions(Actor actor, long branchId) {
+        if (!actor.canAccessBranch(branchId)) {
+            throw MedixException.notFound("error.notFound");
+        }
+        return jdbc.sql("""
+                SELECT e.id, e.full_name,
+                       (SELECT string_agg(a.name, ', ' ORDER BY a.id) FROM money_account a WHERE a.cashier_id = e.id AND a.branch_id = :b) AS cash_name
+                FROM employee e JOIN role_permission rp ON rp.role_id = e.role_id AND rp.permission_key = 'cash.io'
+                WHERE e.branch_id = :b AND e.status = 'ACTIVE' ORDER BY e.full_name""")
+                .param("b", branchId)
+                .query((rs, n) -> new CashierOption(rs.getLong("id"), rs.getString("full_name"), rs.getString("cash_name")))
+                .list();
     }
 
     private static String blank(String s) {

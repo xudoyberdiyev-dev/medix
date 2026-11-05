@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.finance.CashierGuard;
 import uz.medix.finance.MoneyLedger;
 import uz.medix.finance.account.Accounts;
 import uz.medix.finance.cash.CashModels.CashOp;
@@ -42,14 +43,16 @@ class CashOps {
     private final JdbcClient jdbc;
     private final MoneyLedger money;
     private final Accounts accounts;
+    private final CashierGuard cashiers;
     private final DocumentSequenceService numbers;
     private final AuditLog audit;
     private final Clock clock;
 
-    CashOps(JdbcClient jdbc, MoneyLedger money, Accounts accounts, DocumentSequenceService numbers, AuditLog audit, Clock clock) {
+    CashOps(JdbcClient jdbc, MoneyLedger money, Accounts accounts, CashierGuard cashiers, DocumentSequenceService numbers, AuditLog audit, Clock clock) {
         this.jdbc = jdbc;
         this.money = money;
         this.accounts = accounts;
+        this.cashiers = cashiers;
         this.numbers = numbers;
         this.audit = audit;
         this.clock = clock;
@@ -86,6 +89,7 @@ class CashOps {
         Accounts.Account acc = accounts.find(r.accountId())
                 .filter(a -> a.branchId() == r.branchId() && a.active())
                 .orElseThrow(() -> MedixException.badRequest("payment.accountUnknown"));
+        cashiers.check(acc.id());
         Boolean itemOk = jdbc.sql("SELECT active AND direction = :d FROM expense_item WHERE id = :i")
                 .param("d", r.direction() == Direction.OUT ? "EXPENSE" : "INCOME")
                 .param("i", r.itemId())
