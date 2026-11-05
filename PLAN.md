@@ -11,6 +11,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ## Egasidan kutilayotganlar
 - [ ] **GitHub Actions to'xtadi (05.11 12:45):** «recent account payments have failed or your spending limit needs to be increased» — Settings → Billing & plans. Bu tuzalmaguncha backend tekshirilmaydi va Telegram hisobot workflow ishlamaydi.
+- [ ] **Zanjir davomi rad etildi (05.11 14:36):** sessiya ichidan `fire_trigger` chaqiruvi avtomatik ruxsat tekshiruvida bloklandi. Zanjir ishlashi uchun shu vazifaga «Automatically approve» ruxsatini yoqing yoki zaxira ishga tushirishlarga tayaning.
 - [ ] Vercel'ni `medix` reposiga ulash (Root Directory: `frontend`). Production branch — `main`.
 - [ ] Telegram: `TELEGRAM_BOT_TOKEN` va `TELEGRAM_CHAT_ID` ni repo Secrets'ga qo'shish.
 - [x] `notes/T12-topshirish.md`, `T12-audit.md` va boshqa notes — `docs/notes/` ga qo'shildi (01.11.2026, egasi yubordi).
@@ -176,6 +177,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 05.11.2026 14:36 — Keyingi sessiyani ishga tushirish (fire_trigger) xavfsizlik tekshiruvi tomonidan rad etildi; zanjirni 16:00 zaxira ishga tushirish davom ettiradi.
 - 05.11.2026 14:18–14:35 — 10-bosqich: Operator va Xarid bosh sahifalari (API + UI + IT testlar, OpenAPI qo'lda). Davr tanlagichi umumiy komponentga ajratildi. Frontend 117 test, build yashil; skrinshot (mock). CI hali billing sababli to'xtagan.
 - 05.11.2026 14:00–14:20 — 10-bosqich: Direktor/Admin/Buxgalter/Filial rahbari bosh sahifasi (API /api/home/director + UI, DebtSummaries API, DirectorHomeIT). Frontend mahalliy yashil (114 test, build, skrinshot mock bilan). CI billing sababli backend tekshirilmadi. Buyurtmalar/Kirimlar sahifalari ?status= ni qabul qiladi.
 - 05.11.2026 13:30 — Egasi qarori: zanjir rejimi (06:00–11:00, 14:00–18:00; kechki 20:00–22:30 faqat so'rov bilan; 11–14 tanaffus).
