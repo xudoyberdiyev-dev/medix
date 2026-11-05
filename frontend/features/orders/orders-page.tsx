@@ -61,11 +61,12 @@ export const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`)
 export function OrdersPage() {
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
-  const initialStatus = useSearchParams().get("status");
+  const params = useSearchParams();
+  const initialStatus = params.get("status");
   const [status, setStatus] = useState<string | null>(initialStatus);
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
-  const [mine, setMine] = useState(false);
+  const [mine, setMine] = useState(params.get("mine") === "1");
   const [page, setPage] = useState(1);
   const [editor, setEditor] = useState<{ id: number | null } | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);

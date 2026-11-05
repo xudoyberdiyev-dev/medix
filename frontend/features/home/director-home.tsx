@@ -8,16 +8,15 @@ import { Card } from "@/components/ui/card";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
-import { TextField } from "@/components/ui/text-field";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
+import { formatIsoDate } from "@/features/counterparties/api";
 import { type OrderStatus, STATUS_LABELS } from "@/features/orders/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { PERIOD_LABELS, type PeriodPreset, periodRange } from "./period";
+import { PeriodPicker, usePeriodState } from "./period-picker";
 
 type Home = components["schemas"]["Home"];
 type ByPayment = components["schemas"]["ByPayment"];
@@ -121,12 +120,8 @@ export function DirectorHome() {
   const selectedBranch = useBranchStore((s) => s.branchId);
   const allowed = can(me.data, REPORTS_ALL) || can(me.data, REPORTS_VIEW);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const today = todayTashkent();
-  const [preset, setPreset] = useState<PeriodPreset>("today");
-  const [customFrom, setCustomFrom] = useState(formatIsoDate(today));
-  const [customTo, setCustomTo] = useState(formatIsoDate(today));
-  const range =
-    preset === "custom" ? { from: parseUzDate(customFrom) ?? null, to: parseUzDate(customTo) ?? null } : periodRange(preset, today);
+  const period = usePeriodState();
+  const range = period.range;
   const home = useQuery({
     queryKey: ["home", "director", branchId, range.from, range.to],
     queryFn: () =>
@@ -146,38 +141,7 @@ export function DirectorHome() {
     <>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">Bosh sahifa</h1>
-        <div className="flex flex-wrap items-end gap-3">
-          <Tabs
-            aria-label="Davr"
-            items={(Object.keys(PERIOD_LABELS) as PeriodPreset[]).map((k) => ({ key: k, label: PERIOD_LABELS[k] }))}
-            value={preset}
-            onChange={(k) => setPreset(k as PeriodPreset)}
-          />
-          {preset === "custom" ? (
-            <>
-              <div className="w-36">
-                <TextField
-                  label="Dan"
-                  size="sm"
-                  value={customFrom}
-                  onChange={setCustomFrom}
-                  placeholder="04.10.2026"
-                  error={parseUzDate(customFrom) ? undefined : "Sana?"}
-                />
-              </div>
-              <div className="w-36">
-                <TextField
-                  label="Gacha"
-                  size="sm"
-                  value={customTo}
-                  onChange={setCustomTo}
-                  placeholder="04.10.2026"
-                  error={parseUzDate(customTo) ? undefined : "Sana?"}
-                />
-              </div>
-            </>
-          ) : null}
-        </div>
+        <PeriodPicker state={period} />
       </div>
       {home.error ? (
         <ErrorState onRetry={() => home.refetch()} />
@@ -216,7 +180,7 @@ export function DirectorHome() {
   );
 }
 
-function CardTitle({ icon: Icon, title }: { icon: typeof Banknote; title: string }) {
+export function CardTitle({ icon: Icon, title }: { icon: typeof Banknote; title: string }) {
   return (
     <div className="flex items-center gap-2 text-caption text-text-secondary">
       <Icon size={16} strokeWidth={1.5} aria-hidden />
@@ -225,7 +189,7 @@ function CardTitle({ icon: Icon, title }: { icon: typeof Banknote; title: string
   );
 }
 
-function PaymentCard({ icon, title, note, value }: { icon: typeof Banknote; title: string; note: string; value: ByPayment }) {
+export function PaymentCard({ icon, title, note, value }: { icon: typeof Banknote; title: string; note: string; value: ByPayment }) {
   return (
     <Card>
       <CardTitle icon={icon} title={title} />
@@ -350,7 +314,8 @@ function Branches({ rows }: { rows: BranchRow[] }) {
   );
 }
 
-function OrderStatuses({ cells, staleDays }: { cells: StatusCell[]; staleDays: number }) {
+/** hrefSuffix — havolaga qoʻshimcha soʻrov (masalan, Operator uchun «&mine=1»). */
+export function OrderStatuses({ cells, staleDays, hrefSuffix = "" }: { cells: StatusCell[]; staleDays: number; hrefSuffix?: string }) {
   const [filter, setFilter] = useState<StatusFilter>("all");
   return (
     <section>
@@ -373,7 +338,7 @@ function OrderStatuses({ cells, staleDays }: { cells: StatusCell[]; staleDays: n
           return (
             <li key={c.status}>
               <Link
-                href={`/orders?status=${c.status}`}
+                href={`/orders?status=${c.status}${hrefSuffix}`}
                 className="block rounded-card border border-border bg-surface p-3 hover:bg-background"
               >
                 <div className="truncate text-caption text-text-secondary">{STATUS_LABELS[c.status as OrderStatus] ?? c.status}</div>
