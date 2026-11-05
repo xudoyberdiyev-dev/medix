@@ -4,6 +4,8 @@ name: Demo skrinshotlar
 
 on:
   workflow_dispatch:
+  push:
+    branches: [demo]
 
 jobs:
   demo:
