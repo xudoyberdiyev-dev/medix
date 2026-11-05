@@ -5825,6 +5825,7 @@ export interface components {
             id: number;
             manufacturer?: string;
             marked: boolean;
+            match?: components["schemas"]["SearchMatch"];
             /** Format: int32 */
             maxQty?: number;
             /** Format: int32 */
@@ -6300,6 +6301,11 @@ export interface components {
         ScanResult: {
             accepted: components["schemas"]["MarkCode"];
             work: components["schemas"]["MarkWork"];
+        };
+        SearchMatch: {
+            /** @description Maydon kodi: BARCODE, CONTRACT_NAME, CLASSIFIER_NAME, TIN, PHONE, ADDRESS … */
+            field: string;
+            value: string;
         };
         SetPinRequest: {
             currentPassword: string;

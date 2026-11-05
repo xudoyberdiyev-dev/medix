@@ -15,6 +15,7 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useDictionary } from "@/features/dictionaries/api";
 import { formatQuantity } from "@/lib/format";
+import { searchMatchLabel } from "@/lib/search";
 import { PRODUCT_CREATE, useProducts, type ProductRow } from "./api";
 import { ImportDialog } from "./import-dialog";
 import { ProductDrawer } from "./product-drawer";
@@ -90,18 +91,21 @@ export function ProductsPage() {
       title: "Mahsulot",
       sortable: true,
       render: (p) => (
-        <span className="flex items-center gap-2">
-          <span>{p.name}</span>
-          {p.marked ? (
-            <span title="Markirovkali">
-              <QrCode size={16} strokeWidth={1.5} aria-label="Markirovkali" className="text-text-secondary" />
-            </span>
-          ) : null}
-          {p.controlled ? (
-            <span title="Nazoratdagi">
-              <ShieldAlert size={16} strokeWidth={1.5} aria-label="Nazoratdagi" className="text-warning" />
-            </span>
-          ) : null}
+        <span className="flex flex-col">
+          <span className="flex items-center gap-2">
+            <span>{p.name}</span>
+            {p.marked ? (
+              <span title="Markirovkali">
+                <QrCode size={16} strokeWidth={1.5} aria-label="Markirovkali" className="text-text-secondary" />
+              </span>
+            ) : null}
+            {p.controlled ? (
+              <span title="Nazoratdagi">
+                <ShieldAlert size={16} strokeWidth={1.5} aria-label="Nazoratdagi" className="text-warning" />
+              </span>
+            ) : null}
+          </span>
+          {p.match ? <span className="text-caption text-text-secondary">{searchMatchLabel(p.match)}</span> : null}
         </span>
       ),
     },

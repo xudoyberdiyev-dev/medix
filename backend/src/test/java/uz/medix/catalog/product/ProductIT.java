@@ -113,10 +113,16 @@ class ProductIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.items[0].id").value(id))
-                .andExpect(jsonPath("$.items[0].unit").value("dona"));
-        // Kod va shtrix-kod bo'yicha
-        mvc.perform(get("/api/products").param("q", code).cookie(operator)).andExpect(jsonPath("$.items[0].id").value(id));
-        mvc.perform(get("/api/products").param("q", barcode).cookie(operator)).andExpect(jsonPath("$.items[0].id").value(id));
+                .andExpect(jsonPath("$.items[0].unit").value("dona"))
+                .andExpect(jsonPath("$.items[0].match").doesNotExist());
+        // Kod va shtrix-kod bo'yicha; shtrix-kod jadvalda ko'rinmaydi — «topilgan joy» qaytadi
+        mvc.perform(get("/api/products").param("q", code).cookie(operator))
+                .andExpect(jsonPath("$.items[0].id").value(id))
+                .andExpect(jsonPath("$.items[0].match").doesNotExist());
+        mvc.perform(get("/api/products").param("q", barcode).cookie(operator))
+                .andExpect(jsonPath("$.items[0].id").value(id))
+                .andExpect(jsonPath("$.items[0].match.field").value("BARCODE"))
+                .andExpect(jsonPath("$.items[0].match.value").value(barcode));
         // Ishlab chiqaruvchi bo'yicha filtr
         mvc.perform(get("/api/products").param("manufacturerId", String.valueOf(m)).cookie(operator))
                 .andExpect(jsonPath("$.items", hasSize(1)));

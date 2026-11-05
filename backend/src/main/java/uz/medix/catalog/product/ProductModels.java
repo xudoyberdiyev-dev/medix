@@ -32,7 +32,8 @@ final class ProductModels {
             String vatRate,
             @Schema(nullable = true) Integer minQty,
             @Schema(nullable = true) Integer maxQty,
-            boolean active) {}
+            boolean active,
+            @Schema(nullable = true) uz.medix.shared.text.SearchMatch match) {}
 
     record CodeChange(String oldCode, String newCode, @Schema(nullable = true) String reason, @Schema(nullable = true) String changedBy,
             Instant changedAt) {}

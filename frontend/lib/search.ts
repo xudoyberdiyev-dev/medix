@@ -62,3 +62,17 @@ export function matchesSearch(query: string, fields: (string | null | undefined)
   const hay = normalizeSearch(fields.filter(Boolean).join(" "));
   return q.split(" ").every((w) => hay.includes(w));
 }
+
+/** «Topilgan joy qator ostida» (SPEC 4): server qaytargan maydon kodi → foydalanuvchi tilidagi nomi. */
+const MATCH_FIELDS: Record<string, string> = {
+  BARCODE: "Shtrix-kod",
+  CONTRACT_NAME: "Shartnomadagi nomi",
+  CLASSIFIER_NAME: "Klassifikator nomi",
+  TIN: "STIR",
+  PHONE: "Telefon",
+  ADDRESS: "Manzil",
+};
+
+export function searchMatchLabel(match: { field: string; value: string }): string {
+  return `${MATCH_FIELDS[match.field] ?? "Topildi"}: ${match.value}`;
+}

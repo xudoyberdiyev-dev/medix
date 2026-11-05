@@ -6,6 +6,7 @@ import java.security.SecureRandom;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,6 +28,7 @@ import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.CurrentActor;
+import uz.medix.shared.text.SearchMatch;
 import uz.medix.shared.text.SearchText;
 
 /** Mahsulotlar katalogi (SPEC 6-1): 8 raqamli kod, qidiruv (lotin/kirill), nofaol qilish, kod tarixi. */
@@ -112,6 +114,9 @@ public class Products {
                 .param("offset", (long) f.page() * f.size())
                 .query(Products::row)
                 .list();
+        if (!q.isEmpty() && !items.isEmpty()) {
+            items = withMatches(items, f.q());
+        }
         return new ProductPage(items, total, f.page(), f.size());
     }
 
@@ -353,6 +358,38 @@ public class Products {
         }
     }
 
+    /** «Topilgan joy qator ostida»: so'z jadvalda ko'rinmaydigan maydonda (shtrix-kod, shartnoma/klassifikator nomi) topilgan bo'lsa. */
+    private List<ProductRow> withMatches(List<ProductRow> items, String query) {
+        record Hidden(long id, String contractName, String classifierName, String barcodes) {}
+        Map<Long, Hidden> hidden = new HashMap<>();
+        jdbc.sql("""
+                SELECT p.id, p.contract_name, p.classifier_name,
+                       (SELECT string_agg(b.barcode, ' ' ORDER BY b.id) FROM product_barcode b WHERE b.product_id = p.id) AS barcodes
+                FROM product p WHERE p.id IN (:ids)""")
+                .param("ids", items.stream().map(ProductRow::id).toList())
+                .query(Hidden.class)
+                .list()
+                .forEach(h -> hidden.put(h.id(), h));
+        List<ProductRow> out = new ArrayList<>(items.size());
+        for (ProductRow r : items) {
+            Hidden h = hidden.get(r.id());
+            List<SearchMatch> candidates = new ArrayList<>();
+            if (h != null) {
+                if (h.barcodes() != null) {
+                    for (String b : h.barcodes().split(" ")) {
+                        candidates.add(new SearchMatch("BARCODE", b));
+                    }
+                }
+                candidates.add(new SearchMatch("CONTRACT_NAME", h.contractName()));
+                candidates.add(new SearchMatch("CLASSIFIER_NAME", h.classifierName()));
+            }
+            SearchMatch m = SearchMatch.hidden(query, Arrays.asList(r.code(), r.name(), r.manufacturer()), candidates).orElse(null);
+            out.add(m == null ? r : new ProductRow(r.id(), r.code(), r.name(), r.manufacturer(), r.category(), r.country(), r.unit(),
+                    r.controlled(), r.marked(), r.prescription(), r.vatRate(), r.minQty(), r.maxQty(), r.active(), m));
+        }
+        return out;
+    }
+
     private List<String> barcodes(long productId) {
         return jdbc.sql("SELECT barcode FROM product_barcode WHERE product_id = :p ORDER BY id")
                 .param("p", productId)
@@ -417,7 +454,7 @@ public class Products {
         return new ProductRow(rs.getLong("id"), rs.getString("code"), rs.getString("name"), rs.getString("manufacturer"),
                 rs.getString("category"), rs.getString("country"), rs.getString("unit"), rs.getBoolean("controlled"),
                 rs.getBoolean("marked"), rs.getBoolean("prescription"), vat(rs.getBigDecimal("vat_rate")),
-                (Integer) rs.getObject("min_qty"), (Integer) rs.getObject("max_qty"), rs.getBoolean("active"));
+                (Integer) rs.getObject("min_qty"), (Integer) rs.getObject("max_qty"), rs.getBoolean("active"), null);
     }
 
     private static String vat(BigDecimal v) {

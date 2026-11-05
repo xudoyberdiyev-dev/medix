@@ -13753,6 +13753,9 @@
           "marked" : {
             "type" : "boolean"
           },
+          "match" : {
+            "$ref" : "#/components/schemas/SearchMatch"
+          },
           "maxQty" : {
             "type" : "integer",
             "format" : "int32"
@@ -14927,6 +14930,19 @@
           }
         },
         "required" : [ "accepted", "work" ]
+      },
+      "SearchMatch" : {
+        "type" : "object",
+        "properties" : {
+          "field" : {
+            "type" : "string",
+            "description" : "Maydon kodi: BARCODE, CONTRACT_NAME, CLASSIFIER_NAME, TIN, PHONE, ADDRESS …"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "field", "value" ]
       },
       "SetPinRequest" : {
         "type" : "object",
