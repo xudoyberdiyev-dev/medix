@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { visibleReports } from "./catalog";
 import { salesExportHref } from "./sales-report";
+import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
 import { formatMinutes, workerExportHref } from "./worker-report";
 
 describe("hisobotlar", () => {
@@ -26,5 +27,14 @@ describe("hisobotlar", () => {
     );
     expect(formatMinutes(45)).toBe("45 daq");
     expect(formatMinutes(125)).toBe("2 soat 05 daq");
+  });
+
+  it("taʼminotchi tovari: tannarx ruxsati shart, eksport havolasi", () => {
+    expect(visibleReports(["reports.view"]).map((r) => r.key)).not.toContain("suppliers");
+    expect(visibleReports(["reports.view", "prices.cost"]).map((r) => r.key)).toContain("suppliers");
+    expect(canSeeSupplierGoods(["prices.cost"])).toBe(false);
+    expect(supplierGoodsExportHref("COMPANY", { branchId: 1, from: "2026-11-01", to: "2026-11-05" })).toBe(
+      "/api/reports/supplier-goods/export?kind=COMPANY&branchId=1&from=2026-11-01&to=2026-11-05",
+    );
   });
 });

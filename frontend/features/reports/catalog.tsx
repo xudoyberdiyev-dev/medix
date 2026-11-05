@@ -14,6 +14,8 @@ export interface ReportEntry {
   /** Hali qurilmagan boʻlsa — null. */
   href: string | null;
   anyOf: string[];
+  /** Qoʻshimcha majburiy kalitlar (masalan, tannarxdagi hisobot uchun prices.cost). */
+  allOf?: string[];
 }
 
 /** Hisobotlar katalogi (SPEC 2, 8). Ruxsat — reports.* kalitlari; tannarx ustunlari hisobotning oʻzida prices.cost bilan. */
@@ -42,9 +44,10 @@ export const REPORTS: ReportEntry[] = [
   {
     key: "suppliers",
     title: "Taʼminotchi xodim va korxona tovari",
-    description: "Olib keldi / sotildi / qoldi (tannarxda).",
-    href: null,
+    description: "Olib keldi / sotildi / boshqa / qoldi (tannarxda); Aktiv / Passiv.",
+    href: "/reports/supplier-goods",
     anyOf: ["reports.all", "reports.view"],
+    allOf: ["prices.cost"],
   },
   {
     key: "pickers",
@@ -63,7 +66,7 @@ export const REPORTS: ReportEntry[] = [
 ];
 
 export function visibleReports(perms: string[]): ReportEntry[] {
-  return REPORTS.filter((r) => r.anyOf.some((k) => perms.includes(k)));
+  return REPORTS.filter((r) => r.anyOf.some((k) => perms.includes(k)) && (r.allOf ?? []).every((k) => perms.includes(k)));
 }
 
 export function ReportsCatalog() {
