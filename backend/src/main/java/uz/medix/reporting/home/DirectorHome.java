@@ -53,7 +53,7 @@ class DirectorHome {
     record Attention(String overdue1to30, String overdue31to60, String overdue61to90, String overdue90plus, CountAmount directorOrders,
             CountAmount branchOrders, CountAmount cashApprovals, ExpiringBatches expiring, String supplierOverdue, String supplierToday, String supplierNext3Days,
             int receiptsToPost, String driverCash, int bonusDue, int zoneTransfersPending, int transfersInTransit,
-            int writeOffsPending, int transferShortagesOpen) {}
+            int writeOffsPending, int transferShortagesOpen, int inventoryCheck, int inventoryCounting) {}
 
     /**
      * Buyurtma holati katagi: soni va summasi — Hammasi / Bugungi (bugun kiritilgan) / Kechikkanlar (holatda 2 kundan
@@ -310,12 +310,18 @@ class DirectorHome {
                   AND NOT EXISTS (SELECT 1 FROM warehouse_transfer_resolution r LEFT JOIN write_off w ON w.id = r.write_off_id
                                   WHERE r.transfer_id = t.id AND (r.kind = 'RETURN' OR w.status <> 'REJECTED'))""")
                 .param("b", branchId).query(Integer.class).single();
+        // Inventarizatsiya: tekshiruvda (tasdiq kutmoqda) va sanoq ketmoqda — zona qulfi (T12-audit №23, qotib qolish nuqtasi)
+        record InCounts(int check, int counting) {}
+        InCounts inv = jdbc.sql("""
+                SELECT count(*) FILTER (WHERE status = 'CHECK') AS chk, count(*) FILTER (WHERE status = 'COUNTING') AS cnt
+                FROM inventory_count WHERE status IN ('CHECK', 'COUNTING') AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
+                .param("b", branchId).query((rs, n) -> new InCounts(rs.getInt("chk"), rs.getInt("cnt"))).single();
         DebtSummaries.DueSoon due = debts.supplierDue(actor, branchId, today);
         return new Attention(customers.d1to30(), customers.d31to60(), customers.d61to90(), customers.d90plus(),
                 new CountAmount(orders.count(), m(orders.amount()).toString()),
                 new CountAmount(branchOrders.count(), m(branchOrders.amount()).toString()), new CountAmount(cash.count(), m(cash.amount()).toString()),
                 expiring, due.overdue(), due.today(), due.next3Days(), receipts, m(driver).toString(), bonusDue, zonePending, inTransit,
-                writeOffPending, shortagesOpen);
+                writeOffPending, shortagesOpen, inv.check(), inv.counting());
     }
 
     private static Money sum(List<Amount> list, long branchId) {
