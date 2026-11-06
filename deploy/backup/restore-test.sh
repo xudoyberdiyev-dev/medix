@@ -24,7 +24,7 @@ docker exec -u postgres "$name" bash -ec "
   pgbackrest --stanza=medix --repo=$repo --pg1-path=/tmp/restore --archive-mode=off --type=immediate --target-action=promote restore
   pg_ctl -D /tmp/restore -o '-c archive_mode=off -c port=55432 -c listen_addresses=' -w -t 600 start
 "
-check() { docker exec -u postgres "$name" psql -p 55432 -h /var/run/postgresql -d medix -tAc "$1"; }
+check() { docker exec -u postgres "$name" psql -p 55432 -h /var/run/postgresql -U medix -d medix -tAc "$1"; }
 migr="$(check 'SELECT max(installed_rank) FROM flyway_schema_history WHERE success')"
 emps="$(check 'SELECT count(*) FROM employee')"
 last="$(check "SELECT to_char(max(occurred_at) AT TIME ZONE 'Asia/Tashkent', 'DD.MM.YYYY HH24:MI') FROM audit_log")"
