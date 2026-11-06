@@ -2893,6 +2893,36 @@
         "tags" : [ "inventory-count" ]
       }
     },
+    "/api/inventory-counts/{id}/pdf" : {
+      "get" : {
+        "description" : "Sanoqda — sanoq varag'i («Sanaldi» bo'sh), keyin — farqlar bilan qaydnoma. Tannarx — faqat prices.cost.",
+        "operationId" : "pdf_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Sanoq varag'i / inventarizatsiya qaydnomasi — PDF",
+        "tags" : [ "inventory-count" ]
+      }
+    },
     "/api/inventory-counts/{id}/recount" : {
       "post" : {
         "operationId" : "recount",
