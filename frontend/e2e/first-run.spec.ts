@@ -455,3 +455,35 @@ test("CEO: OK kamomadini hisobdan chiqarish (HC, qoldiq harakatisiz)", async ({ 
   const row = page.getByRole("row", { name: /Kamomad/ }).first();
   await expect(row).toContainText("Oʻtkazildi");
 });
+
+test("CEO: inventarizatsiya (IN) — qoralama → sanoqni ochish → sanash → bekor qilish (qulf yechiladi)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/inventory-counts");
+  await page.getByRole("button", { name: "Inventarizatsiya boshlash" }).first().click();
+  const drawer = page.getByRole("dialog").last();
+  await drawer.getByRole("combobox", { name: "Ombor", exact: true }).click();
+  await page.getByRole("option", { name: /Markaziy ombor/ }).click();
+  await drawer.getByRole("combobox", { name: "Zona", exact: true }).click();
+  await page.getByRole("option", { name: /Asosiy saqlash/ }).click();
+  await drawer.getByRole("button", { name: "Qoralama yaratish" }).click();
+  await expect(page.getByText("Qoralama yaratildi")).toBeVisible();
+  await expect(page.getByText("Sanoq hali ochilmagan")).toBeVisible();
+
+  await page.getByRole("dialog").last().getByRole("button", { name: "Sanoqni ochish" }).click();
+  await expect(page.getByText(/Sanoq ketmoqda · 0%/)).toBeVisible();
+  await page.getByRole("dialog").last().getByLabel(/— sanalgan soni/).first().fill("1");
+  await page.getByRole("dialog").last().getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText("Sanoq saqlandi")).toBeVisible();
+
+  await page.getByRole("dialog").last().getByRole("button", { name: "Bekor qilish" }).click();
+  const modal = page.getByRole("dialog").last();
+  await modal.getByLabel("Sabab").fill("E2E sinov");
+  await modal.getByRole("button", { name: "Bekor qilish" }).click();
+  await expect(page.getByText("Bekor qilindi, qulf yechildi")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  const row = page.getByRole("row", { name: /IN-/ }).first();
+  await expect(row).toContainText("Bekor qilingan");
+});

@@ -402,11 +402,12 @@ class InventoryCounts {
         List<Move> moves = new ArrayList<>();
         for (Diff d : diffs) {
             // Qulf tufayli qoldiq o'zgarmagan bo'lishi kerak; himoya — o'zgargan bo'lsa qayta sanash
-            int now = jdbc.sql("SELECT coalesce(max(qty), 0) FROM stock_balance WHERE zone_id = :z AND batch_id = :b FOR UPDATE")
+            int now = jdbc.sql("SELECT qty FROM stock_balance WHERE zone_id = :z AND batch_id = :b FOR UPDATE")
                     .param("z", d.zoneId())
                     .param("b", d.batchId())
                     .query(Integer.class)
-                    .single();
+                    .optional()
+                    .orElse(0);
             if (now != d.book()) {
                 throw MedixException.conflict("inventory.bookChanged", label(d.batchId()));
             }

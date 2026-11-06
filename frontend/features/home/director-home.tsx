@@ -131,6 +131,20 @@ export function attentionRows(
       href: "/warehouse-transfers?status=RECEIVED",
       money: false,
     },
+    {
+      key: "inc",
+      label: "Inventarizatsiya tasdigʻi kutilmoqda",
+      value: String(a.inventoryCheck),
+      href: "/inventory-counts?status=CHECK",
+      money: false,
+    },
+    {
+      key: "inl",
+      label: "Sanoq ketmoqda — ombor harakati toʻxtatilgan",
+      value: String(a.inventoryCounting),
+      href: "/inventory-counts?status=COUNTING",
+      money: false,
+    },
     { key: "drv", label: "Haydovchilardagi pul", value: a.driverCash, href: "/cash", money: true },
   ];
   return rows.filter((r) => nonZero(r.value) && (r.key !== "dir" || perms.director) && (r.key !== "br" || perms.branch));

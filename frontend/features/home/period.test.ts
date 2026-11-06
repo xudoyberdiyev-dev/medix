@@ -37,6 +37,8 @@ describe("Diqqat talab qiladi", () => {
     transfersInTransit: 0,
     writeOffsPending: 0,
     transferShortagesOpen: 0,
+    inventoryCheck: 0,
+    inventoryCounting: 0,
   };
   it("nol qatorlar yashiriladi", () => {
     expect(attentionRows(zero)).toEqual([]);
