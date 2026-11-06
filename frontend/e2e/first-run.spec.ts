@@ -411,3 +411,28 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   await expect(row).toContainText("Qabul qilindi");
   await expect(row).toContainText("E2E ikkinchi ombor");
 });
+
+test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, tannarx bilan", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/write-offs");
+  await page.getByRole("button", { name: "Hisobdan chiqarish" }).first().click();
+  const drawer = page.getByRole("dialog").last();
+  await drawer.getByRole("combobox", { name: "Ombor", exact: true }).click();
+  await page.getByRole("option", { name: /Markaziy ombor/ }).click();
+  await drawer.getByRole("combobox", { name: "Zona", exact: true }).click();
+  await page.getByRole("option", { name: /Asosiy saqlash/ }).click();
+  await drawer.getByRole("combobox", { name: "Sabab", exact: true }).click();
+  await page.getByRole("option", { name: "Shikastlangan" }).click();
+  await drawer.getByLabel(/E2E-01 — hisobdan chiqarish soni/).fill("2");
+  await drawer.getByLabel("Dalolatnoma raqami").fill("E2E-AKT-1");
+  await drawer.getByRole("button", { name: "Hisobdan chiqarish", exact: true }).click();
+  await expect(page.getByText("Tovar hisobdan chiqarildi")).toBeVisible();
+  await expect(drawer.getByText("3.601,00", { exact: false }).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  const row = page.getByRole("row", { name: /HC-/ }).first();
+  await expect(row).toContainText("Oʻtkazildi");
+  await expect(row).toContainText("Shikastlangan");
+});
