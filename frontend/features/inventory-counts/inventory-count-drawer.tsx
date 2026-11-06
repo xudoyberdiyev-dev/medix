@@ -123,14 +123,16 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
 
   const columns: TableColumn<InventoryCountLine>[] = [
     ...(doc.zone ? [] : [{ key: "zone", title: "Zona", render: (l: InventoryCountLine) => l.zone.name }]),
-    { key: "productCode", title: "Kod", mono: true },
     {
       key: "productName",
       title: "Mahsulot",
       wrap: true,
       render: (l) => (
         <span className="flex flex-wrap items-center gap-2">
-          {l.productName}
+          <span>
+            {l.productName}
+            <span className="block font-mono text-caption text-text-secondary">{l.productCode}</span>
+          </span>
           {l.controlled ? (
             <Badge tone="danger" icon={Lock}>
               Nazoratda
@@ -162,7 +164,7 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
       align: "right",
       render: (l) =>
         canCount ? (
-          <div className="ml-auto w-28">
+          <div className="ml-auto w-24">
             <TextField
               label={`${l.productName} ${l.batchNumber} — sanalgan soni`}
               className="[&>label]:sr-only"
@@ -189,7 +191,7 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
               l.diff == null || l.diff === 0 ? "—" : <span className={l.diff < 0 ? "text-danger" : "text-success"}>{signed(l.diff)}</span>,
           },
         ]),
-    ...(withCost && !doc.bookHidden
+    ...(withCost && !doc.bookHidden && !counting
       ? [
           {
             key: "diffAmount",
