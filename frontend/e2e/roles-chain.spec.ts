@@ -455,7 +455,8 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Kassa 2.*460\.000,00 soʻm/ })).toBeVisible();
 });
 
-test("Ombor zanjiri: tasdiqlangan buyurtma — vaqt, yigʻish, hisobdan oʻtkazish, reys", async ({ page }) => {
+/** Ombor zanjiri: Ombor mudiri vaqt beradi → Yigʻuvchi yigʻadi → Ombor mudiri hisobdan oʻtkazadi va reys tuzadi. */
+async function warehouseChain(page: Page) {
   await login(page, "keeper.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/warehouse");
@@ -499,6 +500,10 @@ test("Ombor zanjiri: tasdiqlangan buyurtma — vaqt, yigʻish, hisobdan oʻtkazi
   await choose(page, "Haydovchi", /Hasan Haydovchiyev/);
   await page.getByRole("button", { name: "Reysni rejalashtirish" }).click();
   await expect(page.getByText(/^Reys RS-.* rejalashtirildi$/).first()).toBeVisible();
+}
+
+test("Ombor zanjiri: tasdiqlangan buyurtma — vaqt, yigʻish, hisobdan oʻtkazish, reys", async ({ page }) => {
+  await warehouseChain(page);
 });
 
 test("Haydovchi: qisman yetkazadi (3 ta qaytdi)", async ({ page }) => {
@@ -536,4 +541,117 @@ test("Ombor mudiri: qaytgan tovarni Karantinga qabul qiladi", async ({ page }) =
   await item.getByLabel(/^Keldi\s*\*?$/).fill("3");
   await item.getByRole("button", { name: "Qabul qilish" }).click();
   await expect(page.getByText("Qaytgan tovar Karantinga qabul qilindi").first()).toBeVisible();
+});
+
+test("CEO: Direktor xodimi va mijozga kichik kredit limiti", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/settings/employees");
+  await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
+  const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
+  await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill("Dilshod Direktorov");
+  await dialog.getByLabel(/^Login\s*\*?$/).fill("director.1");
+  await choose(page, "Rol", /^Direktor$/);
+  await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(TEMP);
+  await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
+  await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
+
+  await page.goto("/customers");
+  await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("tab", { name: "Filial shartlari" }).click();
+  const card = page.locator("section").filter({ has: page.getByRole("heading", { name: /Toshkent/ }) });
+  await card.getByLabel(/^Kredit limiti\s*\*?$/).fill("1.000,00");
+  await card.getByRole("button", { name: "Shartlarni saqlash" }).click();
+  await expect(page.getByText("Filial shartlari saqlandi").first()).toBeVisible();
+});
+
+test("Operator: limitdan 20% dan koʻp oshgan buyurtma — Direktor tasdigʻiga", async ({ page }) => {
+  await login(page, "operator.1", OPERATOR_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/orders");
+  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("Baraka");
+  await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
+  await choose(page, "Ombor", /Markaziy ombor/);
+  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("Paracetamol");
+  await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
+  await field(page, "Miqdor").first().fill("2");
+  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  await page.getByRole("button", { name: "Yuborish" }).click();
+  await expect(page.getByText("Buyurtma tasdiqqa yuborildi")).toBeVisible();
+  await expect(page.getByText("Direktor tasdigʻi kerak").first()).toBeVisible();
+});
+
+test("Filial rahbari: Direktor darajasidagi buyurtmani tasdiqlay olmaydi", async ({ page }) => {
+  await login(page, "manager.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/orders");
+  const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
+  await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
+  await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await expect(page.getByText("Direktor tasdigʻi kerak").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tasdiqlash", exact: true })).toHaveCount(0);
+});
+
+test("Direktor: birinchi kirish, buyurtmani tasdiqlaydi", async ({ page }) => {
+  await firstLogin(page, "director.1");
+  await page.goto("/orders");
+  const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
+  await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
+  await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await expect(page.getByText("Direktor tasdigʻi kerak").first()).toBeVisible();
+  await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(page.getByText("Tasdiqlandi — navbatga oʻtdi").first()).toBeVisible();
+});
+
+test("Ombor zanjiri: Direktor tasdiqlagan buyurtma reysga chiqadi", async ({ page }) => {
+  await warehouseChain(page);
+});
+
+test("Haydovchi: «Yetkazilmadi» (sabab bilan), reysni yakunlaydi", async ({ page }) => {
+  await login(page, "driver.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/driver");
+  await field(page, "Joylar soni").fill("1");
+  await page.getByRole("button", { name: "Qabul qildim" }).click();
+  await page.getByRole("button", { name: "Yuklab boʻlindi — reysni boshlash" }).click();
+  await expect(page.getByText("Reys boshlandi").first()).toBeVisible();
+  await page.getByRole("button", { name: "Yetkazilmadi", exact: true }).click();
+  const modal = page.getByRole("dialog", { name: "Yetkazilmadi" });
+  await modal.getByLabel(/^Sabab\s*\*?$/).fill("Dorixona yopiq");
+  await modal.getByRole("button", { name: "Yetkazilmadi deb belgilash" }).click();
+  await expect(modal).toBeHidden();
+  await page.getByRole("button", { name: "Reysni yakunlash" }).click();
+  await expect(page.getByText("Qaytgan tovar va naqd pulni topshiring").first()).toBeVisible();
+});
+
+test("Ombor mudiri: yetkazilmagan tovarni Karantinga qabul qiladi", async ({ page }) => {
+  await login(page, "keeper.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/warehouse");
+  await page.getByRole("tab", { name: /^Qaytgan tovar/ }).click();
+  const item = page.getByRole("listitem").filter({ hasText: CUSTOMER }).filter({ hasText: "kutilmoqda 2 ta" });
+  await item.getByLabel(/^Keldi\s*\*?$/).fill("2");
+  await item.getByRole("button", { name: "Qabul qilish" }).click();
+  await expect(page.getByText("Qaytgan tovar Karantinga qabul qilindi").first()).toBeVisible();
+});
+
+test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
+  await login(page, "accountant.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/reports");
+  await page
+    .getByRole("link", { name: /^Savdo/ })
+    .first()
+    .click();
+  await expect(page.getByRole("heading", { name: "Savdo hisoboti" })).toBeVisible();
+  await expect(page.getByText("Davrda savdo yoʻq")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Excelʼga yuklab olish/ })).toBeVisible();
+  await page.goto("/debts/customers");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByText(/ruxsat/i)).toHaveCount(0);
 });
