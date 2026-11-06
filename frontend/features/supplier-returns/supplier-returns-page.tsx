@@ -21,7 +21,7 @@ import {
   type SupplierReturnStatus,
   type SupplierReturnSummary,
 } from "./api";
-import { SupplierReturnDrawer } from "./supplier-return-drawer";
+import { SupplierReturnDrawer, type ReturnPreset } from "./supplier-return-drawer";
 
 export function SupplierReturnStatusBadge({ status }: { status: SupplierReturnStatus }) {
   const map = {
@@ -44,9 +44,23 @@ export function SupplierReturnsPage() {
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi
-  const [open, setOpen] = useState<{ id: number | null } | null>(() => {
+  // Kirim hujjatidan oʻtish: ?receipt=<id>&supplier=<id>&supplierName=…&receiptNo=… — yangi qaytarish shu kirim bilan ochiladi
+  const [open, setOpen] = useState<{ id: number | null; preset?: ReturnPreset } | null>(() => {
     const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
+    if (Number.isInteger(id) && id > 0) return { id };
+    const receiptId = Number(params.get("receipt"));
+    const supplierId = Number(params.get("supplier"));
+    if (Number.isInteger(receiptId) && receiptId > 0 && Number.isInteger(supplierId) && supplierId > 0)
+      return {
+        id: null,
+        preset: {
+          receiptId,
+          receiptNo: params.get("receiptNo") ?? "",
+          supplierId,
+          supplierName: params.get("supplierName") ?? "",
+        },
+      };
+    return null;
   });
   const allowed = canAny(me.data, QY_VIEW_KEYS);
   const canCreate = can(me.data, QY_CREATE);
@@ -144,7 +158,9 @@ export function SupplierReturnsPage() {
           }
         />
       )}
-      {open ? <SupplierReturnDrawer id={open.id} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} /> : null}
+      {open ? (
+        <SupplierReturnDrawer id={open.id} preset={open.preset} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} />
+      ) : null}
     </>
   );
 }

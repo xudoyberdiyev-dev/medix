@@ -50,9 +50,22 @@ function BonusBadge() {
   );
 }
 
-export function SupplierReturnDrawer(props: { id: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+/** Kirim hujjatidan ochilganda: kirim va yetkazib beruvchi oldindan tanlangan. */
+export interface ReturnPreset {
+  receiptId: number;
+  receiptNo: string;
+  supplierId: number;
+  supplierName: string;
+}
+
+export function SupplierReturnDrawer(props: {
+  id: number | null;
+  preset?: ReturnPreset;
+  onClose: () => void;
+  onCreated: (id: number) => void;
+}) {
   const doc = useSupplierReturn(props.id);
-  if (props.id === null) return <CreateForm onClose={props.onClose} onCreated={props.onCreated} />;
+  if (props.id === null) return <CreateForm preset={props.preset} onClose={props.onClose} onCreated={props.onCreated} />;
   if (doc.error)
     return (
       <Drawer open onClose={props.onClose} size="lg" kind={KIND} title="QY">
@@ -232,14 +245,14 @@ function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void
   );
 }
 
-function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (id: number) => void }) {
+function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onClose: () => void; onCreated: (id: number) => void }) {
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const create = useCreateSupplierReturn();
   const seen = useRef(new Map<string, string>());
-  const [supplier, setSupplier] = useState<string | null>(null);
-  const [supplierLabel, setSupplierLabel] = useState("");
-  const [receiptId, setReceiptId] = useState<string | null>(null);
+  const [supplier, setSupplier] = useState<string | null>(preset ? String(preset.supplierId) : null);
+  const [supplierLabel, setSupplierLabel] = useState(preset?.supplierName ?? "");
+  const [receiptId, setReceiptId] = useState<string | null>(preset ? String(preset.receiptId) : null);
   const [zoneId, setZoneId] = useState<string | null>(null);
   const [reason, setReason] = useState<SupplierReturnReason | null>(null);
   const [note, setNote] = useState("");
@@ -250,6 +263,14 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
   const stock = useReturnStock(receiptId ? Number(receiptId) : null);
 
   const canApprove = can(me.data, QY_APPROVE);
+  const receiptOptions = (receipts.data?.items ?? []).map((r) => ({
+    value: String(r.id),
+    label: `${r.number} · ${day(r.receiptDate)}`,
+    sub: r.invoiceNumber ? `Yuk xati ${r.invoiceNumber}` : r.warehouse,
+  }));
+  // Oldindan tanlangan kirim roʻyxatning birinchi sahifasida boʻlmasa ham koʻrinsin
+  if (preset && String(preset.receiptId) === receiptId && !receiptOptions.some((o) => o.value === receiptId))
+    receiptOptions.unshift({ value: receiptId, label: preset.receiptNo, sub: "" });
   const all = stock.data ?? [];
   const zones = zonesOf(all);
   const zone = zones.find((z) => String(z.id) === zoneId) ?? (zones.length === 1 ? zones[0] : undefined);
@@ -281,14 +302,23 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
           },
         ]
       : []),
-    { key: "qty", title: "Qoldiq", align: "right", render: (r) => formatQuantity(r.qty) },
-    { key: "reserved", title: "Zahirada", align: "right", render: (r) => (r.reserved ? formatQuantity(r.reserved) : "—") },
+    {
+      key: "free",
+      title: "Boʻsh",
+      align: "right",
+      render: (r) => (
+        <span className="flex flex-col items-end">
+          {formatQuantity(r.free)}
+          {r.reserved ? <span className="text-caption text-text-secondary">zahirada {formatQuantity(r.reserved)}</span> : null}
+        </span>
+      ),
+    },
     {
       key: "ret",
       title: "Qaytarish",
       align: "right",
       render: (r) => (
-        <div className="ml-auto w-28">
+        <div className="ml-auto w-20">
           <TextField
             label={`${r.productName} ${r.batchNumber} — qaytarish soni`}
             className="[&>label]:sr-only"
@@ -369,11 +399,7 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
             label="Kirim"
             value={receiptId}
             onChange={(v) => (setReceiptId(v), setZoneId(null), setQty({}))}
-            options={(receipts.data?.items ?? []).map((r) => ({
-              value: String(r.id),
-              label: `${r.number} · ${day(r.receiptDate)}`,
-              sub: r.invoiceNumber ? `Yuk xati ${r.invoiceNumber}` : r.warehouse,
-            }))}
+            options={receiptOptions}
             placeholder={supplier ? "Oʻtkazilgan kirimni tanlang" : "Avval yetkazib beruvchini tanlang"}
             disabled={!supplier}
             required

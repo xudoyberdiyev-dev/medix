@@ -1,6 +1,7 @@
 "use client";
 
-import { BadgePercent, Check, ClipboardCheck, PackagePlus, Trash2, X } from "lucide-react";
+import { BadgePercent, Check, ClipboardCheck, PackagePlus, Trash2, Undo2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -108,6 +109,7 @@ const isInt = (s: string) => /^\d+$/.test(s.trim());
 
 function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClose: () => void; onCreated: (id: number) => void }) {
   const me = useMe();
+  const router = useRouter();
   const warehouses = useWarehouses();
   const employees = useEmployeeOptions();
   const save = useSaveReceipt();
@@ -283,6 +285,19 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
       {primaryIsAccept ? (
         <Button icon={ClipboardCheck} onClick={() => (editable ? saveDraft(() => setDialog("accept")) : setDialog("accept"))}>
           Qabul qilish
+        </Button>
+      ) : null}
+      {doc?.status === "POSTED" && can(me.data, "qy.create") ? (
+        <Button
+          variant="secondary"
+          icon={Undo2}
+          onClick={() =>
+            router.push(
+              `/supplier-returns?receipt=${doc.id}&supplier=${doc.supplierId}&supplierName=${encodeURIComponent(doc.supplier)}&receiptNo=${encodeURIComponent(doc.number)}`,
+            )
+          }
+        >
+          YB ga qaytarish
         </Button>
       ) : null}
       {doc?.status === "POSTED" && doc.discountKind && !doc.bonusNumber && can(me.data, BONUS_CONFIRM) ? (
