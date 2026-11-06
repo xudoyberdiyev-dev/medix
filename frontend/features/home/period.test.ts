@@ -35,6 +35,7 @@ describe("Diqqat talab qiladi", () => {
     bonusDue: 0,
     zoneTransfersPending: 0,
     transfersInTransit: 0,
+    branchSalesToReceive: 0,
     writeOffsPending: 0,
     supplierReturnsPending: 0,
     transferShortagesOpen: 0,

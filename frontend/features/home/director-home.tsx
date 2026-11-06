@@ -118,6 +118,13 @@ export function attentionRows(
       money: false,
     },
     {
+      key: "fs",
+      label: "Filiallararo savdo — qabul kutilmoqda",
+      value: String(a.branchSalesToReceive),
+      href: "/branch-sales?status=IN_TRANSIT",
+      money: false,
+    },
+    {
       key: "hc",
       label: "Hisobdan chiqarish tasdigʻi kutilmoqda",
       value: String(a.writeOffsPending),

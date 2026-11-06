@@ -4872,6 +4872,8 @@ export interface components {
             /** Format: int32 */
             bonusDue: number;
             branchOrders: components["schemas"]["CountAmount"];
+            /** Format: int32 */
+            branchSalesToReceive: number;
             cashApprovals: components["schemas"]["CountAmount"];
             directorOrders: components["schemas"]["CountAmount"];
             driverCash: string;

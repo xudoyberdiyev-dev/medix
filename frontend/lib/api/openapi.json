@@ -10727,6 +10727,10 @@
           "branchOrders" : {
             "$ref" : "#/components/schemas/CountAmount"
           },
+          "branchSalesToReceive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "cashApprovals" : {
             "$ref" : "#/components/schemas/CountAmount"
           },
@@ -10793,7 +10797,7 @@
             "format" : "int32"
           }
         },
-        "required" : [ "bonusDue", "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "inventoryCheck", "inventoryCounting", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierReturnsPending", "supplierToday", "transferShortagesOpen", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
+        "required" : [ "bonusDue", "branchOrders", "branchSalesToReceive", "cashApprovals", "directorOrders", "driverCash", "expiring", "inventoryCheck", "inventoryCounting", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierReturnsPending", "supplierToday", "transferShortagesOpen", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
       },
       "AuditPage" : {
         "type" : "object",
