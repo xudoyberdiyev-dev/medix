@@ -77,3 +77,43 @@ jobs:
           bash -n backup/restore-test.sh
       - name: Caddyfile tekshiruvi
         run: docker run --rm -e MEDIX_DOMAIN=medix.example.uz -e MEDIX_TLS=internal -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 caddy validate --config /etc/caddy/Caddyfile
+
+  smoke:
+    name: Production compose — ishga tushirish, zaxira va tiklash sinovi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Image'lar (mahalliy teg :ci)
+        run: |
+          docker build -q -t ghcr.io/xudoyberdiyev-dev/medix-postgres:ci deploy/postgres
+          docker build -q -t ghcr.io/xudoyberdiyev-dev/medix-backend:ci backend
+          docker build -q -t ghcr.io/xudoyberdiyev-dev/medix-frontend:ci frontend
+      - name: Ishga tushirish (ichki CA bilan HTTPS)
+        working-directory: deploy
+        run: |
+          cat > .env <<'ENV'
+          MEDIX_DOMAIN=localhost
+          MEDIX_TLS=internal
+          MEDIX_VERSION=ci
+          MEDIX_DB_PASSWORD=ci-smoke-parol-1234567890
+          MEDIX_BOOTSTRAP_LOGIN=ceo
+          MEDIX_BOOTSTRAP_PASSWORD=Smoke-parol-2026
+          ENV
+          docker compose up -d --pull never
+          for i in $(seq 1 60); do
+            code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/api/auth/me || true)
+            [ "$code" = "401" ] && break
+            sleep 5
+          done
+          echo "API: $code"; [ "$code" = "401" ]
+          curl -skf https://localhost/login -o /dev/null && echo "Login sahifasi: 200"
+          code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/actuator/health); echo "actuator tashqaridan: $code"; [ "$code" != "200" ]
+      - name: Zaxira nusxa (pgBackRest full) va tiklash sinovi
+        working-directory: deploy
+        run: |
+          MEDIX_BACKUP_TYPE=full ./backup/backup.sh
+          ./backup/restore-test.sh
+      - name: Loglar
+        if: failure()
+        working-directory: deploy
+        run: docker compose logs --tail 80
