@@ -82,6 +82,34 @@ public class StockLedger {
 
     private record ZoneInfo(long warehouseId, long branchId) {}
 
+    /** Inventarizatsiya hujjati turi — o'z qulfidan o'tadi. */
+    static final String INVENTORY_DOC = "IN";
+
+    /**
+     * Inventarizatsiya qulfi (T12 ivLock): sanoq yoki tekshiruvdagi IN qamrovidagi zonada ombor harakati bo'lmaydi — hisob qoldig'i
+     * sanoq davomida o'zgarmasin.
+     */
+    private void requireNotCounting(List<Long> zoneIds) {
+        // Ombor satri FOR SHARE: sanoqni ochish (FOR UPDATE) yarim yo'ldagi harakatlar tugashini kutadi, yangilari esa ochilgan
+        // sanoqni ko'radi — hisob qoldig'i surati (book_qty) aniq bo'ladi.
+        List<Long> warehouses = jdbc.sql("SELECT DISTINCT warehouse_id FROM zone WHERE id IN (:z) ORDER BY warehouse_id")
+                .param("z", zoneIds)
+                .query(Long.class)
+                .list();
+        for (long w : warehouses) {
+            jdbc.sql("SELECT id FROM warehouse WHERE id = :w FOR SHARE").param("w", w).query(Long.class).optional();
+        }
+        jdbc.sql("""
+                SELECT c.number FROM inventory_count c JOIN zone z ON z.warehouse_id = c.warehouse_id
+                WHERE z.id IN (:z) AND c.status IN ('COUNTING', 'CHECK') AND (c.zone_id IS NULL OR c.zone_id = z.id) LIMIT 1""")
+                .param("z", zoneIds)
+                .query(String.class)
+                .optional()
+                .ifPresent(number -> {
+                    throw MedixException.conflict("stock.inventoryLock", number);
+                });
+    }
+
     private record BatchInfo(long productId, String productName, String number) {}
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -99,6 +127,9 @@ public class StockLedger {
         ordered.sort(Comparator.<long[]>comparingLong(a -> a[0]).thenComparingLong(a -> a[1]));
         Map<Long, ZoneInfo> zones = new LinkedHashMap<>();
         Map<Long, BatchInfo> batches = new LinkedHashMap<>();
+        if (!INVENTORY_DOC.equals(doc.type())) {
+            requireNotCounting(ordered.stream().mapToLong(t -> t[0]).distinct().boxed().toList());
+        }
         for (long[] t : ordered) {
             long zoneId = t[0];
             long batchId = t[1];
