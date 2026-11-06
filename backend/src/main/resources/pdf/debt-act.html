@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Akt sverka</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<div class="head center">
+    <h1>Oʻzaro hisob-kitoblarni solishtirish dalolatnomasi (akt sverka)</h1>
+    <div class="muted" th:text="'Davr: ' + ${period}">01.11.2026 – 30.11.2026</div>
+</div>
+<table class="parties">
+    <tr>
+        <td>
+            <div class="caption muted">Kompaniya</div>
+            <div class="b" th:text="${orgName}">MChJ</div>
+            <div class="caption" th:text="'STIR: ' + ${orgTin} + ' · Filial: ' + ${branch}">STIR</div>
+        </td>
+        <td>
+            <div class="caption muted" th:text="${partyRole}">Mijoz</div>
+            <div class="b" th:text="${partyName}">Mijoz</div>
+            <div class="caption" th:text="'STIR: ' + ${partyTin}">STIR</div>
+        </td>
+    </tr>
+</table>
+<table>
+    <thead>
+    <tr>
+        <th>Sana</th>
+        <th>Hujjat</th>
+        <th>Izoh</th>
+        <th class="r" th:text="${debitTitle}">Qarz oshdi</th>
+        <th class="r">Toʻlandi / kamaydi</th>
+        <th class="r">Qoldiq</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="muted">
+        <td colspan="5" th:text="${openingLabel}">Davr boshi</td>
+        <td class="r" th:text="${opening}">0,00</td>
+    </tr>
+    <tr th:each="l : ${lines}">
+        <td th:text="${l.date}">01.11.2026</td>
+        <td class="mono" th:text="${l.doc}">SV</td>
+        <td th:text="${l.note}"></td>
+        <td class="r" th:text="${l.debit}"></td>
+        <td class="r" th:text="${l.credit}"></td>
+        <td class="r" th:text="${l.balance}">0,00</td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(lines)}"><td colspan="6" class="muted">Bu davrda harakat yoʻq.</td></tr>
+    </tbody>
+    <tfoot>
+    <tr class="b">
+        <td colspan="3">Davr aylanmasi</td>
+        <td class="r" th:text="${debitTotal}">0,00</td>
+        <td class="r" th:text="${creditTotal}">0,00</td>
+        <td></td>
+    </tr>
+    <tr class="b">
+        <td colspan="5" th:text="${closingLabel}">Davr oxiri</td>
+        <td class="r" th:text="${closing}">0,00</td>
+    </tr>
+    </tfoot>
+</table>
+<p class="b" th:text="${summary}">Davr oxirida oʻzaro qarz yoʻq.</p>
+<p class="caption muted">Summalar soʻmda. Musbat qoldiq — qarz, manfiy — avans.</p>
+<table class="signs">
+    <tr>
+        <td><span th:text="${orgName}">MChJ</span><br/>Rahbar ______________<br/>Bosh buxgalter ______________<br/>M.Oʻ.</td>
+        <td><span th:text="${partyName}">Mijoz</span><br/>Rahbar ______________<br/>Bosh buxgalter ______________<br/>M.Oʻ.</td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style th:fragment="css">
+        @page { size: A4; margin: 14mm 12mm 16mm 12mm;
+            @bottom-right { content: "Sahifa " counter(page) " / " counter(pages); font-family: "DejaVu Sans"; font-size: 8pt; color: #5b6472; } }
+        body { font-family: "DejaVu Sans"; font-size: 9pt; color: #1f2933; }
+        h1 { font-size: 14pt; font-weight: 700; margin: 2px 0 4px 0; }
+        .head { border-bottom: 1px solid #1f2933; padding-bottom: 6px; margin-bottom: 8px; }
+        .caption { font-size: 8pt; }
+        .muted { color: #5b6472; }
+        .mono { font-family: "DejaVu Sans"; letter-spacing: 0.2px; }
+        table { width: 100%; border-collapse: collapse; -fs-table-paginate: paginate; }
+        th { text-align: left; font-size: 8pt; font-weight: 400; color: #5b6472; border-bottom: 1px solid #1f2933; padding: 3px 4px; }
+        td { border-bottom: 1px solid #d9dee5; padding: 4px; vertical-align: top; }
+        tr { page-break-inside: avoid; }
+        .r { text-align: right; white-space: nowrap; }
+        .num { width: 18px; }
+        table.signs { margin-top: 28px; }
+        table.signs td { border: none; padding: 4px 0; }
+        .center { text-align: center; }
+        h2 { font-size: 11pt; font-weight: 700; margin: 10px 0 4px 0; }
+        .big { font-size: 11pt; font-weight: 700; }
+        .mark { border: 1px solid #b42318; color: #b42318; font-weight: 700; text-align: center; padding: 5px; }
+        table.fields { margin-top: 8px; }
+        table.fields td { border: none; padding: 4px 8px 4px 0; }
+        table.fields td.muted { width: 150px; }
+        table.fields td.line { border-bottom: 1px solid #d9dee5; }
+        .box { width: 9px; height: 9px; border: 1px solid #1f2933; }
+        .b { font-weight: 700; }
+        tfoot td { border-bottom: none; }
+        table.parties { margin-bottom: 8px; }
+        table.parties td { border: none; width: 50%; padding: 0 8px 0 0; }
+    </style>
+</head>
+<body></body>
+</html>

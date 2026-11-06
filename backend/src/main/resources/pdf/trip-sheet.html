@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${number}">RS</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<table class="parties head">
+    <tr>
+        <td>
+            <div class="caption muted">MEDIX</div>
+            <h1>Yoʻl varaqasi <span class="mono" th:text="${number}">RS-TSH-000001</span></h1>
+            <div class="muted" th:text="${subtitle}">06.11.2026 · Damas · Haydovchi</div>
+        </td>
+        <td class="r caption muted">
+            <div th:text="'Chop etildi: ' + ${printedAt}">06.11.2026 08:00</div>
+            <div th:text="'Kim: ' + ${printedBy}">F.I.Sh.</div>
+            <div th:text="${counts}">3 buyurtma · 5 joy</div>
+        </td>
+    </tr>
+</table>
+<table>
+    <thead>
+    <tr>
+        <th class="num">№</th>
+        <th>Buyurtma / NK</th>
+        <th>Mijoz, manzil</th>
+        <th class="r">Joy</th>
+        <th>Toʻlov</th>
+        <th class="r">Summa, soʻm</th>
+        <th style="width: 70px;">Qabul qildi</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="s : ${stops}">
+        <td class="num" th:text="${s.seq}">1</td>
+        <td class="mono"><div th:text="${s.orderNumber}">BY</div><div class="caption muted" th:text="${s.waybill}">NK</div></td>
+        <td><div th:text="${s.customer}">Mijoz</div><div class="caption muted" th:text="${s.contacts}">Manzil</div></td>
+        <td class="r" th:text="${s.places}">1</td>
+        <td th:text="${s.payment}">Naqd</td>
+        <td class="r" th:text="${s.total}">0,00</td>
+        <td></td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr class="b">
+        <td colspan="3">Jami</td>
+        <td class="r" th:text="${places}">0</td>
+        <td></td>
+        <td class="r" th:text="${total}">0,00</td>
+        <td></td>
+    </tr>
+    <tr class="muted">
+        <td colspan="5">Shundan naqd (haydovchi olib keladi)</td>
+        <td class="r" th:text="${cash}">0,00</td>
+        <td></td>
+    </tr>
+    </tfoot>
+</table>
+<p th:if="${note != null}" th:text="'Izoh: ' + ${note}">Izoh</p>
+<table class="signs">
+    <tr>
+        <td>Tovarni berdi (Ombor mudiri)<br/>____________________</td>
+        <td>Tovarni qabul qildi (Haydovchi)<br/>____________________</td>
+        <td>Pulni qabul qildi (Kassir)<br/>____________________</td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Terish varagʻi</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<table class="parties head">
+    <tr>
+        <td>
+            <div class="caption muted">MEDIX</div>
+            <h1>Terish varagʻi</h1>
+            <div class="muted" th:text="'Ombor: ' + ${warehouses}">Ombor</div>
+        </td>
+        <td class="r caption muted">
+            <div th:text="'Chop etildi: ' + ${printedAt}">06.11.2026 08:00</div>
+            <div th:text="'Kim: ' + ${printedBy}">F.I.Sh.</div>
+            <div th:text="${counts}">2 buyurtma · 5 qator · 40 dona</div>
+        </td>
+    </tr>
+</table>
+<h2>Buyurtmalar</h2>
+<table>
+    <thead>
+    <tr><th>Raqam</th><th>Mijoz</th><th class="r">Qator</th><th class="r">Dona</th><th>Izoh</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="o : ${orders}">
+        <td class="mono" th:text="${o.number}">BY</td>
+        <td th:text="${o.customer}">Mijoz</td>
+        <td class="r" th:text="${o.lines}">1</td>
+        <td class="r" th:text="${o.qty}">1</td>
+        <td th:text="${o.note}"></td>
+    </tr>
+    </tbody>
+</table>
+<h2>Terish (zona boʻyicha)</h2>
+<table>
+    <thead>
+    <tr><th class="num">✓</th><th>Zona</th><th>Mahsulot</th><th>Partiya</th><th>Muddati</th><th class="r">Dona</th><th>Buyurtmalarga</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="r : ${rows}">
+        <td class="num"><div class="box"></div></td>
+        <td class="mono" th:text="${r.zone}">A-1</td>
+        <td><span class="mono muted" th:text="${r.code}">0001</span> <span th:text="${r.name}">Mahsulot</span></td>
+        <td class="mono" th:text="${r.batch}">B1</td>
+        <td th:text="${r.expiry}">01.01.2027</td>
+        <td class="r big" th:text="${r.qty}">1</td>
+        <td class="caption" th:text="${r.orders}">000001 — 1</td>
+    </tr>
+    </tbody>
+</table>
+<p class="caption muted" th:if="${unallocated}">«—» — zahira hali taqsimlanmagan: partiyani Ombor mudiridan soʻrang.</p>
+<table class="signs">
+    <tr>
+        <td>Yigʻuvchi<br/>____________________</td>
+        <td>Tekshirdi<br/>____________________</td>
+    </tr>
+</table>
+</body>
+</html>

@@ -44,6 +44,10 @@ public record Money(BigDecimal amount) implements Comparable<Money> {
         return amount.signum() < 0;
     }
 
+    public boolean isPositive() {
+        return amount.signum() > 0;
+    }
+
     public boolean isZero() {
         return amount.signum() == 0;
     }

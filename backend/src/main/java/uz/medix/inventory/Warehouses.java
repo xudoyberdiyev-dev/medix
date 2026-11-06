@@ -1,0 +1,264 @@
+package uz.medix.inventory;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import uz.medix.shared.audit.AuditEntry;
+import uz.medix.shared.audit.AuditLog;
+import uz.medix.shared.error.MedixException;
+
+/** Omborlar va zonalar — inventory modulining ochiq API'si. */
+@Service
+public class Warehouses {
+
+    public record Zone(long id, ZoneType type, String name, boolean sellable) {}
+
+    public record Warehouse(long id, long branchId, String name, @Schema(nullable = true) String address, boolean active,
+            List<Zone> zones) {}
+
+    private final JdbcClient jdbc;
+    private final AuditLog audit;
+
+    Warehouses(JdbcClient jdbc, AuditLog audit) {
+        this.jdbc = jdbc;
+        this.audit = audit;
+    }
+
+    /**
+     * Ombor yaratadi; majburiy zonalar (Qabul, Asosiy saqlash, Karantin, Jo'natish) doim qo'shiladi,
+     * {@code extraZones} — ixtiyoriy Sovuq va Seyf.
+     */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public Warehouse create(long branchId, String name, String address, Set<ZoneType> extraZones) {
+        boolean duplicate = jdbc.sql("SELECT EXISTS (SELECT 1 FROM warehouse WHERE branch_id = :b AND lower(name) = lower(:n))")
+                .param("b", branchId)
+                .param("n", name.strip())
+                .query(Boolean.class)
+                .single();
+        if (duplicate) {
+            throw MedixException.conflict("warehouse.duplicateName", name.strip());
+        }
+        long id = jdbc.sql("INSERT INTO warehouse (branch_id, name, address) VALUES (:b, :n, :a) RETURNING id")
+                .param("b", branchId)
+                .param("n", name.strip())
+                .param("a", blankToNull(address))
+                .query(Long.class)
+                .single();
+        Set<ZoneType> types = EnumSet.copyOf(ZoneType.REQUIRED);
+        types.addAll(extraZones);
+        for (ZoneType t : types) {
+            jdbc.sql("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, :t, :n)")
+                    .param("w", id)
+                    .param("t", t.name())
+                    .param("n", t.defaultName())
+                    .update();
+        }
+        Warehouse created = find(id);
+        audit.record(AuditEntry.of("warehouse.create", "warehouse", id)
+                .change(null, Map.of("branchId", branchId, "name", created.name(), "zones",
+                        created.zones().stream().map(z -> z.type().name()).toList())));
+        return created;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Warehouse> listByBranches(List<Long> branchIds) {
+        if (branchIds.isEmpty()) {
+            return List.of();
+        }
+        List<Long> ids = jdbc.sql("SELECT id FROM warehouse WHERE branch_id IN (:b) ORDER BY branch_id, name")
+                .param("b", branchIds)
+                .query(Long.class)
+                .list();
+        List<Warehouse> result = new ArrayList<>();
+        for (Long id : ids) {
+            result.add(find(id));
+        }
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public long countByBranch(long branchId) {
+        return jdbc.sql("SELECT count(*) FROM warehouse WHERE branch_id = :b AND active")
+                .param("b", branchId)
+                .query(Long.class)
+                .single();
+    }
+
+    /** Barcha omborlar (filial doirasini chaqiruvchi qo'llaydi). */
+    @Transactional(readOnly = true)
+    public List<Warehouse> listAll() {
+        List<Long> branchIds = jdbc.sql("SELECT id FROM branch ORDER BY id").query(Long.class).list();
+        return listByBranches(branchIds);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Optional<Warehouse> findById(long id) {
+        boolean exists = jdbc.sql("SELECT EXISTS (SELECT 1 FROM warehouse WHERE id = :id)")
+                .param("id", id)
+                .query(Boolean.class)
+                .single();
+        return exists ? java.util.Optional.of(find(id)) : java.util.Optional.empty();
+    }
+
+    /** Faol filial bormi — ombor faqat faol filialga qo'shiladi. */
+    @Transactional(readOnly = true)
+    public boolean branchActive(long branchId) {
+        return jdbc.sql("SELECT EXISTS (SELECT 1 FROM branch WHERE id = :b AND active)")
+                .param("b", branchId)
+                .query(Boolean.class)
+                .single();
+    }
+
+    @Transactional
+    public Warehouse update(long id, String name, String address) {
+        Warehouse before = lock(id);
+        boolean duplicate = jdbc.sql("""
+                SELECT EXISTS (SELECT 1 FROM warehouse WHERE branch_id = :b AND lower(name) = lower(:n) AND id <> :id)""")
+                .param("b", before.branchId())
+                .param("n", name.strip())
+                .param("id", id)
+                .query(Boolean.class)
+                .single();
+        if (duplicate) {
+            throw MedixException.conflict("warehouse.duplicateName", name.strip());
+        }
+        jdbc.sql("UPDATE warehouse SET name = :n, address = :a, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("n", name.strip())
+                .param("a", blankToNull(address))
+                .param("id", id)
+                .update();
+        Warehouse after = find(id);
+        audit.record(AuditEntry.of("warehouse.update", "warehouse", id)
+                .change(snapshot(before), snapshot(after)));
+        return after;
+    }
+
+    /** Ixtiyoriy zona (Sovuq yoki Seyf) qo'shadi. Majburiy zonalar ombor yaratilganda bor. */
+    @Transactional
+    public Warehouse addZone(long id, ZoneType type) {
+        lock(id);
+        if (ZoneType.REQUIRED.contains(type)) {
+            throw MedixException.badRequest("warehouse.extraZones");
+        }
+        boolean exists = jdbc.sql("SELECT EXISTS (SELECT 1 FROM zone WHERE warehouse_id = :w AND type = :t)")
+                .param("w", id)
+                .param("t", type.name())
+                .query(Boolean.class)
+                .single();
+        if (exists) {
+            throw MedixException.conflict("warehouse.zoneExists", type.defaultName());
+        }
+        long zoneId = jdbc.sql("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, :t, :n) RETURNING id")
+                .param("w", id)
+                .param("t", type.name())
+                .param("n", type.defaultName())
+                .query(Long.class)
+                .single();
+        audit.record(AuditEntry.of("zone.create", "zone", zoneId)
+                .change(null, Map.of("warehouseId", id, "type", type.name())));
+        return find(id);
+    }
+
+    /** Zona nomini o'zgartiradi (turi va sotuvga ochiqligi o'zgarmaydi). */
+    @Transactional
+    public Warehouse renameZone(long warehouseId, long zoneId, String name) {
+        Warehouse w = lock(warehouseId);
+        Zone zone = w.zones().stream().filter(z -> z.id() == zoneId).findFirst()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        boolean duplicate = w.zones().stream().anyMatch(z -> z.id() != zoneId && z.name().equalsIgnoreCase(name.strip()));
+        if (duplicate) {
+            throw MedixException.conflict("warehouse.zoneDuplicateName", name.strip());
+        }
+        jdbc.sql("UPDATE zone SET name = :n, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("n", name.strip())
+                .param("id", zoneId)
+                .update();
+        audit.record(AuditEntry.of("zone.update", "zone", zoneId)
+                .change(Map.of("name", zone.name()), Map.of("name", name.strip())));
+        return find(warehouseId);
+    }
+
+    /**
+     * Omborni faollashtirish / nofaol qilish (SPEC 13-qoida: o'chirilmaydi).
+     * Qoldig'i bor yoki o'tkazilmagan BQ qoralamasi bor omborni nofaol qilib bo'lmaydi.
+     */
+    @Transactional
+    public Warehouse setActive(long id, boolean active, String reason) {
+        Warehouse before = lock(id);
+        if (before.active() == active) {
+            return before;
+        }
+        if (active && !branchActive(before.branchId())) {
+            throw MedixException.conflict("warehouse.branchInactive");
+        }
+        if (!active) {
+            long stock = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_balance WHERE warehouse_id = :w")
+                    .param("w", id)
+                    .query(Long.class)
+                    .single();
+            if (stock > 0) {
+                throw MedixException.conflict("warehouse.hasStock", String.valueOf(stock));
+            }
+            List<String> drafts = jdbc.sql("SELECT number FROM opening_balance WHERE warehouse_id = :w AND status = 'DRAFT' ORDER BY id LIMIT 3")
+                    .param("w", id)
+                    .query(String.class)
+                    .list();
+            if (!drafts.isEmpty()) {
+                throw MedixException.conflict("warehouse.hasDrafts", String.join(", ", drafts));
+            }
+        }
+        jdbc.sql("UPDATE warehouse SET active = :a, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("a", active)
+                .param("id", id)
+                .update();
+        var entry = AuditEntry.of(active ? "warehouse.activate" : "warehouse.deactivate", "warehouse", id)
+                .change(Map.of("active", before.active()), Map.of("active", active));
+        audit.record(reason == null || reason.isBlank() ? entry : entry.withReason(reason.strip()));
+        return find(id);
+    }
+
+    private Warehouse lock(long id) {
+        jdbc.sql("SELECT id FROM warehouse WHERE id = :id FOR UPDATE")
+                .param("id", id)
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        return find(id);
+    }
+
+    private static Map<String, Object> snapshot(Warehouse w) {
+        Map<String, Object> m = new java.util.HashMap<>();
+        m.put("name", w.name());
+        m.put("address", w.address());
+        return m;
+    }
+
+    private record Row(long id, long branchId, String name, String address, boolean active) {}
+
+    private Warehouse find(long id) {
+        Row w = jdbc.sql("SELECT id, branch_id, name, address, active FROM warehouse WHERE id = :id")
+                .param("id", id)
+                .query(Row.class)
+                .single();
+        Map<Long, Zone> zones = new LinkedHashMap<>();
+        jdbc.sql("SELECT id, type, name, sellable FROM zone WHERE warehouse_id = :id ORDER BY id")
+                .param("id", id)
+                .query((rs, n) -> new Zone(rs.getLong("id"), ZoneType.valueOf(rs.getString("type")), rs.getString("name"),
+                        rs.getBoolean("sellable")))
+                .list()
+                .forEach(z -> zones.put(z.id(), z));
+        return new Warehouse(w.id(), w.branchId(), w.name(), w.address(), w.active(), List.copyOf(zones.values()));
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.strip();
+    }
+}

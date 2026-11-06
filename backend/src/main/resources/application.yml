@@ -18,10 +18,38 @@ spring:
     locations: classpath:db/migration
   jackson:
     time-zone: Asia/Tashkent
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  session:
+    jdbc:
+      initialize-schema: never
+      cleanup-cron: "0 */10 * * * *"
 
 server:
   port: ${PORT:8080}
   shutdown: graceful
+  servlet:
+    session:
+      timeout: 10h
+
+medix:
+  session:
+    cookie-secure: ${MEDIX_COOKIE_SECURE:true}
+  bootstrap:
+    login: ${MEDIX_BOOTSTRAP_LOGIN:}
+    password: ${MEDIX_BOOTSTRAP_PASSWORD:}
+  orders:
+    # Umumiy kechikish: buyurtma bir holatda shuncha kundan ortiq tursa — «N kundan oshgan» (SPEC 5.2)
+    late-days: 2
+  trips:
+    # «Qaytish kutilmoqda»da shuncha soatdan ortiq tursa — Ombor mudiri / kassirga eslatma (T12-audit №23)
+    return-wait-hours: 4
 
 management:
   endpoints:
@@ -34,6 +62,9 @@ management:
         enabled: true
 
 springdoc:
+  default-produces-media-type: application/json
+  writer-with-default-pretty-printer: true
+  writer-with-order-by-keys: true
   api-docs:
     path: /api/openapi
   swagger-ui:

@@ -1,0 +1,229 @@
+package uz.medix.inventory;
+
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import uz.medix.shared.error.MedixException;
+
+/**
+ * Zahira (FEFO, SPEC 6-7) — inventory modulining ochiq API'si. Har qator uchun muddati eng yaqin partiyalardan, sotuvga ochiq
+ * zonalardan, faol zahiralarni hisobga olgan holda ajratiladi. Qoldiq satrlari (zona, partiya) tartibida {@code FOR UPDATE} bilan
+ * qulflanadi — parallel buyurtmalar bir dona tovarni ikki marta zahiralamaydi. Chaqiruvchi tranzaksiyasiga qo'shiladi.
+ */
+@Service
+public class StockReservations {
+
+    /** Zahira so'rovi: hujjat qatori, mahsulot va miqdor. */
+    public record Request(long lineId, long productId, int qty, String productName) {}
+
+    /** Ajratilgan zahira: qator, partiya, zona, miqdor. */
+    public record Allocation(long lineId, long batchId, String batchNumber, LocalDate expiry, long zoneId, String zone, int qty) {}
+
+    private final JdbcClient jdbc;
+
+    StockReservations(JdbcClient jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    private record Candidate(long zoneId, String zone, long batchId, String batchNumber, Date expiryDate, int qty, int reserved) {}
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<Allocation> reserve(String docType, long docId, String docNumber, long warehouseId, LocalDate minExpiry,
+            List<Request> requests) {
+        List<Allocation> out = new ArrayList<>();
+        List<Request> sorted = new ArrayList<>(requests);
+        sorted.sort(Comparator.comparingLong(Request::productId));
+        for (Request r : sorted) {
+            // Qulf: shu mahsulotning ombordagi barcha qoldiq satrlari, barqaror tartibda (deadlock bo'lmasin).
+            jdbc.sql("SELECT 1 FROM stock_balance WHERE warehouse_id = :w AND product_id = :p ORDER BY zone_id, batch_id FOR UPDATE")
+                    .param("w", warehouseId)
+                    .param("p", r.productId())
+                    .query((rs, n) -> 1)
+                    .list();
+            List<Candidate> candidates = jdbc.sql("""
+                    SELECT s.zone_id, z.name AS zone, s.batch_id, b.number AS batch_number, b.expiry_date, s.qty,
+                           coalesce((SELECT sum(x.qty) FROM stock_reservation x
+                                     WHERE x.zone_id = s.zone_id AND x.batch_id = s.batch_id AND x.status = 'ACTIVE'), 0) AS reserved
+                    FROM stock_balance s JOIN batch b ON b.id = s.batch_id JOIN zone z ON z.id = s.zone_id
+                    WHERE s.warehouse_id = :w AND s.product_id = :p AND s.qty > 0 AND z.sellable AND z.active AND b.expiry_date >= :min
+                    ORDER BY b.expiry_date, b.id, s.zone_id""")
+                    .param("w", warehouseId)
+                    .param("p", r.productId())
+                    .param("min", Date.valueOf(minExpiry))
+                    .query(Candidate.class)
+                    .list();
+            int left = r.qty();
+            int free = 0;
+            for (Candidate c : candidates) {
+                free += Math.max(0, c.qty() - c.reserved());
+            }
+            if (free < left) {
+                throw MedixException.conflict("stock.reserveInsufficient", r.productName(), String.valueOf(free), String.valueOf(left));
+            }
+            for (Candidate c : candidates) {
+                if (left == 0) {
+                    break;
+                }
+                int take = Math.min(left, c.qty() - c.reserved());
+                if (take <= 0) {
+                    continue;
+                }
+                jdbc.sql("""
+                        INSERT INTO stock_reservation (doc_type, doc_id, doc_line_id, doc_number, zone_id, batch_id, product_id, warehouse_id, qty)
+                        VALUES (:t, :d, :l, :n, :z, :b, :p, :w, :q)""")
+                        .param("t", docType)
+                        .param("d", docId)
+                        .param("l", r.lineId())
+                        .param("n", docNumber)
+                        .param("z", c.zoneId())
+                        .param("b", c.batchId())
+                        .param("p", r.productId())
+                        .param("w", warehouseId)
+                        .param("q", take)
+                        .update();
+                out.add(new Allocation(r.lineId(), c.batchId(), c.batchNumber(), c.expiryDate().toLocalDate(), c.zoneId(), c.zone(), take));
+                left -= take;
+            }
+        }
+        return out;
+    }
+
+    /** FEFO rejasi ulushi: partiya va miqdor. */
+    public record Planned(long batchId, int qty) {}
+
+    /**
+     * Zahira rejasi (qulfsiz, hech narsa yozilmaydi): {@link #reserve} bilan bir xil FEFO tartibida qaysi partiyalardan olinishi.
+     * Narxni partiyalar bo'yicha hisoblash uchun (SPEC 6). Qoldiq yetmasa — bor qismi qaytadi.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<Long, List<Planned>> plan(long warehouseId, LocalDate minExpiry, java.util.Map<Long, Integer> qtyByProduct) {
+        java.util.Map<Long, List<Planned>> out = new java.util.HashMap<>();
+        if (qtyByProduct.isEmpty()) {
+            return out;
+        }
+        record Row(long productId, long batchId, int free) {}
+        List<Row> rows = jdbc.sql("""
+                SELECT s.product_id, s.batch_id,
+                       sum(s.qty) - coalesce((SELECT sum(x.qty) FROM stock_reservation x
+                                              WHERE x.warehouse_id = :w AND x.batch_id = s.batch_id AND x.status = 'ACTIVE'
+                                                AND x.zone_id IN (SELECT z2.id FROM zone z2 WHERE z2.warehouse_id = :w AND z2.sellable AND z2.active)), 0) AS free
+                FROM stock_balance s JOIN batch b ON b.id = s.batch_id JOIN zone z ON z.id = s.zone_id
+                WHERE s.warehouse_id = :w AND s.product_id IN (:p) AND s.qty > 0 AND z.sellable AND z.active AND b.expiry_date >= :min
+                GROUP BY s.product_id, s.batch_id, b.expiry_date
+                ORDER BY s.product_id, b.expiry_date, s.batch_id""")
+                .param("w", warehouseId)
+                .param("p", qtyByProduct.keySet())
+                .param("min", Date.valueOf(minExpiry))
+                .query(Row.class)
+                .list();
+        java.util.Map<Long, Integer> left = new java.util.HashMap<>(qtyByProduct);
+        for (Row r : rows) {
+            int need = left.getOrDefault(r.productId(), 0);
+            int take = Math.min(need, r.free());
+            if (take <= 0) {
+                continue;
+            }
+            out.computeIfAbsent(r.productId(), k -> new ArrayList<>()).add(new Planned(r.batchId(), take));
+            left.put(r.productId(), need - take);
+        }
+        return out;
+    }
+
+    /** Hujjatning faol zahirasini bo'shatish (bekor qilish). Qaytaradi — bo'shagan satrlar soni. */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public int release(String docType, long docId) {
+        return jdbc.sql("UPDATE stock_reservation SET status = 'RELEASED', closed_at = now() WHERE doc_type = :t AND doc_id = :d AND status = 'ACTIVE'")
+                .param("t", docType)
+                .param("d", docId)
+                .update();
+    }
+
+    /** Hujjatning faol zahirasi (qator bo'yicha ko'rsatish uchun). */
+    @Transactional(readOnly = true)
+    public List<Allocation> active(String docType, long docId) {
+        return jdbc.sql("""
+                SELECT x.doc_line_id, x.batch_id, b.number, b.expiry_date, x.zone_id, z.name AS zone, x.qty
+                FROM stock_reservation x JOIN batch b ON b.id = x.batch_id JOIN zone z ON z.id = x.zone_id
+                WHERE x.doc_type = :t AND x.doc_id = :d AND x.status = 'ACTIVE' ORDER BY x.doc_line_id, b.expiry_date, x.id""")
+                .param("t", docType)
+                .param("d", docId)
+                .query((rs, n) -> new Allocation(rs.getLong("doc_line_id"), rs.getLong("batch_id"), rs.getString("number"),
+                        rs.getDate("expiry_date").toLocalDate(), rs.getLong("zone_id"), rs.getString("zone"), rs.getInt("qty")))
+                .list();
+    }
+
+    /** Qator zahirasini iste'mol qilish (tovar yig'ildi — zahira o'z vazifasini bajardi). */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public int consumeLine(String docType, long docId, long lineId) {
+        return jdbc.sql("""
+                UPDATE stock_reservation SET status = 'CONSUMED', closed_at = now()
+                WHERE doc_type = :t AND doc_id = :d AND doc_line_id = :l AND status = 'ACTIVE'""")
+                .param("t", docType)
+                .param("d", docId)
+                .param("l", lineId)
+                .update();
+    }
+
+    /** Boshqa partiya tanlanganda: shu partiyaning sotuvga ochiq zonalardagi bo'sh (zahirasiz) qoldig'i, qulf bilan. */
+    public record Free(long zoneId, int qty) {}
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<Free> freeOf(long warehouseId, long batchId) {
+        jdbc.sql("SELECT 1 FROM stock_balance WHERE warehouse_id = :w AND batch_id = :b ORDER BY zone_id FOR UPDATE")
+                .param("w", warehouseId)
+                .param("b", batchId)
+                .query((rs, n) -> 1)
+                .list();
+        return jdbc.sql("""
+                SELECT s.zone_id, s.qty - coalesce((SELECT sum(x.qty) FROM stock_reservation x
+                                                    WHERE x.zone_id = s.zone_id AND x.batch_id = s.batch_id AND x.status = 'ACTIVE'), 0) AS qty
+                FROM stock_balance s JOIN zone z ON z.id = s.zone_id JOIN batch b ON b.id = s.batch_id
+                WHERE s.warehouse_id = :w AND s.batch_id = :b AND z.sellable AND z.active AND s.qty > 0 AND b.expiry_date >= current_date
+                ORDER BY s.zone_id""")
+                .param("w", warehouseId)
+                .param("b", batchId)
+                .query((rs, n) -> new Free(rs.getLong("zone_id"), rs.getInt("qty")))
+                .list();
+    }
+
+    /**
+     * Yig'uvchi «Boshqa partiyadan oldim» uchun: mahsulotning ombordagi muddati o'tmagan partiyalari va sotuvga ochiq zonalardagi bo'sh
+     * qoldig'i. {@code ownDocType/ownDocId/ownLineId} qatorining o'z zahirasi bo'sh qoldiqqa qaytarib qo'shiladi (u yig'ishda bo'shaydi).
+     */
+    public record BatchFree(long batchId, String number, LocalDate expiry, boolean bonus, int free, int reservedForLine) {}
+
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRED)
+    public List<BatchFree> freeByProduct(long warehouseId, long productId, String ownDocType, long ownDocId, long ownLineId) {
+        return jdbc.sql("""
+                WITH own AS (SELECT batch_id, zone_id, sum(qty) AS qty FROM stock_reservation
+                             WHERE doc_type = :t AND doc_id = :d AND doc_line_id = :l AND status = 'ACTIVE' GROUP BY batch_id, zone_id),
+                     z AS (SELECT s.batch_id, s.zone_id,
+                                  s.qty - coalesce((SELECT sum(x.qty) FROM stock_reservation x
+                                                    WHERE x.zone_id = s.zone_id AND x.batch_id = s.batch_id AND x.status = 'ACTIVE'), 0)
+                                        + coalesce(own.qty, 0) AS free,
+                                  coalesce(own.qty, 0) AS mine
+                           FROM stock_balance s JOIN zone zn ON zn.id = s.zone_id
+                           LEFT JOIN own ON own.batch_id = s.batch_id AND own.zone_id = s.zone_id
+                           WHERE s.warehouse_id = :w AND zn.sellable AND zn.active AND s.qty > 0)
+                SELECT b.id, b.number, b.expiry_date, b.bonus, sum(z.free)::int AS free, sum(z.mine)::int AS mine
+                FROM z JOIN batch b ON b.id = z.batch_id
+                WHERE b.product_id = :p AND b.expiry_date >= current_date
+                GROUP BY b.id, b.number, b.expiry_date, b.bonus
+                HAVING sum(z.free) > 0
+                ORDER BY b.expiry_date, b.id""")
+                .param("t", ownDocType)
+                .param("d", ownDocId)
+                .param("l", ownLineId)
+                .param("w", warehouseId)
+                .param("p", productId)
+                .query((rs, n) -> new BatchFree(rs.getLong("id"), rs.getString("number"), rs.getObject("expiry_date", LocalDate.class),
+                        rs.getBoolean("bonus"), rs.getInt("free"), rs.getInt("mine")))
+                .list();
+    }
+}

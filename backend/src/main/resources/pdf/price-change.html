@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${doc.number}">NO</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<div class="head">
+    <div class="caption" th:text="${legalName}">MChJ</div>
+    <h1>Narx oʻzgarishi <span class="mono" th:text="${doc.number}">NO-TSH-000001</span></h1>
+    <div class="muted">Kuchga kiradi: <span th:text="${effectiveFrom}">06.11.2026</span> · Filial: <span th:text="${branchName}">Toshkent</span></div>
+    <div class="muted" th:if="${doc.receiptNumber != null}">Kirim boʻyicha: <span class="mono" th:text="${doc.receiptNumber}">KR</span> — faqat shu kirim partiyalariga</div>
+    <div class="muted">Holat: <span th:text="${status}">Tasdiqlangan</span> · Tuzdi: <span th:text="${doc.createdBy}">F.I.Sh.</span><span th:if="${doc.decidedBy != null}" th:text="' · Qaror: ' + ${doc.decidedBy}"></span></div>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th class="num">№</th>
+        <th>Mahsulot</th>
+        <th th:if="${doc.receiptNumber != null}">Partiya</th>
+        <th>Narx turi</th>
+        <th class="r">Eski narx</th>
+        <th class="r">Yangi narx</th>
+        <th class="r">Oʻzgarish</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l, it : ${lines}">
+        <td class="num" th:text="${it.count}">1</td>
+        <td><span class="mono muted" th:text="${l.code}">0001</span> <span th:text="${l.name}">Mahsulot</span></td>
+        <td th:if="${doc.receiptNumber != null}" class="mono" th:text="${l.batch}">B1</td>
+        <td th:text="${l.priceType}">Narx</td>
+        <td class="r" th:text="${l.oldPrice}">—</td>
+        <td class="r" th:text="${l.newPrice}">0,00</td>
+        <td class="r" th:text="${l.change}">yangi</td>
+    </tr>
+    </tbody>
+</table>
+<p class="caption muted">Narxlar QQS bilan, soʻmda.<span th:if="${doc.bigChanges > 0}" th:text="' Katta oʻzgarishlar (20% dan koʻp): ' + ${doc.bigChanges} + ' ta.'"></span></p>
+<p th:if="${doc.note != null}" th:text="'Izoh: ' + ${doc.note}">Izoh</p>
+<table class="signs">
+    <tr>
+        <td>Tuzdi: ____________________</td>
+        <td>Tasdiqladi: ____________________</td>
+    </tr>
+</table>
+</body>
+</html>

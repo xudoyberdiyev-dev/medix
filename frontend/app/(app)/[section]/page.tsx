@@ -2,9 +2,11 @@ import { Construction } from "lucide-react";
 import { notFound } from "next/navigation";
 import { navigation } from "@/components/shell/nav";
 import { TopBar } from "@/components/shell/topbar";
-import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyState } from "@/components/ui/system-states";
 
-const sections = navigation.flatMap((g) => g.items).filter((i) => i.href !== "/");
+/** Oʻz sahifasi bor boʻlimlar bu yerda emas. */
+const BUILT = new Set(["/", "/settings", "/dictionaries", "/products", "/customers", "/suppliers", "/prices", "/stock", "/expiry"]);
+const sections = navigation.flatMap((g) => g.items).filter((i) => !BUILT.has(i.href));
 
 export function generateStaticParams() {
   return sections.map((s) => ({ section: s.href.slice(1) }));
@@ -22,7 +24,7 @@ export default async function SectionPlaceholder({ params }: PageProps<"/[sectio
         <h1 className="text-page-title">{item.label}</h1>
         <div className="mt-6 rounded-card border border-border bg-surface">
           <EmptyState
-            icon={<Construction size={20} strokeWidth={1.5} aria-hidden />}
+            icon={Construction}
             title="Bu boʻlim hali qurilmoqda"
             description="Ish rejasi va qaysi bosqichda tayyor boʻlishi PLAN.md faylida yozilgan."
           />

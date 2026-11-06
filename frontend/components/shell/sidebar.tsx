@@ -1,8 +1,11 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { navigation } from "./nav";
+import { usePathname, useRouter } from "next/navigation";
+import { Avatar } from "@/components/ui/avatar";
+import { useLogout, useMe } from "@/features/auth/session";
+import { navigationFor } from "./nav";
 
 function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -11,14 +14,17 @@ function isActive(pathname: string, href: string): boolean {
 /** Sidebar (design/system: Sidebar) — fon brand-900, faol: oq matn + chapda 3px sidebar-active. */
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const me = useMe();
+  const logout = useLogout();
   return (
-    <aside className="flex w-sidebar shrink-0 flex-col bg-brand-900 text-sidebar-text">
+    <aside className="flex w-sidebar shrink-0 flex-col bg-brand-900 text-sidebar-text print:hidden">
       <div className="flex h-topbar items-center gap-3 px-5">
         <span className="flex size-8 items-center justify-center rounded-control bg-primary-button font-semibold text-white">M</span>
         <span className="text-subtitle text-white">MEDIX</span>
       </div>
       <nav aria-label="Asosiy menyu" className="flex-1 overflow-y-auto px-3 pb-4">
-        {navigation.map((group, gi) => (
+        {navigationFor(me.data?.permissions).map((group, gi) => (
           <div key={group.title ?? gi} className="mt-4 first:mt-2">
             {group.title ? <div className="px-3 pb-1 text-caption font-medium">{group.title}</div> : null}
             <ul>
@@ -45,6 +51,31 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
+      {me.data ? (
+        <div className="flex items-center gap-3 border-t border-sidebar-item-active-bg px-4 py-3">
+          <Link
+            href="/profile"
+            title="Profil"
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-control focus-visible:outline-sidebar-active"
+          >
+            <Avatar name={me.data.fullName} decorative />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium text-white">{me.data.fullName}</span>
+              <span className="block truncate text-caption">{me.data.role.name}</span>
+            </span>
+          </Link>
+          <button
+            type="button"
+            aria-label="Chiqish"
+            title="Chiqish"
+            disabled={logout.isPending}
+            onClick={() => logout.mutate(undefined, { onSettled: () => router.replace("/login") })}
+            className="flex size-control-md items-center justify-center rounded-control hover:bg-sidebar-item-active-bg hover:text-white focus-visible:outline-sidebar-active"
+          >
+            <LogOut size={20} strokeWidth={1.5} aria-hidden />
+          </button>
+        </div>
+      ) : null}
     </aside>
   );
 }

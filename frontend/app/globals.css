@@ -72,8 +72,37 @@
   --spacing-control-sm: 32px;
   --spacing-control-md: 36px;
   --spacing-control-lg: 44px;
+  --spacing-control-touch: 48px;
   --spacing-row-md: 40px;
   --spacing-row-sm: 36px;
+  --spacing-icon-sm: 16px;
+  --spacing-icon-md: 20px;
+  --spacing-modal-sm: 480px;
+  --spacing-modal-md: 640px;
+  --spacing-modal-lg: 880px;
+  --spacing-drawer-sm: 480px;
+  --spacing-drawer-lg: 640px;
+  --spacing-toast: 380px;
+  --spacing-tooltip: 240px;
+
+  --animate-skeleton: skeleton 1600ms ease-in-out infinite;
+  --animate-spin: spin 800ms linear infinite;
+
+  @keyframes skeleton {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 }
 
 @layer base {
@@ -102,5 +131,18 @@
       transition-duration: 0ms !important;
       animation-duration: 0ms !important;
     }
+  }
+}
+
+/*
+ * Telefon panellari (Yigʻuvchi, Markirovkachi, Haydovchi — SPEC 11: «panellarda kamida 48 px»; T12-audit №18).
+ * Sahifa ildiziga data-touch-panel qoʻyiladi — tugmalar va maydonlar barmoq bilan bosishga yetarli boʻladi.
+ */
+@layer components {
+  [data-touch-panel] :where(button:not([role="tab"]), input:not([type="checkbox"], [type="radio"]), select, [role="combobox"]) {
+    min-height: var(--spacing-control-touch);
+  }
+  [data-touch-panel] :where(button) {
+    min-width: var(--spacing-control-touch);
   }
 }
