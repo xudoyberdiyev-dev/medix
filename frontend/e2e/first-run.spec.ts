@@ -473,7 +473,12 @@ test("CEO: inventarizatsiya (IN) — qoralama → sanoqni ochish → sanash → 
 
   await page.getByRole("dialog").last().getByRole("button", { name: "Sanoqni ochish" }).click();
   await expect(page.getByText(/Sanoq ketmoqda · 0%/)).toBeVisible();
-  await page.getByRole("dialog").last().getByLabel(/— sanalgan soni/).first().fill("1");
+  await page
+    .getByRole("dialog")
+    .last()
+    .getByLabel(/— sanalgan soni/)
+    .first()
+    .fill("1");
   await page.getByRole("dialog").last().getByRole("button", { name: "Saqlash" }).click();
   await expect(page.getByText("Sanoq saqlandi")).toBeVisible();
 

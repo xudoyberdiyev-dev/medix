@@ -54,6 +54,9 @@
     "description" : "Kichik ma'lumotnomalar",
     "name" : "dictionaries"
   }, {
+    "description" : "Inventarizatsiya (IN)",
+    "name" : "inventory-count"
+  }, {
     "description" : "Yetkazib beruvchiga to'lovlar (YT)",
     "name" : "supplier-payments"
   }, {
@@ -308,7 +311,7 @@
     },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
-        "operationId" : "cancel_7",
+        "operationId" : "cancel_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -346,7 +349,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_25",
+        "operationId" : "list_26",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -490,7 +493,7 @@
     },
     "/api/bank-reconciliations" : {
       "get" : {
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -519,7 +522,7 @@
         "tags" : [ "bank-reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_18",
+        "operationId" : "create_19",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -584,7 +587,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "responses" : {
           "200" : {
             "content" : {
@@ -604,7 +607,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_17",
+        "operationId" : "create_18",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1095,7 +1098,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_15",
+        "operationId" : "get_16",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -1148,7 +1151,7 @@
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -1225,7 +1228,7 @@
         "tags" : [ "counterparties" ]
       },
       "post" : {
-        "operationId" : "create_16",
+        "operationId" : "create_17",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2013,7 +2016,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -2042,7 +2045,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_15",
+        "operationId" : "create_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -2199,7 +2202,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_24",
+        "operationId" : "list_25",
         "responses" : {
           "200" : {
             "content" : {
@@ -2221,7 +2224,7 @@
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "responses" : {
           "200" : {
             "content" : {
@@ -2241,7 +2244,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_14",
+        "operationId" : "create_15",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2375,7 +2378,7 @@
     },
     "/api/expense-items" : {
       "get" : {
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "responses" : {
           "200" : {
             "content" : {
@@ -2395,7 +2398,7 @@
         "tags" : [ "expense-items" ]
       },
       "post" : {
-        "operationId" : "create_13",
+        "operationId" : "create_14",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2518,7 +2521,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2622,6 +2625,358 @@
         },
         "summary" : "Xarid bosh sahifasi: kutayotgan kirimlar, YB qarzi va to'lov kunlari, bonus, «O'z nomimdagi tovar»",
         "tags" : [ "home" ]
+      }
+    },
+    "/api/inventory-counts" : {
+      "get" : {
+        "description" : "Kamomad / ortiqcha tannarxi — faqat prices.cost.",
+        "operationId" : "list_13",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "COUNTING", "CHECK", "POSTED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Inventarizatsiyalar",
+        "tags" : [ "inventory-count" ]
+      },
+      "post" : {
+        "description" : "Qoralama. Bitta omborda bitta faol inventarizatsiya.",
+        "operationId" : "create_13",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryCountRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Inventarizatsiya yaratish",
+        "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/inventory-counts/{id}" : {
+      "get" : {
+        "description" : "Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.",
+        "operationId" : "get_14",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Inventarizatsiya hujjati",
+        "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/inventory-counts/{id}/approve" : {
+      "post" : {
+        "description" : "Farqlar qoldiqqa yoziladi, qulf yechiladi. Direktor darajasi — inventory.director.",
+        "operationId" : "approve_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tasdiqlash",
+        "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/inventory-counts/{id}/batches" : {
+      "get" : {
+        "description" : "Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta).",
+        "operationId" : "batches",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InventoryBatchHit"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Topilgan partiyani qidirish",
+        "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/inventory-counts/{id}/cancel" : {
+      "post" : {
+        "description" : "Qoldiq o'zgarmaydi, qulf yechiladi.",
+        "operationId" : "cancel_7",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekor qilish",
+        "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/inventory-counts/{id}/counts" : {
+      "put" : {
+        "description" : "Mavjud qatorlar (lineId) yoki topilgan partiyalar (zoneId + batchId).",
+        "operationId" : "count",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryCountEntries"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Sanalgan miqdorlar",
+        "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/inventory-counts/{id}/recount" : {
+      "post" : {
+        "operationId" : "recount",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qayta sanashga qaytarish",
+        "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/inventory-counts/{id}/start" : {
+      "post" : {
+        "description" : "Qoldiq surati olinadi, qamrovdagi zonalarda ombor harakati to'xtatiladi.",
+        "operationId" : "start_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Sanoqni ochish",
+        "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/inventory-counts/{id}/submit" : {
+      "post" : {
+        "description" : "Hamma qator sanalgan bo'lishi shart. Tasdiqlovchilarga bildirishnoma.",
+        "operationId" : "submit_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tekshiruvga yuborish",
+        "tags" : [ "inventory-count" ]
       }
     },
     "/api/marking/codes" : {
@@ -3224,7 +3579,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_23",
+        "operationId" : "list_24",
         "responses" : {
           "200" : {
             "content" : {
@@ -5565,7 +5920,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_22",
+        "operationId" : "list_23",
         "responses" : {
           "200" : {
             "content" : {
@@ -6963,7 +7318,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "responses" : {
           "200" : {
             "content" : {
@@ -7301,7 +7656,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7430,7 +7785,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_19",
+        "operationId" : "list_20",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -9766,6 +10121,14 @@
           "expiring" : {
             "$ref" : "#/components/schemas/ExpiringBatches"
           },
+          "inventoryCheck" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inventoryCounting" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "overdue1to30" : {
             "type" : "string"
           },
@@ -9808,7 +10171,7 @@
             "format" : "int32"
           }
         },
-        "required" : [ "bonusDue", "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday", "transferShortagesOpen", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
+        "required" : [ "bonusDue", "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "inventoryCheck", "inventoryCounting", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday", "transferShortagesOpen", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
       },
       "AuditPage" : {
         "type" : "object",
@@ -11724,6 +12087,381 @@
           }
         },
         "required" : [ "message", "row" ]
+      },
+      "InventoryBatchHit" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "batchId", "batchNumber", "expiryDate", "productCode", "productId", "productName" ]
+      },
+      "InventoryCancelRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
+      "InventoryCountDetail" : {
+        "type" : "object",
+        "properties" : {
+          "blind" : {
+            "type" : "boolean"
+          },
+          "bookHidden" : {
+            "type" : "boolean"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "commission" : {
+            "type" : "string"
+          },
+          "counted" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InventoryCountLine"
+            }
+          },
+          "needsDirector" : {
+            "type" : "boolean"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "postedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "postedBy" : {
+            "type" : "string"
+          },
+          "shortageCost" : {
+            "type" : "string"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "startedBy" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "COUNTING", "CHECK", "POSTED", "CANCELLED" ]
+          },
+          "submittedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "submittedBy" : {
+            "type" : "string"
+          },
+          "surplusCost" : {
+            "type" : "string"
+          },
+          "surplusQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          }
+        },
+        "required" : [ "blind", "bookHidden", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId" ]
+      },
+      "InventoryCountEntries" : {
+        "type" : "object",
+        "properties" : {
+          "entries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InventoryCountEntry"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "entries" ]
+      },
+      "InventoryCountEntry" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "countedQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000000,
+            "minimum" : 0
+          },
+          "lineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "countedQty" ]
+      },
+      "InventoryCountLine" : {
+        "type" : "object",
+        "properties" : {
+          "added" : {
+            "type" : "boolean"
+          },
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "bookQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Ko'r sanoqda sanoq davomida — null"
+          },
+          "controlled" : {
+            "type" : "boolean"
+          },
+          "cost" : {
+            "type" : "string"
+          },
+          "countedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "countedBy" : {
+            "type" : "string"
+          },
+          "countedQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "diff" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "sanaldi − hisobda; sanalmagan yoki ko'r sanoqda — null"
+          },
+          "diffAmount" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "zone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          }
+        },
+        "required" : [ "added", "batchId", "batchNumber", "controlled", "expiryDate", "id", "productCode", "productId", "productName", "zone" ]
+      },
+      "InventoryCountPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InventoryCountSummary"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "InventoryCountRequest" : {
+        "type" : "object",
+        "properties" : {
+          "blind" : {
+            "type" : "boolean"
+          },
+          "commission" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Bo'sh — butun ombor"
+          }
+        },
+        "required" : [ "blind", "commission", "note", "warehouseId" ]
+      },
+      "InventoryCountSummary" : {
+        "type" : "object",
+        "properties" : {
+          "blind" : {
+            "type" : "boolean"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "counted" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "needsDirector" : {
+            "type" : "boolean"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "postedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "shortageCost" : {
+            "type" : "string",
+            "description" : "Faqat prices.cost"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "COUNTING", "CHECK", "POSTED", "CANCELLED" ]
+          },
+          "surplusCost" : {
+            "type" : "string",
+            "description" : "Faqat prices.cost"
+          },
+          "surplusQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          }
+        },
+        "required" : [ "blind", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId" ]
       },
       "IssueRequest" : {
         "type" : "object",

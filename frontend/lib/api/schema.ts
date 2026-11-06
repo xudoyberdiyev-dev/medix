@@ -84,7 +84,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** AH ni bekor qilish (teskari yozuvlar) */
-        post: operations["cancel_7"];
+        post: operations["cancel_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -99,7 +99,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -190,10 +190,10 @@ export interface paths {
             cookie?: never;
         };
         /** Hisob boʻyicha solishtirishlar tarixi */
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         /** Solishtirishni yozish (farq boʻlsa — izoh majburiy) */
-        post: operations["create_18"];
+        post: operations["create_19"];
         delete?: never;
         options?: never;
         head?: never;
@@ -225,10 +225,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ko'rish mumkin bo'lgan filiallar */
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         /** Filial qo'shish */
-        post: operations["create_17"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -447,7 +447,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_15"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -467,10 +467,10 @@ export interface paths {
          * Kontragentlar
          * @description Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).
          */
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         /** Kontragent qo'shish */
-        post: operations["create_16"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -807,10 +807,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ma'lumotnoma yozuvlari (faollari birinchi) */
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         /** Yozuv qo'shish */
-        post: operations["create_15"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -879,7 +879,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -896,10 +896,10 @@ export interface paths {
             cookie?: never;
         };
         /** Xodimlar ro'yxati */
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
         /** Xodim qo'shish */
-        post: operations["create_14"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -968,10 +968,10 @@ export interface paths {
             cookie?: never;
         };
         /** Moddalar */
-        get: operations["list_13"];
+        get: operations["list_14"];
         put?: never;
         /** Modda qo'shish */
-        post: operations["create_13"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1037,7 +1037,7 @@ export interface paths {
             cookie?: never;
         };
         /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1074,6 +1074,187 @@ export interface paths {
         get: operations["purchaserHome"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inventarizatsiyalar
+         * @description Kamomad / ortiqcha tannarxi — faqat prices.cost.
+         */
+        get: operations["list_13"];
+        put?: never;
+        /**
+         * Inventarizatsiya yaratish
+         * @description Qoralama. Bitta omborda bitta faol inventarizatsiya.
+         */
+        post: operations["create_13"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inventarizatsiya hujjati
+         * @description Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.
+         */
+        get: operations["get_14"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tasdiqlash
+         * @description Farqlar qoldiqqa yoziladi, qulf yechiladi. Direktor darajasi — inventory.director.
+         */
+        post: operations["approve_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/{id}/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Topilgan partiyani qidirish
+         * @description Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta).
+         */
+        get: operations["batches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bekor qilish
+         * @description Qoldiq o'zgarmaydi, qulf yechiladi.
+         */
+        post: operations["cancel_7"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/{id}/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Sanalgan miqdorlar
+         * @description Mavjud qatorlar (lineId) yoki topilgan partiyalar (zoneId + batchId).
+         */
+        put: operations["count"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/{id}/recount": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Qayta sanashga qaytarish */
+        post: operations["recount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sanoqni ochish
+         * @description Qoldiq surati olinadi, qamrovdagi zonalarda ombor harakati to'xtatiladi.
+         */
+        post: operations["start_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tekshiruvga yuborish
+         * @description Hamma qator sanalgan bo'lishi shart. Tasdiqlovchilarga bildirishnoma.
+         */
+        post: operations["submit_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1372,7 +1553,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2459,7 +2640,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari */
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3019,7 +3200,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3232,7 +3413,7 @@ export interface paths {
          * Qoldiqlar (zona × partiya)
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3266,7 +3447,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4373,6 +4554,10 @@ export interface components {
             directorOrders: components["schemas"]["CountAmount"];
             driverCash: string;
             expiring: components["schemas"]["ExpiringBatches"];
+            /** Format: int32 */
+            inventoryCheck: number;
+            /** Format: int32 */
+            inventoryCounting: number;
             overdue1to30: string;
             overdue31to60: string;
             overdue61to90: string;
@@ -5076,6 +5261,162 @@ export interface components {
             message: string;
             /** Format: int32 */
             row: number;
+        };
+        InventoryBatchHit: {
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            /** Format: date */
+            expiryDate: string;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+        };
+        InventoryCancelRequest: {
+            reason: string;
+        };
+        InventoryCountDetail: {
+            blind: boolean;
+            bookHidden: boolean;
+            /** Format: int64 */
+            branchId: number;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
+            commission?: string;
+            /** Format: int32 */
+            counted: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: int64 */
+            id: number;
+            lines: components["schemas"]["InventoryCountLine"][];
+            needsDirector: boolean;
+            note?: string;
+            number: string;
+            /** Format: date-time */
+            postedAt?: string;
+            postedBy?: string;
+            shortageCost?: string;
+            /** Format: int32 */
+            shortageQty: number;
+            /** Format: date-time */
+            startedAt?: string;
+            startedBy?: string;
+            /** @enum {string} */
+            status: "DRAFT" | "COUNTING" | "CHECK" | "POSTED" | "CANCELLED";
+            /** Format: date-time */
+            submittedAt?: string;
+            submittedBy?: string;
+            surplusCost?: string;
+            /** Format: int32 */
+            surplusQty: number;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+            zone?: components["schemas"]["ZoneRef"];
+        };
+        InventoryCountEntries: {
+            entries: components["schemas"]["InventoryCountEntry"][];
+        };
+        InventoryCountEntry: {
+            /** Format: int64 */
+            batchId?: number;
+            /** Format: int32 */
+            countedQty: number;
+            /** Format: int64 */
+            lineId?: number;
+            /** Format: int64 */
+            zoneId?: number;
+        };
+        InventoryCountLine: {
+            added: boolean;
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            /**
+             * Format: int32
+             * @description Ko'r sanoqda sanoq davomida — null
+             */
+            bookQty?: number;
+            controlled: boolean;
+            cost?: string;
+            /** Format: date-time */
+            countedAt?: string;
+            countedBy?: string;
+            /** Format: int32 */
+            countedQty?: number;
+            /**
+             * Format: int32
+             * @description sanaldi − hisobda; sanalmagan yoki ko'r sanoqda — null
+             */
+            diff?: number;
+            diffAmount?: string;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int64 */
+            id: number;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            zone: components["schemas"]["ZoneRef"];
+        };
+        InventoryCountPage: {
+            items: components["schemas"]["InventoryCountSummary"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        InventoryCountRequest: {
+            blind: boolean;
+            commission: string;
+            note: string;
+            /** Format: int64 */
+            warehouseId: number;
+            /**
+             * Format: int64
+             * @description Bo'sh — butun ombor
+             */
+            zoneId?: number;
+        };
+        InventoryCountSummary: {
+            blind: boolean;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int32 */
+            counted: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lines: number;
+            needsDirector: boolean;
+            number: string;
+            /** Format: date-time */
+            postedAt?: string;
+            /** @description Faqat prices.cost */
+            shortageCost?: string;
+            /** Format: int32 */
+            shortageQty: number;
+            /** @enum {string} */
+            status: "DRAFT" | "COUNTING" | "CHECK" | "POSTED" | "CANCELLED";
+            /** @description Faqat prices.cost */
+            surplusCost?: string;
+            /** Format: int32 */
+            surplusQty: number;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+            zone?: components["schemas"]["ZoneRef"];
         };
         IssueRequest: {
             /** @description «Boshqa» uchun majburiy */
@@ -7838,7 +8179,7 @@ export interface operations {
             };
         };
     };
-    cancel_7: {
+    cancel_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -7864,7 +8205,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -7975,7 +8316,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query: {
                 accountId: number;
@@ -7997,7 +8338,7 @@ export interface operations {
             };
         };
     };
-    create_18: {
+    create_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -8044,7 +8385,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -8064,7 +8405,7 @@ export interface operations {
             };
         };
     };
-    create_17: {
+    create_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -8400,7 +8741,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_16: {
         parameters: {
             query: {
                 branchId: number;
@@ -8425,7 +8766,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query?: {
                 q?: string;
@@ -8453,7 +8794,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -8950,7 +9291,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -8972,7 +9313,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -9071,7 +9412,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query?: never;
             header?: never;
@@ -9091,7 +9432,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -9111,7 +9452,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -9209,7 +9550,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -9229,7 +9570,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -9323,7 +9664,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -9388,6 +9729,242 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchaserHomeView"];
+                };
+            };
+        };
+    };
+    list_13: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                warehouseId?: number;
+                status?: "DRAFT" | "COUNTING" | "CHECK" | "POSTED" | "CANCELLED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountPage"];
+                };
+            };
+        };
+    };
+    create_13: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryCountRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    get_14: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    approve_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    batches: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryBatchHit"][];
+                };
+            };
+        };
+    };
+    cancel_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    count: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryCountEntries"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    recount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    start_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    submit_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
                 };
             };
         };
@@ -9792,7 +10369,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -11391,7 +11968,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -12231,7 +12808,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -12507,7 +13084,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -12559,7 +13136,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query: {
                 branchId: number;
