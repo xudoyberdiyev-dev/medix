@@ -4,7 +4,7 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 
 ## Haqiqat manbalari (shu tartibda)
 1. `docs/SPEC.md` — loyihaning to'liq tavsifi (rollar, jarayonlar, biznes qoidalari, texnologiyalar, arxitektura). **Har sessiyada kerakli bo'limini o'qing.**
-2. `PLAN.md` — bosqichlar, vazifalar, **hozirgi holat** va egasidan kutilayotganlar.
+2. `PLAN.md` — **avval «Egasi qarori — USTUVORLIK» bo'limi**, keyin bosqichlar, vazifalar, **hozirgi holat** va egasidan kutilayotganlar.
 3. `design/` — dizayn tizimi (`design/system/`) va ekran manbalari (`design/README.md`).
 4. Ziddiyat bo'lsa — eng keyingi sanali qaror ustun; hal qilib bo'lmasa, PLAN.md → «Egasiga savollar» ga yozing va boshqa vazifaga o'ting.
 

@@ -2,12 +2,17 @@
 
 Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testlar → CI yashil → hisobot. Bosqich tugasa — `develop → main` PR.
 
+## Egasi qarori (06.11.2026) — USTUVORLIK
+- Tizim **noldan** ishga tushiriladi: SmartUp'dan mahsulot, qoldiq, qarz ko'chirilmaydi. **Faqat mijozlar bazasi** SmartUp'dan import qilinadi (namuna kelgach).
+- **Bank fayli importi** — kerak emas (qo'lda solishtirish yetarli), V1 dan chiqarildi.
+- Boshqa narsalarga chalg'imaslik. Navbat: (1) V1 qoldiqlari — Buyurtma, Ombor zanjiri, Katalog, Ombor, Kirim bandlarini 100% ga yetkazish; (2) barcha rollar bo'yicha to'liq e2e tekshiruv va xatolarni tuzatish; (3) joylashtirishga tayyorlash (Docker, env, backup); (4) FS; (5) kirill/rus; (6) to'liq hisobotlar.
+
 ## Hozirgi holat
 - **Sana:** 06.11.2026
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~90%; 2 — Katalog ~90%; 3 — Narxlar ~97%; 4 — Ombor ~90%; 5 — Kirim ~90%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~95% (imzo UI ✅); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
 - **Oxirgi sessiya:** 06.11.2026 16:35–17:15 (kunduzgi oyna, zaxira sessiya): QY — YB ga qaytarish (V40 + API + IT 4 test + PDF yuk xati + UI + kirimdan o'tish + «Diqqat» + e2e). Oldingi: 06.11.2026 15:35–16:20 (kunduzgi oyna, zaxira sessiya): IN — inventarizatsiya (V39 + sanoq qulfi + API + IT 5 test + UI + «Diqqat» + e2e). Oldingi: 06.11.2026 14:05–14:50 (kunduzgi oyna): HC — hisobdan chiqarish (V37 + API + PDF + UI + e2e) va OK kamomadini hal qilish (V38). Oldingi: 06.11.2026 09:38–10:25 (ertalabki oyna, zaxira sessiya): OK — ombor ko'chirishi (V35 + API + IT 6 test + UI + e2e + «Diqqat» + Ombor mudiri yorlig'i + V36 real vaqt). Oldingi: 08:37–09:15: T12-audit №24 (bosh sahifa jadvallari tor ekranda aylanmaydi), V2 boshlandi — ZK zona ko'chirishi (backend + UI). Oldingi: 07:37–08:15 — T12 №20, №17, №4, №11, №26; 06:05–07:17 — SSE real vaqt, Ctrl+K.
-- **Keyingi vazifa:** V2 davomi — FS (filiallararo ko'chirish/savdo); QY PDF (qaytarish yuk xati); egasidan namunalar kelsa — SmartUp importi, bank fayli importi.
+- **Keyingi vazifa:** V2 davomi — FS (filiallararo ko'chirish/savdo); QY PDF (qaytarish yuk xati); egasidan namuna kelsa — SmartUp'dan faqat mijozlar importi. Ustuvorlik — «Egasi qarori (06.11.2026)».
 
 ## Egasidan kutilayotganlar
 - [x] ~~GitHub Actions to'xtadi (05.11 12:45)~~ — repo public qilingach (05.11 20:40) CI ishlayapti.
