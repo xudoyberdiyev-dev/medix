@@ -1,5 +1,6 @@
 import {
   FileMinus,
+  Undo2,
   ListChecks,
   ArrowRightLeft,
   Banknote,
@@ -93,6 +94,13 @@ export const navigation: NavGroup[] = [
         href: "/write-offs",
         icon: FileMinus,
         anyOf: ["hc.view", "hc.create", "hc.approve"],
+      },
+      {
+        key: "supplier-returns",
+        label: "YB ga qaytarish",
+        href: "/supplier-returns",
+        icon: Undo2,
+        anyOf: ["qy.view", "qy.create", "qy.approve"],
       },
       { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: PackageOpen, anyOf: ["opening.list", "opening.view"] },
