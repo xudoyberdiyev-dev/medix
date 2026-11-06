@@ -12,6 +12,8 @@ import java.util.Map;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.finance.DebtSummaries;
+import uz.medix.finance.PartyLedger;
 import uz.medix.finance.account.Accounts;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.money.Money;
@@ -39,16 +41,18 @@ class CashPanel {
 
     record Panel(LocalDate from, LocalDate to, KindTotals balances, String income, String expense, List<ItemTotal> expenses,
             String expensesTotal, int draftPayments, String draftPaymentsAmount, int pendingOps, String pendingOpsAmount,
-            List<AccountTurnover> accounts, List<DayPoint> days, List<RecentMove> recent) {}
+            List<AccountTurnover> accounts, List<DayPoint> days, List<RecentMove> recent, String customerDueToday, String customerDueSoon) {}
 
     private final JdbcClient jdbc;
     private final Accounts accounts;
     private final CashOps ops;
+    private final DebtSummaries debts;
 
-    CashPanel(JdbcClient jdbc, Accounts accounts, CashOps ops) {
+    CashPanel(JdbcClient jdbc, Accounts accounts, CashOps ops, DebtSummaries debts) {
         this.jdbc = jdbc;
         this.accounts = accounts;
         this.ops = ops;
+        this.debts = debts;
     }
 
     private static Money m(BigDecimal v) {
@@ -157,7 +161,10 @@ class CashPanel {
                         rs.getString("note")))
                 .list();
 
+        // Kutilayotgan: mijozlarning to'lov kuni (SPEC 8 — Kassir paneli) — bugun va keyingi 3 kun ichida ochiq qarz
+        DebtSummaries.DueSoon due = debts.due(actor, PartyLedger.Side.CUSTOMER, branchId, ops.today());
+
         return new Panel(f, t, balances, income.toString(), expense.toString(), items, itemsTotal.toString(), drafts.cnt(),
-                m(drafts.amount()).toString(), pending.cnt(), m(pending.amount()).toString(), table, days, recent);
+                m(drafts.amount()).toString(), pending.cnt(), m(pending.amount()).toString(), table, days, recent, due.today(), due.next3Days());
     }
 }

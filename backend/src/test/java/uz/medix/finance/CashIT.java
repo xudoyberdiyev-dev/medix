@@ -224,8 +224,22 @@ class CashIT {
 
         // Kassir paneli: IO kirim/chiqimga kirmaydi; bekor qilingan chiqim moddalarda yoʻq
         mvc.perform(get("/api/cash-panel").param("branchId", "" + b).cookie(picker)).andExpect(status().isForbidden());
+        // Mijozlarning to'lov kuni: bugun va 3 kun ichida (ochiq sotuv qarzi)
+        long debtor = jdbc.sql("INSERT INTO counterparty (tin, name, is_customer) VALUES (:t, 'Toʻlov kuni sinov', true) RETURNING id")
+                .param("t", String.valueOf(400_000_000L + ThreadLocalRandom.current().nextLong(99_999_999L)))
+                .query(Long.class).single();
+        for (Object[] r : new Object[][] {{"150000.00", today(), 1L}, {"90000.00", today().plusDays(2), 2L}, {"70000.00", today().plusDays(10), 3L}}) {
+            jdbc.sql("""
+                    INSERT INTO party_ledger (branch_id, counterparty_id, side, amount, due_date, doc_type, doc_id, doc_number)
+                    VALUES (:b, :c, 'CUSTOMER', CAST(:a AS NUMERIC), :d, 'SV', :i, :n)""")
+                    .param("b", b).param("c", debtor).param("a", r[0]).param("d", r[1])
+                    .param("i", 900_000_000L + debtor * 10 + (Long) r[2]).param("n", "SV-TEST-" + r[2])
+                    .update();
+        }
         mvc.perform(get("/api/cash-panel").param("branchId", "" + b).cookie(cashier))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.customerDueToday").value("150000.00"))
+                .andExpect(jsonPath("$.customerDueSoon").value("90000.00"))
                 .andExpect(jsonPath("$.balances.cash").value("2500000.00"))
                 .andExpect(jsonPath("$.balances.terminal").value("300000.00"))
                 .andExpect(jsonPath("$.balances.total").value("2800000.00"))

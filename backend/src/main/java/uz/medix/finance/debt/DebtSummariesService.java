@@ -42,18 +42,18 @@ class DebtSummariesService implements DebtSummaries {
 
     @Override
     @Transactional(readOnly = true)
-    public DueSoon supplierDue(Actor actor, Long branchId, LocalDate today) {
+    public DueSoon due(Actor actor, Side side, Long branchId, LocalDate today) {
         if (branchId == null ? !actor.allBranches() : !actor.canAccessBranch(branchId)) {
             throw MedixException.notFound("error.notFound");
         }
-        // Ochiq kirim hujjatlari (qarz > 0) to'lov kuni bo'yicha; Debts.report dagi own/app qoidasi bilan bir xil
+        // Ochiq hujjatlar (qarz > 0: kirim — YB, sotuv — mijoz) to'lov kuni bo'yicha; Debts.report dagi own/app qoidasi bilan bir xil
         record Row(BigDecimal overdue, BigDecimal today, BigDecimal soon) {}
         Row row = jdbc.sql("""
                 WITH own AS (SELECT branch_id, counterparty_id, doc_type, doc_id, min(due_date) AS due, sum(amount) AS amt
-                             FROM party_ledger WHERE side = 'SUPPLIER' AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
                              GROUP BY branch_id, counterparty_id, doc_type, doc_id),
                      app AS (SELECT branch_id, counterparty_id, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
-                             FROM party_ledger WHERE side = 'SUPPLIER' AND applies_doc_type IS NOT NULL
+                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NOT NULL
                                                  AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
                              GROUP BY branch_id, counterparty_id, applies_doc_type, applies_doc_id),
                      open AS (SELECT own.due, own.amt + coalesce(app.amt, 0) AS open
@@ -64,6 +64,7 @@ class DebtSummariesService implements DebtSummaries {
                        sum(open) FILTER (WHERE due > :d AND due <= :d3) AS soon
                 FROM open WHERE open > 0 AND due IS NOT NULL""")
                 .param("b", branchId)
+                .param("side", side.name())
                 .param("d", Date.valueOf(today))
                 .param("d3", Date.valueOf(today.plusDays(3)))
                 .query(Row.class)

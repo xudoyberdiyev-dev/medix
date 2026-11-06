@@ -12771,6 +12771,12 @@
           "balances" : {
             "$ref" : "#/components/schemas/KindTotals"
           },
+          "customerDueSoon" : {
+            "type" : "string"
+          },
+          "customerDueToday" : {
+            "type" : "string"
+          },
           "days" : {
             "type" : "array",
             "items" : {
@@ -12821,7 +12827,7 @@
             "format" : "date"
           }
         },
-        "required" : [ "accounts", "balances", "days", "draftPayments", "draftPaymentsAmount", "expense", "expenses", "expensesTotal", "from", "income", "pendingOps", "pendingOpsAmount", "recent", "to" ]
+        "required" : [ "accounts", "balances", "customerDueSoon", "customerDueToday", "days", "draftPayments", "draftPaymentsAmount", "expense", "expenses", "expensesTotal", "from", "income", "pendingOps", "pendingOpsAmount", "recent", "to" ]
       },
       "PartialRequest" : {
         "type" : "object",

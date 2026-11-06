@@ -24,5 +24,10 @@ public interface DebtSummaries {
     Summary summary(Actor actor, Side side, Long branchId, int top);
 
     /** Kompaniyaning YB oldidagi ochiq qarzi to'lov kuni bo'yicha. */
-    DueSoon supplierDue(Actor actor, Long branchId, LocalDate today);
+    default DueSoon supplierDue(Actor actor, Long branchId, LocalDate today) {
+        return due(actor, Side.SUPPLIER, branchId, today);
+    }
+
+    /** Ochiq qarz (mijozlar yoki YB) hujjatdagi to'lov kuni bo'yicha: kechikkan / bugun / 3 kun ichida. */
+    DueSoon due(Actor actor, Side side, Long branchId, LocalDate today);
 }

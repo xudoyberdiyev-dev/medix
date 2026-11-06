@@ -173,6 +173,10 @@ export function CashierPanel() {
                 <dd className="text-right font-mono tabular-nums">{formatMoney(p.draftPaymentsAmount)}</dd>
                 <dt className="text-text-secondary">Tasdiq kutayotgan chiqim ({p.pendingOps})</dt>
                 <dd className="text-right font-mono tabular-nums">{formatMoney(p.pendingOpsAmount)}</dd>
+                <dt className="text-text-secondary">Mijozlar toʻlov kuni: bugun</dt>
+                <dd className="text-right font-mono tabular-nums">{formatMoney(p.customerDueToday)}</dd>
+                <dt className="text-text-secondary">Mijozlar toʻlov kuni: 3 kun ichida</dt>
+                <dd className="text-right font-mono tabular-nums">{formatMoney(p.customerDueSoon)}</dd>
               </dl>
               <Link href="/cash" className="mt-2 inline-block text-caption text-primary-button hover:underline">
                 Kassaga oʻtish

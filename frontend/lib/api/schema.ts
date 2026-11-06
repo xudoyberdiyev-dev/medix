@@ -5465,6 +5465,8 @@ export interface components {
         Panel: {
             accounts: components["schemas"]["AccountTurnover"][];
             balances: components["schemas"]["KindTotals"];
+            customerDueSoon: string;
+            customerDueToday: string;
             days: components["schemas"]["DayPoint"][];
             /** Format: int32 */
             draftPayments: number;
