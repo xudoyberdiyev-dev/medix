@@ -112,3 +112,35 @@ export function useReceiveWarehouseTransfer() {
 export function useCancelWarehouseTransfer() {
   return useOkMutation((id: number) => unwrap(api.POST("/api/warehouse-transfers/{id}/cancel", { params: { path: { id } } })));
 }
+
+export type ShortageInfo = components["schemas"]["ShortageInfo"];
+export type ShortageKind = components["schemas"]["ShortageResolveRequest"]["kind"];
+export const TRANSFER_RESOLVE = "transfer.resolve";
+
+export function useTransferShortage(id: number, enabled: boolean) {
+  return useQuery({
+    queryKey: ["warehouse-transfers", "shortage", id],
+    queryFn: () => unwrap(api.GET("/api/warehouse-transfers/{id}/shortage", { params: { path: { id } } })),
+    enabled,
+  });
+}
+
+export function useResolveShortage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { id: number; kind: ShortageKind; note: string }) => {
+      await ensureCsrf();
+      return unwrap(
+        api.POST("/api/warehouse-transfers/{id}/shortage/resolve", {
+          params: { path: { id: v.id } },
+          body: { kind: v.kind, note: v.note },
+        }),
+      );
+    },
+    onSuccess: async (d) => {
+      qc.setQueryData(["warehouse-transfers", "shortage", d.transferId], d);
+      await qc.invalidateQueries({ queryKey: ["write-offs"] });
+      await qc.invalidateQueries({ queryKey: ["stock"] });
+    },
+  });
+}

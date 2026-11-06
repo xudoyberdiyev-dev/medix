@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CalendarX, X } from "lucide-react";
+import { CalendarX, Check, Printer, X } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -100,25 +100,30 @@ function View({ doc, onClose }: { doc: WriteOffDetail; onClose: () => void }) {
       subtitle={formatDateTime(new Date(doc.createdAt))}
       status={<WriteOffStatusBadge status={doc.status} />}
       actions={
-        canDecide ? (
-          <>
-            <Button variant="secondary" icon={X} onClick={() => setRejecting(true)}>
-              Rad etish
-            </Button>
-            <Button
-              icon={Check}
-              loading={approve.isPending}
-              onClick={() =>
-                approve.mutate(doc.id, {
-                  onSuccess: (d) => toast({ tone: "success", title: "Tasdiqlandi, tovar hisobdan chiqarildi", description: d.number }),
-                  onError: fail,
-                })
-              }
-            >
-              Tasdiqlash va chiqarish
-            </Button>
-          </>
-        ) : undefined
+        <>
+          <Button variant="tertiary" icon={Printer} onClick={() => window.open(`/api/write-offs/${doc.id}/pdf`, "_blank", "noopener")}>
+            Dalolatnomani chop etish
+          </Button>
+          {canDecide ? (
+            <>
+              <Button variant="secondary" icon={X} onClick={() => setRejecting(true)}>
+                Rad etish
+              </Button>
+              <Button
+                icon={Check}
+                loading={approve.isPending}
+                onClick={() =>
+                  approve.mutate(doc.id, {
+                    onSuccess: (d) => toast({ tone: "success", title: "Tasdiqlandi, tovar hisobdan chiqarildi", description: d.number }),
+                    onError: fail,
+                  })
+                }
+              >
+                Tasdiqlash va chiqarish
+              </Button>
+            </>
+          ) : null}
+        </>
       }
     >
       <div className="flex flex-col gap-4">
@@ -150,6 +155,12 @@ function View({ doc, onClose }: { doc: WriteOffDetail; onClose: () => void }) {
             <dt className="text-caption text-text-secondary">Dalolatnoma</dt>
             <dd>{doc.actNo ?? "—"}</dd>
           </div>
+          {doc.sourceTransfer ? (
+            <div className="col-span-3">
+              <dt className="text-caption text-text-secondary">Manba</dt>
+              <dd>Ombor koʻchirishi {doc.sourceTransfer} kamomadi — tovar joʻnatishda chiqqan, qoldiq oʻzgarmaydi</dd>
+            </div>
+          ) : null}
           {doc.commission ? (
             <div className="col-span-3">
               <dt className="text-caption text-text-secondary">Komissiya</dt>

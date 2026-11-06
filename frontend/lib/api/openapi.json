@@ -1095,7 +1095,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2518,7 +2518,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_13",
+        "operationId" : "get_14",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2760,7 +2760,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_12",
+        "operationId" : "get_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5469,7 +5469,7 @@
     },
     "/api/price-changes/{id}/pdf" : {
       "get" : {
-        "operationId" : "pdf",
+        "operationId" : "pdf_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7780,7 +7780,7 @@
     },
     "/api/trips/{id}" : {
       "get" : {
-        "operationId" : "get_11",
+        "operationId" : "get_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8696,6 +8696,74 @@
         "tags" : [ "warehouse-transfer" ]
       }
     },
+    "/api/warehouse-transfers/{id}/shortage" : {
+      "get" : {
+        "description" : "Ochiqmi va hal qilish tarixi.",
+        "operationId" : "get_11",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ShortageInfo"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "OK kamomadi",
+        "tags" : [ "warehouse-transfer" ]
+      }
+    },
+    "/api/warehouse-transfers/{id}/shortage/resolve" : {
+      "post" : {
+        "description" : "WRITE_OFF — HC (sabab «Kamomad», qoldiq harakatisiz, HC tasdiq qoidalari); RETURN — topildi, manba zonaga qaytariladi.",
+        "operationId" : "resolve",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ShortageResolveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ShortageInfo"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kamomadni hal qilish",
+        "tags" : [ "warehouse-transfer" ]
+      }
+    },
     "/api/warehouses" : {
       "get" : {
         "operationId" : "list_2",
@@ -9119,6 +9187,36 @@
           }
         },
         "summary" : "Tasdiqlash va o'tkazish",
+        "tags" : [ "write-off" ]
+      }
+    },
+    "/api/write-offs/{id}/pdf" : {
+      "get" : {
+        "description" : "Tannarx ustunlari — faqat prices.cost.",
+        "operationId" : "pdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "HC dalolatnomasi — PDF (chop etish)",
         "tags" : [ "write-off" ]
       }
     },
@@ -9693,6 +9791,10 @@
           "supplierToday" : {
             "type" : "string"
           },
+          "transferShortagesOpen" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "transfersInTransit" : {
             "type" : "integer",
             "format" : "int32"
@@ -9706,7 +9808,7 @@
             "format" : "int32"
           }
         },
-        "required" : [ "bonusDue", "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
+        "required" : [ "bonusDue", "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday", "transferShortagesOpen", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
       },
       "AuditPage" : {
         "type" : "object",
@@ -15915,6 +16017,82 @@
         },
         "required" : [ "blockers", "branches", "completed", "employees", "warehouses" ]
       },
+      "ShortageInfo" : {
+        "type" : "object",
+        "properties" : {
+          "history" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ShortageResolution"
+            }
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "open" : {
+            "type" : "boolean"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "transferId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "history", "number", "open", "shortageQty", "transferId" ]
+      },
+      "ShortageResolution" : {
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "WRITE_OFF", "RETURN" ]
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "resolvedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "resolvedBy" : {
+            "type" : "string"
+          },
+          "writeOffId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "writeOffNumber" : {
+            "type" : "string"
+          },
+          "writeOffStatus" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "POSTED", "REJECTED" ]
+          }
+        },
+        "required" : [ "kind", "qty", "resolvedAt", "resolvedBy" ]
+      },
+      "ShortageResolveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "WRITE_OFF", "RETURN" ]
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "kind", "note" ]
+      },
       "SseEmitter" : {
         "type" : "object",
         "properties" : {
@@ -17470,6 +17648,10 @@
           },
           "rejectedBy" : {
             "type" : "string"
+          },
+          "sourceTransfer" : {
+            "type" : "string",
+            "description" : "OK kamomadidan bo'lsa — OK raqami (qoldiq harakati yo'q)"
           },
           "status" : {
             "type" : "string",

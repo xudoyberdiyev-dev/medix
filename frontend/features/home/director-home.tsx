@@ -124,6 +124,13 @@ export function attentionRows(
       href: "/write-offs?status=PENDING",
       money: false,
     },
+    {
+      key: "oks",
+      label: "Hal qilinmagan koʻchirish kamomadlari",
+      value: String(a.transferShortagesOpen),
+      href: "/warehouse-transfers?status=RECEIVED",
+      money: false,
+    },
     { key: "drv", label: "Haydovchilardagi pul", value: a.driverCash, href: "/cash", money: true },
   ];
   return rows.filter((r) => nonZero(r.value) && (r.key !== "dir" || perms.director) && (r.key !== "br" || perms.branch));

@@ -447,7 +447,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1037,7 +1037,7 @@ export interface paths {
             cookie?: never;
         };
         /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
-        get: operations["get_13"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1145,7 +1145,7 @@ export interface paths {
          * Buyurtma markirovkasi
          * @description Qatorlar, partiyalar, hisoblagichlar va faol kodlar.
          */
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2405,7 +2405,7 @@ export interface paths {
             cookie?: never;
         };
         /** NO hujjati — PDF (chop etish) */
-        get: operations["pdf"];
+        get: operations["pdf_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3464,7 +3464,7 @@ export interface paths {
             cookie?: never;
         };
         /** Reys */
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3894,6 +3894,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouse-transfers/{id}/shortage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * OK kamomadi
+         * @description Ochiqmi va hal qilish tarixi.
+         */
+        get: operations["get_11"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouse-transfers/{id}/shortage/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kamomadni hal qilish
+         * @description WRITE_OFF — HC (sabab «Kamomad», qoldiq harakatisiz, HC tasdiq qoidalari); RETURN — topildi, manba zonaga qaytariladi.
+         */
+        post: operations["resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouses": {
         parameters: {
             query?: never;
@@ -4075,6 +4115,26 @@ export interface paths {
          * @description Tovar zonadan chiqadi. Direktor darajasidagi hujjat — hc.director.
          */
         post: operations["approve_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/write-offs/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * HC dalolatnomasi — PDF (chop etish)
+         * @description Tannarx ustunlari — faqat prices.cost.
+         */
+        get: operations["pdf"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4322,6 +4382,8 @@ export interface components {
             supplierNext3Days: string;
             supplierOverdue: string;
             supplierToday: string;
+            /** Format: int32 */
+            transferShortagesOpen: number;
             /** Format: int32 */
             transfersInTransit: number;
             /** Format: int32 */
@@ -6732,6 +6794,35 @@ export interface components {
             employees: components["schemas"]["Employee"][];
             warehouses: components["schemas"]["Warehouse"][];
         };
+        ShortageInfo: {
+            history: components["schemas"]["ShortageResolution"][];
+            number: string;
+            open: boolean;
+            /** Format: int32 */
+            shortageQty: number;
+            /** Format: int64 */
+            transferId: number;
+        };
+        ShortageResolution: {
+            /** @enum {string} */
+            kind: "WRITE_OFF" | "RETURN";
+            note?: string;
+            /** Format: int32 */
+            qty: number;
+            /** Format: date-time */
+            resolvedAt: string;
+            resolvedBy: string;
+            /** Format: int64 */
+            writeOffId?: number;
+            writeOffNumber?: string;
+            /** @enum {string} */
+            writeOffStatus?: "PENDING" | "POSTED" | "REJECTED";
+        };
+        ShortageResolveRequest: {
+            /** @enum {string} */
+            kind: "WRITE_OFF" | "RETURN";
+            note: string;
+        };
         SseEmitter: {
             /** Format: int64 */
             timeout: number;
@@ -7368,6 +7459,8 @@ export interface components {
             /** Format: date-time */
             rejectedAt?: string;
             rejectedBy?: string;
+            /** @description OK kamomadidan bo'lsa — OK raqami (qoldiq harakati yo'q) */
+            sourceTransfer?: string;
             /** @enum {string} */
             status: "PENDING" | "POSTED" | "REJECTED";
             totalCost?: string;
@@ -8307,7 +8400,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query: {
                 branchId: number;
@@ -9230,7 +9323,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -9369,7 +9462,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -11228,7 +11321,7 @@ export interface operations {
             };
         };
     };
-    pdf: {
+    pdf_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -12718,7 +12811,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -13326,6 +13419,54 @@ export interface operations {
             };
         };
     };
+    get_11: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShortageInfo"];
+                };
+            };
+        };
+    };
+    resolve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShortageResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShortageInfo"];
+                };
+            };
+        };
+    };
     list_2: {
         parameters: {
             query?: never;
@@ -13610,6 +13751,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WriteOffDetail"];
+                };
+            };
+        };
+    };
+    pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

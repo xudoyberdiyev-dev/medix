@@ -436,3 +436,22 @@ test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, 
   await expect(row).toContainText("Oʻtkazildi");
   await expect(row).toContainText("Shikastlangan");
 });
+
+test("CEO: OK kamomadini hisobdan chiqarish (HC, qoldiq harakatisiz)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/warehouse-transfers");
+  await page.getByRole("row", { name: /OK-/ }).first().click();
+  await expect(page.getByText("Kamomad: 1 dona — hal qilinmagan")).toBeVisible();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Hisobdan chiqarish", exact: true }).click();
+  await page.getByRole("dialog").last().getByLabel("Izoh").fill("Yoʻlda shikastlangan");
+  await page.getByRole("dialog").last().getByRole("button", { name: "Hisobdan chiqarish", exact: true }).click();
+  await expect(page.getByText("Hisobdan chiqarish hujjati tuzildi")).toBeVisible();
+  await expect(page.getByText("Kamomad: 1 dona — hal qilindi")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/write-offs");
+  const row = page.getByRole("row", { name: /Kamomad/ }).first();
+  await expect(row).toContainText("Oʻtkazildi");
+});

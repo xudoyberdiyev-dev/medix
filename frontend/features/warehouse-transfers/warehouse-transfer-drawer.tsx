@@ -31,6 +31,7 @@ import {
   type TransferLine,
   type WarehouseTransferDetail,
 } from "./api";
+import { ShortagePanel } from "./shortage-panel";
 import { WarehouseTransferStatusBadge } from "./warehouse-transfers-page";
 
 const KIND = "Ombor koʻchirishi";
@@ -138,11 +139,7 @@ function View({ doc, onClose }: { doc: WarehouseTransferDetail; onClose: () => v
             kutmoqda.
           </Alert>
         ) : null}
-        {received && doc.shortageQty > 0 ? (
-          <Alert tone="danger" title={`Kamomad: ${formatQuantity(doc.shortageQty)} dona`}>
-            {doc.receiveNote ?? ""} — farqni hal qilish kerak (hisobdan chiqarish yoki qidiruv).
-          </Alert>
-        ) : null}
+        <ShortagePanel doc={doc} />
         <dl className="grid grid-cols-2 gap-4 text-body md:grid-cols-4">
           <div>
             <dt className="text-caption text-text-secondary">Qayerdan</dt>
