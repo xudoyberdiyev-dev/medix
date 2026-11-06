@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { resetLive, STREAM_URL, subscribeLive, useLive } from "./live";
+import { CLOSE_DELAY_MS, resetLive, STREAM_URL, subscribeLive, useLive } from "./live";
 
 class FakeEventSource {
   static instances: FakeEventSource[] = [];
@@ -32,14 +32,18 @@ describe("live (SSE)", () => {
     FakeEventSource.instances = [];
     vi.stubGlobal("EventSource", FakeEventSource);
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
 
   it("oʻchiq boʻlsa ulanmaydi", () => {
     renderHook(() => useLive(["orders"], () => {}, false));
     expect(FakeEventSource.instances).toHaveLength(0);
   });
 
-  it("bir nechta obunachi — bitta ulanish; oxirgisi ketganda yopiladi", () => {
+  it("bir nechta obunachi — bitta ulanish; oxirgisi ketganda kechikib yopiladi", () => {
+    vi.useFakeTimers();
     const a = vi.fn();
     const b = vi.fn();
     const offA = subscribeLive("orders", a);
@@ -54,7 +58,20 @@ describe("live (SSE)", () => {
     offA();
     expect(last()?.closed).toBe(false);
     offB();
+    expect(last()?.closed).toBe(false);
+    vi.advanceTimersByTime(CLOSE_DELAY_MS);
     expect(last()?.closed).toBe(true);
+  });
+
+  it("sahifa almashganda (darhol qayta obuna) ulanish saqlanadi", () => {
+    vi.useFakeTimers();
+    const off = subscribeLive("orders", () => {});
+    off();
+    const again = subscribeLive("orders", () => {});
+    vi.advanceTimersByTime(CLOSE_DELAY_MS * 2);
+    expect(FakeEventSource.instances).toHaveLength(1);
+    expect(last()?.closed).toBe(false);
+    again();
   });
 
   it("ready — ulandi va hammasi yangilanadi; xato — ulanmagan; hodisa — oxirgi callback", () => {
@@ -78,6 +95,5 @@ describe("live (SSE)", () => {
     expect(result.current).toBe(false);
 
     unmount();
-    expect(last()?.closed).toBe(true);
   });
 });

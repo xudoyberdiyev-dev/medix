@@ -20,6 +20,9 @@ const handlers = new Map<LiveEvent, Set<Handler>>();
 const statusListeners = new Set<() => void>();
 let source: EventSource | null = null;
 let connected = false;
+let closeTimer: ReturnType<typeof setTimeout> | null = null;
+/** Sahifa almashganda TopBar qayta yaratiladi — ulanish darhol yopilmaydi, yangi sahifa shu ulanishni oladi. */
+export const CLOSE_DELAY_MS = 3_000;
 
 function setConnected(v: boolean) {
   if (connected === v) return;
@@ -32,6 +35,10 @@ function fire(event: LiveEvent) {
 }
 
 function open() {
+  if (closeTimer) {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+  }
   if (source || typeof EventSource === "undefined") return;
   const es = new EventSource(STREAM_URL, { withCredentials: true });
   source = es;
@@ -45,11 +52,20 @@ function open() {
   es.onerror = () => setConnected(false);
 }
 
+function idle(): boolean {
+  for (const set of handlers.values()) if (set.size > 0) return false;
+  return true;
+}
+
 function closeIfIdle() {
-  for (const set of handlers.values()) if (set.size > 0) return;
-  source?.close();
-  source = null;
-  setConnected(false);
+  if (!idle() || closeTimer) return;
+  closeTimer = setTimeout(() => {
+    closeTimer = null;
+    if (!idle()) return;
+    source?.close();
+    source = null;
+    setConnected(false);
+  }, CLOSE_DELAY_MS);
 }
 
 /** Hodisaga obuna; qaytaradi — obunani bekor qilish. Oxirgi obunachi ketganda ulanish yopiladi. */
@@ -66,6 +82,8 @@ export function subscribeLive(event: LiveEvent, handler: Handler): () => void {
 
 /** Testlar uchun: holatni tozalash. */
 export function resetLive() {
+  if (closeTimer) clearTimeout(closeTimer);
+  closeTimer = null;
   handlers.clear();
   source?.close();
   source = null;
