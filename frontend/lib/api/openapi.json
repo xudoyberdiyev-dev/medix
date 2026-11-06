@@ -3566,6 +3566,7 @@
     },
     "/api/orders" : {
       "get" : {
+        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).",
         "operationId" : "list_7",
         "parameters" : [ {
           "in" : "query",
@@ -3590,6 +3591,30 @@
           "schema" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "operatorId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "soldFrom",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "soldTo",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
           }
         }, {
           "in" : "query",

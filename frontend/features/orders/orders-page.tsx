@@ -77,6 +77,50 @@ export function tabSummary(counts: StatusCount[], status: string | null): string
   return `${c.status ? STATUS_LABELS[c.status] : "Hammasi"}: ${formatQuantity(c.count)} ta · ${formatMoney(c.total)} soʻm`;
 }
 
+/** Hisobotdan oʻtish: ?<id>=…&<nom>=Nomi (Savdo hisoboti qatori). */
+export function idParam(
+  params: Pick<URLSearchParams, "get">,
+  idKey: string,
+  nameKey: string,
+  fallback: string,
+): { id: number; name: string } | null {
+  const id = Number(params.get(idKey));
+  return Number.isInteger(id) && id > 0 ? { id, name: params.get(nameKey) ?? `${fallback} #${id}` } : null;
+}
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** ?soldFrom=YYYY-MM-DD&soldTo=YYYY-MM-DD — shu davrda sotilgan yoki qaytarilgan buyurtmalar (hisobot bilan bir xil). */
+export function soldParam(params: Pick<URLSearchParams, "get">): { from: string | null; to: string | null } | null {
+  const from = params.get("soldFrom");
+  const to = params.get("soldTo");
+  const f = from && ISO_DAY.test(from) ? from : null;
+  const t = to && ISO_DAY.test(to) ? to : null;
+  return f || t ? { from: f, to: t } : null;
+}
+
+export function soldLabel(s: { from: string | null; to: string | null }): string {
+  if (s.from && s.from === s.to) return `Sotuv: ${day(s.from)}`;
+  if (s.from && s.to) return `Sotuv: ${day(s.from)} – ${day(s.to)}`;
+  return s.from ? `Sotuv: ${day(s.from)} dan` : `Sotuv: ${day(s.to ?? "")} gacha`;
+}
+
+function FilterChip({ label, what, onClear }: { label: string; what: string; onClear: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-caption">
+      {label}
+      <button
+        type="button"
+        aria-label={`${what} filtrini olib tashlash`}
+        className="text-text-secondary hover:text-text-primary"
+        onClick={onClear}
+      >
+        <X size={14} strokeWidth={1.5} aria-hidden />
+      </button>
+    </span>
+  );
+}
+
 /** Buyurtmalar (SPEC 5.2): holat yorliqlari (soni, summasi), «Hozir kimda», qidiruv (raqam, mijoz, STIR), «Mening buyurtmalarim». */
 export function OrdersPage() {
   const me = useMe();
@@ -87,11 +131,10 @@ export function OrdersPage() {
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [mine, setMine] = useState(params.get("mine") === "1");
-  // Hisobotdan oʻtish: ?customerId=…&customer=Nomi (Savdo hisoboti — mijoz qatori)
-  const [customer, setCustomer] = useState<{ id: number; name: string } | null>(() => {
-    const id = Number(params.get("customerId"));
-    return Number.isInteger(id) && id > 0 ? { id, name: params.get("customer") ?? `Mijoz #${id}` } : null;
-  });
+  // Hisobotdan oʻtish (Savdo hisoboti qatori): mijoz, operator, sotuv davri
+  const [customer, setCustomer] = useState(() => idParam(params, "customerId", "customer", "Mijoz"));
+  const [operator, setOperator] = useState(() => idParam(params, "operatorId", "operator", "Operator"));
+  const [sold, setSold] = useState(() => soldParam(params));
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — buyurtma kartochkasi darhol ochiladi
   const [editor, setEditor] = useState<{ id: number | null } | null>(() => {
@@ -102,7 +145,17 @@ export function OrdersPage() {
   const allowed = canAny(me.data, ["orders.view", "approvals.view"]);
   const canCreate = can(me.data, ORDER_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
-  const orders = useOrders({ branchId, status: (status as OrderStatus | null) ?? null, q, mine, page, customerId: customer?.id ?? null });
+  const orders = useOrders({
+    branchId,
+    status: (status as OrderStatus | null) ?? null,
+    q,
+    mine,
+    page,
+    customerId: customer?.id ?? null,
+    operatorId: operator?.id ?? null,
+    soldFrom: sold?.from ?? null,
+    soldTo: sold?.to ?? null,
+  });
 
   if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
 
@@ -132,7 +185,7 @@ export function OrdersPage() {
     },
   ];
 
-  const filtered = Boolean(status) || Boolean(q) || mine || customer != null;
+  const filtered = Boolean(status) || Boolean(q) || mine || customer != null || operator != null || sold != null;
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
@@ -183,23 +236,27 @@ export function OrdersPage() {
               </div>
               {canCreate ? <Checkbox label="Mening buyurtmalarim" checked={mine} onChange={(v) => (setMine(v), setPage(1))} /> : null}
               {customer ? (
-                <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-caption">
-                  Mijoz: {customer.name}
-                  <button
-                    type="button"
-                    aria-label="Mijoz filtrini olib tashlash"
-                    className="text-text-secondary hover:text-text-primary"
-                    onClick={() => (setCustomer(null), setPage(1))}
-                  >
-                    <X size={14} strokeWidth={1.5} aria-hidden />
-                  </button>
-                </span>
+                <FilterChip label={`Mijoz: ${customer.name}`} what="Mijoz" onClear={() => (setCustomer(null), setPage(1))} />
               ) : null}
+              {operator ? (
+                <FilterChip label={`Operator: ${operator.name}`} what="Operator" onClear={() => (setOperator(null), setPage(1))} />
+              ) : null}
+              {sold ? <FilterChip label={soldLabel(sold)} what="Sotuv davri" onClear={() => (setSold(null), setPage(1))} /> : null}
             </div>
           }
           emptyState={
             filtered ? (
-              <NoResultsState onClearFilters={() => (setStatus(null), setSearch(""), setQ(""), setMine(false), setCustomer(null))} />
+              <NoResultsState
+                onClearFilters={() => (
+                  setStatus(null),
+                  setSearch(""),
+                  setQ(""),
+                  setMine(false),
+                  setCustomer(null),
+                  setOperator(null),
+                  setSold(null)
+                )}
+              />
             ) : (
               <EmptyState
                 icon={ClipboardList}

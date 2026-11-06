@@ -1558,7 +1558,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Buyurtmalar */
+        /**
+         * Buyurtmalar
+         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).
+         */
         get: operations["list_7"];
         put?: never;
         /**
@@ -9267,6 +9270,9 @@ export interface operations {
                 branchId?: number;
                 status?: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
                 customerId?: number;
+                operatorId?: number;
+                soldFrom?: string;
+                soldTo?: string;
                 q?: string;
                 mine?: boolean;
                 page?: number;

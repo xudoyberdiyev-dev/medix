@@ -169,6 +169,20 @@ class SalesReportIT {
                 .andExpect(jsonPath("$.rows[0].cost").doesNotExist());
         // Filial rahbari: boshqa filial — yopiq
         mvc.perform(get("/api/reports/sales").param("branchId", "" + other).cookie(manager)).andExpect(status().isNotFound());
+        // Qatordan hujjatlarga: shu davrda sotilgan, shu operator / mijoz buyurtmalari (SPEC 8)
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("operatorId", "" + op1.id()).param("soldFrom", t).param("soldTo", t)
+                        .cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("customerId", "" + c1).param("soldFrom", t).param("soldTo", t)
+                        .cookie(director))
+                .andExpect(jsonPath("$.total").value(2));
+        String tomorrow = today().plusDays(1).toString();
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("soldFrom", tomorrow).cookie(director))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/orders").param("soldFrom", tomorrow).param("soldTo", t).cookie(director))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("home.periodInvalid"));
         // Eksport
         mvc.perform(get("/api/reports/sales/export").param("branchId", "" + b).param("from", t).cookie(director))
                 .andExpect(status().isOk())

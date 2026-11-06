@@ -291,8 +291,12 @@ class Orders {
 
     // ===== O'qish =====
 
+    /** Ro'yxat filtrlari (hisobotdan o'tish): mijoz, kiritgan xodim, sotuv/qaytarish davri. */
+    record OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo) {}
+
     @Transactional(readOnly = true)
-    OrderPage list(Actor actor, Long branchId, OrderStatus status, Long customerId, String q, boolean mine, int page, int size) {
+    OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, int page, int size) {
+        Long customerId = filter.customerId();
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
         if (!actor.allBranches()) {
@@ -306,6 +310,17 @@ class Orders {
         if (customerId != null) {
             where.append(" AND o.customer_id = :c");
             params.put("c", customerId);
+        }
+        if (filter.operatorId() != null) {
+            where.append(" AND o.created_by = :op");
+            params.put("op", filter.operatorId());
+        }
+        if (filter.soldFrom() != null || filter.soldTo() != null) {
+            // Savdo hisoboti bilan bir xil: o'tkazilgan sotuv (sale_date) yoki qaytarish (return_date) shu davrda.
+            where.append(" AND (EXISTS (SELECT 1 FROM sale s WHERE s.order_id = o.id AND s.status = 'POSTED' AND s.sale_date BETWEEN :sf AND :st)")
+                    .append(" OR EXISTS (SELECT 1 FROM sales_return r WHERE r.order_id = o.id AND r.return_date BETWEEN :sf AND :st))");
+            params.put("sf", java.sql.Date.valueOf(filter.soldFrom() == null ? LocalDate.of(2000, 1, 1) : filter.soldFrom()));
+            params.put("st", java.sql.Date.valueOf(filter.soldTo() == null ? LocalDate.of(2999, 12, 31) : filter.soldTo()));
         }
         if (mine) {
             where.append(" AND o.created_by = :me");

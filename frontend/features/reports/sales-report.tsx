@@ -36,10 +36,33 @@ export function salesExportHref(f: { branchId: number | null; from: string; to: 
 
 const money = (v: string | undefined) => <span className="font-mono tabular-nums">{v == null ? "—" : formatMoney(v)}</span>;
 
-/** Mijoz qatoridan — shu mijozning buyurtmalari (hujjatlar). Boshqa guruhlar uchun — null. */
-export function salesRowHref(groupBy: GroupBy, row: { key: string; name: string }): string | null {
-  if (groupBy !== "CUSTOMER" || !/^[1-9][0-9]*$/.test(row.key)) return null;
-  return `/orders?${new URLSearchParams({ customerId: row.key, customer: row.name }).toString()}`;
+/**
+ * Qatordan hujjatlarga (SPEC 8): shu davrda sotilgan/qaytarilgan buyurtmalar — mijoz, operator yoki kun boʻyicha.
+ * «Faqat oʻz savdom» (reports.own) boʻlsa — «Mening buyurtmalarim» bilan. Filial qatori va «Jami» — null.
+ */
+export function salesRowHref(
+  groupBy: GroupBy,
+  row: { key: string; name: string },
+  period: { from: string | null; to: string | null } = { from: null, to: null },
+  mineOnly = false,
+): string | null {
+  const q = new URLSearchParams();
+  if (groupBy === "CUSTOMER" || groupBy === "OPERATOR") {
+    if (!/^[1-9][0-9]*$/.test(row.key)) return null;
+    const [id, name] = groupBy === "CUSTOMER" ? ["customerId", "customer"] : ["operatorId", "operator"];
+    q.set(id, row.key);
+    q.set(name, row.name);
+    if (period.from) q.set("soldFrom", period.from);
+    if (period.to) q.set("soldTo", period.to);
+  } else if (groupBy === "DAY") {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(row.key)) return null;
+    q.set("soldFrom", row.key);
+    q.set("soldTo", row.key);
+  } else {
+    return null;
+  }
+  if (mineOnly) q.set("mine", "1");
+  return `/orders?${q.toString()}`;
 }
 
 /** Savdo hisoboti (SPEC 8): filtr (davr, guruh), jami qatori, .xlsx eksport; tannarx/yalpi foyda faqat ruxsat bilan (API oʻzi yubormaydi). */
@@ -156,9 +179,9 @@ export function SalesReportPage() {
           rowKey={(x) => x.key}
           loading={report.isLoading}
           onRowClick={
-            canOpenOrders && groupBy === "CUSTOMER"
+            canOpenOrders && groupBy !== "BRANCH"
               ? (x) => {
-                  const href = salesRowHref(groupBy, x);
+                  const href = salesRowHref(groupBy, x, { from, to }, r?.mineOnly ?? false);
                   if (href) router.push(href);
                 }
               : undefined

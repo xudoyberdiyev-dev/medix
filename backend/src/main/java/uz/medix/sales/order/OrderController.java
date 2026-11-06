@@ -3,7 +3,9 @@ package uz.medix.sales.order;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -76,16 +78,24 @@ class OrderController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
-    @Operation(summary = "Buyurtmalar")
+    @Operation(summary = "Buyurtmalar", description = "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan "
+            + "(Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).")
     OrderPage list(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) Long customerId,
+            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldTo,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean mine,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return orders.list(actor(), branchId, status, customerId, q, mine, Math.max(page, 0), Math.clamp(size, 1, 200));
+        if (soldFrom != null && soldTo != null && soldFrom.isAfter(soldTo)) {
+            throw MedixException.badRequest("home.periodInvalid");
+        }
+        return orders.list(actor(), branchId, status, new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo), q, mine,
+                Math.max(page, 0), Math.clamp(size, 1, 200));
     }
 
     @GetMapping("/{id}")

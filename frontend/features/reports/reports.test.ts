@@ -41,9 +41,17 @@ describe("hisobotlar", () => {
     );
   });
 
-  it("savdo hisoboti: mijoz qatoridan buyurtmalarga", () => {
+  it("savdo hisoboti: qatordan shu davr buyurtmalariga", () => {
+    const period = { from: "2026-11-01", to: "2026-11-05" };
     expect(salesRowHref("CUSTOMER", { key: "12", name: "Dorixona A" })).toBe("/orders?customerId=12&customer=Dorixona+A");
-    expect(salesRowHref("DAY", { key: "2026-11-05", name: "05.11.2026" })).toBeNull();
+    expect(salesRowHref("CUSTOMER", { key: "12", name: "Dorixona A" }, period)).toBe(
+      "/orders?customerId=12&customer=Dorixona+A&soldFrom=2026-11-01&soldTo=2026-11-05",
+    );
+    expect(salesRowHref("OPERATOR", { key: "7", name: "Aziza" }, period, true)).toBe(
+      "/orders?operatorId=7&operator=Aziza&soldFrom=2026-11-01&soldTo=2026-11-05&mine=1",
+    );
+    expect(salesRowHref("DAY", { key: "2026-11-05", name: "05.11.2026" }, period)).toBe("/orders?soldFrom=2026-11-05&soldTo=2026-11-05");
+    expect(salesRowHref("BRANCH", { key: "1", name: "Toshkent" }, period)).toBeNull();
     expect(salesRowHref("CUSTOMER", { key: "", name: "Jami" })).toBeNull();
   });
 });

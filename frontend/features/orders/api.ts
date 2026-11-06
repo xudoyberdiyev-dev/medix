@@ -61,6 +61,9 @@ export function useOrders(f: {
   mine: boolean;
   page: number;
   customerId?: number | null;
+  operatorId?: number | null;
+  soldFrom?: string | null;
+  soldTo?: string | null;
 }) {
   return useQuery({
     queryKey: ["orders", "list", f],
@@ -74,6 +77,9 @@ export function useOrders(f: {
               q: f.q.trim() || undefined,
               mine: f.mine,
               customerId: f.customerId ?? undefined,
+              operatorId: f.operatorId ?? undefined,
+              soldFrom: f.soldFrom ?? undefined,
+              soldTo: f.soldTo ?? undefined,
               page: f.page - 1,
               size: 50,
             },
