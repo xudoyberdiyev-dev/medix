@@ -1215,7 +1215,7 @@ export interface paths {
          * Sanoq varag'i / inventarizatsiya qaydnomasi — PDF
          * @description Sanoqda — sanoq varag'i («Sanaldi» bo'sh), keyin — farqlar bilan qaydnoma. Tannarx — faqat prices.cost.
          */
-        get: operations["pdf_2"];
+        get: operations["pdf_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2606,7 +2606,7 @@ export interface paths {
             cookie?: never;
         };
         /** NO hujjati — PDF (chop etish) */
-        get: operations["pdf_1"];
+        get: operations["pdf_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3568,6 +3568,26 @@ export interface paths {
          * @description Tovar zonadan chiqadi, YB qarzi (yoki bonus balans) kirim narxida tuzatiladi.
          */
         post: operations["approve_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supplier-returns/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * QY yuk xati — PDF (chop etish)
+         * @description Narx va summa ustunlari — faqat prices.cost.
+         */
+        get: operations["pdf_1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -10166,7 +10186,7 @@ export interface operations {
             };
         };
     };
-    pdf_2: {
+    pdf_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -12183,7 +12203,7 @@ export interface operations {
             };
         };
     };
-    pdf_1: {
+    pdf_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -13581,6 +13601,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SupplierReturnDetail"];
+                };
+            };
+        };
+    };
+    pdf_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

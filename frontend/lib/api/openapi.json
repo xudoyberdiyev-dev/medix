@@ -2899,7 +2899,7 @@
     "/api/inventory-counts/{id}/pdf" : {
       "get" : {
         "description" : "Sanoqda — sanoq varag'i («Sanaldi» bo'sh), keyin — farqlar bilan qaydnoma. Tannarx — faqat prices.cost.",
-        "operationId" : "pdf_2",
+        "operationId" : "pdf_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5857,7 +5857,7 @@
     },
     "/api/price-changes/{id}/pdf" : {
       "get" : {
-        "operationId" : "pdf_1",
+        "operationId" : "pdf_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8072,6 +8072,36 @@
           }
         },
         "summary" : "Tasdiqlash va o'tkazish",
+        "tags" : [ "supplier-return" ]
+      }
+    },
+    "/api/supplier-returns/{id}/pdf" : {
+      "get" : {
+        "description" : "Narx va summa ustunlari — faqat prices.cost.",
+        "operationId" : "pdf_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "QY yuk xati — PDF (chop etish)",
         "tags" : [ "supplier-return" ]
       }
     },
