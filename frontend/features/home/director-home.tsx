@@ -15,6 +15,7 @@ import { type OrderStatus, STATUS_LABELS } from "@/features/orders/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
+import { useClientTable } from "@/lib/client-table";
 import { useBranchStore } from "@/lib/stores/branch";
 import { PeriodPicker, usePeriodState } from "./period-picker";
 
@@ -291,9 +292,10 @@ function TopDebtors({ rows }: { rows: Debtor[] }) {
 function Branches({ rows }: { rows: BranchRow[] }) {
   const [tab, setTab] = useState<BranchTab>("sales");
   const title = BRANCH_TABS.find((t) => t.key === tab)?.label ?? "";
+  const table = useClientTable(rows);
   const columns: TableColumn<BranchRow>[] = [
-    { key: "name", title: "Filial" },
-    { key: tab, title, align: "right", render: (b) => money(b[tab]) },
+    { key: "name", title: "Filial", sortable: true },
+    { key: tab, title, align: "right", sortable: true, render: (b) => money(b[tab]) },
   ];
   return (
     <section>
@@ -307,7 +309,10 @@ function Branches({ rows }: { rows: BranchRow[] }) {
         caption="Filiallar kesimi"
         density="compact"
         columns={columns}
-        rows={rows}
+        rows={table.rows}
+        sort={table.sort}
+        onSortChange={table.onSortChange}
+        pagination={table.pagination}
         rowKey={(b) => String(b.id)}
         emptyState={<EmptyState icon={Building2} title="Filial yoʻq" description="Faol filiallar shu yerda koʻrinadi." />}
       />
