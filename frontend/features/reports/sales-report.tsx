@@ -15,9 +15,11 @@ import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
+import { useClientTable } from "@/lib/client-table";
 import { useBranchStore } from "@/lib/stores/branch";
 
 type SalesRow = components["schemas"]["SalesRow"];
+const NO_ROWS: SalesRow[] = [];
 export type GroupBy = components["schemas"]["SalesReportView"]["groupBy"];
 
 export const GROUP_LABELS: Record<GroupBy, string> = { CUSTOMER: "Mijoz", OPERATOR: "Operator", BRANCH: "Filial", DAY: "Kun" };
@@ -72,14 +74,22 @@ export function SalesReportPage() {
     enabled: allowed && !!from && !!to,
   });
 
+  const table = useClientTable(report.data?.rows ?? NO_ROWS);
+
   if (me.data && !allowed) return <ForbiddenState description="Savdo hisoboti sizning rolingiz uchun yopiq." />;
   const r = report.data;
   const columns: TableColumn<SalesRow>[] = [
-    { key: "name", title: GROUP_LABELS[groupBy] },
-    { key: "orders", title: "Buyurtmalar", align: "right", render: (x) => <span className="font-mono tabular-nums">{x.orders}</span> },
-    { key: "sales", title: "Sotuv", align: "right", render: (x) => money(x.sales) },
-    { key: "returns", title: "Qaytarish", align: "right", render: (x) => money(x.returns) },
-    { key: "net", title: "Sof savdo (QQS bilan)", align: "right", render: (x) => money(x.net) },
+    { key: "name", sortable: true, title: GROUP_LABELS[groupBy] },
+    {
+      key: "orders",
+      sortable: true,
+      title: "Buyurtmalar",
+      align: "right",
+      render: (x) => <span className="font-mono tabular-nums">{x.orders}</span>,
+    },
+    { key: "sales", sortable: true, title: "Sotuv", align: "right", render: (x) => money(x.sales) },
+    { key: "returns", sortable: true, title: "Qaytarish", align: "right", render: (x) => money(x.returns) },
+    { key: "net", sortable: true, title: "Sof savdo (QQS bilan)", align: "right", render: (x) => money(x.net) },
   ];
   if (r?.costVisible) {
     columns.push(
@@ -139,7 +149,10 @@ export function SalesReportPage() {
           caption="Savdo hisoboti"
           density="compact"
           columns={columns}
-          rows={r?.rows ?? []}
+          rows={table.rows}
+          sort={table.sort}
+          onSortChange={table.onSortChange}
+          pagination={table.pagination}
           rowKey={(x) => x.key}
           loading={report.isLoading}
           onRowClick={

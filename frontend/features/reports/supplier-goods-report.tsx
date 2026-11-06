@@ -14,9 +14,11 @@ import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
+import { rowField, useClientTable } from "@/lib/client-table";
 import { useBranchStore } from "@/lib/stores/branch";
 
 type Row = components["schemas"]["SupplierGoodsRow"];
+const NO_ROWS: Row[] = [];
 export type SupplierKind = components["schemas"]["SupplierGoodsView"]["kind"];
 
 export const KIND_LABELS: Record<SupplierKind, string> = { STAFF: "Taʼminotchi xodim", COMPANY: "Taʼminotchi korxona" };
@@ -57,14 +59,19 @@ export function SupplierGoodsReportPage() {
     enabled: allowed && !!from && !!to,
   });
 
+  const table = useClientTable(report.data?.rows ?? NO_ROWS, {
+    value: (x, key) => (key === "active" ? (x.active ? 0 : 1) : rowField(x, key)),
+  });
+
   if (me.data && !allowed) {
     return <ForbiddenState description="Bu hisobot tannarxda — hisobot va tannarx koʻrish ruxsati kerak." />;
   }
   const r = report.data;
   const columns: TableColumn<Row>[] = [
-    { key: "name", title: kind === "STAFF" ? "Xodim (kim nomiga)" : "Taʼminotchi" },
+    { key: "name", sortable: true, title: kind === "STAFF" ? "Xodim (kim nomiga)" : "Taʼminotchi" },
     {
       key: "active",
+      sortable: true,
       title: "Holat",
       render: (x) =>
         x.active ? (
@@ -77,10 +84,10 @@ export function SupplierGoodsReportPage() {
           </Badge>
         ),
     },
-    { key: "brought", title: "Olib keldi", align: "right", render: (x) => money(x.brought) },
-    { key: "sold", title: "Sotildi", align: "right", render: (x) => money(x.sold) },
-    { key: "other", title: "Boshqa", align: "right", render: (x) => money(x.other) },
-    { key: "left", title: "Qoldi", align: "right", render: (x) => money(x.left) },
+    { key: "brought", sortable: true, title: "Olib keldi", align: "right", render: (x) => money(x.brought) },
+    { key: "sold", sortable: true, title: "Sotildi", align: "right", render: (x) => money(x.sold) },
+    { key: "other", sortable: true, title: "Boshqa", align: "right", render: (x) => money(x.other) },
+    { key: "left", sortable: true, title: "Qoldi", align: "right", render: (x) => money(x.left) },
   ];
   const totals: Record<string, React.ReactNode> | undefined = r
     ? {
@@ -133,7 +140,10 @@ export function SupplierGoodsReportPage() {
           caption={`${KIND_LABELS[kind]} tovari`}
           density="compact"
           columns={columns}
-          rows={r?.rows ?? []}
+          rows={table.rows}
+          sort={table.sort}
+          onSortChange={table.onSortChange}
+          pagination={table.pagination}
           rowKey={(x) => String(x.id)}
           loading={report.isLoading}
           totals={r && r.rows.length > 0 ? totals : undefined}

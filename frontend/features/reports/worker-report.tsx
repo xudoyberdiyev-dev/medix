@@ -11,9 +11,11 @@ import { formatIsoDate } from "@/features/counterparties/api";
 import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { rowField, useClientTable } from "@/lib/client-table";
 import { useBranchStore } from "@/lib/stores/branch";
 
 type WorkerRow = components["schemas"]["WorkerRow"];
+const NO_ROWS: WorkerRow[] = [];
 export type WorkerKind = components["schemas"]["WorkerReportView"]["kind"];
 
 const KIND = {
@@ -72,25 +74,30 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
     enabled: allowed && !!from && !!to,
   });
 
+  const table = useClientTable(report.data?.rows ?? NO_ROWS, {
+    value: (x, key) => (key === "extra" ? (kind === "PICKERS" ? x.fefoDeviations : x.removedCodes) : rowField(x, key)),
+  });
+
   if (me.data && !allowed) return <ForbiddenState description={`${k.title} sizning rolingiz uchun yopiq.`} />;
   const r = report.data;
   const extra = (x: WorkerRow) => (kind === "PICKERS" ? x.fefoDeviations : x.removedCodes);
   const columns: TableColumn<WorkerRow>[] = [
-    { key: "name", title: k.person },
-    { key: "orders", title: "Buyurtmalar", align: "right", render: (x) => num(x.orders) },
-    { key: "lines", title: "Qatorlar", align: "right", render: (x) => num(x.lines) },
-    { key: "units", title: k.units, align: "right", render: (x) => num(x.units) },
-    { key: "givenMinutes", title: "Berilgan vaqt", align: "right", render: (x) => formatMinutes(x.givenMinutes) },
-    { key: "actualMinutes", title: "Haqiqiy vaqt", align: "right", render: (x) => formatMinutes(x.actualMinutes) },
-    { key: "avgMinutes", title: "Oʻrtacha / buyurtma", align: "right", render: (x) => formatMinutes(x.avgMinutes) },
-    { key: "onTime", title: "Vaqtida", align: "right", render: (x) => num(x.onTime) },
+    { key: "name", sortable: true, title: k.person },
+    { key: "orders", sortable: true, title: "Buyurtmalar", align: "right", render: (x) => num(x.orders) },
+    { key: "lines", sortable: true, title: "Qatorlar", align: "right", render: (x) => num(x.lines) },
+    { key: "units", sortable: true, title: k.units, align: "right", render: (x) => num(x.units) },
+    { key: "givenMinutes", sortable: true, title: "Berilgan vaqt", align: "right", render: (x) => formatMinutes(x.givenMinutes) },
+    { key: "actualMinutes", sortable: true, title: "Haqiqiy vaqt", align: "right", render: (x) => formatMinutes(x.actualMinutes) },
+    { key: "avgMinutes", sortable: true, title: "Oʻrtacha / buyurtma", align: "right", render: (x) => formatMinutes(x.avgMinutes) },
+    { key: "onTime", sortable: true, title: "Vaqtida", align: "right", render: (x) => num(x.onTime) },
     {
       key: "late",
+      sortable: true,
       title: "Kechikkan",
       align: "right",
       render: (x) => <span className={`font-mono tabular-nums ${x.late > 0 ? "text-warning" : ""}`}>{x.late}</span>,
     },
-    { key: "extra", title: k.extra, align: "right", render: (x) => num(extra(x)) },
+    { key: "extra", sortable: true, title: k.extra, align: "right", render: (x) => num(extra(x)) },
   ];
   const totals: Record<string, React.ReactNode> | undefined = r
     ? {
@@ -140,7 +147,10 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
           caption={k.title}
           density="compact"
           columns={columns}
-          rows={r?.rows ?? []}
+          rows={table.rows}
+          sort={table.sort}
+          onSortChange={table.onSortChange}
+          pagination={table.pagination}
           rowKey={(x) => String(x.employeeId)}
           loading={report.isLoading}
           totals={r && r.rows.length > 0 ? totals : undefined}
