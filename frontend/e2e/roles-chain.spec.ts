@@ -249,6 +249,7 @@ test("Ombor mudiri: hisobdan oʻtkazadi va reys tuzadi", async ({ page }) => {
   await page.goto("/warehouse");
   await page.getByRole("region", { name: "Hisobdan oʻtkazilmoqda" }).getByText(CUSTOMER).click();
   await expect(page.getByRole("heading", { name: "Hisobdan oʻtkazish" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hisobdan oʻtkazish" })).toBeVisible();
   for (const c of await page.getByText("Tekshirildi", { exact: true }).all()) await c.click();
   await field(page, "Joylar soni").fill("1");
   await page.getByRole("button", { name: "Hisobdan oʻtkazish" }).click();
@@ -472,6 +473,7 @@ test("Ombor zanjiri: tasdiqlangan buyurtma — vaqt, yigʻish, hisobdan oʻtkazi
   await expect(picker).toHaveURL(/\/$/);
   await picker.goto("/picking");
   await picker.getByRole("button", { name: "Yigʻishni boshlash" }).first().click();
+  await expect(picker.getByRole("timer")).toBeVisible();
   for (const c of await picker.getByText("Olindi", { exact: true }).all()) await c.click();
   await picker.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(picker.getByText("Yigʻish yakunlandi")).toBeVisible();
@@ -479,6 +481,7 @@ test("Ombor zanjiri: tasdiqlangan buyurtma — vaqt, yigʻish, hisobdan oʻtkazi
 
   await page.goto("/warehouse");
   await page.getByRole("region", { name: "Hisobdan oʻtkazilmoqda" }).getByText(CUSTOMER).click();
+  await expect(page.getByRole("heading", { name: "Hisobdan oʻtkazish" })).toBeVisible();
   for (const c of await page.getByText("Tekshirildi", { exact: true }).all()) await c.click();
   await field(page, "Joylar soni").fill("1");
   await page.getByRole("button", { name: "Hisobdan oʻtkazish" }).click();
