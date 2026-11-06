@@ -125,6 +125,13 @@ export function attentionRows(
       money: false,
     },
     {
+      key: "qy",
+      label: "YB ga qaytarish tasdigʻi kutilmoqda",
+      value: String(a.supplierReturnsPending),
+      href: "/supplier-returns?status=PENDING",
+      money: false,
+    },
+    {
       key: "oks",
       label: "Hal qilinmagan koʻchirish kamomadlari",
       value: String(a.transferShortagesOpen),

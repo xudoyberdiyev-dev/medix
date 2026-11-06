@@ -1,5 +1,6 @@
 package uz.medix.identity.organization;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -91,10 +92,17 @@ class BranchWarehouseAdminIT {
     }
 
     private long branch(Cookie admin) throws Exception {
-        return id(mvc.perform(json(post("/api/branches"), admin,
-                        "{\"code\":\"" + code() + "\",\"name\":\"Filial\",\"legalName\":\"Filial MChJ\",\"tin\":\"" + tin() + "\"}"))
-                .andExpect(status().isCreated())
-                .andReturn());
+        // Tasodifiy 3 harfli kod boshqa testlar filiali bilan to'qnashishi mumkin (409) — boshqa kod bilan qayta urinamiz.
+        for (int attempt = 0; attempt < 10; attempt++) {
+            MvcResult r = mvc.perform(json(post("/api/branches"), admin,
+                            "{\"code\":\"" + code() + "\",\"name\":\"Filial\",\"legalName\":\"Filial MChJ\",\"tin\":\"" + tin() + "\"}"))
+                    .andReturn();
+            if (r.getResponse().getStatus() != 409) {
+                assertThat(r.getResponse().getStatus()).isEqualTo(201);
+                return id(r);
+            }
+        }
+        throw new AssertionError("filial kodi 10 marta to'qnashdi");
     }
 
     @Test

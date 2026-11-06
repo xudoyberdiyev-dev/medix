@@ -53,7 +53,7 @@ class DirectorHome {
     record Attention(String overdue1to30, String overdue31to60, String overdue61to90, String overdue90plus, CountAmount directorOrders,
             CountAmount branchOrders, CountAmount cashApprovals, ExpiringBatches expiring, String supplierOverdue, String supplierToday, String supplierNext3Days,
             int receiptsToPost, String driverCash, int bonusDue, int zoneTransfersPending, int transfersInTransit,
-            int writeOffsPending, int transferShortagesOpen, int inventoryCheck, int inventoryCounting) {}
+            int writeOffsPending, int transferShortagesOpen, int inventoryCheck, int inventoryCounting, int supplierReturnsPending) {}
 
     /**
      * Buyurtma holati katagi: soni va summasi — Hammasi / Bugungi (bugun kiritilgan) / Kechikkanlar (holatda 2 kundan
@@ -303,6 +303,10 @@ class DirectorHome {
         int writeOffPending = jdbc.sql("""
                 SELECT count(*) FROM write_off WHERE status = 'PENDING' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
                 .param("b", branchId).query(Integer.class).single();
+        // YB ga qaytarish — tasdiq kutmoqda (QY, qy.approve)
+        int supplierReturnPending = jdbc.sql("""
+                SELECT count(*) FROM supplier_return WHERE status = 'PENDING' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
+                .param("b", branchId).query(Integer.class).single();
         // OK kamomadi hal qilinmagan (qaytarilmagan va hisobdan chiqarish rad etilmagan hujjati yo'q) — transfer.resolve
         int shortagesOpen = jdbc.sql("""
                 SELECT count(*) FROM warehouse_transfer t
@@ -321,7 +325,7 @@ class DirectorHome {
                 new CountAmount(orders.count(), m(orders.amount()).toString()),
                 new CountAmount(branchOrders.count(), m(branchOrders.amount()).toString()), new CountAmount(cash.count(), m(cash.amount()).toString()),
                 expiring, due.overdue(), due.today(), due.next3Days(), receipts, m(driver).toString(), bonusDue, zonePending, inTransit,
-                writeOffPending, shortagesOpen, inv.check(), inv.counting());
+                writeOffPending, shortagesOpen, inv.check(), inv.counting(), supplierReturnPending);
     }
 
     private static Money sum(List<Amount> list, long branchId) {

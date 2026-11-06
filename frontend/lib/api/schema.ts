@@ -4687,6 +4687,8 @@ export interface components {
             receiptsToPost: number;
             supplierNext3Days: string;
             supplierOverdue: string;
+            /** Format: int32 */
+            supplierReturnsPending: number;
             supplierToday: string;
             /** Format: int32 */
             transferShortagesOpen: number;

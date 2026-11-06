@@ -492,3 +492,28 @@ test("CEO: inventarizatsiya (IN) — qoralama → sanoqni ochish → sanash → 
   const row = page.getByRole("row", { name: /IN-/ }).first();
   await expect(row).toContainText("Bekor qilingan");
 });
+
+test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kamayadi", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/supplier-returns");
+  await page.getByRole("button", { name: "Qaytarish" }).first().click();
+  const drawer = page.getByRole("dialog").last();
+  await drawer.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("Pharm");
+  await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
+  await drawer.getByRole("combobox", { name: "Kirim", exact: true }).click();
+  await page.getByRole("option", { name: /KR-/ }).first().click();
+  await drawer.getByRole("combobox", { name: "Sabab", exact: true }).click();
+  await page.getByRole("option", { name: "Sifatsiz (brak)" }).click();
+  await drawer.getByLabel(/KR-E2E — qaytarish soni/).fill("1");
+  await drawer.getByRole("button", { name: "Qaytarish", exact: true }).click();
+  await expect(page.getByText("Tovar YB ga qaytarildi")).toBeVisible();
+  await expect(drawer.getByText("2.000,00", { exact: false }).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  const row = page.getByRole("row", { name: /QY-/ }).first();
+  await expect(row).toContainText("Oʻtkazildi");
+  await expect(row).toContainText("Pharm Supply E2E");
+});
