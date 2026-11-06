@@ -90,6 +90,31 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   await field(page, "Nomi").fill(CUSTOMER);
   await page.getByRole("button", { name: "Kartani saqlash" }).click();
   await expect(page.getByText("Kontragent qoʻshildi")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // Pul hisoblari: ikkinchi kassa va bank hisobi; Kassa 2 — Komila Kassirovaga biriktiriladi
+  await page.goto("/cash");
+  await page.getByRole("button", { name: /^Filial:/ }).click();
+  await page.getByRole("option").nth(1).click();
+  await page.getByRole("button", { name: "Hisob qoʻshish" }).click();
+  await choose(page, "Turi", /^Kassa$/);
+  await field(page, "Nomi").fill("Kassa 2");
+  await page.getByRole("button", { name: "Hisobni saqlash" }).click();
+  await expect(page.getByText("Hisob qoʻshildi").first()).toBeVisible();
+  await page.getByRole("button", { name: "Hisob qoʻshish" }).click();
+  await field(page, "Nomi").fill("Asosiy bank hisobi");
+  await field(page, "Hisob raqami").fill("1234");
+  await page.getByRole("button", { name: "Hisobni saqlash" }).click();
+  await expect(page.getByText("Hisob raqami 20 ta raqamdan iborat boʻlishi kerak.")).toBeVisible();
+  await field(page, "Hisob raqami").fill("20208000900123456789");
+  await page.getByRole("button", { name: "Hisobni saqlash" }).click();
+  await expect(page.getByRole("button", { name: /Asosiy bank hisobi/ })).toBeVisible();
+
+  await page.getByRole("button", { name: "Kassirlar" }).click();
+  await page.getByRole("combobox", { name: /^Kassa 2 · / }).click();
+  await page.getByRole("option", { name: /Komila Kassirova/ }).click();
+  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
+  await expect(page.getByText("Kassirlar saqlandi").first()).toBeVisible();
 });
 
 test("Operator: naqd toʻlovli buyurtma kiritadi va navbatga yuboradi", async ({ page }) => {
@@ -184,11 +209,14 @@ test("Kassir: haydovchidagi pulni qabul qiladi (MT)", async ({ page }) => {
   await page.goto("/cash");
   await expect(page.getByRole("heading", { name: "Haydovchidagi pul" })).toBeVisible();
   await expect(page.getByText(CUSTOMER).first()).toBeVisible();
-  const target = page.getByRole("combobox", { name: "Qabul qilinadigan kassa", exact: true });
-  if ((await target.textContent())?.includes("Asosiy kassa") !== true) await choose(page, "Qabul qilinadigan kassa", /Asosiy kassa/);
+  // Kassir faqat oʻz kassasida: tanlovda faqat «Kassa 2» (Asosiy kassada esa CEO kunni yopgan)
+  await expect(page.getByRole("combobox", { name: "Qabul qilinadigan kassa", exact: true })).toHaveText(/Kassa 2/);
   await page.getByRole("button", { name: "Qabul qildim" }).first().click();
   await expect(page.getByText("Pul qabul qilindi").first()).toBeVisible();
   await expect(page.getByText("Haydovchilarda pul yoʻq")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Kassa 2.*10\.000,00 soʻm/ })).toBeVisible();
+  // Kassir hisob qoʻsha olmaydi
+  await expect(page.getByRole("button", { name: "Hisob qoʻshish" })).toHaveCount(0);
 });
 
 test("Operator: buyurtma «Yetkazildi» holatida", async ({ page }) => {

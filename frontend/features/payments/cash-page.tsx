@@ -18,6 +18,7 @@ import { formatDateTime, formatMoney } from "@/lib/format";
 import { CASH_APPROVE, CASH_CLOSE, CASH_IO, usableAccount } from "@/features/cash/api";
 import { ClosesTab, OpsTab, PendingOps, StatementTab, TransfersTab } from "@/features/cash/cash-sections";
 import { BankReconTab } from "@/features/cash/bank-recon";
+import { AccountDialog } from "@/features/cash/account-dialog";
 import { CashierDialog } from "@/features/cash/cashier-dialog";
 import { CloseDrawer } from "@/features/cash/close-drawer";
 import { CashOpDialog, TransferDialog } from "@/features/cash/op-dialogs";
@@ -44,6 +45,7 @@ export function CashPage() {
   });
   const supervisor = can(me.data, CASH_APPROVE);
   const canAssign = supervisor || can(me.data, "settings.view");
+  const canAddAccount = can(me.data, "settings.view");
   const all = accounts.data ?? [];
   // Kassir faqat oʻz kassasida (backend ham tekshiradi): amallar uchun faqat ishlatish mumkin boʻlgan hisoblar
   const usable = all.filter((a) => usableAccount(a, all, me.data?.id, supervisor));
@@ -53,7 +55,7 @@ export function CashPage() {
   const [pending, setPending] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [tab, setTab] = useState("statement");
-  const [dialog, setDialog] = useState<"op" | "io" | "close" | "cashiers" | null>(null);
+  const [dialog, setDialog] = useState<"op" | "io" | "close" | "cashiers" | "account" | null>(null);
   const canIo = can(me.data, CASH_IO);
   const canClose = can(me.data, CASH_CLOSE);
   const canBank = can(me.data, "bank.view");
@@ -94,6 +96,11 @@ export function CashPage() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-page-title">Kassa</h1>
         <div className="flex flex-wrap gap-3">
+          {canAddAccount && branchId != null ? (
+            <Button variant="secondary" icon={Landmark} onClick={() => setDialog("account")}>
+              Hisob qoʻshish
+            </Button>
+          ) : null}
           {canAssign && accountList.some((a) => a.kind === "CASH") ? (
             <Button variant="secondary" icon={UserRound} onClick={() => setDialog("cashiers")}>
               Kassirlar
@@ -241,6 +248,8 @@ export function CashPage() {
             <TransferDialog branchId={branchId} accounts={usable} defaultFrom={actionDefault} onClose={() => setDialog(null)} />
           ) : dialog === "close" ? (
             <CloseDrawer accounts={usable} defaultAccount={actionDefault} onClose={() => setDialog(null)} />
+          ) : dialog === "account" ? (
+            <AccountDialog branchId={branchId} onClose={() => setDialog(null)} />
           ) : dialog === "cashiers" ? (
             <CashierDialog branchId={branchId} accounts={accountList} onClose={() => setDialog(null)} />
           ) : null}
