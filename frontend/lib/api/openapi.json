@@ -674,6 +674,29 @@
         "tags" : [ "branch-sale" ]
       }
     },
+    "/api/branch-sales/balances" : {
+      "get" : {
+        "description" : "Guruh ichidagi qarz qoldiqlari (mijoz / YB qarzi jamiga kirmaydi).",
+        "operationId" : "balances",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/BranchBalance"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filiallararo qarz",
+        "tags" : [ "branch-sale" ]
+      }
+    },
     "/api/branch-sales/targets" : {
       "get" : {
         "description" : "Boshqa filiallarning faol omborlari.",
@@ -10983,6 +11006,21 @@
           }
         },
         "required" : [ "active", "code", "id", "legalName", "name", "tin" ]
+      },
+      "BranchBalance" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "creditor" : {
+            "$ref" : "#/components/schemas/BranchRef"
+          },
+          "debtor" : {
+            "$ref" : "#/components/schemas/BranchRef"
+          }
+        },
+        "required" : [ "amount", "creditor", "debtor" ]
       },
       "BranchRef" : {
         "type" : "object",

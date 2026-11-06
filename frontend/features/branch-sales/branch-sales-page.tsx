@@ -14,7 +14,7 @@ import { OK_STATUS_LABELS } from "@/features/warehouse-transfers/api";
 import { WarehouseTransferStatusBadge } from "@/features/warehouse-transfers/warehouse-transfers-page";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { FS_VIEW_KEYS, TRANSFER_FS, useBranchSales, type BranchSaleStatus, type BranchSaleSummary } from "./api";
+import { FS_VIEW_KEYS, TRANSFER_FS, useBranchBalances, useBranchSales, type BranchSaleStatus, type BranchSaleSummary } from "./api";
 import { BranchSaleDrawer } from "./branch-sale-drawer";
 
 /** FS — filiallararo savdo: Qoralama → Yoʻlda (HF, xaridor filial qarzi) → Qabul qilindi. */
@@ -33,6 +33,7 @@ export function BranchSalesPage() {
   const canCreate = can(me.data, TRANSFER_FS);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useBranchSales(branchId, (status as BranchSaleStatus | null) ?? null, page);
+  const balances = useBranchBalances(allowed && can(me.data, "special.cost"));
 
   if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
 
@@ -90,6 +91,26 @@ export function BranchSalesPage() {
           </Button>
         ) : null}
       </div>
+      {balances.data && balances.data.length > 0 ? (
+        <section aria-label="Filiallararo qarz" className="mb-4 rounded-card border border-border bg-surface p-4">
+          <h2 className="mb-2 text-section-title">Filiallararo qarz</h2>
+          <ul className="flex flex-col gap-1 text-body">
+            {balances.data.map((b) => (
+              <li key={`${b.debtor.id}-${b.creditor.id}`} className="flex items-center justify-between gap-4">
+                <span className="flex items-center gap-1">
+                  {b.debtor.name}
+                  <ArrowRight size={14} strokeWidth={1.5} aria-label="qarzdor" className="text-text-secondary" />
+                  {b.creditor.name}
+                </span>
+                <span className="tabular-nums">{formatMoney(b.amount)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-caption text-text-secondary">
+            Guruh ichidagi qarz — mijozlar va yetkazib beruvchilar qarzi jamiga kirmaydi.
+          </p>
+        </section>
+      ) : null}
       {docs.error ? (
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (

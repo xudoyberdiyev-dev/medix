@@ -11,6 +11,7 @@ export type BranchSaleStatus = BranchSaleDetail["status"];
 export type BranchSaleRequest = components["schemas"]["BranchSaleRequest"];
 export type BranchSaleLine = BranchSaleDetail["lines"][number];
 export type TargetWarehouse = components["schemas"]["TargetWarehouse"];
+export type BranchBalance = components["schemas"]["BranchBalance"];
 type ReceiveRequest = components["schemas"]["ReceiveRequest"];
 
 /** Ruxsatlar (T12): qoralama — transfer.fs, joʻnatish — transfer.send, qabul — transfer.receive, bekor qilish — transfer.cancel. */
@@ -65,6 +66,7 @@ function useFsMutation<T>(fn: (v: T) => Promise<BranchSaleDetail>) {
     onSuccess: async (d) => {
       qc.setQueryData(["branch-sales", "one", d.id], d);
       await qc.invalidateQueries({ queryKey: ["branch-sales", "list"] });
+      await qc.invalidateQueries({ queryKey: ["branch-sales", "balances"] });
       await qc.invalidateQueries({ queryKey: ["branch-sales", "zone-stock"] });
       await qc.invalidateQueries({ queryKey: ["stock"] });
     },
@@ -87,4 +89,13 @@ export function useReceiveBranchSale() {
 
 export function useCancelBranchSale() {
   return useFsMutation((id: number) => unwrap(api.POST("/api/branch-sales/{id}/cancel", { params: { path: { id } } })));
+}
+
+/** Filiallararo qarz qoldiqlari — faqat special.cost bilan (server ham tekshiradi). */
+export function useBranchBalances(enabled: boolean) {
+  return useQuery({
+    queryKey: ["branch-sales", "balances"],
+    queryFn: () => unwrap(api.GET("/api/branch-sales/balances")),
+    enabled,
+  });
 }

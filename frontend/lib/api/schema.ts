@@ -241,6 +241,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/branch-sales/balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Filiallararo qarz
+         * @description Guruh ichidagi qarz qoldiqlari (mijoz / YB qarzi jamiga kirmaydi).
+         */
+        get: operations["balances"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/branch-sales/targets": {
         parameters: {
             query?: never;
@@ -4954,6 +4974,11 @@ export interface components {
             phone?: string;
             tin: string;
         };
+        BranchBalance: {
+            amount: string;
+            creditor: components["schemas"]["BranchRef"];
+            debtor: components["schemas"]["BranchRef"];
+        };
         BranchRef: {
             code: string;
             /** Format: int64 */
@@ -8983,6 +9008,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BranchSaleDetail"];
+                };
+            };
+        };
+    };
+    balances: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchBalance"][];
                 };
             };
         };
