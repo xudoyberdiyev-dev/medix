@@ -5,6 +5,7 @@ import { Ban, CircleCheck, FilePen, PackageCheck, PackagePlus, Plus } from "luci
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -12,6 +13,7 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { idParam } from "@/lib/url-filters";
 import { RECEIPT_CREATE, STATUS_LABELS, useReceipts, type ReceiptStatus, type ReceiptSummary } from "./api";
 import { ReceiptDrawer } from "./receipt-drawer";
 
@@ -38,6 +40,8 @@ export function ReceiptsPage() {
   const params = useSearchParams();
   const initialStatus = params.get("status");
   const [status, setStatus] = useState<string | null>(initialStatus);
+  // Hisobotdan oʻtish: ?supplierId=…&supplier=Nomi (Taʼminotchi korxona tovari)
+  const [supplier, setSupplier] = useState(() => idParam(params, "supplierId", "supplier", "Taʼminotchi"));
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — kirim darhol ochiladi
   const [editor, setEditor] = useState<{ id: number | null } | null>(() => {
@@ -47,7 +51,7 @@ export function ReceiptsPage() {
   const allowed = can(me.data, "receipt.view");
   const canCreate = can(me.data, RECEIPT_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
-  const docs = useReceipts(branchId, (status as ReceiptStatus | null) ?? null, page);
+  const docs = useReceipts(branchId, (status as ReceiptStatus | null) ?? null, page, true, supplier?.id ?? null);
 
   if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
 
@@ -98,21 +102,26 @@ export function ReceiptsPage() {
           loading={docs.isPending}
           onRowClick={(d) => setEditor({ id: d.id })}
           toolbar={
-            <div className="w-56">
-              <Select
-                label="Holat"
-                size="sm"
-                value={status}
-                onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder="Barcha holatlar"
-                className="[&>span:first-child]:sr-only"
-                options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
-              />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-56">
+                <Select
+                  label="Holat"
+                  size="sm"
+                  value={status}
+                  onChange={(v) => (setStatus(v), setPage(1))}
+                  placeholder="Barcha holatlar"
+                  className="[&>span:first-child]:sr-only"
+                  options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                />
+              </div>
+              {supplier ? (
+                <FilterChip label={`Taʼminotchi: ${supplier.name}`} what="Taʼminotchi" onClear={() => (setSupplier(null), setPage(1))} />
+              ) : null}
             </div>
           }
           emptyState={
-            status ? (
-              <NoResultsState onClearFilters={() => setStatus(null)} />
+            status || supplier ? (
+              <NoResultsState onClearFilters={() => (setStatus(null), setSupplier(null))} />
             ) : (
               <EmptyState
                 icon={PackagePlus}

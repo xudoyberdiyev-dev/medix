@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { idParam, soldLabel, soldParam } from "./orders-page";
+import { idParam } from "@/lib/url-filters";
+import { soldLabel, soldParam } from "./orders-page";
 
 describe("buyurtmalar: hisobotdan oʻtish filtrlari", () => {
   it("operator va mijoz", () => {

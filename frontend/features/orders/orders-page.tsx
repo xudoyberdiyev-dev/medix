@@ -13,7 +13,6 @@ import {
   PackageX,
   Plus,
   Truck,
-  X,
   type LucideIcon,
 } from "lucide-react";
 import { useRef, useState } from "react";
@@ -21,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { type TabItem, Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
@@ -28,6 +28,7 @@ import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
+import { idParam } from "@/lib/url-filters";
 import { useBranchStore } from "@/lib/stores/branch";
 import { ORDER_CREATE, STATUS_LABELS, useOrders, type OrderStatus, type OrderSummary } from "./api";
 import { OrderDrawer } from "./order-drawer";
@@ -77,17 +78,6 @@ export function tabSummary(counts: StatusCount[], status: string | null): string
   return `${c.status ? STATUS_LABELS[c.status] : "Hammasi"}: ${formatQuantity(c.count)} ta · ${formatMoney(c.total)} soʻm`;
 }
 
-/** Hisobotdan oʻtish: ?<id>=…&<nom>=Nomi (Savdo hisoboti qatori). */
-export function idParam(
-  params: Pick<URLSearchParams, "get">,
-  idKey: string,
-  nameKey: string,
-  fallback: string,
-): { id: number; name: string } | null {
-  const id = Number(params.get(idKey));
-  return Number.isInteger(id) && id > 0 ? { id, name: params.get(nameKey) ?? `${fallback} #${id}` } : null;
-}
-
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** ?soldFrom=YYYY-MM-DD&soldTo=YYYY-MM-DD — shu davrda sotilgan yoki qaytarilgan buyurtmalar (hisobot bilan bir xil). */
@@ -103,22 +93,6 @@ export function soldLabel(s: { from: string | null; to: string | null }): string
   if (s.from && s.from === s.to) return `Sotuv: ${day(s.from)}`;
   if (s.from && s.to) return `Sotuv: ${day(s.from)} – ${day(s.to)}`;
   return s.from ? `Sotuv: ${day(s.from)} dan` : `Sotuv: ${day(s.to ?? "")} gacha`;
-}
-
-function FilterChip({ label, what, onClear }: { label: string; what: string; onClear: () => void }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-caption">
-      {label}
-      <button
-        type="button"
-        aria-label={`${what} filtrini olib tashlash`}
-        className="text-text-secondary hover:text-text-primary"
-        onClick={onClear}
-      >
-        <X size={14} strokeWidth={1.5} aria-hidden />
-      </button>
-    </span>
-  );
 }
 
 /** Buyurtmalar (SPEC 5.2): holat yorliqlari (soni, summasi), «Hozir kimda», qidiruv (raqam, mijoz, STIR), «Mening buyurtmalarim». */

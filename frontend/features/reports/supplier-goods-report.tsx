@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CircleCheck, CircleMinus, Download, Truck } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
@@ -43,6 +44,8 @@ const money = (v: string) => <span className="font-mono tabular-nums">{formatMon
 export function SupplierGoodsReportPage() {
   const me = useMe();
   const allowed = canSeeSupplierGoods(me.data?.permissions ?? []);
+  const router = useRouter();
+  const canOpenReceipts = (me.data?.permissions ?? []).includes("receipt.view");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
   const period = usePeriodState();
@@ -145,6 +148,11 @@ export function SupplierGoodsReportPage() {
           onSortChange={table.onSortChange}
           pagination={table.pagination}
           rowKey={(x) => String(x.id)}
+          onRowClick={
+            kind === "COMPANY" && canOpenReceipts
+              ? (x) => router.push(`/receipts?${new URLSearchParams({ supplierId: String(x.id), supplier: x.name }).toString()}`)
+              : undefined
+          }
           loading={report.isLoading}
           totals={r && r.rows.length > 0 ? totals : undefined}
           emptyState={

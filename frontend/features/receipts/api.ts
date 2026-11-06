@@ -42,13 +42,27 @@ export function expectedReason(qty: number, received: number, damaged: number): 
   return null;
 }
 
-export function useReceipts(branchId: number | null, status: ReceiptStatus | null, page: number, enabled = true) {
+export function useReceipts(
+  branchId: number | null,
+  status: ReceiptStatus | null,
+  page: number,
+  enabled = true,
+  supplierId: number | null = null,
+) {
   return useQuery({
-    queryKey: ["receipts", "list", branchId, status, page],
+    queryKey: ["receipts", "list", branchId, status, page, supplierId],
     queryFn: () =>
       unwrap(
         api.GET("/api/receipts", {
-          params: { query: { branchId: branchId ?? undefined, status: status ?? undefined, page: page - 1, size: 50 } },
+          params: {
+            query: {
+              branchId: branchId ?? undefined,
+              status: status ?? undefined,
+              supplierId: supplierId ?? undefined,
+              page: page - 1,
+              size: 50,
+            },
+          },
         }),
       ),
     placeholderData: keepPreviousData,
