@@ -367,7 +367,7 @@ class InventoryCounts {
                 .change(null, Map.of("shortageQty", t.shortageQty(), "shortageCost", t.shortageCost().toString(), "surplusQty", t.surplusQty(),
                         "director", director)), actor);
         notifications.notify(director ? "inventory.director" : "inventory.approve", h.branchId(), List.of(),
-                notifications.message("inventory.check", "inventory.check", "/inventory-counts/" + id, "inventory.check:" + id, h.number(),
+                notifications.message("inventory.check", "inventory.check", "/inventory-counts?status=CHECK&open=" + id, "inventory.check:" + id, h.number(),
                         String.valueOf(t.shortageQty()), String.valueOf(t.surplusQty())));
     }
 

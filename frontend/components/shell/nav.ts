@@ -1,5 +1,6 @@
 import {
   FileMinus,
+  ListChecks,
   ArrowRightLeft,
   Banknote,
   BadgeDollarSign,
@@ -78,6 +79,13 @@ export const navigation: NavGroup[] = [
         href: "/warehouse-transfers",
         icon: Warehouse,
         anyOf: ["transfer.view", "transfer.ok", "transfer.send", "transfer.receive"],
+      },
+      {
+        key: "inventory-counts",
+        label: "Inventarizatsiya",
+        href: "/inventory-counts",
+        icon: ListChecks,
+        anyOf: ["inventory.view", "inventory.create", "inventory.count", "inventory.approve"],
       },
       {
         key: "write-offs",

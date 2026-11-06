@@ -168,10 +168,6 @@ class InventoryCountIT {
         return Long.parseLong(r.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1"));
     }
 
-    private static long id(MvcResult r) throws Exception {
-        return Long.parseLong(r.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1"));
-    }
-
     private static String create(long warehouse, Long zone, boolean blind) {
         return "{\"warehouseId\":" + warehouse + ",\"zoneId\":" + zone + ",\"blind\":" + blind + ",\"commission\":\"Komissiya\"}";
     }
