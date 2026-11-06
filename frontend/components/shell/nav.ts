@@ -1,4 +1,5 @@
 import {
+  Building2,
   FileMinus,
   Undo2,
   ListChecks,
@@ -80,6 +81,13 @@ export const navigation: NavGroup[] = [
         href: "/warehouse-transfers",
         icon: Warehouse,
         anyOf: ["transfer.view", "transfer.ok", "transfer.send", "transfer.receive"],
+      },
+      {
+        key: "branch-sales",
+        label: "Filiallararo savdo",
+        href: "/branch-sales",
+        icon: Building2,
+        anyOf: ["transfer.view", "transfer.fs", "transfer.send", "transfer.receive"],
       },
       {
         key: "inventory-counts",

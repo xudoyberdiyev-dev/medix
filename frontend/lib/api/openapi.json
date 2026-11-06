@@ -78,6 +78,9 @@
     "description" : "Profil",
     "name" : "profile"
   }, {
+    "description" : "Filiallararo savdo (FS)",
+    "name" : "branch-sale"
+  }, {
     "description" : "Mashinalar",
     "name" : "vehicles"
   }, {
@@ -314,7 +317,7 @@
     },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
-        "operationId" : "cancel_8",
+        "operationId" : "cancel_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -352,7 +355,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_27",
+        "operationId" : "list_28",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -496,7 +499,7 @@
     },
     "/api/bank-reconciliations" : {
       "get" : {
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -525,7 +528,7 @@
         "tags" : [ "bank-reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_20",
+        "operationId" : "create_21",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -586,6 +589,278 @@
         },
         "summary" : "Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar",
         "tags" : [ "bank-reconciliations" ]
+      }
+    },
+    "/api/branch-sales" : {
+      "get" : {
+        "description" : "branchId — sotuvchi yoki xaridor filial.",
+        "operationId" : "list_20",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "RECEIVED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSalePage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "FS hujjatlari",
+        "tags" : [ "branch-sale" ]
+      },
+      "post" : {
+        "description" : "Tovar joʻnatilguncha joyida qoladi.",
+        "operationId" : "create_20",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BranchSaleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSaleDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Filiallararo savdo (qoralama)",
+        "tags" : [ "branch-sale" ]
+      }
+    },
+    "/api/branch-sales/targets" : {
+      "get" : {
+        "description" : "Boshqa filiallarning faol omborlari.",
+        "operationId" : "targets",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "sellerBranchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TargetWarehouse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xaridor omborlari",
+        "tags" : [ "branch-sale" ]
+      }
+    },
+    "/api/branch-sales/zone-stock" : {
+      "get" : {
+        "description" : "Qoldiq, faol zahira va bo'sh miqdor (tannarxsiz).",
+        "operationId" : "zoneStock_3",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "zoneId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ZoneStockRow"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Sotuvchi zonadagi partiyalar",
+        "tags" : [ "branch-sale" ]
+      }
+    },
+    "/api/branch-sales/{id}" : {
+      "get" : {
+        "operationId" : "get_18",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSaleDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "FS hujjati",
+        "tags" : [ "branch-sale" ]
+      }
+    },
+    "/api/branch-sales/{id}/cancel" : {
+      "post" : {
+        "description" : "Faqat qoralama.",
+        "operationId" : "cancel_8",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSaleDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekor qilish",
+        "tags" : [ "branch-sale" ]
+      }
+    },
+    "/api/branch-sales/{id}/receive" : {
+      "post" : {
+        "description" : "Xaridor filial. Kelgan miqdor qabul zonasiga kiradi; kamomad bo'lsa izoh majburiy.",
+        "operationId" : "receive_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReceiveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSaleDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qabul qilish",
+        "tags" : [ "branch-sale" ]
+      }
+    },
+    "/api/branch-sales/{id}/send" : {
+      "post" : {
+        "description" : "Tovar chiqadi, HF raqami beriladi, xaridor filial qarzi oshadi; hujjat «Yo'lda».",
+        "operationId" : "send_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSaleDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Jo'natish",
+        "tags" : [ "branch-sale" ]
       }
     },
     "/api/branches" : {
@@ -2205,7 +2480,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_26",
+        "operationId" : "list_27",
         "responses" : {
           "200" : {
             "content" : {
@@ -3612,7 +3887,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_25",
+        "operationId" : "list_26",
         "responses" : {
           "200" : {
             "content" : {
@@ -5953,7 +6228,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_24",
+        "operationId" : "list_25",
         "responses" : {
           "200" : {
             "content" : {
@@ -7351,7 +7626,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_23",
+        "operationId" : "list_24",
         "responses" : {
           "200" : {
             "content" : {
@@ -7689,7 +7964,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_22",
+        "operationId" : "list_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7818,7 +8093,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -10709,6 +10984,22 @@
         },
         "required" : [ "active", "code", "id", "legalName", "name", "tin" ]
       },
+      "BranchRef" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "id", "name" ]
+      },
       "BranchRequest" : {
         "type" : "object",
         "properties" : {
@@ -10769,6 +11060,294 @@
           }
         },
         "required" : [ "customerDebt", "expenses", "id", "name", "sales", "supplierDebt" ]
+      },
+      "BranchSaleDetail" : {
+        "type" : "object",
+        "properties" : {
+          "buyer" : {
+            "$ref" : "#/components/schemas/BranchRef"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fromWarehouse" : {
+            "$ref" : "#/components/schemas/WarehouseRef"
+          },
+          "fromZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BranchSaleLine"
+            }
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "receiveNote" : {
+            "type" : "string"
+          },
+          "receivedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "receivedBy" : {
+            "type" : "string"
+          },
+          "seller" : {
+            "$ref" : "#/components/schemas/BranchRef"
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sentBy" : {
+            "type" : "string"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "RECEIVED", "CANCELLED" ]
+          },
+          "toWarehouse" : {
+            "$ref" : "#/components/schemas/WarehouseRef"
+          },
+          "toZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "total" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "vatTotal" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          }
+        },
+        "required" : [ "buyer", "createdAt", "createdBy", "fromWarehouse", "fromZone", "id", "lines", "number", "seller", "shortageQty", "status", "toWarehouse", "totalQty" ]
+      },
+      "BranchSaleLine" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "receivedQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unitCost" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "vatAmount" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "vatRate" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "batchId", "batchNumber", "expiryDate", "id", "lineNo", "productCode", "productId", "productName", "qty" ]
+      },
+      "BranchSaleLineRequest" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000000,
+            "minimum" : 1
+          }
+        },
+        "required" : [ "batchId", "qty" ]
+      },
+      "BranchSalePage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BranchSaleSummary"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "BranchSaleRequest" : {
+        "type" : "object",
+        "properties" : {
+          "fromZoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BranchSaleLineRequest"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "toWarehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "fromZoneId", "lines", "note", "toWarehouseId" ]
+      },
+      "BranchSaleSummary" : {
+        "type" : "object",
+        "properties" : {
+          "buyer" : {
+            "$ref" : "#/components/schemas/BranchRef"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fromWarehouse" : {
+            "$ref" : "#/components/schemas/WarehouseRef"
+          },
+          "fromZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receivedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "seller" : {
+            "$ref" : "#/components/schemas/BranchRef"
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "RECEIVED", "CANCELLED" ]
+          },
+          "toWarehouse" : {
+            "$ref" : "#/components/schemas/WarehouseRef"
+          },
+          "toZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "total" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          }
+        },
+        "required" : [ "buyer", "createdAt", "createdBy", "fromWarehouse", "fromZone", "id", "lines", "number", "qty", "seller", "shortageQty", "status", "toWarehouse" ]
       },
       "Buckets" : {
         "type" : "object",
@@ -17977,6 +18556,22 @@
           }
         },
         "required" : [ "brought", "id", "left", "name", "sold" ]
+      },
+      "TargetWarehouse" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "$ref" : "#/components/schemas/BranchRef"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "branch", "id", "name" ]
       },
       "Terms" : {
         "type" : "object",

@@ -84,7 +84,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** AH ni bekor qilish (teskari yozuvlar) */
-        post: operations["cancel_8"];
+        post: operations["cancel_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -99,7 +99,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -190,10 +190,10 @@ export interface paths {
             cookie?: never;
         };
         /** Hisob boʻyicha solishtirishlar tarixi */
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         /** Solishtirishni yozish (farq boʻlsa — izoh majburiy) */
-        post: operations["create_20"];
+        post: operations["create_21"];
         delete?: never;
         options?: never;
         head?: never;
@@ -211,6 +211,147 @@ export interface paths {
         get: operations["preview_1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * FS hujjatlari
+         * @description branchId — sotuvchi yoki xaridor filial.
+         */
+        get: operations["list_20"];
+        put?: never;
+        /**
+         * Filiallararo savdo (qoralama)
+         * @description Tovar joʻnatilguncha joyida qoladi.
+         */
+        post: operations["create_20"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-sales/targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Xaridor omborlari
+         * @description Boshqa filiallarning faol omborlari.
+         */
+        get: operations["targets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-sales/zone-stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sotuvchi zonadagi partiyalar
+         * @description Qoldiq, faol zahira va bo'sh miqdor (tannarxsiz).
+         */
+        get: operations["zoneStock_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-sales/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** FS hujjati */
+        get: operations["get_18"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-sales/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bekor qilish
+         * @description Faqat qoralama.
+         */
+        post: operations["cancel_8"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-sales/{id}/receive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Qabul qilish
+         * @description Xaridor filial. Kelgan miqdor qabul zonasiga kiradi; kamomad bo'lsa izoh majburiy.
+         */
+        post: operations["receive_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-sales/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Jo'natish
+         * @description Tovar chiqadi, HF raqami beriladi, xaridor filial qarzi oshadi; hujjat «Yo'lda».
+         */
+        post: operations["send_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -879,7 +1020,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1573,7 +1714,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2660,7 +2801,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari */
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3220,7 +3361,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3433,7 +3574,7 @@ export interface paths {
          * Qoldiqlar (zona × partiya)
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3467,7 +3608,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4813,6 +4954,12 @@ export interface components {
             phone?: string;
             tin: string;
         };
+        BranchRef: {
+            code: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
         BranchRequest: {
             address?: string;
             code: string;
@@ -4829,6 +4976,121 @@ export interface components {
             name: string;
             sales: string;
             supplierDebt: string;
+        };
+        BranchSaleDetail: {
+            buyer: components["schemas"]["BranchRef"];
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            fromWarehouse: components["schemas"]["WarehouseRef"];
+            fromZone: components["schemas"]["ZoneRef"];
+            /** Format: int64 */
+            id: number;
+            invoiceNumber?: string;
+            lines: components["schemas"]["BranchSaleLine"][];
+            note?: string;
+            number: string;
+            receiveNote?: string;
+            /** Format: date-time */
+            receivedAt?: string;
+            receivedBy?: string;
+            seller: components["schemas"]["BranchRef"];
+            /** Format: date-time */
+            sentAt?: string;
+            sentBy?: string;
+            /** Format: int32 */
+            shortageQty: number;
+            /** @enum {string} */
+            status: "DRAFT" | "IN_TRANSIT" | "RECEIVED" | "CANCELLED";
+            toWarehouse: components["schemas"]["WarehouseRef"];
+            toZone?: components["schemas"]["ZoneRef"];
+            /** @description Faqat special.cost ruxsati bilan */
+            total?: string;
+            /** Format: int64 */
+            totalQty: number;
+            /** @description Faqat special.cost ruxsati bilan */
+            vatTotal?: string;
+        };
+        BranchSaleLine: {
+            /** @description Faqat special.cost ruxsati bilan */
+            amount?: string;
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lineNo: number;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            /** Format: int32 */
+            receivedQty?: number;
+            /** @description Faqat special.cost ruxsati bilan */
+            unitCost?: string;
+            /** @description Faqat special.cost ruxsati bilan */
+            vatAmount?: string;
+            vatRate?: string;
+        };
+        BranchSaleLineRequest: {
+            /** Format: int64 */
+            batchId: number;
+            /** Format: int32 */
+            qty: number;
+        };
+        BranchSalePage: {
+            items: components["schemas"]["BranchSaleSummary"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        BranchSaleRequest: {
+            /** Format: int64 */
+            fromZoneId: number;
+            lines: components["schemas"]["BranchSaleLineRequest"][];
+            note: string;
+            /** Format: int64 */
+            toWarehouseId: number;
+        };
+        BranchSaleSummary: {
+            buyer: components["schemas"]["BranchRef"];
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            fromWarehouse: components["schemas"]["WarehouseRef"];
+            fromZone: components["schemas"]["ZoneRef"];
+            /** Format: int64 */
+            id: number;
+            invoiceNumber?: string;
+            /** Format: int32 */
+            lines: number;
+            number: string;
+            /** Format: int64 */
+            qty: number;
+            /** Format: date-time */
+            receivedAt?: string;
+            seller: components["schemas"]["BranchRef"];
+            /** Format: date-time */
+            sentAt?: string;
+            /** Format: int32 */
+            shortageQty: number;
+            /** @enum {string} */
+            status: "DRAFT" | "IN_TRANSIT" | "RECEIVED" | "CANCELLED";
+            toWarehouse: components["schemas"]["WarehouseRef"];
+            toZone?: components["schemas"]["ZoneRef"];
+            /** @description Faqat special.cost ruxsati bilan */
+            total?: string;
         };
         Buckets: {
             advance: string;
@@ -7654,6 +7916,12 @@ export interface components {
             name: string;
             sold: string;
         };
+        TargetWarehouse: {
+            branch: components["schemas"]["BranchRef"];
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
         Terms: {
             /** Format: int64 */
             branchId: number;
@@ -8464,7 +8732,7 @@ export interface operations {
             };
         };
     };
-    cancel_8: {
+    cancel_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -8490,7 +8758,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -8601,7 +8869,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query: {
                 accountId: number;
@@ -8623,7 +8891,7 @@ export interface operations {
             };
         };
     };
-    create_20: {
+    create_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -8666,6 +8934,191 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReconPreview"];
+                };
+            };
+        };
+    };
+    list_20: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                status?: "DRAFT" | "IN_TRANSIT" | "RECEIVED" | "CANCELLED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchSalePage"];
+                };
+            };
+        };
+    };
+    create_20: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchSaleRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchSaleDetail"];
+                };
+            };
+        };
+    };
+    targets: {
+        parameters: {
+            query: {
+                sellerBranchId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TargetWarehouse"][];
+                };
+            };
+        };
+    };
+    zoneStock_3: {
+        parameters: {
+            query: {
+                zoneId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneStockRow"][];
+                };
+            };
+        };
+    };
+    get_18: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchSaleDetail"];
+                };
+            };
+        };
+    };
+    cancel_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchSaleDetail"];
+                };
+            };
+        };
+    };
+    receive_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReceiveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchSaleDetail"];
+                };
+            };
+        };
+    };
+    send_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchSaleDetail"];
                 };
             };
         };
@@ -9697,7 +10150,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query?: never;
             header?: never;
@@ -10676,7 +11129,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -12275,7 +12728,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query?: never;
             header?: never;
@@ -13115,7 +13568,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -13391,7 +13844,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -13443,7 +13896,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query: {
                 branchId: number;
