@@ -374,3 +374,39 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
   await page.getByRole("tab", { name: "Yopilgan kunlar" }).click();
   await expect(page.getByRole("cell", { name: "500.000,00" }).first()).toBeVisible();
 });
+
+test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamomad bilan)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  // Filialda ikkinchi ombor
+  await page.goto("/settings/warehouses");
+  await page.getByRole("button", { name: "Ombor qoʻshish" }).click();
+  await field(page, "Nomi").fill("E2E ikkinchi ombor");
+  await page.getByRole("button", { name: "Omborni saqlash" }).click();
+  await expect(page.getByText("E2E ikkinchi ombor").first()).toBeVisible();
+
+  await page.goto("/warehouse-transfers");
+  await page.getByRole("button", { name: "Koʻchirish tuzish" }).first().click();
+  await choose(page, "Qaysi ombordan", /Markaziy ombor/);
+  await choose(page, "Zona", /Asosiy saqlash/);
+  await choose(page, "Qaysi omborga", /E2E ikkinchi ombor/);
+  await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("5");
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+
+  await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await page.getByLabel(/E2E-01 — kelgan soni/).fill("4");
+  await field(page, "Izoh").fill("1 dona shikastlangan");
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).last().click();
+  await expect(page.getByText("Qabul qilindi, kamomad 1 dona")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/warehouse-transfers");
+  const row = page.getByRole("row", { name: /OK-/ }).first();
+  await expect(row).toContainText("Qabul qilindi");
+  await expect(row).toContainText("E2E ikkinchi ombor");
+});
