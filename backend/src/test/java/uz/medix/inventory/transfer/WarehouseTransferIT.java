@@ -325,6 +325,10 @@ class WarehouseTransferIT {
         mvc.perform(get("/api/warehouse-transfers").cookie(operator)).andExpect(status().isForbidden());
         Cookie purchaser = loginAs("PURCHASER", p.branchId());
         send(post("/api/warehouse-transfers/" + id + "/send"), purchaser, "{}").andExpect(status().isForbidden());
+        // Xarid bo'limi qoralama tuzadi — manba zona partiyalarini ko'radi (transfer.ok), bo'sh = qoldiq − qoralama emas, qoldiq
+        mvc.perform(get("/api/warehouse-transfers/zone-stock").param("zoneId", String.valueOf(p.main())).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].free").value(2));
         Cookie director = loginAs("DIRECTOR", null);
         // Direktor barcha filiallarni ko'radi; boshqa filial omboriga OK — FS kerak
         send(post("/api/warehouse-transfers"), director, doc(p.main(), other.target(), b, 1))
