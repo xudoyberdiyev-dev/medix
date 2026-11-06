@@ -453,3 +453,84 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   // 520 000 − 60 000 = 460 000
   await expect(page.getByRole("button", { name: /Kassa 2.*460\.000,00 soʻm/ })).toBeVisible();
 });
+
+test("Ombor zanjiri: tasdiqlangan buyurtma — vaqt, yigʻish, hisobdan oʻtkazish, reys", async ({ page }) => {
+  await login(page, "keeper.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/warehouse");
+  await page.getByRole("tab", { name: /^Vaqt berish/ }).click();
+  await page.getByRole("list", { name: "Vaqt berilmagan buyurtmalar" }).getByText(CUSTOMER).click();
+  await field(page, "Yigʻish vaqti").fill("15");
+  await page.getByRole("button", { name: "Vaqt berish" }).click();
+  await expect(page.getByText("Vaqt berildi")).toBeVisible();
+
+  const picker = await page
+    .context()
+    .browser()!
+    .newPage({ baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000" });
+  await login(picker, "picker.1", PASSWORD);
+  await expect(picker).toHaveURL(/\/$/);
+  await picker.goto("/picking");
+  await picker.getByRole("button", { name: "Yigʻishni boshlash" }).first().click();
+  for (const c of await picker.getByText("Olindi", { exact: true }).all()) await c.click();
+  await picker.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
+  await expect(picker.getByText("Yigʻish yakunlandi")).toBeVisible();
+  await picker.close();
+
+  await page.goto("/warehouse");
+  await page.getByRole("region", { name: "Hisobdan oʻtkazilmoqda" }).getByText(CUSTOMER).click();
+  for (const c of await page.getByText("Tekshirildi", { exact: true }).all()) await c.click();
+  await field(page, "Joylar soni").fill("1");
+  await page.getByRole("button", { name: "Hisobdan oʻtkazish" }).click();
+  await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/shipments");
+  await page
+    .getByRole("region", { name: "Joʻnatishga tayyor" })
+    .getByRole("listitem")
+    .filter({ hasText: CUSTOMER })
+    .getByText("Reysga")
+    .click();
+  await choose(page, "Mashina", /01 E 777 EE/);
+  await choose(page, "Haydovchi", /Hasan Haydovchiyev/);
+  await page.getByRole("button", { name: "Reysni rejalashtirish" }).click();
+  await expect(page.getByText(/^Reys RS-.* rejalashtirildi$/).first()).toBeVisible();
+});
+
+test("Haydovchi: qisman yetkazadi (3 ta qaytdi)", async ({ page }) => {
+  await login(page, "driver.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/driver");
+  await field(page, "Joylar soni").fill("1");
+  await page.getByRole("button", { name: "Qabul qildim" }).click();
+  await page.getByRole("button", { name: "Yuklab boʻlindi — reysni boshlash" }).click();
+  await expect(page.getByText("Reys boshlandi").first()).toBeVisible();
+  await page.getByLabel(`Rasm: ${CUSTOMER}`).setInputFiles({ name: "qisman.png", mimeType: "image/png", buffer: PNG });
+  await expect(page.getByText("Rasm: 1")).toBeVisible();
+  await page.getByRole("button", { name: "Qisman", exact: true }).click();
+  const modal = page.getByRole("dialog", { name: `Qisman yetkazish · ${CUSTOMER}` });
+  await modal
+    .getByLabel(/^Qaytdi\s*\*?$/)
+    .first()
+    .fill("3");
+  await modal.getByLabel(/^Sabab\s*\*?$/).fill("Mijoz 5 ta oldi");
+  const cash = modal.getByLabel(/^Naqd olindi\s*\*?$/);
+  if (await cash.count()) await cash.fill("12.500,00");
+  await modal.getByRole("button", { name: "Qisman yetkazildi deb belgilash" }).click();
+  await expect(page.getByText("Qisman yetkazildi").first()).toBeVisible();
+  await expect(page.getByText(/Qaytgan tovar: 7\.500,00 soʻm/).first()).toBeVisible();
+  await page.getByRole("button", { name: "Reysni yakunlash" }).click();
+  await expect(page.getByText("Reys yakunlandi").first()).toBeVisible();
+});
+
+test("Ombor mudiri: qaytgan tovarni Karantinga qabul qiladi", async ({ page }) => {
+  await login(page, "keeper.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/warehouse");
+  await page.getByRole("tab", { name: /^Qaytgan tovar/ }).click();
+  const item = page.getByRole("listitem").filter({ hasText: CUSTOMER }).filter({ hasText: "kutilmoqda 3 ta" });
+  await item.getByLabel(/^Keldi\s*\*?$/).fill("3");
+  await item.getByRole("button", { name: "Qabul qilish" }).click();
+  await expect(page.getByText("Qaytgan tovar Karantinga qabul qilindi").first()).toBeVisible();
+});
