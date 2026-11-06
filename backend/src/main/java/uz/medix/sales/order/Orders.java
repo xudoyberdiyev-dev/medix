@@ -347,7 +347,7 @@ class Orders {
         long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
         List<OrderSummary> items = jdbc.sql("""
                 SELECT o.id, o.number, o.branch_id, w.name AS warehouse, o.customer_id, c.name AS customer, o.order_date, o.delivery_type,
-                       o.delivery_date, o.status, o.approval_level, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
+                       o.delivery_date, o.payment_type, o.status, o.approval_level, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
                        o.total, e.full_name AS created_by, o.created_at, o.status_changed_at,
                        (SELECT full_name FROM employee WHERE id = o.picker_id) AS picker,
                        (SELECT full_name FROM employee WHERE id = o.marker_id) AS marker,
@@ -360,7 +360,7 @@ class Orders {
                 .query((rs, n) -> new OrderSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getString("warehouse"),
                         rs.getLong("customer_id"), rs.getString("customer"), rs.getDate("order_date").toLocalDate(),
                         DeliveryType.valueOf(rs.getString("delivery_type")), localDate(rs.getDate("delivery_date")),
-                        OrderStatus.valueOf(rs.getString("status")),
+                        PaymentType.valueOf(rs.getString("payment_type")), OrderStatus.valueOf(rs.getString("status")),
                         rs.getString("approval_level") == null ? null : ApprovalLevel.valueOf(rs.getString("approval_level")), rs.getInt("lines"),
                         new Money(rs.getBigDecimal("total")).toString(), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
                         rs.getTimestamp("status_changed_at").toInstant(),

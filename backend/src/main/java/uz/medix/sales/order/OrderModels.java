@@ -102,6 +102,7 @@ final class OrderModels {
             LocalDate orderDate,
             DeliveryType deliveryType,
             @Schema(nullable = true) LocalDate deliveryDate,
+            PaymentType paymentType,
             OrderStatus status,
             @Schema(nullable = true) ApprovalLevel approvalLevel,
             int lines,

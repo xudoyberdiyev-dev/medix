@@ -5449,6 +5449,8 @@ export interface components {
             /** Format: date */
             orderDate: string;
             /** @enum {string} */
+            paymentType: "CASH" | "TRANSFER" | "ONLINE";
+            /** @enum {string} */
             status: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
             /** Format: date-time */
             statusChangedAt: string;

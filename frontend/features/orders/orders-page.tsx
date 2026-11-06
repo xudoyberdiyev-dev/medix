@@ -29,6 +29,7 @@ import { useMe } from "@/features/auth/session";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { idParam } from "@/lib/url-filters";
+import { PAYMENT_TYPES } from "@/features/counterparties/api";
 import { useBranchStore } from "@/lib/stores/branch";
 import { ORDER_CREATE, STATUS_LABELS, useOrders, type OrderStatus, type OrderSummary } from "./api";
 import { OrderDrawer } from "./order-drawer";
@@ -145,6 +146,11 @@ export function OrdersPage() {
     },
     { key: "lines", title: "Qatorlar", align: "right", render: (o) => <span className="tabular-nums">{formatQuantity(o.lines)}</span> },
     { key: "total", title: "Summa", align: "right", render: (o) => <span className="tabular-nums">{formatMoney(o.total)}</span> },
+    {
+      key: "paymentType",
+      title: "Toʻlov turi",
+      render: (o) => PAYMENT_TYPES.find((t) => t.value === o.paymentType)?.label ?? o.paymentType,
+    },
     { key: "createdBy", title: "Operator" },
     { key: "holder", title: "Hozir kimda", render: (o) => <span className="text-caption text-text-secondary">{o.holder}</span> },
     {

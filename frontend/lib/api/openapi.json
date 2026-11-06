@@ -12745,6 +12745,10 @@
             "type" : "string",
             "format" : "date"
           },
+          "paymentType" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
           "status" : {
             "type" : "string",
             "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
@@ -12760,7 +12764,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "holder", "id", "lines", "number", "orderDate", "status", "statusChangedAt", "total", "warehouse" ]
+        "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "holder", "id", "lines", "number", "orderDate", "paymentType", "status", "statusChangedAt", "total", "warehouse" ]
       },
       "OwnGoods" : {
         "type" : "object",
