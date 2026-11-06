@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, PackageCheck, Truck, X } from "lucide-react";
+import { Check, PackageCheck, Printer, Truck, X } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -112,35 +112,44 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
       subtitle={formatDateTime(new Date(doc.createdAt))}
       status={<WarehouseTransferStatusBadge status={doc.status} />}
       actions={
-        canSend || canCancel || canReceive ? (
-          <>
-            {canCancel ? (
-              <Button variant="secondary" icon={X} onClick={() => setCancelling(true)}>
-                Bekor qilish
-              </Button>
-            ) : null}
-            {canSend ? (
-              <Button
-                icon={Truck}
-                loading={send.isPending}
-                onClick={() =>
-                  send.mutate(doc.id, {
-                    onSuccess: (d) =>
-                      toast({ tone: "success", title: "Joʻnatildi — tovar yoʻlda", description: `${d.number} · ${d.invoiceNumber ?? ""}` }),
-                    onError: fail,
-                  })
-                }
-              >
-                Joʻnatish
-              </Button>
-            ) : null}
-            {canReceive ? (
-              <Button icon={PackageCheck} onClick={() => setReceiving(true)}>
-                Qabul qilish
-              </Button>
-            ) : null}
-          </>
-        ) : undefined
+        <>
+          <Button variant="tertiary" icon={Printer} onClick={() => window.open(`/api/branch-sales/${doc.id}/pdf`, "_blank", "noopener")}>
+            Chop etish
+          </Button>
+          {canSend || canCancel || canReceive ? (
+            <>
+              {canCancel ? (
+                <Button variant="secondary" icon={X} onClick={() => setCancelling(true)}>
+                  Bekor qilish
+                </Button>
+              ) : null}
+              {canSend ? (
+                <Button
+                  icon={Truck}
+                  loading={send.isPending}
+                  onClick={() =>
+                    send.mutate(doc.id, {
+                      onSuccess: (d) =>
+                        toast({
+                          tone: "success",
+                          title: "Joʻnatildi — tovar yoʻlda",
+                          description: `${d.number} · ${d.invoiceNumber ?? ""}`,
+                        }),
+                      onError: fail,
+                    })
+                  }
+                >
+                  Joʻnatish
+                </Button>
+              ) : null}
+              {canReceive ? (
+                <Button icon={PackageCheck} onClick={() => setReceiving(true)}>
+                  Qabul qilish
+                </Button>
+              ) : null}
+            </>
+          ) : null}
+        </>
       }
     >
       <div className="flex flex-col gap-4">

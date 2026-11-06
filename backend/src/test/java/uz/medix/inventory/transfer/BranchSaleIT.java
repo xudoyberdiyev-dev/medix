@@ -203,6 +203,13 @@ class BranchSaleIT {
         mvc.perform(get("/api/branch-sales/balances").cookie(manager))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.debtor.id == " + buyer.branchId() + ")].amount").value(org.hamcrest.Matchers.hasItem("4000.00")));
+        byte[] bytes = mvc.perform(get("/api/branch-sales/" + id + "/pdf").cookie(manager))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var pdf = org.apache.pdfbox.Loader.loadPDF(bytes)) {
+            String text = new org.apache.pdfbox.text.PDFTextStripper().getText(pdf);
+            assertThat(text).contains("Filiallararo savdo").contains("Hisob-faktura").contains("4.000,00").contains("428,57");
+        }
         // Guruh ichidagi qarz mijoz / YB qarzi jurnaliga yozilmaydi
         assertThat(jdbc.sql("SELECT count(*) FROM party_ledger WHERE doc_id = :id AND doc_type = 'FS'").param("id", id).query(Long.class)
                 .single()).isZero();

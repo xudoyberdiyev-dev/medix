@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${doc.number}">FS</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<div class="head">
+    <h1>Filiallararo savdo <span class="mono" th:text="${doc.number}">FS-TSH-000001</span></h1>
+    <div class="muted" th:if="${doc.invoiceNumber != null}">Hisob-faktura: <span class="mono" th:text="${doc.invoiceNumber}">HF-TSH-000001</span></div>
+    <div class="muted">Sana: <span th:text="${date}">07.11.2026</span> · Holat: <span th:text="${status}">Yoʻlda</span></div>
+    <div class="muted">Sotuvchi: <span th:text="${seller.legal}">MChJ</span> (<span th:text="${seller.name}">Toshkent</span>)
+        <span th:if="${seller.tin != null}" th:text="' · STIR ' + ${seller.tin}"></span>
+        · Ombor: <span th:text="${doc.from}">Markaziy</span></div>
+    <div class="muted">Xaridor: <span th:text="${buyer.legal}">MChJ</span> (<span th:text="${buyer.name}">Samarqand</span>)
+        <span th:if="${buyer.tin != null}" th:text="' · STIR ' + ${buyer.tin}"></span>
+        · Ombor: <span th:text="${doc.to}">Samarqand ombori</span></div>
+    <div class="muted">Tuzdi: <span th:text="${doc.createdBy}">F.I.Sh.</span><span th:if="${doc.sentBy != null}" th:text="' · Joʻnatdi: ' + ${doc.sentBy}"></span><span th:if="${doc.receivedBy != null}" th:text="' · Qabul qildi: ' + ${doc.receivedBy}"></span></div>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th class="num">№</th>
+        <th>Mahsulot</th>
+        <th>Partiya</th>
+        <th>Yaroqlilik</th>
+        <th class="r">Soni</th>
+        <th class="r" th:if="${withAmount}">Narx (tannarx)</th>
+        <th class="r" th:if="${withAmount}">Summa</th>
+        <th class="r" th:if="${withAmount}">QQS</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l, it : ${lines}">
+        <td class="num" th:text="${it.count}">1</td>
+        <td><span class="mono muted" th:text="${l.code}">0001</span> <span th:text="${l.name}">Mahsulot</span></td>
+        <td class="mono" th:text="${l.batch}">B1</td>
+        <td th:text="${l.expiry}">01.01.2029</td>
+        <td class="r" th:text="${l.qty}">1</td>
+        <td class="r" th:if="${withAmount}" th:text="${l.price}">0,00</td>
+        <td class="r" th:if="${withAmount}" th:text="${l.amount}">0,00</td>
+        <td class="r" th:if="${withAmount}" th:text="${l.vat}">0,00</td>
+    </tr>
+    </tbody>
+</table>
+<p class="caption muted">Jami: <span th:text="${totalQty}">0</span> dona<span th:if="${withAmount and total != ''}" th:text="' · ' + ${total} + ' soʻm, shu jumladan QQS ' + ${vatTotal} + ' soʻm'"></span></p>
+<p th:if="${doc.note != null}" th:text="'Izoh: ' + ${doc.note}">Izoh</p>
+<table class="signs">
+    <tr>
+        <td>Topshirdi (sotuvchi): ____________________</td>
+        <td>Qabul qildi (xaridor): ____________________</td>
+    </tr>
+</table>
+</body>
+</html>

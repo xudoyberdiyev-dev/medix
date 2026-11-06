@@ -4,7 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,11 +44,13 @@ class BranchSaleController {
     private static final String VIEW = "hasAnyAuthority('transfer.view', 'transfer.fs', 'transfer.send', 'transfer.receive')";
 
     private final BranchSales sales;
+    private final BranchSalePdf pdf;
     private final ZoneTransfers zones;
     private final CurrentActor currentActor;
 
-    BranchSaleController(BranchSales sales, ZoneTransfers zones, CurrentActor currentActor) {
+    BranchSaleController(BranchSales sales, BranchSalePdf pdf, ZoneTransfers zones, CurrentActor currentActor) {
         this.sales = sales;
+        this.pdf = pdf;
         this.zones = zones;
         this.currentActor = currentActor;
     }
@@ -78,6 +84,17 @@ class BranchSaleController {
     @Operation(summary = "FS hujjati")
     BranchSaleDetail get(@PathVariable long id, Authentication auth) {
         return detail(id, auth);
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize(VIEW)
+    @Operation(summary = "FS va hisob-faktura — PDF (chop etish)", description = "Narx, summa va QQS — faqat special.cost.")
+    ResponseEntity<byte[]> pdf(@PathVariable long id, Authentication auth) {
+        BranchSalePdf.Rendered r = pdf.render(actor(), id, canSeeCost(auth));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(r.number() + ".pdf").build().toString())
+                .body(r.body());
     }
 
     @GetMapping("/balances")
