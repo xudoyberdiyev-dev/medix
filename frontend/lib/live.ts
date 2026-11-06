@@ -9,7 +9,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
  * qayta ulanganda («ready») barcha obunachilar chaqiriladi — uzilish paytida oʻtkazib yuborilganlar ham koʻrinsin.
  */
 export const STREAM_URL = "/api/notifications/stream";
-export type LiveEvent = "notifications" | "orders" | "trips" | "receipts";
+export type LiveEvent = "notifications" | "orders" | "trips" | "receipts" | "transfers";
 
 /** SSE ulangan boʻlsa soʻrov faqat zaxira; ulanmagan boʻlsa — sahifaning odatdagi oraligʻi. */
 export const LIVE_POLL_MS = 300_000;
@@ -46,7 +46,7 @@ function open() {
     setConnected(true);
     handlers.forEach((set) => set.forEach((h) => h()));
   });
-  for (const ev of ["notifications", "orders", "trips", "receipts"] as const) {
+  for (const ev of ["notifications", "orders", "trips", "receipts", "transfers"] as const) {
     es.addEventListener(ev, () => fire(ev));
   }
   es.onerror = () => setConnected(false);
@@ -149,4 +149,8 @@ export const LIVE_INVALIDATES: Record<Exclude<LiveEvent, "notifications">, reado
     ["orders", "monitor"],
   ],
   receipts: [["receipts", "list"]],
+  transfers: [
+    ["warehouse-transfers", "list"],
+    ["zone-transfers", "list"],
+  ],
 };

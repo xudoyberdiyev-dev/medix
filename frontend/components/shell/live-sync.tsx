@@ -17,5 +17,6 @@ export function LiveSync() {
   useLive(["orders"], () => refresh(LIVE_INVALIDATES.orders), enabled);
   useLive(["trips"], () => refresh(LIVE_INVALIDATES.trips), enabled);
   useLive(["receipts"], () => refresh(LIVE_INVALIDATES.receipts), enabled);
+  useLive(["transfers"], () => refresh(LIVE_INVALIDATES.transfers), enabled);
   return null;
 }
