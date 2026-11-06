@@ -198,6 +198,14 @@ class WriteOffIT {
                 .andExpect(jsonPath("$.status").value("POSTED"));
         assertThat(bal(p.quarantine(), b)).isEqualTo(5);
 
+        // Dalolatnoma PDF: o'zbekcha matn, tannarx bilan (Filial rahbarida prices.cost bor)
+        byte[] pdf = mvc.perform(get("/api/write-offs/" + id + "/pdf").cookie(manager))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var d = org.apache.pdfbox.Loader.loadPDF(pdf)) {
+            String text = new org.apache.pdfbox.text.PDFTextStripper().getText(d);
+            assertThat(text).contains("Hisobdan chiqarish dalolatnomasi").contains("HC darhol").contains("5.002,00");
+        }
         mvc.perform(get("/api/write-offs/zone-stock").param("zoneId", String.valueOf(p.quarantine())).cookie(manager))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].batchId").value(b))

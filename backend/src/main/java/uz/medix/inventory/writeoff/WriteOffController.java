@@ -4,7 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,10 +43,12 @@ class WriteOffController {
     private static final String VIEW = "hasAnyAuthority('hc.view', 'hc.create', 'hc.approve')";
 
     private final WriteOffs writeOffs;
+    private final WriteOffPdf pdf;
     private final CurrentActor currentActor;
 
-    WriteOffController(WriteOffs writeOffs, CurrentActor currentActor) {
+    WriteOffController(WriteOffs writeOffs, WriteOffPdf pdf, CurrentActor currentActor) {
         this.writeOffs = writeOffs;
+        this.pdf = pdf;
         this.currentActor = currentActor;
     }
 
@@ -88,6 +94,17 @@ class WriteOffController {
     @Operation(summary = "HC hujjati")
     WriteOffDetail get(@PathVariable long id, Authentication auth) {
         return detail(id, auth);
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize(VIEW)
+    @Operation(summary = "HC dalolatnomasi — PDF (chop etish)", description = "Tannarx ustunlari — faqat prices.cost.")
+    ResponseEntity<byte[]> pdf(@PathVariable long id, Authentication auth) {
+        WriteOffPdf.Rendered r = pdf.render(actor(), id, has(auth, "prices.cost"));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(r.number() + ".pdf").build().toString())
+                .body(r.body());
     }
 
     @GetMapping("/zone-stock")
