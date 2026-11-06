@@ -818,6 +818,36 @@
         "tags" : [ "branch-sale" ]
       }
     },
+    "/api/branch-sales/{id}/pdf" : {
+      "get" : {
+        "description" : "Narx, summa va QQS — faqat special.cost.",
+        "operationId" : "pdf_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "FS va hisob-faktura — PDF (chop etish)",
+        "tags" : [ "branch-sale" ]
+      }
+    },
     "/api/branch-sales/{id}/receive" : {
       "post" : {
         "description" : "Xaridor filial. Kelgan miqdor qabul zonasiga kiradi; kamomad bo'lsa izoh majburiy.",

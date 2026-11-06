@@ -338,6 +338,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/branch-sales/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * FS va hisob-faktura — PDF (chop etish)
+         * @description Narx, summa va QQS — faqat special.cost.
+         */
+        get: operations["pdf_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/branch-sales/{id}/receive": {
         parameters: {
             query?: never;
@@ -9116,6 +9136,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BranchSaleDetail"];
+                };
+            };
+        };
+    };
+    pdf_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
