@@ -22,6 +22,7 @@ const STAFF = [
   { name: "Mavluda Markirovkachi", login: "marker.1", role: /^Markirovkachi$/ },
   { name: "Hasan Haydovchiyev", login: "driver.1", role: /^Haydovchi$/ },
   { name: "Komila Kassirova", login: "cashier.1", role: /^Kassir$/ },
+  { name: "Farrux Rahbarov", login: "manager.1", role: /^Filial rahbari$/ },
 ] as const;
 
 /** Markirovkali mahsulot: EAN-13 shtrix-kodi = koddagi GTIN (01). */
@@ -301,4 +302,78 @@ test("Operator: buyurtma «Yetkazildi» holatida", async ({ page }) => {
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Yetkazildi/ }).click();
   await expect(page.getByRole("cell", { name: CUSTOMER }).first()).toBeVisible();
+});
+
+test("CEO: Paracetamol uchun maksimal miqdor — 5", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/products?q=Paracetamol E2E");
+  await page.getByRole("cell", { name: "Paracetamol E2E 500 mg" }).click();
+  await field(page, "Maksimal miqdor").fill("5");
+  await page.getByRole("button", { name: "Mahsulotni saqlash" }).click();
+  await expect(page.getByText("Mahsulot saqlandi").first()).toBeVisible();
+});
+
+test("Operator: maksimaldan koʻp — buyurtma Filial rahbari tasdigʻiga ketadi", async ({ page }) => {
+  await login(page, "operator.1", OPERATOR_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/orders");
+  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("Baraka");
+  await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
+  await choose(page, "Ombor", /Markaziy ombor/);
+  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("Paracetamol");
+  await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
+  await field(page, "Miqdor").first().fill("8");
+  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  await page.getByRole("button", { name: "Yuborish" }).click();
+  await expect(page.getByText("Buyurtma tasdiqqa yuborildi")).toBeVisible();
+});
+
+test("Filial rahbari: birinchi kirish, buyurtmani tasdiqlaydi", async ({ page }) => {
+  await firstLogin(page, "manager.1");
+  await page.goto("/orders");
+  const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
+  await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
+  await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(page.getByText("Tasdiqlandi — navbatga oʻtdi").first()).toBeVisible();
+});
+
+test("Kassir: oʻz kassasiga kirim va katta chiqim — tasdiqqa", async ({ page }) => {
+  await login(page, "cashier.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/cash");
+  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
+  await choose(page, "Yoʻnalish", /^Kirim$/);
+  await choose(page, "Hisob", /Kassa 2/);
+  await choose(page, "Kirim moddasi", /Boshqa kirim/);
+  await field(page, "Summa").fill("3.000.000,00");
+  await page.getByRole("button", { name: "Yozish" }).click();
+  await expect(page.getByText("Kirim yozildi").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
+  await choose(page, "Hisob", /Kassa 2/);
+  await choose(page, "Xarajat moddasi", /Ijara/);
+  await field(page, "Summa").fill("2.500.000,00");
+  await field(page, "Summa").press("Tab");
+  await page.getByRole("button", { name: "Tasdiqqa yuborish" }).click();
+  await expect(page.getByText("Chiqim tasdiqqa yuborildi").first()).toBeVisible();
+  // Kassir oʻzi tasdiqlay olmaydi
+  await expect(page.getByRole("button", { name: "Tasdiqlash", exact: true })).toHaveCount(0);
+});
+
+test("Filial rahbari: kassirning katta chiqimini tasdiqlaydi", async ({ page }) => {
+  await login(page, "manager.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/cash");
+  await expect(page.getByRole("heading", { name: /Tasdiqlashni kutmoqda/ })).toBeVisible();
+  await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(page.getByText("Chiqim tasdiqlandi").first()).toBeVisible();
+  // 20 000 (haydovchidan) + 3 000 000 − 2 500 000 = 520 000
+  await expect(page.getByRole("button", { name: /Kassa 2.*520\.000,00 soʻm/ })).toBeVisible();
 });
