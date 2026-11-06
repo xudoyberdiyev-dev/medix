@@ -52,7 +52,7 @@ class DirectorHome {
 
     record Attention(String overdue1to30, String overdue31to60, String overdue61to90, String overdue90plus, CountAmount directorOrders,
             CountAmount branchOrders, CountAmount cashApprovals, ExpiringBatches expiring, String supplierOverdue, String supplierToday, String supplierNext3Days,
-            int receiptsToPost, String driverCash, int bonusDue) {}
+            int receiptsToPost, String driverCash, int bonusDue, int zoneTransfersPending) {}
 
     /**
      * Buyurtma holati katagi: soni va summasi — Hammasi / Bugungi (bugun kiritilgan) / Kechikkanlar (holatda 2 kundan
@@ -290,11 +290,15 @@ class DirectorHome {
                   AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
                   AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id)""")
                 .param("d", Date.valueOf(today)).param("b", branchId).query(Integer.class).single();
+        // Karantindan sotuvga ochiq zonaga ko'chirish — tasdiq kutmoqda (ZK, transfer.quar)
+        int zonePending = jdbc.sql("""
+                SELECT count(*) FROM zone_transfer WHERE status = 'PENDING' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
+                .param("b", branchId).query(Integer.class).single();
         DebtSummaries.DueSoon due = debts.supplierDue(actor, branchId, today);
         return new Attention(customers.d1to30(), customers.d31to60(), customers.d61to90(), customers.d90plus(),
                 new CountAmount(orders.count(), m(orders.amount()).toString()),
                 new CountAmount(branchOrders.count(), m(branchOrders.amount()).toString()), new CountAmount(cash.count(), m(cash.amount()).toString()),
-                expiring, due.overdue(), due.today(), due.next3Days(), receipts, m(driver).toString(), bonusDue);
+                expiring, due.overdue(), due.today(), due.next3Days(), receipts, m(driver).toString(), bonusDue, zonePending);
     }
 
     private static Money sum(List<Amount> list, long branchId) {
