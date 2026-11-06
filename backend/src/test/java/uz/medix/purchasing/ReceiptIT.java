@@ -8,6 +8,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -362,6 +363,17 @@ class ReceiptIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items", hasSize(1)))
                 .andExpect(jsonPath("$.items[0].status").value("CANCELLED"));
+        // .xlsx eksport (T12-audit №4): ro'yxat filtrlari bilan; boshqa filial xodimi — faqat o'z filiali (bo'sh fayl)
+        byte[] xlsx = mvc.perform(get("/api/receipts/export").param("branchId", String.valueOf(p.branchId())).cookie(accountant))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(xlsx))) {
+            var sheet = wb.getSheetAt(0);
+            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).isEqualTo("Raqam");
+            assertThat(sheet.getRow(3).getCell(5).getStringCellValue()).isEqualTo("Bekor qilingan");
+        }
+        mvc.perform(get("/api/receipts/export").cookie(otherKeeper)).andExpect(status().isOk());
     }
 
     private String postedReceipt(Cookie who, String body) throws Exception {

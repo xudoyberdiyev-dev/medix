@@ -6309,6 +6309,44 @@
         "tags" : [ "receipts" ]
       }
     },
+    "/api/receipts/export" : {
+      "get" : {
+        "description" : "Ro'yxat filtrlari bilan, 10 000 qatorgacha; summa — faqat narx ko'rish ruxsati bilan.",
+        "operationId" : "receiptsExport",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "ACCEPTED", "POSTED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "supplierId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kirimlar .xlsx",
+        "tags" : [ "receipts" ]
+      }
+    },
     "/api/receipts/{id}" : {
       "get" : {
         "operationId" : "get",

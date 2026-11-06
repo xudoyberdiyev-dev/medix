@@ -2,7 +2,9 @@ package uz.medix.purchasing.receipt;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -74,6 +76,22 @@ class ReceiptController {
             @RequestParam(defaultValue = "50") int size,
             Authentication auth) {
         return receipts.list(actor(), branchId, status, supplierId, Math.max(page, 0), Math.clamp(size, 1, 200), pricesVisible(auth));
+    }
+
+    @GetMapping("/export")
+    @PreAuthorize("hasAuthority('receipt.view')")
+    @Operation(summary = "Kirimlar .xlsx", description = "Ro'yxat filtrlari bilan, 10 000 qatorgacha; summa — faqat narx ko'rish ruxsati bilan.")
+    void receiptsExport(
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) ReceiptStatus status,
+            @RequestParam(required = false) Long supplierId,
+            Authentication auth,
+            HttpServletResponse response) throws IOException {
+        boolean prices = pricesVisible(auth);
+        ReceiptPage p = receipts.list(actor(), branchId, status, supplierId, 0, ReceiptExcel.MAX_ROWS, prices);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"kirimlar.xlsx\"");
+        ReceiptExcel.write(p.items(), p.total(), prices, response.getOutputStream());
     }
 
     @GetMapping("/catalog")

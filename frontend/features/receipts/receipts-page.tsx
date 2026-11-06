@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Ban, CircleCheck, FilePen, PackageCheck, PackagePlus, Plus } from "lucide-react";
+import { Ban, CircleCheck, Download, FilePen, PackageCheck, PackagePlus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,16 @@ export function ReceiptStatusBadge({ status }: { status: ReceiptStatus }) {
       {STATUS_LABELS[status]}
     </Badge>
   );
+}
+
+/** Kirimlar .xlsx — roʻyxatdagi filtrlar bilan (T12-audit №4). */
+export function receiptsExportHref(f: { branchId: number | null; status: string | null; supplierId: number | null }): string {
+  const q = new URLSearchParams();
+  if (f.branchId != null) q.set("branchId", String(f.branchId));
+  if (f.status) q.set("status", f.status);
+  if (f.supplierId != null) q.set("supplierId", String(f.supplierId));
+  const qs = q.toString();
+  return `/api/receipts/export${qs ? `?${qs}` : ""}`;
 }
 
 export const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
@@ -114,6 +124,16 @@ export function ReceiptsPage() {
                   options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
                 />
               </div>
+              {docs.data && docs.data.total > 0 ? (
+                <a
+                  href={receiptsExportHref({ branchId, status, supplierId: supplier?.id ?? null })}
+                  download
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  <Download size={16} strokeWidth={1.5} aria-hidden />
+                  Excelʼga yuklab olish
+                </a>
+              ) : null}
               {supplier ? (
                 <FilterChip label={`Taʼminotchi: ${supplier.name}`} what="Taʼminotchi" onClear={() => (setSupplier(null), setPage(1))} />
               ) : null}
