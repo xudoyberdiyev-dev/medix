@@ -49,7 +49,7 @@ export function receiveLinesFrom(
   return { lines: out, shortage, error: null };
 }
 
-export function useWarehouseTransfers(branchId: number | null, status: WarehouseTransferStatus | null, page: number) {
+export function useWarehouseTransfers(branchId: number | null, status: WarehouseTransferStatus | null, page: number, enabled = true) {
   return useQuery({
     queryKey: ["warehouse-transfers", "list", branchId, status, page],
     queryFn: () =>
@@ -59,6 +59,7 @@ export function useWarehouseTransfers(branchId: number | null, status: Warehouse
         }),
       ),
     placeholderData: keepPreviousData,
+    enabled,
   });
 }
 

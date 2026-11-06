@@ -15,10 +15,12 @@ import { useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { formatQuantity } from "@/lib/format";
+import { formatDateTime, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { ReceiptDrawer } from "@/features/receipts/receipt-drawer";
 import { RECEIPT_ACCEPT, useReceipts, type ReceiptSummary } from "@/features/receipts/api";
+import { TRANSFER_RECEIVE, useWarehouseTransfers, type WarehouseTransferSummary } from "@/features/warehouse-transfers/api";
+import { WarehouseTransferDrawer } from "@/features/warehouse-transfers/warehouse-transfer-drawer";
 import { STATUS_LABELS, type OrderStatus } from "./api";
 import { IssuesList } from "./issues";
 import { ReturnsList } from "./returns";
@@ -58,15 +60,23 @@ function useNow(): Date {
   return now;
 }
 
-export type KeeperTab = "monitor" | "time" | "issues" | "receipts" | "returns";
+export type KeeperTab = "monitor" | "time" | "issues" | "receipts" | "transfers" | "returns";
 
 /** Ombor mudiri paneli yorliqlari (SPEC 3): ruxsat boʻyicha; «Hujjatlashtirish» — Joʻnatish sahifasiga havola. */
-export function keeperTabs(opts: { waitingTime: number; receipts: boolean; returns: boolean; receiptCount?: number }): TabItem[] {
+export function keeperTabs(opts: {
+  waitingTime: number;
+  receipts: boolean;
+  returns: boolean;
+  receiptCount?: number;
+  transfers?: boolean;
+  transferCount?: number;
+}): TabItem[] {
   return [
     { key: "monitor", label: "Monitor" },
     { key: "time", label: "Vaqt berish", count: opts.waitingTime },
     { key: "issues", label: "Muammolar" },
     ...(opts.receipts ? [{ key: "receipts", label: "Kirim qabuli", count: opts.receiptCount }] : []),
+    ...(opts.transfers ? [{ key: "transfers", label: "Koʻchirish qabuli", count: opts.transferCount }] : []),
     ...(opts.returns ? [{ key: "returns", label: "Qaytgan tovar" }] : []),
   ];
 }
@@ -86,6 +96,9 @@ export function MonitorPage() {
   const canReceipts = can(me.data, RECEIPT_ACCEPT);
   const canReturns = can(me.data, "orders.check");
   const drafts = useReceipts(branchId, "DRAFT", 1, allowed && canReceipts);
+  const canTransfers = can(me.data, TRANSFER_RECEIVE);
+  const transit = useWarehouseTransfers(branchId, "IN_TRANSIT", 1, allowed && canTransfers);
+  const [transfer, setTransfer] = useState<number | null>(null);
   const rawTab = useSearchParams().get("tab");
   const board = useQuery({
     queryKey: ["orders", "monitor", branchId],
@@ -101,6 +114,8 @@ export function MonitorPage() {
     receipts: canReceipts,
     returns: canReturns,
     receiptCount: canReceipts ? drafts.data?.total : undefined,
+    transfers: canTransfers,
+    transferCount: canTransfers ? transit.data?.total : undefined,
   });
   const tab = (tabs.some((t) => t.key === rawTab) ? rawTab : "monitor") as KeeperTab;
   const setTab = (k: string) => router.replace(k === "monitor" ? pathname : `${pathname}?tab=${k}`, { scroll: false });
@@ -192,9 +207,11 @@ export function MonitorPage() {
       ) : null}
       {board.data && tab === "issues" ? <IssuesList onOpenOrder={setOpen} /> : null}
       {board.data && tab === "receipts" ? <ReceiptQueue query={drafts} onOpen={setReceipt} /> : null}
+      {board.data && tab === "transfers" ? <TransferQueue query={transit} onOpen={setTransfer} /> : null}
       {board.data && tab === "returns" ? <ReturnsList /> : null}
       {open !== null ? <OrderDrawer id={open} onClose={() => setOpen(null)} onCreated={() => undefined} /> : null}
       {receipt !== null ? <ReceiptDrawer id={receipt} onClose={() => setReceipt(null)} onCreated={() => undefined} /> : null}
+      {transfer !== null ? <WarehouseTransferDrawer id={transfer} onClose={() => setTransfer(null)} onCreated={() => undefined} /> : null}
     </>
   );
 }
@@ -286,6 +303,38 @@ function ReceiptQueue({ query, onOpen }: { query: ReturnType<typeof useReceipts>
             icon={PackageOpen}
             title="Qabul kutayotgan kirim yoʻq"
             description="Yangi kirim kiritilganda shu yerda paydo boʻladi."
+          />
+        )
+      }
+    />
+  );
+}
+
+/** Koʻchirish qabuli: yoʻldagi ombor koʻchirishlari (OK) — qator bosilsa hujjat ochiladi, u yerda «Qabul qilish». */
+function TransferQueue({ query, onOpen }: { query: ReturnType<typeof useWarehouseTransfers>; onOpen: (id: number) => void }) {
+  const columns: TableColumn<WarehouseTransferSummary>[] = [
+    { key: "number", title: "Raqam", mono: true },
+    { key: "sentAt", title: "Joʻnatildi", render: (d) => (d.sentAt ? formatDateTime(new Date(d.sentAt)) : "—") },
+    { key: "from", title: "Qayerdan", render: (d) => `${d.fromWarehouse.name} · ${d.fromZone.name}` },
+    { key: "to", title: "Qayerga", render: (d) => d.toWarehouse.name },
+    { key: "qty", title: "Miqdor", align: "right", render: (d) => <span className="tabular-nums">{formatQuantity(d.qty)}</span> },
+  ];
+  return (
+    <Table
+      columns={columns}
+      rows={query.data?.items ?? []}
+      rowKey={(d) => String(d.id)}
+      caption="Yoʻldagi koʻchirishlar"
+      loading={query.isPending}
+      onRowClick={(d) => onOpen(d.id)}
+      emptyState={
+        query.error ? (
+          <ErrorState onRetry={() => void query.refetch()} />
+        ) : (
+          <EmptyState
+            icon={Truck}
+            title="Yoʻlda koʻchirish yoʻq"
+            description="Boshqa ombordan joʻnatilgan tovar shu yerda paydo boʻladi."
           />
         )
       }
