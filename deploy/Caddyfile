@@ -1,0 +1,33 @@
+# MEDIX — HTTPS va teskari proksi (SPEC 15).
+# /api/* — to'g'ridan-to'g'ri backendga (SSE, fayl yuklash); qolgani — Next.js.
+# /actuator tashqariga ochilmaydi (faqat ichki tarmoq).
+{$MEDIX_DOMAIN} {
+	tls {$MEDIX_TLS}
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy backend:8080 {
+			# SSE (real vaqt) uchun buferlamaslik
+			flush_interval -1
+		}
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+
+	log {
+		output file /data/logs/access.log {
+			roll_size 50MiB
+			roll_keep 10
+		}
+	}
+}
