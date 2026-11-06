@@ -3,6 +3,7 @@ package uz.medix.inventory.transfer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import uz.medix.inventory.transfer.WarehouseTransferModels.Status;
 import uz.medix.inventory.transfer.WarehouseTransferModels.WarehouseTransferDetail;
 import uz.medix.inventory.transfer.WarehouseTransferModels.WarehouseTransferPage;
 import uz.medix.inventory.transfer.WarehouseTransferModels.WarehouseTransferRequest;
+import uz.medix.inventory.transfer.ZoneTransferModels.ZoneStockRow;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
@@ -34,10 +36,12 @@ class WarehouseTransferController {
     private static final String VIEW = "hasAnyAuthority('transfer.view', 'transfer.ok', 'transfer.send', 'transfer.receive')";
 
     private final WarehouseTransfers transfers;
+    private final ZoneTransfers zones;
     private final CurrentActor currentActor;
 
-    WarehouseTransferController(WarehouseTransfers transfers, CurrentActor currentActor) {
+    WarehouseTransferController(WarehouseTransfers transfers, ZoneTransfers zones, CurrentActor currentActor) {
         this.transfers = transfers;
+        this.zones = zones;
         this.currentActor = currentActor;
     }
 
@@ -66,6 +70,13 @@ class WarehouseTransferController {
     @Operation(summary = "OK hujjati")
     WarehouseTransferDetail get(@PathVariable long id) {
         return detail(id);
+    }
+
+    @GetMapping("/zone-stock")
+    @PreAuthorize("hasAuthority('transfer.ok')")
+    @Operation(summary = "Manba zonadagi partiyalar", description = "Ko'chirish uchun: qoldiq, faol zahira va bo'sh miqdor (tannarxsiz).")
+    List<ZoneStockRow> zoneStock(@RequestParam long zoneId) {
+        return zones.zoneStock(actor(), zoneId);
     }
 
     @PostMapping
