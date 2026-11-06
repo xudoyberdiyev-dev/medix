@@ -198,6 +198,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 07.11.2026 04:31 — davom sessiyasi (fire_trigger): oyna tugashiga 29 daqiqa; oyna hisoboti allaqachon yozilgan. FS kamomadini hal qilish (pul + qoldiq, CI bilan) oynaga sigʻmaydi — keyingi oynaga qoldirildi. CI (develop) yashil.
 - 07.11.2026 03:38–04:30 — zanjir sessiyasi (tungi oyna): FS — V41 + servis + API + IT 5 test + UI + filiallararo qarz paneli + FS/HF PDF + «Diqqat» + e2e (CI yashil). Oyna hisoboti yozildi. HF FS uchun sotuv HF hisoblagichidan (bitta filial ichida HF raqamlari yagona). Kamomadni hal qilish — keyingi sessiya.
 - 07.11.2026 03:40 — zanjir: davom (FS uchun toza kontekst kerak). Keyingi sessiya: FS — `docs/notes/FS-dizayn.md` bo'yicha V41 + servis + IT.
 - 07.11.2026 03:50 — FS dizayni yozildi (`docs/notes/FS-dizayn.md`); migratsiya keyingi sessiyada servis va IT bilan birga (yarim migratsiya develop'ga tushmasin).
