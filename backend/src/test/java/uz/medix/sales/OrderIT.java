@@ -67,6 +67,9 @@ class OrderIT {
     @Autowired
     TransactionTemplate tx;
 
+    @Autowired
+    uz.medix.delivery.trip.TripReminders tripReminders;
+
     private record Place(long branchId, long warehouseId, long main, long quarantine) {}
 
     private Place place() {
@@ -1001,6 +1004,38 @@ class OrderIT {
                         .query(String.class).single())
                 .isEqualTo("2000.00");
         send(post("/api/trips/" + trip3 + "/finish"), driver2, "").andExpect(jsonPath("$.status").value("RETURN_WAIT"));
+
+        // «Qaytish kutilmoqda»da qotib qolgan reys (T12-audit №23): 4 soatdan keyin — Ombor mudiriga (tovar), kassirga (pul), haydovchiga
+        java.time.Instant now = java.time.Instant.now();
+        tripReminders.run(now);
+        assertThat(jdbc.sql("SELECT count(*) FROM notification WHERE dedup_key LIKE :k").param("k", "trip-return-%-" + trip3 + "-%")
+                        .query(Long.class).single())
+                .isZero();
+        java.time.Instant later = now.plus(java.time.Duration.ofHours(5));
+        tripReminders.run(later);
+        String day = java.time.LocalDate.ofInstant(later, java.time.ZoneId.of("Asia/Tashkent")).toString();
+        assertThat(jdbc.sql("""
+                        SELECT count(*) FROM notification n JOIN employee e ON e.id = n.employee_id JOIN role r ON r.id = e.role_id
+                        WHERE n.dedup_key = :k AND r.code = 'WAREHOUSE_MANAGER' AND e.branch_id = :b""")
+                        .param("k", "trip-return-goods-" + trip3 + "-" + day)
+                        .param("b", p.branchId())
+                        .query(Long.class).single())
+                .isPositive();
+        assertThat(jdbc.sql("SELECT body FROM notification WHERE dedup_key = :k AND employee_id = :d")
+                        .param("k", "trip-return-cash-" + trip + "-" + day)
+                        .param("d", driver)
+                        .query(String.class).single())
+                .contains("2.000,00 soʻm");
+        assertThat(jdbc.sql("SELECT count(*) FROM notification WHERE dedup_key = :k").param("k", "trip-return-cash-" + trip3 + "-" + day)
+                        .query(Long.class).single())
+                .isZero();
+        // Shu kunda qayta tekshiruv — takrorlanmaydi.
+        tripReminders.run(later.plusSeconds(60));
+        assertThat(jdbc.sql("SELECT count(*) FROM notification WHERE dedup_key = :k AND employee_id = :d")
+                        .param("k", "trip-return-goods-" + trip3 + "-" + day)
+                        .param("d", driver2Id)
+                        .query(Long.class).single())
+                .isEqualTo(1);
         long ret = jdbc.sql("SELECT id FROM sales_return_pending WHERE order_id = :o").param("o", o3).query(Long.class).single();
         mvc.perform(get("/api/orders/returns").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) ret)));
         send(post("/api/orders/returns/" + ret + "/accept"), keeper, "{\"receivedQty\":3}").andExpect(status().isBadRequest());

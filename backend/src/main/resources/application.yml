@@ -47,6 +47,9 @@ medix:
   orders:
     # Umumiy kechikish: buyurtma bir holatda shuncha kundan ortiq tursa — «N kundan oshgan» (SPEC 5.2)
     late-days: 2
+  trips:
+    # «Qaytish kutilmoqda»da shuncha soatdan ortiq tursa — Ombor mudiri / kassirga eslatma (T12-audit №23)
+    return-wait-hours: 4
 
 management:
   endpoints:
