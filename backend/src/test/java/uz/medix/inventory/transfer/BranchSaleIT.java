@@ -200,6 +200,9 @@ class BranchSaleIT {
                 .andExpect(jsonPath("$.lines[0].vatRate").value("12"));
         assertThat(bal(seller.main(), b)).isEqualTo(6);
         assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("4000.00");
+        mvc.perform(get("/api/branch-sales/balances").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.debtor.id == " + buyer.branchId() + ")].amount").value(org.hamcrest.Matchers.hasItem("4000.00")));
         // Guruh ichidagi qarz mijoz / YB qarzi jurnaliga yozilmaydi
         assertThat(jdbc.sql("SELECT count(*) FROM party_ledger WHERE doc_id = :id AND doc_type = 'FS'").param("id", id).query(Long.class)
                 .single()).isZero();
@@ -215,6 +218,7 @@ class BranchSaleIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.items[0].total").value(nullValue()));
+        mvc.perform(get("/api/branch-sales/balances").cookie(keeper)).andExpect(status().isForbidden());
         send(post("/api/branch-sales/" + id + "/receive"), keeper, "{\"toZoneId\":" + seller.receiving() + "}")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("transfer.ok.zoneNotInTarget"));

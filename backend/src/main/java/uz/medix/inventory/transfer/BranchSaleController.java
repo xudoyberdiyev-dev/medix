@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import uz.medix.inventory.transfer.BranchSaleModels.BranchBalance;
 import uz.medix.inventory.transfer.BranchSaleModels.BranchSaleDetail;
 import uz.medix.inventory.transfer.BranchSaleModels.BranchSalePage;
 import uz.medix.inventory.transfer.BranchSaleModels.BranchSaleRequest;
@@ -77,6 +78,13 @@ class BranchSaleController {
     @Operation(summary = "FS hujjati")
     BranchSaleDetail get(@PathVariable long id, Authentication auth) {
         return detail(id, auth);
+    }
+
+    @GetMapping("/balances")
+    @PreAuthorize(VIEW + " and hasAuthority('special.cost')")
+    @Operation(summary = "Filiallararo qarz", description = "Guruh ichidagi qarz qoldiqlari (mijoz / YB qarzi jamiga kirmaydi).")
+    List<BranchBalance> balances() {
+        return sales.balances(actor());
     }
 
     @GetMapping("/zone-stock")

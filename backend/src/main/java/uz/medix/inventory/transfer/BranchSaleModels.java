@@ -45,6 +45,9 @@ final class BranchSaleModels {
             @Schema(nullable = true, description = "Faqat special.cost ruxsati bilan") String total,
             String createdBy, Instant createdAt, @Schema(nullable = true) Instant sentAt, @Schema(nullable = true) Instant receivedAt) {}
 
+    /** Filiallararo qarz qoldig'i: debtor creditor'ga {@code amount} qarzdor (jurnal yig'indisi, faqat noldan farqli). */
+    record BranchBalance(BranchRef debtor, BranchRef creditor, String amount) {}
+
     record BranchSalePage(List<BranchSaleSummary> items, long total, int page, int size) {}
 
     record BranchSaleLine(long id, int lineNo, long batchId, String batchNumber, LocalDate expiryDate, long productId, String productCode,

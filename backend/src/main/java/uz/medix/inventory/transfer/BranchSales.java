@@ -20,6 +20,7 @@ import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockLedger.DocRef;
 import uz.medix.inventory.StockLedger.Move;
 import uz.medix.inventory.ZoneType;
+import uz.medix.inventory.transfer.BranchSaleModels.BranchBalance;
 import uz.medix.inventory.transfer.BranchSaleModels.BranchRef;
 import uz.medix.inventory.transfer.BranchSaleModels.BranchSaleDetail;
 import uz.medix.inventory.transfer.BranchSaleModels.BranchSaleLine;
@@ -165,6 +166,25 @@ class BranchSales {
                 h.toWarehouse(), h.toZone(), h.status(), h.note(), h.shortageQty(), h.receiveNote(), h.invoiceNumber(), h.total(),
                 h.vatTotal(), h.createdBy(), h.createdAt(), h.sentBy(), h.sentAt(), h.receivedBy(), h.receivedAt(), h.cancelledBy(),
                 h.cancelledAt(), h.totalQty(), lines));
+    }
+
+    /**
+     * Filiallararo qarz qoldiqlari (branch_ledger yig'indisi). Xodim faqat o'z filiali qatnashgan juftlarni ko'radi. Qarama-qarshi
+     * yo'nalishdagi qarzlar alohida qatorda (hisob-kitob — keyingi qadam).
+     */
+    @Transactional(readOnly = true)
+    List<BranchBalance> balances(Actor actor) {
+        String scope = actor.allBranches() ? "" : " WHERE l.debtor_branch_id = :own OR l.creditor_branch_id = :own";
+        return jdbc.sql("""
+                SELECT d.id AS d_id, d.code AS d_code, d.name AS d_name, c.id AS c_id, c.code AS c_code, c.name AS c_name, s.amount
+                FROM (SELECT l.debtor_branch_id, l.creditor_branch_id, sum(l.amount) AS amount FROM branch_ledger l""" + scope + """
+                       GROUP BY l.debtor_branch_id, l.creditor_branch_id HAVING sum(l.amount) <> 0) s
+                JOIN branch d ON d.id = s.debtor_branch_id JOIN branch c ON c.id = s.creditor_branch_id
+                ORDER BY d.name, c.name""")
+                .param("own", actor.branchId() == null ? -1L : actor.branchId())
+                .query((rs, n) -> new BranchBalance(new BranchRef(rs.getLong("d_id"), rs.getString("d_code"), rs.getString("d_name")),
+                        new BranchRef(rs.getLong("c_id"), rs.getString("c_code"), rs.getString("c_name")), money(rs.getBigDecimal("amount"))))
+                .list();
     }
 
     /** Xaridor ombori tanlovi: boshqa filiallarning faol omborlari (faqat nom — ichidagi qoldiq ko'rsatilmaydi). */
