@@ -3256,7 +3256,7 @@
             "description" : "OK"
           }
         },
-        "summary" : "Real vaqt signali (SSE): «notifications» hodisasi kelsa — ro'yxatni qayta oling",
+        "summary" : "Real vaqt signallari (SSE): «notifications» — bildirishnomalar; «orders», «trips», «receipts» — shu filialda hujjat o'zgardi",
         "tags" : [ "notifications" ]
       }
     },

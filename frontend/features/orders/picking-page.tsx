@@ -19,6 +19,7 @@ import { useOrder } from "./api";
 import { IssueButton } from "./issues";
 import { MyToday } from "./my-today";
 import { batchLabel, OtherBatchModal, type PickBatch } from "./other-batch-modal";
+import { useLiveConnected } from "@/lib/live";
 import { day } from "./orders-page";
 
 /** Qolgan vaqt: musbat — «12:05», manfiy — «Kechikdi: N daqiqa» (SPEC 5.2). */
@@ -46,11 +47,12 @@ export function PickingPage() {
   const qc = useQueryClient();
   const now = useNow();
   const allowed = can(me.data, "picking.do");
+  const live = useLiveConnected();
   const queue = useQuery({
     queryKey: ["orders", "pick-queue"],
     queryFn: () => unwrap(api.GET("/api/orders/pick-queue")),
     enabled: allowed,
-    refetchInterval: 15_000,
+    refetchInterval: live ? 60_000 : 15_000,
   });
   const [pending, setPending] = useState<number | null>(null);
   const [error, setError] = useState<unknown>(null);

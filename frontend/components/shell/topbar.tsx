@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
 import { BranchSwitcher } from "./branch-switcher";
+import { LiveSync } from "./live-sync";
 import { NotificationBell } from "./notification-bell";
 
 /** Yuqori panel (design/system: TopBar): qidiruv, filial tanlagichi, bildirishnomalar. */
@@ -17,6 +18,7 @@ export function TopBar({ title }: { title: string }) {
           <kbd className="ml-auto rounded-sm border border-border px-1.5 text-caption text-text-secondary">Ctrl K</kbd>
         </button>
         <BranchSwitcher />
+        <LiveSync />
         <NotificationBell />
       </div>
     </header>

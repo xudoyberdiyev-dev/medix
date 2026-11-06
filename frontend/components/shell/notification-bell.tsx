@@ -8,45 +8,9 @@ import { ensureCsrf, useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
+import { LIVE_POLL_MS, useLive } from "@/lib/live";
 
 const KEY = ["notifications"] as const;
-
-/** SSE ulangan boʻlsa — soʻrov faqat zaxira (5 daqiqa), ulanmagan boʻlsa — har daqiqada. */
-export const POLL_LIVE_MS = 300_000;
-export const POLL_FALLBACK_MS = 60_000;
-export const STREAM_URL = "/api/notifications/stream";
-
-/**
- * Bildirishnomalar real vaqtda (SPEC 10, SSE): «notifications» hodisasi kelsa roʻyxat qayta olinadi.
- * Ulanish uzilsa brauzer oʻzi qayta ulanadi; shu orada har daqiqalik soʻrov ishlaydi. Qaytaradi: ulanganmi.
- */
-export function useNotificationStream(enabled: boolean, onChanged: () => void): boolean {
-  const [live, setLive] = useState(false);
-  const changed = useRef(onChanged);
-  useEffect(() => {
-    changed.current = onChanged;
-  }, [onChanged]);
-  useEffect(() => {
-    if (!enabled || typeof EventSource === "undefined") return;
-    const es = new EventSource(STREAM_URL, { withCredentials: true });
-    const onReady = () => {
-      setLive(true);
-      // Uzilish paytida kelganlari ham koʻrinsin.
-      changed.current();
-    };
-    const onNotify = () => changed.current();
-    es.addEventListener("ready", onReady);
-    es.addEventListener("notifications", onNotify);
-    es.onerror = () => setLive(false);
-    return () => {
-      es.removeEventListener("ready", onReady);
-      es.removeEventListener("notifications", onNotify);
-      es.close();
-      setLive(false);
-    };
-  }, [enabled]);
-  return live;
-}
 
 /** Bildirishnomalar (TopBar): oʻqilmaganlar soni, oxirgi 50 ta, oʻqildi belgisi. Real vaqtda (SSE) yangilanadi. */
 export function NotificationBell() {
@@ -54,12 +18,12 @@ export function NotificationBell() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const live = useNotificationStream(Boolean(me.data), () => void qc.invalidateQueries({ queryKey: KEY }));
+  const live = useLive(["notifications"], () => void qc.invalidateQueries({ queryKey: KEY }), Boolean(me.data));
   const list = useQuery({
     queryKey: KEY,
     queryFn: () => unwrap(api.GET("/api/notifications")),
     enabled: Boolean(me.data),
-    refetchInterval: live ? POLL_LIVE_MS : POLL_FALLBACK_MS,
+    refetchInterval: live ? LIVE_POLL_MS : 60_000,
   });
   const read = useMutation({
     mutationFn: async (id: number | "all") => {

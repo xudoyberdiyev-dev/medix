@@ -23,6 +23,7 @@ import { STATUS_LABELS, type OrderStatus } from "./api";
 import { IssuesList } from "./issues";
 import { ReturnsList } from "./returns";
 import { OrderDrawer } from "./order-drawer";
+import { useLiveConnected } from "@/lib/live";
 import { timerText } from "./picking-page";
 
 export type MonitorCard = components["schemas"]["MonitorCard"];
@@ -75,6 +76,7 @@ export function MonitorPage() {
   const me = useMe();
   const now = useNow();
   const allowed = can(me.data, "orders.queue");
+  const live = useLiveConnected();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const [open, setOpen] = useState<number | null>(null);
@@ -89,7 +91,7 @@ export function MonitorPage() {
     queryKey: ["orders", "monitor", branchId],
     queryFn: () => unwrap(api.GET("/api/orders/monitor", { params: { query: { branchId: branchId ?? undefined } } })),
     enabled: allowed,
-    refetchInterval: 10_000,
+    refetchInterval: live ? 60_000 : 10_000,
   });
 
   if (me.data && !allowed) return <ForbiddenState description="Monitor Ombor mudiri, Filial rahbari va Direktor uchun." />;

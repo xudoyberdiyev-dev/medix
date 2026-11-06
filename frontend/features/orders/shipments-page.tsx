@@ -21,6 +21,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { useLiveConnected } from "@/lib/live";
 import { TripEditModal } from "./trip-edit-modal";
 
 export type ReadyOrder = components["schemas"]["ReadyOrder"];
@@ -49,6 +50,7 @@ function todayUz(): string {
 
 /** Hujjatlashtirish (SPEC 5.2 №7): reys tuzish — mashina, haydovchi, sigʻim; nakladnoy; «Oʻzi olib ketadi». */
 export function ShipmentsPage() {
+  const live = useLiveConnected();
   const me = useMe();
   const qc = useQueryClient();
   const allowed = can(me.data, "shipments.view");
@@ -59,7 +61,7 @@ export function ShipmentsPage() {
     queryKey: ["trips", "ready", scopeBranch],
     queryFn: () => unwrap(api.GET("/api/trips/ready", { params: { query: { branchId: scopeBranch ?? undefined } } })),
     enabled: allowed,
-    refetchInterval: 20_000,
+    refetchInterval: live ? 60_000 : 20_000,
   });
   const trips = useQuery({
     queryKey: ["trips", "list", scopeBranch],

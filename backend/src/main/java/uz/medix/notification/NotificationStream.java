@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import uz.medix.shared.security.Actor;
 
 /**
  * Bildirishnomalar real vaqtda (SPEC 10 — Server-Sent Events). Har xodimning ochiq oynalari (bir nechta varaq bo'lishi
@@ -30,6 +31,8 @@ class NotificationStream {
     private static final Logger log = LoggerFactory.getLogger(NotificationStream.class);
 
     private final Map<Long, Set<SseEmitter>> emitters = new ConcurrentHashMap<>();
+    /** Har ulanishning filial doirasi — mavzu signallari faqat shu filialni ko'radiganlarga. */
+    private final Map<SseEmitter, Actor> scopes = new ConcurrentHashMap<>();
     /** Yuborish alohida oqimda: uzilgan ulanish hujjat o'tkazayotgan so'rovni hech qachon to'xtatmasin va xato qaytarmasin. */
     private final ExecutorService sender = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "notification-sse");
@@ -42,8 +45,10 @@ class NotificationStream {
         sender.shutdownNow();
     }
 
-    SseEmitter subscribe(long employeeId) {
+    SseEmitter subscribe(Actor actor) {
+        long employeeId = actor.employeeId();
         SseEmitter emitter = new SseEmitter(TIMEOUT_MS);
+        scopes.put(emitter, actor);
         emitters.computeIfAbsent(employeeId, k -> ConcurrentHashMap.newKeySet()).add(emitter);
         emitter.onCompletion(() -> remove(employeeId, emitter));
         emitter.onTimeout(() -> remove(employeeId, emitter));
@@ -65,6 +70,26 @@ class NotificationStream {
             });
         } catch (RuntimeException ex) {
             log.debug("SSE signal yuborilmadi", ex);
+        }
+    }
+
+    /**
+     * Mavzu signali (masalan «orders» — buyurtma holati o'zgardi) shu filialni ko'radigan barcha ochiq oynalarga.
+     * Ma'lumot yuborilmaydi — sahifa o'z so'rovi (ruxsat va filial filtri bilan) orqali yangilanadi.
+     */
+    void broadcast(String topic, long branchId) {
+        if (!topic.matches("[a-z]{1,32}")) {
+            return;
+        }
+        try {
+            sender.execute(() -> emitters.forEach((id, set) -> set.forEach(e -> {
+                Actor a = scopes.get(e);
+                if (a != null && a.canAccessBranch(branchId)) {
+                    send(id, e, SseEmitter.event().name(topic).data(Long.toString(branchId)));
+                }
+            })));
+        } catch (RuntimeException ex) {
+            log.debug("SSE mavzu signali yuborilmadi", ex);
         }
     }
 
@@ -117,6 +142,7 @@ class NotificationStream {
     }
 
     private void remove(long employeeId, SseEmitter emitter) {
+        scopes.remove(emitter);
         emitters.computeIfPresent(employeeId, (k, set) -> {
             set.remove(emitter);
             return set.isEmpty() ? null : set;

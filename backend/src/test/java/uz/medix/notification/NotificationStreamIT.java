@@ -50,6 +50,24 @@ class NotificationStreamIT {
     @Autowired
     TransactionTemplate tx;
 
+    @Autowired
+    LiveSignalListener listener;
+
+    private static void waitUntil(java.util.function.BooleanSupplier ok) throws InterruptedException {
+        long end = System.nanoTime() + java.time.Duration.ofSeconds(15).toNanos();
+        while (!ok.getAsBoolean() && System.nanoTime() < end) {
+            Thread.sleep(100);
+        }
+    }
+
+    private static String content(MvcResult r) {
+        try {
+            return r.getResponse().getContentAsString();
+        } catch (java.io.UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private long branch() {
         jdbc.sql("INSERT INTO company (name) SELECT 'Medix Group' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
         var rnd = ThreadLocalRandom.current();
@@ -140,6 +158,44 @@ class NotificationStreamIT {
         mvc.perform(post("/api/notifications/read-all").with(csrf()).cookie(me.cookie())).andExpect(status().isOk());
         stream.awaitSent();
         assertThat(count(mine.getResponse().getContentAsString(), "event:notifications")).isEqualTo(2);
+    }
+
+    @Test
+    void topicSignalFromDatabaseReachesOnlyBranchSubscribers() throws Exception {
+        long b = branch();
+        long otherBranch = branch();
+        Session here = login(b);
+        Session there = login(otherBranch);
+        waitUntil(listener::listening);
+        assertThat(listener.listening()).isTrue();
+
+        MvcResult mine = mvc.perform(get("/api/notifications/stream").cookie(here.cookie()).accept(MediaType.TEXT_EVENT_STREAM))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        MvcResult theirs = mvc.perform(get("/api/notifications/stream").cookie(there.cookie()).accept(MediaType.TEXT_EVENT_STREAM))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // Bekor qilingan tranzaksiyadagi signal yetkazilmaydi (PostgreSQL NOTIFY semantikasi).
+        tx.executeWithoutResult(s -> {
+            jdbc.sql("SELECT pg_notify('medix_live', :p)").param("p", "trips:" + b).query(String.class).single();
+            s.setRollbackOnly();
+        });
+        jdbc.sql("SELECT pg_notify('medix_live', :p)").param("p", "orders:" + b).query(String.class).single();
+        waitUntil(() -> content(mine).contains("event:orders"));
+
+        assertThat(content(mine)).contains("event:orders\ndata:" + b);
+        assertThat(content(mine)).doesNotContain("event:trips");
+        stream.awaitSent();
+        assertThat(content(theirs)).doesNotContain("event:orders");
+    }
+
+    @Test
+    void malformedSignalIsIgnored() {
+        listener.dispatch(null);
+        listener.dispatch("orders");
+        listener.dispatch("orders:abc");
+        listener.dispatch("Bad Topic:1");
     }
 
     @Test

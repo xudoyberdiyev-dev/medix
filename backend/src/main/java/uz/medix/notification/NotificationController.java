@@ -62,12 +62,12 @@ class NotificationController {
     }
 
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "Real vaqt signali (SSE): «notifications» hodisasi kelsa — ro'yxatni qayta oling")
+    @Operation(summary = "Real vaqt signallari (SSE): «notifications» — bildirishnomalar; «orders», «trips», «receipts» — shu filialda hujjat o'zgardi")
     SseEmitter stream(HttpServletResponse response) {
         // Proksi (Next.js rewrites, nginx) siqmasin va bufer qilmasin — hodisa darhol yetib borsin.
         response.setHeader("Cache-Control", "no-cache, no-transform");
         response.setHeader("X-Accel-Buffering", "no");
-        return stream.subscribe(me());
+        return stream.subscribe(currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized")));
     }
 
     @PostMapping("/{id}/read")

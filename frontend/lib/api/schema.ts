@@ -1405,7 +1405,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Real vaqt signali (SSE): «notifications» hodisasi kelsa — ro'yxatni qayta oling */
+        /** Real vaqt signallari (SSE): «notifications» — bildirishnomalar; «orders», «trips», «receipts» — shu filialda hujjat o'zgardi */
         get: operations["stream"];
         put?: never;
         post?: never;
