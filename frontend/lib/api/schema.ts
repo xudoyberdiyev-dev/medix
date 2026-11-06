@@ -3966,6 +3966,8 @@ export interface components {
             type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
         Attention: {
+            /** Format: int32 */
+            bonusDue: number;
             branchOrders: components["schemas"]["CountAmount"];
             cashApprovals: components["schemas"]["CountAmount"];
             directorOrders: components["schemas"]["CountAmount"];

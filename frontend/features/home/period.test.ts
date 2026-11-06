@@ -32,6 +32,7 @@ describe("Diqqat talab qiladi", () => {
     supplierNext3Days: "0.00",
     receiptsToPost: 0,
     driverCash: "0.00",
+    bonusDue: 0,
   };
   it("nol qatorlar yashiriladi", () => {
     expect(attentionRows(zero)).toEqual([]);
@@ -42,8 +43,10 @@ describe("Diqqat talab qiladi", () => {
       overdue31to60: "1000000.00",
       directorOrders: { count: 2, amount: "350000.50" },
       receiptsToPost: 3,
+      bonusDue: 2,
     });
-    expect(rows.map((r) => r.key)).toEqual(["o2", "dir", "rcp"]);
+    expect(rows.map((r) => r.key)).toEqual(["o2", "dir", "rcp", "bns"]);
+    expect(rows[3].href).toBe("/bonuses");
     expect(rows[1].href).toBe("/orders?status=PENDING_APPROVAL");
     expect(rows[1].label).toContain("(2)");
     expect(rows[2].href).toBe("/receipts?status=ACCEPTED");

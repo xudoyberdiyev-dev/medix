@@ -181,6 +181,7 @@ class DirectorHomeIT {
                 .andExpect(jsonPath("$.attention.supplierOverdue").value("0.00"))
                 .andExpect(jsonPath("$.attention.directorOrders.count").value(0))
                 .andExpect(jsonPath("$.attention.driverCash").value("0.00"))
+                .andExpect(jsonPath("$.attention.bonusDue").value(0))
                 .andExpect(jsonPath("$.topDebtors[0].id").value(c))
                 .andExpect(jsonPath("$.topDebtors[0].debt").value("1400000.00"))
                 .andExpect(jsonPath("$.staleDays").value(2))

@@ -8885,6 +8885,10 @@
       "Attention" : {
         "type" : "object",
         "properties" : {
+          "bonusDue" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "branchOrders" : {
             "$ref" : "#/components/schemas/CountAmount"
           },
@@ -8926,7 +8930,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday" ]
+        "required" : [ "bonusDue", "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday" ]
       },
       "AuditPage" : {
         "type" : "object",

@@ -52,7 +52,7 @@ class DirectorHome {
 
     record Attention(String overdue1to30, String overdue31to60, String overdue61to90, String overdue90plus, CountAmount directorOrders,
             CountAmount branchOrders, CountAmount cashApprovals, ExpiringBatches expiring, String supplierOverdue, String supplierToday, String supplierNext3Days,
-            int receiptsToPost, String driverCash) {}
+            int receiptsToPost, String driverCash, int bonusDue) {}
 
     /**
      * Buyurtma holati katagi: soni va summasi — Hammasi / Bugungi (bugun kiritilgan) / Kechikkanlar (holatda 2 kundan
@@ -283,11 +283,18 @@ class DirectorHome {
                 WHERE s.active AND s.cash_collected > 0 AND s.cash_payment_id IS NULL AND t.status IN ('IN_TRANSIT', 'RETURN_WAIT')
                   AND (CAST(:b AS BIGINT) IS NULL OR t.branch_id = :b)""")
                 .param("b", branchId).query(BigDecimal.class).single();
+        // Bonus tasdig'i (SPEC 8): chegirmali o'tkazilgan kirim, BNS hali yo'q, tasdiqlash sanasi kelgan
+        int bonusDue = jdbc.sql("""
+                SELECT count(*) FROM receipt r
+                WHERE r.status = 'POSTED' AND r.discount_kind IS NOT NULL AND r.discount_date <= :d
+                  AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id)""")
+                .param("d", Date.valueOf(today)).param("b", branchId).query(Integer.class).single();
         DebtSummaries.DueSoon due = debts.supplierDue(actor, branchId, today);
         return new Attention(customers.d1to30(), customers.d31to60(), customers.d61to90(), customers.d90plus(),
                 new CountAmount(orders.count(), m(orders.amount()).toString()),
                 new CountAmount(branchOrders.count(), m(branchOrders.amount()).toString()), new CountAmount(cash.count(), m(cash.amount()).toString()),
-                expiring, due.overdue(), due.today(), due.next3Days(), receipts, m(driver).toString());
+                expiring, due.overdue(), due.today(), due.next3Days(), receipts, m(driver).toString(), bonusDue);
     }
 
     private static Money sum(List<Amount> list, long branchId) {
