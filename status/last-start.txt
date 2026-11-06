@@ -1,1 +1,1 @@
-▶️ MEDIX: 01:09 sessiya boshlandi (tungi oyna 01:00–05:00) — reja: CI yashilligini tekshirish (05.11 backend ishi), so'ng reysga buyurtma qo'shish/olib tashlash, server PDF
+▶️ MEDIX: 06:08 sessiya boshlandi (ertalabki oyna 06:00–11:00) — reja: bildirishnomalar real vaqtda (SSE), buyurtmalar holat yorliqlari e2e
