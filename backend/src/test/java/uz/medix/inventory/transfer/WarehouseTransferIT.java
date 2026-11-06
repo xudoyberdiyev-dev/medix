@@ -149,35 +149,6 @@ class WarehouseTransferIT {
         return Long.parseLong(r.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1"));
     }
 
-    private static String doc(long from, long to, long batch, int qty) {
-        return "{\"fromZoneId\":" + from + ",\"toZoneId\":" + to + ",\"note\":null,\"lines\":[{\"batchId\":" + batch + ",\"qty\":" + qty + "}]}";
-    }
-
-    private int bal(long zone, long batch) {
-        return ledger.balance(zone, batch);
-    }
-
-    private ResultActions send(MockHttpServletRequestBuilder b, Cookie session, String body) throws Exception {
-        return mvc.perform(b.with(csrf()).cookie(session).contentType(MediaType.APPLICATION_JSON).content(body))
-                .andDo(r -> {
-                    if (r.getResponse().getStatus() >= 500) {
-                        throw new AssertionError("500: " + r.getResolvedException(), r.getResolvedException());
-                    }
-                });
-    }
-
-    private static long id(MvcResult r) throws Exception {
-        return Long.parseLong(r.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1"));
-    }
-
-    private static String doc(long from, long to, long batch, int qty) {
-        return "{\"fromZoneId\":" + from + ",\"toZoneId\":" + to + ",\"note\":null,\"lines\":[{\"batchId\":" + batch + ",\"qty\":" + qty + "}]}";
-    }
-
-    private int bal(long zone, long batch) {
-        return ledger.balance(zone, batch);
-    }
-
     private static String doc(long fromZone, long toWarehouse, long batch, int qty) {
         return "{\"fromZoneId\":" + fromZone + ",\"toWarehouseId\":" + toWarehouse + ",\"note\":null,\"lines\":[{\"batchId\":" + batch
                 + ",\"qty\":" + qty + "}]}";
