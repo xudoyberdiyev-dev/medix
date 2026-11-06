@@ -90,6 +90,9 @@
     "description" : "Filiallar",
     "name" : "branches"
   }, {
+    "description" : "Universal qidiruv (Ctrl+K)",
+    "name" : "search"
+  }, {
     "description" : "Tizimga kirish va sessiya",
     "name" : "auth"
   }, {
@@ -7003,6 +7006,34 @@
         "tags" : [ "roles" ]
       }
     },
+    "/api/search" : {
+      "get" : {
+        "operationId" : "search",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : ""
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Result"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hujjat (raqam), mahsulot, kontragent, xodim qidiruvi — har guruhdan 5 tagacha; 2 belgidan qisqa so'rov — bo'sh",
+        "tags" : [ "search" ]
+      }
+    },
     "/api/setup" : {
       "get" : {
         "operationId" : "status",
@@ -10667,6 +10698,29 @@
           }
         },
         "required" : [ "sale" ]
+      },
+      "Hit" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "ORDER", "RECEIPT", "PRICE_CHANGE", "TRIP", "PRODUCT", "CUSTOMER", "SUPPLIER", "EMPLOYEE" ]
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "subtitle" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "kind", "link", "title" ]
       },
       "Home" : {
         "type" : "object",
@@ -14765,6 +14819,21 @@
           }
         },
         "required" : [ "resolution" ]
+      },
+      "Result" : {
+        "type" : "object",
+        "properties" : {
+          "hits" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Hit"
+            }
+          },
+          "query" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "hits", "query" ]
       },
       "ReturnAcceptRequest" : {
         "type" : "object",

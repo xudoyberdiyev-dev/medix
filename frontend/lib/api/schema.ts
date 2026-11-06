@@ -3062,6 +3062,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hujjat (raqam), mahsulot, kontragent, xodim qidiruvi — har guruhdan 5 tagacha; 2 belgidan qisqa so'rov — bo'sh */
+        get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/setup": {
         parameters: {
             query?: never;
@@ -4600,6 +4617,15 @@ export interface components {
         };
         HandoverResult: {
             sale: string;
+        };
+        Hit: {
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "ORDER" | "RECEIPT" | "PRICE_CHANGE" | "TRIP" | "PRODUCT" | "CUSTOMER" | "SUPPLIER" | "EMPLOYEE";
+            link: string;
+            subtitle?: string;
+            title: string;
         };
         Home: {
             attention: components["schemas"]["Attention"];
@@ -6247,6 +6273,10 @@ export interface components {
         };
         ResolveRequest: {
             resolution: string;
+        };
+        Result: {
+            hits: components["schemas"]["Hit"][];
+            query: string;
         };
         ReturnAcceptRequest: {
             /** Format: int32 */
@@ -11457,6 +11487,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Matrix"];
+                };
+            };
+        };
+    };
+    search: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result"];
                 };
             };
         };

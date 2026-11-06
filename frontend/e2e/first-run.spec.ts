@@ -146,6 +146,28 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await expect(page.getByRole("cell", { name: "2.500,00" })).toBeVisible();
 });
 
+test("CEO: Ctrl+K — mahsulot (kirillda), sahifa va NO hujjati", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.keyboard.press("Control+K");
+  const input = page.getByRole("combobox", { name: "Qidirish" });
+  await expect(input).toBeFocused();
+  await input.fill("парацетамол");
+  await expect(page.getByRole("group", { name: "Mahsulotlar" }).getByRole("option", { name: /Paracetamol E2E/ })).toBeVisible();
+  await input.press("Enter");
+  await expect(page).toHaveURL(/\/products\?q=Paracetamol/);
+
+  await page.keyboard.press("Control+K");
+  await page.getByRole("combobox", { name: "Qidirish" }).fill("NO-");
+  await page.getByRole("group", { name: "Narx oʻzgarishlari (NO)" }).getByRole("option").first().click();
+  await expect(page).toHaveURL(/\/prices\?tab=documents&open=\d+/);
+
+  await page.keyboard.press("Control+K");
+  await page.getByRole("combobox", { name: "Qidirish" }).fill("kassa");
+  await page.getByRole("group", { name: "Sahifalar" }).getByRole("option", { name: /Kassa/ }).first().click();
+  await expect(page).toHaveURL(/\/cash/);
+});
+
 test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
