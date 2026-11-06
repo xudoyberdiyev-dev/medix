@@ -198,6 +198,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 07.11.2026 03:40 — zanjir: davom (FS uchun toza kontekst kerak). Keyingi sessiya: FS — `docs/notes/FS-dizayn.md` bo'yicha V41 + servis + IT.
 - 07.11.2026 03:50 — FS dizayni yozildi (`docs/notes/FS-dizayn.md`); migratsiya keyingi sessiyada servis va IT bilan birga (yarim migratsiya develop'ga tushmasin).
 - 07.11.2026 03:05–03:40 — zaxira sessiya (zanjir 02:22 da uzilgan): e2e +9 (Direktor tasdig'i, «Yetkazilmadi», Buxgalter hisobotlari; jami 43, CI yashil) → ustuvorlik №2 tugadi. №3: `deploy/` + pgBackRest + `docs/DEPLOY.md` + Docker CI smoke (ishga tushirish, full nusxa, tiklash sinovi — yashil).
 - 07.11.2026 02:22 — zanjir: davom (kontekst og'irlashdi). Keyingi sessiya: e2e — Direktor tasdig'i (HC > 5 mln yoki kredit), «Yetkazilmadi» oqimi, Buxgalter hisobotlari; so'ng ustuvorlik №3 (Docker/env/backup).
