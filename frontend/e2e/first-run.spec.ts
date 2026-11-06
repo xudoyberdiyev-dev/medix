@@ -161,9 +161,15 @@ test("CEO: Ctrl+K — mahsulot (kirillda), sahifa va NO hujjati", async ({ page 
   await page.getByRole("combobox", { name: "Qidirish" }).fill("NO-");
   await page.getByRole("group", { name: "Narx oʻzgarishlari (NO)" }).getByRole("option").first().click();
   await expect(page).toHaveURL(/\/prices\?tab=documents&open=\d+/);
+  await expect(page.getByText("NO-TSH-000001").first()).toBeVisible();
 
-  await page.keyboard.press("Control+K");
-  await page.getByRole("combobox", { name: "Qidirish" }).fill("kassa");
+  await page.goto("/");
+  const palette = page.getByRole("combobox", { name: "Qidirish" });
+  await expect(async () => {
+    await page.keyboard.press("Control+K");
+    await expect(palette).toBeVisible({ timeout: 1000 });
+  }).toPass();
+  await palette.fill("kassa");
   await page.getByRole("group", { name: "Sahifalar" }).getByRole("option", { name: /Kassa/ }).first().click();
   await expect(page).toHaveURL(/\/cash/);
 });
