@@ -8,11 +8,11 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - Boshqa narsalarga chalg'imaslik. Navbat: (1) V1 qoldiqlari — Buyurtma, Ombor zanjiri, Katalog, Ombor, Kirim bandlarini 100% ga yetkazish; (2) barcha rollar bo'yicha to'liq e2e tekshiruv va xatolarni tuzatish; (3) joylashtirishga tayyorlash (Docker, env, backup); (4) FS; (5) kirill/rus; (6) to'liq hisobotlar.
 
 ## Hozirgi holat
-- **Sana:** 06.11.2026
+- **Sana:** 07.11.2026
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~90%; 2 — Katalog ~90%; 3 — Narxlar ~97%; 4 — Ombor ~90%; 5 — Kirim ~90%; 6 — Buyurtma ~80%; 7 — Ombor zanjiri ~85%; 8 — Yetkazish ~95% (imzo UI ✅); 9 — Pul ~98% (hammasi tayyor; qoldi: bank fayli importi — namuna kutilmoqda)
 - **PR:** #1 (develop → main) ochiq — 0–9-bosqich ishlari, egasi ko'rib chiqishini kutmoqda
-- **Oxirgi sessiya:** 06.11.2026 16:35–17:15 (kunduzgi oyna, zaxira sessiya): QY — YB ga qaytarish (V40 + API + IT 4 test + PDF yuk xati + UI + kirimdan o'tish + «Diqqat» + e2e). Oldingi: 06.11.2026 15:35–16:20 (kunduzgi oyna, zaxira sessiya): IN — inventarizatsiya (V39 + sanoq qulfi + API + IT 5 test + UI + «Diqqat» + e2e). Oldingi: 06.11.2026 14:05–14:50 (kunduzgi oyna): HC — hisobdan chiqarish (V37 + API + PDF + UI + e2e) va OK kamomadini hal qilish (V38). Oldingi: 06.11.2026 09:38–10:25 (ertalabki oyna, zaxira sessiya): OK — ombor ko'chirishi (V35 + API + IT 6 test + UI + e2e + «Diqqat» + Ombor mudiri yorlig'i + V36 real vaqt). Oldingi: 08:37–09:15: T12-audit №24 (bosh sahifa jadvallari tor ekranda aylanmaydi), V2 boshlandi — ZK zona ko'chirishi (backend + UI). Oldingi: 07:37–08:15 — T12 №20, №17, №4, №11, №26; 06:05–07:17 — SSE real vaqt, Ctrl+K.
-- **Keyingi vazifa:** V2 davomi — FS (filiallararo ko'chirish/savdo); QY PDF (qaytarish yuk xati); egasidan namuna kelsa — SmartUp'dan faqat mijozlar importi. Ustuvorlik — «Egasi qarori (06.11.2026)».
+- **Oxirgi sessiya:** 07.11.2026 01:10– (tungi oyna): ustuvorlik №2 — rollar bo'yicha e2e (`e2e/roles-chain.spec.ts`): Operator → Ombor mudiri → Yig'uvchi → Markirovkachi → Ombor mudiri (hisobdan o'tkazish, reys) → Haydovchi → Kassir; 2 xato topildi va tuzatildi (pul hisobi qo'shish UI yo'q edi; tez skanerlangan kod yo'qolardi). Oldingi: 06.11.2026 16:35–17:15 (kunduzgi oyna, zaxira sessiya): QY — YB ga qaytarish (V40 + API + IT 4 test + PDF yuk xati + UI + kirimdan o'tish + «Diqqat» + e2e). Oldingi: 06.11.2026 15:35–16:20 (kunduzgi oyna, zaxira sessiya): IN — inventarizatsiya (V39 + sanoq qulfi + API + IT 5 test + UI + «Diqqat» + e2e). Oldingi: 06.11.2026 14:05–14:50 (kunduzgi oyna): HC — hisobdan chiqarish (V37 + API + PDF + UI + e2e) va OK kamomadini hal qilish (V38). Oldingi: 06.11.2026 09:38–10:25 (ertalabki oyna, zaxira sessiya): OK — ombor ko'chirishi (V35 + API + IT 6 test + UI + e2e + «Diqqat» + Ombor mudiri yorlig'i + V36 real vaqt). Oldingi: 08:37–09:15: T12-audit №24 (bosh sahifa jadvallari tor ekranda aylanmaydi), V2 boshlandi — ZK zona ko'chirishi (backend + UI). Oldingi: 07:37–08:15 — T12 №20, №17, №4, №11, №26; 06:05–07:17 — SSE real vaqt, Ctrl+K.
+- **Keyingi vazifa:** ustuvorlik №2 davomi — qolgan rollar e2e (Filial rahbari: kredit tasdig'i; Xarid: kirim/YT; Buxgalter: hisobotlar; haydovchi «Qisman»/«Yetkazilmadi» → qaytgan tovar qabuli); keyin №3 — joylashtirishga tayyorlash (Docker, env, backup). Ustuvorlik — «Egasi qarori (06.11.2026)».
 
 ## Egasidan kutilayotganlar
 - [x] ~~GitHub Actions to'xtadi (05.11 12:45)~~ — repo public qilingach (05.11 20:40) CI ishlayapti.
@@ -107,7 +107,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [x] Haydovchidagi pul → Kassir «Qabul qildim» (MT, darhol o'tkaziladi); reys «Yakunlangan» (02.11)
 
 ## 9. Pul
-- [x] Pul hisoblari: kassa(lar), Terminal, bank — qoldiq faqat pul jurnalidan (bitta tranzaksiyada, CHECK ≥ 0) (02.11)
+- [x] Pul hisoblari: kassa(lar), Terminal, bank — qoldiq faqat pul jurnalidan (bitta tranzaksiyada, CHECK ≥ 0) (02.11). «Hisob qo'shish» oynasi ✅ (07.11: qo'shimcha kassa, bank hisobi — 20 raqam, Terminal; settings.view) — oldin bank hisobini UI'dan ochib bo'lmasdi
 - [x] MT: qoralama → o'tkazish (eng eski qarzdan / qo'lda, ortig'i avans) → bekor qilish; parallel test (02.11)
 - [x] YT: qoralama → tasdiqlashda → o'tkazilgan (qaytarish, tasdiqsiz — ytDirect), eng eski kirim qarzidan; kassada pul yetmasa — yo'q (02.11)
 - [x] KO/BO: kirim/chiqim moddalar bilan; kassadan 2 000 000 dan katta chiqim — «Tasdiqlashda» (cash.approve: tasdiqlash / rad etish); bekor qilish — teskari (05.11)
@@ -195,6 +195,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 07.11.2026 01:10–01:55 — tungi oyna: rollar bo'yicha e2e zanjiri (8 test, CI yashil — jami 21 e2e). Topilgan xatolar: (1) pul hisobi (bank/qo'shimcha kassa) qo'shish UI yo'q edi → «Hisob qo'shish» oynasi; (2) markirovkada tez ketma-ket skanerlangan kod jimgina yo'qolardi → navbat. Kun yopilgan xato matni aniqlashtirildi.
 - 06.11.2026 17:15 — kunduzgi oyna hisoboti yozildi (reports/2026-11-06-1711.md); QY PDF yuk xati, kirim hujjatidan «YB ga qaytarish». Keyingi: FS.
 - 06.11.2026 16:35–17:15 — zaxira sessiya (kunduzgi oyna): V2 — QY, YB ga qaytarish: V40 `supplier_return` (+ trigger), `/api/supplier-returns` (ro'yxat, hujjat, kirim partiyalari qoldig'i, yaratish, tasdiq, rad etish), qarz KR ga qo'llanadi / bonus balansga qaytadi, bildirishnoma, «Diqqat»; SupplierReturnIT 4 test (parallel ×5); UI + e2e. BranchWarehouseAdminIT — filial kodi to'qnashuvida qayta urinish (beqaror test).
 - 06.11.2026 16:20 — fire_trigger yana rad etildi (auto mode); zanjirni 16:30 zaxira ishga tushirish davom ettiradi (keyingi: QY yoki FS). Oyna hisobotini oynaning oxirgi sessiyasi yozadi.
