@@ -4100,6 +4100,8 @@ export interface components {
             supplierNext3Days: string;
             supplierOverdue: string;
             supplierToday: string;
+            /** Format: int32 */
+            zoneTransfersPending: number;
         };
         AuditPage: {
             items: components["schemas"]["AuditRow"][];

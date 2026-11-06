@@ -103,6 +103,13 @@ export function attentionRows(
       money: false,
     },
     { key: "bns", label: "Bonus tasdigʻi kutilmoqda (vaqti kelgan)", value: String(a.bonusDue), href: "/bonuses", money: false },
+    {
+      key: "zk",
+      label: "Karantindan koʻchirish tasdigʻi kutilmoqda",
+      value: String(a.zoneTransfersPending),
+      href: "/zone-transfers?status=PENDING",
+      money: false,
+    },
     { key: "drv", label: "Haydovchilardagi pul", value: a.driverCash, href: "/cash", money: true },
   ];
   return rows.filter((r) => nonZero(r.value) && (r.key !== "dir" || perms.director) && (r.key !== "br" || perms.branch));
