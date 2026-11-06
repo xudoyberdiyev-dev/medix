@@ -110,6 +110,13 @@ export function attentionRows(
       href: "/zone-transfers?status=PENDING",
       money: false,
     },
+    {
+      key: "ok",
+      label: "Yoʻldagi ombor koʻchirishlari",
+      value: String(a.transfersInTransit),
+      href: "/warehouse-transfers?status=IN_TRANSIT",
+      money: false,
+    },
     { key: "drv", label: "Haydovchilardagi pul", value: a.driverCash, href: "/cash", money: true },
   ];
   return rows.filter((r) => nonZero(r.value) && (r.key !== "dir" || perms.director) && (r.key !== "br" || perms.branch));

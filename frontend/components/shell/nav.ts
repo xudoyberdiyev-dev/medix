@@ -20,6 +20,7 @@ import {
   Truck,
   Users,
   Wallet,
+  Warehouse,
   HandCoins,
   type LucideIcon,
 } from "lucide-react";
@@ -69,6 +70,13 @@ export const navigation: NavGroup[] = [
         href: "/zone-transfers",
         icon: ArrowRightLeft,
         anyOf: ["transfer.view", "transfer.zk", "transfer.quar"],
+      },
+      {
+        key: "warehouse-transfers",
+        label: "Ombor koʻchirishlari",
+        href: "/warehouse-transfers",
+        icon: Warehouse,
+        anyOf: ["transfer.view", "transfer.ok", "transfer.send", "transfer.receive"],
       },
       { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: PackageOpen, anyOf: ["opening.list", "opening.view"] },

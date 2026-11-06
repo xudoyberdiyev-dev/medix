@@ -105,6 +105,9 @@
     "description" : "Audit jurnali",
     "name" : "audit"
   }, {
+    "description" : "Ombor ko'chirishi (OK)",
+    "name" : "warehouse-transfer"
+  }, {
     "description" : "Reyslar",
     "name" : "trips"
   }, {
@@ -302,7 +305,7 @@
     },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
-        "operationId" : "cancel_6",
+        "operationId" : "cancel_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -340,7 +343,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_23",
+        "operationId" : "list_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -484,7 +487,7 @@
     },
     "/api/bank-reconciliations" : {
       "get" : {
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -513,7 +516,7 @@
         "tags" : [ "bank-reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_16",
+        "operationId" : "create_17",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -578,7 +581,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "responses" : {
           "200" : {
             "content" : {
@@ -598,7 +601,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_15",
+        "operationId" : "create_16",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1089,7 +1092,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_12",
+        "operationId" : "get_13",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -1142,7 +1145,7 @@
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -1219,7 +1222,7 @@
         "tags" : [ "counterparties" ]
       },
       "post" : {
-        "operationId" : "create_14",
+        "operationId" : "create_15",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2007,7 +2010,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -2036,7 +2039,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_13",
+        "operationId" : "create_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -2193,7 +2196,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_22",
+        "operationId" : "list_23",
         "responses" : {
           "200" : {
             "content" : {
@@ -2215,7 +2218,7 @@
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "responses" : {
           "200" : {
             "content" : {
@@ -2235,7 +2238,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_12",
+        "operationId" : "create_13",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2369,7 +2372,7 @@
     },
     "/api/expense-items" : {
       "get" : {
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "responses" : {
           "200" : {
             "content" : {
@@ -2389,7 +2392,7 @@
         "tags" : [ "expense-items" ]
       },
       "post" : {
-        "operationId" : "create_11",
+        "operationId" : "create_12",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2512,7 +2515,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_11",
+        "operationId" : "get_12",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2754,7 +2757,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_10",
+        "operationId" : "get_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2949,7 +2952,7 @@
     },
     "/api/money-accounts" : {
       "get" : {
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2978,7 +2981,7 @@
         "tags" : [ "money-accounts" ]
       },
       "post" : {
-        "operationId" : "create_10",
+        "operationId" : "create_11",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3218,7 +3221,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "responses" : {
           "200" : {
             "content" : {
@@ -3289,7 +3292,7 @@
     },
     "/api/opening-balances" : {
       "get" : {
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3342,7 +3345,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BQ-TSH-000001). Qoralama qoldiqqa ta'sir qilmaydi.",
-        "operationId" : "create_9",
+        "operationId" : "create_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3449,7 +3452,7 @@
     "/api/opening-balances/{id}/cancel" : {
       "post" : {
         "description" : "Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.",
-        "operationId" : "cancel_5",
+        "operationId" : "cancel_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3570,7 +3573,7 @@
     "/api/orders" : {
       "get" : {
         "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).",
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3670,7 +3673,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BY-TSH-000001). Qoldiq va qarzga ta'sir qilmaydi.",
-        "operationId" : "create_8",
+        "operationId" : "create_9",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4142,7 +4145,7 @@
     "/api/orders/{id}/cancel" : {
       "post" : {
         "description" : "Sabab majburiy. «Yo'lda» va undan keyin bekor qilinmaydi.",
-        "operationId" : "cancel_4",
+        "operationId" : "cancel_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4570,7 +4573,7 @@
     },
     "/api/payments/customer" : {
       "get" : {
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4615,7 +4618,7 @@
         "tags" : [ "payments" ]
       },
       "post" : {
-        "operationId" : "create_7",
+        "operationId" : "create_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4745,7 +4748,7 @@
     "/api/payments/customer/{id}/cancel" : {
       "post" : {
         "description" : "O'tkazilgan bo'lsa: qarz va hisob qoldig'i teskari yoziladi.",
-        "operationId" : "cancel_3",
+        "operationId" : "cancel_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5178,7 +5181,7 @@
     },
     "/api/price-changes" : {
       "get" : {
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5231,7 +5234,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (NO-TSH-000001).",
-        "operationId" : "create_6",
+        "operationId" : "create_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5425,7 +5428,7 @@
     "/api/price-changes/{id}/cancel" : {
       "post" : {
         "description" : "Faqat qoralama yoki tasdiq kutayotgan hujjat.",
-        "operationId" : "cancel_2",
+        "operationId" : "cancel_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5559,7 +5562,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "responses" : {
           "200" : {
             "content" : {
@@ -5652,7 +5655,7 @@
     "/api/products" : {
       "get" : {
         "description" : "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.",
-        "operationId" : "list_5",
+        "operationId" : "list_6",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -5753,7 +5756,7 @@
       },
       "post" : {
         "description" : "8 raqamli kod avtomatik beriladi.",
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6154,7 +6157,7 @@
     },
     "/api/receipts" : {
       "get" : {
-        "operationId" : "list_4",
+        "operationId" : "list_5",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -6215,7 +6218,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (KR-TSH-000001). Qoralama qoldiq va qarzga ta'sir qilmaydi.",
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6486,7 +6489,7 @@
     "/api/receipts/{id}/cancel" : {
       "post" : {
         "description" : "O'tkazilgan kirim — faqat receipt.cancelPosted va tovar ishlatilmagan bo'lsa.",
-        "operationId" : "cancel_1",
+        "operationId" : "cancel_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6957,7 +6960,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_19",
+        "operationId" : "list_20",
         "responses" : {
           "200" : {
             "content" : {
@@ -7295,7 +7298,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7424,7 +7427,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7496,7 +7499,7 @@
     "/api/trips" : {
       "get" : {
         "description" : "active=true — Rejalashtirilgan, Yo'lda, Qaytish kutilmoqda.",
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7534,7 +7537,7 @@
       },
       "post" : {
         "description" : "Sig'im tekshiruvi; har buyurtmaga nakladnoy raqami, «Yuklanmoqda».",
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -7774,7 +7777,7 @@
     },
     "/api/trips/{id}" : {
       "get" : {
-        "operationId" : "get_9",
+        "operationId" : "get_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7803,7 +7806,7 @@
     "/api/trips/{id}/cancel" : {
       "post" : {
         "description" : "Faqat yuklash boshlanmagan «Rejalashtirilgan» reys.",
-        "operationId" : "cancel",
+        "operationId" : "cancel_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8301,7 +8304,7 @@
     },
     "/api/vehicles" : {
       "get" : {
-        "operationId" : "list_2",
+        "operationId" : "list_3",
         "responses" : {
           "200" : {
             "content" : {
@@ -8321,7 +8324,7 @@
         "tags" : [ "vehicles" ]
       },
       "post" : {
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -8440,6 +8443,254 @@
         },
         "summary" : "Nofaol qilish",
         "tags" : [ "vehicles" ]
+      }
+    },
+    "/api/warehouse-transfers" : {
+      "get" : {
+        "description" : "warehouseId — jo'natuvchi yoki qabul qiluvchi ombor.",
+        "operationId" : "list_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "RECEIVED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WarehouseTransferPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "OK hujjatlari",
+        "tags" : [ "warehouse-transfer" ]
+      },
+      "post" : {
+        "description" : "Bitta filial ichida. Tovar joʻnatilguncha joyida qoladi.",
+        "operationId" : "create_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WarehouseTransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WarehouseTransferDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Ombor ko'chirishi (qoralama)",
+        "tags" : [ "warehouse-transfer" ]
+      }
+    },
+    "/api/warehouse-transfers/zone-stock" : {
+      "get" : {
+        "description" : "Ko'chirish uchun: qoldiq, faol zahira va bo'sh miqdor (tannarxsiz).",
+        "operationId" : "zoneStock_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "zoneId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ZoneStockRow"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Manba zonadagi partiyalar",
+        "tags" : [ "warehouse-transfer" ]
+      }
+    },
+    "/api/warehouse-transfers/{id}" : {
+      "get" : {
+        "operationId" : "get_9",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WarehouseTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "OK hujjati",
+        "tags" : [ "warehouse-transfer" ]
+      }
+    },
+    "/api/warehouse-transfers/{id}/cancel" : {
+      "post" : {
+        "description" : "Faqat qoralama.",
+        "operationId" : "cancel",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WarehouseTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekor qilish",
+        "tags" : [ "warehouse-transfer" ]
+      }
+    },
+    "/api/warehouse-transfers/{id}/receive" : {
+      "post" : {
+        "description" : "Kelgan miqdor qabul zonasiga kiradi; kamomad bo'lsa izoh majburiy.",
+        "operationId" : "receive",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReceiveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WarehouseTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qabul qilish",
+        "tags" : [ "warehouse-transfer" ]
+      }
+    },
+    "/api/warehouse-transfers/{id}/send" : {
+      "post" : {
+        "description" : "Tovar manba zonadan chiqadi, hujjat «Yo'lda».",
+        "operationId" : "send",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WarehouseTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Jo'natish",
+        "tags" : [ "warehouse-transfer" ]
       }
     },
     "/api/warehouses" : {
@@ -9212,12 +9463,16 @@
           "supplierToday" : {
             "type" : "string"
           },
+          "transfersInTransit" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "zoneTransfersPending" : {
             "type" : "integer",
             "format" : "int32"
           }
         },
-        "required" : [ "bonusDue", "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday", "zoneTransfersPending" ]
+        "required" : [ "bonusDue", "branchOrders", "cashApprovals", "directorOrders", "driverCash", "expiring", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierToday", "transfersInTransit", "zoneTransfersPending" ]
       },
       "AuditPage" : {
         "type" : "object",
@@ -14901,6 +15156,45 @@
         },
         "required" : [ "branchId", "createdAt", "createdBy", "id", "lines", "number", "prepaid", "receiptDate", "status", "supplier", "supplierId", "totalQty", "warehouse" ]
       },
+      "ReceiveLineRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receivedQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000000,
+            "minimum" : 0
+          }
+        },
+        "required" : [ "lineId", "receivedQty" ]
+      },
+      "ReceiveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReceiveLineRequest"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "toZoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "lines", "note", "toZoneId" ]
+      },
       "RecentMove" : {
         "type" : "object",
         "properties" : {
@@ -16494,6 +16788,19 @@
         },
         "required" : [ "active", "branchId", "id", "name", "zones" ]
       },
+      "WarehouseRef" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ]
+      },
       "WarehouseRequest" : {
         "type" : "object",
         "properties" : {
@@ -16521,6 +16828,257 @@
           }
         },
         "required" : [ "branchId", "name" ]
+      },
+      "WarehouseTransferDetail" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fromWarehouse" : {
+            "$ref" : "#/components/schemas/WarehouseRef"
+          },
+          "fromZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WarehouseTransferLine"
+            }
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "receiveNote" : {
+            "type" : "string"
+          },
+          "receivedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "receivedBy" : {
+            "type" : "string"
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sentBy" : {
+            "type" : "string"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "RECEIVED", "CANCELLED" ]
+          },
+          "toWarehouse" : {
+            "$ref" : "#/components/schemas/WarehouseRef"
+          },
+          "toZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "branchId", "createdAt", "createdBy", "fromWarehouse", "fromZone", "id", "lines", "number", "shortageQty", "status", "toWarehouse", "totalQty" ]
+      },
+      "WarehouseTransferLine" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "receivedQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "batchId", "batchNumber", "expiryDate", "id", "lineNo", "productCode", "productId", "productName", "qty" ]
+      },
+      "WarehouseTransferLineRequest" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000000,
+            "minimum" : 1
+          }
+        },
+        "required" : [ "batchId", "qty" ]
+      },
+      "WarehouseTransferPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WarehouseTransferSummary"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "WarehouseTransferRequest" : {
+        "type" : "object",
+        "properties" : {
+          "fromZoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WarehouseTransferLineRequest"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "toWarehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "fromZoneId", "lines", "note", "toWarehouseId" ]
+      },
+      "WarehouseTransferSummary" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fromWarehouse" : {
+            "$ref" : "#/components/schemas/WarehouseRef"
+          },
+          "fromZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receivedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "RECEIVED", "CANCELLED" ]
+          },
+          "toWarehouse" : {
+            "$ref" : "#/components/schemas/WarehouseRef"
+          },
+          "toZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
+          }
+        },
+        "required" : [ "branchId", "createdAt", "createdBy", "fromWarehouse", "fromZone", "id", "lines", "number", "qty", "shortageQty", "status", "toWarehouse" ]
       },
       "WorkerReportView" : {
         "type" : "object",
