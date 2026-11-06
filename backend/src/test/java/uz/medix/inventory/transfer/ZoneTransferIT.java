@@ -209,6 +209,8 @@ class ZoneTransferIT {
                 .andReturn());
         assertThat(bal(p.quarantine(), b)).isEqualTo(5);
         assertThat(bal(p.main(), b)).isZero();
+        assertThat(jdbc.sql("SELECT count(*) FROM notification WHERE dedup_key = :k").param("k", "transfer.zk.approval:" + id)
+                .query(Long.class).single()).isPositive();
 
         send(post("/api/zone-transfers/" + id + "/approve"), keeper, "{}").andExpect(status().isForbidden());
         send(post("/api/zone-transfers/" + id + "/approve"), manager, "{}")

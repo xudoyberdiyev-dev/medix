@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRightLeft, CircleCheck, Clock, Plus, XCircle } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,9 +39,14 @@ export function ZoneTransferStatusBadge({ status }: { status: ZoneTransferStatus
 export function ZoneTransfersPage() {
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
-  const [status, setStatus] = useState<string | null>(null);
+  const params = useSearchParams();
+  const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
-  const [open, setOpen] = useState<{ id: number | null } | null>(null);
+  // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi
+  const [open, setOpen] = useState<{ id: number | null } | null>(() => {
+    const id = Number(params.get("open"));
+    return Number.isInteger(id) && id > 0 ? { id } : null;
+  });
   const allowed = canAny(me.data, TRANSFER_VIEW_KEYS);
   const canCreate = can(me.data, TRANSFER_ZK);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;

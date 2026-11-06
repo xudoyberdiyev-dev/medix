@@ -26,6 +26,7 @@ import uz.medix.inventory.transfer.ZoneTransferModels.ZoneTransferLineRequest;
 import uz.medix.inventory.transfer.ZoneTransferModels.ZoneTransferPage;
 import uz.medix.inventory.transfer.ZoneTransferModels.ZoneTransferRequest;
 import uz.medix.inventory.transfer.ZoneTransferModels.ZoneTransferSummary;
+import uz.medix.notification.Notifications;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
@@ -48,12 +49,14 @@ class ZoneTransfers {
     private final StockLedger ledger;
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
+    private final Notifications notifications;
 
-    ZoneTransfers(JdbcClient jdbc, StockLedger ledger, AuditLog audit, DocumentSequenceService numbers) {
+    ZoneTransfers(JdbcClient jdbc, StockLedger ledger, AuditLog audit, DocumentSequenceService numbers, Notifications notifications) {
         this.jdbc = jdbc;
         this.ledger = ledger;
         this.audit = audit;
         this.numbers = numbers;
+        this.notifications = notifications;
     }
 
     record ZoneInfo(long id, String name, ZoneType type, boolean active, boolean sellable, long warehouseId, boolean warehouseActive,
@@ -239,6 +242,11 @@ class ZoneTransfers {
                 .change(null, Map.of("number", number, "lines", r.lines().size(), "approval", approval)), actor);
         if (!approval || canApprove) {
             doPost(actor, id, number, from.id(), to.id());
+        } else {
+            // Tasdiqlovchilarga (transfer.quar, filial doirasida) — karantindan chiqarish so'rovi
+            notifications.notify("transfer.quar", from.branchId(), List.of(),
+                    notifications.message("transfer.zk.approval", "transfer.zk.approval", "/zone-transfers?status=PENDING&open=" + id,
+                            "transfer.zk.approval:" + id, number, from.name(), to.name()));
         }
         return id;
     }
