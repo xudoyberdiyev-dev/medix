@@ -608,6 +608,16 @@ test("Direktor: birinchi kirish, buyurtmani tasdiqlaydi", async ({ page }) => {
   await expect(page.getByText("Tasdiqlandi — navbatga oʻtdi").first()).toBeVisible();
 });
 
+test("Kassir: qisman reysdagi naqd pulni qabul qiladi — haydovchi yangi reysga boʻshaydi", async ({ page }) => {
+  await login(page, "cashier.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/cash");
+  await expect(page.getByRole("heading", { name: "Haydovchidagi pul" })).toBeVisible();
+  await page.getByRole("button", { name: "Qabul qildim" }).first().click();
+  await expect(page.getByText("Pul qabul qilindi").first()).toBeVisible();
+  await expect(page.getByText("Haydovchilarda pul yoʻq")).toBeVisible();
+});
+
 test("Ombor zanjiri: Direktor tasdiqlagan buyurtma reysga chiqadi", async ({ page }) => {
   await warehouseChain(page);
 });
