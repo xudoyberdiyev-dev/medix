@@ -1,4 +1,5 @@
 import {
+  ArrowRightLeft,
   Banknote,
   BadgeDollarSign,
   Gift,
@@ -62,6 +63,13 @@ export const navigation: NavGroup[] = [
       { key: "shipments", label: "Joʻnatish", href: "/shipments", icon: Truck, anyOf: ["shipments.view"] },
       { key: "driver", label: "Reysim", href: "/driver", icon: Truck, anyOf: ["trip.driver"] },
       { key: "stock", label: "Qoldiqlar", href: "/stock", icon: Boxes, anyOf: ["stock.view"] },
+      {
+        key: "zone-transfers",
+        label: "Zona koʻchirishlari",
+        href: "/zone-transfers",
+        icon: ArrowRightLeft,
+        anyOf: ["transfer.view", "transfer.zk", "transfer.quar"],
+      },
       { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: PackageOpen, anyOf: ["opening.list", "opening.view"] },
     ],

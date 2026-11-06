@@ -99,7 +99,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -190,10 +190,10 @@ export interface paths {
             cookie?: never;
         };
         /** Hisob boʻyicha solishtirishlar tarixi */
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         /** Solishtirishni yozish (farq boʻlsa — izoh majburiy) */
-        post: operations["create_15"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -225,10 +225,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ko'rish mumkin bo'lgan filiallar */
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
         /** Filial qo'shish */
-        post: operations["create_14"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -447,7 +447,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -467,10 +467,10 @@ export interface paths {
          * Kontragentlar
          * @description Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).
          */
-        get: operations["list_13"];
+        get: operations["list_14"];
         put?: never;
         /** Kontragent qo'shish */
-        post: operations["create_13"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -807,10 +807,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ma'lumotnoma yozuvlari (faollari birinchi) */
-        get: operations["list_12"];
+        get: operations["list_13"];
         put?: never;
         /** Yozuv qo'shish */
-        post: operations["create_12"];
+        post: operations["create_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -879,7 +879,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -896,10 +896,10 @@ export interface paths {
             cookie?: never;
         };
         /** Xodimlar ro'yxati */
-        get: operations["list_11"];
+        get: operations["list_12"];
         put?: never;
         /** Xodim qo'shish */
-        post: operations["create_11"];
+        post: operations["create_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -968,10 +968,10 @@ export interface paths {
             cookie?: never;
         };
         /** Moddalar */
-        get: operations["list_10"];
+        get: operations["list_11"];
         put?: never;
         /** Modda qo'shish */
-        post: operations["create_10"];
+        post: operations["create_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1037,7 +1037,7 @@ export interface paths {
             cookie?: never;
         };
         /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1145,7 +1145,7 @@ export interface paths {
          * Buyurtma markirovkasi
          * @description Qatorlar, partiyalar, hisoblagichlar va faol kodlar.
          */
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1262,10 +1262,10 @@ export interface paths {
             cookie?: never;
         };
         /** Filial hisoblari (qoldiq bilan) */
-        get: operations["list_9"];
+        get: operations["list_10"];
         put?: never;
         /** Yangi hisob (kassa, Terminal yoki bank) */
-        post: operations["create_9"];
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1372,7 +1372,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1440,13 +1440,13 @@ export interface paths {
             cookie?: never;
         };
         /** BQ hujjatlari */
-        get: operations["list_8"];
+        get: operations["list_9"];
         put?: never;
         /**
          * BQ qoralamasi
          * @description Raqam darhol beriladi (BQ-TSH-000001). Qoralama qoldiqqa ta'sir qilmaydi.
          */
-        post: operations["create_8"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1562,13 +1562,13 @@ export interface paths {
          * Buyurtmalar
          * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).
          */
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
         /**
          * Buyurtma qoralamasi
          * @description Raqam darhol beriladi (BY-TSH-000001). Qoldiq va qarzga ta'sir qilmaydi.
          */
-        post: operations["create_7"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1800,7 +1800,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Tasdiqlash */
-        post: operations["approve_1"];
+        post: operations["approve_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1937,7 +1937,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Rad etish */
-        post: operations["reject_1"];
+        post: operations["reject_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2052,10 +2052,10 @@ export interface paths {
             cookie?: never;
         };
         /** MT ro'yxati */
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         /** MT qoralamasi */
-        post: operations["create_6"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2289,13 +2289,13 @@ export interface paths {
             cookie?: never;
         };
         /** NO hujjatlari */
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         /**
          * NO qoralamasi
          * @description Raqam darhol beriladi (NO-TSH-000001).
          */
-        post: operations["create_5"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2370,7 +2370,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Direktor tasdig'i (PIN) */
-        post: operations["approve"];
+        post: operations["approve_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2424,7 +2424,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Rad etish */
-        post: operations["reject"];
+        post: operations["reject_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2459,7 +2459,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari */
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2499,13 +2499,13 @@ export interface paths {
          * Mahsulotlar ro'yxati
          * @description Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.
          */
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         /**
          * Mahsulot qo'shish
          * @description 8 raqamli kod avtomatik beriladi.
          */
-        post: operations["create_4"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2687,13 +2687,13 @@ export interface paths {
             cookie?: never;
         };
         /** Kirimlar */
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         /**
          * Kirim qoralamasi
          * @description Raqam darhol beriladi (KR-TSH-000001). Qoralama qoldiq va qarzga ta'sir qilmaydi.
          */
-        post: operations["create_3"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3019,7 +3019,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3232,7 +3232,7 @@ export interface paths {
          * Qoldiqlar (zona × partiya)
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3266,7 +3266,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3303,13 +3303,13 @@ export interface paths {
          * Reyslar
          * @description active=true — Rejalashtirilgan, Yo'lda, Qaytish kutilmoqda.
          */
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
         /**
          * Reys tuzish
          * @description Sig'im tekshiruvi; har buyurtmaga nakladnoy raqami, «Yuklanmoqda».
          */
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3464,7 +3464,7 @@ export interface paths {
             cookie?: never;
         };
         /** Reys */
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3712,10 +3712,10 @@ export interface paths {
             cookie?: never;
         };
         /** Mashinalar (filial doirasida) */
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
         /** Mashina qo'shish */
-        post: operations["create_1"];
+        post: operations["create_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3781,13 +3781,13 @@ export interface paths {
             cookie?: never;
         };
         /** Ko'rish mumkin bo'lgan omborlar va ularning zonalari */
-        get: operations["list"];
+        get: operations["list_1"];
         put?: never;
         /**
          * Ombor qo'shish
          * @description Qabul, Asosiy saqlash, Karantin, Jo'natish zonalari doim yaratiladi.
          */
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3873,6 +3873,101 @@ export interface paths {
         /** Zona nomini o'zgartirish */
         put: operations["renameZone"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/zone-transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ZK hujjatlari */
+        get: operations["list"];
+        put?: never;
+        /**
+         * Zona ko'chirishi
+         * @description Darhol o'tkaziladi. Karantindan sotuvga ochiq zonaga — transfer.quar ruxsati bo'lmasa «Tasdiqda» holatida qoladi.
+         */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/zone-transfers/zone-stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Zonadagi partiyalar
+         * @description Ko'chirish uchun: qoldiq, faol zahira va bo'sh miqdor (tannarxsiz).
+         */
+        get: operations["zoneStock"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/zone-transfers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ZK hujjati */
+        get: operations["get_8"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/zone-transfers/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tasdiqlash va o'tkazish */
+        post: operations["approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/zone-transfers/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rad etish
+         * @description Tovar joyida qoladi.
+         */
+        post: operations["reject"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6913,6 +7008,126 @@ export interface components {
             /** @enum {string} */
             type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
+        ZoneRef: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @enum {string} */
+            type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
+        };
+        ZoneStockRow: {
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int32 */
+            free: number;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            /** Format: int32 */
+            reserved: number;
+        };
+        ZoneTransferDetail: {
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            from: components["schemas"]["ZoneRef"];
+            /** Format: int64 */
+            id: number;
+            lines: components["schemas"]["ZoneTransferLine"][];
+            needsApproval: boolean;
+            note?: string;
+            number: string;
+            /** Format: date-time */
+            postedAt?: string;
+            postedBy?: string;
+            rejectReason?: string;
+            /** Format: date-time */
+            rejectedAt?: string;
+            rejectedBy?: string;
+            /** @enum {string} */
+            status: "PENDING" | "POSTED" | "REJECTED";
+            to: components["schemas"]["ZoneRef"];
+            /** Format: int64 */
+            totalQty: number;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+        };
+        ZoneTransferLine: {
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lineNo: number;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+        };
+        ZoneTransferLineRequest: {
+            /** Format: int64 */
+            batchId: number;
+            /** Format: int32 */
+            qty: number;
+        };
+        ZoneTransferPage: {
+            items: components["schemas"]["ZoneTransferSummary"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ZoneTransferRejectRequest: {
+            reason: string;
+        };
+        ZoneTransferRequest: {
+            /** Format: int64 */
+            fromZoneId: number;
+            lines: components["schemas"]["ZoneTransferLineRequest"][];
+            note: string;
+            /** Format: int64 */
+            toZoneId: number;
+        };
+        ZoneTransferSummary: {
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            from: components["schemas"]["ZoneRef"];
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lines: number;
+            needsApproval: boolean;
+            number: string;
+            /** Format: date-time */
+            postedAt?: string;
+            /** Format: int64 */
+            qty: number;
+            /** @enum {string} */
+            status: "PENDING" | "POSTED" | "REJECTED";
+            to: components["schemas"]["ZoneRef"];
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -7086,7 +7301,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -7197,7 +7412,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query: {
                 accountId: number;
@@ -7219,7 +7434,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -7266,7 +7481,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -7286,7 +7501,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -7622,7 +7837,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query: {
                 branchId: number;
@@ -7647,7 +7862,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_14: {
         parameters: {
             query?: {
                 q?: string;
@@ -7675,7 +7890,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -8172,7 +8387,7 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    list_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -8194,7 +8409,7 @@ export interface operations {
             };
         };
     };
-    create_12: {
+    create_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -8293,7 +8508,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -8313,7 +8528,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -8333,7 +8548,7 @@ export interface operations {
             };
         };
     };
-    create_11: {
+    create_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -8431,7 +8646,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -8451,7 +8666,7 @@ export interface operations {
             };
         };
     };
-    create_10: {
+    create_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -8545,7 +8760,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -8684,7 +8899,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -8823,7 +9038,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_10: {
         parameters: {
             query: {
                 branchId: number;
@@ -8845,7 +9060,7 @@ export interface operations {
             };
         };
     };
-    create_9: {
+    create_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -9014,7 +9229,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -9092,7 +9307,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_9: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -9117,7 +9332,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -9286,7 +9501,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -9317,7 +9532,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -9617,7 +9832,7 @@ export interface operations {
             };
         };
     };
-    approve_1: {
+    approve_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -9788,7 +10003,7 @@ export interface operations {
             };
         };
     };
-    reject_1: {
+    reject_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -9932,7 +10147,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -9956,7 +10171,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -10348,7 +10563,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -10373,7 +10588,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -10491,7 +10706,7 @@ export interface operations {
             };
         };
     };
-    approve: {
+    approve_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -10565,7 +10780,7 @@ export interface operations {
             };
         };
     };
-    reject: {
+    reject_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -10613,7 +10828,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -10660,7 +10875,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: {
                 q?: string;
@@ -10692,7 +10907,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -10978,7 +11193,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -11004,7 +11219,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -11453,7 +11668,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -11729,7 +11944,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -11781,7 +11996,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query: {
                 branchId: number;
@@ -11828,7 +12043,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -11851,7 +12066,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -12033,7 +12248,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -12363,7 +12578,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -12383,7 +12598,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -12477,7 +12692,7 @@ export interface operations {
             };
         };
     };
-    list: {
+    list_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -12497,7 +12712,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -12644,6 +12859,148 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                warehouseId?: number;
+                status?: "PENDING" | "POSTED" | "REJECTED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferPage"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZoneTransferRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    zoneStock: {
+        parameters: {
+            query: {
+                zoneId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneStockRow"][];
+                };
+            };
+        };
+    };
+    get_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZoneTransferRejectRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferDetail"];
                 };
             };
         };
