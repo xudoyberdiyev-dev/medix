@@ -329,6 +329,7 @@ class WriteOffIT {
         var a = new uz.medix.shared.security.Actor(actor, p.branchId(), false);
         ExecutorService pool = Executors.newFixedThreadPool(8);
         List<Future<Boolean>> results = new ArrayList<>();
+        List<String> errors = java.util.Collections.synchronizedList(new ArrayList<>());
         for (int i = 0; i < 10; i++) {
             Callable<Boolean> job = () -> {
                 try {
@@ -339,6 +340,7 @@ class WriteOffIT {
                     if (e.getMessage() != null && e.getMessage().contains("deadlock")) {
                         throw e;
                     }
+                    errors.add(e.getClass().getSimpleName() + ": " + e.getMessage());
                     return false;
                 }
             };
@@ -351,7 +353,7 @@ class WriteOffIT {
             }
         }
         pool.shutdown();
-        assertThat(ok).isEqualTo(6);
+        assertThat(ok).as("xatolar: %s", errors).isEqualTo(6);
         assertThat(bal(p.quarantine(), b)).isEqualTo(2);
         long journal = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_move WHERE batch_id = :b AND zone_id = :z")
                 .param("b", b)
