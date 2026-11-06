@@ -200,9 +200,8 @@ class SupplierPayments {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("ytpayment.send", "supplier_payment", id).change(Map.of("status", "DRAFT"), Map.of("status", "PENDING")));
-        notifications.notify("payments.ytApprove", h.branchId(), List.of(), new Notifications.Message("ytpayment.approval",
-                "YT tasdigʻi kutmoqda: " + h.number(), h.amount().format() + " soʻm", "/payments?tab=yt",
-                "ytpayment.approval:" + id + ":" + clock.millis()));
+        notifications.notify("payments.ytApprove", h.branchId(), List.of(), notifications.message("ytpayment.approval", "ytpayment.approval", "/payments?tab=yt",
+                "ytpayment.approval:" + id + ":" + clock.millis(), h.number(), h.amount().format()));
     }
 
     /** Tasdiqlashda → Qoralama (sabab bilan). */
@@ -222,9 +221,8 @@ class SupplierPayments {
         long author = jdbc.sql("SELECT sent_by FROM supplier_payment WHERE id = :id").param("id", id).query(Long.class).single();
         if (author != actor.employeeId()) {
             String why = reason.strip();
-            notifications.notify("-", h.branchId(), List.of(author), new Notifications.Message("ytpayment.returned",
-                    "YT qaytarildi: " + h.number(), why.length() <= 500 ? why : why.substring(0, 499) + "…", "/payments?tab=yt",
-                    "ytpayment.returned:" + id + ":" + clock.millis()));
+            notifications.notify("-", h.branchId(), List.of(author), notifications.message("ytpayment.returned", "ytpayment.returned", "/payments?tab=yt",
+                    "ytpayment.returned:" + id + ":" + clock.millis(), h.number(), why));
         }
     }
 

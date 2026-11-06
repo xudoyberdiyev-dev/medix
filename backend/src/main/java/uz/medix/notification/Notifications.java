@@ -9,6 +9,7 @@ import java.util.Set;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.shared.text.Texts;
 
 /**
  * Bildirishnomalar — notification modulining ochiq API'si. Qabul qiluvchilar ruxsat kaliti bo'yicha (rol matritsasidan):
@@ -31,10 +32,27 @@ public class Notifications {
 
     private final JdbcClient jdbc;
     private final NotificationStream stream;
+    private final Texts texts;
 
-    Notifications(JdbcClient jdbc, NotificationStream stream) {
+    Notifications(JdbcClient jdbc, NotificationStream stream, Texts texts) {
         this.jdbc = jdbc;
         this.stream = stream;
+        this.texts = texts;
+    }
+
+    /**
+     * Matni kalitdan (T12-audit №20): sarlavha — {@code notification.<text>.title}, tana (ixtiyoriy) —
+     * {@code notification.<text>.body}; ikkalasi ham bir xil o'rinbosarlar ({@code {0}}, {@code {1}} …) bilan. Tana 500
+     * belgidan uzun bo'lsa qisqartiriladi (masalan, foydalanuvchi yozgan rad etish sababi).
+     */
+    public Message message(String kind, String text, String link, String dedupKey, Object... args) {
+        String title = texts.get("notification." + text + ".title", args);
+        String body = texts.find("notification." + text + ".body", args).filter(b -> !b.isBlank()).map(Notifications::clip).orElse(null);
+        return new Message(kind, title, body, link, dedupKey);
+    }
+
+    static String clip(String text) {
+        return text.length() <= 500 ? text : text.substring(0, 499) + "…";
     }
 
     /** Ruxsat kaliti egalari (filial doirasida) va qo'shimcha xodimlarga. Qaytaradi: yangi yozilganlar soni. */

@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.medix.finance.PartyLedger;
 import uz.medix.finance.PartyLedger.Side;
 import uz.medix.notification.Notifications;
-import uz.medix.notification.Notifications.Message;
 import uz.medix.shared.money.Money;
 
 /**
@@ -82,11 +81,10 @@ public class ReceiptReminders {
             if (parties.balance(d.branchId(), d.supplierId(), Side.SUPPLIER).amount().signum() <= 0) {
                 continue;
             }
-            String when = days == 3 ? "3 kundan keyin" : days == 0 ? "bugun" : "kechikdi: " + (-days) + " kun";
-            String title = "Toʻlov kuni " + when + ": " + d.number();
-            String body = d.supplier() + " · " + new Money(d.debtAmount()).format() + " soʻm · " + due.format(DAY);
+            String text = days == 3 ? "receipt.dueSoon" : days == 0 ? "receipt.dueToday" : "receipt.dueLate";
             created += notifications.notify("supplierPay.notify", d.branchId(), owner(d.ownerId()),
-                    new Message("receipt.due", title, body, "/receipts", "receipt.due:" + d.id() + ":" + today));
+                    notifications.message("receipt.due", text, "/receipts", "receipt.due:" + d.id() + ":" + today, d.number(), d.supplier(),
+                            new Money(d.debtAmount()).format(), due.format(DAY), -days));
         }
         List<BonusDue> bonuses = jdbc.sql("""
                 SELECT r.id, r.number, r.branch_id, c.name AS supplier, r.owner_id, r.discount_date
@@ -98,10 +96,11 @@ public class ReceiptReminders {
                 .query(BonusDue.class)
                 .list();
         for (BonusDue b : bonuses) {
-            String body = b.supplier() + (b.discountDate() == null ? "" : " · olish sanasi " + b.discountDate().toLocalDate().format(DAY));
             // Bir marta: tasdiqlanmaguncha qayta yozilmaydi.
             created += notifications.notify("supplierBonus.notify", b.branchId(), owner(b.ownerId()),
-                    new Message("receipt.bonus", "Bonusni tasdiqlash vaqti keldi: " + b.number(), body, "/receipts", "receipt.bonus:" + b.id()));
+                    notifications.message("receipt.bonus", b.discountDate() == null ? "receipt.bonusNoDate" : "receipt.bonus", "/receipts",
+                            "receipt.bonus:" + b.id(), b.number(), b.supplier(),
+                            b.discountDate() == null ? "" : b.discountDate().toLocalDate().format(DAY)));
         }
         return created;
     }

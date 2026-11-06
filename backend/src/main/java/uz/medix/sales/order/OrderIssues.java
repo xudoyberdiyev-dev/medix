@@ -19,6 +19,7 @@ import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.text.Texts;
 
 /**
  * «Muammo bor» (SPEC 5.2): yig'uvchi (Yig'ilmoqda), markirovkachi (Markirovkada) yoki haydovchi (Yuklanmoqda / Yo'lda) sabab
@@ -28,15 +29,6 @@ import uz.medix.shared.security.Actor;
 class OrderIssues {
 
     enum IssueReason { NOT_FOUND, SHORTAGE, DAMAGED, WRONG_BATCH, EXPIRY, CODE_UNREADABLE, OTHER }
-
-    private static final Map<IssueReason, String> LABELS = Map.of(
-            IssueReason.NOT_FOUND, "Tovar joyida yoʻq",
-            IssueReason.SHORTAGE, "Miqdor yetmaydi",
-            IssueReason.DAMAGED, "Qadoq shikastlangan",
-            IssueReason.WRONG_BATCH, "Partiya mos emas",
-            IssueReason.EXPIRY, "Yaroqlilik muddati muammosi",
-            IssueReason.CODE_UNREADABLE, "Kod oʻqilmaydi",
-            IssueReason.OTHER, "Boshqa");
 
     private static final Set<OrderStatus> STAGES = Set.of(OrderStatus.PICKING, OrderStatus.MARKING, OrderStatus.LOADING, OrderStatus.IN_TRANSIT);
 
@@ -64,11 +56,13 @@ class OrderIssues {
     private final JdbcClient jdbc;
     private final AuditLog audit;
     private final Notifications notifications;
+    private final Texts texts;
 
-    OrderIssues(JdbcClient jdbc, AuditLog audit, Notifications notifications) {
+    OrderIssues(JdbcClient jdbc, AuditLog audit, Notifications notifications, Texts texts) {
         this.jdbc = jdbc;
         this.audit = audit;
         this.notifications = notifications;
+        this.texts = texts;
     }
 
     private record Head(long id, String number, long branchId, OrderStatus status, Long pickerId, Long markerId) {}
@@ -104,8 +98,9 @@ class OrderIssues {
                 .query(Long.class)
                 .single();
         audit.record(AuditEntry.of("order.issue", "sales_order", orderId).change(null, Map.of("reason", reason.name())));
-        notifications.notify("orders.queue", h.branchId(), List.of(), new Notifications.Message("order.issue",
-                "Muammo bor: " + h.number(), LABELS.get(reason) + (n == null ? "" : " — " + n), "/warehouse?tab=issues&issue=" + id, "order.issue:" + id));
+        notifications.notify("orders.queue", h.branchId(), List.of(), notifications.message("order.issue",
+                n == null ? "order.issue" : "order.issueNote", "/warehouse?tab=issues&issue=" + id, "order.issue:" + id, h.number(),
+                label(reason), n == null ? "" : n));
         return find(actor, id);
     }
 
@@ -155,12 +150,17 @@ class OrderIssues {
             FROM sales_order_issue i JOIN sales_order o ON o.id = i.order_id JOIN counterparty c ON c.id = o.customer_id
             JOIN employee cb ON cb.id = i.created_by LEFT JOIN employee rb ON rb.id = i.resolved_by""";
 
-    private static OrderIssueItem row(java.sql.ResultSet rs) throws java.sql.SQLException {
+    private OrderIssueItem row(java.sql.ResultSet rs) throws java.sql.SQLException {
         IssueReason r = IssueReason.valueOf(rs.getString("reason"));
         Timestamp resolved = rs.getTimestamp("resolved_at");
         return new OrderIssueItem(rs.getLong("id"), rs.getLong("order_id"), rs.getString("number"), rs.getString("customer"),
-                OrderStatus.valueOf(rs.getString("stage")), r, LABELS.get(r), rs.getString("note"), rs.getString("created_by"),
+                OrderStatus.valueOf(rs.getString("stage")), r, label(r), rs.getString("note"), rs.getString("created_by"),
                 rs.getTimestamp("created_at").toInstant(), rs.getString("resolved_by"), resolved == null ? null : resolved.toInstant(),
                 rs.getString("resolution"));
+    }
+
+    /** Sabab nomi — {@code order.issueReason.<SABAB>} (messages.properties). */
+    private String label(IssueReason r) {
+        return texts.get("order.issueReason." + r.name());
     }
 }

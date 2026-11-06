@@ -115,9 +115,8 @@ class CashOps {
             post(id);
         } else {
             String number = jdbc.sql("SELECT number FROM cash_op WHERE id = :id").param("id", id).query(String.class).single();
-            notifications.notify("cash.approve", r.branchId(), List.of(), new Notifications.Message("cash.approval",
-                    "Chiqim tasdigʻi kutmoqda: " + number, amount.format() + " soʻm · " + acc.name(), "/cash",
-                    "cash.approval:" + id));
+            notifications.notify("cash.approve", r.branchId(), List.of(), notifications.message("cash.approval", "cash.approval", "/cash",
+                    "cash.approval:" + id, number, amount.format(), acc.name()));
         }
         return id;
     }
@@ -202,8 +201,8 @@ class CashOps {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("cash.op.approve", "cash_op", id).change(Map.of("status", "PENDING"), Map.of("status", "POSTED")));
-        notifyAuthor(h, actor, new Notifications.Message("cash.approved", "Chiqim tasdiqlandi: " + h.number(), h.amount().format() + " soʻm",
-                "/cash", "cash.approved:" + id));
+        notifyAuthor(h, actor, notifications.message("cash.approved", "cash.approved", "/cash", "cash.approved:" + id,
+                h.number(), h.amount().format()));
     }
 
     @Transactional
@@ -221,8 +220,7 @@ class CashOps {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("cash.op.reject", "cash_op", id).change(Map.of("status", "PENDING"), Map.of("status", "REJECTED")).withReason(why));
-        notifyAuthor(h, actor, new Notifications.Message("cash.rejected", "Chiqim rad etildi: " + h.number(),
-                why.length() <= 500 ? why : why.substring(0, 499) + "…", "/cash", "cash.rejected:" + id));
+        notifyAuthor(h, actor, notifications.message("cash.rejected", "cash.rejected", "/cash", "cash.rejected:" + id, h.number(), why));
     }
 
     /** Chiqim muallifiga (o'zi qaror qilmagan bo'lsa). */

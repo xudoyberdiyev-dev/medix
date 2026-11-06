@@ -66,20 +66,14 @@ public class TripReminders {
         for (Stuck s : stuck) {
             long hours = Duration.between(s.finishedAt(), now).toHours();
             if (s.goods() > 0) {
-                created += notifications.notify("orders.check", s.branchId(), List.of(s.driverId()), new Notifications.Message(
-                        "TRIP_RETURN_WAIT",
-                        "Reys " + s.number() + ": qaytgan tovar " + hours + " soatdan beri qabul qilinmagan",
-                        "Haydovchi: " + s.driver() + ". Tovarni sanab qabul qiling — reys shundan keyin yopiladi.",
-                        "/warehouse?tab=returns",
-                        "trip-return-goods-" + s.id() + "-" + day));
+                created += notifications.notify("orders.check", s.branchId(), List.of(s.driverId()), notifications.message(
+                        "TRIP_RETURN_WAIT", "trip.returnGoods", "/warehouse?tab=returns", "trip-return-goods-" + s.id() + "-" + day,
+                        s.number(), hours, s.driver()));
             }
             if (s.cash().signum() > 0) {
-                created += notifications.notify("payments.mt", s.branchId(), List.of(s.driverId()), new Notifications.Message(
-                        "TRIP_RETURN_WAIT",
-                        "Reys " + s.number() + ": haydovchidagi pul " + hours + " soatdan beri topshirilmagan",
-                        "Haydovchi: " + s.driver() + ", summa: " + new Money(s.cash()).format() + " soʻm. Kassaga qabul qiling.",
-                        "/cash",
-                        "trip-return-cash-" + s.id() + "-" + day));
+                created += notifications.notify("payments.mt", s.branchId(), List.of(s.driverId()), notifications.message(
+                        "TRIP_RETURN_WAIT", "trip.returnCash", "/cash", "trip-return-cash-" + s.id() + "-" + day,
+                        s.number(), hours, s.driver(), new Money(s.cash()).format()));
             }
         }
         return created;

@@ -52,6 +52,7 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.text.Texts;
 
 /**
  * BY — buyurtma (SPEC 5.2, 5.3, 6). Qoralama → (Tasdiqlashda) → Navbatda. Yuborishda barcha qoidalar bir joyda tekshiriladi
@@ -79,10 +80,12 @@ class Orders {
     private final StockLedger stock;
     private final org.springframework.context.ApplicationEventPublisher events;
     private final Notifications notifications;
+    private final Texts texts;
 
     Orders(JdbcClient jdbc, PriceBook prices, StockAvailability availability, PartyLedger parties, AuditLog audit,
             DocumentSequenceService numbers, Clock clock, StockReservations reservations, StockLedger stock,
-            org.springframework.context.ApplicationEventPublisher events, Notifications notifications) {
+            org.springframework.context.ApplicationEventPublisher events, Notifications notifications, Texts texts) {
+        this.texts = texts;
         this.events = events;
         this.notifications = notifications;
         this.reservations = reservations;
@@ -120,6 +123,16 @@ class Orders {
         List<String> approvalReasons() {
             return issues.stream().filter(i -> i.level() == IssueLevel.APPROVAL).map(OrderIssue::message).toList();
         }
+    }
+
+    /** Muammo matni — {@code issue.<kod>} kaliti (messages.properties) va o'rinbosarlar (T12-audit №20). */
+    private OrderIssue issue(IssueLevel level, String code, Integer lineNo, Object... args) {
+        return new OrderIssue(level, code, texts.get("issue." + code, args), lineNo);
+    }
+
+    /** Tasdiqlovchi nomi: «Filial rahbari» / «Direktor». */
+    private String approver(ApprovalLevel level) {
+        return texts.get("approvalLevel." + level.name());
     }
 
     private Customer customer(long id) {
@@ -190,17 +203,16 @@ class Orders {
         Customer c = customer(customerId);
         Terms t = terms(customerId, branchId);
         if (!c.customer() || !c.active()) {
-            issues.add(new OrderIssue(IssueLevel.ERROR, "order.customerInactive", "Mijoz nofaol — buyurtma kiritilmaydi.", null));
+            issues.add(issue(IssueLevel.ERROR, "order.customerInactive", null));
         }
         if (c.blocked()) {
-            issues.add(new OrderIssue(IssueLevel.ERROR, "order.customerBlocked", "Mijoz bloklangan — buyurtma kiritilmaydi.", null));
+            issues.add(issue(IssueLevel.ERROR, "order.customerBlocked", null));
         }
         if (!anyLicenseValid(customerId, today)) {
-            issues.add(new OrderIssue(IssueLevel.ERROR, "order.licenseExpired",
-                    "Mijozning litsenziyasi muddati oʻtgan — buyurtma kiritilmaydi. Kartada yangi litsenziyani kiriting.", null));
+            issues.add(issue(IssueLevel.ERROR, "order.licenseExpired", null));
         }
         if (lines.isEmpty()) {
-            issues.add(new OrderIssue(IssueLevel.ERROR, "order.noLines", "Buyurtmada mahsulot yoʻq. Kamida bitta mahsulot qoʻshing.", null));
+            issues.add(issue(IssueLevel.ERROR, "order.noLines", null));
         }
         List<Long> ids = lines.stream().map(OrderLineRequest::productId).distinct().toList();
         Map<Long, Product> products = products(ids);
@@ -216,35 +228,31 @@ class Orders {
             no++;
             Product p = products.get(l.productId());
             if (p == null || !p.active()) {
-                issues.add(new OrderIssue(IssueLevel.ERROR, "order.productInactive", no + "-qator: mahsulot topilmadi yoki nofaol.", no));
+                issues.add(issue(IssueLevel.ERROR, "order.productInactive", no, no));
                 continue;
             }
             if (!seen.add(p.id())) {
-                issues.add(new OrderIssue(IssueLevel.ERROR, "order.duplicateLine", no + "-qator: " + p.name() + " ikki marta kiritilgan.", no));
+                issues.add(issue(IssueLevel.ERROR, "order.duplicateLine", no, no, p.name()));
             }
             Quote q = quotes.get(p.id());
             if (q == null) {
-                issues.add(new OrderIssue(IssueLevel.ERROR, "order.noPrice", no + "-qator: " + p.name() + " uchun narx oʻrnatilmagan.", no));
+                issues.add(issue(IssueLevel.ERROR, "order.noPrice", no, no, p.name()));
             } else {
                 total = total.plus(q.price().times(l.qty()));
             }
             int have = Optional.ofNullable(available.get(p.id())).map(Available::qty).orElse(0);
             if (l.qty() > have) {
-                issues.add(new OrderIssue(IssueLevel.ERROR, "order.insufficient",
-                        no + "-qator: " + p.name() + " — qoldiq yetmaydi: mavjud " + have + ", kerak " + l.qty() + ".", no));
+                issues.add(issue(IssueLevel.ERROR, "order.insufficient", no, no, p.name(), have, l.qty()));
             }
             if (p.minQty() != null && l.qty() < p.minQty()) {
-                issues.add(new OrderIssue(IssueLevel.ERROR, "order.belowMin",
-                        no + "-qator: " + p.name() + " — minimal miqdor " + p.minQty() + ".", no));
+                issues.add(issue(IssueLevel.ERROR, "order.belowMin", no, no, p.name(), p.minQty()));
             }
             if (p.maxQty() != null && l.qty() > p.maxQty()) {
-                issues.add(new OrderIssue(IssueLevel.APPROVAL, "order.aboveMax",
-                        p.name() + " — maksimal miqdordan koʻp (" + l.qty() + " > " + p.maxQty() + ") — Filial rahbari tasdigʻi kerak.", no));
+                issues.add(issue(IssueLevel.APPROVAL, "order.aboveMax", no, p.name(), l.qty(), p.maxQty(), approver(ApprovalLevel.BRANCH)));
                 level = max(level, ApprovalLevel.BRANCH);
             }
             if (p.controlled() && !Boolean.TRUE.equals(license)) {
-                issues.add(new OrderIssue(IssueLevel.ERROR, "order.controlledLicense",
-                        no + "-qator: " + p.name() + " nazoratdagi — mijozda amal qiluvchi ruxsat (litsenziya) yoʻq.", no));
+                issues.add(issue(IssueLevel.ERROR, "order.controlledLicense", no, no, p.name()));
             }
         }
         // Kredit nazorati (SPEC 6): bloklamaydi, tasdiqqa yuboradi.
@@ -259,15 +267,13 @@ class Orders {
                 boolean small = !limit.isZero()
                         && over.amount().multiply(BigDecimal.valueOf(100)).divide(limit.amount(), 2, RoundingMode.HALF_UP).compareTo(LIMIT_BRANCH_PCT) <= 0;
                 ApprovalLevel need = small ? ApprovalLevel.BRANCH : ApprovalLevel.DIRECTOR;
-                issues.add(new OrderIssue(IssueLevel.APPROVAL, "order.overLimit",
-                        "Limitdan " + over.format() + " soʻm oshadi — " + (small ? "Filial rahbari" : "Direktor") + " tasdigʻi kerak.", null));
+                issues.add(issue(IssueLevel.APPROVAL, "order.overLimit", null, over.format(), approver(need)));
                 level = max(level, need);
             }
         }
         if (cs.overdueDays() > 0) {
             ApprovalLevel need = cs.overdueDays() > OVERDUE_DIRECTOR_DAYS ? ApprovalLevel.DIRECTOR : ApprovalLevel.BRANCH;
-            issues.add(new OrderIssue(IssueLevel.APPROVAL, "order.overdue", "Muddati oʻtgan qarz " + cs.overdue().format() + " soʻm, "
-                    + cs.overdueDays() + " kun — " + (need == ApprovalLevel.DIRECTOR ? "Direktor" : "Filial rahbari") + " tasdigʻi kerak.", null));
+            issues.add(issue(IssueLevel.APPROVAL, "order.overdue", null, cs.overdue().format(), cs.overdueDays(), approver(need)));
             level = max(level, need);
         }
         CustomerCredit credit = new CustomerCredit(t.priceType(), cs.debt().toString(), cs.overdue().toString(), cs.overdueDays(),
@@ -411,8 +417,7 @@ class Orders {
         lines = lines.stream().map(l -> l.withReserved(reserved.getOrDefault(l.id(), List.of()))).toList();
         List<OrderIssue> issues = draft ? new ArrayList<>(ev.issues()) : List.of();
         if (draft && priceChanged) {
-            issues.add(new OrderIssue(IssueLevel.WARNING, "order.priceChanged",
-                    "Narx oʻzgardi — yuborishda yangi narx qoʻllanadi. Summani tekshiring.", null));
+            issues.add(issue(IssueLevel.WARNING, "order.priceChanged", null));
         }
         List<String> reasons = h.approvalReasons() == null || h.approvalReasons().isBlank() ? List.of()
                 : Arrays.asList(h.approvalReasons().split("\n"));
@@ -726,8 +731,8 @@ class Orders {
         if (next == OrderStatus.PENDING_APPROVAL) {
             // Tasdiqlovchiga bildirishnoma: Direktor darajasi — faqat approvals.director, aks holda approvals.branch (Direktor ham ko'radi)
             String permission = ev.level() == ApprovalLevel.DIRECTOR ? "approvals.director" : "approvals.branch";
-            Notifications.Message m = new Notifications.Message("order.approval", "Tasdiq kutmoqda: " + h.number(),
-                    clip(String.join("; ", ev.approvalReasons())), "/orders?open=" + id, "order.approval:" + id + ":" + clock.millis());
+            Notifications.Message m = notifications.message("order.approval", "order.approval", "/orders?open=" + id,
+                    "order.approval:" + id + ":" + clock.millis(), h.number(), String.join("; ", ev.approvalReasons()));
             notifications.notify(permission, h.branchId(), List.of(), m);
             if (ev.level() != ApprovalLevel.DIRECTOR) {
                 notifications.notify("approvals.director", h.branchId(), List.of(), m);
@@ -757,8 +762,8 @@ class Orders {
                 .update();
         audit.record(AuditEntry.of("order.approve", "sales_order", id).change(Map.of("status", OrderStatus.PENDING_APPROVAL.name()),
                 Map.of("status", OrderStatus.QUEUED.name(), "level", level.name())));
-        notifyAuthor(h, actor, new Notifications.Message("order.approved", "Tasdiqlandi: " + h.number(), "Buyurtma navbatga oʻtdi",
-                "/orders?open=" + id, "order.approved:" + id + ":" + clock.millis()));
+        notifyAuthor(h, actor, notifications.message("order.approved", "order.approved", "/orders?open=" + id,
+                "order.approved:" + id + ":" + clock.millis(), h.number()));
     }
 
     @Transactional
@@ -778,12 +783,8 @@ class Orders {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("order.reject", "sales_order", id).withReason(reason.strip()));
-        notifyAuthor(h, actor, new Notifications.Message("order.rejected", "Rad etildi: " + h.number(), clip(reason.strip()),
-                "/orders?open=" + id, "order.rejected:" + id + ":" + clock.millis()));
-    }
-
-    private static String clip(String text) {
-        return text.length() <= 500 ? text : text.substring(0, 499) + "…";
+        notifyAuthor(h, actor, notifications.message("order.rejected", "order.rejected", "/orders?open=" + id,
+                "order.rejected:" + id + ":" + clock.millis(), h.number(), reason.strip()));
     }
 
     /** Muallifga (o'zi qaror qilmagan bo'lsa) — bildirishnoma; ruxsat kaliti yo'q, faqat aniq xodim. */

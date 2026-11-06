@@ -279,9 +279,8 @@ class PriceChanges {
         if (belowCost(id) && !actorIsDirector) {
             setStatus(id, Status.PENDING_APPROVAL, null, null);
             audit.record(AuditEntry.of("priceChange.submit", "price_change", id));
-            notifications.notify("prices.below", h.branchId(), List.of(), new Notifications.Message("priceChange.approval",
-                    "Narx tasdigʻi kutmoqda: " + h.number(), "Tannarxdan past narx — Direktor tasdigʻi (PIN) kerak", link(id),
-                    "priceChange.approval:" + id + ":" + clock.millis()));
+            notifications.notify("prices.below", h.branchId(), List.of(), notifications.message("priceChange.approval", "priceChange.approval", link(id),
+                    "priceChange.approval:" + id + ":" + clock.millis(), h.number()));
             return;
         }
         apply(h);
@@ -298,8 +297,8 @@ class PriceChanges {
         apply(h);
         setStatus(id, Status.APPROVED, actor.employeeId(), null);
         audit.record(AuditEntry.of("priceChange.approve", "price_change", id));
-        notifyAuthor(h, actor, new Notifications.Message("priceChange.approved", "Narx tasdiqlandi: " + h.number(), null, link(id),
-                "priceChange.approved:" + id + ":" + clock.millis()));
+        notifyAuthor(h, actor, notifications.message("priceChange.approved", "priceChange.approved", link(id),
+                "priceChange.approved:" + id + ":" + clock.millis(), h.number()));
     }
 
     @Transactional
@@ -308,9 +307,8 @@ class PriceChanges {
         requireStatus(h, Status.PENDING_APPROVAL);
         setStatus(id, Status.REJECTED, actor.employeeId(), reason.strip());
         audit.record(AuditEntry.of("priceChange.reject", "price_change", id).withReason(reason.strip()));
-        String body = reason.strip();
-        notifyAuthor(h, actor, new Notifications.Message("priceChange.rejected", "Narx rad etildi: " + h.number(),
-                body.length() <= 500 ? body : body.substring(0, 499) + "…", link(id), "priceChange.rejected:" + id + ":" + clock.millis()));
+        notifyAuthor(h, actor, notifications.message("priceChange.rejected", "priceChange.rejected", link(id),
+                "priceChange.rejected:" + id + ":" + clock.millis(), h.number(), reason.strip()));
     }
 
     private static String link(long id) {

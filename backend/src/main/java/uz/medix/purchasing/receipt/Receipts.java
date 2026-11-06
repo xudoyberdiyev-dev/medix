@@ -496,8 +496,8 @@ class Receipts {
         // O'tkazishga tayyor: receipt.post egalari va kirim muallifi (Xarid)
         long author = jdbc.sql("SELECT created_by FROM receipt WHERE id = :id").param("id", id).query(Long.class).single();
         notifications.notify("receipt.post", h.branchId(), author == actor.employeeId() ? List.of() : List.of(author),
-                new Notifications.Message("receipt.accepted", "Kirim qabul qilindi: " + h.number(), "Oʻtkazish kutmoqda",
-                        "/receipts?status=ACCEPTED&open=" + id, "receipt.accepted:" + id));
+                notifications.message("receipt.accepted", "receipt.accepted", "/receipts?status=ACCEPTED&open=" + id,
+                        "receipt.accepted:" + id, h.number()));
     }
 
     // ===== O'tkazish =====
