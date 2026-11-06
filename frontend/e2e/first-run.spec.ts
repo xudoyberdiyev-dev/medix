@@ -283,6 +283,17 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
   await page.keyboard.press("Escape");
 
+  // Holat yorliqlari: buyurtma «Hujjatlashtirilmoqda» yorligʻida, «Qoralama» da yoʻq
+  const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
+  await tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ }).click();
+  await expect(tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByText(/^Hujjatlashtirilmoqda: \d+ ta · [\d.]+,\d\d soʻm$/)).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first()).toBeVisible();
+  await tabs.getByRole("tab", { name: /^Qoralama/ }).click();
+  await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" })).toHaveCount(0);
+  await tabs.getByRole("tab", { name: /^Hammasi/ }).click();
+  await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first()).toBeVisible();
+
   // Ombor monitori: buyurtma «Hujjatlashtirilmoqda» ustunida
   await page.goto("/warehouse");
   await expect(page.getByRole("heading", { name: "Ombor mudiri paneli" })).toBeVisible();

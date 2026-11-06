@@ -1398,6 +1398,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Real vaqt signali (SSE): «notifications» hodisasi kelsa — ro'yxatni qayta oling */
+        get: operations["stream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/{id}/read": {
         parameters: {
             query?: never;
@@ -6321,6 +6338,10 @@ export interface components {
             employees: components["schemas"]["Employee"][];
             warehouses: components["schemas"]["Warehouse"][];
         };
+        SseEmitter: {
+            /** Format: int64 */
+            timeout: number;
+        };
         StartResult: {
             sales: string[];
         };
@@ -8969,6 +8990,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    stream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["SseEmitter"];
+                };
             };
         };
     };

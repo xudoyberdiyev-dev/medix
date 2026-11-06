@@ -15,6 +15,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.ErrorResponse;
 
 /**
@@ -66,6 +67,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.beans.TypeMismatchException.class)
     ProblemDetail typeMismatch(org.springframework.beans.TypeMismatchException e) {
         return problem(HttpStatus.BAD_REQUEST, "error.request");
+    }
+
+    /** Mijoz ulanishni uzdi (SSE varaq yopildi va h.k.) — javob yozib bo'lmaydi, xato emas. */
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    void clientGone(AsyncRequestNotUsableException e) {
+        log.debug("Mijoz ulanishi uzildi: {}", e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

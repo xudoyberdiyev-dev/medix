@@ -121,20 +121,24 @@ class NotificationStreamIT {
             notifications.notify("no.such.permission", b, List.of(me.id()), message("sse-rollback-" + me.id()));
             s.setRollbackOnly();
         });
+        stream.awaitSent();
         assertThat(count(mine.getResponse().getContentAsString(), "event:notifications")).isZero();
 
         // Muvaffaqiyatli — faqat qabul qiluvchiga.
         int created = notifications.notify("no.such.permission", b, List.of(me.id()), message("sse-ok-" + me.id()));
         assertThat(created).isEqualTo(1);
+        stream.awaitSent();
         assertThat(count(mine.getResponse().getContentAsString(), "event:notifications")).isEqualTo(1);
         assertThat(count(theirs.getResponse().getContentAsString(), "event:notifications")).isZero();
 
         // Takroriy (dedup) — yangi yozuv yo'q, signal ham yo'q.
         notifications.notify("no.such.permission", b, List.of(me.id()), message("sse-ok-" + me.id()));
+        stream.awaitSent();
         assertThat(count(mine.getResponse().getContentAsString(), "event:notifications")).isEqualTo(1);
 
         // O'qildi — boshqa varaqlar ham yangilanadi.
         mvc.perform(post("/api/notifications/read-all").with(csrf()).cookie(me.cookie())).andExpect(status().isOk());
+        stream.awaitSent();
         assertThat(count(mine.getResponse().getContentAsString(), "event:notifications")).isEqualTo(2);
     }
 

@@ -1,11 +1,14 @@
 package uz.medix.notification;
 
-import java.io.IOException;
+import jakarta.annotation.PreDestroy;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,6 +30,17 @@ class NotificationStream {
     private static final Logger log = LoggerFactory.getLogger(NotificationStream.class);
 
     private final Map<Long, Set<SseEmitter>> emitters = new ConcurrentHashMap<>();
+    /** Yuborish alohida oqimda: uzilgan ulanish hujjat o'tkazayotgan so'rovni hech qachon to'xtatmasin va xato qaytarmasin. */
+    private final ExecutorService sender = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "notification-sse");
+        t.setDaemon(true);
+        return t;
+    });
+
+    @PreDestroy
+    void shutdown() {
+        sender.shutdownNow();
+    }
 
     SseEmitter subscribe(long employeeId) {
         SseEmitter emitter = new SseEmitter(TIMEOUT_MS);
@@ -40,10 +54,17 @@ class NotificationStream {
 
     /** Xodimlarning ochiq oynalariga «bildirishnomalar o'zgardi» signali. */
     void changed(Collection<Long> employeeIds) {
-        for (long id : employeeIds) {
-            for (SseEmitter e : emitters.getOrDefault(id, Set.of())) {
-                send(id, e, SseEmitter.event().name(EVENT_CHANGED).data("changed"));
-            }
+        Set<Long> ids = Set.copyOf(employeeIds);
+        try {
+            sender.execute(() -> {
+                for (long id : ids) {
+                    for (SseEmitter e : emitters.getOrDefault(id, Set.of())) {
+                        send(id, e, SseEmitter.event().name(EVENT_CHANGED).data("changed"));
+                    }
+                }
+            });
+        } catch (RuntimeException ex) {
+            log.debug("SSE signal yuborilmadi", ex);
         }
     }
 
@@ -64,7 +85,16 @@ class NotificationStream {
     /** Proksi va brauzer ulanishni uzib qo'ymasligi uchun; uzilgan ulanishlar shu yerda tozalanadi. */
     @Scheduled(fixedDelay = 25_000, initialDelay = 25_000)
     void heartbeat() {
-        emitters.forEach((id, set) -> set.forEach(e -> send(id, e, SseEmitter.event().comment("ping"))));
+        try {
+            sender.execute(() -> emitters.forEach((id, set) -> set.forEach(e -> send(id, e, SseEmitter.event().comment("ping")))));
+        } catch (RuntimeException ex) {
+            log.debug("SSE ping yuborilmadi", ex);
+        }
+    }
+
+    /** Testlar uchun: navbatdagi barcha yuborishlar tugashini kutadi. */
+    void awaitSent() throws Exception {
+        sender.submit(() -> {}).get(5, TimeUnit.SECONDS);
     }
 
     int subscribers(long employeeId) {
@@ -74,10 +104,15 @@ class NotificationStream {
     private void send(long employeeId, SseEmitter emitter, SseEmitter.SseEventBuilder event) {
         try {
             emitter.send(event);
-        } catch (IOException | IllegalStateException ex) {
+        } catch (Exception ex) {
+            // Uzilgan ulanish (varaq yopildi, proksi uzdi) — oddiy holat: ro'yxatdan chiqariladi, xato qaytarilmaydi.
             log.debug("SSE ulanish yopildi: xodim {}", employeeId);
             remove(employeeId, emitter);
-            emitter.completeWithError(ex);
+            try {
+                emitter.complete();
+            } catch (Exception ignored) {
+                // allaqachon yopilgan
+            }
         }
     }
 
