@@ -99,7 +99,7 @@ jobs:
           MEDIX_BOOTSTRAP_LOGIN=ceo
           MEDIX_BOOTSTRAP_PASSWORD=Smoke-parol-2026
           ENV
-          docker compose up -d --pull never
+          docker compose up -d --pull missing
           for i in $(seq 1 60); do
             code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/api/auth/me || true)
             [ "$code" = "401" ] && break
