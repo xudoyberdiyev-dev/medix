@@ -152,7 +152,7 @@ function OperatorAttention({ home }: { home: OperatorHomeView }) {
 
 function TopCustomers({ rows }: { rows: CustomerRow[] }) {
   const columns: TableColumn<CustomerRow>[] = [
-    { key: "name", title: "Mijoz" },
+    { key: "name", title: "Mijoz", wrap: true },
     { key: "orders", title: "Buyurtmalar", align: "right", render: (c) => <span className="font-mono tabular-nums">{c.orders}</span> },
     {
       key: "sales",

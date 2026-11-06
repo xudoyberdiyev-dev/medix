@@ -161,7 +161,7 @@ export function DirectorHome() {
             <DebtCard icon={HandCoins} title="Taʼminotchilarga qarz" card={h.supplierDebt} href="/debts/suppliers" />
             <PaymentCard icon={Receipt} title="Xarajatlar" note="Oʻtkazilgan chiqimlar (KO/BO)" value={h.expenses} />
           </div>
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
             <Attention home={h} />
             <TopDebtors rows={h.topDebtors} />
           </div>
@@ -171,7 +171,7 @@ export function DirectorHome() {
             <Operators rows={h.operators} />
           </div>
           {h.supplierStaff && h.supplierCompanies ? (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 2xl:grid-cols-2">
               <Suppliers title="Taʼminotchi xodim" party="Xodim" block={h.supplierStaff} />
               <Suppliers title="Taʼminotchi korxona" party="Korxona" block={h.supplierCompanies} />
             </div>
@@ -260,7 +260,7 @@ function Attention({ home }: { home: Home }) {
 
 function TopDebtors({ rows }: { rows: Debtor[] }) {
   const columns: TableColumn<Debtor>[] = [
-    { key: "name", title: "Mijoz" },
+    { key: "name", title: "Mijoz", wrap: true },
     { key: "debt", title: "Qarz", align: "right", render: (d) => money(d.debt) },
     {
       key: "overdue",
@@ -389,7 +389,7 @@ function Operators({ rows }: { rows: OperatorRow[] }) {
 function Suppliers({ title, party, block }: { title: string; party: string; block: SupplierBlock }) {
   const [tab, setTab] = useState<"active" | "passive">("active");
   const columns: TableColumn<SupplierStat>[] = [
-    { key: "name", title: party },
+    { key: "name", title: party, wrap: true },
     { key: "brought", title: "Olib keldi", align: "right", render: (r) => money(r.brought) },
     { key: "sold", title: "Sotildi", align: "right", render: (r) => money(r.sold) },
     { key: "left", title: "Qoldi", align: "right", render: (r) => money(r.left) },

@@ -177,7 +177,7 @@ function PurchaserAttention({ home }: { home: PurchaserHomeView }) {
 
 function TopSuppliers({ rows }: { rows: Debtor[] }) {
   const columns: TableColumn<Debtor>[] = [
-    { key: "name", title: "Taʼminotchi" },
+    { key: "name", title: "Taʼminotchi", wrap: true },
     { key: "debt", title: "Qarz", align: "right", render: (d) => money(d.debt) },
     {
       key: "overdue",

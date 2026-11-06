@@ -16,6 +16,8 @@ export interface TableColumn<T> {
   sortable?: boolean;
   /** Hujjat raqami, partiya, STIR, shtrix-kod — JetBrains Mono. */
   mono?: boolean;
+  /** Uzun nom (mijoz, korxona) — satrga oʻraladi, jadval tor ustunda gorizontal aylanmaydi. */
+  wrap?: boolean;
   render?: (row: T) => ReactNode;
 }
 
@@ -249,7 +251,8 @@ export function Table<T>({
                         <td
                           key={col.key}
                           className={cn(
-                            "border-b border-border px-3 whitespace-nowrap",
+                            "border-b border-border px-3",
+                            col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
                             tdPad,
                             isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
                             col.align === "right" && "tabular text-right",
