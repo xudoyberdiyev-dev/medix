@@ -16156,6 +16156,10 @@
             "type" : "boolean",
             "description" : "Qabulda farq bor"
           },
+          "hasPrices" : {
+            "type" : "boolean",
+            "description" : "Qatorlarda narx kiritilgan: narxni ko'rmaydigan xodim qoralamani tahrirlay olmaydi, faqat qabul qiladi"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -16242,7 +16246,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "branchId", "createdAt", "createdBy", "dueManual", "fromBonus", "hasDiff", "id", "lines", "number", "paymentType", "prepaid", "pricesVisible", "receiptDate", "status", "supplier", "supplierId", "totalBonusQty", "totalQty", "warehouse", "warehouseId" ]
+        "required" : [ "branchId", "createdAt", "createdBy", "dueManual", "fromBonus", "hasDiff", "hasPrices", "id", "lines", "number", "paymentType", "prepaid", "pricesVisible", "receiptDate", "status", "supplier", "supplierId", "totalBonusQty", "totalQty", "warehouse", "warehouseId" ]
       },
       "ReceiptLine" : {
         "type" : "object",

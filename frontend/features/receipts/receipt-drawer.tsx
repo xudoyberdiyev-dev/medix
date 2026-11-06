@@ -120,7 +120,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
   const canPost = can(me.data, RECEIPT_POST);
   // Narxni koʻrish — server bilan bir xil qoida: tannarx huquqi yoki qabul qilmaydigan xodim.
   const pricesVisible = doc ? doc.pricesVisible : can(me.data, "special.cost") || !canAccept;
-  const editable = canCreate && (!doc || doc.status === "DRAFT") && (pricesVisible || !doc?.lines.some((l) => l.price != null));
+  const editable = canCreate && (!doc || doc.status === "DRAFT") && (pricesVisible || !doc?.hasPrices);
 
   const [warehouseId, setWarehouseId] = useState<string | null>(doc ? String(doc.warehouseId) : null);
   const [supplier, setSupplier] = useState<string | null>(doc ? String(doc.supplierId) : null);

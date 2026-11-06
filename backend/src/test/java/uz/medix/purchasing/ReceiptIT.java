@@ -218,6 +218,7 @@ class ReceiptIT {
         // Ombor mudiri narxni ko'rmaydi va narxli qoralamani tahrirlamaydi
         mvc.perform(get("/api/receipts/" + doc).cookie(keeper))
                 .andExpect(jsonPath("$.pricesVisible").value(false))
+                .andExpect(jsonPath("$.hasPrices").value(true))
                 .andExpect(jsonPath("$.lines[0].price").doesNotExist())
                 .andExpect(jsonPath("$.amount").doesNotExist())
                 .andExpect(jsonPath("$.supplierBalance").doesNotExist());

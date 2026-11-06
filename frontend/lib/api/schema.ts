@@ -6937,6 +6937,8 @@ export interface components {
             fromBonus: boolean;
             /** @description Qabulda farq bor */
             hasDiff: boolean;
+            /** @description Qatorlarda narx kiritilgan: narxni ko'rmaydigan xodim qoralamani tahrirlay olmaydi, faqat qabul qiladi */
+            hasPrices: boolean;
             /** Format: int64 */
             id: number;
             /** Format: date */

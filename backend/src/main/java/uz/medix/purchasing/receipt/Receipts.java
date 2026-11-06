@@ -166,6 +166,7 @@ class Receipts {
         Money amount = Money.ZERO;
         Money actual = Money.ZERO;
         boolean priced = true;
+        boolean anyPriced = false;
         long qty = 0;
         long bonus = 0;
         boolean diff = false;
@@ -176,6 +177,7 @@ class Receipts {
             if (l.price() == null) {
                 priced = false;
             } else {
+                anyPriced = true;
                 Money p = new Money(l.price());
                 amount = amount.plus(p.times(l.qty()));
                 if (l.receivedQty() != null) {
@@ -198,7 +200,7 @@ class Receipts {
                 localDate(h.dueDate()), h.dueManual(), h.ownerId(), h.owner(), h.prepaid(), h.fromBonus(),
                 h.discountKind() == null ? null : DiscountKind.valueOf(h.discountKind()),
                 h.discountValue() == null ? null : new Money(h.discountValue()).toString(), localDate(h.discountDate()), h.note(),
-                ReceiptStatus.valueOf(h.status()), h.resolution() == null ? null : Resolution.valueOf(h.resolution()), prices,
+                ReceiptStatus.valueOf(h.status()), h.resolution() == null ? null : Resolution.valueOf(h.resolution()), prices, anyPriced,
                 prices && priced && !rows.isEmpty() ? amount.toString() : null, prices && priced && accepted ? actual.toString() : null,
                 prices && h.debtAmount() != null ? new Money(h.debtAmount()).toString() : null, balance, bonusBalance,
                 bns.map(Bns::number).orElse(null), prices ? bns.map(b -> new Money(b.amount()).toString()).orElse(null) : null,
