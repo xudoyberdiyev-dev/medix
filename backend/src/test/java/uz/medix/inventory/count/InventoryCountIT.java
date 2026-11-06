@@ -250,6 +250,14 @@ class InventoryCountIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("POSTED"));
         assertThat(bal(p.main(), a)).isEqualTo(9);
+        // Qaydnoma PDF: farqlar va tannarx (Filial rahbarida prices.cost bor)
+        byte[] pdf = mvc.perform(get("/api/inventory-counts/" + id + "/pdf").cookie(manager))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var d = org.apache.pdfbox.Loader.loadPDF(pdf)) {
+            String text = new org.apache.pdfbox.text.PDFTextStripper().getText(d);
+            assertThat(text).contains("Inventarizatsiya qaydnomasi").contains("IN kamomad").contains("-3").contains("+2").contains("3.000,00");
+        }
         assertThat(bal(p.main(), b)).isEqualTo(7);
         assertThat(bal(p.quarantine(), q)).isEqualTo(3);
         assertThat(bal(p.main(), found)).isEqualTo(2);
@@ -326,6 +334,14 @@ class InventoryCountIT {
                 .andExpect(jsonPath("$.bookHidden").value(false))
                 .andExpect(jsonPath("$.lines[0].bookQty").value(6))
                 .andExpect(jsonPath("$.lines[0].cost").value("100.00"));
+        // Ko'r sanoq varag'i: hisob qoldig'i ustuni yo'q
+        byte[] sheet = mvc.perform(get("/api/inventory-counts/" + id + "/pdf").cookie(keeper))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var d = org.apache.pdfbox.Loader.loadPDF(sheet)) {
+            String text = new org.apache.pdfbox.text.PDFTextStripper().getText(d);
+            assertThat(text).contains("Sanoq varag").contains("IN ko'r").doesNotContain("Hisobda");
+        }
         send(put("/api/inventory-counts/" + id + "/counts"), keeper, entry(lineId(id, p.main(), a), 5))
                 .andExpect(jsonPath("$.lines[0].countedQty").value(5))
                 .andExpect(jsonPath("$.lines[0].diff").doesNotExist());

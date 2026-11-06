@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ClipboardCheck, Lock, PackagePlus, RotateCcw, Save, ScanSearch, X } from "lucide-react";
+import { Check, ClipboardCheck, Lock, PackagePlus, Printer, RotateCcw, Save, ScanSearch, X } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -214,6 +214,15 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
       status={<InventoryCountStatusBadge status={doc.status} />}
       actions={
         <>
+          {doc.status !== "DRAFT" && doc.status !== "CANCELLED" ? (
+            <Button
+              variant="tertiary"
+              icon={Printer}
+              onClick={() => window.open(`/api/inventory-counts/${doc.id}/pdf`, "_blank", "noopener")}
+            >
+              {counting ? "Sanoq varagʻini chop etish" : "Qaydnomani chop etish"}
+            </Button>
+          ) : null}
           {!finished && can(me.data, IN_CREATE) ? (
             <Button variant="tertiary" icon={X} onClick={() => setCancelling(true)}>
               Bekor qilish

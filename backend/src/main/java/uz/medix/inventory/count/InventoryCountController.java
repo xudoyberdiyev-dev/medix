@@ -4,7 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,10 +47,12 @@ class InventoryCountController {
     private static final String VIEW = "hasAnyAuthority('inventory.view', 'inventory.create', 'inventory.count', 'inventory.approve')";
 
     private final InventoryCounts counts;
+    private final InventoryCountPdf pdf;
     private final CurrentActor currentActor;
 
-    InventoryCountController(InventoryCounts counts, CurrentActor currentActor) {
+    InventoryCountController(InventoryCounts counts, InventoryCountPdf pdf, CurrentActor currentActor) {
         this.counts = counts;
+        this.pdf = pdf;
         this.currentActor = currentActor;
     }
 
@@ -88,6 +94,18 @@ class InventoryCountController {
     @Operation(summary = "Inventarizatsiya hujjati", description = "Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.")
     InventoryCountDetail get(@PathVariable long id, Authentication auth) {
         return detail(id, auth);
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize(VIEW)
+    @Operation(summary = "Sanoq varag'i / inventarizatsiya qaydnomasi — PDF",
+            description = "Sanoqda — sanoq varag'i («Sanaldi» bo'sh), keyin — farqlar bilan qaydnoma. Tannarx — faqat prices.cost.")
+    ResponseEntity<byte[]> pdf(@PathVariable long id, Authentication auth) {
+        InventoryCountPdf.Rendered r = pdf.render(actor(), id, has(auth, "prices.cost"), has(auth, "inventory.openCount"));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(r.number() + ".pdf").build().toString())
+                .body(r.body());
     }
 
     @GetMapping("/{id}/batches")

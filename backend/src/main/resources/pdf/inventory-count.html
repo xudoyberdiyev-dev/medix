@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${doc.number}">IN</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<div class="head">
+    <div class="caption" th:text="${legalName}">MChJ</div>
+    <h1><span th:text="${title}">Inventarizatsiya qaydnomasi</span> <span class="mono" th:text="${doc.number}">IN-TSH-000001</span></h1>
+    <div class="muted">Sana: <span th:text="${date}">06.11.2026</span> · Filial: <span th:text="${branchName}">Toshkent</span></div>
+    <div class="muted">Ombor: <span th:text="${doc.warehouse}">Markaziy</span> · Qamrov: <span th:text="${doc.zone}">butun ombor</span></div>
+    <div class="muted">Holat: <span th:text="${status}">Sanoq</span> · Tuzdi: <span th:text="${doc.createdBy}">F.I.Sh.</span><span th:if="${doc.postedBy != null}" th:text="' · Tasdiqladi: ' + ${doc.postedBy}"></span></div>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th class="num">№</th>
+        <th>Zona</th>
+        <th>Mahsulot</th>
+        <th>Partiya</th>
+        <th>Yaroqlilik</th>
+        <th class="r" th:if="${showBook}">Hisobda</th>
+        <th class="r">Sanaldi</th>
+        <th class="r" th:if="${!sheet}">Farq</th>
+        <th class="r" th:if="${withCost}">Farq summasi</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l, it : ${lines}">
+        <td class="num" th:text="${it.count}">1</td>
+        <td th:text="${l.zone}">Asosiy</td>
+        <td><span class="mono muted" th:text="${l.code}">0001</span> <span th:text="${l.name}">Mahsulot</span></td>
+        <td class="mono" th:text="${l.batch}">B1</td>
+        <td th:text="${l.expiry}">01.01.2029</td>
+        <td class="r" th:if="${showBook}" th:text="${l.book}">1</td>
+        <td class="r" th:text="${l.counted}">1</td>
+        <td class="r" th:if="${!sheet}" th:text="${l.diff}">0</td>
+        <td class="r" th:if="${withCost}" th:text="${l.amount}">0,00</td>
+    </tr>
+    </tbody>
+</table>
+<p class="caption muted" th:if="${!sheet}">Kamomad: <span th:text="${shortageQty}">0</span> dona<span th:if="${withCost}" th:text="' (' + ${shortageCost} + ' soʻm, tannarxda)'"></span>
+    · Ortiqcha: <span th:text="${surplusQty}">0</span> dona<span th:if="${withCost}" th:text="' (' + ${surplusCost} + ' soʻm, tannarxda)'"></span></p>
+<p th:if="${doc.note != null}" th:text="'Izoh: ' + ${doc.note}">Izoh</p>
+<p th:if="${doc.commission != null}" th:text="'Komissiya: ' + ${doc.commission}">Komissiya</p>
+<table class="signs">
+    <tr>
+        <td>Komissiya aʼzolari: ____________________</td>
+        <td>____________________</td>
+        <td>____________________</td>
+    </tr>
+    <tr>
+        <td>Sanadi: ____________________</td>
+        <td>Moddiy javobgar: ____________________</td>
+        <td th:if="${!sheet}">Tasdiqladi: ____________________</td>
+    </tr>
+</table>
+</body>
+</html>
