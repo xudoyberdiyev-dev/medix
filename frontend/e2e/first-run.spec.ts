@@ -401,7 +401,8 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
   await page.getByLabel(/E2E-01 — kelgan soni/).fill("4");
   await field(page, "Izoh").fill("1 dona shikastlangan");
-  await page.getByRole("button", { name: "Qabul qilish", exact: true }).last().click();
+  // Qabul oynasi hujjat oynasi ichida (oxirgi dialog) — uning asosiy tugmasi
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qabul qilish", exact: true }).click();
   await expect(page.getByText("Qabul qilindi, kamomad 1 dona")).toBeVisible();
   await page.keyboard.press("Escape");
 
