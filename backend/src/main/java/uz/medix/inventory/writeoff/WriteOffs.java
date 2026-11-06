@@ -140,13 +140,15 @@ class WriteOffs {
     Optional<WriteOffDetail> find(long id, Actor actor) {
         record HeadRow(long id, String number, long branchId, long warehouseId, String warehouse, ZoneRef zone, String reason, String actNo,
                 String commission, String note, String status, boolean needsDirector, BigDecimal totalCost, String createdBy,
-                Timestamp createdAt, String postedBy, Timestamp postedAt, String rejectedBy, Timestamp rejectedAt, String rejectReason) {}
+                Timestamp createdAt, String postedBy, Timestamp postedAt, String rejectedBy, Timestamp rejectedAt, String rejectReason,
+                String sourceTransfer) {}
         Optional<HeadRow> head = jdbc.sql("""
                 SELECT h.id, h.number, h.branch_id, h.warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone_name,
                        z.type AS zone_type, h.reason, h.act_no, h.commission, h.note, h.status, h.needs_director, h.total_cost,
                        cb.full_name AS created_by, h.created_at, pb.full_name AS posted_by, h.posted_at, rb.full_name AS rejected_by,
-                       h.rejected_at, h.reject_reason
+                       h.rejected_at, h.reject_reason, st.number AS source_transfer
                 FROM write_off h
+                LEFT JOIN warehouse_transfer st ON st.id = h.source_transfer_id
                 JOIN warehouse w ON w.id = h.warehouse_id
                 JOIN zone z ON z.id = h.zone_id
                 JOIN employee cb ON cb.id = h.created_by
@@ -160,7 +162,7 @@ class WriteOffs {
                         rs.getString("reason"), rs.getString("act_no"), rs.getString("commission"), rs.getString("note"), rs.getString("status"),
                         rs.getBoolean("needs_director"), rs.getBigDecimal("total_cost"), rs.getString("created_by"), rs.getTimestamp("created_at"),
                         rs.getString("posted_by"), rs.getTimestamp("posted_at"), rs.getString("rejected_by"), rs.getTimestamp("rejected_at"),
-                        rs.getString("reject_reason")))
+                        rs.getString("reject_reason"), rs.getString("source_transfer")))
                 .optional()
                 .filter(h -> actor.canAccessBranch(h.branchId()));
         if (head.isEmpty()) {
@@ -181,7 +183,7 @@ class WriteOffs {
         return Optional.of(new WriteOffDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.zone(),
                 Reason.valueOf(h.reason()), h.actNo(), h.commission(), h.note(), Status.valueOf(h.status()), h.needsDirector(),
                 money(h.totalCost()), h.createdBy(), h.createdAt().toInstant(), h.postedBy(), instant(h.postedAt()), h.rejectedBy(),
-                instant(h.rejectedAt()), h.rejectReason(), totalQty, lines));
+                instant(h.rejectedAt()), h.rejectReason(), h.sourceTransfer(), totalQty, lines));
     }
 
     /** Zonadagi partiyalar — hisobdan chiqarish uchun tanlash (bo'sh = qoldiq − faol zahira), tannarxsiz. */
@@ -225,10 +227,27 @@ class WriteOffs {
                 throw MedixException.badRequest("hc.duplicateBatch");
             }
         }
+        Created c = insert(actor, zone, r.reason(), blankToNull(r.actNo()), blankToNull(r.commission()), note,
+                r.lines().stream().map(l -> new LineQty(l.batchId(), l.qty())).toList(), null);
+        // Tasdiqqa yuborilganda ham qoldiq yetishi tekshiriladi — yo'q tovar tasdiqqa bormasin.
+        checkFree(zone.id(), lines(c.id()));
+        postOrNotify(actor, c, zone, approver);
+        return c.id();
+    }
+
+    /** Yaratilgan hujjat: id, raqam, Direktor darajasimi, jami dona. */
+    record Created(long id, String number, boolean director, long qty) {}
+
+    /**
+     * Hujjat va qatorlarni yozadi (holat «Tasdiqda»). Tannarx — partiyadan; summa chegaradan katta bo'lsa — Direktor darajasi.
+     * {@code sourceTransfer} — OK kamomadi (qoldiq harakati bo'lmaydi).
+     */
+    Created insert(Actor actor, ZoneInfo zone, Reason reason, String actNo, String commission, String note, List<LineQty> req,
+            Long sourceTransfer) {
         record Priced(long batchId, long productId, int qty, Money cost, Money amount) {}
         List<Priced> priced = new ArrayList<>();
         Money total = Money.ZERO;
-        for (WriteOffLineRequest l : r.lines()) {
+        for (LineQty l : req) {
             record BatchRow(long productId, BigDecimal cost) {}
             BatchRow b = jdbc.sql("SELECT product_id, cost FROM batch WHERE id = :b")
                     .param("b", l.batchId())
@@ -244,19 +263,20 @@ class WriteOffs {
         String number = numbers.next(DocumentPrefix.HC, zone.branchCode()).toString();
         long id = jdbc.sql("""
                 INSERT INTO write_off (number, branch_id, warehouse_id, zone_id, reason, act_no, commission, note, total_cost, needs_director,
-                                       status, created_by)
-                VALUES (:n, :b, :w, :z, :r, :act, :com, :note, :total, :dir, 'PENDING', :by) RETURNING id""")
+                                       status, created_by, source_transfer_id)
+                VALUES (:n, :b, :w, :z, :r, :act, :com, :note, :total, :dir, 'PENDING', :by, :src) RETURNING id""")
                 .param("n", number)
                 .param("b", zone.branchId())
                 .param("w", zone.warehouseId())
                 .param("z", zone.id())
-                .param("r", r.reason().name())
-                .param("act", blankToNull(r.actNo()))
-                .param("com", blankToNull(r.commission()))
+                .param("r", reason.name())
+                .param("act", actNo)
+                .param("com", commission)
                 .param("note", note)
                 .param("total", total.amount())
                 .param("dir", director)
                 .param("by", actor.employeeId())
+                .param("src", sourceTransfer)
                 .query(Long.class)
                 .single();
         int lineNo = 0;
@@ -273,19 +293,22 @@ class WriteOffs {
                     .param("a", l.amount().amount())
                     .update();
         }
-        // Tasdiqqa yuborilganda ham qoldiq yetishi tekshiriladi — yo'q tovar tasdiqqa bormasin.
-        checkFree(zone.id(), lines(id));
+        long qty = priced.stream().mapToLong(Priced::qty).sum();
         audit.record(AuditEntry.of("hc.create", "write_off", id)
-                .change(null, Map.of("number", number, "reason", r.reason().name(), "lines", priced.size(), "total", total.toString(),
-                        "director", director)), actor);
-        if (approver.canPost(director)) {
-            doPost(actor, id, number, zone.id());
+                .change(null, Map.of("number", number, "reason", reason.name(), "lines", priced.size(), "total", total.toString(),
+                        "director", director, "sourceTransfer", sourceTransfer == null ? "" : String.valueOf(sourceTransfer))), actor);
+        return new Created(id, number, director, qty);
+    }
+
+    /** Ruxsat yetsa — darhol o'tkaziladi, aks holda tasdiqlovchilarga (hc.approve yoki hc.director) bildirishnoma. */
+    void postOrNotify(Actor actor, Created c, ZoneInfo zone, Approver approver) {
+        if (approver.canPost(c.director())) {
+            doPost(actor, c.id(), c.number(), zone.id());
         } else {
-            notifications.notify(director ? "hc.director" : "hc.approve", zone.branchId(), List.of(),
-                    notifications.message("hc.approval", "hc.approval", "/write-offs?status=PENDING&open=" + id, "hc.approval:" + id, number,
-                            zone.name(), String.valueOf(priced.stream().mapToLong(Priced::qty).sum())));
+            notifications.notify(c.director() ? "hc.director" : "hc.approve", zone.branchId(), List.of(),
+                    notifications.message("hc.approval", "hc.approval", "/write-offs?status=PENDING&open=" + c.id(), "hc.approval:" + c.id(),
+                            c.number(), zone.name(), String.valueOf(c.qty())));
         }
-        return id;
     }
 
     @Transactional
@@ -313,18 +336,23 @@ class WriteOffs {
 
     // ===== Ichki =====
 
-    private record LineQty(long batchId, int qty) {}
+    record LineQty(long batchId, int qty) {}
 
     private record Head(long id, String number, long branchId, long zoneId, Status status, boolean needsDirector) {}
 
     private void doPost(Actor actor, long id, String number, long zone) {
         List<LineQty> lines = lines(id);
-        checkFree(zone, lines);
-        List<Move> moves = new ArrayList<>();
-        for (LineQty l : lines) {
-            moves.add(Move.out(zone, l.batchId(), l.qty()));
+        boolean shortage = jdbc.sql("SELECT source_transfer_id IS NOT NULL FROM write_off WHERE id = :id").param("id", id)
+                .query(Boolean.class).single();
+        // OK kamomadi: tovar jo'natishda zonadan allaqachon chiqqan — qoldiq harakati yo'q, faqat hujjat
+        if (!shortage) {
+            checkFree(zone, lines);
+            List<Move> moves = new ArrayList<>();
+            for (LineQty l : lines) {
+                moves.add(Move.out(zone, l.batchId(), l.qty()));
+            }
+            ledger.post(new DocRef(DOC_TYPE, id, number), moves);
         }
-        ledger.post(new DocRef(DOC_TYPE, id, number), moves);
         jdbc.sql("""
                 UPDATE write_off SET status = 'POSTED', posted_by = :by, posted_at = now(), updated_at = now(), version = version + 1
                 WHERE id = :id""")
@@ -391,7 +419,7 @@ class WriteOffs {
         }
     }
 
-    private ZoneInfo zone(Actor actor, long zoneId) {
+    ZoneInfo zone(Actor actor, long zoneId) {
         return jdbc.sql("""
                 SELECT z.id, z.name, z.type, z.active, w.id AS warehouse_id, w.active AS warehouse_active, b.id AS branch_id,
                        b.code AS branch_code

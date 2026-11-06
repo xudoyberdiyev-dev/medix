@@ -315,7 +315,87 @@ class WriteOffIT {
                 .hasMessageContaining("o'zgarmaydi");
     }
 
-    /** Parallel hisobdan chiqarishlar: 20 donadan 3 tadan — aniq 6 tasi o'tadi, qoldiq manfiy emas, jurnal = qoldiq. */
+    /** OK kamomadi (2 dona): hisobdan chiqarish — HC qoldiq harakatisiz; Direktor darajasi; rad etilsa — qayta ochiq; qaytarish. */
+    private long shortageTransfer(Place p, Cookie manager, long batch, int sent, int got) throws Exception {
+        long target = jdbc.sql("SELECT warehouse_id FROM zone WHERE id = :z").param("z", p.otherWarehouseMain()).query(Long.class).single();
+        long id = id(send(post("/api/warehouse-transfers"), manager, "{\"fromZoneId\":" + p.main() + ",\"toWarehouseId\":" + target
+                + ",\"note\":null,\"lines\":[{\"batchId\":" + batch + ",\"qty\":" + sent + "}]}").andExpect(status().isCreated()).andReturn());
+        send(post("/api/warehouse-transfers/" + id + "/send"), manager, "{}").andExpect(status().isOk());
+        long line = jdbc.sql("SELECT id FROM warehouse_transfer_line WHERE transfer_id = :t").param("t", id).query(Long.class).single();
+        send(post("/api/warehouse-transfers/" + id + "/receive"), manager, "{\"toZoneId\":" + p.otherWarehouseMain()
+                + ",\"note\":\"kam keldi\",\"lines\":[{\"lineId\":" + line + ",\"receivedQty\":" + got + "}]}")
+                .andExpect(status().isOk());
+        return id;
+    }
+
+    @Test
+    void transferShortageWriteOffAndReturn() throws Exception {
+        Place p = place();
+        long b = stocked(p.main(), "HC kamomad", 10, "1000000.00");
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie cashier = loginAs("CASHIER", p.branchId());
+
+        // Kamomad 2 dona × 1 000 000 = 2 000 000 — Filial rahbari darhol hisobdan chiqaradi, qoldiq o'zgarmaydi
+        long ok1 = shortageTransfer(p, manager, b, 4, 2);
+        assertThat(bal(p.main(), b)).isEqualTo(6);
+        mvc.perform(get("/api/warehouse-transfers/" + ok1 + "/shortage").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(true))
+                .andExpect(jsonPath("$.shortageQty").value(2));
+        send(post("/api/warehouse-transfers/" + ok1 + "/shortage/resolve"), cashier, "{\"kind\":\"WRITE_OFF\"}")
+                .andExpect(status().isForbidden());
+        send(post("/api/warehouse-transfers/" + ok1 + "/shortage/resolve"), manager, "{\"kind\":\"WRITE_OFF\",\"note\":\"yoʻlda\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(false))
+                .andExpect(jsonPath("$.history[0].kind").value("WRITE_OFF"))
+                .andExpect(jsonPath("$.history[0].writeOffStatus").value("POSTED"));
+        long hc = jdbc.sql("SELECT id FROM write_off WHERE source_transfer_id = :t").param("t", ok1).query(Long.class).single();
+        mvc.perform(get("/api/write-offs/" + hc).cookie(manager))
+                .andExpect(jsonPath("$.reason").value("SHORTAGE"))
+                .andExpect(jsonPath("$.totalCost").value("2000000.00"))
+                .andExpect(jsonPath("$.sourceTransfer").exists());
+        assertThat(bal(p.main(), b)).isEqualTo(6);
+        assertThat(jdbc.sql("SELECT count(*) FROM stock_move WHERE doc_type = 'HC' AND doc_id = :id").param("id", hc).query(Long.class).single())
+                .isZero();
+        send(post("/api/warehouse-transfers/" + ok1 + "/shortage/resolve"), manager, "{\"kind\":\"RETURN\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.shortage.notOpen"));
+
+        // Kamomad 6 × 1 000 000 > 5 000 000 — Ombor mudiri: HC Direktor tasdig'iga; rad etilsa — kamomad yana ochiq, qaytariladi
+        long ok2 = shortageTransfer(p, manager, b, 6, 0);
+        assertThat(bal(p.main(), b)).isZero();
+        send(post("/api/warehouse-transfers/" + ok2 + "/shortage/resolve"), keeper, "{\"kind\":\"WRITE_OFF\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(false))
+                .andExpect(jsonPath("$.history[0].writeOffStatus").value("PENDING"));
+        long hc2 = jdbc.sql("SELECT id FROM write_off WHERE source_transfer_id = :t").param("t", ok2).query(Long.class).single();
+        assertThat(jdbc.sql("SELECT needs_director FROM write_off WHERE id = :id").param("id", hc2).query(Boolean.class).single()).isTrue();
+        Cookie director = loginAs("DIRECTOR", null);
+        send(post("/api/write-offs/" + hc2 + "/reject"), director, "{\"reason\":\"Topildi\"}").andExpect(status().isOk());
+        send(post("/api/warehouse-transfers/" + ok2 + "/shortage/resolve"), keeper, "{\"kind\":\"RETURN\",\"note\":\"mashinada qolgan\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(false))
+                .andExpect(jsonPath("$.history[0].kind").value("RETURN"))
+                .andExpect(jsonPath("$.history[1].writeOffStatus").value("REJECTED"));
+        assertThat(bal(p.main(), b)).isEqualTo(6);
+        long journal = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_move WHERE batch_id = :b AND zone_id = :z")
+                .param("b", b)
+                .param("z", p.main())
+                .query(Long.class)
+                .single();
+        assertThat(journal).isEqualTo(6);
+
+        // Boshqa filial ko'rmaydi
+        Place other = place();
+        Cookie otherManager = loginAs("BRANCH_MANAGER", other.branchId());
+        mvc.perform(get("/api/warehouse-transfers/" + ok2 + "/shortage").cookie(otherManager)).andExpect(status().isNotFound());
+    }
+
+    /**
+     * Parallel hisobdan chiqarishlar: 20 donadan 3 tadan — aniq 6 tasi o'tadi, qoldiq manfiy emas, jurnal = qoldiq. 4 oqim: har
+     * tranzaksiya raqamlash uchun ikkinchi ulanish oladi (REQUIRES_NEW) — test pulida 8 oqim ulanish kutib qoladi.
+     */
     @RepeatedTest(3)
     void parallelWriteOffsNeverGoNegative() throws Exception {
         Place p = place();
@@ -328,7 +408,7 @@ class WriteOffIT {
                 .query(Long.class)
                 .single();
         var a = new uz.medix.shared.security.Actor(actor, p.branchId(), false);
-        ExecutorService pool = Executors.newFixedThreadPool(8);
+        ExecutorService pool = Executors.newFixedThreadPool(4);
         List<Future<Boolean>> results = new ArrayList<>();
         List<String> errors = java.util.Collections.synchronizedList(new ArrayList<>());
         for (int i = 0; i < 10; i++) {

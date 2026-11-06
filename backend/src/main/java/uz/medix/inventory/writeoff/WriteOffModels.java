@@ -57,16 +57,29 @@ final class WriteOffModels {
             Status status, boolean needsDirector, @Schema(nullable = true) String totalCost, String createdBy, Instant createdAt,
             @Schema(nullable = true) String postedBy, @Schema(nullable = true) Instant postedAt,
             @Schema(nullable = true) String rejectedBy, @Schema(nullable = true) Instant rejectedAt,
-            @Schema(nullable = true) String rejectReason, long totalQty, List<WriteOffLine> lines) {
+            @Schema(nullable = true) String rejectReason,
+            @Schema(nullable = true, description = "OK kamomadidan bo'lsa — OK raqami (qoldiq harakati yo'q)") String sourceTransfer,
+            long totalQty, List<WriteOffLine> lines) {
 
         /** Tannarxsiz nusxa (prices.cost ruxsati yo'q xodimlar uchun). */
         WriteOffDetail withoutCost() {
             return new WriteOffDetail(id, number, branchId, warehouseId, warehouse, zone, reason, actNo, commission, note, status, needsDirector,
-                    null, createdBy, createdAt, postedBy, postedAt, rejectedBy, rejectedAt, rejectReason, totalQty,
+                    null, createdBy, createdAt, postedBy, postedAt, rejectedBy, rejectedAt, rejectReason, sourceTransfer, totalQty,
                     lines.stream().map(l -> new WriteOffLine(l.id(), l.lineNo(), l.batchId(), l.batchNumber(), l.expiryDate(), l.productId(),
                             l.productCode(), l.productName(), l.qty(), null, null)).toList());
         }
     }
+
+    enum ShortageKind { WRITE_OFF, RETURN }
+
+    record ShortageResolveRequest(@NotNull(message = "{validation.required}") ShortageKind kind, @Size(max = 500) String note) {}
+
+    record ShortageResolution(ShortageKind kind, int qty, @Schema(nullable = true) Long writeOffId,
+            @Schema(nullable = true) String writeOffNumber, @Schema(nullable = true) Status writeOffStatus, @Schema(nullable = true) String note,
+            String resolvedBy, Instant resolvedAt) {}
+
+    /** OK kamomadi: ochiqmi (hal qilinmagan yoki HC rad etilgan), hal qilish tarixi (eng yangisi birinchi). */
+    record ShortageInfo(long transferId, String number, int shortageQty, boolean open, List<ShortageResolution> history) {}
 
     /** Zonadagi partiya: qoldiq, faol zahira, hisobdan chiqarish mumkin bo'lgan bo'sh miqdor; muddati o'tganmi. Tannarxsiz. */
     record WriteOffStockRow(long batchId, String batchNumber, LocalDate expiryDate, boolean expired, long productId, String productCode,
