@@ -60,7 +60,7 @@ export function InventoryCountDrawer(props: { id: number | null; onClose: () => 
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
-  return <View key={`${doc.data.id}-${doc.data.status}`} doc={doc.data} onClose={props.onClose} />;
+  return <View key={doc.data.id} doc={doc.data} onClose={props.onClose} />;
 }
 
 function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void }) {
