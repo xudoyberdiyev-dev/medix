@@ -87,8 +87,11 @@ class CashPanel {
             }
         }
         KindTotals balances = new KindTotals(cash.toString(), terminal.toString(), bank.toString(), cash.plus(terminal).plus(bank).toString());
+        // Kutilayotgan: mijozlarning to'lov kuni (SPEC 8 — Kassir paneli) — bugun va keyingi 3 kun ichida ochiq qarz
+        DebtSummaries.DueSoon due = debts.due(actor, PartyLedger.Side.CUSTOMER, branchId, ops.today());
         if (ids.isEmpty()) {
-            return new Panel(f, t, balances, "0.00", "0.00", List.of(), "0.00", 0, "0.00", 0, "0.00", List.of(), List.of(), List.of());
+            return new Panel(f, t, balances, "0.00", "0.00", List.of(), "0.00", 0, "0.00", 0, "0.00", List.of(), List.of(), List.of(), due.today(),
+                    due.next3Days());
         }
 
         // Hisoblar jadvali: davr boshi + kirim − chiqim = davr oxiri (IO ham — hisob qoldig'i uchun)
@@ -160,9 +163,6 @@ class CashPanel {
                         rs.getString("doc_type"), rs.getString("doc_number"), m(rs.getBigDecimal("amount")).toString(), rs.getString("employee"),
                         rs.getString("note")))
                 .list();
-
-        // Kutilayotgan: mijozlarning to'lov kuni (SPEC 8 — Kassir paneli) — bugun va keyingi 3 kun ichida ochiq qarz
-        DebtSummaries.DueSoon due = debts.due(actor, PartyLedger.Side.CUSTOMER, branchId, ops.today());
 
         return new Panel(f, t, balances, income.toString(), expense.toString(), items, itemsTotal.toString(), drafts.cnt(),
                 m(drafts.amount()).toString(), pending.cnt(), m(pending.amount()).toString(), table, days, recent, due.today(), due.next3Days());
