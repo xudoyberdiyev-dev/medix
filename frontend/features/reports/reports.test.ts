@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { visibleReports } from "./catalog";
-import { salesExportHref, salesRowHref } from "./sales-report";
+import { initialGroupBy, salesExportHref, salesRowHref } from "./sales-report";
 import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
 import { formatMinutes, workerExportHref } from "./worker-report";
 
@@ -8,6 +8,9 @@ describe("hisobotlar", () => {
   it("katalog ruxsat boʻyicha", () => {
     expect(visibleReports(["reports.own"]).map((r) => r.key)).toEqual(["sales"]);
     expect(visibleReports(["reports.pickers"]).map((r) => r.key)).toEqual(["pickers"]);
+    expect(visibleReports(["reports.view"]).map((r) => r.key)).toContain("operators");
+    expect(visibleReports(["reports.view"]).map((r) => r.key)).not.toContain("gross-profit");
+    expect(visibleReports(["reports.view", "prices.cost"]).map((r) => r.key)).toContain("gross-profit");
     expect(visibleReports([])).toHaveLength(0);
   });
 
@@ -42,5 +45,13 @@ describe("hisobotlar", () => {
     expect(salesRowHref("CUSTOMER", { key: "12", name: "Dorixona A" })).toBe("/orders?customerId=12&customer=Dorixona+A");
     expect(salesRowHref("DAY", { key: "2026-11-05", name: "05.11.2026" })).toBeNull();
     expect(salesRowHref("CUSTOMER", { key: "", name: "Jami" })).toBeNull();
+  });
+});
+
+describe("Savdo hisoboti: URL'dagi guruh", () => {
+  it("ruxsat etilgan guruh qoʻllanadi, aks holda — Mijoz", () => {
+    expect(initialGroupBy("OPERATOR", ["CUSTOMER", "OPERATOR", "BRANCH", "DAY"])).toBe("OPERATOR");
+    expect(initialGroupBy("OPERATOR", ["CUSTOMER", "DAY"])).toBe("CUSTOMER");
+    expect(initialGroupBy(null, ["CUSTOMER", "DAY"])).toBe("CUSTOMER");
   });
 });

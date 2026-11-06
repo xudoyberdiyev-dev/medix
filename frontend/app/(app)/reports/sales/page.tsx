@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { TopBar } from "@/components/shell/topbar";
 import { SalesReportPage } from "@/features/reports/sales-report";
 
@@ -6,7 +7,9 @@ export default function Page() {
     <>
       <TopBar title="Savdo hisoboti" />
       <main className="flex-1 overflow-y-auto p-4 md:p-6">
-        <SalesReportPage />
+        <Suspense>
+          <SalesReportPage />
+        </Suspense>
       </main>
     </>
   );

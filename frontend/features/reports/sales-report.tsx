@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChartColumn, Download } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -41,6 +41,11 @@ export function salesRowHref(groupBy: GroupBy, row: { key: string; name: string 
 }
 
 /** Savdo hisoboti (SPEC 8): filtr (davr, guruh), jami qatori, .xlsx eksport; tannarx/yalpi foyda faqat ruxsat bilan (API oʻzi yubormaydi). */
+/** Katalogdagi «Operatorlar savdosi» kabi kirishlar: ?groupBy=OPERATOR — ruxsat etilgan guruh boʻlsa, oʻsha bilan ochiladi. */
+export function initialGroupBy(raw: string | null, allowed: GroupBy[]): GroupBy {
+  return allowed.find((g) => g === raw) ?? "CUSTOMER";
+}
+
 export function SalesReportPage() {
   const me = useMe();
   const router = useRouter();
@@ -52,7 +57,10 @@ export function SalesReportPage() {
   const period = usePeriodState();
   const { from, to } = period.range;
   const groups = (Object.keys(GROUP_LABELS) as GroupBy[]).filter((g) => fullScope || g === "CUSTOMER" || g === "DAY");
-  const [groupBy, setGroupBy] = useState<GroupBy>("CUSTOMER");
+  const params = useSearchParams();
+  // Ruxsatlar yuklangach URL'dagi guruh qoʻllanadi; foydalanuvchi tanlasa — oʻsha.
+  const [picked, setGroupBy] = useState<GroupBy | null>(null);
+  const groupBy = picked ?? initialGroupBy(params.get("groupBy"), groups);
   const report = useQuery({
     queryKey: ["reports", "sales", branchId, from, to, groupBy],
     queryFn: () =>

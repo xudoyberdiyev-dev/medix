@@ -28,6 +28,21 @@ export const REPORTS: ReportEntry[] = [
     anyOf: ["reports.all", "reports.view", "reports.own"],
   },
   {
+    key: "operators",
+    title: "Operatorlar savdosi",
+    description: "Har operatorning sof savdosi va buyurtmalari tanlangan davrda.",
+    href: "/reports/sales?groupBy=OPERATOR",
+    anyOf: ["reports.all", "reports.view"],
+  },
+  {
+    key: "gross-profit",
+    title: "Yalpi foyda",
+    description: "Sof savdo, tannarx va yalpi foyda (QQSsiz) — mijoz, operator, filial yoki kun boʻyicha.",
+    href: "/reports/sales",
+    anyOf: ["reports.all", "reports.view"],
+    allOf: ["prices.cost"],
+  },
+  {
     key: "debts",
     title: "Qarzlar",
     description: "Mijozlar va taʼminotchilar qarzi muddat guruhlari bilan.",
