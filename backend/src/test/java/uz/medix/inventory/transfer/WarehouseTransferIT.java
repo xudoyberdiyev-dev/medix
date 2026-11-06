@@ -176,8 +176,9 @@ class WarehouseTransferIT {
                 .andExpect(jsonPath("$.totalQty").value(4))
                 .andReturn());
         assertThat(bal(p.main(), b)).isEqualTo(10);
-        // Ombor mudirida transfer.ok yo'q — qoralama tuzmaydi, lekin jo'natadi
-        send(post("/api/warehouse-transfers"), keeper, doc(p.main(), p.target(), b, 1)).andExpect(status().isForbidden());
+        // Kassirda transfer.ok yo'q — qoralama tuzmaydi
+        Cookie cashier = loginAs("CASHIER", p.branchId());
+        send(post("/api/warehouse-transfers"), cashier, doc(p.main(), p.target(), b, 1)).andExpect(status().isForbidden());
         send(post("/api/warehouse-transfers/" + id + "/receive"), keeper, "{\"toZoneId\":" + p.targetReceiving() + "}")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("transfer.ok.badStatus"));
