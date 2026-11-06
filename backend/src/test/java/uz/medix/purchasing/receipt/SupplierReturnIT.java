@@ -243,6 +243,14 @@ class SupplierReturnIT {
         assertThat(jdbc.sql("""
                 SELECT applies_doc_id FROM party_ledger WHERE doc_type = 'QY' AND doc_id = :d""").param("d", doc).query(Long.class).single())
                 .isEqualTo(kr.receiptId());
+        // Yuk xati PDF
+        byte[] pdf = mvc.perform(get("/api/supplier-returns/" + doc + "/pdf").cookie(keeper))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var d = org.apache.pdfbox.Loader.loadPDF(pdf)) {
+            String text = new org.apache.pdfbox.text.PDFTextStripper().getText(d);
+            assertThat(text).contains("qaytarish yuk xati").contains("QY Paratsetamol").doesNotContain("12 500,50").doesNotContain("Kirim narxi");
+        }
         // Ikkinchi marta — yo'q
         send(post("/api/supplier-returns/" + doc + "/approve"), keeper, "{}")
                 .andExpect(status().isConflict())

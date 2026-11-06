@@ -4,7 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,10 +42,12 @@ class SupplierReturnController {
     private static final String VIEW = "hasAnyAuthority('qy.view', 'qy.create', 'qy.approve')";
 
     private final SupplierReturns returns;
+    private final SupplierReturnPdf pdf;
     private final CurrentActor currentActor;
 
-    SupplierReturnController(SupplierReturns returns, CurrentActor currentActor) {
+    SupplierReturnController(SupplierReturns returns, SupplierReturnPdf pdf, CurrentActor currentActor) {
         this.returns = returns;
+        this.pdf = pdf;
         this.currentActor = currentActor;
     }
 
@@ -81,6 +87,17 @@ class SupplierReturnController {
     @Operation(summary = "QY hujjati")
     SupplierReturnDetail get(@PathVariable long id, Authentication auth) {
         return detail(id, auth);
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize(VIEW)
+    @Operation(summary = "QY yuk xati — PDF (chop etish)", description = "Narx va summa ustunlari — faqat prices.cost.")
+    ResponseEntity<byte[]> pdf(@PathVariable long id, Authentication auth) {
+        SupplierReturnPdf.Rendered r = pdf.render(actor(), id, has(auth, "prices.cost"));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(r.number() + ".pdf").build().toString())
+                .body(r.body());
     }
 
     @GetMapping("/receipt-stock")

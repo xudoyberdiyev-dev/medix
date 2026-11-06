@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Gift, X } from "lucide-react";
+import { Check, Gift, Printer, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -122,25 +122,34 @@ function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void
       subtitle={formatDateTime(new Date(doc.createdAt))}
       status={<SupplierReturnStatusBadge status={doc.status} />}
       actions={
-        canDecide ? (
-          <>
-            <Button variant="secondary" icon={X} onClick={() => setRejecting(true)}>
-              Rad etish
-            </Button>
-            <Button
-              icon={Check}
-              loading={approve.isPending}
-              onClick={() =>
-                approve.mutate(doc.id, {
-                  onSuccess: (d) => toast({ tone: "success", title: "Tasdiqlandi, tovar YB ga qaytarildi", description: d.number }),
-                  onError: fail,
-                })
-              }
-            >
-              Tasdiqlash va qaytarish
-            </Button>
-          </>
-        ) : undefined
+        <>
+          <Button
+            variant="tertiary"
+            icon={Printer}
+            onClick={() => window.open(`/api/supplier-returns/${doc.id}/pdf`, "_blank", "noopener")}
+          >
+            Yuk xatini chop etish
+          </Button>
+          {canDecide ? (
+            <>
+              <Button variant="secondary" icon={X} onClick={() => setRejecting(true)}>
+                Rad etish
+              </Button>
+              <Button
+                icon={Check}
+                loading={approve.isPending}
+                onClick={() =>
+                  approve.mutate(doc.id, {
+                    onSuccess: (d) => toast({ tone: "success", title: "Tasdiqlandi, tovar YB ga qaytarildi", description: d.number }),
+                    onError: fail,
+                  })
+                }
+              >
+                Tasdiqlash va qaytarish
+              </Button>
+            </>
+          ) : null}
+        </>
       }
     >
       <div className="flex flex-col gap-4">
@@ -404,6 +413,10 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
               loading={stock.isPending}
               emptyState={<EmptyState icon={X} title="Zonada bu kirim tovari yoʻq" description="Boshqa zonani tanlang." />}
             />
+          ) : zones.length > 1 ? (
+            <Alert tone="info" title="Zonani tanlang">
+              Kirim partiyalari bir nechta zonada turibdi — qaytariladigan tovar qaysi zonadan chiqishini tanlang.
+            </Alert>
           ) : null
         ) : null}
         <TextField

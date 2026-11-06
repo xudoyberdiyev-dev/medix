@@ -507,6 +507,12 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
   await page.getByRole("option", { name: /KR-/ }).first().click();
   await drawer.getByRole("combobox", { name: "Sabab", exact: true }).click();
   await page.getByRole("option", { name: "Sifatsiz (brak)" }).click();
+  await drawer.getByRole("combobox", { name: "Zona", exact: true }).click();
+  await page
+    .getByRole("option", { name: /Asosiy saqlash/ })
+    .first()
+    .click();
+  await expect(drawer.getByText("zonasidagi kirim partiyalari")).toBeVisible();
   await drawer.getByLabel(/KR-E2E — qaytarish soni/).fill("1");
   await drawer.getByRole("button", { name: "Qaytarish", exact: true }).click();
   await expect(page.getByText("Tovar YB ga qaytarildi")).toBeVisible();
