@@ -212,7 +212,6 @@ function ActiveMarking({ work }: { work: MarkWork }) {
   const input = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [flash, setFlash] = useState<Flash | null>(null);
-  const [scanning, setScanning] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<unknown>(null);
   const [removing, setRemoving] = useState<MarkCode | null>(null);
@@ -244,14 +243,22 @@ function ActiveMarking({ work }: { work: MarkWork }) {
     beep(f.ok);
   }
 
-  async function scan(raw: string) {
-    if (!raw.trim() || scanning) return;
+  // Skaner kodlarni ketma-ket tez yuboradi: oldingi soʻrov tugamaguncha kelgan kod tashlab yuborilmaydi — navbatga qoʻyiladi.
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const [queued, setQueued] = useState(0);
+
+  function scan(raw: string) {
+    if (!raw.trim()) return;
+    setQueued((n) => n + 1);
+    queue.current = queue.current.then(() => scanOne(raw)).finally(() => setQueued((n) => n - 1));
+  }
+
+  async function scanOne(raw: string) {
     const parsed = parseGs1(raw);
     if (!parsed.ok) {
       show({ ok: false, title: "Kod qabul qilinmadi", detail: GS1_ERROR_TEXT[parsed.error] });
       return;
     }
-    setScanning(true);
     try {
       await ensureCsrf();
       const r = await unwrap(api.POST("/api/marking/orders/{id}/scan", { params: { path: { id: work.id } }, body: { code: raw } }));
@@ -259,8 +266,6 @@ function ActiveMarking({ work }: { work: MarkWork }) {
       show({ ok: true, title: "Qabul qilindi", detail: `${r.accepted.productName} · ${counterText(r.work)}` });
     } catch (e) {
       show({ ok: false, title: "Kod qabul qilinmadi", detail: e instanceof ApiError ? e.message : (describeError(e).message ?? "") });
-    } finally {
-      setScanning(false);
     }
   }
 
@@ -275,7 +280,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
       e.preventDefault();
       const raw = value;
       setValue("");
-      void scan(raw);
+      scan(raw);
     }
   }
 
@@ -355,6 +360,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
           <label className="mt-4 block">
             <span className="mb-1 flex items-center gap-2 text-caption text-text-secondary">
               <ScanLine size={16} strokeWidth={1.5} aria-hidden /> Skanerlash maydoni — kodni skanerlang (Enter bilan tugaydi)
+              {queued > 1 ? <span aria-live="polite">· tekshirilmoqda: {queued} ta kod</span> : null}
             </span>
             <input
               ref={input}
