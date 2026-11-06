@@ -16,13 +16,13 @@ import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockLedger.DocRef;
 import uz.medix.inventory.StockLedger.Move;
 import uz.medix.inventory.ZoneType;
-import uz.medix.inventory.count.InventoryCountModels.BatchHit;
-import uz.medix.inventory.count.InventoryCountModels.CountDetail;
-import uz.medix.inventory.count.InventoryCountModels.CountEntry;
-import uz.medix.inventory.count.InventoryCountModels.CountLine;
-import uz.medix.inventory.count.InventoryCountModels.CountPage;
-import uz.medix.inventory.count.InventoryCountModels.CountRequest;
-import uz.medix.inventory.count.InventoryCountModels.CountSummary;
+import uz.medix.inventory.count.InventoryCountModels.InventoryBatchHit;
+import uz.medix.inventory.count.InventoryCountModels.InventoryCountDetail;
+import uz.medix.inventory.count.InventoryCountModels.InventoryCountEntry;
+import uz.medix.inventory.count.InventoryCountModels.InventoryCountLine;
+import uz.medix.inventory.count.InventoryCountModels.InventoryCountPage;
+import uz.medix.inventory.count.InventoryCountModels.InventoryCountRequest;
+import uz.medix.inventory.count.InventoryCountModels.InventoryCountSummary;
 import uz.medix.inventory.count.InventoryCountModels.Status;
 import uz.medix.inventory.count.InventoryCountModels.ZoneRef;
 import uz.medix.notification.Notifications;
@@ -73,7 +73,7 @@ class InventoryCounts {
     // ===== O'qish =====
 
     @Transactional(readOnly = true)
-    CountPage list(Actor actor, Long branchId, Long warehouseId, Status status, int page, int size) {
+    InventoryCountPage list(Actor actor, Long branchId, Long warehouseId, Status status, int page, int size) {
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
         if (!actor.allBranches()) {
@@ -93,7 +93,7 @@ class InventoryCounts {
             params.put("s", status.name());
         }
         long total = jdbc.sql("SELECT count(*) FROM inventory_count c" + where).params(params).query(Long.class).single();
-        List<CountSummary> items = jdbc.sql("""
+        List<InventoryCountSummary> items = jdbc.sql("""
                 SELECT c.id, c.number, c.branch_id, c.warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone_name,
                        z.type AS zone_type, c.blind, c.status, c.needs_director, coalesce(l.lines, 0) AS lines,
                        coalesce(l.counted, 0) AS counted, c.shortage_qty, c.surplus_qty, c.shortage_cost, c.surplus_cost,
@@ -107,7 +107,7 @@ class InventoryCounts {
                 .params(params)
                 .param("l", size)
                 .param("o", (long) page * size)
-                .query((rs, n) -> new CountSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"),
+                .query((rs, n) -> new InventoryCountSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"),
                         rs.getLong("warehouse_id"), rs.getString("warehouse"), zoneRef(rs.getObject("zone_id", Long.class),
                                 rs.getString("zone_name"), rs.getString("zone_type")),
                         rs.getBoolean("blind"), Status.valueOf(rs.getString("status")), rs.getBoolean("needs_director"), rs.getInt("lines"),
@@ -115,11 +115,11 @@ class InventoryCounts {
                         money(rs.getBigDecimal("surplus_cost")), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
                         instant(rs.getTimestamp("posted_at"))))
                 .list();
-        return new CountPage(items, total, page, size);
+        return new InventoryCountPage(items, total, page, size);
     }
 
     @Transactional(readOnly = true)
-    Optional<CountDetail> find(long id, Actor actor) {
+    Optional<InventoryCountDetail> find(long id, Actor actor) {
         record HeadRow(long id, String number, long branchId, long warehouseId, String warehouse, ZoneRef zone, boolean blind,
                 String commission, String note, String status, boolean needsDirector, int shortageQty, int surplusQty,
                 BigDecimal shortageCost, BigDecimal surplusCost, String createdBy, Timestamp createdAt, String startedBy,
@@ -156,7 +156,7 @@ class InventoryCounts {
             return Optional.empty();
         }
         HeadRow h = head.get();
-        List<CountLine> lines = jdbc.sql("""
+        List<InventoryCountLine> lines = jdbc.sql("""
                 SELECT l.id, z.id AS zone_id, z.name AS zone_name, z.type AS zone_type, l.batch_id, b.number AS batch_number, b.expiry_date,
                        l.product_id, p.code, p.name, p.controlled, l.book_qty, l.counted_qty, l.added, l.cost, e.full_name AS counted_by,
                        l.counted_at
@@ -170,7 +170,7 @@ class InventoryCounts {
                     Integer counted = rs.getObject("counted_qty", Integer.class);
                     Integer diff = counted == null ? null : counted - book;
                     Money cost = new Money(rs.getBigDecimal("cost"));
-                    return new CountLine(rs.getLong("id"), new ZoneRef(rs.getLong("zone_id"), rs.getString("zone_name"),
+                    return new InventoryCountLine(rs.getLong("id"), new ZoneRef(rs.getLong("zone_id"), rs.getString("zone_name"),
                             ZoneType.valueOf(rs.getString("zone_type"))), rs.getLong("batch_id"), rs.getString("batch_number"),
                             rs.getDate("expiry_date").toLocalDate(), rs.getLong("product_id"), rs.getString("code"), rs.getString("name"),
                             rs.getBoolean("controlled"), book, counted, diff, rs.getBoolean("added"), cost.toString(),
@@ -178,7 +178,7 @@ class InventoryCounts {
                 })
                 .list();
         int counted = (int) lines.stream().filter(l -> l.countedQty() != null).count();
-        return Optional.of(new CountDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.zone(), h.blind(), false,
+        return Optional.of(new InventoryCountDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.zone(), h.blind(), false,
                 h.commission(), h.note(), Status.valueOf(h.status()), h.needsDirector(), h.shortageQty(), h.surplusQty(), money(h.shortageCost()),
                 money(h.surplusCost()), h.createdBy(), h.createdAt().toInstant(), h.startedBy(), instant(h.startedAt()), h.submittedBy(),
                 instant(h.submittedAt()), h.postedBy(), instant(h.postedAt()), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(),
@@ -187,7 +187,7 @@ class InventoryCounts {
 
     /** Sanoqda topilgan partiyani raqami bo'yicha qidirish (qamrovdagi ombor filialida mavjud bo'lishi shart emas). */
     @Transactional(readOnly = true)
-    List<BatchHit> findBatches(Actor actor, long id, String query) {
+    List<InventoryBatchHit> findBatches(Actor actor, long id, String query) {
         head(id, actor, false);
         String q = query == null ? "" : query.strip().toLowerCase();
         if (q.length() < 2) {
@@ -200,7 +200,7 @@ class InventoryCounts {
                 ORDER BY p.name, b.expiry_date LIMIT 20""")
                 .param("q", "%" + q.replace("%", "").replace("_", "") + "%")
                 .param("exact", q)
-                .query((rs, n) -> new BatchHit(rs.getLong("id"), rs.getString("number"), rs.getDate("expiry_date").toLocalDate(),
+                .query((rs, n) -> new InventoryBatchHit(rs.getLong("id"), rs.getString("number"), rs.getDate("expiry_date").toLocalDate(),
                         rs.getLong("product_id"), rs.getString("code"), rs.getString("name")))
                 .list();
     }
@@ -208,7 +208,7 @@ class InventoryCounts {
     // ===== Yozish =====
 
     @Transactional
-    long create(Actor actor, CountRequest r) {
+    long create(Actor actor, InventoryCountRequest r) {
         record Wh(long id, long branchId, String branchCode, boolean active) {}
         Wh w = jdbc.sql("SELECT w.id, w.branch_id, b.code, w.active FROM warehouse w JOIN branch b ON b.id = w.branch_id WHERE w.id = :w")
                 .param("w", r.warehouseId())
@@ -286,10 +286,10 @@ class InventoryCounts {
 
     /** Sanalgan miqdorlar: mavjud qatorga yoki topilgan partiya — yangi qator (hisobda 0). */
     @Transactional
-    void count(Actor actor, long id, List<CountEntry> entries) {
+    void count(Actor actor, long id, List<InventoryCountEntry> entries) {
         Head h = head(id, actor, true);
         requireStatus(h, Status.COUNTING);
-        for (CountEntry e : entries) {
+        for (InventoryCountEntry e : entries) {
             if (e.lineId() != null) {
                 int updated = jdbc.sql("""
                         UPDATE inventory_count_line SET counted_qty = :q, counted_by = :by, counted_at = now()

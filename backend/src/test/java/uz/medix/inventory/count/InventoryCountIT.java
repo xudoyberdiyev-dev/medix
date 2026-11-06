@@ -387,7 +387,7 @@ class InventoryCountIT {
                 .query(Long.class)
                 .single();
         var who = new uz.medix.shared.security.Actor(actor, p.branchId(), false);
-        long id = counts.create(who, new InventoryCountModels.CountRequest(p.warehouseId(), null, false, null, null));
+        long id = counts.create(who, new InventoryCountModels.InventoryCountRequest(p.warehouseId(), null, false, null, null));
         ExecutorService pool = Executors.newFixedThreadPool(3);
         List<Future<Boolean>> results = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
