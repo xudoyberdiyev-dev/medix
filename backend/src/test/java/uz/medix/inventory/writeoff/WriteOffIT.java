@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -315,7 +316,7 @@ class WriteOffIT {
     }
 
     /** Parallel hisobdan chiqarishlar: 20 donadan 3 tadan — aniq 6 tasi o'tadi, qoldiq manfiy emas, jurnal = qoldiq. */
-    @Test
+    @RepeatedTest(3)
     void parallelWriteOffsNeverGoNegative() throws Exception {
         Place p = place();
         long b = stocked(p.quarantine(), "HC parallel", 20);

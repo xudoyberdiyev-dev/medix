@@ -1,4 +1,5 @@
 import {
+  FileMinus,
   ArrowRightLeft,
   Banknote,
   BadgeDollarSign,
@@ -77,6 +78,13 @@ export const navigation: NavGroup[] = [
         href: "/warehouse-transfers",
         icon: Warehouse,
         anyOf: ["transfer.view", "transfer.ok", "transfer.send", "transfer.receive"],
+      },
+      {
+        key: "write-offs",
+        label: "Hisobdan chiqarish",
+        href: "/write-offs",
+        icon: FileMinus,
+        anyOf: ["hc.view", "hc.create", "hc.approve"],
       },
       { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: PackageOpen, anyOf: ["opening.list", "opening.view"] },

@@ -117,6 +117,13 @@ export function attentionRows(
       href: "/warehouse-transfers?status=IN_TRANSIT",
       money: false,
     },
+    {
+      key: "hc",
+      label: "Hisobdan chiqarish tasdigʻi kutilmoqda",
+      value: String(a.writeOffsPending),
+      href: "/write-offs?status=PENDING",
+      money: false,
+    },
     { key: "drv", label: "Haydovchilardagi pul", value: a.driverCash, href: "/cash", money: true },
   ];
   return rows.filter((r) => nonZero(r.value) && (r.key !== "dir" || perms.director) && (r.key !== "br" || perms.branch));

@@ -35,6 +35,7 @@ describe("Diqqat talab qiladi", () => {
     bonusDue: 0,
     zoneTransfersPending: 0,
     transfersInTransit: 0,
+    writeOffsPending: 0,
   };
   it("nol qatorlar yashiriladi", () => {
     expect(attentionRows(zero)).toEqual([]);
