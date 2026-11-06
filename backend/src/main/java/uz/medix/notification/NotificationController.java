@@ -3,9 +3,11 @@ package uz.medix.notification;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.CurrentActor;
 
@@ -29,10 +32,12 @@ class NotificationController {
 
     private final JdbcClient jdbc;
     private final CurrentActor currentActor;
+    private final NotificationStream stream;
 
-    NotificationController(JdbcClient jdbc, CurrentActor currentActor) {
+    NotificationController(JdbcClient jdbc, CurrentActor currentActor, NotificationStream stream) {
         this.jdbc = jdbc;
         this.currentActor = currentActor;
+        this.stream = stream;
     }
 
     private long me() {
@@ -56,6 +61,15 @@ class NotificationController {
         return new NotificationList(items, unread);
     }
 
+    @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "Real vaqt signali (SSE): «notifications» hodisasi kelsa — ro'yxatni qayta oling")
+    SseEmitter stream(HttpServletResponse response) {
+        // Proksi (Next.js rewrites, nginx) siqmasin va bufer qilmasin — hodisa darhol yetib borsin.
+        response.setHeader("Cache-Control", "no-cache, no-transform");
+        response.setHeader("X-Accel-Buffering", "no");
+        return stream.subscribe(me());
+    }
+
     @PostMapping("/{id}/read")
     @Transactional
     @Operation(summary = "O'qildi deb belgilash")
@@ -64,13 +78,16 @@ class NotificationController {
                 .param("id", id)
                 .param("e", me())
                 .update();
+        stream.changedAfterCommit(List.of(me()));
     }
 
     @PostMapping("/read-all")
     @Transactional
     @Operation(summary = "Hammasini o'qildi deb belgilash")
     void readAll() {
-        jdbc.sql("UPDATE notification SET read_at = now() WHERE employee_id = :e AND read_at IS NULL").param("e", me()).update();
+        long e = me();
+        jdbc.sql("UPDATE notification SET read_at = now() WHERE employee_id = :e AND read_at IS NULL").param("e", e).update();
+        stream.changedAfterCommit(List.of(e));
     }
 
     private static Instant instant(Timestamp t) {

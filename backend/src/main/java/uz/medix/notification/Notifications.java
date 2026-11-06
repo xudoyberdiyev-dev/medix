@@ -1,7 +1,9 @@
 package uz.medix.notification;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -28,9 +30,11 @@ public class Notifications {
     }
 
     private final JdbcClient jdbc;
+    private final NotificationStream stream;
 
-    Notifications(JdbcClient jdbc) {
+    Notifications(JdbcClient jdbc, NotificationStream stream) {
         this.jdbc = jdbc;
+        this.stream = stream;
     }
 
     /** Ruxsat kaliti egalari (filial doirasida) va qo'shimcha xodimlarga. Qaytaradi: yangi yozilganlar soni. */
@@ -51,9 +55,9 @@ public class Notifications {
                     .query(Long.class)
                     .list());
         }
-        int created = 0;
+        List<Long> notified = new ArrayList<>();
         for (long e : to) {
-            created += jdbc.sql("""
+            int n = jdbc.sql("""
                     INSERT INTO notification (employee_id, kind, title, body, link, dedup_key) VALUES (:e, :k, :t, :body, :link, :d)
                     ON CONFLICT (employee_id, dedup_key) DO NOTHING""")
                     .param("e", e)
@@ -63,7 +67,13 @@ public class Notifications {
                     .param("link", m.link())
                     .param("d", m.dedupKey())
                     .update();
+            if (n > 0) {
+                notified.add(e);
+            }
         }
-        return created;
+        if (!notified.isEmpty()) {
+            stream.changedAfterCommit(notified);
+        }
+        return notified.size();
     }
 }
