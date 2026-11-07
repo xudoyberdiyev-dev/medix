@@ -1,0 +1,7 @@
+{
+  "title": "Bildirishnomalar",
+  "unread": "Bildirishnomalar: {count} ta oʻqilmagan",
+  "markAll": "Hammasini oʻqildi deb belgilash",
+  "loadError": "Bildirishnomalarni yuklab boʻlmadi. Birozdan keyin qayta oching.",
+  "empty": "Hozircha bildirishnoma yoʻq"
+}

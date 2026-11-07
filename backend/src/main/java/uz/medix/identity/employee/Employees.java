@@ -21,14 +21,15 @@ public class Employees {
 
     public record Employee(long id, String login, String fullName, @Schema(nullable = true) String phone,
             @Schema(nullable = true) String position, String roleCode, String roleName, @Schema(nullable = true) Long branchId,
-            String status, boolean mustChangePassword) {}
+            String status, boolean mustChangePassword,
+            @Schema(description = "Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3)") boolean allBranches) {}
 
     public record NewEmployee(String login, String fullName, String phone, String position, String roleCode, Long branchId,
             String temporaryPassword) {}
 
     private static final String SELECT = """
             SELECT e.id, e.login, e.full_name, e.phone, e.position, r.code AS role_code, r.name AS role_name, e.branch_id,
-                   e.status, e.must_change_password
+                   e.status, e.must_change_password, e.all_branches
             FROM employee e JOIN role r ON r.id = e.role_id""";
 
     private final JdbcClient jdbc;
@@ -97,6 +98,29 @@ public class Employees {
                 .update();
         jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
         audit.record(AuditEntry.of("employee.resetPassword", "employee", id));
+        return get(id);
+    }
+
+    /**
+     * Buxgalterga barcha filiallar doirasini berish / olish (egasi qarori 07.11.2026, E3) — faqat Direktor.
+     * Xodimning ochiq sessiyalari tugatiladi (yangi doira keyingi kirishda kuchga kiradi).
+     */
+    @Transactional
+    public Employee setAllBranches(Actor actor, long id, boolean enabled) {
+        Employee e = accessible(actor, id);
+        if (!"ACCOUNTANT".equals(e.roleCode())) {
+            throw MedixException.badRequest("employee.allBranchesOnlyAccountant");
+        }
+        if (e.allBranches() == enabled) {
+            return e;
+        }
+        jdbc.sql("UPDATE employee SET all_branches = :v, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("v", enabled)
+                .param("id", id)
+                .update();
+        jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
+        audit.record(AuditEntry.of("employee.allBranches", "employee", id)
+                .change(Map.of("allBranches", e.allBranches()), Map.of("allBranches", enabled)));
         return get(id);
     }
 

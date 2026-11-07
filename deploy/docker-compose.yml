@@ -1,0 +1,95 @@
+# MEDIX — production (SPEC 15). Serverda: deploy/ papkasi + .env (namuna: .env.example).
+# Ishga tushirish va yangilash: docs/DEPLOY.md
+name: medix
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "20m", max-file: "5" }
+
+services:
+  postgres:
+    image: ghcr.io/xudoyberdiyev-dev/medix-postgres:${MEDIX_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: medix
+      POSTGRES_USER: medix
+      POSTGRES_PASSWORD: ${MEDIX_DB_PASSWORD:?MEDIX_DB_PASSWORD .env da berilmagan}
+      TZ: Asia/Tashkent
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=pgbackrest --stanza=medix archive-push %p
+      - -c
+      - archive_timeout=300
+      - -c
+      - max_wal_senders=3
+      - -c
+      - shared_buffers=1GB
+      - -c
+      - effective_cache_size=3GB
+      - -c
+      - log_timezone=Asia/Tashkent
+      - -c
+      - timezone=UTC
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - pgbackrest:/var/lib/pgbackrest
+      - pgbackrest-spool:/var/spool/pgbackrest
+      - ./pgbackrest/conf.d:/etc/pgbackrest/conf.d:ro
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medix -d medix"]
+      interval: 10s
+      retries: 10
+    logging: *logging
+
+  backend:
+    image: ghcr.io/xudoyberdiyev-dev/medix-backend:${MEDIX_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      MEDIX_DB_URL: jdbc:postgresql://postgres:5432/medix
+      MEDIX_DB_USER: medix
+      MEDIX_DB_PASSWORD: ${MEDIX_DB_PASSWORD}
+      MEDIX_COOKIE_SECURE: "true"
+      # Caddy ortida: mijoz IP (audit) va https sxemasi X-Forwarded-* dan
+      MEDIX_FORWARD_HEADERS: native
+      MEDIX_BOOTSTRAP_LOGIN: ${MEDIX_BOOTSTRAP_LOGIN:-}
+      MEDIX_BOOTSTRAP_PASSWORD: ${MEDIX_BOOTSTRAP_PASSWORD:-}
+    depends_on:
+      postgres: { condition: service_healthy }
+    mem_limit: ${MEDIX_BACKEND_MEMORY:-2g}
+    logging: *logging
+
+  frontend:
+    image: ghcr.io/xudoyberdiyev-dev/medix-frontend:${MEDIX_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://backend:8080
+    depends_on: [backend]
+    mem_limit: 1g
+    logging: *logging
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      MEDIX_DOMAIN: ${MEDIX_DOMAIN:?MEDIX_DOMAIN .env da berilmagan}
+      MEDIX_TLS: ${MEDIX_TLS:?MEDIX_TLS .env da berilmagan}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [frontend, backend]
+    logging: *logging
+
+volumes:
+  pgdata:
+  pgbackrest:
+  pgbackrest-spool:
+  caddy-data:
+  caddy-config:

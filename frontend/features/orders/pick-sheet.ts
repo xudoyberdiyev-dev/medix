@@ -30,6 +30,13 @@ export function parseIds(raw: string | null): number[] {
   return out.slice(0, 20);
 }
 
+/** Yigʻiladigan qatorlar: qator boʻyicha qaytarilgan boʻlsa — faqat shular, aks holda hammasi. */
+export function repickLines<L extends { id: number }>(d: { lines: L[]; repickLineIds?: number[] }): L[] {
+  if (!d.repickLineIds || d.repickLineIds.length === 0) return d.lines;
+  const set = new Set(d.repickLineIds);
+  return d.lines.filter((l) => set.has(l.id));
+}
+
 /**
  * Bir necha buyurtma bitta varaqda (SPEC: chop etish shakllari): zahiradagi partiyalar zona → mahsulot →
  * yaroqlilik muddati boʻyicha tartiblanadi, yigʻuvchi omborni bir marta aylanib chiqadi.
@@ -38,7 +45,7 @@ export function parseIds(raw: string | null): number[] {
 export function buildPickSheet(orders: OrderDetail[]): PickSheet {
   const map = new Map<string, PickSheetRow>();
   for (const o of orders) {
-    for (const l of o.lines) {
+    for (const l of repickLines(o)) {
       const parts = l.reserved.length > 0 ? l.reserved : [{ zone: "", batch: "", expiryDate: "", qty: l.qty }];
       for (const r of parts) {
         const key = [r.zone, l.productCode, r.batch].join("\u0000");
@@ -74,9 +81,9 @@ export function buildPickSheet(orders: OrderDetail[]): PickSheet {
       id: o.id,
       number: o.number,
       customer: o.customer,
-      lines: o.lines.length,
-      qty: o.lines.reduce((s, l) => s + l.qty, 0),
-      marked: o.lines.some((l) => l.marked),
+      lines: repickLines(o).length,
+      qty: repickLines(o).reduce((s, l) => s + l.qty, 0),
+      marked: repickLines(o).some((l) => l.marked),
     })),
     totalQty: rows.reduce((s, r) => s + r.qty, 0),
   };

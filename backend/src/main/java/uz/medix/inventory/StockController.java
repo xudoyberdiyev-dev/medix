@@ -1,6 +1,7 @@
 package uz.medix.inventory;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -85,10 +86,13 @@ class StockController {
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean sellableOnly,
             @RequestParam(required = false) Integer expiringWithinDays,
+            @Parameter(description = "Berilmasa: nom (muddat nazoratida — yaroqlilik)") @RequestParam(required = false) StockSort sort,
+            @RequestParam(defaultValue = "false") boolean desc,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             Authentication auth) {
-        return query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, Math.max(page, 0), Math.clamp(size, 1, 200), auth);
+        return query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, orderBy(sort, desc, expiringWithinDays != null),
+                Math.max(page, 0), Math.clamp(size, 1, 200), auth);
     }
 
     /** Qoldiqlar .xlsx — jadvaldagi filtrlar bilan, ko'pi bilan {@value #MAX_EXPORT_ROWS} qator. Tannarx faqat special.cost bilan. */
@@ -102,9 +106,12 @@ class StockController {
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean sellableOnly,
             @RequestParam(required = false) Integer expiringWithinDays,
+            @RequestParam(required = false) StockSort sort,
+            @RequestParam(defaultValue = "false") boolean desc,
             Authentication auth,
             HttpServletResponse response) throws IOException {
-        StockPage data = query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, 0, MAX_EXPORT_ROWS, auth);
+        StockPage data = query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, orderBy(sort, desc, expiringWithinDays != null), 0,
+                MAX_EXPORT_ROWS, auth);
         boolean showCost = auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition",
@@ -167,8 +174,23 @@ class StockController {
         }
     }
 
-    private StockPage query(Long branchId, Long warehouseId, String q, boolean sellableOnly, Integer expiringWithinDays, int safePage,
-            int safeSize, Authentication auth) {
+    /** Jadval saralash ustuni (SPEC 4 «Jadvallar standarti»). */
+    enum StockSort { NAME, CODE, EXPIRY, QTY, WAREHOUSE }
+
+    static String orderBy(StockSort sort, boolean desc, boolean expiryControl) {
+        String dir = desc ? " DESC" : "";
+        StockSort s = sort != null ? sort : expiryControl ? StockSort.EXPIRY : StockSort.NAME;
+        return switch (s) {
+            case NAME -> "lower(p.name)" + dir + ", b.expiry_date";
+            case CODE -> "p.code" + dir + ", b.expiry_date";
+            case EXPIRY -> "b.expiry_date" + dir + ", lower(p.name)";
+            case QTY -> "s.qty" + dir + ", lower(p.name)";
+            case WAREHOUSE -> "lower(w.name)" + dir + ", lower(z.name), lower(p.name)";
+        };
+    }
+
+    private StockPage query(Long branchId, Long warehouseId, String q, boolean sellableOnly, Integer expiringWithinDays, String orderBy,
+            int safePage, int safeSize, Authentication auth) {
         Actor actor = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
         boolean showCost = auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
         LocalDate today = LocalDate.now(clock.withZone(TASHKENT));
@@ -216,7 +238,7 @@ class StockController {
         List<StockRow> items = jdbc.sql("""
                 SELECT p.id AS product_id, p.code, p.name, m.name AS manufacturer, b.id AS batch_id, b.number, b.expiry_date,
                        w.id AS warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone, z.type, z.sellable, s.qty, b.cost, b.bonus
-                """ + from + where + " ORDER BY " + (expiringWithinDays != null ? "b.expiry_date, lower(p.name)" : "lower(p.name), b.expiry_date")
+                """ + from + where + " ORDER BY " + orderBy
                         + ", s.zone_id, s.batch_id LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", safeSize)

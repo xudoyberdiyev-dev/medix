@@ -143,6 +143,7 @@ final class ReceiptModels {
             ReceiptStatus status,
             @Schema(nullable = true) Resolution resolution,
             boolean pricesVisible,
+            @Schema(description = "Qatorlarda narx kiritilgan: narxni ko'rmaydigan xodim qoralamani tahrirlay olmaydi, faqat qabul qiladi") boolean hasPrices,
             @Schema(nullable = true, description = "Hujjat bo'yicha summa (narx × soni)") String amount,
             @Schema(nullable = true, description = "Haqiqiy soni bo'yicha summa (qabuldan keyin)") String actualAmount,
             @Schema(nullable = true, description = "Yozilgan qarz (o'tkazilgandan keyin)") String debtAmount,

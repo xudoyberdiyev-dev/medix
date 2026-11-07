@@ -58,7 +58,7 @@ final class WriteOffModels {
             @Schema(nullable = true) String postedBy, @Schema(nullable = true) Instant postedAt,
             @Schema(nullable = true) String rejectedBy, @Schema(nullable = true) Instant rejectedAt,
             @Schema(nullable = true) String rejectReason,
-            @Schema(nullable = true, description = "OK kamomadidan bo'lsa — OK raqami (qoldiq harakati yo'q)") String sourceTransfer,
+            @Schema(nullable = true, description = "OK / FS kamomadidan bo'lsa — OK yoki FS raqami (qoldiq harakati yo'q)") String sourceTransfer,
             long totalQty, List<WriteOffLine> lines) {
 
         /** Tannarxsiz nusxa (prices.cost ruxsati yo'q xodimlar uchun). */

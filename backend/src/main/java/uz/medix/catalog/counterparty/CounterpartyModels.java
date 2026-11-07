@@ -19,6 +19,9 @@ final class CounterpartyModels {
 
     enum Status { ACTIVE, BLOCKED, INACTIVE, ALL }
 
+    /** Ro'yxat saralash ustuni (SPEC 4 «Jadvallar standarti»). */
+    enum SortField { NAME, TIN, REGION, LICENSE }
+
     enum PaymentType { CASH, TRANSFER, ONLINE }
 
     record Ref(long id, String name) {}

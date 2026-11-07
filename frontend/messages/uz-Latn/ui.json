@@ -1,0 +1,55 @@
+{
+  "noResults": "Hech narsa topilmadi",
+  "noResultsHint": "Qidiruv soʻzini yoki filtrlarni oʻzgartiring.",
+  "clearFilters": "Filtrlarni tozalash",
+  "forbidden": "Ruxsat yoʻq",
+  "forbiddenHint": "Bu boʻlimni koʻrish uchun ruxsatingiz yoʻq. Administratorga murojaat qiling.",
+  "loadError": "Maʼlumot yuklanmadi",
+  "loadErrorHint": "Internet aloqasini tekshirib, qayta urinib koʻring.",
+  "retry": "Qayta urinish",
+  "clear": "Tozalash",
+  "hidePassword": "Parolni yashirish",
+  "showPassword": "Parolni koʻrsatish",
+  "choose": "Tanlang",
+  "search": "Qidirish",
+  "removeItem": "{name} — olib tashlash",
+  "selectEmpty": "Hech narsa topilmadi. Boshqa soʻz bilan qidiring.",
+  "close": "Yopish",
+  "removeFilter": "{what} filtrini olib tashlash",
+  "status": {
+    "draft": "Qoralama",
+    "pending": "Tasdiqlashda",
+    "approved": "Tasdiqlangan",
+    "cancelled": "Bekor qilingan",
+    "valid": "Yaroqli",
+    "expiring": "Muddati yaqin",
+    "expired": "Muddati oʻtgan",
+    "in_transit": "Yoʻlda",
+    "reserved": "Band qilingan"
+  },
+  "pagination": {
+    "label": "Sahifalash",
+    "perPage": "Sahifada:",
+    "prev": "Oldingi sahifa",
+    "next": "Keyingi sahifa"
+  },
+  "table": {
+    "selectAll": "Sahifadagi barcha qatorlarni tanlash",
+    "selectRow": "Qatorni tanlash"
+  },
+  "views": {
+    "button": "Koʻrinishlar",
+    "none": "Hali saqlangan koʻrinish yoʻq. Filtr va ustunlarni tanlab, nom bering.",
+    "empty": "Koʻrinish nomini yozing",
+    "tooLong": "Nom {max} belgidan oshmasin — qisqaroq yozing",
+    "limit": "{max} tadan koʻp koʻrinish saqlanmaydi — keraksizini oʻchiring",
+    "delete": "Oʻchirish",
+    "deleteNamed": "Oʻchirish: {name}",
+    "newName": "Yangi koʻrinish nomi",
+    "save": "Saqlash"
+  },
+  "placeholder": {
+    "title": "Bu boʻlim hali qurilmoqda",
+    "description": "Ish rejasi va qaysi bosqichda tayyor boʻlishi PLAN.md faylida yozilgan."
+  }
+}

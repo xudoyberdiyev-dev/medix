@@ -146,9 +146,10 @@ class WriteOffs {
                 SELECT h.id, h.number, h.branch_id, h.warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone_name,
                        z.type AS zone_type, h.reason, h.act_no, h.commission, h.note, h.status, h.needs_director, h.total_cost,
                        cb.full_name AS created_by, h.created_at, pb.full_name AS posted_by, h.posted_at, rb.full_name AS rejected_by,
-                       h.rejected_at, h.reject_reason, st.number AS source_transfer
+                       h.rejected_at, h.reject_reason, COALESCE(st.number, sf.number) AS source_transfer
                 FROM write_off h
                 LEFT JOIN warehouse_transfer st ON st.id = h.source_transfer_id
+                LEFT JOIN branch_sale sf ON sf.id = h.source_branch_sale_id
                 JOIN warehouse w ON w.id = h.warehouse_id
                 JOIN zone z ON z.id = h.zone_id
                 JOIN employee cb ON cb.id = h.created_by
@@ -244,6 +245,12 @@ class WriteOffs {
      */
     Created insert(Actor actor, ZoneInfo zone, Reason reason, String actNo, String commission, String note, List<LineQty> req,
             Long sourceTransfer) {
+        return insert(actor, zone, reason, actNo, commission, note, req, sourceTransfer, null);
+    }
+
+    /** {@code sourceBranchSale} — FS kamomadi (qoldiq harakati bo'lmaydi, tovar jo'natishda allaqachon chiqqan). */
+    Created insert(Actor actor, ZoneInfo zone, Reason reason, String actNo, String commission, String note, List<LineQty> req,
+            Long sourceTransfer, Long sourceBranchSale) {
         record Priced(long batchId, long productId, int qty, Money cost, Money amount) {}
         List<Priced> priced = new ArrayList<>();
         Money total = Money.ZERO;
@@ -263,8 +270,8 @@ class WriteOffs {
         String number = numbers.next(DocumentPrefix.HC, zone.branchCode()).toString();
         long id = jdbc.sql("""
                 INSERT INTO write_off (number, branch_id, warehouse_id, zone_id, reason, act_no, commission, note, total_cost, needs_director,
-                                       status, created_by, source_transfer_id)
-                VALUES (:n, :b, :w, :z, :r, :act, :com, :note, :total, :dir, 'PENDING', :by, :src) RETURNING id""")
+                                       status, created_by, source_transfer_id, source_branch_sale_id)
+                VALUES (:n, :b, :w, :z, :r, :act, :com, :note, :total, :dir, 'PENDING', :by, :src, :srcFs) RETURNING id""")
                 .param("n", number)
                 .param("b", zone.branchId())
                 .param("w", zone.warehouseId())
@@ -277,6 +284,7 @@ class WriteOffs {
                 .param("dir", director)
                 .param("by", actor.employeeId())
                 .param("src", sourceTransfer)
+                .param("srcFs", sourceBranchSale)
                 .query(Long.class)
                 .single();
         int lineNo = 0;
@@ -296,7 +304,8 @@ class WriteOffs {
         long qty = priced.stream().mapToLong(Priced::qty).sum();
         audit.record(AuditEntry.of("hc.create", "write_off", id)
                 .change(null, Map.of("number", number, "reason", reason.name(), "lines", priced.size(), "total", total.toString(),
-                        "director", director, "sourceTransfer", sourceTransfer == null ? "" : String.valueOf(sourceTransfer))), actor);
+                        "director", director, "sourceTransfer", sourceTransfer == null ? "" : String.valueOf(sourceTransfer),
+                        "sourceBranchSale", sourceBranchSale == null ? "" : String.valueOf(sourceBranchSale))), actor);
         return new Created(id, number, director, qty);
     }
 
@@ -342,9 +351,9 @@ class WriteOffs {
 
     private void doPost(Actor actor, long id, String number, long zone) {
         List<LineQty> lines = lines(id);
-        boolean shortage = jdbc.sql("SELECT source_transfer_id IS NOT NULL FROM write_off WHERE id = :id").param("id", id)
+        boolean shortage = jdbc.sql("SELECT source_transfer_id IS NOT NULL OR source_branch_sale_id IS NOT NULL FROM write_off WHERE id = :id").param("id", id)
                 .query(Boolean.class).single();
-        // OK kamomadi: tovar jo'natishda zonadan allaqachon chiqqan — qoldiq harakati yo'q, faqat hujjat
+        // OK / FS kamomadi: tovar jo'natishda zonadan allaqachon chiqqan — qoldiq harakati yo'q, faqat hujjat
         if (!shortage) {
             checkFree(zone, lines);
             List<Move> moves = new ArrayList<>();

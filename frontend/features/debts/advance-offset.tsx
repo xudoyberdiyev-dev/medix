@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { ArrowRightLeft } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -18,6 +19,7 @@ type Side = "CUSTOMER" | "SUPPLIER";
 
 /** Avansni hisobga olish (AH): avans eng eski qarzlarga yopiladi. Tugma faqat avans va ochiq qarz bo'lsa ko'rinadi. */
 export function AdvanceOffsetButton(props: { side: Side; branchId: number | null; counterpartyId: number }) {
+  const t = useTranslations("debts.offset");
   const me = useMe();
   const qc = useQueryClient();
   const allowed = can(me.data, props.side === "CUSTOMER" ? "payments.mt" : "payments.yt") && can(me.data, "payments.view");
@@ -50,7 +52,7 @@ export function AdvanceOffsetButton(props: { side: Side; branchId: number | null
           : await unwrap(api.POST("/api/advance-offsets/supplier", { body }));
       await qc.invalidateQueries({ queryKey: ["debts"] });
       await qc.invalidateQueries({ queryKey: ["payments"] });
-      toast({ tone: "success", title: "Avans hisobga olindi", description: `${r.number} · ${formatMoney(r.amount)} soʻm` });
+      toast({ tone: "success", title: t("done"), description: t("doneDescription", { number: r.number, amount: formatMoney(r.amount) }) });
       setOpen(false);
     } catch (e) {
       setError(e);
@@ -64,22 +66,25 @@ export function AdvanceOffsetButton(props: { side: Side; branchId: number | null
   return (
     <>
       <Button variant="secondary" icon={ArrowRightLeft} onClick={() => setOpen(true)}>
-        Avansni hisobga olish
+        {t("button")}
       </Button>
       {open ? (
         <Modal
           open
           onClose={() => setOpen(false)}
           size="lg"
-          title="Avansni hisobga olish (AH)"
-          primaryAction={{ label: "Hisobga olish", onClick: () => void submit(), loading: pending }}
+          title={t("title")}
+          primaryAction={{ label: t("submit"), onClick: () => void submit(), loading: pending }}
         >
           <div className="flex flex-col gap-4">
             {err.message ? <Alert tone="danger" title={err.message} /> : null}
             <p>
-              Avans <span className="font-mono tabular-nums">{formatMoney(p.advance)}</span> soʻm, ochiq qarz{" "}
-              <span className="font-mono tabular-nums">{formatMoney(p.debt)}</span> soʻm. Eng eski qarzlardan boshlab{" "}
-              <span className="font-mono tabular-nums">{formatMoney(p.available)}</span> soʻm yopiladi.
+              {t.rich("summary", {
+                advance: formatMoney(p.advance),
+                debt: formatMoney(p.debt),
+                available: formatMoney(p.available),
+                num: (chunks) => <span className="font-mono tabular-nums">{chunks}</span>,
+              })}
             </p>
             <ul className="flex flex-col">
               {p.lines.map((l) => (
@@ -92,12 +97,12 @@ export function AdvanceOffsetButton(props: { side: Side; branchId: number | null
               ))}
             </ul>
             <TextField
-              label="Summa (ixtiyoriy)"
+              label={t("amount")}
               variant="amount"
               value={amount}
               onChange={setAmount}
-              suffix="soʻm"
-              hint="Boʻsh qoldirilsa — butun avans hisobga olinadi"
+              suffix={t("currency")}
+              hint={t("amountHint")}
             />
           </div>
         </Modal>

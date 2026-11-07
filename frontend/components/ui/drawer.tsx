@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import type { MouseEvent, ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -25,6 +26,7 @@ export interface DrawerProps {
 
 /** Yon panel (design/system: Drawer) — jadvaldan chiqmasdan yozuvni koʻrish/tahrirlash, oʻngdan ochiladi. */
 export function Drawer({ open, onClose, size = "sm", kind, title, subtitle, status, tabs, children, actions }: DrawerProps) {
+  const t = useTranslations("ui");
   const ref = useDialog(open, onClose);
 
   function onBackdropClick(e: MouseEvent<HTMLDialogElement>) {
@@ -56,7 +58,7 @@ export function Drawer({ open, onClose, size = "sm", kind, title, subtitle, stat
             </div>
           ) : null}
         </div>
-        <Button variant="icon" icon={X} aria-label="Yopish" title="Yopish" onClick={onClose} />
+        <Button variant="icon" icon={X} aria-label={t("close")} title={t("close")} onClick={onClose} />
       </div>
       {tabs ? (
         <div className="px-6">

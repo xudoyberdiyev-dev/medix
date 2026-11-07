@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ClipboardCheck, Lock, PackagePlus, Printer, RotateCcw, Save, ScanSearch, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useWarehouses, ZONE_LABELS } from "@/features/organization/api";
+import { useWarehouses, ZONE_LABELS, zoneLabel } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
 import { formatDate, formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import {
@@ -41,11 +42,12 @@ import {
 } from "./api";
 import { InventoryCountStatusBadge } from "./inventory-counts-page";
 
-const KIND = "Inventarizatsiya";
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
 const signed = (n: number) => (n > 0 ? `+${formatQuantity(n)}` : formatQuantity(n));
 
 export function InventoryCountDrawer(props: { id: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("inventoryCounts");
+  const KIND = t("title");
   const doc = useInventoryCount(props.id);
   if (props.id === null) return <CreateForm onClose={props.onClose} onCreated={props.onCreated} />;
   if (doc.error)
@@ -56,7 +58,7 @@ export function InventoryCountDrawer(props: { id: number | null; onClose: () => 
     );
   if (!doc.data)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind={KIND} title="Yuklanmoqda…">
+      <Drawer open onClose={props.onClose} size="lg" kind={KIND} title={t("drawer.loading")}>
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
@@ -64,6 +66,8 @@ export function InventoryCountDrawer(props: { id: number | null; onClose: () => 
 }
 
 function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void }) {
+  const t = useTranslations("inventoryCounts");
+  const KIND = t("title");
   const me = useMe();
   const start = useStartInventoryCount();
   const save = useSaveCounts();
@@ -85,13 +89,14 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
   const level = can(me.data, IN_APPROVE) && (!doc.needsDirector || can(me.data, IN_DIRECTOR));
   const withCost = doc.lines.some((l) => l.cost != null);
   const pending = changedEntries(doc.lines, draft);
+  const pendingError = pending.error ? t("errors.qty", pending.error) : null;
   const pct = progress(doc.lines);
 
   const fail = (e: unknown) =>
-    toast({ tone: "danger", title: "Bajarilmadi", description: describeError(e).message ?? "Qayta urinib koʻring." });
+    toast({ tone: "danger", title: t("drawer.failed"), description: describeError(e).message ?? t("drawer.retryHint") });
 
   const saveDraft = (then?: () => void) => {
-    if (pending.error) return setError(pending.error);
+    if (pendingError) return setError(pendingError);
     if (pending.entries.length === 0) return then ? then() : undefined;
     save.mutate(
       { id: doc.id, entries: pending.entries },
@@ -100,9 +105,14 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
           setDraft({});
           setError(null);
           if (then) then();
-          else toast({ tone: "success", title: "Sanoq saqlandi", description: `${pending.entries.length} ta qator` });
+          else
+            toast({
+              tone: "success",
+              title: t("drawer.countSaved"),
+              description: t("drawer.linesCount", { count: pending.entries.length }),
+            });
         },
-        onError: (e) => setError(describeError(e).message ?? "Saqlanmadi. Qayta urinib koʻring."),
+        onError: (e) => setError(describeError(e).message ?? t("drawer.notSaved")),
       },
     );
   };
@@ -110,8 +120,8 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
   const sendToCheck = () =>
     saveDraft(() =>
       submit.mutate(doc.id, {
-        onSuccess: (d) => toast({ tone: "success", title: "Tekshiruvga yuborildi", description: d.number }),
-        onError: (e) => setError(describeError(e).message ?? "Yuborilmadi. Qayta urinib koʻring."),
+        onSuccess: (d) => toast({ tone: "success", title: t("drawer.sentToCheck"), description: d.number }),
+        onError: (e) => setError(describeError(e).message ?? t("drawer.notSent")),
       }),
     );
 
@@ -122,10 +132,10 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
   });
 
   const columns: TableColumn<InventoryCountLine>[] = [
-    ...(doc.zone ? [] : [{ key: "zone", title: "Zona", render: (l: InventoryCountLine) => l.zone.name }]),
+    ...(doc.zone ? [] : [{ key: "zone", title: t("drawer.zone"), render: (l: InventoryCountLine) => l.zone.name }]),
     {
       key: "productName",
-      title: "Mahsulot",
+      title: t("drawer.product"),
       wrap: true,
       render: (l) => (
         <span className="flex flex-wrap items-center gap-2">
@@ -135,42 +145,42 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
           </span>
           {l.controlled ? (
             <Badge tone="danger" icon={Lock}>
-              Nazoratda
+              {t("drawer.controlled")}
             </Badge>
           ) : null}
           {l.added ? (
             <Badge tone="info" icon={PackagePlus}>
-              Topildi
+              {t("drawer.found")}
             </Badge>
           ) : null}
         </span>
       ),
     },
-    { key: "batchNumber", title: "Partiya", mono: true },
-    { key: "expiryDate", title: "Yaroqlilik", render: (l) => day(l.expiryDate) },
+    { key: "batchNumber", title: t("drawer.batch"), mono: true },
+    { key: "expiryDate", title: t("drawer.expiry"), render: (l) => day(l.expiryDate) },
     ...(doc.bookHidden
       ? []
       : [
           {
             key: "bookQty",
-            title: "Hisobda",
+            title: t("drawer.book"),
             align: "right" as const,
             render: (l: InventoryCountLine) => (l.bookQty != null ? formatQuantity(l.bookQty) : "—"),
           },
         ]),
     {
       key: "countedQty",
-      title: "Sanaldi",
+      title: t("drawer.counted"),
       align: "right",
       render: (l) =>
         canCount ? (
           <div className="ml-auto w-24">
             <TextField
-              label={`${l.productName} ${l.batchNumber} — sanalgan soni`}
+              label={t("drawer.countedLabel", { product: l.productName, batch: l.batchNumber })}
               className="[&>label]:sr-only"
               value={draft[l.id] ?? (l.countedQty != null ? String(l.countedQty) : "")}
               onChange={(v) => (setDraft((d) => ({ ...d, [l.id]: v })), setError(null))}
-              placeholder="soni"
+              placeholder={t("drawer.qtyPlaceholder")}
               inputMode="numeric"
             />
           </div>
@@ -185,7 +195,7 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
       : [
           {
             key: "diff",
-            title: "Farq",
+            title: t("drawer.diff"),
             align: "right" as const,
             render: (l: InventoryCountLine) =>
               l.diff == null || l.diff === 0 ? "—" : <span className={l.diff < 0 ? "text-danger" : "text-success"}>{signed(l.diff)}</span>,
@@ -195,7 +205,7 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
       ? [
           {
             key: "diffAmount",
-            title: "Farq summasi",
+            title: t("drawer.diffAmount"),
             align: "right" as const,
             render: (l: InventoryCountLine) => (l.diffAmount != null && l.diff ? formatMoney(l.diffAmount) : "—"),
           },
@@ -220,12 +230,12 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
               icon={Printer}
               onClick={() => window.open(`/api/inventory-counts/${doc.id}/pdf`, "_blank", "noopener")}
             >
-              {counting ? "Sanoq varagʻini chop etish" : "Qaydnomani chop etish"}
+              {counting ? t("drawer.printSheet") : t("drawer.printReport")}
             </Button>
           ) : null}
           {!finished && can(me.data, IN_CREATE) ? (
             <Button variant="tertiary" icon={X} onClick={() => setCancelling(true)}>
-              Bekor qilish
+              {t("drawer.cancel")}
             </Button>
           ) : null}
           {doc.status === "DRAFT" && canOpen ? (
@@ -234,21 +244,26 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
               loading={start.isPending}
               onClick={() =>
                 start.mutate(doc.id, {
-                  onSuccess: (d) => toast({ tone: "success", title: "Sanoq ochildi", description: `${d.lines.length} ta qator` }),
+                  onSuccess: (d) =>
+                    toast({
+                      tone: "success",
+                      title: t("drawer.countOpened"),
+                      description: t("drawer.linesCount", { count: d.lines.length }),
+                    }),
                   onError: fail,
                 })
               }
             >
-              Sanoqni ochish
+              {t("drawer.openCount")}
             </Button>
           ) : null}
           {canCount ? (
             <>
               <Button variant="secondary" icon={Save} loading={save.isPending && !submit.isPending} onClick={() => saveDraft()}>
-                Saqlash
+                {t("drawer.save")}
               </Button>
               <Button icon={ClipboardCheck} loading={submit.isPending} onClick={sendToCheck}>
-                Tekshiruvga yuborish
+                {t("drawer.sendToCheck")}
               </Button>
             </>
           ) : null}
@@ -260,10 +275,10 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
                   icon={RotateCcw}
                   loading={recount.isPending}
                   onClick={() =>
-                    recount.mutate(doc.id, { onSuccess: () => toast({ tone: "info", title: "Qayta sanashga qaytarildi" }), onError: fail })
+                    recount.mutate(doc.id, { onSuccess: () => toast({ tone: "info", title: t("drawer.sentToRecount") }), onError: fail })
                   }
                 >
-                  Qayta sanash
+                  {t("drawer.recount")}
                 </Button>
               ) : null}
               {level ? (
@@ -272,12 +287,12 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
                   loading={approve.isPending}
                   onClick={() =>
                     approve.mutate(doc.id, {
-                      onSuccess: (d) => toast({ tone: "success", title: "Tasdiqlandi, qoldiq tuzatildi", description: d.number }),
+                      onSuccess: (d) => toast({ tone: "success", title: t("drawer.approved"), description: d.number }),
                       onError: fail,
                     })
                   }
                 >
-                  Tasdiqlash
+                  {t("drawer.approve")}
                 </Button>
               ) : null}
             </>
@@ -287,77 +302,76 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
     >
       <div className="flex flex-col gap-4">
         {error ? (
-          <Alert tone="danger" title="Bajarilmadi">
+          <Alert tone="danger" title={t("drawer.failed")}>
             {error}
           </Alert>
         ) : null}
         {doc.status === "DRAFT" ? (
-          <Alert tone="info" title="Sanoq hali ochilmagan">
-            Sanoq ochilganda hisobdagi qoldiq qayd etiladi va {doc.zone ? `«${doc.zone.name}» zonasida` : "butun omborda"} ombor harakatlari
-            (kirim, yigʻish, koʻchirish) sanoq tugaguncha toʻxtatiladi.
+          <Alert tone="info" title={t("drawer.draftTitle")}>
+            {t("drawer.draftHint", {
+              scope: doc.zone ? t("drawer.inZone", { name: doc.zone.name }) : t("drawer.inWholeWarehouse"),
+            })}
           </Alert>
         ) : null}
         {counting ? (
-          <Alert tone="warning" title={`Sanoq ketmoqda · ${pct}%`}>
-            {doc.zone ? `«${doc.zone.name}» zonasida` : "Omborda"} ombor harakatlari toʻxtatilgan. Har bir partiyani sanab miqdorini
-            kiriting (yoʻq boʻlsa — 0).{doc.bookHidden ? " Koʻr sanoq: hisobdagi qoldiq koʻrsatilmaydi." : ""}
+          <Alert tone="warning" title={t("drawer.countingTitle", { pct: String(pct) })}>
+            {t("drawer.countingHint", {
+              scope: doc.zone ? t("drawer.inZoneStart", { name: doc.zone.name }) : t("drawer.inWarehouse"),
+            })}
+            {doc.bookHidden ? ` ${t("drawer.blindHint")}` : ""}
           </Alert>
         ) : null}
         {doc.status === "CHECK" ? (
-          <Alert tone="warning" title={doc.needsDirector ? "Direktor tasdigʻi kutilmoqda" : "Tasdiq kutilmoqda"}>
-            {doc.needsDirector
-              ? `Kamomad tannarxi ${formatMoney(IN_DIRECTOR_LIMIT)} dan katta yoki nazoratdagi tovarda farq bor — Direktor tasdiqlaydi. `
-              : "Filial rahbari yoki Direktor tasdiqlaydi. "}
-            Tasdiqlanganda farqlar qoldiqqa yoziladi va qulf yechiladi.
+          <Alert tone="warning" title={doc.needsDirector ? t("drawer.waitingDirector") : t("drawer.waitingApproval")}>
+            {doc.needsDirector ? t("drawer.directorHint", { limit: formatMoney(IN_DIRECTOR_LIMIT) }) : t("drawer.managerHint")}{" "}
+            {t("drawer.approveHint")}
           </Alert>
         ) : null}
         {doc.status === "CANCELLED" ? (
-          <Alert tone="info" title={`Bekor qilindi: ${doc.cancelReason ?? ""}`}>
-            {doc.cancelledBy} — qoldiq oʻzgarmadi.
+          <Alert tone="info" title={t("drawer.cancelledTitle", { reason: doc.cancelReason ?? "" })}>
+            {t("drawer.cancelledBody", { name: doc.cancelledBy ?? "" })}
           </Alert>
         ) : null}
         <dl className="grid grid-cols-4 gap-4 text-body">
           <div>
-            <dt className="text-caption text-text-secondary">Ombor · qamrov</dt>
+            <dt className="text-caption text-text-secondary">{t("drawer.scope")}</dt>
             <dd>
-              {doc.warehouse} · {doc.zone ? doc.zone.name : "butun ombor"}
+              {doc.warehouse} · {doc.zone ? doc.zone.name : t("drawer.wholeWarehouse")}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Sanaldi</dt>
-            <dd>
-              {formatQuantity(doc.counted)} / {formatQuantity(doc.lines.length)} qator
-            </dd>
+            <dt className="text-caption text-text-secondary">{t("drawer.counted")}</dt>
+            <dd>{t("drawer.countedOf", { counted: formatQuantity(doc.counted), total: formatQuantity(doc.lines.length) })}</dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Kamomad</dt>
+            <dt className="text-caption text-text-secondary">{t("drawer.shortage")}</dt>
             <dd>
-              {formatQuantity(doc.shortageQty)} dona
+              {t("drawer.pcs", { qty: formatQuantity(doc.shortageQty) })}
               {doc.shortageCost != null && doc.shortageQty ? ` · ${formatMoney(doc.shortageCost)}` : ""}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Ortiqcha</dt>
+            <dt className="text-caption text-text-secondary">{t("drawer.surplus")}</dt>
             <dd>
-              {formatQuantity(doc.surplusQty)} dona
+              {t("drawer.pcs", { qty: formatQuantity(doc.surplusQty) })}
               {doc.surplusCost != null && doc.surplusQty ? ` · ${formatMoney(doc.surplusCost)}` : ""}
             </dd>
           </div>
           {doc.commission ? (
             <div className="col-span-2">
-              <dt className="text-caption text-text-secondary">Komissiya</dt>
+              <dt className="text-caption text-text-secondary">{t("drawer.commission")}</dt>
               <dd>{doc.commission}</dd>
             </div>
           ) : null}
           {doc.note ? (
             <div className="col-span-2">
-              <dt className="text-caption text-text-secondary">Izoh</dt>
+              <dt className="text-caption text-text-secondary">{t("drawer.note")}</dt>
               <dd>{doc.note}</dd>
             </div>
           ) : null}
           {doc.startedBy ? (
             <div className="col-span-2">
-              <dt className="text-caption text-text-secondary">Sanoqni ochdi</dt>
+              <dt className="text-caption text-text-secondary">{t("drawer.startedBy")}</dt>
               <dd>
                 {doc.startedBy}
                 {doc.startedAt ? ` · ${formatDateTime(new Date(doc.startedAt))}` : ""}
@@ -366,7 +380,7 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
           ) : null}
           {doc.postedBy ? (
             <div className="col-span-2">
-              <dt className="text-caption text-text-secondary">Tasdiqladi</dt>
+              <dt className="text-caption text-text-secondary">{t("drawer.postedBy")}</dt>
               <dd>
                 {doc.postedBy}
                 {doc.postedAt ? ` · ${formatDateTime(new Date(doc.postedAt))}` : ""}
@@ -377,23 +391,21 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
         {doc.status !== "DRAFT" ? (
           <>
             <div className="flex items-center justify-between gap-4">
-              <Checkbox label={counting ? "Faqat sanalmaganlar" : "Faqat farqi borlar"} checked={onlyOpen} onChange={setOnlyOpen} />
+              <Checkbox label={counting ? t("drawer.onlyUncounted") : t("drawer.onlyDiff")} checked={onlyOpen} onChange={setOnlyOpen} />
               {canCount ? (
                 <Button variant="secondary" size="sm" icon={PackagePlus} onClick={() => setAdding(true)}>
-                  Topilgan partiya
+                  {t("drawer.foundBatch")}
                 </Button>
               ) : null}
             </div>
             <Table
-              caption="Sanoq qatorlari"
+              caption={t("drawer.linesCaption")}
               density="compact"
               columns={columns}
               rows={rows}
               rowKey={(l) => String(l.id)}
               emptyState={
-                <p className="p-6 text-center text-body text-text-secondary">
-                  {onlyOpen ? "Bunday qator yoʻq." : "Qamrovda tovar yoʻq — topilgan partiyani qoʻshing yoki bekor qiling."}
-                </p>
+                <p className="p-6 text-center text-body text-text-secondary">{onlyOpen ? t("drawer.noSuchLines") : t("drawer.noGoods")}</p>
               }
             />
           </>
@@ -402,20 +414,26 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
       <Modal
         open={cancelling}
         onClose={() => setCancelling(false)}
-        title="Inventarizatsiyani bekor qilish"
+        title={t("drawer.cancelTitle")}
         tone="danger"
         primaryAction={{
-          label: "Bekor qilish",
+          label: t("drawer.cancel"),
           loading: cancel.isPending,
           disabled: cancelReason.trim() === "",
           onClick: () =>
             cancel.mutate(
               { id: doc.id, reason: cancelReason.trim() },
-              { onSuccess: () => (setCancelling(false), toast({ tone: "success", title: "Bekor qilindi, qulf yechildi" })), onError: fail },
+              { onSuccess: () => (setCancelling(false), toast({ tone: "success", title: t("drawer.cancelledUnlocked") })), onError: fail },
             ),
         }}
       >
-        <TextField label="Sabab" value={cancelReason} onChange={setCancelReason} placeholder="Masalan: komissiya toʻliq emas" required />
+        <TextField
+          label={t("drawer.reason")}
+          value={cancelReason}
+          onChange={setCancelReason}
+          placeholder={t("drawer.reasonPlaceholder")}
+          required
+        />
       </Modal>
       {adding ? <AddFound doc={doc} onClose={() => setAdding(false)} /> : null}
     </Drawer>
@@ -424,6 +442,7 @@ function View({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void
 
 /** Sanoqda topilgan, hisobda yoʻq partiya: qidirish → zona → soni. */
 function AddFound({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void }) {
+  const t = useTranslations("inventoryCounts");
   const warehouses = useWarehouses();
   const save = useSaveCounts();
   const [q, setQ] = useState("");
@@ -435,14 +454,14 @@ function AddFound({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => 
   const zones = doc.zone ? [doc.zone] : ((warehouses.data ?? []).find((w) => w.id === doc.warehouseId)?.zones ?? []);
 
   const add = () => {
-    if (!batchId) return setError("Partiyani tanlang.");
-    if (!zoneId) return setError("Zonani tanlang.");
-    if (!/^\d+$/.test(qty.trim()) || Number(qty) <= 0) return setError("Soni musbat butun son boʻlishi kerak.");
+    if (!batchId) return setError(t("errors.batch"));
+    if (!zoneId) return setError(t("errors.zone"));
+    if (!/^\d+$/.test(qty.trim()) || Number(qty) <= 0) return setError(t("errors.positiveQty"));
     save.mutate(
       { id: doc.id, entries: [{ zoneId: Number(zoneId), batchId: Number(batchId), countedQty: Number(qty) }] },
       {
-        onSuccess: () => (toast({ tone: "success", title: "Topilgan partiya qoʻshildi" }), onClose()),
-        onError: (e) => setError(describeError(e).message ?? "Qoʻshilmadi. Qayta urinib koʻring."),
+        onSuccess: () => (toast({ tone: "success", title: t("addFound.added") }), onClose()),
+        onError: (e) => setError(describeError(e).message ?? t("errors.notAdded")),
       },
     );
   };
@@ -451,28 +470,28 @@ function AddFound({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => 
     <Modal
       open
       onClose={onClose}
-      title="Topilgan partiyani qoʻshish"
-      primaryAction={{ label: "Qoʻshish", loading: save.isPending, onClick: add }}
+      title={t("addFound.title")}
+      primaryAction={{ label: t("addFound.add"), loading: save.isPending, onClick: add }}
     >
       <div className="flex flex-col gap-4">
         {error ? (
-          <Alert tone="danger" title="Qoʻshilmadi">
+          <Alert tone="danger" title={t("addFound.failed")}>
             {error}
           </Alert>
         ) : null}
         <TextField
-          label="Partiya raqami, mahsulot kodi yoki nomi"
+          label={t("addFound.search")}
           value={q}
           onChange={(v) => (setQ(v), setBatchId(null))}
-          placeholder="Kamida 2 belgi"
+          placeholder={t("addFound.searchPlaceholder")}
           variant="search"
         />
         <Select
-          label="Partiya"
+          label={t("addFound.batch")}
           value={batchId}
           onChange={setBatchId}
           disabled={(hits.data ?? []).length === 0}
-          placeholder={q.trim().length < 2 ? "Avval qidiring" : hits.isFetching ? "Qidirilmoqda…" : "Topilmadi"}
+          placeholder={q.trim().length < 2 ? t("addFound.searchFirst") : hits.isFetching ? t("addFound.searching") : t("addFound.notFound")}
           options={(hits.data ?? []).map((h) => ({
             value: String(h.batchId),
             label: `${h.productName} · ${h.batchNumber} · ${day(h.expiryDate)}`,
@@ -481,17 +500,24 @@ function AddFound({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => 
         />
         <div className="grid grid-cols-2 gap-4">
           <Select
-            label="Zona"
+            label={t("addFound.zone")}
             value={zoneId}
             onChange={setZoneId}
             disabled={doc.zone != null}
             options={zones.map((z) => ({
               value: String(z.id),
-              label: z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${ZONE_LABELS[z.type]}`,
+              label: z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${zoneLabel(z.type)}`,
             }))}
             required
           />
-          <TextField label="Sanaldi" value={qty} onChange={setQty} inputMode="numeric" placeholder="soni" required />
+          <TextField
+            label={t("addFound.counted")}
+            value={qty}
+            onChange={setQty}
+            inputMode="numeric"
+            placeholder={t("addFound.qtyPlaceholder")}
+            required
+          />
         </div>
       </div>
     </Modal>
@@ -499,6 +525,7 @@ function AddFound({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => 
 }
 
 function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("inventoryCounts");
   const warehouses = useWarehouses();
   const create = useCreateInventoryCount();
   const [warehouseId, setWarehouseId] = useState<string | null>(null);
@@ -512,7 +539,7 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
   const warehouse = active.find((w) => String(w.id) === warehouseId);
 
   const submit = () => {
-    if (!warehouse) return setError("Omborni tanlang.");
+    if (!warehouse) return setError(t("errors.warehouse"));
     create.mutate(
       {
         warehouseId: warehouse.id,
@@ -522,8 +549,8 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
         note: note.trim(),
       },
       {
-        onSuccess: (d) => (toast({ tone: "success", title: "Qoralama yaratildi", description: d.number }), onCreated(d.id)),
-        onError: (e) => setError(describeError(e).message ?? "Saqlanmadi. Qayta urinib koʻring."),
+        onSuccess: (d) => (toast({ tone: "success", title: t("create.draftCreated"), description: d.number }), onCreated(d.id)),
+        onError: (e) => setError(describeError(e).message ?? t("drawer.notSaved")),
       },
     );
   };
@@ -533,52 +560,51 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
       open
       onClose={onClose}
       size="lg"
-      kind={KIND}
-      title="Yangi inventarizatsiya"
+      kind={t("title")}
+      title={t("create.title")}
       actions={
         <Button icon={Check} loading={create.isPending} onClick={submit} disabled={!warehouse}>
-          Qoralama yaratish
+          {t("create.submit")}
         </Button>
       }
     >
       <div className="flex flex-col gap-4">
         {error ? (
-          <Alert tone="danger" title="Yaratilmadi">
+          <Alert tone="danger" title={t("create.failed")}>
             {error}
           </Alert>
         ) : null}
         <div className="grid grid-cols-2 gap-4">
           <Select
-            label="Ombor"
+            label={t("create.warehouse")}
             value={warehouseId}
             onChange={(v) => (setWarehouseId(v), setZoneId(null))}
             options={active.map((w) => ({ value: String(w.id), label: w.name }))}
             required
           />
           <Select
-            label="Zona"
+            label={t("create.zone")}
             value={zoneId}
             onChange={setZoneId}
-            placeholder="Butun ombor"
+            placeholder={t("create.wholeWarehouse")}
             options={(warehouse?.zones ?? []).map((z) => ({
               value: String(z.id),
-              label: z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${ZONE_LABELS[z.type]}`,
+              label: z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${zoneLabel(z.type)}`,
             }))}
             disabled={!warehouse}
           />
         </div>
-        <Checkbox
-          label="Koʻr sanoq"
-          description="Sanovchi hisobdagi qoldiqni koʻrmaydi — faqat sanaydi."
-          checked={blind}
-          onChange={setBlind}
-        />
-        <Alert tone="info" title="Qanday ishlaydi">
-          Qoralama → sanoqni ochish (qoldiq qayd etiladi, qamrovdagi ombor harakatlari toʻxtaydi) → sanash → tekshiruv → tasdiq. Kamomad
-          tannarxi {formatMoney(IN_DIRECTOR_LIMIT)} dan katta yoki nazoratdagi tovarda farq boʻlsa — Direktor tasdiqlaydi.
+        <Checkbox label={t("create.blind")} description={t("create.blindHint")} checked={blind} onChange={setBlind} />
+        <Alert tone="info" title={t("create.howTitle")}>
+          {t("create.how", { limit: formatMoney(IN_DIRECTOR_LIMIT) })}
         </Alert>
-        <TextField label="Komissiya" value={commission} onChange={setCommission} placeholder="F.I.Sh., vergul bilan" />
-        <TextField label="Izoh" value={note} onChange={setNote} placeholder="Masalan: oylik inventarizatsiya" />
+        <TextField
+          label={t("create.commission")}
+          value={commission}
+          onChange={setCommission}
+          placeholder={t("create.commissionPlaceholder")}
+        />
+        <TextField label={t("create.note")} value={note} onChange={setNote} placeholder={t("create.notePlaceholder")} />
       </div>
     </Drawer>
   );

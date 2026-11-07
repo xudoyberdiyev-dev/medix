@@ -2,6 +2,7 @@
 
 import { BadgePercent, Check, ClipboardCheck, PackagePlus, Trash2, Undo2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -15,22 +16,22 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { PAYMENT_TYPES, formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent } from "@/features/counterparties/api";
+import { PAYMENT_TYPE_VALUES, formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
-import { useWarehouses, ZONE_LABELS, type Zone } from "@/features/organization/api";
+import { useWarehouses, zoneLabel, type Zone } from "@/features/organization/api";
 import { searchProducts } from "@/features/prices/api";
 import { useEmployeeOptions } from "@/features/products/api";
 import { describeError } from "@/features/setup/form-error";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import {
   BONUS_CONFIRM,
-  DIFF_LABELS,
   RECEIPT_ACCEPT,
   RECEIPT_CANCEL,
   RECEIPT_CANCEL_POSTED,
   RECEIPT_CREATE,
   RECEIPT_POST,
   expectedReason,
+  prepaidShortfall,
   searchSuppliers,
   useAcceptReceipt,
   useCancelReceipt,
@@ -45,21 +46,22 @@ import {
 import { ReceiptCatalogDialog } from "./receipt-catalog-dialog";
 import { ReceiptStatusBadge, day } from "./receipts-page";
 
-const KIND = "Kirim";
 /** Kirim qatori manzili boʻla oladigan zonalar (Qabul va Joʻnatish — yoʻq). */
 const TARGET_ZONES = new Set(["MAIN", "COLD", "SAFE", "QUARANTINE"]);
 
 export function ReceiptDrawer(props: { id: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("receipts.drawer");
+  const tc = useTranslations("common");
   const doc = useReceipt(props.id);
   if (props.id !== null && doc.error)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind={KIND} title="KR">
+      <Drawer open onClose={props.onClose} size="lg" kind={t("kind")} title="KR">
         <ErrorState onRetry={() => doc.refetch()} />
       </Drawer>
     );
   if (props.id !== null && !doc.data)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind={KIND} title="Yuklanmoqda…">
+      <Drawer open onClose={props.onClose} size="lg" kind={t("kind")} title={tc("loading")}>
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
@@ -108,6 +110,11 @@ const emptyAdd = {
 const isInt = (s: string) => /^\d+$/.test(s.trim());
 
 function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("receipts.drawer");
+  const tr = useTranslations("receipts");
+  const dp = tr("datePlaceholder");
+  const tcp = useTranslations("counterparties");
+  const paymentTypes = PAYMENT_TYPE_VALUES.map((value) => ({ value, label: tcp(`paymentType.${value}`) }));
   const me = useMe();
   const router = useRouter();
   const warehouses = useWarehouses();
@@ -120,7 +127,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
   const canPost = can(me.data, RECEIPT_POST);
   // Narxni koʻrish — server bilan bir xil qoida: tannarx huquqi yoki qabul qilmaydigan xodim.
   const pricesVisible = doc ? doc.pricesVisible : can(me.data, "special.cost") || !canAccept;
-  const editable = canCreate && (!doc || doc.status === "DRAFT") && (pricesVisible || !doc?.lines.some((l) => l.price != null));
+  const editable = canCreate && (!doc || doc.status === "DRAFT") && (pricesVisible || !doc?.hasPrices);
 
   const [warehouseId, setWarehouseId] = useState<string | null>(doc ? String(doc.warehouseId) : null);
   const [supplier, setSupplier] = useState<string | null>(doc ? String(doc.supplierId) : null);
@@ -156,29 +163,29 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
       ((doc.status === "DRAFT" || doc.status === "ACCEPTED") && can(me.data, RECEIPT_CANCEL)));
 
   function body(): ReceiptRequest | null {
-    if (!warehouse) return (setLocal("Omborni tanlang."), null);
-    if (!supplier) return (setLocal("Yetkazib beruvchini tanlang."), null);
+    if (!warehouse) return (setLocal(t("errors.warehouse")), null);
+    if (!supplier) return (setLocal(t("errors.supplier")), null);
     const iso = parseUzDate(date);
-    if (!iso) return (setLocal("Kirim sanasi KK.OO.YYYY koʻrinishida boʻlsin."), null);
+    if (!iso) return (setLocal(t("errors.date")), null);
     const invIso = parseUzDate(invoiceDate);
-    if (invIso === null) return (setLocal("Yuk xati sanasi KK.OO.YYYY koʻrinishida boʻlsin."), null);
+    if (invIso === null) return (setLocal(t("errors.invoiceDate")), null);
     const dueIso = parseUzDate(due);
-    if (dueIso === null) return (setLocal("Toʻlov kuni KK.OO.YYYY koʻrinishida boʻlsin."), null);
+    if (dueIso === null) return (setLocal(t("errors.dueDate")), null);
     const discIso = parseUzDate(discountDate);
-    if (discIso === null) return (setLocal("Chegirma olish sanasi KK.OO.YYYY koʻrinishida boʻlsin."), null);
+    if (discIso === null) return (setLocal(t("errors.discountDate")), null);
     const disc = discountKind ? parseMoneyInput(discountValue) : undefined;
-    if (discountKind && !disc) return (setLocal("Chegirma qiymatini kiriting."), null);
+    if (discountKind && !disc) return (setLocal(t("errors.discountValue")), null);
     const out: ReceiptRequest["lines"] = [];
     for (const [i, l] of lines.entries()) {
-      const where = `${i + 1}-qator (${l.productName})`;
+      const where = t("errors.where", { n: i + 1, name: l.productName });
       const expiry = parseUzDate(l.expiryDate);
-      if (!expiry) return (setLocal(`${where}: yaroqlilik sanasi KK.OO.YYYY koʻrinishida boʻlsin.`), null);
+      if (!expiry) return (setLocal(t("errors.lineExpiry", { where })), null);
       const produced = parseUzDate(l.producedOn);
-      if (produced === null) return (setLocal(`${where}: ishlab chiqarilgan sana KK.OO.YYYY koʻrinishida boʻlsin.`), null);
-      if (!isInt(l.qty) || Number(l.qty) < 1) return (setLocal(`${where}: soni — butun musbat son.`), null);
-      if (l.bonusQty && !isInt(l.bonusQty)) return (setLocal(`${where}: aksiya bonusi — butun son.`), null);
+      if (produced === null) return (setLocal(t("errors.lineProduced", { where })), null);
+      if (!isInt(l.qty) || Number(l.qty) < 1) return (setLocal(t("errors.lineQty", { where })), null);
+      if (l.bonusQty && !isInt(l.bonusQty)) return (setLocal(t("errors.lineBonus", { where })), null);
       const price = pricesVisible ? parseMoneyInput(l.price) : undefined;
-      if (pricesVisible && l.price && !price) return (setLocal(`${where}: narx notoʻgʻri. Masalan: 15.000,50.`), null);
+      if (pricesVisible && l.price && !price) return (setLocal(t("errors.linePrice", { where })), null);
       out.push({
         productId: l.productId,
         batchNumber: l.batchNumber.trim(),
@@ -218,7 +225,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
       {
         onSuccess: (d) => {
           if (then) return then(d);
-          toast({ tone: "success", title: "Qoralama saqlandi", description: d.number });
+          toast({ tone: "success", title: t("draftSaved"), description: d.number });
           if (!doc) onCreated(d.id);
         },
       },
@@ -227,16 +234,15 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
 
   function addLine() {
     const label = adding.product ? seen.current.get(adding.product) : undefined;
-    if (!adding.product || !label) return setLocal("Mahsulotni tanlang.");
-    if (!adding.batch.trim()) return setLocal("Partiya raqamini kiriting.");
-    if (!parseUzDate(adding.expiry)) return setLocal("Yaroqlilik sanasini KK.OO.YYYY koʻrinishida kiriting.");
-    if (!adding.zone) return setLocal("Zonani tanlang.");
-    if (!isInt(adding.qty) || Number(adding.qty) < 1) return setLocal("Soni — butun musbat son.");
-    if (adding.bonus && !isInt(adding.bonus)) return setLocal("Aksiya bonusi — butun son.");
-    if (pricesVisible && adding.price && !parseMoneyInput(adding.price)) return setLocal("Narx notoʻgʻri. Masalan: 15.000,50.");
+    if (!adding.product || !label) return setLocal(t("errors.product"));
+    if (!adding.batch.trim()) return setLocal(t("errors.batch"));
+    if (!parseUzDate(adding.expiry)) return setLocal(t("errors.expiry"));
+    if (!adding.zone) return setLocal(t("errors.zone"));
+    if (!isInt(adding.qty) || Number(adding.qty) < 1) return setLocal(t("errors.qty"));
+    if (adding.bonus && !isInt(adding.bonus)) return setLocal(t("errors.bonus"));
+    if (pricesVisible && adding.price && !parseMoneyInput(adding.price)) return setLocal(t("errors.price"));
     const key = `${adding.product}|${adding.batch.trim().toUpperCase()}`;
-    if (lines.some((l) => `${l.productId}|${l.batchNumber.trim().toUpperCase()}` === key))
-      return setLocal("Bu mahsulot va partiya allaqachon qoʻshilgan.");
+    if (lines.some((l) => `${l.productId}|${l.batchNumber.trim().toUpperCase()}` === key)) return setLocal(t("errors.duplicate"));
     setLines((ls) => [
       ...ls,
       {
@@ -271,20 +277,20 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
     <>
       {canCancel ? (
         <Button variant="tertiary" icon={X} className="mr-auto" onClick={() => (cancel.reset(), setDialog("cancel"))}>
-          Hujjatni bekor qilish
+          {t("cancelDoc")}
         </Button>
       ) : null}
       <Button variant="secondary" onClick={onClose}>
-        Ortga
+        {t("back")}
       </Button>
       {editable ? (
         <Button variant={primaryIsAccept ? "secondary" : "primary"} loading={save.isPending} onClick={() => saveDraft()}>
-          Qoralamani saqlash
+          {t("saveDraft")}
         </Button>
       ) : null}
       {primaryIsAccept ? (
         <Button icon={ClipboardCheck} onClick={() => (editable ? saveDraft(() => setDialog("accept")) : setDialog("accept"))}>
-          Qabul qilish
+          {t("accept")}
         </Button>
       ) : null}
       {doc?.status === "POSTED" && can(me.data, "qy.create") ? (
@@ -297,7 +303,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
             )
           }
         >
-          YB ga qaytarish
+          {t("returnToSupplier")}
         </Button>
       ) : null}
       {doc?.status === "POSTED" && doc.discountKind && !doc.bonusNumber && can(me.data, BONUS_CONFIRM) ? (
@@ -309,14 +315,14 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
               (d) =>
                 toast({
                   tone: "success",
-                  title: "Bonus tasdiqlandi",
-                  description: `${d.bonusNumber ?? ""}${d.bonusAmount ? ` · ${formatMoney(d.bonusAmount)} soʻm bonus balansga` : ""}`,
+                  title: t("bonusConfirmed"),
+                  description: `${d.bonusNumber ?? ""}${d.bonusAmount ? t("bonusToBalance", { amount: formatMoney(d.bonusAmount) }) : ""}`,
                 }),
               () => undefined,
             )
           }
         >
-          Bonus tasdiqlandi
+          {t("bonusConfirmed")}
         </Button>
       ) : null}
       {doc?.status === "ACCEPTED" && canPost ? (
@@ -327,12 +333,12 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
             doc.hasDiff
               ? setDialog("post")
               : void post.mutateAsync({ id: doc.id }).then(
-                  (d) => toast({ tone: "success", title: "Kirim oʻtkazildi", description: `${d.number} · qoldiqqa kirdi` }),
+                  (d) => toast({ tone: "success", title: t("posted"), description: t("postedDescription", { number: d.number }) }),
                   () => undefined,
                 )
           }
         >
-          Oʻtkazish
+          {t("post")}
         </Button>
       ) : null}
     </>
@@ -343,8 +349,8 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
       open
       onClose={onClose}
       size="lg"
-      kind={doc ? `${KIND} · ${doc.createdBy}` : KIND}
-      title={doc ? doc.number : "Yangi kirim"}
+      kind={doc ? t("kindBy", { name: doc.createdBy }) : t("kind")}
+      title={doc ? doc.number : t("newTitle")}
       subtitle={doc ? `${doc.supplier} · ${doc.warehouse}` : undefined}
       status={doc ? <ReceiptStatusBadge status={doc.status} /> : undefined}
       actions={actions}
@@ -353,16 +359,16 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
         <StatusNotes doc={doc} />
         <div className="grid grid-cols-3 gap-4">
           <Select
-            label="Ombor"
+            label={t("field.warehouse")}
             value={warehouseId}
             onChange={(v) => (setWarehouseId(v), setLines([]), setAdding(emptyAdd))}
             disabled={!editable || lines.length > 0}
             options={activeWarehouses.map((w) => ({ value: String(w.id), label: w.name }))}
-            hint={editable && lines.length > 0 ? "Omborni almashtirish uchun avval qatorlarni olib tashlang" : undefined}
+            hint={editable && lines.length > 0 ? t("field.warehouseHint") : undefined}
             required
           />
           <Select
-            label="Yetkazib beruvchi"
+            label={t("field.supplier")}
             value={supplier}
             loadOptions={async (q) => {
               const found = await searchSuppliers(q);
@@ -370,80 +376,86 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
               return found;
             }}
             onChange={(v) => (setSupplier(v), setSupplierLabel(v ? (seen.current.get(`s:${v}`)?.name ?? "") : ""))}
-            placeholder={supplierLabel || "Nom yoki STIR boʻyicha qidiring"}
+            placeholder={supplierLabel || t("field.supplierPlaceholder")}
             options={supplier && supplierLabel ? [{ value: supplier, label: supplierLabel }] : []}
             disabled={!editable}
             required
             className="col-span-2"
           />
-          <TextField label="Kirim sanasi" value={date} onChange={setDate} placeholder="KK.OO.YYYY" disabled={!editable} required />
-          <TextField label="Yuk xati raqami" value={invoice} onChange={setInvoice} disabled={!editable} />
-          <TextField label="Yuk xati sanasi" value={invoiceDate} onChange={setInvoiceDate} placeholder="KK.OO.YYYY" disabled={!editable} />
-          <Select label="Toʻlov turi" value={paymentType} onChange={setPaymentType} options={PAYMENT_TYPES} disabled={!editable} />
+          <TextField label={t("field.date")} value={date} onChange={setDate} placeholder={dp} disabled={!editable} required />
+          <TextField label={t("field.invoiceNumber")} value={invoice} onChange={setInvoice} disabled={!editable} />
+          <TextField label={t("field.invoiceDate")} value={invoiceDate} onChange={setInvoiceDate} placeholder={dp} disabled={!editable} />
+          <Select
+            label={t("field.paymentType")}
+            value={paymentType}
+            onChange={setPaymentType}
+            options={paymentTypes}
+            disabled={!editable}
+          />
           <TextField
-            label="Toʻlov kuni"
+            label={t("field.due")}
             value={prepaid || fromBonus ? "" : due}
             onChange={setDue}
-            placeholder={doc?.dueDate && !doc.dueManual ? formatIsoDate(doc.dueDate) : "KK.OO.YYYY"}
-            hint="Boʻsh — kirim sanasi + yetkazib beruvchi sharti"
+            placeholder={doc?.dueDate && !doc.dueManual ? formatIsoDate(doc.dueDate) : dp}
+            hint={t("field.dueHint")}
             disabled={!editable || prepaid || fromBonus}
           />
           <Select
-            label="Kim nomiga"
+            label={t("field.owner")}
             value={owner}
             onChange={setOwner}
-            placeholder="Tanlanmagan"
+            placeholder={t("field.ownerPlaceholder")}
             options={(employees.data ?? []).map((e) => ({ value: String(e.id), label: e.fullName, sub: e.roleName }))}
             disabled={!editable}
           />
           <Checkbox
-            label="100% oldindan toʻlangan"
-            description="Qarz va eslatma yoʻq — avansdan yopiladi"
+            label={t("field.prepaid")}
+            description={t("field.prepaidHint")}
             checked={prepaid}
             onChange={(v) => (setPrepaid(v), v && setFromBonus(false))}
             disabled={!editable}
           />
           <Checkbox
-            label="Bonus balans hisobidan"
-            description="Qarz yoʻq, tannarx 0 — partiya «Bonus»"
+            label={t("field.fromBonus")}
+            description={t("field.fromBonusHint")}
             checked={fromBonus}
             onChange={(v) => (setFromBonus(v), v && (setPrepaid(false), setDiscountKind(null)))}
             disabled={!editable}
           />
           <Select
-            label="Chegirma (bonus)"
+            label={t("field.discount")}
             value={discountKind}
             onChange={setDiscountKind}
-            placeholder="Yoʻq"
-            hint={fromBonus ? "Bonus hisobidan kirimda chegirma boʻlmaydi" : undefined}
+            placeholder={t("field.discountNone")}
+            hint={fromBonus ? t("field.discountBonusHint") : undefined}
             options={[
-              { value: "SUM", label: "Summa" },
-              { value: "PERCENT", label: "Foiz" },
+              { value: "SUM", label: t("field.discountSum") },
+              { value: "PERCENT", label: t("field.discountPercent") },
             ]}
             disabled={!editable || fromBonus}
           />
           <TextField
-            label="Chegirma qiymati"
+            label={t("field.discountValue")}
             value={discountValue}
             onChange={setDiscountValue}
-            suffix={discountKind === "PERCENT" ? "%" : "soʻm"}
+            suffix={discountKind === "PERCENT" ? "%" : tr("sum")}
             inputMode="decimal"
             disabled={!editable || !discountKind}
           />
           <TextField
-            label="Chegirma olish sanasi"
+            label={t("field.discountDate")}
             value={discountDate}
             onChange={setDiscountDate}
-            placeholder="KK.OO.YYYY"
+            placeholder={dp}
             disabled={!editable || !discountKind}
           />
-          <TextField label="Izoh" value={note} onChange={setNote} disabled={!editable} className="col-span-3" />
+          <TextField label={t("field.note")} value={note} onChange={setNote} disabled={!editable} className="col-span-3" />
         </div>
 
         {editable && warehouse ? (
           <div className="grid grid-cols-4 items-end gap-3 rounded-card border border-border p-3">
             <Select
-              label="Mahsulot"
+              label={t("field.product")}
               value={adding.product}
               loadOptions={async (q) => {
                 const found = await searchProducts(q);
@@ -451,58 +463,58 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
                 return found;
               }}
               onChange={(v) => setAdding((a) => ({ ...a, product: v }))}
-              placeholder="Nom yoki kod boʻyicha qidiring"
+              placeholder={t("field.productPlaceholder")}
               options={[]}
               className="col-span-3"
             />
             <Select
-              label="Zona"
+              label={t("field.zone")}
               value={adding.zone}
               onChange={(v) => setAdding((a) => ({ ...a, zone: v }))}
-              options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: ZONE_LABELS[z.type] }))}
+              options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: zoneLabel(z.type) }))}
             />
-            <TextField label="Partiya" value={adding.batch} onChange={(v) => setAdding((a) => ({ ...a, batch: v }))} />
+            <TextField label={t("field.batch")} value={adding.batch} onChange={(v) => setAdding((a) => ({ ...a, batch: v }))} />
             <TextField
-              label="Ishlab chiqarilgan"
+              label={t("field.produced")}
               value={adding.produced}
               onChange={(v) => setAdding((a) => ({ ...a, produced: v }))}
-              placeholder="KK.OO.YYYY"
+              placeholder={dp}
             />
             <TextField
-              label="Yaroqlilik"
+              label={t("field.expiry")}
               value={adding.expiry}
               onChange={(v) => setAdding((a) => ({ ...a, expiry: v }))}
-              placeholder="KK.OO.YYYY"
+              placeholder={dp}
             />
             <TextField
-              label="Soni"
+              label={t("field.qty")}
               value={adding.qty}
               onChange={(v) => setAdding((a) => ({ ...a, qty: v }))}
               inputMode="numeric"
-              suffix="dona"
+              suffix={tr("pcs")}
             />
             <TextField
-              label="Aksiya bonusi"
+              label={t("field.bonus")}
               value={adding.bonus}
               onChange={(v) => setAdding((a) => ({ ...a, bonus: v }))}
               inputMode="numeric"
-              suffix="dona"
-              hint="Masalan, 10 + 1 — bonus 1"
+              suffix={tr("pcs")}
+              hint={t("field.bonusHint")}
             />
             {pricesVisible ? (
               <TextField
-                label="Faktura narxi (1 dona)"
+                label={t("field.price")}
                 value={adding.price}
                 onChange={(v) => setAdding((a) => ({ ...a, price: v }))}
                 inputMode="decimal"
-                suffix="soʻm"
+                suffix={tr("sum")}
                 className="col-span-2"
               />
             ) : (
-              <p className="col-span-2 text-caption text-text-secondary">Narxni Xarid kiritadi.</p>
+              <p className="col-span-2 text-caption text-text-secondary">{t("field.priceByPurchasing")}</p>
             )}
             <Button variant="secondary" onClick={addLine}>
-              Qator qoʻshish
+              {t("addLine")}
             </Button>
           </div>
         ) : null}
@@ -512,14 +524,14 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
 
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-subtitle">
-            Qatorlar · {formatQuantity(lines.length)}
+            {t("lines", { count: formatQuantity(lines.length) })}
             {pricesVisible && amount > 0n ? (
-              <span className="ml-3 text-body font-normal text-text-secondary">{formatMoney(amountStr)} soʻm</span>
+              <span className="ml-3 text-body font-normal text-text-secondary">{tr("amountSum", { amount: formatMoney(amountStr) })}</span>
             ) : null}
           </h3>
           {editable && warehouse ? (
             <Button variant="secondary" size="sm" icon={PackagePlus} onClick={() => setCatalogOpen(true)}>
-              Mahsulot qoʻshish
+              {t("addProduct")}
             </Button>
           ) : null}
         </div>
@@ -527,14 +539,14 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
           <table className="w-full text-table">
             <thead className="bg-table-header text-left text-text-secondary">
               <tr>
-                <th className="px-3 py-2 font-medium">Mahsulot</th>
-                <th className="px-3 py-2 font-medium">Partiya</th>
-                <th className="px-3 py-2 font-medium">Yaroqlilik</th>
-                <th className="px-3 py-2 font-medium">Zona</th>
-                <th className="px-3 py-2 text-right font-medium">Soni</th>
-                <th className="px-3 py-2 text-right font-medium">Bonus</th>
-                {doc && doc.status !== "DRAFT" ? <th className="px-3 py-2 text-right font-medium">Kelgan</th> : null}
-                {pricesVisible ? <th className="px-3 py-2 text-right font-medium">Narx</th> : null}
+                <th className="px-3 py-2 font-medium">{t("col.product")}</th>
+                <th className="px-3 py-2 font-medium">{t("col.batch")}</th>
+                <th className="px-3 py-2 font-medium">{t("col.expiry")}</th>
+                <th className="px-3 py-2 font-medium">{t("col.zone")}</th>
+                <th className="px-3 py-2 text-right font-medium">{t("col.qty")}</th>
+                <th className="px-3 py-2 text-right font-medium">{t("col.bonus")}</th>
+                {doc && doc.status !== "DRAFT" ? <th className="px-3 py-2 text-right font-medium">{t("col.received")}</th> : null}
+                {pricesVisible ? <th className="px-3 py-2 text-right font-medium">{t("col.price")}</th> : null}
                 {editable ? <th className="w-10" /> : null}
               </tr>
             </thead>
@@ -542,11 +554,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
               {lines.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-3 py-6 text-center text-text-secondary">
-                    {editable
-                      ? warehouse
-                        ? "Qator yoʻq. «Mahsulot qoʻshish» katalogidan yoki yuqoridagi formadan kiriting."
-                        : "Avval omborni tanlang."
-                      : "Qator yoʻq."}
+                    {editable ? (warehouse ? t("emptyEditable") : t("chooseWarehouse")) : t("empty")}
                   </td>
                 </tr>
               ) : (
@@ -568,9 +576,9 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
                             <span className="flex flex-col items-end gap-1">
                               <span className="tabular-nums">
                                 {formatQuantity(server.receivedQty)}
-                                {server.damagedQty ? ` + ${formatQuantity(server.damagedQty)} shikast.` : ""}
+                                {server.damagedQty ? t("damagedShort", { qty: formatQuantity(server.damagedQty) }) : ""}
                               </span>
-                              {server.diffReason ? <Badge tone="warning">{DIFF_LABELS[server.diffReason]}</Badge> : null}
+                              {server.diffReason ? <Badge tone="warning">{tr(`diff.${server.diffReason}`)}</Badge> : null}
                             </span>
                           ) : (
                             "—"
@@ -582,7 +590,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
                           {parseMoneyInput(l.price) ? (
                             formatMoney(parseMoneyInput(l.price)!)
                           ) : (
-                            <span className="text-text-disabled">kiritilmagan</span>
+                            <span className="text-text-disabled">{t("notEntered")}</span>
                           )}
                         </td>
                       ) : null}
@@ -591,7 +599,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
                           <Button
                             variant="icon"
                             icon={Trash2}
-                            aria-label="Qatorni olib tashlash"
+                            aria-label={t("removeLine")}
                             onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
                           />
                         </td>
@@ -613,17 +621,17 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
           pricesVisible={pricesVisible}
           existing={new Set(lines.map((l) => `${l.productId}|${l.batchNumber.trim().toUpperCase()}`))}
           header={[
-            doc?.number ?? "Yangi kirim",
-            supplierLabel || "YB tanlanmagan",
+            doc?.number ?? t("newTitle"),
+            supplierLabel || t("noSupplier"),
             warehouse.name,
-            `${formatQuantity(lines.length)} qator`,
+            t("lineCount", { count: formatQuantity(lines.length) }),
           ].join(" · ")}
           onClose={() => setCatalogOpen(false)}
           onAdd={(picked) => {
             setLines((ls) => [...ls, ...picked]);
             setCatalogOpen(false);
             setLocal(null);
-            toast({ tone: "success", title: `${formatQuantity(picked.length)} qator qoʻshildi` });
+            toast({ tone: "success", title: t("linesAdded", { count: formatQuantity(picked.length) }) });
           }}
         />
       ) : null}
@@ -631,21 +639,15 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
       {dialog === "post" && doc ? <PostDialog doc={doc} onClose={() => setDialog(null)} /> : null}
       {dialog === "cancel" && doc ? (
         <DeactivateDialog
-          title={`${doc.number}ni bekor qilasizmi?`}
-          consequence={
-            doc.status === "POSTED"
-              ? "Tovar qoldiqdan chiqariladi va qarz teskari yoziladi. Partiyadan sotilgan boʻlsa, bekor qilinmaydi."
-              : doc.status === "ACCEPTED"
-                ? "Tovar Qabul zonasidan chiqariladi. Hujjat tarixda qoladi."
-                : "Qoldiq va qarz oʻzgarmaydi. Hujjat tarixda qoladi."
-          }
-          actionLabel="Hujjatni bekor qilish"
+          title={t("cancelTitle", { number: doc.number })}
+          consequence={doc.status === "POSTED" ? t("cancelPosted") : doc.status === "ACCEPTED" ? t("cancelAccepted") : t("cancelDraft")}
+          actionLabel={t("cancelDoc")}
           pending={cancel.isPending}
           error={cancel.error}
           onClose={() => setDialog(null)}
           onConfirm={(reason) =>
             void cancel.mutateAsync({ id: doc.id, reason }).then(
-              () => (toast({ tone: "success", title: "Bekor qilindi", description: doc.number }), setDialog(null)),
+              () => (toast({ tone: "success", title: t("cancelled"), description: doc.number }), setDialog(null)),
               () => undefined,
             )
           }
@@ -656,28 +658,43 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
 }
 
 function StatusNotes({ doc }: { doc: ReceiptDetail | null }) {
+  const t = useTranslations("receipts.notes");
   if (!doc) return null;
   if (doc.status === "CANCELLED")
     return (
-      <Alert tone="info" title={`Bekor qilindi: ${doc.cancelReason ?? ""}`}>
+      <Alert tone="info" title={t("cancelled", { reason: doc.cancelReason ?? "" })}>
         {doc.cancelledBy}
       </Alert>
     );
+  const short = prepaidShortfall(doc);
+  const shortNote = short ? (
+    <Alert tone="warning" title={t("prepaidShortTitle", { amount: formatMoney(short.shortfall) })}>
+      {t("prepaidShortBody", { advance: formatMoney(short.advance), total: formatMoney(short.total) })}
+    </Alert>
+  ) : null;
+  if (doc.status === "DRAFT") return shortNote;
   if (doc.status === "ACCEPTED")
     return (
-      <Alert tone="warning" title="Tovar Qabul zonasida — sotuvga yopiq">
-        Qabul qildi: {doc.acceptedBy}
-        {doc.acceptedAt ? `, ${formatDateTime(new Date(doc.acceptedAt))}` : ""}. Oʻtkazilgach saqlash zonalariga oʻtadi va qarz yoziladi.
-      </Alert>
+      <>
+        {shortNote}
+        <Alert tone="warning" title={t("acceptedTitle")}>
+          {t("acceptedBody", { name: doc.acceptedBy ?? "", at: doc.acceptedAt ? `, ${formatDateTime(new Date(doc.acceptedAt))}` : "" })}
+        </Alert>
+      </>
     );
   if (doc.status === "POSTED")
     return (
-      <Alert tone="success" title={doc.debtAmount ? `Oʻtkazildi · qarz ${formatMoney(doc.debtAmount)} soʻm` : "Oʻtkazildi"}>
-        {doc.prepaid ? "100% oldindan toʻlangan — summa avansdan yopiladi." : doc.dueDate ? `Toʻlov kuni: ${day(doc.dueDate)}.` : ""}
-        {doc.supplierBalance ? ` Yetkazib beruvchi saldosi: ${formatMoney(doc.supplierBalance)} soʻm.` : ""}
-        {doc.fromBonus ? " Bonus balans hisobidan — qarz yozilmadi." : ""}
-        {doc.bonusNumber ? ` Bonus tasdiqlandi: ${doc.bonusNumber}${doc.bonusAmount ? `, ${formatMoney(doc.bonusAmount)} soʻm` : ""}.` : ""}
-        {doc.bonusBalance ? ` Bonus balansi: ${formatMoney(doc.bonusBalance)} soʻm.` : ""}
+      <Alert tone="success" title={doc.debtAmount ? t("postedDebt", { amount: formatMoney(doc.debtAmount) }) : t("posted")}>
+        {doc.prepaid ? t("prepaid") : doc.dueDate ? t("due", { date: day(doc.dueDate) }) : ""}
+        {doc.supplierBalance ? t("supplierBalance", { amount: formatMoney(doc.supplierBalance) }) : ""}
+        {doc.fromBonus ? t("fromBonus") : ""}
+        {doc.bonusNumber
+          ? t("bonus", {
+              number: doc.bonusNumber,
+              amount: doc.bonusAmount ? t("bonusAmount", { amount: formatMoney(doc.bonusAmount) }) : "",
+            })
+          : ""}
+        {doc.bonusBalance ? t("bonusBalance", { amount: formatMoney(doc.bonusBalance) }) : ""}
       </Alert>
     );
   return null;
@@ -691,6 +708,8 @@ interface CountRow {
 
 /** Qabul (Ombor mudiri): har qatorga haqiqiy soni; farq boʻlsa — sababi. Narx koʻrsatilmaydi. */
 function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
+  const t = useTranslations("receipts.accept");
+  const tr = useTranslations("receipts");
   const doc = useReceipt(id);
   const warehouses = useWarehouses();
   const accept = useAcceptReceipt();
@@ -707,7 +726,7 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
     const out = [];
     for (const l of lines) {
       const r = row(l.id, l.qty, l.zoneId);
-      if (!isInt(r.received) || !isInt(r.damaged || "0")) return setLocal(`${l.lineNo}-qator: soni — butun son.`);
+      if (!isInt(r.received) || !isInt(r.damaged || "0")) return setLocal(t("lineQty", { n: l.lineNo }));
       const received = Number(r.received);
       const damaged = Number(r.damaged || "0");
       // Sabab soniga qarab aniqlanadi (server qoidasi bilan bir xil) — xodim faqat sonlarni kiritadi.
@@ -723,7 +742,7 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
     setLocal(null);
     // mutateAsync: muharrir holat o'zgarganda qayta quriladi — per-call onSuccess yo'qolmasin.
     void accept.mutateAsync({ id, lines: out }).then(
-      (d) => (toast({ tone: "success", title: "Qabul qilindi", description: `${d.number} · tovar Qabul zonasida` }), onClose()),
+      (d) => (toast({ tone: "success", title: t("done"), description: t("doneDescription", { number: d.number }) }), onClose()),
       () => undefined,
     );
   }
@@ -733,11 +752,11 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
       open
       onClose={onClose}
       size="lg"
-      title="Tovarni qabul qilish"
-      primaryAction={{ label: "Qabulni tasdiqlash", loading: accept.isPending, onClick: submit }}
+      title={t("title")}
+      primaryAction={{ label: t("confirm"), loading: accept.isPending, onClick: submit }}
     >
       <div className="flex flex-col gap-3">
-        <p className="text-text-secondary">Har qatorni sanab, haqiqiy sonini kiriting. Shikastlangani Karantinga tushadi.</p>
+        <p className="text-text-secondary">{t("intro")}</p>
         {lines.map((l) => {
           const r = row(l.id, l.qty, l.zoneId);
           const expected =
@@ -750,28 +769,34 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
               <div className="flex flex-col">
                 <span>{l.productName}</span>
                 <span className="text-caption text-text-secondary">
-                  {l.batchNumber} · hujjatda {formatQuantity(l.qty)}
-                  {l.bonusQty ? ` + ${formatQuantity(l.bonusQty)} bonus` : ""}
+                  {t("inDoc", { batch: l.batchNumber, qty: formatQuantity(l.qty) })}
+                  {l.bonusQty ? t("bonusPart", { qty: formatQuantity(l.bonusQty) }) : ""}
                 </span>
               </div>
-              <TextField label="Yaroqli" size="sm" value={r.received} onChange={(v) => set(l.id, r, { received: v })} inputMode="numeric" />
               <TextField
-                label="Shikastlangan"
+                label={t("good")}
+                size="sm"
+                value={r.received}
+                onChange={(v) => set(l.id, r, { received: v })}
+                inputMode="numeric"
+              />
+              <TextField
+                label={t("damaged")}
                 size="sm"
                 value={r.damaged}
                 onChange={(v) => set(l.id, r, { damaged: v })}
                 inputMode="numeric"
               />
               <div className="flex flex-col gap-1">
-                <span className="text-caption text-text-secondary">Farq sababi</span>
+                <span className="text-caption text-text-secondary">{t("reason")}</span>
                 {expected ? (
-                  <Badge tone={expected === "DAMAGED" ? "danger" : "warning"}>{DIFF_LABELS[expected]}</Badge>
+                  <Badge tone={expected === "DAMAGED" ? "danger" : "warning"}>{tr(`diff.${expected}`)}</Badge>
                 ) : (
-                  <span className="text-text-secondary">Farq yoʻq</span>
+                  <span className="text-text-secondary">{t("noDiff")}</span>
                 )}
               </div>
               <Select
-                label="Zona"
+                label={t("zone")}
                 size="sm"
                 value={r.zone}
                 onChange={(v) => set(l.id, r, { zone: v ?? r.zone })}
@@ -789,43 +814,53 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
 
 /** Farq boʻlsa — qaror: qarz haqiqiy soni boʻyicha yoki hujjat boʻyicha. */
 function PostDialog({ doc, onClose }: { doc: ReceiptDetail; onClose: () => void }) {
+  const t = useTranslations("receipts.post");
+  const tr = useTranslations("receipts");
+  const td = useTranslations("receipts.drawer");
   const post = usePostReceipt();
   const [resolution, setResolution] = useState<Resolution>("ACTUAL");
   const err = describeError(post.error);
+  const tn = useTranslations("receipts.notes");
+  const short = prepaidShortfall(doc, resolution === "DOCUMENT" ? doc.amount : (doc.actualAmount ?? doc.amount));
   return (
     <Modal
       open
       onClose={onClose}
       size="sm"
-      title="Kirimni oʻtkazish"
+      title={t("title")}
       primaryAction={{
-        label: "Oʻtkazish",
+        label: t("submit"),
         loading: post.isPending,
         onClick: () =>
           void post.mutateAsync({ id: doc.id, resolution }).then(
-            (d) => (toast({ tone: "success", title: "Kirim oʻtkazildi", description: `${d.number} · qoldiqqa kirdi` }), onClose()),
+            (d) => (toast({ tone: "success", title: td("posted"), description: td("postedDescription", { number: d.number }) }), onClose()),
             () => undefined,
           ),
       }}
     >
       <div className="flex flex-col gap-3">
-        <p className="text-text-secondary">Qabulda farq bor. Qarz qaysi son boʻyicha yozilsin?</p>
+        <p className="text-text-secondary">{t("intro")}</p>
         <Radio
           name="resolution"
           value="ACTUAL"
-          label="Haqiqiy soni boʻyicha"
-          description={doc.actualAmount ? `${formatMoney(doc.actualAmount)} soʻm` : "Kelgan (yaroqli + shikastlangan) soni"}
+          label={t("actual")}
+          description={doc.actualAmount ? tr("amountSum", { amount: formatMoney(doc.actualAmount) }) : t("actualHint")}
           checked={resolution === "ACTUAL"}
           onChange={() => setResolution("ACTUAL")}
         />
         <Radio
           name="resolution"
           value="DOCUMENT"
-          label="Hujjat boʻyicha"
-          description={doc.amount ? `${formatMoney(doc.amount)} soʻm` : "Yuk xatidagi soni"}
+          label={t("document")}
+          description={doc.amount ? tr("amountSum", { amount: formatMoney(doc.amount) }) : t("documentHint")}
           checked={resolution === "DOCUMENT"}
           onChange={() => setResolution("DOCUMENT")}
         />
+        {short ? (
+          <Alert tone="warning" title={tn("prepaidShortTitle", { amount: formatMoney(short.shortfall) })}>
+            {tn("prepaidShortBody", { advance: formatMoney(short.advance), total: formatMoney(short.total) })}
+          </Alert>
+        ) : null}
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
       </div>
     </Modal>

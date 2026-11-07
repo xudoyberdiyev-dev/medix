@@ -48,6 +48,11 @@ final class OrderModels {
 
     record OrderReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
+    /** «Yig'ishga qaytarish»: sabab va qatorlar (bo'sh yoki yo'q — butun buyurtma, SPEC 188). */
+    record ReturnToPickRequest(
+            @NotBlank(message = "{validation.required}") @Size(max = 300) String reason,
+            @Schema(nullable = true, description = "Qaytariladigan qatorlar; bo'sh — butun buyurtma") @Size(max = 500) List<Long> lineIds) {}
+
     /** «N ta muammo» paneli: qator (yoki sarlavha — null) va aniq matn. */
     record OrderIssue(IssueLevel level, String code, String message, @Schema(nullable = true) Integer lineNo) {}
 
@@ -159,7 +164,9 @@ final class OrderModels {
             @Schema(nullable = true, description = "Joylar soni (quti)") Integer places,
             OrderDocuments documents,
             @Schema(description = "«Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2)") String holder,
-            List<OrderLine> lines) {}
+            List<OrderLine> lines,
+            @Schema(description = "Qator bo'yicha «Yig'ishga qaytarish»dan keyin qayta yig'iladigan qatorlar; bo'sh — barcha qatorlar (SPEC 188)")
+            List<Long> repickLineIds) {}
 
     /** Buyurtmadan yozilgan hujjatlar (SPEC 7). */
     record OrderDocuments(
@@ -205,6 +212,10 @@ final class OrderModels {
 
     record PickFinishRequest(@Schema(nullable = true) List<@Valid PickLineConfirm> lines) {}
 
+    /** «Bugun yakunlanganlar» (Yig'uvchi, SPEC 5.4): o'zi bugun yig'ib bo'lgan buyurtmalar; vaqtida — berilgan daqiqa ichida. */
+    record PickDoneItem(long id, String number, String customer, OrderStatus status, int lines, long totalQty, Instant startedAt,
+            Instant finishedAt, @Schema(nullable = true) Integer minutes, boolean onTime) {}
+
     /** Yig'uvchi navbati kartasi (SPEC 5.4). */
     record PickQueueItem(
             long id,
@@ -219,7 +230,42 @@ final class OrderModels {
             @Schema(nullable = true) Long pickerId,
             @Schema(nullable = true) Instant pickStartedAt,
             @Schema(nullable = true, description = "Berilgan vaqt tugash payti") Instant deadline,
-            Instant queuedAt) {}
+            Instant queuedAt,
+            @Schema(nullable = true, description = "Mijozning amaldagi shartnomasi (shu filial; SPEC 213)") String contract,
+            @Schema(nullable = true, description = "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa") String invoice) {}
+
+    /** Hisob-faktura (chop etish uchun, SPEC 300): summalar QQS bilan; tannarxsiz. */
+    record InvoiceDoc(
+            String invoiceNumber,
+            String saleNumber,
+            String orderNumber,
+            long branchId,
+            @Schema(description = "POSTED yoki CANCELLED") String status,
+            LocalDate saleDate,
+            @Schema(nullable = true) LocalDate dueDate,
+            String customer,
+            @Schema(nullable = true) String customerTin,
+            @Schema(nullable = true) String address,
+            PaymentType paymentType,
+            String warehouse,
+            @Schema(nullable = true, description = "Sotuv sanasida amaldagi shartnoma") String contract,
+            String total,
+            String vatTotal,
+            @Schema(description = "QQSsiz qiymat") String netTotal,
+            List<InvoiceLine> lines) {}
+
+    record InvoiceLine(
+            String productCode,
+            String productName,
+            @Schema(nullable = true) String manufacturer,
+            String batch,
+            LocalDate expiryDate,
+            int qty,
+            @Schema(description = "Narx QQS bilan") String price,
+            String amount,
+            @Schema(description = "QQS stavkasi, %") String vatRate,
+            String vatAmount,
+            @Schema(description = "QQSsiz qiymat") String netAmount) {}
 
     record CheckRequest(
             @NotNull(message = "{validation.required}") @Size(min = 1, max = MAX_LINES) List<Long> checkedLines,

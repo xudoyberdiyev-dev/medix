@@ -1,16 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Bookmark, BookmarkCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { addView, isCurrentView, MAX_NAME, MAX_VIEWS, parseViews, removeView, type SavedView } from "@/lib/saved-views";
 import { Button } from "./button";
 import { TextField } from "./text-field";
-
-const ERRORS = {
-  empty: "Koʻrinish nomini yozing",
-  tooLong: `Nom ${MAX_NAME} belgidan oshmasin — qisqaroq yozing`,
-  limit: `${MAX_VIEWS} tadan koʻp koʻrinish saqlanmaydi — keraksizini oʻchiring`,
-} as const;
 
 function read(key: string): SavedView[] {
   try {
@@ -45,6 +40,7 @@ export function SavedViews({
   hidden: string[];
   onApply: (view: SavedView) => void;
 }) {
+  const t = useTranslations("ui.views");
   const [open, setOpen] = useState(false);
   const [views, setViews] = useState<SavedView[]>([]);
   const [name, setName] = useState("");
@@ -61,7 +57,7 @@ export function SavedViews({
   function save() {
     const r = addView(read(storageKey), name, query, hidden);
     if (!r.ok) {
-      setError(ERRORS[r.error]);
+      setError(r.error === "empty" ? t("empty") : r.error === "tooLong" ? t("tooLong", { max: MAX_NAME }) : t("limit", { max: MAX_VIEWS }));
       return;
     }
     write(storageKey, r.views);
@@ -79,12 +75,12 @@ export function SavedViews({
   return (
     <div className="relative">
       <Button variant="secondary" size="sm" icon={Bookmark} onClick={toggle} aria-expanded={open}>
-        Koʻrinishlar
+        {t("button")}
       </Button>
       {open ? (
         <div className="absolute right-0 z-30 mt-1 flex w-72 flex-col gap-2 rounded-control border border-border bg-surface p-3 shadow-overlay">
           {views.length === 0 ? (
-            <div className="text-caption text-text-secondary">Hali saqlangan koʻrinish yoʻq. Filtr va ustunlarni tanlab, nom bering.</div>
+            <div className="text-caption text-text-secondary">{t("none")}</div>
           ) : (
             <ul className="flex flex-col gap-1">
               {views.map((v) => {
@@ -111,8 +107,8 @@ export function SavedViews({
                       type="button"
                       onClick={() => remove(v.name)}
                       className="rounded-control p-1 text-text-secondary hover:text-danger"
-                      aria-label={`Oʻchirish: ${v.name}`}
-                      title="Oʻchirish"
+                      aria-label={t("deleteNamed", { name: v.name })}
+                      title={t("delete")}
                     >
                       <Trash2 size={16} strokeWidth={1.5} aria-hidden />
                     </button>
@@ -123,10 +119,10 @@ export function SavedViews({
           )}
           <div className="flex items-end gap-2 border-t border-border pt-2">
             <div className="flex-1">
-              <TextField label="Yangi koʻrinish nomi" size="sm" value={name} onChange={setName} error={error} />
+              <TextField label={t("newName")} size="sm" value={name} onChange={setName} error={error} />
             </div>
             <Button variant="secondary" size="sm" onClick={save}>
-              Saqlash
+              {t("save")}
             </Button>
           </div>
         </div>

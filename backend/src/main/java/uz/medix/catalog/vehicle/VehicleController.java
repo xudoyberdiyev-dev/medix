@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -42,14 +40,19 @@ class VehicleController {
 
     private static final String MANAGE = "hasAuthority('lookups.fleet')";
 
-    record Vehicle(long id, long branchId, String plateNumber, String model, @Schema(nullable = true) Integer capacityBoxes,
-            boolean active) {}
+    record Vehicle(long id, long branchId, String plateNumber, String model,
+            @Schema(description = "Muzlatkichi bor (faqat ma'lumot, reysga ta'sir qilmaydi)") boolean hasRefrigerator, boolean active) {}
 
     record VehicleRequest(
             @NotNull(message = "{validation.required}") Long branchId,
             @NotBlank(message = "{validation.required}") @Size(max = 20) String plateNumber,
             @NotBlank(message = "{validation.required}") @Size(max = 100) String model,
-            @Schema(nullable = true, description = "Sig'imi — joylar (quti) soni") @Min(1) @Max(100000) Integer capacityBoxes) {}
+            @Schema(nullable = true, description = "Muzlatkichi bor (bo'sh — yo'q)") Boolean hasRefrigerator) {
+
+        boolean refrigerator() {
+            return Boolean.TRUE.equals(hasRefrigerator);
+        }
+    }
 
     private final JdbcClient jdbc;
     private final AuditLog audit;
@@ -74,7 +77,7 @@ class VehicleController {
             return List.of();
         }
         return jdbc.sql("""
-                SELECT id, branch_id, plate_number, model, capacity_boxes, active FROM vehicle
+                SELECT id, branch_id, plate_number, model, has_refrigerator, active FROM vehicle
                 WHERE (:all OR branch_id = :b) ORDER BY active DESC, plate_number""")
                 .param("all", a.allBranches())
                 .param("b", a.branchId() == null ? -1L : a.branchId())
@@ -92,11 +95,11 @@ class VehicleController {
         String plate = normalizePlate(r.plateNumber());
         ensureUniquePlate(plate, 0L);
         long id = jdbc.sql("""
-                INSERT INTO vehicle (branch_id, plate_number, model, capacity_boxes) VALUES (:b, :p, :m, :c) RETURNING id""")
+                INSERT INTO vehicle (branch_id, plate_number, model, has_refrigerator) VALUES (:b, :p, :m, :c) RETURNING id""")
                 .param("b", r.branchId())
                 .param("p", plate)
                 .param("m", r.model().strip())
-                .param("c", r.capacityBoxes())
+                .param("c", r.refrigerator())
                 .query(Long.class)
                 .single();
         Vehicle v = find(id);
@@ -114,12 +117,12 @@ class VehicleController {
         String plate = normalizePlate(r.plateNumber());
         ensureUniquePlate(plate, id);
         jdbc.sql("""
-                UPDATE vehicle SET branch_id = :b, plate_number = :p, model = :m, capacity_boxes = :c,
+                UPDATE vehicle SET branch_id = :b, plate_number = :p, model = :m, has_refrigerator = :c,
                        updated_at = now(), version = version + 1 WHERE id = :id""")
                 .param("b", r.branchId())
                 .param("p", plate)
                 .param("m", r.model().strip())
-                .param("c", r.capacityBoxes())
+                .param("c", r.refrigerator())
                 .param("id", id)
                 .update();
         Vehicle after = find(id);
@@ -190,7 +193,7 @@ class VehicleController {
     }
 
     private Vehicle find(long id) {
-        return jdbc.sql("SELECT id, branch_id, plate_number, model, capacity_boxes, active FROM vehicle WHERE id = :id")
+        return jdbc.sql("SELECT id, branch_id, plate_number, model, has_refrigerator, active FROM vehicle WHERE id = :id")
                 .param("id", id)
                 .query(Vehicle.class)
                 .optional()
@@ -212,7 +215,7 @@ class VehicleController {
         m.put("branchId", v.branchId());
         m.put("plateNumber", v.plateNumber());
         m.put("model", v.model());
-        m.put("capacityBoxes", v.capacityBoxes());
+        m.put("hasRefrigerator", v.hasRefrigerator());
         return m;
     }
 }

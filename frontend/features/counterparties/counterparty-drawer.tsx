@@ -1,6 +1,7 @@
 "use client";
 
 import { Ban, FileText, LockOpen, Pencil, Plus, Power, PowerOff, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { formatMoney } from "@/lib/format";
 import {
   canBlockCard,
   canEditCard,
-  PAYMENT_TYPES,
+  PAYMENT_TYPE_VALUES,
   formatIsoDate,
   parseMoneyInput,
   parseUzDate,
@@ -56,18 +57,20 @@ export function CounterpartyDrawer({
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const t = useTranslations("counterparties.drawer");
+  const tc = useTranslations("common");
   const cp = useCounterparty(counterpartyId);
   const me = useMe();
   const [tab, setTab] = useState("main");
   if (counterpartyId !== null && cp.error)
     return (
-      <Drawer open onClose={onClose} size="lg" kind="Kontragent" title="Kontragent">
+      <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("kind")}>
         <ErrorState onRetry={() => cp.refetch()} />
       </Drawer>
     );
   if (counterpartyId !== null && !cp.data)
     return (
-      <Drawer open onClose={onClose} size="lg" kind="Kontragent" title="Yuklanmoqda…">
+      <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={tc("loading")}>
         <div className="flex flex-col gap-4">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-2/3" />
@@ -80,10 +83,10 @@ export function CounterpartyDrawer({
   const tabs = c
     ? {
         items: [
-          { key: "main", label: "Asosiy" },
-          { key: "licenses", label: "Litsenziyalar", count: c.licenses.length },
-          { key: "contracts", label: "Shartnomalar", count: c.contracts.length },
-          { key: "terms", label: "Filial shartlari" },
+          { key: "main", label: t("tabs.main") },
+          { key: "licenses", label: t("tabs.licenses"), count: c.licenses.length },
+          { key: "contracts", label: t("tabs.contracts"), count: c.contracts.length },
+          { key: "terms", label: t("tabs.terms") },
         ],
         value: tab,
         onChange: setTab,
@@ -94,8 +97,8 @@ export function CounterpartyDrawer({
       open
       onClose={onClose}
       size="lg"
-      kind={c ? (c.customer && c.supplier ? "Mijoz · yetkazib beruvchi" : c.customer ? "Mijoz" : "Yetkazib beruvchi") : "Kontragent"}
-      title={c ? c.name : defaultRole === "CUSTOMER" ? "Yangi mijoz" : "Yangi yetkazib beruvchi"}
+      kind={c ? (c.customer && c.supplier ? t("kindBoth") : c.customer ? t("kindCustomer") : t("kindSupplier")) : t("kind")}
+      title={c ? c.name : defaultRole === "CUSTOMER" ? t("newCustomer") : t("newSupplier")}
       subtitle={c?.tin}
       status={c ? <StatusBadge blocked={c.blocked} active={c.active} /> : undefined}
       tabs={tabs}
@@ -130,6 +133,7 @@ function MainTab({
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const tm = useTranslations("counterparties.main");
   const me = useMe();
   const save = useSaveCounterparty();
   const block = useBlockCounterparty();
@@ -186,7 +190,7 @@ function MainTab({
       },
       {
         onSuccess: (c) => {
-          toast({ tone: "success", title: cp ? "Karta saqlandi" : "Kontragent qoʻshildi", description: `${c.name} · ${c.tin}` });
+          toast({ tone: "success", title: cp ? tm("saved") : tm("created"), description: `${c.name} · ${c.tin}` });
           if (!cp) onCreated(c.id);
         },
       },
@@ -195,11 +199,11 @@ function MainTab({
 
   return (
     <>
-      {cp?.blocked ? <Alert tone="danger" title={`Bloklangan: ${cp.blockedReason ?? ""}`} className="mb-4" /> : null}
+      {cp?.blocked ? <Alert tone="danger" title={tm("blockedReason", { reason: cp.blockedReason ?? "" })} className="mb-4" /> : null}
       <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
         <fieldset disabled={!canEdit} className="contents">
           <TextField
-            label="STIR / JShShIR"
+            label={tm("tin")}
             value={form.tin}
             onChange={set("tin")}
             error={err.fields.tin}
@@ -207,20 +211,20 @@ function MainTab({
             maxLength={14}
             required
           />
-          <TextField label="Nomi" value={form.name} onChange={set("name")} error={err.fields.name} required />
+          <TextField label={tm("name")} value={form.name} onChange={set("name")} error={err.fields.name} required />
           <TextField
-            label="Yuridik nomi"
+            label={tm("legalName")}
             value={form.legalName}
             onChange={set("legalName")}
             error={err.fields.legalName}
             className="col-span-2"
           />
           <div className="col-span-2 flex gap-6">
-            <Checkbox label="Mijoz" checked={form.customer} disabled={!canEdit} onChange={set("customer")} />
-            <Checkbox label="Yetkazib beruvchi" checked={form.supplier} disabled={!canEdit} onChange={set("supplier")} />
+            <Checkbox label={tm("customer")} checked={form.customer} disabled={!canEdit} onChange={set("customer")} />
+            <Checkbox label={tm("supplier")} checked={form.supplier} disabled={!canEdit} onChange={set("supplier")} />
           </div>
           <Select
-            label="Hudud"
+            label={tm("region")}
             searchable
             disabled={!canEdit}
             value={form.regionId}
@@ -229,21 +233,32 @@ function MainTab({
               .filter((r) => r.active || String(r.id) === form.regionId)
               .map((r) => ({ value: String(r.id), label: r.name }))}
           />
-          <TextField label="Manzil" value={form.address} onChange={set("address")} error={err.fields.address} />
-          <TextField label="Telefon" value={form.phone} onChange={set("phone")} error={err.fields.phone} placeholder="+998 90 123 45 67" />
-          <TextField label="Masʼul shaxs" value={form.contactPerson} onChange={set("contactPerson")} error={err.fields.contactPerson} />
-          <TextField label="Elektron pochta" value={form.email} onChange={set("email")} error={err.fields.email} />
+          <TextField label={tm("address")} value={form.address} onChange={set("address")} error={err.fields.address} />
           <TextField
-            label="QQS kodi"
+            label={tm("phone")}
+            value={form.phone}
+            onChange={set("phone")}
+            error={err.fields.phone}
+            placeholder="+998 90 123 45 67"
+          />
+          <TextField
+            label={tm("contactPerson")}
+            value={form.contactPerson}
+            onChange={set("contactPerson")}
+            error={err.fields.contactPerson}
+          />
+          <TextField label={tm("email")} value={form.email} onChange={set("email")} error={err.fields.email} />
+          <TextField
+            label={tm("vatCode")}
             value={form.vatCode}
             onChange={set("vatCode")}
             error={err.fields.vatCode}
             inputMode="numeric"
             maxLength={12}
           />
-          <TextField label="Bank" value={form.bankName} onChange={set("bankName")} error={err.fields.bankName} />
+          <TextField label={tm("bank")} value={form.bankName} onChange={set("bankName")} error={err.fields.bankName} />
           <TextField
-            label="MFO"
+            label={tm("mfo")}
             value={form.bankMfo}
             onChange={set("bankMfo")}
             error={err.fields.bankMfo}
@@ -251,7 +266,7 @@ function MainTab({
             maxLength={5}
           />
           <TextField
-            label="Hisob raqami"
+            label={tm("account")}
             value={form.bankAccount}
             onChange={set("bankAccount")}
             error={err.fields.bankAccount}
@@ -259,7 +274,7 @@ function MainTab({
             maxLength={20}
             className="col-span-2"
           />
-          <TextField label="Izoh" value={form.note} onChange={set("note")} error={err.fields.note} className="col-span-2" />
+          <TextField label={tm("note")} value={form.note} onChange={set("note")} error={err.fields.note} className="col-span-2" />
         </fieldset>
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
         {canEdit ? (
@@ -271,21 +286,21 @@ function MainTab({
                   icon={LockOpen}
                   loading={block.isPending}
                   onClick={() =>
-                    block.mutate({ id: cp.id, reason: null }, { onSuccess: () => toast({ tone: "success", title: "Blokdan chiqarildi" }) })
+                    block.mutate({ id: cp.id, reason: null }, { onSuccess: () => toast({ tone: "success", title: tm("unblocked") }) })
                   }
                 >
-                  Blokdan chiqarish
+                  {tm("unblock")}
                 </Button>
               ) : (
                 <Button variant="tertiary" icon={Ban} onClick={() => (block.reset(), setDialog("block"))}>
-                  Bloklash
+                  {tm("block")}
                 </Button>
               )
             ) : null}
             {cp ? (
               cp.active ? (
                 <Button variant="tertiary" icon={PowerOff} onClick={() => (activate.reset(), setDialog("deactivate"))}>
-                  Nofaol qilish
+                  {tm("deactivate")}
                 </Button>
               ) : (
                 <Button
@@ -293,19 +308,19 @@ function MainTab({
                   icon={Power}
                   loading={activate.isPending}
                   onClick={() =>
-                    activate.mutate({ id: cp.id, reason: null }, { onSuccess: () => toast({ tone: "success", title: "Faollashtirildi" }) })
+                    activate.mutate({ id: cp.id, reason: null }, { onSuccess: () => toast({ tone: "success", title: tm("activated") }) })
                   }
                 >
-                  Faollashtirish
+                  {tm("activate")}
                 </Button>
               )
             ) : null}
             <div className="ml-auto flex gap-2">
               <Button variant="secondary" onClick={onClose}>
-                Ortga
+                {tm("back")}
               </Button>
               <Button type="submit" loading={save.isPending}>
-                Kartani saqlash
+                {tm("save")}
               </Button>
             </div>
           </div>
@@ -313,13 +328,9 @@ function MainTab({
       </form>
       {dialog && cp ? (
         <DeactivateDialog
-          title={dialog === "block" ? `${cp.name}ni bloklaysizmi?` : `${cp.name}ni nofaol qilasizmi?`}
-          consequence={
-            dialog === "block"
-              ? "Bloklangan mijozga buyurtma kiritilmaydi. Qarzi va tarixi saqlanadi; keyin blokdan chiqarish mumkin."
-              : "Kontragent yangi hujjatlarda tanlanmaydi. Tarixi saqlanadi; keyin faollashtirish mumkin."
-          }
-          actionLabel={dialog === "block" ? "Kontragentni bloklash" : "Kontragentni nofaol qilish"}
+          title={dialog === "block" ? tm("blockTitle", { name: cp.name }) : tm("deactivateTitle", { name: cp.name })}
+          consequence={dialog === "block" ? tm("blockConsequence") : tm("deactivateConsequence")}
+          actionLabel={dialog === "block" ? tm("blockAction") : tm("deactivateAction")}
           pending={dialog === "block" ? block.isPending : activate.isPending}
           error={dialog === "block" ? block.error : activate.error}
           onClose={() => setDialog(null)}
@@ -328,7 +339,7 @@ function MainTab({
               { id: cp.id, reason },
               {
                 onSuccess: () => (
-                  toast({ tone: "success", title: dialog === "block" ? "Bloklandi" : "Nofaol qilindi", description: cp.name }),
+                  toast({ tone: "success", title: dialog === "block" ? tm("blockedToast") : tm("deactivatedToast"), description: cp.name }),
                   setDialog(null)
                 ),
               },
@@ -341,22 +352,19 @@ function MainTab({
 }
 
 function LicensesTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean }) {
+  const t = useTranslations("counterparties.licenses");
   const [editing, setEditing] = useState<License | "new" | null>(null);
   return (
     <div className="flex flex-col gap-3">
       {canEdit ? (
         <div>
           <Button variant="secondary" icon={Plus} onClick={() => setEditing("new")}>
-            Litsenziya qoʻshish
+            {t("add")}
           </Button>
         </div>
       ) : null}
       {cp.licenses.length === 0 ? (
-        <EmptyState
-          icon={ShieldCheck}
-          title="Litsenziya kiritilmagan"
-          description="Muddati oʻtgan yoki litsenziyasi yoʻq mijozga buyurtma kiritilmaydi."
-        />
+        <EmptyState icon={ShieldCheck} title={t("emptyTitle")} description={t("emptyDescription")} />
       ) : (
         <ul className="flex flex-col divide-y divide-border rounded-card border border-border">
           {cp.licenses.map((l) => (
@@ -366,12 +374,12 @@ function LicensesTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean
                   {l.kind} · <span className="font-mono">{l.number}</span>
                 </div>
                 <div className="text-caption text-text-secondary">
-                  {l.issuedOn ? `Berilgan: ${formatIsoDate(l.issuedOn)}` : "Berilgan sana yoʻq"}
-                  {l.controlledAllowed ? " · Nazoratdagi preparatlarga ruxsat" : ""}
+                  {l.issuedOn ? t("issued", { date: formatIsoDate(l.issuedOn) }) : t("noIssued")}
+                  {l.controlledAllowed ? t("controlledSuffix") : ""}
                 </div>
               </div>
               <LicenseBadge validUntil={l.validUntil} />
-              {canEdit ? <Button variant="icon" icon={Pencil} aria-label="Tahrirlash" onClick={() => setEditing(l)} /> : null}
+              {canEdit ? <Button variant="icon" icon={Pencil} aria-label={t("edit")} onClick={() => setEditing(l)} /> : null}
             </li>
           ))}
         </ul>
@@ -382,6 +390,8 @@ function LicensesTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean
 }
 
 function LicenseDialog({ cpId, license, onClose }: { cpId: number; license: License | null; onClose: () => void }) {
+  const t = useTranslations("counterparties.licenses");
+  const dp = useTranslations("counterparties")("datePlaceholder");
   const save = useSaveLicense();
   const [number, setNumber] = useState(license?.number ?? "");
   const [kind, setKind] = useState(license?.kind ?? "Farmatsevtika faoliyati");
@@ -394,39 +404,47 @@ function LicenseDialog({ cpId, license, onClose }: { cpId: number; license: Lice
     <Modal
       open
       onClose={onClose}
-      title={license ? "Litsenziyani tahrirlash" : "Yangi litsenziya"}
+      title={license ? t("editTitle") : t("newTitle")}
       primaryAction={{
-        label: "Litsenziyani saqlash",
+        label: t("save"),
         loading: save.isPending,
         onClick: () => {
           const i = parseUzDate(issuedOn);
           const v = parseUzDate(validUntil);
           const e: Record<string, string> = {};
-          if (i === null) e.issuedOn = "Sana KK.OO.YYYY koʻrinishida, masalan 04.10.2026.";
-          if (v === null) e.validUntil = "Sana KK.OO.YYYY koʻrinishida, masalan 04.10.2027.";
+          if (i === null) e.issuedOn = t("issuedError");
+          if (v === null) e.validUntil = t("validError");
           setLocal(e);
           if (i === null || v === null) return;
           save.mutate(
             { id: cpId, licenseId: license?.id, body: { number, kind, issuedOn: i, validUntil: v, controlledAllowed: controlled } },
-            { onSuccess: () => (toast({ tone: "success", title: "Litsenziya saqlandi" }), onClose()) },
+            { onSuccess: () => (toast({ tone: "success", title: t("saved") }), onClose()) },
           );
         },
       }}
     >
       <div className="grid grid-cols-2 gap-4">
-        <TextField label="Turi" value={kind} onChange={setKind} error={err.fields.kind} required className="col-span-2" />
-        <TextField label="Raqami" value={number} onChange={setNumber} error={err.fields.number} required autoFocus className="col-span-2" />
-        <TextField label="Berilgan sana" value={issuedOn} onChange={setIssuedOn} error={local.issuedOn} placeholder="KK.OO.YYYY" />
+        <TextField label={t("kind")} value={kind} onChange={setKind} error={err.fields.kind} required className="col-span-2" />
         <TextField
-          label="Amal qilish muddati"
+          label={t("number")}
+          value={number}
+          onChange={setNumber}
+          error={err.fields.number}
+          required
+          autoFocus
+          className="col-span-2"
+        />
+        <TextField label={t("issuedOn")} value={issuedOn} onChange={setIssuedOn} error={local.issuedOn} placeholder={dp} />
+        <TextField
+          label={t("validUntil")}
           value={validUntil}
           onChange={setValidUntil}
           error={local.validUntil}
-          placeholder="KK.OO.YYYY"
-          hint="Boʻsh — muddatsiz"
+          placeholder={dp}
+          hint={t("validHint")}
         />
         <div className="col-span-2">
-          <Checkbox label="Nazoratdagi preparatlarga ruxsat" checked={controlled} onChange={setControlled} />
+          <Checkbox label={t("controlled")} checked={controlled} onChange={setControlled} />
         </div>
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
       </div>
@@ -435,6 +453,7 @@ function LicenseDialog({ cpId, license, onClose }: { cpId: number; license: Lice
 }
 
 function ContractsTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean }) {
+  const t = useTranslations("counterparties.contracts");
   const branches = useBranchList();
   const [editing, setEditing] = useState<Contract | "new" | null>(null);
   const branchName = (id: number) => branches.data?.find((b) => b.id === id)?.name ?? "";
@@ -443,12 +462,12 @@ function ContractsTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolea
       {canEdit ? (
         <div>
           <Button variant="secondary" icon={Plus} onClick={() => setEditing("new")}>
-            Shartnoma qoʻshish
+            {t("add")}
           </Button>
         </div>
       ) : null}
       {cp.contracts.length === 0 ? (
-        <EmptyState icon={FileText} title="Shartnoma kiritilmagan" description="Shartnoma filial (yuridik shaxs) bilan tuziladi." />
+        <EmptyState icon={FileText} title={t("emptyTitle")} description={t("emptyDescription")} />
       ) : (
         <ul className="flex flex-col divide-y divide-border rounded-card border border-border">
           {cp.contracts.map((k) => (
@@ -458,12 +477,12 @@ function ContractsTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolea
                   № <span className="font-mono">{k.number}</span> · {branchName(k.branchId)}
                 </div>
                 <div className="text-caption text-text-secondary">
-                  {k.signedOn ? `Imzolangan: ${formatIsoDate(k.signedOn)}` : "Imzo sanasi yoʻq"}
-                  {k.validUntil ? ` · ${formatIsoDate(k.validUntil)} gacha` : ""}
+                  {k.signedOn ? t("signed", { date: formatIsoDate(k.signedOn) }) : t("noSigned")}
+                  {k.validUntil ? t("until", { date: formatIsoDate(k.validUntil) }) : ""}
                   {k.note ? ` · ${k.note}` : ""}
                 </div>
               </div>
-              {canEdit ? <Button variant="icon" icon={Pencil} aria-label="Tahrirlash" onClick={() => setEditing(k)} /> : null}
+              {canEdit ? <Button variant="icon" icon={Pencil} aria-label={t("edit")} onClick={() => setEditing(k)} /> : null}
             </li>
           ))}
         </ul>
@@ -474,6 +493,8 @@ function ContractsTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolea
 }
 
 function ContractDialog({ cpId, contract, onClose }: { cpId: number; contract: Contract | null; onClose: () => void }) {
+  const t = useTranslations("counterparties.contracts");
+  const dp = useTranslations("counterparties")("datePlaceholder");
   const me = useMe();
   const branches = useBranchList();
   const save = useSaveContract();
@@ -491,17 +512,17 @@ function ContractDialog({ cpId, contract, onClose }: { cpId: number; contract: C
     <Modal
       open
       onClose={onClose}
-      title={contract ? "Shartnomani tahrirlash" : "Yangi shartnoma"}
+      title={contract ? t("editTitle") : t("newTitle")}
       primaryAction={{
-        label: "Shartnomani saqlash",
+        label: t("save"),
         loading: save.isPending,
         onClick: () => {
           const s = parseUzDate(signedOn);
           const v = parseUzDate(validUntil);
           const e: Record<string, string> = {};
-          if (!branchId) e.branchId = "Filial tanlanmagan.";
-          if (s === null) e.signedOn = "Sana KK.OO.YYYY koʻrinishida.";
-          if (v === null) e.validUntil = "Sana KK.OO.YYYY koʻrinishida.";
+          if (!branchId) e.branchId = t("branchError");
+          if (s === null) e.signedOn = t("dateError");
+          if (v === null) e.validUntil = t("dateError");
           setLocal(e);
           if (!branchId || s === null || v === null) return;
           save.mutate(
@@ -510,30 +531,24 @@ function ContractDialog({ cpId, contract, onClose }: { cpId: number; contract: C
               contractId: contract?.id,
               body: { branchId: Number(branchId), number, signedOn: s, validUntil: v, note: note.trim() || undefined },
             },
-            { onSuccess: () => (toast({ tone: "success", title: "Shartnoma saqlandi" }), onClose()) },
+            { onSuccess: () => (toast({ tone: "success", title: t("saved") }), onClose()) },
           );
         },
       }}
     >
       <div className="grid grid-cols-2 gap-4">
         <Select
-          label="Filial"
+          label={t("branch")}
           required
           value={branchId}
           onChange={setBranchId}
           error={local.branchId ?? err.fields.branchId}
           options={active.map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
         />
-        <TextField label="Raqami" value={number} onChange={setNumber} error={err.fields.number} required autoFocus />
-        <TextField label="Imzolangan sana" value={signedOn} onChange={setSignedOn} error={local.signedOn} placeholder="KK.OO.YYYY" />
-        <TextField
-          label="Amal qilish muddati"
-          value={validUntil}
-          onChange={setValidUntil}
-          error={local.validUntil}
-          placeholder="KK.OO.YYYY"
-        />
-        <TextField label="Izoh" value={note} onChange={setNote} error={err.fields.note} className="col-span-2" />
+        <TextField label={t("number")} value={number} onChange={setNumber} error={err.fields.number} required autoFocus />
+        <TextField label={t("signedOn")} value={signedOn} onChange={setSignedOn} error={local.signedOn} placeholder={dp} />
+        <TextField label={t("validUntil")} value={validUntil} onChange={setValidUntil} error={local.validUntil} placeholder={dp} />
+        <TextField label={t("note")} value={note} onChange={setNote} error={err.fields.note} className="col-span-2" />
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
       </div>
     </Modal>
@@ -541,6 +556,7 @@ function ContractDialog({ cpId, contract, onClose }: { cpId: number; contract: C
 }
 
 function TermsTab({ cp }: { cp: CounterpartyDetail }) {
+  const tt = useTranslations("counterparties.terms");
   const me = useMe();
   const branches = useBranchList();
   const perms = me.data?.permissions ?? [];
@@ -550,7 +566,7 @@ function TermsTab({ cp }: { cp: CounterpartyDetail }) {
   if (!branches.data) return <Skeleton className="h-40 w-full" />;
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-text-secondary">Limit, muddat va narx turi har filial boʻyicha alohida. Qarz ham filial boʻyicha hisoblanadi.</p>
+      <p className="text-text-secondary">{tt("intro")}</p>
       {visible.map((b) => (
         <TermsCard
           key={b.id}
@@ -581,6 +597,8 @@ function TermsCard({
   customerSide: boolean;
   supplierSide: boolean;
 }) {
+  const tt = useTranslations("counterparties.terms");
+  const tcp = useTranslations("counterparties");
   const canEdit = customerSide || supplierSide;
   const save = useSaveTerms();
   const priceTypes = usePriceTypes();
@@ -606,12 +624,12 @@ function TermsCard({
   function submit() {
     const e: Record<string, string> = {};
     const limit = parseMoneyInput(f.creditLimit);
-    if (limit === null) e.creditLimit = "Summa notoʻgʻri, masalan 15.000.000";
+    if (limit === null) e.creditLimit = tt("limitError");
     const int = (raw: string, key: string, max: number) => {
       const t = raw.trim();
       if (!t) return undefined;
       if (!/^\d+$/.test(t) || Number(t) > max) {
-        e[key] = `0–${max} oraligʻida butun son.`;
+        e[key] = tt("intError", { max });
         return undefined;
       }
       return Number(t);
@@ -630,7 +648,7 @@ function TermsCard({
     if (Object.keys(e).length > 0) return;
     save.mutate(
       { id: cp.id, branchId, body },
-      { onSuccess: () => toast({ tone: "success", title: "Filial shartlari saqlandi", description: branchName }) },
+      { onSuccess: () => toast({ tone: "success", title: tt("saved"), description: branchName }) },
     );
   }
 
@@ -641,7 +659,7 @@ function TermsCard({
       actions={
         canEdit ? (
           <Button variant="secondary" size="sm" loading={save.isPending} onClick={submit}>
-            Shartlarni saqlash
+            {tt("save")}
           </Button>
         ) : undefined
       }
@@ -649,43 +667,43 @@ function TermsCard({
       <div className="grid grid-cols-2 gap-4">
         {cp.customer ? (
           <fieldset disabled={!customerSide} className="contents">
-            <div className="col-span-2 text-label text-text-secondary">Mijoz sifatida</div>
+            <div className="col-span-2 text-label text-text-secondary">{tt("asCustomer")}</div>
             <TextField
-              label="Kredit limiti"
+              label={tt("creditLimit")}
               value={f.creditLimit}
               onChange={set("creditLimit")}
               error={fe("creditLimit")}
-              suffix="soʻm"
+              suffix={tt("sum")}
               inputMode="decimal"
-              hint="Boʻsh — limit belgilanmagan"
+              hint={tt("creditLimitHint")}
             />
             <TextField
-              label="Toʻlov muddati"
+              label={tt("paymentDays")}
               value={f.paymentDays}
               onChange={set("paymentDays")}
               error={fe("paymentDays")}
-              suffix="kun"
+              suffix={tt("days")}
               inputMode="numeric"
             />
             <Select
-              label="Narx turi"
+              label={tt("priceType")}
               disabled={!customerSide}
               value={f.priceTypeId}
               onChange={set("priceTypeId")}
-              placeholder="Bazaviy (Narx)"
+              placeholder={tt("priceTypeBase")}
               options={(priceTypes.data ?? []).map((p) => ({ value: String(p.id), label: p.name }))}
             />
             <TextField
-              label="Minimal yaroqlilik"
+              label={tt("minShelfLife")}
               value={f.minShelfLifeDays}
               onChange={set("minShelfLifeDays")}
               error={fe("minShelfLifeDays")}
-              suffix="kun"
+              suffix={tt("days")}
               inputMode="numeric"
-              hint="Partiyaning qolgan muddati kamida shuncha boʻlsin"
+              hint={tt("minShelfLifeHint")}
             />
             <Select
-              label="Operator"
+              label={tt("operator")}
               searchable
               disabled={!customerSide}
               value={f.operatorId}
@@ -697,24 +715,24 @@ function TermsCard({
         ) : null}
         {cp.supplier ? (
           <fieldset disabled={!supplierSide} className="contents">
-            <div className="col-span-2 text-label text-text-secondary">Yetkazib beruvchi sifatida</div>
+            <div className="col-span-2 text-label text-text-secondary">{tt("asSupplier")}</div>
             <TextField
-              label="Toʻlov muddati (YB)"
+              label={tt("supplierPaymentDays")}
               value={f.supplierPaymentDays}
               onChange={set("supplierPaymentDays")}
               error={fe("supplierPaymentDays")}
-              suffix="kun"
+              suffix={tt("days")}
               inputMode="numeric"
             />
             <Select
-              label="Asosiy toʻlov turi"
+              label={tt("defaultPaymentType")}
               disabled={!supplierSide}
               value={f.defaultPaymentType}
               onChange={set("defaultPaymentType")}
-              options={PAYMENT_TYPES}
+              options={PAYMENT_TYPE_VALUES.map((value) => ({ value, label: tcp(`paymentType.${value}`) }))}
             />
             <Select
-              label="Taʼminot masʼuli"
+              label={tt("supplyEmployee")}
               searchable
               disabled={!supplierSide}
               value={f.supplyEmployeeId}

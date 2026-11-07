@@ -1,0 +1,10 @@
+{
+  "mainMenu": "Главное меню",
+  "profile": "Профиль",
+  "logout": "Выйти",
+  "search": "Поиск",
+  "branch": "Филиал",
+  "allBranches": "Все филиалы",
+  "openMenu": "Открыть меню",
+  "closeMenu": "Закрыть меню"
+}

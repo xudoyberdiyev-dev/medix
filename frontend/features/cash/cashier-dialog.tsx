@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Modal } from "@/components/ui/modal";
@@ -17,6 +18,8 @@ const NONE = "none";
 
 /** Kassalarga kassir biriktirish (Filial rahbari, Direktor, Admin). Kassir amallarni faqat oʻz kassasida bajaradi. */
 export function CashierDialog(props: { branchId: number; accounts: MoneyAccount[]; onClose: () => void }) {
+  const t = useTranslations("cash.cashiers");
+  const tc = useTranslations("common");
   const qc = useQueryClient();
   const kassas = props.accounts.filter((a) => a.kind === "CASH" && a.active);
   const options = useCashierOptions(props.branchId, true);
@@ -41,7 +44,7 @@ export function CashierDialog(props: { branchId: number; accounts: MoneyAccount[
         );
       }
       await qc.invalidateQueries({ queryKey: ["money-accounts"] });
-      toast({ tone: "success", title: "Kassirlar saqlandi" });
+      toast({ tone: "success", title: t("saved") });
       props.onClose();
     } catch (e) {
       setError(e);
@@ -52,24 +55,22 @@ export function CashierDialog(props: { branchId: number; accounts: MoneyAccount[
 
   const err = describeError(error);
   const people = [
-    { value: NONE, label: "Biriktirilmagan", sub: "Kassasi yoʻq xodimlar ishlatadi" },
+    { value: NONE, label: t("none"), sub: t("noneSub") },
     ...(options.data ?? []).map((o) => ({ value: String(o.id), label: o.fullName, sub: o.cashName ?? undefined })),
   ];
   return (
     <Modal
       open
       onClose={props.onClose}
-      title="Kassirlar"
-      primaryAction={{ label: "Saqlash", onClick: () => void save(), loading: pending, disabled: changed.length === 0 }}
-      secondaryAction={{ label: "Bekor qilish", onClick: props.onClose }}
+      title={t("title")}
+      primaryAction={{ label: tc("save"), onClick: () => void save(), loading: pending, disabled: changed.length === 0 }}
+      secondaryAction={{ label: tc("cancel"), onClick: props.onClose }}
     >
       <div className="flex flex-col gap-4">
-        <p className="text-text-secondary">
-          Kassir faqat oʻziga biriktirilgan kassada ishlaydi. Filial rahbari, Direktor va Admin istalgan kassada ishlay oladi.
-        </p>
+        <p className="text-text-secondary">{t("hint")}</p>
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {options.error ? (
-          <Alert tone="danger" title="Xodimlar roʻyxati yuklanmadi. Oynani yopib, qayta oching." />
+          <Alert tone="danger" title={t("loadError")} />
         ) : options.isPending ? (
           <Skeleton className="h-20 w-full" />
         ) : (

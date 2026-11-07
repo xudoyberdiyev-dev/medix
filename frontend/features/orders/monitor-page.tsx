@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlarmClock, CalendarX, Clock, LayoutDashboard, PackageOpen, Tag, Timer, Truck } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -21,7 +22,10 @@ import { ReceiptDrawer } from "@/features/receipts/receipt-drawer";
 import { RECEIPT_ACCEPT, useReceipts, type ReceiptSummary } from "@/features/receipts/api";
 import { TRANSFER_RECEIVE, useWarehouseTransfers, type WarehouseTransferSummary } from "@/features/warehouse-transfers/api";
 import { WarehouseTransferDrawer } from "@/features/warehouse-transfers/warehouse-transfer-drawer";
-import { STATUS_LABELS, type OrderStatus } from "./api";
+import { useBranchSales, type BranchSaleSummary } from "@/features/branch-sales/api";
+import { BranchSaleDrawer } from "@/features/branch-sales/branch-sale-drawer";
+import type { OrderStatus } from "./api";
+import type { OrdersT } from "./i18n";
 import { IssuesList } from "./issues";
 import { ReturnsList } from "./returns";
 import { OrderDrawer } from "./order-drawer";
@@ -33,12 +37,12 @@ export type MonitorCard = components["schemas"]["MonitorCard"];
 export const MONITOR_COLUMNS: OrderStatus[] = ["QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING"];
 
 /** Holatda turgan vaqt: «45 daqiqa», «3 soat 10 daqiqa», «2 kun 4 soat». */
-export function sinceText(since: Date, now: Date): string {
+export function sinceText(since: Date, now: Date, t: OrdersT): string {
   const min = Math.max(0, Math.floor((now.getTime() - since.getTime()) / 60000));
-  if (min < 60) return `${min} daqiqa`;
+  if (min < 60) return t("since.minutes", { m: min });
   const h = Math.floor(min / 60);
-  if (h < 24) return `${h} soat ${min % 60} daqiqa`;
-  return `${Math.floor(h / 24)} kun ${h % 24} soat`;
+  if (h < 24) return t("since.hours", { h, m: min % 60 });
+  return t("since.days", { d: Math.floor(h / 24), h: h % 24 });
 }
 
 /** Ustunlarga ajratish: kechikkanlar tepada, keyin eng uzoq kutayotganlar. */
@@ -60,29 +64,37 @@ function useNow(): Date {
   return now;
 }
 
-export type KeeperTab = "monitor" | "time" | "issues" | "receipts" | "transfers" | "returns";
+export type KeeperTab = "monitor" | "time" | "check" | "issues" | "receipts" | "transfers" | "returns";
 
 /** Ombor mudiri paneli yorliqlari (SPEC 3): ruxsat boʻyicha; «Hujjatlashtirish» — Joʻnatish sahifasiga havola. */
-export function keeperTabs(opts: {
-  waitingTime: number;
-  receipts: boolean;
-  returns: boolean;
-  receiptCount?: number;
-  transfers?: boolean;
-  transferCount?: number;
-}): TabItem[] {
+export function keeperTabs(
+  opts: {
+    waitingTime: number;
+    receipts: boolean;
+    returns: boolean;
+    receiptCount?: number;
+    transfers?: boolean;
+    transferCount?: number;
+    /** «Hisobdan oʻtkazish» — orders.check bilan; soni — «Tekshiruvda» buyurtmalar. */
+    check?: boolean;
+    checkCount?: number;
+  },
+  t: OrdersT,
+): TabItem[] {
   return [
-    { key: "monitor", label: "Monitor" },
-    { key: "time", label: "Vaqt berish", count: opts.waitingTime },
-    { key: "issues", label: "Muammolar" },
-    ...(opts.receipts ? [{ key: "receipts", label: "Kirim qabuli", count: opts.receiptCount }] : []),
-    ...(opts.transfers ? [{ key: "transfers", label: "Koʻchirish qabuli", count: opts.transferCount }] : []),
-    ...(opts.returns ? [{ key: "returns", label: "Qaytgan tovar" }] : []),
+    { key: "monitor", label: t("monitor.tab.monitor") },
+    { key: "time", label: t("monitor.tab.time"), count: opts.waitingTime },
+    ...(opts.check ? [{ key: "check", label: t("monitor.tab.check"), count: opts.checkCount }] : []),
+    { key: "issues", label: t("monitor.tab.issues") },
+    ...(opts.receipts ? [{ key: "receipts", label: t("monitor.tab.receipts"), count: opts.receiptCount }] : []),
+    ...(opts.transfers ? [{ key: "transfers", label: t("monitor.tab.transfers"), count: opts.transferCount }] : []),
+    ...(opts.returns ? [{ key: "returns", label: t("monitor.tab.returns") }] : []),
   ];
 }
 
 /** Ombor mudiri paneli (SPEC 3, 5.4): «Ombor holati» + yorliqlar — Monitor, Vaqt berish, Muammolar, Kirim qabuli, Qaytgan tovar. */
 export function MonitorPage() {
+  const t = useTranslations("orders");
   const me = useMe();
   const now = useNow();
   const allowed = can(me.data, "orders.queue");
@@ -99,6 +111,11 @@ export function MonitorPage() {
   const canTransfers = can(me.data, TRANSFER_RECEIVE);
   const transit = useWarehouseTransfers(branchId, "IN_TRANSIT", 1, allowed && canTransfers);
   const [transfer, setTransfer] = useState<number | null>(null);
+  // Filiallararo savdo: shu filialga (xaridor) yo'ldagi FS lar ham «Ko'chirish qabuli» da
+  const fsTransit = useBranchSales(branchId, "IN_TRANSIT", 1, allowed && canTransfers);
+  const buyerBranch = branchId ?? me.data?.branchId ?? null;
+  const fsToReceive = incomingBranchSales(fsTransit.data?.items ?? [], buyerBranch);
+  const [branchSale, setBranchSale] = useState<number | null>(null);
   const rawTab = useSearchParams().get("tab");
   const board = useQuery({
     queryKey: ["orders", "monitor", branchId],
@@ -107,30 +124,35 @@ export function MonitorPage() {
     refetchInterval: live ? 60_000 : 10_000,
   });
 
-  if (me.data && !allowed) return <ForbiddenState description="Monitor Ombor mudiri, Filial rahbari va Direktor uchun." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("monitor.forbidden")} />;
 
-  const tabs = keeperTabs({
-    waitingTime: board.data?.waitingTime ?? 0,
-    receipts: canReceipts,
-    returns: canReturns,
-    receiptCount: canReceipts ? drafts.data?.total : undefined,
-    transfers: canTransfers,
-    transferCount: canTransfers ? transit.data?.total : undefined,
-  });
-  const tab = (tabs.some((t) => t.key === rawTab) ? rawTab : "monitor") as KeeperTab;
+  const tabs = keeperTabs(
+    {
+      waitingTime: board.data?.waitingTime ?? 0,
+      receipts: canReceipts,
+      returns: canReturns,
+      receiptCount: canReceipts ? drafts.data?.total : undefined,
+      transfers: canTransfers,
+      transferCount: canTransfers && transit.data ? transit.data.total + fsToReceive.length : undefined,
+      check: canReturns,
+      checkCount: board.data?.cards.filter((c) => c.status === "CHECKING").length,
+    },
+    t,
+  );
+  const tab = (tabs.some((x) => x.key === rawTab) ? rawTab : "monitor") as KeeperTab;
   const setTab = (k: string) => router.replace(k === "monitor" ? pathname : `${pathname}?tab=${k}`, { scroll: false });
   const waiting = (board.data?.cards ?? []).filter((c) => c.status === "QUEUED" && !c.timeGiven);
 
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-page-title">Ombor mudiri paneli</h1>
+        <h1 className="text-page-title">{t("monitor.title")}</h1>
         {can(me.data, "shipments.view") ? (
           <Link
             href="/shipments"
             className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-3 hover:border-primary"
           >
-            <Truck size={16} strokeWidth={1.5} aria-hidden /> Hujjatlashtirish va reys
+            <Truck size={16} strokeWidth={1.5} aria-hidden /> {t("monitor.docsLink")}
           </Link>
         ) : null}
       </div>
@@ -140,41 +162,37 @@ export function MonitorPage() {
         <Skeleton className="h-64 w-full" />
       ) : (
         <>
-          <section aria-label="Ombor holati" className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Ishda" value={board.data.cards.length} icon={LayoutDashboard} />
+          <section aria-label={t("monitor.stateAria")} className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Stat label={t("monitor.inWork")} value={board.data.cards.length} icon={LayoutDashboard} />
             <Stat
-              label="Vaqt berilmagan"
+              label={t("monitor.noTime")}
               value={board.data.waitingTime}
               icon={Clock}
               tone={board.data.waitingTime ? "warning" : undefined}
             />
-            <Stat label="Berilgan vaqtdan oʻtgan" value={board.data.late} icon={AlarmClock} tone={board.data.late ? "danger" : undefined} />
+            <Stat label={t("monitor.late")} value={board.data.late} icon={AlarmClock} tone={board.data.late ? "danger" : undefined} />
             <Stat
-              label={`${board.data.lateDays} kundan oshgan`}
+              label={t("monitor.stale", { days: board.data.lateDays })}
               value={board.data.stale}
               icon={CalendarX}
               tone={board.data.stale ? "danger" : undefined}
             />
           </section>
           <div className="mb-4">
-            <Tabs items={tabs} value={tab} onChange={setTab} aria-label="Ombor mudiri paneli" />
+            <Tabs items={tabs} value={tab} onChange={setTab} aria-label={t("monitor.title")} />
           </div>
           {tab !== "monitor" ? null : board.data.cards.length === 0 ? (
             <Card>
-              <EmptyState
-                icon={LayoutDashboard}
-                title="Omborda ish yoʻq"
-                description="Tasdiqlangan buyurtmalar «Navbatda» ustunida paydo boʻladi."
-              />
+              <EmptyState icon={LayoutDashboard} title={t("monitor.emptyTitle")} description={t("monitor.emptyHint")} />
             </Card>
           ) : (
             <div className="grid grid-flow-col auto-cols-[minmax(14rem,1fr)] gap-3 overflow-x-auto pb-2">
               {MONITOR_COLUMNS.map((s) => {
                 const cards = groupByStage(board.data.cards)[s];
                 return (
-                  <section key={s} aria-label={STATUS_LABELS[s]} className="rounded-card bg-background p-2">
+                  <section key={s} aria-label={t(`status.${s}`)} className="rounded-card bg-background p-2">
                     <h2 className="mb-2 flex items-center justify-between px-1 text-subtitle">
-                      {STATUS_LABELS[s]} <span className="text-text-secondary tabular-nums">{cards.length}</span>
+                      {t(`status.${s}`)} <span className="text-text-secondary tabular-nums">{cards.length}</span>
                     </h2>
                     <ul className="flex flex-col gap-2">
                       {cards.map((c) => (
@@ -193,10 +211,10 @@ export function MonitorPage() {
       {board.data && tab === "time" ? (
         waiting.length === 0 ? (
           <Card>
-            <EmptyState icon={Clock} title="Hammasiga vaqt berilgan" description="Navbatdagi yangi buyurtmalar shu yerda paydo boʻladi." />
+            <EmptyState icon={Clock} title={t("monitor.allTimed")} description={t("monitor.allTimedHint")} />
           </Card>
         ) : (
-          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Vaqt berilmagan buyurtmalar">
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label={t("monitor.waitingAria")}>
             {waiting.map((c) => (
               <li key={c.id}>
                 <MonitorCardView card={c} now={now} onOpen={() => setOpen(c.id)} />
@@ -205,12 +223,43 @@ export function MonitorPage() {
           </ul>
         )
       ) : null}
+      {board.data && tab === "check" ? (
+        <>
+          <p className="mb-3 text-caption text-text-secondary">
+            {t("monitor.checkHint")}{" "}
+            <Link href="/shipments" className="text-primary hover:underline">
+              {t("monitor.toShipments")}
+            </Link>
+          </p>
+          {board.data.cards.filter((c) => c.status === "CHECKING").length === 0 ? (
+            <Card>
+              <EmptyState icon={PackageOpen} title={t("monitor.checkEmpty")} description={t("monitor.checkEmptyHint")} />
+            </Card>
+          ) : (
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label={t("monitor.tab.check")}>
+              {board.data.cards
+                .filter((c) => c.status === "CHECKING")
+                .map((c) => (
+                  <li key={c.id}>
+                    <MonitorCardView card={c} now={now} onOpen={() => setOpen(c.id)} />
+                  </li>
+                ))}
+            </ul>
+          )}
+        </>
+      ) : null}
       {board.data && tab === "issues" ? <IssuesList onOpenOrder={setOpen} /> : null}
       {board.data && tab === "receipts" ? <ReceiptQueue query={drafts} onOpen={setReceipt} /> : null}
-      {board.data && tab === "transfers" ? <TransferQueue query={transit} onOpen={setTransfer} /> : null}
+      {board.data && tab === "transfers" ? (
+        <div className="flex flex-col gap-4">
+          <TransferQueue query={transit} onOpen={setTransfer} />
+          {fsToReceive.length > 0 ? <BranchSaleQueue rows={fsToReceive} onOpen={setBranchSale} /> : null}
+        </div>
+      ) : null}
       {board.data && tab === "returns" ? <ReturnsList /> : null}
       {open !== null ? <OrderDrawer id={open} onClose={() => setOpen(null)} onCreated={() => undefined} /> : null}
       {receipt !== null ? <ReceiptDrawer id={receipt} onClose={() => setReceipt(null)} onCreated={() => undefined} /> : null}
+      {branchSale !== null ? <BranchSaleDrawer id={branchSale} onClose={() => setBranchSale(null)} onCreated={() => undefined} /> : null}
       {transfer !== null ? <WarehouseTransferDrawer id={transfer} onClose={() => setTransfer(null)} onCreated={() => undefined} /> : null}
     </>
   );
@@ -230,7 +279,8 @@ function Stat({ label, value, icon: Icon, tone }: { label: string; value: number
 }
 
 function MonitorCardView({ card: c, now, onOpen }: { card: MonitorCard; now: Date; onOpen: () => void }) {
-  const t = c.deadline ? timerText(new Date(c.deadline), now) : null;
+  const tr = useTranslations("orders");
+  const t = c.deadline ? timerText(new Date(c.deadline), now, tr) : null;
   return (
     <button
       type="button"
@@ -241,13 +291,13 @@ function MonitorCardView({ card: c, now, onOpen }: { card: MonitorCard; now: Dat
         <span className="font-mono text-caption">{c.number}</span>
         {c.marked ? (
           <Badge tone="info" icon={Tag}>
-            Markirovka
+            {tr("monitor.marking")}
           </Badge>
         ) : null}
       </div>
       <div className="mt-1 truncate">{c.customer}</div>
       <div className="mt-1 text-caption text-text-secondary">
-        {formatQuantity(c.lines)} xil · {formatQuantity(c.totalQty)} dona
+        {tr("monitor.cardMeta", { lines: formatQuantity(c.lines), qty: formatQuantity(c.totalQty) })}
         {c.person ? ` · ${c.person}` : ""}
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-2 text-caption">
@@ -259,17 +309,17 @@ function MonitorCardView({ card: c, now, onOpen }: { card: MonitorCard; now: Dat
         ) : (
           <span className="inline-flex items-center gap-1 text-text-secondary">
             <Clock size={14} strokeWidth={1.5} aria-hidden />
-            {sinceText(new Date(c.since), now)}
+            {sinceText(new Date(c.since), now, tr)}
           </span>
         )}
         {c.status === "QUEUED" && !c.timeGiven ? (
           <Badge tone="warning" icon={Clock}>
-            Vaqt berilmagan
+            {tr("monitor.noTime")}
           </Badge>
         ) : null}
         {c.stale ? (
           <Badge tone="danger" icon={CalendarX}>
-            Kechikkan
+            {tr("monitor.lateBadge")}
           </Badge>
         ) : null}
       </div>
@@ -279,31 +329,33 @@ function MonitorCardView({ card: c, now, onOpen }: { card: MonitorCard; now: Dat
 
 /** Kirim qabuli: qabul kutayotgan (Qoralama) kirimlar — qator bosilsa kirim oynasi ochiladi. */
 function ReceiptQueue({ query, onOpen }: { query: ReturnType<typeof useReceipts>; onOpen: (id: number) => void }) {
+  const t = useTranslations("orders");
   const columns: TableColumn<ReceiptSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "receiptDate", title: "Sana", render: (d) => formatIsoDate(d.receiptDate) },
-    { key: "supplier", title: "Yetkazib beruvchi" },
-    { key: "invoiceNumber", title: "Yuk xati", mono: true, render: (d) => d.invoiceNumber ?? "—" },
-    { key: "warehouse", title: "Ombor" },
-    { key: "totalQty", title: "Miqdor", align: "right", render: (d) => <span className="tabular-nums">{formatQuantity(d.totalQty)}</span> },
+    { key: "number", title: t("monitor.col.number"), mono: true },
+    { key: "receiptDate", title: t("monitor.col.date"), render: (d) => formatIsoDate(d.receiptDate) },
+    { key: "supplier", title: t("monitor.col.supplier") },
+    { key: "invoiceNumber", title: t("monitor.col.invoice"), mono: true, render: (d) => d.invoiceNumber ?? "—" },
+    { key: "warehouse", title: t("monitor.col.warehouse") },
+    {
+      key: "totalQty",
+      title: t("monitor.col.qty"),
+      align: "right",
+      render: (d) => <span className="tabular-nums">{formatQuantity(d.totalQty)}</span>,
+    },
   ];
   return (
     <Table
       columns={columns}
       rows={query.data?.items ?? []}
       rowKey={(d) => String(d.id)}
-      caption="Qabul kutayotgan kirimlar"
+      caption={t("monitor.receiptsCaption")}
       loading={query.isPending}
       onRowClick={(d) => onOpen(d.id)}
       emptyState={
         query.error ? (
           <ErrorState onRetry={() => void query.refetch()} />
         ) : (
-          <EmptyState
-            icon={PackageOpen}
-            title="Qabul kutayotgan kirim yoʻq"
-            description="Yangi kirim kiritilganda shu yerda paydo boʻladi."
-          />
+          <EmptyState icon={PackageOpen} title={t("monitor.receiptsEmpty")} description={t("monitor.receiptsEmptyHint")} />
         )
       }
     />
@@ -311,31 +363,63 @@ function ReceiptQueue({ query, onOpen }: { query: ReturnType<typeof useReceipts>
 }
 
 /** Koʻchirish qabuli: yoʻldagi ombor koʻchirishlari (OK) — qator bosilsa hujjat ochiladi, u yerda «Qabul qilish». */
+/** Xaridor filialga yo'ldagi FS lar (sotuvchi sifatidagilar emas); filial tanlanmagan (barcha filiallar) — hammasi. */
+export function incomingBranchSales(items: BranchSaleSummary[], buyerBranchId: number | null): BranchSaleSummary[] {
+  return items.filter((d) => d.status === "IN_TRANSIT" && (buyerBranchId === null || d.buyer.id === buyerBranchId));
+}
+
+function BranchSaleQueue({ rows, onOpen }: { rows: BranchSaleSummary[]; onOpen: (id: number) => void }) {
+  const t = useTranslations("orders");
+  const columns: TableColumn<BranchSaleSummary>[] = [
+    { key: "number", title: t("monitor.col.number"), mono: true },
+    { key: "sentAt", title: t("monitor.col.sentAt"), render: (d) => (d.sentAt ? formatDateTime(new Date(d.sentAt)) : "—") },
+    { key: "seller", title: t("monitor.col.seller"), render: (d) => d.seller.name },
+    { key: "to", title: t("monitor.col.to"), render: (d) => d.toWarehouse.name },
+    {
+      key: "qty",
+      title: t("monitor.col.qty"),
+      align: "right",
+      render: (d) => <span className="tabular-nums">{formatQuantity(d.qty)}</span>,
+    },
+  ];
+  return (
+    <Table
+      columns={columns}
+      rows={rows}
+      rowKey={(d) => String(d.id)}
+      caption={t("monitor.branchSalesCaption")}
+      onRowClick={(d) => onOpen(d.id)}
+    />
+  );
+}
+
 function TransferQueue({ query, onOpen }: { query: ReturnType<typeof useWarehouseTransfers>; onOpen: (id: number) => void }) {
+  const t = useTranslations("orders");
   const columns: TableColumn<WarehouseTransferSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "sentAt", title: "Joʻnatildi", render: (d) => (d.sentAt ? formatDateTime(new Date(d.sentAt)) : "—") },
-    { key: "from", title: "Qayerdan", render: (d) => `${d.fromWarehouse.name} · ${d.fromZone.name}` },
-    { key: "to", title: "Qayerga", render: (d) => d.toWarehouse.name },
-    { key: "qty", title: "Miqdor", align: "right", render: (d) => <span className="tabular-nums">{formatQuantity(d.qty)}</span> },
+    { key: "number", title: t("monitor.col.number"), mono: true },
+    { key: "sentAt", title: t("monitor.col.sentAt"), render: (d) => (d.sentAt ? formatDateTime(new Date(d.sentAt)) : "—") },
+    { key: "from", title: t("monitor.col.from"), render: (d) => `${d.fromWarehouse.name} · ${d.fromZone.name}` },
+    { key: "to", title: t("monitor.col.to"), render: (d) => d.toWarehouse.name },
+    {
+      key: "qty",
+      title: t("monitor.col.qty"),
+      align: "right",
+      render: (d) => <span className="tabular-nums">{formatQuantity(d.qty)}</span>,
+    },
   ];
   return (
     <Table
       columns={columns}
       rows={query.data?.items ?? []}
       rowKey={(d) => String(d.id)}
-      caption="Yoʻldagi koʻchirishlar"
+      caption={t("monitor.transfersCaption")}
       loading={query.isPending}
       onRowClick={(d) => onOpen(d.id)}
       emptyState={
         query.error ? (
           <ErrorState onRetry={() => void query.refetch()} />
         ) : (
-          <EmptyState
-            icon={Truck}
-            title="Yoʻlda koʻchirish yoʻq"
-            description="Boshqa ombordan joʻnatilgan tovar shu yerda paydo boʻladi."
-          />
+          <EmptyState icon={Truck} title={t("monitor.transfersEmpty")} description={t("monitor.transfersEmptyHint")} />
         )
       }
     />

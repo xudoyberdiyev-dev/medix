@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { CircleAlert, Lock, SearchX } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -32,15 +35,16 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
 }
 
 export function NoResultsState({ onClearFilters }: { onClearFilters?: () => void }) {
+  const t = useTranslations("ui");
   return (
     <EmptyState
       icon={SearchX}
-      title="Hech narsa topilmadi"
-      description="Qidiruv soʻzini yoki filtrlarni oʻzgartiring."
+      title={t("noResults")}
+      description={t("noResultsHint")}
       action={
         onClearFilters ? (
           <Button variant="secondary" onClick={onClearFilters}>
-            Filtrlarni tozalash
+            {t("clearFilters")}
           </Button>
         ) : undefined
       }
@@ -48,12 +52,9 @@ export function NoResultsState({ onClearFilters }: { onClearFilters?: () => void
   );
 }
 
-export function ForbiddenState({
-  description = "Bu boʻlimni koʻrish uchun ruxsatingiz yoʻq. Administratorga murojaat qiling.",
-}: {
-  description?: string;
-}) {
-  return <EmptyState icon={Lock} title="Ruxsat yoʻq" description={description} />;
+export function ForbiddenState({ description }: { description?: string }) {
+  const t = useTranslations("ui");
+  return <EmptyState icon={Lock} title={t("forbidden")} description={description ?? t("forbiddenHint")} />;
 }
 
 export interface ErrorStateProps {
@@ -62,26 +63,23 @@ export interface ErrorStateProps {
   onRetry?: () => void;
 }
 
-export function ErrorState({
-  title = "Maʼlumot yuklanmadi",
-  description = "Internet aloqasini tekshirib, qayta urinib koʻring.",
-  onRetry,
-}: ErrorStateProps) {
+export function ErrorState({ title, description, onRetry }: ErrorStateProps) {
+  const t = useTranslations("ui");
   return (
     <div className="p-4">
       <Alert
         tone="danger"
         icon={CircleAlert}
-        title={title}
+        title={title ?? t("loadError")}
         action={
           onRetry ? (
             <Button variant="secondary" size="sm" onClick={onRetry}>
-              Qayta urinish
+              {t("retry")}
             </Button>
           ) : undefined
         }
       >
-        {description}
+        {description ?? t("loadErrorHint")}
       </Alert>
     </div>
   );

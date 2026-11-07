@@ -15,13 +15,13 @@ describe("safeNext", () => {
 describe("validatePasswordForm", () => {
   it("qisqa, bir xil va mos kelmagan parollar", () => {
     expect(validatePasswordForm({ currentPassword: "", newPassword: "123", repeat: "1" })).toEqual({
-      currentPassword: expect.any(String),
-      newPassword: expect.stringContaining("kamida 8"),
-      repeat: expect.any(String),
+      currentPassword: "currentRequired",
+      newPassword: "tooShort",
+      repeat: "mismatch",
     });
-    expect(
-      validatePasswordForm({ currentPassword: "Eski-parol-1", newPassword: "Eski-parol-1", repeat: "Eski-parol-1" }).newPassword,
-    ).toContain("farq");
+    expect(validatePasswordForm({ currentPassword: "Eski-parol-1", newPassword: "Eski-parol-1", repeat: "Eski-parol-1" }).newPassword).toBe(
+      "sameAsCurrent",
+    );
     expect(validatePasswordForm({ currentPassword: "Eski-parol-1", newPassword: "Yangi-parol-2", repeat: "Yangi-parol-2" })).toEqual({});
   });
 });

@@ -5,7 +5,7 @@ import { InventoryCountsPage } from "@/features/inventory-counts/inventory-count
 export default function Page() {
   return (
     <>
-      <TopBar title="Inventarizatsiya" />
+      <TopBar titleKey="inventoryCounts" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <InventoryCountsPage />

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download, PackageCheck, ScanBarcode } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { can } from "@/features/auth/can";
@@ -22,22 +23,12 @@ const KIND = {
   PICKERS: {
     path: "/api/reports/pickers",
     perm: "reports.pickers",
-    title: "Yigʻuvchilar natijasi",
-    person: "Yigʻuvchi",
-    units: "Dona",
-    extra: "FEFOʻdan chetlashish",
     icon: PackageCheck,
-    empty: "Davrda yakunlangan yigʻish yoʻq",
   },
   MARKERS: {
     path: "/api/reports/markers",
     perm: "reports.markers",
-    title: "Markirovkachilar natijasi",
-    person: "Markirovkachi",
-    units: "Kodlar",
-    extra: "Olib tashlangan kodlar",
     icon: ScanBarcode,
-    empty: "Davrda yakunlangan markirovka yoʻq",
   },
 } as const;
 
@@ -50,17 +41,30 @@ export function workerExportHref(kind: WorkerKind, f: { branchId: number | null;
   return `${KIND[kind].path}/export?${p.toString()}`;
 }
 
-/** Daqiqani oʻqiladigan koʻrinishda: 45 daq, 2 soat 05 daq. */
-export function formatMinutes(m: number): string {
-  if (m < 60) return `${m} daq`;
-  return `${Math.floor(m / 60)} soat ${String(m % 60).padStart(2, "0")} daq`;
+/** Daqiqani oʻqiladigan koʻrinishda: 45 daq, 2 soat 05 daq. `labels` — tarjima (standart: uz-Latn). */
+export function formatMinutes(
+  m: number,
+  labels: { minutes: (m: number) => string; hoursMinutes: (h: number, m: string) => string } = {
+    minutes: (x) => `${x} daq`,
+    hoursMinutes: (h, x) => `${h} soat ${x} daq`,
+  },
+): string {
+  if (m < 60) return labels.minutes(m);
+  return labels.hoursMinutes(Math.floor(m / 60), String(m % 60).padStart(2, "0"));
 }
 
 const num = (v: number | undefined | null) => <span className="font-mono tabular-nums">{v ?? "—"}</span>;
 
 /** Yigʻuvchilar / Markirovkachilar natijasi: xodim boʻyicha buyurtmalar, vaqt (berilgan / haqiqiy), vaqtida / kechikkan, .xlsx. */
 export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
+  const t = useTranslations("reports");
   const k = KIND[kind];
+  const title = t(`worker.${kind}.title`);
+  const labels = {
+    minutes: (m: number) => t("minutes", { m }),
+    hoursMinutes: (h: number, m: string) => t("hoursMinutes", { h, m }),
+  };
+  const fmt = (m: number) => formatMinutes(m, labels);
   const me = useMe();
   const allowed = can(me.data, k.perm);
   const selectedBranch = useBranchStore((s) => s.branchId);
@@ -78,36 +82,36 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
     value: (x, key) => (key === "extra" ? (kind === "PICKERS" ? x.fefoDeviations : x.removedCodes) : rowField(x, key)),
   });
 
-  if (me.data && !allowed) return <ForbiddenState description={`${k.title} sizning rolingiz uchun yopiq.`} />;
+  if (me.data && !allowed) return <ForbiddenState description={t("worker.forbidden", { title })} />;
   const r = report.data;
   const extra = (x: WorkerRow) => (kind === "PICKERS" ? x.fefoDeviations : x.removedCodes);
   const columns: TableColumn<WorkerRow>[] = [
-    { key: "name", sortable: true, title: k.person },
-    { key: "orders", sortable: true, title: "Buyurtmalar", align: "right", render: (x) => num(x.orders) },
-    { key: "lines", sortable: true, title: "Qatorlar", align: "right", render: (x) => num(x.lines) },
-    { key: "units", sortable: true, title: k.units, align: "right", render: (x) => num(x.units) },
-    { key: "givenMinutes", sortable: true, title: "Berilgan vaqt", align: "right", render: (x) => formatMinutes(x.givenMinutes) },
-    { key: "actualMinutes", sortable: true, title: "Haqiqiy vaqt", align: "right", render: (x) => formatMinutes(x.actualMinutes) },
-    { key: "avgMinutes", sortable: true, title: "Oʻrtacha / buyurtma", align: "right", render: (x) => formatMinutes(x.avgMinutes) },
-    { key: "onTime", sortable: true, title: "Vaqtida", align: "right", render: (x) => num(x.onTime) },
+    { key: "name", sortable: true, title: t(`worker.${kind}.person`) },
+    { key: "orders", sortable: true, title: t("orders"), align: "right", render: (x) => num(x.orders) },
+    { key: "lines", sortable: true, title: t("worker.lines"), align: "right", render: (x) => num(x.lines) },
+    { key: "units", sortable: true, title: t(`worker.${kind}.units`), align: "right", render: (x) => num(x.units) },
+    { key: "givenMinutes", sortable: true, title: t("worker.givenMinutes"), align: "right", render: (x) => fmt(x.givenMinutes) },
+    { key: "actualMinutes", sortable: true, title: t("worker.actualMinutes"), align: "right", render: (x) => fmt(x.actualMinutes) },
+    { key: "avgMinutes", sortable: true, title: t("worker.avgMinutes"), align: "right", render: (x) => fmt(x.avgMinutes) },
+    { key: "onTime", sortable: true, title: t("worker.onTime"), align: "right", render: (x) => num(x.onTime) },
     {
       key: "late",
       sortable: true,
-      title: "Kechikkan",
+      title: t("worker.late"),
       align: "right",
       render: (x) => <span className={`font-mono tabular-nums ${x.late > 0 ? "text-warning" : ""}`}>{x.late}</span>,
     },
-    { key: "extra", sortable: true, title: k.extra, align: "right", render: (x) => num(extra(x)) },
+    { key: "extra", sortable: true, title: t(`worker.${kind}.extra`), align: "right", render: (x) => num(extra(x)) },
   ];
   const totals: Record<string, React.ReactNode> | undefined = r
     ? {
-        name: "Jami",
+        name: t("total"),
         orders: num(r.total.orders),
         lines: num(r.total.lines),
         units: num(r.total.units),
-        givenMinutes: formatMinutes(r.total.givenMinutes),
-        actualMinutes: formatMinutes(r.total.actualMinutes),
-        avgMinutes: formatMinutes(r.total.avgMinutes),
+        givenMinutes: fmt(r.total.givenMinutes),
+        actualMinutes: fmt(r.total.actualMinutes),
+        avgMinutes: fmt(r.total.avgMinutes),
         onTime: num(r.total.onTime),
         late: num(r.total.late),
         extra: num(extra(r.total)),
@@ -117,17 +121,17 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
   return (
     <>
       <Link href="/reports" className="mb-2 inline-flex items-center gap-1 text-caption text-text-secondary hover:underline">
-        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> Hisobotlar
+        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> {t("back")}
       </Link>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-page-title">{k.title}</h1>
+        <h1 className="text-page-title">{title}</h1>
         <PeriodPicker state={period} />
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-end gap-4 text-caption text-text-secondary">
         {r ? (
           <span>
             {r.from === r.to ? formatIsoDate(r.from) : `${formatIsoDate(r.from)} – ${formatIsoDate(r.to)}`}
-            {r.branchId == null ? " · barcha filiallar" : ""}
+            {r.branchId == null ? ` · ${t("allBranches")}` : ""}
           </span>
         ) : null}
         {from && to ? (
@@ -136,7 +140,7 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
             download
             className="inline-flex items-center gap-1 text-primary hover:underline"
           >
-            <Download size={16} strokeWidth={1.5} aria-hidden /> Excelʼga yuklab olish
+            <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
           </a>
         ) : null}
       </div>
@@ -144,7 +148,7 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
         <ErrorState onRetry={() => report.refetch()} />
       ) : (
         <Table
-          caption={k.title}
+          caption={title}
           density="compact"
           columns={columns}
           rows={table.rows}
@@ -154,12 +158,10 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
           rowKey={(x) => String(x.employeeId)}
           loading={report.isLoading}
           totals={r && r.rows.length > 0 ? totals : undefined}
-          emptyState={<EmptyState icon={k.icon} title={k.empty} description="Boshqa davrni tanlang yoki filialni oʻzgartiring." />}
+          emptyState={<EmptyState icon={k.icon} title={t(`worker.${kind}.empty`)} description={t("emptyHint")} />}
         />
       )}
-      <p className="mt-2 text-caption text-text-secondary">
-        Ish yakunlangan sana boʻyicha. «Vaqtida» va «Kechikkan» — faqat Ombor mudiri vaqt bergan buyurtmalar.
-      </p>
+      <p className="mt-2 text-caption text-text-secondary">{t("worker.note")}</p>
     </>
   );
 }

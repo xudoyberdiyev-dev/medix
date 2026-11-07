@@ -1,0 +1,53 @@
+{
+  "title": "Bonus balans",
+  "forbidden": "«Bonus balans» sahifasi sizning rolingiz uchun yopiq.",
+  "noBranch": {
+    "title": "Filialni tanlang",
+    "description": "Bonus balans filial boʻyicha yuritiladi — yuqorida filialni tanlang."
+  },
+  "balance": "Bonus balans",
+  "pending": "Kutilayotgan",
+  "pendingBonuses": "Kutilayotgan bonuslar",
+  "idleOver": "{days} kundan koʻp ishlatilmagan",
+  "suppliersCount": "{count} ta yetkazib beruvchi",
+  "days": "{count} kun",
+  "currency": "soʻm",
+  "total": "Jami",
+  "search": "Qidirish",
+  "searchPlaceholder": "Nomi yoki STIR",
+  "tin": "STIR {tin}",
+  "overdue": "vaqti oʻtgan",
+  "empty": {
+    "title": "Bonus yoʻq",
+    "description": "Kirimda chegirma kiritilsa, u shu yerda kutilayotgan bonus boʻlib koʻrinadi."
+  },
+  "pendingHint": "Olish sanasida kirim kartochkasida «Bonus tasdiqlandi» bosiladi — summa balansga tushadi.",
+  "pendingEmpty": {
+    "title": "Kutilayotgan bonus yoʻq",
+    "description": "Chegirmali barcha kirimlar tasdiqlangan."
+  },
+  "moves": "Harakatlar",
+  "movesCaption": "Bonus harakatlari",
+  "movesEmpty": {
+    "title": "Harakat yoʻq",
+    "description": "Bonus tasdiqlanganda shu yerda koʻrinadi."
+  },
+  "docType": {
+    "BNS": "Bonus tasdiqlandi",
+    "KR": "Bonus hisobidan kirim"
+  },
+  "col": {
+    "supplier": "Yetkazib beruvchi",
+    "bonusDate": "Olish sanasi",
+    "idle": "Ishlatilmagan",
+    "lastMove": "Oxirgi harakat",
+    "date": "Sana",
+    "document": "Hujjat",
+    "amount": "Summa",
+    "balance": "Balans",
+    "employee": "Xodim",
+    "receipt": "Kirim",
+    "receiptDate": "Kirim sanasi",
+    "bonus": "Bonus"
+  }
+}

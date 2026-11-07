@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ban, CalendarClock, ListPlus, PackageCheck, Printer, Truck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -23,24 +24,31 @@ import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { useLiveConnected } from "@/lib/live";
 import { TripEditModal } from "./trip-edit-modal";
+import type { OrdersT } from "./i18n";
 
 export type ReadyOrder = components["schemas"]["ReadyOrder"];
 export type TripSummary = components["schemas"]["TripSummary"];
 export type TripStatus = TripSummary["status"];
 
-export const TRIP_STATUS: Record<TripStatus, { label: string; tone: "info" | "warning" | "success" | "neutral"; icon: typeof Truck }> = {
-  PLANNED: { label: "Rejalashtirilgan", tone: "info", icon: CalendarClock },
-  IN_TRANSIT: { label: "Yoʻlda", tone: "info", icon: Truck },
-  RETURN_WAIT: { label: "Qaytish kutilmoqda", tone: "warning", icon: Truck },
-  DONE: { label: "Yakunlangan", tone: "success", icon: PackageCheck },
-  CANCELLED: { label: "Bekor qilingan", tone: "neutral", icon: Ban },
+/** Reys holati koʻrinishi; nomi — lugʻatda (`orders.shipments.tripStatus.*`). */
+export const TRIP_STATUS: Record<TripStatus, { tone: "info" | "warning" | "success" | "neutral"; icon: typeof Truck }> = {
+  PLANNED: { tone: "info", icon: CalendarClock },
+  IN_TRANSIT: { tone: "info", icon: Truck },
+  RETURN_WAIT: { tone: "warning", icon: Truck },
+  DONE: { tone: "success", icon: PackageCheck },
+  CANCELLED: { tone: "neutral", icon: Ban },
 };
 
 /** Sigʻim: tanlangan joylar + mashinaning band joylari ≤ sigʻim (server bilan bir xil). */
-export function capacityState(selected: number, busy: number, capacity: number | null | undefined): { text: string; over: boolean } {
-  if (!capacity) return { text: `${formatQuantity(selected)} joy · sigʻim belgilanmagan`, over: false };
+export function capacityState(
+  selected: number,
+  busy: number,
+  capacity: number | null | undefined,
+  t: OrdersT,
+): { text: string; over: boolean } {
+  if (!capacity) return { text: t("shipments.capacityNone", { n: formatQuantity(selected) }), over: false };
   const used = selected + busy;
-  return { text: `${formatQuantity(used)} / ${formatQuantity(capacity)} joy`, over: used > capacity };
+  return { text: t("shipments.capacity", { used: formatQuantity(used), capacity: formatQuantity(capacity) }), over: used > capacity };
 }
 
 function todayUz(): string {
@@ -50,6 +58,7 @@ function todayUz(): string {
 
 /** Hujjatlashtirish (SPEC 5.2 №7): reys tuzish — mashina, haydovchi, sigʻim; nakladnoy; «Oʻzi olib ketadi». */
 export function ShipmentsPage() {
+  const tr = useTranslations("orders");
   const live = useLiveConnected();
   const me = useMe();
   const qc = useQueryClient();
@@ -97,11 +106,11 @@ export function ShipmentsPage() {
     enabled: canTrip && tripBranch !== null,
   });
 
-  if (me.data && !allowed) return <ForbiddenState description="Joʻnatish sahifasi Ombor mudiri, Filial rahbari va Direktor uchun." />;
+  if (me.data && !allowed) return <ForbiddenState description={tr("shipments.forbidden")} />;
 
   const places = deliveries.filter((o) => picked.includes(o.id)).reduce((s, o) => s + o.places, 0);
   const v = options.data?.vehicles.find((x) => String(x.id) === vehicle);
-  const cap = capacityState(places, v?.busyPlaces ?? 0, v?.capacityBoxes);
+  const cap = capacityState(places, v?.busyPlaces ?? 0, v?.capacityBoxes, tr);
   const isoDate = parseUzDate(date);
 
   async function createTrip() {
@@ -120,8 +129,8 @@ export function ShipmentsPage() {
       );
       toast({
         tone: "success",
-        title: `Reys ${t.number} rejalashtirildi`,
-        description: `${t.stops.length} ta buyurtma · nakladnoylar raqamlandi`,
+        title: tr("shipments.tripPlanned", { number: t.number }),
+        description: tr("shipments.tripPlannedHint", { count: t.stops.length }),
       });
       setPicked([]);
       setVehicle(null);
@@ -141,7 +150,11 @@ export function ShipmentsPage() {
     try {
       await ensureCsrf();
       const r = await unwrap(api.POST("/api/trips/pickup", { body: { orderId: id } }));
-      toast({ tone: "success", title: "Nakladnoy tayyor", description: `${r.waybillNumber} · mijoz olib ketishi mumkin` });
+      toast({
+        tone: "success",
+        title: tr("shipments.waybillReady"),
+        description: tr("shipments.waybillReadyHint", { number: r.waybillNumber }),
+      });
       await qc.invalidateQueries({ queryKey: ["trips"] });
       await qc.invalidateQueries({ queryKey: ["orders"] });
     } catch (e) {
@@ -157,7 +170,7 @@ export function ShipmentsPage() {
     try {
       await ensureCsrf();
       const r = await unwrap(api.POST("/api/trips/pickup/{orderId}/handover", { params: { path: { orderId: id } } }));
-      toast({ tone: "success", title: "Mijoz olib ketdi", description: `Sotuv ${r.sale} va hisob-faktura yozildi` });
+      toast({ tone: "success", title: tr("shipments.pickedUp"), description: tr("shipments.pickedUpHint", { sale: r.sale }) });
       await qc.invalidateQueries({ queryKey: ["orders"] });
     } catch (e) {
       setError(e);
@@ -184,14 +197,11 @@ export function ShipmentsPage() {
     }
   }
 
-  const err =
-    error instanceof Error && error.message === "date"
-      ? { message: "Reys sanasini KK.OO.YYYY koʻrinishida kiriting." }
-      : describeError(error);
+  const err = error instanceof Error && error.message === "date" ? { message: tr("shipments.dateError") } : describeError(error);
   const cancelErr = describeError(cancelError);
   return (
     <>
-      <h1 className="mb-4 text-page-title">Joʻnatish</h1>
+      <h1 className="mb-4 text-page-title">{tr("shipments.title")}</h1>
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
       {ready.error ? (
         <ErrorState onRetry={() => ready.refetch()} />
@@ -199,15 +209,11 @@ export function ShipmentsPage() {
         <Skeleton className="h-40 w-full" />
       ) : (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[3fr_2fr]">
-          <section aria-label="Joʻnatishga tayyor">
-            <h2 className="mb-3 text-subtitle">Joʻnatishga tayyor — yetkazib berish</h2>
+          <section aria-label={tr("shipments.readyAria")}>
+            <h2 className="mb-3 text-subtitle">{tr("shipments.readyTitle")}</h2>
             {deliveries.length === 0 ? (
               <Card>
-                <EmptyState
-                  icon={Truck}
-                  title="Tayyor buyurtma yoʻq"
-                  description="Hisobdan oʻtkazilgan buyurtmalar shu yerda paydo boʻladi."
-                />
+                <EmptyState icon={Truck} title={tr("shipments.emptyTitle")} description={tr("shipments.emptyHint")} />
               </Card>
             ) : (
               <ul className="flex flex-col gap-2">
@@ -215,7 +221,7 @@ export function ShipmentsPage() {
                   <li key={o.id} className="flex items-start gap-3 rounded-card border border-border bg-surface p-3">
                     {canTrip ? (
                       <Checkbox
-                        label="Reysga"
+                        label={tr("shipments.toTrip")}
                         checked={picked.includes(o.id)}
                         disabled={tripBranch !== null && picked.length > 0 && o.branchId !== tripBranch}
                         onChange={(on) => setPicked((p) => (on ? [...p, o.id] : p.filter((x) => x !== o.id)))}
@@ -224,11 +230,11 @@ export function ShipmentsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="font-mono">{o.number}</span>
-                        <span className="tabular-nums">{formatMoney(o.total)} soʻm</span>
+                        <span className="tabular-nums">{tr("sum", { amount: formatMoney(o.total) })}</span>
                       </div>
                       <div>{o.customer}</div>
                       <div className="text-caption text-text-secondary">
-                        {o.address ?? "Manzil koʻrsatilmagan"} · {formatQuantity(o.places)} joy
+                        {o.address ?? tr("shipments.noAddress")} · {tr("shipments.places", { n: formatQuantity(o.places) })}
                       </div>
                     </div>
                   </li>
@@ -237,7 +243,7 @@ export function ShipmentsPage() {
             )}
             {pickups.length > 0 ? (
               <>
-                <h2 className="mt-6 mb-3 text-subtitle">Oʻzi olib ketadi</h2>
+                <h2 className="mt-6 mb-3 text-subtitle">{tr("shipments.pickup")}</h2>
                 <ul className="flex flex-col gap-2">
                   {pickups.map((o) => (
                     <li
@@ -245,7 +251,8 @@ export function ShipmentsPage() {
                       className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-3"
                     >
                       <div>
-                        <span className="font-mono">{o.number}</span> · {o.customer} · {formatQuantity(o.places)} joy
+                        <span className="font-mono">{o.number}</span> · {o.customer} ·{" "}
+                        {tr("shipments.places", { n: formatQuantity(o.places) })}
                       </div>
                       {canTrip ? (
                         <Button
@@ -255,7 +262,7 @@ export function ShipmentsPage() {
                           loading={pickupPending === o.id}
                           onClick={() => void pickup(o.id)}
                         >
-                          Nakladnoy berish
+                          {tr("shipments.giveWaybill")}
                         </Button>
                       ) : null}
                     </li>
@@ -265,7 +272,7 @@ export function ShipmentsPage() {
             ) : null}
             {(waiting.data ?? []).length > 0 ? (
               <>
-                <h2 className="mt-6 mb-3 text-subtitle">Olib ketishni kutmoqda</h2>
+                <h2 className="mt-6 mb-3 text-subtitle">{tr("shipments.waiting")}</h2>
                 <ul className="flex flex-col gap-2">
                   {(waiting.data ?? []).map((o) => (
                     <li
@@ -273,7 +280,7 @@ export function ShipmentsPage() {
                       className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-3"
                     >
                       <div>
-                        <span className="font-mono">{o.number}</span> · {o.customer} · {formatMoney(o.total)} soʻm
+                        <span className="font-mono">{o.number}</span> · {o.customer} · {tr("sum", { amount: formatMoney(o.total) })}
                       </div>
                       {can(me.data, "shipments.ship") ? (
                         <Button
@@ -283,7 +290,7 @@ export function ShipmentsPage() {
                           loading={handoverPending === o.id}
                           onClick={() => void handover(o.id)}
                         >
-                          Mijoz olib ketdi
+                          {tr("shipments.handover")}
                         </Button>
                       ) : null}
                     </li>
@@ -293,40 +300,40 @@ export function ShipmentsPage() {
             ) : null}
           </section>
           {canTrip ? (
-            <section aria-label="Reys tuzish">
+            <section aria-label={tr("shipments.build")}>
               <Card>
-                <h2 className="mb-3 text-subtitle">Reys tuzish</h2>
+                <h2 className="mb-3 text-subtitle">{tr("shipments.build")}</h2>
                 <div className="flex flex-col gap-3">
                   <Select
-                    label="Mashina"
+                    label={tr("shipments.vehicle")}
                     value={vehicle}
                     onChange={setVehicle}
                     options={(options.data?.vehicles ?? []).map((x) => ({
                       value: String(x.id),
                       label: `${x.plateNumber} · ${x.model}`,
-                      meta: x.capacityBoxes ? `${formatQuantity(x.capacityBoxes)} joy` : undefined,
+                      meta: x.capacityBoxes ? tr("shipments.places", { n: formatQuantity(x.capacityBoxes) }) : undefined,
                     }))}
                   />
                   <Select
-                    label="Haydovchi"
+                    label={tr("shipments.driver")}
                     value={driver}
                     onChange={setDriver}
                     options={(options.data?.drivers ?? []).map((d) => ({
                       value: String(d.id),
                       label: d.fullName,
                       sub: d.phone ?? undefined,
-                      meta: d.activeTrip ? `Band: ${d.activeTrip}` : undefined,
+                      meta: d.activeTrip ? tr("shipments.busy", { trip: d.activeTrip }) : undefined,
                       metaWarning: Boolean(d.activeTrip),
                       disabled: Boolean(d.activeTrip),
                     }))}
                   />
-                  <TextField label="Reys sanasi" value={date} onChange={setDate} placeholder="KK.OO.YYYY" />
+                  <TextField label={tr("shipments.tripDate")} value={date} onChange={setDate} placeholder={tr("drawer.datePlaceholder")} />
                   <div className={`text-subtitle tabular-nums ${cap.over ? "text-danger" : ""}`} aria-live="polite">
-                    {formatQuantity(picked.length)} ta buyurtma · {cap.text}
+                    {tr("shipments.selected", { count: formatQuantity(picked.length), capacity: cap.text })}
                   </div>
                   {cap.over ? (
-                    <Alert tone="danger" title="Mashina sigʻimi yetmaydi">
-                      Buyurtmalarni kamaytiring yoki boshqa mashina tanlang.
+                    <Alert tone="danger" title={tr("shipments.overTitle")}>
+                      {tr("shipments.overHint")}
                     </Alert>
                   ) : null}
                   <Button
@@ -335,7 +342,7 @@ export function ShipmentsPage() {
                     loading={pending}
                     onClick={() => void createTrip()}
                   >
-                    Reysni rejalashtirish
+                    {tr("shipments.plan")}
                   </Button>
                 </div>
               </Card>
@@ -343,14 +350,14 @@ export function ShipmentsPage() {
           ) : null}
         </div>
       )}
-      <section aria-label="Faol reyslar" className="mt-8">
-        <h2 className="mb-3 text-subtitle">Faol reyslar</h2>
+      <section aria-label={tr("shipments.active")} className="mt-8">
+        <h2 className="mb-3 text-subtitle">{tr("shipments.active")}</h2>
         {trips.error ? (
           <ErrorState onRetry={() => trips.refetch()} />
         ) : trips.isPending ? (
           <Skeleton className="h-24 w-full" />
         ) : trips.data.length === 0 ? (
-          <p className="text-text-secondary">Faol reys yoʻq.</p>
+          <p className="text-text-secondary">{tr("shipments.noActive")}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {trips.data.map((t) => {
@@ -364,12 +371,18 @@ export function ShipmentsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono">{t.number}</span>
                       <Badge tone={st.tone} icon={st.icon}>
-                        {st.label}
+                        {tr(`shipments.tripStatus.${t.status}`)}
                       </Badge>
                     </div>
                     <div className="text-caption text-text-secondary">
-                      {formatIsoDate(t.tripDate)} · {t.vehicle} · {t.driver} · {formatQuantity(t.orders)} ta buyurtma ·{" "}
-                      {formatQuantity(t.places)} joy · {formatMoney(t.total)} soʻm
+                      {tr("shipments.tripMeta", {
+                        date: formatIsoDate(t.tripDate),
+                        vehicle: t.vehicle,
+                        driver: t.driver,
+                        orders: formatQuantity(t.orders),
+                        places: formatQuantity(t.places),
+                        amount: formatMoney(t.total),
+                      })}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -379,16 +392,16 @@ export function ShipmentsPage() {
                       icon={Printer}
                       onClick={() => window.open(`/api/trips/${t.id}/sheet/pdf`, "_blank", "noopener")}
                     >
-                      Yoʻl varaqasini chop etish
+                      {tr("shipments.printSheet")}
                     </Button>
                     {canTrip && t.status === "PLANNED" ? (
                       <Button size="sm" variant="secondary" icon={ListPlus} onClick={() => setEditing(t.id)}>
-                        Tarkibni oʻzgartirish
+                        {tr("shipments.editTrip")}
                       </Button>
                     ) : null}
                     {canTrip && t.status === "PLANNED" ? (
                       <Button size="sm" variant="tertiary" icon={Ban} onClick={() => setCancelling(t)}>
-                        Reysni bekor qilish
+                        {tr("shipments.cancelTrip")}
                       </Button>
                     ) : null}
                   </div>
@@ -402,12 +415,17 @@ export function ShipmentsPage() {
       <Modal
         open={cancelling !== null}
         onClose={() => setCancelling(null)}
-        title="Reysni bekor qilish"
+        title={tr("shipments.cancelTrip")}
         tone="danger"
-        primaryAction={{ label: "Reysni bekor qilish", onClick: () => void cancelTrip(), loading: cancelPending, disabled: !reason.trim() }}
+        primaryAction={{
+          label: tr("shipments.cancelTrip"),
+          onClick: () => void cancelTrip(),
+          loading: cancelPending,
+          disabled: !reason.trim(),
+        }}
       >
-        <p className="mb-3">{cancelling?.number}: buyurtmalar «Hujjatlashtirilmoqda»ga qaytadi, nakladnoy raqamlari saqlanadi.</p>
-        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} error={cancelErr.fields.reason} />
+        <p className="mb-3">{tr("shipments.cancelText", { number: cancelling?.number ?? "" })}</p>
+        <TextField label={tr("shipments.reason")} value={reason} onChange={setReason} maxLength={300} error={cancelErr.fields.reason} />
         {cancelErr.message ? <Alert tone="danger" title={cancelErr.message} className="mt-3" /> : null}
       </Modal>
     </>

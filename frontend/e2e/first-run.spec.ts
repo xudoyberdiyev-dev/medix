@@ -523,3 +523,80 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
   await expect(row).toContainText("Oʻtkazildi");
   await expect(row).toContainText("Pharm Supply E2E");
 });
+
+test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx) → xaridor qabul qiladi", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  // Ikkinchi filial va uning ombori
+  await page.goto("/settings/branches");
+  await page.getByRole("button", { name: "Filial qoʻshish" }).first().click();
+  await field(page, "Kod").fill("SMQ");
+  await field(page, "STIR").fill("309876543");
+  await field(page, "Nomi").fill("E2E Samarqand");
+  await field(page, "Yuridik nomi").fill("E2E Samarqand MChJ");
+  await page.getByRole("button", { name: "Filialni saqlash" }).click();
+  await expect(page.getByText("E2E Samarqand").first()).toBeVisible();
+
+  await page.goto("/settings/warehouses");
+  await page.getByRole("button", { name: "Ombor qoʻshish" }).click();
+  // Roʻyxat filtrida ham «Filial» bor — ombor oynasi ichidagisi
+  await page.getByRole("dialog").getByRole("combobox", { name: "Filial", exact: true }).click();
+  await page.getByRole("option", { name: /E2E Samarqand/ }).click();
+  await field(page, "Nomi").fill("Samarqand ombori");
+  await page.getByRole("button", { name: "Omborni saqlash" }).click();
+  await expect(page.getByText("Samarqand ombori").first()).toBeVisible();
+
+  await page.goto("/branch-sales");
+  await page.getByRole("button", { name: "Savdo tuzish" }).first().click();
+  await choose(page, "Qaysi ombordan", /Markaziy ombor/);
+  await choose(page, "Zona", /Asosiy saqlash/);
+  await choose(page, "Xaridor ombori", /Samarqand ombori/);
+  await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("1");
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+
+  await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+  await expect(page.getByText(/HF-[A-Z]{3}-\d{6}/).first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await expect(page.getByText("Toʻliq qabul qilindi")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/branch-sales");
+  const row = page.getByRole("row", { name: /FS-/ }).first();
+  await expect(row).toContainText("Qabul qilindi");
+  await expect(row).toContainText("E2E Samarqand");
+});
+
+test("CEO: FS kamomadi — topildi, sotuvchiga qaytariladi (qarz kamayadi)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/branch-sales");
+  await page.getByRole("button", { name: "Savdo tuzish" }).first().click();
+  await choose(page, "Qaysi ombordan", /Markaziy ombor/);
+  await choose(page, "Zona", /Asosiy saqlash/);
+  await choose(page, "Xaridor ombori", /Samarqand ombori/);
+  await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("2");
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await page.getByLabel(/E2E-01 — kelgan soni/).fill("1");
+  await page.getByRole("dialog").last().getByLabel("Izoh").fill("1 quti yuklanmay qolgan");
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await expect(page.getByText("Qabul qilindi, kamomad 1 dona")).toBeVisible();
+  await expect(page.getByText(/Kamomad: 1 dona .*— hal qilinmagan/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Topildi — sotuvchiga qaytarish" }).click();
+  await page.getByRole("dialog").last().getByLabel("Izoh").fill("Markaziy omborda topildi");
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qaytarish", exact: true }).click();
+  await expect(page.getByText("Tovar sotuvchiga qaytarildi")).toBeVisible();
+  await expect(page.getByText(/Kamomad: 1 dona .*— hal qilindi/)).toBeVisible();
+  await expect(page.getByText(/Sotuvchiga qaytarildi · qarz -/)).toBeVisible();
+});

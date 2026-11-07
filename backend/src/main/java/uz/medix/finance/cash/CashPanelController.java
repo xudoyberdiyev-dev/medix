@@ -1,6 +1,7 @@
 package uz.medix.finance.cash;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -8,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uz.medix.finance.account.Accounts;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.CurrentActor;
 
@@ -30,8 +32,9 @@ class CashPanelController {
     CashPanel.Panel get(@RequestParam long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) Long accountId) {
+            @RequestParam(required = false) Long accountId,
+            @Parameter(description = "To'lov turi: CASH — kassalar, TERMINAL, BANK") @RequestParam(required = false) Accounts.Kind kind) {
         return panel.panel(currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized")), branchId, from, to,
-                accountId);
+                accountId, kind);
     }
 }

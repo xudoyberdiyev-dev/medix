@@ -5,7 +5,7 @@ import { ProductsPage } from "@/features/products/products-page";
 export default function Page() {
   return (
     <>
-      <TopBar title="Mahsulotlar" />
+      <TopBar titleKey="products" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <ProductsPage />

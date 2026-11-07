@@ -52,6 +52,7 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.text.SearchText;
 import uz.medix.shared.text.Texts;
 
 /**
@@ -291,11 +292,21 @@ class Orders {
 
     // ===== O'qish =====
 
-    /** Ro'yxat filtrlari (hisobotdan o'tish): mijoz, kiritgan xodim, sotuv/qaytarish davri. */
-    record OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo) {}
+    /** Ro'yxat filtrlari: mijoz, kiritgan xodim, sotuv/qaytarish davri (hisobotdan o'tish), buyurtma sanasi (SPEC 120). */
+    record OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom, LocalDate orderTo) {
+        OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo) {
+            this(customerId, operatorId, soldFrom, soldTo, null, null);
+        }
+    }
 
     @Transactional(readOnly = true)
     OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, int page, int size) {
+        return list(actor, branchId, status, filter, q, mine, OrderSort.CREATED, true, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, OrderSort sort, boolean desc,
+            int page, int size) {
         Long customerId = filter.customerId();
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
@@ -322,13 +333,29 @@ class Orders {
             params.put("sf", java.sql.Date.valueOf(filter.soldFrom() == null ? LocalDate.of(2000, 1, 1) : filter.soldFrom()));
             params.put("st", java.sql.Date.valueOf(filter.soldTo() == null ? LocalDate.of(2999, 12, 31) : filter.soldTo()));
         }
+        if (filter.orderFrom() != null) {
+            where.append(" AND o.order_date >= :of");
+            params.put("of", java.sql.Date.valueOf(filter.orderFrom()));
+        }
+        if (filter.orderTo() != null) {
+            where.append(" AND o.order_date <= :ot");
+            params.put("ot", java.sql.Date.valueOf(filter.orderTo()));
+        }
         if (mine) {
             where.append(" AND o.created_by = :me");
             params.put("me", actor.employeeId());
         }
-        if (q != null && !q.isBlank()) {
-            where.append(" AND (o.number ILIKE :q OR c.name ILIKE :q OR c.tin = :exact)");
-            params.put("q", "%" + q.strip().replace("%", "") + "%");
+        String nq = SearchText.normalize(q);
+        if (!nq.isEmpty()) {
+            // Raqam, STIR yoki mijoz nomi — lotin/kirill farqsiz, so'zlar istalgan tartibda (counterparty.search_text)
+            where.append(" AND (o.number ILIKE :q ESCAPE '\\' OR c.tin = :exact OR (true");
+            String[] parts = nq.split(" ");
+            for (int i = 0; i < parts.length && i < 8; i++) {
+                where.append(" AND c.search_text LIKE :w").append(i).append(" ESCAPE '\\'");
+                params.put("w" + i, "%" + SearchText.likeEscape(parts[i]) + "%");
+            }
+            where.append("))");
+            params.put("q", "%" + SearchText.likeEscape(q.strip()) + "%");
             params.put("exact", q.strip());
         }
         String from = " FROM sales_order o JOIN counterparty c ON c.id = o.customer_id JOIN warehouse w ON w.id = o.warehouse_id"
@@ -353,7 +380,7 @@ class Orders {
                        (SELECT full_name FROM employee WHERE id = o.marker_id) AS marker,
                        (SELECT d.full_name FROM trip_stop ts JOIN trip t ON t.id = ts.trip_id JOIN employee d ON d.id = t.driver_id
                         WHERE ts.order_id = o.id AND ts.active AND t.status <> 'CANCELLED' ORDER BY ts.id DESC LIMIT 1) AS driver""" + from + where
-                        + " ORDER BY o.created_at DESC, o.id DESC LIMIT :l OFFSET :o")
+                        + (sort == null ? OrderSort.CREATED : sort).orderBy(desc) + " LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", size)
                 .param("o", (long) page * size)
@@ -444,7 +471,8 @@ class Orders {
                 h.createdBy(), h.createdById(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
                 h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
                 instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), documents(id),
-                holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines));
+                holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines,
+                jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list()));
     }
 
     private OrderModels.OrderDocuments documents(long orderId) {
@@ -879,14 +907,34 @@ class Orders {
                 .list();
     }
 
+    /** Qator bo'yicha sof yig'ilgan (yig'ilgan − shu qatordan qaytarilgan): «Yig'ishga qaytarish» tanlangan qatorlar uchun (SPEC 188). */
+    record LinePick(long lineId, long storageZone, long shippingZone, long batchId, int qty) {}
+
+    List<LinePick> netPickedByLine(long orderId) {
+        return jdbc.sql("""
+                SELECT line_id, storage_zone, shipping_zone, batch_id, sum(qty) AS qty FROM (
+                    SELECT line_id, from_zone_id AS storage_zone, to_zone_id AS shipping_zone, batch_id, qty FROM sales_order_pick WHERE order_id = :id
+                    UNION ALL
+                    SELECT line_id, to_zone_id, from_zone_id, batch_id, -qty FROM sales_order_pick_return WHERE order_id = :id AND line_id IS NOT NULL) t
+                GROUP BY line_id, storage_zone, shipping_zone, batch_id HAVING sum(qty) > 0 ORDER BY line_id, storage_zone, batch_id""")
+                .param("id", orderId)
+                .query(LinePick.class)
+                .list();
+    }
+
     /** FEFO zahira (SPEC 6-7): «Navbatda»ga o'tishda — sotuvga ochiq zona va mijozning minimal yaroqlilik talabi bilan. */
     void reserveAgain(long orderId) {
+        reserveAgain(orderId, null);
+    }
+
+    /** Faqat tanlangan qatorlarga (null — barchasiga) zahira qayta qo'yiladi. */
+    void reserveAgain(long orderId, java.util.Set<Long> onlyLines) {
         Head h = jdbc.sql("SELECT id, number, branch_id, warehouse_id, customer_id, status, created_by FROM sales_order WHERE id = :id")
                 .param("id", orderId)
                 .query((rs, n) -> new Head(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getLong("warehouse_id"),
                         rs.getLong("customer_id"), OrderStatus.valueOf(rs.getString("status")), rs.getLong("created_by")))
                 .single();
-        List<LineRow> rows = lineRows(orderId);
+        List<LineRow> rows = lineRows(orderId).stream().filter(r -> onlyLines == null || onlyLines.contains(r.id())).toList();
         reserve(h, rows, evaluate(h.branchId(), h.warehouseId(), h.customerId(),
                 rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList()));
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Gift, Printer, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -14,14 +15,15 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { ZONE_LABELS } from "@/features/organization/api";
+import { ZONE_LABELS, zoneLabel as zoneTypeLabel } from "@/features/organization/api";
 import { searchSuppliers, useReceipts } from "@/features/receipts/api";
 import { describeError } from "@/features/setup/form-error";
+import { useLineErrorText } from "@/features/zone-transfers/line-error";
 import { formatDate, formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
   QY_APPROVE,
-  QY_REASON_LABELS,
+  QY_REASONS,
   returnLinesFrom,
   useApproveSupplierReturn,
   useCreateSupplierReturn,
@@ -35,17 +37,18 @@ import {
 } from "./api";
 import { SupplierReturnStatusBadge } from "./supplier-returns-page";
 
-const KIND = "YB ga qaytarish";
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
 const zoneLabel = (z: { name: string; type: string }) => {
-  const t = ZONE_LABELS[z.type as keyof typeof ZONE_LABELS];
-  return !t || z.name === t ? z.name : `${z.name} · ${t}`;
+  const type = z.type as keyof typeof ZONE_LABELS;
+  const t = ZONE_LABELS[type];
+  return !t || z.name === t ? z.name : `${z.name} · ${zoneTypeLabel(type)}`;
 };
 
 function BonusBadge() {
+  const t = useTranslations("supplierReturns");
   return (
     <Badge tone="info" icon={Gift}>
-      Bonus
+      {t("bonus")}
     </Badge>
   );
 }
@@ -64,17 +67,19 @@ export function SupplierReturnDrawer(props: {
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const t = useTranslations("supplierReturns");
+  const tc = useTranslations("common");
   const doc = useSupplierReturn(props.id);
   if (props.id === null) return <CreateForm preset={props.preset} onClose={props.onClose} onCreated={props.onCreated} />;
   if (doc.error)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind={KIND} title="QY">
+      <Drawer open onClose={props.onClose} size="lg" kind={t("kind")} title="QY">
         <ErrorState onRetry={() => doc.refetch()} />
       </Drawer>
     );
   if (!doc.data)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind={KIND} title="Yuklanmoqda…">
+      <Drawer open onClose={props.onClose} size="lg" kind={t("kind")} title={tc("loading")}>
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
@@ -82,6 +87,7 @@ export function SupplierReturnDrawer(props: {
 }
 
 function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void }) {
+  const t = useTranslations("supplierReturns");
   const me = useMe();
   const approve = useApproveSupplierReturn();
   const reject = useRejectSupplierReturn();
@@ -91,10 +97,10 @@ function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void
   const withAmount = doc.totalAmount != null;
   type Line = SupplierReturnDetail["lines"][number];
   const columns: TableColumn<Line>[] = [
-    { key: "productCode", title: "Kod", mono: true },
+    { key: "productCode", title: t("col.code"), mono: true },
     {
       key: "productName",
-      title: "Mahsulot",
+      title: t("col.product"),
       wrap: true,
       render: (l) => (
         <span className="flex items-center gap-2">
@@ -103,34 +109,33 @@ function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void
         </span>
       ),
     },
-    { key: "batchNumber", title: "Partiya", mono: true },
-    { key: "expiryDate", title: "Yaroqlilik", render: (l) => day(l.expiryDate) },
-    { key: "qty", title: "Soni", align: "right", render: (l) => formatQuantity(l.qty) },
+    { key: "batchNumber", title: t("col.batch"), mono: true },
+    { key: "expiryDate", title: t("col.expiry"), render: (l) => day(l.expiryDate) },
+    { key: "qty", title: t("col.count"), align: "right", render: (l) => formatQuantity(l.qty) },
     ...(withAmount
       ? [
           {
             key: "price",
-            title: "Kirim narxi",
+            title: t("col.price"),
             align: "right" as const,
             render: (l: Line) => (l.price != null ? formatMoney(l.price) : "—"),
           },
           {
             key: "amount",
-            title: "Summa",
+            title: t("col.amount"),
             align: "right" as const,
             render: (l: Line) => (l.amount != null ? formatMoney(l.amount) : "—"),
           },
         ]
       : []),
   ];
-  const fail = (e: unknown) =>
-    toast({ tone: "danger", title: "Bajarilmadi", description: describeError(e).message ?? "Qayta urinib koʻring." });
+  const fail = (e: unknown) => toast({ tone: "danger", title: t("failed"), description: describeError(e).message ?? t("retryHint") });
   return (
     <Drawer
       open
       onClose={onClose}
       size="lg"
-      kind={`${KIND} · ${doc.createdBy}`}
+      kind={`${t("kind")} · ${doc.createdBy}`}
       title={doc.number}
       subtitle={formatDateTime(new Date(doc.createdAt))}
       status={<SupplierReturnStatusBadge status={doc.status} />}
@@ -141,24 +146,24 @@ function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void
             icon={Printer}
             onClick={() => window.open(`/api/supplier-returns/${doc.id}/pdf`, "_blank", "noopener")}
           >
-            Yuk xatini chop etish
+            {t("view.print")}
           </Button>
           {canDecide ? (
             <>
               <Button variant="secondary" icon={X} onClick={() => setRejecting(true)}>
-                Rad etish
+                {t("view.reject")}
               </Button>
               <Button
                 icon={Check}
                 loading={approve.isPending}
                 onClick={() =>
                   approve.mutate(doc.id, {
-                    onSuccess: (d) => toast({ tone: "success", title: "Tasdiqlandi, tovar YB ga qaytarildi", description: d.number }),
+                    onSuccess: (d) => toast({ tone: "success", title: t("view.approved"), description: d.number }),
                     onError: fail,
                   })
                 }
               >
-                Tasdiqlash va qaytarish
+                {t("view.approve")}
               </Button>
             </>
           ) : null}
@@ -167,49 +172,49 @@ function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void
     >
       <div className="flex flex-col gap-4">
         {doc.status === "PENDING" ? (
-          <Alert tone="warning" title="Tasdiq kutilmoqda">
-            Filial rahbari yoki Ombor mudiri tasdiqlaydi. Tasdiqlanmaguncha tovar «{doc.zone.name}» zonasida qoladi, YB qarzi oʻzgarmaydi.
+          <Alert tone="warning" title={t("view.pendingTitle")}>
+            {t("view.pendingBody", { zone: doc.zone.name })}
           </Alert>
         ) : null}
         {doc.status === "REJECTED" ? (
-          <Alert tone="info" title={`Rad etildi: ${doc.rejectReason ?? ""}`}>
-            {doc.rejectedBy} — tovar joyida qoldi.
+          <Alert tone="info" title={t("view.rejectedTitle", { reason: doc.rejectReason ?? "" })}>
+            {t("view.rejectedBody", { who: doc.rejectedBy ?? "" })}
           </Alert>
         ) : null}
         <dl className="grid grid-cols-3 gap-4 text-body">
           <div className="col-span-2">
-            <dt className="text-caption text-text-secondary">Yetkazib beruvchi</dt>
+            <dt className="text-caption text-text-secondary">{t("view.supplier")}</dt>
             <dd>{doc.supplier}</dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Kirim</dt>
+            <dt className="text-caption text-text-secondary">{t("view.receipt")}</dt>
             <dd>
               <span className="font-mono">{doc.receiptNumber}</span> · {day(doc.receiptDate)}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Ombor · zona</dt>
+            <dt className="text-caption text-text-secondary">{t("view.warehouseZone")}</dt>
             <dd>
               {doc.warehouse} · {doc.zone.name}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Sabab</dt>
-            <dd>{QY_REASON_LABELS[doc.reason]}</dd>
+            <dt className="text-caption text-text-secondary">{t("view.reason")}</dt>
+            <dd>{t(`reason.${doc.reason}`)}</dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Hisob-kitob</dt>
-            <dd>{doc.fromBonus ? "Bonus balansga qaytadi" : "YB qarzi kamayadi"}</dd>
+            <dt className="text-caption text-text-secondary">{t("view.settlement")}</dt>
+            <dd>{doc.fromBonus ? t("view.fromBonus") : t("view.debt")}</dd>
           </div>
           {doc.note ? (
             <div className="col-span-3">
-              <dt className="text-caption text-text-secondary">Izoh</dt>
+              <dt className="text-caption text-text-secondary">{t("view.note")}</dt>
               <dd>{doc.note}</dd>
             </div>
           ) : null}
           {doc.postedBy ? (
             <div className="col-span-3">
-              <dt className="text-caption text-text-secondary">Tasdiqladi</dt>
+              <dt className="text-caption text-text-secondary">{t("view.postedBy")}</dt>
               <dd>
                 {doc.postedBy}
                 {doc.postedAt ? ` · ${formatDateTime(new Date(doc.postedAt))}` : ""}
@@ -217,35 +222,37 @@ function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void
             </div>
           ) : null}
         </dl>
-        <Table caption="Qaytarilgan partiyalar" density="compact" columns={columns} rows={doc.lines} rowKey={(l) => String(l.id)} />
+        <Table caption={t("view.linesCaption")} density="compact" columns={columns} rows={doc.lines} rowKey={(l) => String(l.id)} />
         <p className="text-right text-caption text-text-secondary">
-          Jami: {formatQuantity(doc.totalQty)} dona
-          {doc.totalAmount != null ? ` · ${formatMoney(doc.totalAmount)} soʻm (kirim narxida)` : ""}
+          {t("view.total", { qty: formatQuantity(doc.totalQty) })}
+          {doc.totalAmount != null ? ` · ${t("view.totalAmount", { amount: formatMoney(doc.totalAmount) })}` : ""}
         </p>
       </div>
       <Modal
         open={rejecting}
         onClose={() => setRejecting(false)}
-        title="Qaytarishni rad etish"
+        title={t("view.rejectTitle")}
         tone="danger"
         primaryAction={{
-          label: "Rad etish",
+          label: t("view.reject"),
           loading: reject.isPending,
           disabled: reason.trim() === "",
           onClick: () =>
             reject.mutate(
               { id: doc.id, reason: reason.trim() },
-              { onSuccess: () => (setRejecting(false), toast({ tone: "success", title: "Rad etildi" })), onError: fail },
+              { onSuccess: () => (setRejecting(false), toast({ tone: "success", title: t("view.rejected") })), onError: fail },
             ),
         }}
       >
-        <TextField label="Sabab" value={reason} onChange={setReason} placeholder="Masalan: YB qabul qilmaydi" required />
+        <TextField label={t("view.rejectReason")} value={reason} onChange={setReason} placeholder={t("view.rejectPlaceholder")} required />
       </Modal>
     </Drawer>
   );
 }
 
 function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("supplierReturns");
+  const lineError = useLineErrorText();
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const create = useCreateSupplierReturn();
@@ -266,7 +273,7 @@ function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onC
   const receiptOptions = (receipts.data?.items ?? []).map((r) => ({
     value: String(r.id),
     label: `${r.number} · ${day(r.receiptDate)}`,
-    sub: r.invoiceNumber ? `Yuk xati ${r.invoiceNumber}` : r.warehouse,
+    sub: r.invoiceNumber ? t("form.invoice", { number: r.invoiceNumber }) : r.warehouse,
   }));
   // Oldindan tanlangan kirim roʻyxatning birinchi sahifasida boʻlmasa ham koʻrinsin
   if (preset && String(preset.receiptId) === receiptId && !receiptOptions.some((o) => o.value === receiptId))
@@ -281,7 +288,7 @@ function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onC
   const columns: TableColumn<ReturnStockRow>[] = [
     {
       key: "productName",
-      title: "Mahsulot",
+      title: t("col.product"),
       wrap: true,
       render: (r) => (
         <span className="flex items-center gap-2">
@@ -290,13 +297,13 @@ function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onC
         </span>
       ),
     },
-    { key: "batchNumber", title: "Partiya", mono: true },
-    { key: "expiryDate", title: "Yaroqlilik", render: (r) => day(r.expiryDate) },
+    { key: "batchNumber", title: t("col.batch"), mono: true },
+    { key: "expiryDate", title: t("col.expiry"), render: (r) => day(r.expiryDate) },
     ...(withPrice
       ? [
           {
             key: "price",
-            title: "Kirim narxi",
+            title: t("col.price"),
             align: "right" as const,
             render: (r: ReturnStockRow) => (r.price != null ? formatMoney(r.price) : "—"),
           },
@@ -304,23 +311,25 @@ function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onC
       : []),
     {
       key: "free",
-      title: "Boʻsh",
+      title: t("col.free"),
       align: "right",
       render: (r) => (
         <span className="flex flex-col items-end">
           {formatQuantity(r.free)}
-          {r.reserved ? <span className="text-caption text-text-secondary">zahirada {formatQuantity(r.reserved)}</span> : null}
+          {r.reserved ? (
+            <span className="text-caption text-text-secondary">{t("reservedQty", { qty: formatQuantity(r.reserved) })}</span>
+          ) : null}
         </span>
       ),
     },
     {
       key: "ret",
-      title: "Qaytarish",
+      title: t("col.ret"),
       align: "right",
       render: (r) => (
         <div className="ml-auto w-20">
           <TextField
-            label={`${r.productName} ${r.batchNumber} — qaytarish soni`}
+            label={t("form.qtyLabel", { product: r.productName, batch: r.batchNumber })}
             className="[&>label]:sr-only"
             value={qty[r.batchId] ?? ""}
             onChange={(v) => (setQty((q) => ({ ...q, [r.batchId]: v })), setError(null))}
@@ -334,24 +343,24 @@ function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onC
   ];
 
   const submit = () => {
-    if (!receiptId) return setError("Yetkazib beruvchi va kirimni tanlang.");
-    if (!zone) return setError("Zonani tanlang.");
-    if (!reason) return setError("Sababni tanlang.");
-    if (reason === "OTHER" && note.trim() === "") return setError("Sabab «Boshqa» — izoh yozing (nima boʻldi).");
-    if (picked.error) return setError(picked.error);
-    if (picked.lines.length === 0) return setError("Kamida bitta partiyaga qaytarish sonini kiriting.");
+    if (!receiptId) return setError(t("form.pickReceipt"));
+    if (!zone) return setError(t("form.pickZone"));
+    if (!reason) return setError(t("form.pickReason"));
+    if (reason === "OTHER" && note.trim() === "") return setError(t("form.otherNote"));
+    if (picked.error) return setError(lineError(picked.error));
+    if (picked.lines.length === 0) return setError(t("form.noLines"));
     create.mutate(
       { receiptId: Number(receiptId), zoneId: zone.id, reason, note: note.trim(), lines: picked.lines },
       {
         onSuccess: (d) => {
           toast({
             tone: "success",
-            title: d.status === "PENDING" ? "Tasdiqqa yuborildi" : "Tovar YB ga qaytarildi",
+            title: d.status === "PENDING" ? t("form.sent") : t("form.done"),
             description: d.number,
           });
           onCreated(d.id);
         },
-        onError: (e) => setError(describeError(e).message ?? "Saqlanmadi. Qayta urinib koʻring."),
+        onError: (e) => setError(describeError(e).message ?? t("saveFailed")),
       },
     );
   };
@@ -361,23 +370,23 @@ function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onC
       open
       onClose={onClose}
       size="lg"
-      kind={KIND}
-      title="Yangi qaytarish"
+      kind={t("kind")}
+      title={t("form.title")}
       actions={
         <Button icon={Check} loading={create.isPending} onClick={submit} disabled={!receiptId || !zone || !reason}>
-          {canApprove ? "Qaytarish" : "Tasdiqqa yuborish"}
+          {canApprove ? t("form.submit") : t("form.sendForApproval")}
         </Button>
       }
     >
       <div className="flex flex-col gap-4">
         {error ? (
-          <Alert tone="danger" title="Qaytarilmadi">
+          <Alert tone="danger" title={t("form.errorTitle")}>
             {error}
           </Alert>
         ) : null}
         <div className="grid grid-cols-2 gap-4">
           <Select
-            label="Yetkazib beruvchi"
+            label={t("form.supplier")}
             value={supplier}
             loadOptions={async (q) => {
               const found = await searchSuppliers(q);
@@ -391,65 +400,63 @@ function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onC
               setZoneId(null),
               setQty({})
             )}
-            placeholder={supplierLabel || "Nom yoki STIR boʻyicha qidiring"}
+            placeholder={supplierLabel || t("form.supplierPlaceholder")}
             options={supplier && supplierLabel ? [{ value: supplier, label: supplierLabel }] : []}
             required
           />
           <Select
-            label="Kirim"
+            label={t("form.receipt")}
             value={receiptId}
             onChange={(v) => (setReceiptId(v), setZoneId(null), setQty({}))}
             options={receiptOptions}
-            placeholder={supplier ? "Oʻtkazilgan kirimni tanlang" : "Avval yetkazib beruvchini tanlang"}
+            placeholder={supplier ? t("form.receiptPlaceholder") : t("form.receiptFirst")}
             disabled={!supplier}
             required
           />
           <Select
-            label="Zona"
+            label={t("form.zone")}
             value={zone ? String(zone.id) : null}
             onChange={(v) => (setZoneId(v), setQty({}))}
             options={zones.map((z) => ({ value: String(z.id), label: zoneLabel(z) }))}
             disabled={zones.length === 0}
-            hint={receiptId && stock.data && zones.length === 0 ? "Bu kirim partiyalaridan qoldiq yoʻq" : undefined}
+            hint={receiptId && stock.data && zones.length === 0 ? t("form.noStock") : undefined}
             required
           />
           <Select
-            label="Sabab"
+            label={t("form.reason")}
             value={reason}
             onChange={(v) => setReason(v as SupplierReturnReason | null)}
-            options={Object.entries(QY_REASON_LABELS).map(([value, label]) => ({ value, label }))}
+            options={QY_REASONS.map((value) => ({ value, label: t(`reason.${value}`) }))}
             required
           />
         </div>
-        <Alert tone="info" title={canApprove ? "Siz tasdiqlaysiz" : "Tasdiq kerak"}>
-          {canApprove
-            ? "Hujjat darhol oʻtkaziladi: tovar zonadan chiqadi, YB qarzi kirim narxida kamayadi (bonus tovar — qarzga taʼsir qilmaydi)."
-            : "Hujjat Filial rahbari yoki Ombor mudiri tasdigʻiga yuboriladi. Tasdiqlanmaguncha tovar zonada qoladi."}
+        <Alert tone="info" title={canApprove ? t("form.selfApproveTitle") : t("form.needApprovalTitle")}>
+          {canApprove ? t("form.selfApproveBody") : t("form.needApprovalBody")}
         </Alert>
         {receiptId ? (
           stock.error ? (
             <ErrorState onRetry={() => stock.refetch()} />
           ) : zone || stock.isPending ? (
             <Table
-              caption={zone ? `«${zone.name}» zonasidagi kirim partiyalari` : "Kirim partiyalari"}
+              caption={zone ? t("form.stockCaption", { zone: zone.name }) : t("form.stockCaptionAll")}
               density="compact"
               columns={columns}
               rows={rows}
               rowKey={(r) => String(r.batchId)}
               loading={stock.isPending}
-              emptyState={<EmptyState icon={X} title="Zonada bu kirim tovari yoʻq" description="Boshqa zonani tanlang." />}
+              emptyState={<EmptyState icon={X} title={t("form.emptyZoneTitle")} description={t("form.emptyZoneHint")} />}
             />
           ) : zones.length > 1 ? (
-            <Alert tone="info" title="Zonani tanlang">
-              Kirim partiyalari bir nechta zonada turibdi — qaytariladigan tovar qaysi zonadan chiqishini tanlang.
+            <Alert tone="info" title={t("form.pickZoneTitle")}>
+              {t("form.pickZoneBody")}
             </Alert>
           ) : null
         ) : null}
         <TextField
-          label="Izoh"
+          label={t("form.note")}
           value={note}
           onChange={setNote}
-          placeholder="Masalan: qadoq ezilgan, YB bilan kelishilgan"
+          placeholder={t("form.notePlaceholder")}
           required={reason === "OTHER"}
         />
       </div>

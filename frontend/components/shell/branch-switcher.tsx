@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Building2, Check, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/features/auth/session";
@@ -9,6 +10,7 @@ import { effectiveBranchId, useBranchStore } from "@/lib/stores/branch";
 
 /** Filial tanlagichi (SPEC 4: Umumiy). Barcha filiallarni koʻradiganlar uchun — menyu, boshqalar uchun — oʻz filiali. */
 export function BranchSwitcher() {
+  const t = useTranslations("shell");
   const me = useMe();
   const branches = useBranchList();
   const { branchId, setBranchId } = useBranchStore();
@@ -35,18 +37,18 @@ export function BranchSwitcher() {
     branchId,
     active.map((b) => b.id),
   );
-  const label = current === null ? "Barcha filiallar" : (branches.data.find((b) => b.id === current)?.name ?? "");
+  const label = current === null ? t("allBranches") : (branches.data.find((b) => b.id === current)?.name ?? "");
 
   if (!me.data.allBranches) {
     return label ? (
-      <span className="flex h-control-md items-center gap-2 px-3">
+      <span title={label} className="flex h-control-md items-center gap-2 px-2 md:px-3">
         <Building2 size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-        <span>{label}</span>
+        <span className="max-md:sr-only">{label}</span>
       </span>
     ) : null;
   }
 
-  const options: { id: number | null; name: string; code?: string }[] = [{ id: null, name: "Barcha filiallar" }, ...active];
+  const options: { id: number | null; name: string; code?: string }[] = [{ id: null, name: t("allBranches") }, ...active];
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -55,16 +57,16 @@ export function BranchSwitcher() {
         aria-expanded={open}
         aria-label={`Filial: ${label}`}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-control-md items-center gap-2 rounded-control border border-border px-3 hover:bg-background"
+        className="flex h-control-md items-center gap-2 rounded-control border border-border px-2 hover:bg-background md:px-3"
       >
         <Building2 size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-        <span>{label}</span>
+        <span className="max-w-40 truncate max-md:sr-only">{label}</span>
         <ChevronDown size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
       </button>
       {open ? (
         <ul
           role="listbox"
-          aria-label="Filial"
+          aria-label={t("branch")}
           className="absolute right-0 z-30 mt-1 min-w-56 rounded-control border border-border bg-surface py-1 shadow-overlay"
         >
           {options.map((o) => {

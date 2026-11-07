@@ -218,6 +218,7 @@ class ReceiptIT {
         // Ombor mudiri narxni ko'rmaydi va narxli qoralamani tahrirlamaydi
         mvc.perform(get("/api/receipts/" + doc).cookie(keeper))
                 .andExpect(jsonPath("$.pricesVisible").value(false))
+                .andExpect(jsonPath("$.hasPrices").value(true))
                 .andExpect(jsonPath("$.lines[0].price").doesNotExist())
                 .andExpect(jsonPath("$.amount").doesNotExist())
                 .andExpect(jsonPath("$.supplierBalance").doesNotExist());
@@ -357,7 +358,7 @@ class ReceiptIT {
         // Boshqa filial xodimi ko'rmaydi; Buxgalter yarata olmaydi
         Cookie otherKeeper = loginAs("WAREHOUSE_MANAGER", other.branchId());
         mvc.perform(get("/api/receipts/" + doc).cookie(otherKeeper)).andExpect(status().isNotFound());
-        Cookie accountant = loginAs("ACCOUNTANT", null);
+        Cookie accountant = loginAs("ACCOUNTANT", p.branchId()); // E3: Buxgalter — o'z filiali
         send(post("/api/receipts"), accountant, doc(p, sup, false, line(a, "P-2", p.main(), 1, 0, "1"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/receipts").param("branchId", String.valueOf(p.branchId())).cookie(accountant))
                 .andExpect(status().isOk())
@@ -499,5 +500,42 @@ class ReceiptIT {
         long notif = ((Number) JsonPath.read(json, "$.items[0].id")).longValue();
         send(post("/api/notifications/" + notif + "/read"), admin, "").andExpect(status().isOk());
         assertThat(jdbc.sql("SELECT employee_id FROM notification WHERE id = :id").param("id", notif).query(Long.class).single()).isEqualTo(ownerId);
+    }
+
+    @Test
+    void idleBonusBalanceRemindsEveryThirtyDays() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 15);
+        long a = product("KR bonus eslatma", false);
+        Cookie admin = loginAs("ADMIN", null);
+        loginAs("PURCHASER", p.branchId());
+        long ownerId = jdbc.sql("SELECT max(id) FROM employee WHERE role_id = (SELECT id FROM role WHERE code = 'PURCHASER')").query(Long.class).single();
+        String body = doc(p, sup, false, line(a, "BI-1", p.main(), 10, 0, "1000"))
+                .replace("\"prepaid\":false", "\"prepaid\":false,\"ownerId\":" + ownerId);
+        String kr = postedReceipt(admin, body);
+        send(post("/api/receipts/" + kr + "/post"), admin, "{}").andExpect(status().isOk());
+        send(post("/api/receipts/" + kr + "/bonus"), admin, "").andExpect(status().isOk());
+
+        String like = "bonus.idle:" + p.branchId() + ":" + sup + ":%";
+        java.util.function.Supplier<Integer> count = () -> jdbc.sql("SELECT count(*)::int FROM notification WHERE dedup_key LIKE :k")
+                .param("k", like).query(Integer.class).single();
+        java.util.function.Supplier<Integer> ownerCount = () -> jdbc.sql(
+                "SELECT count(*)::int FROM notification WHERE dedup_key LIKE :k AND employee_id = :e")
+                .param("k", like).param("e", ownerId).query(Integer.class).single();
+        reminders.run(today().plusDays(29));
+        assertThat(count.get()).isZero();
+        reminders.run(today().plusDays(30));
+        assertThat(ownerCount.get()).isEqualTo(1);
+        int afterFirst = count.get();
+        assertThat(afterFirst).isGreaterThanOrEqualTo(2); // Kim nomiga + Direktor/Admin
+        String title = jdbc.sql("SELECT title FROM notification WHERE dedup_key LIKE :k AND employee_id = :e")
+                .param("k", like).param("e", ownerId).query(String.class).single();
+        assertThat(title).startsWith("Bonus balansi 30 kundan beri ishlatilmagan:");
+        // Shu davrda qayta yozilmaydi; keyingi 30 kunda — yana
+        reminders.run(today().plusDays(31));
+        reminders.run(today().plusDays(45));
+        assertThat(count.get()).isEqualTo(afterFirst);
+        reminders.run(today().plusDays(60));
+        assertThat(ownerCount.get()).isEqualTo(2);
     }
 }

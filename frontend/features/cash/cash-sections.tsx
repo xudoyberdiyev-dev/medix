@@ -1,11 +1,13 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Ban, CircleCheck, CircleX, Hourglass, ArrowLeftRight, Printer, ReceiptText, LockKeyhole, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { EmptyState, ErrorState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
@@ -18,8 +20,7 @@ import { formatDateTime, formatMoney } from "@/lib/format";
 import {
   CASH_APPROVE,
   CASH_CANCEL,
-  DOC_TITLE,
-  OP_STATUS,
+  isDocTitleKey,
   useCashOps,
   useDayCloses,
   useStatement,
@@ -29,10 +30,12 @@ import {
   type DayClose,
   type Move,
   type Transfer,
+  type OpsFilter,
 } from "./api";
 import { ReasonDialog, refreshMoney } from "./op-dialogs";
 
 export function OpStatusBadge({ status }: { status: CashOpStatus }) {
+  const tc = useTranslations("cash");
   const map = {
     PENDING: { tone: "warning", icon: Hourglass },
     POSTED: { tone: "success", icon: CircleCheck },
@@ -41,7 +44,7 @@ export function OpStatusBadge({ status }: { status: CashOpStatus }) {
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {OP_STATUS[status]}
+      {tc(`opStatus.${status}`)}
     </Badge>
   );
 }
@@ -51,6 +54,7 @@ const money = (v: string) => <span className="tabular-nums">{formatMoney(v)}</sp
 // ===== Tasdiqlashni kutayotganlar =====
 
 export function PendingOps(props: { branchId: number }) {
+  const tc = useTranslations("cash");
   const me = useMe();
   const qc = useQueryClient();
   const list = useCashOps(props.branchId, "PENDING");
@@ -66,9 +70,13 @@ export function PendingOps(props: { branchId: number }) {
       await ensureCsrf();
       await unwrap(api.POST("/api/cash-ops/{id}/approve", { params: { path: { id: o.id } } }));
       await refreshMoney(qc);
-      toast({ tone: "success", title: "Chiqim tasdiqlandi", description: `${o.number} · ${formatMoney(o.amount)} soʻm` });
+      toast({
+        tone: "success",
+        title: tc("pending.approved"),
+        description: tc("amountLine", { number: o.number, amount: formatMoney(o.amount) }),
+      });
     } catch (e) {
-      toast({ tone: "danger", title: "Tasdiqlanmadi", description: e instanceof Error ? e.message : undefined });
+      toast({ tone: "danger", title: tc("pending.approveFailed"), description: e instanceof Error ? e.message : undefined });
     } finally {
       setBusy(null);
     }
@@ -77,7 +85,7 @@ export function PendingOps(props: { branchId: number }) {
   return (
     <Card className="mb-6">
       <h2 className="mb-3 flex items-center gap-2 text-subtitle">
-        <Hourglass size={18} strokeWidth={1.5} aria-hidden /> Tasdiqlashni kutmoqda
+        <Hourglass size={18} strokeWidth={1.5} aria-hidden /> {tc("pending.title")}
       </h2>
       <ul className="flex flex-col">
         {rows.map((o) => (
@@ -93,19 +101,21 @@ export function PendingOps(props: { branchId: number }) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-mono tabular-nums">{formatMoney(o.amount)} soʻm</span>
+              <span className="font-mono tabular-nums">
+                {formatMoney(o.amount)} {tc("currency")}
+              </span>
               {mayApprove ? (
                 <>
                   <Button variant="tertiary" icon={CircleX} onClick={() => setRejecting(o)}>
-                    Rad etish
+                    {tc("pending.reject")}
                   </Button>
                   <Button variant="secondary" icon={CircleCheck} loading={busy === o.id} onClick={() => void approve(o)}>
-                    Tasdiqlash
+                    {tc("pending.approve")}
                   </Button>
                 </>
               ) : (
                 <Badge tone="warning" icon={Hourglass}>
-                  Filial rahbarida
+                  {tc("pending.atManager")}
                 </Badge>
               )}
             </div>
@@ -114,14 +124,14 @@ export function PendingOps(props: { branchId: number }) {
       </ul>
       {rejecting ? (
         <ReasonDialog
-          title={`Rad etish: ${rejecting.number}`}
-          action="Rad etish"
+          title={tc("pending.rejectTitle", { number: rejecting.number })}
+          action={tc("pending.reject")}
           onClose={() => setRejecting(null)}
           onSubmit={async (reason) => {
             await ensureCsrf();
             await unwrap(api.POST("/api/cash-ops/{id}/reject", { params: { path: { id: rejecting.id } }, body: { reason } }));
             await refreshMoney(qc);
-            toast({ tone: "success", title: "Chiqim rad etildi", description: rejecting.number });
+            toast({ tone: "success", title: tc("pending.rejected"), description: rejecting.number });
           }}
         />
       ) : null}
@@ -132,6 +142,7 @@ export function PendingOps(props: { branchId: number }) {
 // ===== Ko'chirma =====
 
 export function StatementTab(props: { accountId: number | null }) {
+  const tc = useTranslations("cash");
   const today = formatIsoDate(todayTashkent());
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
@@ -141,74 +152,71 @@ export function StatementTab(props: { accountId: number | null }) {
   const st = useStatement(valid ? props.accountId : null, isoFrom ?? null, isoTo ?? null);
 
   const columns: TableColumn<Move>[] = [
-    { key: "occurredAt", title: "Vaqt", render: (m) => formatDateTime(new Date(m.occurredAt)) },
-    { key: "docNumber", title: "Hujjat", mono: true, render: (m) => <span title={DOC_TITLE[m.docType] ?? m.docType}>{m.docNumber}</span> },
-    { key: "note", title: "Izoh", render: (m) => m.note ?? "" },
-    { key: "employee", title: "Xodim", render: (m) => m.employee ?? "" },
-    { key: "in", title: "Kirim", align: "right", render: (m) => (m.amount.startsWith("-") ? "" : money(m.amount)) },
-    { key: "out", title: "Chiqim", align: "right", render: (m) => (m.amount.startsWith("-") ? money(m.amount.slice(1)) : "") },
+    { key: "occurredAt", title: tc("col.time"), render: (m) => formatDateTime(new Date(m.occurredAt)) },
+    {
+      key: "docNumber",
+      title: tc("col.document"),
+      mono: true,
+      render: (m) => <span title={isDocTitleKey(m.docType) ? tc(`docType.${m.docType}`) : m.docType}>{m.docNumber}</span>,
+    },
+    { key: "note", title: tc("col.note"), render: (m) => m.note ?? "" },
+    { key: "employee", title: tc("col.employee"), render: (m) => m.employee ?? "" },
+    { key: "in", title: tc("col.in"), align: "right", render: (m) => (m.amount.startsWith("-") ? "" : money(m.amount)) },
+    { key: "out", title: tc("col.out"), align: "right", render: (m) => (m.amount.startsWith("-") ? money(m.amount.slice(1)) : "") },
   ];
 
   if (props.accountId == null) {
-    return (
-      <EmptyState
-        icon={ScrollText}
-        title="Hisobni tanlang"
-        description="Yuqoridagi kartalardan birini bosing — koʻchirma shu hisob boʻyicha chiqadi."
-      />
-    );
+    return <EmptyState icon={ScrollText} title={tc("statement.noAccount.title")} description={tc("statement.noAccount.description")} />;
   }
   return (
     <>
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <div className="w-40">
           <TextField
-            label="Dan"
+            label={tc("from")}
             value={from}
             onChange={setFrom}
             placeholder="04.10.2026"
             size="sm"
-            error={isoFrom === null ? "Sana notoʻgʻri" : undefined}
+            error={isoFrom === null ? tc("badDate") : undefined}
           />
         </div>
         <div className="w-40">
           <TextField
-            label="Gacha"
+            label={tc("to")}
             value={to}
             onChange={setTo}
             placeholder="04.10.2026"
             size="sm"
-            error={isoTo === null ? "Sana notoʻgʻri" : undefined}
+            error={isoTo === null ? tc("badDate") : undefined}
           />
         </div>
         {st.data ? (
           <dl className="flex flex-wrap gap-6">
-            <Sum label="Davr boshi" value={st.data.opening} />
-            <Sum label="Kirim" value={st.data.income} />
-            <Sum label="Chiqim" value={st.data.expense} />
-            <Sum label="Davr oxiri" value={st.data.closing} />
+            <Sum label={tc("statement.opening")} value={st.data.opening} />
+            <Sum label={tc("col.in")} value={st.data.income} />
+            <Sum label={tc("col.out")} value={st.data.expense} />
+            <Sum label={tc("statement.closing")} value={st.data.closing} />
           </dl>
         ) : null}
       </div>
       {st.data?.closedThrough ? (
         <p className="mb-2 text-caption text-text-secondary">
           <LockKeyhole size={14} strokeWidth={1.5} className="mr-1 inline" aria-hidden />
-          {formatIsoDate(st.data.closedThrough)} gacha kun yopilgan — bu kunlarga yangi hujjat kiritilmaydi.
+          {tc("statement.closedThrough", { date: formatIsoDate(st.data.closedThrough) })}
         </p>
       ) : null}
       {st.error ? (
         <ErrorState onRetry={() => st.refetch()} />
       ) : (
         <Table
-          caption={`Koʻchirma: ${st.data?.account ?? ""}`}
+          caption={tc("statement.caption", { account: st.data?.account ?? "" })}
           density="compact"
           columns={columns}
           rows={st.data?.moves ?? []}
           rowKey={(m) => String(m.id)}
           loading={st.isPending}
-          emptyState={
-            <EmptyState icon={ScrollText} title="Bu davrda harakat yoʻq" description="Davrni oʻzgartiring yoki kirim/chiqim yozing." />
-          }
+          emptyState={<EmptyState icon={ScrollText} title={tc("statement.empty.title")} description={tc("statement.empty.description")} />}
         />
       )}
     </>
@@ -226,29 +234,43 @@ function Sum(props: { label: string; value: string }) {
 
 // ===== KO / BO =====
 
-export function OpsTab(props: { branchId: number }) {
+export function OpsTab(props: { branchId: number; filter?: OpsFilter | null; onClearFilter?: () => void }) {
+  const tc = useTranslations("cash");
   const me = useMe();
   const qc = useQueryClient();
-  const list = useCashOps(props.branchId, null);
+  const list = useCashOps(props.branchId, null, props.filter ?? null);
   const [cancelling, setCancelling] = useState<CashOp | null>(null);
   const mayCancel = can(me.data, CASH_CANCEL);
   const columns: TableColumn<CashOp>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "opDate", title: "Sana", render: (o) => formatIsoDate(o.opDate) },
-    { key: "account", title: "Hisob" },
-    { key: "item", title: "Modda", render: (o) => (o.source === "CLOSE" ? `${o.item} (kunni yopish)` : o.item) },
-    { key: "party", title: "Kimdan / kimga", render: (o) => o.party ?? "" },
-    { key: "in", title: "Kirim", align: "right", render: (o) => (o.direction === "IN" ? money(o.amount) : "") },
-    { key: "out", title: "Chiqim", align: "right", render: (o) => (o.direction === "OUT" ? money(o.amount) : "") },
-    { key: "status", title: "Holat", render: (o) => <OpStatusBadge status={o.status} /> },
+    { key: "number", title: tc("col.number"), mono: true },
+    { key: "opDate", title: tc("col.date"), render: (o) => formatIsoDate(o.opDate) },
+    { key: "account", title: tc("col.account") },
+    { key: "item", title: tc("col.item"), render: (o) => (o.source === "CLOSE" ? tc("ops.closeItem", { item: o.item }) : o.item) },
+    { key: "party", title: tc("col.party"), render: (o) => o.party ?? "" },
+    { key: "in", title: tc("col.in"), align: "right", render: (o) => (o.direction === "IN" ? money(o.amount) : "") },
+    { key: "out", title: tc("col.out"), align: "right", render: (o) => (o.direction === "OUT" ? money(o.amount) : "") },
+    { key: "status", title: tc("col.status"), render: (o) => <OpStatusBadge status={o.status} /> },
   ];
+  const f = props.filter;
   return (
     <>
+      {f ? (
+        <div className="mb-3">
+          <FilterChip
+            label={tc("ops.itemChip", {
+              name: f.item,
+              period: f.from && f.to ? (f.from === f.to ? formatIsoDate(f.from) : `${formatIsoDate(f.from)} – ${formatIsoDate(f.to)}`) : "",
+            })}
+            what={tc("ops.itemFilter")}
+            onClear={() => props.onClearFilter?.()}
+          />
+        </div>
+      ) : null}
       {list.error ? (
         <ErrorState onRetry={() => list.refetch()} />
       ) : (
         <Table
-          caption="Kassa va bank operatsiyalari"
+          caption={tc("ops.caption")}
           columns={columns}
           rows={list.data ?? []}
           rowKey={(o) => String(o.id)}
@@ -261,34 +283,28 @@ export function OpsTab(props: { branchId: number }) {
                 icon={Printer}
                 onClick={() => window.open(`/api/cash-ops/${o.id}/pdf`, "_blank", "noopener")}
               >
-                Chop etish
+                {tc("print")}
               </Button>
               {mayCancel && o.status === "POSTED" && o.source === "MANUAL" ? (
                 <Button variant="tertiary" size="sm" icon={Ban} onClick={() => setCancelling(o)}>
-                  Bekor qilish
+                  {tc("cancel")}
                 </Button>
               ) : null}
             </>
           )}
-          emptyState={
-            <EmptyState
-              icon={ReceiptText}
-              title="Hali operatsiya yoʻq"
-              description="Xarajat va boshqa kirimlar «Kirim / chiqim» tugmasi bilan yoziladi."
-            />
-          }
+          emptyState={<EmptyState icon={ReceiptText} title={tc("ops.empty.title")} description={tc("ops.empty.description")} />}
         />
       )}
       {cancelling ? (
         <ReasonDialog
-          title={`Bekor qilish: ${cancelling.number}`}
-          action="Bekor qilish"
+          title={tc("cancelTitle", { number: cancelling.number })}
+          action={tc("cancel")}
           onClose={() => setCancelling(null)}
           onSubmit={async (reason) => {
             await ensureCsrf();
             await unwrap(api.POST("/api/cash-ops/{id}/cancel", { params: { path: { id: cancelling.id } }, body: { reason } }));
             await refreshMoney(qc);
-            toast({ tone: "success", title: "Operatsiya bekor qilindi", description: cancelling.number });
+            toast({ tone: "success", title: tc("ops.cancelled"), description: cancelling.number });
           }}
         />
       ) : null}
@@ -299,28 +315,29 @@ export function OpsTab(props: { branchId: number }) {
 // ===== IO =====
 
 export function TransfersTab(props: { branchId: number }) {
+  const tc = useTranslations("cash");
   const me = useMe();
   const qc = useQueryClient();
   const list = useTransfers(props.branchId);
   const [cancelling, setCancelling] = useState<Transfer | null>(null);
   const mayCancel = can(me.data, CASH_CANCEL);
   const columns: TableColumn<Transfer>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "transferDate", title: "Sana", render: (t) => formatIsoDate(t.transferDate) },
-    { key: "fromAccount", title: "Qayerdan" },
-    { key: "toAccount", title: "Qayerga" },
-    { key: "amount", title: "Summa", align: "right", render: (t) => money(t.amount) },
+    { key: "number", title: tc("col.number"), mono: true },
+    { key: "transferDate", title: tc("col.date"), render: (t) => formatIsoDate(t.transferDate) },
+    { key: "fromAccount", title: tc("col.fromAccount") },
+    { key: "toAccount", title: tc("col.toAccount") },
+    { key: "amount", title: tc("col.amount"), align: "right", render: (t) => money(t.amount) },
     {
       key: "status",
-      title: "Holat",
+      title: tc("col.status"),
       render: (t) =>
         t.status === "POSTED" ? (
           <Badge tone="success" icon={CircleCheck}>
-            Oʻtkazilgan
+            {tc("opStatus.POSTED")}
           </Badge>
         ) : (
           <Badge tone="neutral" icon={Ban}>
-            Bekor qilingan
+            {tc("opStatus.CANCELLED")}
           </Badge>
         ),
     },
@@ -331,7 +348,7 @@ export function TransfersTab(props: { branchId: number }) {
         <ErrorState onRetry={() => list.refetch()} />
       ) : (
         <Table
-          caption="Hisoblar orasida oʻtkazmalar"
+          caption={tc("io.caption")}
           columns={columns}
           rows={list.data ?? []}
           rowKey={(t) => String(t.id)}
@@ -339,29 +356,23 @@ export function TransfersTab(props: { branchId: number }) {
           rowActions={(t) =>
             mayCancel && t.status === "POSTED" ? (
               <Button variant="tertiary" size="sm" icon={Ban} onClick={() => setCancelling(t)}>
-                Bekor qilish
+                {tc("cancel")}
               </Button>
             ) : null
           }
-          emptyState={
-            <EmptyState
-              icon={ArrowLeftRight}
-              title="Hali oʻtkazma yoʻq"
-              description="Masalan, Terminal yoki kassadagi pulni bankka oʻtkazish — «Oʻtkazma» tugmasi."
-            />
-          }
+          emptyState={<EmptyState icon={ArrowLeftRight} title={tc("io.empty.title")} description={tc("io.empty.description")} />}
         />
       )}
       {cancelling ? (
         <ReasonDialog
-          title={`Bekor qilish: ${cancelling.number}`}
-          action="Bekor qilish"
+          title={tc("cancelTitle", { number: cancelling.number })}
+          action={tc("cancel")}
           onClose={() => setCancelling(null)}
           onSubmit={async (reason) => {
             await ensureCsrf();
             await unwrap(api.POST("/api/money-transfers/{id}/cancel", { params: { path: { id: cancelling.id } }, body: { reason } }));
             await refreshMoney(qc);
-            toast({ tone: "success", title: "Oʻtkazma bekor qilindi", description: cancelling.number });
+            toast({ tone: "success", title: tc("io.cancelled"), description: cancelling.number });
           }}
         />
       ) : null}
@@ -372,38 +383,33 @@ export function TransfersTab(props: { branchId: number }) {
 // ===== Yopilgan kunlar =====
 
 export function ClosesTab(props: { branchId: number }) {
+  const tc = useTranslations("cash");
   const list = useDayCloses(props.branchId, true);
   const columns: TableColumn<DayClose>[] = [
-    { key: "closeDate", title: "Kun", render: (c) => formatIsoDate(c.closeDate) },
-    { key: "account", title: "Kassa" },
-    { key: "expected", title: "Kutilgan", align: "right", render: (c) => money(c.expected) },
-    { key: "counted", title: "Sanaldi", align: "right", render: (c) => money(c.counted) },
+    { key: "closeDate", title: tc("col.day"), render: (c) => formatIsoDate(c.closeDate) },
+    { key: "account", title: tc("col.cash") },
+    { key: "expected", title: tc("col.expected"), align: "right", render: (c) => money(c.expected) },
+    { key: "counted", title: tc("col.counted"), align: "right", render: (c) => money(c.counted) },
     {
       key: "diff",
-      title: "Farq",
+      title: tc("col.diff"),
       align: "right",
       render: (c) => (c.diff === "0.00" ? money(c.diff) : <span className="text-danger">{money(c.diff)}</span>),
     },
-    { key: "correctionNumber", title: "Tuzatish", mono: true, render: (c) => c.correctionNumber ?? "" },
-    { key: "note", title: "Izoh", render: (c) => c.note ?? "" },
-    { key: "closedBy", title: "Kim yopdi", render: (c) => `${c.closedBy} · ${formatDateTime(new Date(c.closedAt))}` },
+    { key: "correctionNumber", title: tc("col.correction"), mono: true, render: (c) => c.correctionNumber ?? "" },
+    { key: "note", title: tc("col.note"), render: (c) => c.note ?? "" },
+    { key: "closedBy", title: tc("col.closedBy"), render: (c) => `${c.closedBy} · ${formatDateTime(new Date(c.closedAt))}` },
   ];
   return list.error ? (
     <ErrorState onRetry={() => list.refetch()} />
   ) : (
     <Table
-      caption="Yopilgan kunlar"
+      caption={tc("closes.caption")}
       columns={columns}
       rows={list.data ?? []}
       rowKey={(c) => String(c.id)}
       loading={list.isPending}
-      emptyState={
-        <EmptyState
-          icon={LockKeyhole}
-          title="Hali kun yopilmagan"
-          description="Kun oxirida kassadagi pulni sanab «Kunni yopish» ni bosing."
-        />
-      }
+      emptyState={<EmptyState icon={LockKeyhole} title={tc("closes.empty.title")} description={tc("closes.empty.description")} />}
     />
   );
 }

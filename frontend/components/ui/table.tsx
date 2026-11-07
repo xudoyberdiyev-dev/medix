@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -83,6 +84,7 @@ export function Table<T>({
   emptyState,
   pagination,
 }: TableProps<T>) {
+  const t = useTranslations("ui.table");
   const keys = rows.map(rowKey);
   const selectedOnPage = keys.filter((k) => selectedKeys.includes(k));
   const allSelected = keys.length > 0 && selectedOnPage.length === keys.length;
@@ -157,7 +159,7 @@ export function Table<T>({
                     indeterminate={someSelected}
                     disabled={rows.length === 0}
                     onChange={toggleAll}
-                    aria-label="Sahifadagi barcha qatorlarni tanlash"
+                    aria-label={t("selectAll")}
                   />
                 </th>
               ) : null}
@@ -242,7 +244,7 @@ export function Table<T>({
                           <Checkbox
                             checked={selectedKeys.includes(key)}
                             onChange={() => toggleRow(key)}
-                            aria-label="Qatorni tanlash"
+                            aria-label={t("selectRow")}
                             className="min-h-0"
                           />
                         </td>

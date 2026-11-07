@@ -2,6 +2,7 @@
 
 import { CircleCheck, CirclePause, Columns3, FileDown, FileUp, FilterX, Pill, Plus, QrCode, ShieldAlert, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,15 +24,8 @@ import { DEFAULT_FILTERS, activeFilterCount, exportQuery, parseFilters, serializ
 
 const COLUMN_STORAGE = "medix-products-columns";
 
-const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Faol" },
-  { value: "INACTIVE", label: "Nofaol" },
-  { value: "ALL", label: "Hammasi" },
-];
-const FLAG_OPTIONS = [
-  { value: "marked", label: "Markirovkali" },
-  { value: "controlled", label: "Nazoratdagi" },
-];
+const STATUS_VALUES = ["ACTIVE", "INACTIVE", "ALL"] as const;
+const FLAG_VALUES = ["marked", "controlled"] as const;
 
 function useHiddenColumns() {
   const [hidden, setHidden] = useState<string[]>([]);
@@ -56,6 +50,10 @@ function useHiddenColumns() {
 }
 
 export function ProductsPage() {
+  const t = useTranslations("products.list");
+  const tp = useTranslations("products");
+  const STATUS_OPTIONS = STATUS_VALUES.map((value) => ({ value, label: tp(`status.${value}`) }));
+  const FLAG_OPTIONS = FLAG_VALUES.map((value) => ({ value, label: tp(`flag.${value}`) }));
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -85,23 +83,23 @@ export function ProductsPage() {
   };
 
   const allColumns: TableColumn<ProductRow>[] = [
-    { key: "code", title: "Kod", mono: true, sortable: true, width: 110 },
+    { key: "code", title: t("col.code"), mono: true, sortable: true, width: 110 },
     {
       key: "name",
-      title: "Mahsulot",
+      title: t("col.name"),
       sortable: true,
       render: (p) => (
         <span className="flex flex-col">
           <span className="flex items-center gap-2">
             <span>{p.name}</span>
             {p.marked ? (
-              <span title="Markirovkali">
-                <QrCode size={16} strokeWidth={1.5} aria-label="Markirovkali" className="text-text-secondary" />
+              <span title={tp("flag.marked")}>
+                <QrCode size={16} strokeWidth={1.5} aria-label={tp("flag.marked")} className="text-text-secondary" />
               </span>
             ) : null}
             {p.controlled ? (
-              <span title="Nazoratdagi">
-                <ShieldAlert size={16} strokeWidth={1.5} aria-label="Nazoratdagi" className="text-warning" />
+              <span title={tp("flag.controlled")}>
+                <ShieldAlert size={16} strokeWidth={1.5} aria-label={tp("flag.controlled")} className="text-warning" />
               </span>
             ) : null}
           </span>
@@ -109,29 +107,29 @@ export function ProductsPage() {
         </span>
       ),
     },
-    { key: "manufacturer", title: "Ishlab chiqaruvchi", sortable: true },
-    { key: "category", title: "Kategoriya" },
-    { key: "country", title: "Davlat" },
-    { key: "unit", title: "Birlik" },
-    { key: "vatRate", title: "QQS", align: "right", render: (p) => `${p.vatRate.replace(/\.00$/, "")}%` },
+    { key: "manufacturer", title: t("col.manufacturer"), sortable: true },
+    { key: "category", title: t("col.category") },
+    { key: "country", title: t("col.country") },
+    { key: "unit", title: t("col.unit") },
+    { key: "vatRate", title: t("col.vatRate"), align: "right", render: (p) => `${p.vatRate.replace(/\.00$/, "")}%` },
     {
       key: "minMax",
-      title: "Min / max",
+      title: t("col.minMax"),
       align: "right",
       render: (p) =>
         p.minQty || p.maxQty ? `${p.minQty ? formatQuantity(p.minQty) : "—"} / ${p.maxQty ? formatQuantity(p.maxQty) : "—"}` : "",
     },
     {
       key: "active",
-      title: "Holat",
+      title: t("col.active"),
       render: (p) =>
         p.active ? (
           <Badge tone="success" icon={CircleCheck}>
-            Faol
+            {tp("status.ACTIVE")}
           </Badge>
         ) : (
           <Badge tone="neutral" icon={CirclePause}>
-            Nofaol
+            {tp("status.INACTIVE")}
           </Badge>
         ),
     },
@@ -142,16 +140,16 @@ export function ProductsPage() {
   const chips: { key: string; label: string; clear: () => void }[] = [];
   if (filters.manufacturerId) {
     const name = manufacturers.data?.find((m) => m.id === filters.manufacturerId)?.name ?? "…";
-    chips.push({ key: "m", label: `Ishlab chiqaruvchi: ${name}`, clear: () => apply({ manufacturerId: null }) });
+    chips.push({ key: "m", label: t("chipManufacturer", { name }), clear: () => apply({ manufacturerId: null }) });
   }
   if (filters.categoryId) {
     const name = categories.data?.find((m) => m.id === filters.categoryId)?.name ?? "…";
-    chips.push({ key: "c", label: `Kategoriya: ${name}`, clear: () => apply({ categoryId: null }) });
+    chips.push({ key: "c", label: t("chipCategory", { name }), clear: () => apply({ categoryId: null }) });
   }
   if (filters.status !== "ACTIVE")
     chips.push({
       key: "s",
-      label: `Holat: ${STATUS_OPTIONS.find((s) => s.value === filters.status)?.label}`,
+      label: t("chipStatus", { status: STATUS_OPTIONS.find((s) => s.value === filters.status)?.label ?? "" }),
       clear: () => apply({ status: "ACTIVE" }),
     });
   if (filters.flag)
@@ -164,8 +162,8 @@ export function ProductsPage() {
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-page-title">Mahsulotlar</h1>
-          {data ? <span className="text-text-secondary">{formatQuantity(data.total)} ta</span> : null}
+          <h1 className="text-page-title">{t("title")}</h1>
+          {data ? <span className="text-text-secondary">{t("count", { count: formatQuantity(data.total) })}</span> : null}
         </div>
         <div className="flex items-center gap-2">
           <a
@@ -174,15 +172,15 @@ export function ProductsPage() {
             className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-4 font-medium hover:bg-background"
           >
             <FileDown size={16} strokeWidth={1.5} aria-hidden />
-            Excelʼga yuklash
+            {t("export")}
           </a>
           {canEdit ? (
             <>
               <Button variant="secondary" icon={FileUp} onClick={() => setImporting(true)}>
-                Import
+                {t("import")}
               </Button>
               <Button icon={Plus} onClick={() => setOpen("new")}>
-                Mahsulot qoʻshish
+                {t("add")}
               </Button>
             </>
           ) : null}
@@ -192,7 +190,7 @@ export function ProductsPage() {
         <ErrorState onRetry={() => products.refetch()} />
       ) : (
         <Table
-          caption="Mahsulotlar"
+          caption={t("title")}
           columns={columns}
           rows={data?.items ?? []}
           rowKey={(p) => String(p.id)}
@@ -211,53 +209,53 @@ export function ProductsPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="w-80">
                   <TextField
-                    label="Qidirish"
+                    label={t("search")}
                     variant="search"
                     size="sm"
                     value={search}
                     onChange={onSearch}
-                    placeholder="Nom, kod, shtrix-kod (lotin yoki kirill)"
+                    placeholder={t("searchPlaceholder")}
                     className="[&>label]:sr-only"
                   />
                 </div>
                 <div className="w-56">
                   <Select
-                    label="Ishlab chiqaruvchi"
+                    label={t("manufacturer")}
                     size="sm"
                     searchable
                     value={filters.manufacturerId ? String(filters.manufacturerId) : null}
                     onChange={(v) => apply({ manufacturerId: v ? Number(v) : null })}
-                    placeholder="Ishlab chiqaruvchi"
+                    placeholder={t("manufacturer")}
                     className="[&>span:first-child]:sr-only"
                     options={(manufacturers.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))}
                   />
                 </div>
                 <div className="w-48">
                   <Select
-                    label="Kategoriya"
+                    label={t("category")}
                     size="sm"
                     searchable
                     value={filters.categoryId ? String(filters.categoryId) : null}
                     onChange={(v) => apply({ categoryId: v ? Number(v) : null })}
-                    placeholder="Kategoriya"
+                    placeholder={t("category")}
                     className="[&>span:first-child]:sr-only"
                     options={(categories.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))}
                   />
                 </div>
                 <div className="w-40">
                   <Select
-                    label="Belgi"
+                    label={t("flag")}
                     size="sm"
                     value={filters.flag}
                     onChange={(v) => apply({ flag: v === "marked" || v === "controlled" ? v : null })}
-                    placeholder="Belgi"
+                    placeholder={t("flag")}
                     className="[&>span:first-child]:sr-only"
                     options={FLAG_OPTIONS}
                   />
                 </div>
                 <div className="w-36">
                   <Select
-                    label="Holat"
+                    label={t("status")}
                     size="sm"
                     value={filters.status}
                     onChange={(v) => apply({ status: v === "INACTIVE" || v === "ALL" ? v : "ACTIVE" })}
@@ -285,7 +283,7 @@ export function ProductsPage() {
                     onClick={() => setColumnsOpen((o) => !o)}
                     aria-expanded={columnsOpen}
                   >
-                    Ustunlar
+                    {t("columns")}
                   </Button>
                   {columnsOpen ? (
                     <div className="absolute right-0 z-30 mt-1 flex w-60 flex-col gap-2 rounded-control border border-border bg-surface p-3 shadow-overlay">
@@ -313,7 +311,7 @@ export function ProductsPage() {
                       className="flex h-7 items-center gap-1 rounded-full border border-border bg-primary-soft px-3 text-caption hover:border-text-disabled"
                     >
                       {c.label}
-                      <X size={14} strokeWidth={1.5} aria-label="Olib tashlash" />
+                      <X size={14} strokeWidth={1.5} aria-label={t("remove")} />
                     </button>
                   ))}
                   <Button
@@ -325,7 +323,7 @@ export function ProductsPage() {
                       apply({ ...DEFAULT_FILTERS, sort: filters.sort, desc: filters.desc, size: filters.size })
                     )}
                   >
-                    Filtrlarni tozalash
+                    {t("clearFilters")}
                   </Button>
                 </div>
               ) : null}
@@ -335,11 +333,7 @@ export function ProductsPage() {
             filtered ? (
               <NoResultsState onClearFilters={() => (setSearch(""), apply({ ...DEFAULT_FILTERS }))} />
             ) : (
-              <EmptyState
-                icon={Pill}
-                title="Hali mahsulot yoʻq"
-                description="Mahsulotlarni qoʻlda qoʻshing yoki SmartUp'dan import qiling (keyingi bosqich)."
-              />
+              <EmptyState icon={Pill} title={t("emptyTitle")} description={t("emptyDescription")} />
             )
           }
           pagination={

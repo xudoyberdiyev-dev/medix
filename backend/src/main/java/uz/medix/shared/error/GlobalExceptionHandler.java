@@ -17,17 +17,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.ErrorResponse;
+import uz.medix.shared.text.Texts;
 
 /**
  * Barcha API xatolari RFC 9457 ProblemDetail ko'rinishida: {@code detail} — foydalanuvchi tilidagi matn
- * (nima bo'ldi + nima qilish kerak), {@code code} — i18n kaliti, {@code errors} — maydon xatolari.
+ * (nima bo'ldi + nima qilish kerak; til — {@code MEDIX_LOCALE} cookie), {@code code} — i18n kaliti, {@code errors} — maydon xatolari.
  * Texnik tafsilot faqat jurnalga yoziladi.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    /** V1 da faqat o'zbek (lotin); kirill va rus — V2. */
-    public static final Locale UZ = Locale.forLanguageTag("uz-Latn");
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
@@ -47,7 +45,7 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "validation.failed");
         Map<String, String> errors = new LinkedHashMap<>();
         for (FieldError fe : e.getBindingResult().getFieldErrors()) {
-            errors.putIfAbsent(fe.getField(), messages.getMessage(fe, UZ));
+            errors.putIfAbsent(fe.getField(), messages.getMessage(fe, locale()));
         }
         pd.setProperty("errors", errors);
         return pd;
@@ -89,8 +87,12 @@ public class GlobalExceptionHandler {
     }
 
     public ProblemDetail problem(HttpStatus status, String code, Object... args) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, messages.getMessage(code, args, code, UZ));
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, messages.getMessage(code, args, code, locale()));
         pd.setProperty("code", code);
         return pd;
+    }
+
+    private static Locale locale() {
+        return Texts.requestLocale();
     }
 }

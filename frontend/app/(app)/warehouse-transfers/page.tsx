@@ -5,7 +5,7 @@ import { WarehouseTransfersPage } from "@/features/warehouse-transfers/warehouse
 export default function Page() {
   return (
     <>
-      <TopBar title="Ombor koʻchirishlari" />
+      <TopBar titleKey="warehouseTransfers" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <WarehouseTransfersPage />

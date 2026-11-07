@@ -4,6 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { ensureCsrf } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { fromCents, toCents } from "@/features/cash/api";
 
 export type ReceiptSummary = components["schemas"]["ReceiptSummary"];
 export type ReceiptDetail = components["schemas"]["ReceiptDetail"];
@@ -33,6 +34,31 @@ export const DIFF_LABELS: Record<DiffReason, string> = {
   EXCESS: "Ortiqcha keldi",
   DAMAGED: "Shikastlangan",
 };
+
+export interface PrepaidShortfall {
+  advance: string;
+  total: string;
+  shortfall: string;
+}
+
+/**
+ * SPEC 5.1: 100% oldindan toʻlangan kirim summasi avansdan yopiladi; avans yetmasa — ogohlantirish, farq qarz boʻlib qoladi.
+ * Faqat oʻtkazilmagan hujjatda va saldo koʻrinadigan (narx ruxsati bor) xodimga. `total` berilmasa — qabuldan keyin haqiqiy,
+ * aks holda hujjat summasi.
+ */
+export function prepaidShortfall(
+  doc: Pick<ReceiptDetail, "prepaid" | "status" | "supplierBalance" | "amount" | "actualAmount">,
+  total?: string | null,
+): PrepaidShortfall | null {
+  if (!doc.prepaid || !doc.supplierBalance || (doc.status !== "DRAFT" && doc.status !== "ACCEPTED")) return null;
+  const sum = total ?? (doc.status === "ACCEPTED" ? (doc.actualAmount ?? doc.amount) : doc.amount);
+  if (!sum) return null;
+  const balance = toCents(doc.supplierBalance);
+  const advance = balance < 0n ? -balance : 0n;
+  const need = toCents(sum);
+  if (need <= 0n || advance >= need) return null;
+  return { advance: fromCents(advance), total: fromCents(need), shortfall: fromCents(need - advance) };
+}
 
 /** Qabuldagi farq sababi soniga qarab (server qoidasi bilan bir xil): shikastlangan bor — «Shikastlangan», kam — «Kam keldi». */
 export function expectedReason(qty: number, received: number, damaged: number): DiffReason | null {

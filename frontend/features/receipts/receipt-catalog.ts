@@ -33,6 +33,9 @@ export interface CatalogPick {
   price: string;
 }
 
+/** Katalog qatoridagi xato — `receipts.catalog.errors.<kalit>` (tarjima komponentda). */
+export type CatalogError = "batch" | "expiry" | "produced" | "qty" | "bonus" | "price" | "duplicate" | "zone";
+
 const isInt = (s: string) => /^\d+$/.test(s.trim());
 
 /**
@@ -43,21 +46,21 @@ export function collectPicks(
   rows: CatalogProduct[],
   inputs: Record<number, CatalogInput>,
   opts: { zoneId: number | null; pricesVisible: boolean; existing: Set<string> },
-): { picks: CatalogPick[]; errors: Record<number, string> } {
+): { picks: CatalogPick[]; errors: Record<number, CatalogError> } {
   const picks: CatalogPick[] = [];
-  const errors: Record<number, string> = {};
+  const errors: Record<number, CatalogError> = {};
   for (const r of rows) {
     const v = inputs[r.productId];
     if (!v || Object.values(v).every((x) => !x.trim())) continue;
-    const fail = (m: string) => (errors[r.productId] = m);
-    if (!v.batch.trim()) fail("Partiyani kiriting");
-    else if (!parseUzDate(v.expiry)) fail("Yaroqlilik: KK.OO.YYYY");
-    else if (v.produced.trim() && !parseUzDate(v.produced)) fail("Ishlab chiqarilgan: KK.OO.YYYY");
-    else if (!isInt(v.qty) || Number(v.qty) < 1) fail("Soni — butun musbat son");
-    else if (v.bonus.trim() && !isInt(v.bonus)) fail("Bonus — butun son");
-    else if (opts.pricesVisible && v.price.trim() && !parseMoneyInput(v.price)) fail("Narx notoʻgʻri");
-    else if (opts.existing.has(`${r.productId}|${v.batch.trim().toUpperCase()}`)) fail("Bu partiya allaqachon qoʻshilgan");
-    else if (opts.zoneId === null) fail("Zonani tanlang");
+    const fail = (m: CatalogError) => (errors[r.productId] = m);
+    if (!v.batch.trim()) fail("batch");
+    else if (!parseUzDate(v.expiry)) fail("expiry");
+    else if (v.produced.trim() && !parseUzDate(v.produced)) fail("produced");
+    else if (!isInt(v.qty) || Number(v.qty) < 1) fail("qty");
+    else if (v.bonus.trim() && !isInt(v.bonus)) fail("bonus");
+    else if (opts.pricesVisible && v.price.trim() && !parseMoneyInput(v.price)) fail("price");
+    else if (opts.existing.has(`${r.productId}|${v.batch.trim().toUpperCase()}`)) fail("duplicate");
+    else if (opts.zoneId === null) fail("zone");
     if (errors[r.productId] || opts.zoneId === null) continue;
     const price = opts.pricesVisible ? (parseMoneyInput(v.price) ?? r.lastPrice ?? "") : "";
     picks.push({

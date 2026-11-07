@@ -27,6 +27,7 @@ import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
 import uz.medix.catalog.counterparty.CounterpartyModels.PaymentType;
 import uz.medix.catalog.counterparty.CounterpartyModels.Ref;
 import uz.medix.catalog.counterparty.CounterpartyModels.Role;
+import uz.medix.catalog.counterparty.CounterpartyModels.SortField;
 import uz.medix.catalog.counterparty.CounterpartyModels.Status;
 import uz.medix.catalog.counterparty.CounterpartyModels.Terms;
 import uz.medix.catalog.counterparty.CounterpartyModels.TermsRequest;
@@ -57,7 +58,7 @@ class Counterparties {
     // ===== O'qish =====
 
     @Transactional(readOnly = true)
-    CounterpartyPage search(String q, Role role, Status status, Long regionId, boolean sortByTin, int page, int size) {
+    CounterpartyPage search(String q, Role role, Status status, Long regionId, SortField sort, boolean desc, int page, int size) {
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
         switch (role) {
@@ -92,7 +93,7 @@ class Counterparties {
                        (SELECT max(l.valid_until) FROM counterparty_license l WHERE l.counterparty_id = c.id) AS license_valid_until,
                        c.blocked, c.active, c.contact_person
                 FROM counterparty c LEFT JOIN region r ON r.id = c.region_id""" + where
-                        + (sortByTin ? " ORDER BY c.tin" : " ORDER BY lower(c.name)") + ", c.id LIMIT :limit OFFSET :offset")
+                        + orderBy(sort, desc) + ", c.id LIMIT :limit OFFSET :offset")
                 .params(params)
                 .param("limit", size)
                 .param("offset", (long) page * size)
@@ -503,6 +504,16 @@ class Counterparties {
     }
 
     /** {@code query} bo'lsa — «topilgan joy qator ostida» (jadvalda ko'rinmaydigan aloqa shaxsida topilganmi). */
+    static String orderBy(SortField sort, boolean desc) {
+        String dir = desc ? " DESC" : "";
+        return switch (sort == null ? SortField.NAME : sort) {
+            case NAME -> " ORDER BY lower(c.name)" + dir;
+            case TIN -> " ORDER BY c.tin" + dir;
+            case REGION -> " ORDER BY lower(r.name)" + dir + " NULLS LAST, lower(c.name)";
+            case LICENSE -> " ORDER BY license_valid_until" + dir + " NULLS LAST, lower(c.name)";
+        };
+    }
+
     private static CounterpartyRow row(ResultSet rs, String query) throws SQLException {
         String tin = rs.getString("tin");
         String name = rs.getString("name");

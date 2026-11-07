@@ -4,6 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { ensureCsrf } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { orderQuery, type OrderFilters } from "./url-state";
 
 export type OrderSummary = components["schemas"]["OrderSummary"];
 export type OrderDetail = components["schemas"]["OrderDetail"];
@@ -54,36 +55,13 @@ export function canApprove(level: OrderDetail["approvalLevel"] | null, branch: b
   return level === "DIRECTOR" ? director : branch || director;
 }
 
-export function useOrders(f: {
-  branchId: number | null;
-  status: OrderStatus | null;
-  q: string;
-  mine: boolean;
-  page: number;
-  customerId?: number | null;
-  operatorId?: number | null;
-  soldFrom?: string | null;
-  soldTo?: string | null;
-}) {
+export function useOrders(f: OrderFilters, branchId: number | null) {
   return useQuery({
-    queryKey: ["orders", "list", f],
+    queryKey: ["orders", "list", f, branchId],
     queryFn: () =>
       unwrap(
         api.GET("/api/orders", {
-          params: {
-            query: {
-              branchId: f.branchId ?? undefined,
-              status: f.status ?? undefined,
-              q: f.q.trim() || undefined,
-              mine: f.mine,
-              customerId: f.customerId ?? undefined,
-              operatorId: f.operatorId ?? undefined,
-              soldFrom: f.soldFrom ?? undefined,
-              soldTo: f.soldTo ?? undefined,
-              page: f.page - 1,
-              size: 50,
-            },
-          },
+          params: { query: { ...orderQuery(f, branchId), page: f.page - 1, size: 50 } },
         }),
       ),
     placeholderData: keepPreviousData,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Eye, EyeOff, Search, X } from "lucide-react";
 import { useId, useState, type InputHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
@@ -50,6 +51,7 @@ export function TextField({
   onFocus,
   ...rest
 }: TextFieldProps) {
+  const t = useTranslations("ui");
   const autoId = useId();
   const id = idProp ?? autoId;
   const [showPassword, setShowPassword] = useState(false);
@@ -95,7 +97,7 @@ export function TextField({
         {variant === "search" && value && !disabled ? (
           <button
             type="button"
-            aria-label="Tozalash"
+            aria-label={t("clear")}
             onClick={() => onChange("")}
             className="-mr-1 flex size-7 items-center justify-center rounded-control text-text-secondary hover:bg-background hover:text-text-primary"
           >
@@ -106,7 +108,7 @@ export function TextField({
           <button
             type="button"
             disabled={disabled}
-            aria-label={showPassword ? "Parolni yashirish" : "Parolni koʻrsatish"}
+            aria-label={showPassword ? t("hidePassword") : t("showPassword")}
             onClick={() => setShowPassword((v) => !v)}
             className="-mr-1 flex size-7 items-center justify-center rounded-control text-text-secondary hover:bg-background hover:text-text-primary"
           >

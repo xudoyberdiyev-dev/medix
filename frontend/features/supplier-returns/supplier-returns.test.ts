@@ -27,8 +27,14 @@ describe("QY — qaytarish qatorlari", () => {
   });
 
   it("boʻsh miqdordan oshsa yoki son notoʻgʻri boʻlsa — xato", () => {
-    expect(returnLinesFrom([row(1, 10, 5)], { 1: "6" }).error).toContain("boʻsh 5");
-    expect(returnLinesFrom([row(1, 10, 5)], { 1: "1.5" }).error).toContain("musbat butun");
-    expect(returnLinesFrom([row(1, 10, 5)], { 1: "0" }).error).toContain("musbat butun");
+    expect(returnLinesFrom([row(1, 10, 5)], { 1: "6" }).error).toEqual({
+      code: "overFree",
+      product: "Paratsetamol",
+      batch: "P-1",
+      free: 5,
+      got: 6,
+    });
+    expect(returnLinesFrom([row(1, 10, 5)], { 1: "1.5" }).error).toMatchObject({ code: "notPositiveInt" });
+    expect(returnLinesFrom([row(1, 10, 5)], { 1: "0" }).error).toMatchObject({ code: "notPositiveInt" });
   });
 });

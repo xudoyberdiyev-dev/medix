@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { AlarmClock, HandCoins } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -25,8 +26,8 @@ export type DebtDoc = components["schemas"]["DebtDoc"];
 type Side = "CUSTOMER" | "SUPPLIER";
 
 const CONFIG = {
-  CUSTOMER: { title: "Mijozlar qarzi", permission: "cdebt.view", path: "customers", party: "Mijoz" },
-  SUPPLIER: { title: "Yetkazib beruvchilar qarzi", permission: "sdebt.view", path: "suppliers", party: "Yetkazib beruvchi" },
+  CUSTOMER: { permission: "cdebt.view", path: "customers" },
+  SUPPLIER: { permission: "sdebt.view", path: "suppliers" },
 } as const;
 
 const money = (v: string) =>
@@ -40,7 +41,9 @@ export function matchesDebt(row: { name: string; tin: string }, q: string) {
 
 /** Pul → Mijozlar qarzi / YB qarzi (SPEC 5.5): qarz jurnalidan, muddat guruhlari 1–30 / 31–60 / 61–90 / 90+. */
 export function DebtsPage({ side }: { side: Side }) {
+  const t = useTranslations("debts");
   const cfg = CONFIG[side];
+  const title = t(`side.${side}.title`);
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const allowed = can(me.data, cfg.permission);
@@ -62,12 +65,12 @@ export function DebtsPage({ side }: { side: Side }) {
     [report.data, q, overdueOnly],
   );
 
-  if (me.data && !allowed) return <ForbiddenState description={`«${cfg.title}» sahifasi sizning rolingiz uchun yopiq.`} />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden", { title })} />;
 
   const columns: TableColumn<DebtRow>[] = [
     {
       key: "name",
-      title: cfg.party,
+      title: t(`side.${side}.party`),
       render: (r) => (
         <div className="min-w-0">
           <div>{r.name}</div>
@@ -75,8 +78,8 @@ export function DebtsPage({ side }: { side: Side }) {
         </div>
       ),
     },
-    { key: "debt", title: "Qarz", align: "right", render: (r) => money(r.buckets.debt) },
-    { key: "notDue", title: "Muddati kelmagan", align: "right", render: (r) => money(r.buckets.notDue) },
+    { key: "debt", title: t("col.debt"), align: "right", render: (r) => money(r.buckets.debt) },
+    { key: "notDue", title: t("col.notDue"), align: "right", render: (r) => money(r.buckets.notDue) },
     { key: "d1to30", title: "1–30", align: "right", render: (r) => money(r.buckets.d1to30) },
     { key: "d31to60", title: "31–60", align: "right", render: (r) => money(r.buckets.d31to60) },
     { key: "d61to90", title: "61–90", align: "right", render: (r) => money(r.buckets.d61to90) },
@@ -86,14 +89,14 @@ export function DebtsPage({ side }: { side: Side }) {
       align: "right",
       render: (r) => (r.buckets.d90plus === "0.00" ? money("0.00") : <span className="text-danger">{money(r.buckets.d90plus)}</span>),
     },
-    { key: "advance", title: "Avans", align: "right", render: (r) => money(r.buckets.advance) },
+    { key: "advance", title: t("col.advance"), align: "right", render: (r) => money(r.buckets.advance) },
     {
       key: "maxOverdueDays",
-      title: "Kechikish",
+      title: t("col.overdue"),
       render: (r) =>
         r.maxOverdueDays > 0 ? (
           <Badge tone={r.maxOverdueDays > 30 ? "danger" : "warning"} icon={AlarmClock}>
-            {r.maxOverdueDays} kun
+            {t("days", { count: r.maxOverdueDays })}
           </Badge>
         ) : null,
     },
@@ -101,49 +104,49 @@ export function DebtsPage({ side }: { side: Side }) {
       ? [
           {
             key: "creditLimit",
-            title: "Limit",
+            title: t("col.limit"),
             align: "right" as const,
             render: (r: DebtRow) => (r.creditLimit ? money(r.creditLimit) : ""),
           },
         ]
       : []),
-    { key: "lastPayment", title: "Oxirgi toʻlov", render: (r) => formatIsoDate(r.lastPayment) },
+    { key: "lastPayment", title: t("col.lastPayment"), render: (r) => formatIsoDate(r.lastPayment) },
   ];
-  const t = report.data?.totals;
+  const tot = report.data?.totals;
 
   return (
     <>
-      <h1 className="mb-4 text-page-title">{cfg.title}</h1>
+      <h1 className="mb-4 text-page-title">{title}</h1>
       {report.error ? (
         <ErrorState onRetry={() => report.refetch()} />
       ) : (
         <Table
-          caption={cfg.title}
+          caption={title}
           columns={columns}
           rows={rows}
           rowKey={(r) => String(r.counterpartyId)}
           loading={!ready || report.isPending}
           onRowClick={setOpen}
           totals={
-            t
+            tot
               ? {
-                  name: "Jami",
-                  debt: money(t.debt),
-                  notDue: money(t.notDue),
-                  d1to30: money(t.d1to30),
-                  d31to60: money(t.d31to60),
-                  d61to90: money(t.d61to90),
-                  d90plus: money(t.d90plus),
-                  advance: money(t.advance),
+                  name: t("total"),
+                  debt: money(tot.debt),
+                  notDue: money(tot.notDue),
+                  d1to30: money(tot.d1to30),
+                  d31to60: money(tot.d31to60),
+                  d61to90: money(tot.d61to90),
+                  d90plus: money(tot.d90plus),
+                  advance: money(tot.advance),
                 }
               : undefined
           }
           toolbar={
             <div className="flex flex-wrap items-center gap-4">
               <div className="w-72">
-                <TextField label="Qidirish" variant="search" size="sm" value={q} onChange={setQ} placeholder="Nomi yoki STIR" />
+                <TextField label={t("search")} variant="search" size="sm" value={q} onChange={setQ} placeholder={t("searchPlaceholder")} />
               </div>
-              <Checkbox label="Faqat muddati oʻtganlar" checked={overdueOnly} onChange={setOverdueOnly} />
+              <Checkbox label={t("overdueOnly")} checked={overdueOnly} onChange={setOverdueOnly} />
             </div>
           }
           emptyState={
@@ -155,15 +158,7 @@ export function DebtsPage({ side }: { side: Side }) {
                 }}
               />
             ) : (
-              <EmptyState
-                icon={HandCoins}
-                title="Qarz yoʻq"
-                description={
-                  side === "CUSTOMER"
-                    ? "Sotuvdan keyin mijoz qarzi shu yerda koʻrinadi."
-                    : "Kirim oʻtkazilgach yetkazib beruvchi qarzi shu yerda koʻrinadi."
-                }
-              />
+              <EmptyState icon={HandCoins} title={t("empty.title")} description={t(`side.${side}.empty`)} />
             )
           }
         />
@@ -174,6 +169,7 @@ export function DebtsPage({ side }: { side: Side }) {
 }
 
 function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; onClose: () => void }) {
+  const t = useTranslations("debts");
   const [tab, setTab] = useState("docs");
   const docs = useQuery({
     queryKey: ["debts", CONFIG[props.side].path, "docs", props.row.counterpartyId, props.branchId],
@@ -191,23 +187,28 @@ function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; 
           ),
   });
   const columns: TableColumn<DebtDoc>[] = [
-    { key: "docNumber", title: "Hujjat", mono: true },
-    { key: "date", title: "Sana", render: (d) => formatIsoDate(d.date) },
-    { key: "dueDate", title: "Toʻlov kuni", render: (d) => formatIsoDate(d.dueDate) },
-    ...(props.branchId == null ? [{ key: "branch", title: "Filial" }] : []),
+    { key: "docNumber", title: t("col.document"), mono: true },
+    { key: "date", title: t("col.date"), render: (d) => formatIsoDate(d.date) },
+    { key: "dueDate", title: t("col.dueDate"), render: (d) => formatIsoDate(d.dueDate) },
+    ...(props.branchId == null ? [{ key: "branch", title: t("col.branch") }] : []),
     {
       key: "open",
-      title: "Qoldiq",
+      title: t("col.open"),
       align: "right",
-      render: (d) => (d.open.startsWith("-") ? <span className="tabular-nums">avans {formatMoney(d.open.slice(1))}</span> : money(d.open)),
+      render: (d) =>
+        d.open.startsWith("-") ? (
+          <span className="tabular-nums">{t("advanceAmount", { amount: formatMoney(d.open.slice(1)) })}</span>
+        ) : (
+          money(d.open)
+        ),
     },
     {
       key: "overdueDays",
-      title: "Kechikish",
+      title: t("col.overdue"),
       render: (d) =>
         d.overdueDays > 0 ? (
           <Badge tone={d.overdueDays > 30 ? "danger" : "warning"} icon={AlarmClock}>
-            {d.overdueDays} kun
+            {t("days", { count: d.overdueDays })}
           </Badge>
         ) : null,
     },
@@ -217,32 +218,38 @@ function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; 
       open
       onClose={props.onClose}
       size="lg"
-      kind={CONFIG[props.side].party}
+      kind={t(`side.${props.side}.party`)}
       title={props.row.name}
-      subtitle={`STIR ${props.row.tin}`}
+      subtitle={t("tin", { tin: props.row.tin })}
       actions={<AdvanceOffsetButton side={props.side} branchId={props.branchId} counterpartyId={props.row.counterpartyId} />}
     >
       <dl className="mb-4 grid grid-cols-3 gap-4">
         <div>
-          <dt className="text-caption text-text-secondary">Qarz</dt>
-          <dd className="font-mono tabular-nums">{formatMoney(props.row.buckets.debt)} soʻm</dd>
+          <dt className="text-caption text-text-secondary">{t("col.debt")}</dt>
+          <dd className="font-mono tabular-nums">
+            {formatMoney(props.row.buckets.debt)} {t("currency")}
+          </dd>
         </div>
         <div>
-          <dt className="text-caption text-text-secondary">Muddati oʻtgan</dt>
-          <dd className="font-mono tabular-nums text-danger">{formatMoney(props.row.buckets.overdue)} soʻm</dd>
+          <dt className="text-caption text-text-secondary">{t("overdueSum")}</dt>
+          <dd className="font-mono tabular-nums text-danger">
+            {formatMoney(props.row.buckets.overdue)} {t("currency")}
+          </dd>
         </div>
         <div>
-          <dt className="text-caption text-text-secondary">Avans</dt>
-          <dd className="font-mono tabular-nums">{formatMoney(props.row.buckets.advance)} soʻm</dd>
+          <dt className="text-caption text-text-secondary">{t("col.advance")}</dt>
+          <dd className="font-mono tabular-nums">
+            {formatMoney(props.row.buckets.advance)} {t("currency")}
+          </dd>
         </div>
       </dl>
       <Tabs
-        aria-label="Kontragent boʻlimlari"
+        aria-label={t("drawer.tabs")}
         value={tab}
         onChange={setTab}
         items={[
-          { key: "docs", label: "Ochiq hujjatlar" },
-          { key: "act", label: "Akt sverka" },
+          { key: "docs", label: t("drawer.openDocs") },
+          { key: "act", label: t("drawer.act") },
         ]}
       />
       <div className="mt-4">
@@ -254,13 +261,13 @@ function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; 
               <ErrorState onRetry={() => docs.refetch()} />
             ) : (
               <Table
-                caption="Ochiq hujjatlar"
+                caption={t("drawer.openDocs")}
                 density="compact"
                 columns={columns}
                 rows={docs.data ?? []}
                 rowKey={(d) => `${d.branchId}:${d.docType}:${d.docId}`}
                 loading={docs.isPending}
-                emptyState={<EmptyState icon={HandCoins} title="Ochiq hujjat yoʻq" description="Barcha hujjatlar yopilgan." />}
+                emptyState={<EmptyState icon={HandCoins} title={t("drawer.emptyTitle")} description={t("drawer.emptyDescription")} />}
               />
             )}
           </>

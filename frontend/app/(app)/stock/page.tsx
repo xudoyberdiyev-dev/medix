@@ -4,7 +4,7 @@ import { StockPage } from "@/features/stock/stock-page";
 export default function Page() {
   return (
     <>
-      <TopBar title="Qoldiqlar" />
+      <TopBar titleKey="stock" />
       <main className="flex-1 overflow-y-auto p-6">
         <StockPage mode="stock" />
       </main>

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -41,6 +42,8 @@ class EmployeeController {
 
     record ResetPasswordRequest(
             @NotBlank(message = "{validation.required}") @Size(min = 8, max = 128, message = "{validation.password.length}") String temporaryPassword) {}
+
+    record AllBranchesRequest(@NotNull(message = "{validation.required}") Boolean enabled) {}
 
     private final Employees employees;
     private final CurrentActor currentActor;
@@ -92,5 +95,13 @@ class EmployeeController {
     @Operation(summary = "Vaqtinchalik parol berish")
     Employees.Employee resetPassword(@PathVariable long id, @Valid @RequestBody ResetPasswordRequest r) {
         return employees.resetPassword(actor(), id, r.temporaryPassword());
+    }
+
+    @PostMapping("/{id}/all-branches")
+    @PreAuthorize("hasRole('DIRECTOR')")
+    @Operation(summary = "Buxgalterga barcha filiallar doirasi (faqat Direktor)",
+            description = "Standart holatda Buxgalter faqat o'z filialini ko'radi (E3). Ochiq sessiyalari tugatiladi.")
+    Employees.Employee allBranches(@PathVariable long id, @Valid @RequestBody AllBranchesRequest r) {
+        return employees.setAllBranches(actor(), id, r.enabled());
     }
 }

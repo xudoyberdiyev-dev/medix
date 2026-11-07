@@ -160,6 +160,26 @@ class SalesReportIT {
         mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "DAY").cookie(director))
                 .andExpect(jsonPath("$.rows.length()").value(1))
                 .andExpect(jsonPath("$.rows[0].key").value(t));
+        // To'lov turi va hudud: guruhlash va filtr (prototip: ptype, region)
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "PAYMENT_TYPE").cookie(director))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].key").value("CASH"))
+                .andExpect(jsonPath("$.rows[0].net").value("1700000.00"))
+                .andExpect(jsonPath("$.rows[1].key").value("TRANSFER"));
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("paymentType", "TRANSFER").cookie(director))
+                .andExpect(jsonPath("$.paymentType").value("TRANSFER"))
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.total.net").value("300000.00"));
+        long region = jdbc.sql("INSERT INTO region (name) VALUES (:n) RETURNING id").param("n", "Chilonzor " + UUID.randomUUID().toString().substring(0, 6))
+                .query(Long.class).single();
+        jdbc.sql("UPDATE counterparty SET region_id = :r WHERE id = :c").param("r", region).param("c", c1).update();
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "REGION").cookie(director))
+                .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(region)))
+                .andExpect(jsonPath("$.rows[0].net").value("1700000.00"))
+                .andExpect(jsonPath("$.rows[1].key").value(""));
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("regionId", "" + region).cookie(director))
+                .andExpect(jsonPath("$.regionId").value(region))
+                .andExpect(jsonPath("$.total.net").value("1700000.00"));
         // Operator (reports.own): faqat o'zi kiritganlar, tannarxsiz
         mvc.perform(get("/api/reports/sales").param("from", t).cookie(op1.cookie()))
                 .andExpect(status().isOk())
@@ -183,6 +203,35 @@ class SalesReportIT {
         mvc.perform(get("/api/orders").param("soldFrom", tomorrow).param("soldTo", t).cookie(director))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("home.periodInvalid"));
+        // Buyurtma sanasi filtri (SPEC 120) va ro'yxat eksporti
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("orderFrom", t).param("orderTo", t).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("orderFrom", tomorrow).cookie(director))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/orders").param("orderFrom", tomorrow).param("orderTo", t).cookie(director))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("home.periodInvalid"));
+        // Saralash (summa bo'yicha) va qidiruv — mijoz nomi lotin/kirill farqsiz (SPEC 120)
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("sort", "TOTAL").param("desc", "false").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(o2))
+                .andExpect(jsonPath("$.items[2].id").value(o1));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("sort", "TOTAL").cookie(director))
+                .andExpect(jsonPath("$.items[0].id").value(o1));
+        jdbc.sql("UPDATE counterparty SET name = 'Шифо Фарм', search_text = :s WHERE id = :id")
+                .param("s", uz.medix.shared.text.SearchText.of("Шифо Фарм"))
+                .param("id", c2)
+                .update();
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("q", "farm shifo").cookie(director))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(o2));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("sort", "NOPE").cookie(director))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/orders/export").param("branchId", "" + b).param("orderFrom", t).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         // Eksport
         mvc.perform(get("/api/reports/sales/export").param("branchId", "" + b).param("from", t).cookie(director))
                 .andExpect(status().isOk())
