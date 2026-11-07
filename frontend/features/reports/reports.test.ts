@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { visibleReports } from "./catalog";
 import { expenseExportHref, initialDirection } from "./expense-report";
 import { drillFilter, formatMargin, initialProductGroupBy, productSalesExportHref } from "./product-sales-report";
+import { drillReturns, initialReturnsGroupBy, returnsExportHref } from "./returns-report";
 import { initialGroupBy, isPaymentType, salesExportHref, salesRowHref } from "./sales-report";
 import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
 import { formatMinutes, workerExportHref } from "./worker-report";
 
 describe("hisobotlar", () => {
   it("katalog ruxsat boʻyicha", () => {
-    expect(visibleReports(["reports.own"]).map((r) => r.key)).toEqual(["sales"]);
+    expect(visibleReports(["reports.own"]).map((r) => r.key)).toEqual(["sales", "returns"]);
     expect(visibleReports(["reports.pickers"]).map((r) => r.key)).toEqual(["pickers"]);
     expect(visibleReports(["reports.view"]).map((r) => r.key)).toContain("operators");
     expect(visibleReports(["reports.view"]).map((r) => r.key)).not.toContain("gross-profit");
@@ -107,5 +108,31 @@ describe("Savdo hisoboti: URL'dagi guruh", () => {
     expect(initialGroupBy("OPERATOR", ["CUSTOMER", "OPERATOR", "BRANCH", "DAY"])).toBe("OPERATOR");
     expect(initialGroupBy("OPERATOR", ["CUSTOMER", "DAY"])).toBe("CUSTOMER");
     expect(initialGroupBy(null, ["CUSTOMER", "DAY"])).toBe("CUSTOMER");
+  });
+});
+
+describe("Qaytarishlar hisoboti", () => {
+  it("katalog, eksport havolasi, URL guruhi va qatordan oʻtish", () => {
+    expect(visibleReports(["reports.own"]).map((r) => r.key)).toContain("returns");
+    expect(visibleReports(["cash.view"]).map((r) => r.key)).not.toContain("returns");
+    expect(returnsExportHref({ branchId: 2, from: "2026-11-01", to: "2026-11-07", groupBy: "CUSTOMER", productId: 5 })).toBe(
+      "/api/reports/returns/export?branchId=2&from=2026-11-01&to=2026-11-07&groupBy=CUSTOMER&productId=5",
+    );
+    expect(initialReturnsGroupBy("DAY")).toBe("DAY");
+    expect(initialReturnsGroupBy("XYZ")).toBe("REASON");
+    expect(drillReturns("CUSTOMER", { key: "9", name: "Dorixona" })).toEqual({
+      kind: "customer",
+      id: 9,
+      name: "Dorixona",
+      next: "PRODUCT",
+    });
+    expect(drillReturns("PRODUCT", { key: "3", name: "Paracetamol" })).toEqual({
+      kind: "product",
+      id: 3,
+      name: "Paracetamol",
+      next: "REASON",
+    });
+    expect(drillReturns("REASON", { key: "muddati yaqin", name: "Muddati yaqin" })).toBeNull();
+    expect(drillReturns("DAY", { key: "2026-11-07", name: "07.11.2026" })).toBeNull();
   });
 });

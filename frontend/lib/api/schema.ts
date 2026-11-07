@@ -3497,6 +3497,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Qaytarishlar (QM): sabab / mijoz / mahsulot / kun bo'yicha hujjatlar, dona, summa va qaytarish ulushi */
+        get: operations["returns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/returns/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Qaytarishlar .xlsx */
+        get: operations["returnsExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/sales": {
         parameters: {
             query?: never;
@@ -7865,6 +7899,39 @@ export interface components {
             qty: number;
             /** Format: int64 */
             saleLineId: number;
+        };
+        ReturnsRow: {
+            amount: string;
+            /** @description Mahsulot kodi yoki mijoz STIR (REASON va DAY da yo'q) */
+            code?: string;
+            /** Format: int32 */
+            documents: number;
+            key: string;
+            name: string;
+            /** Format: int32 */
+            qty: number;
+            /** @description Qaytarish ulushi, %: qaytarish / sotuv × 100 (1 xona) */
+            rate?: string;
+            /** @description Shu davrdagi sotuv (QQS bilan) — faqat CUSTOMER, PRODUCT va jami */
+            sales?: string;
+        };
+        ReturnsView: {
+            /** Format: int64 */
+            branchId?: number;
+            /** Format: int64 */
+            customerId?: number;
+            /** Format: date */
+            from: string;
+            /** @enum {string} */
+            groupBy: "REASON" | "CUSTOMER" | "PRODUCT" | "DAY";
+            mineOnly: boolean;
+            /** Format: int64 */
+            productId?: number;
+            rows: components["schemas"]["ReturnsRow"][];
+            /** Format: date */
+            to: string;
+            total: components["schemas"]["ReturnsRow"];
+            truncated: boolean;
         };
         Role: {
             code: string;
@@ -14134,6 +14201,58 @@ export interface operations {
                 customerId?: number;
                 categoryId?: number;
                 manufacturerId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    returns: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                groupBy?: "REASON" | "CUSTOMER" | "PRODUCT" | "DAY";
+                customerId?: number;
+                productId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnsView"];
+                };
+            };
+        };
+    };
+    returnsExport: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                groupBy?: "REASON" | "CUSTOMER" | "PRODUCT" | "DAY";
+                customerId?: number;
+                productId?: number;
             };
             header?: never;
             path?: never;

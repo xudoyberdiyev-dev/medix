@@ -9,7 +9,7 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 
 export type ReportKey =
-  "sales" | "operators" | "products" | "gross-profit" | "expenses" | "debts" | "stock" | "suppliers" | "pickers" | "markers";
+  "sales" | "operators" | "products" | "gross-profit" | "returns" | "expenses" | "debts" | "stock" | "suppliers" | "pickers" | "markers";
 
 /** `title`/`description` — uz-Latn (Ctrl+K qidiruvi uchun); UI tarjimasi `reports.catalog.items.<key>` dan. */
 export interface ReportEntry {
@@ -53,6 +53,13 @@ export const REPORTS: ReportEntry[] = [
     href: "/reports/products",
     anyOf: ["reports.all", "reports.view"],
     allOf: ["prices.cost"],
+  },
+  {
+    key: "returns",
+    title: "Qaytarishlar",
+    description: "QM hujjatlari sabab, mijoz, mahsulot yoki kun boʻyicha; qaytarish ulushi.",
+    href: "/reports/returns",
+    anyOf: ["reports.all", "reports.view", "reports.own"],
   },
   {
     key: "expenses",

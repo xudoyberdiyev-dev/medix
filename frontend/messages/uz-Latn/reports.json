@@ -30,6 +30,10 @@
         "title": "Yalpi foyda",
         "description": "Mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha tannarx, yalpi foyda (QQSsiz) va rentabellik."
       },
+      "returns": {
+        "title": "Qaytarishlar",
+        "description": "QM hujjatlari sabab, mijoz, mahsulot yoki kun boʻyicha; qaytarish ulushi."
+      },
       "expenses": {
         "title": "Xarajatlar",
         "description": "Oʻtkazilgan kassa va bank chiqimlari modda, filial, oy yoki kun boʻyicha; Naqd / Bank / Terminal."
@@ -179,5 +183,22 @@
       "IN": "Davrda boshqa kirim yoʻq"
     },
     "note": "Faqat oʻtkazilgan kassa (KO) va bank (BO) operatsiyalari; tasdiq kutayotgan va bekor qilinganlar kirmaydi. Mijoz toʻlovlari — «Qarzlar» va Kassir panelida."
+  },
+  "returns": {
+    "title": "Qaytarishlar",
+    "forbidden": "Qaytarishlar hisoboti sizning rolingiz uchun yopiq.",
+    "group": {
+      "REASON": "Sabab",
+      "CUSTOMER": "Mijoz",
+      "PRODUCT": "Mahsulot",
+      "DAY": "Kun"
+    },
+    "documents": "QM hujjatlari",
+    "amount": "Qaytarish",
+    "rate": "Ulushi",
+    "totalRate": "Qaytarish ulushi: {rate}",
+    "productChip": "Mahsulot: {name}",
+    "emptyTitle": "Bu davrda qaytarish yoʻq",
+    "note": "Qaytarish = QM hujjatlari (qisman yetkazish va mijoz qaytargan tovar), QQS bilan. Ulushi = qaytarish / shu davrdagi sotuv (yetkazilmaganlar kirmaydi). Mijoz qatorini bosing — uning mahsulotlari, mahsulot qatorini — sabablari."
   }
 }

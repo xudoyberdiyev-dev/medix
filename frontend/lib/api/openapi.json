@@ -7959,6 +7959,135 @@
         "tags" : [ "reports" ]
       }
     },
+    "/api/reports/returns" : {
+      "get" : {
+        "operationId" : "returns",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "groupBy",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "REASON", "CUSTOMER", "PRODUCT", "DAY" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReturnsView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qaytarishlar (QM): sabab / mijoz / mahsulot / kun bo'yicha hujjatlar, dona, summa va qaytarish ulushi",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/returns/export" : {
+      "get" : {
+        "operationId" : "returnsExport",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "groupBy",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "REASON", "CUSTOMER", "PRODUCT", "DAY" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qaytarishlar .xlsx",
+        "tags" : [ "reports" ]
+      }
+    },
     "/api/reports/sales" : {
       "get" : {
         "operationId" : "salesReport",
@@ -18430,6 +18559,86 @@
           }
         },
         "required" : [ "qty", "saleLineId" ]
+      },
+      "ReturnsRow" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Mahsulot kodi yoki mijoz STIR (REASON va DAY da yo'q)"
+          },
+          "documents" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "key" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "rate" : {
+            "type" : "string",
+            "description" : "Qaytarish ulushi, %: qaytarish / sotuv × 100 (1 xona)"
+          },
+          "sales" : {
+            "type" : "string",
+            "description" : "Shu davrdagi sotuv (QQS bilan) — faqat CUSTOMER, PRODUCT va jami"
+          }
+        },
+        "required" : [ "amount", "documents", "key", "name", "qty" ]
+      },
+      "ReturnsView" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "groupBy" : {
+            "type" : "string",
+            "enum" : [ "REASON", "CUSTOMER", "PRODUCT", "DAY" ]
+          },
+          "mineOnly" : {
+            "type" : "boolean"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReturnsRow"
+            }
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "$ref" : "#/components/schemas/ReturnsRow"
+          },
+          "truncated" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "from", "groupBy", "mineOnly", "rows", "to", "total", "truncated" ]
       },
       "Role" : {
         "type" : "object",
