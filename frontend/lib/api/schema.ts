@@ -6031,6 +6031,13 @@ export interface components {
             extraZones?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
             name: string;
         };
+        CreditFlag: {
+            blocked: boolean;
+            overLimit?: string;
+            overdue?: string;
+            /** Format: int32 */
+            overdueDays: number;
+        };
         CsrfResponse: {
             headerName: string;
             token: string;
@@ -7403,6 +7410,8 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
+            /** @description Ochiq (qoralama / tasdiqlashda) buyurtma mijozining kredit ogohlantirishi */
+            credit?: components["schemas"]["CreditFlag"];
             customer: string;
             /** Format: int64 */
             customerId: number;
@@ -7438,7 +7447,6 @@ export interface components {
             statusChangedAt: string;
             total: string;
             warehouse: string;
-            credit?: components["schemas"]["CreditFlag"];
         };
         OwnGoods: {
             /** Format: int64 */
@@ -9583,13 +9591,6 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
-        };
-        CreditFlag: {
-            blocked: boolean;
-            overLimit?: string;
-            overdue?: string;
-            /** Format: int32 */
-            overdueDays: number;
         };
     };
     responses: never;
