@@ -178,13 +178,13 @@ class PriceChangeIT {
                 .andExpect(jsonPath("$.items[0].code").exists())
                 .andExpect(jsonPath("$.items[0].prices['" + base + "']").doesNotExist());
 
-        // Ommaviy ustama: bazaviy narxdan +15%, 500 ga yaxlitlash → Promo
+        // Ommaviy ustama: bazaviy narxdan +15% → Promo (E4: yaxlitlashsiz, tiyinigacha)
         mvc.perform(json(post("/api/price-changes/markup"), purchaser,
                         "{\"branchId\":" + branch + ",\"productIds\":[" + p + "],\"priceTypeId\":" + promo
-                                + ",\"base\":\"BASE_PRICE\",\"percent\":15,\"rounding\":500}"))
+                                + ",\"base\":\"BASE_PRICE\",\"percent\":15}"))
                 .andExpect(jsonPath("$[0].basePrice").value("13000.00"))
                 .andExpect(jsonPath("$[0].oldPrice").value("9500.50"))
-                .andExpect(jsonPath("$[0].newPrice").value("15000.00"));
+                .andExpect(jsonPath("$[0].newPrice").value("14950.00"));
     }
 
     @Test
@@ -266,7 +266,7 @@ class PriceChangeIT {
         // Ommaviy ustama kirim narxidan (+10%): Xarid tannarxni ko'rmaydi — faqat natija
         for (String kind : new String[] {"AVG_RECEIPT", "LAST_RECEIPT"}) {
             mvc.perform(json(post("/api/price-changes/markup"), purchaser, "{\"branchId\":" + branch + ",\"productIds\":[" + p
-                            + "],\"priceTypeId\":" + base + ",\"base\":\"" + kind + "\",\"percent\":10,\"rounding\":100}"))
+                            + "],\"priceTypeId\":" + base + ",\"base\":\"" + kind + "\",\"percent\":10}"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].basePrice").doesNotExist())
                     .andExpect(jsonPath("$[0].newPrice").value("13200.00"));

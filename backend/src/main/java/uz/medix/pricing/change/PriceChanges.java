@@ -347,13 +347,10 @@ class PriceChanges {
         audit.record(AuditEntry.of("priceChange.cancel", "price_change", id).withReason(reason.strip()));
     }
 
-    /** Ommaviy ustama (SPEC 6): asos narxga foiz va yaxlitlash. Hech narsa yozilmaydi — natija NO qatorlariga qo'yiladi. */
+    /** Ommaviy ustama (SPEC 6): asos narxga foiz (yaxlitlashsiz, E4). Hech narsa yozilmaydi — natija NO qatorlariga qo'yiladi. */
     @Transactional(readOnly = true)
     List<MarkupLine> markup(Actor actor, MarkupRequest r, boolean showCost) {
         branchCode(actor, r.branchId());
-        if (r.rounding() != 0 && r.rounding() != 100 && r.rounding() != 500 && r.rounding() != 1000) {
-            throw MedixException.badRequest("priceChange.rounding");
-        }
         long baseType = jdbc.sql("SELECT id FROM price_type WHERE base").query(Long.class).single();
         checkPriceType(r.priceTypeId());
         Map<String, Money> current = currentPrices(r.branchId(), r.productIds(), today());
@@ -375,7 +372,7 @@ class PriceChanges {
                 case CURRENT_SAME_TYPE -> old;
                 case AVG_RECEIPT, LAST_RECEIPT -> receiptCosts.get(p.id());
             };
-            Money next = base == null ? null : PriceMath.markup(base, r.percent(), r.rounding());
+            Money next = base == null ? null : PriceMath.markup(base, r.percent());
             boolean costBased = r.base() == BaseKind.AVG_RECEIPT || r.base() == BaseKind.LAST_RECEIPT;
             out.add(new MarkupLine(p.id(), p.code(), p.name(), costBased && !showCost ? null : str(base), str(old), str(next)));
         }
