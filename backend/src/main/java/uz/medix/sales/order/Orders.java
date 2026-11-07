@@ -680,17 +680,26 @@ class Orders {
     @Transactional(readOnly = true)
     List<PreviousOrder> previous(Actor actor, long customerId) {
         return jdbc.sql("""
-                SELECT o.id, o.number, o.order_date, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines, o.total, o.branch_id
+                SELECT o.id, o.number, o.order_date, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines, o.total, o.branch_id,
+                       ARRAY(SELECT p.name FROM sales_order_line l JOIN product p ON p.id = l.product_id
+                             WHERE l.order_id = o.id ORDER BY l.line_no LIMIT 3) AS products
                 FROM sales_order o WHERE o.customer_id = :c AND o.status NOT IN ('CANCELLED', 'REJECTED')
                 ORDER BY o.created_at DESC, o.id DESC LIMIT 20""")
                 .param("c", customerId)
                 .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id")) ? new PreviousOrder(rs.getLong("id"), rs.getString("number"),
-                        rs.getDate("order_date").toLocalDate(), rs.getInt("lines"), new Money(rs.getBigDecimal("total")).toString()) : null)
+                        rs.getDate("order_date").toLocalDate(), rs.getInt("lines"), new Money(rs.getBigDecimal("total")).toString(),
+                        List.of((String[]) rs.getArray("products").getArray())) : null)
                 .list()
                 .stream()
                 .filter(java.util.Objects::nonNull)
                 .limit(5)
                 .toList();
+    }
+
+    /** Mijoz holati (prototip «Buyurtma kiritish» — mijoz qatori): saqlanmagan buyurtmada ham — narx turi, qarz, limit, blok, litsenziya. */
+    @Transactional(readOnly = true)
+    OrderModels.CustomerCredit customerCredit(Actor actor, long warehouseId, long customerId) {
+        return evaluate(place(actor, warehouseId).branchId(), warehouseId, customerId, List.of()).credit();
     }
 
     /** To'lov turi standarti: mijozning oxirgi buyurtmasidan, bo'lmasa Perechisleniye (SPEC 5.3). */

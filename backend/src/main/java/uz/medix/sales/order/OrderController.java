@@ -200,6 +200,13 @@ class OrderController {
         return orders.previous(actor(), customerId);
     }
 
+    @GetMapping("/customer-credit")
+    @PreAuthorize("hasAuthority('orders.create')")
+    @Operation(summary = "Mijoz holati", description = "Buyurtma kiritishda mijoz qatori: narx turi, qarz, muddati o'tgan, limit, qolgan limit, blok, litsenziya.")
+    OrderModels.CustomerCredit customerCredit(@RequestParam long warehouseId, @RequestParam long customerId) {
+        return orders.customerCredit(actor(), warehouseId, customerId);
+    }
+
     @GetMapping("/default-payment-type")
     @PreAuthorize("hasAuthority('orders.create')")
     @Operation(summary = "To'lov turi standarti", description = "Mijozning oxirgi buyurtmasidan, bo'lmasa Perechisleniye.")

@@ -198,7 +198,8 @@ final class OrderModels {
             @Schema(nullable = true) String vehicle) {}
 
     /** Oldingi buyurtmalar (takrorlash uchun). */
-    record PreviousOrder(long id, String number, LocalDate orderDate, int lines, String total) {}
+    record PreviousOrder(long id, String number, LocalDate orderDate, int lines, String total,
+            @Schema(description = "Birinchi 3 ta mahsulot nomi (qator tartibida)") List<String> products) {}
 
     /** «Mahsulot qo'shish» katalog sahifasi qatori (SPEC 5.3): mavjud qoldiq, mijoz narxi (QQS bilan), eng yaqin muddat, min/max. */
     record CatalogRow(

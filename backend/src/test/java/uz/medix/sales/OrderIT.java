@@ -235,6 +235,22 @@ class OrderIT {
                 .andExpect(jsonPath("$.issues.length()").value(0))
                 .andReturn();
         long doc = id(created);
+        // Mijoz holati — saqlanmagan buyurtma uchun ham (prototip «Buyurtma kiritish» mijoz qatori)
+        mvc.perform(get("/api/orders/customer-credit").param("warehouseId", String.valueOf(p.warehouseId())).param("customerId", String.valueOf(c))
+                        .cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.creditLimit").value("100000.00"))
+                .andExpect(jsonPath("$.limitLeft").value("100000.00"))
+                .andExpect(jsonPath("$.debt").value("0.00"))
+                .andExpect(jsonPath("$.overdueDays").value(0))
+                .andExpect(jsonPath("$.blocked").value(false));
+        Cookie foreign = loginAs("OPERATOR", place().branchId());
+        mvc.perform(get("/api/orders/customer-credit").param("warehouseId", String.valueOf(p.warehouseId())).param("customerId", String.valueOf(c))
+                        .cookie(foreign))
+                .andExpect(status().isBadRequest());
+        // Oxirgi buyurtmalar — birinchi mahsulot nomlari bilan
+        mvc.perform(get("/api/orders/previous").param("customerId", String.valueOf(c)).cookie(operator))
+                .andExpect(jsonPath("$[0].products[0]").value("BY Aspirin"));
         // «Mahsulot qo'shish» katalogi: mavjud qoldiq va mijoz narxi; «Faqat bor mahsulotlar»
         long empty = product(p, "BY Aspirin bo'sh", "100", 0, null, null);
         mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("customerId", String.valueOf(c))
