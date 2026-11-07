@@ -336,6 +336,10 @@ class OrderIT {
         mvc.perform(get("/api/orders").param("customerId", "" + c).param("statuses", "QUEUED").cookie(manager))
                 .andExpect(jsonPath("$.items[0].id").value(small))
                 .andExpect(jsonPath("$.items[0].credit").doesNotExist());
+        // Sidebar nishoni: tasdiq kutayotgan buyurtmalar soni — filial doirasida
+        mvc.perform(get("/api/nav/badges").cookie(manager)).andExpect(status().isOk()).andExpect(jsonPath("$.orders.count").value(1));
+        mvc.perform(get("/api/nav/badges").param("branchId", "" + p.branchId()).cookie(director)).andExpect(jsonPath("$.orders.count").value(1));
+        mvc.perform(get("/api/nav/badges").param("branchId", "" + place().branchId()).cookie(manager)).andExpect(jsonPath("$.orders.count").value(1));
         send(post("/api/orders/" + big + "/approve"), manager, "")
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("order.directorOnly"));
