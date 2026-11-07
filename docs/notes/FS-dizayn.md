@@ -36,3 +36,13 @@ IT: jo'natish (qoldiq − , qarz + , HF raqami, QQS), qabul (xaridor qoldig'i +,
 
 ## Ochiq savol (egasiga, bloklamaydi)
 - FS summasi = partiya tannarxi (QQS shu ichida, sotuvdagi kabi). QQS ustiga qo'shilishi kerak bo'lsa — ayting.
+
+## Joriy qilindi (07.11.2026, ertalabki oyna)
+- **Kamomad (V42, `inventory.writeoff.BranchSaleShortages`, `/api/branch-sales/{id}/shortage`):** WRITE_OFF + BUYER (HC xaridor zonasida, qarz
+  o'zgarmaydi), WRITE_OFF + SELLER (HC sotuvchi zonasida, xaridor qarzi − kamomad summasi), RETURN (sotuvchi zonaga kirim, qarz −). Qarz
+  tuzatish `branch_ledger` doc_type `FSK`: kerakli − avval yozilgan (faqat qo'shiladi). HC rad etilsa — kamomad yana ochiq. Hal qiluvchi —
+  tovar harakati bo'ladigan filial xodimi (`transfer.fs.sellerOnly` / `buyerOnly`).
+- **Hisob-kitob (V43, `finance.cash.BranchPayments`, `/api/branch-payments`):** qarzdor filial hisobidan → kreditor filial hisobiga, qarz −;
+  raqam IO hisoblagichidan, pul jurnalida `FIO`. Qarzdan oshmaydi (filiallar juftligi FOR UPDATE, parallel test). Bekor qilish — teskari.
+  `inventory.BranchDebts` — branch_ledger uchun ochiq API.
+- UI: FS oynasida kamomad paneli (3 yo'l), FS sahifasida «To'lash» va to'lovlar ro'yxati, Ombor mudiri «Ko'chirish qabuli» da FS, «Diqqat».
