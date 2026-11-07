@@ -213,7 +213,7 @@ test("Ombor mudiri: birinchi kirish, yigʻish vaqtini beradi", async ({ page }) 
   await field(page, "Yigʻish vaqti").fill("15");
   await field(page, "Markirovka vaqti").fill("10");
   await page.getByRole("button", { name: "Vaqt berish" }).click();
-  await expect(page.getByText("Vaqt berildi")).toBeVisible();
+  await expect(page.getByRole("status").getByText("Vaqt berildi", { exact: true })).toBeVisible();
 });
 
 test("Yigʻuvchi: birinchi kirish, buyurtmani yigʻadi", async ({ page }) => {
@@ -506,7 +506,7 @@ async function warehouseChain(page: Page) {
   await page.getByRole("list", { name: "Vaqt berilmagan buyurtmalar" }).getByText(CUSTOMER).click();
   await field(page, "Yigʻish vaqti").fill("15");
   await page.getByRole("button", { name: "Vaqt berish" }).click();
-  await expect(page.getByText("Vaqt berildi")).toBeVisible();
+  await expect(page.getByRole("status").getByText("Vaqt berildi", { exact: true })).toBeVisible();
 
   const picker = await page
     .context()

@@ -293,7 +293,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   // Vaqt berish → yigʻish → hisobdan oʻtkazish
   await field(page, "Yigʻish vaqti").fill("10");
   await page.getByRole("button", { name: "Vaqt berish" }).click();
-  await expect(page.getByText("Vaqt berildi")).toBeVisible();
+  await expect(page.getByRole("status").getByText("Vaqt berildi", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await page.goto("/picking");
   await page.getByRole("button", { name: "Yigʻishni boshlash" }).first().click();

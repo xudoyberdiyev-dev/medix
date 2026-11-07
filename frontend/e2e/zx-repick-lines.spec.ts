@@ -73,7 +73,7 @@ test("Ombor zanjiri: vaqt, yigʻish, markirovka", async ({ page }) => {
   await field(page, "Yigʻish vaqti").fill("15");
   await field(page, "Markirovka vaqti").fill("10");
   await page.getByRole("button", { name: "Vaqt berish" }).click();
-  await expect(page.getByText("Vaqt berildi")).toBeVisible();
+  await expect(page.getByRole("status").getByText("Vaqt berildi", { exact: true })).toBeVisible();
 
   await pick(page);
   for (const c of await page.getByText("Olindi", { exact: true }).all()) await c.click();
