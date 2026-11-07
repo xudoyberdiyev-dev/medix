@@ -71,12 +71,12 @@ class Trips {
             throw MedixException.notFound("error.notFound");
         }
         List<VehicleOption> vehicles = jdbc.sql("""
-                SELECT v.id, v.plate_number, v.model, v.capacity_boxes,
+                SELECT v.id, v.plate_number, v.model, v.has_refrigerator,
                        coalesce((SELECT sum(t.places) FROM trip t WHERE t.vehicle_id = v.id AND t.status IN ('PLANNED', 'IN_TRANSIT')), 0) AS busy
                 FROM vehicle v WHERE v.branch_id = :b AND v.active ORDER BY v.plate_number""")
                 .param("b", branchId)
                 .query((rs, n) -> new VehicleOption(rs.getLong("id"), rs.getString("plate_number"), rs.getString("model"),
-                        (Integer) rs.getObject("capacity_boxes"), rs.getInt("busy")))
+                        rs.getBoolean("has_refrigerator"), rs.getInt("busy")))
                 .list();
         List<DriverOption> drivers = jdbc.sql("""
                 SELECT e.id, e.full_name, e.phone,
@@ -89,7 +89,7 @@ class Trips {
         return new TripOptions(vehicles, drivers);
     }
 
-    private record Vehicle(long id, long branchId, String plate, Integer capacity, boolean active) {}
+    private record Vehicle(long id, long branchId, String plate, boolean active) {}
 
     @Transactional
     long create(Actor actor, TripRequest r) {
@@ -98,10 +98,10 @@ class Trips {
         if (orders.stream().anyMatch(o -> o.delivery() == OrderDispatch.Delivery.PICKUP)) {
             throw MedixException.badRequest("trip.pickupInTrip");
         }
-        Vehicle v = jdbc.sql("SELECT id, branch_id, plate_number, capacity_boxes, active FROM vehicle WHERE id = :id FOR UPDATE")
+        Vehicle v = jdbc.sql("SELECT id, branch_id, plate_number, active FROM vehicle WHERE id = :id FOR UPDATE")
                 .param("id", r.vehicleId())
                 .query((rs, n) -> new Vehicle(rs.getLong("id"), rs.getLong("branch_id"), rs.getString("plate_number"),
-                        (Integer) rs.getObject("capacity_boxes"), rs.getBoolean("active")))
+                        rs.getBoolean("active")))
                 .optional()
                 .filter(x -> x.active() && x.branchId() == branchId)
                 .orElseThrow(() -> MedixException.badRequest("trip.vehicleUnknown"));
@@ -126,15 +126,6 @@ class Trips {
             throw MedixException.conflict("trip.driverBusy", busyTrip);
         }
         int places = orders.stream().mapToInt(DispatchOrder::places).sum();
-        if (v.capacity() != null) {
-            int busy = jdbc.sql("SELECT coalesce(sum(places), 0) FROM trip WHERE vehicle_id = :v AND status IN ('PLANNED', 'IN_TRANSIT')")
-                    .param("v", v.id())
-                    .query(Integer.class)
-                    .single();
-            if (busy + places > v.capacity()) {
-                throw MedixException.conflict("trip.overCapacity", busy + places, v.capacity(), v.plate());
-            }
-        }
         LocalDate today = LocalDate.now(TASHKENT);
         if (r.tripDate().isBefore(today)) {
             throw MedixException.badRequest("trip.datePast");
@@ -246,21 +237,12 @@ class Trips {
         if (orders.stream().anyMatch(o -> o.delivery() == OrderDispatch.Delivery.PICKUP)) {
             throw MedixException.badRequest("trip.pickupInTrip");
         }
-        Vehicle v = jdbc.sql("SELECT id, branch_id, plate_number, capacity_boxes, active FROM vehicle WHERE id = :id FOR UPDATE")
+        Vehicle v = jdbc.sql("SELECT id, branch_id, plate_number, active FROM vehicle WHERE id = :id FOR UPDATE")
                 .param("id", t.vehicleId())
                 .query((rs, n) -> new Vehicle(rs.getLong("id"), rs.getLong("branch_id"), rs.getString("plate_number"),
-                        (Integer) rs.getObject("capacity_boxes"), rs.getBoolean("active")))
+                        rs.getBoolean("active")))
                 .single();
         int places = orders.stream().mapToInt(DispatchOrder::places).sum();
-        if (v.capacity() != null) {
-            int busy = jdbc.sql("SELECT coalesce(sum(places), 0) FROM trip WHERE vehicle_id = :v AND status IN ('PLANNED', 'IN_TRANSIT')")
-                    .param("v", v.id())
-                    .query(Integer.class)
-                    .single();
-            if (busy + places > v.capacity()) {
-                throw MedixException.conflict("trip.overCapacity", busy + places, v.capacity(), v.plate());
-            }
-        }
         int seq = jdbc.sql("SELECT coalesce(max(seq), 0) FROM trip_stop WHERE trip_id = :t").param("t", tripId).query(Integer.class).single();
         for (DispatchOrder o : orders) {
             jdbc.sql("INSERT INTO trip_stop (trip_id, order_id, seq, places) VALUES (:t, :o, :s, :p)")
@@ -601,7 +583,7 @@ class Trips {
     }
 
     private static final String SUMMARY = """
-            SELECT t.id, t.number, t.branch_id, t.trip_date, t.status, v.plate_number || ' · ' || v.model AS vehicle, v.capacity_boxes,
+            SELECT t.id, t.number, t.branch_id, t.trip_date, t.status, v.plate_number || ' · ' || v.model AS vehicle,
                    d.full_name AS driver, t.places, t.created_at, t.note, t.vehicle_id, t.driver_id, cb.full_name AS created_by, t.started_at,
                    t.cancel_reason,
                    (SELECT count(*) FROM trip_stop s WHERE s.trip_id = t.id AND (s.active OR t.status = 'CANCELLED')) AS orders,
@@ -625,7 +607,7 @@ class Trips {
 
     private static TripSummary summary(java.sql.ResultSet rs) throws java.sql.SQLException {
         return new TripSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getDate("trip_date").toLocalDate(),
-                TripStatus.valueOf(rs.getString("status")), rs.getString("vehicle"), (Integer) rs.getObject("capacity_boxes"),
+                TripStatus.valueOf(rs.getString("status")), rs.getString("vehicle"),
                 rs.getString("driver"), rs.getInt("orders"), rs.getInt("places"), money(rs.getBigDecimal("total")),
                 rs.getTimestamp("created_at").toInstant());
     }
@@ -648,7 +630,7 @@ class Trips {
                 .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id"))
                         ? new TripDetail(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getDate("trip_date").toLocalDate(),
                                 TripStatus.valueOf(rs.getString("status")), rs.getLong("vehicle_id"), rs.getString("vehicle"),
-                                (Integer) rs.getObject("capacity_boxes"), rs.getLong("driver_id"), rs.getString("driver"), rs.getString("note"),
+                                rs.getLong("driver_id"), rs.getString("driver"), rs.getString("note"),
                                 rs.getInt("places"), money(rs.getBigDecimal("total")), rs.getString("created_by"),
                                 rs.getTimestamp("created_at").toInstant(),
                                 rs.getTimestamp("started_at") == null ? null : rs.getTimestamp("started_at").toInstant(), rs.getString("cancel_reason"),
@@ -678,7 +660,7 @@ class Trips {
                         rs.getBigDecimal("return_total") == null ? null : money(rs.getBigDecimal("return_total")), rs.getBoolean("signed")))
                 .list());
         return new TripDetail(head.id(), head.number(), head.branchId(), head.tripDate(), head.status(), head.vehicleId(), head.vehicle(),
-                head.capacityBoxes(), head.driverId(), head.driver(), head.note(), head.places(), head.total(), head.createdBy(), head.createdAt(),
+                head.driverId(), head.driver(), head.note(), head.places(), head.total(), head.createdBy(), head.createdAt(),
                 head.startedAt(), head.cancelReason(), stops);
     }
 

@@ -847,7 +847,7 @@ class OrderIT {
     }
 
     @Test
-    void tripCapacityWaybillCancelAndPickup() throws Exception {
+    void tripWithoutCapacityWaybillCancelAndPickup() throws Exception {
         Place p = place();
         long c = customer(p.branchId(), null);
         Cookie operator = loginAs("OPERATOR", p.branchId());
@@ -858,7 +858,7 @@ class OrderIT {
         long o2 = documenting(p, c, prod, 3, 2, "DELIVERY", operator, keeper, picker);
         long o3 = documenting(p, c, prod, 1, 1, "PICKUP", operator, keeper, picker);
         String plate = "01" + ThreadLocalRandom.current().nextInt(100_000, 999_999);
-        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model, capacity_boxes) VALUES (:b, :p, 'Damas', 3) RETURNING id")
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model, has_refrigerator) VALUES (:b, :p, 'Damas', true) RETURNING id")
                 .param("b", p.branchId()).param("p", plate).query(Long.class).single();
         jdbc.sql("""
                 INSERT INTO employee (login, full_name, role_id, branch_id, password_hash, must_change_password)
@@ -869,15 +869,15 @@ class OrderIT {
 
         mvc.perform(get("/api/trips/ready").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) o1)));
         mvc.perform(get("/api/trips/options").param("branchId", String.valueOf(p.branchId())).cookie(keeper))
-                .andExpect(jsonPath("$.vehicles[0].capacityBoxes").value(3))
+                .andExpect(jsonPath("$.vehicles[0].hasRefrigerator").value(true))
                 .andExpect(jsonPath("$.drivers[0].fullName").value("Haydovchi Sinov"));
         String body = "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today() + "\",\"orderIds\":[" + o1 + "," + o2 + "]}";
         send(post("/api/trips"), picker, body).andExpect(status().isForbidden());
-        // Sig'im: 2 + 2 = 4 joy > 3
-        send(post("/api/trips"), keeper, body).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("trip.overCapacity"));
+        // E5 (07.11): reysni faqat Ombor mudiri tuzadi — Operator va Filial rahbari emas
+        send(post("/api/trips"), operator, body).andExpect(status().isForbidden());
+        send(post("/api/trips"), loginAs("BRANCH_MANAGER", p.branchId()), body).andExpect(status().isForbidden());
         send(post("/api/trips"), keeper, body.replace("[" + o1 + "," + o2 + "]", "[" + o1 + "," + o3 + "]"))
                 .andExpect(jsonPath("$.code").value("trip.pickupInTrip"));
-        jdbc.sql("UPDATE vehicle SET capacity_boxes = 5 WHERE id = :v").param("v", vehicle).update();
         MvcResult trip = send(post("/api/trips"), keeper, body)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.number", matchesPattern("RS-[A-Z]{3}-\\d{6}")))
@@ -931,7 +931,7 @@ class OrderIT {
         long o2 = documenting(p, c, prod, 1, 2, "DELIVERY", operator, keeper, picker);
         long o3 = documenting(p, c, prod, 1, 2, "DELIVERY", operator, keeper, picker);
         long o4 = documenting(p, c, prod, 1, 1, "PICKUP", operator, keeper, picker);
-        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model, capacity_boxes) VALUES (:b, :p, 'Damas', 5) RETURNING id")
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model) VALUES (:b, :p, 'Damas') RETURNING id")
                 .param("b", p.branchId()).param("p", "01" + ThreadLocalRandom.current().nextInt(100_000, 999_999)).query(Long.class).single();
         String login = "drv" + UUID.randomUUID().toString().substring(0, 8);
         long driver = jdbc.sql("""
@@ -942,11 +942,10 @@ class OrderIT {
                 "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today() + "\",\"orderIds\":[" + o1 + "]}")
                 .andExpect(status().isCreated()).andReturn());
 
-        // Qo'shish: ruxsat, «O'zi olib ketadi» emas, sig'im (2 + 2 + 2 = 6 > 5)
+        // Qo'shish: ruxsat, «O'zi olib ketadi» emas (E6: sig'im tekshiruvi yo'q)
         send(post("/api/trips/" + t + "/orders"), picker, "{\"orderIds\":[" + o2 + "]}").andExpect(status().isForbidden());
+        send(post("/api/trips/" + t + "/orders"), operator, "{\"orderIds\":[" + o2 + "]}").andExpect(status().isForbidden());
         send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o4 + "]}").andExpect(jsonPath("$.code").value("trip.pickupInTrip"));
-        send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o2 + "," + o3 + "]}")
-                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("trip.overCapacity"));
         assertThat(statusOf(o2)).isEqualTo("DOCUMENTING");
         send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o2 + "]}")
                 .andExpect(status().isOk())

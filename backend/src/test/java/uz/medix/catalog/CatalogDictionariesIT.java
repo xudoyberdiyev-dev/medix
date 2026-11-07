@@ -139,8 +139,9 @@ class CatalogDictionariesIT {
         Cookie manager = loginAs("BRANCH_MANAGER", own);
         String plate = "01 a " + ThreadLocalRandom.current().nextInt(100, 999) + " bc";
         long vid = id(mvc.perform(json(post("/api/vehicles"), manager,
-                        "{\"branchId\":" + own + ",\"plateNumber\":\"" + plate + "\",\"model\":\"Damas\",\"capacityBoxes\":40}"))
+                        "{\"branchId\":" + own + ",\"plateNumber\":\"" + plate + "\",\"model\":\"Damas\",\"hasRefrigerator\":true}"))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.hasRefrigerator").value(true))
                 .andExpect(jsonPath("$.plateNumber").value(plate.toUpperCase()))
                 .andReturn());
         mvc.perform(json(post("/api/vehicles"), manager,
