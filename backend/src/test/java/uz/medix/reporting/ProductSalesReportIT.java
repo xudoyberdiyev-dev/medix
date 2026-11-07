@@ -242,6 +242,14 @@ class ProductSalesReportIT {
                 .andExpect(jsonPath("$.rows[1].net").value("32000.00"));
         mvc.perform(get("/api/reports/product-sales").param("branchId", "" + b).param("from", t).param("groupBy", "MANUFACTURER").cookie(director))
                 .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(maker)));
+        // Kategoriya / ishlab chiqaruvchi filtri: kategoriyasiz mahsulot (32 000) chiqib ketadi
+        mvc.perform(get("/api/reports/product-sales").param("branchId", "" + b).param("from", t).param("categoryId", "" + cat).cookie(director))
+                .andExpect(jsonPath("$.categoryId").value(cat))
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.total.net").value("195000.00"));
+        mvc.perform(get("/api/reports/product-sales").param("branchId", "" + b).param("from", t).param("manufacturerId", "" + maker)
+                .param("groupBy", "CATEGORY").cookie(director))
+                .andExpect(jsonPath("$.manufacturerId").value(maker));
         // Mijoz filtri
         mvc.perform(get("/api/reports/product-sales").param("branchId", "" + b).param("from", t).param("customerId", "" + c2).cookie(director))
                 .andExpect(jsonPath("$.customerId").value(c2))

@@ -33,6 +33,8 @@ export function productSalesExportHref(f: {
   to: string;
   groupBy: ProductGroupBy;
   customerId?: number | null;
+  categoryId?: number | null;
+  manufacturerId?: number | null;
 }): string {
   const p = new URLSearchParams();
   if (f.branchId != null) p.set("branchId", String(f.branchId));
@@ -40,6 +42,8 @@ export function productSalesExportHref(f: {
   p.set("to", f.to);
   p.set("groupBy", f.groupBy);
   if (f.customerId != null) p.set("customerId", String(f.customerId));
+  if (f.categoryId != null) p.set("categoryId", String(f.categoryId));
+  if (f.manufacturerId != null) p.set("manufacturerId", String(f.manufacturerId));
   return `/api/reports/product-sales/export?${p.toString()}`;
 }
 
@@ -55,8 +59,16 @@ export function initialProductGroupBy(raw: string | null): ProductGroupBy {
 const money = (v: string | undefined) => <span className="font-mono tabular-nums">{v == null ? "—" : formatMoney(v)}</span>;
 const qty = (v: number) => <span className="font-mono tabular-nums">{formatQuantity(v)}</span>;
 
+/** Kategoriya / ishlab chiqaruvchi qatori bosilsa — shu filtr bilan mahsulotlar kesimiga oʻtiladi; «Koʻrsatilmagan» qatori bosilmaydi. */
+export function drillFilter(groupBy: ProductGroupBy, row: Pick<Row, "key" | "name">) {
+  const id = Number(row.key);
+  if (groupBy === "PRODUCT" || row.key === "" || !Number.isInteger(id) || id <= 0) return null;
+  return { kind: groupBy === "CATEGORY" ? ("category" as const) : ("manufacturer" as const), id, name: row.name };
+}
+
 /**
  * Mahsulotlar savdosi va yalpi foyda (SPEC 8): davr, guruh (mahsulot / kategoriya / ishlab chiqaruvchi), mijoz filtri (?customerId=),
+ * kategoriya va ishlab chiqaruvchi filtri (?categoryId=, ?manufacturerId= yoki guruh qatorini bosib),
  * jami qatori, .xlsx; tannarx, yalpi foyda va rentabellik faqat prices.cost bilan (API oʻzi yubormaydi).
  */
 export function ProductSalesReportPage() {
@@ -70,8 +82,22 @@ export function ProductSalesReportPage() {
   const params = useSearchParams();
   const [groupBy, setGroupBy] = useState<ProductGroupBy>(() => initialProductGroupBy(params.get("groupBy")));
   const [customer, setCustomer] = useState(() => idParam(params, "customerId", "customer", t("products.customer")));
+  const [category, setCategory] = useState(() => idParam(params, "categoryId", "category", t("products.group.CATEGORY")));
+  const [manufacturer, setManufacturer] = useState(() =>
+    idParam(params, "manufacturerId", "manufacturer", t("products.group.MANUFACTURER")),
+  );
   const report = useQuery({
-    queryKey: ["reports", "product-sales", branchId, from, to, groupBy, customer?.id ?? null],
+    queryKey: [
+      "reports",
+      "product-sales",
+      branchId,
+      from,
+      to,
+      groupBy,
+      customer?.id ?? null,
+      category?.id ?? null,
+      manufacturer?.id ?? null,
+    ],
     queryFn: () =>
       unwrap(
         api.GET("/api/reports/product-sales", {
@@ -82,6 +108,8 @@ export function ProductSalesReportPage() {
               to: to ?? undefined,
               groupBy,
               customerId: customer?.id,
+              categoryId: category?.id,
+              manufacturerId: manufacturer?.id,
             },
           },
         }),
@@ -169,6 +197,20 @@ export function ProductSalesReportPage() {
               onClear={() => setCustomer(null)}
             />
           ) : null}
+          {category ? (
+            <FilterChip
+              label={t("products.categoryChip", { name: category.name })}
+              what={t("products.group.CATEGORY")}
+              onClear={() => setCategory(null)}
+            />
+          ) : null}
+          {manufacturer ? (
+            <FilterChip
+              label={t("products.manufacturerChip", { name: manufacturer.name })}
+              what={t("products.group.MANUFACTURER")}
+              onClear={() => setManufacturer(null)}
+            />
+          ) : null}
         </div>
         <div className="flex items-center gap-4 text-caption text-text-secondary">
           {r ? (
@@ -179,7 +221,15 @@ export function ProductSalesReportPage() {
           ) : null}
           {from && to ? (
             <a
-              href={productSalesExportHref({ branchId, from, to, groupBy, customerId: customer?.id ?? null })}
+              href={productSalesExportHref({
+                branchId,
+                from,
+                to,
+                groupBy,
+                customerId: customer?.id ?? null,
+                categoryId: category?.id ?? null,
+                manufacturerId: manufacturer?.id ?? null,
+              })}
               download
               className="inline-flex items-center gap-1 text-primary hover:underline"
             >
@@ -200,12 +250,24 @@ export function ProductSalesReportPage() {
           onSortChange={table.onSortChange}
           pagination={table.pagination}
           rowKey={(x) => x.key || "—"}
+          onRowClick={
+            groupBy === "PRODUCT"
+              ? undefined
+              : (x) => {
+                  const d = drillFilter(groupBy, x);
+                  if (!d) return;
+                  if (d.kind === "category") setCategory({ id: d.id, name: d.name });
+                  else setManufacturer({ id: d.id, name: d.name });
+                  setGroupBy("PRODUCT");
+                }
+          }
           loading={report.isLoading}
           totals={r && r.rows.length > 0 ? totals : undefined}
           emptyState={<EmptyState icon={ChartColumn} title={t("sales.emptyTitle")} description={t("emptyHint")} />}
         />
       )}
       {r?.truncated ? <p className="mt-2 text-caption text-warning">{t("sales.truncated")}</p> : null}
+      {groupBy !== "PRODUCT" ? <p className="mt-2 text-caption text-text-secondary">{t("products.drillHint")}</p> : null}
       <p className="mt-2 text-caption text-text-secondary">{t(r?.costVisible ? "products.noteCost" : "products.note")}</p>
     </>
   );

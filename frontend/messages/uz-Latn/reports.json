@@ -152,7 +152,10 @@
     "customer": "Mijoz",
     "customerChip": "Mijoz: {name}",
     "note": "Sof savdo = sotuv − qaytarish (partiya qatorlari boʻyicha); yetkazilmagan (bekor qilingan) sotuvlar kirmaydi.",
-    "noteCost": "Sof savdo = sotuv − qaytarish; yetkazilmaganlar kirmaydi. Yalpi foyda = sof savdo QQSsiz − partiya tannarxi; rentabellik = yalpi foyda / sof savdo QQSsiz."
+    "noteCost": "Sof savdo = sotuv − qaytarish; yetkazilmaganlar kirmaydi. Yalpi foyda = sof savdo QQSsiz − partiya tannarxi; rentabellik = yalpi foyda / sof savdo QQSsiz.",
+    "categoryChip": "Kategoriya: {name}",
+    "manufacturerChip": "Ishlab chiqaruvchi: {name}",
+    "drillHint": "Kategoriya yoki ishlab chiqaruvchi qatorini bosing — uning mahsulotlari ochiladi."
   },
   "expenses": {
     "forbidden": "Xarajatlar hisoboti sizning rolingiz uchun yopiq.",

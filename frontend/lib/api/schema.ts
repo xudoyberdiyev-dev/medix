@@ -7405,6 +7405,8 @@ export interface components {
         ProductSalesView: {
             /** Format: int64 */
             branchId?: number;
+            /** Format: int64 */
+            categoryId?: number;
             costVisible: boolean;
             /** Format: int64 */
             customerId?: number;
@@ -7412,6 +7414,8 @@ export interface components {
             from: string;
             /** @enum {string} */
             groupBy: "PRODUCT" | "CATEGORY" | "MANUFACTURER";
+            /** Format: int64 */
+            manufacturerId?: number;
             mineOnly: boolean;
             rows: components["schemas"]["ProductSalesRow"][];
             /** Format: date */
@@ -14100,6 +14104,8 @@ export interface operations {
                 to?: string;
                 groupBy?: "PRODUCT" | "CATEGORY" | "MANUFACTURER";
                 customerId?: number;
+                categoryId?: number;
+                manufacturerId?: number;
             };
             header?: never;
             path?: never;
@@ -14126,6 +14132,8 @@ export interface operations {
                 to?: string;
                 groupBy?: "PRODUCT" | "CATEGORY" | "MANUFACTURER";
                 customerId?: number;
+                categoryId?: number;
+                manufacturerId?: number;
             };
             header?: never;
             path?: never;

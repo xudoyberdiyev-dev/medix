@@ -7857,6 +7857,22 @@
             "type" : "integer",
             "format" : "int64"
           }
+        }, {
+          "in" : "query",
+          "name" : "categoryId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "manufacturerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -7912,6 +7928,22 @@
         }, {
           "in" : "query",
           "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "categoryId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "manufacturerId",
           "required" : false,
           "schema" : {
             "type" : "integer",
@@ -17257,6 +17289,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "categoryId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "costVisible" : {
             "type" : "boolean"
           },
@@ -17271,6 +17307,10 @@
           "groupBy" : {
             "type" : "string",
             "enum" : [ "PRODUCT", "CATEGORY", "MANUFACTURER" ]
+          },
+          "manufacturerId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "mineOnly" : {
             "type" : "boolean"

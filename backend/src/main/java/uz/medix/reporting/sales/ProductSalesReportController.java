@@ -43,10 +43,10 @@ class ProductSalesReportController {
     }
 
     private ProductSalesReport.ProductSalesView build(Long branchId, LocalDate from, LocalDate to, ProductSalesReport.GroupBy groupBy,
-            Long customerId, Authentication auth) {
+            Long customerId, Long categoryId, Long manufacturerId, Authentication auth) {
         Actor actor = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
         boolean full = has(auth, "reports.all") || has(auth, "reports.view");
-        return report.report(actor, branchId, from, to, groupBy, customerId, full, has(auth, "prices.cost"));
+        return report.report(actor, branchId, from, to, groupBy, customerId, categoryId, manufacturerId, full, has(auth, "prices.cost"));
     }
 
     @GetMapping("/api/reports/product-sales")
@@ -57,8 +57,8 @@ class ProductSalesReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) ProductSalesReport.GroupBy groupBy, @RequestParam(required = false) Long customerId,
-            Authentication auth) {
-        return build(branchId, from, to, groupBy, customerId, auth);
+            @RequestParam(required = false) Long categoryId, @RequestParam(required = false) Long manufacturerId, Authentication auth) {
+        return build(branchId, from, to, groupBy, customerId, categoryId, manufacturerId, auth);
     }
 
     @GetMapping("/api/reports/product-sales/export")
@@ -68,8 +68,9 @@ class ProductSalesReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) ProductSalesReport.GroupBy groupBy, @RequestParam(required = false) Long customerId,
-            Authentication auth, HttpServletResponse response) throws IOException {
-        ProductSalesReport.ProductSalesView r = build(branchId, from, to, groupBy, customerId, auth);
+            @RequestParam(required = false) Long categoryId, @RequestParam(required = false) Long manufacturerId, Authentication auth,
+            HttpServletResponse response) throws IOException {
+        ProductSalesReport.ProductSalesView r = build(branchId, from, to, groupBy, customerId, categoryId, manufacturerId, auth);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"mahsulotlar-savdosi-" + r.from() + "-" + r.to() + ".xlsx\"");
         try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { visibleReports } from "./catalog";
 import { expenseExportHref, initialDirection } from "./expense-report";
-import { formatMargin, initialProductGroupBy, productSalesExportHref } from "./product-sales-report";
+import { drillFilter, formatMargin, initialProductGroupBy, productSalesExportHref } from "./product-sales-report";
 import { initialGroupBy, isPaymentType, salesExportHref, salesRowHref } from "./sales-report";
 import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
 import { formatMinutes, workerExportHref } from "./worker-report";
@@ -25,6 +25,20 @@ describe("hisobotlar", () => {
     expect(productSalesExportHref({ branchId: null, from: "2026-11-01", to: "2026-11-01", groupBy: "PRODUCT" })).toBe(
       "/api/reports/product-sales/export?from=2026-11-01&to=2026-11-01&groupBy=PRODUCT",
     );
+    expect(
+      productSalesExportHref({
+        branchId: null,
+        from: "2026-11-01",
+        to: "2026-11-01",
+        groupBy: "PRODUCT",
+        categoryId: 4,
+        manufacturerId: 7,
+      }),
+    ).toBe("/api/reports/product-sales/export?from=2026-11-01&to=2026-11-01&groupBy=PRODUCT&categoryId=4&manufacturerId=7");
+    expect(drillFilter("CATEGORY", { key: "4", name: "Antibiotiklar" })).toEqual({ kind: "category", id: 4, name: "Antibiotiklar" });
+    expect(drillFilter("MANUFACTURER", { key: "7", name: "Nobel" })).toEqual({ kind: "manufacturer", id: 7, name: "Nobel" });
+    expect(drillFilter("CATEGORY", { key: "", name: "" })).toBeNull();
+    expect(drillFilter("PRODUCT", { key: "12", name: "Paracetamol" })).toBeNull();
     expect(formatMargin("40.3")).toBe("40,3 %");
     expect(formatMargin(null)).toBe("—");
     expect(initialProductGroupBy("MANUFACTURER")).toBe("MANUFACTURER");
