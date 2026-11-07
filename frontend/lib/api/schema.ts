@@ -84,7 +84,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** AH ni bekor qilish (teskari yozuvlar) */
-        post: operations["cancel_9"];
+        post: operations["cancel_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -99,7 +99,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_28"];
+        get: operations["list_29"];
         put?: never;
         post?: never;
         delete?: never;
@@ -190,10 +190,10 @@ export interface paths {
             cookie?: never;
         };
         /** Hisob boʻyicha solishtirishlar tarixi */
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         /** Solishtirishni yozish (farq boʻlsa — izoh majburiy) */
-        post: operations["create_21"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -211,6 +211,70 @@ export interface paths {
         get: operations["preview_1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Filiallararo to'lovlar
+         * @description Filial to'lovchi yoki oluvchi bo'lganlari.
+         */
+        get: operations["list_21"];
+        put?: never;
+        /**
+         * Filialga to'lov
+         * @description Darhol o'tkaziladi: to'lovchi hisobidan chiqim, oluvchi hisobiga kirim, filiallararo qarz kamayadi. Qarzdan oshmaydi.
+         */
+        post: operations["create_21"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-payments/payee-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Oluvchi filial hisoblari
+         * @description Faqat nom va tur — qoldiq ko'rsatilmaydi.
+         */
+        get: operations["payeeAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-payments/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Filiallararo to'lovni bekor qilish
+         * @description Teskari: pul qaytadi, qarz tiklanadi.
+         */
+        post: operations["cancel_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1100,7 +1164,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1794,7 +1858,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2881,7 +2945,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari */
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3441,7 +3505,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3654,7 +3718,7 @@ export interface paths {
          * Qoldiqlar (zona × partiya)
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3688,7 +3752,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5042,6 +5106,53 @@ export interface components {
             amount: string;
             creditor: components["schemas"]["BranchRef"];
             debtor: components["schemas"]["BranchRef"];
+        };
+        BranchPayment: {
+            amount: string;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            fromAccount: string;
+            /** Format: int64 */
+            fromAccountId: number;
+            /** Format: int64 */
+            id: number;
+            note?: string;
+            number: string;
+            payeeBranch: string;
+            /** Format: int64 */
+            payeeBranchId: number;
+            payerBranch: string;
+            /** Format: int64 */
+            payerBranchId: number;
+            /** Format: date */
+            paymentDate: string;
+            /** @enum {string} */
+            status: "POSTED" | "CANCELLED";
+            toAccount: string;
+            /** Format: int64 */
+            toAccountId: number;
+        };
+        BranchPaymentRequest: {
+            amount: string;
+            /** Format: int64 */
+            fromAccountId: number;
+            note?: string;
+            /** Format: int64 */
+            payeeBranchId: number;
+            /** Format: int64 */
+            payerBranchId: number;
+            /**
+             * Format: date
+             * @description Bo'sh bo'lsa — bugun
+             */
+            paymentDate?: string;
+            /** Format: int64 */
+            toAccountId: number;
         };
         BranchRef: {
             code: string;
@@ -6777,6 +6888,13 @@ export interface components {
             cash?: string;
             lines: components["schemas"]["ReturnedLine"][];
             reason: string;
+        };
+        PayeeAccount: {
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "CASH" | "TERMINAL" | "BANK";
+            name: string;
         };
         PaymentAllocation: {
             amount: string;
@@ -8864,7 +8982,7 @@ export interface operations {
             };
         };
     };
-    cancel_9: {
+    cancel_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -8890,7 +9008,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_29: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -9001,7 +9119,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query: {
                 accountId: number;
@@ -9023,7 +9141,7 @@ export interface operations {
             };
         };
     };
-    create_21: {
+    create_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -9066,6 +9184,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReconPreview"];
+                };
+            };
+        };
+    };
+    list_21: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchPayment"][];
+                };
+            };
+        };
+    };
+    create_21: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BranchPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchPayment"];
+                };
+            };
+        };
+    };
+    payeeAccounts: {
+        parameters: {
+            query: {
+                payerBranchId: number;
+                payeeBranchId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayeeAccount"][];
+                };
+            };
+        };
+    };
+    cancel_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchPayment"];
                 };
             };
         };
@@ -10372,7 +10585,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query?: never;
             header?: never;
@@ -11351,7 +11564,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query?: never;
             header?: never;
@@ -12950,7 +13163,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -13790,7 +14003,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query?: never;
             header?: never;
@@ -14066,7 +14279,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -14118,7 +14331,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query: {
                 branchId: number;

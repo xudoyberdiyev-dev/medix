@@ -111,6 +111,9 @@
     "description" : "Tizimga kirish va sessiya",
     "name" : "auth"
   }, {
+    "description" : "Kassa va bank",
+    "name" : "cash"
+  }, {
     "description" : "Markirovka",
     "name" : "marking"
   }, {
@@ -317,7 +320,7 @@
     },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
-        "operationId" : "cancel_9",
+        "operationId" : "cancel_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -355,7 +358,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_28",
+        "operationId" : "list_29",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -499,7 +502,7 @@
     },
     "/api/bank-reconciliations" : {
       "get" : {
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -528,7 +531,7 @@
         "tags" : [ "bank-reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_21",
+        "operationId" : "create_22",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -589,6 +592,145 @@
         },
         "summary" : "Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar",
         "tags" : [ "bank-reconciliations" ]
+      }
+    },
+    "/api/branch-payments" : {
+      "get" : {
+        "description" : "Filial to'lovchi yoki oluvchi bo'lganlari.",
+        "operationId" : "list_21",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/BranchPayment"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filiallararo to'lovlar",
+        "tags" : [ "cash" ]
+      },
+      "post" : {
+        "description" : "Darhol o'tkaziladi: to'lovchi hisobidan chiqim, oluvchi hisobiga kirim, filiallararo qarz kamayadi. Qarzdan oshmaydi.",
+        "operationId" : "create_21",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BranchPaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchPayment"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Filialga to'lov",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/branch-payments/payee-accounts" : {
+      "get" : {
+        "description" : "Faqat nom va tur — qoldiq ko'rsatilmaydi.",
+        "operationId" : "payeeAccounts",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "payerBranchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "payeeBranchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PayeeAccount"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Oluvchi filial hisoblari",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/branch-payments/{id}/cancel" : {
+      "post" : {
+        "description" : "Teskari: pul qaytadi, qarz tiklanadi.",
+        "operationId" : "cancel_9",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchPayment"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filiallararo to'lovni bekor qilish",
+        "tags" : [ "cash" ]
       }
     },
     "/api/branch-sales" : {
@@ -2601,7 +2743,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_27",
+        "operationId" : "list_28",
         "responses" : {
           "200" : {
             "content" : {
@@ -4008,7 +4150,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_26",
+        "operationId" : "list_27",
         "responses" : {
           "200" : {
             "content" : {
@@ -6349,7 +6491,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_25",
+        "operationId" : "list_26",
         "responses" : {
           "200" : {
             "content" : {
@@ -7747,7 +7889,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_24",
+        "operationId" : "list_25",
         "responses" : {
           "200" : {
             "content" : {
@@ -8085,7 +8227,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_23",
+        "operationId" : "list_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -8214,7 +8356,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_22",
+        "operationId" : "list_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -11127,6 +11269,115 @@
           }
         },
         "required" : [ "amount", "creditor", "debtor" ]
+      },
+      "BranchPayment" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fromAccount" : {
+            "type" : "string"
+          },
+          "fromAccountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "payeeBranch" : {
+            "type" : "string"
+          },
+          "payeeBranchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "payerBranch" : {
+            "type" : "string"
+          },
+          "payerBranchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "POSTED", "CANCELLED" ]
+          },
+          "toAccount" : {
+            "type" : "string"
+          },
+          "toAccountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "amount", "createdAt", "createdBy", "fromAccount", "fromAccountId", "id", "number", "payeeBranch", "payeeBranchId", "payerBranch", "payerBranchId", "paymentDate", "status", "toAccount", "toAccountId" ]
+      },
+      "BranchPaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "fromAccountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "payeeBranchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "payerBranchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bo'sh bo'lsa — bugun"
+          },
+          "toAccountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "amount", "fromAccountId", "payeeBranchId", "payerBranchId", "toAccountId" ]
       },
       "BranchRef" : {
         "type" : "object",
@@ -15592,6 +15843,23 @@
           }
         },
         "required" : [ "lines", "reason" ]
+      },
+      "PayeeAccount" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TERMINAL", "BANK" ]
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "kind", "name" ]
       },
       "PaymentAllocation" : {
         "type" : "object",

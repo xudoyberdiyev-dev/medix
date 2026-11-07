@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Building2, Plus, TriangleAlert } from "lucide-react";
+import { ArrowRight, Banknote, Building2, Plus, TriangleAlert } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,17 @@ import { OK_STATUS_LABELS } from "@/features/warehouse-transfers/api";
 import { WarehouseTransferStatusBadge } from "@/features/warehouse-transfers/warehouse-transfers-page";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { FS_VIEW_KEYS, TRANSFER_FS, useBranchBalances, useBranchSales, type BranchSaleStatus, type BranchSaleSummary } from "./api";
+import {
+  FS_VIEW_KEYS,
+  TRANSFER_FS,
+  useBranchBalances,
+  useBranchSales,
+  type BranchBalance,
+  type BranchSaleStatus,
+  type BranchSaleSummary,
+} from "./api";
 import { BranchSaleDrawer } from "./branch-sale-drawer";
+import { BranchPayDialog, BranchPaymentsList, canPayFor, useBranchPayments } from "./branch-payments";
 
 /** FS — filiallararo savdo: Qoralama → Yoʻlda (HF, xaridor filial qarzi) → Qabul qilindi. */
 export function BranchSalesPage() {
@@ -34,6 +43,9 @@ export function BranchSalesPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useBranchSales(branchId, (status as BranchSaleStatus | null) ?? null, page);
   const balances = useBranchBalances(allowed && can(me.data, "special.cost"));
+  const canSeePayments = allowed && canAny(me.data, ["cash.view", "bank.view"]);
+  const payments = useBranchPayments(canSeePayments);
+  const [paying, setPaying] = useState<BranchBalance | null>(null);
 
   if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
 
@@ -91,7 +103,7 @@ export function BranchSalesPage() {
           </Button>
         ) : null}
       </div>
-      {balances.data && balances.data.length > 0 ? (
+      {balances.data && (balances.data.length > 0 || (payments.data?.length ?? 0) > 0) ? (
         <section aria-label="Filiallararo qarz" className="mb-4 rounded-card border border-border bg-surface p-4">
           <h2 className="mb-2 text-section-title">Filiallararo qarz</h2>
           <ul className="flex flex-col gap-1 text-body">
@@ -102,15 +114,24 @@ export function BranchSalesPage() {
                   <ArrowRight size={14} strokeWidth={1.5} aria-label="qarzdor" className="text-text-secondary" />
                   {b.creditor.name}
                 </span>
-                <span className="tabular-nums">{formatMoney(b.amount)}</span>
+                <span className="flex items-center gap-2">
+                  <span className="tabular-nums">{formatMoney(b.amount)}</span>
+                  {canPayFor(me.data, b.debtor.id) && !b.amount.startsWith("-") ? (
+                    <Button variant="secondary" size="sm" icon={Banknote} onClick={() => setPaying(b)}>
+                      Toʻlash
+                    </Button>
+                  ) : null}
+                </span>
               </li>
             ))}
           </ul>
           <p className="mt-2 text-caption text-text-secondary">
             Guruh ichidagi qarz — mijozlar va yetkazib beruvchilar qarzi jamiga kirmaydi.
           </p>
+          <BranchPaymentsList enabled={canSeePayments} />
         </section>
       ) : null}
+      {paying ? <BranchPayDialog balance={paying} onClose={() => setPaying(null)} /> : null}
       {docs.error ? (
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { canPayFor } from "./branch-payments";
 import { shortageChoices } from "./shortage-panel";
 
 describe("FS kamomadi — hal qilish yoʻllari", () => {
@@ -13,5 +14,17 @@ describe("FS kamomadi — hal qilish yoʻllari", () => {
   });
   it("barcha filiallar (Direktor) — uchala yoʻl", () => {
     expect(shortageChoices({ open: true, canResolveAsBuyer: true, canResolveAsSeller: true })).toHaveLength(3);
+  });
+});
+
+describe("Filiallararo toʻlov — kim toʻlaydi", () => {
+  const me = (permissions: string[], branchId: number | undefined, allBranches = false) => ({ permissions, branchId, allBranches });
+  it("qarzdor filial xodimi cash.io bilan", () => {
+    expect(canPayFor(me(["cash.io"], 5), 5)).toBe(true);
+    expect(canPayFor(me(["cash.io"], 6), 5)).toBe(false);
+    expect(canPayFor(me(["cash.view"], 5), 5)).toBe(false);
+  });
+  it("barcha filiallar egasi", () => {
+    expect(canPayFor(me(["cash.io"], undefined, true), 5)).toBe(true);
   });
 });
