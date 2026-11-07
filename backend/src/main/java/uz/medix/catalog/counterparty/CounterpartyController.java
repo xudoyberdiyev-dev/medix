@@ -1,8 +1,11 @@
 package uz.medix.catalog.counterparty;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +24,7 @@ import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
 import uz.medix.catalog.counterparty.CounterpartyModels.ReasonRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.Role;
+import uz.medix.catalog.counterparty.CounterpartyModels.SortField;
 import uz.medix.catalog.counterparty.CounterpartyModels.Status;
 import uz.medix.catalog.counterparty.CounterpartyModels.TermsRequest;
 import uz.medix.shared.error.MedixException;
@@ -40,10 +44,12 @@ class CounterpartyController {
 
     private final Counterparties counterparties;
     private final CurrentActor currentActor;
+    private final CounterpartyExcel excel;
 
-    CounterpartyController(Counterparties counterparties, CurrentActor currentActor) {
+    CounterpartyController(Counterparties counterparties, CurrentActor currentActor, CounterpartyExcel excel) {
         this.counterparties = counterparties;
         this.currentActor = currentActor;
+        this.excel = excel;
     }
 
     private Actor actor() {
@@ -89,10 +95,55 @@ class CounterpartyController {
             @RequestParam(defaultValue = "ALL") Role role,
             @RequestParam(defaultValue = "ACTIVE") Status status,
             @RequestParam(required = false) Long regionId,
-            @RequestParam(defaultValue = "false") boolean sortByTin,
+            @Parameter(description = "Eskirgan: sort=TIN bilan bir xil") @RequestParam(defaultValue = "false") boolean sortByTin,
+            @RequestParam(required = false) SortField sort,
+            @RequestParam(defaultValue = "false") boolean desc,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return counterparties.search(q, role, status, regionId, sortByTin, Math.max(page, 0), Math.clamp(size, 1, 200));
+        return counterparties.search(q, role, status, regionId, sort(sort, sortByTin), desc, Math.max(page, 0), Math.clamp(size, 1, 200));
+    }
+
+    private static SortField sort(SortField sort, boolean sortByTin) {
+        return sort != null ? sort : sortByTin ? SortField.TIN : SortField.NAME;
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "Excel'ga eksport (.xlsx)",
+            description = "Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; "
+                    + "telefon va kontakt — clients.contact / suppliers.contact bilan.")
+    void export(
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "ALL") Role role,
+            @RequestParam(defaultValue = "ACTIVE") Status status,
+            @RequestParam(required = false) Long regionId,
+            @RequestParam(required = false) SortField sort,
+            @RequestParam(defaultValue = "false") boolean desc,
+            Authentication auth,
+            HttpServletResponse response) throws IOException {
+        boolean customers = has(auth, "clients.view");
+        boolean suppliers = has(auth, "suppliers.view");
+        Role scope = switch (role) {
+            case CUSTOMER -> customers ? Role.CUSTOMER : null;
+            case SUPPLIER -> suppliers ? Role.SUPPLIER : null;
+            case ALL -> customers && suppliers ? Role.ALL : customers ? Role.CUSTOMER : suppliers ? Role.SUPPLIER : null;
+        };
+        if (scope == null) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+        boolean contacts = switch (scope) {
+            case CUSTOMER -> has(auth, "clients.contact");
+            case SUPPLIER -> has(auth, "suppliers.contact");
+            case ALL -> has(auth, "clients.contact") && has(auth, "suppliers.contact");
+        };
+        String file = switch (scope) {
+            case CUSTOMER -> "mijozlar.xlsx";
+            case SUPPLIER -> "yetkazib-beruvchilar.xlsx";
+            case ALL -> "kontragentlar.xlsx";
+        };
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + file + "\"");
+        excel.export(counterparties.search(q, scope, status, regionId, sort(sort, false), desc, 0, CounterpartyExcel.MAX_EXPORT_ROWS),
+                contacts, response.getOutputStream());
     }
 
     @GetMapping("/{id}")
