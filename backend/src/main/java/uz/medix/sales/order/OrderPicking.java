@@ -312,8 +312,8 @@ class OrderPicking {
                     .update();
         }
         stock.post(new DocRef(Orders.DOC_TYPE, id, h.number()), moves);
-        boolean marked = lines.stream().anyMatch(LineRow::marked);
-        OrderStatus next = marked ? OrderStatus.MARKING : OrderStatus.CHECKING;
+        // E1 (07.11.2026): har bir buyurtma Markirovkachidan o'tadi — markirovkasiz qatorlar u yerda tasdiqlanadi
+        OrderStatus next = OrderStatus.MARKING;
         jdbc.sql("""
                 UPDATE sales_order SET status = :s, pick_finished_at = now(), fefo_deviation = :dev, status_changed_at = now(), updated_at = now(),
                        version = version + 1 WHERE id = :id""")

@@ -524,16 +524,17 @@ class OrderIT {
         send(post("/api/orders/" + o1 + "/pick/finish"), otherPicker, "{}").andExpect(status().isForbidden());
 
         // «Ha, shundan oldim» — FEFO zahira (Y-EARLY) Jo'natish zonasiga
+        // E1: markirovkasiz buyurtma ham Markirovkachiga o'tadi
         send(post("/api/orders/" + o1 + "/pick/finish"), picker, "{}")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CHECKING"))
+                .andExpect(jsonPath("$.status").value("MARKING"))
                 .andExpect(jsonPath("$.fefoDeviation").value(false));
         // «Bugun yakunlanganlar» — faqat o'zi yig'ganlari
         mvc.perform(get("/api/orders/pick-done-today").cookie(picker))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(o1))
-                .andExpect(jsonPath("$[0].status").value("CHECKING"))
+                .andExpect(jsonPath("$[0].status").value("MARKING"))
                 .andExpect(jsonPath("$[0].onTime").value(true));
         mvc.perform(get("/api/orders/pick-done-today").cookie(otherPicker)).andExpect(jsonPath("$.length()").value(0));
         mvc.perform(get("/api/orders/pick-done-today").cookie(keeper)).andExpect(status().isForbidden());
@@ -568,7 +569,9 @@ class OrderIT {
                         .param("z", p.main()).query(Long.class).single())
                 .isEqualTo(7);
 
-        // Hisobdan o'tkazish: barcha qatorlar va joylar soni
+        // Hisobdan o'tkazish: avval Markirovkachi tasdig'i (E1), keyin barcha qatorlar va joylar soni
+        send(post("/api/orders/" + o2 + "/check"), keeper, "{\"checkedLines\":[" + line2 + "],\"places\":2}").andExpect(status().isConflict());
+        passMarking(p.branchId(), o2);
         send(post("/api/orders/" + o2 + "/check"), keeper, "{\"checkedLines\":[],\"places\":2}").andExpect(status().isBadRequest());
         send(post("/api/orders/" + o2 + "/check"), picker, "{\"checkedLines\":[" + line2 + "],\"places\":2}").andExpect(status().isForbidden());
         send(post("/api/orders/" + o2 + "/check"), keeper, "{\"checkedLines\":[" + line2 + "],\"places\":2}")
@@ -583,7 +586,7 @@ class OrderIT {
         assertThat(qtyIn(shipping, prod)).isEqualTo(3);
         assertThat(qtyIn(p.main(), prod)).isEqualTo(17);
         send(post("/api/orders/" + o1 + "/pick/start"), picker, "").andExpect(status().isOk());
-        send(post("/api/orders/" + o1 + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("CHECKING"));
+        send(post("/api/orders/" + o1 + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
         assertThat(qtyIn(shipping, prod)).isEqualTo(7);
         send(post("/api/orders/" + o1 + "/cancel"), keeper, "{\"reason\":\"Mijoz voz kechdi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
         assertThat(qtyIn(shipping, prod)).isEqualTo(3);
@@ -604,7 +607,8 @@ class OrderIT {
         send(post("/api/orders/" + o + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
         send(post("/api/orders/" + o + "/time"), keeper, "{\"pickMinutes\":15}").andExpect(status().isOk());
         send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());
-        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("CHECKING"));
+        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
+        passMarking(p.branchId(), o);
         long lineA = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o AND product_id = :p").param("o", o).param("p", a)
                 .query(Long.class).single();
         long lineB = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o AND product_id = :p").param("o", o).param("p", b)
@@ -644,7 +648,11 @@ class OrderIT {
 
         // Qayta yig'ish — faqat B; A ikki marta olinmaydi
         send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());
-        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("CHECKING"));
+        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
+        // Qayta tasdiq — faqat B (A tasdig'i saqlanadi, B niki yopilgan)
+        assertThat(jdbc.sql("SELECT line_id FROM sales_order_mark_confirm WHERE order_id = :o AND active").param("o", o).query(Long.class).list())
+                .containsOnly(lineA);
+        passMarking(p.branchId(), o);
         assertThat(qtyIn(shipping, a)).isEqualTo(2);
         assertThat(qtyIn(shipping, b)).isEqualTo(3);
         assertThat(qtyIn(p.main(), a)).isEqualTo(3);
@@ -828,6 +836,101 @@ class OrderIT {
         mvc.perform(get("/api/marking/codes/export").cookie(keeper)).andExpect(status().isForbidden());
     }
 
+    /** E1: markirovkasiz qatorlarni yangi Markirovkachi tasdiqlaydi va yakunlaydi → «Hisobdan o'tkazilmoqda». */
+    private void passMarking(long branchId, long o) throws Exception {
+        Cookie m = loginAs("MARKER", branchId);
+        send(post("/api/marking/orders/" + o + "/start"), m, "").andExpect(status().isOk());
+        List<Long> lines = jdbc.sql("""
+                SELECT l.id FROM sales_order_line l JOIN product p ON p.id = l.product_id JOIN sales_order so ON so.id = l.order_id
+                WHERE l.order_id = :o AND NOT p.marked AND (so.repick_line_ids IS NULL OR l.id = ANY (so.repick_line_ids))""")
+                .param("o", o).query(Long.class).list();
+        String ids = lines.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+        send(post("/api/marking/orders/" + o + "/confirm"), m, "{\"lineIds\":[" + ids + "]}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.complete").value(true));
+        send(post("/api/marking/orders/" + o + "/finish"), m, "").andExpect(jsonPath("$.status").value("CHECKING"));
+    }
+
+    /** E1 (07.11.2026): aralash buyurtma — markirovkali qator skanerlanadi, markirovkasizi tasdiqlanadi; hammasi markirovkasiz — tasdiq. */
+    @Test
+    void everyOrderPassesMarkingUnmarkedLinesConfirmed() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie marker = loginAs("MARKER", p.branchId());
+        long plain = product(p, "BY Oddiy", "1000", 10, null, null);
+        long markedProd = product(p, "BY Aralash markirovka", "1000", 0, null, null);
+        String ean = ean13();
+        jdbc.sql("UPDATE product SET marked = true WHERE id = :p").param("p", markedProd).update();
+        jdbc.sql("INSERT INTO product_barcode (product_id, barcode) VALUES (:p, :b)").param("p", markedProd).param("b", ean).update();
+        tx.executeWithoutResult(st -> {
+            long b = ledger.createBatch(markedProd, "LOT-AR", null, LocalDate.now().plusYears(2), Money.of("100"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", markedProd, "BQ-AR"), List.of(Move.in(p.main(), b, 5)));
+        });
+
+        // Aralash: 1 markirovkali (2 dona) + 1 markirovkasiz
+        long o = draft(operator, order(p, c, new long[][] {{markedProd, 2}, {plain, 3}}));
+        send(post("/api/orders/" + o + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+        send(post("/api/orders/" + o + "/time"), keeper, "{\"pickMinutes\":10,\"markMinutes\":5}").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
+        long markedLine = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o AND product_id = :p").param("o", o).param("p", markedProd)
+                .query(Long.class).single();
+        long plainLine = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o AND product_id = :p").param("o", o).param("p", plain)
+                .query(Long.class).single();
+        mvc.perform(get("/api/marking/queue").cookie(marker))
+                .andExpect(jsonPath("$[?(@.id == " + o + ")].lines").value(hasItem(1)))
+                .andExpect(jsonPath("$[?(@.id == " + o + ")].unmarkedLines").value(hasItem(1)));
+        send(post("/api/marking/orders/" + o + "/start"), marker, "")
+                .andExpect(jsonPath("$.lines.length()").value(1))
+                .andExpect(jsonPath("$.unmarkedLines.length()").value(1))
+                .andExpect(jsonPath("$.unmarkedLines[0].lineId").value(plainLine))
+                .andExpect(jsonPath("$.unmarkedLines[0].confirmed").value(false))
+                .andExpect(jsonPath("$.unmarkedOnly").value(false))
+                .andExpect(jsonPath("$.complete").value(false));
+        // Yig'ishdan to'g'ridan-to'g'ri Tekshiruvga o'tish yo'q
+        send(post("/api/orders/" + o + "/check"), keeper, "{\"checkedLines\":[" + markedLine + "," + plainLine + "],\"places\":1}")
+                .andExpect(status().isConflict());
+        send(post("/api/marking/orders/" + o + "/scan"), marker, mark(ean, "AR1", "LOT-AR", "D")).andExpect(status().isOk());
+        send(post("/api/marking/orders/" + o + "/scan"), marker, mark(ean, "AR2", "LOT-AR", "D")).andExpect(status().isOk());
+        // Kodlar to'liq, lekin markirovkasiz qator tasdiqlanmagan
+        send(post("/api/marking/orders/" + o + "/finish"), marker, "")
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("marking.unconfirmed"));
+        // Markirovkali qatorni «tasdiqlab» bo'lmaydi; boshqa xodim — yo'q
+        send(post("/api/marking/orders/" + o + "/confirm"), marker, "{\"lineIds\":[" + markedLine + "]}")
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("marking.confirmMarkedLine"));
+        send(post("/api/marking/orders/" + o + "/confirm"), picker, "{\"lineIds\":[" + plainLine + "]}").andExpect(status().isForbidden());
+        send(post("/api/marking/orders/" + o + "/confirm"), loginAs("MARKER", p.branchId()), "{\"lineIds\":[" + plainLine + "]}")
+                .andExpect(status().isForbidden());
+        send(post("/api/marking/orders/" + o + "/confirm"), marker, "{\"lineIds\":[" + plainLine + "]}")
+                .andExpect(jsonPath("$.unmarkedLines[0].confirmed").value(true))
+                .andExpect(jsonPath("$.complete").value(true));
+        // Takror tasdiq — o'zgarishsiz
+        send(post("/api/marking/orders/" + o + "/confirm"), marker, "{\"lineIds\":[" + plainLine + "]}").andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_order_mark_confirm WHERE order_id = :o").param("o", o).query(Long.class).single())
+                .isEqualTo(1);
+        send(post("/api/marking/orders/" + o + "/finish"), marker, "").andExpect(jsonPath("$.status").value("CHECKING"));
+
+        // Hammasi markirovkasiz — «Markirovkasiz — tasdiqlash»
+        long o2 = draft(operator, order(p, c, new long[][] {{plain, 2}}));
+        send(post("/api/orders/" + o2 + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+        send(post("/api/orders/" + o2 + "/time"), keeper, "{\"pickMinutes\":10}").andExpect(status().isOk());
+        send(post("/api/orders/" + o2 + "/pick/start"), picker, "").andExpect(status().isOk());
+        send(post("/api/orders/" + o2 + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
+        long line2 = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o").param("o", o2).query(Long.class).single();
+        send(post("/api/marking/orders/" + o2 + "/start"), marker, "")
+                .andExpect(jsonPath("$.lines.length()").value(0))
+                .andExpect(jsonPath("$.unmarkedOnly").value(true))
+                .andExpect(jsonPath("$.complete").value(false));
+        send(post("/api/marking/orders/" + o2 + "/finish"), marker, "").andExpect(jsonPath("$.code").value("marking.unconfirmed"));
+        send(post("/api/marking/orders/" + o2 + "/confirm"), marker, "{\"lineIds\":[" + line2 + "]}").andExpect(jsonPath("$.complete").value(true));
+        send(post("/api/marking/orders/" + o2 + "/finish"), marker, "").andExpect(jsonPath("$.status").value("CHECKING"));
+        // Tasdiq o'chirilmaydi / o'zgartirilmaydi
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM sales_order_mark_confirm WHERE order_id = :o").param("o", o2).update())
+                .hasMessageContaining("oʻchirilmaydi");
+    }
+
     /** Buyurtmani «Hujjatlashtirilmoqda»gacha olib boradi (joylar soni bilan). */
     private long documenting(Place p, long c, long prod, int qty, int places, String delivery, Cookie operator, Cookie keeper, Cookie picker)
             throws Exception {
@@ -835,7 +938,8 @@ class OrderIT {
         send(post("/api/orders/" + o + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
         send(post("/api/orders/" + o + "/time"), keeper, "{\"pickMinutes\":10}").andExpect(status().isOk());
         send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());
-        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("CHECKING"));
+        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
+        passMarking(p.branchId(), o);
         long line = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o").param("o", o).query(Long.class).single();
         send(post("/api/orders/" + o + "/check"), keeper, "{\"checkedLines\":[" + line + "],\"places\":" + places + "}")
                 .andExpect(jsonPath("$.status").value("DOCUMENTING"));

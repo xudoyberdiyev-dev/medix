@@ -35,8 +35,9 @@ import uz.medix.shared.gs1.Gs1Code;
 import uz.medix.shared.security.Actor;
 
 /**
- * Markirovka (SPEC 5.2 №5, 5.4, 6). «Markirovkada» buyurtmani markirovkachi boshlaydi (bitta faol ish), markirovkali
- * qatorlarning har birligini skanerlaydi, so'ng yakunlaydi → «Hisobdan o'tkazilmoqda». Har skanerlashda tekshiruv tartibi:
+ * Markirovka (SPEC 5.2 №5, 5.4, 6). HAR bir buyurtma shu bosqichdan o'tadi (egasi qarori 07.11.2026, E1).
+ * «Markirovkada» buyurtmani markirovkachi boshlaydi (bitta faol ish), markirovkali qatorlarning har birligini skanerlaydi,
+ * markirovkasiz qatorlarni «Tasdiqlash» bilan o'tkazadi, so'ng yakunlaydi → «Hisobdan o'tkazilmoqda». Har skanerlashda tekshiruv tartibi:
  * format → takror (global) → mahsulot (GTIN) → partiya (yig'ilgan) → tur (quti/dona) → qator to'lganmi.
  *
  * <p>V1: milliy markirovka reestri bilan integratsiya yo'q (V3) — «reestrda bor va sotilmagan» o'rniga MEDIX ichidagi
@@ -85,6 +86,12 @@ class OrderMarking {
                 .param("o", orderId)
                 .params(lines == null ? Map.of() : Map.of("lines", lines))
                 .update();
+        // Markirovkasiz qatorlar tasdig'i ham yopiladi (E1) — qayta yig'ishdan keyin yana tasdiqlanadi
+        jdbc.sql("UPDATE sales_order_mark_confirm SET active = false, closed_at = now() WHERE order_id = :o AND active"
+                        + (lines == null ? "" : " AND line_id IN (:lines)"))
+                .param("o", orderId)
+                .params(lines == null ? Map.of() : Map.of("lines", lines))
+                .update();
     }
 
     /** Markirovkachi navbati: «Markirovkada» buyurtmalar (o'z filiali), boshlanganlari oldin. */
@@ -95,6 +102,8 @@ class OrderMarking {
                        o.status_changed_at,
                        (SELECT count(*) FROM sales_order_line l JOIN product p ON p.id = l.product_id
                         WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS lines,
+                       (SELECT count(*) FROM sales_order_line l JOIN product p ON p.id = l.product_id
+                        WHERE l.order_id = o.id AND NOT p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS unmarked,
                        (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l JOIN product p ON p.id = l.product_id
                         WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS total_qty
                 FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN employee mk ON mk.id = o.marker_id
@@ -107,7 +116,7 @@ class OrderMarking {
                     Instant started = instant(rs.getTimestamp("mark_started_at"));
                     Integer minutes = (Integer) rs.getObject("mark_minutes");
                     return new MarkQueueItem(rs.getLong("id"), rs.getString("number"), rs.getString("customer"), rs.getInt("lines"),
-                            rs.getLong("total_qty"), minutes, rs.getString("marker"), (Long) rs.getObject("marker_id"), started,
+                            rs.getLong("total_qty"), rs.getInt("unmarked"), minutes, rs.getString("marker"), (Long) rs.getObject("marker_id"), started,
                             deadline(started, minutes), rs.getTimestamp("status_changed_at").toInstant());
                 })
                 .list()
@@ -280,14 +289,53 @@ class OrderMarking {
         return work(id, actor);
     }
 
-    /** «Yakunlash»: barcha markirovkali birliklar skanerlangan bo'lishi shart → «Hisobdan o'tkazilmoqda». */
+    /**
+     * «Tasdiqlash» (E1): markirovkasiz qatorlarni Markirovkachi tasdiqlaydi (bittalab yoki hammasi). Faqat shu buyurtmaning
+     * markirovkasiz qatorlari (qayta yig'ishda — faqat qaytarilgan qatorlar); takror tasdiq — o'zgarishsiz.
+     */
+    @Transactional
+    MarkWork confirm(Actor actor, long id, List<Long> lineIds) {
+        mineLocked(actor, id);
+        MarkWork w = work(id, actor);
+        java.util.Set<Long> allowed = new java.util.HashSet<>();
+        for (MarkingModels.UnmarkedLine l : w.unmarkedLines()) {
+            allowed.add(l.lineId());
+        }
+        java.util.Set<Long> wanted = new java.util.LinkedHashSet<>(lineIds);
+        if (!allowed.containsAll(wanted)) {
+            throw MedixException.badRequest("marking.confirmMarkedLine");
+        }
+        int added = 0;
+        for (long lineId : wanted) {
+            added += jdbc.sql("""
+                    INSERT INTO sales_order_mark_confirm (order_id, line_id, confirmed_by) VALUES (:o, :l, :by)
+                    ON CONFLICT (line_id) WHERE active DO NOTHING""")
+                    .param("o", id)
+                    .param("l", lineId)
+                    .param("by", actor.employeeId())
+                    .update();
+        }
+        if (added > 0) {
+            audit.record(AuditEntry.of("order.markConfirm", "sales_order", id).change(null, Map.of("lines", List.copyOf(wanted))));
+        }
+        return work(id, actor);
+    }
+
+    /**
+     * «Yakunlash»: barcha markirovkali birliklar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lishi shart
+     * → «Hisobdan o'tkazilmoqda».
+     */
     @Transactional
     void finish(Actor actor, long id) {
         mineLocked(actor, id);
         MarkWork w = work(id, actor);
-        if (!w.complete()) {
-            int left = w.lines().stream().mapToInt(l -> l.qty() - l.scanned()).sum();
+        int left = w.lines().stream().mapToInt(l -> l.qty() - l.scanned()).sum();
+        if (left > 0) {
             throw MedixException.conflict("marking.incomplete", left);
+        }
+        long unconfirmed = w.unmarkedLines().stream().filter(l -> !l.confirmed()).count();
+        if (unconfirmed > 0) {
+            throw MedixException.conflict("marking.unconfirmed", unconfirmed);
         }
         jdbc.sql("""
                 UPDATE sales_order SET status = 'CHECKING', mark_finished_at = now(), status_changed_at = now(), updated_at = now(),
@@ -399,6 +447,17 @@ class OrderMarking {
                 .query((rs, n) -> new LineRow(rs.getLong("id"), rs.getInt("line_no"), rs.getString("code"), rs.getString("name"), rs.getString("unit"),
                         rs.getInt("qty")))
                 .list();
+        List<MarkingModels.UnmarkedLine> unmarked = jdbc.sql("""
+                SELECT l.id, l.line_no, p.code, p.name, u.short_name AS unit, l.qty,
+                       EXISTS (SELECT 1 FROM sales_order_mark_confirm c WHERE c.line_id = l.id AND c.active) AS confirmed
+                FROM sales_order_line l
+                JOIN product p ON p.id = l.product_id JOIN unit u ON u.id = p.unit_id
+                JOIN sales_order so ON so.id = l.order_id
+                WHERE l.order_id = :id AND NOT p.marked AND (so.repick_line_ids IS NULL OR l.id = ANY (so.repick_line_ids)) ORDER BY l.line_no""")
+                .param("id", id)
+                .query((rs, n) -> new MarkingModels.UnmarkedLine(rs.getLong("id"), rs.getInt("line_no"), rs.getString("code"), rs.getString("name"),
+                        rs.getString("unit"), rs.getInt("qty"), rs.getBoolean("confirmed")))
+                .list();
         List<MarkLine> lines = new ArrayList<>();
         int boxes = 0;
         int boxesNeeded = 0;
@@ -424,7 +483,9 @@ class OrderMarking {
             lines.add(new MarkLine(r.id(), r.lineNo(), r.code(), r.name(), kind, r.qty(), scanned, batches));
         }
         return new MarkWork(h.id(), h.number(), h.customer(), h.status(), h.markMinutes(), h.marker(), h.markerId(), h.startedAt(),
-                deadline(h.startedAt(), h.markMinutes()), lines, codes, boxes, boxesNeeded, units, unitsNeeded, complete && !rows.isEmpty());
+                deadline(h.startedAt(), h.markMinutes()), lines, unmarked, codes, boxes, boxesNeeded, units, unitsNeeded,
+                complete && unmarked.stream().allMatch(MarkingModels.UnmarkedLine::confirmed) && !(rows.isEmpty() && unmarked.isEmpty()),
+                rows.isEmpty() && !unmarked.isEmpty());
     }
 
     static MarkKind kindOf(String unitShortName) {
