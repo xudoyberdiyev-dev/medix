@@ -59,6 +59,8 @@ public class ReceiptReminders {
 
     private record BonusDue(long id, String number, long branchId, String supplier, Long ownerId, Date discountDate) {}
 
+    private record IdleBonus(long branchId, long supplierId, String supplier, BigDecimal balance, Date lastMove, Long ownerId) {}
+
     /** Bir kunlik eslatmalar; qaytaradi — yozilgan bildirishnomalar soni (takrorlar yozilmaydi). */
     @Transactional
     public int run(LocalDate today) {
@@ -101,6 +103,39 @@ public class ReceiptReminders {
                     notifications.message("receipt.bonus", b.discountDate() == null ? "receipt.bonusNoDate" : "receipt.bonus", "/receipts",
                             "receipt.bonus:" + b.id(), b.number(), b.supplier(),
                             b.discountDate() == null ? "" : b.discountDate().toLocalDate().format(DAY)));
+        }
+        created += idleBonuses(today);
+        return created;
+    }
+
+    /**
+     * SPEC 5.1: bonusning muddati yo'q, lekin balans 30 kun ishlatilmasa — eslatma (Direktor, Buxgalter va oxirgi BNS kirimining
+     * «Kim nomiga» xodimi). Har 30 kunlik bo'shliq uchun bir marta; balans harakatlansa hisob qaytadan boshlanadi.
+     */
+    private int idleBonuses(LocalDate today) {
+        List<IdleBonus> idle = jdbc.sql("""
+                WITH led AS (SELECT branch_id, supplier_id, sum(amount) AS balance,
+                                    (max(occurred_at) AT TIME ZONE 'Asia/Tashkent')::date AS last_move
+                             FROM supplier_bonus_ledger GROUP BY branch_id, supplier_id)
+                SELECT led.branch_id, led.supplier_id, c.name AS supplier, led.balance, led.last_move,
+                       (SELECT r.owner_id FROM supplier_bonus s JOIN receipt r ON r.id = s.receipt_id
+                        WHERE s.branch_id = led.branch_id AND s.supplier_id = led.supplier_id
+                        ORDER BY s.id DESC LIMIT 1) AS owner_id
+                FROM led JOIN counterparty c ON c.id = led.supplier_id
+                WHERE led.balance > 0 AND led.last_move <= :limit
+                ORDER BY led.branch_id, led.supplier_id""")
+                .param("limit", Date.valueOf(today.minusDays(BonusBalances.IDLE_DAYS)))
+                .query(IdleBonus.class)
+                .list();
+        int created = 0;
+        for (IdleBonus b : idle) {
+            LocalDate last = b.lastMove().toLocalDate();
+            long days = ChronoUnit.DAYS.between(last, today);
+            long period = days / BonusBalances.IDLE_DAYS;
+            created += notifications.notify("supplierBonus.notify", b.branchId(), owner(b.ownerId()),
+                    notifications.message("bonus.idle", "bonus.idle", "/bonuses",
+                            "bonus.idle:" + b.branchId() + ":" + b.supplierId() + ":" + last + ":" + period, b.supplier(),
+                            new Money(b.balance()).format(), days, last.format(DAY)));
         }
         return created;
     }
