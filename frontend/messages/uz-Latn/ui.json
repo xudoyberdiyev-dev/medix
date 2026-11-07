@@ -51,5 +51,14 @@
   "placeholder": {
     "title": "Bu boʻlim hali qurilmoqda",
     "description": "Ish rejasi va qaysi bosqichda tayyor boʻlishi PLAN.md faylida yozilgan."
+  },
+  "apply": "Qoʻllash",
+  "date": {
+    "today": "Bugun",
+    "yesterday": "Kecha",
+    "week": "Shu hafta",
+    "month": "Shu oy",
+    "from": "Dan",
+    "to": "Gacha"
   }
 }

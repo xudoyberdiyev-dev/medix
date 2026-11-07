@@ -18,7 +18,7 @@ describe("buyurtmalar: filtrlar URL'da (SPEC 120)", () => {
       status: "QUEUED",
       q: "shifo",
       mine: true,
-      customer: { id: 4, name: "Shifo" },
+      customers: [{ id: 4, name: "Shifo" }],
       orderFrom: "2026-11-01",
       orderTo: "2026-11-07",
       sort: "TOTAL",
@@ -38,6 +38,28 @@ describe("buyurtmalar: filtrlar URL'da (SPEC 120)", () => {
     expect(parse("sort=CUSTOMER").desc).toBe(false);
     expect(serializeOrderFilters({ ...DEFAULT_ORDER_FILTERS, sort: "CUSTOMER", desc: false })).toBe("sort=CUSTOMER");
     expect(serializeOrderFilters({ ...DEFAULT_ORDER_FILTERS, desc: false })).toBe("dir=asc");
+  });
+
+  it("prototip filtr chiplari — bir nechta qiymat, aylanma", () => {
+    const f = parse(
+      "customerId=4&customer=Shifo&customerId=9&st=QUEUED&st=PICKING&st=NOPE&dt=PICKUP&pt=CASH&pt=ONLINE&regionId=3&operatorId=7&per=50",
+    );
+    expect(f).toMatchObject({
+      customers: [
+        { id: 4, name: "Shifo" },
+        { id: 9, name: "Mijoz #9" },
+      ],
+      operators: [{ id: 7, name: "Operator #7" }],
+      statuses: ["QUEUED", "PICKING"],
+      delivery: ["PICKUP"],
+      payments: ["CASH", "ONLINE"],
+      regions: [3],
+      size: 50,
+    });
+    expect(parse(serializeOrderFilters(f)).statuses).toEqual(f.statuses);
+    expect(ordersExportHref({ ...DEFAULT_ORDER_FILTERS, regions: [3, 5], payments: ["CASH"] }, null)).toBe(
+      "/api/orders/export?paymentType=CASH&regionId=3&regionId=5&sort=CREATED&desc=true",
+    );
   });
 
   it("eksport havolasi — filtrlar va saralash bilan", () => {

@@ -1,11 +1,19 @@
+import type { PageSize } from "@/components/ui/pagination";
 import type { components } from "@/lib/api/schema";
 
 type OrderStatus = components["schemas"]["OrderDetail"]["status"];
+type DeliveryType = components["schemas"]["OrderDetail"]["deliveryType"];
+type PaymentType = components["schemas"]["OrderDetail"]["paymentType"];
+
+export const DELIVERY_TYPES: readonly DeliveryType[] = ["DELIVERY", "PICKUP"];
+export const PAYMENT_TYPES: readonly PaymentType[] = ["CASH", "TRANSFER", "ONLINE"];
+export const PAGE_SIZES: PageSize[] = [20, 50, 100];
+export type Ref = { id: number; name: string };
 
 export const ORDER_SORTS = ["CREATED", "NUMBER", "DATE", "CUSTOMER", "TOTAL"] as const;
 export type OrderSort = (typeof ORDER_SORTS)[number];
 
-const STATUSES: readonly OrderStatus[] = [
+export const STATUSES: readonly OrderStatus[] = [
   "DRAFT",
   "PENDING_APPROVAL",
   "QUEUED",
@@ -26,8 +34,13 @@ export interface OrderFilters {
   status: OrderStatus | null;
   q: string;
   mine: boolean;
-  customer: { id: number; name: string } | null;
-  operator: { id: number; name: string } | null;
+  /** Prototip filtr chiplari — bir nechta qiymat. */
+  customers: Ref[];
+  operators: Ref[];
+  statuses: OrderStatus[];
+  delivery: DeliveryType[];
+  payments: PaymentType[];
+  regions: number[];
   /** Sotuv/qaytarish davri (Savdo hisobotidan oʻtish). */
   soldFrom: string | null;
   soldTo: string | null;
@@ -38,14 +51,19 @@ export interface OrderFilters {
   desc: boolean;
   /** 1 dan boshlanadi. */
   page: number;
+  size: PageSize;
 }
 
 export const DEFAULT_ORDER_FILTERS: OrderFilters = {
   status: null,
   q: "",
   mine: false,
-  customer: null,
-  operator: null,
+  customers: [],
+  operators: [],
+  statuses: [],
+  delivery: [],
+  payments: [],
+  regions: [],
   soldFrom: null,
   soldTo: null,
   orderFrom: null,
@@ -53,15 +71,26 @@ export const DEFAULT_ORDER_FILTERS: OrderFilters = {
   sort: "CREATED",
   desc: true,
   page: 1,
+  size: 20,
 };
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 const isoDay = (v: string | null): string | null => (v && ISO_DAY.test(v) ? v : null);
 const positiveInt = (v: string | null): number | null => (v && /^\d+$/.test(v) && Number(v) > 0 ? Number(v) : null);
 
-function ref(params: URLSearchParams, idKey: string, nameKey: string, fallback: string): { id: number; name: string } | null {
-  const id = positiveInt(params.get(idKey));
-  return id ? { id, name: params.get(nameKey) || `${fallback} #${id}` } : null;
+/** ?customerId=4&customer=Shifo&customerId=9 — id va (ixtiyoriy) nom, tartib boʻyicha. */
+function refs(params: URLSearchParams, idKey: string, nameKey: string, fallback: string): Ref[] {
+  const names = params.getAll(nameKey);
+  const out: Ref[] = [];
+  params.getAll(idKey).forEach((v, i) => {
+    const id = positiveInt(v);
+    if (id && !out.some((r) => r.id === id)) out.push({ id, name: names[i] || `${fallback} #${id}` });
+  });
+  return out;
+}
+
+function oneOf<T extends string>(values: string[], allowed: readonly T[]): T[] {
+  return [...new Set(values.filter((v): v is T => (allowed as readonly string[]).includes(v)))];
 }
 
 export function parseOrderFilters(params: URLSearchParams, names: { customer: string; operator: string }): OrderFilters {
@@ -73,8 +102,19 @@ export function parseOrderFilters(params: URLSearchParams, names: { customer: st
     status: (STATUSES as readonly string[]).includes(status ?? "") ? (status as OrderStatus) : null,
     q: params.get("q") ?? "",
     mine: params.get("mine") === "1",
-    customer: ref(params, "customerId", "customer", names.customer),
-    operator: ref(params, "operatorId", "operator", names.operator),
+    customers: refs(params, "customerId", "customer", names.customer),
+    operators: refs(params, "operatorId", "operator", names.operator),
+    statuses: oneOf(params.getAll("st"), STATUSES),
+    delivery: oneOf(params.getAll("dt"), DELIVERY_TYPES),
+    payments: oneOf(params.getAll("pt"), PAYMENT_TYPES),
+    regions: [
+      ...new Set(
+        params
+          .getAll("regionId")
+          .map(positiveInt)
+          .filter((v): v is number => v !== null),
+      ),
+    ],
     soldFrom: isoDay(params.get("soldFrom")),
     soldTo: isoDay(params.get("soldTo")),
     orderFrom: isoDay(params.get("from")),
@@ -83,6 +123,7 @@ export function parseOrderFilters(params: URLSearchParams, names: { customer: st
     // Standart: kiritilgan vaqti — yangisi tepada; boshqa ustunlar — oʻsish tartibida
     desc: dir === "desc" ? true : dir === "asc" ? false : !isSort || sort === "CREATED",
     page: positiveInt(params.get("page")) ?? 1,
+    size: PAGE_SIZES.find((n) => String(n) === params.get("per")) ?? 20,
   };
 }
 
@@ -92,14 +133,18 @@ export function serializeOrderFilters(f: OrderFilters): string {
   if (f.status) p.set("status", f.status);
   if (f.q.trim()) p.set("q", f.q.trim());
   if (f.mine) p.set("mine", "1");
-  if (f.customer) {
-    p.set("customerId", String(f.customer.id));
-    p.set("customer", f.customer.name);
+  for (const c of f.customers) {
+    p.append("customerId", String(c.id));
+    p.append("customer", c.name);
   }
-  if (f.operator) {
-    p.set("operatorId", String(f.operator.id));
-    p.set("operator", f.operator.name);
+  for (const o of f.operators) {
+    p.append("operatorId", String(o.id));
+    p.append("operator", o.name);
   }
+  f.statuses.forEach((v) => p.append("st", v));
+  f.delivery.forEach((v) => p.append("dt", v));
+  f.payments.forEach((v) => p.append("pt", v));
+  f.regions.forEach((v) => p.append("regionId", String(v)));
   if (f.soldFrom) p.set("soldFrom", f.soldFrom);
   if (f.soldTo) p.set("soldTo", f.soldTo);
   if (f.orderFrom) p.set("from", f.orderFrom);
@@ -108,12 +153,27 @@ export function serializeOrderFilters(f: OrderFilters): string {
   const defaultDesc = f.sort === "CREATED";
   if (f.desc !== defaultDesc) p.set("dir", f.desc ? "desc" : "asc");
   if (f.page > 1) p.set("page", String(f.page));
+  if (f.size !== 20) p.set("per", String(f.size));
   return p.toString();
 }
 
 /** Filtr qoʻllanganmi (qidiruv ham) — «Natija yoʻq» yoki «Hali buyurtma yoʻq» holatini tanlash uchun. */
 export function hasOrderFilters(f: OrderFilters): boolean {
-  return Boolean(f.status || f.q.trim() || f.mine || f.customer || f.operator || f.soldFrom || f.soldTo || f.orderFrom || f.orderTo);
+  return Boolean(
+    f.status ||
+    f.q.trim() ||
+    f.mine ||
+    f.customers.length ||
+    f.operators.length ||
+    f.statuses.length ||
+    f.delivery.length ||
+    f.payments.length ||
+    f.regions.length ||
+    f.soldFrom ||
+    f.soldTo ||
+    f.orderFrom ||
+    f.orderTo,
+  );
 }
 
 /** API soʻrovi parametrlari (roʻyxat va .xlsx eksport — bir xil). */
@@ -123,8 +183,12 @@ export function orderQuery(f: OrderFilters, branchId: number | null) {
     status: f.status ?? undefined,
     q: f.q.trim() || undefined,
     mine: f.mine || undefined,
-    customerId: f.customer?.id,
-    operatorId: f.operator?.id,
+    customerId: f.customers.length ? f.customers.map((c) => c.id) : undefined,
+    operatorId: f.operators.length ? f.operators.map((o) => o.id) : undefined,
+    statuses: f.statuses.length ? f.statuses : undefined,
+    deliveryType: f.delivery.length ? f.delivery : undefined,
+    paymentType: f.payments.length ? f.payments : undefined,
+    regionId: f.regions.length ? f.regions : undefined,
     soldFrom: f.soldFrom ?? undefined,
     soldTo: f.soldTo ?? undefined,
     orderFrom: f.orderFrom ?? undefined,
@@ -138,7 +202,8 @@ export function orderQuery(f: OrderFilters, branchId: number | null) {
 export function ordersExportHref(f: OrderFilters, branchId: number | null): string {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(orderQuery(f, branchId))) {
-    if (v !== undefined) p.set(k, String(v));
+    if (Array.isArray(v)) v.forEach((x) => p.append(k, String(x)));
+    else if (v !== undefined) p.set(k, String(v));
   }
   return `/api/orders/export?${p.toString()}`;
 }

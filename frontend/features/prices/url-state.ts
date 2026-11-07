@@ -8,7 +8,7 @@ export interface PriceFilters {
   sort: PriceSort;
   desc: boolean;
   page: number;
-  size: 25 | 50 | 100;
+  size: 20 | 25 | 50 | 100;
 }
 
 const SORTS: readonly PriceSort[] = ["CODE", "NAME", "MANUFACTURER"];

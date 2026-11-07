@@ -4778,7 +4778,7 @@
     },
     "/api/orders" : {
       "get" : {
-        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
+        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
         "operationId" : "list_11",
         "parameters" : [ {
           "in" : "query",
@@ -4801,16 +4801,66 @@
           "name" : "customerId",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         }, {
           "in" : "query",
           "name" : "operatorId",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "statuses",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "deliveryType",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "DELIVERY", "PICKUP" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "paymentType",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "regionId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         }, {
           "in" : "query",
@@ -5064,16 +5114,66 @@
           "name" : "customerId",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         }, {
           "in" : "query",
           "name" : "operatorId",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "statuses",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "deliveryType",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "DELIVERY", "PICKUP" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "paymentType",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "regionId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         }, {
           "in" : "query",
@@ -14610,6 +14710,23 @@
         },
         "required" : [ "d0to30", "d31to60", "d61to90", "expired" ]
       },
+      "FilterOption" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "id", "name" ]
+      },
       "FinishResult" : {
         "type" : "object",
         "properties" : {
@@ -17089,6 +17206,30 @@
           }
         }
       },
+      "OrderFacets" : {
+        "type" : "object",
+        "properties" : {
+          "customers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FilterOption"
+            }
+          },
+          "operators" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FilterOption"
+            }
+          },
+          "regions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FilterOption"
+            }
+          }
+        },
+        "required" : [ "customers", "operators", "regions" ]
+      },
       "OrderIssue" : {
         "type" : "object",
         "properties" : {
@@ -17254,6 +17395,10 @@
       "OrderPage" : {
         "type" : "object",
         "properties" : {
+          "facets" : {
+            "$ref" : "#/components/schemas/OrderFacets",
+            "description" : "Filtr variantlari: mijozlar, operatorlar, hududlar (soni bilan)"
+          },
           "items" : {
             "type" : "array",
             "items" : {
@@ -17280,7 +17425,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "items", "page", "size", "statuses", "total" ]
+        "required" : [ "facets", "items", "page", "size", "statuses", "total" ]
       },
       "OrderReasonRequest" : {
         "type" : "object",
@@ -17392,6 +17537,23 @@
           "paymentType" : {
             "type" : "string",
             "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "pickFinishedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "pickMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yig'ishga berilgan vaqt, daqiqa (null — «Vaqt kutilmoqda»)"
+          },
+          "pickStartedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "region" : {
+            "type" : "string",
+            "description" : "Mijoz hududi"
           },
           "status" : {
             "type" : "string",

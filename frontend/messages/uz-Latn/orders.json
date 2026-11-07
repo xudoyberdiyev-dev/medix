@@ -81,7 +81,30 @@
     "export": "Excel'ga yuklash",
     "columns": "Ustunlar",
     "totalRow": "Jami: {count} ta",
-    "clearFilters": "Filtrlarni tozalash"
+    "clearFilters": "Filtrlarni tozalash",
+    "stage": {
+      "wait": "Vaqt kutilmoqda",
+      "given": "Vaqt berildi",
+      "left": "{n} daqiqa qoldi",
+      "late": "+{n} daqiqa kechikdi",
+      "resOk": "Yigʻildi {s} daqiqada · {d} daqiqa erta",
+      "resOnTime": "Yigʻildi {s} daqiqada · oʻz vaqtida",
+      "resLate": "Kechikdi: {d} daqiqa"
+    },
+    "f": {
+      "customer": "Mijoz",
+      "status": "Holat",
+      "delivery": "Yetkazish usuli",
+      "region": "Hudud",
+      "operator": "Operator",
+      "payment": "Toʻlov turi",
+      "date": "Sana"
+    },
+    "count": "{count} ta",
+    "selected": "{count} ta tanlandi",
+    "printSheets": "Terish varagʻi",
+    "clearSelection": "Tanlovni bekor qilish",
+    "printNone": "Terish varagʻi faqat «Navbatda» va «Yigʻilmoqda» buyurtmalar uchun"
   },
   "drawer": {
     "kind": "Buyurtma",

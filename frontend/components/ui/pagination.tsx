@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { formatQuantity } from "@/lib/format";
 import { Button } from "./button";
 
-export type PageSize = 25 | 50 | 100;
+export type PageSize = 20 | 25 | 50 | 100;
 
 export interface PaginationProps {
   /** 1 dan boshlanadi. */

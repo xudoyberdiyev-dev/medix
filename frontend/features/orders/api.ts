@@ -61,7 +61,7 @@ export function useOrders(f: OrderFilters, branchId: number | null) {
     queryFn: () =>
       unwrap(
         api.GET("/api/orders", {
-          params: { query: { ...orderQuery(f, branchId), page: f.page - 1, size: 50 } },
+          params: { query: { ...orderQuery(f, branchId), page: f.page - 1, size: f.size } },
         }),
       ),
     placeholderData: keepPreviousData,

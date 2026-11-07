@@ -8,7 +8,7 @@ export interface StockFilters {
   sort: StockSort | null;
   desc: boolean;
   page: number;
-  size: 25 | 50 | 100;
+  size: 20 | 25 | 50 | 100;
 }
 
 export type StockSort = "NAME" | "CODE" | "EXPIRY" | "QTY" | "WAREHOUSE";

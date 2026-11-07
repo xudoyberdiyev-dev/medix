@@ -67,3 +67,9 @@ export function formatDateTime(date: Date): string {
   const p = parts(date);
   return `${p.day}.${p.month}.${p.year}, ${p.hour}:${p.minute}`;
 }
+
+/** → "16:40" (Asia/Tashkent) */
+export function formatTime(date: Date): string {
+  const p = parts(date);
+  return `${p.hour}:${p.minute}`;
+}

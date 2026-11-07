@@ -2157,7 +2157,7 @@ export interface paths {
         };
         /**
          * Buyurtmalar
-         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).
+         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).
          */
         get: operations["list_11"];
         put?: never;
@@ -6273,6 +6273,13 @@ export interface components {
             /** Format: int32 */
             expired: number;
         };
+        FilterOption: {
+            /** Format: int64 */
+            count: number;
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
         FinishResult: {
             /** @enum {string} */
             status: "PLANNED" | "IN_TRANSIT" | "RETURN_WAIT" | "DONE" | "CANCELLED";
@@ -7283,6 +7290,11 @@ export interface components {
             vehicle?: string;
             waybillNumber?: string;
         };
+        OrderFacets: {
+            customers: components["schemas"]["FilterOption"][];
+            operators: components["schemas"]["FilterOption"][];
+            regions: components["schemas"]["FilterOption"][];
+        };
         OrderIssue: {
             code: string;
             /** @enum {string} */
@@ -7353,6 +7365,8 @@ export interface components {
             qty: number;
         };
         OrderPage: {
+            /** @description Filtr variantlari: mijozlar, operatorlar, hududlar (soni bilan) */
+            facets: components["schemas"]["OrderFacets"];
             items: components["schemas"]["OrderSummary"][];
             /** Format: int32 */
             page: number;
@@ -7407,6 +7421,17 @@ export interface components {
             orderDate: string;
             /** @enum {string} */
             paymentType: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: date-time */
+            pickFinishedAt?: string;
+            /**
+             * Format: int32
+             * @description Yig'ishga berilgan vaqt, daqiqa (null — «Vaqt kutilmoqda»)
+             */
+            pickMinutes?: number;
+            /** Format: date-time */
+            pickStartedAt?: string;
+            /** @description Mijoz hududi */
+            region?: string;
             /** @enum {string} */
             status: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
             /** Format: date-time */
@@ -12715,8 +12740,12 @@ export interface operations {
             query?: {
                 branchId?: number;
                 status?: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
-                customerId?: number;
-                operatorId?: number;
+                customerId?: number[];
+                operatorId?: number[];
+                statuses?: ("DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED")[];
+                deliveryType?: ("DELIVERY" | "PICKUP")[];
+                paymentType?: ("CASH" | "TRANSFER" | "ONLINE")[];
+                regionId?: number[];
                 soldFrom?: string;
                 soldTo?: string;
                 orderFrom?: string;
@@ -12823,8 +12852,12 @@ export interface operations {
             query?: {
                 branchId?: number;
                 status?: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
-                customerId?: number;
-                operatorId?: number;
+                customerId?: number[];
+                operatorId?: number[];
+                statuses?: ("DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED")[];
+                deliveryType?: ("DELIVERY" | "PICKUP")[];
+                paymentType?: ("CASH" | "TRANSFER" | "ONLINE")[];
+                regionId?: number[];
                 soldFrom?: string;
                 soldTo?: string;
                 orderFrom?: string;
