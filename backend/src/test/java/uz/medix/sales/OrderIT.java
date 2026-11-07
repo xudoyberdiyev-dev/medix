@@ -658,6 +658,9 @@ class OrderIT {
                 .andReturn());
         mvc.perform(get("/api/orders/issues").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) issue)));
         mvc.perform(get("/api/notifications").cookie(keeper)).andExpect(jsonPath("$.items[*].title", hasItem(containsString("Muammo bor"))));
+        // O'quvchi tilida (MEDIX_LOCALE): kalit va o'rinbosarlar saqlangan.
+        mvc.perform(get("/api/notifications").cookie(keeper).cookie(new Cookie("MEDIX_LOCALE", "ru")))
+                .andExpect(jsonPath("$.items[*].title", hasItem(containsString("Есть проблема"))));
         send(post("/api/orders/issues/" + issue + "/resolve"), keeper, "{\"resolution\":\"Almashtirildi\"}")
                 .andExpect(jsonPath("$.resolvedBy").value("Sinov WAREHOUSE_MANAGER"));
         send(post("/api/orders/issues/" + issue + "/resolve"), keeper, "{\"resolution\":\"Yana\"}").andExpect(status().isConflict());

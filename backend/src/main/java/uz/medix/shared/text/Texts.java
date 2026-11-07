@@ -47,7 +47,16 @@ public class Texts {
         return Optional.ofNullable(messages.getMessage(key, strings(args), null, UZ));
     }
 
-    static Object[] strings(Object... args) {
+    /** Berilgan tilda (masalan, bildirishnoma o'qilganda — o'quvchi tili). */
+    public String getIn(Locale locale, String key, Object... args) {
+        return messages.getMessage(key, strings(args), key, locale);
+    }
+
+    public Optional<String> findIn(Locale locale, String key, Object... args) {
+        return Optional.ofNullable(messages.getMessage(key, strings(args), null, locale));
+    }
+
+    public static Object[] strings(Object... args) {
         return Arrays.stream(args).map(a -> a == null ? "" : a.toString()).toArray();
     }
 }

@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.CurrentActor;
+import uz.medix.shared.text.Texts;
 
 /** Xodimning o'z bildirishnomalari (har kim faqat o'zinikini ko'radi — alohida ruxsat kaliti kerak emas). */
 @RestController
@@ -33,11 +35,13 @@ class NotificationController {
     private final JdbcClient jdbc;
     private final CurrentActor currentActor;
     private final NotificationStream stream;
+    private final Notifications notifications;
 
-    NotificationController(JdbcClient jdbc, CurrentActor currentActor, NotificationStream stream) {
+    NotificationController(JdbcClient jdbc, CurrentActor currentActor, NotificationStream stream, Notifications notifications) {
         this.jdbc = jdbc;
         this.currentActor = currentActor;
         this.stream = stream;
+        this.notifications = notifications;
     }
 
     private long me() {
@@ -49,12 +53,17 @@ class NotificationController {
     @Operation(summary = "Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni")
     NotificationList list() {
         long e = me();
+        Locale locale = Texts.requestLocale();
         List<NotificationItem> items = jdbc.sql("""
-                SELECT id, kind, title, body, link, created_at, read_at FROM notification WHERE employee_id = :e
+                SELECT id, kind, title, body, link, created_at, read_at, text_key, text_args FROM notification WHERE employee_id = :e
                 ORDER BY (read_at IS NULL) DESC, created_at DESC, id DESC LIMIT 50""")
                 .param("e", e)
-                .query((rs, n) -> new NotificationItem(rs.getLong("id"), rs.getString("kind"), rs.getString("title"), rs.getString("body"),
-                        rs.getString("link"), rs.getTimestamp("created_at").toInstant(), instant(rs.getTimestamp("read_at"))))
+                .query((rs, n) -> {
+                    var text = notifications.render(rs.getString("text_key"), rs.getString("text_args"), rs.getString("title"),
+                            rs.getString("body"), locale);
+                    return new NotificationItem(rs.getLong("id"), rs.getString("kind"), text.title(), text.body(), rs.getString("link"),
+                            rs.getTimestamp("created_at").toInstant(), instant(rs.getTimestamp("read_at")));
+                })
                 .list();
         long unread = jdbc.sql("SELECT count(*) FROM notification WHERE employee_id = :e AND read_at IS NULL").param("e", e)
                 .query(Long.class).single();
