@@ -8,6 +8,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/cn";
 import { useLogout, useMe } from "@/features/auth/session";
+import { useBranchStore } from "@/lib/stores/branch";
+import { useNavBadges, type NavBadge } from "./nav-badges";
 import { LOCALE_NAMES, LOCALES, writeLocaleCookie, type Locale } from "@/i18n/config";
 import { useSidebarStore } from "@/lib/stores/sidebar";
 import { LANG_CODE } from "./language-chip";
@@ -55,6 +57,8 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, [menu]);
+  const selectedBranch = useBranchStore((s) => s.branchId);
+  const badges = useNavBadges(me.data ? (me.data.allBranches ? (selectedBranch ?? null) : null) : undefined);
   const rail = variant === "rail";
   // Ixcham koʻrinish: 768–1279 px da har doim, ≥1280 da — yigʻilganda
   const mini = rail && collapsed;
@@ -110,12 +114,13 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
                   const active = isActive(pathname, item.href);
                   const Icon = item.icon;
                   const label = t(`nav.${item.key}`);
+                  const badge: NavBadge | null | undefined = badges[item.key];
                   return (
                     <li key={item.key}>
                       <Link
                         href={item.href}
                         aria-current={active ? "page" : undefined}
-                        title={rail ? label : undefined}
+                        title={rail ? (badge ? `${label} · ${badge.count}` : label) : undefined}
                         onClick={onNavigate}
                         className={cn(
                           "relative flex items-center gap-2.5 rounded-card px-2.5 text-[13.5px] transition-colors duration-150 ease-out focus-visible:outline-sidebar-active",
@@ -132,7 +137,19 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
                           aria-hidden
                           className={cn("shrink-0", active ? "text-sidebar-active" : "text-sidebar-text/85")}
                         />
-                        <span className={cn("truncate", compact("sr-only", "max-xl:sr-only"))}>{label}</span>
+                        <span className={cn("min-w-0 flex-1 truncate", compact("sr-only", "max-xl:sr-only"))}>{label}</span>
+                        {badge ? (
+                          <span
+                            aria-label={t("shell.badge", { count: badge.count })}
+                            className={cn(
+                              "h-[18px] min-w-[18px] shrink-0 rounded-full px-1.5 text-center text-[11px] leading-[18px] font-semibold",
+                              badge.danger ? "bg-danger-bg text-danger" : "bg-warning-bg text-warning",
+                              compact("absolute top-0.5 right-0.5 px-1", "max-xl:absolute max-xl:top-0.5 max-xl:right-0.5 max-xl:px-1"),
+                            )}
+                          >
+                            {badge.count > 99 ? "99+" : badge.count}
+                          </span>
+                        ) : null}
                       </Link>
                     </li>
                   );

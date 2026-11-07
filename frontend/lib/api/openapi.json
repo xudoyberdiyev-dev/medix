@@ -13603,6 +13603,38 @@
           "orders"
         ]
       }
+    },
+    "/api/nav/badges": {
+      "get": {
+        "operationId": "get_nav",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "branchId",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NavBadgesView"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Sidebar nishonlari",
+        "tags": [
+          "home"
+        ]
+      }
     }
   },
   "components": {
@@ -27487,6 +27519,37 @@
           "warehouse",
           "warehouseId"
         ]
+      },
+      "Badge": {
+        "type": "object",
+        "description": "Ko'rsatkich: son va xavfli holat (qizil)",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "danger": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "count",
+          "danger"
+        ]
+      },
+      "NavBadgesView": {
+        "type": "object",
+        "properties": {
+          "expiry": {
+            "$ref": "#/components/schemas/Badge"
+          },
+          "orders": {
+            "$ref": "#/components/schemas/Badge"
+          },
+          "shipments": {
+            "$ref": "#/components/schemas/Badge"
+          }
+        }
       }
     }
   }

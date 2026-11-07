@@ -10,5 +10,6 @@
   "collapse": "Sidebarʼni yigʻish",
   "expand": "Sidebarʼni ochish",
   "userMenu": "Foydalanuvchi menyusi",
-  "language": "Til"
+  "language": "Til",
+  "badge": "{count} ta kutmoqda"
 }
