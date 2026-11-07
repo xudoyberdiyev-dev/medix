@@ -65,7 +65,7 @@ class PurchaserHome {
 
         DebtSummaries.Summary s = debts.summary(actor, Side.SUPPLIER, branchId, TOP);
         DebtSummaries.DueSoon due = debts.supplierDue(actor, branchId, today);
-        List<Debtor> top = s.top().stream().map(x -> new Debtor(x.counterpartyId(), x.name(), x.debt(), x.overdue(), x.maxOverdueDays())).toList();
+        List<Debtor> top = s.top().stream().map(x -> new Debtor(x.counterpartyId(), x.name(), x.debt(), x.overdue(), x.maxOverdueDays(), "")).toList();
 
         String balance = DirectorHome.m(jdbc.sql("""
                 SELECT coalesce(sum(amount), 0) FROM supplier_bonus_ledger WHERE (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
