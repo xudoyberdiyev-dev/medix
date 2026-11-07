@@ -373,7 +373,7 @@ export interface paths {
             cookie?: never;
         };
         /** FS hujjati */
-        get: operations["get_19"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -473,7 +473,7 @@ export interface paths {
          * FS kamomadi
          * @description Ochiqmi, summa (special.cost) va hal qilish tarixi.
          */
-        get: operations["get_20"];
+        get: operations["get_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -732,7 +732,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_18"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1348,6 +1348,23 @@ export interface paths {
         put?: never;
         /** Nofaol qilish */
         post: operations["deactivate_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/home/accountant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Buxgalter bosh sahifasi: kassa/bank, qarzlar, to'lov taqvimi (14 kun), ish ro'yxati, pul filiallar bo'yicha */
+        get: operations["get_18"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5230,6 +5247,29 @@ export interface components {
             name: string;
             opening: string;
         };
+        AccountantHomeView: {
+            bank: string;
+            /** Format: int64 */
+            branchId: number;
+            calendar: components["schemas"]["CalendarDay"][];
+            cash: string;
+            customerDebt: string;
+            customerOverdue: string;
+            money: components["schemas"]["BranchMoney"][];
+            supplierDebt: string;
+            supplierDue7: string;
+            /** Format: date */
+            today: string;
+            work: components["schemas"]["AccountantWork"];
+        };
+        AccountantWork: {
+            /** Format: int32 */
+            bankUnreconciled: number;
+            /** Format: int32 */
+            cashDaysOpen: number;
+            /** Format: int32 */
+            ytPending: number;
+        };
         Act: {
             branch: string;
             /** Format: int64 */
@@ -5439,6 +5479,14 @@ export interface components {
             salesDocs: number;
             salesPrev: string;
         };
+        BranchMoney: {
+            bank: string;
+            cash: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            total: string;
+        };
         BranchPayment: {
             amount: string;
             cancelReason?: string;
@@ -5647,6 +5695,12 @@ export interface components {
             online: string;
             total: string;
             transfer: string;
+        };
+        CalendarDay: {
+            /** Format: date */
+            date: string;
+            incoming: string;
+            outgoing: string;
         };
         CashAcceptRequest: {
             /** Format: int64 */
@@ -9979,7 +10033,7 @@ export interface operations {
             };
         };
     };
-    get_19: {
+    get_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -10093,7 +10147,7 @@ export interface operations {
             };
         };
     };
-    get_20: {
+    get_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -10498,7 +10552,7 @@ export interface operations {
             };
         };
     };
-    get_18: {
+    get_19: {
         parameters: {
             query: {
                 branchId: number;
@@ -11473,6 +11527,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpenseItem"];
+                };
+            };
+        };
+    };
+    get_18: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountantHomeView"];
                 };
             };
         };

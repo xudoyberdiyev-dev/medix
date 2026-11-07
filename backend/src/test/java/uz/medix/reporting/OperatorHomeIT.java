@@ -156,7 +156,26 @@ class OperatorHomeIT {
                 .andExpect(jsonPath("$.topCustomers.length()").value(2))
                 .andExpect(jsonPath("$.topCustomers[0].id").value(c1))
                 .andExpect(jsonPath("$.topCustomers[0].sales").value("1200000.00"))
-                .andExpect(jsonPath("$.topCustomers[0].orders").value(1));
+                .andExpect(jsonPath("$.topCustomers[0].orders").value(1))
+                // Prototip: oxirgi 10 ta buyurtma va «E'tibor bering»
+                .andExpect(jsonPath("$.recent.length()").value(5))
+                .andExpect(jsonPath("$.notes.length()").value(2))
+                .andExpect(jsonPath("$.notes[0].kind").value("REJECTED"))
+                .andExpect(jsonPath("$.notes[0].reason").value("Sinov"))
+                .andExpect(jsonPath("$.notes[1].kind").value("PENDING"))
+                .andExpect(jsonPath("$.notes[1].level").value("BRANCH"))
+                .andExpect(jsonPath("$.notes[1].amount").value("70000.00"));
+        // «Mijoz holati»: STIR bo'yicha
+        String tin = jdbc.sql("SELECT tin FROM counterparty WHERE id = :c").param("c", c1).query(String.class).single();
+        mvc.perform(get("/api/home/operator/customers").param("q", tin).cookie(me.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(c1))
+                .andExpect(jsonPath("$[0].blocked").value(false))
+                .andExpect(jsonPath("$[0].licenseExpired").value(false))
+                .andExpect(jsonPath("$[0].debt").value("0.00"))
+                .andExpect(jsonPath("$[0].limit").doesNotExist());
+        mvc.perform(get("/api/home/operator/customers").param("q", tin).cookie(purchaser)).andExpect(status().isForbidden());
         mvc.perform(get("/api/home/operator").cookie(other.cookie()))
                 .andExpect(jsonPath("$.sales.total").value("5000000.00"))
                 .andExpect(jsonPath("$.attention.drafts.count").value(0));

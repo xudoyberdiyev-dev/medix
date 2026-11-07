@@ -905,7 +905,7 @@
     },
     "/api/branch-sales/{id}" : {
       "get" : {
-        "operationId" : "get_19",
+        "operationId" : "get_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1061,7 +1061,7 @@
     "/api/branch-sales/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi, summa (special.cost) va hal qilish tarixi.",
-        "operationId" : "get_20",
+        "operationId" : "get_21",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1647,7 +1647,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_18",
+        "operationId" : "get_19",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3194,6 +3194,34 @@
         },
         "summary" : "Nofaol qilish",
         "tags" : [ "expense-items" ]
+      }
+    },
+    "/api/home/accountant" : {
+      "get" : {
+        "operationId" : "get_18",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AccountantHomeView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buxgalter bosh sahifasi: kassa/bank, qarzlar, to'lov taqvimi (14 kun), ish ro'yxati, pul filiallar bo'yicha",
+        "tags" : [ "home" ]
       }
     },
     "/api/home/branch" : {
@@ -11813,6 +11841,71 @@
         },
         "required" : [ "closing", "code", "expense", "id", "income", "kind", "name", "opening" ]
       },
+      "AccountantHomeView" : {
+        "type" : "object",
+        "properties" : {
+          "bank" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "calendar" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CalendarDay"
+            }
+          },
+          "cash" : {
+            "type" : "string"
+          },
+          "customerDebt" : {
+            "type" : "string"
+          },
+          "customerOverdue" : {
+            "type" : "string"
+          },
+          "money" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BranchMoney"
+            }
+          },
+          "supplierDebt" : {
+            "type" : "string"
+          },
+          "supplierDue7" : {
+            "type" : "string"
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "work" : {
+            "$ref" : "#/components/schemas/AccountantWork"
+          }
+        },
+        "required" : [ "bank", "branchId", "calendar", "cash", "customerDebt", "customerOverdue", "money", "supplierDebt", "supplierDue7", "today", "work" ]
+      },
+      "AccountantWork" : {
+        "type" : "object",
+        "properties" : {
+          "bankUnreconciled" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "cashDaysOpen" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ytPending" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "bankUnreconciled", "cashDaysOpen", "ytPending" ]
+      },
       "Act" : {
         "type" : "object",
         "properties" : {
@@ -12364,6 +12457,28 @@
         },
         "required" : [ "bank", "cash", "debt", "money", "overdue", "sales", "salesDocs", "salesPrev" ]
       },
+      "BranchMoney" : {
+        "type" : "object",
+        "properties" : {
+          "bank" : {
+            "type" : "string"
+          },
+          "cash" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "bank", "cash", "id", "name", "total" ]
+      },
       "BranchPayment" : {
         "type" : "object",
         "properties" : {
@@ -12907,6 +13022,22 @@
           }
         },
         "required" : [ "cash", "online", "total", "transfer" ]
+      },
+      "CalendarDay" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "incoming" : {
+            "type" : "string"
+          },
+          "outgoing" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "date", "incoming", "outgoing" ]
       },
       "CashAcceptRequest" : {
         "type" : "object",

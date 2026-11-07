@@ -172,7 +172,7 @@ function Delta({ cur, prev }: { cur: string; prev: string | null | undefined }) 
   );
 }
 
-function Now() {
+export function Now() {
   const t = useTranslations("home.br");
   return (
     <span className="flex items-center gap-1 text-caption text-text-secondary">
@@ -181,7 +181,7 @@ function Now() {
   );
 }
 
-function Kpi({ label, value, delta, note, href }: { label: string; value: string; delta: ReactNode; note: string; href: string }) {
+export function Kpi({ label, value, delta, note, href }: { label: string; value: string; delta: ReactNode; note: string; href: string }) {
   const t = useTranslations("home.dir");
   return (
     <Link

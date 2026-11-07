@@ -279,5 +279,22 @@
     "open": "Ochiq",
     "noAccounts": "Pul hisobi yoʻq",
     "noAccountsHint": "Kassa yoki bank hisobi qoʻshilsa, shu yerda koʻrinadi."
+  },
+  "acc": {
+    "kCash": "Kassa jami",
+    "kBank": "Bank jami",
+    "nSup7": "7 kun ichida toʻlanadi {v}",
+    "calT": "Toʻlov taqvimi — 14 kun",
+    "calIn": "Kutilayotgan tushum",
+    "calOut": "Toʻlanishi kerak",
+    "workT": "Ish roʻyxati",
+    "tasksNone": "Hozircha vazifa yoʻq",
+    "tasksNoneHint": "Tasdiq, solishtirish yoki kassa yopish kerak boʻlsa, shu yerda koʻrinadi.",
+    "wYt": "Tasdiq kutayotgan YT: {n}",
+    "wBank": "Koʻchirma bilan solishtirilmagan bank operatsiyalari: {n}",
+    "wCash": "Yopilmagan kassa kunlari: {n}",
+    "moneyBrT": "Pul — filiallar boʻyicha",
+    "cCash": "Kassa",
+    "cBank": "Bank"
   }
 }

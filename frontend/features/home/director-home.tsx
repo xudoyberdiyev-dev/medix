@@ -381,6 +381,7 @@ export function MiniTable<T>({
   rows,
   rowKey,
   rowHref,
+  onRowClick,
   foot,
   empty,
   minWidth,
@@ -390,6 +391,8 @@ export function MiniTable<T>({
   rows: T[];
   rowKey: (r: T) => string;
   rowHref?: (r: T) => string;
+  /** Havola oʻrniga amal (masalan, filialni tanlash). */
+  onRowClick?: (r: T) => void;
   foot?: ReactNode[];
   empty: ReactNode;
   minWidth: string;
@@ -416,13 +419,14 @@ export function MiniTable<T>({
         <tbody>
           {rows.map((r) => {
             const href = rowHref?.(r);
+            const go = href ? () => router.push(href) : onRowClick ? () => onRowClick(r) : undefined;
             return (
               <tr
                 key={rowKey(r)}
-                className={cn("h-11 border-t border-border", href && "cursor-pointer hover:bg-background")}
-                onClick={href ? () => router.push(href) : undefined}
-                onKeyDown={href ? (e) => e.key === "Enter" && router.push(href) : undefined}
-                tabIndex={href ? 0 : undefined}
+                className={cn("h-11 border-t border-border", go && "cursor-pointer hover:bg-background")}
+                onClick={go}
+                onKeyDown={go ? (e) => e.key === "Enter" && go() : undefined}
+                tabIndex={go ? 0 : undefined}
               >
                 {cols.map((c) => (
                   <td key={c.key} className={cn("px-3 first:pl-4 last:pr-4", c.right ? "text-right tabular-nums" : "text-left")}>
