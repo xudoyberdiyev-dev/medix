@@ -3327,6 +3327,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xarajatlar hisoboti: o'tkazilgan KO/BO (chiqim yoki kirim) modda / filial / oy / kun bo'yicha; Naqd / Bank / Terminal */
+        get: operations["expenses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/expenses/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xarajatlar hisoboti .xlsx */
+        get: operations["expensesExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/markers": {
         parameters: {
             query?: never;
@@ -4897,38 +4931,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/reports/expenses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["expenses"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/reports/expenses/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["expensesExport"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5866,6 +5868,30 @@ export interface components {
             id: number;
             name: string;
             system: boolean;
+        };
+        ExpenseReportView: {
+            /** Format: int64 */
+            branchId?: number;
+            /** @enum {string} */
+            direction: "OUT" | "IN";
+            /** Format: date */
+            from: string;
+            /** @enum {string} */
+            groupBy: "ITEM" | "BRANCH" | "MONTH" | "DAY";
+            rows: components["schemas"]["ExpenseRow"][];
+            /** Format: date */
+            to: string;
+            total: components["schemas"]["ExpenseRow"];
+        };
+        ExpenseRow: {
+            cash: string;
+            key: string;
+            name: string;
+            online: string;
+            /** Format: int32 */
+            ops: number;
+            total: string;
+            transfer: string;
         };
         ExpiringBatches: {
             /** Format: int32 */
@@ -7873,15 +7899,15 @@ export interface components {
             /** @enum {string} */
             groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
             mineOnly: boolean;
+            /** @enum {string} */
+            paymentType?: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: int64 */
+            regionId?: number;
             rows: components["schemas"]["SalesRow"][];
             /** Format: date */
             to: string;
             total: components["schemas"]["SalesRow"];
             truncated: boolean;
-            /** @enum {string} */
-            paymentType?: "CASH" | "TRANSFER" | "ONLINE";
-            /** Format: int64 */
-            regionId?: number;
         };
         SalesRow: {
             cost?: string;
@@ -8942,30 +8968,6 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
-        };
-        ExpenseRow: {
-            cash: string;
-            key: string;
-            name: string;
-            online: string;
-            /** Format: int32 */
-            ops: number;
-            total: string;
-            transfer: string;
-        };
-        ExpenseReportView: {
-            /** Format: int64 */
-            branchId?: number;
-            /** @enum {string} */
-            direction: "OUT" | "IN";
-            /** Format: date */
-            from: string;
-            /** @enum {string} */
-            groupBy: "ITEM" | "BRANCH" | "MONTH" | "DAY";
-            rows: components["schemas"]["ExpenseRow"][];
-            /** Format: date */
-            to: string;
-            total: components["schemas"]["ExpenseRow"];
         };
     };
     responses: never;
@@ -13907,6 +13909,56 @@ export interface operations {
             };
         };
     };
+    expenses: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                direction?: "OUT" | "IN";
+                groupBy?: "ITEM" | "BRANCH" | "MONTH" | "DAY";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseReportView"];
+                };
+            };
+        };
+    };
+    expensesExport: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                direction?: "OUT" | "IN";
+                groupBy?: "ITEM" | "BRANCH" | "MONTH" | "DAY";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     markers: {
         parameters: {
             query?: {
@@ -16065,56 +16117,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
                 };
-            };
-        };
-    };
-    expenses: {
-        parameters: {
-            query?: {
-                branchId?: number;
-                from?: string;
-                to?: string;
-                direction?: "OUT" | "IN";
-                groupBy?: "ITEM" | "BRANCH" | "MONTH" | "DAY";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExpenseReportView"];
-                };
-            };
-        };
-    };
-    expensesExport: {
-        parameters: {
-            query?: {
-                branchId?: number;
-                from?: string;
-                to?: string;
-                direction?: "OUT" | "IN";
-                groupBy?: "ITEM" | "BRANCH" | "MONTH" | "DAY";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
