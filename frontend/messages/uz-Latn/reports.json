@@ -30,6 +30,10 @@
         "title": "Yalpi foyda",
         "description": "Mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha tannarx, yalpi foyda (QQSsiz) va rentabellik."
       },
+      "expenses": {
+        "title": "Xarajatlar",
+        "description": "Oʻtkazilgan kassa va bank chiqimlari modda, filial, oy yoki kun boʻyicha; Naqd / Bank / Terminal."
+      },
       "debts": {
         "title": "Qarzlar",
         "description": "Mijozlar va taʼminotchilar qarzi muddat guruhlari bilan."
@@ -137,5 +141,28 @@
     "customerChip": "Mijoz: {name}",
     "note": "Sof savdo = sotuv − qaytarish (partiya qatorlari boʻyicha); yetkazilmagan (bekor qilingan) sotuvlar kirmaydi.",
     "noteCost": "Sof savdo = sotuv − qaytarish; yetkazilmaganlar kirmaydi. Yalpi foyda = sof savdo QQSsiz − partiya tannarxi; rentabellik = yalpi foyda / sof savdo QQSsiz."
+  },
+  "expenses": {
+    "forbidden": "Xarajatlar hisoboti sizning rolingiz uchun yopiq.",
+    "title": {
+      "OUT": "Xarajatlar",
+      "IN": "Boshqa kirimlar"
+    },
+    "direction": "Yoʻnalish",
+    "group": {
+      "ITEM": "Modda",
+      "BRANCH": "Filial",
+      "MONTH": "Oy",
+      "DAY": "Kun"
+    },
+    "ops": "Operatsiyalar",
+    "cash": "Naqd",
+    "transfer": "Bank",
+    "online": "Terminal",
+    "empty": {
+      "OUT": "Davrda xarajat yoʻq",
+      "IN": "Davrda boshqa kirim yoʻq"
+    },
+    "note": "Faqat oʻtkazilgan kassa (KO) va bank (BO) operatsiyalari; tasdiq kutayotgan va bekor qilinganlar kirmaydi. Mijoz toʻlovlari — «Qarzlar» va Kassir panelida."
   }
 }

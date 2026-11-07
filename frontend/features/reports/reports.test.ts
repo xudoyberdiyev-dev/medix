@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { visibleReports } from "./catalog";
+import { expenseExportHref, initialDirection } from "./expense-report";
 import { formatMargin, initialProductGroupBy, productSalesExportHref } from "./product-sales-report";
 import { initialGroupBy, salesExportHref, salesRowHref } from "./sales-report";
 import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
@@ -28,6 +29,16 @@ describe("hisobotlar", () => {
     expect(formatMargin(null)).toBe("—");
     expect(initialProductGroupBy("MANUFACTURER")).toBe("MANUFACTURER");
     expect(initialProductGroupBy("CUSTOMER")).toBe("PRODUCT");
+  });
+
+  it("xarajatlar: katalog, eksport havolasi, yoʻnalish", () => {
+    expect(visibleReports(["reports.all"]).map((r) => r.key)).toContain("expenses");
+    expect(visibleReports(["reports.own"]).map((r) => r.key)).not.toContain("expenses");
+    expect(expenseExportHref({ branchId: 1, from: "2026-11-01", to: "2026-11-07", direction: "OUT", groupBy: "ITEM" })).toBe(
+      "/api/reports/expenses/export?branchId=1&from=2026-11-01&to=2026-11-07&direction=OUT&groupBy=ITEM",
+    );
+    expect(initialDirection("IN")).toBe("IN");
+    expect(initialDirection(null)).toBe("OUT");
   });
 
   it("eksport havolasi filtrlar bilan", () => {

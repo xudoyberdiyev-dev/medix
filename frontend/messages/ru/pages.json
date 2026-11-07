@@ -38,5 +38,6 @@
   "warehouse": "Панель заведующего складом",
   "writeOffs": "Списание",
   "zoneTransfers": "Перемещения по зонам",
-  "reportsProducts": "Продажи товаров"
+  "reportsProducts": "Продажи товаров",
+  "reportsExpenses": "Отчёт по расходам"
 }

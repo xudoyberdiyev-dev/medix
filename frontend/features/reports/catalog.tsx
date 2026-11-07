@@ -8,7 +8,8 @@ import { EmptyState, ForbiddenState } from "@/components/ui/system-states";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 
-export type ReportKey = "sales" | "operators" | "products" | "gross-profit" | "debts" | "stock" | "suppliers" | "pickers" | "markers";
+export type ReportKey =
+  "sales" | "operators" | "products" | "gross-profit" | "expenses" | "debts" | "stock" | "suppliers" | "pickers" | "markers";
 
 /** `title`/`description` — uz-Latn (Ctrl+K qidiruvi uchun); UI tarjimasi `reports.catalog.items.<key>` dan. */
 export interface ReportEntry {
@@ -52,6 +53,13 @@ export const REPORTS: ReportEntry[] = [
     href: "/reports/products",
     anyOf: ["reports.all", "reports.view"],
     allOf: ["prices.cost"],
+  },
+  {
+    key: "expenses",
+    title: "Xarajatlar",
+    description: "Oʻtkazilgan kassa va bank chiqimlari modda, filial, oy yoki kun boʻyicha; Naqd / Bank / Terminal.",
+    href: "/reports/expenses",
+    anyOf: ["reports.all", "reports.view"],
   },
   {
     key: "debts",
