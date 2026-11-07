@@ -264,6 +264,101 @@ class BranchSaleIT {
         assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("5000.00");
     }
 
+    /** FS: 5 dona jo'natildi (5 000,00), 3 tasi qabul qilindi — kamomad 2 (2 000,00). */
+    private long shortageSale(Place seller, Place buyer, long batch, Cookie director) throws Exception {
+        long id = id(send(post("/api/branch-sales"), director, doc(seller.main(), buyer.warehouseId(), batch, 5)).andReturn());
+        send(post("/api/branch-sales/" + id + "/send"), director, "{}").andExpect(status().isOk());
+        long line = jdbc.sql("SELECT id FROM branch_sale_line WHERE sale_id = :t").param("t", id).query(Long.class).single();
+        send(post("/api/branch-sales/" + id + "/receive"), director,
+                "{\"toZoneId\":" + buyer.main() + ",\"note\":\"2 quti yo'q\",\"lines\":[{\"lineId\":" + line + ",\"receivedQty\":3}]}")
+                .andExpect(status().isOk());
+        return id;
+    }
+
+    @Test
+    void shortageReturnedToSellerReducesBuyerDebt() throws Exception {
+        Place seller = place();
+        Place buyer = place();
+        long b = stocked(seller.main(), "FS qaytarish", 5);
+        long id = shortageSale(seller, buyer, b, loginAs("DIRECTOR", null));
+        assertThat(bal(seller.main(), b)).isZero();
+
+        Cookie buyerManager = loginAs("BRANCH_MANAGER", buyer.branchId());
+        mvc.perform(get("/api/branch-sales/" + id + "/shortage").cookie(buyerManager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(true))
+                .andExpect(jsonPath("$.shortageQty").value(2))
+                .andExpect(jsonPath("$.amount").value("2000.00"))
+                .andExpect(jsonPath("$.canResolveAsBuyer").value(true))
+                .andExpect(jsonPath("$.canResolveAsSeller").value(false));
+        // Tovar sotuvchi omborida topildi — faqat sotuvchi filial qaytaradi
+        send(post("/api/branch-sales/" + id + "/shortage/resolve"), buyerManager, "{\"kind\":\"RETURN\"}")
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("transfer.fs.sellerOnly"));
+        Cookie sellerManager = loginAs("BRANCH_MANAGER", seller.branchId());
+        send(post("/api/branch-sales/" + id + "/shortage/resolve"), sellerManager, "{\"kind\":\"RETURN\",\"note\":\"Yuklanmay qolgan\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(false))
+                .andExpect(jsonPath("$.history[0].bearer").value("SELLER"))
+                .andExpect(jsonPath("$.history[0].debtChange").value("-2000.00"));
+        assertThat(bal(seller.main(), b)).isEqualTo(2);
+        assertThat(bal(buyer.main(), b)).isEqualTo(3);
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("3000.00");
+        send(post("/api/branch-sales/" + id + "/shortage/resolve"), sellerManager, "{\"kind\":\"RETURN\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.shortage.notOpen"));
+        // Tannarx ruxsatisiz — summa yo'q
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", seller.branchId());
+        mvc.perform(get("/api/branch-sales/" + id + "/shortage").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount").value(nullValue()))
+                .andExpect(jsonPath("$.history[0].debtChange").value(nullValue()));
+    }
+
+    @Test
+    void shortageWriteOffBearerDecidesDebtAndRejectReopens() throws Exception {
+        Place seller = place();
+        Place buyer = place();
+        long b = stocked(seller.main(), "FS HC", 5);
+        Cookie director = loginAs("DIRECTOR", null);
+        long id = shortageSale(seller, buyer, b, director);
+        send(post("/api/branch-sales/" + id + "/shortage/resolve"), director, "{\"kind\":\"WRITE_OFF\"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("transfer.fs.bearerRequired"));
+
+        // Sotuvchi zimmasida, hc.approve yo'q — HC tasdiq kutadi, qarz darhol kamayadi
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", seller.branchId());
+        send(post("/api/branch-sales/" + id + "/shortage/resolve"), keeper, "{\"kind\":\"WRITE_OFF\",\"bearer\":\"SELLER\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(false))
+                .andExpect(jsonPath("$.history[0].writeOffStatus").value("PENDING"));
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("3000.00");
+        long hc = jdbc.sql("SELECT id FROM write_off WHERE source_branch_sale_id = :s").param("s", id).query(Long.class).single();
+        assertThat(jdbc.sql("SELECT zone_id FROM write_off WHERE id = :h").param("h", hc).query(Long.class).single()).isEqualTo(seller.main());
+
+        Cookie sellerManager = loginAs("BRANCH_MANAGER", seller.branchId());
+        send(post("/api/write-offs/" + hc + "/reject"), sellerManager, "{\"reason\":\"Xaridor omborida tekshirilsin\"}")
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/branch-sales/" + id + "/shortage").cookie(sellerManager))
+                .andExpect(jsonPath("$.open").value(true));
+
+        // Qayta: xaridor zimmasida — HC xaridor zonasida, qoldiq harakatisiz; qarz asl holiga qaytadi
+        Cookie buyerManager = loginAs("BRANCH_MANAGER", buyer.branchId());
+        send(post("/api/branch-sales/" + id + "/shortage/resolve"), buyerManager,
+                "{\"kind\":\"WRITE_OFF\",\"bearer\":\"BUYER\",\"note\":\"Yo'lda yo'qoldi\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.open").value(false))
+                .andExpect(jsonPath("$.history[0].writeOffStatus").value("POSTED"))
+                .andExpect(jsonPath("$.history[0].debtChange").value("2000.00"));
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("5000.00");
+        assertThat(bal(buyer.main(), b)).isEqualTo(3);
+        assertThat(bal(seller.main(), b)).isZero();
+        assertThat(jdbc.sql("SELECT count(*) FROM branch_ledger WHERE doc_type = 'FSK' AND doc_id = :s").param("s", id).query(Integer.class)
+                .single()).isEqualTo(2);
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM branch_sale_resolution WHERE sale_id = :s").param("s", id).update())
+                .hasMessageContaining("faqat qo");
+    }
+
     @Test
     void scopePermissionsAndCancel() throws Exception {
         Place seller = place();
