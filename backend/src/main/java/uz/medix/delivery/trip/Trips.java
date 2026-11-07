@@ -616,16 +616,29 @@ class Trips {
                 ORDER BY t.trip_date DESC, t.id DESC LIMIT 200""")
                 .param("b", branchId)
                 .param("active", activeOnly)
-                .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id"))
-                        ? new TripSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getDate("trip_date").toLocalDate(),
-                                TripStatus.valueOf(rs.getString("status")), rs.getString("vehicle"), (Integer) rs.getObject("capacity_boxes"),
-                                rs.getString("driver"), rs.getInt("orders"), rs.getInt("places"), money(rs.getBigDecimal("total")),
-                                rs.getTimestamp("created_at").toInstant())
-                        : null)
+                .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id")) ? summary(rs) : null)
                 .list()
                 .stream()
                 .filter(Objects::nonNull)
                 .toList();
+    }
+
+    private static TripSummary summary(java.sql.ResultSet rs) throws java.sql.SQLException {
+        return new TripSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getDate("trip_date").toLocalDate(),
+                TripStatus.valueOf(rs.getString("status")), rs.getString("vehicle"), (Integer) rs.getObject("capacity_boxes"),
+                rs.getString("driver"), rs.getInt("orders"), rs.getInt("places"), money(rs.getBigDecimal("total")),
+                rs.getTimestamp("created_at").toInstant());
+    }
+
+    /** Haydovchi paneli «Yakunlangan reyslar» (SPEC 5.4): o'z reyslari — yakunlangan yoki bekor qilingan, oxirgi 100 ta. */
+    @Transactional(readOnly = true)
+    List<TripSummary> mineHistory(Actor actor) {
+        return jdbc.sql(SUMMARY + """
+                 WHERE t.driver_id = :d AND t.status IN ('DONE', 'CANCELLED')
+                ORDER BY t.trip_date DESC, t.id DESC LIMIT 100""")
+                .param("d", actor.employeeId())
+                .query((rs, n) -> summary(rs))
+                .list();
     }
 
     @Transactional(readOnly = true)

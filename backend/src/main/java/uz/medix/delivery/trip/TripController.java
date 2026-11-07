@@ -162,6 +162,13 @@ class TripController {
                 .orElseGet(() -> org.springframework.http.ResponseEntity.noContent().build());
     }
 
+    @GetMapping("/mine/history")
+    @PreAuthorize("hasAuthority('trip.driver')")
+    @Operation(summary = "Yakunlangan reyslarim (haydovchi)", description = "O'z reyslari: yakunlangan va bekor qilingan, oxirgi 100 ta.")
+    List<TripSummary> mineHistory() {
+        return trips.mineHistory(actor());
+    }
+
     @PostMapping("/{id}/stops/{stopId}/load")
     @PreAuthorize("hasAuthority('trip.driver')")
     @Operation(summary = "«Qabul qildim»", description = "Haydovchi buyurtmani joylar soni bo'yicha qabul qiladi.")

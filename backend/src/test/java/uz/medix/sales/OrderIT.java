@@ -1156,6 +1156,14 @@ class OrderIT {
         assertThat(jdbc.sql("SELECT balance::text FROM money_account WHERE id = :a").param("a", kassa).query(String.class).single())
                 .isEqualTo("2000.00");
         assertThat(jdbc.sql("SELECT status FROM trip WHERE id = :t").param("t", trip).query(String.class).single()).isEqualTo("DONE");
+        // Haydovchi paneli «Yakunlangan reyslar» (SPEC 5.4): faqat o'z reyslari; faol reys (trip3 — qaytish kutilmoqda) yo'q
+        mvc.perform(get("/api/trips/mine/history").cookie(driverSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(trip))
+                .andExpect(jsonPath("$[0].status").value("DONE"))
+                .andExpect(jsonPath("$[?(@.id == " + trip3 + ")]").isEmpty());
+        mvc.perform(get("/api/trips/mine/history").cookie(driver2)).andExpect(jsonPath("$[?(@.id == " + trip + ")]").isEmpty());
+        mvc.perform(get("/api/trips/mine/history").cookie(keeper)).andExpect(status().isForbidden());
     }
 
     @Test
