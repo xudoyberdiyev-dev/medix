@@ -631,6 +631,16 @@ class OrderIT {
                 .isZero();
         assertThat(jdbc.sql("SELECT line_id FROM sales_order_pick_return WHERE order_id = :o").param("o", o).query(Long.class).list())
                 .containsOnly(lineB);
+        // Navbat kartasi: faqat qayta yig'iladigan qator; mijozning amaldagi shartnomasi (SPEC 213)
+        jdbc.sql("INSERT INTO counterparty_contract (counterparty_id, branch_id, number, valid_until) VALUES (:c, :b, 'SH-OLD', :old)")
+                .param("c", c).param("b", p.branchId()).param("old", java.sql.Date.valueOf(LocalDate.now().minusDays(1))).update();
+        jdbc.sql("INSERT INTO counterparty_contract (counterparty_id, branch_id, number, signed_on) VALUES (:c, :b, 'SH-2026/7', :d)")
+                .param("c", c).param("b", p.branchId()).param("d", java.sql.Date.valueOf(LocalDate.now().minusMonths(1))).update();
+        mvc.perform(get("/api/orders/pick-queue").cookie(picker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == " + o + ")].lines").value(1))
+                .andExpect(jsonPath("$[?(@.id == " + o + ")].totalQty").value(3))
+                .andExpect(jsonPath("$[?(@.id == " + o + ")].contract").value("SH-2026/7"));
 
         // Qayta yig'ish — faqat B; A ikki marta olinmaydi
         send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());

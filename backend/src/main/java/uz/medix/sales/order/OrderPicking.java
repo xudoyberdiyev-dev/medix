@@ -93,9 +93,16 @@ class OrderPicking {
         return jdbc.sql("""
                 SELECT o.id, o.number, c.name AS customer, o.status, o.branch_id, o.pick_minutes, pk.full_name AS picker, o.picker_id,
                        o.pick_started_at, o.queued_at,
-                       (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
-                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l WHERE l.order_id = o.id) AS total_qty,
-                       EXISTS (SELECT 1 FROM sales_order_line l JOIN product p ON p.id = l.product_id WHERE l.order_id = o.id AND p.marked) AS marked
+                       (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids)))
+                           AS lines,
+                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l
+                        WHERE l.order_id = o.id AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS total_qty,
+                       EXISTS (SELECT 1 FROM sales_order_line l JOIN product p ON p.id = l.product_id
+                               WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS marked,
+                       (SELECT k.number FROM counterparty_contract k
+                        WHERE k.counterparty_id = o.customer_id AND k.branch_id = o.branch_id AND (k.valid_until IS NULL OR k.valid_until >= CURRENT_DATE)
+                        ORDER BY k.signed_on DESC NULLS LAST, k.id DESC LIMIT 1) AS contract,
+                       (SELECT s.invoice_number FROM sale s WHERE s.order_id = o.id ORDER BY s.id DESC LIMIT 1) AS invoice
                 FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN employee pk ON pk.id = o.picker_id
                 WHERE (o.status = 'QUEUED' AND o.pick_minutes IS NOT NULL) OR o.status = 'PICKING'
                 ORDER BY o.status DESC, o.queued_at, o.id""")
@@ -108,7 +115,8 @@ class OrderPicking {
                     return new PickQueueItem(rs.getLong("id"), rs.getString("number"), rs.getString("customer"),
                             OrderStatus.valueOf(rs.getString("status")), rs.getInt("lines"), rs.getLong("total_qty"), rs.getBoolean("marked"),
                             minutes, rs.getString("picker"), (Long) rs.getObject("picker_id"), started,
-                            started == null || minutes == null ? null : started.plusSeconds(minutes * 60L), rs.getTimestamp("queued_at").toInstant());
+                            started == null || minutes == null ? null : started.plusSeconds(minutes * 60L), rs.getTimestamp("queued_at").toInstant(),
+                            rs.getString("contract"), rs.getString("invoice"));
                 })
                 .list()
                 .stream()

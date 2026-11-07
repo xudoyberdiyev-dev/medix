@@ -230,7 +230,9 @@ final class OrderModels {
             @Schema(nullable = true) Long pickerId,
             @Schema(nullable = true) Instant pickStartedAt,
             @Schema(nullable = true, description = "Berilgan vaqt tugash payti") Instant deadline,
-            Instant queuedAt) {}
+            Instant queuedAt,
+            @Schema(nullable = true, description = "Mijozning amaldagi shartnomasi (shu filial; SPEC 213)") String contract,
+            @Schema(nullable = true, description = "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa") String invoice) {}
 
     record CheckRequest(
             @NotNull(message = "{validation.required}") @Size(min = 1, max = MAX_LINES) List<Long> checkedLines,
