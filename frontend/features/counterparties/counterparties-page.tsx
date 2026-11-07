@@ -1,11 +1,12 @@
 "use client";
 
-import { Ban, CircleCheck, CirclePause, CircleAlert, Clock, Plus, Users } from "lucide-react";
+import { Ban, CircleAlert, CircleCheck, CirclePause, Clock, Columns3, FileDown, Plus, Users } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/selection-controls";
 import { SavedViews } from "@/components/ui/saved-views";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, NoResultsState } from "@/components/ui/system-states";
@@ -25,6 +26,7 @@ import {
   type CounterpartyRow,
   type CounterpartyStatus,
 } from "./api";
+import { SORT_COLUMNS, counterpartyExportQuery, parseCounterpartyQuery, serializeCounterpartyQuery, sortColumn } from "./url-state";
 import { searchMatchLabel } from "@/lib/search";
 import { CounterpartyDrawer } from "./counterparty-drawer";
 
@@ -77,29 +79,28 @@ export function LicenseBadge({ validUntil }: { validUntil?: string | null }) {
   );
 }
 
-function parse(params: URLSearchParams, role: CounterpartyRole): CounterpartyQuery {
-  const status = params.get("status");
-  const size = Number(params.get("size"));
-  const region = Number(params.get("region"));
-  const page = Number(params.get("page"));
-  return {
-    q: params.get("q") ?? "",
-    role,
-    status: status === "BLOCKED" || status === "INACTIVE" || status === "ALL" ? status : "ACTIVE",
-    regionId: Number.isInteger(region) && region > 0 ? region : null,
-    page: Number.isInteger(page) && page > 0 ? page : 1,
-    size: size === 25 || size === 100 ? size : 50,
-  };
-}
+const ALWAYS = ["tin", "name"];
 
-function serialize(f: CounterpartyQuery): string {
-  const p = new URLSearchParams();
-  if (f.q.trim()) p.set("q", f.q.trim());
-  if (f.status !== "ACTIVE") p.set("status", f.status);
-  if (f.regionId) p.set("region", String(f.regionId));
-  if (f.page > 1) p.set("page", String(f.page));
-  if (f.size !== 50) p.set("size", String(f.size));
-  return p.toString();
+function useHiddenColumns(storageKey: string) {
+  const [hidden, setHidden] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- brauzer xotirasidan bir marta oʻqiladi
+      if (raw) setHidden(JSON.parse(raw) as string[]);
+    } catch {
+      /* xotira yopiq — standart ustunlar */
+    }
+  }, [storageKey]);
+  const update = (next: string[]) => {
+    setHidden(next);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(next));
+    } catch {
+      /* saqlanmasa ham ishlaydi */
+    }
+  };
+  return [hidden, update] as const;
 }
 
 export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
@@ -108,7 +109,7 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const f = parse(new URLSearchParams(params.toString()), role);
+  const f = parseCounterpartyQuery(new URLSearchParams(params.toString()), role);
   const me = useMe();
   const canEdit = canEditCard(me.data?.permissions, role === "CUSTOMER", role === "SUPPLIER");
   const list = useCounterparties(f);
@@ -118,17 +119,20 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const isCustomer = role === "CUSTOMER";
   const title = isCustomer ? t("customers") : t("suppliers");
+  const [hidden, setHidden] = useHiddenColumns(`medix-counterparties-${role}-columns`);
+  const [columnsOpen, setColumnsOpen] = useState(false);
 
   const apply = (patch: Partial<CounterpartyQuery>) => {
-    const qs = serialize({ ...f, page: 1, ...patch });
+    const qs = serializeCounterpartyQuery({ ...f, page: 1, ...patch });
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
-  const columns: TableColumn<CounterpartyRow>[] = [
-    { key: "tin", title: t("col.tin"), mono: true, width: 140 },
+  const allColumns: TableColumn<CounterpartyRow>[] = [
+    { key: "tin", title: t("col.tin"), mono: true, width: 140, sortable: true },
     {
       key: "name",
       title: t("col.name"),
+      sortable: true,
       render: (c) => (
         <span className="flex flex-col">
           <span className="flex items-center gap-2">
@@ -140,13 +144,21 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
         </span>
       ),
     },
-    { key: "region", title: t("col.region") },
+    { key: "region", title: t("col.region"), sortable: true },
     { key: "phone", title: t("col.phone") },
     ...(isCustomer
-      ? [{ key: "license", title: t("col.license"), render: (c: CounterpartyRow) => <LicenseBadge validUntil={c.licenseValidUntil} /> }]
+      ? [
+          {
+            key: "license",
+            title: t("col.license"),
+            sortable: true,
+            render: (c: CounterpartyRow) => <LicenseBadge validUntil={c.licenseValidUntil} />,
+          },
+        ]
       : []),
     { key: "status", title: t("col.status"), render: (c: CounterpartyRow) => <StatusBadge blocked={c.blocked} active={c.active} /> },
   ];
+  const columns = allColumns.filter((c) => ALWAYS.includes(c.key) || !hidden.includes(c.key));
 
   const filtered = Boolean(f.q) || f.status !== "ACTIVE" || f.regionId !== null;
   return (
@@ -156,11 +168,21 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
           <h1 className="text-page-title">{title}</h1>
           {list.data ? <span className="text-text-secondary">{t("count", { count: formatQuantity(list.data.total) })}</span> : null}
         </div>
-        {canEdit ? (
-          <Button icon={Plus} onClick={() => setOpen("new")}>
-            {isCustomer ? t("addCustomer") : t("addSupplier")}
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/counterparties/export?${counterpartyExportQuery(f)}`}
+            download
+            className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-4 font-medium hover:bg-background"
+          >
+            <FileDown size={16} strokeWidth={1.5} aria-hidden />
+            {t("export")}
+          </a>
+          {canEdit ? (
+            <Button icon={Plus} onClick={() => setOpen("new")}>
+              {isCustomer ? t("addCustomer") : t("addSupplier")}
+            </Button>
+          ) : null}
+        </div>
       </div>
       {list.error ? (
         <ErrorState onRetry={() => list.refetch()} />
@@ -173,6 +195,8 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
           loading={list.isPending}
           activeKey={typeof open === "number" ? String(open) : undefined}
           onRowClick={(c) => setOpen(c.id)}
+          sort={{ key: sortColumn(f.sort), dir: f.desc ? "desc" : "asc" }}
+          onSortChange={(s) => apply({ sort: SORT_COLUMNS[s.key] ?? "NAME", desc: s.dir === "desc" })}
           toolbar={
             <div className="flex flex-wrap items-center gap-3">
               <div className="w-80">
@@ -216,12 +240,32 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
                 <SavedViews
                   storageKey={`medix-counterparties-${role}-views`}
                   query={params.toString()}
-                  hidden={[]}
+                  hidden={hidden}
                   onApply={(v) => {
-                    setSearch(parse(new URLSearchParams(v.query), role).q);
+                    setSearch(parseCounterpartyQuery(new URLSearchParams(v.query), role).q);
+                    setHidden(v.hidden);
                     router.replace(v.query ? `${pathname}?${v.query}` : pathname, { scroll: false });
                   }}
                 />
+              </div>
+              <div className="relative">
+                <Button variant="secondary" size="sm" icon={Columns3} onClick={() => setColumnsOpen((o) => !o)} aria-expanded={columnsOpen}>
+                  {t("columns")}
+                </Button>
+                {columnsOpen ? (
+                  <div className="absolute right-0 z-30 mt-1 flex w-60 flex-col gap-2 rounded-control border border-border bg-surface p-3 shadow-overlay">
+                    {allColumns
+                      .filter((c) => !ALWAYS.includes(c.key))
+                      .map((c) => (
+                        <Checkbox
+                          key={c.key}
+                          label={c.title}
+                          checked={!hidden.includes(c.key)}
+                          onChange={(on) => setHidden(on ? hidden.filter((h) => h !== c.key) : [...hidden, c.key])}
+                        />
+                      ))}
+                  </div>
+                ) : null}
               </div>
             </div>
           }

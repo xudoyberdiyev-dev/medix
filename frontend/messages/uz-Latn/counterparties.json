@@ -39,7 +39,9 @@
       "phone": "Telefon",
       "license": "Litsenziya",
       "status": "Holat"
-    }
+    },
+    "export": "Excelʼga yuklash",
+    "columns": "Ustunlar"
   },
   "drawer": {
     "kind": "Kontragent",

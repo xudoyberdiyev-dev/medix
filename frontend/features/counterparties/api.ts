@@ -42,9 +42,13 @@ export interface CounterpartyQuery {
   role: CounterpartyRole;
   status: CounterpartyStatus;
   regionId: number | null;
+  sort: CounterpartySort;
+  desc: boolean;
   page: number;
   size: 25 | 50 | 100;
 }
+
+export type CounterpartySort = "NAME" | "TIN" | "REGION" | "LICENSE";
 
 export function useCounterparties(f: CounterpartyQuery) {
   return useQuery({
@@ -58,6 +62,8 @@ export function useCounterparties(f: CounterpartyQuery) {
               role: f.role,
               status: f.status,
               regionId: f.regionId ?? undefined,
+              sort: f.sort,
+              desc: f.desc || undefined,
               page: f.page - 1,
               size: f.size,
             },

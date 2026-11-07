@@ -762,6 +762,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/counterparties/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Excel'ga eksport (.xlsx)
+         * @description Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.
+         */
+        get: operations["export_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties/{id}": {
         parameters: {
             query?: never;
@@ -10306,7 +10326,10 @@ export interface operations {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
                 status?: "ACTIVE" | "BLOCKED" | "INACTIVE" | "ALL";
                 regionId?: number;
+                /** @description Eskirgan: sort=TIN bilan bir xil */
                 sortByTin?: boolean;
+                sort?: "NAME" | "TIN" | "REGION" | "LICENSE";
+                desc?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -10348,6 +10371,31 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CounterpartyDetail"];
                 };
+            };
+        };
+    };
+    export_2: {
+        parameters: {
+            query?: {
+                q?: string;
+                role?: "CUSTOMER" | "SUPPLIER" | "ALL";
+                status?: "ACTIVE" | "BLOCKED" | "INACTIVE" | "ALL";
+                regionId?: number;
+                sort?: "NAME" | "TIN" | "REGION" | "LICENSE";
+                desc?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

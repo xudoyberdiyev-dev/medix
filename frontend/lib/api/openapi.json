@@ -1735,8 +1735,25 @@
             "format" : "int64"
           }
         }, {
+          "description" : "Eskirgan: sort=TIN bilan bir xil",
           "in" : "query",
           "name" : "sortByTin",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "NAME", "TIN", "REGION", "LICENSE" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "desc",
           "required" : false,
           "schema" : {
             "type" : "boolean",
@@ -1801,6 +1818,69 @@
           }
         },
         "summary" : "Kontragent qo'shish",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/export" : {
+      "get" : {
+        "description" : "Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.",
+        "operationId" : "export_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ALL",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ACTIVE",
+            "enum" : [ "ACTIVE", "BLOCKED", "INACTIVE", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "regionId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "NAME", "TIN", "REGION", "LICENSE" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "desc",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Excel'ga eksport (.xlsx)",
         "tags" : [ "counterparties" ]
       }
     },
