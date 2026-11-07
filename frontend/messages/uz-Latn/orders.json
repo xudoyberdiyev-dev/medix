@@ -104,7 +104,12 @@
     "selected": "{count} ta tanlandi",
     "printSheets": "Terish varagʻi",
     "clearSelection": "Tanlovni bekor qilish",
-    "printNone": "Terish varagʻi faqat «Navbatda» va «Yigʻilmoqda» buyurtmalar uchun"
+    "printNone": "Terish varagʻi faqat «Navbatda» va «Yigʻilmoqda» buyurtmalar uchun",
+    "credit": {
+      "blocked": "Mijoz bloklangan",
+      "overLimit": "Limitdan {amount} soʻm oshadi",
+      "overdue": "Muddati oʻtgan qarz {amount} soʻm ({days} kun)"
+    }
   },
   "drawer": {
     "kind": "Buyurtma",

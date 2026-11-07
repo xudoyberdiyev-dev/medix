@@ -15,6 +15,7 @@ import {
   PackageX,
   Plus,
   Printer,
+  TriangleAlert,
   Truck,
   type LucideIcon,
 } from "lucide-react";
@@ -29,6 +30,7 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import type { TabItem } from "@/components/ui/tabs";
 import { DateChip, MultiFilter } from "@/components/ui/multi-filter";
 import { TextField } from "@/components/ui/text-field";
+import { Tooltip } from "@/components/ui/tooltip";
 import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import type { components } from "@/lib/api/schema";
@@ -134,6 +136,17 @@ const HINT_TONE = {
   danger: "text-danger",
   success: "text-success",
 } as const;
+
+/** ⚠ izohi (prototip Orders: issue): bloklangan · limitdan oshgan · muddati oʻtgan qarz. */
+export function creditText(c: components["schemas"]["CreditFlag"], t: OrdersT): string {
+  return [
+    c.blocked ? t("list.credit.blocked") : null,
+    c.overLimit ? t("list.credit.overLimit", { amount: formatMoney(c.overLimit) }) : null,
+    c.overdue ? t("list.credit.overdue", { amount: formatMoney(c.overdue), days: c.overdueDays }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
 
 /** Holat kartalari (prototip): nomi + soni (nishon) + summasi; «Tasdiqlashda» — sariq, «Yetkazilmadi»/«Rad etildi» — qizil. */
 function StatusCards({
@@ -280,7 +293,14 @@ export function OrdersPage() {
       sortable: true,
       render: (o) => (
         <span className={`flex min-w-0 flex-col ${muted(o)}`}>
-          <span className="truncate font-medium">{o.customer}</span>
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate font-medium">{o.customer}</span>
+            {o.credit ? (
+              <Tooltip content={creditText(o.credit, t)}>
+                <TriangleAlert size={14} strokeWidth={1.5} className="shrink-0 text-warning" aria-label={creditText(o.credit, t)} />
+              </Tooltip>
+            ) : null}
+          </span>
           {o.region ? <span className="truncate text-caption text-text-secondary">{o.region}</span> : null}
         </span>
       ),

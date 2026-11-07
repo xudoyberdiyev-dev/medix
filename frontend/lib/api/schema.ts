@@ -7438,6 +7438,7 @@ export interface components {
             statusChangedAt: string;
             total: string;
             warehouse: string;
+            credit?: components["schemas"]["CreditFlag"];
         };
         OwnGoods: {
             /** Format: int64 */
@@ -9582,6 +9583,13 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        CreditFlag: {
+            blocked: boolean;
+            overLimit?: string;
+            overdue?: string;
+            /** Format: int32 */
+            overdueDays: number;
         };
     };
     responses: never;
