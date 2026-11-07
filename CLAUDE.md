@@ -4,8 +4,8 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 
 ## Haqiqat manbalari (shu tartibda)
 1. `docs/SPEC.md` — loyihaning to'liq tavsifi (rollar, jarayonlar, biznes qoidalari, texnologiyalar, arxitektura). **Har sessiyada kerakli bo'limini o'qing.**
-2. `PLAN.md` — **avval «Egasi javoblari (07.11)» va «Egasi qarori — USTUVORLIK» bo'limlari**, keyin bosqichlar, vazifalar, **hozirgi holat** va egasidan kutilayotganlar.
-3. `design/` — dizayn tizimi (`design/system/`) va ekran manbalari (`design/README.md`).
+2. `PLAN.md` — **avval «Egasi talabi (07.11) — MUDDAT 11.11», «Egasi javoblari (07.11)» va «Egasi qarori — USTUVORLIK» bo'limlari**, keyin bosqichlar, vazifalar, **hozirgi holat** va egasidan kutilayotganlar.
+3. `design/prototype/` — **egasining Claude Design prototipi: UI unga AYNAN mos bo'lishi shart** (bor bo'lsa — eng ustun dizayn manbai). `design/` — dizayn tizimi (`design/system/`) va ekran manbalari (`design/README.md`).
 4. Ziddiyat bo'lsa — eng keyingi sanali qaror ustun; hal qilib bo'lmasa, PLAN.md → «Egasiga savollar» ga yozing va boshqa vazifaga o'ting.
 
 ## Zanjir rejimi (egasi qarori, 05.11.2026)
