@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -74,19 +75,8 @@ function Highlight({ text, query }: { text: string; query: string }): ReactNode 
  * Klaviatura: Enter/Space/↓ ochadi, ↑↓ harakatlanadi, Enter tanlaydi, Esc yopadi.
  */
 export function Select(props: SelectProps) {
-  const {
-    label,
-    options,
-    searchable,
-    loadOptions,
-    placeholder = "Tanlang",
-    hint,
-    error,
-    required,
-    disabled,
-    size = "md",
-    className,
-  } = props;
+  const { label, options, searchable, loadOptions, placeholder, hint, error, required, disabled, size = "md", className } = props;
+  const t = useTranslations("ui");
   const id = useId();
   const listId = `${id}-list`;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -239,7 +229,7 @@ export function Select(props: SelectProps) {
           )}
         >
           {selected.length === 0 ? (
-            <span className="flex-1 truncate text-text-disabled">{placeholder}</span>
+            <span className="flex-1 truncate text-text-disabled">{placeholder ?? t("choose")}</span>
           ) : props.multiple ? (
             <span className="flex flex-1 flex-wrap gap-1">
               {selected.map((v) => (
@@ -251,7 +241,7 @@ export function Select(props: SelectProps) {
                   <span
                     role="button"
                     tabIndex={-1}
-                    aria-label={`${labelOf(v)} — olib tashlash`}
+                    aria-label={t("removeItem", { name: labelOf(v) })}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeValue(v);
@@ -278,10 +268,10 @@ export function Select(props: SelectProps) {
                   ref={searchRef}
                   type="text"
                   value={query}
-                  aria-label="Qidirish"
+                  aria-label={t("search")}
                   aria-controls={listId}
                   aria-activedescendant={activeId}
-                  placeholder="Qidirish"
+                  placeholder={t("search")}
                   onChange={(e) => {
                     setQuery(e.target.value);
                     setActive(0);
@@ -300,7 +290,7 @@ export function Select(props: SelectProps) {
               {loading ? (
                 <li className="px-2 py-2 text-text-secondary">Qidirilmoqda…</li>
               ) : visible.length === 0 ? (
-                <li className="px-2 py-2 text-text-secondary">Hech narsa topilmadi. Boshqa soʻz bilan qidiring.</li>
+                <li className="px-2 py-2 text-text-secondary">{t("selectEmpty")}</li>
               ) : (
                 visible.map((o, i) => {
                   const isSelected = selected.includes(o.value);

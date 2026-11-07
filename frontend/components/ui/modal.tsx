@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { TriangleAlert, X } from "lucide-react";
 import type { MouseEvent, ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -26,6 +27,7 @@ const sizes = { sm: "max-w-modal-sm", md: "max-w-modal-md", lg: "max-w-modal-lg"
  * Xavfli oyna (`tone="danger"`) parda bosilganda yopilmaydi; asosiy tugma `danger`.
  */
 export function Modal({ open, onClose, title, size = "md", tone = "default", children, primaryAction, secondaryAction }: ModalProps) {
+  const t = useTranslations("ui");
   const ref = useDialog(open, onClose);
   const danger = tone === "danger";
 
@@ -54,7 +56,7 @@ export function Modal({ open, onClose, title, size = "md", tone = "default", chi
         <h2 id="modal-title" className="flex-1 pt-[7px] text-subtitle">
           {title}
         </h2>
-        <Button variant="icon" icon={X} aria-label="Yopish" title="Yopish" onClick={onClose} />
+        <Button variant="icon" icon={X} aria-label={t("close")} title={t("close")} onClick={onClose} />
       </div>
       <div className="overflow-auto px-6 pb-6">{children}</div>
       <div className="flex flex-wrap justify-end gap-2 border-t border-border px-6 py-4">

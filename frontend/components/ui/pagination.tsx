@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useId } from "react";
 import { cn } from "@/lib/cn";
@@ -36,12 +37,13 @@ export function rangeLabel(page: number, pageSize: number, total: number): strin
 
 export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChange, pageSizeOptions = [25, 50, 100] }: PaginationProps) {
   const sizeId = useId();
+  const t = useTranslations("ui.pagination");
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   return (
-    <nav aria-label="Sahifalash" className="flex flex-wrap items-center gap-4 text-table text-text-secondary">
+    <nav aria-label={t("label")} className="flex flex-wrap items-center gap-4 text-table text-text-secondary">
       <span className="tabular">{rangeLabel(page, pageSize, total)}</span>
       <span className="flex items-center gap-2">
-        <label htmlFor={sizeId}>Sahifada:</label>
+        <label htmlFor={sizeId}>{t("perPage")}</label>
         <select
           id={sizeId}
           value={pageSize}
@@ -61,8 +63,8 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
             variant="icon"
             size="sm"
             icon={ChevronLeft}
-            aria-label="Oldingi sahifa"
-            title="Oldingi sahifa"
+            aria-label={t("prev")}
+            title={t("prev")}
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
           />
@@ -90,8 +92,8 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
             variant="icon"
             size="sm"
             icon={ChevronRight}
-            aria-label="Keyingi sahifa"
-            title="Keyingi sahifa"
+            aria-label={t("next")}
+            title={t("next")}
             disabled={page >= pageCount}
             onClick={() => onPageChange(page + 1)}
           />

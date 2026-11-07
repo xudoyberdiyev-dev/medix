@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Bookmark, CalendarClock, CalendarX, CircleCheck, CircleX, FilePenLine, Hourglass, ShieldCheck, Truck } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -39,6 +42,7 @@ export interface BadgeProps {
 
 /** Holat belgisi: doim ikonka + soʻz + rang. Bosilmaydi. */
 export function Badge({ tone, icon, status, children, className }: BadgeProps) {
+  const t = useTranslations("ui.status");
   const preset = status ? BADGE_STATUSES[status] : undefined;
   const finalTone = tone ?? preset?.tone ?? "neutral";
   const finalIcon = icon ?? preset?.icon;
@@ -51,7 +55,7 @@ export function Badge({ tone, icon, status, children, className }: BadgeProps) {
       )}
     >
       {finalIcon ? <Icon icon={finalIcon} /> : null}
-      {children ?? preset?.label}
+      {children ?? (status ? t(status) : null)}
     </span>
   );
 }
