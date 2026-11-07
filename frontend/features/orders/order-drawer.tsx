@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, FileDown, History, Info, LayoutList, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
+import { Check, CircleAlert, FileDown, Info, LayoutList, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -34,7 +34,6 @@ import {
   canCancelOrder,
   defaultPaymentType,
   loadOrder,
-  previousOrders,
   searchCustomers,
   useApproveOrder,
   useCancelOrder,
@@ -49,6 +48,7 @@ import {
   codesExportUrl,
 } from "./api";
 import { CatalogDialog } from "./catalog-dialog";
+import { CustomerStateRow, RecentOrders, useCustomerCredit, type PreviousOrder } from "./customer-state";
 import { clearOpenDraft, draftFormFor, readOpenDraft, writeOpenDraft } from "./open-draft";
 import { OrderStatusBadge, day } from "./orders-page";
 
@@ -136,8 +136,9 @@ function Editor({
   );
   const [adding, setAdding] = useState<{ product: string | null; qty: string }>({ product: null, qty: "" });
   const [local, setLocal] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<"catalog" | "repeat" | "reject" | "cancel" | "discard" | null>(null);
+  const [dialog, setDialog] = useState<"catalog" | "reject" | "cancel" | "discard" | null>(null);
   const seen = useRef(new Map<string, { code: string; name: string }>());
+  const credit = useCustomerCredit(warehouseId ? Number(warehouseId) : null, editable && customer ? Number(customer) : null);
   const err = describeError(save.error ?? submit.error ?? approve.error ?? back.error);
 
   const activeWarehouses = (warehouses.data ?? []).filter((w) => w.active || String(w.id) === warehouseId);
@@ -202,6 +203,32 @@ function Editor({
       return await save.mutateAsync({ id: doc?.id, body: b });
     } catch {
       return null;
+    }
+  }
+
+  // «Takrorlash» (prototip): oldingi buyurtma qatorlari joriy buyurtmaga qoʻshiladi; bor mahsulotlar oʻtkazib yuboriladi
+  const [repeatNote, setRepeatNote] = useState<string | null>(null);
+  const [repeating, setRepeating] = useState(false);
+  async function repeatOrder(o: PreviousOrder) {
+    setRepeating(true);
+    try {
+      const prev = await loadOrder(o.id);
+      const have = new Set(lines.map((l) => l.productId));
+      const add = prev.lines.filter((l) => !have.has(l.productId));
+      const dup = prev.lines.filter((l) => have.has(l.productId)).map((l) => l.productName);
+      setLines((ls) => [
+        ...ls,
+        ...add.map((l) => ({ productId: l.productId, productCode: l.productCode, productName: l.productName, qty: String(l.qty) })),
+      ]);
+      const parts = [t("customer.repeated", { number: o.number, count: add.length })];
+      if (dup.length) parts.push(t("customer.repeatSkipped", { count: dup.length, names: dup.join(", ") }));
+      const text = parts.join(". ");
+      setRepeatNote(text);
+      toast({ tone: "info", title: text, description: t("drawer.linesAddedHint") });
+    } catch (e) {
+      setLocal(describeError(e).message ?? t("repeat.loadError"));
+    } finally {
+      setRepeating(false);
     }
   }
 
@@ -385,7 +412,14 @@ function Editor({
           <TextField label={t("drawer.note")} value={note} onChange={setNote} disabled={!editable} />
         </div>
 
-        {doc ? <CreditRow doc={doc} /> : null}
+        {editable && customer && warehouseId && credit.data ? (
+          <CustomerStateRow name={customerLabel} credit={credit.data} orderTotal={doc && !dirty ? doc.total : "0"} />
+        ) : doc ? (
+          <CreditRow doc={doc} />
+        ) : null}
+        {editable && customer ? (
+          <RecentOrders customerId={Number(customer)} onRepeat={(o) => void repeatOrder(o)} note={repeatNote} busy={repeating} />
+        ) : null}
         {doc?.status === "QUEUED" && can(me.data, "orders.queue") ? <TimeForm doc={doc} /> : null}
         {doc?.status === "CHECKING" && can(me.data, "orders.check") ? <CheckForm doc={doc} /> : null}
 
@@ -413,9 +447,6 @@ function Editor({
             />
             <Button variant="secondary" onClick={addLine}>
               {t("drawer.addLine")}
-            </Button>
-            <Button variant="tertiary" icon={History} disabled={!customer} onClick={() => setDialog("repeat")}>
-              {t("drawer.repeat")}
             </Button>
             <Button
               variant="tertiary"
@@ -560,17 +591,6 @@ function Editor({
         >
           <p>{t(doc ? "drawer.discardChanged" : "drawer.discardNew")}</p>
         </Modal>
-      ) : null}
-      {dialog === "repeat" && customer ? (
-        <RepeatDialog
-          customerId={Number(customer)}
-          onClose={() => setDialog(null)}
-          onPick={(picked) => {
-            setLines(picked);
-            setDialog(null);
-            toast({ tone: "info", title: t("drawer.linesAdded"), description: t("drawer.linesAddedHint") });
-          }}
-        />
       ) : null}
       {(dialog === "reject" || dialog === "cancel") && doc ? (
         <DeactivateDialog
@@ -772,86 +792,6 @@ function IssuesPanel({ issues, dirty }: { issues: OrderIssue[]; dirty: boolean }
   );
 }
 
-function RepeatDialog({ customerId, onClose, onPick }: { customerId: number; onClose: () => void; onPick: (lines: DraftLine[]) => void }) {
-  const t = useTranslations("orders");
-  const [list, setList] = useState<Awaited<ReturnType<typeof previousOrders>> | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [picked, setPicked] = useState<number | null>(null);
-  const [pending, setPending] = useState(false);
-  if (list === null && error === null) {
-    void previousOrders(customerId).then(setList, (e: unknown) => setError(describeError(e).message ?? t("repeat.loadError")));
-  }
-  async function apply(id: number | null = picked) {
-    if (id === null || pending) return;
-    setPicked(id);
-    setPending(true);
-    try {
-      const d = await loadOrder(id);
-      onPick(d.lines.map((l) => ({ productId: l.productId, productCode: l.productCode, productName: l.productName, qty: String(l.qty) })));
-    } catch (e) {
-      setError(describeError(e).message ?? t("repeat.loadError"));
-    } finally {
-      setPending(false);
-    }
-  }
-  const applyRef = useRef(apply);
-  useEffect(() => {
-    applyRef.current = apply;
-  });
-  useEffect(() => {
-    // SPEC 5.3: Alt+1…5 — oxirgi 5 buyurtmadan birini darhol takrorlash.
-    function onKey(e: KeyboardEvent) {
-      if (!e.altKey || !list) return;
-      const n = Number(e.code.startsWith("Digit") ? e.code.slice(5) : e.key);
-      const o = Number.isInteger(n) && n >= 1 && n <= 5 ? list[n - 1] : undefined;
-      if (!o) return;
-      e.preventDefault();
-      void applyRef.current(o.id);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [list]);
-  return (
-    <Modal
-      open
-      onClose={onClose}
-      size="md"
-      title={t("repeat.title")}
-      primaryAction={{ label: t("repeat.add"), disabled: picked === null, loading: pending, onClick: () => void apply() }}
-    >
-      {error ? <Alert tone="danger" title={error} /> : null}
-      {list === null ? (
-        <Skeleton className="h-24 w-full" />
-      ) : list.length === 0 ? (
-        <p className="text-text-secondary">{t("repeat.empty")}</p>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {list.slice(0, 5).map((o, i) => (
-            <li key={o.id}>
-              <button
-                type="button"
-                onClick={() => setPicked(o.id)}
-                aria-keyshortcuts={`Alt+${i + 1}`}
-                className={`flex w-full items-center justify-between rounded-control border px-3 py-2 text-left ${picked === o.id ? "border-primary" : "border-border"}`}
-              >
-                <span className="flex items-center gap-2">
-                  <kbd className="rounded-sm border border-border px-1.5 text-caption text-text-secondary">Alt+{i + 1}</kbd>
-                  <span className="font-mono">{o.number}</span>
-                </span>
-                <span className="text-text-secondary">
-                  {t("repeat.row", { date: day(o.orderDate), lines: formatQuantity(o.lines), amount: formatMoney(o.total) })}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="mt-3 text-caption text-text-secondary">{t("repeat.hint")}</p>
-    </Modal>
-  );
-}
-
-/** Vaqt berish (Ombor mudiri, SPEC 5.2 №3): yigʻish va markirovka uchun daqiqa, har buyurtmaga alohida. */
 function TimeForm({ doc }: { doc: OrderDetail }) {
   const t = useTranslations("orders");
   const qc = useQueryClient();

@@ -615,5 +615,22 @@
     "gtinInvalid": "Koddagi GTIN notoʻgʻri (nazorat raqami mos emas). Qadoqdagi boshqa kodni skanerlang.",
     "kindInvalid": "Koddagi tur (91) notoʻgʻri: Q (quti) yoki D (dona) boʻlishi kerak.",
     "expiryInvalid": "Koddagi yaroqlilik sanasi (17) notoʻgʻri. Kodni qayta skanerlang."
+  },
+  "customer": {
+    "aria": "Mijoz holati",
+    "stOk": "Faol",
+    "stApproval": "Tasdiq kerak",
+    "stBlocked": "Bloklangan",
+    "msgOk": "Muammo yoʻq — buyurtma tasdiqsiz «Navbatda» ga oʻtadi",
+    "msgApproval": "{reasons} — tasdiq kerak (Filial rahbari yoki Direktor)",
+    "msgBlocked": "Mijoz bloklangan — buyurtma yuborilmaydi. Blokni Direktor yoki Admin olib tashlaydi.",
+    "rLimit": "Limitdan {amount} soʻm oshadi",
+    "rOverdue": "Muddati oʻtgan qarz {amount} soʻm · {days} kun",
+    "noLicense": "Litsenziya muddati oʻtgan — nazoratdagi preparatlar sotilmaydi. Mijoz kartasida yangi litsenziyani kiriting.",
+    "recent": "Oxirgi buyurtmalar",
+    "recentSub": "Takrorlash — qatorlarni joriy buyurtmaga qoʻshadi",
+    "repeat": "Takrorlash",
+    "repeated": "{number} dan {count} ta qator qoʻshildi",
+    "repeatSkipped": "{count} tasi oʻtkazib yuborildi (buyurtmada bor): {names}"
   }
 }
