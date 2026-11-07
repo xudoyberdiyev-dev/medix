@@ -25,16 +25,24 @@ class PurchaserHome {
 
     private static final int TOP = 5;
 
-    record ReceiptCounts(int toAccept, int toAcceptMine, int toPost, int toPostMine) {}
+    /** toAcceptNumbers / toPostNumbers — prototip: hujjat raqamlari (eng eski 5 ta). */
+    record ReceiptCounts(int toAccept, int toAcceptMine, int toPost, int toPostMine, List<String> toAcceptNumbers, List<String> toPostNumbers) {}
 
-    record PaymentDue(String overdue, String today, String next3Days) {}
+    /** Summa va ochiq kirimlar soni: kechikkan / bugun / 3 kun ichida. */
+    record PaymentDue(String overdue, String today, String next3Days, int overdueCount, int todayCount, int next3Count) {}
+
+    /** Bonus eslatmasi (prototip): bonus sanasi o'tgan yoki 3 kun ichida — YB, kirim, sana, summa. */
+    record BonusDue(long receiptId, String supplier, String number, LocalDate date, String amount) {}
+
+    /** O'z nomidagi tovar (prototip): olib keldi (kirimlar soni), sotildi (oxirgi sotuv), qoldi, boshqa harakat, aktiv (30 kunda sotuv). */
+    record OwnMoves(int receipts, long soldQty, long otherQty, @Schema(nullable = true) LocalDate lastSale, boolean active) {}
 
     record BonusInfo(String balance, int pending, int pendingOverdue) {}
 
     record OwnGoods(int products, long broughtQty, long leftQty, int expiring90) {}
 
     record PurchaserHomeView(LocalDate today, @Schema(nullable = true) Long branchId, ReceiptCounts receipts, DebtCard supplierDebt,
-            PaymentDue due, List<Debtor> topSuppliers, BonusInfo bonus, OwnGoods ownGoods) {}
+            PaymentDue due, List<Debtor> topSuppliers, BonusInfo bonus, OwnGoods ownGoods, List<BonusDue> bonusDue, OwnMoves ownMoves) {}
 
     private final JdbcClient jdbc;
     private final DebtSummaries debts;
@@ -60,7 +68,8 @@ class PurchaserHome {
                        count(*) FILTER (WHERE status = 'ACCEPTED') AS p, count(*) FILTER (WHERE status = 'ACCEPTED' AND created_by = :e) AS pm
                 FROM receipt WHERE status IN ('DRAFT', 'ACCEPTED') AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
                 .param("e", me).param("b", branchId)
-                .query((rs, n) -> new ReceiptCounts(rs.getInt("a"), rs.getInt("am"), rs.getInt("p"), rs.getInt("pm")))
+                .query((rs, n) -> new ReceiptCounts(rs.getInt("a"), rs.getInt("am"), rs.getInt("p"), rs.getInt("pm"), numbers("DRAFT", branchId),
+                        numbers("ACCEPTED", branchId)))
                 .single();
 
         DebtSummaries.Summary s = debts.summary(actor, Side.SUPPLIER, branchId, TOP);
@@ -95,7 +104,62 @@ class PurchaserHome {
                 .query((rs, n) -> new OwnGoods(rs.getInt("products"), rs.getLong("brought"), rs.getLong("lft"), rs.getInt("expiring")))
                 .single();
 
+        // Ochiq kirimlar soni to'lov kuni bo'yicha (Debts.due bilan bir qoida)
+        record Counts(int o, int t, int s3) {}
+        Counts cnt = jdbc.sql("""
+                WITH own AS (SELECT branch_id, counterparty_id, doc_type, doc_id, min(due_date) AS due, sum(amount) AS amt
+                             FROM party_ledger WHERE side = 'SUPPLIER' AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                             GROUP BY branch_id, counterparty_id, doc_type, doc_id),
+                     app AS (SELECT branch_id, counterparty_id, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
+                             FROM party_ledger WHERE side = 'SUPPLIER' AND applies_doc_type IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                             GROUP BY branch_id, counterparty_id, applies_doc_type, applies_doc_id),
+                     open AS (SELECT own.due, own.amt + coalesce(app.amt, 0) AS open
+                              FROM own LEFT JOIN app ON app.branch_id = own.branch_id AND app.counterparty_id = own.counterparty_id
+                                                    AND app.t = own.doc_type AND app.i = own.doc_id)
+                SELECT count(*) FILTER (WHERE due < :d) AS o, count(*) FILTER (WHERE due = :d) AS t,
+                       count(*) FILTER (WHERE due > :d AND due <= :d3) AS s3
+                FROM open WHERE open > 0 AND due IS NOT NULL""")
+                .param("b", branchId).param("d", Date.valueOf(today)).param("d3", Date.valueOf(today.plusDays(3)))
+                .query((rs, n) -> new Counts(rs.getInt("o"), rs.getInt("t"), rs.getInt("s3"))).single();
+
+        List<BonusDue> bonusDue = jdbc.sql("""
+                SELECT r.id, c.name AS supplier, r.number, r.discount_date,
+                       CASE r.discount_kind WHEN 'SUM' THEN r.discount_value ELSE round(r.debt_amount * r.discount_value / 100, 2) END AS amount
+                FROM receipt r JOIN counterparty c ON c.id = r.supplier_id
+                WHERE r.status = 'POSTED' AND r.discount_kind IS NOT NULL AND r.discount_date <= :d3
+                  AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id)
+                ORDER BY r.discount_date, r.number LIMIT 10""")
+                .param("d3", Date.valueOf(today.plusDays(3))).param("b", branchId)
+                .query((rs, n) -> new BonusDue(rs.getLong("id"), rs.getString("supplier"), rs.getString("number"),
+                        rs.getDate("discount_date").toLocalDate(), DirectorHome.m(rs.getBigDecimal("amount")).toString()))
+                .list();
+
+        OwnMoves moves = jdbc.sql("""
+                WITH src AS (SELECT b.id AS batch_id, r.id AS receipt_id
+                             FROM batch b JOIN receipt_line l ON l.id = b.source_id JOIN receipt r ON r.id = l.receipt_id
+                             WHERE b.source_type = 'KR' AND r.owner_id = :e AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b))
+                SELECT (SELECT count(DISTINCT receipt_id) FROM src) AS receipts,
+                       coalesce(-sum(m.qty) FILTER (WHERE m.doc_type IN ('SV', 'QM')), 0) AS sold,
+                       coalesce(-sum(m.qty) FILTER (WHERE m.doc_type NOT IN ('KR', 'SV', 'QM') AND m.qty < 0), 0) AS other,
+                       max((m.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) FILTER (WHERE m.doc_type = 'SV') AS last_sale
+                FROM src LEFT JOIN stock_move m ON m.batch_id = src.batch_id""")
+                .param("e", me).param("b", branchId)
+                .query((rs, n) -> {
+                    java.sql.Date last = rs.getDate("last_sale");
+                    LocalDate ls = last == null ? null : last.toLocalDate();
+                    return new OwnMoves(rs.getInt("receipts"), rs.getLong("sold"), rs.getLong("other"), ls,
+                            ls != null && !ls.isBefore(today.minusDays(29)));
+                })
+                .single();
+
         return new PurchaserHomeView(today, branchId, receipts, new DebtCard(s.debt(), s.overdue(), s.advance()),
-                new PaymentDue(due.overdue(), due.today(), due.next3Days()), top, bonus, own);
+                new PaymentDue(due.overdue(), due.today(), due.next3Days(), cnt.o(), cnt.t(), cnt.s3()), top, bonus, own, bonusDue, moves);
+    }
+
+    private List<String> numbers(String status, Long branchId) {
+        return jdbc.sql("""
+                SELECT number FROM receipt WHERE status = :s AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b) ORDER BY created_at, id LIMIT 5""")
+                .param("s", status).param("b", branchId).query(String.class).list();
     }
 }
