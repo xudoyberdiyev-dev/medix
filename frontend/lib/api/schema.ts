@@ -5455,20 +5455,20 @@ export interface components {
         };
         BranchRow: {
             customerDebt: string;
+            customerDebtBy: components["schemas"]["ByPayment"];
             expenses: string;
+            expensesBy: components["schemas"]["ByPayment"];
             /** Format: int64 */
             id: number;
-            name: string;
-            sales: string;
-            supplierDebt: string;
-            salesBy: components["schemas"]["ByPayment"];
-            customerDebtBy: components["schemas"]["ByPayment"];
-            supplierDebtBy: components["schemas"]["ByPayment"];
-            expensesBy: components["schemas"]["ByPayment"];
-            overdue: string;
-            /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
-            stockValue?: string | null;
             money: string;
+            name: string;
+            overdue: string;
+            sales: string;
+            salesBy: components["schemas"]["ByPayment"];
+            /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
+            stockValue?: string;
+            supplierDebt: string;
+            supplierDebtBy: components["schemas"]["ByPayment"];
         };
         BranchSaleDetail: {
             buyer: components["schemas"]["BranchRef"];
@@ -6003,6 +6003,7 @@ export interface components {
             tin: string;
         };
         Debtor: {
+            branches: string;
             debt: string;
             /** Format: int64 */
             id: number;
@@ -6010,7 +6011,6 @@ export interface components {
             maxOverdueDays: number;
             name: string;
             overdue: string;
-            branches: string;
         };
         DeliverRequest: {
             /** @description Naqd olingan summa, masalan «25000.00» */
@@ -6195,21 +6195,29 @@ export interface components {
         };
         Home: {
             attention: components["schemas"]["Attention"];
+            avgSale: string;
             /** Format: int64 */
             branchId?: number;
             branches: components["schemas"]["BranchRow"][];
             customerDebt: components["schemas"]["DebtCard"];
+            customerDebtBy: components["schemas"]["ByPayment"];
+            daily: components["schemas"]["SalesDay"][];
             expenses: components["schemas"]["ByPayment"];
             /** Format: date */
             from: string;
+            /** @description Filiallararo (guruh ichidagi) ochiq qarz — jamilarga kirmaydi */
+            groupDebt: string;
             operators: components["schemas"]["OperatorRow"][];
             orderStatuses: components["schemas"]["StatusCell"][];
             sales: components["schemas"]["ByPayment"];
+            /** Format: int32 */
+            salesDocs: number;
             /** Format: int32 */
             staleDays: number;
             /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
             supplierCompanies?: components["schemas"]["SupplierBlock"];
             supplierDebt: components["schemas"]["DebtCard"];
+            supplierDebtBy: components["schemas"]["ByPayment"];
             /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
             supplierStaff?: components["schemas"]["SupplierBlock"];
             /** Format: date */
@@ -6217,14 +6225,6 @@ export interface components {
             /** Format: date */
             today: string;
             topDebtors: components["schemas"]["Debtor"][];
-            customerDebtBy: components["schemas"]["ByPayment"];
-            supplierDebtBy: components["schemas"]["ByPayment"];
-            daily: components["schemas"]["SalesDay"][];
-            /** Format: int32 */
-            salesDocs: number;
-            avgSale: string;
-            /** @description Filiallararo (guruh ichidagi) ochiq qarz — jamilarga kirmaydi */
-            groupDebt: string;
         };
         ImportResult: {
             applied: boolean;
@@ -7010,14 +7010,14 @@ export interface components {
             topCustomers: components["schemas"]["CustomerRow"][];
         };
         OperatorRow: {
+            /** @description Oxirgi 30 kunda sotuvi bor */
+            active: boolean;
+            /** Format: int32 */
+            docs: number;
             /** Format: int64 */
             id: number;
             name: string;
             sales: string;
-            /** Format: int32 */
-            docs: number;
-            /** @description Oxirgi 30 kunda sotuvi bor */
-            active: boolean;
         };
         OrderDetail: {
             address?: string;
@@ -8249,6 +8249,13 @@ export interface components {
             /** Format: int32 */
             qty: number;
         };
+        SalesDay: {
+            amount: string;
+            /** Format: date */
+            date: string;
+            /** Format: int32 */
+            docs: number;
+        };
         SalesReportView: {
             /** Format: int64 */
             branchId?: number;
@@ -9332,13 +9339,6 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
-        };
-        SalesDay: {
-            amount: string;
-            /** Format: date */
-            date: string;
-            /** Format: int32 */
-            docs: number;
         };
     };
     responses: never;

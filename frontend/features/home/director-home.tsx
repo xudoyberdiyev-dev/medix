@@ -258,7 +258,7 @@ export function DirectorHome() {
   const h = home.data;
   const name = firstName(me.data?.fullName);
   const greet = t(`dir.${greetKey(tashkentHour())}`) + (name ? `, ${name}` : "");
-  const branchName = h ? (h.branchId == null ? t("allBranches") : (h.branches.find((b) => b.id === h.branchId)?.name ?? "")) : "";
+  const branchName = h ? (h.branchId == null ? t("dir.allBr") : (h.branches.find((b) => b.id === h.branchId)?.name ?? "")) : "";
 
   return (
     <>
