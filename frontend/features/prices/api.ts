@@ -4,6 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { ensureCsrf } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import type { PriceFilters } from "./url-state";
 
 export type PriceRow = components["schemas"]["PriceRow"];
 export type PriceChangeDetail = components["schemas"]["PriceChangeDetail"];
@@ -26,11 +27,26 @@ export const STATUS_LABELS: Record<PriceChangeStatus, string> = {
   CANCELLED: "Bekor qilingan",
 };
 
-export function usePrices(branchId: number | null, q: string, page: number, size: number) {
+export function usePrices(branchId: number | null, f: PriceFilters) {
   return useQuery({
-    queryKey: ["prices", branchId, q, page, size],
+    queryKey: ["prices", branchId, f],
     queryFn: () =>
-      unwrap(api.GET("/api/prices", { params: { query: { branchId: branchId ?? 0, q: q.trim() || undefined, page: page - 1, size } } })),
+      unwrap(
+        api.GET("/api/prices", {
+          params: {
+            query: {
+              branchId: branchId ?? 0,
+              q: f.q.trim() || undefined,
+              manufacturerId: f.manufacturerId ?? undefined,
+              at: f.at ?? undefined,
+              sort: f.sort,
+              desc: f.desc || undefined,
+              page: f.page - 1,
+              size: f.size,
+            },
+          },
+        }),
+      ),
     enabled: branchId !== null,
     placeholderData: keepPreviousData,
   });

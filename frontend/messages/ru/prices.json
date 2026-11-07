@@ -25,7 +25,12 @@
     "search": "Поиск",
     "searchPlaceholder": "Название или код товара",
     "emptyTitle": "Товаров нет",
-    "emptyDescription": "Сначала заполните каталог в разделе «Товары»."
+    "emptyDescription": "Сначала заполните каталог в разделе «Товары».",
+    "manufacturer": "Производитель",
+    "allManufacturers": "Все производители",
+    "at": "Дата",
+    "dateInvalid": "Введите в формате ДД.ММ.ГГГГ",
+    "export": "Выгрузить в Excel"
   },
   "documents": {
     "number": "Номер",

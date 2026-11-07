@@ -1,11 +1,13 @@
 "use client";
 
-import { Ban, CircleCheck, CircleX, Clock, FilePen, Plus, Tags } from "lucide-react";
+import { Ban, CircleCheck, CircleX, Clock, FileDown, FilePen, Plus, Tags } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DayField } from "@/components/ui/day-field";
+import { SavedViews } from "@/components/ui/saved-views";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -14,6 +16,7 @@ import { TextField } from "@/components/ui/text-field";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { usePriceTypes } from "@/features/counterparties/api";
+import { useDictionary } from "@/features/dictionaries/api";
 import { useBranchList } from "@/features/organization/api";
 import { formatDate, formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
@@ -28,6 +31,7 @@ import {
   type PriceRow,
 } from "./api";
 import { PriceChangeDrawer } from "./price-change-drawer";
+import { parsePriceFilters, priceExportQuery, priceSortFromKey, priceSortKey, serializePriceFilters, type PriceFilters } from "./url-state";
 
 export function StatusBadge({ status }: { status: PriceChangeStatus }) {
   const t = useTranslations("prices");
@@ -129,22 +133,29 @@ function PricesTab({
 }) {
   const t = useTranslations("prices.current");
   const types = usePriceTypes();
-  const [search, setSearch] = useState("");
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
-  const [size, setSize] = useState<25 | 50 | 100>(50);
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const f = parsePriceFilters(new URLSearchParams(params.toString()));
+  const manufacturers = useDictionary("MANUFACTURER");
+  const [search, setSearch] = useState(f.q);
+  const apply = (patch: Partial<PriceFilters>) => {
+    const qs = serializePriceFilters({ ...f, page: 1, ...patch });
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
   const [selection, setSelection] = useState<string[]>([]);
   const [targetType, setTargetType] = useState<string | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const prices = usePrices(branchId, q, page, size);
+  const prices = usePrices(branchId, f);
   const rows = prices.data?.items ?? [];
   const typeList = types.data ?? [];
 
   const columns: TableColumn<PriceRow>[] = [
-    { key: "code", title: t("code"), mono: true, width: 110 },
+    { key: "code", title: t("code"), mono: true, width: 110, sortable: true },
     {
       key: "name",
       title: t("product"),
+      sortable: true,
       render: (p) => (
         <span className="flex flex-col">
           <span>{p.name}</span>
@@ -210,33 +221,77 @@ function PricesTab({
           </Button>
         </div>
       }
+      sort={{ key: priceSortKey(f.sort), dir: f.desc ? "desc" : "asc" }}
+      onSortChange={(s) => apply({ sort: priceSortFromKey(s.key), desc: s.dir === "desc" })}
       toolbar={
-        <div className="w-80">
-          <TextField
-            label={t("search")}
-            variant="search"
-            size="sm"
-            value={search}
-            onChange={(v) => {
-              setSearch(v);
-              clearTimeout(debounce.current);
-              debounce.current = setTimeout(() => (setQ(v), setPage(1)), 300);
-            }}
-            placeholder={t("searchPlaceholder")}
-            className="[&>label]:sr-only"
-          />
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-80">
+            <TextField
+              label={t("search")}
+              variant="search"
+              size="sm"
+              value={search}
+              onChange={(v) => {
+                setSearch(v);
+                clearTimeout(debounce.current);
+                debounce.current = setTimeout(() => apply({ q: v }), 300);
+              }}
+              placeholder={t("searchPlaceholder")}
+              className="[&>label]:sr-only"
+            />
+          </div>
+          <div className="w-56">
+            <Select
+              label={t("manufacturer")}
+              size="sm"
+              searchable
+              value={f.manufacturerId ? String(f.manufacturerId) : null}
+              onChange={(v) => apply({ manufacturerId: v ? Number(v) : null })}
+              placeholder={t("allManufacturers")}
+              className="[&>span:first-child]:sr-only"
+              options={(manufacturers.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))}
+            />
+          </div>
+          <DayField label={t("at")} value={f.at} invalid={t("dateInvalid")} onApply={(at) => apply({ at })} />
+          <div className="ml-auto flex items-center gap-2">
+            <SavedViews
+              storageKey="medix-prices-views"
+              query={params.toString()}
+              hidden={[]}
+              onApply={(v) => {
+                setSearch(parsePriceFilters(new URLSearchParams(v.query)).q);
+                router.replace(v.query ? `${pathname}?${v.query}` : pathname, { scroll: false });
+              }}
+            />
+            {branchId ? (
+              <a
+                href={`/api/prices/export?${priceExportQuery(branchId, f)}`}
+                download
+                className="inline-flex h-control-sm items-center gap-2 rounded-control border border-border bg-surface px-3 font-medium hover:bg-background"
+              >
+                <FileDown size={16} strokeWidth={1.5} aria-hidden />
+                {t("export")}
+              </a>
+            ) : null}
+          </div>
         </div>
       }
       emptyState={
-        q ? (
-          <NoResultsState onClearFilters={() => (setSearch(""), setQ(""))} />
+        f.q || f.manufacturerId || f.at ? (
+          <NoResultsState onClearFilters={() => (setSearch(""), apply({ q: "", manufacturerId: null, at: null }))} />
         ) : (
           <EmptyState icon={Tags} title={t("emptyTitle")} description={t("emptyDescription")} />
         )
       }
       pagination={
         prices.data && prices.data.total > 0
-          ? { page, pageSize: size, total: prices.data.total, onPageChange: setPage, onPageSizeChange: (s) => (setSize(s), setPage(1)) }
+          ? {
+              page: f.page,
+              pageSize: f.size,
+              total: prices.data.total,
+              onPageChange: (page) => apply({ page }),
+              onPageSizeChange: (size) => apply({ size }),
+            }
           : undefined
       }
     />

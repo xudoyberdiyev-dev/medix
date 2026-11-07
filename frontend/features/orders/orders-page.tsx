@@ -34,7 +34,7 @@ import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { useHiddenColumns } from "@/lib/use-hidden-columns";
 import { SavedViews } from "@/components/ui/saved-views";
-import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
+import { DayField } from "@/components/ui/day-field";
 import { ORDER_CREATE, useOrders, type OrderStatus, type OrderSummary } from "./api";
 import type { OrdersT } from "./i18n";
 import { OrderDrawer } from "./order-drawer";
@@ -119,43 +119,6 @@ export function soldLabel(s: { from: string | null; to: string | null }, t: Orde
 const ALWAYS = ["number", "customer", "status"];
 
 /** Sana maydoni (KK.OO.YYYY): toʻgʻri yoki boʻsh boʻlsa — darhol qoʻllanadi. */
-function DayField({
-  label,
-  value,
-  onApply,
-  invalid,
-}: {
-  label: string;
-  value: string | null;
-  onApply: (iso: string | null) => void;
-  invalid: string;
-}) {
-  const [text, setText] = useState(formatIsoDate(value));
-  const [seen, setSeen] = useState(value);
-  if (seen !== value) {
-    // URL tashqaridan oʻzgardi (koʻrinish, tozalash) — maydon ham yangilanadi
-    setSeen(value);
-    setText(formatIsoDate(value));
-  }
-  const parsed = parseUzDate(text);
-  return (
-    <div className="w-36">
-      <TextField
-        label={label}
-        size="sm"
-        value={text}
-        placeholder="04.10.2026"
-        error={parsed === null ? invalid : undefined}
-        onChange={(v) => {
-          setText(v);
-          const iso = parseUzDate(v);
-          if (iso !== null && (iso ?? null) !== value) onApply(iso ?? null);
-        }}
-      />
-    </div>
-  );
-}
-
 /**
  * Buyurtmalar (SPEC 5.2, jadval standarti SPEC 120): holat yorliqlari (soni, summasi), «Hozir kimda», qidiruv (raqam, mijoz, STIR —
  * lotin/kirill farqsiz), buyurtma sanasi, saralash, «Ustunlar», «Koʻrinishlar», .xlsx eksport, jami qatori; filtrlar URL'da.

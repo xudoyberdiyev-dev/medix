@@ -25,7 +25,12 @@
     "search": "Qidirish",
     "searchPlaceholder": "Mahsulot nomi yoki kodi",
     "emptyTitle": "Mahsulot yoʻq",
-    "emptyDescription": "Avval Mahsulotlar boʻlimida katalogni toʻldiring."
+    "emptyDescription": "Avval Mahsulotlar boʻlimida katalogni toʻldiring.",
+    "manufacturer": "Ishlab chiqaruvchi",
+    "allManufacturers": "Barcha ishlab chiqaruvchilar",
+    "at": "Sana",
+    "dateInvalid": "KK.OO.YYYY koʻrinishida yozing",
+    "export": "Excelʼga yuklash"
   },
   "documents": {
     "number": "Raqam",

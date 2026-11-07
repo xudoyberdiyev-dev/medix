@@ -25,7 +25,12 @@
     "search": "Қидириш",
     "searchPlaceholder": "Маҳсулот номи ёки коди",
     "emptyTitle": "Маҳсулот йўқ",
-    "emptyDescription": "Аввал Маҳсулотлар бўлимида каталогни тўлдиринг."
+    "emptyDescription": "Аввал Маҳсулотлар бўлимида каталогни тўлдиринг.",
+    "manufacturer": "Ишлаб чиқарувчи",
+    "allManufacturers": "Барча ишлаб чиқарувчилар",
+    "at": "Сана",
+    "dateInvalid": "КК.ОО.ЙЙЙЙ кўринишида ёзинг",
+    "export": "Excelъга юклаш"
   },
   "documents": {
     "number": "Рақам",

@@ -3074,6 +3074,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/prices/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Amaldagi narxlar — Excel'ga eksport (.xlsx)
+         * @description Jadvaldagi filtr, sana va saralash bilan; har narx turi alohida ustun; ko'pi bilan 50 000 qator.
+         */
+        get: operations["exportPrices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/products": {
         parameters: {
             query?: never;
@@ -13697,6 +13717,8 @@ export interface operations {
                 q?: string;
                 manufacturerId?: number;
                 at?: string;
+                sort?: "CODE" | "NAME" | "MANUFACTURER";
+                desc?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -13714,6 +13736,31 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PricePage"];
                 };
+            };
+        };
+    };
+    exportPrices: {
+        parameters: {
+            query: {
+                branchId: number;
+                q?: string;
+                manufacturerId?: number;
+                at?: string;
+                sort?: "CODE" | "NAME" | "MANUFACTURER";
+                desc?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
