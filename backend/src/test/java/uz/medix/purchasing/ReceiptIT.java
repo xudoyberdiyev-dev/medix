@@ -358,7 +358,7 @@ class ReceiptIT {
         // Boshqa filial xodimi ko'rmaydi; Buxgalter yarata olmaydi
         Cookie otherKeeper = loginAs("WAREHOUSE_MANAGER", other.branchId());
         mvc.perform(get("/api/receipts/" + doc).cookie(otherKeeper)).andExpect(status().isNotFound());
-        Cookie accountant = loginAs("ACCOUNTANT", null);
+        Cookie accountant = loginAs("ACCOUNTANT", p.branchId()); // E3: Buxgalter — o'z filiali
         send(post("/api/receipts"), accountant, doc(p, sup, false, line(a, "P-2", p.main(), 1, 0, "1"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/receipts").param("branchId", String.valueOf(p.branchId())).cookie(accountant))
                 .andExpect(status().isOk())

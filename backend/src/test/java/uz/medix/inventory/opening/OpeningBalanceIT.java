@@ -288,7 +288,7 @@ class OpeningBalanceIT {
                 .andReturn());
 
         // Buxgalter: yaratish bor, lekin tovar qoldig'i (opening.goods) yo'q
-        Cookie accountant = loginAs("ACCOUNTANT", null);
+        Cookie accountant = loginAs("ACCOUNTANT", p.branchId()); // E3: Buxgalter — o'z filiali
         send(post("/api/opening-balances"), accountant, doc(p)).andExpect(status().isForbidden());
         mvc.perform(get("/api/opening-balances/" + doc).cookie(accountant)).andExpect(status().isOk());
         // Ombor mudiri — BQ ko'rmaydi

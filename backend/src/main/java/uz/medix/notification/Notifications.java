@@ -22,7 +22,7 @@ import uz.medix.shared.text.Texts;
 public class Notifications {
 
     /** Barcha filiallar doirasidagi rollar (identity.MedixPrincipal bilan bir xil — SPEC 13). */
-    static final Set<String> ALL_BRANCH_ROLES = Set.of("DIRECTOR", "ADMIN", "ACCOUNTANT");
+    static final Set<String> ALL_BRANCH_ROLES = Set.of("DIRECTOR", "ADMIN");
 
     /**
      * {@code text} — {@code notification.<text>} kaliti, {@code args} — o'rinbosarlar: ro'yxat o'qilganda matn o'quvchi tilida
@@ -98,7 +98,8 @@ public class Notifications {
         Set<Long> to = new LinkedHashSet<>(jdbc.sql("""
                 SELECT e.id FROM employee e JOIN role r ON r.id = e.role_id
                 JOIN role_permission rp ON rp.role_id = r.id AND rp.permission_key = :key
-                WHERE e.status = 'ACTIVE' AND (e.branch_id = :b OR r.code IN (:all)) ORDER BY e.id""")
+                WHERE e.status = 'ACTIVE' AND (e.branch_id = :b OR r.code IN (:all) OR (r.code = 'ACCOUNTANT' AND e.all_branches))
+                ORDER BY e.id""")
                 .param("key", permission)
                 .param("b", branchId)
                 .param("all", ALL_BRANCH_ROLES)

@@ -277,7 +277,7 @@ class ZoneTransferIT {
                 .andExpect(jsonPath("$.code").value("stock.zoneUnknown"));
         Cookie operator = loginAs("OPERATOR", p.branchId());
         send(post("/api/zone-transfers"), operator, doc(p.main(), p.safe(), b, 1)).andExpect(status().isForbidden());
-        Cookie accountant = loginAs("ACCOUNTANT", null);
+        Cookie accountant = loginAs("ACCOUNTANT", p.branchId()); // E3: Buxgalter — o'z filiali
         mvc.perform(get("/api/zone-transfers").param("branchId", String.valueOf(p.branchId())).cookie(accountant))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
