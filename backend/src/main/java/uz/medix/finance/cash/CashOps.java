@@ -277,7 +277,7 @@ class CashOps {
     }
 
     @Transactional(readOnly = true)
-    /** @param expenseItemId modda (Xarajatlar hisoboti qatoridan o'tish, SPEC 8) — ixtiyoriy */
+    // expenseItemId — modda (Xarajatlar hisoboti qatoridan oʻtish, SPEC 8), ixtiyoriy
     List<CashOp> list(Actor actor, Long branchId, Long accountId, OpStatus status, LocalDate from, LocalDate to, Long expenseItemId) {
         return jdbc.sql(SELECT + """
                  WHERE (CAST(:b AS BIGINT) IS NULL OR o.branch_id = :b) AND (CAST(:a AS BIGINT) IS NULL OR o.account_id = :a)
