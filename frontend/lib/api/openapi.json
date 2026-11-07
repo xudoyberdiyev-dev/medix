@@ -5539,7 +5539,7 @@
     },
     "/api/orders/{id}/return-to-pick" : {
       "post" : {
-        "description" : "Sabab bilan; tovar olingan joyiga qaytadi, zahira qayta qo'yiladi.",
+        "description" : "Sabab bilan, tanlangan qatorlar (bo'sh — butun buyurtma); shu qatorlar tovari olingan joyiga qaytadi, zahira qayta qo'yiladi, kodlari bekor qilinadi; qayta yig'ish va markirovkada faqat shu qatorlar (SPEC 188).",
         "operationId" : "returnToPick",
         "parameters" : [ {
           "in" : "path",
@@ -5554,7 +5554,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/OrderReasonRequest"
+                "$ref" : "#/components/schemas/ReturnToPickRequest"
               }
             }
           },
@@ -16005,6 +16005,14 @@
             "type" : "boolean",
             "description" : "Qoralamada narx o'zgargan qatorlar bor"
           },
+          "repickLineIds" : {
+            "type" : "array",
+            "description" : "Qator bo'yicha «Yig'ishga qaytarish»dan keyin qayta yig'iladigan qatorlar; bo'sh — barcha qatorlar (SPEC 188)",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
           "status" : {
             "type" : "string",
             "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
@@ -16024,7 +16032,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "documents", "fefoDeviation", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "status", "total", "warehouse", "warehouseId" ]
+        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "documents", "fefoDeviation", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "warehouse", "warehouseId" ]
       },
       "OrderDocuments" : {
         "type" : "object",
@@ -18753,6 +18761,27 @@
           }
         },
         "required" : [ "batchId", "batchNumber", "bonus", "expiryDate", "free", "productCode", "productId", "productName", "qty", "reserved", "zone" ]
+      },
+      "ReturnToPickRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lineIds" : {
+            "type" : "array",
+            "description" : "Qaytariladigan qatorlar; bo'sh — butun buyurtma",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          },
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
       },
       "ReturnedLine" : {
         "type" : "object",

@@ -52,3 +52,21 @@ describe("buildPickSheet", () => {
     ]);
   });
 });
+
+describe("qator boʻyicha qayta yigʻish (SPEC 188)", () => {
+  it("faqat qaytarilgan qatorlar; boʻsh roʻyxat — hammasi", async () => {
+    const { repickLines } = await import("./pick-sheet");
+    const lines = [{ id: 1 }, { id: 2 }, { id: 3 }];
+    expect(repickLines({ lines, repickLineIds: [] })).toEqual(lines);
+    expect(repickLines({ lines, repickLineIds: [2] })).toEqual([{ id: 2 }]);
+    expect(repickLines({ lines })).toEqual(lines);
+  });
+
+  it("Hisobdan oʻtkazish: belgilanmagan yoki hammasi — butun buyurtma", async () => {
+    const { returnLineIds } = await import("./order-drawer");
+    const lines = [{ id: 1 }, { id: 2 }];
+    expect(returnLineIds(lines, {})).toBeNull();
+    expect(returnLineIds(lines, { 1: true, 2: true })).toBeNull();
+    expect(returnLineIds(lines, { 2: true, 1: false })).toEqual([2]);
+  });
+});

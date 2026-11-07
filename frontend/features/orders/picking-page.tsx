@@ -23,6 +23,7 @@ import { batchLabel, OtherBatchModal, type PickBatch } from "./other-batch-modal
 import { useLiveConnected } from "@/lib/live";
 import { day } from "./orders-page";
 import type { OrdersT } from "./i18n";
+import { repickLines } from "./pick-sheet";
 
 /** Qolgan vaqt: musbat — «12:05», manfiy — «Kechikdi: N daqiqa» (SPEC 5.2). */
 export function timerText(deadline: Date, now: Date, t: OrdersT): { text: string; late: boolean } {
@@ -172,7 +173,9 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
   if (!order.data) return <Skeleton className="h-40 w-full" />;
   const d = order.data;
   const t = deadline ? timerText(deadline, now, tr) : null;
-  const all = d.lines.every((l) => taken[l.id]);
+  // Qator boʻyicha «Yigʻishga qaytarish»dan keyin — faqat shu qatorlar (SPEC 188)
+  const lines = repickLines(d);
+  const all = lines.every((l) => taken[l.id]);
   const err = describeError(error);
 
   async function finish() {
@@ -209,8 +212,11 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
           </div>
         ) : null}
       </div>
+      {lines.length < d.lines.length ? (
+        <Alert className="mt-3" tone="info" title={tr("picking.repickOnly", { count: lines.length })} />
+      ) : null}
       <ul className="mt-4 flex flex-col">
-        {d.lines.map((l) => (
+        {lines.map((l) => (
           <li key={l.id} className="flex items-start gap-3 border-t border-border py-3">
             <Checkbox label={tr("picking.taken")} checked={Boolean(taken[l.id])} onChange={(v) => setTaken((m) => ({ ...m, [l.id]: v }))} />
             <div className="flex-1">

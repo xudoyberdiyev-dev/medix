@@ -2501,7 +2501,7 @@ export interface paths {
         put?: never;
         /**
          * Yig'ishga qaytarish
-         * @description Sabab bilan; tovar olingan joyiga qaytadi, zahira qayta qo'yiladi.
+         * @description Sabab bilan, tanlangan qatorlar (bo'sh — butun buyurtma); shu qatorlar tovari olingan joyiga qaytadi, zahira qayta qo'yiladi, kodlari bekor qilinadi; qayta yig'ish va markirovkada faqat shu qatorlar (SPEC 188).
          */
         post: operations["returnToPick"];
         delete?: never;
@@ -6864,6 +6864,8 @@ export interface components {
             places?: number;
             /** @description Qoralamada narx o'zgargan qatorlar bor */
             priceChanged: boolean;
+            /** @description Qator bo'yicha «Yig'ishga qaytarish»dan keyin qayta yig'iladigan qatorlar; bo'sh — barcha qatorlar (SPEC 188) */
+            repickLineIds: number[];
             /** @enum {string} */
             status: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
             /** Format: date-time */
@@ -7952,6 +7954,11 @@ export interface components {
             /** Format: int32 */
             reserved: number;
             zone: components["schemas"]["ZoneRef"];
+        };
+        ReturnToPickRequest: {
+            /** @description Qaytariladigan qatorlar; bo'sh — butun buyurtma */
+            lineIds?: number[];
+            reason: string;
         };
         ReturnedLine: {
             /** Format: int32 */
@@ -12717,7 +12724,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OrderReasonRequest"];
+                "application/json": components["schemas"]["ReturnToPickRequest"];
             };
         };
         responses: {

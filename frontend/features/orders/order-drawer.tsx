@@ -870,6 +870,12 @@ function TimeForm({ doc }: { doc: OrderDetail }) {
   );
 }
 
+/** Qaytariladigan qatorlar: belgilanmagan yoki hammasi belgilangan — null (butun buyurtma). */
+export function returnLineIds(lines: { id: number }[], marked: Record<number, boolean>): number[] | null {
+  const ids = lines.filter((l) => marked[l.id]).map((l) => l.id);
+  return ids.length === 0 || ids.length === lines.length ? null : ids;
+}
+
 /** Hisobdan oʻtkazish (SPEC 5.2 №6): har qator «Tekshirildi», joylar soni; xato boʻlsa — «Yigʻishga qaytarish» (sabab bilan). */
 function CheckForm({ doc }: { doc: OrderDetail }) {
   const t = useTranslations("orders");
@@ -879,8 +885,11 @@ function CheckForm({ doc }: { doc: OrderDetail }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [returning, setReturning] = useState(false);
+  // «Yigʻishga qaytarish» qatorlari (SPEC 188): hech biri belgilanmasa — butun buyurtma
+  const [back, setBack] = useState<Record<number, boolean>>({});
   const err = describeError(error);
   const all = doc.lines.every((l) => checked[l.id]);
+  const backIds = returnLineIds(doc.lines, back);
 
   async function run(fn: () => Promise<OrderDetail>, title: string) {
     setPending(true);
@@ -913,6 +922,13 @@ function CheckForm({ doc }: { doc: OrderDetail }) {
             <span className="flex-1">
               {l.productName} · <span className="tabular-nums">{formatQuantity(l.qty)}</span> {t("unit.pcs")}
             </span>
+            {doc.lines.length > 1 ? (
+              <Checkbox
+                label={t("check.returnLine")}
+                checked={Boolean(back[l.id])}
+                onChange={(v) => setBack((m) => ({ ...m, [l.id]: v }))}
+              />
+            ) : null}
           </li>
         ))}
       </ul>
@@ -945,21 +961,27 @@ function CheckForm({ doc }: { doc: OrderDetail }) {
           {t("check.title")}
         </Button>
         <Button variant="tertiary" icon={RotateCcw} onClick={() => setReturning(true)}>
-          {t("check.returnPick")}
+          {backIds ? t("check.returnSelected", { count: backIds.length }) : t("check.returnPick")}
         </Button>
       </div>
       {err.message ? <Alert tone="danger" title={err.message} /> : null}
       {returning ? (
         <DeactivateDialog
           title={t("check.returnTitle", { number: doc.number })}
-          consequence={t("check.returnConsequence")}
+          consequence={backIds ? t("check.returnLinesConsequence", { count: backIds.length }) : t("check.returnConsequence")}
           actionLabel={t("check.returnPick")}
           pending={pending}
           error={error}
           onClose={() => setReturning(false)}
           onConfirm={(reason) =>
             void run(
-              () => unwrap(api.POST("/api/orders/{id}/return-to-pick", { params: { path: { id: doc.id } }, body: { reason } })),
+              () =>
+                unwrap(
+                  api.POST("/api/orders/{id}/return-to-pick", {
+                    params: { path: { id: doc.id } },
+                    body: { reason, lineIds: backIds ?? undefined },
+                  }),
+                ),
               t("check.returned"),
             )
           }

@@ -221,7 +221,10 @@
     "returnPick": "Yigʻishga qaytarish",
     "returnTitle": "{number}ni yigʻishga qaytarasizmi?",
     "returnConsequence": "Tovar Joʻnatish zonasidan olingan joyiga qaytadi, zahira qayta qoʻyiladi va buyurtma navbatga tushadi.",
-    "returned": "Yigʻishga qaytarildi"
+    "returned": "Yigʻishga qaytarildi",
+    "returnLine": "Qaytarish",
+    "returnSelected": "Tanlanganlarni yigʻishga qaytarish ({count})",
+    "returnLinesConsequence": "Faqat belgilangan {count} ta qator qayta yigʻiladi: tovari olingan joyiga qaytadi, kodlari bekor qilinadi (tarixda qoladi). Qolgan qatorlar Joʻnatish zonasida qoladi."
   },
   "myToday": {
     "title": "Bugungi natijam",
@@ -264,7 +267,8 @@
     "doneTodayEmpty": "Bugun hali yigʻish yakunlanmagan.",
     "doneTodayMeta": "{lines} qator · {qty} dona · {time}",
     "onTime": "Vaqtida",
-    "late": "Kechikdi"
+    "late": "Kechikdi",
+    "repickOnly": "Qayta yigʻish: faqat {count} ta qator (qolganlari Joʻnatish zonasida)"
   },
   "otherBatch": {
     "title": "Boshqa partiyadan oldim",
