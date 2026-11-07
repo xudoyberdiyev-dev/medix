@@ -301,7 +301,7 @@ class BranchSaleIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.open").value(false))
                 .andExpect(jsonPath("$.history[0].bearer").value("SELLER"))
-                .andExpect(jsonPath("$.history[0].debtChange").value("-2000.00"));
+                .andExpect(jsonPath("$.history[0].debtChange").value("-2240.00"));
         assertThat(bal(seller.main(), b)).isEqualTo(2);
         assertThat(bal(buyer.main(), b)).isEqualTo(3);
         assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("3360.00");

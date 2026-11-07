@@ -16,10 +16,10 @@ import { ensureCsrf } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney, formatQuantity } from "@/lib/format";
-import { capacityState, type ReadyOrder } from "./shipments-page";
+import { placesText, type ReadyOrder } from "./shipments-page";
 
 /**
- * Rejalashtirilgan reys tarkibi: buyurtma qoʻshish (Joʻnatishga tayyor, shu filial, sigʻim bilan) va olib tashlash (haydovchi hali
+ * Rejalashtirilgan reys tarkibi: buyurtma qoʻshish (Joʻnatishga tayyor, shu filial) va olib tashlash (haydovchi hali
  * qabul qilmagan; sabab majburiy). Oxirgi buyurtmani olib tashlash oʻrniga reys bekor qilinadi (server ham tekshiradi).
  */
 export function TripEditModal({ tripId, ready, onClose }: { tripId: number | null; ready: ReadyOrder[]; onClose: () => void }) {
@@ -31,11 +31,6 @@ export function TripEditModal({ tripId, ready, onClose }: { tripId: number | nul
     enabled: tripId !== null,
   });
   const branchId = trip.data?.branchId ?? null;
-  const options = useQuery({
-    queryKey: ["trips", "options", branchId],
-    queryFn: () => unwrap(api.GET("/api/trips/options", { params: { query: { branchId: branchId ?? 0 } } })),
-    enabled: branchId !== null,
-  });
   const [picked, setPicked] = useState<number[]>([]);
   const [removing, setRemoving] = useState<number | null>(null);
   const [reason, setReason] = useState("");
@@ -44,9 +39,6 @@ export function TripEditModal({ tripId, ready, onClose }: { tripId: number | nul
 
   const candidates = ready.filter((o) => o.delivery === "DELIVERY" && o.branchId === branchId);
   const places = candidates.filter((o) => picked.includes(o.id)).reduce((s, o) => s + o.places, 0);
-  const vehicle = options.data?.vehicles.find((v) => v.id === trip.data?.vehicleId);
-  // Band joylar shu reysni ham oʻz ichiga oladi
-  const cap = capacityState(places, vehicle?.busyPlaces ?? trip.data?.places ?? 0, trip.data?.capacityBoxes, tr);
   const stops = trip.data?.stops ?? [];
 
   function close() {
@@ -121,7 +113,7 @@ export function TripEditModal({ tripId, ready, onClose }: { tripId: number | nul
         label: tr("tripEdit.add"),
         onClick: () => void add(),
         loading: pending && removing === null,
-        disabled: picked.length === 0 || cap.over || pending,
+        disabled: picked.length === 0 || pending,
       }}
     >
       {trip.error ? (
@@ -207,14 +199,9 @@ export function TripEditModal({ tripId, ready, onClose }: { tripId: number | nul
                 ))}
               </ul>
             )}
-            <div className={`mt-3 text-subtitle tabular-nums ${cap.over ? "text-danger" : ""}`} aria-live="polite">
-              {trip.data?.vehicle} · {cap.text}
+            <div className="mt-3 text-subtitle tabular-nums" aria-live="polite">
+              {trip.data?.vehicle} · {placesText(places + (trip.data?.places ?? 0), tr)}
             </div>
-            {cap.over ? (
-              <Alert tone="danger" title={tr("tripEdit.overTitle")} className="mt-2">
-                {tr("tripEdit.overHint")}
-              </Alert>
-            ) : null}
           </section>
         </div>
       )}

@@ -360,7 +360,16 @@
       "serial": "Seriya · partiya",
       "status": "Holat",
       "who": "Kim"
-    }
+    },
+    "confirmCounter": "{done} / {total} qator tasdiqlandi",
+    "queueMetaUnmarked": "{lines} xil · skanerlash yoʻq",
+    "plusUnmarked": "yana {lines} xil markirovkasiz",
+    "unmarkedOnly": "Markirovkasiz — tasdiqlash",
+    "unmarkedTitle": "Markirovkasiz qatorlar",
+    "unmarkedHint": "Bu qatorlar skanerlanmaydi: tovar va miqdorni tekshirib, «Tasdiqlash»ni bosing.",
+    "confirmed": "Tasdiqlandi",
+    "confirm": "Tasdiqlash",
+    "confirmAll": "Hammasini tasdiqlash ({count})"
   },
   "monitor": {
     "forbidden": "Monitor Ombor mudiri, Filial rahbari va Direktor uchun.",
@@ -475,8 +484,6 @@
       "DONE": "Yakunlangan",
       "CANCELLED": "Bekor qilingan"
     },
-    "capacityNone": "{n} joy · sigʻim belgilanmagan",
-    "capacity": "{used} / {capacity} joy",
     "places": "{n} joy",
     "forbidden": "Joʻnatish sahifasi Ombor mudiri, Filial rahbari va Direktor uchun.",
     "tripPlanned": "Reys {number} rejalashtirildi",
@@ -502,9 +509,7 @@
     "driver": "Haydovchi",
     "busy": "Band: {trip}",
     "tripDate": "Reys sanasi",
-    "selected": "{count} ta buyurtma · {capacity}",
-    "overTitle": "Mashina sigʻimi yetmaydi",
-    "overHint": "Buyurtmalarni kamaytiring yoki boshqa mashina tanlang.",
+    "selected": "{count} ta buyurtma · {places}",
     "plan": "Reysni rejalashtirish",
     "active": "Faol reyslar",
     "noActive": "Faol reys yoʻq.",
@@ -513,7 +518,8 @@
     "editTrip": "Tarkibni oʻzgartirish",
     "cancelTrip": "Reysni bekor qilish",
     "cancelText": "{number}: buyurtmalar «Hujjatlashtirilmoqda»ga qaytadi, nakladnoy raqamlari saqlanadi.",
-    "reason": "Sabab"
+    "reason": "Sabab",
+    "refrigerator": "Muzlatkichli"
   },
   "tripEdit": {
     "added": "{number}: {count} ta buyurtma qoʻshildi",
@@ -533,9 +539,7 @@
     "lastOne": "Bitta buyurtma qoldi — kerak boʻlmasa, reysni bekor qiling.",
     "canAdd": "Qoʻshish mumkin",
     "noCandidates": "Shu filialda joʻnatishga tayyor buyurtma yoʻq.",
-    "toTrip": "Reysga",
-    "overTitle": "Mashina sigʻimi yetmaydi",
-    "overHint": "Kamroq buyurtma tanlang yoki alohida reys tuzing."
+    "toTrip": "Reysga"
   },
   "catalog": {
     "title": "Mahsulot qoʻshish",

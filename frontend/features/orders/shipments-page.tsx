@@ -39,16 +39,9 @@ export const TRIP_STATUS: Record<TripStatus, { tone: "info" | "warning" | "succe
   CANCELLED: { tone: "neutral", icon: Ban },
 };
 
-/** Sigʻim: tanlangan joylar + mashinaning band joylari ≤ sigʻim (server bilan bir xil). */
-export function capacityState(
-  selected: number,
-  busy: number,
-  capacity: number | null | undefined,
-  t: OrdersT,
-): { text: string; over: boolean } {
-  if (!capacity) return { text: t("shipments.capacityNone", { n: formatQuantity(selected) }), over: false };
-  const used = selected + busy;
-  return { text: t("shipments.capacity", { used: formatQuantity(used), capacity: formatQuantity(capacity) }), over: used > capacity };
+/** Tanlangan buyurtmalar joylari (E6, 07.11: mashina sigʻimi yoʻq — faqat maʼlumot). */
+export function placesText(selected: number, t: OrdersT): string {
+  return t("shipments.places", { n: formatQuantity(selected) });
 }
 
 function todayUz(): string {
@@ -56,7 +49,7 @@ function todayUz(): string {
   return formatIsoDate(p);
 }
 
-/** Hujjatlashtirish (SPEC 5.2 №7): reys tuzish — mashina, haydovchi, sigʻim; nakladnoy; «Oʻzi olib ketadi». */
+/** Hujjatlashtirish (SPEC 5.2 №7): reys tuzish — mashina, haydovchi (sigʻimsiz, E6); nakladnoy; «Oʻzi olib ketadi». */
 export function ShipmentsPage() {
   const tr = useTranslations("orders");
   const live = useLiveConnected();
@@ -109,8 +102,6 @@ export function ShipmentsPage() {
   if (me.data && !allowed) return <ForbiddenState description={tr("shipments.forbidden")} />;
 
   const places = deliveries.filter((o) => picked.includes(o.id)).reduce((s, o) => s + o.places, 0);
-  const v = options.data?.vehicles.find((x) => String(x.id) === vehicle);
-  const cap = capacityState(places, v?.busyPlaces ?? 0, v?.capacityBoxes, tr);
   const isoDate = parseUzDate(date);
 
   async function createTrip() {
@@ -311,7 +302,7 @@ export function ShipmentsPage() {
                     options={(options.data?.vehicles ?? []).map((x) => ({
                       value: String(x.id),
                       label: `${x.plateNumber} · ${x.model}`,
-                      meta: x.capacityBoxes ? tr("shipments.places", { n: formatQuantity(x.capacityBoxes) }) : undefined,
+                      meta: x.hasRefrigerator ? tr("shipments.refrigerator") : undefined,
                     }))}
                   />
                   <Select
@@ -328,17 +319,12 @@ export function ShipmentsPage() {
                     }))}
                   />
                   <TextField label={tr("shipments.tripDate")} value={date} onChange={setDate} placeholder={tr("drawer.datePlaceholder")} />
-                  <div className={`text-subtitle tabular-nums ${cap.over ? "text-danger" : ""}`} aria-live="polite">
-                    {tr("shipments.selected", { count: formatQuantity(picked.length), capacity: cap.text })}
+                  <div className="text-subtitle tabular-nums" aria-live="polite">
+                    {tr("shipments.selected", { count: formatQuantity(picked.length), places: placesText(places, tr) })}
                   </div>
-                  {cap.over ? (
-                    <Alert tone="danger" title={tr("shipments.overTitle")}>
-                      {tr("shipments.overHint")}
-                    </Alert>
-                  ) : null}
                   <Button
                     icon={Truck}
-                    disabled={picked.length === 0 || !vehicle || !driver || cap.over}
+                    disabled={picked.length === 0 || !vehicle || !driver}
                     loading={pending}
                     onClick={() => void createTrip()}
                   >

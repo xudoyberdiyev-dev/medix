@@ -1,7 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CircleX, FileDown, Play, ScanLine, Tag, Timer, Trash2 } from "lucide-react";
+import { Check, CheckCircle2, CircleX, FileDown, ListChecks, Play, ScanLine, Tag, Timer, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -31,6 +31,13 @@ import type { OrdersT } from "./i18n";
 
 export type MarkWork = components["schemas"]["MarkWork"];
 export type MarkCode = components["schemas"]["MarkCode"];
+export type UnmarkedLine = components["schemas"]["UnmarkedLine"];
+
+/** E1: markirovkasiz qatorlar tasdig'i — «1 / 2 qator tasdiqlandi». */
+export function confirmText(lines: Pick<UnmarkedLine, "confirmed">[], t: OrdersT): string {
+  const done = lines.filter((l) => l.confirmed).length;
+  return t("marking.confirmCounter", { done: formatQuantity(done), total: formatQuantity(lines.length) });
+}
 
 /** Hisoblagich: «10 / 10 quti · 25 / 25 dona» (SPEC 5.4). */
 export function counterText(w: Pick<MarkWork, "boxesScanned" | "boxesNeeded" | "unitsScanned" | "unitsNeeded">, t: OrdersT): string {
@@ -187,12 +194,22 @@ function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
               <div className="font-mono">{o.number}</div>
               <div className="mt-1">{o.customer}</div>
               <div className="mt-1 text-caption text-text-secondary">
-                {t("marking.queueMeta", {
-                  lines: formatQuantity(o.lines),
-                  qty: formatQuantity(o.totalQty),
-                  minutes: o.markMinutes ?? "—",
-                })}
+                {o.lines === 0
+                  ? t("marking.queueMetaUnmarked", { lines: formatQuantity(o.unmarkedLines) })
+                  : t("marking.queueMeta", {
+                      lines: formatQuantity(o.lines),
+                      qty: formatQuantity(o.totalQty),
+                      minutes: o.markMinutes ?? "—",
+                    })}
+                {o.lines > 0 && o.unmarkedLines > 0 ? ` · ${t("marking.plusUnmarked", { lines: formatQuantity(o.unmarkedLines) })}` : null}
               </div>
+              {o.lines === 0 ? (
+                <div className="mt-2">
+                  <Badge tone="neutral" icon={ListChecks}>
+                    {t("marking.unmarkedOnly")}
+                  </Badge>
+                </div>
+              ) : null}
               <div className="mt-2">
                 {o.markerId ? (
                   <Badge tone="warning">{t("marking.busy", { name: o.marker ?? "" })}</Badge>
@@ -223,6 +240,10 @@ function ActiveMarking({ work }: { work: MarkWork }) {
   const [reason, setReason] = useState("");
   const [removeError, setRemoveError] = useState<unknown>(null);
   const [removePending, setRemovePending] = useState(false);
+  const [confirming, setConfirming] = useState<number | "all" | null>(null);
+  const [confirmError, setConfirmError] = useState<unknown>(null);
+  const hasMarked = work.lines.length > 0;
+  const unconfirmed = work.unmarkedLines.filter((l) => !l.confirmed);
   const t = work.deadline ? timerText(new Date(work.deadline), now, tr) : null;
 
   // Doimiy fokus: skaner klaviatura rejimida — maydon har doim tayyor turadi (oyna ochiq bo'lmasa).
@@ -310,6 +331,21 @@ function ActiveMarking({ work }: { work: MarkWork }) {
     }
   }
 
+  /** E1: markirovkasiz qatorni (yoki hammasini) «Tasdiqlash». */
+  async function confirm(ids: number[], key: number | "all") {
+    setConfirming(key);
+    setConfirmError(null);
+    try {
+      await ensureCsrf();
+      const w = await unwrap(api.POST("/api/marking/orders/{id}/confirm", { params: { path: { id: work.id } }, body: { lineIds: ids } }));
+      qc.setQueryData(["marking", "mine"], w);
+    } catch (e) {
+      setConfirmError(e);
+    } finally {
+      setConfirming(null);
+    }
+  }
+
   async function remove() {
     if (!removing) return;
     setRemovePending(true);
@@ -366,22 +402,31 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               </div>
             ) : null}
           </div>
-          <label className="mt-4 block">
-            <span className="mb-1 flex items-center gap-2 text-caption text-text-secondary">
-              <ScanLine size={16} strokeWidth={1.5} aria-hidden /> {tr("marking.scanField")}
-              {queued > 1 ? <span aria-live="polite">{tr("marking.checking", { count: queued })}</span> : null}
-            </span>
-            <input
-              ref={input}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={onKeyDown}
-              autoComplete="off"
-              spellCheck={false}
-              aria-label={tr("marking.codeAria")}
-              className="h-12 w-full rounded-control border border-border bg-surface px-3 font-mono focus:border-primary focus:outline-none"
-            />
-          </label>
+          {work.unmarkedOnly ? (
+            <div className="mt-3">
+              <Badge tone="neutral" icon={ListChecks}>
+                {tr("marking.unmarkedOnly")}
+              </Badge>
+            </div>
+          ) : null}
+          {hasMarked ? (
+            <label className="mt-4 block">
+              <span className="mb-1 flex items-center gap-2 text-caption text-text-secondary">
+                <ScanLine size={16} strokeWidth={1.5} aria-hidden /> {tr("marking.scanField")}
+                {queued > 1 ? <span aria-live="polite">{tr("marking.checking", { count: queued })}</span> : null}
+              </span>
+              <input
+                ref={input}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onKeyDown={onKeyDown}
+                autoComplete="off"
+                spellCheck={false}
+                aria-label={tr("marking.codeAria")}
+                className="h-12 w-full rounded-control border border-border bg-surface px-3 font-mono focus:border-primary focus:outline-none"
+              />
+            </label>
+          ) : null}
           <ul className="mt-4 flex flex-col">
             {work.lines.map((l) => (
               <li key={l.lineId} className="border-t border-border py-3">
@@ -401,6 +446,67 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               </li>
             ))}
           </ul>
+          {work.unmarkedLines.length > 0 ? (
+            <section aria-label={tr("marking.unmarkedTitle")} className="mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-subtitle">{tr("marking.unmarkedTitle")}</h3>
+                <span className="text-caption text-text-secondary tabular-nums" aria-live="polite">
+                  {confirmText(work.unmarkedLines, tr)}
+                </span>
+              </div>
+              <p className="text-caption text-text-secondary">{tr("marking.unmarkedHint")}</p>
+              <ul className="mt-2 flex flex-col">
+                {work.unmarkedLines.map((l) => (
+                  <li key={l.lineId} className="flex items-center justify-between gap-3 border-t border-border py-3">
+                    <div>
+                      <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
+                      <div className="text-caption text-text-secondary tabular-nums">
+                        {formatQuantity(l.qty)} {l.unit}
+                      </div>
+                    </div>
+                    {l.confirmed ? (
+                      <Badge tone="success" icon={CheckCircle2}>
+                        {tr("marking.confirmed")}
+                      </Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon={Check}
+                        loading={confirming === l.lineId}
+                        disabled={confirming !== null}
+                        onClick={() => void confirm([l.lineId], l.lineId)}
+                      >
+                        {tr("marking.confirm")}
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {unconfirmed.length > 1 ? (
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={ListChecks}
+                    loading={confirming === "all"}
+                    disabled={confirming !== null}
+                    onClick={() =>
+                      void confirm(
+                        unconfirmed.map((l) => l.lineId),
+                        "all",
+                      )
+                    }
+                  >
+                    {tr("marking.confirmAll", { count: formatQuantity(unconfirmed.length) })}
+                  </Button>
+                </div>
+              ) : null}
+              {describeError(confirmError).message ? (
+                <Alert tone="danger" title={describeError(confirmError).message ?? ""} className="mt-2" />
+              ) : null}
+            </section>
+          ) : null}
           {finishErr.message ? <Alert tone="danger" title={finishErr.message} className="mt-3" /> : null}
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <IssueButton orderId={work.id} />

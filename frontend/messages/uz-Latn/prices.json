@@ -130,11 +130,7 @@
     "LAST_RECEIPT": "Oxirgi kirim narxi",
     "percent": "Ustama",
     "percentHint": "Manfiy — chegirma",
-    "rounding": "Yaxlitlash",
-    "round0": "Yaxlitlanmaydi",
-    "round100": "100 soʻmgacha",
-    "round500": "500 soʻmgacha",
-    "round1000": "1 000 soʻmgacha"
+    "exact": "Narx yaxlitlanmaydi — soʻm va tiyinigacha aniq hisoblanadi."
   },
   "approve": {
     "title": "Narx oʻzgarishini tasdiqlash",

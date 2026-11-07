@@ -5105,6 +5105,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/employees/{id}/all-branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Buxgalterga barcha filiallar doirasi (faqat Direktor)
+         * @description Standart holatda Buxgalter faqat o'z filialini ko'radi (E3). Ochiq sessiyalari tugatiladi.
+         */
+        post: operations["allBranches"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Markirovkasiz qatorlarni tasdiqlash
+         * @description E1: markirovkasiz qatorlar skanerlanmaydi — Markirovkachi «Tasdiqlash» bilan o'tkazadi (bittalab yoki hammasi).
+         */
+        post: operations["confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5992,6 +6032,8 @@ export interface components {
             phone?: string;
         };
         Employee: {
+            /** @description Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3) */
+            allBranches: boolean;
             /** Format: int64 */
             branchId?: number;
             fullName: string;
@@ -6540,6 +6582,11 @@ export interface components {
              * @description Skanerlanadigan kodlar soni
              */
             totalQty: number;
+            /**
+             * Format: int32
+             * @description Markirovkasiz (tasdiqlanadigan) qatorlar soni (E1)
+             */
+            unmarkedLines: number;
         };
         MarkWork: {
             /** Format: int32 */
@@ -6572,6 +6619,10 @@ export interface components {
             unitsNeeded: number;
             /** Format: int32 */
             unitsScanned: number;
+            /** @description Markirovkasiz qatorlar (tasdiqlanadi, E1) */
+            unmarkedLines: components["schemas"]["UnmarkedLine"][];
+            /** @description Buyurtmada markirovkali qator yo'q — «Markirovkasiz — tasdiqlash» */
+            unmarkedOnly: boolean;
         };
         MarkupLine: {
             /** @description Kirim narxi asosida — faqat special.cost bilan */
@@ -6592,11 +6643,6 @@ export interface components {
             /** Format: int64 */
             priceTypeId: number;
             productIds: number[];
-            /**
-             * Format: int32
-             * @description 0, 100, 500 yoki 1000
-             */
-            rounding: number;
         };
         Matrix: {
             /** @description Rol kodi → ruxsat kalitlari */
@@ -8677,8 +8723,6 @@ export interface components {
             /** Format: int64 */
             branchId: number;
             cancelReason?: string;
-            /** Format: int32 */
-            capacityBoxes?: number;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -8751,8 +8795,6 @@ export interface components {
         TripSummary: {
             /** Format: int64 */
             branchId: number;
-            /** Format: int32 */
-            capacityBoxes?: number;
             /** Format: date-time */
             createdAt: string;
             driver: string;
@@ -8788,8 +8830,8 @@ export interface components {
             active: boolean;
             /** Format: int64 */
             branchId: number;
-            /** Format: int32 */
-            capacityBoxes?: number;
+            /** @description Muzlatkichi bor (faqat ma'lumot, reysga ta'sir qilmaydi) */
+            hasRefrigerator: boolean;
             /** Format: int64 */
             id: number;
             model: string;
@@ -8801,8 +8843,8 @@ export interface components {
              * @description Faol reysdagi joylar (Rejalashtirilgan / Yo'lda)
              */
             busyPlaces: number;
-            /** Format: int32 */
-            capacityBoxes?: number;
+            /** @description Muzlatkichi bor (faqat ma'lumot) */
+            hasRefrigerator: boolean;
             /** Format: int64 */
             id: number;
             model: string;
@@ -8811,11 +8853,8 @@ export interface components {
         VehicleRequest: {
             /** Format: int64 */
             branchId: number;
-            /**
-             * Format: int32
-             * @description Sig'imi — joylar (quti) soni
-             */
-            capacityBoxes?: number;
+            /** @description Muzlatkichi bor (bo'sh — yo'q) */
+            hasRefrigerator?: boolean;
             model: string;
             plateNumber: string;
         };
@@ -9253,6 +9292,24 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        AllBranchesRequest: {
+            enabled: boolean;
+        };
+        UnmarkedLine: {
+            confirmed: boolean;
+            /** Format: int64 */
+            lineId: number;
+            /** Format: int32 */
+            lineNo: number;
+            productCode: string;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            unit: string;
+        };
+        ConfirmRequest: {
+            lineIds: number[];
         };
     };
     responses: never;
@@ -16639,6 +16696,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    allBranches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllBranchesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkWork"];
                 };
             };
         };

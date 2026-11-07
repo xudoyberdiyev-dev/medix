@@ -11534,6 +11534,84 @@
         "summary" : "Rad etish",
         "tags" : [ "zone-transfer" ]
       }
+    },
+    "/api/employees/{id}/all-branches" : {
+      "post" : {
+        "description" : "Standart holatda Buxgalter faqat o'z filialini ko'radi (E3). Ochiq sessiyalari tugatiladi.",
+        "operationId" : "allBranches",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AllBranchesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Employee"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buxgalterga barcha filiallar doirasi (faqat Direktor)",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/marking/orders/{id}/confirm" : {
+      "post" : {
+        "description" : "E1: markirovkasiz qatorlar skanerlanmaydi — Markirovkachi «Tasdiqlash» bilan o'tkazadi (bittalab yoki hammasi).",
+        "operationId" : "confirm",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfirmRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkWork"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovkasiz qatorlarni tasdiqlash",
+        "tags" : [ "marking" ]
+      }
     }
   },
   "components" : {
@@ -13895,6 +13973,10 @@
       "Employee" : {
         "type" : "object",
         "properties" : {
+          "allBranches" : {
+            "type" : "boolean",
+            "description" : "Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3)"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -13928,7 +14010,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "fullName", "id", "login", "mustChangePassword", "roleCode", "roleName", "status" ]
+        "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "roleCode", "roleName", "status" ]
       },
       "EmployeeOption" : {
         "type" : "object",
@@ -15273,9 +15355,14 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Skanerlanadigan kodlar soni"
+          },
+          "unmarkedLines" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Markirovkasiz (tasdiqlanadigan) qatorlar soni (E1)"
           }
         },
-        "required" : [ "customer", "id", "lines", "number", "statusChangedAt", "totalQty" ]
+        "required" : [ "customer", "id", "lines", "number", "statusChangedAt", "totalQty", "unmarkedLines" ]
       },
       "MarkWork" : {
         "type" : "object",
@@ -15345,9 +15432,20 @@
           "unitsScanned" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unmarkedLines" : {
+            "type" : "array",
+            "description" : "Markirovkasiz qatorlar (tasdiqlanadi, E1)",
+            "items" : {
+              "$ref" : "#/components/schemas/UnmarkedLine"
+            }
+          },
+          "unmarkedOnly" : {
+            "type" : "boolean",
+            "description" : "Buyurtmada markirovkali qator yo'q — «Markirovkasiz — tasdiqlash»"
           }
         },
-        "required" : [ "boxesNeeded", "boxesScanned", "codes", "complete", "customer", "id", "lines", "number", "status", "unitsNeeded", "unitsScanned" ]
+        "required" : [ "boxesNeeded", "boxesScanned", "codes", "complete", "customer", "id", "lines", "number", "status", "unitsNeeded", "unitsScanned", "unmarkedLines", "unmarkedOnly" ]
       },
       "MarkupLine" : {
         "type" : "object",
@@ -15403,14 +15501,9 @@
             },
             "maxItems" : 5000,
             "minItems" : 0
-          },
-          "rounding" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "0, 100, 500 yoki 1000"
           }
         },
-        "required" : [ "base", "branchId", "percent", "priceTypeId", "productIds", "rounding" ]
+        "required" : [ "base", "branchId", "percent", "priceTypeId", "productIds" ]
       },
       "Matrix" : {
         "type" : "object",
@@ -20612,10 +20705,6 @@
           "cancelReason" : {
             "type" : "string"
           },
-          "capacityBoxes" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -20805,10 +20894,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "capacityBoxes" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -20915,9 +21000,9 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "capacityBoxes" : {
-            "type" : "integer",
-            "format" : "int32"
+          "hasRefrigerator" : {
+            "type" : "boolean",
+            "description" : "Muzlatkichi bor (faqat ma'lumot, reysga ta'sir qilmaydi)"
           },
           "id" : {
             "type" : "integer",
@@ -20930,7 +21015,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "active", "branchId", "id", "model", "plateNumber" ]
+        "required" : [ "active", "branchId", "hasRefrigerator", "id", "model", "plateNumber" ]
       },
       "VehicleOption" : {
         "type" : "object",
@@ -20940,9 +21025,9 @@
             "format" : "int32",
             "description" : "Faol reysdagi joylar (Rejalashtirilgan / Yo'lda)"
           },
-          "capacityBoxes" : {
-            "type" : "integer",
-            "format" : "int32"
+          "hasRefrigerator" : {
+            "type" : "boolean",
+            "description" : "Muzlatkichi bor (faqat ma'lumot)"
           },
           "id" : {
             "type" : "integer",
@@ -20955,7 +21040,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "busyPlaces", "id", "model", "plateNumber" ]
+        "required" : [ "busyPlaces", "hasRefrigerator", "id", "model", "plateNumber" ]
       },
       "VehicleRequest" : {
         "type" : "object",
@@ -20964,12 +21049,9 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "capacityBoxes" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Sig'imi — joylar (quti) soni",
-            "maximum" : 100000,
-            "minimum" : 1
+          "hasRefrigerator" : {
+            "type" : "boolean",
+            "description" : "Muzlatkichi bor (bo'sh — yo'q)"
           },
           "model" : {
             "type" : "string",
@@ -22048,6 +22130,60 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "from", "id", "lines", "needsApproval", "number", "qty", "status", "to", "warehouse", "warehouseId" ]
+      },
+      "AllBranchesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "enabled" ]
+      },
+      "UnmarkedLine" : {
+        "type" : "object",
+        "properties" : {
+          "confirmed" : {
+            "type" : "boolean"
+          },
+          "lineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "confirmed", "lineId", "lineNo", "productCode", "productName", "qty", "unit" ]
+      },
+      "ConfirmRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lineIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 1000,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "lineIds" ]
       }
     }
   }

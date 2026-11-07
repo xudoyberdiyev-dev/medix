@@ -71,8 +71,6 @@
   "vehicle": {
     "plate": "Давлат рақами",
     "model": "Модел",
-    "capacity": "Сиғими",
-    "places": "{count} жой",
     "branch": "Филиал",
     "status": "Ҳолат",
     "searchPlaceholder": "Рақам ёки модел",
@@ -81,7 +79,6 @@
     "emptyTitle": "Ҳали машина қўшилмаган",
     "emptyDescription": "Рейс тузишда машина ва унинг сиғими танланади.",
     "branchError": "Филиал танланмаган. Машина қайси филиалга тегишли эканини танланг.",
-    "capacityError": "Сиғим — бутун мусбат сон (жойлар сони). Бўш қолдириш мумкин.",
     "saved": "Машина сақланди",
     "created": "Машина қўшилди",
     "titleEdit": "Машина {plate}",
@@ -89,8 +86,11 @@
     "save": "Машинани сақлаш",
     "plateHint": "Масалан: 01 А 123 БЦ",
     "modelPlaceholder": "Дамас",
-    "capacityField": "Сиғими (жой)",
-    "capacityHint": "Нечта қути сиғади — рейсда текширилади"
+    "refrigerator": "Музлаткич",
+    "refrigeratorYes": "Бор",
+    "refrigeratorNo": "Йўқ",
+    "refrigeratorField": "Музлаткичи бор",
+    "refrigeratorHint": "Фақат маълумот учун — рейсга таъсир қилмайди"
   },
   "expense": {
     "item": "Модда",

@@ -71,8 +71,6 @@
   "vehicle": {
     "plate": "Госномер",
     "model": "Модель",
-    "capacity": "Вместимость",
-    "places": "{count} мест",
     "branch": "Филиал",
     "status": "Статус",
     "searchPlaceholder": "Номер или модель",
@@ -81,7 +79,6 @@
     "emptyTitle": "Машин пока нет",
     "emptyDescription": "При формировании рейса выбирается машина и её вместимость.",
     "branchError": "Филиал не выбран. Выберите, к какому филиалу относится машина.",
-    "capacityError": "Вместимость — целое положительное число (количество мест). Можно оставить пустым.",
     "saved": "Машина сохранена",
     "created": "Машина добавлена",
     "titleEdit": "Машина {plate}",
@@ -89,8 +86,11 @@
     "save": "Сохранить машину",
     "plateHint": "Например: 01 A 123 BC",
     "modelPlaceholder": "Damas",
-    "capacityField": "Вместимость (мест)",
-    "capacityHint": "Сколько коробок помещается — проверяется в рейсе"
+    "refrigerator": "Холодильник",
+    "refrigeratorYes": "Есть",
+    "refrigeratorNo": "Нет",
+    "refrigeratorField": "Есть холодильник",
+    "refrigeratorHint": "Только для сведения — на рейс не влияет"
   },
   "expense": {
     "item": "Статья",

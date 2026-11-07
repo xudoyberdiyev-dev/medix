@@ -302,6 +302,35 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(page.getByText("Yigʻish yakunlandi")).toBeVisible();
 
+  // E1 (07.11): markirovkasiz buyurtma ham Markirovkachidan «Tasdiqlash» bilan oʻtadi
+  await page.goto("/settings/employees");
+  await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
+  const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
+  await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill("Malika Markirovkachi");
+  await dialog.getByLabel(/^Login\s*\*?$/).fill("marker.0");
+  await choose(page, "Rol", /^Markirovkachi$/);
+  await choose(page, "Filial", /Toshkent/);
+  await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(OPERATOR_TEMP);
+  await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
+  await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
+  const marker = await page
+    .context()
+    .browser()!
+    .newPage({ baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000" });
+  await login(marker, "marker.0", OPERATOR_TEMP);
+  await changePassword(marker, OPERATOR_TEMP, OPERATOR_PASSWORD);
+  await expect(marker).toHaveURL(/\/$/);
+  await marker.goto("/marking");
+  await marker.getByRole("tab", { name: /Navbat/ }).click();
+  const card = marker.getByRole("listitem").filter({ hasText: "Shifo Dorixona E2E" }).first();
+  await expect(card).toContainText("Markirovkasiz — tasdiqlash");
+  await card.getByRole("button", { name: "Markirovkani boshlash" }).click();
+  await marker.getByRole("region", { name: "Markirovkasiz qatorlar" }).getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(marker.getByText("1 / 1 qator tasdiqlandi")).toBeVisible();
+  await marker.getByRole("button", { name: "Markirovkani yakunlash" }).click();
+  await expect(marker.getByText("Markirovka yakunlandi").first()).toBeVisible();
+  await marker.close();
+
   await page.goto("/orders");
   await page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first().click();
   await expect(page.getByRole("heading", { name: "Hisobdan oʻtkazish" })).toBeVisible();

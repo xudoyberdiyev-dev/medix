@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, CircleCheck, KeyRound, LockOpen, UserPlus, Users } from "lucide-react";
+import { Ban, Building2, CircleCheck, KeyRound, LockOpen, UserPlus, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -26,16 +26,19 @@ import {
   useCreateEmployee,
   useEmployees,
   useResetPassword,
+  useSetAllBranches,
   useUnblockEmployee,
   type Employee,
 } from "./api";
 
-type Dialog = { kind: "block" | "reset"; employee: Employee } | null;
+type Dialog = { kind: "block" | "reset" | "allBranches"; employee: Employee } | null;
 
 export function EmployeesPage() {
   const t = useTranslations("employees");
   const me = useMe();
   const canEdit = can(me.data, "staff.edit");
+  // E3: Buxgalterga barcha filiallar — faqat Direktor beradi
+  const isDirector = me.data?.role.code === "DIRECTOR";
   const employees = useEmployees();
   const unblock = useUnblockEmployee();
   const [query, setQuery] = useState("");
@@ -45,6 +48,30 @@ export function EmployeesPage() {
   if (employees.error instanceof ApiError && employees.error.isForbidden) return <ForbiddenState description={t("forbidden")} />;
 
   const rows = filterEmployees(employees.data ?? [], query);
+  const editItems = (e: Employee) => [
+    e.status === "BLOCKED"
+      ? {
+          key: "unblock",
+          label: t("unblock"),
+          icon: <LockOpen size={16} strokeWidth={1.5} aria-hidden />,
+          onSelect: () =>
+            unblock.mutate(e.id, {
+              onSuccess: () => toast({ tone: "success", title: t("unblocked"), description: e.fullName }),
+            }),
+        }
+      : {
+          key: "block",
+          label: t("block"),
+          icon: <Ban size={16} strokeWidth={1.5} aria-hidden />,
+          onSelect: () => setDialog({ kind: "block", employee: e }),
+        },
+    {
+      key: "reset",
+      label: t("resetPassword"),
+      icon: <KeyRound size={16} strokeWidth={1.5} aria-hidden />,
+      onSelect: () => setDialog({ kind: "reset", employee: e }),
+    },
+  ];
   const columns: TableColumn<Employee>[] = [
     {
       key: "fullName",
@@ -57,7 +84,20 @@ export function EmployeesPage() {
       ),
     },
     { key: "login", title: t("login"), mono: true },
-    { key: "roleName", title: t("role") },
+    {
+      key: "roleName",
+      title: t("role"),
+      render: (e) => (
+        <span className="flex flex-wrap items-center gap-2">
+          <span>{e.roleName}</span>
+          {e.allBranches ? (
+            <Badge tone="info" icon={Building2}>
+              {t("allBranches.badge")}
+            </Badge>
+          ) : null}
+        </span>
+      ),
+    },
     {
       key: "status",
       title: t("status"),
@@ -111,31 +151,20 @@ export function EmployeesPage() {
             </div>
           }
           rowActions={(e) =>
-            canEdit ? (
+            canEdit || (isDirector && e.roleCode === "ACCOUNTANT") ? (
               <RowMenu
                 items={[
-                  e.status === "BLOCKED"
-                    ? {
-                        key: "unblock",
-                        label: t("unblock"),
-                        icon: <LockOpen size={16} strokeWidth={1.5} aria-hidden />,
-                        onSelect: () =>
-                          unblock.mutate(e.id, {
-                            onSuccess: () => toast({ tone: "success", title: t("unblocked"), description: e.fullName }),
-                          }),
-                      }
-                    : {
-                        key: "block",
-                        label: t("block"),
-                        icon: <Ban size={16} strokeWidth={1.5} aria-hidden />,
-                        onSelect: () => setDialog({ kind: "block", employee: e }),
-                      },
-                  {
-                    key: "reset",
-                    label: t("resetPassword"),
-                    icon: <KeyRound size={16} strokeWidth={1.5} aria-hidden />,
-                    onSelect: () => setDialog({ kind: "reset", employee: e }),
-                  },
+                  ...(isDirector && e.roleCode === "ACCOUNTANT"
+                    ? [
+                        {
+                          key: "allBranches",
+                          label: e.allBranches ? t("allBranches.revoke") : t("allBranches.grant"),
+                          icon: <Building2 size={16} strokeWidth={1.5} aria-hidden />,
+                          onSelect: () => setDialog({ kind: "allBranches", employee: e }),
+                        },
+                      ]
+                    : []),
+                  ...(canEdit ? editItems(e) : []),
                 ]}
               />
             ) : null
@@ -152,6 +181,7 @@ export function EmployeesPage() {
       <CreateEmployeeDrawer open={creating} onClose={() => setCreating(false)} />
       {dialog?.kind === "block" ? <BlockDialog employee={dialog.employee} onClose={() => setDialog(null)} /> : null}
       {dialog?.kind === "reset" ? <ResetDialog employee={dialog.employee} onClose={() => setDialog(null)} /> : null}
+      {dialog?.kind === "allBranches" ? <AllBranchesDialog employee={dialog.employee} onClose={() => setDialog(null)} /> : null}
     </>
   );
 }
@@ -185,6 +215,41 @@ function BlockDialog({ employee, onClose }: { employee: Employee; onClose: () =>
       <div className="mt-4">
         <TextField label={t("reason")} value={reason} onChange={setReason} error={error ?? err.fields.reason} required autoFocus />
       </div>
+      {err.message ? <Alert tone="danger" title={err.message} className="mt-4" /> : null}
+    </Modal>
+  );
+}
+
+/** E3: Direktor Buxgalterga barcha filiallar doirasini beradi / oladi (audit; xodim qayta kiradi). */
+function AllBranchesDialog({ employee, onClose }: { employee: Employee; onClose: () => void }) {
+  const t = useTranslations("employees.allBranches");
+  const set = useSetAllBranches();
+  const enable = !employee.allBranches;
+  const err = describeError(set.error);
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      size="sm"
+      tone={enable ? undefined : "danger"}
+      title={enable ? t("grantTitle", { name: employee.fullName }) : t("revokeTitle", { name: employee.fullName })}
+      primaryAction={{
+        label: enable ? t("grant") : t("revoke"),
+        loading: set.isPending,
+        onClick: () =>
+          set.mutate(
+            { id: employee.id, enabled: enable },
+            {
+              onSuccess: () => (
+                toast({ tone: "success", title: enable ? t("granted") : t("revoked"), description: employee.fullName }),
+                onClose()
+              ),
+            },
+          ),
+      }}
+    >
+      <p className="text-text-secondary">{enable ? t("grantHint") : t("revokeHint")}</p>
+      <p className="mt-2 text-text-secondary">{t("sessions")}</p>
       {err.message ? <Alert tone="danger" title={err.message} className="mt-4" /> : null}
     </Modal>
   );

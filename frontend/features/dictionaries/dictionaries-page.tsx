@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/selection-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -19,13 +20,11 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useBranchList } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
-import { formatQuantity } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
 import {
   DICTIONARIES,
   EXPENSE_PERMISSION,
   VEHICLE_PERMISSION,
-  parseCapacity,
   useDictionary,
   useExpenseItems,
   useSaveEntry,
@@ -270,10 +269,9 @@ function VehiclesTab({ canEdit, creating, onCreated }: TabProps) {
     { key: "plateNumber", title: t("vehicle.plate"), mono: true },
     { key: "model", title: t("vehicle.model") },
     {
-      key: "capacityBoxes",
-      title: t("vehicle.capacity"),
-      align: "right",
-      render: (v) => (v.capacityBoxes ? t("vehicle.places", { count: formatQuantity(v.capacityBoxes) }) : "—"),
+      key: "hasRefrigerator",
+      title: t("vehicle.refrigerator"),
+      render: (v) => (v.hasRefrigerator ? t("vehicle.refrigeratorYes") : t("vehicle.refrigeratorNo")),
     },
     ...(multiBranch ? [{ key: "branch", title: t("vehicle.branch"), render: (v: Vehicle) => branchName(v.branchId) }] : []),
     { key: "active", title: t("vehicle.status"), render: (v: Vehicle) => <ActiveBadge active={v.active} /> },
@@ -338,20 +336,16 @@ function VehicleDialog({ vehicle, onClose }: { vehicle: Vehicle | null; onClose:
   );
   const [plate, setPlate] = useState(vehicle?.plateNumber ?? "");
   const [model, setModel] = useState(vehicle?.model ?? "");
-  const [capacity, setCapacity] = useState(vehicle?.capacityBoxes ? String(vehicle.capacityBoxes) : "");
-  const [local, setLocal] = useState<{ branchId?: string; capacity?: string }>({});
+  const [refrigerator, setRefrigerator] = useState(vehicle?.hasRefrigerator ?? false);
+  const [local, setLocal] = useState<{ branchId?: string }>({});
   const err = describeError(save.error);
 
   function submit() {
-    const cap = parseCapacity(capacity);
-    const errors = {
-      branchId: branchId ? undefined : t("branchError"),
-      capacity: cap === null ? t("capacityError") : undefined,
-    };
+    const errors = { branchId: branchId ? undefined : t("branchError") };
     setLocal(errors);
-    if (errors.branchId || errors.capacity || !branchId || cap === null) return;
+    if (errors.branchId || !branchId) return;
     save.mutate(
-      { id: vehicle?.id, branchId: Number(branchId), plateNumber: plate, model, capacityBoxes: cap },
+      { id: vehicle?.id, branchId: Number(branchId), plateNumber: plate, model, hasRefrigerator: refrigerator },
       {
         onSuccess: (v) => (toast({ tone: "success", title: vehicle ? t("saved") : t("created"), description: v.plateNumber }), onClose()),
       },
@@ -392,14 +386,9 @@ function VehicleDialog({ vehicle, onClose }: { vehicle: Vehicle | null; onClose:
           placeholder={t("modelPlaceholder")}
           required
         />
-        <TextField
-          label={t("capacityField")}
-          value={capacity}
-          onChange={setCapacity}
-          error={local.capacity ?? err.fields.capacityBoxes}
-          hint={t("capacityHint")}
-          inputMode="numeric"
-        />
+        <div className="col-span-2">
+          <Checkbox label={t("refrigeratorField")} description={t("refrigeratorHint")} checked={refrigerator} onChange={setRefrigerator} />
+        </div>
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
       </div>
     </Modal>

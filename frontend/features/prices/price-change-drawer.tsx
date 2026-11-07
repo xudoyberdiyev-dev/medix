@@ -546,7 +546,6 @@ function MarkupDialog({
   const t = useTranslations("prices.markup");
   const [base, setBase] = useState<string | null>("BASE_PRICE");
   const [percent, setPercent] = useState("15");
-  const [rounding, setRounding] = useState<string | null>("100");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -567,7 +566,6 @@ function MarkupDialog({
           priceTypeId,
           base: (base ?? "BASE_PRICE") as MarkupBase,
           percent: pct,
-          rounding: Number(rounding ?? 0),
         });
         for (const m of out) {
           if (m.newPrice) result[`${m.productId}:${priceTypeId}`] = m.newPrice;
@@ -602,17 +600,7 @@ function MarkupDialog({
           ]}
         />
         <TextField label={t("percent")} value={percent} onChange={setPercent} suffix="%" inputMode="decimal" hint={t("percentHint")} />
-        <Select
-          label={t("rounding")}
-          value={rounding}
-          onChange={setRounding}
-          options={[
-            { value: "0", label: t("round0") },
-            { value: "100", label: t("round100") },
-            { value: "500", label: t("round500") },
-            { value: "1000", label: t("round1000") },
-          ]}
-        />
+        <p className="text-caption text-text-secondary">{t("exact")}</p>
         {error ? <Alert tone="danger" title={error} /> : null}
       </div>
     </Modal>

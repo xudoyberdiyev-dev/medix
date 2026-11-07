@@ -2,11 +2,11 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { uzLatn } from "@/i18n/messages.generated";
 import { canApprove, canCancelOrder, codesExportUrl } from "./api";
-import { counterText } from "./marking-page";
+import { confirmText, counterText } from "./marking-page";
 import { statusTabs, tabSummary } from "./orders-page";
 import { groupByStage, sinceText, type MonitorCard } from "./monitor-page";
 import { timerText } from "./picking-page";
-import { capacityState } from "./shipments-page";
+import { placesText } from "./shipments-page";
 
 const t = createTranslator({ locale: "uz-Latn", messages: uzLatn, namespace: "orders" });
 
@@ -80,11 +80,9 @@ describe("monitor", () => {
   });
 });
 
-describe("reys sigʻimi", () => {
-  it("band joylar bilan birga hisoblanadi", () => {
-    expect(capacityState(3, 1, 5, t)).toEqual({ text: "4 / 5 joy", over: false });
-    expect(capacityState(4, 2, 5, t)).toEqual({ text: "6 / 5 joy", over: true });
-    expect(capacityState(7, 0, null, t)).toEqual({ text: "7 joy · sigʻim belgilanmagan", over: false });
+describe("reys joylari (E6: sigʻimsiz)", () => {
+  it("faqat joylar soni koʻrsatiladi", () => {
+    expect(placesText(7, t)).toBe("7 joy");
   });
 });
 
@@ -111,5 +109,12 @@ describe("buyurtma holat yorliqlari", () => {
     ]);
     expect(tabSummary(counts, null, t)).toBe("Hammasi: 3 ta · 3.500,00 soʻm");
     expect(tabSummary(counts, "CANCELLED", t)).toBe("Bekor qilingan: 2 ta · 3.000,00 soʻm");
+  });
+});
+
+describe("markirovkasiz qatorlar tasdigʻi (E1)", () => {
+  it("tasdiqlangan / jami", () => {
+    expect(confirmText([{ confirmed: true }, { confirmed: false }], t)).toBe("1 / 2 qator tasdiqlandi");
+    expect(confirmText([{ confirmed: true }], t)).toBe("1 / 1 qator tasdiqlandi");
   });
 });

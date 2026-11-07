@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 /**
  * «Yigʻishga qaytarish» tanlangan qatorlar boʻyicha (SPEC 188): ikki qatorli buyurtma (oddiy + markirovkali) yigʻiladi va
  * markirovkalanadi; Ombor mudiri faqat oddiy qatorni qaytaradi — qayta yigʻishda faqat shu qator, markirovkali qator kodi
- * saqlanadi (qayta markirovka shart emas), buyurtma yana «Hisobdan oʻtkazilmoqda». Maʼlumot first-run va roles-chain dan keyin bor.
+ * saqlanadi (qayta skanerlash shart emas, oddiy qator qayta tasdiqlanadi — E1), buyurtma yana «Hisobdan oʻtkazilmoqda». Maʼlumot first-run va roles-chain dan keyin bor.
  */
 test.describe.configure({ mode: "serial" });
 
@@ -89,6 +89,9 @@ test("Ombor zanjiri: vaqt, yigʻish, markirovka", async ({ page }) => {
   await scan.fill(mark("RP1"));
   await scan.press("Enter");
   await expect(page.getByText("1 / 1").first()).toBeVisible();
+  // E1: aralash buyurtma — markirovkasiz qator «Tasdiqlash» bilan
+  await page.getByRole("region", { name: "Markirovkasiz qatorlar" }).getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(page.getByText("1 / 1 qator tasdiqlandi")).toBeVisible();
   await page.getByRole("button", { name: "Markirovkani yakunlash" }).click();
   await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
 });
@@ -112,7 +115,16 @@ test("Ombor mudiri: faqat oddiy qatorni yigʻishga qaytaradi; qayta yigʻishda f
   await page.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(page.getByText("Yigʻish yakunlandi")).toBeVisible();
 
-  // Markirovkali qator kodi saqlangan — markirovkasiz toʻgʻridan-toʻgʻri hisobdan oʻtkazishga
+  // E1: qayta yigʻilgan markirovkasiz qator Markirovkachida qayta tasdiqlanadi; markirovkali qator kodi saqlangan
+  await login(page, "marker.1", PASSWORD);
+  await page.goto("/marking");
+  await page.getByRole("tab", { name: /Navbat/ }).click();
+  await page.getByRole("listitem").filter({ hasText: number }).getByRole("button", { name: "Markirovkani boshlash" }).click();
+  const unmarked = page.getByRole("region", { name: "Markirovkasiz qatorlar" });
+  await expect(unmarked).toContainText("Paracetamol E2E");
+  await unmarked.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await page.getByRole("button", { name: "Markirovkani yakunlash" }).click();
+  await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
   await login(page, "keeper.1", PASSWORD);
   await page.goto("/warehouse");
   await page.getByRole("region", { name: "Hisobdan oʻtkazilmoqda" }).getByText(number).click();

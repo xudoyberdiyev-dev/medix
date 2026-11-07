@@ -5,8 +5,8 @@
   "col": {
     "route": "Sotuvchi → xaridor",
     "total": "Summa",
-    "unitCost": "Tannarx",
-    "amount": "Summa"
+    "unitCost": "Tannarx (QQSsiz)",
+    "amount": "Summa (QQS bilan)"
   },
   "debt": {
     "title": "Filiallararo qarz",
@@ -33,7 +33,7 @@
     "buyerWarehouse": "Xaridor ombori",
     "noTargetsTitle": "Boshqa filialda faol ombor yoʻq",
     "noTargetsBody": "Filiallararo savdo uchun xaridor filialda faol ombor kerak. Filial ichida — ombor koʻchirishi ({ok}).",
-    "priceNote": "Narx — partiya tannarxi (QQS shu summa ichida). Guruh ichidagi qarz mijozlar qarzi jamiga kirmaydi.",
+    "priceNote": "Narx — partiya tannarxi (QQSsiz baza), QQS ustiga qoʻshiladi. Guruh ichidagi qarz mijozlar qarzi jamiga kirmaydi.",
     "pickZones": "Sotuvchi zonani va xaridor omborini tanlang.",
     "notePlaceholder": "Masalan: Samarqand filialiga kamyob dorilar"
   },

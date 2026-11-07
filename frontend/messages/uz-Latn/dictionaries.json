@@ -71,8 +71,6 @@
   "vehicle": {
     "plate": "Davlat raqami",
     "model": "Model",
-    "capacity": "Sigʻimi",
-    "places": "{count} joy",
     "branch": "Filial",
     "status": "Holat",
     "searchPlaceholder": "Raqam yoki model",
@@ -81,7 +79,6 @@
     "emptyTitle": "Hali mashina qoʻshilmagan",
     "emptyDescription": "Reys tuzishda mashina va uning sigʻimi tanlanadi.",
     "branchError": "Filial tanlanmagan. Mashina qaysi filialga tegishli ekanini tanlang.",
-    "capacityError": "Sigʻim — butun musbat son (joylar soni). Boʻsh qoldirish mumkin.",
     "saved": "Mashina saqlandi",
     "created": "Mashina qoʻshildi",
     "titleEdit": "Mashina {plate}",
@@ -89,8 +86,11 @@
     "save": "Mashinani saqlash",
     "plateHint": "Masalan: 01 A 123 BC",
     "modelPlaceholder": "Damas",
-    "capacityField": "Sigʻimi (joy)",
-    "capacityHint": "Nechta quti sigʻadi — reysda tekshiriladi"
+    "refrigerator": "Muzlatkich",
+    "refrigeratorYes": "Bor",
+    "refrigeratorNo": "Yoʻq",
+    "refrigeratorField": "Muzlatkichi bor",
+    "refrigeratorHint": "Faqat maʼlumot uchun — reysga taʼsir qilmaydi"
   },
   "expense": {
     "item": "Modda",

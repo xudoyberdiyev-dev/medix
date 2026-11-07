@@ -24,7 +24,8 @@ const STAFF = [
   { name: "Komila Kassirova", login: "cashier.1", role: /^Kassir$/ },
   { name: "Farrux Rahbarov", login: "manager.1", role: /^Filial rahbari$/ },
   { name: "Xurshida Xaridova", login: "buyer.1", role: /^Xarid$/ },
-  { name: "Botir Buxgalterov", login: "accountant.1", role: /^Buxgalter$/, allBranches: true },
+  // E3 (07.11): Buxgalter standart holatda faqat oʻz filiali; barcha filiallarni Direktor beradi (pastda)
+  { name: "Botir Buxgalterov", login: "accountant.1", role: /^Buxgalter$/ },
 ] as const;
 
 /** Markirovkali mahsulot: EAN-13 shtrix-kodi = koddagi GTIN (01). */
@@ -74,12 +75,18 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
     await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill(s.name);
     await dialog.getByLabel(/^Login\s*\*?$/).fill(s.login);
     await choose(page, "Rol", s.role);
-    if (!("allBranches" in s)) await choose(page, "Filial", /Toshkent/);
+    await choose(page, "Filial", /Toshkent/);
     await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(TEMP);
     await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
     await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
     await expect(page.getByRole("cell", { name: s.login, exact: true })).toBeVisible();
   }
+  // E3: Direktor Buxgalterga barcha filiallar doirasini beradi (audit bilan)
+  await page.getByRole("row").filter({ hasText: "accountant.1" }).getByRole("button", { name: "Amallar" }).click();
+  await page.getByRole("menuitem", { name: "Barcha filiallarga ruxsat berish" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Barcha filiallarga ruxsat berish" }).click();
+  await expect(page.getByText("Barcha filiallar ruxsati berildi").first()).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: "accountant.1" })).toContainText("Barcha filiallar");
 
   // Markirovkali mahsulot: karta → narx (NO) → boshlangʻich qoldiq (BQ)
   await page.goto("/products");
@@ -120,15 +127,17 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   await expect(page.getByText("Qoldiq omborga kirdi")).toBeVisible();
   await page.keyboard.press("Escape");
 
-  // Mashina (filial doirasida, sigʻimi 40 joy)
+  // Mashina (filial doirasida; E6: sigʻim yoʻq — faqat «Muzlatkichi bor» belgisi)
   await page.goto("/dictionaries?tab=vehicles");
   await page.getByRole("button", { name: "Mashina qoʻshish" }).click();
   await choose(page, "Filial", /Toshkent/);
   await field(page, "Davlat raqami").fill(PLATE);
   await field(page, "Model").fill("Damas");
-  await field(page, "Sigʻimi (joy)").fill("40");
+  await expect(page.getByLabel(/Sigʻimi/)).toHaveCount(0);
+  await page.getByText("Muzlatkichi bor", { exact: true }).click();
   await page.getByRole("button", { name: "Mashinani saqlash" }).click();
   await expect(page.getByText("Mashina qoʻshildi").first()).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: "Damas" }).first()).toContainText("Bor");
   await page.keyboard.press("Escape");
 
   // Mijoz
@@ -223,7 +232,7 @@ test("Markirovkachi: birinchi kirish, kodlarni skanerlaydi (xato kod rad etiladi
   await firstLogin(page, "marker.1");
   await page.goto("/marking");
   await page.getByRole("tab", { name: /Navbat/ }).click();
-  await page.getByRole("button", { name: "Markirovkani boshlash" }).first().click();
+  await page.getByRole("listitem").filter({ hasText: CUSTOMER }).first().getByRole("button", { name: "Markirovkani boshlash" }).click();
   const scan = page.getByLabel("Markirovka kodi");
   await expect(scan).toBeFocused();
   // Boshqa partiya — rad etiladi
@@ -239,6 +248,12 @@ test("Markirovkachi: birinchi kirish, kodlarni skanerlaydi (xato kod rad etiladi
   await scan.press("Enter");
   await expect(page.getByText(/shu buyurtmada allaqachon skanerlangan/).first()).toBeVisible();
   await expect(page.getByText("2 / 2").first()).toBeVisible();
+  // E1: aralash buyurtma — kodlar toʻliq, lekin markirovkasiz qator (Paracetamol) tasdiqlanmaguncha yakunlab boʻlmaydi
+  await expect(page.getByRole("button", { name: "Markirovkani yakunlash" })).toBeDisabled();
+  const unmarked = page.getByRole("region", { name: "Markirovkasiz qatorlar" });
+  await expect(unmarked).toContainText("Paracetamol E2E");
+  await unmarked.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(unmarked.getByText("Tasdiqlandi")).toBeVisible();
   await page.getByRole("button", { name: "Markirovkani yakunlash" }).click();
   await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
 });
@@ -465,6 +480,23 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Kassa 2.*460\.000,00 soʻm/ })).toBeVisible();
 });
 
+/** E1: Markirovkachi markirovkasiz buyurtmani boshlaydi, qatorlarni tasdiqlaydi va yakunlaydi. */
+async function confirmUnmarked(page: Page, customer: string) {
+  await page.goto("/marking");
+  await page.getByRole("tab", { name: /Navbat/ }).click();
+  const card = page.getByRole("listitem").filter({ hasText: customer }).first();
+  await expect(card).toContainText("Markirovkasiz — tasdiqlash");
+  await card.getByRole("button", { name: "Markirovkani boshlash" }).click();
+  const unmarked = page.getByRole("region", { name: "Markirovkasiz qatorlar" });
+  await expect(unmarked).toBeVisible();
+  await expect(page.getByLabel("Markirovka kodi")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Markirovkani yakunlash" })).toBeDisabled();
+  for (const b of await unmarked.getByRole("button", { name: "Tasdiqlash", exact: true }).all()) await b.click();
+  await expect(unmarked.getByText("Tasdiqlandi").first()).toBeVisible();
+  await page.getByRole("button", { name: "Markirovkani yakunlash" }).click();
+  await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
+}
+
 /** Ombor zanjiri: Ombor mudiri vaqt beradi → Yigʻuvchi yigʻadi → Ombor mudiri hisobdan oʻtkazadi va reys tuzadi. */
 async function warehouseChain(page: Page) {
   await login(page, "keeper.1", PASSWORD);
@@ -488,6 +520,10 @@ async function warehouseChain(page: Page) {
   for (const c of await picker.getByText("Olindi", { exact: true }).all()) await c.click();
   await picker.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(picker.getByText("Yigʻish yakunlandi")).toBeVisible();
+  // E1: markirovkasiz buyurtma ham Markirovkachidan «Tasdiqlash» bilan oʻtadi
+  await login(picker, "marker.1", PASSWORD);
+  await expect(picker).toHaveURL(/\/$/);
+  await confirmUnmarked(picker, CUSTOMER);
   await picker.close();
 
   await page.goto("/warehouse");
