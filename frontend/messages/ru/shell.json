@@ -4,5 +4,7 @@
   "logout": "Выйти",
   "search": "Поиск",
   "branch": "Филиал",
-  "allBranches": "Все филиалы"
+  "allBranches": "Все филиалы",
+  "openMenu": "Открыть меню",
+  "closeMenu": "Закрыть меню"
 }

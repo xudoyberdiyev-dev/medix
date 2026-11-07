@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import type pages from "@/messages/uz-Latn/pages.json";
 import { BranchSwitcher } from "./branch-switcher";
 import { LiveSync } from "./live-sync";
+import { MobileNav } from "./mobile-nav";
 import { NotificationBell } from "./notification-bell";
 import { SearchButton } from "./search-button";
 
@@ -17,9 +18,10 @@ export function TopBar(props: TitleProps) {
   const t = useTranslations("pages");
   const title = props.titleKey ? t(props.titleKey) : props.title;
   return (
-    <header className="flex h-topbar items-center gap-4 border-b border-border bg-surface px-6 print:hidden">
-      <div className="text-body font-medium">{title}</div>
-      <div className="ml-auto flex items-center gap-3">
+    <header className="flex h-topbar shrink-0 items-center gap-2 border-b border-border bg-surface px-4 md:gap-4 md:px-6 print:hidden">
+      <MobileNav />
+      <div className="min-w-0 truncate text-body font-medium">{title}</div>
+      <div className="ml-auto flex shrink-0 items-center gap-1 md:gap-3">
         <SearchButton />
         <BranchSwitcher />
         <LiveSync />

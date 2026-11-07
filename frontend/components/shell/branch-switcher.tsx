@@ -41,9 +41,9 @@ export function BranchSwitcher() {
 
   if (!me.data.allBranches) {
     return label ? (
-      <span className="flex h-control-md items-center gap-2 px-3">
+      <span title={label} className="flex h-control-md items-center gap-2 px-2 md:px-3">
         <Building2 size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-        <span>{label}</span>
+        <span className="max-md:sr-only">{label}</span>
       </span>
     ) : null;
   }
@@ -57,10 +57,10 @@ export function BranchSwitcher() {
         aria-expanded={open}
         aria-label={`Filial: ${label}`}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-control-md items-center gap-2 rounded-control border border-border px-3 hover:bg-background"
+        className="flex h-control-md items-center gap-2 rounded-control border border-border px-2 hover:bg-background md:px-3"
       >
         <Building2 size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-        <span>{label}</span>
+        <span className="max-w-40 truncate max-md:sr-only">{label}</span>
         <ChevronDown size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
       </button>
       {open ? (

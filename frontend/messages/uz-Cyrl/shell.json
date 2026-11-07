@@ -4,5 +4,7 @@
   "logout": "Чиқиш",
   "search": "Қидириш",
   "branch": "Филиал",
-  "allBranches": "Барча филиаллар"
+  "allBranches": "Барча филиаллар",
+  "openMenu": "Менюни очиш",
+  "closeMenu": "Менюни ёпиш"
 }

@@ -68,7 +68,7 @@ export function NotificationBell() {
         ) : null}
       </button>
       {open ? (
-        <div className="absolute right-0 z-30 mt-1 w-96 rounded-card border border-border bg-surface shadow-overlay">
+        <div className="absolute right-0 z-30 mt-1 w-[min(24rem,calc(100vw-2rem))] rounded-card border border-border bg-surface shadow-overlay">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-subtitle">{t("title")}</span>
             {unread > 0 ? (

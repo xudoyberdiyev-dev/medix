@@ -89,7 +89,7 @@ export function PickingPage() {
       ) : queue.isPending ? (
         <Skeleton className="h-40 w-full" />
       ) : (
-        <div className="grid grid-cols-[2fr_1fr] gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
           <section>
             <h2 className="mb-3 text-subtitle">{t("picking.mine")}</h2>
             {mine ? (
