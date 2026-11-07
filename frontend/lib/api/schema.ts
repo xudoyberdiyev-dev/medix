@@ -2046,7 +2046,7 @@ export interface paths {
         };
         /**
          * Buyurtmalar
-         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).
+         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi.
          */
         get: operations["list_11"];
         put?: never;
@@ -2093,6 +2093,26 @@ export interface paths {
          * @description Mijozning oxirgi buyurtmasidan, bo'lmasa Perechisleniye.
          */
         get: operations["defaultPaymentType"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buyurtmalar .xlsx
+         * @description Ro'yxatdagi filtrlar bilan (holat ham), jami qatori bilan; ko'pi bilan 20000 qator.
+         */
+        get: operations["exportOrders"];
         put?: never;
         post?: never;
         delete?: never;
@@ -12090,6 +12110,8 @@ export interface operations {
                 operatorId?: number;
                 soldFrom?: string;
                 soldTo?: string;
+                orderFrom?: string;
+                orderTo?: string;
                 q?: string;
                 mine?: boolean;
                 page?: number;
@@ -12182,6 +12204,35 @@ export interface operations {
                 content: {
                     "application/json": "CASH" | "TRANSFER" | "ONLINE";
                 };
+            };
+        };
+    };
+    exportOrders: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                status?: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
+                customerId?: number;
+                operatorId?: number;
+                soldFrom?: string;
+                soldTo?: string;
+                orderFrom?: string;
+                orderTo?: string;
+                q?: string;
+                mine?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
