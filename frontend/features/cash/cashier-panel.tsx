@@ -83,7 +83,14 @@ export function CashierPanel() {
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
   if (me.data && branchId == null)
-    return <EmptyState icon={Banknote} title={t("noBranch.title")} description={t("noBranch.description")} />;
+    return (
+      <>
+        <h1 className="mb-4 text-page-title">{t("title")}</h1>
+        <Card>
+          <EmptyState icon={Banknote} title={t("noBranch.title")} description={t("noBranch.description")} />
+        </Card>
+      </>
+    );
 
   const p = panel.data;
   const driverTotal = (driverCash.data ?? []).reduce((s, c) => s + toCents(c.amount), 0n);

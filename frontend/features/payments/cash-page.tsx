@@ -74,7 +74,14 @@ export function CashPage() {
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
   if (me.data && branchId == null)
-    return <EmptyState icon={Banknote} title={t("noBranch.title")} description={t("noBranch.description")} />;
+    return (
+      <>
+        <h1 className="mb-4 text-page-title">{t("title")}</h1>
+        <Card>
+          <EmptyState icon={Banknote} title={t("noBranch.title")} description={t("noBranch.description")} />
+        </Card>
+      </>
+    );
 
   async function accept(c: DriverCash) {
     if (!kassa) return;

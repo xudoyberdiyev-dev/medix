@@ -53,7 +53,7 @@ for (const panel of PHONE_PANELS) {
 
     await page.getByRole("button", { name: "Menyuni ochish" }).click();
     const menu = page.getByRole("dialog", { name: "Asosiy menyu" });
-    await expect(menu.getByRole("link", { name: panel.nav })).toBeVisible();
+    await expect(menu.getByRole("link", { name: panel.nav, exact: true })).toBeVisible();
     await menu.getByRole("link", { name: "Bosh sahifa" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(menu).toBeHidden();
