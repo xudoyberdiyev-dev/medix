@@ -82,6 +82,11 @@ interface DraftLine {
 
 const isInt = (s: string) => /^\d+$/.test(s.trim());
 
+/** Yopishda ogohlantirish: tahrirlanadigan hujjatda saqlanmagan qatorlar bor (yangi qoralama — qator qoʻshilgan boʻlsa). */
+export function hasUnsavedChanges(s: { editable: boolean; isNew: boolean; dirty: boolean; lineCount: number }): boolean {
+  return s.editable && (s.isNew ? s.lineCount > 0 : s.dirty);
+}
+
 function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose: () => void; onCreated: (id: number) => void }) {
   const t = useTranslations("orders");
   const me = useMe();
@@ -108,7 +113,7 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
   );
   const [adding, setAdding] = useState<{ product: string | null; qty: string }>({ product: null, qty: "" });
   const [local, setLocal] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<"catalog" | "repeat" | "reject" | "cancel" | null>(null);
+  const [dialog, setDialog] = useState<"catalog" | "repeat" | "reject" | "cancel" | "discard" | null>(null);
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const err = describeError(save.error ?? submit.error ?? approve.error ?? back.error);
 
@@ -128,6 +133,15 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
     doc !== null &&
     (lines.length !== doc.lines.length ||
       lines.some((l, i) => l.productId !== doc.lines[i]?.productId || Number(l.qty) !== doc.lines[i]?.qty));
+  const unsaved = hasUnsavedChanges({ editable, isNew: doc === null, dirty, lineCount: lines.length });
+  // Saqlanmagan qatorlar bilan sahifani yopish / yangilash — brauzer ogohlantiradi (SPEC 6)
+  useEffect(() => {
+    if (!unsaved) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [unsaved]);
+  const requestClose = () => (unsaved ? setDialog("discard") : onClose());
 
   function body(): OrderRequest | null {
     if (!warehouseId) return (setLocal(t("drawer.errWarehouse")), null);
@@ -178,7 +192,7 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
           {t("drawer.cancelOrder")}
         </Button>
       ) : null}
-      <Button variant="secondary" onClick={onClose}>
+      <Button variant="secondary" onClick={requestClose}>
         {t("drawer.back")}
       </Button>
       {editable ? (
@@ -262,7 +276,7 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
   return (
     <Drawer
       open
-      onClose={dialog ? () => undefined : onClose}
+      onClose={dialog ? () => undefined : requestClose}
       size="lg"
       kind={doc ? t("drawer.kindBy", { name: doc.createdBy }) : t("drawer.kind")}
       title={doc ? doc.number : t("drawer.new")}
@@ -502,6 +516,19 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
             setDialog(null);
           }}
         />
+      ) : null}
+      {dialog === "discard" ? (
+        <Modal
+          open
+          size="sm"
+          tone="danger"
+          title={t("drawer.discardTitle")}
+          onClose={() => setDialog(null)}
+          primaryAction={{ label: t("drawer.discardAction"), onClick: onClose }}
+          secondaryAction={{ label: t("drawer.discardKeep"), onClick: () => setDialog(null) }}
+        >
+          <p>{t(doc ? "drawer.discardChanged" : "drawer.discardNew")}</p>
+        </Modal>
       ) : null}
       {dialog === "repeat" && customer ? (
         <RepeatDialog

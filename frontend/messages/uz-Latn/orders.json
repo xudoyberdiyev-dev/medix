@@ -150,7 +150,12 @@
       "qty": "Miqdor",
       "price": "Narx",
       "amount": "Summa"
-    }
+    },
+    "discardTitle": "Oʻzgarishlar saqlanmagan",
+    "discardNew": "Yangi buyurtma hali saqlanmagan — yopsangiz, qoʻshilgan qatorlar yoʻqoladi. Saqlash uchun «Ortga qaytish» ni bosing va «Qoralamani saqlash» ni tanlang.",
+    "discardChanged": "Qatorlardagi oʻzgarishlar saqlanmagan — yopsangiz, ular yoʻqoladi. Saqlash uchun «Ortga qaytish» ni bosing va qoralamani saqlang.",
+    "discardAction": "Saqlamasdan yopish",
+    "discardKeep": "Ortga qaytish"
   },
   "docs": {
     "aria": "Hujjatlar",
