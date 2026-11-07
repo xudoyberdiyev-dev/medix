@@ -1,6 +1,20 @@
 "use client";
 
-import { Check, CircleAlert, FileDown, Info, ListPlus, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
+import {
+  Check,
+  CircleAlert,
+  FileDown,
+  Info,
+  ListPlus,
+  Printer,
+  RotateCcw,
+  Send,
+  Store,
+  Trash2,
+  TriangleAlert,
+  Truck,
+  X,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -404,16 +418,41 @@ function Editor({
             disabled={!editable}
             required
           />
-          <Select
-            label={t("drawer.deliveryType")}
-            value={deliveryType}
-            onChange={setDeliveryType}
-            options={[
-              { value: "DELIVERY", label: t("list.delivery") },
-              { value: "PICKUP", label: t("list.pickup") },
-            ]}
-            disabled={!editable}
-          />
+          <div className="flex min-w-0 flex-col">
+            <span id="by-delivery" className="mb-1.5 text-caption font-medium">
+              {t("drawer.deliveryType")} <span className="text-danger">*</span>
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="by-delivery"
+              className="flex h-control-md gap-1 rounded-control border border-border bg-background p-0.5"
+            >
+              {(
+                [
+                  { value: "DELIVERY", label: t("list.delivery"), icon: Truck },
+                  { value: "PICKUP", label: t("list.pickup"), icon: Store },
+                ] as const
+              ).map((o) => {
+                const on = (deliveryType ?? "DELIVERY") === o.value;
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    disabled={!editable}
+                    onClick={() => setDeliveryType(o.value)}
+                    className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-control px-1 text-caption transition-colors ${
+                      on ? "bg-surface font-medium text-text-primary ring-1 ring-border" : "text-text-secondary hover:text-text-primary"
+                    } disabled:cursor-default`}
+                  >
+                    <o.icon size={14} strokeWidth={1.5} aria-hidden className="hidden shrink-0 2xl:block" />
+                    <span className="truncate">{o.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <TextField
             label={t("drawer.deliveryDate")}
             value={deliveryDate}
@@ -427,6 +466,13 @@ function Editor({
             onChange={setPaymentType}
             options={PAYMENT_VALUES.map((v) => ({ value: v, label: t(`paymentType.${v}`) }))}
             disabled={!editable}
+            hint={
+              editable && customer && credit.data
+                ? credit.data.paymentDays
+                  ? t("customer.payAuto", { days: credit.data.paymentDays })
+                  : t("customer.payAutoNoTerm")
+                : undefined
+            }
           />
           <TextField
             label={t("drawer.address")}

@@ -639,6 +639,9 @@
     "tLines": "Qatorlar",
     "tQty": "Miqdor",
     "tTotal": "Jami",
-    "needCustomer": "Avval mijozni tanlang — narx va qoldiq mijoz shartiga bogʻliq"
+    "needCustomer": "Avval mijozni tanlang — narx va qoldiq mijoz shartiga bogʻliq",
+    "payAuto": "Standart — mijozning oxirgi buyurtmasidan · muddat {days} kun",
+    "payAutoNoTerm": "Standart — mijozning oxirgi buyurtmasidan",
+    "overdueValue": "{amount} · {days} kun"
   }
 }

@@ -76,7 +76,7 @@ export function CustomerStateRow({ name, credit, orderTotal }: { name: string; c
     { label: t("credit.debt"), value: formatMoney(credit.debt) },
     {
       label: t("credit.overdue"),
-      value: overdue ? t("credit.overdueValue", { amount: formatMoney(credit.overdue), days: credit.overdueDays }) : t("credit.none"),
+      value: overdue ? t("customer.overdueValue", { amount: formatMoney(credit.overdue), days: credit.overdueDays }) : t("credit.none"),
       danger: overdue,
     },
     { label: t("credit.limit"), value: credit.creditLimit ? formatMoney(credit.creditLimit) : t("credit.notSet") },
