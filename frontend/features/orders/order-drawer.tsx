@@ -54,7 +54,13 @@ import { OrderStatusBadge, day } from "./orders-page";
 
 const PAYMENT_VALUES = ["TRANSFER", "CASH", "ONLINE"] as const;
 
-export function OrderDrawer(props: { id: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+/** preset — yangi buyurtmada oldindan tanlangan mijoz (masalan, bosh sahifadagi «Mijoz holati»dan). */
+export function OrderDrawer(props: {
+  id: number | null;
+  onClose: () => void;
+  onCreated: (id: number) => void;
+  preset?: { customerId: number; customerLabel: string };
+}) {
   const t = useTranslations("orders");
   const tc = useTranslations("common");
   const doc = useOrder(props.id);
@@ -88,7 +94,17 @@ export function hasUnsavedChanges(s: { editable: boolean; isNew: boolean; dirty:
   return s.editable && (s.isNew ? s.lineCount > 0 : s.dirty);
 }
 
-function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose: () => void; onCreated: (id: number) => void }) {
+function Editor({
+  doc,
+  onClose,
+  onCreated,
+  preset,
+}: {
+  doc: OrderDetail | null;
+  onClose: () => void;
+  onCreated: (id: number) => void;
+  preset?: { customerId: number; customerLabel: string };
+}) {
   const t = useTranslations("orders");
   const me = useMe();
   const warehouses = useWarehouses();
@@ -102,8 +118,10 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
   // Ochiq hujjat (SPEC 208): boshqa sahifadan qaytganda saqlanmagan forma tiklanadi
   const [restored] = useState(() => (editable ? draftFormFor(readOpenDraft(), doc?.id ?? null) : null));
   const [warehouseId, setWarehouseId] = useState<string | null>(restored ? restored.warehouseId : doc ? String(doc.warehouseId) : null);
-  const [customer, setCustomer] = useState<string | null>(restored ? restored.customer : doc ? String(doc.customerId) : null);
-  const [customerLabel, setCustomerLabel] = useState(restored?.customerLabel ?? doc?.customer ?? "");
+  const [customer, setCustomer] = useState<string | null>(
+    restored ? restored.customer : doc ? String(doc.customerId) : preset ? String(preset.customerId) : null,
+  );
+  const [customerLabel, setCustomerLabel] = useState(restored?.customerLabel ?? doc?.customer ?? preset?.customerLabel ?? "");
   const [deliveryType, setDeliveryType] = useState<string | null>(restored ? restored.deliveryType : (doc?.deliveryType ?? "DELIVERY"));
   const [deliveryDate, setDeliveryDate] = useState(restored?.deliveryDate ?? formatIsoDate(doc?.deliveryDate));
   const [address, setAddress] = useState(restored?.address ?? doc?.address ?? "");

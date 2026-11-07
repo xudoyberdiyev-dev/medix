@@ -233,11 +233,11 @@ function Kpis({ view: v }: { view: View }) {
   );
 }
 
-function Flow({ cells }: { cells: StatusCell[] }) {
+export function Flow({ cells, title, hrefSuffix = "" }: { cells: StatusCell[]; title?: string; hrefSuffix?: string }) {
   const t = useTranslations("home");
   const by = new Map(cells.map((c) => [c.status, c]));
   return (
-    <Panel title={t("br.flowT")}>
+    <Panel title={title ?? t("br.flowT")}>
       <ul className="grid grid-cols-3 gap-2 px-4 pb-4 md:grid-cols-5 xl:grid-cols-9">
         {FLOW.map((s) => {
           const c = by.get(s);
@@ -246,7 +246,7 @@ function Flow({ cells }: { cells: StatusCell[] }) {
           return (
             <li key={s} className="min-w-0" title={s === "IN_TRANSIT" ? t("br.shipped") : t(`orderStatus.${s}`)}>
               <Link
-                href={`/orders?status=${s}`}
+                href={`/orders?status=${s}${hrefSuffix}`}
                 className="block h-full rounded-control border border-border px-3 py-2.5 hover:bg-background"
               >
                 <div className="flex items-center gap-1.5 text-caption text-text-secondary">

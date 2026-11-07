@@ -2308,7 +2308,7 @@
     "/api/debts/customers" : {
       "get" : {
         "description" : "Muddati kelmagan / 1–30 / 31–60 / 61–90 / 90+ kun; avans qarzdan eng eskisidan ayriladi.",
-        "operationId" : "customers",
+        "operationId" : "customers_1",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3345,6 +3345,36 @@
           }
         },
         "summary" : "Operator bosh sahifasi: o'z sof savdosi, buyurtma holatlari, «Diqqat talab qiladi», eng katta mijozlar",
+        "tags" : [ "home" ]
+      }
+    },
+    "/api/home/operator/customers" : {
+      "get" : {
+        "operationId" : "customers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CustomerStatus"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Mijoz holati»: nomi yoki STIR bo'yicha 3 ta mijoz — bloklangan, litsenziya, qarz / limit, muddati o'tgan (o'z filiali)",
         "tags" : [ "home" ]
       }
     },
@@ -13982,6 +14012,38 @@
         },
         "required" : [ "id", "name", "orders", "sales" ]
       },
+      "CustomerStatus" : {
+        "type" : "object",
+        "properties" : {
+          "blocked" : {
+            "type" : "boolean"
+          },
+          "debt" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "licenseExpired" : {
+            "type" : "boolean"
+          },
+          "limit" : {
+            "type" : "string",
+            "description" : "Kredit limiti; null — belgilanmagan"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "blocked", "debt", "id", "licenseExpired", "name", "overdue", "tin" ]
+      },
       "DayClose" : {
         "type" : "object",
         "properties" : {
@@ -16685,6 +16747,12 @@
             "type" : "string",
             "format" : "date"
           },
+          "notes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OperatorNote"
+            }
+          },
           "orderStatuses" : {
             "type" : "array",
             "items" : {
@@ -16693,6 +16761,12 @@
           },
           "ordersCreated" : {
             "$ref" : "#/components/schemas/CountAmount"
+          },
+          "recent" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RecentOrder"
+            }
           },
           "sales" : {
             "$ref" : "#/components/schemas/ByPayment"
@@ -16716,7 +16790,50 @@
             }
           }
         },
-        "required" : [ "attention", "from", "orderStatuses", "ordersCreated", "sales", "staleDays", "to", "today", "topCustomers" ]
+        "required" : [ "attention", "from", "notes", "orderStatuses", "ordersCreated", "recent", "sales", "staleDays", "to", "today", "topCustomers" ]
+      },
+      "OperatorNote" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "approver" : {
+            "type" : "string"
+          },
+          "available" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "level" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "product" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "requested" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "waitMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "available", "kind", "number", "orderId", "requested", "waitMinutes" ]
       },
       "OperatorRow" : {
         "type" : "object",
@@ -19418,6 +19535,28 @@
           }
         },
         "required" : [ "account", "amount", "docNumber", "docType", "id", "occurredAt" ]
+      },
+      "RecentOrder" : {
+        "type" : "object",
+        "properties" : {
+          "customer" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "customer", "id", "number", "status", "total" ]
       },
       "ReconPreview" : {
         "type" : "object",

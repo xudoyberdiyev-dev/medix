@@ -296,5 +296,29 @@
     "moneyBrT": "Pul — filiallar boʻyicha",
     "cCash": "Kassa",
     "cBank": "Bank"
+  },
+  "op": {
+    "newOrder": "Yangi buyurtma",
+    "myOrdersT": "Mening buyurtmalarim — bugun",
+    "lastOrders": "Oxirgi 10 ta buyurtma",
+    "noOrders": "Buyurtma yoʻq",
+    "noOrdersHint": "Kiritgan buyurtmalaringiz shu yerda koʻrinadi.",
+    "noteT": "Eʼtibor bering",
+    "noteNone": "Hammasi joyida",
+    "noteNoneHint": "Rad etilgan, tasdiq kutayotgan yoki qoldigʻi yetmaydigan buyurtma yoʻq.",
+    "rej": "{no} rad etildi: {r}",
+    "waitAt": "{no} — {who}",
+    "lvDirector": "Direktor",
+    "lvBranch": "Filial rahbari",
+    "lowStock": "{p}: mavjud {a}, soʻralgan {q}",
+    "custT": "Mijoz holati",
+    "custPh": "Mijoz nomi yoki STIR (lotin yoki kirill)",
+    "custNone": "Mijoz topilmadi",
+    "custBlocked": "Bloklangan",
+    "custLic": "Litsenziya muddati oʻtgan",
+    "custOk": "Faol",
+    "custLimit": "Qarz / kredit limiti",
+    "custOver": "Muddati oʻtgan qarz",
+    "createOrder": "Buyurtma yaratish"
   }
 }

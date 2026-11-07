@@ -134,10 +134,16 @@ export function OrdersPage() {
   const [search, setSearch] = useState(filters.q);
   const [hidden, setHidden] = useHiddenColumns("medix-orders-columns");
   const [columnsOpen, setColumnsOpen] = useState(false);
-  // Bildirishnomadan oʻtish: ?open=<id> — buyurtma kartochkasi darhol ochiladi
-  const [editor, setEditor] = useState<{ id: number | null } | null>(() => {
+  // Bildirishnomadan oʻtish: ?open=<id> — buyurtma kartochkasi darhol ochiladi; ?new=1[&customer=<id>&customerName=…] — yangi buyurtma
+  const [editor, setEditor] = useState<{ id: number | null; preset?: { customerId: number; customerLabel: string } } | null>(() => {
     const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
+    if (Number.isInteger(id) && id > 0) return { id };
+    if (params.get("new") !== "1") return null;
+    const c = Number(params.get("customer"));
+    return {
+      id: null,
+      preset: Number.isInteger(c) && c > 0 ? { customerId: c, customerLabel: params.get("customerName") ?? "" } : undefined,
+    };
   });
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Ochiq hujjat (SPEC 208): boshqa sahifaga oʻtib qaytganda buyurtma shu holatda ochiladi
@@ -387,7 +393,7 @@ export function OrdersPage() {
           }
         />
       )}
-      {editor ? <OrderDrawer id={editor.id} onClose={closeEditor} onCreated={(id) => setEditor({ id })} /> : null}
+      {editor ? <OrderDrawer id={editor.id} preset={editor.preset} onClose={closeEditor} onCreated={(id) => setEditor({ id })} /> : null}
     </>
   );
 }

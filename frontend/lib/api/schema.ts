@@ -970,7 +970,7 @@ export interface paths {
          * Mijozlar qarzi
          * @description Muddati kelmagan / 1–30 / 31–60 / 61–90 / 90+ kun; avans qarzdan eng eskisidan ayriladi.
          */
-        get: operations["customers"];
+        get: operations["customers_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1414,6 +1414,23 @@ export interface paths {
         };
         /** Operator bosh sahifasi: o'z sof savdosi, buyurtma holatlari, «Diqqat talab qiladi», eng katta mijozlar */
         get: operations["operatorHome"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/home/operator/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** «Mijoz holati»: nomi yoki STIR bo'yicha 3 ta mijoz — bloklangan, litsenziya, qarz / limit, muddati o'tgan (o'z filiali) */
+        get: operations["customers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6033,6 +6050,18 @@ export interface components {
             orders: number;
             sales: string;
         };
+        CustomerStatus: {
+            blocked: boolean;
+            debt: string;
+            /** Format: int64 */
+            id: number;
+            licenseExpired: boolean;
+            /** @description Kredit limiti; null — belgilanmagan */
+            limit?: string;
+            name: string;
+            overdue: string;
+            tin: string;
+        };
         DayClose: {
             account: string;
             /** Format: int64 */
@@ -7118,8 +7147,10 @@ export interface components {
             attention: components["schemas"]["OperatorAttention"];
             /** Format: date */
             from: string;
+            notes: components["schemas"]["OperatorNote"][];
             orderStatuses: components["schemas"]["StatusCell"][];
             ordersCreated: components["schemas"]["CountAmount"];
+            recent: components["schemas"]["RecentOrder"][];
             sales: components["schemas"]["ByPayment"];
             /** Format: int32 */
             staleDays: number;
@@ -7128,6 +7159,23 @@ export interface components {
             /** Format: date */
             today: string;
             topCustomers: components["schemas"]["CustomerRow"][];
+        };
+        OperatorNote: {
+            amount?: string;
+            approver?: string;
+            /** Format: int32 */
+            available: number;
+            kind: string;
+            level?: string;
+            number: string;
+            /** Format: int64 */
+            orderId: number;
+            product?: string;
+            reason?: string;
+            /** Format: int32 */
+            requested: number;
+            /** Format: int64 */
+            waitMinutes: number;
         };
         OperatorRow: {
             /** @description Oxirgi 30 kunda sotuvi bor */
@@ -8214,6 +8262,14 @@ export interface components {
             note?: string;
             /** Format: date-time */
             occurredAt: string;
+        };
+        RecentOrder: {
+            customer: string;
+            /** Format: int64 */
+            id: number;
+            number: string;
+            status: string;
+            total: string;
         };
         ReconPreview: {
             account: string;
@@ -10936,7 +10992,7 @@ export interface operations {
             };
         };
     };
-    customers: {
+    customers_1: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -11620,6 +11676,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OperatorHomeView"];
+                };
+            };
+        };
+    };
+    customers: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerStatus"][];
                 };
             };
         };
