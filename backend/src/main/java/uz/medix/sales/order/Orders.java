@@ -32,6 +32,7 @@ import uz.medix.pricing.PriceBook;
 import uz.medix.pricing.PriceBook.Quote;
 import uz.medix.sales.order.OrderModels.ApprovalLevel;
 import uz.medix.sales.order.OrderModels.CustomerCredit;
+import uz.medix.sales.order.OrderModels.CreditFlag;
 import uz.medix.sales.order.OrderModels.DeliveryType;
 import uz.medix.sales.order.OrderModels.FilterOption;
 import uz.medix.sales.order.OrderModels.OrderFacets;
@@ -422,8 +423,9 @@ class Orders {
                         holderText(OrderStatus.valueOf(rs.getString("status")), DeliveryType.valueOf(rs.getString("delivery_type")),
                                 rs.getString("created_by"), rs.getString("picker"), rs.getString("marker"), rs.getString("driver")),
                         rs.getString("region"), (Integer) rs.getObject("pick_minutes"), instant(rs.getTimestamp("pick_started_at")),
-                        instant(rs.getTimestamp("pick_finished_at"))))
+                        instant(rs.getTimestamp("pick_finished_at")), null))
                 .list();
+        items = items.stream().map(this::withCreditFlag).toList();
         String fromScope = from + scope;
         List<FilterOption> customers = jdbc.sql("SELECT c.id, c.name, count(*) AS cnt" + fromScope
                         + " GROUP BY c.id, c.name ORDER BY c.name LIMIT 300")
@@ -435,6 +437,32 @@ class Orders {
                         + " GROUP BY r.id, r.name ORDER BY r.name LIMIT 300")
                 .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
         return new OrderPage(items, total, page, size, statusTabs(statuses), new OrderFacets(customers, operators, regions));
+    }
+
+    /** Ochiq buyurtmalar uchun kredit ogohlantirishi (faqat qoralama va tasdiqlashda — sahifadagi qatorlar). */
+    private OrderSummary withCreditFlag(OrderSummary o) {
+        if (o.status() != OrderStatus.DRAFT && o.status() != OrderStatus.PENDING_APPROVAL) {
+            return o;
+        }
+        Customer c = customer(o.customerId());
+        Terms t = terms(o.customerId(), o.branchId());
+        CreditState cs = parties.creditState(o.branchId(), o.customerId(), Side.CUSTOMER, today());
+        String over = null;
+        if (t.creditLimit() != null) {
+            Money exposure = cs.debt().plus(Money.of(o.total()));
+            Money limit = new Money(t.creditLimit());
+            if (exposure.compareTo(limit) > 0) {
+                over = exposure.minus(limit).toString();
+            }
+        }
+        String overdue = cs.overdueDays() > 0 ? cs.overdue().toString() : null;
+        if (!c.blocked() && over == null && overdue == null) {
+            return o;
+        }
+        return new OrderSummary(o.id(), o.number(), o.branchId(), o.warehouse(), o.customerId(), o.customer(), o.orderDate(), o.deliveryType(),
+                o.deliveryDate(), o.paymentType(), o.status(), o.approvalLevel(), o.lines(), o.total(), o.createdBy(), o.createdAt(),
+                o.statusChangedAt(), o.holder(), o.region(), o.pickMinutes(), o.pickStartedAt(), o.pickFinishedAt(),
+                new CreditFlag(c.blocked(), over, overdue, cs.overdueDays()));
     }
 
     record LineRow(long id, int lineNo, long productId, int qty, BigDecimal price, Long priceTypeId, String priceType) {}

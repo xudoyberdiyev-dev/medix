@@ -312,6 +312,14 @@ class OrderIT {
         assertThat(notified("order.approved", small, "OPERATOR")).isEqualTo(1);
         long big = draft(operator, order(p, c, new long[][] {{a, 150}}));
         send(post("/api/orders/" + big + "/submit"), operator, "").andExpect(jsonPath("$.approvalLevel").value("DIRECTOR"));
+        // Ro'yxatda ⚠ belgisi (prototip): limitdan oshgan summa — faqat ochiq buyurtmada
+        mvc.perform(get("/api/orders").param("customerId", "" + c).param("statuses", "PENDING_APPROVAL").cookie(manager))
+                .andExpect(jsonPath("$.items[0].id").value(big))
+                .andExpect(jsonPath("$.items[0].credit.overLimit").value("50000.00"))
+                .andExpect(jsonPath("$.items[0].credit.blocked").value(false));
+        mvc.perform(get("/api/orders").param("customerId", "" + c).param("statuses", "QUEUED").cookie(manager))
+                .andExpect(jsonPath("$.items[0].id").value(small))
+                .andExpect(jsonPath("$.items[0].credit").doesNotExist());
         send(post("/api/orders/" + big + "/approve"), manager, "")
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("order.directorOnly"));

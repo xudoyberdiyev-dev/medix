@@ -119,7 +119,13 @@ final class OrderModels {
             @Schema(nullable = true, description = "Mijoz hududi") String region,
             @Schema(nullable = true, description = "Yig'ishga berilgan vaqt, daqiqa (null — «Vaqt kutilmoqda»)") Integer pickMinutes,
             @Schema(nullable = true) Instant pickStartedAt,
-            @Schema(nullable = true) Instant pickFinishedAt) {}
+            @Schema(nullable = true) Instant pickFinishedAt,
+            @Schema(nullable = true, description = "Ochiq (qoralama / tasdiqlashda) buyurtma mijozining kredit ogohlantirishi") CreditFlag credit) {}
+
+    /**
+     * Ro'yxatdagi ⚠ belgisi (prototip Orders: issue): mijoz bloklangan, limitdan oshgan summa (shu buyurtma bilan), muddati o'tgan qarz.
+     */
+    record CreditFlag(boolean blocked, @Schema(nullable = true) String overLimit, @Schema(nullable = true) String overdue, int overdueDays) {}
 
     /** Filtr varianti: id, nomi va shu filial doirasidagi buyurtmalar soni. */
     record FilterOption(long id, String name, long count) {}
