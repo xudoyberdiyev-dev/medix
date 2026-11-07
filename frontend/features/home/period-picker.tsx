@@ -2,8 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
+import { cn } from "@/lib/cn";
 import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { PERIOD_LABELS, type PeriodPreset, periodRange } from "./period";
 
@@ -19,9 +19,9 @@ export interface PeriodState {
 }
 
 /** Bosh sahifa davri holati: Bugun / Hafta / Oy / Ixtiyoriy (SPEC 8). */
-export function usePeriodState(): PeriodState {
+export function usePeriodState(initial: PeriodPreset = "today"): PeriodState {
   const today = todayTashkent();
-  const [preset, setPreset] = useState<PeriodPreset>("today");
+  const [preset, setPreset] = useState<PeriodPreset>(initial);
   const [customFrom, setCustomFrom] = useState(formatIsoDate(today));
   const [customTo, setCustomTo] = useState(formatIsoDate(today));
   const range =
@@ -33,12 +33,26 @@ export function PeriodPicker({ state }: { state: PeriodState }) {
   const t = useTranslations("home.period");
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <Tabs
-        aria-label={t("label")}
-        items={(Object.keys(PERIOD_LABELS) as PeriodPreset[]).map((k) => ({ key: k, label: t(k) }))}
-        value={state.preset}
-        onChange={(k) => state.setPreset(k as PeriodPreset)}
-      />
+      <div role="radiogroup" aria-label={t("label")} className="inline-flex rounded-control border border-border bg-background p-0.5">
+        {(Object.keys(PERIOD_LABELS) as PeriodPreset[]).map((k) => {
+          const on = state.preset === k;
+          return (
+            <button
+              key={k}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => state.setPreset(k)}
+              className={cn(
+                "h-8 rounded-control px-3 text-body font-medium whitespace-nowrap transition-colors duration-150",
+                on ? "bg-surface text-text-primary shadow-xs" : "text-text-secondary hover:text-text-primary",
+              )}
+            >
+              {t(k)}
+            </button>
+          );
+        })}
+      </div>
       {state.preset === "custom" ? (
         <>
           <div className="w-36">

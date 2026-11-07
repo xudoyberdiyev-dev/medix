@@ -54,7 +54,7 @@ class DirectorHome {
     record Debtor(long id, String name, String debt, String overdue, int maxOverdueDays, String branches) {}
 
     /** Savdo dinamikasi: kun bo'yicha sof savdo va sotuv hujjatlari soni. */
-    record DayPoint(LocalDate date, String amount, int docs) {}
+    record SalesDay(LocalDate date, String amount, int docs) {}
 
     record CountAmount(int count, String amount) {}
 
@@ -83,7 +83,7 @@ class DirectorHome {
 
     record Home(LocalDate from, LocalDate to, LocalDate today, @Schema(nullable = true) Long branchId, ByPayment sales, DebtCard customerDebt,
             DebtCard supplierDebt, ByPayment expenses, ByPayment customerDebtBy, ByPayment supplierDebtBy, List<BranchRow> branches,
-            Attention attention, List<Debtor> topDebtors, List<DayPoint> daily, int salesDocs, String avgSale,
+            Attention attention, List<Debtor> topDebtors, List<SalesDay> daily, int salesDocs, String avgSale,
             @Schema(description = "Filiallararo (guruh ichidagi) ochiq qarz — jamilarga kirmaydi") String groupDebt,
             int staleDays, List<StatusCell> orderStatuses, List<OperatorRow> operators,
             @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") SupplierBlock supplierStaff,
@@ -196,12 +196,12 @@ class DirectorHome {
                     return d;
                 })
                 .list();
-        List<DayPoint> daily = new ArrayList<>();
+        List<SalesDay> daily = new ArrayList<>();
         int salesDocs = 0;
         for (LocalDate d = f; !d.isAfter(t); d = d.plusDays(1)) {
             int docs = dayDocs.getOrDefault(d, 0);
             salesDocs += docs;
-            daily.add(new DayPoint(d, m(dayAmount.get(d)).toString(), docs));
+            daily.add(new SalesDay(d, m(dayAmount.get(d)).toString(), docs));
         }
         Money net = byPaymentTotal(sales);
         String avgSale = salesDocs == 0 ? "0.00" : new Money(net.amount().divide(BigDecimal.valueOf(salesDocs), Money.SCALE, Money.ROUNDING)).toString();

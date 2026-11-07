@@ -5461,6 +5461,14 @@ export interface components {
             name: string;
             sales: string;
             supplierDebt: string;
+            salesBy: components["schemas"]["ByPayment"];
+            customerDebtBy: components["schemas"]["ByPayment"];
+            supplierDebtBy: components["schemas"]["ByPayment"];
+            expensesBy: components["schemas"]["ByPayment"];
+            overdue: string;
+            /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
+            stockValue?: string | null;
+            money: string;
         };
         BranchSaleDetail: {
             buyer: components["schemas"]["BranchRef"];
@@ -6002,6 +6010,7 @@ export interface components {
             maxOverdueDays: number;
             name: string;
             overdue: string;
+            branches: string;
         };
         DeliverRequest: {
             /** @description Naqd olingan summa, masalan «25000.00» */
@@ -6208,6 +6217,14 @@ export interface components {
             /** Format: date */
             today: string;
             topDebtors: components["schemas"]["Debtor"][];
+            customerDebtBy: components["schemas"]["ByPayment"];
+            supplierDebtBy: components["schemas"]["ByPayment"];
+            daily: components["schemas"]["SalesDay"][];
+            /** Format: int32 */
+            salesDocs: number;
+            avgSale: string;
+            /** @description Filiallararo (guruh ichidagi) ochiq qarz — jamilarga kirmaydi */
+            groupDebt: string;
         };
         ImportResult: {
             applied: boolean;
@@ -6997,6 +7014,10 @@ export interface components {
             id: number;
             name: string;
             sales: string;
+            /** Format: int32 */
+            docs: number;
+            /** @description Oxirgi 30 kunda sotuvi bor */
+            active: boolean;
         };
         OrderDetail: {
             address?: string;
@@ -9311,6 +9332,13 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        SalesDay: {
+            amount: string;
+            /** Format: date */
+            date: string;
+            /** Format: int32 */
+            docs: number;
         };
     };
     responses: never;
