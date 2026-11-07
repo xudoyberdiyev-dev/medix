@@ -52,6 +52,7 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.text.SearchText;
 import uz.medix.shared.text.Texts;
 
 /**
@@ -300,6 +301,12 @@ class Orders {
 
     @Transactional(readOnly = true)
     OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, int page, int size) {
+        return list(actor, branchId, status, filter, q, mine, OrderSort.CREATED, true, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, OrderSort sort, boolean desc,
+            int page, int size) {
         Long customerId = filter.customerId();
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
@@ -338,9 +345,17 @@ class Orders {
             where.append(" AND o.created_by = :me");
             params.put("me", actor.employeeId());
         }
-        if (q != null && !q.isBlank()) {
-            where.append(" AND (o.number ILIKE :q OR c.name ILIKE :q OR c.tin = :exact)");
-            params.put("q", "%" + q.strip().replace("%", "") + "%");
+        String nq = SearchText.normalize(q);
+        if (!nq.isEmpty()) {
+            // Raqam, STIR yoki mijoz nomi — lotin/kirill farqsiz, so'zlar istalgan tartibda (counterparty.search_text)
+            where.append(" AND (o.number ILIKE :q ESCAPE '\\' OR c.tin = :exact OR (true");
+            String[] parts = nq.split(" ");
+            for (int i = 0; i < parts.length && i < 8; i++) {
+                where.append(" AND c.search_text LIKE :w").append(i).append(" ESCAPE '\\'");
+                params.put("w" + i, "%" + SearchText.likeEscape(parts[i]) + "%");
+            }
+            where.append("))");
+            params.put("q", "%" + SearchText.likeEscape(q.strip()) + "%");
             params.put("exact", q.strip());
         }
         String from = " FROM sales_order o JOIN counterparty c ON c.id = o.customer_id JOIN warehouse w ON w.id = o.warehouse_id"
@@ -365,7 +380,7 @@ class Orders {
                        (SELECT full_name FROM employee WHERE id = o.marker_id) AS marker,
                        (SELECT d.full_name FROM trip_stop ts JOIN trip t ON t.id = ts.trip_id JOIN employee d ON d.id = t.driver_id
                         WHERE ts.order_id = o.id AND ts.active AND t.status <> 'CANCELLED' ORDER BY ts.id DESC LIMIT 1) AS driver""" + from + where
-                        + " ORDER BY o.created_at DESC, o.id DESC LIMIT :l OFFSET :o")
+                        + (sort == null ? OrderSort.CREATED : sort).orderBy(desc) + " LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", size)
                 .param("o", (long) page * size)

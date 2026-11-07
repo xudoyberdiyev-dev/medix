@@ -212,6 +212,22 @@ class SalesReportIT {
         mvc.perform(get("/api/orders").param("orderFrom", tomorrow).param("orderTo", t).cookie(director))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("home.periodInvalid"));
+        // Saralash (summa bo'yicha) va qidiruv — mijoz nomi lotin/kirill farqsiz (SPEC 120)
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("sort", "TOTAL").param("desc", "false").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(o2))
+                .andExpect(jsonPath("$.items[2].id").value(o1));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("sort", "TOTAL").cookie(director))
+                .andExpect(jsonPath("$.items[0].id").value(o1));
+        jdbc.sql("UPDATE counterparty SET name = 'Шифо Фарм', search_text = :s WHERE id = :id")
+                .param("s", uz.medix.shared.text.SearchText.of("Шифо Фарм"))
+                .param("id", c2)
+                .update();
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("q", "farm shifo").cookie(director))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(o2));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("sort", "NOPE").cookie(director))
+                .andExpect(status().isBadRequest());
         mvc.perform(get("/api/orders/export").param("branchId", "" + b).param("orderFrom", t).cookie(director))
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
