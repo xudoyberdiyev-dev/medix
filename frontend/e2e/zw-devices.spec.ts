@@ -23,7 +23,7 @@ async function login(page: Page, login: string) {
 }
 
 /** Hujjat ham, asosiy qism (`main`) ham ekran kengligidan oshmaydi (ichki aylanuvchi yorliqlar/jadvallar hisobga olinmaydi). */
-async function expectNoHorizontalOverflow(page: Page) {
+async function expectNoHorizontalOverflow(page: Page, where = "") {
   const overflow = await page.evaluate(() => {
     const main = document.querySelector("main");
     return {
@@ -31,8 +31,8 @@ async function expectNoHorizontalOverflow(page: Page) {
       main: main ? main.scrollWidth - main.clientWidth : 0,
     };
   });
-  expect(overflow.page, "sahifa gorizontal aylanmasligi kerak").toBeLessThanOrEqual(1);
-  expect(overflow.main, "asosiy qism gorizontal aylanmasligi kerak").toBeLessThanOrEqual(1);
+  expect(overflow.page, `${where} sahifa gorizontal aylanmasligi kerak`).toBeLessThanOrEqual(1);
+  expect.soft(overflow.main, `${where} asosiy qism gorizontal aylanmasligi kerak`).toBeLessThanOrEqual(1);
 }
 
 const PHONE_PANELS = [
@@ -74,9 +74,11 @@ test("Planshet (1024 px): Ombor mudiri — ixcham menyu, panel sigʻadi", async 
   await nav.getByRole("link", { name: "Monitor" }).click();
   await expect(page).toHaveURL(/\/warehouse/);
   await expectNoHorizontalOverflow(page);
-  for (const path of ["/receipts", "/stock"]) {
+  const hrefs = [...new Set(await nav.getByRole("link").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? "")))];
+  for (const path of hrefs) {
     await page.goto(path);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expectNoHorizontalOverflow(page);
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
+    await page.waitForTimeout(500);
+    await expectNoHorizontalOverflow(page, path);
   }
 });
