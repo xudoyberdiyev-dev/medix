@@ -668,6 +668,11 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   await expect(page.getByRole("cell", { name: /Paracetamol E2E/ }).first()).toBeVisible();
   await page.getByRole("tab", { name: "Kategoriya" }).click();
   await expect(page.getByRole("columnheader", { name: /Kategoriya/ })).toBeVisible();
+  // Savdo: toʻlov turi boʻyicha guruhlash; Xarajatlar hisoboti ochiladi
+  await page.goto("/reports/sales?groupBy=PAYMENT_TYPE");
+  await expect(page.getByRole("columnheader", { name: /Toʻlov turi/ })).toBeVisible();
+  await page.goto("/reports/expenses");
+  await expect(page.getByRole("heading", { name: "Xarajatlar", level: 1 })).toBeVisible();
   await page.goto("/debts/customers");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText(/ruxsat/i)).toHaveCount(0);

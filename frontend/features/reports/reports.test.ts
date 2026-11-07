@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { visibleReports } from "./catalog";
 import { expenseExportHref, initialDirection } from "./expense-report";
 import { formatMargin, initialProductGroupBy, productSalesExportHref } from "./product-sales-report";
-import { initialGroupBy, salesExportHref, salesRowHref } from "./sales-report";
+import { initialGroupBy, isPaymentType, salesExportHref, salesRowHref } from "./sales-report";
 import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
 import { formatMinutes, workerExportHref } from "./worker-report";
 
@@ -46,6 +46,11 @@ describe("hisobotlar", () => {
       "/api/reports/sales/export?branchId=3&from=2026-11-01&to=2026-11-05&groupBy=DAY",
     );
     expect(salesExportHref({ branchId: null, from: "2026-11-01", to: "2026-11-01", groupBy: "CUSTOMER" })).not.toContain("branchId");
+    expect(
+      salesExportHref({ branchId: 1, from: "2026-11-01", to: "2026-11-01", groupBy: "REGION", paymentType: "TRANSFER", regionId: 7 }),
+    ).toBe("/api/reports/sales/export?branchId=1&from=2026-11-01&to=2026-11-01&groupBy=REGION&paymentType=TRANSFER&regionId=7");
+    expect(isPaymentType("ONLINE")).toBe(true);
+    expect(isPaymentType("")).toBe(false);
   });
 
   it("yigʻuvchi / markirovkachi: eksport havolasi va daqiqa", () => {

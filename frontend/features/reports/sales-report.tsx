@@ -6,12 +6,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
+import { useDictionary } from "@/features/dictionaries/api";
 import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
@@ -23,15 +25,35 @@ type SalesRow = components["schemas"]["SalesRow"];
 const NO_ROWS: SalesRow[] = [];
 export type GroupBy = components["schemas"]["SalesReportView"]["groupBy"];
 
-export const GROUP_LABELS: Record<GroupBy, string> = { CUSTOMER: "Mijoz", OPERATOR: "Operator", BRANCH: "Filial", DAY: "Kun" };
+export type PaymentType = NonNullable<components["schemas"]["SalesReportView"]["paymentType"]>;
+export const PAYMENT_TYPES: PaymentType[] = ["CASH", "TRANSFER", "ONLINE"];
+export const isPaymentType = (v: string): v is PaymentType => (PAYMENT_TYPES as string[]).includes(v);
+
+export const GROUP_LABELS: Record<GroupBy, string> = {
+  CUSTOMER: "Mijoz",
+  OPERATOR: "Operator",
+  BRANCH: "Filial",
+  DAY: "Kun",
+  REGION: "Hudud",
+  PAYMENT_TYPE: "Toʻlov turi",
+};
 
 /** .xlsx eksport havolasi — jadvaldagi filtrlar bilan. */
-export function salesExportHref(f: { branchId: number | null; from: string; to: string; groupBy: GroupBy }): string {
+export function salesExportHref(f: {
+  branchId: number | null;
+  from: string;
+  to: string;
+  groupBy: GroupBy;
+  paymentType?: PaymentType | null;
+  regionId?: number | null;
+}): string {
   const p = new URLSearchParams();
   if (f.branchId != null) p.set("branchId", String(f.branchId));
   p.set("from", f.from);
   p.set("to", f.to);
   p.set("groupBy", f.groupBy);
+  if (f.paymentType) p.set("paymentType", f.paymentType);
+  if (f.regionId != null) p.set("regionId", String(f.regionId));
   return `/api/reports/sales/export?${p.toString()}`;
 }
 
@@ -83,17 +105,29 @@ export function SalesReportPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
   const period = usePeriodState();
   const { from, to } = period.range;
-  const groups = (Object.keys(GROUP_LABELS) as GroupBy[]).filter((g) => fullScope || g === "CUSTOMER" || g === "DAY");
+  const groups = (Object.keys(GROUP_LABELS) as GroupBy[]).filter((g) => fullScope || (g !== "OPERATOR" && g !== "BRANCH"));
+  const regions = useDictionary("REGION");
   const params = useSearchParams();
   // Ruxsatlar yuklangach URL'dagi guruh qoʻllanadi; foydalanuvchi tanlasa — oʻsha.
   const [picked, setGroupBy] = useState<GroupBy | null>(null);
   const groupBy = picked ?? initialGroupBy(params.get("groupBy"), groups);
+  const [paymentType, setPaymentType] = useState<PaymentType | null>(null);
+  const [regionId, setRegionId] = useState<number | null>(null);
   const report = useQuery({
-    queryKey: ["reports", "sales", branchId, from, to, groupBy],
+    queryKey: ["reports", "sales", branchId, from, to, groupBy, paymentType, regionId],
     queryFn: () =>
       unwrap(
         api.GET("/api/reports/sales", {
-          params: { query: { branchId: branchId ?? undefined, from: from ?? undefined, to: to ?? undefined, groupBy } },
+          params: {
+            query: {
+              branchId: branchId ?? undefined,
+              from: from ?? undefined,
+              to: to ?? undefined,
+              groupBy,
+              paymentType: paymentType ?? undefined,
+              regionId: regionId ?? undefined,
+            },
+          },
         }),
       ),
     enabled: allowed && !!from && !!to,
@@ -104,7 +138,19 @@ export function SalesReportPage() {
   if (me.data && !allowed) return <ForbiddenState description={t("sales.forbidden")} />;
   const r = report.data;
   const columns: TableColumn<SalesRow>[] = [
-    { key: "name", sortable: true, title: t(`sales.group.${groupBy}`) },
+    {
+      key: "name",
+      sortable: true,
+      title: t(`sales.group.${groupBy}`),
+      render: (x) =>
+        groupBy === "PAYMENT_TYPE" && isPaymentType(x.key) ? (
+          t(`sales.payment.${x.key}`)
+        ) : x.name === "" ? (
+          <span className="text-text-secondary">{t("sales.unspecified")}</span>
+        ) : (
+          x.name
+        ),
+    },
     {
       key: "orders",
       sortable: true,
@@ -149,6 +195,31 @@ export function SalesReportPage() {
           value={groupBy}
           onChange={(k) => setGroupBy(k as GroupBy)}
         />
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="w-44">
+            <Select
+              label={t("sales.paymentType")}
+              size="sm"
+              value={paymentType}
+              onChange={(v) => setPaymentType((v as PaymentType | null) ?? null)}
+              placeholder={t("sales.allPayments")}
+              className="[&>span:first-child]:sr-only"
+              options={PAYMENT_TYPES.map((p) => ({ value: p, label: t(`sales.payment.${p}`) }))}
+            />
+          </div>
+          <div className="w-52">
+            <Select
+              label={t("sales.region")}
+              size="sm"
+              searchable
+              value={regionId ? String(regionId) : null}
+              onChange={(v) => setRegionId(v ? Number(v) : null)}
+              placeholder={t("sales.allRegions")}
+              className="[&>span:first-child]:sr-only"
+              options={(regions.data ?? []).map((x) => ({ value: String(x.id), label: x.name }))}
+            />
+          </div>
+        </div>
         <div className="flex items-center gap-4 text-caption text-text-secondary">
           {r ? (
             <span>
@@ -158,7 +229,7 @@ export function SalesReportPage() {
           ) : null}
           {from && to ? (
             <a
-              href={salesExportHref({ branchId, from, to, groupBy })}
+              href={salesExportHref({ branchId, from, to, groupBy, paymentType, regionId })}
               download
               className="inline-flex items-center gap-1 text-primary hover:underline"
             >

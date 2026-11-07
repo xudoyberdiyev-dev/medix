@@ -7871,13 +7871,17 @@ export interface components {
             /** Format: date */
             from: string;
             /** @enum {string} */
-            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
             mineOnly: boolean;
             rows: components["schemas"]["SalesRow"][];
             /** Format: date */
             to: string;
             total: components["schemas"]["SalesRow"];
             truncated: boolean;
+            /** @enum {string} */
+            paymentType?: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: int64 */
+            regionId?: number;
         };
         SalesRow: {
             cost?: string;
@@ -14091,7 +14095,9 @@ export interface operations {
                 branchId?: number;
                 from?: string;
                 to?: string;
-                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+                paymentType?: "CASH" | "TRANSFER" | "ONLINE";
+                regionId?: number;
             };
             header?: never;
             path?: never;
@@ -14116,7 +14122,9 @@ export interface operations {
                 branchId?: number;
                 from?: string;
                 to?: string;
-                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+                paymentType?: "CASH" | "TRANSFER" | "ONLINE";
+                regionId?: number;
             };
             header?: never;
             path?: never;

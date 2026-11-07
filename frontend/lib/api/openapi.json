@@ -8929,8 +8929,32 @@
                 "CUSTOMER",
                 "OPERATOR",
                 "BRANCH",
-                "DAY"
+                "DAY",
+                "REGION",
+                "PAYMENT_TYPE"
               ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "paymentType",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CASH",
+                "TRANSFER",
+                "ONLINE"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "regionId",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
             }
           }
         ],
@@ -8993,8 +9017,32 @@
                 "CUSTOMER",
                 "OPERATOR",
                 "BRANCH",
-                "DAY"
+                "DAY",
+                "REGION",
+                "PAYMENT_TYPE"
               ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "paymentType",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CASH",
+                "TRANSFER",
+                "ONLINE"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "regionId",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
             }
           }
         ],
@@ -21607,7 +21655,9 @@
               "CUSTOMER",
               "OPERATOR",
               "BRANCH",
-              "DAY"
+              "DAY",
+              "REGION",
+              "PAYMENT_TYPE"
             ]
           },
           "mineOnly": {
@@ -21628,6 +21678,18 @@
           },
           "truncated": {
             "type": "boolean"
+          },
+          "paymentType": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "TRANSFER",
+              "ONLINE"
+            ]
+          },
+          "regionId": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "required": [

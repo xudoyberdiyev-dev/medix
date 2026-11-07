@@ -160,6 +160,26 @@ class SalesReportIT {
         mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "DAY").cookie(director))
                 .andExpect(jsonPath("$.rows.length()").value(1))
                 .andExpect(jsonPath("$.rows[0].key").value(t));
+        // To'lov turi va hudud: guruhlash va filtr (prototip: ptype, region)
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "PAYMENT_TYPE").cookie(director))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].key").value("CASH"))
+                .andExpect(jsonPath("$.rows[0].net").value("1700000.00"))
+                .andExpect(jsonPath("$.rows[1].key").value("TRANSFER"));
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("paymentType", "TRANSFER").cookie(director))
+                .andExpect(jsonPath("$.paymentType").value("TRANSFER"))
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.total.net").value("300000.00"));
+        long region = jdbc.sql("INSERT INTO region (name) VALUES (:n) RETURNING id").param("n", "Chilonzor " + UUID.randomUUID().toString().substring(0, 6))
+                .query(Long.class).single();
+        jdbc.sql("UPDATE counterparty SET region_id = :r WHERE id = :c").param("r", region).param("c", c1).update();
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "REGION").cookie(director))
+                .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(region)))
+                .andExpect(jsonPath("$.rows[0].net").value("1700000.00"))
+                .andExpect(jsonPath("$.rows[1].key").value(""));
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("regionId", "" + region).cookie(director))
+                .andExpect(jsonPath("$.regionId").value(region))
+                .andExpect(jsonPath("$.total.net").value("1700000.00"));
         // Operator (reports.own): faqat o'zi kiritganlar, tannarxsiz
         mvc.perform(get("/api/reports/sales").param("from", t).cookie(op1.cookie()))
                 .andExpect(status().isOk())

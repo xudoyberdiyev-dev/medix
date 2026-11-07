@@ -64,7 +64,9 @@
       "CUSTOMER": "Mijoz",
       "OPERATOR": "Operator",
       "BRANCH": "Filial",
-      "DAY": "Kun"
+      "DAY": "Kun",
+      "REGION": "Hudud",
+      "PAYMENT_TYPE": "Toʻlov turi"
     },
     "sales": "Sotuv",
     "returns": "Qaytarish",
@@ -74,7 +76,17 @@
     "mineOnly": "faqat siz kiritgan buyurtmalar",
     "emptyTitle": "Davrda savdo yoʻq",
     "truncated": "Faqat birinchi 5000 qator koʻrsatildi — davrni qisqartiring.",
-    "note": "Sof savdo = sotuv − qaytarish; yetkazilmagan (bekor qilingan) sotuvlar kirmaydi."
+    "note": "Sof savdo = sotuv − qaytarish; yetkazilmagan (bekor qilingan) sotuvlar kirmaydi.",
+    "payment": {
+      "CASH": "Naqd",
+      "TRANSFER": "Perechisleniye",
+      "ONLINE": "Online"
+    },
+    "paymentType": "Toʻlov turi",
+    "allPayments": "Barcha toʻlov turlari",
+    "region": "Hudud",
+    "allRegions": "Barcha hududlar",
+    "unspecified": "Koʻrsatilmagan"
   },
   "worker": {
     "forbidden": "{title} sizning rolingiz uchun yopiq.",
