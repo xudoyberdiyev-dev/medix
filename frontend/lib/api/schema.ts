@@ -1211,6 +1211,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/employees/{id}/all-branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Buxgalterga barcha filiallar doirasi (faqat Direktor)
+         * @description Standart holatda Buxgalter faqat o'z filialini ko'radi (E3). Ochiq sessiyalari tugatiladi.
+         */
+        post: operations["allBranches"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/employees/{id}/block": {
         parameters: {
             query?: never;
@@ -1680,6 +1700,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/marking/orders/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Markirovkasiz qatorlarni tasdiqlash
+         * @description E1: markirovkasiz qatorlar skanerlanmaydi — Markirovkachi «Tasdiqlash» bilan o'tkazadi (bittalab yoki hammasi).
+         */
+        post: operations["confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marking/orders/{id}/finish": {
         parameters: {
             query?: never;
@@ -1691,7 +1731,7 @@ export interface paths {
         put?: never;
         /**
          * Markirovkani yakunlash
-         * @description Barcha kodlar skanerlangan bo'lsa → «Hisobdan o'tkazilmoqda».
+         * @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».
          */
         post: operations["finish_1"];
         delete?: never;
@@ -5105,46 +5145,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/employees/{id}/all-branches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Buxgalterga barcha filiallar doirasi (faqat Direktor)
-         * @description Standart holatda Buxgalter faqat o'z filialini ko'radi (E3). Ochiq sessiyalari tugatiladi.
-         */
-        post: operations["allBranches"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/marking/orders/{id}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Markirovkasiz qatorlarni tasdiqlash
-         * @description E1: markirovkasiz qatorlar skanerlanmaydi — Markirovkachi «Tasdiqlash» bilan o'tkazadi (bittalab yoki hammasi).
-         */
-        post: operations["confirm"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5253,6 +5253,9 @@ export interface components {
         AddZoneRequest: {
             /** @enum {string} */
             type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
+        };
+        AllBranchesRequest: {
+            enabled: boolean;
         };
         Attention: {
             /** Format: int32 */
@@ -5756,6 +5759,9 @@ export interface components {
         };
         CompanyRequest: {
             name: string;
+        };
+        ConfirmRequest: {
+            lineIds: number[];
         };
         Contract: {
             /** Format: int64 */
@@ -6598,13 +6604,14 @@ export interface components {
             boxesScanned: number;
             /** @description Faol (olib tashlanmagan) kodlar */
             codes: components["schemas"]["MarkCode"][];
-            /** @description Barcha kodlar skanerlangan — yakunlash mumkin */
+            /** @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan — yakunlash mumkin */
             complete: boolean;
             customer: string;
             /** Format: date-time */
             deadline?: string;
             /** Format: int64 */
             id: number;
+            /** @description Markirovkali qatorlar (skanerlanadi) */
             lines: components["schemas"]["MarkLine"][];
             /** Format: int32 */
             markMinutes?: number;
@@ -8812,6 +8819,18 @@ export interface components {
             tripDate: string;
             vehicle: string;
         };
+        UnmarkedLine: {
+            confirmed: boolean;
+            /** Format: int64 */
+            lineId: number;
+            /** Format: int32 */
+            lineNo: number;
+            productCode: string;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            unit: string;
+        };
         UpdateBranchRequest: {
             address?: string;
             legalName: string;
@@ -9292,24 +9311,6 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
-        };
-        AllBranchesRequest: {
-            enabled: boolean;
-        };
-        UnmarkedLine: {
-            confirmed: boolean;
-            /** Format: int64 */
-            lineId: number;
-            /** Format: int32 */
-            lineNo: number;
-            productCode: string;
-            productName: string;
-            /** Format: int32 */
-            qty: number;
-            unit: string;
-        };
-        ConfirmRequest: {
-            lineIds: number[];
         };
     };
     responses: never;
@@ -11156,6 +11157,32 @@ export interface operations {
             };
         };
     };
+    allBranches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllBranchesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
     block: {
         parameters: {
             query?: never;
@@ -11776,6 +11803,32 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["OrderReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkWork"];
+                };
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmRequest"];
             };
         };
         responses: {
@@ -16696,58 +16749,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
-                };
-            };
-        };
-    };
-    allBranches: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AllBranchesRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Employee"];
-                };
-            };
-        };
-    };
-    confirm: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConfirmRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MarkWork"];
                 };
             };
         };

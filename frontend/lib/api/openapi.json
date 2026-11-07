@@ -2909,6 +2909,45 @@
         "tags" : [ "employees" ]
       }
     },
+    "/api/employees/{id}/all-branches" : {
+      "post" : {
+        "description" : "Standart holatda Buxgalter faqat o'z filialini ko'radi (E3). Ochiq sessiyalari tugatiladi.",
+        "operationId" : "allBranches",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AllBranchesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Employee"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buxgalterga barcha filiallar doirasi (faqat Direktor)",
+        "tags" : [ "employees" ]
+      }
+    },
     "/api/employees/{id}/block" : {
       "post" : {
         "description" : "Ochiq sessiyalari darhol tugatiladi.",
@@ -3856,9 +3895,48 @@
         "tags" : [ "marking" ]
       }
     },
+    "/api/marking/orders/{id}/confirm" : {
+      "post" : {
+        "description" : "E1: markirovkasiz qatorlar skanerlanmaydi — Markirovkachi «Tasdiqlash» bilan o'tkazadi (bittalab yoki hammasi).",
+        "operationId" : "confirm",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfirmRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkWork"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovkasiz qatorlarni tasdiqlash",
+        "tags" : [ "marking" ]
+      }
+    },
     "/api/marking/orders/{id}/finish" : {
       "post" : {
-        "description" : "Barcha kodlar skanerlangan bo'lsa → «Hisobdan o'tkazilmoqda».",
+        "description" : "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».",
         "operationId" : "finish_1",
         "parameters" : [ {
           "in" : "path",
@@ -11534,84 +11612,6 @@
         "summary" : "Rad etish",
         "tags" : [ "zone-transfer" ]
       }
-    },
-    "/api/employees/{id}/all-branches" : {
-      "post" : {
-        "description" : "Standart holatda Buxgalter faqat o'z filialini ko'radi (E3). Ochiq sessiyalari tugatiladi.",
-        "operationId" : "allBranches",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/AllBranchesRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Employee"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "summary" : "Buxgalterga barcha filiallar doirasi (faqat Direktor)",
-        "tags" : [ "employees" ]
-      }
-    },
-    "/api/marking/orders/{id}/confirm" : {
-      "post" : {
-        "description" : "E1: markirovkasiz qatorlar skanerlanmaydi — Markirovkachi «Tasdiqlash» bilan o'tkazadi (bittalab yoki hammasi).",
-        "operationId" : "confirm",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ConfirmRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/MarkWork"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "summary" : "Markirovkasiz qatorlarni tasdiqlash",
-        "tags" : [ "marking" ]
-      }
     }
   },
   "components" : {
@@ -11880,6 +11880,15 @@
           }
         },
         "required" : [ "type" ]
+      },
+      "AllBranchesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "enabled" ]
       },
       "Attention" : {
         "type" : "object",
@@ -13176,6 +13185,21 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "ConfirmRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lineIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 1000,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "lineIds" ]
       },
       "Contract" : {
         "type" : "object",
@@ -15385,7 +15409,7 @@
           },
           "complete" : {
             "type" : "boolean",
-            "description" : "Barcha kodlar skanerlangan — yakunlash mumkin"
+            "description" : "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan — yakunlash mumkin"
           },
           "customer" : {
             "type" : "string"
@@ -15400,6 +15424,7 @@
           },
           "lines" : {
             "type" : "array",
+            "description" : "Markirovkali qatorlar (skanerlanadi)",
             "items" : {
               "$ref" : "#/components/schemas/MarkLine"
             }
@@ -20933,6 +20958,36 @@
         },
         "required" : [ "branchId", "createdAt", "driver", "id", "number", "orders", "places", "status", "total", "tripDate", "vehicle" ]
       },
+      "UnmarkedLine" : {
+        "type" : "object",
+        "properties" : {
+          "confirmed" : {
+            "type" : "boolean"
+          },
+          "lineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "confirmed", "lineId", "lineNo", "productCode", "productName", "qty", "unit" ]
+      },
       "UpdateBranchRequest" : {
         "type" : "object",
         "properties" : {
@@ -22130,60 +22185,6 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "from", "id", "lines", "needsApproval", "number", "qty", "status", "to", "warehouse", "warehouseId" ]
-      },
-      "AllBranchesRequest" : {
-        "type" : "object",
-        "properties" : {
-          "enabled" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "enabled" ]
-      },
-      "UnmarkedLine" : {
-        "type" : "object",
-        "properties" : {
-          "confirmed" : {
-            "type" : "boolean"
-          },
-          "lineId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "lineNo" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "productCode" : {
-            "type" : "string"
-          },
-          "productName" : {
-            "type" : "string"
-          },
-          "qty" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "unit" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "confirmed", "lineId", "lineNo", "productCode", "productName", "qty", "unit" ]
-      },
-      "ConfirmRequest" : {
-        "type" : "object",
-        "properties" : {
-          "lineIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            },
-            "maxItems" : 1000,
-            "minItems" : 0
-          }
-        },
-        "required" : [ "lineIds" ]
       }
     }
   }
