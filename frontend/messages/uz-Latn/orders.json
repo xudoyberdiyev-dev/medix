@@ -378,7 +378,8 @@
       "issues": "Muammolar",
       "receipts": "Kirim qabuli",
       "transfers": "Koʻchirish qabuli",
-      "returns": "Qaytgan tovar"
+      "returns": "Qaytgan tovar",
+      "check": "Hisobdan oʻtkazish"
     },
     "col": {
       "number": "Raqam",
@@ -391,7 +392,11 @@
       "seller": "Sotuvchi filial",
       "from": "Qayerdan",
       "to": "Qayerga"
-    }
+    },
+    "checkHint": "Yigʻilgan (va markirovka qilingan) buyurtmalar — kartani oching, qatorlarni tekshirib hisobdan oʻtkazing. Hujjatlashtirish va reys —",
+    "toShipments": "Joʻnatish sahifasida",
+    "checkEmpty": "Tekshiruv kutayotgan buyurtma yoʻq",
+    "checkEmptyHint": "Yigʻish yakunlangach buyurtma shu yerda chiqadi."
   },
   "driver": {
     "forbidden": "Reys paneli faqat haydovchilar uchun.",

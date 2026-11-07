@@ -16,6 +16,10 @@ describe("Ombor mudiri paneli yorliqlari", () => {
     const withTransfers = keeperTabs({ waitingTime: 0, receipts: true, returns: true, transfers: true, transferCount: 2 }, t);
     expect(withTransfers.map((t) => t.key)).toEqual(["monitor", "time", "issues", "receipts", "transfers", "returns"]);
     expect(withTransfers.find((t) => t.key === "transfers")?.count).toBe(2);
+    const withCheck = keeperTabs({ waitingTime: 0, receipts: false, returns: true, check: true, checkCount: 4 }, t);
+    expect(withCheck.map((t) => t.key)).toEqual(["monitor", "time", "check", "issues", "returns"]);
+    expect(withCheck.find((t) => t.key === "check")?.label).toBe("Hisobdan oʻtkazish");
+    expect(withCheck.find((t) => t.key === "check")?.count).toBe(4);
   });
 });
 

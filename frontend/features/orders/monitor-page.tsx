@@ -64,7 +64,7 @@ function useNow(): Date {
   return now;
 }
 
-export type KeeperTab = "monitor" | "time" | "issues" | "receipts" | "transfers" | "returns";
+export type KeeperTab = "monitor" | "time" | "check" | "issues" | "receipts" | "transfers" | "returns";
 
 /** Ombor mudiri paneli yorliqlari (SPEC 3): ruxsat boʻyicha; «Hujjatlashtirish» — Joʻnatish sahifasiga havola. */
 export function keeperTabs(
@@ -75,12 +75,16 @@ export function keeperTabs(
     receiptCount?: number;
     transfers?: boolean;
     transferCount?: number;
+    /** «Hisobdan oʻtkazish» — orders.check bilan; soni — «Tekshiruvda» buyurtmalar. */
+    check?: boolean;
+    checkCount?: number;
   },
   t: OrdersT,
 ): TabItem[] {
   return [
     { key: "monitor", label: t("monitor.tab.monitor") },
     { key: "time", label: t("monitor.tab.time"), count: opts.waitingTime },
+    ...(opts.check ? [{ key: "check", label: t("monitor.tab.check"), count: opts.checkCount }] : []),
     { key: "issues", label: t("monitor.tab.issues") },
     ...(opts.receipts ? [{ key: "receipts", label: t("monitor.tab.receipts"), count: opts.receiptCount }] : []),
     ...(opts.transfers ? [{ key: "transfers", label: t("monitor.tab.transfers"), count: opts.transferCount }] : []),
@@ -130,6 +134,8 @@ export function MonitorPage() {
       receiptCount: canReceipts ? drafts.data?.total : undefined,
       transfers: canTransfers,
       transferCount: canTransfers && transit.data ? transit.data.total + fsToReceive.length : undefined,
+      check: canReturns,
+      checkCount: board.data?.cards.filter((c) => c.status === "CHECKING").length,
     },
     t,
   );
@@ -216,6 +222,31 @@ export function MonitorPage() {
             ))}
           </ul>
         )
+      ) : null}
+      {board.data && tab === "check" ? (
+        <>
+          <p className="mb-3 text-caption text-text-secondary">
+            {t("monitor.checkHint")}{" "}
+            <Link href="/shipments" className="text-primary hover:underline">
+              {t("monitor.toShipments")}
+            </Link>
+          </p>
+          {board.data.cards.filter((c) => c.status === "CHECKING").length === 0 ? (
+            <Card>
+              <EmptyState icon={PackageOpen} title={t("monitor.checkEmpty")} description={t("monitor.checkEmptyHint")} />
+            </Card>
+          ) : (
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label={t("monitor.tab.check")}>
+              {board.data.cards
+                .filter((c) => c.status === "CHECKING")
+                .map((c) => (
+                  <li key={c.id}>
+                    <MonitorCardView card={c} now={now} onOpen={() => setOpen(c.id)} />
+                  </li>
+                ))}
+            </ul>
+          )}
+        </>
       ) : null}
       {board.data && tab === "issues" ? <IssuesList onOpenOrder={setOpen} /> : null}
       {board.data && tab === "receipts" ? <ReceiptQueue query={drafts} onOpen={setReceipt} /> : null}
