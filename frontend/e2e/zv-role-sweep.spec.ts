@@ -49,7 +49,8 @@ for (const user of USERS) {
 
     const nav = page.getByRole("navigation", { name: "Asosiy menyu" });
     await expect(nav.getByRole("link").first()).toBeVisible();
-    const hrefs = [...new Set(await nav.getByRole("link").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? "")))];
+    // Yigʻilgan guruhlardagi havolalar ham (prototip: guruhlar yigʻiladi)
+    const hrefs = [...new Set(await nav.locator("a[href]").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? "")))];
     expect(hrefs.length).toBeGreaterThan(0);
 
     for (const href of [...hrefs, "/profile"]) {

@@ -6,5 +6,9 @@
   "branch": "Filial",
   "allBranches": "Barcha filiallar",
   "openMenu": "Menyuni ochish",
-  "closeMenu": "Menyuni yopish"
+  "closeMenu": "Menyuni yopish",
+  "collapse": "Sidebarʼni yigʻish",
+  "expand": "Sidebarʼni ochish",
+  "userMenu": "Foydalanuvchi menyusi",
+  "language": "Til"
 }

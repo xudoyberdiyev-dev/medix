@@ -60,7 +60,9 @@ for (const panel of PHONE_PANELS) {
     await expectNoHorizontalOverflow(page);
 
     await page.getByRole("button", { name: "Menyuni ochish" }).click();
-    await page.getByRole("dialog", { name: "Asosiy menyu" }).getByRole("button", { name: "Chiqish" }).click();
+    // Prototip: chiqish — foydalanuvchi menyusida
+    await page.getByRole("dialog", { name: "Asosiy menyu" }).getByRole("button", { name: "Foydalanuvchi menyusi" }).click();
+    await page.getByRole("menuitem", { name: "Chiqish" }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 }
@@ -74,7 +76,7 @@ test("Planshet (1024 px): Ombor mudiri — ixcham menyu, panel sigʻadi", async 
   await nav.getByRole("link", { name: "Monitor" }).click();
   await expect(page).toHaveURL(/\/warehouse/);
   await expectNoHorizontalOverflow(page);
-  const hrefs = [...new Set(await nav.getByRole("link").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? "")))];
+  const hrefs = [...new Set(await nav.locator("a[href]").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? "")))];
   for (const path of hrefs) {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();

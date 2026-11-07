@@ -6,5 +6,9 @@
   "branch": "Филиал",
   "allBranches": "Все филиалы",
   "openMenu": "Открыть меню",
-  "closeMenu": "Закрыть меню"
+  "closeMenu": "Закрыть меню",
+  "collapse": "Свернуть меню",
+  "expand": "Развернуть меню",
+  "userMenu": "Меню пользователя",
+  "language": "Язык"
 }

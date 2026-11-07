@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Building2, Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Layers } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/features/auth/session";
 import { useBranchList } from "@/features/organization/api";
@@ -38,12 +38,17 @@ export function BranchSwitcher() {
     active.map((b) => b.id),
   );
   const label = current === null ? t("allBranches") : (branches.data.find((b) => b.id === current)?.name ?? "");
+  const code = current === null ? "ALL" : (branches.data.find((b) => b.id === current)?.code ?? "");
+  const codeBadge = code ? (
+    <span className="rounded-sm bg-background px-1.5 font-mono text-[11px] leading-4 text-text-secondary max-md:hidden">{code}</span>
+  ) : null;
 
   if (!me.data.allBranches) {
     return label ? (
-      <span title={label} className="flex h-control-md items-center gap-2 px-2 md:px-3">
-        <Building2 size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-        <span className="max-md:sr-only">{label}</span>
+      <span title={label} className="flex h-control-sm items-center gap-2 rounded-full border border-border px-2 md:px-3">
+        <Layers size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+        <span className="max-w-40 truncate max-md:sr-only">{label}</span>
+        {codeBadge}
       </span>
     ) : null;
   }
@@ -57,17 +62,18 @@ export function BranchSwitcher() {
         aria-expanded={open}
         aria-label={`Filial: ${label}`}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-control-md items-center gap-2 rounded-control border border-border px-2 hover:bg-background md:px-3"
+        className="flex h-control-sm items-center gap-2 rounded-full border border-border px-2 hover:bg-background md:px-3"
       >
-        <Building2 size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+        <Layers size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
         <span className="max-w-40 truncate max-md:sr-only">{label}</span>
+        {codeBadge}
         <ChevronDown size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
       </button>
       {open ? (
         <ul
           role="listbox"
           aria-label={t("branch")}
-          className="absolute right-0 z-30 mt-1 min-w-56 rounded-control border border-border bg-surface py-1 shadow-overlay"
+          className="absolute left-0 z-30 mt-1 min-w-56 rounded-control border border-border bg-surface py-1 shadow-overlay"
         >
           {options.map((o) => {
             const selected = o.id === current;

@@ -147,8 +147,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
-    key: "analysis",
-    title: "Tahlil",
+    // Prototip: «Hisobotlar» — sarlavhasiz, yuqori darajadagi band
     items: [
       {
         key: "reports",
