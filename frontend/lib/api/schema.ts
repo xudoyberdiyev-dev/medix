@@ -398,6 +398,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/branch-sales/{id}/shortage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * FS kamomadi
+         * @description Ochiqmi, summa (special.cost) va hal qilish tarixi.
+         */
+        get: operations["get_19"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/branch-sales/{id}/shortage/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * FS kamomadini hal qilish
+         * @description WRITE_OFF + BUYER — HC xaridor zonasida, qarz o'zgarmaydi; WRITE_OFF + SELLER — HC sotuvchi zonasida, xaridor qarzi kamayadi; RETURN — topildi, sotuvchi zonaga qaytariladi, xaridor qarzi kamayadi. HC tasdiq qoidalari amal qiladi.
+         */
+        post: operations["resolve_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/branches": {
         parameters: {
             query?: never;
@@ -4873,6 +4913,8 @@ export interface components {
             bonusDue: number;
             branchOrders: components["schemas"]["CountAmount"];
             /** Format: int32 */
+            branchSaleShortagesOpen: number;
+            /** Format: int32 */
             branchSalesToReceive: number;
             cashApprovals: components["schemas"]["CountAmount"];
             directorOrders: components["schemas"]["CountAmount"];
@@ -5661,6 +5703,49 @@ export interface components {
         FinishResult: {
             /** @enum {string} */
             status: "PLANNED" | "IN_TRANSIT" | "RETURN_WAIT" | "DONE" | "CANCELLED";
+        };
+        FsShortageInfo: {
+            amount?: string;
+            canResolveAsBuyer: boolean;
+            canResolveAsSeller: boolean;
+            history: components["schemas"]["FsShortageResolution"][];
+            number: string;
+            open: boolean;
+            /** Format: int64 */
+            saleId: number;
+            /** Format: int32 */
+            shortageQty: number;
+        };
+        FsShortageResolution: {
+            /** @description Tannarxda; faqat special.cost */
+            amount?: string;
+            /** @enum {string} */
+            bearer: "BUYER" | "SELLER";
+            /** @description Xaridor qarzi o'zgarishi (− kamaydi); faqat special.cost */
+            debtChange?: string;
+            /** @enum {string} */
+            kind: "WRITE_OFF" | "RETURN";
+            note?: string;
+            /** Format: int32 */
+            qty: number;
+            /** Format: date-time */
+            resolvedAt: string;
+            resolvedBy: string;
+            /** Format: int64 */
+            writeOffId?: number;
+            writeOffNumber?: string;
+            /** @enum {string} */
+            writeOffStatus?: "PENDING" | "POSTED" | "REJECTED";
+        };
+        FsShortageResolveRequest: {
+            /**
+             * @description WRITE_OFF da majburiy; RETURN — doim SELLER
+             * @enum {string}
+             */
+            bearer?: "BUYER" | "SELLER";
+            /** @enum {string} */
+            kind: "WRITE_OFF" | "RETURN";
+            note: string;
         };
         HandoverResult: {
             sale: string;
@@ -8400,7 +8485,7 @@ export interface components {
             /** Format: date-time */
             rejectedAt?: string;
             rejectedBy?: string;
-            /** @description OK kamomadidan bo'lsa — OK raqami (qoldiq harakati yo'q) */
+            /** @description OK / FS kamomadidan bo'lsa — OK yoki FS raqami (qoldiq harakati yo'q) */
             sourceTransfer?: string;
             /** @enum {string} */
             status: "PENDING" | "POSTED" | "REJECTED";
@@ -9208,6 +9293,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BranchSaleDetail"];
+                };
+            };
+        };
+    };
+    get_19: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FsShortageInfo"];
+                };
+            };
+        };
+    };
+    resolve_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FsShortageResolveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FsShortageInfo"];
                 };
             };
         };

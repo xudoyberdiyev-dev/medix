@@ -30,6 +30,7 @@ import {
   type BranchSaleDetail,
   type BranchSaleLine,
 } from "./api";
+import { BranchSaleShortagePanel } from "./shortage-panel";
 
 const KIND = "Filiallararo savdo";
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
@@ -165,11 +166,7 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
             kutmoqda.
           </Alert>
         ) : null}
-        {doc.shortageQty > 0 ? (
-          <Alert tone="warning" title={`Kamomad: ${formatQuantity(doc.shortageQty)} dona`}>
-            {doc.receiveNote ?? ""} Qarz joʻnatilgan summada qoldi; farqni filiallar oʻzaro hal qiladi.
-          </Alert>
-        ) : null}
+        <BranchSaleShortagePanel doc={doc} />
         <dl className="grid grid-cols-2 gap-4 text-body md:grid-cols-4">
           <div>
             <dt className="text-caption text-text-secondary">Sotuvchi</dt>

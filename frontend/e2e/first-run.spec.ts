@@ -570,3 +570,33 @@ test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx)
   await expect(row).toContainText("Qabul qilindi");
   await expect(row).toContainText("E2E Samarqand");
 });
+
+test("CEO: FS kamomadi — topildi, sotuvchiga qaytariladi (qarz kamayadi)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/branch-sales");
+  await page.getByRole("button", { name: "Savdo tuzish" }).first().click();
+  await choose(page, "Qaysi ombordan", /Markaziy ombor/);
+  await choose(page, "Zona", /Asosiy saqlash/);
+  await choose(page, "Xaridor ombori", /Samarqand ombori/);
+  await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("2");
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await page.getByLabel(/E2E-01 — kelgan soni/).fill("1");
+  await page.getByRole("dialog").last().getByLabel("Izoh").fill("1 quti yuklanmay qolgan");
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await expect(page.getByText("Qabul qilindi, kamomad 1 dona")).toBeVisible();
+  await expect(page.getByText(/Kamomad: 1 dona .*— hal qilinmagan/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Topildi — sotuvchiga qaytarish" }).click();
+  await page.getByRole("dialog").last().getByLabel("Izoh").fill("Markaziy omborda topildi");
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qaytarish", exact: true }).click();
+  await expect(page.getByText("Tovar sotuvchiga qaytarildi")).toBeVisible();
+  await expect(page.getByText(/Kamomad: 1 dona .*— hal qilindi/)).toBeVisible();
+  await expect(page.getByText(/Sotuvchiga qaytarildi · qarz -/)).toBeVisible();
+});

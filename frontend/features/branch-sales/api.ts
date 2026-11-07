@@ -99,3 +99,39 @@ export function useBranchBalances(enabled: boolean) {
     enabled,
   });
 }
+
+export type FsShortageInfo = components["schemas"]["FsShortageInfo"];
+export type FsShortageKind = components["schemas"]["FsShortageResolveRequest"]["kind"];
+export type FsShortageBearer = NonNullable<components["schemas"]["FsShortageResolveRequest"]["bearer"]>;
+export const TRANSFER_RESOLVE = "transfer.resolve";
+
+/** FS kamomadi: ochiqmi, summa (special.cost), tarix. */
+export function useBranchSaleShortage(id: number, enabled: boolean) {
+  return useQuery({
+    queryKey: ["branch-sales", "shortage", id],
+    queryFn: () => unwrap(api.GET("/api/branch-sales/{id}/shortage", { params: { path: { id } } })),
+    enabled,
+  });
+}
+
+/** Hal qilish: HC (xaridor yoki sotuvchi zimmasida) yoki sotuvchiga qaytarish; qarz tuzatish serverda. */
+export function useResolveBranchSaleShortage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { id: number; kind: FsShortageKind; bearer: FsShortageBearer; note: string }) => {
+      await ensureCsrf();
+      return unwrap(
+        api.POST("/api/branch-sales/{id}/shortage/resolve", {
+          params: { path: { id: v.id } },
+          body: { kind: v.kind, bearer: v.bearer, note: v.note },
+        }),
+      );
+    },
+    onSuccess: async (d) => {
+      qc.setQueryData(["branch-sales", "shortage", d.saleId], d);
+      await qc.invalidateQueries({ queryKey: ["branch-sales", "balances"] });
+      await qc.invalidateQueries({ queryKey: ["write-offs"] });
+      await qc.invalidateQueries({ queryKey: ["stock"] });
+    },
+  });
+}

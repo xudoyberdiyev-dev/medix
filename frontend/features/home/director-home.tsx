@@ -146,6 +146,13 @@ export function attentionRows(
       money: false,
     },
     {
+      key: "fss",
+      label: "Hal qilinmagan filiallararo savdo kamomadlari",
+      value: String(a.branchSaleShortagesOpen),
+      href: "/branch-sales?status=RECEIVED",
+      money: false,
+    },
+    {
       key: "inc",
       label: "Inventarizatsiya tasdigʻi kutilmoqda",
       value: String(a.inventoryCheck),

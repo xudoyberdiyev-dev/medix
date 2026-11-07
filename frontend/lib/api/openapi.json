@@ -916,6 +916,74 @@
         "tags" : [ "branch-sale" ]
       }
     },
+    "/api/branch-sales/{id}/shortage" : {
+      "get" : {
+        "description" : "Ochiqmi, summa (special.cost) va hal qilish tarixi.",
+        "operationId" : "get_19",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FsShortageInfo"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "FS kamomadi",
+        "tags" : [ "branch-sale" ]
+      }
+    },
+    "/api/branch-sales/{id}/shortage/resolve" : {
+      "post" : {
+        "description" : "WRITE_OFF + BUYER — HC xaridor zonasida, qarz o'zgarmaydi; WRITE_OFF + SELLER — HC sotuvchi zonasida, xaridor qarzi kamayadi; RETURN — topildi, sotuvchi zonaga qaytariladi, xaridor qarzi kamayadi. HC tasdiq qoidalari amal qiladi.",
+        "operationId" : "resolve_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FsShortageResolveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FsShortageInfo"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "FS kamomadini hal qilish",
+        "tags" : [ "branch-sale" ]
+      }
+    },
     "/api/branches" : {
       "get" : {
         "operationId" : "list_19",
@@ -10727,6 +10795,10 @@
           "branchOrders" : {
             "$ref" : "#/components/schemas/CountAmount"
           },
+          "branchSaleShortagesOpen" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "branchSalesToReceive" : {
             "type" : "integer",
             "format" : "int32"
@@ -10797,7 +10869,7 @@
             "format" : "int32"
           }
         },
-        "required" : [ "bonusDue", "branchOrders", "branchSalesToReceive", "cashApprovals", "directorOrders", "driverCash", "expiring", "inventoryCheck", "inventoryCounting", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierReturnsPending", "supplierToday", "transferShortagesOpen", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
+        "required" : [ "bonusDue", "branchOrders", "branchSaleShortagesOpen", "branchSalesToReceive", "cashApprovals", "directorOrders", "driverCash", "expiring", "inventoryCheck", "inventoryCounting", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierReturnsPending", "supplierToday", "transferShortagesOpen", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
       },
       "AuditPage" : {
         "type" : "object",
@@ -12879,6 +12951,108 @@
           }
         },
         "required" : [ "status" ]
+      },
+      "FsShortageInfo" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "canResolveAsBuyer" : {
+            "type" : "boolean"
+          },
+          "canResolveAsSeller" : {
+            "type" : "boolean"
+          },
+          "history" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FsShortageResolution"
+            }
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "open" : {
+            "type" : "boolean"
+          },
+          "saleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "canResolveAsBuyer", "canResolveAsSeller", "history", "number", "open", "saleId", "shortageQty" ]
+      },
+      "FsShortageResolution" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "description" : "Tannarxda; faqat special.cost"
+          },
+          "bearer" : {
+            "type" : "string",
+            "enum" : [ "BUYER", "SELLER" ]
+          },
+          "debtChange" : {
+            "type" : "string",
+            "description" : "Xaridor qarzi o'zgarishi (− kamaydi); faqat special.cost"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "WRITE_OFF", "RETURN" ]
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "resolvedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "resolvedBy" : {
+            "type" : "string"
+          },
+          "writeOffId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "writeOffNumber" : {
+            "type" : "string"
+          },
+          "writeOffStatus" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "POSTED", "REJECTED" ]
+          }
+        },
+        "required" : [ "bearer", "kind", "qty", "resolvedAt", "resolvedBy" ]
+      },
+      "FsShortageResolveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "bearer" : {
+            "type" : "string",
+            "description" : "WRITE_OFF da majburiy; RETURN — doim SELLER",
+            "enum" : [ "BUYER", "SELLER" ]
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "WRITE_OFF", "RETURN" ]
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "kind", "note" ]
       },
       "HandoverResult" : {
         "type" : "object",
@@ -19703,7 +19877,7 @@
           },
           "sourceTransfer" : {
             "type" : "string",
-            "description" : "OK kamomadidan bo'lsa — OK raqami (qoldiq harakati yo'q)"
+            "description" : "OK / FS kamomadidan bo'lsa — OK yoki FS raqami (qoldiq harakati yo'q)"
           },
           "status" : {
             "type" : "string",
