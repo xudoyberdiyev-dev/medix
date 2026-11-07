@@ -68,7 +68,7 @@ Bu hujjat loyihaning yagona umumiy tavsifi. Batafsil qarorlar tarixi `claude/MED
 | QQS | Kompaniya QQS to'lovchi. Narx **QQS bilan** saqlanadi. Stavka 12%, sozlanadi (buxgalter tasdiqlaydi) |
 | Tannarx | Har bir partiyaning o'z kirim narxi. Bonus tovar tannarxi 0 |
 | Mijoz va yetkazib beruvchi | Kontragent kartasi markazda bitta (bitta STIR — bitta karta). Shartlar, limit, narx turi va qarz har filial bo'yicha alohida. Bitta karta ikki rolli bo'lishi mumkin |
-| Filiallararo savdo | Guruh ichida tannarxda, hisob-faktura va QQS bilan. Guruh ichidagi qarz umumiy jamiga kirmaydi |
+| Filiallararo savdo | Guruh ichida tannarxda (QQSsiz baza), hisob-faktura bilan; QQS 12% tannarx ustiga qo'shiladi (egasi qarori 07.11.2026, buxgalter bilan tasdiqlash tavsiya qilinadi). Guruh ichidagi qarz umumiy jamiga kirmaydi |
 | Foydalanuvchilar | 20–40 tagacha. O'zi ro'yxatdan o'tish yo'q — loginlarni administrator yaratadi |
 | Birinchi ishga tushirish | Tizim faqat CEO hisobi bilan ochiladi. Sozlash ustasi orqali kompaniya, filiallar, omborlar va zonalar, rollar, xodimlar yaratiladi |
 | Tillar | O'zbek (lotin) — asosiy; o'zbek (kirill), rus. Qidiruv lotin va kirillda bir xil ishlaydi. V1 da faqat lotin, kirill va rus — V2 da |
@@ -88,7 +88,7 @@ Tizimda **11 ta rol**. Ruxsatlar rollar matritsasidan olinadi: prototipda 131 ta
 | 3 | **Filial rahbari** | Bosh sahifa | Buyurtma va limit tasdig'i, kirimni o'tkazish, bekor qilish, filial sozlamalari |
 | 4 | **Operator** | Bosh sahifa | Buyurtma kiritish (asosiy ishi kompyuterda); o'zi kiritgan buyurtmalar bo'yicha savdo hisobotini ko'radi |
 | 5 | **Xarid** | Xarid bosh sahifasi | Kirim kiritish, YB qarzini ko'rish, bonus, «Kim nomiga» tovarlari. Tannarxni faqat Narxlar sahifasida ko'radi |
-| 6 | **Buxgalter** | Bosh sahifa | Kirimni o'tkazish, bonus tasdig'i, to'lovlar, barcha filiallar hisobotlari. Qoldiqlar sahifasi yopiq |
+| 6 | **Buxgalter** | Bosh sahifa | Kirimni o'tkazish, bonus tasdig'i, to'lovlar, o'z filiali hisobotlari (barcha filiallar — faqat Direktor ruxsat bergan buxgalterga; egasi qarori 07.11.2026). Qoldiqlar sahifasi yopiq |
 | 7 | **Kassir** | **Kassir paneli** | Kassa: mijozdan to'lov (MT), chiqim (KO), haydovchidan pul, kunni yopish. Filial hisoblarini ko'radi, amallarni faqat o'z kassasida bajaradi |
 | 8 | **Ombor mudiri** | **Ombor mudiri paneli** | Kirimni qabul qilish (o'tkazmaydi), buyurtmaga vaqt berish, hisobdan o'tkazish, hujjatlashtirish (reys), ko'chirish, inventarizatsiya, qaytgan tovar. Tannarxni ko'rmaydi |
 | 9 | **Yig'uvchi** | **Yig'uvchi paneli** (menyuda faqat Panel) | Buyurtmani yig'ish, partiyani tasdiqlash |
@@ -169,9 +169,9 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 | 2 | Tasdiqlashda | Filial rahbari / Direktor | Limit, muddati o'tgan qarz yoki maksimal miqdor sababli. Sabablar aniq yoziladi |
 | 3 | **Navbatda** | Ombor mudiri | FEFO partiya taklifi va zahira; Ombor mudiri **yig'ish va markirovka uchun vaqt** beradi (daqiqada, har buyurtmaga alohida) |
 | 4 | Yig'ilmoqda | Yig'uvchi | «Yig'ishni boshlash» → teskari taymer → «Yakunlash» + partiya tasdig'i → tovar Jo'natish zonasiga |
-| 5 | Markirovkada | Markirovkachi | Markirovkali qatorlar to'liq skanerlanadi; markirovkasiz buyurtma — «Markirovkasiz — tasdiqlash» |
+| 5 | Markirovkada | Markirovkachi | HAR bir buyurtma shu bosqichdan o'tadi: markirovkali qatorlar to'liq skanerlanadi, markirovkasiz qatorlar «Tasdiqlash» bilan; hammasi markirovkasiz — «Markirovkasiz — tasdiqlash» (egasi qarori 07.11.2026) |
 | 6 | Hisobdan o'tkazilmoqda | Ombor mudiri | Har qator «Tekshirildi», joylar soni (quti); xato bo'lsa — «Yig'ishga qaytarish» |
-| 7 | Hujjatlashtirilmoqda | Ombor mudiri | Reys tuzish: mashina, haydovchi, sig'im tekshiruvi; nakladnoy raqamlanadi; yo'l varaqasi; kodlar .xlsx |
+| 7 | Hujjatlashtirilmoqda | Ombor mudiri | Reys tuzish (faqat Ombor mudiri; Direktor/Admin — to'liq huquqli): mashina, haydovchi — sig'im tekshiruvi yo'q, mashinada faqat «Muzlatkichi bor» belgisi (egasi qarori 07.11.2026); nakladnoy raqamlanadi; yo'l varaqasi; kodlar .xlsx |
 | 8 | Yuklanmoqda | Haydovchi | Har buyurtmani joylar soni bo'yicha «Qabul qildim» |
 | 9 | Yo'lda | Haydovchi | «Yuklab bo'lindi — reysni boshlash» → **sotuv va hisob-faktura shu yerda yoziladi** (qoldiq kamayadi, mijoz qarzi oshadi) |
 | 10 | Yetkazildi | Haydovchi | Kamida 1 rasm majburiy, imzo ixtiyoriy; qisman yetkazish mumkin |
@@ -257,7 +257,7 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 **Narx:**
 - **8 ta narx turi:** Narx (bazaviy), Promo, Aksiya, Vozvrat, Health Line narxi, Ulgurji partiya narxi, Tovar chegirmasi, Distribyutor narxi. Mijozga narx turi filial shartida biriktiriladi. Vozvrat turi QM da avtomatik ishlatiladi.
 - **Narx tuzilishi:** narx = mahsulot × narx turi × filial × kuchga kirish sanasi, QQS bilan. Har saqlash NO hujjati bo'ladi va tarixi yoziladi.
-- **Nazorat:** tannarxdan past narx — Direktor tasdig'i bilan; 20% dan ko'p o'zgarish — ogohlantirish. Yaxlitlash 100 / 500 / 1 000 so'mgacha. Ommaviy ustama o'rtacha kirim narxiga, oxirgi kirim narxiga, bazaviy narxga yoki partiya narxiga nisbatan qo'llanadi.
+- **Nazorat:** tannarxdan past narx — Direktor tasdig'i bilan; 20% dan ko'p o'zgarish — ogohlantirish. Narx yaxlitlanmaydi — so'm va tiyinigacha aniq (egasi qarori 07.11.2026). Ommaviy ustama o'rtacha kirim narxiga, oxirgi kirim narxiga, bazaviy narxga yoki partiya narxiga nisbatan qo'llanadi.
 - **Narx o'rnatish ikki rejimda:** «Mahsulot bo'yicha» va **«Kirim bo'yicha»**. Ikkinchisida narx faqat tanlangan kirim partiyalariga qo'yiladi; faqat o'tkazilgan kirimga qo'yish mumkin.
 - **Narx tanlash tartibi:** 1) shu partiyaning narxi (mijoz turida, bo'lmasa bazaviy turda); 2) mijoz narx turining narxi; 3) bazaviy narx. Partiya narxi ustun turadi.
 - Bir qator bir necha partiyaga tushsa, har partiya o'z narxida hisoblanadi; qator narxi o'rtacha tortilgan narx bo'ladi.
@@ -511,7 +511,7 @@ To'liq maydonlar va bog'lanishlar dasturlashdan oldin alohida «Ma'lumotlar mode
 
 - **Kirish:** login va parol (BCrypt/Argon2). Birinchi kirishda parolni almashtirish majburiy. Bloklangan xodim kira olmaydi. Sessiya httpOnly va Secure cookie'da, CSRF himoyasi bilan.
 - **Ruxsatlar:** rol → ruxsat kalitlari (prototipda 131 ta, masalan `orders.queue`, `receipt.post`, `marking.scan`, `special.cost`). Har API metodida tekshiriladi (`@PreAuthorize`). Frontend faqat ko'rinishni boshqaradi, yakuniy qaror serverda.
-- **Ma'lumot doirasi:** xodim faqat o'z filialini ko'radi. Barcha filiallar — faqat ruxsati borlarga (Direktor, Admin, Buxgalter). Kassir amallarni faqat o'z kassasida bajaradi.
+- **Ma'lumot doirasi:** xodim faqat o'z filialini ko'radi. Barcha filiallar — faqat ruxsati borlarga (Direktor, Admin; Buxgalter — faqat Direktor xodim kartasida bergan belgi bilan, audit — egasi qarori 07.11.2026). Kassir amallarni faqat o'z kassasida bajaradi.
 - **Tannarx:** faqat tannarx ruxsati borlarga ko'rinadi (Direktor, Admin, Filial rahbari, Buxgalter; Xarid — faqat Narxlarda). API ham tannarx maydonini yubormaydi.
 - **PIN:** rahbar tasdiqlari va kassa farqi uchun ikkinchi tasdiq.
 - **Audit:** kim, qachon, nima, eski → yangi qiymat. Jadval faqat qo'shiladigan.
