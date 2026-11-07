@@ -1,0 +1,12 @@
+{
+  "pageTitle": "Kirish — MEDIX",
+  "title": "Tizimga kirish",
+  "subtitle": "Login va parolni administrator beradi.",
+  "login": "Login",
+  "loginPlaceholder": "Loginni kiriting",
+  "password": "Parol",
+  "passwordPlaceholder": "Parolni kiriting",
+  "submit": "Tizimga kirish",
+  "requiredLogin": "Login kiritilmagan. Administrator bergan loginni yozing.",
+  "requiredPassword": "Parol kiritilmagan. Parolni yozing."
+}

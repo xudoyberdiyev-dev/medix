@@ -1,14 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { navigation } from "@/components/shell/nav";
-import ru from "@/messages/ru.json";
 import overrides from "@/messages/uz-Cyrl.overrides.json";
-import uzCyrl from "@/messages/uz-Cyrl.json";
-import uzLatn from "@/messages/uz-Latn.json";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildCyrillic } from "./cyrl";
 import { propertiesToCyrillic } from "./properties";
 import { resolveLocale } from "./config";
+import { ru, uzCyrl, uzLatn } from "./messages.generated";
 import { toCyrillic, type Messages } from "./translit";
 
 function keys(m: Messages, prefix = ""): string[] {
@@ -41,7 +39,11 @@ describe("toCyrillic", () => {
 
 describe("lugʻatlar", () => {
   it("uz-Cyrl uz-Latn dan yasalgan (pnpm i18n:cyrl)", () => {
-    expect(uzCyrl).toEqual(buildCyrillic(uzLatn, overrides));
+    const fixes = overrides as Messages;
+    for (const [ns, latin] of Object.entries(uzLatn)) {
+      const extra = fixes[ns];
+      expect(uzCyrl[ns as keyof typeof uzCyrl], ns).toEqual(buildCyrillic(latin, typeof extra === "object" ? extra : {}));
+    }
   });
 
   it("backend messages_uz_Cyrl.properties messages.properties dan yasalgan (pnpm i18n:cyrl)", () => {
@@ -50,8 +52,13 @@ describe("lugʻatlar", () => {
     expect(readFileSync(join(dir, "messages_uz_Cyrl.properties"), "utf8")).toBe(propertiesToCyrillic(latin));
   });
 
-  it("ru va uz-Latn kalitlari bir xil", () => {
+  it("ru va uz-Latn kalitlari va oʻrinbosarlari bir xil", () => {
     expect(keys(ru)).toEqual(keys(uzLatn));
+    const args = (v: string) => [...v.matchAll(/\{(\w+)/g)].map((m) => m[1]).sort();
+    const flat = (m: Messages, p = ""): [string, string][] =>
+      Object.entries(m).flatMap(([k, v]) => (typeof v === "string" ? [[p + k, v] as [string, string]] : flat(v, `${p}${k}.`)));
+    const ruFlat = new Map(flat(ru));
+    for (const [k, v] of flat(uzLatn)) expect(args(ruFlat.get(k) ?? ""), k).toEqual(args(v));
   });
 
   it("menyu nomlari lugʻatdagi bilan bir xil", () => {

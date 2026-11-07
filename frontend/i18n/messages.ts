@@ -1,7 +1,5 @@
-import ru from "@/messages/ru.json";
-import uzCyrl from "@/messages/uz-Cyrl.json";
-import uzLatn from "@/messages/uz-Latn.json";
 import type { Locale } from "./config";
+import { ru, uzCyrl, uzLatn } from "./messages.generated";
 
-/** Barcha lugʻatlar (hozircha kichik — bundlega birga kiradi; kattalashsa modul boʻyicha ajratiladi). */
+/** Barcha lugʻatlar (hozircha bundlega birga kiradi; kattalashsa til boʻyicha ajratiladi). */
 export const MESSAGES: Record<Locale, typeof uzLatn> = { "uz-Latn": uzLatn, "uz-Cyrl": uzCyrl, ru };

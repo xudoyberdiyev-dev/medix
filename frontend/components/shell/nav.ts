@@ -28,10 +28,11 @@ import {
   HandCoins,
   type LucideIcon,
 } from "lucide-react";
-import type uzLatn from "@/messages/uz-Latn.json";
+import type navGroups from "@/messages/uz-Latn/navGroups.json";
+import type nav from "@/messages/uz-Latn/nav.json";
 
-export type NavKey = keyof typeof uzLatn.nav;
-export type NavGroupKey = keyof typeof uzLatn.navGroups;
+export type NavKey = keyof typeof nav;
+export type NavGroupKey = keyof typeof navGroups;
 
 export interface NavItem {
   /** Lugʻat kaliti ham (`nav.<key>`); `label` — uz-Latn matni (lugʻat bilan bir xil, testda tekshiriladi). */

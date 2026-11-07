@@ -1,0 +1,21 @@
+{
+  "label": "Qidiruv",
+  "placeholder": "Hujjat raqami, mahsulot, mijoz, STIR, hisobot…",
+  "empty": "Hech narsa topilmadi. Boshqa soʻz yoki hujjat raqamini yozib koʻring.",
+  "results": "Natijalar",
+  "kinds": {
+    "PAGE": "Sahifalar",
+    "REPORT": "Hisobotlar",
+    "ORDER": "Buyurtmalar",
+    "RECEIPT": "Kirimlar",
+    "PRICE_CHANGE": "Narx oʻzgarishlari (NO)",
+    "TRIP": "Reyslar",
+    "PRODUCT": "Mahsulotlar",
+    "CUSTOMER": "Mijozlar",
+    "SUPPLIER": "Yetkazib beruvchilar",
+    "EMPLOYEE": "Xodimlar"
+  },
+  "searching": "Qidirilmoqda",
+  "short": "Kamida {min} ta belgi yozing. Kirill yoki lotinda — farqi yoʻq.",
+  "failed": "Qidiruv bajarilmadi. Ulanishni tekshirib, qayta yozing."
+}
