@@ -15001,6 +15001,9 @@ export interface operations {
                 q?: string;
                 sellableOnly?: boolean;
                 expiringWithinDays?: number;
+                /** @description Berilmasa: nom (muddat nazoratida — yaroqlilik) */
+                sort?: "NAME" | "CODE" | "EXPIRY" | "QTY" | "WAREHOUSE";
+                desc?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -15029,6 +15032,8 @@ export interface operations {
                 q?: string;
                 sellableOnly?: boolean;
                 expiringWithinDays?: number;
+                sort?: "NAME" | "CODE" | "EXPIRY" | "QTY" | "WAREHOUSE";
+                desc?: boolean;
             };
             header?: never;
             path?: never;

@@ -9079,6 +9079,23 @@
             "format" : "int32"
           }
         }, {
+          "description" : "Berilmasa: nom (muddat nazoratida — yaroqlilik)",
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "NAME", "CODE", "EXPIRY", "QTY", "WAREHOUSE" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "desc",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
           "in" : "query",
           "name" : "page",
           "required" : false,
@@ -9154,6 +9171,22 @@
           "schema" : {
             "type" : "integer",
             "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "NAME", "CODE", "EXPIRY", "QTY", "WAREHOUSE" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "desc",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {

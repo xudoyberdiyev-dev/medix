@@ -19,7 +19,14 @@ import { useWarehouses } from "@/features/organization/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
-import { parseStockFilters, serializeStockFilters, type StockFilters } from "./url-state";
+import {
+  STOCK_SORT_COLUMNS,
+  parseStockFilters,
+  serializeStockFilters,
+  stockSortColumn,
+  type StockFilters,
+  type StockSort,
+} from "./url-state";
 
 type StockRow = components["schemas"]["StockRow"];
 
@@ -50,12 +57,21 @@ function ExpiryBadge({ row }: { row: StockRow }) {
 }
 
 /** Eksport havolasi — jadvaldagi filtrlar bilan (server ham filial doirasi va tannarx ruxsatini tekshiradi). */
-export function stockExportHref(f: { q: string; warehouseId: string | null; sellableOnly: boolean; expiringWithinDays?: number }): string {
+export function stockExportHref(f: {
+  q: string;
+  warehouseId: string | null;
+  sellableOnly: boolean;
+  expiringWithinDays?: number;
+  sort?: StockSort | null;
+  desc?: boolean;
+}): string {
   const p = new URLSearchParams();
   if (f.q) p.set("q", f.q);
   if (f.warehouseId) p.set("warehouseId", f.warehouseId);
   if (f.sellableOnly) p.set("sellableOnly", "true");
   if (f.expiringWithinDays !== undefined) p.set("expiringWithinDays", String(f.expiringWithinDays));
+  if (f.sort) p.set("sort", f.sort);
+  if (f.desc) p.set("desc", "true");
   const qs = p.toString();
   return `/api/stock/export${qs ? `?${qs}` : ""}`;
 }
@@ -69,7 +85,7 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const f = parseStockFilters(new URLSearchParams(params.toString()));
-  const { q, warehouseId, sellableOnly, days, page, size } = f;
+  const { q, warehouseId, sellableOnly, days, sort, desc, page, size } = f;
   const [search, setSearch] = useState(q);
   const apply = (patch: Partial<StockFilters>) => {
     const qs = serializeStockFilters({ ...f, page: 1, ...patch });
@@ -79,7 +95,7 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
   const allowed = canAny(me.data, mode === "stock" ? ["stock.view"] : ["expiry.view", "stock.view"]);
 
   const stock = useQuery({
-    queryKey: ["stock", mode, q, warehouseId, sellableOnly, days, page, size],
+    queryKey: ["stock", mode, q, warehouseId, sellableOnly, days, sort, desc, page, size],
     queryFn: () =>
       unwrap(
         api.GET("/api/stock", {
@@ -89,6 +105,8 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
               warehouseId: warehouseId ? Number(warehouseId) : undefined,
               sellableOnly,
               expiringWithinDays: mode === "expiry" ? Number(days) : undefined,
+              sort: sort ?? undefined,
+              desc: desc || undefined,
               page: page - 1,
               size,
             },
@@ -103,9 +121,10 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
 
   const showCost = (stock.data?.items ?? []).some((r) => r.cost != null);
   const columns: TableColumn<StockRow>[] = [
-    { key: "productCode", title: t("code"), mono: true, width: 100 },
+    { key: "productCode", title: t("code"), mono: true, width: 100, sortable: true },
     {
       key: "productName",
+      sortable: true,
       title: t("product"),
       render: (r) => (
         <span className="flex flex-col">
@@ -125,8 +144,8 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
         </span>
       ),
     },
-    { key: "expiryDate", title: t("expiry"), render: (r) => <ExpiryBadge row={r} /> },
-    { key: "warehouse", title: t("warehouse") },
+    { key: "expiryDate", title: t("expiry"), sortable: true, render: (r) => <ExpiryBadge row={r} /> },
+    { key: "warehouse", title: t("warehouse"), sortable: true },
     {
       key: "zone",
       title: t("zone"),
@@ -138,7 +157,13 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
         </span>
       ),
     },
-    { key: "qty", title: t("qty"), align: "right", render: (r) => <span className="tabular-nums">{formatQuantity(r.qty)}</span> },
+    {
+      key: "qty",
+      title: t("qty"),
+      align: "right",
+      sortable: true,
+      render: (r) => <span className="tabular-nums">{formatQuantity(r.qty)}</span>,
+    },
     ...(showCost
       ? [{ key: "cost", title: t("cost"), align: "right" as const, render: (r: StockRow) => (r.cost ? formatMoney(r.cost) : "") }]
       : []),
@@ -150,6 +175,8 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
     warehouseId,
     sellableOnly,
     expiringWithinDays: mode === "expiry" ? Number(days) : undefined,
+    sort,
+    desc,
   });
   return (
     <>
@@ -174,6 +201,8 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
           rows={stock.data?.items ?? []}
           rowKey={(r) => `${r.zoneId}:${r.batchId}`}
           loading={stock.isPending}
+          sort={{ key: stockSortColumn(f, mode), dir: desc ? "desc" : "asc" }}
+          onSortChange={(s) => apply({ sort: STOCK_SORT_COLUMNS[s.key] ?? null, desc: s.dir === "desc" })}
           toolbar={
             <div className="flex flex-wrap items-center gap-3">
               <div className="w-80">
