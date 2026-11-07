@@ -1219,6 +1219,21 @@ class OrderIT {
                 .andExpect(jsonPath("$.documents.tripNumber", matchesPattern("RS-[A-Z]{3}-\\d{6}")))
                 .andExpect(jsonPath("$.documents.driver").value("Sinov DRIVER"))
                 .andExpect(jsonPath("$.holder").value("Yakunlangan"));
+        // Hisob-faktura (chop etish, SPEC 300): sotuv qatorlari QQS bilan, tannarxsiz; PDF ham
+        var sv = jdbc.sql("SELECT invoice_number, total::text AS total, vat_total::text AS vat, (total - vat_total)::text AS net FROM sale "
+                        + "WHERE order_id = :o").param("o", o).query().singleRow();
+        mvc.perform(get("/api/orders/" + o + "/invoice").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.invoiceNumber").value(sv.get("invoice_number")))
+                .andExpect(jsonPath("$.status").value("POSTED"))
+                .andExpect(jsonPath("$.total").value(sv.get("total")))
+                .andExpect(jsonPath("$.vatTotal").value(sv.get("vat")))
+                .andExpect(jsonPath("$.netTotal").value(sv.get("net")))
+                .andExpect(jsonPath("$.lines[0].qty").value(5))
+                .andExpect(jsonPath("$.lines[0].vatRate").value("12"))
+                .andExpect(jsonPath("$.lines[0].cost").doesNotExist());
+        mvc.perform(get("/api/orders/" + o + "/invoice").cookie(driverSession)).andExpect(status().isForbidden());
+        assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Hisob-faktura", (String) sv.get("invoice_number"), "QQS", "Jami");
         var qm = jdbc.sql("SELECT total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sales_return WHERE order_id = :o")
                 .param("o", o).query().singleRow();
         assertThat(qm.get("total")).isEqualTo("2000.00");

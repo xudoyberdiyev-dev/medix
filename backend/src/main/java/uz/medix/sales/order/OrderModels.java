@@ -234,6 +234,39 @@ final class OrderModels {
             @Schema(nullable = true, description = "Mijozning amaldagi shartnomasi (shu filial; SPEC 213)") String contract,
             @Schema(nullable = true, description = "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa") String invoice) {}
 
+    /** Hisob-faktura (chop etish uchun, SPEC 300): summalar QQS bilan; tannarxsiz. */
+    record InvoiceDoc(
+            String invoiceNumber,
+            String saleNumber,
+            String orderNumber,
+            long branchId,
+            @Schema(description = "POSTED yoki CANCELLED") String status,
+            LocalDate saleDate,
+            @Schema(nullable = true) LocalDate dueDate,
+            String customer,
+            @Schema(nullable = true) String customerTin,
+            @Schema(nullable = true) String address,
+            PaymentType paymentType,
+            String warehouse,
+            @Schema(nullable = true, description = "Sotuv sanasida amaldagi shartnoma") String contract,
+            String total,
+            String vatTotal,
+            @Schema(description = "QQSsiz qiymat") String netTotal,
+            List<InvoiceLine> lines) {}
+
+    record InvoiceLine(
+            String productCode,
+            String productName,
+            @Schema(nullable = true) String manufacturer,
+            String batch,
+            LocalDate expiryDate,
+            int qty,
+            @Schema(description = "Narx QQS bilan") String price,
+            String amount,
+            @Schema(description = "QQS stavkasi, %") String vatRate,
+            String vatAmount,
+            @Schema(description = "QQSsiz qiymat") String netAmount) {}
+
     record CheckRequest(
             @NotNull(message = "{validation.required}") @Size(min = 1, max = MAX_LINES) List<Long> checkedLines,
             @NotNull(message = "{validation.required}") @Min(1) @Max(10_000) Integer places) {}

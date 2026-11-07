@@ -47,14 +47,18 @@ class OrderController {
     private final OrderSales sales;
     private final OrderWaybillPdf waybill;
     private final OrderPickSheetPdf pickSheet;
+    private final OrderInvoices invoices;
+    private final OrderInvoicePdf invoicePdf;
     private final CurrentActor currentActor;
 
     record ReturnAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0)
             Integer receivedQty) {}
 
     OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, OrderWaybillPdf waybill,
-            OrderPickSheetPdf pickSheet, CurrentActor currentActor) {
+            OrderPickSheetPdf pickSheet, OrderInvoices invoices, OrderInvoicePdf invoicePdf, CurrentActor currentActor) {
         this.pickSheet = pickSheet;
+        this.invoices = invoices;
+        this.invoicePdf = invoicePdf;
         this.sales = sales;
         this.waybill = waybill;
         this.issues = issues;
@@ -131,11 +135,25 @@ class OrderController {
         return new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo);
     }
 
+    @GetMapping("/{id}/invoice")
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Hisob-faktura", description = "O'tkazilgan sotuv qatorlari (partiya, QQS) — chop etish uchun; sotuv bo'lmasa 404.")
+    OrderModels.InvoiceDoc invoice(@PathVariable long id) {
+        return invoices.find(actor(), id).orElseThrow(() -> MedixException.notFound("error.notFound"));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
     @Operation(summary = "Buyurtma", description = "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.")
     OrderDetail get(@PathVariable long id) {
         return detail(id);
+    }
+
+    @GetMapping(value = "/{id}/invoice/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Hisob-faktura — PDF (chop etish)", description = "Sotuv bo'lmasa — 404.")
+    ResponseEntity<byte[]> invoicePdf(@PathVariable long id) {
+        return invoicePdf.render(actor(), id).response();
     }
 
     @GetMapping(value = "/{id}/waybill/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
