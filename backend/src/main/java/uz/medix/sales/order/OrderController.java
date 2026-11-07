@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import uz.medix.sales.order.OrderModels.DeliveryType;
 import uz.medix.sales.order.OrderModels.OrderDetail;
 import uz.medix.sales.order.OrderModels.OrderPage;
 import uz.medix.sales.order.OrderModels.OrderReasonRequest;
@@ -83,13 +84,17 @@ class OrderController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
     @Operation(summary = "Buyurtmalar", description = "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan "
-            + "(Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; q — raqam, STIR yoki mijoz nomi "
+            + "(Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi "
             + "(lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).")
     OrderPage list(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) List<Long> customerId,
+            @RequestParam(required = false) List<Long> operatorId,
+            @RequestParam(required = false) List<OrderStatus> statuses,
+            @RequestParam(required = false) List<DeliveryType> deliveryType,
+            @RequestParam(required = false) List<PaymentType> paymentType,
+            @RequestParam(required = false) List<Long> regionId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldTo,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderFrom,
@@ -100,7 +105,7 @@ class OrderController {
             @RequestParam(defaultValue = "true") boolean desc,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo), q, mine,
+        return orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId), q, mine,
                 sort, desc, Math.max(page, 0), Math.clamp(size, 1, 200));
     }
 
@@ -111,8 +116,12 @@ class OrderController {
     void exportOrders(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) List<Long> customerId,
+            @RequestParam(required = false) List<Long> operatorId,
+            @RequestParam(required = false) List<OrderStatus> statuses,
+            @RequestParam(required = false) List<DeliveryType> deliveryType,
+            @RequestParam(required = false) List<PaymentType> paymentType,
+            @RequestParam(required = false) List<Long> regionId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldTo,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderFrom,
@@ -122,17 +131,18 @@ class OrderController {
             @RequestParam(defaultValue = "CREATED") OrderSort sort,
             @RequestParam(defaultValue = "true") boolean desc,
             jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-        OrderPage data = orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo), q, mine,
+        OrderPage data = orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId), q, mine,
                 sort, desc, 0, OrderExcel.MAX_ROWS);
         OrderExcel.write(data.items(), response);
     }
 
-    private static Orders.OrderFilter filter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom,
-            LocalDate orderTo) {
+    private static Orders.OrderFilter filter(List<Long> customerId, List<Long> operatorId, LocalDate soldFrom, LocalDate soldTo,
+            LocalDate orderFrom, LocalDate orderTo, List<OrderStatus> statuses, List<DeliveryType> deliveryType, List<PaymentType> paymentType,
+            List<Long> regionId) {
         if ((soldFrom != null && soldTo != null && soldFrom.isAfter(soldTo)) || (orderFrom != null && orderTo != null && orderFrom.isAfter(orderTo))) {
             throw MedixException.badRequest("home.periodInvalid");
         }
-        return new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo);
+        return new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId);
     }
 
     @GetMapping("/{id}/invoice")

@@ -33,6 +33,8 @@ import uz.medix.pricing.PriceBook.Quote;
 import uz.medix.sales.order.OrderModels.ApprovalLevel;
 import uz.medix.sales.order.OrderModels.CustomerCredit;
 import uz.medix.sales.order.OrderModels.DeliveryType;
+import uz.medix.sales.order.OrderModels.FilterOption;
+import uz.medix.sales.order.OrderModels.OrderFacets;
 import uz.medix.sales.order.OrderModels.IssueLevel;
 import uz.medix.sales.order.OrderModels.OrderDetail;
 import uz.medix.sales.order.OrderModels.OrderIssue;
@@ -293,9 +295,16 @@ class Orders {
     // ===== O'qish =====
 
     /** Ro'yxat filtrlari: mijoz, kiritgan xodim, sotuv/qaytarish davri (hisobotdan o'tish), buyurtma sanasi (SPEC 120). */
-    record OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom, LocalDate orderTo) {
-        OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo) {
-            this(customerId, operatorId, soldFrom, soldTo, null, null);
+    record OrderFilter(List<Long> customerIds, List<Long> operatorIds, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom,
+            LocalDate orderTo, List<OrderStatus> statuses, List<DeliveryType> deliveryTypes, List<PaymentType> paymentTypes,
+            List<Long> regionIds) {
+        OrderFilter {
+            customerIds = customerIds == null ? List.of() : List.copyOf(customerIds);
+            operatorIds = operatorIds == null ? List.of() : List.copyOf(operatorIds);
+            statuses = statuses == null ? List.of() : List.copyOf(statuses);
+            deliveryTypes = deliveryTypes == null ? List.of() : List.copyOf(deliveryTypes);
+            paymentTypes = paymentTypes == null ? List.of() : List.copyOf(paymentTypes);
+            regionIds = regionIds == null ? List.of() : List.copyOf(regionIds);
         }
     }
 
@@ -307,7 +316,6 @@ class Orders {
     @Transactional(readOnly = true)
     OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, OrderSort sort, boolean desc,
             int page, int size) {
-        Long customerId = filter.customerId();
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
         if (!actor.allBranches()) {
@@ -318,13 +326,32 @@ class Orders {
             where.append(" AND o.branch_id = :b");
             params.put("b", branchId);
         }
-        if (customerId != null) {
-            where.append(" AND o.customer_id = :c");
-            params.put("c", customerId);
+        // Filtr variantlari (prototip FilterBar: har variant soni bilan) — faqat filial doirasida, boshqa filtrlarsiz
+        String scope = where.toString();
+        Map<String, Object> scopeParams = new HashMap<>(params);
+        if (!filter.customerIds().isEmpty()) {
+            where.append(" AND o.customer_id IN (:c)");
+            params.put("c", filter.customerIds());
         }
-        if (filter.operatorId() != null) {
-            where.append(" AND o.created_by = :op");
-            params.put("op", filter.operatorId());
+        if (!filter.operatorIds().isEmpty()) {
+            where.append(" AND o.created_by IN (:op)");
+            params.put("op", filter.operatorIds());
+        }
+        if (!filter.statuses().isEmpty()) {
+            where.append(" AND o.status IN (:ss)");
+            params.put("ss", filter.statuses().stream().map(Enum::name).toList());
+        }
+        if (!filter.deliveryTypes().isEmpty()) {
+            where.append(" AND o.delivery_type IN (:dt)");
+            params.put("dt", filter.deliveryTypes().stream().map(Enum::name).toList());
+        }
+        if (!filter.paymentTypes().isEmpty()) {
+            where.append(" AND o.payment_type IN (:pt)");
+            params.put("pt", filter.paymentTypes().stream().map(Enum::name).toList());
+        }
+        if (!filter.regionIds().isEmpty()) {
+            where.append(" AND c.region_id IN (:rg)");
+            params.put("rg", filter.regionIds());
         }
         if (filter.soldFrom() != null || filter.soldTo() != null) {
             // Savdo hisoboti bilan bir xil: o'tkazilgan sotuv (sale_date) yoki qaytarish (return_date) shu davrda.
@@ -376,6 +403,7 @@ class Orders {
                 SELECT o.id, o.number, o.branch_id, w.name AS warehouse, o.customer_id, c.name AS customer, o.order_date, o.delivery_type,
                        o.delivery_date, o.payment_type, o.status, o.approval_level, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
                        o.total, e.full_name AS created_by, o.created_at, o.status_changed_at,
+                       (SELECT r.name FROM region r WHERE r.id = c.region_id) AS region, o.pick_minutes, o.pick_started_at, o.pick_finished_at,
                        (SELECT full_name FROM employee WHERE id = o.picker_id) AS picker,
                        (SELECT full_name FROM employee WHERE id = o.marker_id) AS marker,
                        (SELECT d.full_name FROM trip_stop ts JOIN trip t ON t.id = ts.trip_id JOIN employee d ON d.id = t.driver_id
@@ -392,9 +420,21 @@ class Orders {
                         new Money(rs.getBigDecimal("total")).toString(), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
                         rs.getTimestamp("status_changed_at").toInstant(),
                         holderText(OrderStatus.valueOf(rs.getString("status")), DeliveryType.valueOf(rs.getString("delivery_type")),
-                                rs.getString("created_by"), rs.getString("picker"), rs.getString("marker"), rs.getString("driver"))))
+                                rs.getString("created_by"), rs.getString("picker"), rs.getString("marker"), rs.getString("driver")),
+                        rs.getString("region"), (Integer) rs.getObject("pick_minutes"), instant(rs.getTimestamp("pick_started_at")),
+                        instant(rs.getTimestamp("pick_finished_at"))))
                 .list();
-        return new OrderPage(items, total, page, size, statusTabs(statuses));
+        String fromScope = from + scope;
+        List<FilterOption> customers = jdbc.sql("SELECT c.id, c.name, count(*) AS cnt" + fromScope
+                        + " GROUP BY c.id, c.name ORDER BY c.name LIMIT 300")
+                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
+        List<FilterOption> operators = jdbc.sql("SELECT e.id, e.full_name AS name, count(*) AS cnt" + fromScope
+                        + " GROUP BY e.id, e.full_name ORDER BY e.full_name LIMIT 300")
+                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
+        List<FilterOption> regions = jdbc.sql("SELECT r.id, r.name, count(*) AS cnt" + from + " JOIN region r ON r.id = c.region_id" + scope
+                        + " GROUP BY r.id, r.name ORDER BY r.name LIMIT 300")
+                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
+        return new OrderPage(items, total, page, size, statusTabs(statuses), new OrderFacets(customers, operators, regions));
     }
 
     record LineRow(long id, int lineNo, long productId, int qty, BigDecimal price, Long priceTypeId, String priceType) {}

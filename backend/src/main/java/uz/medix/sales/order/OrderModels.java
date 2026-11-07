@@ -115,13 +115,23 @@ final class OrderModels {
             String createdBy,
             Instant createdAt,
             Instant statusChangedAt,
-            @Schema(description = "«Hozir kimda» (SPEC 5.2)") String holder) {}
+            @Schema(description = "«Hozir kimda» (SPEC 5.2)") String holder,
+            @Schema(nullable = true, description = "Mijoz hududi") String region,
+            @Schema(nullable = true, description = "Yig'ishga berilgan vaqt, daqiqa (null — «Vaqt kutilmoqda»)") Integer pickMinutes,
+            @Schema(nullable = true) Instant pickStartedAt,
+            @Schema(nullable = true) Instant pickFinishedAt) {}
+
+    /** Filtr varianti: id, nomi va shu filial doirasidagi buyurtmalar soni. */
+    record FilterOption(long id, String name, long count) {}
+
+    record OrderFacets(List<FilterOption> customers, List<FilterOption> operators, List<FilterOption> regions) {}
 
     /** Holat yorlig'i: soni va summasi — boshqa filtrlar (holatdan tashqari) bo'yicha. */
     record StatusCount(@Schema(nullable = true, description = "null — «Hammasi»") OrderStatus status, long count, String total) {}
 
     record OrderPage(List<OrderSummary> items, long total, int page, int size,
-            @Schema(description = "Holat yorliqlari («Hammasi» + har holat): soni va summasi") List<StatusCount> statuses) {}
+            @Schema(description = "Holat yorliqlari («Hammasi» + har holat): soni va summasi") List<StatusCount> statuses,
+            @Schema(description = "Filtr variantlari: mijozlar, operatorlar, hududlar (soni bilan)") OrderFacets facets) {}
 
     record OrderDetail(
             long id,

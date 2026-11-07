@@ -232,6 +232,22 @@ class SalesReportIT {
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
                         .string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        // Prototip filtr chiplari: hudud, to'lov turi, holat (bir nechta qiymat) va variantlar (facets) soni bilan
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("regionId", "" + region).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[0].region").exists())
+                .andExpect(jsonPath("$.facets.regions[0].id").value(region))
+                .andExpect(jsonPath("$.facets.regions[0].count").value(2));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("paymentType", "TRANSFER").cookie(director))
+                .andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("customerId", "" + c1).param("customerId", "" + c2).cookie(director))
+                .andExpect(jsonPath("$.total").value(3));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("statuses", "DRAFT").param("statuses", "CANCELLED").cookie(director))
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.statuses[0].count").value(0));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("operatorId", "" + op1.id()).cookie(director))
+                .andExpect(jsonPath("$.facets.operators[?(@.id == " + op1.id() + ")].count").value(2));
         // Eksport
         mvc.perform(get("/api/reports/sales/export").param("branchId", "" + b).param("from", t).cookie(director))
                 .andExpect(status().isOk())
