@@ -298,6 +298,15 @@ test("Kassir: haydovchidagi pulni qabul qiladi (MT)", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Hisob qoʻshish" })).toHaveCount(0);
 });
 
+test("Haydovchi: pul topshirilgach reys «Yakunlangan reyslar»da", async ({ page }) => {
+  await login(page, "driver.1", PASSWORD);
+  await page.goto("/driver");
+  await expect(page.getByText("Faol reys yoʻq")).toBeVisible();
+  await page.getByRole("tab", { name: "Yakunlangan reyslar" }).click();
+  await expect(page.getByText("Yakunlangan", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/RS-[A-Z]{3}-\d{6}/).first()).toBeVisible();
+});
+
 test("Operator: buyurtma «Yetkazildi» holatida", async ({ page }) => {
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
