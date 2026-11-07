@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/selection-controls";
@@ -38,6 +38,7 @@ import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
 import { ORDER_CREATE, useOrders, type OrderStatus, type OrderSummary } from "./api";
 import type { OrdersT } from "./i18n";
 import { OrderDrawer } from "./order-drawer";
+import { clearOpenDraft, readOpenDraft } from "./open-draft";
 import {
   DEFAULT_ORDER_FILTERS,
   hasOrderFilters,
@@ -176,6 +177,15 @@ export function OrdersPage() {
     return Number.isInteger(id) && id > 0 ? { id } : null;
   });
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Ochiq hujjat (SPEC 208): boshqa sahifaga oʻtib qaytganda buyurtma shu holatda ochiladi
+  useEffect(() => {
+    if (editor) return;
+    const d = readOpenDraft();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- brauzer xotirasidan bir marta oʻqiladi
+    if (d) setEditor({ id: d.id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- faqat birinchi ochilishda
+  }, []);
+  const closeEditor = () => (clearOpenDraft(), setEditor(null));
   const allowed = canAny(me.data, ["orders.view", "approvals.view"]);
   const canCreate = can(me.data, ORDER_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -414,7 +424,7 @@ export function OrdersPage() {
           }
         />
       )}
-      {editor ? <OrderDrawer id={editor.id} onClose={() => setEditor(null)} onCreated={(id) => setEditor({ id })} /> : null}
+      {editor ? <OrderDrawer id={editor.id} onClose={closeEditor} onCreated={(id) => setEditor({ id })} /> : null}
     </>
   );
 }

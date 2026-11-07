@@ -49,6 +49,7 @@ import {
   codesExportUrl,
 } from "./api";
 import { CatalogDialog } from "./catalog-dialog";
+import { clearOpenDraft, draftFormFor, readOpenDraft, writeOpenDraft } from "./open-draft";
 import { OrderStatusBadge, day } from "./orders-page";
 
 const PAYMENT_VALUES = ["TRANSFER", "CASH", "ONLINE"] as const;
@@ -98,18 +99,22 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
   const reject = useRejectOrder();
   const cancel = useCancelOrder();
   const editable = can(me.data, ORDER_CREATE) && (!doc || doc.status === "DRAFT");
-  const [warehouseId, setWarehouseId] = useState<string | null>(doc ? String(doc.warehouseId) : null);
-  const [customer, setCustomer] = useState<string | null>(doc ? String(doc.customerId) : null);
-  const [customerLabel, setCustomerLabel] = useState(doc?.customer ?? "");
-  const [deliveryType, setDeliveryType] = useState<string | null>(doc?.deliveryType ?? "DELIVERY");
-  const [deliveryDate, setDeliveryDate] = useState(formatIsoDate(doc?.deliveryDate));
-  const [address, setAddress] = useState(doc?.address ?? "");
-  const [paymentType, setPaymentType] = useState<string | null>(doc?.paymentType ?? "TRANSFER");
-  const [note, setNote] = useState(doc?.note ?? "");
+  // Ochiq hujjat (SPEC 208): boshqa sahifadan qaytganda saqlanmagan forma tiklanadi
+  const [restored] = useState(() => (editable ? draftFormFor(readOpenDraft(), doc?.id ?? null) : null));
+  const [warehouseId, setWarehouseId] = useState<string | null>(restored ? restored.warehouseId : doc ? String(doc.warehouseId) : null);
+  const [customer, setCustomer] = useState<string | null>(restored ? restored.customer : doc ? String(doc.customerId) : null);
+  const [customerLabel, setCustomerLabel] = useState(restored?.customerLabel ?? doc?.customer ?? "");
+  const [deliveryType, setDeliveryType] = useState<string | null>(restored ? restored.deliveryType : (doc?.deliveryType ?? "DELIVERY"));
+  const [deliveryDate, setDeliveryDate] = useState(restored?.deliveryDate ?? formatIsoDate(doc?.deliveryDate));
+  const [address, setAddress] = useState(restored?.address ?? doc?.address ?? "");
+  const [paymentType, setPaymentType] = useState<string | null>(restored ? restored.paymentType : (doc?.paymentType ?? "TRANSFER"));
+  const [note, setNote] = useState(restored?.note ?? doc?.note ?? "");
   const [lines, setLines] = useState<DraftLine[]>(
-    doc
-      ? doc.lines.map((l) => ({ productId: l.productId, productCode: l.productCode, productName: l.productName, qty: String(l.qty) }))
-      : [],
+    restored
+      ? restored.lines
+      : doc
+        ? doc.lines.map((l) => ({ productId: l.productId, productCode: l.productCode, productName: l.productName, qty: String(l.qty) }))
+        : [],
   );
   const [adding, setAdding] = useState<{ product: string | null; qty: string }>({ product: null, qty: "" });
   const [local, setLocal] = useState<string | null>(null);
@@ -142,6 +147,14 @@ function Editor({ doc, onClose, onCreated }: { doc: OrderDetail | null; onClose:
     return () => window.removeEventListener("beforeunload", warn);
   }, [unsaved]);
   const requestClose = () => (unsaved ? setDialog("discard") : onClose());
+  // Qoralama ochiq turibdi — sahifadan chiqib qaytganda shu holatda ochiladi (yopilganda roʻyxat sahifasi tozalaydi)
+  const docId = doc?.id ?? null;
+  useEffect(() => {
+    const form = unsaved ? { warehouseId, customer, customerLabel, deliveryType, deliveryDate, address, paymentType, note, lines } : null;
+    // Faqat tahrirlanadigan qoralama eslab qolinadi; jarayondagi hujjat — roʻyxatdan qayta ochiladi
+    if (!editable || (docId === null && !form)) clearOpenDraft();
+    else writeOpenDraft({ id: docId, form });
+  }, [editable, docId, unsaved, warehouseId, customer, customerLabel, deliveryType, deliveryDate, address, paymentType, note, lines]);
 
   function body(): OrderRequest | null {
     if (!warehouseId) return (setLocal(t("drawer.errWarehouse")), null);
