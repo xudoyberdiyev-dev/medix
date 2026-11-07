@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, FileDown, Info, LayoutList, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
+import { Check, CircleAlert, FileDown, Info, ListPlus, Printer, RotateCcw, Send, Trash2, TriangleAlert, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -232,6 +232,33 @@ function Editor({
     }
   }
 
+  const issueCounts = {
+    errors: doc?.issues.filter((i) => i.level === "ERROR").length ?? 0,
+    warnings: doc?.issues.filter((i) => i.level !== "ERROR").length ?? 0,
+  };
+  const totalQty = lines.reduce((n, l) => n + (isInt(l.qty) ? Number(l.qty) : 0), 0);
+  // «Mahsulot qoʻshish» (Alt+K) — katalog: narx va qoldiq mijoz shartiga bogʻliq, shuning uchun avval mijoz va ombor
+  function openCatalog() {
+    if (!customer) return toast({ tone: "warning", title: t("customer.needCustomer") });
+    if (!warehouseId) return toast({ tone: "warning", title: t("drawer.errWarehouse") });
+    setDialog("catalog");
+  }
+  const openCatalogRef = useRef(openCatalog);
+  useEffect(() => {
+    openCatalogRef.current = openCatalog;
+  });
+  useEffect(() => {
+    if (!editable) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyK") {
+        e.preventDefault();
+        openCatalogRef.current();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editable]);
+
   function addLine() {
     const label = adding.product ? seen.current.get(adding.product) : undefined;
     if (!adding.product || !label) return setLocal(t("drawer.errProduct"));
@@ -424,7 +451,7 @@ function Editor({
         {doc?.status === "CHECKING" && can(me.data, "orders.check") ? <CheckForm doc={doc} /> : null}
 
         {editable ? (
-          <div className="grid grid-cols-[1fr_9rem_auto_auto] items-end gap-3 rounded-card border border-border p-3">
+          <div className="grid grid-cols-[1fr_9rem_auto] items-end gap-3 rounded-card border border-border p-3">
             <Select
               label={t("drawer.product")}
               value={adding.product}
@@ -448,15 +475,6 @@ function Editor({
             <Button variant="secondary" onClick={addLine}>
               {t("drawer.addLine")}
             </Button>
-            <Button
-              variant="tertiary"
-              icon={LayoutList}
-              disabled={!warehouseId}
-              onClick={() => setDialog("catalog")}
-              className="col-span-4 justify-self-start"
-            >
-              {t("drawer.fromCatalog")}
-            </Button>
           </div>
         ) : null}
 
@@ -464,14 +482,34 @@ function Editor({
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {doc && doc.status === "DRAFT" ? <IssuesPanel issues={doc.issues} dirty={dirty} /> : null}
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-subtitle">
             {t("drawer.lines", { count: formatQuantity(lines.length) })}
             {doc && !dirty ? (
               <span className="ml-3 text-body font-normal text-text-secondary">{t("sum", { amount: formatMoney(doc.total) })}</span>
             ) : null}
           </h3>
-          {dirty ? <span className="text-caption text-text-secondary">{t("drawer.recalcHint")}</span> : null}
+          <span className="flex flex-wrap items-center gap-4">
+            {dirty ? <span className="text-caption text-text-secondary">{t("drawer.recalcHint")}</span> : null}
+            {doc && !dirty && doc.status === "DRAFT" && issueCounts.errors > 0 ? (
+              <span className="flex items-center gap-1 text-caption text-danger">
+                <CircleAlert size={14} strokeWidth={1.5} aria-hidden />
+                {t("customer.errNote", { count: issueCounts.errors })}
+              </span>
+            ) : null}
+            {doc && !dirty && doc.status === "DRAFT" && issueCounts.warnings > 0 ? (
+              <span className="flex items-center gap-1 text-caption text-warning">
+                <TriangleAlert size={14} strokeWidth={1.5} aria-hidden />
+                {t("customer.warnNote", { count: issueCounts.warnings })}
+              </span>
+            ) : null}
+            {editable ? (
+              <Button variant="secondary" size="sm" icon={ListPlus} aria-keyshortcuts="Alt+K" onClick={openCatalog}>
+                {t("customer.pick")}
+                <span className="ml-1 text-caption font-normal text-text-secondary">Alt+K</span>
+              </Button>
+            ) : null}
+          </span>
         </div>
         <div className="overflow-x-auto rounded-card border border-border">
           <table className="w-full text-table">
@@ -552,6 +590,25 @@ function Editor({
               )}
             </tbody>
           </table>
+          {lines.length > 0 ? (
+            <dl
+              aria-label={t("customer.totals")}
+              className="sticky bottom-0 flex flex-wrap items-center justify-end gap-x-6 gap-y-1 border-t border-border bg-table-header px-3 py-2.5"
+            >
+              <div className="flex gap-1.5">
+                <dt className="text-text-secondary">{t("customer.tLines")}</dt>
+                <dd className="tabular-nums">{formatQuantity(lines.length)}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="text-text-secondary">{t("customer.tQty")}</dt>
+                <dd className="tabular-nums">{formatQuantity(totalQty)}</dd>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <dt className="font-medium">{t("customer.tTotal")}</dt>
+                <dd className="text-subtitle tabular-nums">{doc && !dirty ? formatMoney(doc.total) : "—"}</dd>
+              </div>
+            </dl>
+          ) : null}
         </div>
       </div>
       {dialog === "catalog" && warehouseId ? (

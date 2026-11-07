@@ -631,6 +631,14 @@
     "recentSub": "Takrorlash — qatorlarni joriy buyurtmaga qoʻshadi",
     "repeat": "Takrorlash",
     "repeated": "{number} dan {count} ta qator qoʻshildi",
-    "repeatSkipped": "{count} tasi oʻtkazib yuborildi (buyurtmada bor): {names}"
+    "repeatSkipped": "{count} tasi oʻtkazib yuborildi (buyurtmada bor): {names}",
+    "errNote": "{count} ta xato",
+    "warnNote": "{count} ta ogohlantirish",
+    "pick": "Mahsulot qoʻshish",
+    "totals": "Jami",
+    "tLines": "Qatorlar",
+    "tQty": "Miqdor",
+    "tTotal": "Jami",
+    "needCustomer": "Avval mijozni tanlang — narx va qoldiq mijoz shartiga bogʻliq"
   }
 }
