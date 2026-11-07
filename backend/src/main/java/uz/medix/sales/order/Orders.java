@@ -291,8 +291,12 @@ class Orders {
 
     // ===== O'qish =====
 
-    /** Ro'yxat filtrlari (hisobotdan o'tish): mijoz, kiritgan xodim, sotuv/qaytarish davri. */
-    record OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo) {}
+    /** Ro'yxat filtrlari: mijoz, kiritgan xodim, sotuv/qaytarish davri (hisobotdan o'tish), buyurtma sanasi (SPEC 120). */
+    record OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom, LocalDate orderTo) {
+        OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo) {
+            this(customerId, operatorId, soldFrom, soldTo, null, null);
+        }
+    }
 
     @Transactional(readOnly = true)
     OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, int page, int size) {
@@ -321,6 +325,14 @@ class Orders {
                     .append(" OR EXISTS (SELECT 1 FROM sales_return r WHERE r.order_id = o.id AND r.return_date BETWEEN :sf AND :st))");
             params.put("sf", java.sql.Date.valueOf(filter.soldFrom() == null ? LocalDate.of(2000, 1, 1) : filter.soldFrom()));
             params.put("st", java.sql.Date.valueOf(filter.soldTo() == null ? LocalDate.of(2999, 12, 31) : filter.soldTo()));
+        }
+        if (filter.orderFrom() != null) {
+            where.append(" AND o.order_date >= :of");
+            params.put("of", java.sql.Date.valueOf(filter.orderFrom()));
+        }
+        if (filter.orderTo() != null) {
+            where.append(" AND o.order_date <= :ot");
+            params.put("ot", java.sql.Date.valueOf(filter.orderTo()));
         }
         if (mine) {
             where.append(" AND o.created_by = :me");

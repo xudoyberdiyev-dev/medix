@@ -203,6 +203,19 @@ class SalesReportIT {
         mvc.perform(get("/api/orders").param("soldFrom", tomorrow).param("soldTo", t).cookie(director))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("home.periodInvalid"));
+        // Buyurtma sanasi filtri (SPEC 120) va ro'yxat eksporti
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("orderFrom", t).param("orderTo", t).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+        mvc.perform(get("/api/orders").param("branchId", "" + b).param("orderFrom", tomorrow).cookie(director))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/orders").param("orderFrom", tomorrow).param("orderTo", t).cookie(director))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("home.periodInvalid"));
+        mvc.perform(get("/api/orders/export").param("branchId", "" + b).param("orderFrom", t).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         // Eksport
         mvc.perform(get("/api/reports/sales/export").param("branchId", "" + b).param("from", t).cookie(director))
                 .andExpect(status().isOk())

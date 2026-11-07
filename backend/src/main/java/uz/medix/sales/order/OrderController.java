@@ -79,7 +79,7 @@ class OrderController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
     @Operation(summary = "Buyurtmalar", description = "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan "
-            + "(Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).")
+            + "(Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi.")
     OrderPage list(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) OrderStatus status,
@@ -87,15 +87,43 @@ class OrderController {
             @RequestParam(required = false) Long operatorId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderTo,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean mine,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        if (soldFrom != null && soldTo != null && soldFrom.isAfter(soldTo)) {
+        return orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo), q, mine,
+                Math.max(page, 0), Math.clamp(size, 1, 200));
+    }
+
+    @GetMapping("/export")
+    @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
+    @Operation(summary = "Buyurtmalar .xlsx", description = "Ro'yxatdagi filtrlar bilan (holat ham), jami qatori bilan; ko'pi bilan "
+            + OrderExcel.MAX_ROWS + " qator.")
+    void exportOrders(
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderTo,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "false") boolean mine,
+            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+        OrderPage data = orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo), q, mine,
+                0, OrderExcel.MAX_ROWS);
+        OrderExcel.write(data.items(), response);
+    }
+
+    private static Orders.OrderFilter filter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom,
+            LocalDate orderTo) {
+        if ((soldFrom != null && soldTo != null && soldFrom.isAfter(soldTo)) || (orderFrom != null && orderTo != null && orderFrom.isAfter(orderTo))) {
             throw MedixException.badRequest("home.periodInvalid");
         }
-        return orders.list(actor(), branchId, status, new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo), q, mine,
-                Math.max(page, 0), Math.clamp(size, 1, 200));
+        return new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo);
     }
 
     @GetMapping("/{id}")

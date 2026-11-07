@@ -4509,7 +4509,7 @@
     },
     "/api/orders" : {
       "get" : {
-        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).",
+        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi.",
         "operationId" : "list_11",
         "parameters" : [ {
           "in" : "query",
@@ -4554,6 +4554,22 @@
         }, {
           "in" : "query",
           "name" : "soldTo",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "orderFrom",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "orderTo",
           "required" : false,
           "schema" : {
             "type" : "string",
@@ -4734,6 +4750,99 @@
           }
         },
         "summary" : "To'lov turi standarti",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/export" : {
+      "get" : {
+        "description" : "Ro'yxatdagi filtrlar bilan (holat ham), jami qatori bilan; ko'pi bilan 20000 qator.",
+        "operationId" : "exportOrders",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "operatorId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "soldFrom",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "soldTo",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "orderFrom",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "orderTo",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "mine",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buyurtmalar .xlsx",
         "tags" : [ "orders" ]
       }
     },
