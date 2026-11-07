@@ -93,9 +93,10 @@ class OrderMarking {
         return jdbc.sql("""
                 SELECT o.id, o.number, c.name AS customer, o.branch_id, o.mark_minutes, mk.full_name AS marker, o.marker_id, o.mark_started_at,
                        o.status_changed_at,
-                       (SELECT count(*) FROM sales_order_line l JOIN product p ON p.id = l.product_id WHERE l.order_id = o.id AND p.marked) AS lines,
+                       (SELECT count(*) FROM sales_order_line l JOIN product p ON p.id = l.product_id
+                        WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS lines,
                        (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l JOIN product p ON p.id = l.product_id
-                        WHERE l.order_id = o.id AND p.marked) AS total_qty
+                        WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS total_qty
                 FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN employee mk ON mk.id = o.marker_id
                 WHERE o.status = 'MARKING'
                 ORDER BY o.mark_started_at NULLS LAST, o.status_changed_at, o.id""")
@@ -392,7 +393,8 @@ class OrderMarking {
         List<LineRow> rows = jdbc.sql("""
                 SELECT l.id, l.line_no, p.code, p.name, u.short_name AS unit, l.qty FROM sales_order_line l
                 JOIN product p ON p.id = l.product_id JOIN unit u ON u.id = p.unit_id
-                WHERE l.order_id = :id AND p.marked ORDER BY l.line_no""")
+                JOIN sales_order so ON so.id = l.order_id
+                WHERE l.order_id = :id AND p.marked AND (so.repick_line_ids IS NULL OR l.id = ANY (so.repick_line_ids)) ORDER BY l.line_no""")
                 .param("id", id)
                 .query((rs, n) -> new LineRow(rs.getLong("id"), rs.getInt("line_no"), rs.getString("code"), rs.getString("name"), rs.getString("unit"),
                         rs.getInt("qty")))
