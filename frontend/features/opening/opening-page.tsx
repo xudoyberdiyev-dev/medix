@@ -1,6 +1,7 @@
 "use client";
 
 import { Ban, CircleCheck, FilePen, PackageOpen, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { OPENING_CREATE, OPENING_GOODS, STATUS_LABELS, useOpenings, type Opening
 import { OpeningDrawer } from "./opening-drawer";
 
 export function OpeningStatusBadge({ status }: { status: OpeningStatus }) {
+  const t = useTranslations("opening.status");
   const map = {
     DRAFT: { tone: "neutral", icon: FilePen },
     POSTED: { tone: "success", icon: CircleCheck },
@@ -22,7 +24,7 @@ export function OpeningStatusBadge({ status }: { status: OpeningStatus }) {
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {STATUS_LABELS[status]}
+      {t(status)}
     </Badge>
   );
 }
@@ -31,6 +33,7 @@ const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
 
 /** Boshlangʻich qoldiq (BQ) hujjatlari — SmartUp dan oʻtishda omborlardagi tovar qoldigʻi. */
 export function OpeningPage() {
+  const t = useTranslations("opening");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const [status, setStatus] = useState<string | null>(null);
@@ -41,15 +44,15 @@ export function OpeningPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useOpenings(branchId, (status as OpeningStatus | null) ?? null, page);
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
   const columns: TableColumn<OpeningSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "warehouse", title: "Ombor" },
-    { key: "cutoffDate", title: "Qoldiq sanasi", render: (d) => day(d.cutoffDate) },
+    { key: "number", title: t("list.number"), mono: true },
+    { key: "warehouse", title: t("list.warehouse") },
+    { key: "cutoffDate", title: t("list.cutoffDate"), render: (d) => day(d.cutoffDate) },
     {
       key: "lines",
-      title: "Qatorlar",
+      title: t("list.lines"),
       align: "right",
       render: (d) => (
         <span className="flex items-center justify-end gap-2">
@@ -58,28 +61,33 @@ export function OpeningPage() {
         </span>
       ),
     },
-    { key: "totalQty", title: "Miqdor", align: "right", render: (d) => <span className="tabular-nums">{formatQuantity(d.totalQty)}</span> },
+    {
+      key: "totalQty",
+      title: t("list.qty"),
+      align: "right",
+      render: (d) => <span className="tabular-nums">{formatQuantity(d.totalQty)}</span>,
+    },
     ...((docs.data?.items ?? []).some((d) => d.totalCost != null)
       ? [
           {
             key: "totalCost",
-            title: "Tannarx boʻyicha summa",
+            title: t("list.totalCost"),
             align: "right" as const,
             render: (d: OpeningSummary) => <span className="tabular-nums">{d.totalCost ? formatMoney(d.totalCost) : ""}</span>,
           },
         ]
       : []),
-    { key: "createdBy", title: "Kiritdi" },
-    { key: "status", title: "Holat", render: (d) => <OpeningStatusBadge status={d.status} /> },
+    { key: "createdBy", title: t("list.createdBy") },
+    { key: "status", title: t("list.status"), render: (d) => <OpeningStatusBadge status={d.status} /> },
   ];
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Boshlangʻich qoldiq</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setEditor({ id: null })}>
-            Qoldiq kiritish
+            {t("create")}
           </Button>
         ) : null}
       </div>
@@ -87,7 +95,7 @@ export function OpeningPage() {
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (
         <Table
-          caption="Boshlangʻich qoldiq hujjatlari"
+          caption={t("caption")}
           columns={columns}
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
@@ -96,13 +104,13 @@ export function OpeningPage() {
           toolbar={
             <div className="w-56">
               <Select
-                label="Holat"
+                label={t("list.status")}
                 size="sm"
                 value={status}
                 onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder="Barcha holatlar"
+                placeholder={t("list.allStatuses")}
                 className="[&>span:first-child]:sr-only"
-                options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                options={(Object.keys(STATUS_LABELS) as OpeningStatus[]).map((value) => ({ value, label: t(`status.${value}`) }))}
               />
             </div>
           }
@@ -112,12 +120,12 @@ export function OpeningPage() {
             ) : (
               <EmptyState
                 icon={PackageOpen}
-                title="Hali boshlangʻich qoldiq kiritilmagan"
-                description="Oldingi tizimdagi qoldiqni omborlar boʻyicha kiriting yoki Excelʼdan yuklang. Oʻtkazilgan hujjat qoldiqqa kiradi."
+                title={t("list.emptyTitle")}
+                description={t("list.emptyDescription")}
                 action={
                   canCreate ? (
                     <Button variant="secondary" icon={Plus} onClick={() => setEditor({ id: null })}>
-                      Qoldiq kiritish
+                      {t("create")}
                     </Button>
                   ) : undefined
                 }

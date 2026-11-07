@@ -5,7 +5,7 @@ import { DictionariesPage } from "@/features/dictionaries/dictionaries-page";
 export default function Page() {
   return (
     <>
-      <TopBar title="Maʼlumotnomalar" />
+      <TopBar titleKey="dictionaries" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <DictionariesPage />

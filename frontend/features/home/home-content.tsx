@@ -1,6 +1,7 @@
 "use client";
 
 import { Construction } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/ui/system-states";
 import { useMe } from "@/features/auth/session";
 import { CashierPanel } from "@/features/cash/cashier-panel";
@@ -11,6 +12,7 @@ import { SetupBanner } from "@/features/setup/setup-banner";
 
 /** Bosh sahifa rolga qarab (SPEC 8): Kassir — Kassir paneli; Direktor/Admin/Buxgalter/Filial rahbari — koʻrsatkichlar bosh sahifasi; Operator — oʻz savdosi; Xarid — kirimlar, YB qarzi, bonus; boshqa rollar sahifalari 10-bosqichda qoʻshiladi. */
 export function HomeContent() {
+  const t = useTranslations("home");
   const me = useMe();
   const role = me.data?.role.code;
   if (role === "CASHIER") return <CashierPanel />;
@@ -34,16 +36,12 @@ export function HomeContent() {
     );
   return (
     <>
-      <h1 className="text-page-title">Bosh sahifa</h1>
+      <h1 className="text-page-title">{t("title")}</h1>
       <div className="mt-6 empty:hidden">
         <SetupBanner />
       </div>
       <div className="mt-6 rounded-card border border-border bg-surface">
-        <EmptyState
-          icon={Construction}
-          title="Bosh sahifa hali qurilmoqda"
-          description="Koʻrsatkichlar kartalari va «Diqqat talab qiladi» bloki 10-bosqichda qoʻshiladi."
-        />
+        <EmptyState icon={Construction} title={t("placeholderTitle")} description={t("placeholderDescription")} />
       </div>
     </>
   );

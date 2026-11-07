@@ -1,0 +1,49 @@
+{
+  "forbidden": "Xodimlarni Direktor va Bosh administrator boshqaradi.",
+  "title": "Xodimlar",
+  "employee": "Xodim",
+  "login": "Login",
+  "role": "Rol",
+  "status": "Holat",
+  "blocked": "Bloklangan",
+  "mustChangePassword": "Parol almashtirilmagan",
+  "active": "Faol",
+  "add": "Xodim qoʻshish",
+  "search": "Qidirish",
+  "searchPlaceholder": "Ism, login yoki rol",
+  "unblock": "Blokdan chiqarish",
+  "unblocked": "Xodim blokdan chiqarildi",
+  "block": "Bloklash",
+  "resetPassword": "Vaqtinchalik parol berish",
+  "emptyTitle": "Hali xodim qoʻshilmagan",
+  "emptyDescription": "Loginlarni siz yaratasiz; xodim birinchi kirishda parolni almashtiradi.",
+  "blockDialog": {
+    "title": "{name}ni bloklaysizmi?",
+    "action": "Xodimni bloklash",
+    "reasonRequired": "Sabab kiritilmagan. Nega bloklanayotganini yozing.",
+    "done": "Xodim bloklandi",
+    "consequence": "Xodim tizimga kira olmaydi, ochiq sessiyalari darhol tugatiladi. Keyin blokdan chiqarish mumkin.",
+    "reason": "Sabab"
+  },
+  "resetDialog": {
+    "save": "Parolni saqlash",
+    "done": "Vaqtinchalik parol saqlandi",
+    "doneDescription": "{name} keyingi kirishda parolni almashtiradi.",
+    "sessions": "{name} ({login}) ning ochiq sessiyalari tugatiladi."
+  },
+  "temporaryPassword": "Vaqtinchalik parol",
+  "passwordHint": "Kamida 8 belgi",
+  "create": {
+    "added": "Xodim qoʻshildi",
+    "addedDescription": "{name} — login: {login}",
+    "new": "Yangi xodim",
+    "back": "Ortga",
+    "save": "Xodimni saqlash",
+    "fullName": "F.I.Sh.",
+    "branch": "Filial",
+    "allBranches": "Barcha filiallar",
+    "branchHint": "Direktor, Bosh administrator va Buxgalter barcha filiallarni koʻradi",
+    "position": "Lavozim",
+    "phone": "Telefon"
+  }
+}

@@ -2,6 +2,7 @@
 
 import { CircleCheck, ClipboardCheck, FilePen, ListChecks, Plus, ScanSearch, ShieldAlert, XCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
 import { InventoryCountDrawer } from "./inventory-count-drawer";
 
 export function InventoryCountStatusBadge({ status }: { status: InventoryCountStatus }) {
+  const t = useTranslations("inventoryCounts.status");
   const map = {
     DRAFT: { tone: "neutral", icon: FilePen },
     COUNTING: { tone: "info", icon: ScanSearch },
@@ -32,13 +34,14 @@ export function InventoryCountStatusBadge({ status }: { status: InventoryCountSt
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {IN_STATUS_LABELS[status]}
+      {t(status)}
     </Badge>
   );
 }
 
 /** IN — inventarizatsiya: qoralama → sanoq (zonalar qulflanadi) → tekshirish → tasdiq. Kamomad 5 000 000 dan katta — Direktor. */
 export function InventoryCountsPage() {
+  const t = useTranslations("inventoryCounts");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const params = useSearchParams();
@@ -53,51 +56,51 @@ export function InventoryCountsPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useInventoryCounts(branchId, (status as InventoryCountStatus | null) ?? null, page);
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
   const showCost = (docs.data?.items ?? []).some((d) => d.shortageCost != null);
   const columns: TableColumn<InventoryCountSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "createdAt", title: "Sana", render: (d) => formatDateTime(new Date(d.createdAt)) },
-    { key: "warehouse", title: "Ombor · qamrov", render: (d) => `${d.warehouse} · ${d.zone ? d.zone.name : "butun ombor"}` },
+    { key: "number", title: t("list.number"), mono: true },
+    { key: "createdAt", title: t("list.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
+    { key: "warehouse", title: t("list.scope"), render: (d) => `${d.warehouse} · ${d.zone ? d.zone.name : t("list.wholeWarehouse")}` },
     {
       key: "counted",
-      title: "Sanaldi",
+      title: t("list.counted"),
       align: "right",
       render: (d) => (d.lines > 0 ? `${formatQuantity(d.counted)} / ${formatQuantity(d.lines)}` : "—"),
     },
     {
       key: "shortageQty",
-      title: "Kamomad",
+      title: t("list.shortage"),
       align: "right",
-      render: (d) => (d.shortageQty ? `${formatQuantity(d.shortageQty)} dona` : "—"),
+      render: (d) => (d.shortageQty ? t("list.pcs", { qty: formatQuantity(d.shortageQty) }) : "—"),
     },
     {
       key: "surplusQty",
-      title: "Ortiqcha",
+      title: t("list.surplus"),
       align: "right",
-      render: (d) => (d.surplusQty ? `${formatQuantity(d.surplusQty)} dona` : "—"),
+      render: (d) => (d.surplusQty ? t("list.pcs", { qty: formatQuantity(d.surplusQty) }) : "—"),
     },
     ...(showCost
       ? [
           {
             key: "shortageCost",
-            title: "Kamomad tannarxi",
+            title: t("list.shortageCost"),
             align: "right" as const,
             render: (d: InventoryCountSummary) => (d.shortageCost != null && d.shortageQty ? formatMoney(d.shortageCost) : "—"),
           },
         ]
       : []),
-    { key: "createdBy", title: "Kiritdi" },
+    { key: "createdBy", title: t("list.createdBy") },
     {
       key: "status",
-      title: "Holat",
+      title: t("list.status"),
       render: (d) => (
         <span className="flex items-center gap-2">
           <InventoryCountStatusBadge status={d.status} />
           {d.needsDirector && d.status === "CHECK" ? (
             <Badge tone="danger" icon={ShieldAlert}>
-              Direktor
+              {t("list.director")}
             </Badge>
           ) : null}
         </span>
@@ -108,10 +111,10 @@ export function InventoryCountsPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Inventarizatsiya</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setOpen({ id: null })}>
-            Inventarizatsiya boshlash
+            {t("start")}
           </Button>
         ) : null}
       </div>
@@ -119,7 +122,7 @@ export function InventoryCountsPage() {
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (
         <Table
-          caption="Inventarizatsiya hujjatlari"
+          caption={t("caption")}
           columns={columns}
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
@@ -128,13 +131,13 @@ export function InventoryCountsPage() {
           toolbar={
             <div className="w-56">
               <Select
-                label="Holat"
+                label={t("list.status")}
                 size="sm"
                 value={status}
                 onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder="Barcha holatlar"
+                placeholder={t("list.allStatuses")}
                 className="[&>span:first-child]:sr-only"
-                options={Object.entries(IN_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                options={(Object.keys(IN_STATUS_LABELS) as InventoryCountStatus[]).map((value) => ({ value, label: t(`status.${value}`) }))}
               />
             </div>
           }
@@ -144,12 +147,12 @@ export function InventoryCountsPage() {
             ) : (
               <EmptyState
                 icon={ListChecks}
-                title="Hali inventarizatsiya yoʻq"
-                description="Ombor yoki zonadagi tovarni sanab, hisobdagi qoldiq bilan solishtiring."
+                title={t("list.emptyTitle")}
+                description={t("list.emptyDescription")}
                 action={
                   canCreate ? (
                     <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
-                      Inventarizatsiya boshlash
+                      {t("start")}
                     </Button>
                   ) : undefined
                 }

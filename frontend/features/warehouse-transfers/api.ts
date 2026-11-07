@@ -19,30 +19,30 @@ export const TRANSFER_RECEIVE = "transfer.receive";
 export const TRANSFER_CANCEL = "transfer.cancel";
 export const OK_VIEW_KEYS = ["transfer.view", TRANSFER_OK, TRANSFER_SEND, TRANSFER_RECEIVE];
 
-export const OK_STATUS_LABELS: Record<WarehouseTransferStatus, string> = {
-  DRAFT: "Qoralama",
-  IN_TRANSIT: "Yoʻlda",
-  RECEIVED: "Qabul qilindi",
-  CANCELLED: "Bekor qilindi",
-};
+/** Holatlar tartibi (filtr uchun); nomlari — lugʻatda `warehouseTransfers.status.*`. */
+export const OK_STATUSES = ["DRAFT", "IN_TRANSIT", "RECEIVED", "CANCELLED"] as const satisfies readonly WarehouseTransferStatus[];
+
+/** Qabul qatori xatosi — matni lugʻatda `warehouseTransfers.lineError.*`. */
+export type ReceiveLineError =
+  { code: "notInt"; product: string; batch: string } | { code: "overSent"; product: string; batch: string; sent: number; got: number };
 
 /**
  * Qabul qatorlari: boʻsh maydon — toʻliq keldi; aks holda 0 … joʻnatilgan butun son.
- * Qaytaradi: serverga yuboriladigan qatorlar (faqat farqlilari), jami kamomad va xato matni.
+ * Qaytaradi: serverga yuboriladigan qatorlar (faqat farqlilari), jami kamomad va xato.
  */
 export function receiveLinesFrom(
   lines: TransferLine[],
   got: Record<number, string>,
-): { lines: NonNullable<ReceiveRequest["lines"]>; shortage: number; error: string | null } {
+): { lines: NonNullable<ReceiveRequest["lines"]>; shortage: number; error: ReceiveLineError | null } {
   const out: NonNullable<ReceiveRequest["lines"]> = [];
   let shortage = 0;
   for (const l of lines) {
     const raw = (got[l.id] ?? "").trim();
     if (raw === "") continue;
-    if (!/^\d+$/.test(raw))
-      return { lines: [], shortage: 0, error: `${l.productName} · ${l.batchNumber}: miqdor butun son boʻlishi kerak` };
+    if (!/^\d+$/.test(raw)) return { lines: [], shortage: 0, error: { code: "notInt", product: l.productName, batch: l.batchNumber } };
     const n = Number(raw);
-    if (n > l.qty) return { lines: [], shortage: 0, error: `${l.productName} · ${l.batchNumber}: joʻnatildi ${l.qty}, kiritildi ${n}` };
+    if (n > l.qty)
+      return { lines: [], shortage: 0, error: { code: "overSent", product: l.productName, batch: l.batchNumber, sent: l.qty, got: n } };
     shortage += l.qty - n;
     if (n !== l.qty) out.push({ lineId: l.id, receivedQty: n });
   }

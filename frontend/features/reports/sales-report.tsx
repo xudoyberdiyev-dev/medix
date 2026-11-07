@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChartColumn, Download } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -72,6 +73,7 @@ export function initialGroupBy(raw: string | null, allowed: GroupBy[]): GroupBy 
 }
 
 export function SalesReportPage() {
+  const t = useTranslations("reports");
   const me = useMe();
   const router = useRouter();
   const allowed = can(me.data, "reports.all") || can(me.data, "reports.view") || can(me.data, "reports.own");
@@ -99,30 +101,30 @@ export function SalesReportPage() {
 
   const table = useClientTable(report.data?.rows ?? NO_ROWS);
 
-  if (me.data && !allowed) return <ForbiddenState description="Savdo hisoboti sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("sales.forbidden")} />;
   const r = report.data;
   const columns: TableColumn<SalesRow>[] = [
-    { key: "name", sortable: true, title: GROUP_LABELS[groupBy] },
+    { key: "name", sortable: true, title: t(`sales.group.${groupBy}`) },
     {
       key: "orders",
       sortable: true,
-      title: "Buyurtmalar",
+      title: t("orders"),
       align: "right",
       render: (x) => <span className="font-mono tabular-nums">{x.orders}</span>,
     },
-    { key: "sales", sortable: true, title: "Sotuv", align: "right", render: (x) => money(x.sales) },
-    { key: "returns", sortable: true, title: "Qaytarish", align: "right", render: (x) => money(x.returns) },
-    { key: "net", sortable: true, title: "Sof savdo (QQS bilan)", align: "right", render: (x) => money(x.net) },
+    { key: "sales", sortable: true, title: t("sales.sales"), align: "right", render: (x) => money(x.sales) },
+    { key: "returns", sortable: true, title: t("sales.returns"), align: "right", render: (x) => money(x.returns) },
+    { key: "net", sortable: true, title: t("sales.net"), align: "right", render: (x) => money(x.net) },
   ];
   if (r?.costVisible) {
     columns.push(
-      { key: "cost", title: "Tannarx", align: "right", render: (x) => money(x.cost) },
-      { key: "profit", title: "Yalpi foyda (QQSsiz)", align: "right", render: (x) => money(x.profit) },
+      { key: "cost", title: t("sales.cost"), align: "right", render: (x) => money(x.cost) },
+      { key: "profit", title: t("sales.profit"), align: "right", render: (x) => money(x.profit) },
     );
   }
   const totals: Record<string, React.ReactNode> | undefined = r
     ? {
-        name: "Jami",
+        name: t("total"),
         orders: <span className="font-mono tabular-nums">{r.total.orders}</span>,
         sales: money(r.total.sales),
         returns: money(r.total.returns),
@@ -134,16 +136,16 @@ export function SalesReportPage() {
   return (
     <>
       <Link href="/reports" className="mb-2 inline-flex items-center gap-1 text-caption text-text-secondary hover:underline">
-        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> Hisobotlar
+        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> {t("back")}
       </Link>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-page-title">Savdo hisoboti</h1>
+        <h1 className="text-page-title">{t("sales.title")}</h1>
         <PeriodPicker state={period} />
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <Tabs
-          aria-label="Guruhlash"
-          items={groups.map((g) => ({ key: g, label: GROUP_LABELS[g] }))}
+          aria-label={t("sales.groupBy")}
+          items={groups.map((g) => ({ key: g, label: t(`sales.group.${g}`) }))}
           value={groupBy}
           onChange={(k) => setGroupBy(k as GroupBy)}
         />
@@ -151,7 +153,7 @@ export function SalesReportPage() {
           {r ? (
             <span>
               {r.from === r.to ? formatIsoDate(r.from) : `${formatIsoDate(r.from)} – ${formatIsoDate(r.to)}`}
-              {r.mineOnly ? " · faqat siz kiritgan buyurtmalar" : r.branchId == null ? " · barcha filiallar" : ""}
+              {r.mineOnly ? ` · ${t("sales.mineOnly")}` : r.branchId == null ? ` · ${t("allBranches")}` : ""}
             </span>
           ) : null}
           {from && to ? (
@@ -160,7 +162,7 @@ export function SalesReportPage() {
               download
               className="inline-flex items-center gap-1 text-primary hover:underline"
             >
-              <Download size={16} strokeWidth={1.5} aria-hidden /> Excelʼga yuklab olish
+              <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
             </a>
           ) : null}
         </div>
@@ -169,7 +171,7 @@ export function SalesReportPage() {
         <ErrorState onRetry={() => report.refetch()} />
       ) : (
         <Table
-          caption="Savdo hisoboti"
+          caption={t("sales.title")}
           density="compact"
           columns={columns}
           rows={table.rows}
@@ -187,15 +189,11 @@ export function SalesReportPage() {
               : undefined
           }
           totals={r && r.rows.length > 0 ? totals : undefined}
-          emptyState={
-            <EmptyState icon={ChartColumn} title="Davrda savdo yoʻq" description="Boshqa davrni tanlang yoki filialni oʻzgartiring." />
-          }
+          emptyState={<EmptyState icon={ChartColumn} title={t("sales.emptyTitle")} description={t("emptyHint")} />}
         />
       )}
-      {r?.truncated ? <p className="mt-2 text-caption text-warning">Faqat birinchi 5000 qator koʻrsatildi — davrni qisqartiring.</p> : null}
-      <p className="mt-2 text-caption text-text-secondary">
-        Sof savdo = sotuv − qaytarish; yetkazilmagan (bekor qilingan) sotuvlar kirmaydi.
-      </p>
+      {r?.truncated ? <p className="mt-2 text-caption text-warning">{t("sales.truncated")}</p> : null}
+      <p className="mt-2 text-caption text-text-secondary">{t("sales.note")}</p>
     </>
   );
 }

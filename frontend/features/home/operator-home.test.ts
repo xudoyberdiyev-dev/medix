@@ -1,6 +1,9 @@
+import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
+import { uzLatn } from "@/i18n/messages.generated";
 import { operatorAttentionRows } from "./operator-home";
 
+const t = createTranslator({ locale: "uz-Latn", messages: uzLatn, namespace: "home.attention" });
 const ca = (count: number, amount: string) => ({ count, amount });
 
 describe("operatorAttentionRows", () => {
@@ -15,7 +18,8 @@ describe("operatorAttentionRows", () => {
     expect(rows.map((r) => r.key)).toEqual(["rej", "draft"]);
     expect(rows[0]?.danger).toBe(true);
     expect(rows[0]?.href).toBe("/orders?status=REJECTED&mine=1");
-    expect(rows[1]?.label).toBe("Yuborilmagan qoralamalar (2)");
+    const draft = rows[1];
+    expect(draft && t(`rows.${draft.key}`, draft.values)).toBe("Yuborilmagan qoralamalar (2)");
   });
 
   it("summasi nol, lekin soni bor qoralama ham koʻrinadi", () => {

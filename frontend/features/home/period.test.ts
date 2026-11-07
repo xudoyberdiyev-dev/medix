@@ -59,7 +59,7 @@ describe("Diqqat talab qiladi", () => {
     expect(rows[3].href).toBe("/bonuses");
     expect(rows[4].href).toBe("/zone-transfers?status=PENDING");
     expect(rows[1].href).toBe("/orders?status=PENDING_APPROVAL");
-    expect(rows[1].label).toContain("(2)");
+    expect(rows[1].values).toEqual({ count: 2 });
     expect(rows[2].href).toBe("/receipts?status=ACCEPTED");
   });
   it("tasdiq qatorlari ruxsatga qarab", () => {

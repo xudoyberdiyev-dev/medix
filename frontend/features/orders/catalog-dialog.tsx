@@ -1,6 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
@@ -35,6 +36,7 @@ export function CatalogDialog({
   onClose: () => void;
   onAdd: (lines: PickedLine[]) => void;
 }) {
+  const t = useTranslations("orders");
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [inStockOnly, setInStockOnly] = useState(true);
@@ -62,9 +64,9 @@ export function CatalogDialog({
       open
       onClose={onClose}
       size="lg"
-      title="Mahsulot qoʻshish"
+      title={t("catalog.title")}
       primaryAction={{
-        label: picked.length ? `Qoʻshish va qaytish · ${picked.length}` : "Qoʻshish va qaytish",
+        label: picked.length ? t("catalog.addCount", { count: picked.length }) : t("catalog.add"),
         disabled: !picked.length,
         onClick: add,
       }}
@@ -74,7 +76,7 @@ export function CatalogDialog({
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <TextField
-              label="Qidirish"
+              label={t("catalog.search")}
               variant="search"
               size="sm"
               value={search}
@@ -84,11 +86,11 @@ export function CatalogDialog({
                 clearTimeout(debounce.current);
                 debounce.current = setTimeout(() => setQ(v.trim()), 250);
               }}
-              placeholder="Kod, shtrix-kod yoki nom"
+              placeholder={t("catalog.searchPlaceholder")}
               className="[&>label]:sr-only"
             />
           </div>
-          <Checkbox label="Faqat bor mahsulotlar" checked={inStockOnly} onChange={setInStockOnly} />
+          <Checkbox label={t("catalog.inStock")} checked={inStockOnly} onChange={setInStockOnly} />
         </div>
         {catalog.error ? (
           <ErrorState onRetry={() => catalog.refetch()} />
@@ -99,20 +101,20 @@ export function CatalogDialog({
             <table className="w-full text-table">
               <thead className="sticky top-0 bg-table-header text-left text-text-secondary">
                 <tr>
-                  <th className="px-3 py-2 font-medium">Kod</th>
-                  <th className="px-3 py-2 font-medium">Mahsulot</th>
-                  <th className="px-3 py-2 text-right font-medium">Mavjud</th>
-                  <th className="px-3 py-2 text-right font-medium">Narx</th>
-                  <th className="px-3 py-2 font-medium">Eng yaqin muddat</th>
-                  <th className="px-3 py-2 text-right font-medium">Min / max</th>
-                  <th className="px-3 py-2 text-right font-medium">Miqdor</th>
+                  <th className="px-3 py-2 font-medium">{t("catalog.col.code")}</th>
+                  <th className="px-3 py-2 font-medium">{t("catalog.col.product")}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t("catalog.col.available")}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t("catalog.col.price")}</th>
+                  <th className="px-3 py-2 font-medium">{t("catalog.col.nearestExpiry")}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t("catalog.col.minMax")}</th>
+                  <th className="px-3 py-2 text-right font-medium">{t("catalog.col.qty")}</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-3 py-6 text-center text-text-secondary">
-                      {inStockOnly ? "Mos mahsulot yoʻq. «Faqat bor mahsulotlar»ni oʻchirib koʻring." : "Mos mahsulot yoʻq."}
+                      {inStockOnly ? t("catalog.emptyInStock") : t("catalog.empty")}
                     </td>
                   </tr>
                 ) : (
@@ -129,7 +131,7 @@ export function CatalogDialog({
                               {r.name}
                               {r.controlled ? (
                                 <Badge tone="warning" className="ml-2">
-                                  Nazoratdagi
+                                  {t("catalog.controlled")}
                                 </Badge>
                               ) : null}
                             </span>
@@ -138,7 +140,7 @@ export function CatalogDialog({
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">{formatQuantity(r.available)}</td>
                         <td className="px-3 py-2 text-right tabular-nums">
-                          {r.price ? formatMoney(r.price) : <span className="text-text-disabled">narx yoʻq</span>}
+                          {r.price ? formatMoney(r.price) : <span className="text-text-disabled">{t("catalog.noPrice")}</span>}
                         </td>
                         <td className="px-3 py-2 tabular-nums">{r.nearestExpiry ? day(r.nearestExpiry) : "—"}</td>
                         <td className="px-3 py-2 text-right tabular-nums text-text-secondary">
@@ -146,13 +148,13 @@ export function CatalogDialog({
                         </td>
                         <td className="px-3 py-1 text-right">
                           <TextField
-                            label={`${r.name} miqdori`}
+                            label={t("catalog.qtyAria", { name: r.name })}
                             size="sm"
                             value={v}
                             onChange={(x) => setQty((m) => ({ ...m, [r.productId]: x }))}
                             onKeyDown={(e) => e.key === "Enter" && picked.length > 0 && (e.preventDefault(), add())}
                             inputMode="numeric"
-                            error={over ? `Mavjud ${formatQuantity(r.available)}` : undefined}
+                            error={over ? t("catalog.available", { qty: formatQuantity(r.available) }) : undefined}
                             className="ml-auto w-24 [&>label]:sr-only [&_input]:text-right"
                           />
                         </td>

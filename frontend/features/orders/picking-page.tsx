@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, ClipboardList, Play, Printer, Replace, Timer, TriangleAlert, Undo2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -21,11 +22,12 @@ import { MyToday } from "./my-today";
 import { batchLabel, OtherBatchModal, type PickBatch } from "./other-batch-modal";
 import { useLiveConnected } from "@/lib/live";
 import { day } from "./orders-page";
+import type { OrdersT } from "./i18n";
 
 /** Qolgan vaqt: musbat — «12:05», manfiy — «Kechikdi: N daqiqa» (SPEC 5.2). */
-export function timerText(deadline: Date, now: Date): { text: string; late: boolean } {
+export function timerText(deadline: Date, now: Date, t: OrdersT): { text: string; late: boolean } {
   const ms = deadline.getTime() - now.getTime();
-  if (ms < 0) return { text: `Kechikdi: ${Math.ceil(-ms / 60000)} daqiqa`, late: true };
+  if (ms < 0) return { text: t("timer.late", { minutes: Math.ceil(-ms / 60000) }), late: true };
   const total = Math.floor(ms / 1000);
   const m = Math.floor(total / 60);
   const s = total % 60;
@@ -43,6 +45,7 @@ function useNow(): Date {
 
 /** Yigʻuvchi paneli (SPEC 5.4): navbat, mening yigʻishim (katta taymer, «Olindi» belgilari, partiya tasdigʻi). */
 export function PickingPage() {
+  const t = useTranslations("orders");
   const me = useMe();
   const qc = useQueryClient();
   const now = useNow();
@@ -59,7 +62,7 @@ export function PickingPage() {
   const [selected, setSelected] = useState<number[]>([]);
   const mine = (queue.data ?? []).find((o) => o.status === "PICKING" && o.pickerId === me.data?.id) ?? null;
 
-  if (me.data && !allowed) return <ForbiddenState description="Yigʻish paneli faqat yigʻuvchilar uchun." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("picking.forbidden")} />;
 
   async function start(id: number) {
     setPending(id);
@@ -78,7 +81,7 @@ export function PickingPage() {
   const err = describeError(error);
   return (
     <>
-      <h1 className="mb-4 text-page-title">Yigʻish</h1>
+      <h1 className="mb-4 text-page-title">{t("picking.title")}</h1>
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
       {queue.error ? (
         <ErrorState onRetry={() => queue.refetch()} />
@@ -87,30 +90,26 @@ export function PickingPage() {
       ) : (
         <div className="grid grid-cols-[2fr_1fr] gap-6">
           <section>
-            <h2 className="mb-3 text-subtitle">Mening yigʻishim</h2>
+            <h2 className="mb-3 text-subtitle">{t("picking.mine")}</h2>
             {mine ? (
               <ActivePick id={mine.id} deadline={mine.deadline ? new Date(mine.deadline) : null} now={now} />
             ) : (
               <Card>
-                <EmptyState
-                  icon={ClipboardList}
-                  title="Faol yigʻish yoʻq"
-                  description="Navbatdan buyurtma tanlab, «Yigʻishni boshlash»ni bosing."
-                />
+                <EmptyState icon={ClipboardList} title={t("picking.emptyTitle")} description={t("picking.emptyHint")} />
               </Card>
             )}
           </section>
           <section>
             <MyToday kind="pickers" />
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-subtitle">Navbat</h2>
+              <h2 className="text-subtitle">{t("picking.queue")}</h2>
               <Button variant="secondary" size="sm" icon={Printer} disabled={selected.length === 0} onClick={() => openPickSheet(selected)}>
-                Varaqni chop etish{selected.length > 0 ? ` (${selected.length})` : ""}
+                {selected.length > 0 ? t("picking.printSheetCount", { count: selected.length }) : t("picking.printSheet")}
               </Button>
             </div>
             <ul className="flex flex-col gap-3">
               {(queue.data ?? []).filter((o) => o.id !== mine?.id).length === 0 ? (
-                <li className="text-text-secondary">Navbat boʻsh.</li>
+                <li className="text-text-secondary">{t("picking.queueEmpty")}</li>
               ) : null}
               {(queue.data ?? [])
                 .filter((o) => o.id !== mine?.id)
@@ -119,24 +118,28 @@ export function PickingPage() {
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-2">
                         <Checkbox
-                          aria-label={`${o.number} — terish varagʻiga`}
+                          aria-label={t("picking.toSheet", { number: o.number })}
                           checked={selected.includes(o.id)}
                           onChange={(v) => setSelected((ids) => (v ? [...ids, o.id] : ids.filter((x) => x !== o.id)))}
                         />
                         <span className="font-mono">{o.number}</span>
                       </span>
-                      {o.marked ? <Badge tone="info">Markirovka</Badge> : null}
+                      {o.marked ? <Badge tone="info">{t("picking.marking")}</Badge> : null}
                     </div>
                     <div className="mt-1">{o.customer}</div>
                     <div className="mt-1 text-caption text-text-secondary">
-                      {formatQuantity(o.lines)} xil · {formatQuantity(o.totalQty)} dona · vaqt {o.pickMinutes ?? "—"} daqiqa
+                      {t("picking.meta", {
+                        lines: formatQuantity(o.lines),
+                        qty: formatQuantity(o.totalQty),
+                        minutes: o.pickMinutes ?? "—",
+                      })}
                     </div>
                     <div className="mt-2">
                       {o.status === "PICKING" ? (
-                        <Badge tone="warning">Band: {o.picker}</Badge>
+                        <Badge tone="warning">{t("picking.busy", { name: o.picker ?? "" })}</Badge>
                       ) : (
                         <Button size="sm" icon={Play} disabled={Boolean(mine)} loading={pending === o.id} onClick={() => void start(o.id)}>
-                          Yigʻishni boshlash
+                          {t("picking.start")}
                         </Button>
                       )}
                     </div>
@@ -156,6 +159,7 @@ function openPickSheet(ids: number[]) {
 }
 
 function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; now: Date }) {
+  const tr = useTranslations("orders");
   const qc = useQueryClient();
   const order = useOrder(id);
   const [taken, setTaken] = useState<Record<number, boolean>>({});
@@ -166,7 +170,7 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
   if (order.error) return <ErrorState onRetry={() => order.refetch()} />;
   if (!order.data) return <Skeleton className="h-40 w-full" />;
   const d = order.data;
-  const t = deadline ? timerText(deadline, now) : null;
+  const t = deadline ? timerText(deadline, now, tr) : null;
   const all = d.lines.every((l) => taken[l.id]);
   const err = describeError(error);
 
@@ -181,7 +185,7 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
           body: { lines: Object.entries(other).map(([lineId, b]) => ({ lineId: Number(lineId), batchId: b.batchId })) },
         }),
       );
-      toast({ tone: "success", title: "Yigʻish yakunlandi", description: `${r.number} · tovar Joʻnatish zonasida` });
+      toast({ tone: "success", title: tr("picking.finished"), description: tr("picking.finishedHint", { number: r.number }) });
       await qc.invalidateQueries({ queryKey: ["orders"] });
     } catch (e) {
       setError(e);
@@ -207,7 +211,7 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
       <ul className="mt-4 flex flex-col">
         {d.lines.map((l) => (
           <li key={l.id} className="flex items-start gap-3 border-t border-border py-3">
-            <Checkbox label="Olindi" checked={Boolean(taken[l.id])} onChange={(v) => setTaken((m) => ({ ...m, [l.id]: v }))} />
+            <Checkbox label={tr("picking.taken")} checked={Boolean(taken[l.id])} onChange={(v) => setTaken((m) => ({ ...m, [l.id]: v }))} />
             <div className="flex-1">
               <div>
                 <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
@@ -215,7 +219,7 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
               {other[l.id] ? (
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <Badge tone="warning" icon={TriangleAlert}>
-                    Boshqa partiya: {batchLabel(other[l.id])}
+                    {tr("picking.otherBatch", { batch: batchLabel(other[l.id]) })}
                   </Badge>
                   <Button
                     size="sm"
@@ -229,12 +233,16 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
                       })
                     }
                   >
-                    Koʻrsatilganiga qaytarish
+                    {tr("picking.revert")}
                   </Button>
                 </div>
               ) : (
                 <div className="text-caption text-text-secondary">
-                  {l.reserved.map((r) => `${r.batch} · ${day(r.expiryDate)} · ${r.zone} — ${formatQuantity(r.qty)} dona`).join("; ")}
+                  {l.reserved
+                    .map((r) =>
+                      tr("picking.reservedRow", { batch: r.batch, date: day(r.expiryDate), zone: r.zone, qty: formatQuantity(r.qty) }),
+                    )
+                    .join("; ")}
                 </div>
               )}
               {!other[l.id] ? (
@@ -245,7 +253,7 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
                   className="mt-1"
                   onClick={() => setChoosing({ id: l.id, name: l.productName, qty: l.qty })}
                 >
-                  Boshqa partiyadan oldim
+                  {tr("picking.tookOther")}
                 </Button>
               ) : null}
             </div>
@@ -256,16 +264,17 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
       {err.message ? <Alert tone="danger" title={err.message} className="mt-3" /> : null}
       <div className="mt-4 flex items-center justify-between gap-3">
         <span className="text-caption text-text-secondary">
-          Partiya tasdigʻi: «Ha, shundan oldim» — koʻrsatilgan partiyalardan
-          {Object.keys(other).length > 0 ? `; ${formatQuantity(Object.keys(other).length)} qator — boshqa partiyadan` : ""}.
+          {Object.keys(other).length > 0
+            ? tr("picking.confirmHintOther", { count: formatQuantity(Object.keys(other).length) })
+            : tr("picking.confirmHint")}
         </span>
         <div className="flex flex-wrap items-center gap-2">
           <IssueButton orderId={id} />
           <Button variant="secondary" icon={Printer} onClick={() => openPickSheet([id])}>
-            Terish varagʻini chop etish
+            {tr("picking.printPickSheet")}
           </Button>
           <Button icon={CheckCircle2} disabled={!all} loading={pending} onClick={() => void finish()}>
-            Yigʻishni yakunlash
+            {tr("picking.finish")}
           </Button>
         </div>
       </div>

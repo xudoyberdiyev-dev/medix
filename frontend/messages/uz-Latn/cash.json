@@ -1,0 +1,298 @@
+{
+  "currency": "soʻm",
+  "inactive": "nofaol",
+  "cashierName": "Kassir: {name}",
+  "noCashier": "Kassir biriktirilmagan",
+  "opStatus": {
+    "PENDING": "Tasdiqlashda",
+    "POSTED": "Oʻtkazilgan",
+    "REJECTED": "Rad etilgan",
+    "CANCELLED": "Bekor qilingan"
+  },
+  "docType": {
+    "MT": "Mijozdan toʻlov",
+    "YT": "Yetkazib beruvchiga toʻlov",
+    "KO": "Kassa operatsiyasi",
+    "BO": "Bank operatsiyasi",
+    "IO": "Oʻtkazma",
+    "FIO": "Filiallararo toʻlov"
+  },
+  "amountLine": "{number} · {amount} soʻm",
+  "pending": {
+    "approved": "Chiqim tasdiqlandi",
+    "approveFailed": "Tasdiqlanmadi",
+    "title": "Tasdiqlashni kutmoqda",
+    "reject": "Rad etish",
+    "approve": "Tasdiqlash",
+    "atManager": "Filial rahbarida",
+    "rejectTitle": "Rad etish: {number}",
+    "rejected": "Chiqim rad etildi"
+  },
+  "col": {
+    "time": "Vaqt",
+    "document": "Hujjat",
+    "note": "Izoh",
+    "employee": "Xodim",
+    "in": "Kirim",
+    "out": "Chiqim",
+    "date": "Sana",
+    "number": "Raqam",
+    "account": "Hisob",
+    "item": "Modda",
+    "party": "Kimdan / kimga",
+    "status": "Holat",
+    "fromAccount": "Qayerdan",
+    "toAccount": "Qayerga",
+    "amount": "Summa",
+    "day": "Kun",
+    "cash": "Kassa",
+    "expected": "Kutilgan",
+    "counted": "Sanaldi",
+    "diff": "Farq",
+    "correction": "Tuzatish",
+    "closedBy": "Kim yopdi"
+  },
+  "from": "Dan",
+  "to": "Gacha",
+  "badDate": "Sana notoʻgʻri",
+  "badDateExample": "Sana notoʻgʻri. Masalan: 04.10.2026.",
+  "enterAmount": "Summani kiriting.",
+  "loading": "Yuklanmoqda…",
+  "choose": "Tanlang",
+  "reason": "Sabab",
+  "reasonRequired": "Sababini yozing.",
+  "print": "Chop etish",
+  "cancel": "Bekor qilish",
+  "cancelTitle": "Bekor qilish: {number}",
+  "statement": {
+    "noAccount": {
+      "title": "Hisobni tanlang",
+      "description": "Yuqoridagi kartalardan birini bosing — koʻchirma shu hisob boʻyicha chiqadi."
+    },
+    "opening": "Davr boshi",
+    "closing": "Davr oxiri",
+    "closedThrough": "{date} gacha kun yopilgan — bu kunlarga yangi hujjat kiritilmaydi.",
+    "caption": "Koʻchirma: {account}",
+    "empty": {
+      "title": "Bu davrda harakat yoʻq",
+      "description": "Davrni oʻzgartiring yoki kirim/chiqim yozing."
+    }
+  },
+  "ops": {
+    "closeItem": "{item} (kunni yopish)",
+    "caption": "Kassa va bank operatsiyalari",
+    "empty": {
+      "title": "Hali operatsiya yoʻq",
+      "description": "Xarajat va boshqa kirimlar «Kirim / chiqim» tugmasi bilan yoziladi."
+    },
+    "cancelled": "Operatsiya bekor qilindi"
+  },
+  "io": {
+    "caption": "Hisoblar orasida oʻtkazmalar",
+    "empty": {
+      "title": "Hali oʻtkazma yoʻq",
+      "description": "Masalan, Terminal yoki kassadagi pulni bankka oʻtkazish — «Oʻtkazma» tugmasi."
+    },
+    "cancelled": "Oʻtkazma bekor qilindi",
+    "selectBoth": "Qaysi hisobdan va qaysi hisobga — ikkalasini tanlang.",
+    "sameAccount": "Bitta hisobdan oʻziga oʻtkazib boʻlmaydi. Boshqa hisobni tanlang.",
+    "saved": "Oʻtkazma yozildi",
+    "savedDescription": "{number} · {from} → {to} · {amount} soʻm",
+    "title": "Hisoblar orasida oʻtkazma (IO)",
+    "submit": "Oʻtkazish",
+    "from": "Qaysi hisobdan",
+    "to": "Qaysi hisobga"
+  },
+  "closes": {
+    "caption": "Yopilgan kunlar",
+    "empty": {
+      "title": "Hali kun yopilmagan",
+      "description": "Kun oxirida kassadagi pulni sanab «Kunni yopish» ni bosing."
+    }
+  },
+  "op": {
+    "selectAccount": "Hisobni tanlang.",
+    "selectItem": {
+      "OUT": "Xarajat moddasini tanlang.",
+      "IN": "Kirim moddasini tanlang."
+    },
+    "sentForApproval": "Chiqim tasdiqqa yuborildi",
+    "saved": {
+      "OUT": "Chiqim yozildi",
+      "IN": "Kirim yozildi"
+    },
+    "title": {
+      "OUT": "Chiqim (KO / BO)",
+      "IN": "Kirim (KO / BO)"
+    },
+    "sendForApproval": "Tasdiqqa yuborish",
+    "submit": "Yozish",
+    "direction": "Yoʻnalish",
+    "item": {
+      "OUT": "Xarajat moddasi",
+      "IN": "Kirim moddasi"
+    },
+    "party": {
+      "OUT": "Kimga",
+      "IN": "Kimdan"
+    },
+    "approvalHint": "Kassadan 2.000.000,00 soʻmdan katta chiqim — Filial rahbari tasdiqlagach oʻtkaziladi.",
+    "balance": "«{name}» qoldigʻi: <num>{amount} soʻm</num>"
+  },
+  "account": {
+    "added": "Hisob qoʻshildi",
+    "title": "Yangi hisob",
+    "save": "Hisobni saqlash",
+    "cancel": "Bekor qilish",
+    "kind": "Turi",
+    "name": "Nomi",
+    "namePlaceholder": {
+      "BANK": "Asosiy bank hisobi",
+      "CASH": "Ikkinchi kassa",
+      "TERMINAL": "Terminal 2"
+    },
+    "bank": "Bank",
+    "accountNo": "Hisob raqami",
+    "accountNoHint": "20 raqam",
+    "errors": {
+      "nameRequired": "Hisob nomini kiriting.",
+      "accountNoDigits": "Hisob raqami 20 ta raqamdan iborat boʻlishi kerak."
+    }
+  },
+  "close": {
+    "selectCash": "Kassani tanlang.",
+    "diffNoRight": "Sanoqda farq bor. Qayta sanang yoki Filial rahbarini chaqiring — farq bilan faqat u yopadi.",
+    "diffNoteRequired": "Farq sababini izohda yozing.",
+    "pinRequired": "Tasdiqlash uchun PIN kiriting.",
+    "closed": "Kun yopildi: {date}",
+    "closedDiff": "Farq {amount} soʻm · {number}",
+    "closedOk": "{account} · {amount} soʻm",
+    "title": "Kunni yopish",
+    "lastClosed": "Oxirgi yopilgan kun: {date}",
+    "pendingOps": "Tasdiqlashni kutayotgan chiqim bor ({count} ta). Avval Filial rahbari tasdiqlasin yoki rad etsin.",
+    "income": "Kun kirimi",
+    "expense": "Kun chiqimi",
+    "expected": "Kutilgan qoldiq",
+    "count": "Kupyuralar sanogʻi",
+    "pieces": "dona",
+    "coins": "Mayda pul / tiyin",
+    "diffReason": "Farq sababi",
+    "pin": "PIN",
+    "diffTitle": "Sanoqda farq bor",
+    "diffHint": "Qayta sanang. Farq qolsa — Filial rahbarini chaqiring: u izoh va PIN bilan yopadi, farq tuzatuvchi KO boʻlib yoziladi."
+  },
+  "cashiers": {
+    "saved": "Kassirlar saqlandi",
+    "none": "Biriktirilmagan",
+    "noneSub": "Kassasi yoʻq xodimlar ishlatadi",
+    "title": "Kassirlar",
+    "hint": "Kassir faqat oʻziga biriktirilgan kassada ishlaydi. Filial rahbari, Direktor va Admin istalgan kassada ishlay oladi.",
+    "loadError": "Xodimlar roʻyxati yuklanmadi. Oynani yopib, qayta oching."
+  },
+  "panel": {
+    "forbidden": "Kassir paneli sizning rolingiz uchun yopiq.",
+    "noBranch": {
+      "title": "Filialni tanlang",
+      "description": "Kassir paneli filial boʻyicha — yuqorida filialni tanlang."
+    },
+    "title": "Kassir paneli",
+    "dateShort": "Sana?",
+    "allAccounts": "Barcha hisoblar",
+    "balances": "Qoldiq pullar",
+    "cash": "Naqd",
+    "income": "Kirim pullar",
+    "expense": "Chiqim pullar",
+    "expenses": "Xarajatlar",
+    "noExpenses": "Davrda xarajat yoʻq",
+    "expected": "Kutilayotgan pullar",
+    "atDrivers": "Haydovchilarda",
+    "draftPayments": "Tasdiqlanmagan MT ({count})",
+    "pendingOps": "Tasdiq kutayotgan chiqim ({count})",
+    "dueToday": "Mijozlar toʻlov kuni: bugun",
+    "dueSoon": "Mijozlar toʻlov kuni: 3 kun ichida",
+    "goToCash": "Kassaga oʻtish",
+    "withoutIo": "Oʻtkazmalarsiz (IO)",
+    "accounts": "Hisoblar",
+    "accountsCaption": "Hisoblar: davr boshi + kirim − chiqim = davr oxiri",
+    "accountsEmpty": {
+      "title": "Hisob yoʻq",
+      "description": "Filialda kassa yoki bank hisobi ochilgach shu yerda koʻrinadi."
+    },
+    "dynamics": "Kunlik dinamika",
+    "noMoves": "Davrda harakat yoʻq.",
+    "dayTitle": "Kirim {income} · Chiqim {expense}",
+    "recent": "Oxirgi operatsiyalar",
+    "recentEmpty": {
+      "title": "Operatsiya yoʻq",
+      "description": "Pul harakati boʻlgach shu yerda koʻrinadi."
+    }
+  },
+  "bank": {
+    "noAccount": {
+      "title": "Bank hisobi yoʻq",
+      "description": "Bank hisobi Sozlamalarda qoʻshilgach, koʻchirma shu yerda solishtiriladi."
+    },
+    "saved": "Solishtirish yozildi",
+    "savedMatch": "Qoldiqlar mos",
+    "diff": "Farq: {amount} soʻm",
+    "statementDate": "Koʻchirma sanasi",
+    "col": {
+      "bank": "Bankda",
+      "moves": "Harakatlar",
+      "who": "Kim"
+    },
+    "match": "Mos",
+    "account": "Bank hisobi",
+    "dateExample": "Masalan: 04.10.2026",
+    "medixBalance": "MEDIX qoldigʻi {date} holatiga",
+    "last": "Oxirgi solishtirish",
+    "never": "Hali solishtirilmagan",
+    "unmatched": "Belgilanmagan harakatlar",
+    "unmatchedSummary": "{count} ta · <num>{amount} soʻm</num>",
+    "markTitle": "Bank koʻchirmasida bor harakatlarni belgilang",
+    "allMatched": {
+      "title": "Hammasi belgilangan",
+      "description": "Bu sanagacha barcha harakatlar solishtirilgan."
+    },
+    "bankBalance": "Bankdagi qoldiq (koʻchirmadan)",
+    "diffHint": "Farq bor — sababini yozing",
+    "matchAlert": "Bank va MEDIX qoldigʻi mos.",
+    "diffAlert": "Bankda hali oʻtmagan yoki MEDIXga kiritilmagan harakatni tekshiring. Farq bilan yozish uchun izoh majburiy.",
+    "submit": "Solishtirishni yozish",
+    "history": "Solishtirishlar tarixi",
+    "historyEmpty": {
+      "title": "Solishtirish yoʻq",
+      "description": "Birinchi koʻchirmani yuqorida solishtiring."
+    }
+  },
+  "page": {
+    "forbidden": "Kassa sahifasi sizning rolingiz uchun yopiq.",
+    "noBranch": {
+      "title": "Filialni tanlang",
+      "description": "Kassa filial boʻyicha yuritiladi — yuqorida filialni tanlang."
+    },
+    "accepted": "Pul qabul qilindi",
+    "acceptedDescription": "{payment} · {amount} soʻm · {customer}",
+    "title": "Kassa",
+    "addAccount": "Hisob qoʻshish",
+    "cashiers": "Kassirlar",
+    "closeDay": "Kunni yopish",
+    "transfer": "Oʻtkazma",
+    "op": "Kirim / chiqim",
+    "driverCash": "Haydovchidagi pul",
+    "targetCash": "Qabul qilinadigan kassa",
+    "driverEmpty": {
+      "title": "Haydovchilarda pul yoʻq",
+      "description": "Naqd toʻlov yetkazilganda summa shu yerda paydo boʻladi."
+    },
+    "accept": "Qabul qildim",
+    "tabs": {
+      "label": "Kassa boʻlimlari",
+      "statement": "Koʻchirma",
+      "ops": "Kirim / chiqim (KO, BO)",
+      "io": "Oʻtkazmalar (IO)",
+      "closes": "Yopilgan kunlar",
+      "bank": "Bank koʻchirmasi"
+    }
+  }
+}

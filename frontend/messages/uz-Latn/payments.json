@@ -1,0 +1,130 @@
+{
+  "status": {
+    "DRAFT": "Qoralama",
+    "POSTED": "Oʻtkazilgan",
+    "CANCELLED": "Bekor qilingan"
+  },
+  "supplierStatus": {
+    "DRAFT": "Qoralama",
+    "PENDING": "Tasdiqlashda",
+    "POSTED": "Oʻtkazilgan",
+    "CANCELLED": "Bekor qilingan"
+  },
+  "accountKind": {
+    "CASH": "Kassa",
+    "TERMINAL": "Terminal",
+    "BANK": "Bank"
+  },
+  "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
+  "title": "Toʻlovlar",
+  "tabs": {
+    "label": "Toʻlov turi",
+    "mt": "Mijozdan (MT)",
+    "yt": "Yetkazib beruvchiga (YT)"
+  },
+  "col": {
+    "number": "Raqam",
+    "date": "Sana",
+    "customer": "Mijoz",
+    "account": "Hisob",
+    "amount": "Summa",
+    "source": "Manba",
+    "status": "Holat",
+    "supplier": "Yetkazib beruvchi"
+  },
+  "source": {
+    "driver": "Haydovchidan",
+    "cashier": "Kassir"
+  },
+  "selectBranchFirst": "Avval yuqorida filialni tanlang",
+  "add": "Toʻlov qoʻshish",
+  "allStatuses": "Barcha holatlar",
+  "mtCaption": "Mijozdan toʻlovlar",
+  "mtEmpty": {
+    "title": "Hali toʻlov yoʻq",
+    "description": "Mijoz toʻlagan pul shu yerda yoziladi: summa eng eski qarzdan yopiladi, ortigʻi avans boʻladi."
+  },
+  "ytCaption": "Yetkazib beruvchiga toʻlovlar",
+  "ytEmpty": {
+    "title": "Hali YT yoʻq",
+    "description": "Yetkazib beruvchiga toʻlov tasdiqdan soʻng oʻtkaziladi: summa eng eski kirim qarzidan yopiladi."
+  },
+  "currency": "soʻm",
+  "form": {
+    "selectBranch": "Filialni tanlang.",
+    "selectAccount": "Hisobni tanlang (kassa, Terminal yoki bank).",
+    "badDate": "Sana notoʻgʻri. Masalan: 04.10.2026.",
+    "enterAmount": "Summani kiriting.",
+    "draftSaved": "Qoralama saqlandi",
+    "amountLine": "{number} · {amount} soʻm",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "post": "Oʻtkazish",
+    "cancelledReason": "Bekor qilindi: {reason}",
+    "account": "Hisob",
+    "date": "Sana",
+    "amount": "Summa",
+    "note": "Izoh",
+    "reason": "Sabab",
+    "cancelDraft": "Qoralama bekor qilinadi."
+  },
+  "mt": {
+    "payment": "Toʻlov",
+    "selectCustomer": "Mijozni tanlang.",
+    "posted": "Toʻlov oʻtkazildi",
+    "postedAdvance": " · avans {amount}",
+    "cancelled": "Toʻlov bekor qilindi",
+    "kind": "Mijozdan toʻlov",
+    "new": "Yangi toʻlov",
+    "fromDriver": "Haydovchidan qabul qilingan · {ref}",
+    "customer": "Mijoz",
+    "customerPlaceholder": "Nom, STIR yoki telefon",
+    "cancelTitle": "Toʻlovni bekor qilish",
+    "cancelPosted": "Mijoz qarzi va hisob qoldigʻi teskari yoziladi. Kassada pul yetmasa, bekor qilinmaydi."
+  },
+  "yt": {
+    "selectSupplier": "Yetkazib beruvchini tanlang.",
+    "selectAccount": "Hisobni tanlang (kassa yoki bank).",
+    "sent": "Tasdiqqa yuborildi",
+    "returned": "Qoralamaga qaytarildi",
+    "returnTitle": "Qoralamaga qaytarish",
+    "approvePost": "Tasdiqlash va oʻtkazish",
+    "send": "Tasdiqqa yuborish",
+    "kind": "Yetkazib beruvchiga toʻlov",
+    "returnedReason": "Qaytarildi: {reason}",
+    "pendingTitle": "Tasdiqlashda — Filial rahbari yoki Direktor tasdiqlaydi",
+    "sentBy": "Yubordi: {name}",
+    "supplier": "Yetkazib beruvchi",
+    "supplierPlaceholder": "Nom yoki STIR",
+    "balanceSub": "qoldiq {amount}",
+    "accountBalance": "Hisob qoldigʻi: <num>{amount}</num> soʻm",
+    "return": "Qaytarish",
+    "cancelPosted": "YB oldidagi qarz va hisob qoldigʻi teskari yoziladi (pul hisobga qaytadi).",
+    "cancelDraft": "Toʻlov bekor qilinadi.",
+    "returnHint": "Toʻlov qoralamaga qaytadi — tayyorlovchi sababni koʻradi."
+  },
+  "alloc": {
+    "title": "Taqsimot",
+    "none": "Qarzga taqsimlanmagan.",
+    "sum": "{amount} soʻm",
+    "advance": "Avans: <num>{amount}</num> soʻm",
+    "createdBy": "Yaratdi: {name}",
+    "postedBy": " · Oʻtkazdi: {name}"
+  },
+  "openDocs": {
+    "title": "Ochiq qarzlar",
+    "summary": "Qarz: <num>{debt}</num> soʻm · Avans: <num>{advance}</num> soʻm",
+    "empty": "Ochiq qarz yoʻq — toʻlov toʻliq avans boʻladi.",
+    "manual": "Qoʻlda taqsimlash",
+    "col": {
+      "document": "Hujjat",
+      "date": "Sana",
+      "due": "Muddati",
+      "open": "Ochiq qarz",
+      "fromPayment": "Toʻlovdan"
+    },
+    "overdueDays": "{count} kun oʻtgan",
+    "allocLabel": "Toʻlovdan: {number}",
+    "auto": "Avtomatik: eng eski qarzdan boshlab. Ortigʻi avans boʻladi: <num>{advance}</num> soʻm."
+  }
+}

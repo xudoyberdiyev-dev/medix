@@ -17,6 +17,7 @@ import { formatDateTime } from "@/lib/format";
 import { useProfile, useSetPin, useUpdatePhone, validatePin, type Profile } from "./api";
 
 export function ProfilePage() {
+  const t = useTranslations("profile");
   const profile = useProfile();
   if (profile.error) return <ErrorState onRetry={() => profile.refetch()} />;
   if (!profile.data)
@@ -28,7 +29,7 @@ export function ProfilePage() {
     );
   return (
     <>
-      <h1 className="mb-6 text-page-title">Profil</h1>
+      <h1 className="mb-6 text-page-title">{t("title")}</h1>
       <div className="grid max-w-5xl grid-cols-1 gap-4 lg:grid-cols-2">
         <InfoCard profile={profile.data} />
         <PinCard profile={profile.data} />
@@ -58,34 +59,35 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function InfoCard({ profile }: { profile: Profile }) {
+  const t = useTranslations("profile.info");
   const update = useUpdatePhone();
   const [phone, setPhone] = useState(profile.phone ?? "");
   const err = describeError(update.error);
   const changed = phone.trim() !== (profile.phone ?? "");
   return (
-    <Card title="Maʼlumotlarim">
+    <Card title={t("title")}>
       <dl className="divide-y divide-border">
-        <Row label="F.I.Sh.">{profile.fullName}</Row>
-        <Row label="Login">
+        <Row label={t("fullName")}>{profile.fullName}</Row>
+        <Row label={t("login")}>
           <span className="font-mono">{profile.login}</span>
         </Row>
-        <Row label="Rol">{profile.roleName}</Row>
-        <Row label="Filial">{profile.branchName ?? "Barcha filiallar"}</Row>
-        {profile.position ? <Row label="Lavozim">{profile.position}</Row> : null}
-        <Row label="Oxirgi kirish">{profile.lastLoginAt ? formatDateTime(new Date(profile.lastLoginAt)) : "—"}</Row>
+        <Row label={t("role")}>{profile.roleName}</Row>
+        <Row label={t("branch")}>{profile.branchName ?? t("allBranches")}</Row>
+        {profile.position ? <Row label={t("position")}>{profile.position}</Row> : null}
+        <Row label={t("lastLogin")}>{profile.lastLoginAt ? formatDateTime(new Date(profile.lastLoginAt)) : "—"}</Row>
       </dl>
-      <p className="mt-2 text-caption text-text-secondary">Ism, rol va filialni administrator oʻzgartiradi.</p>
+      <p className="mt-2 text-caption text-text-secondary">{t("adminEdits")}</p>
       <form
         className="mt-4 flex items-start gap-3"
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          update.mutate(phone, { onSuccess: () => toast({ tone: "success", title: "Telefon raqami saqlandi" }) });
+          update.mutate(phone, { onSuccess: () => toast({ tone: "success", title: t("phoneSaved") }) });
         }}
       >
         <div className="flex-1">
           <TextField
-            label="Telefon"
+            label={t("phone")}
             value={phone}
             onChange={setPhone}
             error={err.fields.phone ?? err.message ?? undefined}
@@ -93,7 +95,7 @@ function InfoCard({ profile }: { profile: Profile }) {
           />
         </div>
         <Button type="submit" variant="secondary" className="mt-6" disabled={!changed} loading={update.isPending}>
-          Telefonni saqlash
+          {t("savePhone")}
         </Button>
       </form>
     </Card>
@@ -101,6 +103,7 @@ function InfoCard({ profile }: { profile: Profile }) {
 }
 
 function PinCard({ profile }: { profile: Profile }) {
+  const t = useTranslations("profile.pin");
   const setPin = useSetPin();
   const [form, setForm] = useState({ currentPassword: "", pin: "", repeat: "" });
   const [errors, setErrors] = useState<{ pin?: string; repeat?: string }>({});
@@ -110,13 +113,13 @@ function PinCard({ profile }: { profile: Profile }) {
   function submit(e: FormEvent) {
     e.preventDefault();
     const v = validatePin(form.pin, form.repeat);
-    setErrors(v);
+    setErrors({ pin: v.pin && t(`errors.${v.pin}`), repeat: v.repeat && t(`errors.${v.repeat}`) });
     if (v.pin || v.repeat) return;
     setPin.mutate(
       { currentPassword: form.currentPassword, pin: form.pin },
       {
         onSuccess: () => (
-          toast({ tone: "success", title: profile.pinSet ? "PIN almashtirildi" : "PIN oʻrnatildi" }),
+          toast({ tone: "success", title: profile.pinSet ? t("changed") : t("set") }),
           setForm({ currentPassword: "", pin: "", repeat: "" })
         ),
       },
@@ -125,26 +128,26 @@ function PinCard({ profile }: { profile: Profile }) {
 
   return (
     <Card
-      title="PIN"
+      title={t("title")}
       actions={
         profile.pinSet ? (
           <Badge tone="success" icon={CircleCheck}>
-            Oʻrnatilgan
+            {t("isSet")}
           </Badge>
         ) : (
           <Badge tone="warning" icon={ShieldAlert}>
-            Oʻrnatilmagan
+            {t("notSet")}
           </Badge>
         )
       }
     >
       <p className="mb-4 text-text-secondary">
-        PIN — rahbar tasdiqlari va kassa farqi uchun ikkinchi tasdiq. 5 marta xato kiritilsa, 15 daqiqaga qulflanadi.
-        {profile.pinSetAt ? ` Oxirgi oʻzgarish: ${formatDateTime(new Date(profile.pinSetAt))}.` : ""}
+        {t("about")}
+        {profile.pinSetAt ? t("lastChange", { date: formatDateTime(new Date(profile.pinSetAt)) }) : ""}
       </p>
       <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
         <TextField
-          label="Joriy parol"
+          label={t("currentPassword")}
           variant="password"
           value={form.currentPassword}
           onChange={set("currentPassword")}
@@ -154,19 +157,19 @@ function PinCard({ profile }: { profile: Profile }) {
           className="col-span-2"
         />
         <TextField
-          label={profile.pinSet ? "Yangi PIN" : "PIN"}
+          label={profile.pinSet ? t("newPin") : t("pin")}
           variant="password"
           inputMode="numeric"
           maxLength={6}
           value={form.pin}
           onChange={set("pin")}
           error={errors.pin ?? err.fields.pin}
-          hint="4–6 raqam"
+          hint={t("pinHint")}
           autoComplete="off"
           required
         />
         <TextField
-          label="PIN takrori"
+          label={t("repeat")}
           variant="password"
           inputMode="numeric"
           maxLength={6}
@@ -179,7 +182,7 @@ function PinCard({ profile }: { profile: Profile }) {
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
         <div className="col-span-2 flex justify-end">
           <Button type="submit" icon={KeyRound} loading={setPin.isPending}>
-            {profile.pinSet ? "PIN ni almashtirish" : "PIN oʻrnatish"}
+            {profile.pinSet ? t("change") : t("setAction")}
           </Button>
         </div>
       </form>
@@ -188,6 +191,7 @@ function PinCard({ profile }: { profile: Profile }) {
 }
 
 function PasswordCard() {
+  const t = useTranslations("profile.password");
   const change = useChangePassword();
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", repeat: "" });
   const [repeatError, setRepeatError] = useState<string>();
@@ -196,24 +200,21 @@ function PasswordCard() {
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (form.newPassword !== form.repeat) return setRepeatError("Parol takrori mos kelmadi. Qaytadan kiriting.");
+    if (form.newPassword !== form.repeat) return setRepeatError(t("mismatch"));
     setRepeatError(undefined);
     change.mutate(
       { currentPassword: form.currentPassword, newPassword: form.newPassword },
       {
-        onSuccess: () => (
-          toast({ tone: "success", title: "Parol almashtirildi" }),
-          setForm({ currentPassword: "", newPassword: "", repeat: "" })
-        ),
+        onSuccess: () => (toast({ tone: "success", title: t("changed") }), setForm({ currentPassword: "", newPassword: "", repeat: "" })),
       },
     );
   }
 
   return (
-    <Card title="Parol">
+    <Card title={t("title")}>
       <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
         <TextField
-          label="Joriy parol"
+          label={t("current")}
           variant="password"
           value={form.currentPassword}
           onChange={set("currentPassword")}
@@ -223,17 +224,17 @@ function PasswordCard() {
           className="col-span-2"
         />
         <TextField
-          label="Yangi parol"
+          label={t("new")}
           variant="password"
           value={form.newPassword}
           onChange={set("newPassword")}
           error={err.fields.newPassword}
-          hint="Kamida 8 belgi"
+          hint={t("newHint")}
           autoComplete="new-password"
           required
         />
         <TextField
-          label="Parol takrori"
+          label={t("repeat")}
           variant="password"
           value={form.repeat}
           onChange={set("repeat")}
@@ -244,7 +245,7 @@ function PasswordCard() {
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
         <div className="col-span-2 flex justify-end">
           <Button type="submit" variant="secondary" loading={change.isPending}>
-            Parolni almashtirish
+            {t("change")}
           </Button>
         </div>
       </form>

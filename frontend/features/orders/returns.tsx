@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PackageCheck, Undo2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { formatDateTime, formatQuantity } from "@/lib/format";
 
 /** Ombor mudiri → Qaytgan tovar (SPEC 5.4): yetkazilmagan tovar sanab qabul qilinadi → Karantin; kam kelsa — muammo. */
 export function ReturnsList() {
+  const t = useTranslations("orders");
   const qc = useQueryClient();
   const list = useQuery({
     queryKey: ["orders", "returns"],
@@ -37,8 +39,8 @@ export function ReturnsList() {
       );
       toast({
         tone: received < expected ? "warning" : "success",
-        title: "Qaytgan tovar Karantinga qabul qilindi",
-        description: received < expected ? `Kam keldi: ${expected - received} ta — muammo yozildi` : undefined,
+        title: t("returns.accepted"),
+        description: received < expected ? t("returns.short", { count: expected - received }) : undefined,
       });
       await qc.invalidateQueries({ queryKey: ["orders"] });
     } catch (e) {
@@ -54,7 +56,7 @@ export function ReturnsList() {
   if (list.data.length === 0)
     return (
       <Card>
-        <EmptyState icon={Undo2} title="Qaytayotgan tovar yoʻq" description="Haydovchi «Yetkazilmadi» belgilasa, tovar shu yerda kutadi." />
+        <EmptyState icon={Undo2} title={t("returns.emptyTitle")} description={t("returns.emptyHint")} />
       </Card>
     );
   return (
@@ -68,13 +70,18 @@ export function ReturnsList() {
                 <span className="font-mono">{r.orderNumber}</span> · {r.customer}
               </div>
               <div className="text-caption text-text-secondary">
-                {r.product} · {r.batch} · kutilmoqda {formatQuantity(r.qty)} ta · {formatDateTime(new Date(r.createdAt))}
+                {t("returns.meta", {
+                  product: r.product,
+                  batch: r.batch,
+                  qty: formatQuantity(r.qty),
+                  date: formatDateTime(new Date(r.createdAt)),
+                })}
               </div>
             </div>
             <div className="flex items-end gap-2">
               <div className="w-28">
                 <TextField
-                  label="Keldi"
+                  label={t("returns.received")}
                   value={counts[r.id] ?? ""}
                   onChange={(v) => setCounts((m) => ({ ...m, [r.id]: v.replace(/\D/g, "") }))}
                   inputMode="numeric"
@@ -88,7 +95,7 @@ export function ReturnsList() {
                 loading={pending === r.id}
                 onClick={() => void accept(r.id, r.qty)}
               >
-                Qabul qilish
+                {t("returns.accept")}
               </Button>
             </div>
           </li>

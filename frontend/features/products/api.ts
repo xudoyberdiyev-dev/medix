@@ -132,24 +132,27 @@ export function formFromProduct(p: ProductDetail): ProductForm {
   };
 }
 
+/** Shakl xatosi — `products.form.errors.<kalit>` (tarjima komponentda). */
+export type ProductFormError = "qty" | "minMax" | "vat" | "unit";
+
 /** Shakl → API soʻrovi; mahalliy xatolar (raqamlar) — maydon boʻyicha. */
-export function toRequest(f: ProductForm): { body?: ProductRequest; errors: Record<string, string> } {
-  const errors: Record<string, string> = {};
+export function toRequest(f: ProductForm): { body?: ProductRequest; errors: Record<string, ProductFormError> } {
+  const errors: Record<string, ProductFormError> = {};
   const qty = (raw: string, key: string) => {
     const t = raw.trim();
     if (!t) return undefined;
     if (!/^\d+$/.test(t) || Number(t) < 1) {
-      errors[key] = "Butun musbat son kiriting yoki boʻsh qoldiring.";
+      errors[key] = "qty";
       return undefined;
     }
     return Number(t);
   };
   const minQty = qty(f.minQty, "minQty");
   const maxQty = qty(f.maxQty, "maxQty");
-  if (minQty && maxQty && minQty > maxQty) errors.maxQty = "Maksimal miqdor minimaldan kam boʻlmasligi kerak.";
+  if (minQty && maxQty && minQty > maxQty) errors.maxQty = "minMax";
   const vat = f.vatRate.trim().replace(",", ".");
-  if (!/^\d{1,3}(\.\d{1,2})?$/.test(vat) || Number(vat) > 100) errors.vatRate = "QQS stavkasi 0–100 oraligʻida, masalan 12.";
-  if (!f.unitId) errors.unitId = "Birlik tanlanmagan. Roʻyxatdan tanlang.";
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(vat) || Number(vat) > 100) errors.vatRate = "vat";
+  if (!f.unitId) errors.unitId = "unit";
   if (Object.keys(errors).length > 0) return { errors };
   const num = (v: string | null) => (v ? Number(v) : undefined);
   const text = (v: string) => v.trim() || undefined;

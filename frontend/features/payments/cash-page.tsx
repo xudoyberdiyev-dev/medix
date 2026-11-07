@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { ArrowLeftRight, Banknote, HandCoins, Landmark, LockKeyhole, Plus, Truck, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -23,13 +24,16 @@ import { CashierDialog } from "@/features/cash/cashier-dialog";
 import { CloseDrawer } from "@/features/cash/close-drawer";
 import { CashOpDialog, TransferDialog } from "@/features/cash/op-dialogs";
 import { useBranchStore } from "@/lib/stores/branch";
-import { ACCOUNT_KIND, PAYMENT_MT, useAccounts, type DriverCash } from "./api";
+import { PAYMENT_MT, useAccounts, type DriverCash } from "./api";
 
 /**
  * Pul → Kassa (SPEC 5.4, 5.5): hisoblar qoldigʻi (faqat hujjatlardan), KO/BO (kirim/chiqim, moddalar bilan; katta chiqim — tasdiq),
  * IO (hisoblar orasida), koʻchirma, kunni yopish va «Haydovchidagi pul» — Kassir sanab qabul qiladi → MT.
  */
 export function CashPage() {
+  const t = useTranslations("cash.page");
+  const tc = useTranslations("cash");
+  const tk = useTranslations("payments.accountKind");
   const me = useMe();
   const qc = useQueryClient();
   const selectedBranch = useBranchStore((s) => s.branchId);
@@ -64,11 +68,9 @@ export function CashPage() {
   const actionDefault = current != null && usable.some((a) => a.id === current) ? current : (usable[0]?.id ?? null);
   const [error, setError] = useState<unknown>(null);
 
-  if (me.data && !allowed) return <ForbiddenState description="Kassa sahifasi sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
   if (me.data && branchId == null)
-    return (
-      <EmptyState icon={Banknote} title="Filialni tanlang" description="Kassa filial boʻyicha yuritiladi — yuqorida filialni tanlang." />
-    );
+    return <EmptyState icon={Banknote} title={t("noBranch.title")} description={t("noBranch.description")} />;
 
   async function accept(c: DriverCash) {
     if (!kassa) return;
@@ -79,7 +81,11 @@ export function CashPage() {
       const r = await unwrap(
         api.POST("/api/trips/cash/{stopId}/accept", { params: { path: { stopId: c.stopId } }, body: { accountId: Number(kassa) } }),
       );
-      toast({ tone: "success", title: "Pul qabul qilindi", description: `${r.payment} · ${formatMoney(c.amount)} soʻm · ${c.customer}` });
+      toast({
+        tone: "success",
+        title: t("accepted"),
+        description: t("acceptedDescription", { payment: r.payment, amount: formatMoney(c.amount), customer: c.customer }),
+      });
       await qc.invalidateQueries({ queryKey: ["trips", "cash"] });
       await qc.invalidateQueries({ queryKey: ["money-accounts"] });
       await qc.invalidateQueries({ queryKey: ["payments"] });
@@ -94,30 +100,30 @@ export function CashPage() {
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-page-title">Kassa</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         <div className="flex flex-wrap gap-3">
           {canAddAccount && branchId != null ? (
             <Button variant="secondary" icon={Landmark} onClick={() => setDialog("account")}>
-              Hisob qoʻshish
+              {t("addAccount")}
             </Button>
           ) : null}
           {canAssign && accountList.some((a) => a.kind === "CASH") ? (
             <Button variant="secondary" icon={UserRound} onClick={() => setDialog("cashiers")}>
-              Kassirlar
+              {t("cashiers")}
             </Button>
           ) : null}
           {canClose && kassas.length > 0 ? (
             <Button variant="secondary" icon={LockKeyhole} onClick={() => setDialog("close")}>
-              Kunni yopish
+              {t("closeDay")}
             </Button>
           ) : null}
           {canIo ? (
             <>
               <Button variant="secondary" icon={ArrowLeftRight} disabled={usable.length < 2} onClick={() => setDialog("io")}>
-                Oʻtkazma
+                {t("transfer")}
               </Button>
               <Button icon={Plus} disabled={usable.length === 0} onClick={() => setDialog("op")}>
-                Kirim / chiqim
+                {t("op")}
               </Button>
             </>
           ) : null}
@@ -144,17 +150,19 @@ export function CashPage() {
                   ) : (
                     <Banknote size={16} strokeWidth={1.5} aria-hidden />
                   )}
-                  {ACCOUNT_KIND[a.kind]} · <span className="font-mono">{a.code}</span>
-                  {a.active ? "" : " · nofaol"}
+                  {tk(a.kind)} · <span className="font-mono">{a.code}</span>
+                  {a.active ? "" : ` · ${tc("inactive")}`}
                 </div>
                 <div className="mt-1">{a.name}</div>
                 {a.kind === "CASH" ? (
                   <div className="mt-1 flex items-center gap-1 text-caption text-text-secondary">
                     <UserRound size={14} strokeWidth={1.5} aria-hidden />
-                    {a.cashierName ? `Kassir: ${a.cashierName}` : "Kassir biriktirilmagan"}
+                    {a.cashierName ? tc("cashierName", { name: a.cashierName }) : tc("noCashier")}
                   </div>
                 ) : null}
-                <div className="mt-2 font-mono text-subtitle tabular-nums">{formatMoney(a.balance)} soʻm</div>
+                <div className="mt-2 font-mono text-subtitle tabular-nums">
+                  {formatMoney(a.balance)} {tc("currency")}
+                </div>
               </Card>
             </button>
           ))}
@@ -164,10 +172,10 @@ export function CashPage() {
       {canAccept ? (
         <Card className="mb-6">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-subtitle">Haydovchidagi pul</h2>
+            <h2 className="text-subtitle">{t("driverCash")}</h2>
             <div className="w-64">
               <Select
-                label="Qabul qilinadigan kassa"
+                label={t("targetCash")}
                 value={kassa}
                 onChange={setTarget}
                 options={kassas.map((a) => ({ value: String(a.id), label: a.name, sub: a.code }))}
@@ -180,11 +188,7 @@ export function CashPage() {
           ) : cash.isPending ? (
             <Skeleton className="h-20 w-full" />
           ) : (cash.data ?? []).length === 0 ? (
-            <EmptyState
-              icon={Truck}
-              title="Haydovchilarda pul yoʻq"
-              description="Naqd toʻlov yetkazilganda summa shu yerda paydo boʻladi."
-            />
+            <EmptyState icon={Truck} title={t("driverEmpty.title")} description={t("driverEmpty.description")} />
           ) : (
             <ul className="flex flex-col">
               {(cash.data ?? []).map((c) => (
@@ -198,7 +202,9 @@ export function CashPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-mono tabular-nums">{formatMoney(c.amount)} soʻm</span>
+                    <span className="font-mono tabular-nums">
+                      {formatMoney(c.amount)} {tc("currency")}
+                    </span>
                     <Button
                       variant="secondary"
                       icon={HandCoins}
@@ -206,7 +212,7 @@ export function CashPage() {
                       loading={pending === c.stopId}
                       onClick={() => void accept(c)}
                     >
-                      Qabul qildim
+                      {t("accept")}
                     </Button>
                   </div>
                 </li>
@@ -218,15 +224,15 @@ export function CashPage() {
       {branchId != null ? (
         <>
           <Tabs
-            aria-label="Kassa boʻlimlari"
+            aria-label={t("tabs.label")}
             value={tab}
             onChange={setTab}
             items={[
-              { key: "statement", label: "Koʻchirma" },
-              { key: "ops", label: "Kirim / chiqim (KO, BO)" },
-              { key: "io", label: "Oʻtkazmalar (IO)" },
-              { key: "closes", label: "Yopilgan kunlar" },
-              ...(canBank ? [{ key: "bank", label: "Bank koʻchirmasi" }] : []),
+              { key: "statement", label: t("tabs.statement") },
+              { key: "ops", label: t("tabs.ops") },
+              { key: "io", label: t("tabs.io") },
+              { key: "closes", label: t("tabs.closes") },
+              ...(canBank ? [{ key: "bank", label: t("tabs.bank") }] : []),
             ]}
           />
           <div className="mt-4">

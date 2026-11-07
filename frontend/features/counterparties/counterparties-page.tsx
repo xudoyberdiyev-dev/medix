@@ -2,6 +2,7 @@
 
 import { Ban, CircleCheck, CirclePause, CircleAlert, Clock, Plus, Users } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,54 +28,51 @@ import {
 import { searchMatchLabel } from "@/lib/search";
 import { CounterpartyDrawer } from "./counterparty-drawer";
 
-const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Faol" },
-  { value: "BLOCKED", label: "Bloklangan" },
-  { value: "INACTIVE", label: "Nofaol" },
-  { value: "ALL", label: "Hammasi" },
-];
+const STATUS_VALUES = ["ACTIVE", "BLOCKED", "INACTIVE", "ALL"] as const;
 
 export function StatusBadge({ blocked, active }: { blocked: boolean; active: boolean }) {
+  const t = useTranslations("counterparties.status");
   if (blocked)
     return (
       <Badge tone="danger" icon={Ban}>
-        Bloklangan
+        {t("BLOCKED")}
       </Badge>
     );
   return active ? (
     <Badge tone="success" icon={CircleCheck}>
-      Faol
+      {t("ACTIVE")}
     </Badge>
   ) : (
     <Badge tone="neutral" icon={CirclePause}>
-      Nofaol
+      {t("INACTIVE")}
     </Badge>
   );
 }
 
 export function LicenseBadge({ validUntil }: { validUntil?: string | null }) {
+  const t = useTranslations("counterparties.license");
   const state = licenseState(validUntil, todayTashkent());
   if (state === "none")
     return (
       <Badge tone="warning" icon={CircleAlert}>
-        Yoʻq
+        {t("none")}
       </Badge>
     );
   if (state === "expired")
     return (
       <Badge tone="danger" icon={CircleAlert}>
-        Oʻtgan · {formatIsoDate(validUntil)}
+        {t("expired", { date: formatIsoDate(validUntil) })}
       </Badge>
     );
   if (state === "expiring")
     return (
       <Badge tone="warning" icon={Clock}>
-        {formatIsoDate(validUntil)} gacha
+        {t("until", { date: formatIsoDate(validUntil) })}
       </Badge>
     );
   return (
     <Badge tone="success" icon={CircleCheck}>
-      {formatIsoDate(validUntil)} gacha
+      {t("until", { date: formatIsoDate(validUntil) })}
     </Badge>
   );
 }
@@ -105,6 +103,8 @@ function serialize(f: CounterpartyQuery): string {
 }
 
 export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
+  const t = useTranslations("counterparties.list");
+  const ts = useTranslations("counterparties.status");
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -117,7 +117,7 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
   const [open, setOpen] = useState<number | "new" | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const isCustomer = role === "CUSTOMER";
-  const title = isCustomer ? "Mijozlar" : "Yetkazib beruvchilar";
+  const title = isCustomer ? t("customers") : t("suppliers");
 
   const apply = (patch: Partial<CounterpartyQuery>) => {
     const qs = serialize({ ...f, page: 1, ...patch });
@@ -125,27 +125,27 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
   };
 
   const columns: TableColumn<CounterpartyRow>[] = [
-    { key: "tin", title: "STIR", mono: true, width: 140 },
+    { key: "tin", title: t("col.tin"), mono: true, width: 140 },
     {
       key: "name",
-      title: "Nomi",
+      title: t("col.name"),
       render: (c) => (
         <span className="flex flex-col">
           <span className="flex items-center gap-2">
             {c.name}
-            {c.customer && c.supplier ? <Badge tone="info">{isCustomer ? "YB ham" : "Mijoz ham"}</Badge> : null}
+            {c.customer && c.supplier ? <Badge tone="info">{isCustomer ? t("alsoSupplier") : t("alsoCustomer")}</Badge> : null}
           </span>
           {c.legalName ? <span className="text-caption text-text-secondary">{c.legalName}</span> : null}
           {c.match ? <span className="text-caption text-text-secondary">{searchMatchLabel(c.match)}</span> : null}
         </span>
       ),
     },
-    { key: "region", title: "Hudud" },
-    { key: "phone", title: "Telefon" },
+    { key: "region", title: t("col.region") },
+    { key: "phone", title: t("col.phone") },
     ...(isCustomer
-      ? [{ key: "license", title: "Litsenziya", render: (c: CounterpartyRow) => <LicenseBadge validUntil={c.licenseValidUntil} /> }]
+      ? [{ key: "license", title: t("col.license"), render: (c: CounterpartyRow) => <LicenseBadge validUntil={c.licenseValidUntil} /> }]
       : []),
-    { key: "status", title: "Holat", render: (c: CounterpartyRow) => <StatusBadge blocked={c.blocked} active={c.active} /> },
+    { key: "status", title: t("col.status"), render: (c: CounterpartyRow) => <StatusBadge blocked={c.blocked} active={c.active} /> },
   ];
 
   const filtered = Boolean(f.q) || f.status !== "ACTIVE" || f.regionId !== null;
@@ -154,11 +154,11 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-baseline gap-3">
           <h1 className="text-page-title">{title}</h1>
-          {list.data ? <span className="text-text-secondary">{formatQuantity(list.data.total)} ta</span> : null}
+          {list.data ? <span className="text-text-secondary">{t("count", { count: formatQuantity(list.data.total) })}</span> : null}
         </div>
         {canEdit ? (
           <Button icon={Plus} onClick={() => setOpen("new")}>
-            {isCustomer ? "Mijoz qoʻshish" : "Yetkazib beruvchi qoʻshish"}
+            {isCustomer ? t("addCustomer") : t("addSupplier")}
           </Button>
         ) : null}
       </div>
@@ -177,7 +177,7 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
             <div className="flex flex-wrap items-center gap-3">
               <div className="w-80">
                 <TextField
-                  label="Qidirish"
+                  label={t("search")}
                   variant="search"
                   size="sm"
                   value={search}
@@ -186,30 +186,30 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
                     clearTimeout(debounce.current);
                     debounce.current = setTimeout(() => apply({ q: v }), 300);
                   }}
-                  placeholder="Nom, STIR, telefon (lotin yoki kirill)"
+                  placeholder={t("searchPlaceholder")}
                   className="[&>label]:sr-only"
                 />
               </div>
               <div className="w-56">
                 <Select
-                  label="Hudud"
+                  label={t("region")}
                   size="sm"
                   searchable
                   value={f.regionId ? String(f.regionId) : null}
                   onChange={(v) => apply({ regionId: v ? Number(v) : null })}
-                  placeholder="Barcha hududlar"
+                  placeholder={t("allRegions")}
                   className="[&>span:first-child]:sr-only"
                   options={(regions.data ?? []).map((r) => ({ value: String(r.id), label: r.name }))}
                 />
               </div>
               <div className="w-40">
                 <Select
-                  label="Holat"
+                  label={t("status")}
                   size="sm"
                   value={f.status}
                   onChange={(v) => apply({ status: (v as CounterpartyStatus | null) ?? "ACTIVE" })}
                   className="[&>span:first-child]:sr-only"
-                  options={STATUS_OPTIONS}
+                  options={STATUS_VALUES.map((value) => ({ value, label: ts(value) }))}
                 />
               </div>
               <div className="ml-auto">
@@ -229,11 +229,7 @@ export function CounterpartiesPage({ role }: { role: CounterpartyRole }) {
             filtered ? (
               <NoResultsState onClearFilters={() => (setSearch(""), apply({ q: "", status: "ACTIVE", regionId: null }))} />
             ) : (
-              <EmptyState
-                icon={Users}
-                title={isCustomer ? "Hali mijoz qoʻshilmagan" : "Hali yetkazib beruvchi qoʻshilmagan"}
-                description="Bitta STIR — bitta karta: mijoz yetkazib beruvchi ham boʻlishi mumkin. Shartlar har filial boʻyicha alohida."
-              />
+              <EmptyState icon={Users} title={isCustomer ? t("emptyCustomers") : t("emptySuppliers")} description={t("emptyDescription")} />
             )
           }
           pagination={

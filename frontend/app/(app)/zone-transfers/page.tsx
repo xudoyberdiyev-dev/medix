@@ -5,7 +5,7 @@ import { ZoneTransfersPage } from "@/features/zone-transfers/zone-transfers-page
 export default function Page() {
   return (
     <>
-      <TopBar title="Zona koʻchirishlari" />
+      <TopBar titleKey="zoneTransfers" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <ZoneTransfersPage />

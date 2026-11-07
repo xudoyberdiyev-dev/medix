@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Modal } from "@/components/ui/modal";
@@ -40,6 +41,7 @@ export function OtherBatchModal({
   onPick: (batch: PickBatch) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("orders");
   const [value, setValue] = useState<string | null>(null);
   const batches = useQuery({
     queryKey: ["orders", "pick-batches", orderId, line?.id],
@@ -59,9 +61,9 @@ export function OtherBatchModal({
     <Modal
       open={line !== null}
       onClose={close}
-      title="Boshqa partiyadan oldim"
+      title={t("otherBatch.title")}
       primaryAction={{
-        label: "Partiyani tanlash",
+        label: t("otherBatch.choose"),
         disabled: !chosen?.enough,
         onClick: () => {
           if (chosen) onPick(chosen.batch);
@@ -69,20 +71,17 @@ export function OtherBatchModal({
         },
       }}
     >
-      <p className="mb-3">
-        {line?.name} — {formatQuantity(line?.qty ?? 0)} dona. Qoʻlingizdagi partiyani tanlang: yigʻish FEFO dan chetlashish sifatida
-        belgilanadi.
-      </p>
+      <p className="mb-3">{t("otherBatch.intro", { name: line?.name ?? "", qty: formatQuantity(line?.qty ?? 0) })}</p>
       {batches.error ? (
         <ErrorState onRetry={() => batches.refetch()} />
       ) : batches.isPending ? (
         <Skeleton className="h-24 w-full" />
       ) : options.length === 0 ? (
-        <Alert tone="warning" title="Boshqa partiya yoʻq">
-          Omborda bu mahsulotning boshqa yaroqli partiyasi topilmadi. Koʻrsatilgan partiyadan oling yoki «Muammo bor» ni bosing.
+        <Alert tone="warning" title={t("otherBatch.noneTitle")}>
+          {t("otherBatch.noneHint")}
         </Alert>
       ) : (
-        <div className="flex flex-col gap-2" role="radiogroup" aria-label="Partiyalar">
+        <div className="flex flex-col gap-2" role="radiogroup" aria-label={t("otherBatch.aria")}>
           {options.map(({ batch, enough }) => (
             <Radio
               key={batch.batchId}
@@ -94,8 +93,8 @@ export function OtherBatchModal({
               label={batchLabel(batch)}
               description={
                 enough
-                  ? `Boʻsh: ${formatQuantity(batch.free)} dona${batch.reserved > 0 ? " · shu qator zahirasida" : ""}`
-                  : `Boʻsh: ${formatQuantity(batch.free)} dona — yetmaydi`
+                  ? t(batch.reserved > 0 ? "otherBatch.freeReserved" : "otherBatch.free", { qty: formatQuantity(batch.free) })
+                  : t("otherBatch.freeShort", { qty: formatQuantity(batch.free) })
               }
             />
           ))}

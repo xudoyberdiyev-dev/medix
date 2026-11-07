@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Banknote, Building2, Plus, TriangleAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/compon
 import { Table, type TableColumn } from "@/components/ui/table";
 import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { OK_STATUS_LABELS } from "@/features/warehouse-transfers/api";
+import { OK_STATUSES } from "@/features/warehouse-transfers/api";
 import { WarehouseTransferStatusBadge } from "@/features/warehouse-transfers/warehouse-transfers-page";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
@@ -28,6 +29,8 @@ import { BranchPayDialog, BranchPaymentsList, canPayFor, useBranchPayments } fro
 
 /** FS — filiallararo savdo: Qoralama → Yoʻlda (HF, xaridor filial qarzi) → Qabul qilindi. */
 export function BranchSalesPage() {
+  const t = useTranslations("branchSales");
+  const tw = useTranslations("warehouseTransfers");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const params = useSearchParams();
@@ -47,31 +50,31 @@ export function BranchSalesPage() {
   const payments = useBranchPayments(canSeePayments);
   const [paying, setPaying] = useState<BranchBalance | null>(null);
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={tw("forbidden")} />;
 
   const showMoney = (docs.data?.items ?? []).some((d) => d.total !== null && d.total !== undefined);
   const columns: TableColumn<BranchSaleSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "createdAt", title: "Sana", render: (d) => formatDateTime(new Date(d.createdAt)) },
+    { key: "number", title: tw("col.number"), mono: true },
+    { key: "createdAt", title: tw("col.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
     {
       key: "route",
-      title: "Sotuvchi → xaridor",
+      title: t("col.route"),
       wrap: true,
       render: (d) => (
         <span className="flex items-center gap-1">
           {d.seller.name}
-          <ArrowRight size={14} strokeWidth={1.5} aria-label="dan" className="text-text-secondary" />
+          <ArrowRight size={14} strokeWidth={1.5} aria-label={tw("routeArrow")} className="text-text-secondary" />
           {d.buyer.name} · {d.toWarehouse.name}
         </span>
       ),
     },
     { key: "invoiceNumber", title: "HF", mono: true, render: (d) => d.invoiceNumber ?? "—" },
-    { key: "qty", title: "Miqdor", align: "right", render: (d) => formatQuantity(d.qty) },
+    { key: "qty", title: tw("col.qty"), align: "right", render: (d) => formatQuantity(d.qty) },
     ...(showMoney
       ? [
           {
             key: "total",
-            title: "Summa",
+            title: t("col.total"),
             align: "right" as const,
             render: (d: BranchSaleSummary) => (d.total ? formatMoney(d.total) : "—"),
           },
@@ -79,7 +82,7 @@ export function BranchSalesPage() {
       : []),
     {
       key: "shortageQty",
-      title: "Kamomad",
+      title: tw("col.shortage"),
       align: "right",
       render: (d) =>
         d.shortageQty > 0 ? (
@@ -90,44 +93,42 @@ export function BranchSalesPage() {
           "—"
         ),
     },
-    { key: "status", title: "Holat", render: (d) => <WarehouseTransferStatusBadge status={d.status} /> },
+    { key: "status", title: tw("col.status"), render: (d) => <WarehouseTransferStatusBadge status={d.status} /> },
   ];
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Filiallararo savdo</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setOpen({ id: null })}>
-            Savdo tuzish
+            {t("create")}
           </Button>
         ) : null}
       </div>
       {balances.data && (balances.data.length > 0 || (payments.data?.length ?? 0) > 0) ? (
-        <section aria-label="Filiallararo qarz" className="mb-4 rounded-card border border-border bg-surface p-4">
-          <h2 className="mb-2 text-section-title">Filiallararo qarz</h2>
+        <section aria-label={t("debt.title")} className="mb-4 rounded-card border border-border bg-surface p-4">
+          <h2 className="mb-2 text-section-title">{t("debt.title")}</h2>
           <ul className="flex flex-col gap-1 text-body">
             {balances.data.map((b) => (
               <li key={`${b.debtor.id}-${b.creditor.id}`} className="flex items-center justify-between gap-4">
                 <span className="flex items-center gap-1">
                   {b.debtor.name}
-                  <ArrowRight size={14} strokeWidth={1.5} aria-label="qarzdor" className="text-text-secondary" />
+                  <ArrowRight size={14} strokeWidth={1.5} aria-label={t("debt.arrow")} className="text-text-secondary" />
                   {b.creditor.name}
                 </span>
                 <span className="flex items-center gap-2">
                   <span className="tabular-nums">{formatMoney(b.amount)}</span>
                   {canPayFor(me.data, b.debtor.id) && !b.amount.startsWith("-") ? (
                     <Button variant="secondary" size="sm" icon={Banknote} onClick={() => setPaying(b)}>
-                      Toʻlash
+                      {t("debt.pay")}
                     </Button>
                   ) : null}
                 </span>
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-caption text-text-secondary">
-            Guruh ichidagi qarz — mijozlar va yetkazib beruvchilar qarzi jamiga kirmaydi.
-          </p>
+          <p className="mt-2 text-caption text-text-secondary">{t("debt.note")}</p>
           <BranchPaymentsList enabled={canSeePayments} />
         </section>
       ) : null}
@@ -136,7 +137,7 @@ export function BranchSalesPage() {
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (
         <Table
-          caption="Filiallararo savdo"
+          caption={t("title")}
           columns={columns}
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
@@ -145,13 +146,13 @@ export function BranchSalesPage() {
           toolbar={
             <div className="w-56">
               <Select
-                label="Holat"
+                label={tw("filter.status")}
                 size="sm"
                 value={status}
                 onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder="Barcha holatlar"
+                placeholder={tw("filter.allStatuses")}
                 className="[&>span:first-child]:sr-only"
-                options={Object.entries(OK_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                options={OK_STATUSES.map((value) => ({ value, label: tw(`status.${value}`) }))}
               />
             </div>
           }
@@ -161,12 +162,12 @@ export function BranchSalesPage() {
             ) : (
               <EmptyState
                 icon={Building2}
-                title="Hali filiallararo savdo yoʻq"
-                description="Tovarni boshqa filialga tannarxda soting: qoralama → joʻnatish (HF) → xaridor qabul qiladi."
+                title={t("empty.title")}
+                description={t("empty.description", { hf: "HF" })}
                 action={
                   canCreate ? (
                     <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
-                      Savdo tuzish
+                      {t("create")}
                     </Button>
                   ) : undefined
                 }

@@ -26,7 +26,10 @@ export const OP_STATUS: Record<CashOpStatus, string> = {
   CANCELLED: "Bekor qilingan",
 };
 
-export const DOC_TITLE: Record<string, string> = {
+export type DocTitleKey = "MT" | "YT" | "KO" | "BO" | "IO" | "FIO";
+
+/** Hujjat turi nomi (uz-Latn). UI'da tarjima: `cash.docType.<tur>` (`isDocTitleKey` bilan). */
+export const DOC_TITLE: Record<DocTitleKey, string> = {
   MT: "Mijozdan toʻlov",
   YT: "Yetkazib beruvchiga toʻlov",
   KO: "Kassa operatsiyasi",
@@ -34,6 +37,8 @@ export const DOC_TITLE: Record<string, string> = {
   IO: "Oʻtkazma",
   FIO: "Filiallararo toʻlov",
 };
+
+export const isDocTitleKey = (v: string): v is DocTitleKey => Object.hasOwn(DOC_TITLE, v);
 
 export function useCashOps(branchId: number | null, status: CashOpStatus | null) {
   return useQuery({

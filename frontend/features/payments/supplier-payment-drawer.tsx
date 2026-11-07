@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Ban, CircleCheck, FilePen, Hourglass, Save, Send, Undo2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -20,12 +21,10 @@ import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney } from "@/lib/format";
 import {
-  ACCOUNT_KIND,
   PAYMENT_CANCEL,
   PAYMENT_YT,
   PAYMENT_YT_APPROVE,
   PAYMENT_YT_DIRECT,
-  SUPPLIER_PAYMENT_STATUS,
   searchSuppliers,
   useAccounts,
   useSupplierOpenDocs,
@@ -37,6 +36,7 @@ import { OpenDocsSection } from "./open-docs";
 import { Allocations } from "./payment-drawer";
 
 export function SupplierPaymentStatusBadge({ status }: { status: SupplierPaymentStatus }) {
+  const t = useTranslations("payments");
   const map = {
     DRAFT: { tone: "neutral", icon: FilePen },
     PENDING: { tone: "warning", icon: Hourglass },
@@ -45,7 +45,7 @@ export function SupplierPaymentStatusBadge({ status }: { status: SupplierPayment
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {SUPPLIER_PAYMENT_STATUS[status]}
+      {t(`supplierStatus.${status}`)}
     </Badge>
   );
 }
@@ -56,17 +56,18 @@ export function SupplierPaymentDrawer(props: {
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const t = useTranslations("payments.mt");
   const one = useSupplierPayment(props.id);
   if (props.id != null && one.error) {
     return (
-      <Drawer open onClose={props.onClose} kind="Toʻlov" title="Toʻlov">
+      <Drawer open onClose={props.onClose} kind={t("payment")} title={t("payment")}>
         <ErrorState onRetry={() => one.refetch()} />
       </Drawer>
     );
   }
   if (props.id != null && !one.data) {
     return (
-      <Drawer open onClose={props.onClose} kind="Toʻlov" title="Toʻlov">
+      <Drawer open onClose={props.onClose} kind={t("payment")} title={t("payment")}>
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
@@ -80,6 +81,8 @@ function Editor(props: {
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const t = useTranslations("payments.yt");
+  const tp = useTranslations("payments");
   const { doc } = props;
   const me = useMe();
   const qc = useQueryClient();
@@ -108,12 +111,12 @@ function Editor(props: {
 
   function body() {
     setLocal(null);
-    if (props.branchId == null) return (setLocal("Filialni tanlang."), null);
-    if (!supplier) return (setLocal("Yetkazib beruvchini tanlang."), null);
-    if (!account) return (setLocal("Hisobni tanlang (kassa yoki bank)."), null);
+    if (props.branchId == null) return (setLocal(tp("form.selectBranch")), null);
+    if (!supplier) return (setLocal(t("selectSupplier")), null);
+    if (!account) return (setLocal(t("selectAccount")), null);
     const iso = parseUzDate(date);
-    if (iso === null) return (setLocal("Sana notoʻgʻri. Masalan: 04.10.2026."), null);
-    if (!amount) return (setLocal("Summani kiriting."), null);
+    if (iso === null) return (setLocal(tp("form.badDate")), null);
+    if (!amount) return (setLocal(tp("form.enterAmount")), null);
     return {
       branchId: props.branchId,
       supplierId: Number(supplier),
@@ -159,7 +162,7 @@ function Editor(props: {
     run("save", async () => {
       const d = await save();
       if (!d) return;
-      toast({ tone: "success", title: "Qoralama saqlandi", description: d.number });
+      toast({ tone: "success", title: tp("form.draftSaved"), description: d.number });
       if (!doc) props.onCreated(d.id);
     });
 
@@ -169,7 +172,7 @@ function Editor(props: {
       if (!d) return;
       await unwrap(api.POST("/api/payments/supplier/{id}/send", { params: { path: { id: d.id } } }));
       await refresh();
-      toast({ tone: "success", title: "Tasdiqqa yuborildi", description: d.number });
+      toast({ tone: "success", title: t("sent"), description: d.number });
       if (!doc) props.onCreated(d.id);
     });
 
@@ -186,7 +189,11 @@ function Editor(props: {
             api.POST("/api/payments/supplier/{id}/post", { params: { path: { id: d.id } }, body: { allocations: allocations() } }),
           );
       await refresh();
-      toast({ tone: "success", title: "Toʻlov oʻtkazildi", description: `${r.number} · ${formatMoney(r.amount)} soʻm` });
+      toast({
+        tone: "success",
+        title: tp("mt.posted"),
+        description: tp("form.amountLine", { number: r.number, amount: formatMoney(r.amount) }),
+      });
       if (!doc) props.onCreated(r.id);
     });
 
@@ -201,7 +208,7 @@ function Editor(props: {
       await refresh();
       setDialog(null);
       setReason("");
-      toast({ tone: "success", title: dialog === "cancel" ? "Toʻlov bekor qilindi" : "Qoralamaga qaytarildi" });
+      toast({ tone: "success", title: dialog === "cancel" ? tp("mt.cancelled") : t("returned") });
     });
 
   const err = describeError(error);
@@ -210,36 +217,36 @@ function Editor(props: {
     <>
       {canCancel ? (
         <Button variant="tertiary" icon={Ban} onClick={() => setDialog("cancel")}>
-          Bekor qilish
+          {tp("form.cancel")}
         </Button>
       ) : null}
       {approver ? (
         <>
           <Button variant="secondary" icon={Undo2} onClick={() => setDialog("return")}>
-            Qoralamaga qaytarish
+            {t("returnTitle")}
           </Button>
           <Button icon={CircleCheck} loading={pending === "post"} onClick={() => void onPost(true)}>
-            Tasdiqlash va oʻtkazish
+            {t("approvePost")}
           </Button>
         </>
       ) : null}
       {editable ? (
         <>
           <Button variant="tertiary" icon={Save} loading={pending === "save"} onClick={() => void onSave()}>
-            Saqlash
+            {tp("form.save")}
           </Button>
           {direct ? (
             <>
               <Button variant="secondary" icon={Send} loading={pending === "send"} onClick={() => void onSend()}>
-                Tasdiqqa yuborish
+                {t("send")}
               </Button>
               <Button icon={CircleCheck} loading={pending === "post"} onClick={() => void onPost(false)}>
-                Oʻtkazish
+                {tp("form.post")}
               </Button>
             </>
           ) : (
             <Button icon={Send} loading={pending === "send"} onClick={() => void onSend()}>
-              Tasdiqqa yuborish
+              {t("send")}
             </Button>
           )}
         </>
@@ -252,8 +259,8 @@ function Editor(props: {
       open
       onClose={props.onClose}
       size="lg"
-      kind="Yetkazib beruvchiga toʻlov"
-      title={doc ? doc.number : "Yangi toʻlov"}
+      kind={t("kind")}
+      title={doc ? doc.number : tp("mt.new")}
       subtitle={doc ? `${doc.supplier}${doc.supplierTin ? ` · ${doc.supplierTin}` : ""}` : undefined}
       status={doc ? <SupplierPaymentStatusBadge status={doc.status} /> : undefined}
       actions={actions}
@@ -261,20 +268,22 @@ function Editor(props: {
       <div className="flex flex-col gap-4">
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {local ? <Alert tone="warning" title={local} /> : null}
-        {doc?.returnedReason && status === "DRAFT" ? <Alert tone="warning" title={`Qaytarildi: ${doc.returnedReason}`} /> : null}
+        {doc?.returnedReason && status === "DRAFT" ? (
+          <Alert tone="warning" title={t("returnedReason", { reason: doc.returnedReason })} />
+        ) : null}
         {status === "PENDING" ? (
-          <Alert tone="info" title="Tasdiqlashda — Filial rahbari yoki Direktor tasdiqlaydi">
-            Yubordi: {doc?.sentBy ?? ""}
+          <Alert tone="info" title={t("pendingTitle")}>
+            {t("sentBy", { name: doc?.sentBy ?? "" })}
           </Alert>
         ) : null}
         {doc?.status === "CANCELLED" ? (
-          <Alert tone="info" title={`Bekor qilindi: ${doc.cancelReason ?? ""}`}>
+          <Alert tone="info" title={tp("form.cancelledReason", { reason: doc.cancelReason ?? "" })}>
             {doc.cancelledBy}
           </Alert>
         ) : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Select
-            label="Yetkazib beruvchi"
+            label={t("supplier")}
             value={supplier}
             loadOptions={async (q) => {
               const found = await searchSuppliers(q);
@@ -286,14 +295,14 @@ function Editor(props: {
               setSupplierLabel(v ? (labels.current.get(v) ?? "") : "");
               setAlloc({});
             }}
-            placeholder={supplierLabel || "Nom yoki STIR"}
+            placeholder={supplierLabel || t("supplierPlaceholder")}
             options={supplier && supplierLabel ? [{ value: supplier, label: supplierLabel }] : []}
             disabled={!editable}
             required
             className="md:col-span-2"
           />
           <Select
-            label="Hisob"
+            label={tp("form.account")}
             value={account}
             onChange={setAccount}
             options={(accounts.data ?? [])
@@ -303,17 +312,32 @@ function Editor(props: {
                   (String(a.id) === account || usableAccount(a, accounts.data ?? [], me.data?.id, can(me.data, CASH_APPROVE))) &&
                   a.kind !== "TERMINAL",
               )
-              .map((a) => ({ value: String(a.id), label: `${ACCOUNT_KIND[a.kind]} · ${a.name}`, sub: `qoldiq ${formatMoney(a.balance)}` }))}
+              .map((a) => ({
+                value: String(a.id),
+                label: `${tp(`accountKind.${a.kind}`)} · ${a.name}`,
+                sub: t("balanceSub", { amount: formatMoney(a.balance) }),
+              }))}
             disabled={!editable}
             required
           />
-          <TextField label="Sana" value={date} onChange={setDate} placeholder="04.10.2026" disabled={!editable} />
-          <TextField label="Summa" variant="amount" value={amount} onChange={setAmount} disabled={!editable} required suffix="soʻm" />
-          <TextField label="Izoh" value={note} onChange={setNote} maxLength={500} disabled={!editable} />
+          <TextField label={tp("form.date")} value={date} onChange={setDate} placeholder="04.10.2026" disabled={!editable} />
+          <TextField
+            label={tp("form.amount")}
+            variant="amount"
+            value={amount}
+            onChange={setAmount}
+            disabled={!editable}
+            required
+            suffix={tp("currency")}
+          />
+          <TextField label={tp("form.note")} value={note} onChange={setNote} maxLength={500} disabled={!editable} />
         </div>
         {chosen && status !== "POSTED" && status !== "CANCELLED" ? (
           <p className="text-caption text-text-secondary">
-            Hisob qoldigʻi: <span className="font-mono">{formatMoney(chosen.balance)}</span> soʻm
+            {t.rich("accountBalance", {
+              amount: formatMoney(chosen.balance),
+              num: (chunks) => <span className="font-mono">{chunks}</span>,
+            })}
           </p>
         ) : null}
         {doc && (status === "POSTED" || status === "CANCELLED") ? (
@@ -333,23 +357,17 @@ function Editor(props: {
       <Modal
         open={dialog !== null}
         onClose={() => setDialog(null)}
-        title={dialog === "cancel" ? "Toʻlovni bekor qilish" : "Qoralamaga qaytarish"}
+        title={dialog === "cancel" ? tp("mt.cancelTitle") : t("returnTitle")}
         tone={dialog === "cancel" ? "danger" : "default"}
         primaryAction={{
-          label: dialog === "cancel" ? "Bekor qilish" : "Qaytarish",
+          label: dialog === "cancel" ? tp("form.cancel") : t("return"),
           onClick: () => void onDialog(),
           loading: pending === "dialog",
           disabled: !reason.trim(),
         }}
       >
-        <p className="mb-3">
-          {dialog === "cancel"
-            ? status === "POSTED"
-              ? "YB oldidagi qarz va hisob qoldigʻi teskari yoziladi (pul hisobga qaytadi)."
-              : "Toʻlov bekor qilinadi."
-            : "Toʻlov qoralamaga qaytadi — tayyorlovchi sababni koʻradi."}
-        </p>
-        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} />
+        <p className="mb-3">{dialog === "cancel" ? (status === "POSTED" ? t("cancelPosted") : t("cancelDraft")) : t("returnHint")}</p>
+        <TextField label={tp("form.reason")} value={reason} onChange={setReason} maxLength={300} />
       </Modal>
     </Drawer>
   );

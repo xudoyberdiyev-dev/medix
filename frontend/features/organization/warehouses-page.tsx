@@ -13,6 +13,7 @@ import {
   Vault,
   Warehouse as WarehouseIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +31,6 @@ import { useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import {
   OPTIONAL_ZONES,
-  ZONE_LABELS,
   missingOptionalZones,
   useActivateWarehouse,
   useAddZone,
@@ -49,8 +49,9 @@ import { DeactivateDialog } from "./deactivate-dialog";
 const ZONE_ICONS: Partial<Record<ZoneType, typeof Snowflake>> = { COLD: Snowflake, SAFE: Vault };
 
 function ZoneBadge({ zone }: { zone: Zone }) {
+  const t = useTranslations("organization");
   return (
-    <span title={zone.sellable ? "Sotuvga ochiq" : "Sotuvga yopiq"}>
+    <span title={zone.sellable ? t("sellableOpen") : t("sellableClosed")}>
       <Badge tone={zone.sellable ? "success" : "neutral"} icon={zone.sellable ? ShoppingCart : Lock}>
         {zone.name}
       </Badge>
@@ -59,6 +60,7 @@ function ZoneBadge({ zone }: { zone: Zone }) {
 }
 
 export function WarehousesPage() {
+  const t = useTranslations("organization");
   const me = useMe();
   const warehouses = useWarehouses();
   const branches = useBranchList();
@@ -70,8 +72,7 @@ export function WarehousesPage() {
   const [editing, setEditing] = useState<Warehouse | "new" | null>(null);
   const [deactivating, setDeactivating] = useState<Warehouse | null>(null);
 
-  if (me.data && !can(me.data, "warehouses.view"))
-    return <ForbiddenState description="Omborlarni Direktor va Bosh administrator boshqaradi." />;
+  if (me.data && !can(me.data, "warehouses.view")) return <ForbiddenState description={t("warehouses.forbidden")} />;
 
   const branchName = (id: number) => branches.data?.find((b) => b.id === id)?.name ?? "";
   const q = query.trim().toLocaleLowerCase("uz");
@@ -83,10 +84,10 @@ export function WarehousesPage() {
   const multiBranch = (branches.data?.length ?? 0) > 1;
 
   const columns: TableColumn<Warehouse>[] = [
-    ...(multiBranch ? [{ key: "branch", title: "Filial", render: (w: Warehouse) => branchName(w.branchId) }] : []),
+    ...(multiBranch ? [{ key: "branch", title: t("branch"), render: (w: Warehouse) => branchName(w.branchId) }] : []),
     {
       key: "name",
-      title: "Ombor",
+      title: t("warehouses.warehouse"),
       render: (w) => (
         <span className="flex flex-col">
           <span>{w.name}</span>
@@ -96,7 +97,7 @@ export function WarehousesPage() {
     },
     {
       key: "zones",
-      title: "Zonalar",
+      title: t("warehouses.zones"),
       render: (w) => (
         <span className="flex flex-wrap gap-1">
           {w.zones.map((z) => (
@@ -107,15 +108,15 @@ export function WarehousesPage() {
     },
     {
       key: "active",
-      title: "Holat",
+      title: t("status"),
       render: (w) =>
         w.active ? (
           <Badge tone="success" icon={CircleCheck}>
-            Faol
+            {t("active")}
           </Badge>
         ) : (
           <Badge tone="neutral" icon={CirclePause}>
-            Nofaol
+            {t("inactive")}
           </Badge>
         ),
     },
@@ -123,20 +124,21 @@ export function WarehousesPage() {
 
   function menu(w: Warehouse): RowMenuItem[] {
     const items: RowMenuItem[] = [
-      { key: "edit", label: "Tahrirlash", icon: <Pencil size={16} strokeWidth={1.5} aria-hidden />, onSelect: () => setEditing(w) },
+      { key: "edit", label: t("edit"), icon: <Pencil size={16} strokeWidth={1.5} aria-hidden />, onSelect: () => setEditing(w) },
     ];
     for (const type of missingOptionalZones(w)) {
       const ZoneIcon = ZONE_ICONS[type] ?? Plus;
       items.push({
         key: `zone-${type}`,
-        label: `${ZONE_LABELS[type]} zonasini qoʻshish`,
+        label: t("warehouses.addZone", { zone: t(`zone.${type}`) }),
         icon: <ZoneIcon size={16} strokeWidth={1.5} aria-hidden />,
         onSelect: () =>
           addZone.mutate(
             { id: w.id, type },
             {
-              onSuccess: () => toast({ tone: "success", title: `${ZONE_LABELS[type]} zonasi qoʻshildi`, description: w.name }),
-              onError: (e) => toast({ tone: "danger", title: "Zona qoʻshilmadi", description: describeError(e).message ?? "" }),
+              onSuccess: () =>
+                toast({ tone: "success", title: t("warehouses.zoneAdded", { zone: t(`zone.${type}`) }), description: w.name }),
+              onError: (e) => toast({ tone: "danger", title: t("warehouses.zoneAddFailed"), description: describeError(e).message ?? "" }),
             },
           ),
       });
@@ -145,18 +147,19 @@ export function WarehousesPage() {
       w.active
         ? {
             key: "deactivate",
-            label: "Nofaol qilish",
+            label: t("deactivate"),
             icon: <PowerOff size={16} strokeWidth={1.5} aria-hidden />,
             onSelect: () => (deactivate.reset(), setDeactivating(w)),
           }
         : {
             key: "activate",
-            label: "Faollashtirish",
+            label: t("activate"),
             icon: <Power size={16} strokeWidth={1.5} aria-hidden />,
             onSelect: () =>
               activate.mutate(w.id, {
-                onSuccess: () => toast({ tone: "success", title: "Ombor faollashtirildi", description: w.name }),
-                onError: (e) => toast({ tone: "danger", title: "Ombor faollashtirilmadi", description: describeError(e).message ?? "" }),
+                onSuccess: () => toast({ tone: "success", title: t("warehouses.activated"), description: w.name }),
+                onError: (e) =>
+                  toast({ tone: "danger", title: t("warehouses.activateFailed"), description: describeError(e).message ?? "" }),
               }),
           },
     );
@@ -166,16 +169,16 @@ export function WarehousesPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Omborlar va zonalar</h1>
+        <h1 className="text-page-title">{t("warehouses.title")}</h1>
         <Button icon={Plus} onClick={() => setEditing("new")}>
-          Ombor qoʻshish
+          {t("warehouses.add")}
         </Button>
       </div>
       {warehouses.error ? (
         <ErrorState onRetry={() => warehouses.refetch()} />
       ) : (
         <Table
-          caption="Omborlar"
+          caption={t("warehouses.caption")}
           columns={columns}
           rows={rows}
           rowKey={(w) => String(w.id)}
@@ -185,23 +188,23 @@ export function WarehousesPage() {
             <div className="flex items-center gap-3">
               <div className="w-72">
                 <TextField
-                  label="Qidirish"
+                  label={t("search")}
                   variant="search"
                   size="sm"
                   value={query}
                   onChange={setQuery}
-                  placeholder="Ombor nomi yoki manzil"
+                  placeholder={t("warehouses.searchPlaceholder")}
                   className="[&>label]:sr-only"
                 />
               </div>
               {multiBranch ? (
                 <div className="w-56">
                   <Select
-                    label="Filial"
+                    label={t("branch")}
                     size="sm"
                     value={branchFilter}
                     onChange={setBranchFilter}
-                    placeholder="Barcha filiallar"
+                    placeholder={t("allBranches")}
                     className="[&>span:first-child]:sr-only"
                     options={(branches.data ?? []).map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
                   />
@@ -214,11 +217,7 @@ export function WarehousesPage() {
             query || branchFilter ? (
               <NoResultsState onClearFilters={() => (setQuery(""), setBranchFilter(null))} />
             ) : (
-              <EmptyState
-                icon={WarehouseIcon}
-                title="Hali ombor qoʻshilmagan"
-                description="Har omborda Qabul, Asosiy saqlash, Karantin va Joʻnatish zonalari avtomatik yaratiladi."
-              />
+              <EmptyState icon={WarehouseIcon} title={t("warehouses.emptyTitle")} description={t("warehouses.emptyDescription")} />
             )
           }
         />
@@ -233,9 +232,9 @@ export function WarehousesPage() {
       ) : null}
       {deactivating ? (
         <DeactivateDialog
-          title={`«${deactivating.name}» omborini nofaol qilasizmi?`}
-          consequence="Ombor roʻyxatlarda «Nofaol» boʻlib qoladi, unga yangi hujjat kiritilmaydi. Maʼlumotlari va tarixi saqlanadi — keyin faollashtirish mumkin."
-          actionLabel="Omborni nofaol qilish"
+          title={t("warehouses.deactivateTitle", { name: deactivating.name })}
+          consequence={t("warehouses.deactivateConsequence")}
+          actionLabel={t("warehouses.deactivateAction")}
           pending={deactivate.isPending}
           error={deactivate.error}
           onClose={() => setDeactivating(null)}
@@ -244,7 +243,7 @@ export function WarehousesPage() {
               { id: deactivating.id, reason },
               {
                 onSuccess: () => (
-                  toast({ tone: "success", title: "Ombor nofaol qilindi", description: deactivating.name }),
+                  toast({ tone: "success", title: t("warehouses.deactivated"), description: deactivating.name }),
                   setDeactivating(null)
                 ),
               },
@@ -257,6 +256,7 @@ export function WarehousesPage() {
 }
 
 function CreateWarehouseDrawer({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("organization");
   const me = useMe();
   const branches = useBranchList();
   const create = useCreateWarehouse();
@@ -271,12 +271,16 @@ function CreateWarehouseDrawer({ onClose }: { onClose: () => void }) {
 
   function submit(e?: FormEvent) {
     e?.preventDefault();
-    if (!effectiveBranch) return setBranchError("Filial tanlanmagan. Ombor qaysi filialga tegishli ekanini tanlang.");
+    if (!effectiveBranch) return setBranchError(t("warehouses.branchRequired"));
     create.mutate(
       { branchId: Number(effectiveBranch), name, address: address || undefined, extraZones: extra },
       {
         onSuccess: (w) => (
-          toast({ tone: "success", title: "Ombor qoʻshildi", description: `${w.name}: ${w.zones.length} ta zona` }),
+          toast({
+            tone: "success",
+            title: t("warehouses.added"),
+            description: t("warehouses.addedDescription", { name: w.name, count: w.zones.length }),
+          }),
           onClose()
         ),
       },
@@ -288,22 +292,22 @@ function CreateWarehouseDrawer({ onClose }: { onClose: () => void }) {
       open
       onClose={onClose}
       size="lg"
-      kind="Ombor"
-      title="Yangi ombor"
+      kind={t("warehouses.warehouse")}
+      title={t("warehouses.new")}
       actions={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Ortga
+            {t("back")}
           </Button>
           <Button loading={create.isPending} onClick={() => submit()}>
-            Omborni saqlash
+            {t("warehouses.save")}
           </Button>
         </>
       }
     >
       <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
         <Select
-          label="Filial"
+          label={t("branch")}
           required
           value={effectiveBranch}
           onChange={(v) => (setBranchId(v), setBranchError(undefined))}
@@ -311,18 +315,18 @@ function CreateWarehouseDrawer({ onClose }: { onClose: () => void }) {
           options={activeBranches.map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
           className="col-span-2"
         />
-        <TextField label="Nomi" value={name} onChange={setName} error={err.fields.name} required />
-        <TextField label="Manzil" value={address} onChange={setAddress} error={err.fields.address} />
+        <TextField label={t("name")} value={name} onChange={setName} error={err.fields.name} required />
+        <TextField label={t("address")} value={address} onChange={setAddress} error={err.fields.address} />
         <fieldset className="col-span-2 flex flex-col gap-3">
-          <legend className="mb-2 text-label">Qoʻshimcha zonalar</legend>
-          <p className="text-text-secondary">Qabul, Asosiy saqlash, Karantin va Joʻnatish zonalari doim yaratiladi.</p>
-          {OPTIONAL_ZONES.map((t) => (
+          <legend className="mb-2 text-label">{t("warehouses.extraZones")}</legend>
+          <p className="text-text-secondary">{t("warehouses.alwaysCreated")}</p>
+          {OPTIONAL_ZONES.map((z) => (
             <Checkbox
-              key={t}
-              label={ZONE_LABELS[t]}
-              description={t === "COLD" ? "Sovuq zanjir talab qiladigan dorilar uchun" : "Nazoratdagi dorilar uchun"}
-              checked={extra.includes(t)}
-              onChange={(c) => setExtra((x) => (c ? [...x, t] : x.filter((y) => y !== t)))}
+              key={z}
+              label={t(`zone.${z}`)}
+              description={z === "COLD" ? t("warehouses.coldDescription") : t("warehouses.safeDescription")}
+              checked={extra.includes(z)}
+              onChange={(c) => setExtra((x) => (c ? [...x, z] : x.filter((y) => y !== z)))}
             />
           ))}
         </fieldset>
@@ -333,6 +337,7 @@ function CreateWarehouseDrawer({ onClose }: { onClose: () => void }) {
 }
 
 function EditWarehouseDrawer({ warehouse, branchName, onClose }: { warehouse: Warehouse; branchName: string; onClose: () => void }) {
+  const t = useTranslations("organization");
   const update = useUpdateWarehouse();
   const [name, setName] = useState(warehouse.name);
   const [address, setAddress] = useState(warehouse.address ?? "");
@@ -342,7 +347,7 @@ function EditWarehouseDrawer({ warehouse, branchName, onClose }: { warehouse: Wa
     e?.preventDefault();
     update.mutate(
       { id: warehouse.id, name, address: address || undefined },
-      { onSuccess: (w) => (toast({ tone: "success", title: "Ombor saqlandi", description: w.name }), onClose()) },
+      { onSuccess: (w) => (toast({ tone: "success", title: t("warehouses.saved"), description: w.name }), onClose()) },
     );
   }
 
@@ -351,25 +356,25 @@ function EditWarehouseDrawer({ warehouse, branchName, onClose }: { warehouse: Wa
       open
       onClose={onClose}
       size="lg"
-      kind={branchName ? `Ombor · ${branchName}` : "Ombor"}
+      kind={branchName ? t("warehouses.warehouseWithBranch", { branch: branchName }) : t("warehouses.warehouse")}
       title={warehouse.name}
       actions={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Ortga
+            {t("back")}
           </Button>
           <Button loading={update.isPending} onClick={() => submit()}>
-            Omborni saqlash
+            {t("warehouses.save")}
           </Button>
         </>
       }
     >
       <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
-        <TextField label="Nomi" value={name} onChange={setName} error={err.fields.name} required />
-        <TextField label="Manzil" value={address} onChange={setAddress} error={err.fields.address} />
+        <TextField label={t("name")} value={name} onChange={setName} error={err.fields.name} required />
+        <TextField label={t("address")} value={address} onChange={setAddress} error={err.fields.address} />
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
       </form>
-      <h3 className="mt-6 mb-3 text-subtitle">Zonalar</h3>
+      <h3 className="mt-6 mb-3 text-subtitle">{t("warehouses.zones")}</h3>
       <ul className="flex flex-col gap-3">
         {warehouse.zones.map((z) => (
           <ZoneRow key={z.id} warehouseId={warehouse.id} zone={z} />
@@ -380,6 +385,7 @@ function EditWarehouseDrawer({ warehouse, branchName, onClose }: { warehouse: Wa
 }
 
 function ZoneRow({ warehouseId, zone }: { warehouseId: number; zone: Zone }) {
+  const t = useTranslations("organization");
   const rename = useRenameZone();
   const [name, setName] = useState(zone.name);
   const err = describeError(rename.error);
@@ -388,7 +394,7 @@ function ZoneRow({ warehouseId, zone }: { warehouseId: number; zone: Zone }) {
     <li className="flex items-start gap-3">
       <div className="flex-1">
         <TextField
-          label={`${ZONE_LABELS[zone.type]} · ${zone.sellable ? "sotuvga ochiq" : "sotuvga yopiq"}`}
+          label={t(zone.sellable ? "zoneLabel" : "zoneLabelClosed", { zone: t(`zone.${zone.type}`) })}
           size="sm"
           value={name}
           onChange={setName}
@@ -404,11 +410,11 @@ function ZoneRow({ warehouseId, zone }: { warehouseId: number; zone: Zone }) {
           onClick={() =>
             rename.mutate(
               { id: warehouseId, zoneId: zone.id, name: name.trim() },
-              { onSuccess: () => toast({ tone: "success", title: "Zona nomi saqlandi", description: name.trim() }) },
+              { onSuccess: () => toast({ tone: "success", title: t("warehouses.zoneRenamed"), description: name.trim() }) },
             )
           }
         >
-          Nomni saqlash
+          {t("warehouses.saveName")}
         </Button>
       ) : null}
     </li>

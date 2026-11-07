@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleCheck, CirclePause, Hash, Power, PowerOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import {
   useSaveProduct,
   type ProductDetail,
   type ProductForm,
+  type ProductFormError,
 } from "./api";
 
 /** Faol yozuvlar + hozir tanlangan (nofaol boʻlsa ham) — tahrirlashda qiymat yoʻqolmasin. */
@@ -48,18 +50,20 @@ export function ProductDrawer({
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const t = useTranslations("products.drawer");
+  const tc = useTranslations("common");
   const product = useProduct(productId);
   const [tab, setTab] = useState("main");
   if (productId !== null && product.error) {
     return (
-      <Drawer open onClose={onClose} size="lg" kind="Mahsulot" title="Mahsulot">
+      <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("kind")}>
         <ErrorState onRetry={() => product.refetch()} />
       </Drawer>
     );
   }
   if (productId !== null && !product.data) {
     return (
-      <Drawer open onClose={onClose} size="lg" kind="Mahsulot" title="Yuklanmoqda…">
+      <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={tc("loading")}>
         <div className="flex flex-col gap-4">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
@@ -97,6 +101,9 @@ function ProductEditor({
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const t = useTranslations("products.drawer");
+  const tf = useTranslations("products.form");
+  const tp = useTranslations("products");
   const save = useSaveProduct();
   const activate = useActivateProduct();
   const deactivate = useDeactivateProduct();
@@ -106,11 +113,11 @@ function ProductEditor({
   const units = useDictionary("UNIT");
   const employees = useEmployeeOptions();
   const [form, setForm] = useState<ProductForm>(product ? formFromProduct(product) : EMPTY_FORM);
-  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const [localErrors, setLocalErrors] = useState<Record<string, ProductFormError>>({});
   const [codeOpen, setCodeOpen] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
   const err = describeError(save.error);
-  const fieldError = (k: string) => localErrors[k] ?? err.fields[k];
+  const fieldError = (k: string) => (localErrors[k] ? tf(`errors.${localErrors[k]}`) : err.fields[k]);
   const set =
     <K extends keyof ProductForm>(k: K) =>
     (v: ProductForm[K]) =>
@@ -126,7 +133,7 @@ function ProductEditor({
       { id: product?.id, body },
       {
         onSuccess: (p) => {
-          toast({ tone: "success", title: product ? "Mahsulot saqlandi" : "Mahsulot qoʻshildi", description: `${p.code} · ${p.name}` });
+          toast({ tone: "success", title: product ? t("saved") : t("created"), description: `${p.code} · ${p.name}` });
           if (!product) onCreated(p.id);
         },
       },
@@ -136,11 +143,11 @@ function ProductEditor({
   const status = product ? (
     product.active ? (
       <Badge tone="success" icon={CircleCheck}>
-        Faol
+        {tp("status.ACTIVE")}
       </Badge>
     ) : (
       <Badge tone="neutral" icon={CirclePause}>
-        Nofaol
+        {tp("status.INACTIVE")}
       </Badge>
     )
   ) : undefined;
@@ -150,16 +157,16 @@ function ProductEditor({
       open
       onClose={onClose}
       size="lg"
-      kind="Mahsulot"
-      title={product ? product.name : "Yangi mahsulot"}
+      kind={t("kind")}
+      title={product ? product.name : t("newTitle")}
       subtitle={product?.code}
       status={status}
       tabs={
         product
           ? {
               items: [
-                { key: "main", label: "Asosiy" },
-                { key: "history", label: "Kod tarixi", count: product.codeHistory.length },
+                { key: "main", label: t("tabs.main") },
+                { key: "history", label: t("tabs.history"), count: product.codeHistory.length },
               ],
               value: tab,
               onChange: onTab,
@@ -172,31 +179,29 @@ function ProductEditor({
             {product ? (
               <div className="mr-auto flex gap-2">
                 <Button variant="tertiary" icon={Hash} onClick={() => setCodeOpen(true)}>
-                  Kodni oʻzgartirish
+                  {t("changeCode")}
                 </Button>
                 {product.active ? (
                   <Button variant="tertiary" icon={PowerOff} onClick={() => (deactivate.reset(), setDeactivating(true))}>
-                    Nofaol qilish
+                    {t("deactivate")}
                   </Button>
                 ) : (
                   <Button
                     variant="tertiary"
                     icon={Power}
                     loading={activate.isPending}
-                    onClick={() =>
-                      activate.mutate(product.id, { onSuccess: () => toast({ tone: "success", title: "Mahsulot faollashtirildi" }) })
-                    }
+                    onClick={() => activate.mutate(product.id, { onSuccess: () => toast({ tone: "success", title: t("activated") }) })}
                   >
-                    Faollashtirish
+                    {t("activate")}
                   </Button>
                 )}
               </div>
             ) : null}
             <Button variant="secondary" onClick={onClose}>
-              Ortga
+              {t("back")}
             </Button>
             <Button loading={save.isPending} onClick={() => submit()}>
-              Mahsulotni saqlash
+              {t("save")}
             </Button>
           </>
         ) : undefined
@@ -204,7 +209,7 @@ function ProductEditor({
     >
       {tab === "history" && product ? (
         product.codeHistory.length === 0 ? (
-          <p className="text-text-secondary">Kod oʻzgartirilmagan.</p>
+          <p className="text-text-secondary">{t("noCodeChanges")}</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border">
             {product.codeHistory.map((h) => (
@@ -225,7 +230,7 @@ function ProductEditor({
         <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
           <fieldset disabled={readOnly} className="contents">
             <TextField
-              label="Nomi"
+              label={tf("name")}
               value={form.name}
               onChange={set("name")}
               error={fieldError("name")}
@@ -234,19 +239,19 @@ function ProductEditor({
               autoFocus={!product}
             />
             <TextField
-              label="Shartnomadagi nomi"
+              label={tf("contractName")}
               value={form.contractName}
               onChange={set("contractName")}
               error={fieldError("contractName")}
             />
             <TextField
-              label="Klassifikator nomi"
+              label={tf("classifierName")}
               value={form.classifierName}
               onChange={set("classifierName")}
               error={fieldError("classifierName")}
             />
             <Select
-              label="Ishlab chiqaruvchi"
+              label={tf("manufacturer")}
               searchable
               disabled={readOnly}
               value={form.manufacturerId}
@@ -255,7 +260,7 @@ function ProductEditor({
               options={options(manufacturers.data, form.manufacturerId)}
             />
             <Select
-              label="Davlat"
+              label={tf("country")}
               searchable
               disabled={readOnly}
               value={form.countryId}
@@ -264,7 +269,7 @@ function ProductEditor({
               options={options(countries.data, form.countryId)}
             />
             <Select
-              label="Kategoriya"
+              label={tf("category")}
               searchable
               disabled={readOnly}
               value={form.categoryId}
@@ -273,7 +278,7 @@ function ProductEditor({
               options={options(categories.data, form.categoryId)}
             />
             <Select
-              label="Birlik"
+              label={tf("unit")}
               required
               disabled={readOnly}
               value={form.unitId}
@@ -282,17 +287,17 @@ function ProductEditor({
               options={options(units.data, form.unitId)}
             />
             <Select
-              label="Taʼminot masʼuli"
+              label={tf("supplyEmployee")}
               searchable
               disabled={readOnly}
               value={form.supplyEmployeeId}
               onChange={set("supplyEmployeeId")}
               error={fieldError("supplyEmployeeId")}
-              hint="«Kim nomiga» — taʼminotchi hisobi uchun"
+              hint={tf("supplyEmployeeHint")}
               options={(employees.data ?? []).map((e) => ({ value: String(e.id), label: e.fullName, sub: e.roleName }))}
             />
             <TextField
-              label="QQS, %"
+              label={tf("vatRate")}
               value={form.vatRate}
               onChange={set("vatRate")}
               error={fieldError("vatRate")}
@@ -300,55 +305,55 @@ function ProductEditor({
               required
             />
             <TextField
-              label="IKPU (MXIK)"
+              label={tf("ikpu")}
               value={form.ikpu}
               onChange={set("ikpu")}
               error={fieldError("ikpu")}
               inputMode="numeric"
               maxLength={17}
-              hint="17 ta raqam"
+              hint={tf("ikpuHint")}
             />
-            <TextField label="Farm ID" value={form.farmId} onChange={set("farmId")} error={fieldError("farmId")} />
+            <TextField label={tf("farmId")} value={form.farmId} onChange={set("farmId")} error={fieldError("farmId")} />
             <TextField
-              label="Shtrix-kodlar"
+              label={tf("barcodes")}
               value={form.barcodes}
               onChange={set("barcodes")}
               error={fieldError("barcodes") ?? Object.entries(err.fields).find(([k]) => k.startsWith("barcodes"))?.[1]}
-              hint="Bir nechta boʻlsa — vergul yoki boʻsh joy bilan"
+              hint={tf("barcodesHint")}
               className="col-span-2"
             />
             <TextField
-              label="Minimal miqdor"
+              label={tf("minQty")}
               value={form.minQty}
               onChange={set("minQty")}
               error={fieldError("minQty")}
               inputMode="numeric"
-              hint="Buyurtmada bundan kam boʻlmaydi"
+              hint={tf("minQtyHint")}
             />
             <TextField
-              label="Maksimal miqdor"
+              label={tf("maxQty")}
               value={form.maxQty}
               onChange={set("maxQty")}
               error={fieldError("maxQty")}
               inputMode="numeric"
-              hint="Oshsa — buyurtma tasdiqqa ketadi"
+              hint={tf("maxQtyHint")}
             />
             <div className="col-span-2 flex flex-wrap gap-6 pt-2">
               <Checkbox
-                label="Markirovkali"
-                description="Sotuvda 2D kod skanerlanadi"
+                label={tf("marked")}
+                description={tf("markedHint")}
                 checked={form.marked}
                 disabled={readOnly}
                 onChange={set("marked")}
               />
               <Checkbox
-                label="Nazoratdagi"
-                description="Faqat Seyf va litsenziyali mijoz"
+                label={tf("controlled")}
+                description={tf("controlledHint")}
                 checked={form.controlled}
                 disabled={readOnly}
                 onChange={set("controlled")}
               />
-              <Checkbox label="Retsept bilan" checked={form.prescription} disabled={readOnly} onChange={set("prescription")} />
+              <Checkbox label={tf("prescription")} checked={form.prescription} disabled={readOnly} onChange={set("prescription")} />
             </div>
           </fieldset>
           {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
@@ -357,9 +362,9 @@ function ProductEditor({
       {codeOpen && product ? <ChangeCodeDialog product={product} onClose={() => setCodeOpen(false)} /> : null}
       {deactivating && product ? (
         <DeactivateDialog
-          title={`${product.name}ni nofaol qilasizmi?`}
-          consequence="Mahsulot yangi hujjatlarda tanlanmaydi va roʻyxatda standart koʻrinmaydi. Tarixi va qoldiqlari saqlanadi — keyin faollashtirish mumkin."
-          actionLabel="Mahsulotni nofaol qilish"
+          title={t("deactivateTitle", { name: product.name })}
+          consequence={t("deactivateConsequence")}
+          actionLabel={t("deactivateAction")}
           pending={deactivate.isPending}
           error={deactivate.error}
           onClose={() => setDeactivating(false)}
@@ -367,10 +372,7 @@ function ProductEditor({
             deactivate.mutate(
               { id: product.id, reason },
               {
-                onSuccess: () => (
-                  toast({ tone: "success", title: "Mahsulot nofaol qilindi", description: product.name }),
-                  setDeactivating(false)
-                ),
+                onSuccess: () => (toast({ tone: "success", title: t("deactivated"), description: product.name }), setDeactivating(false)),
               },
             )
           }
@@ -381,6 +383,7 @@ function ProductEditor({
 }
 
 function ChangeCodeDialog({ product, onClose }: { product: ProductDetail; onClose: () => void }) {
+  const t = useTranslations("products.code");
   const change = useChangeCode();
   const [code, setCode] = useState(product.code);
   const [reason, setReason] = useState("");
@@ -391,33 +394,30 @@ function ChangeCodeDialog({ product, onClose }: { product: ProductDetail; onClos
       open
       onClose={onClose}
       size="sm"
-      title="Mahsulot kodini oʻzgartirish"
+      title={t("title")}
       primaryAction={{
-        label: "Kodni saqlash",
+        label: t("save"),
         loading: change.isPending,
         onClick: () => {
           const e = {
-            code: /^[1-9]\d{7}$/.test(code) ? undefined : "Kod — 8 ta raqam, boshida 0 boʻlmaydi.",
-            reason: reason.trim() ? undefined : "Sabab kiritilmagan. Nega oʻzgartirilayotganini yozing.",
+            code: /^[1-9]\d{7}$/.test(code) ? undefined : t("codeError"),
+            reason: reason.trim() ? undefined : t("reasonError"),
           };
           setLocal(e);
           if (e.code || e.reason) return;
           change.mutate(
             { id: product.id, code, reason: reason.trim() },
             {
-              onSuccess: (p) => (
-                toast({ tone: "success", title: "Kod oʻzgartirildi", description: `${product.code} → ${p.code}` }),
-                onClose()
-              ),
+              onSuccess: (p) => (toast({ tone: "success", title: t("changed"), description: `${product.code} → ${p.code}` }), onClose()),
             },
           );
         },
       }}
     >
-      <p className="mb-4 text-text-secondary">Eski kod tarixda qoladi va boshqa mahsulotga berilmaydi.</p>
+      <p className="mb-4 text-text-secondary">{t("intro")}</p>
       <div className="flex flex-col gap-4">
         <TextField
-          label="Yangi kod"
+          label={t("newCode")}
           value={code}
           onChange={(v) => setCode(v.replace(/\D/g, "").slice(0, 8))}
           error={local.code ?? err.fields.code}
@@ -426,7 +426,7 @@ function ChangeCodeDialog({ product, onClose }: { product: ProductDetail; onClos
           required
           autoFocus
         />
-        <TextField label="Sabab" value={reason} onChange={setReason} error={local.reason ?? err.fields.reason} required />
+        <TextField label={t("reason")} value={reason} onChange={setReason} error={local.reason ?? err.fields.reason} required />
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
       </div>
     </Modal>

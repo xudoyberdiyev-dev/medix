@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Ban, CircleCheck, Download, FilePen, PackageCheck, PackagePlus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import { RECEIPT_CREATE, STATUS_LABELS, useReceipts, type ReceiptStatus, type Re
 import { ReceiptDrawer } from "./receipt-drawer";
 
 export function ReceiptStatusBadge({ status }: { status: ReceiptStatus }) {
+  const t = useTranslations("receipts");
   const map = {
     DRAFT: { tone: "neutral", icon: FilePen },
     ACCEPTED: { tone: "warning", icon: PackageCheck },
@@ -26,7 +28,7 @@ export function ReceiptStatusBadge({ status }: { status: ReceiptStatus }) {
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {STATUS_LABELS[status]}
+      {t(`status.${status}`)}
     </Badge>
   );
 }
@@ -45,13 +47,14 @@ export const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`)
 
 /** Kirim (SPEC 5.1): Qoralama → Qabul qilindi → Oʻtkazildi. */
 export function ReceiptsPage() {
+  const t = useTranslations("receipts");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const params = useSearchParams();
   const initialStatus = params.get("status");
   const [status, setStatus] = useState<string | null>(initialStatus);
   // Hisobotdan oʻtish: ?supplierId=…&supplier=Nomi (Taʼminotchi korxona tovari)
-  const [supplier, setSupplier] = useState(() => idParam(params, "supplierId", "supplier", "Taʼminotchi"));
+  const [supplier, setSupplier] = useState(() => idParam(params, "supplierId", "supplier", t("list.supplierWhat")));
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — kirim darhol ochiladi
   const [editor, setEditor] = useState<{ id: number | null } | null>(() => {
@@ -63,21 +66,26 @@ export function ReceiptsPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useReceipts(branchId, (status as ReceiptStatus | null) ?? null, page, true, supplier?.id ?? null);
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("list.forbidden")} />;
 
   const showAmount = (docs.data?.items ?? []).some((d) => d.amount != null);
   const columns: TableColumn<ReceiptSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "receiptDate", title: "Sana", render: (d) => day(d.receiptDate) },
-    { key: "supplier", title: "Yetkazib beruvchi" },
-    { key: "invoiceNumber", title: "Yuk xati", mono: true, render: (d) => d.invoiceNumber ?? "—" },
-    { key: "warehouse", title: "Ombor" },
-    { key: "totalQty", title: "Miqdor", align: "right", render: (d) => <span className="tabular-nums">{formatQuantity(d.totalQty)}</span> },
+    { key: "number", title: t("list.col.number"), mono: true },
+    { key: "receiptDate", title: t("list.col.date"), render: (d) => day(d.receiptDate) },
+    { key: "supplier", title: t("list.col.supplier") },
+    { key: "invoiceNumber", title: t("list.col.invoice"), mono: true, render: (d) => d.invoiceNumber ?? "—" },
+    { key: "warehouse", title: t("list.col.warehouse") },
+    {
+      key: "totalQty",
+      title: t("list.col.qty"),
+      align: "right",
+      render: (d) => <span className="tabular-nums">{formatQuantity(d.totalQty)}</span>,
+    },
     ...(showAmount
       ? [
           {
             key: "amount",
-            title: "Summa",
+            title: t("list.col.amount"),
             align: "right" as const,
             render: (d: ReceiptSummary) => <span className="tabular-nums">{d.amount ? formatMoney(d.amount) : ""}</span>,
           },
@@ -85,19 +93,19 @@ export function ReceiptsPage() {
       : []),
     {
       key: "dueDate",
-      title: "Toʻlov kuni",
-      render: (d) => (d.prepaid ? <Badge tone="info">100% oldindan</Badge> : d.dueDate ? day(d.dueDate) : "—"),
+      title: t("list.col.due"),
+      render: (d) => (d.prepaid ? <Badge tone="info">{t("list.prepaid")}</Badge> : d.dueDate ? day(d.dueDate) : "—"),
     },
-    { key: "status", title: "Holat", render: (d) => <ReceiptStatusBadge status={d.status} /> },
+    { key: "status", title: t("list.col.status"), render: (d) => <ReceiptStatusBadge status={d.status} /> },
   ];
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Kirim</h1>
+        <h1 className="text-page-title">{t("list.title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setEditor({ id: null })}>
-            Kirim qoʻshish
+            {t("list.add")}
           </Button>
         ) : null}
       </div>
@@ -105,7 +113,7 @@ export function ReceiptsPage() {
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (
         <Table
-          caption="Kirimlar"
+          caption={t("list.caption")}
           columns={columns}
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
@@ -115,13 +123,13 @@ export function ReceiptsPage() {
             <div className="flex flex-wrap items-center gap-3">
               <div className="w-56">
                 <Select
-                  label="Holat"
+                  label={t("list.status")}
                   size="sm"
                   value={status}
                   onChange={(v) => (setStatus(v), setPage(1))}
-                  placeholder="Barcha holatlar"
+                  placeholder={t("list.allStatuses")}
                   className="[&>span:first-child]:sr-only"
-                  options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                  options={(Object.keys(STATUS_LABELS) as ReceiptStatus[]).map((value) => ({ value, label: t(`status.${value}`) }))}
                 />
               </div>
               {docs.data && docs.data.total > 0 ? (
@@ -131,11 +139,15 @@ export function ReceiptsPage() {
                   className="inline-flex items-center gap-1 text-primary hover:underline"
                 >
                   <Download size={16} strokeWidth={1.5} aria-hidden />
-                  Excelʼga yuklab olish
+                  {t("list.export")}
                 </a>
               ) : null}
               {supplier ? (
-                <FilterChip label={`Taʼminotchi: ${supplier.name}`} what="Taʼminotchi" onClear={() => (setSupplier(null), setPage(1))} />
+                <FilterChip
+                  label={t("list.supplierChip", { name: supplier.name })}
+                  what={t("list.supplierWhat")}
+                  onClear={() => (setSupplier(null), setPage(1))}
+                />
               ) : null}
             </div>
           }
@@ -143,11 +155,7 @@ export function ReceiptsPage() {
             status || supplier ? (
               <NoResultsState onClearFilters={() => (setStatus(null), setSupplier(null))} />
             ) : (
-              <EmptyState
-                icon={PackagePlus}
-                title="Hali kirim yoʻq"
-                description="Yetkazib beruvchidan kelgan tovar shu yerda rasmiylashtiriladi: qoralama → qabul → oʻtkazish."
-              />
+              <EmptyState icon={PackagePlus} title={t("list.emptyTitle")} description={t("list.emptyDescription")} />
             )
           }
           pagination={

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
@@ -29,11 +30,12 @@ export function usePeriodState(): PeriodState {
 }
 
 export function PeriodPicker({ state }: { state: PeriodState }) {
+  const t = useTranslations("home.period");
   return (
     <div className="flex flex-wrap items-end gap-3">
       <Tabs
-        aria-label="Davr"
-        items={(Object.keys(PERIOD_LABELS) as PeriodPreset[]).map((k) => ({ key: k, label: PERIOD_LABELS[k] }))}
+        aria-label={t("label")}
+        items={(Object.keys(PERIOD_LABELS) as PeriodPreset[]).map((k) => ({ key: k, label: t(k) }))}
         value={state.preset}
         onChange={(k) => state.setPreset(k as PeriodPreset)}
       />
@@ -41,22 +43,22 @@ export function PeriodPicker({ state }: { state: PeriodState }) {
         <>
           <div className="w-36">
             <TextField
-              label="Dan"
+              label={t("from")}
               size="sm"
               value={state.customFrom}
               onChange={state.setCustomFrom}
               placeholder="04.10.2026"
-              error={parseUzDate(state.customFrom) ? undefined : "Sana?"}
+              error={parseUzDate(state.customFrom) ? undefined : t("invalid")}
             />
           </div>
           <div className="w-36">
             <TextField
-              label="Gacha"
+              label={t("to")}
               size="sm"
               value={state.customTo}
               onChange={state.setCustomTo}
               placeholder="04.10.2026"
-              error={parseUzDate(state.customTo) ? undefined : "Sana?"}
+              error={parseUzDate(state.customTo) ? undefined : t("invalid")}
             />
           </div>
         </>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Ban, CircleCheck, Save } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -19,22 +20,23 @@ import { searchCustomers } from "@/features/orders/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney } from "@/lib/format";
-import { ACCOUNT_KIND, PAYMENT_CANCEL, PAYMENT_MT, useAccounts, useOpenDocs, usePayment, type PaymentDetail } from "./api";
+import { PAYMENT_CANCEL, PAYMENT_MT, useAccounts, useOpenDocs, usePayment, type PaymentDetail } from "./api";
 import { OpenDocsSection } from "./open-docs";
 import { PaymentStatusBadge } from "./payments-page";
 
 export function PaymentDrawer(props: { id: number | null; branchId: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("payments.mt");
   const one = usePayment(props.id);
   if (props.id != null && one.error) {
     return (
-      <Drawer open onClose={props.onClose} kind="Toʻlov" title="Toʻlov">
+      <Drawer open onClose={props.onClose} kind={t("payment")} title={t("payment")}>
         <ErrorState onRetry={() => one.refetch()} />
       </Drawer>
     );
   }
   if (props.id != null && !one.data) {
     return (
-      <Drawer open onClose={props.onClose} kind="Toʻlov" title="Toʻlov">
+      <Drawer open onClose={props.onClose} kind={t("payment")} title={t("payment")}>
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
@@ -43,6 +45,8 @@ export function PaymentDrawer(props: { id: number | null; branchId: number | nul
 }
 
 function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("payments.mt");
+  const tp = useTranslations("payments");
   const { doc } = props;
   const me = useMe();
   const qc = useQueryClient();
@@ -67,12 +71,12 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
 
   function body() {
     setLocal(null);
-    if (props.branchId == null) return (setLocal("Filialni tanlang."), null);
-    if (!customer) return (setLocal("Mijozni tanlang."), null);
-    if (!account) return (setLocal("Hisobni tanlang (kassa, Terminal yoki bank)."), null);
+    if (props.branchId == null) return (setLocal(tp("form.selectBranch")), null);
+    if (!customer) return (setLocal(t("selectCustomer")), null);
+    if (!account) return (setLocal(tp("form.selectAccount")), null);
     const iso = parseUzDate(date);
-    if (iso === null) return (setLocal("Sana notoʻgʻri. Masalan: 04.10.2026."), null);
-    if (!amount) return (setLocal("Summani kiriting."), null);
+    if (iso === null) return (setLocal(tp("form.badDate")), null);
+    if (!amount) return (setLocal(tp("form.enterAmount")), null);
     return {
       branchId: props.branchId,
       customerId: Number(customer),
@@ -110,7 +114,7 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
     run("save", async () => {
       const d = await save();
       if (!d) return;
-      toast({ tone: "success", title: "Qoralama saqlandi", description: d.number });
+      toast({ tone: "success", title: tp("form.draftSaved"), description: d.number });
       if (!doc) props.onCreated(d.id);
     });
 
@@ -126,8 +130,10 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
       await qc.invalidateQueries({ queryKey: ["money-accounts"] });
       toast({
         tone: "success",
-        title: "Toʻlov oʻtkazildi",
-        description: `${r.number} · ${formatMoney(r.amount)} soʻm${r.advance && r.advance !== "0.00" ? ` · avans ${formatMoney(r.advance)}` : ""}`,
+        title: t("posted"),
+        description:
+          tp("form.amountLine", { number: r.number, amount: formatMoney(r.amount) }) +
+          (r.advance && r.advance !== "0.00" ? t("postedAdvance", { amount: formatMoney(r.advance) }) : ""),
       });
       if (!doc) props.onCreated(r.id);
     });
@@ -140,7 +146,7 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
       await qc.invalidateQueries({ queryKey: ["payments"] });
       await qc.invalidateQueries({ queryKey: ["money-accounts"] });
       setCancelOpen(false);
-      toast({ tone: "success", title: "Toʻlov bekor qilindi" });
+      toast({ tone: "success", title: t("cancelled") });
     });
 
   const err = describeError(error);
@@ -149,16 +155,16 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
     <>
       {canCancel ? (
         <Button variant="tertiary" icon={Ban} onClick={() => setCancelOpen(true)}>
-          Bekor qilish
+          {tp("form.cancel")}
         </Button>
       ) : null}
       {editable ? (
         <>
           <Button variant="secondary" icon={Save} loading={pending === "save"} onClick={() => void onSave()}>
-            Saqlash
+            {tp("form.save")}
           </Button>
           <Button icon={CircleCheck} loading={pending === "post"} onClick={() => void onPost()}>
-            Oʻtkazish
+            {tp("form.post")}
           </Button>
         </>
       ) : null}
@@ -170,8 +176,8 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
       open
       onClose={props.onClose}
       size="lg"
-      kind="Mijozdan toʻlov"
-      title={doc ? doc.number : "Yangi toʻlov"}
+      kind={t("kind")}
+      title={doc ? doc.number : t("new")}
       subtitle={doc ? `${doc.customer}${doc.customerTin ? ` · ${doc.customerTin}` : ""}` : undefined}
       status={doc ? <PaymentStatusBadge status={doc.status} /> : undefined}
       actions={actions}
@@ -180,14 +186,14 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {local ? <Alert tone="warning" title={local} /> : null}
         {doc?.status === "CANCELLED" ? (
-          <Alert tone="info" title={`Bekor qilindi: ${doc.cancelReason ?? ""}`}>
+          <Alert tone="info" title={tp("form.cancelledReason", { reason: doc.cancelReason ?? "" })}>
             {doc.cancelledBy}
           </Alert>
         ) : null}
-        {doc?.source === "DRIVER" ? <Alert tone="info" title={`Haydovchidan qabul qilingan · ${doc.sourceRef ?? ""}`} /> : null}
+        {doc?.source === "DRIVER" ? <Alert tone="info" title={t("fromDriver", { ref: doc.sourceRef ?? "" })} /> : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Select
-            label="Mijoz"
+            label={t("customer")}
             value={customer}
             loadOptions={async (q) => {
               const found = await searchCustomers(q);
@@ -199,14 +205,14 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
               setCustomerLabel(v ? (labels.current.get(v) ?? "") : "");
               setAlloc({});
             }}
-            placeholder={customerLabel || "Nom, STIR yoki telefon"}
+            placeholder={customerLabel || t("customerPlaceholder")}
             options={customer && customerLabel ? [{ value: customer, label: customerLabel }] : []}
             disabled={!editable}
             required
             className="md:col-span-2"
           />
           <Select
-            label="Hisob"
+            label={tp("form.account")}
             value={account}
             onChange={setAccount}
             options={(accounts.data ?? [])
@@ -214,13 +220,21 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
                 (a) =>
                   a.active && (String(a.id) === account || usableAccount(a, accounts.data ?? [], me.data?.id, can(me.data, CASH_APPROVE))),
               )
-              .map((a) => ({ value: String(a.id), label: `${ACCOUNT_KIND[a.kind]} · ${a.name}`, sub: a.code }))}
+              .map((a) => ({ value: String(a.id), label: `${tp(`accountKind.${a.kind}`)} · ${a.name}`, sub: a.code }))}
             disabled={!editable}
             required
           />
-          <TextField label="Sana" value={date} onChange={setDate} placeholder="04.10.2026" disabled={!editable} />
-          <TextField label="Summa" variant="amount" value={amount} onChange={setAmount} disabled={!editable} required suffix="soʻm" />
-          <TextField label="Izoh" value={note} onChange={setNote} maxLength={500} disabled={!editable} />
+          <TextField label={tp("form.date")} value={date} onChange={setDate} placeholder="04.10.2026" disabled={!editable} />
+          <TextField
+            label={tp("form.amount")}
+            variant="amount"
+            value={amount}
+            onChange={setAmount}
+            disabled={!editable}
+            required
+            suffix={tp("currency")}
+          />
+          <TextField label={tp("form.note")} value={note} onChange={setNote} maxLength={500} disabled={!editable} />
         </div>
         {doc && doc.status !== "DRAFT" ? (
           <Allocations doc={doc} />
@@ -239,45 +253,50 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
       <Modal
         open={cancelOpen}
         onClose={() => setCancelOpen(false)}
-        title="Toʻlovni bekor qilish"
+        title={t("cancelTitle")}
         tone="danger"
-        primaryAction={{ label: "Bekor qilish", onClick: () => void onCancel(), loading: pending === "cancel", disabled: !reason.trim() }}
+        primaryAction={{
+          label: tp("form.cancel"),
+          onClick: () => void onCancel(),
+          loading: pending === "cancel",
+          disabled: !reason.trim(),
+        }}
       >
-        <p className="mb-3">
-          {doc?.status === "POSTED"
-            ? "Mijoz qarzi va hisob qoldigʻi teskari yoziladi. Kassada pul yetmasa, bekor qilinmaydi."
-            : "Qoralama bekor qilinadi."}
-        </p>
-        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} />
+        <p className="mb-3">{doc?.status === "POSTED" ? t("cancelPosted") : tp("form.cancelDraft")}</p>
+        <TextField label={tp("form.reason")} value={reason} onChange={setReason} maxLength={300} />
       </Modal>
     </Drawer>
   );
 }
 
 export function Allocations({ doc }: { doc: Pick<PaymentDetail, "allocations" | "advance" | "createdBy" | "postedBy"> }) {
+  const t = useTranslations("payments.alloc");
   return (
-    <section aria-label="Taqsimot">
-      <h2 className="mb-2 text-subtitle">Taqsimot</h2>
+    <section aria-label={t("title")}>
+      <h2 className="mb-2 text-subtitle">{t("title")}</h2>
       {doc.allocations.length === 0 ? (
-        <p className="text-text-secondary">Qarzga taqsimlanmagan.</p>
+        <p className="text-text-secondary">{t("none")}</p>
       ) : (
         <ul className="flex flex-col">
           {doc.allocations.map((a) => (
             <li key={`${a.docType}:${a.docId}`} className="flex justify-between border-t border-border py-2">
               <span className="font-mono">{a.docNumber}</span>
-              <span className="font-mono">{formatMoney(a.amount)} soʻm</span>
+              <span className="font-mono">{t("sum", { amount: formatMoney(a.amount) })}</span>
             </li>
           ))}
         </ul>
       )}
       {doc.advance && doc.advance !== "0.00" ? (
         <p className="mt-2">
-          Avans: <span className="font-mono">{formatMoney(doc.advance)}</span> soʻm
+          {t.rich("advance", {
+            amount: formatMoney(doc.advance),
+            num: (chunks) => <span className="font-mono">{chunks}</span>,
+          })}
         </p>
       ) : null}
       <p className="mt-2 text-caption text-text-secondary">
-        Yaratdi: {doc.createdBy}
-        {doc.postedBy ? ` · Oʻtkazdi: ${doc.postedBy}` : ""}
+        {t("createdBy", { name: doc.createdBy })}
+        {doc.postedBy ? t("postedBy", { name: doc.postedBy }) : ""}
       </p>
     </section>
   );

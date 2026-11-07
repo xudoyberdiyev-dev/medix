@@ -3,7 +3,7 @@ import { accountFormErrors } from "./account-dialog";
 
 describe("accountFormErrors", () => {
   it("nom majburiy", () => {
-    expect(accountFormErrors("CASH", "  ", "")).toEqual({ name: "Hisob nomini kiriting." });
+    expect(accountFormErrors("CASH", "  ", "")).toEqual({ name: "nameRequired" });
   });
   it("bank hisobi — 20 raqam", () => {
     expect(accountFormErrors("BANK", "Asosiy", "1234").accountNo).toBeDefined();

@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, PackageCheck, Printer, Truck, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,8 @@ import { useMe } from "@/features/auth/session";
 import { useWarehouses, ZONE_LABELS } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
 import { linesFrom, type ZoneStockRow } from "@/features/zone-transfers/api";
+import { useLineErrorText } from "@/features/zone-transfers/line-error";
+import { useReceiveErrorText } from "@/features/warehouse-transfers/receive-error";
 import { receiveLinesFrom, TRANSFER_CANCEL, TRANSFER_RECEIVE, TRANSFER_SEND } from "@/features/warehouse-transfers/api";
 import { WarehouseTransferStatusBadge } from "@/features/warehouse-transfers/warehouse-transfers-page";
 import { formatDate, formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
@@ -32,23 +35,22 @@ import {
 } from "./api";
 import { BranchSaleShortagePanel } from "./shortage-panel";
 
-const KIND = "Filiallararo savdo";
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
-const fail = (e: unknown) =>
-  toast({ tone: "danger", title: "Bajarilmadi", description: describeError(e).message ?? "Qayta urinib koʻring." });
 
 export function BranchSaleDrawer(props: { id: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("branchSales");
+  const tc = useTranslations("common");
   const doc = useBranchSale(props.id);
   if (props.id === null) return <CreateForm onClose={props.onClose} onCreated={props.onCreated} />;
   if (doc.error)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind={KIND} title="FS">
+      <Drawer open onClose={props.onClose} size="lg" kind={t("kind")} title="FS">
         <ErrorState onRetry={() => doc.refetch()} />
       </Drawer>
     );
   if (!doc.data)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind={KIND} title="Yuklanmoqda…">
+      <Drawer open onClose={props.onClose} size="lg" kind={t("kind")} title={tc("loading")}>
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
@@ -56,6 +58,9 @@ export function BranchSaleDrawer(props: { id: number | null; onClose: () => void
 }
 
 function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) {
+  const t = useTranslations("branchSales");
+  const tw = useTranslations("warehouseTransfers");
+  const fail = (e: unknown) => toast({ tone: "danger", title: tw("failed"), description: describeError(e).message ?? tw("retryHint") });
   const me = useMe();
   const send = useSendBranchSale();
   const cancel = useCancelBranchSale();
@@ -68,16 +73,16 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
   const canReceive = doc.status === "IN_TRANSIT" && can(me.data, TRANSFER_RECEIVE) && side(doc.buyer.id);
   const received = doc.status === "RECEIVED";
   const columns: TableColumn<BranchSaleLine>[] = [
-    { key: "productCode", title: "Kod", mono: true },
-    { key: "productName", title: "Mahsulot", wrap: true },
-    { key: "batchNumber", title: "Partiya", mono: true },
-    { key: "expiryDate", title: "Yaroqlilik", render: (l) => day(l.expiryDate) },
-    { key: "qty", title: "Joʻnatildi", align: "right", render: (l) => formatQuantity(l.qty) },
+    { key: "productCode", title: tw("col.code"), mono: true },
+    { key: "productName", title: tw("col.product"), wrap: true },
+    { key: "batchNumber", title: tw("col.batch"), mono: true },
+    { key: "expiryDate", title: tw("col.expiry"), render: (l) => day(l.expiryDate) },
+    { key: "qty", title: tw("col.sent"), align: "right", render: (l) => formatQuantity(l.qty) },
     ...(received
       ? [
           {
             key: "receivedQty",
-            title: "Qabul qilindi",
+            title: tw("col.received"),
             align: "right" as const,
             render: (l: BranchSaleLine) => {
               const got = l.receivedQty ?? 0;
@@ -90,13 +95,13 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
       ? [
           {
             key: "unitCost",
-            title: "Tannarx",
+            title: t("col.unitCost"),
             align: "right" as const,
             render: (l: BranchSaleLine) => (l.unitCost ? formatMoney(l.unitCost) : "—"),
           },
           {
             key: "amount",
-            title: "Summa",
+            title: t("col.amount"),
             align: "right" as const,
             render: (l: BranchSaleLine) => (l.amount ? formatMoney(l.amount) : "—"),
           },
@@ -108,20 +113,20 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
       open
       onClose={onClose}
       size="lg"
-      kind={`${KIND} · ${doc.createdBy}`}
+      kind={`${t("kind")} · ${doc.createdBy}`}
       title={doc.number}
       subtitle={formatDateTime(new Date(doc.createdAt))}
       status={<WarehouseTransferStatusBadge status={doc.status} />}
       actions={
         <>
           <Button variant="tertiary" icon={Printer} onClick={() => window.open(`/api/branch-sales/${doc.id}/pdf`, "_blank", "noopener")}>
-            Chop etish
+            {t("view.print")}
           </Button>
           {canSend || canCancel || canReceive ? (
             <>
               {canCancel ? (
                 <Button variant="secondary" icon={X} onClick={() => setCancelling(true)}>
-                  Bekor qilish
+                  {tw("view.cancel")}
                 </Button>
               ) : null}
               {canSend ? (
@@ -133,19 +138,19 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
                       onSuccess: (d) =>
                         toast({
                           tone: "success",
-                          title: "Joʻnatildi — tovar yoʻlda",
+                          title: tw("view.sentToast"),
                           description: `${d.number} · ${d.invoiceNumber ?? ""}`,
                         }),
                       onError: fail,
                     })
                   }
                 >
-                  Joʻnatish
+                  {tw("view.send")}
                 </Button>
               ) : null}
               {canReceive ? (
                 <Button icon={PackageCheck} onClick={() => setReceiving(true)}>
-                  Qabul qilish
+                  {tw("view.receive")}
                 </Button>
               ) : null}
             </>
@@ -155,82 +160,84 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
     >
       <div className="flex flex-col gap-4">
         {doc.status === "DRAFT" ? (
-          <Alert tone="info" title="Qoralama">
-            Tovar hali «{doc.fromZone.name}» zonasida. Joʻnatilganda qoldiqdan chiqadi, partiya tannarxida hisob-faktura (HF) yoziladi va «
-            {doc.buyer.name}» filiali qarzi oshadi.
+          <Alert tone="info" title={tw("view.draftTitle")}>
+            {t("view.draftBody", { zone: doc.fromZone.name, hf: "HF", buyer: doc.buyer.name })}
           </Alert>
         ) : null}
         {doc.status === "IN_TRANSIT" ? (
-          <Alert tone="info" title="Yoʻlda">
-            {doc.sentBy} joʻnatdi ({doc.sentAt ? formatDateTime(new Date(doc.sentAt)) : ""}). «{doc.buyer.name}» filiali qabul qilishini
-            kutmoqda.
+          <Alert tone="info" title={tw("view.transitTitle")}>
+            {t("view.transitBody", {
+              who: doc.sentBy ?? "",
+              at: doc.sentAt ? formatDateTime(new Date(doc.sentAt)) : "",
+              buyer: doc.buyer.name,
+            })}
           </Alert>
         ) : null}
         <BranchSaleShortagePanel doc={doc} />
         <dl className="grid grid-cols-2 gap-4 text-body md:grid-cols-4">
           <div>
-            <dt className="text-caption text-text-secondary">Sotuvchi</dt>
+            <dt className="text-caption text-text-secondary">{t("view.seller")}</dt>
             <dd>
               {doc.seller.name} · {doc.fromWarehouse.name} · {doc.fromZone.name}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Xaridor</dt>
+            <dt className="text-caption text-text-secondary">{t("view.buyer")}</dt>
             <dd>
               {doc.buyer.name} · {doc.toWarehouse.name}
               {doc.toZone ? ` · ${doc.toZone.name}` : ""}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Joʻnatdi</dt>
+            <dt className="text-caption text-text-secondary">{tw("view.sentBy")}</dt>
             <dd>{doc.sentBy ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Qabul qildi</dt>
+            <dt className="text-caption text-text-secondary">{tw("view.receivedBy")}</dt>
             <dd>{doc.receivedBy ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-caption text-text-secondary">Hisob-faktura</dt>
+            <dt className="text-caption text-text-secondary">{t("view.invoice")}</dt>
             <dd className="font-mono">{doc.invoiceNumber ?? "—"}</dd>
           </div>
           {doc.total ? (
             <>
               <div>
-                <dt className="text-caption text-text-secondary">Summa (QQS bilan)</dt>
+                <dt className="text-caption text-text-secondary">{t("view.total")}</dt>
                 <dd>{formatMoney(doc.total)}</dd>
               </div>
               <div>
-                <dt className="text-caption text-text-secondary">shu jumladan QQS</dt>
+                <dt className="text-caption text-text-secondary">{t("view.vat")}</dt>
                 <dd>{doc.vatTotal ? formatMoney(doc.vatTotal) : "—"}</dd>
               </div>
             </>
           ) : null}
           {doc.note ? (
             <div className="col-span-2 md:col-span-4">
-              <dt className="text-caption text-text-secondary">Izoh</dt>
+              <dt className="text-caption text-text-secondary">{tw("view.note")}</dt>
               <dd>{doc.note}</dd>
             </div>
           ) : null}
         </dl>
-        <Table caption="Partiyalar" density="compact" columns={columns} rows={doc.lines} rowKey={(l) => String(l.id)} />
-        <p className="text-right text-caption text-text-secondary">Jami: {formatQuantity(doc.totalQty)} dona</p>
+        <Table caption={tw("view.linesCaption")} density="compact" columns={columns} rows={doc.lines} rowKey={(l) => String(l.id)} />
+        <p className="text-right text-caption text-text-secondary">{tw("view.total", { qty: formatQuantity(doc.totalQty) })}</p>
       </div>
       <Modal
         open={cancelling}
         onClose={() => setCancelling(false)}
-        title="Qoralamani bekor qilish"
+        title={tw("view.cancelTitle")}
         tone="danger"
         primaryAction={{
-          label: "Bekor qilish",
+          label: tw("view.cancel"),
           loading: cancel.isPending,
           onClick: () =>
             cancel.mutate(doc.id, {
-              onSuccess: () => (setCancelling(false), toast({ tone: "success", title: "Bekor qilindi" })),
+              onSuccess: () => (setCancelling(false), toast({ tone: "success", title: tw("view.cancelled") })),
               onError: fail,
             }),
         }}
       >
-        <p className="text-body">Hujjat bekor qilinadi, tovar joyida qoladi. Bu amalni qaytarib boʻlmaydi.</p>
+        <p className="text-body">{tw("view.cancelBody")}</p>
       </Modal>
       {receiving ? <ReceiveModal doc={doc} onClose={() => setReceiving(false)} /> : null}
     </Drawer>
@@ -238,6 +245,8 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
 }
 
 function ReceiveModal({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) {
+  const t = useTranslations("warehouseTransfers");
+  const receiveError = useReceiveErrorText();
   const warehouses = useWarehouses();
   const receive = useReceiveBranchSale();
   const zones = warehouses.data?.find((w) => w.id === doc.toWarehouse.id)?.zones ?? [];
@@ -250,9 +259,9 @@ function ReceiveModal({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => 
   const picked = receiveLinesFrom(doc.lines, got);
 
   const submit = () => {
-    if (!zone) return setError("Qabul zonasini tanlang.");
-    if (picked.error) return setError(picked.error);
-    if (picked.shortage > 0 && note.trim() === "") return setError("Kamomad bor — izoh yozing: nima boʻldi, kim bilan tekshirildi.");
+    if (!zone) return setError(t("receive.pickZone"));
+    if (picked.error) return setError(receiveError(picked.error));
+    if (picked.shortage > 0 && note.trim() === "") return setError(t("receive.noteRequired"));
     receive.mutate(
       { id: doc.id, body: { toZoneId: Number(zone), note: note.trim(), lines: picked.lines } },
       {
@@ -260,11 +269,11 @@ function ReceiveModal({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => 
           onClose();
           toast({
             tone: d.shortageQty > 0 ? "warning" : "success",
-            title: d.shortageQty > 0 ? `Qabul qilindi, kamomad ${formatQuantity(d.shortageQty)} dona` : "Toʻliq qabul qilindi",
+            title: d.shortageQty > 0 ? t("receive.doneShortage", { qty: formatQuantity(d.shortageQty) }) : t("receive.doneFull"),
             description: d.number,
           });
         },
-        onError: (e) => setError(describeError(e).message ?? "Saqlanmadi. Qayta urinib koʻring."),
+        onError: (e) => setError(describeError(e).message ?? t("saveFailed")),
       },
     );
   };
@@ -274,32 +283,33 @@ function ReceiveModal({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => 
       open
       onClose={onClose}
       size="lg"
-      title={`Qabul qilish: ${doc.number}`}
-      primaryAction={{ label: "Qabul qilish", loading: receive.isPending, onClick: submit }}
+      title={t("receive.title", { number: doc.number })}
+      primaryAction={{ label: t("receive.action"), loading: receive.isPending, onClick: submit }}
     >
       <div className="flex flex-col gap-4">
         {error ? (
-          <Alert tone="danger" title="Qabul qilinmadi">
+          <Alert tone="danger" title={t("receive.errorTitle")}>
             {error}
           </Alert>
         ) : null}
         <Select
-          label="Qaysi zonaga"
+          label={t("receive.zone")}
           value={zone}
           onChange={setZoneId}
           options={zones.map((z) => ({ value: String(z.id), label: `${z.name} · ${ZONE_LABELS[z.type]}` }))}
           required
         />
-        <p className="text-caption text-text-secondary">Sanab chiqing. Boʻsh qoldirilgan qator — toʻliq keldi.</p>
+        <p className="text-caption text-text-secondary">{t("receive.hint")}</p>
         <ul className="flex flex-col gap-2">
           {doc.lines.map((l) => (
             <li key={l.id} className="flex items-center justify-between gap-4">
               <span className="text-body">
-                {l.productName} · <span className="font-mono">{l.batchNumber}</span> — joʻnatildi {formatQuantity(l.qty)}
+                {l.productName} · <span className="font-mono">{l.batchNumber}</span> —{" "}
+                {t("receive.sentQty", { qty: formatQuantity(l.qty) })}
               </span>
               <div className="w-28 shrink-0">
                 <TextField
-                  label={`${l.productName} ${l.batchNumber} — kelgan soni`}
+                  label={t("receive.gotLabel", { product: l.productName, batch: l.batchNumber })}
                   className="[&>label]:sr-only"
                   value={got[l.id] ?? ""}
                   onChange={(v) => (setGot((g) => ({ ...g, [l.id]: v })), setError(null))}
@@ -311,17 +321,20 @@ function ReceiveModal({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => 
           ))}
         </ul>
         {picked.shortage > 0 ? (
-          <Alert tone="warning" title={`Kamomad: ${formatQuantity(picked.shortage)} dona`}>
-            Izoh majburiy. Kamomad hujjatda qayd etiladi va hal qilish uchun xabar yuboriladi.
+          <Alert tone="warning" title={t("receive.shortageTitle", { qty: formatQuantity(picked.shortage) })}>
+            {t("receive.shortageBody")}
           </Alert>
         ) : null}
-        <TextField label="Izoh" value={note} onChange={setNote} placeholder="Masalan: 2 quti shikastlangan, haydovchi bilan tekshirildi" />
+        <TextField label={t("receive.note")} value={note} onChange={setNote} placeholder={t("receive.notePlaceholder")} />
       </div>
     </Modal>
   );
 }
 
 function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (id: number) => void }) {
+  const t = useTranslations("branchSales");
+  const tw = useTranslations("warehouseTransfers");
+  const lineError = useLineErrorText();
   const warehouses = useWarehouses();
   const create = useCreateBranchSale();
   const [warehouseId, setWarehouseId] = useState<string | null>(null);
@@ -342,19 +355,19 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
   const picked = linesFrom(rows, qty);
 
   const columns: TableColumn<ZoneStockRow>[] = [
-    { key: "productName", title: "Mahsulot", wrap: true },
-    { key: "batchNumber", title: "Partiya", mono: true },
-    { key: "expiryDate", title: "Yaroqlilik", render: (r) => day(r.expiryDate) },
-    { key: "qty", title: "Qoldiq", align: "right", render: (r) => formatQuantity(r.qty) },
-    { key: "reserved", title: "Zahirada", align: "right", render: (r) => (r.reserved ? formatQuantity(r.reserved) : "—") },
+    { key: "productName", title: tw("col.product"), wrap: true },
+    { key: "batchNumber", title: tw("col.batch"), mono: true },
+    { key: "expiryDate", title: tw("col.expiry"), render: (r) => day(r.expiryDate) },
+    { key: "qty", title: tw("col.stock"), align: "right", render: (r) => formatQuantity(r.qty) },
+    { key: "reserved", title: tw("col.reserved"), align: "right", render: (r) => (r.reserved ? formatQuantity(r.reserved) : "—") },
     {
       key: "move",
-      title: "Joʻnatish",
+      title: tw("col.send"),
       align: "right",
       render: (r) => (
         <div className="ml-auto w-28">
           <TextField
-            label={`${r.productName} ${r.batchNumber} — joʻnatish soni`}
+            label={tw("form.qtyLabel", { product: r.productName, batch: r.batchNumber })}
             className="[&>label]:sr-only"
             value={qty[r.batchId] ?? ""}
             onChange={(v) => (setQty((q) => ({ ...q, [r.batchId]: v })), setError(null))}
@@ -368,17 +381,17 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
   ];
 
   const submit = () => {
-    if (!from || !toId) return setError("Sotuvchi zonani va xaridor omborini tanlang.");
-    if (picked.error) return setError(picked.error);
-    if (picked.lines.length === 0) return setError("Kamida bitta partiyaga joʻnatish sonini kiriting.");
+    if (!from || !toId) return setError(t("form.pickZones"));
+    if (picked.error) return setError(lineError(picked.error));
+    if (picked.lines.length === 0) return setError(tw("form.noLines"));
     create.mutate(
       { fromZoneId: from.id, toWarehouseId: Number(toId), note: note.trim(), lines: picked.lines },
       {
         onSuccess: (d) => {
-          toast({ tone: "success", title: "Qoralama saqlandi", description: d.number });
+          toast({ tone: "success", title: tw("form.saved"), description: d.number });
           onCreated(d.id);
         },
-        onError: (e) => setError(describeError(e).message ?? "Saqlanmadi. Qayta urinib koʻring."),
+        onError: (e) => setError(describeError(e).message ?? tw("saveFailed")),
       },
     );
   };
@@ -388,30 +401,30 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
       open
       onClose={onClose}
       size="lg"
-      kind={KIND}
-      title="Yangi filiallararo savdo"
+      kind={t("kind")}
+      title={t("form.title")}
       actions={
         <Button icon={Check} loading={create.isPending} onClick={submit} disabled={!from || !toId}>
-          Qoralamani saqlash
+          {tw("form.save")}
         </Button>
       }
     >
       <div className="flex flex-col gap-4">
         {error ? (
-          <Alert tone="danger" title="Saqlanmadi">
+          <Alert tone="danger" title={tw("form.errorTitle")}>
             {error}
           </Alert>
         ) : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Select
-            label="Qaysi ombordan"
+            label={tw("form.fromWarehouse")}
             value={warehouseId}
             onChange={(v) => (setWarehouseId(v), setFromId(null), setToId(null), setQty({}))}
             options={active.map((w) => ({ value: String(w.id), label: w.name }))}
             required
           />
           <Select
-            label="Zona"
+            label={tw("form.zone")}
             value={fromId}
             onChange={(v) => (setFromId(v), setQty({}))}
             options={zones.map((z) => ({ value: String(z.id), label: `${z.name} · ${ZONE_LABELS[z.type]}` }))}
@@ -419,7 +432,7 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
             required
           />
           <Select
-            label="Xaridor ombori"
+            label={t("form.buyerWarehouse")}
             value={toId}
             onChange={setToId}
             options={targets.map((w) => ({ value: String(w.id), label: `${w.branch.name} · ${w.name}` }))}
@@ -428,29 +441,27 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
           />
         </div>
         {warehouse && buyers.data && targets.length === 0 ? (
-          <Alert tone="info" title="Boshqa filialda faol ombor yoʻq">
-            Filiallararo savdo uchun xaridor filialda faol ombor kerak. Filial ichida — ombor koʻchirishi (OK).
+          <Alert tone="info" title={t("form.noTargetsTitle")}>
+            {t("form.noTargetsBody", { ok: "OK" })}
           </Alert>
         ) : null}
-        <p className="text-caption text-text-secondary">
-          Narx — partiya tannarxi (QQS shu summa ichida). Guruh ichidagi qarz mijozlar qarzi jamiga kirmaydi.
-        </p>
+        <p className="text-caption text-text-secondary">{t("form.priceNote")}</p>
         {from ? (
           stock.error ? (
             <ErrorState onRetry={() => stock.refetch()} />
           ) : (
             <Table
-              caption={`«${from.name}» zonasidagi partiyalar`}
+              caption={tw("form.stockCaption", { zone: from.name })}
               density="compact"
               columns={columns}
               rows={rows}
               rowKey={(r) => String(r.batchId)}
               loading={stock.isPending}
-              emptyState={<EmptyState icon={X} title="Zonada tovar yoʻq" description="Boshqa zonani tanlang." />}
+              emptyState={<EmptyState icon={X} title={tw("form.emptyZoneTitle")} description={tw("form.emptyZoneHint")} />}
             />
           )
         ) : null}
-        <TextField label="Izoh" value={note} onChange={setNote} placeholder="Masalan: Samarqand filialiga kamyob dorilar" />
+        <TextField label={tw("form.note")} value={note} onChange={setNote} placeholder={t("form.notePlaceholder")} />
       </div>
     </Drawer>
   );

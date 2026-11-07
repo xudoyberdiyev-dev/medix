@@ -15,6 +15,7 @@ import {
   Truck,
   type LucideIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,9 @@ import { useMe } from "@/features/auth/session";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { idParam } from "@/lib/url-filters";
-import { PAYMENT_TYPES } from "@/features/counterparties/api";
 import { useBranchStore } from "@/lib/stores/branch";
-import { ORDER_CREATE, STATUS_LABELS, useOrders, type OrderStatus, type OrderSummary } from "./api";
+import { ORDER_CREATE, useOrders, type OrderStatus, type OrderSummary } from "./api";
+import type { OrdersT } from "./i18n";
 import { OrderDrawer } from "./order-drawer";
 
 const STATUS_STYLE: Record<OrderStatus, { tone: "neutral" | "warning" | "info" | "success" | "danger"; icon: LucideIcon }> = {
@@ -51,10 +52,11 @@ const STATUS_STYLE: Record<OrderStatus, { tone: "neutral" | "warning" | "info" |
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
+  const t = useTranslations("orders");
   const s = STATUS_STYLE[status];
   return (
     <Badge tone={s.tone} icon={s.icon}>
-      {STATUS_LABELS[status]}
+      {t(`status.${status}`)}
     </Badge>
   );
 }
@@ -65,18 +67,22 @@ const ALL = "ALL";
 type StatusCount = components["schemas"]["StatusCount"];
 
 /** Holat yorliqlari: «Hammasi» + 13 holat, har birida soni (summasi — tanlangan yorliq ostida). */
-export function statusTabs(counts: StatusCount[]): TabItem[] {
+export function statusTabs(counts: StatusCount[], t: OrdersT): TabItem[] {
   return counts.map((c) => ({
     key: c.status ?? ALL,
-    label: c.status ? STATUS_LABELS[c.status] : "Hammasi",
+    label: c.status ? t(`status.${c.status}`) : t("list.all"),
     count: c.count,
   }));
 }
 
-export function tabSummary(counts: StatusCount[], status: string | null): string {
+export function tabSummary(counts: StatusCount[], status: string | null, t: OrdersT): string {
   const c = counts.find((x) => (x.status ?? null) === status) ?? counts[0];
   if (!c) return "";
-  return `${c.status ? STATUS_LABELS[c.status] : "Hammasi"}: ${formatQuantity(c.count)} ta · ${formatMoney(c.total)} soʻm`;
+  return t("list.summary", {
+    label: c.status ? t(`status.${c.status}`) : t("list.all"),
+    count: formatQuantity(c.count),
+    amount: formatMoney(c.total),
+  });
 }
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -90,14 +96,15 @@ export function soldParam(params: Pick<URLSearchParams, "get">): { from: string 
   return f || t ? { from: f, to: t } : null;
 }
 
-export function soldLabel(s: { from: string | null; to: string | null }): string {
-  if (s.from && s.from === s.to) return `Sotuv: ${day(s.from)}`;
-  if (s.from && s.to) return `Sotuv: ${day(s.from)} – ${day(s.to)}`;
-  return s.from ? `Sotuv: ${day(s.from)} dan` : `Sotuv: ${day(s.to ?? "")} gacha`;
+export function soldLabel(s: { from: string | null; to: string | null }, t: OrdersT): string {
+  if (s.from && s.from === s.to) return t("list.soldOn", { date: day(s.from) });
+  if (s.from && s.to) return t("list.soldRange", { from: day(s.from), to: day(s.to) });
+  return s.from ? t("list.soldFrom", { date: day(s.from) }) : t("list.soldTo", { date: day(s.to ?? "") });
 }
 
 /** Buyurtmalar (SPEC 5.2): holat yorliqlari (soni, summasi), «Hozir kimda», qidiruv (raqam, mijoz, STIR), «Mening buyurtmalarim». */
 export function OrdersPage() {
+  const t = useTranslations("orders");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const params = useSearchParams();
@@ -107,8 +114,8 @@ export function OrdersPage() {
   const [q, setQ] = useState("");
   const [mine, setMine] = useState(params.get("mine") === "1");
   // Hisobotdan oʻtish (Savdo hisoboti qatori): mijoz, operator, sotuv davri
-  const [customer, setCustomer] = useState(() => idParam(params, "customerId", "customer", "Mijoz"));
-  const [operator, setOperator] = useState(() => idParam(params, "operatorId", "operator", "Operator"));
+  const [customer, setCustomer] = useState(() => idParam(params, "customerId", "customer", t("list.customer")));
+  const [operator, setOperator] = useState(() => idParam(params, "operatorId", "operator", t("list.operator")));
   const [sold, setSold] = useState(() => soldParam(params));
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — buyurtma kartochkasi darhol ochiladi
@@ -132,34 +139,48 @@ export function OrdersPage() {
     soldTo: sold?.to ?? null,
   });
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("list.forbidden")} />;
 
   const columns: TableColumn<OrderSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "orderDate", title: "Sana", render: (o) => day(o.orderDate) },
-    { key: "customer", title: "Mijoz" },
+    { key: "number", title: t("list.col.number"), mono: true },
+    { key: "orderDate", title: t("list.col.date"), render: (o) => day(o.orderDate) },
+    { key: "customer", title: t("list.col.customer") },
     {
       key: "deliveryType",
-      title: "Yetkazish",
+      title: t("list.col.delivery"),
       render: (o) =>
-        o.deliveryType === "PICKUP" ? "Oʻzi olib ketadi" : o.deliveryDate ? `Yetkazib berish · ${day(o.deliveryDate)}` : "Yetkazib berish",
+        o.deliveryType === "PICKUP"
+          ? t("list.pickup")
+          : o.deliveryDate
+            ? t("list.deliveryOn", { date: day(o.deliveryDate) })
+            : t("list.delivery"),
     },
-    { key: "lines", title: "Qatorlar", align: "right", render: (o) => <span className="tabular-nums">{formatQuantity(o.lines)}</span> },
-    { key: "total", title: "Summa", align: "right", render: (o) => <span className="tabular-nums">{formatMoney(o.total)}</span> },
+    {
+      key: "lines",
+      title: t("list.col.lines"),
+      align: "right",
+      render: (o) => <span className="tabular-nums">{formatQuantity(o.lines)}</span>,
+    },
+    {
+      key: "total",
+      title: t("list.col.total"),
+      align: "right",
+      render: (o) => <span className="tabular-nums">{formatMoney(o.total)}</span>,
+    },
     {
       key: "paymentType",
-      title: "Toʻlov turi",
-      render: (o) => PAYMENT_TYPES.find((t) => t.value === o.paymentType)?.label ?? o.paymentType,
+      title: t("list.col.paymentType"),
+      render: (o) => t(`paymentType.${o.paymentType}`),
     },
-    { key: "createdBy", title: "Operator" },
-    { key: "holder", title: "Hozir kimda", render: (o) => <span className="text-caption text-text-secondary">{o.holder}</span> },
+    { key: "createdBy", title: t("list.col.operator") },
+    { key: "holder", title: t("list.col.holder"), render: (o) => <span className="text-caption text-text-secondary">{o.holder}</span> },
     {
       key: "status",
-      title: "Holat",
+      title: t("list.col.status"),
       render: (o) => (
         <span className="flex items-center gap-2">
           <OrderStatusBadge status={o.status} />
-          {o.approvalLevel === "DIRECTOR" && o.status === "PENDING_APPROVAL" ? <Badge tone="warning">Direktor</Badge> : null}
+          {o.approvalLevel === "DIRECTOR" && o.status === "PENDING_APPROVAL" ? <Badge tone="warning">{t("list.director")}</Badge> : null}
         </span>
       ),
     },
@@ -169,29 +190,29 @@ export function OrdersPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Buyurtmalar</h1>
+        <h1 className="text-page-title">{t("list.title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setEditor({ id: null })}>
-            Buyurtma kiritish
+            {t("list.create")}
           </Button>
         ) : null}
       </div>
       {orders.data ? (
         <div className="mb-3 flex flex-col gap-2">
           <Tabs
-            aria-label="Buyurtma holatlari"
-            items={statusTabs(orders.data.statuses)}
+            aria-label={t("list.statusTabs")}
+            items={statusTabs(orders.data.statuses, t)}
             value={status ?? ALL}
             onChange={(k) => (setStatus(k === ALL ? null : k), setPage(1))}
           />
-          <p className="text-caption text-text-secondary tabular-nums">{tabSummary(orders.data.statuses, status)}</p>
+          <p className="text-caption text-text-secondary tabular-nums">{tabSummary(orders.data.statuses, status, t)}</p>
         </div>
       ) : null}
       {orders.error ? (
         <ErrorState onRetry={() => orders.refetch()} />
       ) : (
         <Table
-          caption="Buyurtmalar"
+          caption={t("list.title")}
           columns={columns}
           rows={orders.data?.items ?? []}
           rowKey={(o) => String(o.id)}
@@ -201,7 +222,7 @@ export function OrdersPage() {
             <div className="flex flex-wrap items-center gap-3">
               <div className="w-80">
                 <TextField
-                  label="Qidirish"
+                  label={t("list.search")}
                   variant="search"
                   size="sm"
                   value={search}
@@ -210,18 +231,28 @@ export function OrdersPage() {
                     clearTimeout(debounce.current);
                     debounce.current = setTimeout(() => (setQ(v.trim()), setPage(1)), 300);
                   }}
-                  placeholder="Raqam, mijoz yoki STIR"
+                  placeholder={t("list.searchPlaceholder")}
                   className="[&>label]:sr-only"
                 />
               </div>
-              {canCreate ? <Checkbox label="Mening buyurtmalarim" checked={mine} onChange={(v) => (setMine(v), setPage(1))} /> : null}
+              {canCreate ? <Checkbox label={t("list.mine")} checked={mine} onChange={(v) => (setMine(v), setPage(1))} /> : null}
               {customer ? (
-                <FilterChip label={`Mijoz: ${customer.name}`} what="Mijoz" onClear={() => (setCustomer(null), setPage(1))} />
+                <FilterChip
+                  label={t("list.customerChip", { name: customer.name })}
+                  what={t("list.customer")}
+                  onClear={() => (setCustomer(null), setPage(1))}
+                />
               ) : null}
               {operator ? (
-                <FilterChip label={`Operator: ${operator.name}`} what="Operator" onClear={() => (setOperator(null), setPage(1))} />
+                <FilterChip
+                  label={t("list.operatorChip", { name: operator.name })}
+                  what={t("list.operator")}
+                  onClear={() => (setOperator(null), setPage(1))}
+                />
               ) : null}
-              {sold ? <FilterChip label={soldLabel(sold)} what="Sotuv davri" onClear={() => (setSold(null), setPage(1))} /> : null}
+              {sold ? (
+                <FilterChip label={soldLabel(sold, t)} what={t("list.soldPeriod")} onClear={() => (setSold(null), setPage(1))} />
+              ) : null}
             </div>
           }
           emptyState={
@@ -238,11 +269,7 @@ export function OrdersPage() {
                 )}
               />
             ) : (
-              <EmptyState
-                icon={ClipboardList}
-                title="Hali buyurtma yoʻq"
-                description="Operator mijoz va mahsulotlarni tanlab buyurtma kiritadi. Limit yoki qarz boʻlsa — tasdiqqa ketadi."
-              />
+              <EmptyState icon={ClipboardList} title={t("list.emptyTitle")} description={t("list.emptyHint")} />
             )
           }
           pagination={

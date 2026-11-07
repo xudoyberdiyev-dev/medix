@@ -5,7 +5,7 @@ import { ReceiptsPage } from "@/features/receipts/receipts-page";
 export default function Page() {
   return (
     <>
-      <TopBar title="Kirim" />
+      <TopBar titleKey="receipts" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <ReceiptsPage />

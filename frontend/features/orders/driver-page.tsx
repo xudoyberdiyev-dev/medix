@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, CircleCheck, CircleX, Flag, PackageCheck, PackageMinus, Signature, Truck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ export type TripDetail = components["schemas"]["TripDetail"];
 
 /** Haydovchi paneli → Reysim (SPEC 5.4): yuklash («Qabul qildim» joylar soni bilan) → «Yuklab boʻlindi — reysni boshlash». */
 export function DriverPage() {
+  const tr = useTranslations("orders");
   const me = useMe();
   const qc = useQueryClient();
   const allowed = can(me.data, "trip.driver");
@@ -42,7 +44,7 @@ export function DriverPage() {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
 
-  if (me.data && !allowed) return <ForbiddenState description="Reys paneli faqat haydovchilar uchun." />;
+  if (me.data && !allowed) return <ForbiddenState description={tr("driver.forbidden")} />;
 
   async function load(t: TripDetail, stopId: number) {
     setPending(`load-${stopId}`);
@@ -69,7 +71,7 @@ export function DriverPage() {
     try {
       await ensureCsrf();
       const r = await unwrap(api.POST("/api/trips/{id}/start", { params: { path: { id: t.id } } }));
-      toast({ tone: "success", title: "Reys boshlandi", description: `${r.sales.length} ta sotuv va hisob-faktura yozildi` });
+      toast({ tone: "success", title: tr("driver.started"), description: tr("driver.startedHint", { count: r.sales.length }) });
       await qc.invalidateQueries({ queryKey: ["trips", "mine"] });
     } catch (e) {
       setError(e);
@@ -81,7 +83,7 @@ export function DriverPage() {
   const err = describeError(error);
   return (
     <>
-      <h1 className="mb-4 text-page-title">Reysim</h1>
+      <h1 className="mb-4 text-page-title">{tr("driver.title")}</h1>
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
       {trip.error ? (
         <ErrorState onRetry={() => trip.refetch()} />
@@ -89,7 +91,7 @@ export function DriverPage() {
         <Skeleton className="h-40 w-full" />
       ) : !trip.data ? (
         <Card>
-          <EmptyState icon={Truck} title="Faol reys yoʻq" description="Ombor mudiri reys tuzganda shu yerda paydo boʻladi." />
+          <EmptyState icon={Truck} title={tr("driver.emptyTitle")} description={tr("driver.emptyHint")} />
         </Card>
       ) : (
         <TripView
@@ -113,6 +115,7 @@ function TripView(props: {
   onLoad: (stopId: number) => void;
   onStart: () => void;
 }) {
+  const tr = useTranslations("orders");
   const { t } = props;
   const st = TRIP_STATUS[t.status];
   const planned = t.status === "PLANNED";
@@ -124,11 +127,16 @@ function TripView(props: {
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-subtitle">{t.number}</span>
             <Badge tone={st.tone} icon={st.icon}>
-              {st.label}
+              {tr(`shipments.tripStatus.${t.status}`)}
             </Badge>
           </div>
           <div className="text-caption text-text-secondary">
-            {formatIsoDate(t.tripDate)} · {t.vehicle} · {formatQuantity(t.places)} joy · {formatMoney(t.total)} soʻm
+            {tr("driver.tripMeta", {
+              date: formatIsoDate(t.tripDate),
+              vehicle: t.vehicle,
+              places: formatQuantity(t.places),
+              amount: formatMoney(t.total),
+            })}
           </div>
         </div>
       </div>
@@ -141,27 +149,27 @@ function TripView(props: {
                   {s.seq}. {s.customer}
                 </div>
                 <div className="text-caption text-text-secondary">
-                  {s.address ?? "Manzil koʻrsatilmagan"} · <span className="font-mono">{s.waybillNumber ?? s.orderNumber}</span>
+                  {s.address ?? tr("driver.noAddress")} · <span className="font-mono">{s.waybillNumber ?? s.orderNumber}</span>
                 </div>
                 <div className="text-caption text-text-secondary">
-                  {formatQuantity(s.places)} joy · {formatMoney(s.total)} soʻm
+                  {tr("driver.stopMeta", { places: formatQuantity(s.places), amount: formatMoney(s.total) })}
                 </div>
               </div>
               {s.outcome === "DELIVERED" ? (
                 <Badge tone="success" icon={CircleCheck}>
-                  Yetkazildi
+                  {tr("driver.delivered")}
                 </Badge>
               ) : s.outcome === "PARTIAL" ? (
                 <Badge tone="warning" icon={PackageMinus}>
-                  Qisman · <span className="font-mono">{s.returnNumber}</span>
+                  {tr("driver.partial")} · <span className="font-mono">{s.returnNumber}</span>
                 </Badge>
               ) : s.outcome === "UNDELIVERED" ? (
                 <Badge tone="danger" icon={CircleX}>
-                  Yetkazilmadi
+                  {tr("driver.undelivered")}
                 </Badge>
               ) : s.loadedAt ? (
                 <Badge tone="success" icon={CircleCheck}>
-                  Qabul qilindi
+                  {tr("driver.loaded")}
                 </Badge>
               ) : null}
             </div>
@@ -169,7 +177,7 @@ function TripView(props: {
               <div className="mt-2 flex flex-wrap items-end gap-2">
                 <div className="w-32">
                   <TextField
-                    label="Joylar soni"
+                    label={tr("driver.places")}
                     value={props.places[s.id] ?? ""}
                     onChange={(v) => props.setPlaces(s.id, v.replace(/\D/g, ""))}
                     inputMode="numeric"
@@ -182,7 +190,7 @@ function TripView(props: {
                   loading={props.pending === `load-${s.id}`}
                   onClick={() => props.onLoad(s.id)}
                 >
-                  Qabul qildim
+                  {tr("driver.accept")}
                 </Button>
               </div>
             ) : null}
@@ -192,16 +200,16 @@ function TripView(props: {
       {planned ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <span className="text-caption text-text-secondary">
-            {left > 0 ? `Qabul qilinmagan: ${formatQuantity(left)} ta buyurtma` : "Hammasi qabul qilindi"}
+            {left > 0 ? tr("driver.notLoaded", { count: formatQuantity(left) }) : tr("driver.allLoaded")}
           </span>
           <Button icon={Truck} disabled={left > 0} loading={props.pending === "start"} onClick={props.onStart}>
-            Yuklab boʻlindi — reysni boshlash
+            {tr("driver.startTrip")}
           </Button>
         </div>
       ) : t.status === "IN_TRANSIT" ? (
         <TransitActions t={t} />
       ) : (
-        <p className="mt-4 text-text-secondary">Reys yakunlandi — qaytgan tovar va naqd pulni topshiring.</p>
+        <p className="mt-4 text-text-secondary">{tr("driver.finishedText")}</p>
       )}
     </Card>
   );
@@ -209,6 +217,7 @@ function TripView(props: {
 
 /** «Yoʻlda»: har manzilda rasm → «Yetkazildi» (naqd boʻlsa summa) yoki «Yetkazilmadi» (sabab); oxirida «Reysni yakunlash». */
 function TransitActions({ t }: { t: TripDetail }) {
+  const tr = useTranslations("orders");
   const qc = useQueryClient();
   const [cash, setCash] = useState<Record<number, string>>({});
   const [pending, setPending] = useState<string | null>(null);
@@ -284,8 +293,8 @@ function TransitActions({ t }: { t: TripDetail }) {
       const r = await unwrap(api.POST("/api/trips/{id}/finish", { params: { path: { id: t.id } } }));
       toast({
         tone: "success",
-        title: "Reys yakunlandi",
-        description: r.status === "DONE" ? "Hammasi yetkazildi" : "Qaytgan tovar va naqd pulni topshiring",
+        title: tr("driver.finished"),
+        description: r.status === "DONE" ? tr("driver.allDelivered") : tr("driver.handOver"),
       });
     });
 
@@ -301,13 +310,13 @@ function TransitActions({ t }: { t: TripDetail }) {
           <div className="flex flex-wrap items-end gap-2">
             <label className="inline-flex h-control-md cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3">
               <Camera size={16} strokeWidth={1.5} aria-hidden />
-              {s.photos > 0 ? `Rasm: ${s.photos}` : "Rasm olish"}
+              {s.photos > 0 ? tr("driver.photos", { count: s.photos }) : tr("driver.takePhoto")}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 capture="environment"
                 className="sr-only"
-                aria-label={`Rasm: ${s.customer}`}
+                aria-label={tr("driver.photoAria", { customer: s.customer })}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) void photo(s.id, f);
@@ -316,12 +325,12 @@ function TransitActions({ t }: { t: TripDetail }) {
               />
             </label>
             <Button variant="tertiary" icon={Signature} onClick={() => setSigning(s)}>
-              {s.signed ? "Imzo olindi" : "Imzo olish"}
+              {s.signed ? tr("driver.signed") : tr("driver.sign")}
             </Button>
             {s.paymentType === "CASH" ? (
               <div className="w-40">
                 <TextField
-                  label="Naqd olindi"
+                  label={tr("driver.cashReceived")}
                   variant="amount"
                   value={cash[s.id] ?? ""}
                   onChange={(v) => setCash((m) => ({ ...m, [s.id]: v }))}
@@ -335,23 +344,21 @@ function TransitActions({ t }: { t: TripDetail }) {
               loading={pending === `deliver-${s.id}`}
               onClick={() => void deliver(s.id)}
             >
-              Yetkazildi
+              {tr("driver.delivered")}
             </Button>
             <Button variant="tertiary" icon={PackageMinus} disabled={s.photos === 0} onClick={() => setPartial(s)}>
-              Qisman
+              {tr("driver.partial")}
             </Button>
             <Button variant="tertiary" icon={CircleX} onClick={() => setUndeliver(s.id)}>
-              Yetkazilmadi
+              {tr("driver.undelivered")}
             </Button>
           </div>
-          {s.photos === 0 ? (
-            <div className="mt-1 text-caption text-text-secondary">«Yetkazildi» va «Qisman» uchun kamida 1 rasm kerak.</div>
-          ) : null}
+          {s.photos === 0 ? <div className="mt-1 text-caption text-text-secondary">{tr("driver.photoRequired")}</div> : null}
         </div>
       ))}
       <div className="flex justify-end">
         <Button icon={Flag} disabled={open.length > 0} loading={pending === "finish"} onClick={() => void finish()}>
-          Reysni yakunlash
+          {tr("driver.finishTrip")}
         </Button>
       </div>
       {signing ? (
@@ -366,7 +373,7 @@ function TransitActions({ t }: { t: TripDetail }) {
             void photo(signing.id, png, true).then((ok) => {
               if (ok) {
                 setSigning(null);
-                toast({ tone: "success", title: "Imzo saqlandi" });
+                toast({ tone: "success", title: tr("driver.signSaved") });
               }
             });
           }}
@@ -375,17 +382,17 @@ function TransitActions({ t }: { t: TripDetail }) {
       <Modal
         open={undeliver !== null}
         onClose={() => setUndeliver(null)}
-        title="Yetkazilmadi"
+        title={tr("driver.undelivered")}
         tone="danger"
         primaryAction={{
-          label: "Yetkazilmadi deb belgilash",
+          label: tr("driver.markUndelivered"),
           onClick: () => void confirmUndeliver(),
           loading: pending?.startsWith("undeliver") ?? false,
           disabled: !reason.trim(),
         }}
       >
-        <p className="mb-3">Sotuv va mijoz qarzi bekor boʻladi, tovar omborga qaytadi (Karantin).</p>
-        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} />
+        <p className="mb-3">{tr("driver.undeliveredText")}</p>
+        <TextField label={tr("driver.reason")} value={reason} onChange={setReason} maxLength={300} />
       </Modal>
       {partial ? (
         <PartialDialog
@@ -405,6 +412,7 @@ function TransitActions({ t }: { t: TripDetail }) {
 type TripStop = TripDetail["stops"][number];
 
 function PartialDialog(props: { tripId: number; stop: TripStop; onClose: () => void; onDone: (d: TripDetail) => void }) {
+  const tr = useTranslations("orders");
   const { stop } = props;
   const lines = useQuery({
     queryKey: ["trips", props.tripId, "stops", stop.id, "lines"],
@@ -433,7 +441,11 @@ function PartialDialog(props: { tripId: number; stop: TripStop; onClose: () => v
           },
         }),
       );
-      toast({ tone: "success", title: "Qisman yetkazildi", description: `Qaytgan tovar: ${formatMoney(sum.returned)} soʻm` });
+      toast({
+        tone: "success",
+        title: tr("driver.partialDone"),
+        description: tr("driver.partialDoneHint", { amount: formatMoney(sum.returned) }),
+      });
       props.onDone(d);
     } catch (e) {
       setError(e);
@@ -447,15 +459,12 @@ function PartialDialog(props: { tripId: number; stop: TripStop; onClose: () => v
     <Modal
       open
       onClose={props.onClose}
-      title={`Qisman yetkazish · ${stop.customer}`}
+      title={tr("driver.partialTitle", { customer: stop.customer })}
       size="lg"
-      primaryAction={{ label: "Qisman yetkazildi deb belgilash", onClick: () => void submit(), loading: pending, disabled: blocked }}
+      primaryAction={{ label: tr("driver.markPartial"), onClick: () => void submit(), loading: pending, disabled: blocked }}
     >
       {err.message ? <Alert tone="danger" title={err.message} className="mb-3" /> : null}
-      <p className="mb-3 text-text-secondary">
-        Mijoz olmagan miqdorni kiriting. Qaytgan qism asl sotuv narxida qaytarish (QM) boʻlib yoziladi, mijoz qarzi kamayadi, tovar omborga
-        qaytadi (Karantin).
-      </p>
+      <p className="mb-3 text-text-secondary">{tr("driver.partialIntro")}</p>
       {lines.error ? (
         <ErrorState onRetry={() => lines.refetch()} />
       ) : lines.isPending ? (
@@ -467,17 +476,18 @@ function PartialDialog(props: { tripId: number; stop: TripStop; onClose: () => v
               <div className="min-w-0">
                 <div>{l.product}</div>
                 <div className="text-caption text-text-secondary">
-                  Partiya <span className="font-mono">{l.batch}</span> · {formatQuantity(l.qty)} dona × {formatMoney(l.price)} soʻm
-                  {l.marked ? " · markirovkali" : ""}
+                  {tr("driver.batch")} <span className="font-mono">{l.batch}</span> ·{" "}
+                  {tr("driver.qtyPrice", { qty: formatQuantity(l.qty), price: formatMoney(l.price) })}
+                  {l.marked ? tr("driver.marked") : ""}
                 </div>
               </div>
               <div className="w-28">
                 <TextField
-                  label="Qaytdi"
+                  label={tr("driver.returnedField")}
                   value={back[l.id] ?? ""}
                   onChange={(v) => setBack((m) => ({ ...m, [l.id]: v.replace(/\D/g, "") }))}
                   inputMode="numeric"
-                  error={Number(back[l.id] || "0") > l.qty ? `${formatQuantity(l.qty)} dan koʻp emas` : undefined}
+                  error={Number(back[l.id] || "0") > l.qty ? tr("driver.maxQty", { qty: formatQuantity(l.qty) }) : undefined}
                 />
               </div>
             </li>
@@ -485,17 +495,19 @@ function PartialDialog(props: { tripId: number; stop: TripStop; onClose: () => v
         </ul>
       )}
       <div className="mb-3 text-caption">
-        Qaytdi: <span className="font-mono">{formatMoney(sum.returned)}</span> soʻm · Mijoz toʻlaydi:{" "}
-        <span className="font-mono">{formatMoney(sum.net)}</span> soʻm
+        {tr("driver.returnedSum")} <span className="font-mono">{formatMoney(sum.returned)}</span> {tr("currency")} ·{" "}
+        {tr("driver.customerPays")} <span className="font-mono">{formatMoney(sum.net)}</span> {tr("currency")}
       </div>
       {sum.all ? (
-        <Alert tone="warning" title="Hamma tovar qaytmoqda" className="mb-3">
-          «Qisman» emas, «Yetkazilmadi» ni sabab bilan belgilang.
+        <Alert tone="warning" title={tr("driver.allBack")} className="mb-3">
+          {tr("driver.allBackHint")}
         </Alert>
       ) : null}
       <div className="flex flex-col gap-3">
-        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} />
-        {stop.paymentType === "CASH" ? <TextField label="Naqd olindi" variant="amount" value={cash} onChange={setCash} /> : null}
+        <TextField label={tr("driver.reason")} value={reason} onChange={setReason} maxLength={300} />
+        {stop.paymentType === "CASH" ? (
+          <TextField label={tr("driver.cashReceived")} variant="amount" value={cash} onChange={setCash} />
+        ) : null}
       </div>
     </Modal>
   );

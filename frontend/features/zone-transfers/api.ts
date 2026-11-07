@@ -16,30 +16,38 @@ export const TRANSFER_ZK = "transfer.zk";
 export const TRANSFER_QUAR = "transfer.quar";
 export const TRANSFER_VIEW_KEYS = ["transfer.view", TRANSFER_ZK, TRANSFER_QUAR];
 
-export const ZK_STATUS_LABELS: Record<ZoneTransferStatus, string> = {
-  PENDING: "Tasdiqda",
-  POSTED: "Oʻtkazildi",
-  REJECTED: "Rad etildi",
-};
+/** Holatlar tartibi (filtr uchun); nomlari — lugʻatda `zoneTransfers.status.*`. */
+export const ZK_STATUSES = ["PENDING", "POSTED", "REJECTED"] as const satisfies readonly ZoneTransferStatus[];
+
+/** Qator xatosi — matni lugʻatda `zoneTransfers.lineError.*` (komponentda `useLineErrorText`). */
+export type LineError =
+  | { code: "notPositiveInt"; product: string; batch: string }
+  | { code: "overFree"; product: string; batch: string; free: number; got: number };
+
+/** Kiritilgan miqdorni tekshiradi: musbat butun son, boʻsh miqdordan oshmaydi. */
+export function checkQty(row: { productName: string; batchNumber: string; free: number }, raw: string): LineError | number {
+  if (!/^\d+$/.test(raw) || Number(raw) <= 0) return { code: "notPositiveInt", product: row.productName, batch: row.batchNumber };
+  const n = Number(raw);
+  if (n > row.free) return { code: "overFree", product: row.productName, batch: row.batchNumber, free: row.free, got: n };
+  return n;
+}
 
 /** Karantindan sotuvga ochiq zonaga — tasdiq kerak (server bilan bir xil qoida). */
 export function needsApproval(fromType: string | undefined, toType: string | undefined): boolean {
   return fromType === "QUARANTINE" && (toType === "MAIN" || toType === "COLD" || toType === "SAFE");
 }
 
-/** Kiritilgan miqdorlar: musbat butun son, boʻsh miqdordan oshmaydi. Xato boʻlsa — matn. */
+/** Kiritilgan miqdorlar: musbat butun son, boʻsh miqdordan oshmaydi. Xato boʻlsa — `LineError`. */
 export function linesFrom(
   stock: ZoneStockRow[],
   qty: Record<number, string>,
-): { lines: ZoneTransferRequest["lines"]; error: string | null } {
+): { lines: ZoneTransferRequest["lines"]; error: LineError | null } {
   const lines: ZoneTransferRequest["lines"] = [];
   for (const row of stock) {
     const raw = (qty[row.batchId] ?? "").trim();
     if (raw === "") continue;
-    if (!/^\d+$/.test(raw) || Number(raw) <= 0)
-      return { lines: [], error: `${row.productName} · ${row.batchNumber}: miqdor musbat butun son boʻlishi kerak` };
-    const n = Number(raw);
-    if (n > row.free) return { lines: [], error: `${row.productName} · ${row.batchNumber}: boʻsh ${row.free}, kiritildi ${n}` };
+    const n = checkQty(row, raw);
+    if (typeof n !== "number") return { lines: [], error: n };
     lines.push({ batchId: row.batchId, qty: n });
   }
   return { lines, error: null };

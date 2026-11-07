@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Modal } from "@/components/ui/modal";
@@ -10,7 +11,7 @@ import { toast } from "@/components/ui/toast";
 import { ensureCsrf } from "@/features/auth/session";
 import { parseUzDate, formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { useExpenseItems } from "@/features/dictionaries/api";
-import { ACCOUNT_KIND, type MoneyAccount } from "@/features/payments/api";
+import type { MoneyAccount } from "@/features/payments/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney } from "@/lib/format";
@@ -22,11 +23,14 @@ export async function refreshMoney(qc: ReturnType<typeof useQueryClient>) {
   );
 }
 
-const accountOptions = (accounts: MoneyAccount[]) =>
-  accounts.filter((a) => a.active).map((a) => ({ value: String(a.id), label: a.name, sub: `${ACCOUNT_KIND[a.kind]} · ${a.code}` }));
+const accountOptions = (accounts: MoneyAccount[], kindLabel: (kind: MoneyAccount["kind"]) => string) =>
+  accounts.filter((a) => a.active).map((a) => ({ value: String(a.id), label: a.name, sub: `${kindLabel(a.kind)} · ${a.code}` }));
 
 /** KO / BO: kirim yoki chiqim, modda bilan. Kassadan 2 000 000 soʻmdan katta chiqim tasdiqqa ketadi. */
 export function CashOpDialog(props: { branchId: number; accounts: MoneyAccount[]; defaultAccount: number | null; onClose: () => void }) {
+  const t = useTranslations("cash.op");
+  const tc = useTranslations("cash");
+  const tk = useTranslations("payments.accountKind");
   const qc = useQueryClient();
   const items = useExpenseItems();
   const [direction, setDirection] = useState<"IN" | "OUT">("OUT");
@@ -48,11 +52,11 @@ export function CashOpDialog(props: { branchId: number; accounts: MoneyAccount[]
   async function submit() {
     setLocal(null);
     setError(null);
-    if (!account) return setLocal("Hisobni tanlang.");
-    if (!item) return setLocal(direction === "OUT" ? "Xarajat moddasini tanlang." : "Kirim moddasini tanlang.");
-    if (!amount) return setLocal("Summani kiriting.");
+    if (!account) return setLocal(t("selectAccount"));
+    if (!item) return setLocal(t(`selectItem.${direction}`));
+    if (!amount) return setLocal(tc("enterAmount"));
     const iso = parseUzDate(date);
-    if (iso === null) return setLocal("Sana notoʻgʻri. Masalan: 04.10.2026.");
+    if (iso === null) return setLocal(tc("badDateExample"));
     setPending(true);
     try {
       await ensureCsrf();
@@ -73,8 +77,8 @@ export function CashOpDialog(props: { branchId: number; accounts: MoneyAccount[]
       await refreshMoney(qc);
       toast({
         tone: "success",
-        title: r.status === "PENDING" ? "Chiqim tasdiqqa yuborildi" : direction === "OUT" ? "Chiqim yozildi" : "Kirim yozildi",
-        description: `${r.number} · ${formatMoney(r.amount)} soʻm`,
+        title: r.status === "PENDING" ? t("sentForApproval") : t(`saved.${direction}`),
+        description: tc("amountLine", { number: r.number, amount: formatMoney(r.amount) }),
       });
       props.onClose();
     } catch (e) {
@@ -90,44 +94,46 @@ export function CashOpDialog(props: { branchId: number; accounts: MoneyAccount[]
       open
       onClose={props.onClose}
       size="lg"
-      title={direction === "OUT" ? "Chiqim (KO / BO)" : "Kirim (KO / BO)"}
-      primaryAction={{ label: needsApproval ? "Tasdiqqa yuborish" : "Yozish", onClick: () => void submit(), loading: pending }}
+      title={t(`title.${direction}`)}
+      primaryAction={{ label: needsApproval ? t("sendForApproval") : t("submit"), onClick: () => void submit(), loading: pending }}
     >
       <div className="flex flex-col gap-4">
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {local ? <Alert tone="warning" title={local} /> : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Select
-            label="Yoʻnalish"
+            label={t("direction")}
             value={direction}
             onChange={(v) => {
               setDirection(v === "IN" ? "IN" : "OUT");
               setItem(null);
             }}
             options={[
-              { value: "OUT", label: "Chiqim" },
-              { value: "IN", label: "Kirim" },
+              { value: "OUT", label: tc("col.out") },
+              { value: "IN", label: tc("col.in") },
             ]}
           />
-          <Select label="Hisob" value={account} onChange={setAccount} options={accountOptions(props.accounts)} />
+          <Select label={tc("col.account")} value={account} onChange={setAccount} options={accountOptions(props.accounts, tk)} />
           <Select
-            label={direction === "OUT" ? "Xarajat moddasi" : "Kirim moddasi"}
+            label={t(`item.${direction}`)}
             value={item}
             onChange={setItem}
             options={itemOptions}
-            placeholder={items.isPending ? "Yuklanmoqda…" : "Tanlang"}
+            placeholder={items.isPending ? tc("loading") : tc("choose")}
           />
-          <TextField label="Summa" variant="amount" value={amount} onChange={setAmount} required suffix="soʻm" />
-          <TextField label="Sana" value={date} onChange={setDate} placeholder="04.10.2026" />
-          <TextField label={direction === "OUT" ? "Kimga" : "Kimdan"} value={party} onChange={setParty} maxLength={200} />
+          <TextField label={tc("col.amount")} variant="amount" value={amount} onChange={setAmount} required suffix={tc("currency")} />
+          <TextField label={tc("col.date")} value={date} onChange={setDate} placeholder="04.10.2026" />
+          <TextField label={t(`party.${direction}`)} value={party} onChange={setParty} maxLength={200} />
         </div>
-        <TextField label="Izoh" value={note} onChange={setNote} maxLength={500} />
-        {needsApproval ? (
-          <Alert tone="info" title="Kassadan 2.000.000,00 soʻmdan katta chiqim — Filial rahbari tasdiqlagach oʻtkaziladi." />
-        ) : null}
+        <TextField label={tc("col.note")} value={note} onChange={setNote} maxLength={500} />
+        {needsApproval ? <Alert tone="info" title={t("approvalHint")} /> : null}
         {selected ? (
           <div className="text-caption text-text-secondary">
-            «{selected.name}» qoldigʻi: <span className="font-mono tabular-nums">{formatMoney(selected.balance)} soʻm</span>
+            {t.rich("balance", {
+              name: selected.name,
+              amount: formatMoney(selected.balance),
+              num: (chunks) => <span className="font-mono tabular-nums">{chunks}</span>,
+            })}
           </div>
         ) : null}
       </div>
@@ -137,6 +143,9 @@ export function CashOpDialog(props: { branchId: number; accounts: MoneyAccount[]
 
 /** IO: bir filial hisoblari orasida (kassa → bank, Terminal → bank, …). Darhol oʻtkaziladi. */
 export function TransferDialog(props: { branchId: number; accounts: MoneyAccount[]; defaultFrom: number | null; onClose: () => void }) {
+  const t = useTranslations("cash.io");
+  const tc = useTranslations("cash");
+  const tk = useTranslations("payments.accountKind");
   const qc = useQueryClient();
   const [from, setFrom] = useState<string | null>(props.defaultFrom != null ? String(props.defaultFrom) : null);
   const [to, setTo] = useState<string | null>(null);
@@ -150,9 +159,9 @@ export function TransferDialog(props: { branchId: number; accounts: MoneyAccount
   async function submit() {
     setLocal(null);
     setError(null);
-    if (!from || !to) return setLocal("Qaysi hisobdan va qaysi hisobga — ikkalasini tanlang.");
-    if (from === to) return setLocal("Bitta hisobdan oʻziga oʻtkazib boʻlmaydi. Boshqa hisobni tanlang.");
-    if (!amount) return setLocal("Summani kiriting.");
+    if (!from || !to) return setLocal(t("selectBoth"));
+    if (from === to) return setLocal(t("sameAccount"));
+    if (!amount) return setLocal(tc("enterAmount"));
     setPending(true);
     try {
       await ensureCsrf();
@@ -164,8 +173,8 @@ export function TransferDialog(props: { branchId: number; accounts: MoneyAccount
       await refreshMoney(qc);
       toast({
         tone: "success",
-        title: "Oʻtkazma yozildi",
-        description: `${r.number} · ${r.fromAccount} → ${r.toAccount} · ${formatMoney(r.amount)} soʻm`,
+        title: t("saved"),
+        description: t("savedDescription", { number: r.number, from: r.fromAccount, to: r.toAccount, amount: formatMoney(r.amount) }),
       });
       props.onClose();
     } catch (e) {
@@ -176,24 +185,28 @@ export function TransferDialog(props: { branchId: number; accounts: MoneyAccount
   }
 
   const err = describeError(error);
-  const options = accountOptions(props.accounts);
+  const options = accountOptions(props.accounts, tk);
   return (
     <Modal
       open
       onClose={props.onClose}
-      title="Hisoblar orasida oʻtkazma (IO)"
-      primaryAction={{ label: "Oʻtkazish", onClick: () => void submit(), loading: pending }}
+      title={t("title")}
+      primaryAction={{ label: t("submit"), onClick: () => void submit(), loading: pending }}
     >
       <div className="flex flex-col gap-4">
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {local ? <Alert tone="warning" title={local} /> : null}
-        <Select label="Qaysi hisobdan" value={from} onChange={setFrom} options={options} />
-        <Select label="Qaysi hisobga" value={to} onChange={setTo} options={options.filter((o) => o.value !== from)} />
-        <TextField label="Summa" variant="amount" value={amount} onChange={setAmount} required suffix="soʻm" />
-        <TextField label="Izoh" value={note} onChange={setNote} maxLength={500} />
+        <Select label={t("from")} value={from} onChange={setFrom} options={options} />
+        <Select label={t("to")} value={to} onChange={setTo} options={options.filter((o) => o.value !== from)} />
+        <TextField label={tc("col.amount")} variant="amount" value={amount} onChange={setAmount} required suffix={tc("currency")} />
+        <TextField label={tc("col.note")} value={note} onChange={setNote} maxLength={500} />
         {source ? (
           <div className="text-caption text-text-secondary">
-            «{source.name}» qoldigʻi: <span className="font-mono tabular-nums">{formatMoney(source.balance)} soʻm</span>
+            {tc.rich("op.balance", {
+              name: source.name,
+              amount: formatMoney(source.balance),
+              num: (chunks) => <span className="font-mono tabular-nums">{chunks}</span>,
+            })}
           </div>
         ) : null}
       </div>
@@ -203,13 +216,14 @@ export function TransferDialog(props: { branchId: number; accounts: MoneyAccount
 
 /** Sabab bilan amal (rad etish, bekor qilish). */
 export function ReasonDialog(props: { title: string; action: string; onSubmit: (reason: string) => Promise<void>; onClose: () => void }) {
+  const tc = useTranslations("cash");
   const [reason, setReason] = useState("");
   const [error, setError] = useState<unknown>(null);
   const [local, setLocal] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   async function submit() {
     setLocal(null);
-    if (!reason.trim()) return setLocal("Sababini yozing.");
+    if (!reason.trim()) return setLocal(tc("reasonRequired"));
     setPending(true);
     setError(null);
     try {
@@ -234,7 +248,7 @@ export function ReasonDialog(props: { title: string; action: string; onSubmit: (
       <div className="flex flex-col gap-4">
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {local ? <Alert tone="warning" title={local} /> : null}
-        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} required autoFocus />
+        <TextField label={tc("reason")} value={reason} onChange={setReason} maxLength={300} required autoFocus />
       </div>
     </Modal>
   );

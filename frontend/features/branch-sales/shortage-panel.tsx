@@ -2,6 +2,7 @@
 
 import { FileMinus, Undo2 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
-import { HC_STATUS_LABELS } from "@/features/write-offs/api";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import {
   TRANSFER_RESOLVE,
@@ -25,28 +25,11 @@ import {
 
 export type FsShortageChoice = "BUYER_WRITE_OFF" | "SELLER_WRITE_OFF" | "RETURN";
 
-const CHOICES: Record<FsShortageChoice, { kind: FsShortageKind; bearer: FsShortageBearer; button: string; title: string; hint: string }> = {
-  BUYER_WRITE_OFF: {
-    kind: "WRITE_OFF",
-    bearer: "BUYER",
-    button: "Xaridor zimmasida",
-    title: "Kamomad xaridor zimmasida — hisobdan chiqarish",
-    hint: "Xaridor omborida hisobdan chiqarish hujjati (HC, sabab «Kamomad») tuziladi, qoldiq oʻzgarmaydi. Filiallararo qarz joʻnatilgan summada qoladi.",
-  },
-  SELLER_WRITE_OFF: {
-    kind: "WRITE_OFF",
-    bearer: "SELLER",
-    button: "Sotuvchi zimmasida",
-    title: "Kamomad sotuvchi zimmasida — hisobdan chiqarish",
-    hint: "Sotuvchi omborida HC tuziladi (qoldiq oʻzgarmaydi). Xaridor filial qarzi kamomad summasiga kamayadi.",
-  },
-  RETURN: {
-    kind: "RETURN",
-    bearer: "SELLER",
-    button: "Topildi — sotuvchiga qaytarish",
-    title: "Topildi — sotuvchiga qaytarish",
-    hint: "Tovar joʻnatilmay qolgan: sotuvchi zonasiga qaytariladi (qoldiq oshadi), xaridor filial qarzi kamomad summasiga kamayadi.",
-  },
+/** Har yoʻlning server parametrlari; matnlari — lugʻatda `branchSales.shortage.choice.*`. */
+const CHOICES: Record<FsShortageChoice, { kind: FsShortageKind; bearer: FsShortageBearer }> = {
+  BUYER_WRITE_OFF: { kind: "WRITE_OFF", bearer: "BUYER" },
+  SELLER_WRITE_OFF: { kind: "WRITE_OFF", bearer: "SELLER" },
+  RETURN: { kind: "RETURN", bearer: "SELLER" },
 };
 
 /** Ruxsat va filial bo'yicha mavjud yo'llar (tovar harakati qaysi filial omborida bo'lsa — o'sha filial hal qiladi). */
@@ -58,10 +41,11 @@ export function shortageChoices(info: Pick<FsShortageInfo, "open" | "canResolveA
   return out;
 }
 
-const BEARER_TEXT: Record<FsShortageBearer, string> = { BUYER: "xaridor zimmasida", SELLER: "sotuvchi zimmasida" };
-
 /** FS kamomadi: holat, oxirgi qaror va hal qilish (transfer.resolve). */
 export function BranchSaleShortagePanel({ doc }: { doc: BranchSaleDetail }) {
+  const t = useTranslations("branchSales.shortage");
+  const tw = useTranslations("writeOffs");
+  const tf = useTranslations("warehouseTransfers");
   const me = useMe();
   const active = doc.status === "RECEIVED" && doc.shortageQty > 0;
   const info = useBranchSaleShortage(doc.id, active);
@@ -77,34 +61,37 @@ export function BranchSaleShortagePanel({ doc }: { doc: BranchSaleDetail }) {
     <>
       <Alert
         tone={open ? "danger" : "info"}
-        title={`Kamomad: ${formatQuantity(doc.shortageQty)} dona${data?.amount ? ` · ${formatMoney(data.amount)}` : ""}${open ? " — hal qilinmagan" : " — hal qilindi"}`}
+        title={t(open ? "titleOpen" : "titleDone", {
+          qty: formatQuantity(doc.shortageQty),
+          amount: data?.amount ? ` · ${formatMoney(data.amount)}` : "",
+        })}
       >
         <div className="flex flex-col gap-2">
           {doc.receiveNote ? <span>{doc.receiveNote}</span> : null}
           {last ? (
             <span>
-              {last.kind === "RETURN" ? "Sotuvchiga qaytarildi" : `Hisobdan chiqarish, ${BEARER_TEXT[last.bearer]}`}
+              {last.kind === "RETURN" ? t("returned") : t("writtenOff", { bearer: t(`bearer.${last.bearer}`) })}
               {last.writeOffNumber ? (
                 <>
                   {" "}
                   <Link className="underline" href={`/write-offs?open=${last.writeOffId ?? ""}`}>
                     {last.writeOffNumber}
                   </Link>
-                  {last.writeOffStatus ? ` (${HC_STATUS_LABELS[last.writeOffStatus]})` : ""}
+                  {last.writeOffStatus ? ` (${tw(`status.${last.writeOffStatus}`)})` : ""}
                 </>
               ) : null}
-              {last.debtChange && last.debtChange !== "0.00" ? ` · qarz ${formatMoney(last.debtChange)}` : ""} · {last.resolvedBy},{" "}
-              {formatDateTime(new Date(last.resolvedAt))}
+              {last.debtChange && last.debtChange !== "0.00" ? ` · ${t("debt", { amount: formatMoney(last.debtChange) })}` : ""} ·{" "}
+              {last.resolvedBy}, {formatDateTime(new Date(last.resolvedAt))}
               {last.note ? ` · ${last.note}` : ""}
             </span>
           ) : open ? (
-            <span>Qarz joʻnatilgan summada. Kamomad kimning zimmasida ekanini aniqlab, hal qiling.</span>
+            <span>{t("openHint")}</span>
           ) : null}
           {choices.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {choices.map((c) => (
                 <Button key={c} variant="secondary" size="sm" icon={c === "RETURN" ? Undo2 : FileMinus} onClick={() => setChoice(c)}>
-                  {CHOICES[c].button}
+                  {t(`choice.${c}.button`)}
                 </Button>
               ))}
             </div>
@@ -114,9 +101,9 @@ export function BranchSaleShortagePanel({ doc }: { doc: BranchSaleDetail }) {
       <Modal
         open={choice !== null}
         onClose={() => setChoice(null)}
-        title={choice ? CHOICES[choice].title : ""}
+        title={choice ? t(`choice.${choice}.title`) : ""}
         primaryAction={{
-          label: choice === "RETURN" ? "Qaytarish" : "Hisobdan chiqarish",
+          label: choice === "RETURN" ? t("returnAction") : t("writeOffAction"),
           loading: resolve.isPending,
           onClick: () =>
             choice &&
@@ -129,23 +116,18 @@ export function BranchSaleShortagePanel({ doc }: { doc: BranchSaleDetail }) {
                   const pending = d.history[0]?.writeOffStatus === "PENDING";
                   toast({
                     tone: "success",
-                    title: pending
-                      ? "Hisobdan chiqarish tasdiqqa yuborildi"
-                      : choice === "RETURN"
-                        ? "Tovar sotuvchiga qaytarildi"
-                        : "Hisobdan chiqarish hujjati tuzildi",
+                    title: pending ? t("pendingToast") : choice === "RETURN" ? t("returnedToast") : t("writtenOffToast"),
                     description: d.history[0]?.writeOffNumber ?? d.number,
                   });
                 },
-                onError: (e) =>
-                  toast({ tone: "danger", title: "Bajarilmadi", description: describeError(e).message ?? "Qayta urinib koʻring." }),
+                onError: (e) => toast({ tone: "danger", title: tf("failed"), description: describeError(e).message ?? tf("retryHint") }),
               },
             ),
         }}
       >
         <div className="flex flex-col gap-3">
-          <p className="text-body text-text-secondary">{choice ? CHOICES[choice].hint : ""}</p>
-          <TextField label="Izoh" value={note} onChange={setNote} placeholder="Masalan: yuklashda qolib ketgan, haydovchi tasdiqladi" />
+          <p className="text-body text-text-secondary">{choice ? t(`choice.${choice}.hint`, { hc: "HC" }) : ""}</p>
+          <TextField label={t("note")} value={note} onChange={setNote} placeholder={t("notePlaceholder")} />
         </div>
       </Modal>
     </>

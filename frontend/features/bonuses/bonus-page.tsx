@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { AlarmClock, Gift } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -32,13 +33,15 @@ export const isIdle = (r: Pick<BonusRow, "idleDays">) => r.idleDays != null && r
 const money = (v: string) =>
   v === "0.00" ? <span className="text-text-secondary">—</span> : <span className="tabular-nums">{formatMoney(v)}</span>;
 
-const DOC_LABEL: Record<string, string> = { BNS: "Bonus tasdiqlandi", KR: "Bonus hisobidan kirim" };
+const DOC_TYPES = ["BNS", "KR"] as const;
+const isDocType = (v: string): v is (typeof DOC_TYPES)[number] => (DOC_TYPES as readonly string[]).includes(v);
 
 /**
  * Pul → Bonus balans (SPEC 5.1): YB chegirmasi qarzdan ayrilmaydi — «Bonus tasdiqlandi» (BNS) bilan balansga tushadi va keyingi
  * kirimlarda ishlatiladi. Balans faqat jurnaldan; kutilayotgan — chegirmali, lekin hali tasdiqlanmagan kirimlar.
  */
 export function BonusPage() {
+  const t = useTranslations("bonuses");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const allowed = BONUS_VIEW.some((k) => can(me.data, k));
@@ -56,16 +59,13 @@ export function BonusPage() {
     [report.data, q, idleOnly],
   );
 
-  if (me.data && !allowed) return <ForbiddenState description="«Bonus balans» sahifasi sizning rolingiz uchun yopiq." />;
-  if (me.data && branchId == null)
-    return (
-      <EmptyState icon={Gift} title="Filialni tanlang" description="Bonus balans filial boʻyicha yuritiladi — yuqorida filialni tanlang." />
-    );
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
+  if (me.data && branchId == null) return <EmptyState icon={Gift} title={t("noBranch.title")} description={t("noBranch.description")} />;
 
   const columns: TableColumn<BonusRow>[] = [
     {
       key: "supplier",
-      title: "Yetkazib beruvchi",
+      title: t("col.supplier"),
       render: (r) => (
         <div className="min-w-0">
           <div>{r.supplier}</div>
@@ -73,41 +73,45 @@ export function BonusPage() {
         </div>
       ),
     },
-    { key: "balance", title: "Bonus balans", align: "right", render: (r) => money(r.balance) },
-    { key: "pending", title: "Kutilayotgan", align: "right", render: (r) => money(r.pending) },
-    { key: "nextBonusDate", title: "Olish sanasi", render: (r) => formatIsoDate(r.nextBonusDate) },
+    { key: "balance", title: t("balance"), align: "right", render: (r) => money(r.balance) },
+    { key: "pending", title: t("pending"), align: "right", render: (r) => money(r.pending) },
+    { key: "nextBonusDate", title: t("col.bonusDate"), render: (r) => formatIsoDate(r.nextBonusDate) },
     {
       key: "idleDays",
-      title: "Ishlatilmagan",
+      title: t("col.idle"),
       render: (r) =>
         isIdle(r) ? (
           <Badge tone="warning" icon={AlarmClock}>
-            {r.idleDays} kun
+            {t("days", { count: r.idleDays ?? 0 })}
           </Badge>
         ) : r.idleDays != null ? (
-          <span className="text-text-secondary">{r.idleDays} kun</span>
+          <span className="text-text-secondary">{t("days", { count: r.idleDays })}</span>
         ) : null,
     },
-    { key: "lastMoveAt", title: "Oxirgi harakat", render: (r) => (r.lastMoveAt ? formatDateTime(new Date(r.lastMoveAt)) : "") },
+    { key: "lastMoveAt", title: t("col.lastMove"), render: (r) => (r.lastMoveAt ? formatDateTime(new Date(r.lastMoveAt)) : "") },
   ];
   const d = report.data;
 
   return (
     <>
-      <h1 className="mb-4 text-page-title">Bonus balans</h1>
+      <h1 className="mb-4 text-page-title">{t("title")}</h1>
       {d ? (
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card>
-            <div className="text-caption text-text-secondary">Bonus balans</div>
-            <div className="mt-1 font-mono text-subtitle tabular-nums">{formatMoney(d.balance)} soʻm</div>
+            <div className="text-caption text-text-secondary">{t("balance")}</div>
+            <div className="mt-1 font-mono text-subtitle tabular-nums">
+              {formatMoney(d.balance)} {t("currency")}
+            </div>
           </Card>
           <Card>
-            <div className="text-caption text-text-secondary">Kutilayotgan bonuslar</div>
-            <div className="mt-1 font-mono text-subtitle tabular-nums">{formatMoney(d.pending)} soʻm</div>
+            <div className="text-caption text-text-secondary">{t("pendingBonuses")}</div>
+            <div className="mt-1 font-mono text-subtitle tabular-nums">
+              {formatMoney(d.pending)} {t("currency")}
+            </div>
           </Card>
           <Card>
-            <div className="text-caption text-text-secondary">{IDLE_DAYS} kundan koʻp ishlatilmagan</div>
-            <div className="mt-1 text-subtitle tabular-nums">{d.idle} ta yetkazib beruvchi</div>
+            <div className="text-caption text-text-secondary">{t("idleOver", { days: IDLE_DAYS })}</div>
+            <div className="mt-1 text-subtitle tabular-nums">{t("suppliersCount", { count: d.idle })}</div>
           </Card>
         </div>
       ) : null}
@@ -115,19 +119,19 @@ export function BonusPage() {
         <ErrorState onRetry={() => report.refetch()} />
       ) : (
         <Table
-          caption="Bonus balans"
+          caption={t("balance")}
           columns={columns}
           rows={rows}
           rowKey={(r) => String(r.supplierId)}
           loading={report.isPending}
           onRowClick={setOpen}
-          totals={d ? { supplier: "Jami", balance: money(d.balance), pending: money(d.pending) } : undefined}
+          totals={d ? { supplier: t("total"), balance: money(d.balance), pending: money(d.pending) } : undefined}
           toolbar={
             <div className="flex flex-wrap items-center gap-4">
               <div className="w-72">
-                <TextField label="Qidirish" variant="search" size="sm" value={q} onChange={setQ} placeholder="Nomi yoki STIR" />
+                <TextField label={t("search")} variant="search" size="sm" value={q} onChange={setQ} placeholder={t("searchPlaceholder")} />
               </div>
-              <Checkbox label={`${IDLE_DAYS} kundan koʻp ishlatilmagan`} checked={idleOnly} onChange={setIdleOnly} />
+              <Checkbox label={t("idleOver", { days: IDLE_DAYS })} checked={idleOnly} onChange={setIdleOnly} />
             </div>
           }
           emptyState={
@@ -139,11 +143,7 @@ export function BonusPage() {
                 }}
               />
             ) : (
-              <EmptyState
-                icon={Gift}
-                title="Bonus yoʻq"
-                description="Kirimda chegirma kiritilsa, u shu yerda kutilayotgan bonus boʻlib koʻrinadi."
-              />
+              <EmptyState icon={Gift} title={t("empty.title")} description={t("empty.description")} />
             )
           }
         />
@@ -154,6 +154,7 @@ export function BonusPage() {
 }
 
 function BonusDrawer(props: { row: BonusRow; branchId: number; onClose: () => void }) {
+  const t = useTranslations("bonuses");
   const detail = useQuery({
     queryKey: ["supplier-bonuses", props.branchId, props.row.supplierId],
     queryFn: () =>
@@ -164,84 +165,93 @@ function BonusDrawer(props: { row: BonusRow; branchId: number; onClose: () => vo
       ),
   });
   const moveColumns: TableColumn<BonusMove>[] = [
-    { key: "at", title: "Sana", render: (m) => formatDateTime(new Date(m.at)) },
+    { key: "at", title: t("col.date"), render: (m) => formatDateTime(new Date(m.at)) },
     {
       key: "docNumber",
-      title: "Hujjat",
+      title: t("col.document"),
       render: (m) => (
         <div>
           <div className="font-mono">{m.docNumber}</div>
-          <div className="text-caption text-text-secondary">{DOC_LABEL[m.docType] ?? m.docType}</div>
+          <div className="text-caption text-text-secondary">{isDocType(m.docType) ? t(`docType.${m.docType}`) : m.docType}</div>
         </div>
       ),
     },
     {
       key: "amount",
-      title: "Summa",
+      title: t("col.amount"),
       align: "right",
       render: (m) => <span className={`tabular-nums ${m.amount.startsWith("-") ? "" : "text-success"}`}>{formatMoney(m.amount)}</span>,
     },
-    { key: "balance", title: "Balans", align: "right", render: (m) => money(m.balance) },
-    { key: "employee", title: "Xodim", render: (m) => m.employee ?? "" },
+    { key: "balance", title: t("col.balance"), align: "right", render: (m) => money(m.balance) },
+    { key: "employee", title: t("col.employee"), render: (m) => m.employee ?? "" },
   ];
   const pendingColumns: TableColumn<PendingBonus>[] = [
-    { key: "receiptNumber", title: "Kirim", mono: true },
-    { key: "receiptDate", title: "Kirim sanasi", render: (p) => formatIsoDate(p.receiptDate) },
+    { key: "receiptNumber", title: t("col.receipt"), mono: true },
+    { key: "receiptDate", title: t("col.receiptDate"), render: (p) => formatIsoDate(p.receiptDate) },
     {
       key: "bonusDate",
-      title: "Olish sanasi",
+      title: t("col.bonusDate"),
       render: (p) =>
         p.overdue ? (
           <Badge tone="warning" icon={AlarmClock}>
-            {formatIsoDate(p.bonusDate)} — vaqti oʻtgan
+            {formatIsoDate(p.bonusDate)} — {t("overdue")}
           </Badge>
         ) : (
           formatIsoDate(p.bonusDate)
         ),
     },
-    { key: "amount", title: "Bonus", align: "right", render: (p) => money(p.amount) },
+    { key: "amount", title: t("col.bonus"), align: "right", render: (p) => money(p.amount) },
   ];
   return (
-    <Drawer open onClose={props.onClose} size="lg" kind="Yetkazib beruvchi" title={props.row.supplier} subtitle={`STIR ${props.row.tin}`}>
+    <Drawer
+      open
+      onClose={props.onClose}
+      size="lg"
+      kind={t("col.supplier")}
+      title={props.row.supplier}
+      subtitle={t("tin", { tin: props.row.tin })}
+    >
       {detail.error ? (
         <ErrorState onRetry={() => detail.refetch()} />
       ) : (
         <div className="flex flex-col gap-6">
           <dl className="grid grid-cols-2 gap-4">
             <div>
-              <dt className="text-caption text-text-secondary">Bonus balans</dt>
-              <dd className="font-mono tabular-nums">{formatMoney(detail.data?.balance ?? props.row.balance)} soʻm</dd>
+              <dt className="text-caption text-text-secondary">{t("balance")}</dt>
+              <dd className="font-mono tabular-nums">
+                {formatMoney(detail.data?.balance ?? props.row.balance)} {t("currency")}
+              </dd>
             </div>
             <div>
-              <dt className="text-caption text-text-secondary">Kutilayotgan</dt>
-              <dd className="font-mono tabular-nums">{formatMoney(props.row.pending)} soʻm</dd>
+              <dt className="text-caption text-text-secondary">{t("pending")}</dt>
+              <dd className="font-mono tabular-nums">
+                {formatMoney(props.row.pending)} {t("currency")}
+              </dd>
             </div>
           </dl>
           <section>
-            <h2 className="mb-2 text-subtitle">Kutilayotgan bonuslar</h2>
-            <p className="mb-3 text-caption text-text-secondary">
-              Olish sanasida kirim kartochkasida «Bonus tasdiqlandi» bosiladi — summa balansga tushadi.
-            </p>
+            <h2 className="mb-2 text-subtitle">{t("pendingBonuses")}</h2>
+            <p className="mb-3 text-caption text-text-secondary">{t("pendingHint")}</p>
             <Table
-              caption="Kutilayotgan bonuslar"
+              caption={t("pendingBonuses")}
               density="compact"
               columns={pendingColumns}
               rows={detail.data?.pending ?? []}
               rowKey={(p) => String(p.receiptId)}
               loading={detail.isPending}
-              emptyState={<EmptyState icon={Gift} title="Kutilayotgan bonus yoʻq" description="Chegirmali barcha kirimlar tasdiqlangan." />}
+              emptyState={<EmptyState icon={Gift} title={t("pendingEmpty.title")} description={t("pendingEmpty.description")} />}
             />
           </section>
           <section>
-            <h2 className="mb-2 text-subtitle">Harakatlar</h2>
+            <h2 className="mb-2 text-subtitle">{t("moves")}</h2>
             <Table
-              caption="Bonus harakatlari"
+              caption={t("movesCaption")}
               density="compact"
               columns={moveColumns}
               rows={detail.data?.moves ?? []}
               rowKey={(m) => `${m.docType}:${m.docId}:${m.at}:${m.amount}`}
               loading={detail.isPending}
-              emptyState={<EmptyState icon={Gift} title="Harakat yoʻq" description="Bonus tasdiqlanganda shu yerda koʻrinadi." />}
+              emptyState={<EmptyState icon={Gift} title={t("movesEmpty.title")} description={t("movesEmpty.description")} />}
             />
           </section>
         </div>

@@ -26,6 +26,9 @@ export function canBlockCard(perms: string[] | undefined, customer: boolean, sup
   return (customer && p.includes("clients.block")) || (supplier && p.includes("suppliers.block"));
 }
 
+/** Toʻlov turlari; nomi UI'da `counterparties.paymentType.<qiymat>` dan. */
+export const PAYMENT_TYPE_VALUES = ["TRANSFER", "CASH", "ONLINE"] as const;
+
 export const PAYMENT_TYPES = [
   { value: "TRANSFER", label: "Perechisleniye" },
   { value: "CASH", label: "Naqd" },

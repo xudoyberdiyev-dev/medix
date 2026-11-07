@@ -1,0 +1,96 @@
+{
+  "kind": "Filiallararo savdo",
+  "title": "Filiallararo savdo",
+  "create": "Savdo tuzish",
+  "col": {
+    "route": "Sotuvchi → xaridor",
+    "total": "Summa",
+    "unitCost": "Tannarx",
+    "amount": "Summa"
+  },
+  "debt": {
+    "title": "Filiallararo qarz",
+    "arrow": "qarzdor",
+    "pay": "Toʻlash",
+    "note": "Guruh ichidagi qarz — mijozlar va yetkazib beruvchilar qarzi jamiga kirmaydi."
+  },
+  "empty": {
+    "title": "Hali filiallararo savdo yoʻq",
+    "description": "Tovarni boshqa filialga tannarxda soting: qoralama → joʻnatish ({hf}) → xaridor qabul qiladi."
+  },
+  "view": {
+    "print": "Chop etish",
+    "draftBody": "Tovar hali «{zone}» zonasida. Joʻnatilganda qoldiqdan chiqadi, partiya tannarxida hisob-faktura ({hf}) yoziladi va «{buyer}» filiali qarzi oshadi.",
+    "transitBody": "{who} joʻnatdi ({at}). «{buyer}» filiali qabul qilishini kutmoqda.",
+    "seller": "Sotuvchi",
+    "buyer": "Xaridor",
+    "invoice": "Hisob-faktura",
+    "total": "Summa (QQS bilan)",
+    "vat": "shu jumladan QQS"
+  },
+  "form": {
+    "title": "Yangi filiallararo savdo",
+    "buyerWarehouse": "Xaridor ombori",
+    "noTargetsTitle": "Boshqa filialda faol ombor yoʻq",
+    "noTargetsBody": "Filiallararo savdo uchun xaridor filialda faol ombor kerak. Filial ichida — ombor koʻchirishi ({ok}).",
+    "priceNote": "Narx — partiya tannarxi (QQS shu summa ichida). Guruh ichidagi qarz mijozlar qarzi jamiga kirmaydi.",
+    "pickZones": "Sotuvchi zonani va xaridor omborini tanlang.",
+    "notePlaceholder": "Masalan: Samarqand filialiga kamyob dorilar"
+  },
+  "shortage": {
+    "titleOpen": "Kamomad: {qty} dona{amount} — hal qilinmagan",
+    "titleDone": "Kamomad: {qty} dona{amount} — hal qilindi",
+    "returned": "Sotuvchiga qaytarildi",
+    "writtenOff": "Hisobdan chiqarish, {bearer}",
+    "bearer": {
+      "BUYER": "xaridor zimmasida",
+      "SELLER": "sotuvchi zimmasida"
+    },
+    "debt": "qarz {amount}",
+    "openHint": "Qarz joʻnatilgan summada. Kamomad kimning zimmasida ekanini aniqlab, hal qiling.",
+    "returnAction": "Qaytarish",
+    "writeOffAction": "Hisobdan chiqarish",
+    "pendingToast": "Hisobdan chiqarish tasdiqqa yuborildi",
+    "returnedToast": "Tovar sotuvchiga qaytarildi",
+    "writtenOffToast": "Hisobdan chiqarish hujjati tuzildi",
+    "note": "Izoh",
+    "notePlaceholder": "Masalan: yuklashda qolib ketgan, haydovchi tasdiqladi",
+    "choice": {
+      "BUYER_WRITE_OFF": {
+        "button": "Xaridor zimmasida",
+        "title": "Kamomad xaridor zimmasida — hisobdan chiqarish",
+        "hint": "Xaridor omborida hisobdan chiqarish hujjati ({hc}, sabab «Kamomad») tuziladi, qoldiq oʻzgarmaydi. Filiallararo qarz joʻnatilgan summada qoladi."
+      },
+      "SELLER_WRITE_OFF": {
+        "button": "Sotuvchi zimmasida",
+        "title": "Kamomad sotuvchi zimmasida — hisobdan chiqarish",
+        "hint": "Sotuvchi omborida {hc} tuziladi (qoldiq oʻzgarmaydi). Xaridor filial qarzi kamomad summasiga kamayadi."
+      },
+      "RETURN": {
+        "button": "Topildi — sotuvchiga qaytarish",
+        "title": "Topildi — sotuvchiga qaytarish",
+        "hint": "Tovar joʻnatilmay qolgan: sotuvchi zonasiga qaytariladi (qoldiq oshadi), xaridor filial qarzi kamomad summasiga kamayadi."
+      }
+    }
+  },
+  "payments": {
+    "paid": "Toʻlov yozildi",
+    "paidDescription": "{number} · {from} → {to} · {amount} soʻm",
+    "dialogTitle": "Filialga toʻlov: {name}",
+    "pay": "Toʻlash",
+    "pickAccounts": "Qaysi hisobdan va qaysi hisobga — ikkalasini tanlang.",
+    "enterAmount": "Summani kiriting.",
+    "debtLine": "«{name}» qarzi: <money>{amount} soʻm</money>. Pul darhol oʻtadi, filiallararo qarz shu summaga kamayadi.",
+    "fromAccount": "Qaysi hisobdan",
+    "toAccount": "Qaysi hisobga ({name})",
+    "amount": "Summa",
+    "currency": "soʻm",
+    "note": "Izoh",
+    "balance": "«{name}» qoldigʻi: <money>{amount} soʻm</money>",
+    "list": "Toʻlovlar",
+    "arrow": "dan",
+    "cancel": "Bekor qilish",
+    "cancelTitle": "Toʻlovni bekor qilish: {number}",
+    "cancelled": "Toʻlov bekor qilindi"
+  }
+}

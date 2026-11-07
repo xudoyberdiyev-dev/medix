@@ -2,13 +2,17 @@
 
 import { ChartColumn, ChevronRight, Clock } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/card";
 import { EmptyState, ForbiddenState } from "@/components/ui/system-states";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 
+export type ReportKey = "sales" | "operators" | "gross-profit" | "debts" | "stock" | "suppliers" | "pickers" | "markers";
+
+/** `title`/`description` — uz-Latn (Ctrl+K qidiruvi uchun); UI tarjimasi `reports.catalog.items.<key>` dan. */
 export interface ReportEntry {
-  key: string;
+  key: ReportKey;
   title: string;
   description: string;
   /** Hali qurilmagan boʻlsa — null. */
@@ -85,16 +89,17 @@ export function visibleReports(perms: string[]): ReportEntry[] {
 }
 
 export function ReportsCatalog() {
+  const t = useTranslations("reports.catalog");
   const me = useMe();
   if (!me.data) return null;
   const list = visibleReports(me.data.permissions);
   if (!can(me.data, "reports.all") && !can(me.data, "reports.view") && !can(me.data, "reports.own") && list.length === 0)
-    return <ForbiddenState description="Hisobotlar sizning rolingiz uchun yopiq." />;
+    return <ForbiddenState description={t("forbidden")} />;
   return (
     <>
-      <h1 className="mb-4 text-page-title">Hisobotlar</h1>
+      <h1 className="mb-4 text-page-title">{t("title")}</h1>
       {list.length === 0 ? (
-        <EmptyState icon={ChartColumn} title="Hisobot yoʻq" description="Rolingiz uchun ochiq hisobot hali yoʻq." />
+        <EmptyState icon={ChartColumn} title={t("emptyTitle")} description={t("emptyDescription")} />
       ) : (
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {list.map((r) => (
@@ -104,20 +109,20 @@ export function ReportsCatalog() {
                   <Card className="h-full hover:bg-background">
                     <div className="flex items-center justify-between gap-2 text-subtitle">
                       <span className="flex items-center gap-2">
-                        <ChartColumn size={18} strokeWidth={1.5} aria-hidden /> {r.title}
+                        <ChartColumn size={18} strokeWidth={1.5} aria-hidden /> {t(`items.${r.key}.title`)}
                       </span>
                       <ChevronRight size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
                     </div>
-                    <p className="mt-1 text-caption text-text-secondary">{r.description}</p>
+                    <p className="mt-1 text-caption text-text-secondary">{t(`items.${r.key}.description`)}</p>
                   </Card>
                 </Link>
               ) : (
                 <Card className="h-full">
                   <div className="flex items-center gap-2 text-subtitle text-text-secondary">
-                    <Clock size={18} strokeWidth={1.5} aria-hidden /> {r.title}
+                    <Clock size={18} strokeWidth={1.5} aria-hidden /> {t(`items.${r.key}.title`)}
                   </div>
-                  <p className="mt-1 text-caption text-text-secondary">{r.description}</p>
-                  <p className="mt-2 text-caption text-text-secondary">Tez orada</p>
+                  <p className="mt-1 text-caption text-text-secondary">{t(`items.${r.key}.description`)}</p>
+                  <p className="mt-2 text-caption text-text-secondary">{t("soon")}</p>
                 </Card>
               )}
             </li>

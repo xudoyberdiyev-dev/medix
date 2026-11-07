@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Modal } from "@/components/ui/modal";
@@ -24,6 +25,7 @@ export function DeactivateDialog({
   onConfirm: (reason: string) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("organization");
   const [reason, setReason] = useState("");
   const [localError, setLocalError] = useState<string>();
   const err = describeError(error);
@@ -38,14 +40,14 @@ export function DeactivateDialog({
         label: actionLabel,
         loading: pending,
         onClick: () => {
-          if (!reason.trim()) return setLocalError("Sabab kiritilmagan. Nega nofaol qilinayotganini yozing.");
+          if (!reason.trim()) return setLocalError(t("reasonRequired"));
           onConfirm(reason.trim());
         },
       }}
     >
       <p>{consequence}</p>
       <div className="mt-4">
-        <TextField label="Sabab" value={reason} onChange={setReason} error={localError ?? err.fields.reason} required autoFocus />
+        <TextField label={t("reason")} value={reason} onChange={setReason} error={localError ?? err.fields.reason} required autoFocus />
       </div>
       {err.message ? <Alert tone="danger" title={err.message} className="mt-4" /> : null}
     </Modal>

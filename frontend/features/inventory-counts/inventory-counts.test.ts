@@ -24,7 +24,7 @@ describe("inventarizatsiya", () => {
   });
 
   it("notoʻgʻri miqdor — xato matni", () => {
-    expect(changedEntries([line(1, null)], { 1: "-2" }).error).toContain("Paratsetamol · P-1");
+    expect(changedEntries([line(1, null)], { 1: "-2" }).error).toEqual({ product: "Paratsetamol", batch: "P-1" });
     expect(changedEntries([line(1, null)], { 1: "2,5" }).entries).toEqual([]);
   });
 

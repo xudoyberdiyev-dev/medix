@@ -5,7 +5,7 @@ import { OrdersPage } from "@/features/orders/orders-page";
 export default function Page() {
   return (
     <>
-      <TopBar title="Buyurtmalar" />
+      <TopBar titleKey="orders" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <OrdersPage />

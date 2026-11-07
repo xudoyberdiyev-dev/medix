@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleCheck, Clock, Plus, Undo2, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -12,18 +13,11 @@ import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import {
-  QY_CREATE,
-  QY_REASON_LABELS,
-  QY_STATUS_LABELS,
-  QY_VIEW_KEYS,
-  useSupplierReturns,
-  type SupplierReturnStatus,
-  type SupplierReturnSummary,
-} from "./api";
+import { QY_CREATE, QY_STATUSES, QY_VIEW_KEYS, useSupplierReturns, type SupplierReturnStatus, type SupplierReturnSummary } from "./api";
 import { SupplierReturnDrawer, type ReturnPreset } from "./supplier-return-drawer";
 
 export function SupplierReturnStatusBadge({ status }: { status: SupplierReturnStatus }) {
+  const t = useTranslations("supplierReturns");
   const map = {
     PENDING: { tone: "warning", icon: Clock },
     POSTED: { tone: "success", icon: CircleCheck },
@@ -31,13 +25,14 @@ export function SupplierReturnStatusBadge({ status }: { status: SupplierReturnSt
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {QY_STATUS_LABELS[status]}
+      {t(`status.${status}`)}
     </Badge>
   );
 }
 
 /** QY — yetkazib beruvchiga qaytarish: oʻtkazilgan kirim partiyalari; tasdiq bilan, YB qarzi kirim narxida kamayadi. */
 export function SupplierReturnsPage() {
+  const t = useTranslations("supplierReturns");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const params = useSearchParams();
@@ -67,39 +62,39 @@ export function SupplierReturnsPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useSupplierReturns(branchId, (status as SupplierReturnStatus | null) ?? null, page);
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
   const showAmount = (docs.data?.items ?? []).some((d) => d.totalAmount != null);
   const columns: TableColumn<SupplierReturnSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "createdAt", title: "Sana", render: (d) => formatDateTime(new Date(d.createdAt)) },
-    { key: "supplier", title: "Yetkazib beruvchi", wrap: true },
-    { key: "receiptNumber", title: "Kirim", mono: true },
-    { key: "warehouse", title: "Ombor · zona", render: (d) => `${d.warehouse} · ${d.zone.name}` },
-    { key: "reason", title: "Sabab", render: (d) => QY_REASON_LABELS[d.reason] },
-    { key: "qty", title: "Miqdor", align: "right", render: (d) => formatQuantity(d.qty) },
+    { key: "number", title: t("col.number"), mono: true },
+    { key: "createdAt", title: t("col.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
+    { key: "supplier", title: t("col.supplier"), wrap: true },
+    { key: "receiptNumber", title: t("col.receipt"), mono: true },
+    { key: "warehouse", title: t("col.warehouseZone"), render: (d) => `${d.warehouse} · ${d.zone.name}` },
+    { key: "reason", title: t("col.reason"), render: (d) => t(`reason.${d.reason}`) },
+    { key: "qty", title: t("col.qty"), align: "right", render: (d) => formatQuantity(d.qty) },
     ...(showAmount
       ? [
           {
             key: "totalAmount",
-            title: "Summa",
+            title: t("col.amount"),
             align: "right" as const,
             render: (d: SupplierReturnSummary) => (d.totalAmount != null ? formatMoney(d.totalAmount) : "—"),
           },
         ]
       : []),
-    { key: "createdBy", title: "Kiritdi" },
-    { key: "status", title: "Holat", render: (d) => <SupplierReturnStatusBadge status={d.status} /> },
+    { key: "createdBy", title: t("col.createdBy") },
+    { key: "status", title: t("col.status"), render: (d) => <SupplierReturnStatusBadge status={d.status} /> },
   ];
   const filtered = status !== null;
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">YB ga qaytarish</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setOpen({ id: null })}>
-            Qaytarish
+            {t("create")}
           </Button>
         ) : null}
       </div>
@@ -107,7 +102,7 @@ export function SupplierReturnsPage() {
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (
         <Table
-          caption="YB ga qaytarish hujjatlari"
+          caption={t("caption")}
           columns={columns}
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
@@ -116,13 +111,13 @@ export function SupplierReturnsPage() {
           toolbar={
             <div className="w-56">
               <Select
-                label="Holat"
+                label={t("filter.status")}
                 size="sm"
                 value={status}
                 onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder="Barcha holatlar"
+                placeholder={t("filter.allStatuses")}
                 className="[&>span:first-child]:sr-only"
-                options={Object.entries(QY_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                options={QY_STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
               />
             </div>
           }
@@ -132,12 +127,12 @@ export function SupplierReturnsPage() {
             ) : (
               <EmptyState
                 icon={Undo2}
-                title="Hali YB ga qaytarish yoʻq"
-                description="Sifatsiz, shikastlangan yoki ortiqcha tovarni kirim boʻyicha yetkazib beruvchiga qaytaring — qarz avtomatik kamayadi."
+                title={t("empty.title")}
+                description={t("empty.description")}
                 action={
                   canCreate ? (
                     <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
-                      Qaytarish
+                      {t("create")}
                     </Button>
                   ) : undefined
                 }

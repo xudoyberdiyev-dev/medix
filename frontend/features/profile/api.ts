@@ -37,15 +37,17 @@ export function useSetPin() {
 
 /**
  * PIN shakli tekshiruvi (server ham tekshiradi): 4–6 raqam, 1111 / 1234 / 4321 kabi oson emas, takrori mos.
- * Xato boʻlsa — foydalanuvchiga koʻrsatiladigan matn.
+ * Xato boʻlsa — `profile.pin.errors.<kalit>`.
  */
-export function validatePin(pin: string, repeat: string): { pin?: string; repeat?: string } {
-  if (!/^\d{4,6}$/.test(pin)) return { pin: "PIN 4–6 ta raqamdan iborat boʻlishi kerak." };
+export type PinErrorKey = "format" | "easy" | "mismatch";
+
+export function validatePin(pin: string, repeat: string): { pin?: PinErrorKey; repeat?: PinErrorKey } {
+  if (!/^\d{4,6}$/.test(pin)) return { pin: "format" };
   const digits = [...pin].map(Number);
   const same = digits.every((d) => d === digits[0]);
   const up = digits.every((d, i) => i === 0 || d - digits[i - 1] === 1);
   const down = digits.every((d, i) => i === 0 || d - digits[i - 1] === -1);
-  if (same || up || down) return { pin: "PIN juda oson. 1111, 1234 kabi ketma-ketlik boʻlmasin." };
-  if (pin !== repeat) return { repeat: "PIN takrori mos kelmadi. Qaytadan kiriting." };
+  if (same || up || down) return { pin: "easy" };
+  if (pin !== repeat) return { repeat: "mismatch" };
   return {};
 }

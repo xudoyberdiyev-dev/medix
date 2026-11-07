@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Undo2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,7 @@ async function refreshAll(qc: ReturnType<typeof useQueryClient>) {
 
 /** Filialga to'lov: qarzdor hisobidan → kreditor hisobiga; qarz kamayadi (summa qarzdan oshmaydi — server tekshiradi). */
 export function BranchPayDialog({ balance, onClose }: { balance: BranchBalance; onClose: () => void }) {
+  const t = useTranslations("branchSales.payments");
   const qc = useQueryClient();
   const own = useAccounts(balance.debtor.id);
   const payee = usePayeeAccounts(balance.debtor.id, balance.creditor.id);
@@ -84,8 +86,8 @@ export function BranchPayDialog({ balance, onClose }: { balance: BranchBalance; 
       await refreshAll(qc);
       toast({
         tone: "success",
-        title: "Toʻlov yozildi",
-        description: `${r.number} · ${r.payerBranch} → ${r.payeeBranch} · ${formatMoney(r.amount)} soʻm`,
+        title: t("paid"),
+        description: t("paidDescription", { number: r.number, from: r.payerBranch, to: r.payeeBranch, amount: formatMoney(r.amount) }),
       });
       onClose();
     },
@@ -96,14 +98,14 @@ export function BranchPayDialog({ balance, onClose }: { balance: BranchBalance; 
     <Modal
       open
       onClose={onClose}
-      title={`Filialga toʻlov: ${balance.creditor.name}`}
+      title={t("dialogTitle", { name: balance.creditor.name })}
       primaryAction={{
-        label: "Toʻlash",
+        label: t("pay"),
         loading: pay.isPending,
         onClick: () => {
           setLocal(null);
-          if (!from || !to) return setLocal("Qaysi hisobdan va qaysi hisobga — ikkalasini tanlang.");
-          if (!amount.trim()) return setLocal("Summani kiriting.");
+          if (!from || !to) return setLocal(t("pickAccounts"));
+          if (!amount.trim()) return setLocal(t("enterAmount"));
           pay.mutate();
         },
       }}
@@ -112,11 +114,14 @@ export function BranchPayDialog({ balance, onClose }: { balance: BranchBalance; 
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {local ? <Alert tone="warning" title={local} /> : null}
         <p className="text-body text-text-secondary">
-          «{balance.debtor.name}» qarzi: <span className="font-mono tabular-nums">{formatMoney(balance.amount)} soʻm</span>. Pul darhol
-          oʻtadi, filiallararo qarz shu summaga kamayadi.
+          {t.rich("debtLine", {
+            name: balance.debtor.name,
+            amount: formatMoney(balance.amount),
+            money: (chunks) => <span className="font-mono tabular-nums">{chunks}</span>,
+          })}
         </p>
         <Select
-          label="Qaysi hisobdan"
+          label={t("fromAccount")}
           value={from}
           onChange={setFrom}
           options={(own.data ?? [])
@@ -124,16 +129,20 @@ export function BranchPayDialog({ balance, onClose }: { balance: BranchBalance; 
             .map((a) => ({ value: String(a.id), label: a.name, sub: `${ACCOUNT_KIND[a.kind]} · ${a.code}` }))}
         />
         <Select
-          label={`Qaysi hisobga (${balance.creditor.name})`}
+          label={t("toAccount", { name: balance.creditor.name })}
           value={to}
           onChange={setTo}
           options={(payee.data ?? []).map((a) => ({ value: String(a.id), label: a.name, sub: ACCOUNT_KIND[a.kind] }))}
         />
-        <TextField label="Summa" variant="amount" value={amount} onChange={setAmount} required suffix="soʻm" />
-        <TextField label="Izoh" value={note} onChange={setNote} maxLength={500} />
+        <TextField label={t("amount")} variant="amount" value={amount} onChange={setAmount} required suffix={t("currency")} />
+        <TextField label={t("note")} value={note} onChange={setNote} maxLength={500} />
         {source ? (
           <div className="text-caption text-text-secondary">
-            «{source.name}» qoldigʻi: <span className="font-mono tabular-nums">{formatMoney(source.balance)} soʻm</span>
+            {t.rich("balance", {
+              name: source.name,
+              amount: formatMoney(source.balance),
+              money: (chunks) => <span className="font-mono tabular-nums">{chunks}</span>,
+            })}
           </div>
         ) : null}
       </div>
@@ -143,6 +152,7 @@ export function BranchPayDialog({ balance, onClose }: { balance: BranchBalance; 
 
 /** Oxirgi filiallararo to'lovlar; to'lovchi filial (cash.cancel) bekor qila oladi. */
 export function BranchPaymentsList({ enabled }: { enabled: boolean }) {
+  const t = useTranslations("branchSales.payments");
   const me = useMe();
   const qc = useQueryClient();
   const list = useBranchPayments(enabled);
@@ -151,7 +161,7 @@ export function BranchPaymentsList({ enabled }: { enabled: boolean }) {
   if (rows.length === 0) return null;
   return (
     <div className="mt-3 border-t border-border pt-3">
-      <h3 className="mb-2 text-body font-medium">Toʻlovlar</h3>
+      <h3 className="mb-2 text-body font-medium">{t("list")}</h3>
       <ul className="flex flex-col gap-1 text-body">
         {rows.map((p) => {
           const cancelled = p.status === "CANCELLED";
@@ -160,7 +170,7 @@ export function BranchPaymentsList({ enabled }: { enabled: boolean }) {
             <li key={p.id} className="flex flex-wrap items-center justify-between gap-2">
               <span className="flex items-center gap-1">
                 <span className="font-mono">{p.number}</span> · {formatDate(new Date(`${p.paymentDate}T00:00:00+05:00`))} · {p.payerBranch}
-                <ArrowRight size={14} strokeWidth={1.5} aria-label="dan" className="text-text-secondary" />
+                <ArrowRight size={14} strokeWidth={1.5} aria-label={t("arrow")} className="text-text-secondary" />
                 {p.payeeBranch}
                 {cancelled ? <Badge status="cancelled" /> : null}
               </span>
@@ -168,7 +178,7 @@ export function BranchPaymentsList({ enabled }: { enabled: boolean }) {
                 <span className={`tabular-nums ${cancelled ? "line-through text-text-secondary" : ""}`}>{formatMoney(p.amount)}</span>
                 {canCancel ? (
                   <Button variant="tertiary" size="sm" icon={Undo2} onClick={() => setCancel(p)}>
-                    Bekor qilish
+                    {t("cancel")}
                   </Button>
                 ) : null}
               </span>
@@ -178,14 +188,14 @@ export function BranchPaymentsList({ enabled }: { enabled: boolean }) {
       </ul>
       {cancel ? (
         <ReasonDialog
-          title={`Toʻlovni bekor qilish: ${cancel.number}`}
-          action="Bekor qilish"
+          title={t("cancelTitle", { number: cancel.number })}
+          action={t("cancel")}
           onClose={() => setCancel(null)}
           onSubmit={async (reason) => {
             await ensureCsrf();
             await unwrap(api.POST("/api/branch-payments/{id}/cancel", { params: { path: { id: cancel.id } }, body: { reason } }));
             await refreshAll(qc);
-            toast({ tone: "success", title: "Toʻlov bekor qilindi", description: cancel.number });
+            toast({ tone: "success", title: t("cancelled"), description: cancel.number });
           }}
         />
       ) : null}

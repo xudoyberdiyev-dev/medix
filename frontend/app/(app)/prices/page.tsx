@@ -5,7 +5,7 @@ import { PricesPage } from "@/features/prices/prices-page";
 export default function Page() {
   return (
     <>
-      <TopBar title="Narxlar" />
+      <TopBar titleKey="prices" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <PricesPage />

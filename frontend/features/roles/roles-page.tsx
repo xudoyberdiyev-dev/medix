@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Copy, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +23,8 @@ import { matchesSearch } from "@/lib/search";
 
 type Matrix = components["schemas"]["Matrix"];
 
-const MODULE_TITLES: Record<string, string> = {
+/** Tartib va asl (uz-Latn) nomlar; UI — `roles.modules.<modul>` lugʻatidan. */
+const MODULE_TITLES = {
   orders: "Buyurtmalar",
   approvals: "Tasdiqlar",
   shipments: "Joʻnatish",
@@ -61,7 +63,10 @@ const MODULE_TITLES: Record<string, string> = {
   audit: "Audit",
   settings: "Sozlamalar",
   special: "Maxsus",
-};
+} as const satisfies Record<string, string>;
+
+type ModuleKey = keyof typeof MODULE_TITLES;
+const isModule = (m: string): m is ModuleKey => Object.hasOwn(MODULE_TITLES, m);
 
 /** Modullar boʻyicha guruhlash (MODULE_TITLES tartibida, notanishlar oxirida). */
 export function groupPermissions<T extends { key: string; module: string }>(perms: T[]): { module: string; title: string; items: T[] }[] {
@@ -70,7 +75,7 @@ export function groupPermissions<T extends { key: string; module: string }>(perm
   for (const p of perms) groups.set(p.module, [...(groups.get(p.module) ?? []), p]);
   return [...groups.entries()]
     .sort(([a], [b]) => (order.indexOf(a) === -1 ? 999 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 999 : order.indexOf(b)))
-    .map(([module, items]) => ({ module, title: MODULE_TITLES[module] ?? module, items }));
+    .map(([module, items]) => ({ module, title: isModule(module) ? MODULE_TITLES[module] : module, items }));
 }
 
 function useMatrix() {
@@ -78,11 +83,11 @@ function useMatrix() {
 }
 
 export function RolesPage() {
+  const t = useTranslations("roles");
   const me = useMe();
   const matrix = useMatrix();
   const [role, setRole] = useState<string>("ADMIN");
-  if (me.data && !can(me.data, "roles.view"))
-    return <ForbiddenState description="Rollar va ruxsatlarni Direktor va Bosh administrator boshqaradi." />;
+  if (me.data && !can(me.data, "roles.view")) return <ForbiddenState description={t("forbidden")} />;
   if (matrix.error) return <ErrorState onRetry={() => matrix.refetch()} />;
   if (!matrix.data)
     return (
@@ -93,10 +98,10 @@ export function RolesPage() {
     );
   return (
     <>
-      <h1 className="mb-4 text-page-title">Rollar va ruxsatlar</h1>
+      <h1 className="mb-4 text-page-title">{t("title")}</h1>
       <div className="grid grid-cols-[260px_1fr] gap-4">
         <Card flush>
-          <ul className="py-2" role="listbox" aria-label="Rollar">
+          <ul className="py-2" role="listbox" aria-label={t("roles")}>
             {matrix.data.roles.map((r) => (
               <li key={r.code}>
                 <button
@@ -123,6 +128,8 @@ export function RolesPage() {
 }
 
 function RoleEditor({ matrix, roleCode, onCopied }: { matrix: Matrix; roleCode: string; onCopied: (code: string) => void }) {
+  const t = useTranslations("roles");
+  const moduleTitle = (m: string) => (isModule(m) ? t(`modules.${m}`) : m);
   const qc = useQueryClient();
   const role = matrix.roles.find((r) => r.code === roleCode);
   const initial = useMemo(() => new Set(matrix.grants[roleCode] ?? []), [matrix, roleCode]);
@@ -139,12 +146,12 @@ function RoleEditor({ matrix, roleCode, onCopied }: { matrix: Matrix; roleCode: 
     },
     onSuccess: (m) => {
       qc.setQueryData(["roles", "matrix"], m);
-      toast({ tone: "success", title: "Ruxsatlar saqlandi", description: `${role?.name}: xodimlarning keyingi kirishida kuchga kiradi` });
+      toast({ tone: "success", title: t("saved"), description: t("savedDescription", { role: role?.name ?? "" }) });
     },
   });
   const err = describeError(save.error);
   const changed = selected.size !== initial.size || [...selected].some((k) => !initial.has(k));
-  const groups = groupPermissions(matrix.permissions.filter((p) => matchesSearch(query, [p.key, p.description, MODULE_TITLES[p.module]])));
+  const groups = groupPermissions(matrix.permissions.filter((p) => matchesSearch(query, [p.key, p.description, moduleTitle(p.module)])));
   const toggle = (key: string, on: boolean) =>
     setSelected((s) => {
       const n = new Set(s);
@@ -161,38 +168,36 @@ function RoleEditor({ matrix, roleCode, onCopied }: { matrix: Matrix; roleCode: 
         <div className="flex items-center gap-2">
           {role.system ? (
             <Badge tone="neutral" icon={ShieldCheck}>
-              Standart rol
+              {t("standard")}
             </Badge>
           ) : null}
           <Button variant="secondary" size="sm" icon={Copy} onClick={() => setCopying(true)}>
-            Nusxa olish
+            {t("copy")}
           </Button>
           {!locked ? (
             <Button size="sm" disabled={!changed} loading={save.isPending} onClick={() => save.mutate()}>
-              Ruxsatlarni saqlash
+              {t("save")}
             </Button>
           ) : null}
         </div>
       }
     >
       {locked ? (
-        <Alert tone="info" title="Direktor rolining ruxsatlari oʻzgartirilmaydi" className="mb-4">
-          Tizim boshqaruvi yoʻqolmasligi uchun. Boshqa toʻplam kerak boʻlsa — nusxa oling.
+        <Alert tone="info" title={t("lockedTitle")} className="mb-4">
+          {t("lockedDescription")}
         </Alert>
       ) : (
-        <p className="mb-4 text-text-secondary">
-          {selected.size} ta ruxsat belgilangan · {role.employeeCount} ta xodim. Oʻzgarish xodimning keyingi kirishida kuchga kiradi.
-        </p>
+        <p className="mb-4 text-text-secondary">{t("summary", { selected: selected.size, employees: role.employeeCount })}</p>
       )}
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
       <div className="mb-4 w-80">
         <TextField
-          label="Qidirish"
+          label={t("search")}
           variant="search"
           size="sm"
           value={query}
           onChange={setQuery}
-          placeholder="Ruxsat nomi yoki kaliti"
+          placeholder={t("searchPlaceholder")}
           className="[&>label]:sr-only"
         />
       </div>
@@ -200,7 +205,7 @@ function RoleEditor({ matrix, roleCode, onCopied }: { matrix: Matrix; roleCode: 
         {groups.map((g) => (
           <section key={g.module}>
             <h3 className="mb-2 flex items-center gap-2 text-label text-text-secondary">
-              {g.title}
+              {moduleTitle(g.module)}
               <span className="text-caption">
                 {g.items.filter((p) => selected.has(p.key)).length}/{g.items.length}
               </span>
@@ -237,8 +242,9 @@ function CopyDialog({
   onClose: () => void;
   onCopied: (code: string) => void;
 }) {
+  const t = useTranslations("roles.copyDialog");
   const qc = useQueryClient();
-  const [name, setName] = useState(`${sourceName} (nusxa)`);
+  const [name, setName] = useState(() => t("defaultName", { name: sourceName }));
   const copy = useMutation({
     mutationFn: async () => {
       await ensureCsrf();
@@ -246,7 +252,7 @@ function CopyDialog({
     },
     onSuccess: async (r) => {
       await qc.invalidateQueries({ queryKey: ["roles"] });
-      toast({ tone: "success", title: "Rol nusxasi yaratildi", description: r.name });
+      toast({ tone: "success", title: t("done"), description: r.name });
       onCopied(r.code);
       onClose();
     },
@@ -257,11 +263,11 @@ function CopyDialog({
       open
       onClose={onClose}
       size="sm"
-      title="Rol nusxasi"
-      primaryAction={{ label: "Nusxani yaratish", loading: copy.isPending, onClick: () => copy.mutate() }}
+      title={t("title")}
+      primaryAction={{ label: t("create"), loading: copy.isPending, onClick: () => copy.mutate() }}
     >
-      <p className="mb-4 text-text-secondary">«{sourceName}» ruxsatlari yangi rolga koʻchiriladi. Keyin ularni oʻzgartirasiz.</p>
-      <TextField label="Yangi rol nomi" value={name} onChange={setName} error={err.fields.name} required autoFocus />
+      <p className="mb-4 text-text-secondary">{t("description", { name: sourceName })}</p>
+      <TextField label={t("name")} value={name} onChange={setName} error={err.fields.name} required autoFocus />
       {err.message ? <Alert tone="danger" title={err.message} className="mt-4" /> : null}
     </Modal>
   );

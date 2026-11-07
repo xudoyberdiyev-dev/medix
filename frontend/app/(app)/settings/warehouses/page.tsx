@@ -4,7 +4,7 @@ import { WarehousesPage } from "@/features/organization/warehouses-page";
 export default function Page() {
   return (
     <>
-      <TopBar title="Sozlamalar · Omborlar va zonalar" />
+      <TopBar titleKey="settingsWarehouses" />
       <main className="flex-1 overflow-y-auto p-6">
         <WarehousesPage />
       </main>

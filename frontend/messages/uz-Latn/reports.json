@@ -1,0 +1,119 @@
+{
+  "back": "Hisobotlar",
+  "allBranches": "barcha filiallar",
+  "export": "Excelʼga yuklab olish",
+  "total": "Jami",
+  "emptyHint": "Boshqa davrni tanlang yoki filialni oʻzgartiring.",
+  "orders": "Buyurtmalar",
+  "minutes": "{m} daq",
+  "hoursMinutes": "{h} soat {m} daq",
+  "catalog": {
+    "title": "Hisobotlar",
+    "forbidden": "Hisobotlar sizning rolingiz uchun yopiq.",
+    "emptyTitle": "Hisobot yoʻq",
+    "emptyDescription": "Rolingiz uchun ochiq hisobot hali yoʻq.",
+    "soon": "Tez orada",
+    "items": {
+      "sales": {
+        "title": "Savdo",
+        "description": "Sof savdo (sotuv − qaytarish) mijoz, operator, filial yoki kun boʻyicha; tannarx va yalpi foyda — ruxsat bilan."
+      },
+      "operators": {
+        "title": "Operatorlar savdosi",
+        "description": "Har operatorning sof savdosi va buyurtmalari tanlangan davrda."
+      },
+      "gross-profit": {
+        "title": "Yalpi foyda",
+        "description": "Sof savdo, tannarx va yalpi foyda (QQSsiz) — mijoz, operator, filial yoki kun boʻyicha."
+      },
+      "debts": {
+        "title": "Qarzlar",
+        "description": "Mijozlar va taʼminotchilar qarzi muddat guruhlari bilan."
+      },
+      "stock": {
+        "title": "Qoldiq",
+        "description": "Ombor va partiyalar boʻyicha qoldiq, .xlsx eksport."
+      },
+      "suppliers": {
+        "title": "Taʼminotchi xodim va korxona tovari",
+        "description": "Olib keldi / sotildi / boshqa / qoldi (tannarxda); Aktiv / Passiv."
+      },
+      "pickers": {
+        "title": "Yigʻuvchilar natijasi",
+        "description": "Yigʻilgan buyurtma, qator va dona; vaqtida / kechikkan."
+      },
+      "markers": {
+        "title": "Markirovkachilar natijasi",
+        "description": "Skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan."
+      }
+    }
+  },
+  "sales": {
+    "title": "Savdo hisoboti",
+    "forbidden": "Savdo hisoboti sizning rolingiz uchun yopiq.",
+    "groupBy": "Guruhlash",
+    "group": {
+      "CUSTOMER": "Mijoz",
+      "OPERATOR": "Operator",
+      "BRANCH": "Filial",
+      "DAY": "Kun"
+    },
+    "sales": "Sotuv",
+    "returns": "Qaytarish",
+    "net": "Sof savdo (QQS bilan)",
+    "cost": "Tannarx",
+    "profit": "Yalpi foyda (QQSsiz)",
+    "mineOnly": "faqat siz kiritgan buyurtmalar",
+    "emptyTitle": "Davrda savdo yoʻq",
+    "truncated": "Faqat birinchi 5000 qator koʻrsatildi — davrni qisqartiring.",
+    "note": "Sof savdo = sotuv − qaytarish; yetkazilmagan (bekor qilingan) sotuvlar kirmaydi."
+  },
+  "worker": {
+    "forbidden": "{title} sizning rolingiz uchun yopiq.",
+    "lines": "Qatorlar",
+    "givenMinutes": "Berilgan vaqt",
+    "actualMinutes": "Haqiqiy vaqt",
+    "avgMinutes": "Oʻrtacha / buyurtma",
+    "onTime": "Vaqtida",
+    "late": "Kechikkan",
+    "note": "Ish yakunlangan sana boʻyicha. «Vaqtida» va «Kechikkan» — faqat Ombor mudiri vaqt bergan buyurtmalar.",
+    "PICKERS": {
+      "title": "Yigʻuvchilar natijasi",
+      "person": "Yigʻuvchi",
+      "units": "Dona",
+      "extra": "FEFOʻdan chetlashish",
+      "empty": "Davrda yakunlangan yigʻish yoʻq"
+    },
+    "MARKERS": {
+      "title": "Markirovkachilar natijasi",
+      "person": "Markirovkachi",
+      "units": "Kodlar",
+      "extra": "Olib tashlangan kodlar",
+      "empty": "Davrda yakunlangan markirovka yoʻq"
+    }
+  },
+  "supplierGoods": {
+    "title": "{kind} tovari",
+    "kind": {
+      "STAFF": "Taʼminotchi xodim",
+      "COMPANY": "Taʼminotchi korxona"
+    },
+    "tab": {
+      "STAFF": "Xodim",
+      "COMPANY": "Korxona"
+    },
+    "forbidden": "Bu hisobot tannarxda — hisobot va tannarx koʻrish ruxsati kerak.",
+    "byWhom": "Kim boʻyicha",
+    "staffName": "Xodim (kim nomiga)",
+    "supplier": "Taʼminotchi",
+    "status": "Holat",
+    "active": "Aktiv",
+    "passive": "Passiv",
+    "brought": "Olib keldi",
+    "sold": "Sotildi",
+    "other": "Boshqa",
+    "left": "Qoldi",
+    "emptyTitle": "Davrda harakat va qoldiq yoʻq",
+    "note": "Tannarxda. Olib keldi — davrdagi kirim; Sotildi — sotuv − qaytarish; Boshqa — hisobdan oʻtkazish va h.k.; Qoldi — hozirgi qoldiq. Aktiv — davrda kirim qilgan, Passiv — kirim yoʻq, qoldigʻi bor."
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Download, FileSpreadsheet } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ async function upload(file: File, apply: boolean): Promise<ImportResult> {
 
 /** Excelʼdan import: avval tekshiriladi (hech narsa yozilmaydi), xato boʻlmasa — «Import qilish». */
 export function ImportDialog({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("products.import");
   const qc = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -50,7 +52,7 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
       const r = await upload(file, apply);
       setResult(r);
       if (r.applied) {
-        toast({ tone: "success", title: "Import yakunlandi", description: `${formatQuantity(r.created)} ta mahsulot qoʻshildi` });
+        toast({ tone: "success", title: t("done"), description: t("doneDescription", { count: formatQuantity(r.created) }) });
         await qc.invalidateQueries({ queryKey: ["products"] });
         await qc.invalidateQueries({ queryKey: ["dictionaries"] });
         onClose();
@@ -67,18 +69,15 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
       open
       onClose={onClose}
       size="lg"
-      title="Mahsulotlarni Excelʼdan import qilish"
+      title={t("title")}
       primaryAction={
         ready
-          ? { label: `${formatQuantity(result.created)} ta mahsulotni import qilish`, loading: pending, onClick: () => run(true) }
-          : { label: "Faylni tekshirish", loading: pending, disabled: !file, onClick: () => run(false) }
+          ? { label: t("apply", { count: formatQuantity(result.created) }), loading: pending, onClick: () => run(true) }
+          : { label: t("check"), loading: pending, disabled: !file, onClick: () => run(false) }
       }
     >
       <div className="flex flex-col gap-4">
-        <p className="text-text-secondary">
-          Shablon ustunlari: Nomi va Birlik — majburiy; Kod (8 raqam) berilsa saqlanadi, boʻlmasa avtomatik beriladi. Yangi ishlab
-          chiqaruvchi va kategoriyalar avtomatik qoʻshiladi. Bitta xato qator boʻlsa — hech narsa yozilmaydi.
-        </p>
+        <p className="text-text-secondary">{t("intro")}</p>
         <div className="flex flex-wrap items-center gap-3">
           <input
             ref={input}
@@ -88,34 +87,34 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
             onChange={(e) => (setFile(e.target.files?.[0] ?? null), setResult(null), setError(null))}
           />
           <Button variant="secondary" icon={FileSpreadsheet} onClick={() => input.current?.click()}>
-            {file ? "Boshqa fayl tanlash" : "Fayl tanlash"}
+            {file ? t("chooseOther") : t("choose")}
           </Button>
-          <span className="text-text-secondary">{file ? file.name : "Fayl tanlanmagan"}</span>
+          <span className="text-text-secondary">{file ? file.name : t("noFile")}</span>
           <a href="/api/products/import-template" className="ml-auto inline-flex items-center gap-1 text-primary hover:underline" download>
             <Download size={16} strokeWidth={1.5} aria-hidden />
-            Shablonni yuklab olish
+            {t("template")}
           </a>
         </div>
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {result ? (
           result.errors.length > 0 ? (
             <div className="flex flex-col gap-2">
-              <Alert tone="danger" title={`${formatQuantity(result.errors.length)} ta qatorda xato — hech narsa yozilmadi`}>
-                Xatolarni faylda tuzatib, qayta tekshiring.
+              <Alert tone="danger" title={t("errorsTitle", { count: formatQuantity(result.errors.length) })}>
+                {t("errorsHint")}
               </Alert>
               <ul className="max-h-64 overflow-y-auto rounded-card border border-border">
                 {result.errors.map((e) => (
                   <li key={`${e.row}-${e.message}`} className="flex gap-3 border-b border-border px-3 py-2 last:border-b-0">
-                    <span className="w-20 shrink-0 font-mono text-text-secondary">{e.row}-qator</span>
+                    <span className="w-20 shrink-0 font-mono text-text-secondary">{t("row", { row: e.row })}</span>
                     <span>{e.message}</span>
                   </li>
                 ))}
               </ul>
             </div>
           ) : (
-            <Alert tone="success" title={`Fayl toʻgʻri: ${formatQuantity(result.created)} ta mahsulot qoʻshishga tayyor`}>
-              {result.createdManufacturers.length > 0 ? `Yangi ishlab chiqaruvchilar: ${result.createdManufacturers.join(", ")}. ` : ""}
-              {result.createdCategories.length > 0 ? `Yangi kategoriyalar: ${result.createdCategories.join(", ")}.` : ""}
+            <Alert tone="success" title={t("ok", { count: formatQuantity(result.created) })}>
+              {result.createdManufacturers.length > 0 ? t("newManufacturers", { list: result.createdManufacturers.join(", ") }) : ""}
+              {result.createdCategories.length > 0 ? t("newCategories", { list: result.createdCategories.join(", ") }) : ""}
             </Alert>
           )
         ) : null}

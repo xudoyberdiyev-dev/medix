@@ -44,7 +44,7 @@ describe("collectPicks", () => {
       { zoneId: 7, pricesVisible: false, existing: new Set(["3|A-1"]) },
     );
     expect(picks).toEqual([]);
-    expect(errors).toEqual({ 1: "Partiyani kiriting", 2: "Yaroqlilik: KK.OO.YYYY", 3: "Bu partiya allaqachon qoʻshilgan" });
+    expect(errors).toEqual({ 1: "batch", 2: "expiry", 3: "duplicate" });
 
     const ok = collectPicks(
       rows,
