@@ -7767,7 +7767,7 @@ export interface components {
             /** Format: date */
             from: string;
             /** @enum {string} */
-            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PRODUCT" | "CATEGORY" | "MANUFACTURER";
             mineOnly: boolean;
             rows: components["schemas"]["SalesRow"][];
             /** Format: date */
@@ -7784,6 +7784,11 @@ export interface components {
             orders: number;
             /** @description Yalpi foyda: sof savdo QQSsiz − tannarx */
             profit?: string;
+            /**
+             * Format: int32
+             * @description Sof dona (sotilgan − qaytgan) — faqat mahsulot/kategoriya/ishlab chiqaruvchi guruhida
+             */
+            qty?: number;
             returns: string;
             sales: string;
         };
@@ -13913,7 +13918,7 @@ export interface operations {
                 branchId?: number;
                 from?: string;
                 to?: string;
-                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PRODUCT" | "CATEGORY" | "MANUFACTURER";
             };
             header?: never;
             path?: never;
@@ -13938,7 +13943,7 @@ export interface operations {
                 branchId?: number;
                 from?: string;
                 to?: string;
-                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY";
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PRODUCT" | "CATEGORY" | "MANUFACTURER";
             };
             header?: never;
             path?: never;

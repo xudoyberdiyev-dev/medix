@@ -7726,7 +7726,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PRODUCT", "CATEGORY", "MANUFACTURER" ]
           }
         } ],
         "responses" : {
@@ -7778,7 +7778,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PRODUCT", "CATEGORY", "MANUFACTURER" ]
           }
         } ],
         "responses" : {
@@ -18051,7 +18051,7 @@
           },
           "groupBy" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PRODUCT", "CATEGORY", "MANUFACTURER" ]
           },
           "mineOnly" : {
             "type" : "boolean"
@@ -18097,6 +18097,11 @@
           "profit" : {
             "type" : "string",
             "description" : "Yalpi foyda: sof savdo QQSsiz − tannarx"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sof dona (sotilgan − qaytgan) — faqat mahsulot/kategoriya/ishlab chiqaruvchi guruhida"
           },
           "returns" : {
             "type" : "string"

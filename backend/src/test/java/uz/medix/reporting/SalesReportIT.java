@@ -189,4 +189,97 @@ class SalesReportIT {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
                         .string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
     }
+
+    private long id(String sql, Object... params) {
+        var q = jdbc.sql(sql);
+        for (int i = 0; i < params.length; i++) {
+            q = q.param("p" + i, params[i]);
+        }
+        return q.query(Long.class).single();
+    }
+
+    @Test
+    void groupsByProductCategoryManufacturerAndRegion() throws Exception {
+        long b = branch();
+        long w = id("INSERT INTO warehouse (branch_id, name) VALUES (:p0, 'Asosiy') RETURNING id", b);
+        Session op = loginAs("OPERATOR", b);
+        Cookie director = loginAs("DIRECTOR", b).cookie();
+        String u = UUID.randomUUID().toString().substring(0, 6);
+        long cat = id("INSERT INTO category (name) VALUES (:p0) RETURNING id", "Antibiotik " + u);
+        long mf = id("INSERT INTO manufacturer (name) VALUES (:p0) RETURNING id", "Nobel " + u);
+        long rg = id("INSERT INTO region (name) VALUES (:p0) RETURNING id", "Chilonzor " + u);
+        long c = id("INSERT INTO counterparty (tin, name, is_customer, region_id) VALUES (:p0, :p1, true, :p2) RETURNING id",
+                String.valueOf(500_000_000L + ThreadLocalRandom.current().nextLong(99_999_999L)), "Dorixona " + u, rg);
+        var rnd = ThreadLocalRandom.current();
+        long p1 = id("INSERT INTO product (code, name, unit_id, category_id, manufacturer_id) VALUES (:p0, :p1, 1, :p2, :p3) RETURNING id",
+                String.valueOf(10_000_000 + rnd.nextInt(89_999_999)), "Amoksil " + u, cat, mf);
+        long p2 = id("INSERT INTO product (code, name, unit_id) VALUES (:p0, :p1, 1) RETURNING id",
+                String.valueOf(10_000_000 + rnd.nextInt(89_999_999)), "Yod " + u);
+        long b1 = id("INSERT INTO batch (product_id, number, expiry_date, cost, source_type) VALUES (:p0, 'B1', DATE '2030-01-01', 8000, 'RECEIPT') RETURNING id", p1);
+        long b2 = id("INSERT INTO batch (product_id, number, expiry_date, cost, source_type) VALUES (:p0, 'B2', DATE '2030-01-01', 1000, 'RECEIPT') RETURNING id", p2);
+        // Buyurtma qatorlari faqat qoralamada qo'shiladi — keyin «Yetkazildi»
+        long o = order(b, w, c, op.id(), "DRAFT", "112000.00", "CASH");
+        long ol1 = id("INSERT INTO sales_order_line (order_id, line_no, product_id, qty) VALUES (:p0, 1, :p1, 10) RETURNING id", o, p1);
+        long ol2 = id("INSERT INTO sales_order_line (order_id, line_no, product_id, qty) VALUES (:p0, 2, :p1, 2) RETURNING id", o, p2);
+        jdbc.sql("UPDATE sales_order SET status = 'DELIVERED' WHERE id = :o").param("o", o).update();
+        String n = UUID.randomUUID().toString().substring(0, 8);
+        long s = id("""
+                INSERT INTO sale (number, invoice_number, order_id, branch_id, warehouse_id, customer_id, sale_date, total, vat_total, cost_total, created_by)
+                VALUES (:p0, :p1, :p2, :p3, :p4, :p5, :p6, 112000, 12000, 82000, :p7) RETURNING id""",
+                "SV-TST-" + n, "HF-TST-" + n, o, b, w, c, java.sql.Date.valueOf(today()), op.id());
+        long sl1 = id("""
+                INSERT INTO sale_line (sale_id, order_line_id, product_id, batch_id, qty, price, amount, vat_rate, vat_amount, cost)
+                VALUES (:p0, :p1, :p2, :p3, 10, 10000, 100000, 12, 10714.29, 8000) RETURNING id""", s, ol1, p1, b1);
+        id("""
+                INSERT INTO sale_line (sale_id, order_line_id, product_id, batch_id, qty, price, amount, vat_rate, vat_amount, cost)
+                VALUES (:p0, :p1, :p2, :p3, 2, 6000, 12000, 12, 1285.71, 1000) RETURNING id""", s, ol2, p2, b2);
+        long r = id("""
+                INSERT INTO sales_return (number, sale_id, order_id, branch_id, warehouse_id, customer_id, return_date, total, vat_total, cost_total,
+                                          reason, created_by)
+                VALUES (:p0, :p1, :p2, :p3, :p4, :p5, :p6, 20000, 2142.86, 16000, 'Sinov', :p7) RETURNING id""",
+                "QM-TST-" + n, s, o, b, w, c, java.sql.Date.valueOf(today()), op.id());
+        id("""
+                INSERT INTO sales_return_line (return_id, sale_line_id, product_id, batch_id, qty, price, amount, vat_rate, vat_amount, cost)
+                VALUES (:p0, :p1, :p2, :p3, 2, 10000, 20000, 12, 2142.86, 8000) RETURNING id""", r, sl1, p1, b1);
+        String t = today().toString();
+
+        // Mahsulot bo'yicha: sof dona (10 − 2), sof savdo, tannarx (birlik × dona), yalpi foyda QQSsiz
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "PRODUCT").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(p1)))
+                .andExpect(jsonPath("$.rows[0].qty").value(8))
+                .andExpect(jsonPath("$.rows[0].net").value("80000.00"))
+                .andExpect(jsonPath("$.rows[0].cost").value("64000.00"))
+                .andExpect(jsonPath("$.rows[0].profit").value("7428.57"))
+                .andExpect(jsonPath("$.rows[1].qty").value(2))
+                .andExpect(jsonPath("$.total.qty").value(10))
+                .andExpect(jsonPath("$.total.orders").value(1))
+                .andExpect(jsonPath("$.total.net").value("92000.00"))
+                .andExpect(jsonPath("$.total.cost").value("66000.00"));
+        // Bitta manba: hujjat sarlavhasi bo'yicha (mijoz) jami bilan teng
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).cookie(director))
+                .andExpect(jsonPath("$.total.net").value("92000.00"))
+                .andExpect(jsonPath("$.total.cost").value("66000.00"))
+                .andExpect(jsonPath("$.total.qty").doesNotExist());
+        // Kategoriyasiz / ishlab chiqaruvchisiz mahsulot — «—» guruhida
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "CATEGORY").cookie(director))
+                .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(cat)))
+                .andExpect(jsonPath("$.rows[1].key").value("0"))
+                .andExpect(jsonPath("$.rows[1].name").value("—"));
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "MANUFACTURER").cookie(director))
+                .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(mf)))
+                .andExpect(jsonPath("$.rows[0].net").value("80000.00"));
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "REGION").cookie(director))
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(rg)))
+                .andExpect(jsonPath("$.rows[0].net").value("92000.00"));
+        // Operator (reports.own) ham mahsulot bo'yicha ko'radi — tannarxsiz
+        mvc.perform(get("/api/reports/sales").param("from", t).param("groupBy", "PRODUCT").cookie(op.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total.qty").value(10))
+                .andExpect(jsonPath("$.rows[0].cost").doesNotExist());
+        mvc.perform(get("/api/reports/sales/export").param("branchId", "" + b).param("from", t).param("groupBy", "PRODUCT").cookie(director))
+                .andExpect(status().isOk());
+    }
 }

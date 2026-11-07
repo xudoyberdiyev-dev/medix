@@ -86,8 +86,17 @@ class SalesReportController {
                 case OPERATOR -> "Operator";
                 case BRANCH -> "Filial";
                 case DAY -> "Sana";
+                case REGION -> "Hudud";
+                case PRODUCT -> "Mahsulot";
+                case CATEGORY -> "Kategoriya";
+                case MANUFACTURER -> "Ishlab chiqaruvchi";
             };
-            List<String> titles = new ArrayList<>(List.of(first, "Buyurtmalar", "Sotuv", "Qaytarish", "Sof savdo (QQS bilan)"));
+            boolean qty = r.total().qty() != null;
+            List<String> titles = new ArrayList<>(List.of(first, "Buyurtmalar"));
+            if (qty) {
+                titles.add("Dona (sof)");
+            }
+            titles.addAll(List.of("Sotuv", "Qaytarish", "Sof savdo (QQS bilan)"));
             if (r.costVisible()) {
                 titles.addAll(List.of("Tannarx", "Yalpi foyda (QQSsiz)"));
             }
@@ -104,9 +113,8 @@ class SalesReportController {
                 write(sheet.createRow(n++), row, r.costVisible(), null, right);
             }
             write(sheet.createRow(n), r.total(), r.costVisible(), bold, boldRight);
-            int[] widths = {40, 12, 18, 18, 22, 18, 20};
             for (int i = 0; i < titles.size(); i++) {
-                sheet.setColumnWidth(i, widths[i] * 256);
+                sheet.setColumnWidth(i, (i == 0 ? 40 : i == 1 || (qty && i == 2) ? 12 : 20) * 256);
             }
             sheet.createFreezePane(0, 3);
             wb.write(response.getOutputStream());
@@ -125,13 +133,17 @@ class SalesReportController {
             name.setCellStyle(text);
         }
         x.createCell(1).setCellValue(r.orders());
+        int col = 2;
+        if (r.qty() != null) {
+            x.createCell(col++).setCellValue(r.qty());
+        }
         List<String> values = new ArrayList<>(List.of(r.sales(), r.returns(), r.net()));
         if (cost) {
             values.add(r.cost());
             values.add(r.profit());
         }
         for (int i = 0; i < values.size(); i++) {
-            Cell c = x.createCell(2 + i);
+            Cell c = x.createCell(col + i);
             c.setCellValue(Money.of(values.get(i)).format());
             c.setCellStyle(money);
         }
