@@ -116,6 +116,7 @@ test("Ombor mudiri: faqat oddiy qatorni yigʻishga qaytaradi; qayta yigʻishda f
   await login(page, "keeper.1", PASSWORD);
   await page.goto("/warehouse");
   await page.getByRole("region", { name: "Hisobdan oʻtkazilmoqda" }).getByText(number).click();
+  await expect(page.getByText("Tekshirildi", { exact: true })).toHaveCount(2);
   for (const c of await page.getByText("Tekshirildi", { exact: true }).all()) await c.click();
   await field(page, "Joylar soni").fill("1");
   await page.getByRole("button", { name: "Hisobdan oʻtkazish" }).click();
