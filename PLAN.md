@@ -2,6 +2,15 @@
 
 Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testlar → CI yashil → hisobot. Bosqich tugasa — `develop → main` PR.
 
+## Egasi javoblari (07.11.2026 18:12) — BIRINCHI NAVBATDA BAJARILADI
+Bu javoblar SPEC/T12 dan ustun. Har birini kod + test + e2e bilan joriy qiling, PLAN'da belgilang:
+- [ ] **E1. Markirovka:** HAR bir buyurtma Markirovkachi bosqichidan o'tadi. Bitta buyurtmada markirovkali va markirovkasiz qatorlar aralash bo'lishi mumkin: markirovkali qatorlar skanerlanadi, markirovkasiz qatorlar Markirovkachi tomonidan «Tasdiqlash» bilan o'tadi; hammasi markirovkasiz bo'lsa — butun buyurtma «Markirovkasiz — tasdiqlash». Yig'ishdan to'g'ridan-to'g'ri Tekshiruvga o'tish olib tashlansin.
+- [ ] **E2. FS QQS:** egasi qarorni Claude'ga qoldirdi. Qaror: FS narxi = partiya tannarxi (QQSsiz baza), **QQS 12% ustiga qo'shiladi** (soliq bazasi tannarxdan past bo'lmasligi uchun; qabul qiluvchi filialda kirim QQSi hisobga olinadi). Agar SmartUp'da shunday hujjat bo'lsa — uning shakli/mantiqi bilan moslansin (namuna kelganda). Hisobotda buxgalter bilan tasdiqlash tavsiya qilinsin.
+- [ ] **E3. Buxgalter doirasi:** Buxgalter standart holatda FAQAT o'z filialini ko'radi. Barcha filiallar — faqat Direktor ruxsat bergan buxgalterga (xodim kartasida Direktor yoqadigan belgi/ruxsat, audit bilan). Rollar matritsasida Buxgalter = own.
+- [ ] **E4. Narx yaxlitlanmaydi:** hech qayerda yaxlitlash yo'q — narx so'm va tiyinigacha aniq saqlanadi va ko'rsatiladi. Ommaviy ustamadagi 100/500/1000 yaxlitlash parametri olib tashlansin (UI va API).
+- [ ] **E5. Reys:** reysni FAQAT Ombor mudiri tuzadi (Direktor/Admin — to'liq huquqli rol sifatida qoladi). Operator va boshqa rollardan `shipments.trip` olib tashlansin (yangi Flyway migratsiya bilan rol_permission'dan ham).
+- [ ] **E6. Mashina sig'imi olib tashlanadi:** reysda sig'im tekshiruvi va mashina sig'imi maydoni butunlay olib tashlansin (hech qanday blok/ogohlantirish yo'q). Mashina kartasida faqat «Muzlatkichi bor / yo'q» belgisi qoladi (reysga ta'sir qilmaydi, faqat ma'lumot).
+
 ## Egasi qarori (06.11.2026) — USTUVORLIK
 - Tizim **noldan** ishga tushiriladi: SmartUp'dan mahsulot, qoldiq, qarz ko'chirilmaydi. **Faqat mijozlar bazasi** SmartUp'dan import qilinadi (namuna kelgach).
 - **Bank fayli importi** — kerak emas (qo'lda solishtirish yetarli), V1 dan chiqarildi.
@@ -27,6 +36,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - [ ] (Ixtiyoriy) Bulut muhiti tarmoq sozlamasida Maven Central (`repo.maven.apache.org`), `services.gradle.org` va Docker Hub'ga ruxsat — shunda backend sessiya ichida ham tekshiriladi, CI kutish shart bo'lmaydi.
 
 ## Egasiga savollar
+_(07.11.2026 18:12 — quyidagi 6 savolga javob berildi: yuqoridagi «Egasi javoblari» E1–E6)_
 - **Markirovkasiz buyurtma (SPEC 172):** SPEC boʻyicha markirovkali qatori yoʻq buyurtma ham Markirovkachidan «tasdiqlash» bilan oʻtadi; hozir yigʻishdan keyin toʻgʻridan-toʻgʻri «Tekshiruv»ga oʻtadi (tezroq). SPEC dagidek qilaylikmi?
 - **FS summasi (joriy qilindi 07.11):** filiallararo savdo partiya tannarxida, QQS shu summa ichida ajratiladi (sotuvdagi kabi). QQS tannarx ustiga qo'shilishi kerakmi? (Javobgacha — ichida.)
 - **Buxgalter doirasi:** SPEC 13 — Buxgalter barcha filiallarni ko'radi; T12 matritsasida esa «own». Hozir SPEC bo'yicha (barcha filiallar). To'g'rimi?
