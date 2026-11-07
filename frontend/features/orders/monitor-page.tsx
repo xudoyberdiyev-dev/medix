@@ -21,6 +21,8 @@ import { ReceiptDrawer } from "@/features/receipts/receipt-drawer";
 import { RECEIPT_ACCEPT, useReceipts, type ReceiptSummary } from "@/features/receipts/api";
 import { TRANSFER_RECEIVE, useWarehouseTransfers, type WarehouseTransferSummary } from "@/features/warehouse-transfers/api";
 import { WarehouseTransferDrawer } from "@/features/warehouse-transfers/warehouse-transfer-drawer";
+import { useBranchSales, type BranchSaleSummary } from "@/features/branch-sales/api";
+import { BranchSaleDrawer } from "@/features/branch-sales/branch-sale-drawer";
 import { STATUS_LABELS, type OrderStatus } from "./api";
 import { IssuesList } from "./issues";
 import { ReturnsList } from "./returns";
@@ -99,6 +101,11 @@ export function MonitorPage() {
   const canTransfers = can(me.data, TRANSFER_RECEIVE);
   const transit = useWarehouseTransfers(branchId, "IN_TRANSIT", 1, allowed && canTransfers);
   const [transfer, setTransfer] = useState<number | null>(null);
+  // Filiallararo savdo: shu filialga (xaridor) yo'ldagi FS lar ham «Ko'chirish qabuli» da
+  const fsTransit = useBranchSales(branchId, "IN_TRANSIT", 1, allowed && canTransfers);
+  const buyerBranch = branchId ?? me.data?.branchId ?? null;
+  const fsToReceive = incomingBranchSales(fsTransit.data?.items ?? [], buyerBranch);
+  const [branchSale, setBranchSale] = useState<number | null>(null);
   const rawTab = useSearchParams().get("tab");
   const board = useQuery({
     queryKey: ["orders", "monitor", branchId],
@@ -115,7 +122,7 @@ export function MonitorPage() {
     returns: canReturns,
     receiptCount: canReceipts ? drafts.data?.total : undefined,
     transfers: canTransfers,
-    transferCount: canTransfers ? transit.data?.total : undefined,
+    transferCount: canTransfers && transit.data ? transit.data.total + fsToReceive.length : undefined,
   });
   const tab = (tabs.some((t) => t.key === rawTab) ? rawTab : "monitor") as KeeperTab;
   const setTab = (k: string) => router.replace(k === "monitor" ? pathname : `${pathname}?tab=${k}`, { scroll: false });
@@ -207,10 +214,16 @@ export function MonitorPage() {
       ) : null}
       {board.data && tab === "issues" ? <IssuesList onOpenOrder={setOpen} /> : null}
       {board.data && tab === "receipts" ? <ReceiptQueue query={drafts} onOpen={setReceipt} /> : null}
-      {board.data && tab === "transfers" ? <TransferQueue query={transit} onOpen={setTransfer} /> : null}
+      {board.data && tab === "transfers" ? (
+        <div className="flex flex-col gap-4">
+          <TransferQueue query={transit} onOpen={setTransfer} />
+          {fsToReceive.length > 0 ? <BranchSaleQueue rows={fsToReceive} onOpen={setBranchSale} /> : null}
+        </div>
+      ) : null}
       {board.data && tab === "returns" ? <ReturnsList /> : null}
       {open !== null ? <OrderDrawer id={open} onClose={() => setOpen(null)} onCreated={() => undefined} /> : null}
       {receipt !== null ? <ReceiptDrawer id={receipt} onClose={() => setReceipt(null)} onCreated={() => undefined} /> : null}
+      {branchSale !== null ? <BranchSaleDrawer id={branchSale} onClose={() => setBranchSale(null)} onCreated={() => undefined} /> : null}
       {transfer !== null ? <WarehouseTransferDrawer id={transfer} onClose={() => setTransfer(null)} onCreated={() => undefined} /> : null}
     </>
   );
@@ -311,6 +324,30 @@ function ReceiptQueue({ query, onOpen }: { query: ReturnType<typeof useReceipts>
 }
 
 /** Koʻchirish qabuli: yoʻldagi ombor koʻchirishlari (OK) — qator bosilsa hujjat ochiladi, u yerda «Qabul qilish». */
+/** Xaridor filialga yo'ldagi FS lar (sotuvchi sifatidagilar emas); filial tanlanmagan (barcha filiallar) — hammasi. */
+export function incomingBranchSales(items: BranchSaleSummary[], buyerBranchId: number | null): BranchSaleSummary[] {
+  return items.filter((d) => d.status === "IN_TRANSIT" && (buyerBranchId === null || d.buyer.id === buyerBranchId));
+}
+
+function BranchSaleQueue({ rows, onOpen }: { rows: BranchSaleSummary[]; onOpen: (id: number) => void }) {
+  const columns: TableColumn<BranchSaleSummary>[] = [
+    { key: "number", title: "Raqam", mono: true },
+    { key: "sentAt", title: "Joʻnatildi", render: (d) => (d.sentAt ? formatDateTime(new Date(d.sentAt)) : "—") },
+    { key: "seller", title: "Sotuvchi filial", render: (d) => d.seller.name },
+    { key: "to", title: "Qayerga", render: (d) => d.toWarehouse.name },
+    { key: "qty", title: "Miqdor", align: "right", render: (d) => <span className="tabular-nums">{formatQuantity(d.qty)}</span> },
+  ];
+  return (
+    <Table
+      columns={columns}
+      rows={rows}
+      rowKey={(d) => String(d.id)}
+      caption="Filiallararo savdo — qabul kutilmoqda"
+      onRowClick={(d) => onOpen(d.id)}
+    />
+  );
+}
+
 function TransferQueue({ query, onOpen }: { query: ReturnType<typeof useWarehouseTransfers>; onOpen: (id: number) => void }) {
   const columns: TableColumn<WarehouseTransferSummary>[] = [
     { key: "number", title: "Raqam", mono: true },
