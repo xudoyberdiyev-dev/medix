@@ -2373,6 +2373,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{id}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-faktura
+         * @description O'tkazilgan sotuv qatorlari (partiya, QQS) — chop etish uchun; sotuv bo'lmasa 404.
+         */
+        get: operations["invoice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/invoice/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-faktura — PDF (chop etish)
+         * @description Sotuv bo'lmasa — 404.
+         */
+        get: operations["invoicePdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{id}/issues": {
         parameters: {
             query?: never;
@@ -6231,6 +6271,50 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
             zone?: components["schemas"]["ZoneRef"];
+        };
+        InvoiceDoc: {
+            address?: string;
+            /** Format: int64 */
+            branchId: number;
+            /** @description Sotuv sanasida amaldagi shartnoma */
+            contract?: string;
+            customer: string;
+            customerTin?: string;
+            /** Format: date */
+            dueDate?: string;
+            invoiceNumber: string;
+            lines: components["schemas"]["InvoiceLine"][];
+            /** @description QQSsiz qiymat */
+            netTotal: string;
+            orderNumber: string;
+            /** @enum {string} */
+            paymentType: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: date */
+            saleDate: string;
+            saleNumber: string;
+            /** @description POSTED yoki CANCELLED */
+            status: string;
+            total: string;
+            vatTotal: string;
+            warehouse: string;
+        };
+        InvoiceLine: {
+            amount: string;
+            batch: string;
+            /** Format: date */
+            expiryDate: string;
+            manufacturer?: string;
+            /** @description QQSsiz qiymat */
+            netAmount: string;
+            /** @description Narx QQS bilan */
+            price: string;
+            productCode: string;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            vatAmount: string;
+            /** @description QQS stavkasi, % */
+            vatRate: string;
         };
         IssueRequest: {
             /** @description «Boshqa» uchun majburiy */
@@ -12568,6 +12652,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    invoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDoc"];
+                };
+            };
+        };
+    };
+    invoicePdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

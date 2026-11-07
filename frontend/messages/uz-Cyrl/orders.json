@@ -174,7 +174,8 @@
     "invoice": "Ҳисоб-фактура",
     "return": "Қайтариш",
     "exportCodes": "Кодларни юклаш (.xlsx)",
-    "printWaybill": "Накладнойни чоп этиш"
+    "printWaybill": "Накладнойни чоп этиш",
+    "printInvoice": "Ҳисоб-фактурани чоп этиш"
   },
   "credit": {
     "priceType": "Нарх тури",

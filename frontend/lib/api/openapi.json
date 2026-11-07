@@ -5323,6 +5323,65 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/{id}/invoice" : {
+      "get" : {
+        "description" : "O'tkazilgan sotuv qatorlari (partiya, QQS) — chop etish uchun; sotuv bo'lmasa 404.",
+        "operationId" : "invoice",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceDoc"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-faktura",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/invoice/pdf" : {
+      "get" : {
+        "description" : "Sotuv bo'lmasa — 404.",
+        "operationId" : "invoicePdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-faktura — PDF (chop etish)",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/{id}/issues" : {
       "post" : {
         "description" : "Sabab tanlanadi; xabar Ombor mudiriga keladi, taymer to'xtamaydi.",
@@ -14488,6 +14547,117 @@
           }
         },
         "required" : [ "blind", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId" ]
+      },
+      "InvoiceDoc" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "contract" : {
+            "type" : "string",
+            "description" : "Sotuv sanasida amaldagi shartnoma"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerTin" : {
+            "type" : "string"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InvoiceLine"
+            }
+          },
+          "netTotal" : {
+            "type" : "string",
+            "description" : "QQSsiz qiymat"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "paymentType" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "saleDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "saleNumber" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "POSTED yoki CANCELLED"
+          },
+          "total" : {
+            "type" : "string"
+          },
+          "vatTotal" : {
+            "type" : "string"
+          },
+          "warehouse" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "branchId", "customer", "invoiceNumber", "lines", "netTotal", "orderNumber", "paymentType", "saleDate", "saleNumber", "status", "total", "vatTotal", "warehouse" ]
+      },
+      "InvoiceLine" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "batch" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "netAmount" : {
+            "type" : "string",
+            "description" : "QQSsiz qiymat"
+          },
+          "price" : {
+            "type" : "string",
+            "description" : "Narx QQS bilan"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "vatAmount" : {
+            "type" : "string"
+          },
+          "vatRate" : {
+            "type" : "string",
+            "description" : "QQS stavkasi, %"
+          }
+        },
+        "required" : [ "amount", "batch", "expiryDate", "netAmount", "price", "productCode", "productName", "qty", "vatAmount", "vatRate" ]
       },
       "IssueRequest" : {
         "type" : "object",

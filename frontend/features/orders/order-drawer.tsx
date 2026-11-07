@@ -620,6 +620,7 @@ function DocumentsRow({ doc }: { doc: OrderDetail }) {
   const t = useTranslations("orders");
   const me = useMe();
   const canExportCodes = can(me.data, "marking.export");
+  const canPrintInvoice = can(me.data, "orders.view");
   const d = doc.documents;
   const items: { label: string; value: string; note?: string }[] = [];
   if (d.waybillNumber) items.push({ label: t("docs.waybill"), value: d.waybillNumber });
@@ -671,6 +672,17 @@ function DocumentsRow({ doc }: { doc: OrderDetail }) {
           onClick={() => window.open(`/api/orders/${doc.id}/waybill/pdf`, "_blank", "noopener")}
         >
           {t("docs.printWaybill")}
+        </Button>
+      ) : null}
+      {d.invoiceNumber && canPrintInvoice ? (
+        <Button
+          variant="tertiary"
+          size="sm"
+          icon={Printer}
+          className="mt-2"
+          onClick={() => window.open(`/api/orders/${doc.id}/invoice/pdf`, "_blank", "noopener")}
+        >
+          {t("docs.printInvoice")}
         </Button>
       ) : null}
     </div>

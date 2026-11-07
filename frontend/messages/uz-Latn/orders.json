@@ -174,7 +174,8 @@
     "invoice": "Hisob-faktura",
     "return": "Qaytarish",
     "exportCodes": "Kodlarni yuklash (.xlsx)",
-    "printWaybill": "Nakladnoyni chop etish"
+    "printWaybill": "Nakladnoyni chop etish",
+    "printInvoice": "Hisob-fakturani chop etish"
   },
   "credit": {
     "priceType": "Narx turi",

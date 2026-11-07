@@ -174,7 +174,8 @@
     "invoice": "Счёт-фактура",
     "return": "Возврат",
     "exportCodes": "Выгрузить коды (.xlsx)",
-    "printWaybill": "Печать накладной"
+    "printWaybill": "Печать накладной",
+    "printInvoice": "Печать счёта-фактуры"
   },
   "credit": {
     "priceType": "Тип цены",
