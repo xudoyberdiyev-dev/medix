@@ -154,7 +154,9 @@
     "fromBonus": " Bonus balans hisobidan — qarz yozilmadi.",
     "bonus": " Bonus tasdiqlandi: {number}{amount}.",
     "bonusAmount": ", {amount} soʻm",
-    "bonusBalance": " Bonus balansi: {amount} soʻm."
+    "bonusBalance": " Bonus balansi: {amount} soʻm.",
+    "prepaidShortTitle": "Avans yetmaydi — {amount} soʻm qarz boʻlib qoladi",
+    "prepaidShortBody": "Avans: {advance} soʻm, kirim summasi: {total} soʻm. Farqni toʻlov bilan yoping yoki «100% oldindan toʻlangan» belgisini olib tashlang."
   },
   "accept": {
     "lineQty": "{n}-qator: soni — butun son.",

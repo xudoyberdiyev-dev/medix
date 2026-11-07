@@ -154,7 +154,9 @@
     "fromBonus": " Бонус баланс ҳисобидан — қарз ёзилмади.",
     "bonus": " Бонус тасдиқланди: {number}{amount}.",
     "bonusAmount": ", {amount} сўм",
-    "bonusBalance": " Бонус баланси: {amount} сўм."
+    "bonusBalance": " Бонус баланси: {amount} сўм.",
+    "prepaidShortTitle": "Аванс етмайди — {amount} сўм қарз бўлиб қолади",
+    "prepaidShortBody": "Аванс: {advance} сўм, кирим суммаси: {total} сўм. Фарқни тўлов билан ёпинг ёки «100% олдиндан тўланган» белгисини олиб ташланг."
   },
   "accept": {
     "lineQty": "{n}-қатор: сони — бутун сон.",

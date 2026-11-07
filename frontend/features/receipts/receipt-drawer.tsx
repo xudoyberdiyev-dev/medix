@@ -31,6 +31,7 @@ import {
   RECEIPT_CREATE,
   RECEIPT_POST,
   expectedReason,
+  prepaidShortfall,
   searchSuppliers,
   useAcceptReceipt,
   useCancelReceipt,
@@ -665,11 +666,21 @@ function StatusNotes({ doc }: { doc: ReceiptDetail | null }) {
         {doc.cancelledBy}
       </Alert>
     );
+  const short = prepaidShortfall(doc);
+  const shortNote = short ? (
+    <Alert tone="warning" title={t("prepaidShortTitle", { amount: formatMoney(short.shortfall) })}>
+      {t("prepaidShortBody", { advance: formatMoney(short.advance), total: formatMoney(short.total) })}
+    </Alert>
+  ) : null;
+  if (doc.status === "DRAFT") return shortNote;
   if (doc.status === "ACCEPTED")
     return (
-      <Alert tone="warning" title={t("acceptedTitle")}>
-        {t("acceptedBody", { name: doc.acceptedBy ?? "", at: doc.acceptedAt ? `, ${formatDateTime(new Date(doc.acceptedAt))}` : "" })}
-      </Alert>
+      <>
+        {shortNote}
+        <Alert tone="warning" title={t("acceptedTitle")}>
+          {t("acceptedBody", { name: doc.acceptedBy ?? "", at: doc.acceptedAt ? `, ${formatDateTime(new Date(doc.acceptedAt))}` : "" })}
+        </Alert>
+      </>
     );
   if (doc.status === "POSTED")
     return (
@@ -809,6 +820,8 @@ function PostDialog({ doc, onClose }: { doc: ReceiptDetail; onClose: () => void 
   const post = usePostReceipt();
   const [resolution, setResolution] = useState<Resolution>("ACTUAL");
   const err = describeError(post.error);
+  const tn = useTranslations("receipts.notes");
+  const short = prepaidShortfall(doc, resolution === "DOCUMENT" ? doc.amount : (doc.actualAmount ?? doc.amount));
   return (
     <Modal
       open
@@ -843,6 +856,11 @@ function PostDialog({ doc, onClose }: { doc: ReceiptDetail; onClose: () => void 
           checked={resolution === "DOCUMENT"}
           onChange={() => setResolution("DOCUMENT")}
         />
+        {short ? (
+          <Alert tone="warning" title={tn("prepaidShortTitle", { amount: formatMoney(short.shortfall) })}>
+            {tn("prepaidShortBody", { advance: formatMoney(short.advance), total: formatMoney(short.total) })}
+          </Alert>
+        ) : null}
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
       </div>
     </Modal>

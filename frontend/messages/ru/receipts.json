@@ -154,7 +154,9 @@
     "fromBonus": " За счёт бонусного баланса — долг не записан.",
     "bonus": " Бонус подтверждён: {number}{amount}.",
     "bonusAmount": ", {amount} сум",
-    "bonusBalance": " Бонусный баланс: {amount} сум."
+    "bonusBalance": " Бонусный баланс: {amount} сум.",
+    "prepaidShortTitle": "Аванса не хватает — {amount} сум останется долгом",
+    "prepaidShortBody": "Аванс: {advance} сум, сумма прихода: {total} сум. Погасите разницу оплатой или снимите отметку «100% предоплата»."
   },
   "accept": {
     "lineQty": "Строка {n}: количество — целое число.",
