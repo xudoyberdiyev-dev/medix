@@ -262,4 +262,35 @@ class StockLedgerIT {
         mvc.perform(get("/api/stock").cookie(accountant)).andExpect(status().isForbidden());
         mvc.perform(get("/api/stock/export").cookie(accountant)).andExpect(status().isForbidden());
     }
+
+    @Test
+    void stockApiSorting() throws Exception {
+        Place p = place();
+        String tag = "srt" + java.util.UUID.randomUUID().toString().substring(0, 5);
+        long a = product("Alfa qoldiq " + tag);
+        long b = product("Beta qoldiq " + tag);
+        long ba = batch(a, "SA-1", false);
+        long bb = batch(b, "SB-1", false);
+        tx.executeWithoutResult(s -> ledger.post(new DocRef("BQ", 900_000 + ThreadLocalRandom.current().nextInt(99_999), "BQ-TST-" + tag), List.of(Move.in(p.mainZone(), ba, 7), Move.in(p.mainZone(), bb, 2))));
+        Cookie admin = loginAs("ADMIN", null);
+        String branch = String.valueOf(p.branchId());
+        mvc.perform(get("/api/stock").param("q", tag).param("branchId", branch).cookie(admin))
+                .andExpect(jsonPath("$.items[*].productId").value(org.hamcrest.Matchers.contains((int) a, (int) b)));
+        mvc.perform(get("/api/stock").param("q", tag).param("branchId", branch).param("sort", "NAME").param("desc", "true").cookie(admin))
+                .andExpect(jsonPath("$.items[*].productId").value(org.hamcrest.Matchers.contains((int) b, (int) a)));
+        mvc.perform(get("/api/stock").param("q", tag).param("branchId", branch).param("sort", "QTY").cookie(admin))
+                .andExpect(jsonPath("$.items[*].qty").value(org.hamcrest.Matchers.contains(2, 7)));
+        for (String sort : List.of("CODE", "EXPIRY", "WAREHOUSE")) {
+            mvc.perform(get("/api/stock").param("q", tag).param("branchId", branch).param("sort", sort).cookie(admin))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.total").value(2));
+        }
+        byte[] file = mvc.perform(get("/api/stock/export").param("q", tag).param("branchId", branch).param("sort", "QTY").param("desc", "true")
+                        .cookie(admin))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var wb = org.apache.poi.ss.usermodel.WorkbookFactory.create(new java.io.ByteArrayInputStream(file))) {
+            assertThat(wb.getSheetAt(0).getRow(1).getCell(1).getStringCellValue()).isEqualTo("Alfa qoldiq " + tag);
+        }
+    }
 }
