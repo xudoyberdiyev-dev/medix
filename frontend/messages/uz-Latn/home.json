@@ -320,5 +320,33 @@
     "custLimit": "Qarz / kredit limiti",
     "custOver": "Muddati oʻtgan qarz",
     "createOrder": "Buyurtma yaratish"
+  },
+  "pur": {
+    "rcT": "Kirimlar: qabul va oʻtkazish",
+    "rcAcc": "Qabul kutmoqda",
+    "rcPost": "Oʻtkazish kutmoqda",
+    "rcMine": "Shundan siz kiritgan",
+    "debtT": "YB qarzi va toʻlov kunlari",
+    "debtAll": "Jami qarz",
+    "late": "Kechikkan",
+    "today": "Bugun",
+    "d3": "3 kun ichida",
+    "bonusT": "Bonus eslatmalari",
+    "bonusNone": "Bonus eslatmasi yoʻq",
+    "bonusNoneHint": "Bonus sanasi yaqinlashgan kirimlar shu yerda koʻrinadi.",
+    "ownT": "Oʻz nomimdagi tovar",
+    "ownNone": "Oʻz nomingizdagi tovar yoʻq",
+    "ownNoneHint": "Kirimda «Kim nomiga» siz tanlansa, shu yerda koʻrinadi.",
+    "brought": "Olib keldi",
+    "rcN": "{n} ta kirim",
+    "sold": "Sotildi",
+    "lastSale": "oxirgi sotuv {d}",
+    "left": "Qoldi",
+    "other": "Boshqa harakat",
+    "otherSub": "Hisobdan chiqarish, YB ga qaytarish, inventarizatsiya farqi",
+    "active": "Aktiv",
+    "passive": "Passiv",
+    "activeSub": "Oxirgi 30 kunda tovari sotilganmi",
+    "pcs": "{n} dona"
   }
 }

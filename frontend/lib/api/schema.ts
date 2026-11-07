@@ -5400,6 +5400,15 @@ export interface components {
             /** Format: int64 */
             supplierId: number;
         };
+        BonusDue: {
+            amount: string;
+            /** Format: date */
+            date: string;
+            number: string;
+            /** Format: int64 */
+            receiptId: number;
+            supplier: string;
+        };
         BonusInfo: {
             balance: string;
             /** Format: int32 */
@@ -7415,6 +7424,17 @@ export interface components {
             /** Format: int32 */
             products: number;
         };
+        OwnMoves: {
+            active: boolean;
+            /** Format: date */
+            lastSale?: string;
+            /** Format: int64 */
+            otherQty: number;
+            /** Format: int32 */
+            receipts: number;
+            /** Format: int64 */
+            soldQty: number;
+        };
         Panel: {
             accounts: components["schemas"]["AccountTurnover"][];
             balances: components["schemas"]["KindTotals"];
@@ -7505,9 +7525,15 @@ export interface components {
             version: number;
         };
         PaymentDue: {
+            /** Format: int32 */
+            next3Count: number;
             next3Days: string;
             overdue: string;
+            /** Format: int32 */
+            overdueCount: number;
             today: string;
+            /** Format: int32 */
+            todayCount: number;
         };
         PaymentPostRequest: {
             /** @description Bo'sh — avtomatik (eng eski qarzdan); berilsa — qo'lda taqsimot, ortig'i avans */
@@ -7938,10 +7964,12 @@ export interface components {
         };
         PurchaserHomeView: {
             bonus: components["schemas"]["BonusInfo"];
+            bonusDue: components["schemas"]["BonusDue"][];
             /** Format: int64 */
             branchId?: number;
             due: components["schemas"]["PaymentDue"];
             ownGoods: components["schemas"]["OwnGoods"];
+            ownMoves: components["schemas"]["OwnMoves"];
             receipts: components["schemas"]["ReceiptCounts"];
             supplierDebt: components["schemas"]["DebtCard"];
             /** Format: date */
@@ -8038,10 +8066,12 @@ export interface components {
             toAccept: number;
             /** Format: int32 */
             toAcceptMine: number;
+            toAcceptNumbers: string[];
             /** Format: int32 */
             toPost: number;
             /** Format: int32 */
             toPostMine: number;
+            toPostNumbers: string[];
         };
         ReceiptDetail: {
             /** Format: date-time */

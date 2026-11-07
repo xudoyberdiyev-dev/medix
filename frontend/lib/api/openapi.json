@@ -12239,6 +12239,29 @@
         },
         "required" : [ "balance", "moves", "pending", "supplier", "supplierId" ]
       },
+      "BonusDue" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "supplier" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "date", "number", "receiptId", "supplier" ]
+      },
       "BonusInfo" : {
         "type" : "object",
         "properties" : {
@@ -17409,6 +17432,31 @@
         },
         "required" : [ "broughtQty", "expiring90", "leftQty", "products" ]
       },
+      "OwnMoves" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "lastSale" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "otherQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receipts" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "soldQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "active", "otherQty", "receipts", "soldQty" ]
+      },
       "Panel" : {
         "type" : "object",
         "properties" : {
@@ -17669,17 +17717,29 @@
       "PaymentDue" : {
         "type" : "object",
         "properties" : {
+          "next3Count" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "next3Days" : {
             "type" : "string"
           },
           "overdue" : {
             "type" : "string"
           },
+          "overdueCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "today" : {
             "type" : "string"
+          },
+          "todayCount" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
-        "required" : [ "next3Days", "overdue", "today" ]
+        "required" : [ "next3Count", "next3Days", "overdue", "overdueCount", "today", "todayCount" ]
       },
       "PaymentPostRequest" : {
         "type" : "object",
@@ -18764,6 +18824,12 @@
           "bonus" : {
             "$ref" : "#/components/schemas/BonusInfo"
           },
+          "bonusDue" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BonusDue"
+            }
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -18773,6 +18839,9 @@
           },
           "ownGoods" : {
             "$ref" : "#/components/schemas/OwnGoods"
+          },
+          "ownMoves" : {
+            "$ref" : "#/components/schemas/OwnMoves"
           },
           "receipts" : {
             "$ref" : "#/components/schemas/ReceiptCounts"
@@ -18791,7 +18860,7 @@
             }
           }
         },
-        "required" : [ "bonus", "due", "ownGoods", "receipts", "supplierDebt", "today", "topSuppliers" ]
+        "required" : [ "bonus", "bonusDue", "due", "ownGoods", "ownMoves", "receipts", "supplierDebt", "today", "topSuppliers" ]
       },
       "ReadyOrder" : {
         "type" : "object",
@@ -18999,6 +19068,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "toAcceptNumbers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "toPost" : {
             "type" : "integer",
             "format" : "int32"
@@ -19006,9 +19081,15 @@
           "toPostMine" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "toPostNumbers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         },
-        "required" : [ "toAccept", "toAcceptMine", "toPost", "toPostMine" ]
+        "required" : [ "toAccept", "toAcceptMine", "toAcceptNumbers", "toPost", "toPostMine", "toPostNumbers" ]
       },
       "ReceiptDetail" : {
         "type" : "object",
