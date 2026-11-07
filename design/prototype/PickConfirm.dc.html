@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+    <div onClick="{{ close }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:{{ pad }}">
+      <div role="dialog" aria-modal="true" aria-label="{{ title }}" onClick="{{ stop }}" style="width:680px;max-width:100%;max-height:calc(100vh - 24px);box-sizing:border-box;display:flex;flex-direction:column;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12)">
+        <div style="padding:20px {{ px }} 12px;display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;text-wrap:pretty">{{ title }}</h2>
+          <p style="margin:0;font-size:13px;line-height:19px;color:#5B6B6A;text-wrap:pretty">{{ L.q9_dSub }}</p>
+        </div>
+        <div style="flex:1;min-height:0;overflow-y:auto;padding:4px {{ px }} 12px;display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ lines }}" as="ln">
+            <div style="border:1px solid {{ ln.border }};border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+              <span style="font-size:13px;line-height:19px;text-wrap:pretty">{{ ln.text }}</span>
+              <div role="radiogroup" aria-label="{{ ln.name }}" style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ ln.opts }}" as="r"><button role="radio" aria-checked="{{ r.on }}" onClick="{{ r.pick }}" style="display:flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }};font-size:13px;color:#172B2A;cursor:pointer;white-space:nowrap"><span style="width:16px;height:16px;border-radius:50%;border:{{ r.ring }};box-sizing:border-box;flex:none"></span>{{ r.label }}</button></sc-for><sc-if value="{{ ln.noAlt }}"><span style="align-self:center;font-size:12px;line-height:16px;color:#647574">{{ L.q9_noAlt }}</span></sc-if>
+              </div>
+              <sc-if value="{{ ln.isOther }}">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px">
+                  <select value="{{ ln.batch }}" onChange="{{ ln.onBatch }}" aria-label="{{ L.q9_pickB }}" style="height:48px;padding:0 8px;border:1px solid {{ ln.bBorder }};border-radius:8px;font:inherit;font-size:13px;background:#FFFFFF;color:#172B2A;min-width:0"><option value="">{{ L.q9_pickB }}</option><sc-for list="{{ ln.alts }}" as="a"><option value="{{ a.value }}">{{ a.label }}</option></sc-for></select>
+                  <input value="{{ ln.reason }}" onChange="{{ ln.onReason }}" placeholder="{{ L.q9_reason }}" aria-label="{{ L.q9_reason }}" style="height:48px;padding:0 10px;box-sizing:border-box;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:13px;outline:none;min-width:0" style-focus="border-color:#0F766E">
+                </div>
+                <sc-if value="{{ ln.warn }}"><div style="display:flex;gap:6px;font-size:12px;line-height:16px;color:#B45309;background:#FFFBEB;border-radius:6px;padding:6px 8px"><lucide-i name="triangle-alert" size="14" style="flex:none"></lucide-i><span>{{ ln.warn }}</span></div></sc-if>
+                <sc-if value="{{ ln.err }}"><div style="display:flex;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14" style="flex:none"></lucide-i><span>{{ ln.err }}</span></div></sc-if>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:16px 24px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;border-top:1px solid #EEF2F4">
+          <button onClick="{{ close }}" style="min-height:48px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.bk_back2 }}</button>
+          <button onClick="{{ confirm }}" style="min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.q9_confirm }}</button>
+        </div>
+      </div>
+    </div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:800,&quot;height&quot;:700},&quot;orderId&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5005,&quot;tsType&quot;:&quot;number&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onDone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(order)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
+// T9-2: «Yig'ildi» — partiya tasdig'i (yagona oyna: buyurtma kartochkasi va Yig'uvchi paneli)
+class Component extends DCLogic {
+  state = { fin: {}, tried: false };
+  get L() { return this.props.dict || {}; }
+  order() { const D = window.MedixData; return D ? D.store.orders.find(o => o.id === this.props.orderId) : null; }
+  lines(o) { const D = window.MedixData; return (((o.pk || D.ensurePk(o)) || {}).lines || []).map((pl, k) => ({ pl, k, p: D.prodById(pl.pid) || {}, alts: D.pickAlts(o, pl.pid) })).filter(x => !x.pl.locked); }
+  close() { this.props.onClose && this.props.onClose(); }
+  confirm(o) { const D = window.MedixData, s = this.state, ch = {}; let bad = false;
+    this.lines(o).forEach(({ pl, k, alts }) => { const f = s.fin[k]; if (!f || f.mode !== 'other') return; const a = alts.find(x => x.batch === f.batch); if (!a || a.free < pl.qty) { bad = true; return; } ch[k] = { batch: f.batch, reason: (f.reason || '').trim() }; });
+    if (bad) return this.setState({ tried: true });
+    const n = D.finishPick(o.id, this.props.userName || '', ch); this.props.onDone && this.props.onDone(n); }
+  renderVals() { const L = this.L, s = this.state, D = window.MedixData, o = this.order(), narrow = !!this.props.narrow, base = { L, pad: narrow ? '12px' : '24px', px: narrow ? '16px' : '24px', stop: e => e.stopPropagation(), close: () => this.close() };
+    if (!D || !o || o.status !== 'picking') return { ...base, title: '', lines: [], confirm: () => {} };
+    const set = (k, patch) => this.setState(x => ({ fin: { ...x.fin, [k]: { ...(x.fin[k] || { mode: 'yes', batch: '', reason: '' }), ...patch } } }));
+    const lines = this.lines(o).map(({ pl, k, p, alts }) => { const f = s.fin[k] || { mode: 'yes', batch: '', reason: '' }, other = f.mode === 'other', f0 = pl.plan[0];
+      const planTxt = pl.plan.length ? pl.plan.map(x => fill(L.q9_dBatch, { b: x.batch, e: x.exp, z: (alts.find(a => a.batch === x.batch) || {}).zoneLabel || x.zone, q: fN(x.qty) })).join('; ') : L.q9_noPlan;
+      const text = fill(L.q9_dLine, { p: p.name, q: fN(pl.qty), plan: planTxt });
+      const a = alts.find(x => x.batch === f.batch), warn = other && a && f0 && pD(a.exp) > pD(f0.exp) ? fill(L.q9_wLater, { b: f0.batch, e: f0.exp }) : '';
+      const err = other && s.tried ? (!f.batch ? L.q9_eBatch : a && a.free < pl.qty ? fill(L.q9_eFree, { n: fN(a.free) }) : '') : '';
+      const opt = (key, label) => { const on = f.mode === key; return { label, on, border: on ? '#0D9488' : '#E2E8F0', bg: on ? '#F0FDFA' : '#FFFFFF', ring: on ? '5px solid #0F766E' : '1.5px solid #647574', pick: () => set(k, { mode: key }) }; };
+      const altList = alts.filter(x => !(pl.plan.length === 1 && x.batch === pl.plan[0].batch));
+      return { name: p.name, text, opts: altList.length ? [opt('yes', L.q9_yes), opt('other', L.q9_other)] : [opt('yes', L.q9_yes)], noAlt: !altList.length, isOther: other && altList.length > 0, batch: f.batch, reason: f.reason, border: err ? '#B91C1C' : other ? '#0D9488' : '#E2E8F0', bBorder: err && !f.batch ? '#B91C1C' : '#E2E8F0',
+        alts: altList.map(x => ({ value: x.batch, label: fill(L.q9_alt, { b: x.batch, e: x.exp, z: x.zoneLabel || x.zone, n: fN(x.free) }) })),
+        onBatch: e => set(k, { batch: e.target.value }), onReason: e => set(k, { reason: e.target.value }), warn, err }; });
+    return { ...base, lines, title: fill(L.q9_dT, { no: o.no }), confirm: () => this.confirm(o) }; }
+}
+</script>
+</body>
+</html>

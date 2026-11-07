@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>@media print { body * { visibility: hidden !important; } [data-print-root], [data-print-root] * { visibility: visible !important; } [data-print-root] { position: absolute !important; inset: auto !important; left: 0 !important; top: 0 !important; background: #FFFFFF !important; overflow: visible !important; height: auto !important; } [data-print-hide] { display: none !important; } [data-print-pages] { transform: none !important; padding: 0 !important; gap: 0 !important; } [data-print-sheet] { margin: 0 !important; border: 0 !important; box-shadow: none !important; break-after: page; page-break-after: always; } [data-print-row] { break-inside: avoid; page-break-inside: avoid; } @page { size: A4; margin: 0; } }</style></helmet>
+<div data-print-root="1" style="position:fixed;inset:0;z-index:300;background:#F5F7F8;display:flex;flex-direction:column;color:#172B2A">
+  <div data-print-hide="1" style="position:sticky;top:0;z-index:2;min-height:56px;flex:none;background:#FFFFFF;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;padding:10px 16px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 260px">
+      <button onClick="{{ close }}" style="height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;color:#172B2A" style-hover="background:#F8FAFA"><lucide-i name="arrow-left" size="16"></lucide-i>{{ L.ch_back }}</button>
+      <span style="font-size:14px;font-weight:600;white-space:nowrap">{{ formName }}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ docNo }}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div role="tablist" style="display:flex;height:34px;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;gap:2px">
+        <sc-for list="{{ zooms }}" as="z"><button role="tab" aria-selected="{{ z.on }}" onClick="{{ z.pick }}" style="height:28px;padding:0 10px;border:0;border-radius:6px;background:{{ z.bg }};color:{{ z.fg }};font:inherit;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">{{ z.label }}</button></sc-for>
+      </div>
+      <span style="font-size:13px;color:#5B6B6A;white-space:nowrap">{{ pageInfo }}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex:1 1 auto;justify-content:flex-end;flex-wrap:wrap">
+      <div style="width:110px"><dc-import name="Select" label="" required="{{ false }}" options="{{ copyOpts }}" value="{{ copies }}" on-change="{{ setCopies }}" hint-size="110px,34px"></dc-import></div>
+      <sc-if value="{{ hasVariant }}"><div role="tablist" style="display:flex;height:34px;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;gap:2px"><sc-for list="{{ variants }}" as="v"><button role="tab" aria-selected="{{ v.on }}" onClick="{{ v.pick }}" style="height:28px;padding:0 10px;border:0;border-radius:6px;background:{{ v.bg }};color:{{ v.fg }};font:inherit;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">{{ v.label }}</button></sc-for></div></sc-if>
+      <button onClick="{{ pdf }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;color:#172B2A;white-space:nowrap" style-hover="background:#F8FAFA"><lucide-i name="file-down" size="16" style="color:#5B6B6A"></lucide-i>{{ L.ch_pdf }}</button>
+      <button onClick="{{ print }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap" style-hover="background:#115E59"><lucide-i name="printer" size="16"></lucide-i>{{ L.ch_print }}</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow:auto">
+    <sc-if value="{{ hasBanners }}"><div data-print-hide="1" style="max-width:820px;margin:16px auto 0;display:flex;flex-direction:column;gap:8px;padding:0 16px"><sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for></div></sc-if>
+    <div data-print-pages="1" style="display:flex;flex-direction:column;align-items:center;gap:24px;padding:24px 16px 48px;transform:scale({{ scale }});transform-origin:top center">
+      <sc-for list="{{ pages }}" as="pg" hint-placeholder-count="1">
+        <div data-print-sheet="1" style="position:relative;width:210mm;height:297mm;flex:none;background:#FFFFFF;border:1px solid #E2E8F0;box-sizing:border-box;padding:15mm 15mm 14mm 20mm;display:flex;flex-direction:column;overflow:hidden;font-family:Inter,system-ui,sans-serif;font-size:9pt;line-height:1.35;color:#000;font-variant-numeric:tabular-nums">
+          <sc-if value="{{ pg.wm }}"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:72pt;font-weight:700;color:{{ pg.wmColor }};letter-spacing:4pt;white-space:nowrap;pointer-events:none;z-index:0">{{ pg.wmText }}</div></sc-if>
+          <sc-if value="{{ pg.reprint }}"><div style="position:absolute;top:8mm;right:15mm;border:0.75pt solid #000;padding:1pt 5pt;font-size:7.5pt">{{ pg.reprintText }}</div></sc-if>
+          <sc-for list="{{ pg.blocks }}" as="b">
+            <sc-if value="{{ b.isNote }}"><div data-bid="{{ b.bid }}" style="font-size:7.5pt;color:#444;margin-bottom:4pt">{{ b.t }}</div></sc-if>
+            <sc-if value="{{ b.isHdr }}">
+              <div data-bid="{{ b.bid }}" style="display:flex;justify-content:space-between;gap:12mm;padding-bottom:5pt;border-bottom:0.75pt solid #000;position:relative">
+                <div style="display:flex;flex-direction:column;gap:1pt;min-width:0">
+                  <span style="font-size:10pt;font-weight:600">{{ b.name }}</span>
+                  <span>STIR: <span style="font-family:'JetBrains Mono',monospace;font-size:8.5pt">{{ b.stir }}</span></span>
+                  <span style="color:#444">{{ b.address }}</span>
+                  <span style="color:#444">{{ b.phone }}</span>
+                  <span style="color:#444">{{ b.bank }} · h/r <span style="font-family:'JetBrains Mono',monospace;font-size:8.5pt;color:#000">{{ b.acc }}</span> · MFO <span style="font-family:'JetBrains Mono',monospace;font-size:8.5pt;color:#000">{{ b.mfo }}</span></span>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2pt;flex:none;text-align:right">
+                  <span style="display:block;font-size:12pt;font-weight:600;line-height:1.3;white-space:nowrap">{{ b.title }}</span>
+                  <sc-if value="{{ b.hasNo }}"><span>№ <span style="font-family:'JetBrains Mono',monospace;font-size:8.5pt">{{ b.no }}</span> · {{ b.date }}</span></sc-if>
+                  <sc-if value="{{ b.noNo }}"><span>{{ b.date }}</span></sc-if>
+                  <sc-if value="{{ b.hasSub }}"><span style="color:#444">{{ b.sub }}</span></sc-if>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isParties }}">
+              <div data-bid="{{ b.bid }}" style="display:grid;grid-template-columns:1fr 1fr;border:0.5pt solid #999;margin-top:6pt">
+                <sc-for list="{{ b.cols }}" as="p"><div style="padding:4pt 6pt;display:flex;flex-direction:column;gap:1pt;border-right:0.5pt solid #999">
+                  <span style="font-size:9.5pt;font-weight:600">{{ p.title }}</span>
+                  <sc-for list="{{ p.rows }}" as="r"><span><span style="color:#444">{{ r.k }}:</span> <span style="font-family:{{ r.font }};font-size:{{ r.fs }}">{{ r.v }}</span></span></sc-for>
+                </div></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isInfo }}"><div data-bid="{{ b.bid }}" style="margin-top:{{ b.mt }}"><span style="color:#444">{{ b.k }}:</span> <span style="font-family:{{ b.font }};font-size:{{ b.fs }};font-weight:{{ b.w }}">{{ b.v }}</span></div></sc-if>
+            <sc-if value="{{ b.isText }}"><div data-bid="{{ b.bid }}" style="margin-top:{{ b.mt }};font-size:{{ b.fs }};font-weight:{{ b.w }};color:{{ b.fg }};font-style:{{ b.st }};text-align:{{ b.align }};text-wrap:pretty">{{ b.t }}</div></sc-if>
+            <sc-if value="{{ b.isBarcode }}">
+              <div data-bid="{{ b.bid }}" style="display:flex;justify-content:space-between;align-items:flex-start;gap:8mm;margin-top:6pt">
+                <div style="display:flex;flex-direction:column;gap:2pt;min-width:0"><sc-for list="{{ b.lines }}" as="i"><span><span style="color:#444">{{ i.k }}:</span> {{ i.v }}</span></sc-for></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2pt;flex:none">
+                  <svg viewBox="{{ b.vb }}" preserveAspectRatio="none" style="width:{{ b.wmm }};height:13mm;display:block"><sc-for list="{{ b.bars }}" as="r"><rect x="{{ r.x }}" y="0" width="{{ r.w }}" height="40" fill="#000"></rect></sc-for></svg>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:14pt;font-weight:600;letter-spacing:1pt">{{ b.big }}</span>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isTable }}">
+              <div style="margin-top:6pt;border:0.75pt solid #000;position:relative;z-index:1">
+                <sc-if value="{{ b.hasSupers }}"><div style="display:grid;grid-template-columns:{{ b.grid }};font-size:7.5pt;font-weight:600;border-bottom:0.5pt solid #999"><sc-for list="{{ b.supers }}" as="h"><span style="grid-column:span {{ h.span }};padding:2pt 3pt;border-right:0.5pt solid #999;text-align:center">{{ h.t }}</span></sc-for></div></sc-if>
+                <div data-th="{{ b.thid }}" style="display:grid;grid-template-columns:{{ b.grid }};font-size:7.5pt;font-weight:600;border-bottom:0.75pt solid #000">
+                  <sc-for list="{{ b.heads }}" as="h"><span style="padding:2pt 3pt;border-right:0.5pt solid #999;text-align:{{ h.align }};display:flex;align-items:flex-end;justify-content:{{ h.just }}">{{ h.t }}</span></sc-for>
+                </div>
+                <sc-for list="{{ b.rows }}" as="r">
+                  <sc-if value="{{ r.isGroup }}"><div data-print-row="1" data-rid="{{ r.rid }}" style="padding:2pt 3pt;font-size:8pt;font-weight:600;border-bottom:0.5pt solid #999">{{ r.gt }}</div></sc-if>
+                  <sc-if value="{{ r.isRow }}"><div data-print-row="1" data-rid="{{ r.rid }}" style="display:grid;grid-template-columns:{{ b.grid }};font-size:8.5pt;font-weight:{{ r.w }};border-bottom:0.5pt solid #999;min-height:{{ r.minH }}">
+                    <sc-for list="{{ r.c }}" as="c"><span style="padding:2pt 2pt;border-right:0.5pt solid #999;text-align:{{ c.align }};font-family:{{ c.font }};font-size:{{ c.fs }};white-space:{{ c.ws }};overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:{{ c.ai }}"><sc-if value="{{ c.isBox }}"><span style="width:5mm;height:5mm;border:0.75pt solid #000;box-sizing:border-box"></span></sc-if><span>{{ c.t }}</span><sc-if value="{{ c.hasSub }}"><span style="font-size:7.5pt;font-weight:400;color:#444">{{ c.sub }}</span></sc-if></span></sc-for>
+                  </div></sc-if>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isMore }}"><div data-bid="{{ b.bid }}" style="margin-top:4pt;font-size:7.5pt;font-style:italic;text-align:right">{{ L.ch_more }}</div></sc-if>
+            <sc-if value="{{ b.isTotals }}">
+              <div data-bid="{{ b.bid }}" style="display:flex;justify-content:space-between;gap:12mm;margin-top:6pt">
+                <div style="display:flex;flex-direction:column;gap:2pt;color:#444"><span>{{ b.left }}</span></div>
+                <div style="display:grid;grid-template-columns:auto auto;gap:2pt 12pt;text-align:right;flex:none">
+                  <sc-for list="{{ b.rows }}" as="t"><span style="color:#444">{{ t.k }}</span><span style="font-weight:{{ t.w }};font-size:{{ t.fs }}">{{ t.v }}</span></sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isWords }}"><div data-bid="{{ b.bid }}" style="margin-top:6pt"><span style="color:#444">{{ b.k }}:</span> <span style="font-weight:600">{{ b.t }}</span></div></sc-if>
+            <sc-if value="{{ b.isLine }}"><div data-bid="{{ b.bid }}" style="margin-top:8pt;display:flex;align-items:flex-end;gap:4pt"><span style="flex:none">{{ b.k }}</span><span style="flex:1;border-bottom:0.5pt solid #000;height:11pt"></span><span style="flex:none;color:#444;font-size:7.5pt">{{ b.hint }}</span></div></sc-if>
+            <sc-if value="{{ b.isSigns }}">
+              <div data-bid="{{ b.bid }}" style="margin-top:14pt;display:grid;grid-template-columns:repeat({{ b.cols }},minmax(0,1fr));gap:8mm;align-items:start">
+                <sc-for list="{{ b.items }}" as="s"><div style="display:flex;flex-direction:column;gap:3pt;min-width:0">
+                  <span style="font-size:8pt;color:#444">{{ s.role }}</span>
+                  <span style="width:40mm;max-width:100%;border-bottom:0.5pt solid #000;height:12pt"></span>
+                  <span style="font-size:8.5pt">{{ s.name }}</span>
+                  <sc-if value="{{ s.hasStamp }}"><div style="margin-top:6pt;width:30mm;height:30mm;border-radius:50%;border:0.5pt dashed #999;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#444">M.O'.</div></sc-if>
+                </div></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isStamp }}"><div data-bid="{{ b.bid }}" style="margin-top:8pt;width:30mm;height:30mm;border-radius:50%;border:0.5pt dashed #999;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#444">M.O'.</div></sc-if>
+            <sc-if value="{{ b.isCut }}"><div data-bid="{{ b.bid }}" style="margin-top:12pt;display:flex;align-items:center;gap:4pt;color:#444;font-size:7pt"><lucide-i name="scissors" size="12"></lucide-i><span style="flex:1;border-top:0.75pt dashed #444"></span><span>{{ b.t }}</span><span style="width:12mm;border-top:0.75pt dashed #444"></span></div></sc-if>
+            <sc-if value="{{ b.isReceipt }}">
+              <div data-bid="{{ b.bid }}" style="margin-top:8pt;border:0.75pt solid #000;padding:5pt 7pt;display:flex;flex-direction:column;gap:2pt">
+                <div style="display:flex;justify-content:space-between;gap:8mm;align-items:baseline"><span style="font-size:10pt;font-weight:600">{{ b.title }}</span><span style="color:#444">{{ b.sub }}</span></div>
+                <sc-for list="{{ b.rows }}" as="r"><span><span style="color:#444">{{ r.k }}:</span> <span style="font-family:{{ r.font }};font-size:{{ r.fs }};font-weight:{{ r.w }}">{{ r.v }}</span></span></sc-for>
+                <span style="margin-top:2pt"><span style="color:#444">{{ b.wordsK }}:</span> <span style="font-weight:600">{{ b.words }}</span></span>
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8mm;margin-top:8pt">
+                  <div style="display:flex;flex-direction:column;gap:3pt"><span style="font-size:8pt;color:#444">{{ b.signRole }}</span><span style="width:40mm;border-bottom:0.5pt solid #000;height:12pt"></span><span style="font-size:8.5pt">{{ b.signName }}</span></div>
+                  <div style="width:22mm;height:22mm;border-radius:50%;border:0.5pt dashed #999;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#444">M.O'.</div>
+                </div>
+              </div>
+            </sc-if>
+          </sc-for>
+          <div style="margin-top:auto;padding-top:4pt;border-top:0.5pt solid #999;font-size:7pt;color:#444;display:flex;justify-content:space-between"><span>{{ footL }}</span><span>{{ pg.footR }}</span></div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <sc-if value="{{ dlgOpen }}">
+    <div data-print-hide="1" onClick="{{ closeDlg }}" style="position:fixed;inset:0;z-index:310;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:420px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:6px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ dlg.title }}</h2><p style="margin:0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ dlg.text }}</p></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button onClick="{{ closeDlg }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer">{{ dlg.cancel }}</button>
+          <sc-if value="{{ dlg.hasOk }}"><button onClick="{{ dlg.ok }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:{{ dlg.okBg }};color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer">{{ dlg.okLabel }}</button></sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const fM = n => n == null || n === '' || isNaN(n) ? '' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fN = n => Number(n || 0).toLocaleString('de-DE');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const MONO = "'JetBrains Mono',monospace", SANS = 'Inter,system-ui,sans-serif', BL = '____________';
+const v = x => x == null || x === '' ? BL : x;
+const TYPES = ['Hdr', 'Note', 'Parties', 'Info', 'Text', 'Barcode', 'Table', 'Totals', 'Words', 'Signs', 'Stamp', 'Cut', 'Receipt', 'More', 'Line'];
+const blk = (t, o) => { const b = { h: 0 }; TYPES.forEach(k => { b['is' + k] = false; }); b['is' + t] = true; return Object.assign(b, o); };
+const PAGE_H = 246;
+const PAGE = { sv: 'shipments', fs: 'transfer', by: 'orders', mt: 'payments', yt: 'payments', ko: 'cash', as: 'recon', rs: 'shipments' };
+const cell = (t, o) => Object.assign({ t: t == null ? '' : String(t), align: 'left', font: SANS, fs: '8.5pt', ws: 'normal', ai: 'stretch', hasSub: false, sub: '', isBox: false }, o || {});
+const R = (t, o) => cell(t, Object.assign({ align: 'right', ws: 'nowrap' }, o || {}));
+const row = (c, o) => Object.assign({ isRow: true, isGroup: false, gt: '', c, w: 400, h: 6.5, minH: '0' }, o || {});
+const grp = t => ({ isRow: false, isGroup: true, gt: t, c: [], w: 600, h: 5.5, minH: '0' });
+const textH = (t, cpl) => Math.max(1, Math.ceil(String(t || '').length / (cpl || 100))) * 4.4;
+class Component extends DCLogic {
+  state = { zoom: 'fit', copies: '1', variant: null, dlg: null, w: 1200 };
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { setTimeout(() => this.measure(), 60); this._r = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._r); this._r(); this._k = e => { if (e.key === 'Escape') this.close(); }; window.addEventListener('keydown', this._k); }
+  componentDidUpdate() { this.measure(); }
+  measure() { const root = document.querySelector('[data-print-root]'); if (!root) return; const rq = this.props.req || {}, key = [rq.n, rq.form, rq.no, this.state.variant].join('|'); if (this._mk !== key) { this._mk = key; this.mh = {}; this._mn = 0; } const PX = 96 / 25.4, mh = this.mh; let ch = false;
+    const put = (k, el, extra) => { if (!k) return; const cs = getComputedStyle(el), h = (el.offsetHeight + parseFloat(cs.marginTop || 0) + parseFloat(cs.marginBottom || 0)) / PX + (extra || 0); if (mh[k] == null || Math.abs(mh[k] - h) > 0.3) { mh[k] = h; ch = true; } };
+    root.querySelectorAll('[data-rid]').forEach(el => put(el.getAttribute('data-rid'), el)); root.querySelectorAll('[data-bid]').forEach(el => put(el.getAttribute('data-bid'), el)); root.querySelectorAll('[data-th]').forEach(el => put(el.getAttribute('data-th'), el, 2.6));
+    if (ch && (this._mn = (this._mn || 0) + 1) < 6) this.forceUpdate(); }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); window.removeEventListener('keydown', this._k); }
+  close() { this.props.onClose && this.props.onClose(); }
+  docs(x) { return x.form === 'trip' || x.form === 'picks' ? x.docs : [x]; }
+  doPrint(x) { const D = window.MedixData, p = this.props, L = this.L, s = this.state, who = p.userName || D.DIRECTOR; this.docs(x).forEach(d => D.prLog(d.src, d.form, +s.copies, who, d.kind, PAGE[d.kind] || 'shipments', d.branch)); this.setState({ dlg: null }); setTimeout(() => window.print(), 50); p.onToast && p.onToast(fill(L.ch_tPrinted, { n: s.copies })); }
+  tryPrint(x, pdf) { const L = this.L; if (x.status === 'draft') return this.setState({ dlg: { title: L.ch_draftT, text: L.ch_draftD, cancel: L.ch_ok, hasOk: false } });
+    if (x.status === 'other') return this.setState({ dlg: { title: L.ch_pickNeedT, text: L.ch_pickNeed, cancel: L.ch_ok, hasOk: false } });
+    if (x.status === 'cancelled') return this.setState({ dlg: { title: L.ch_cancT, text: L.ch_cancD, cancel: L.ch_cancel, hasOk: true, okLabel: L.ch_print, okBg: '#B91C1C', ok: () => this.doPrint(x) } });
+    if (pdf) { this.setState({ dlg: null }); return setTimeout(() => window.print(), 50); } this.doPrint(x); }
+  hdr(x, title, no, date, sub) { const S = x.seller || {}; return blk('Hdr', { h: 27, name: S.name || BL, stir: v(S.stir), address: v(S.address), phone: v(S.phone), bank: v(S.bank), acc: v(S.acc), mfo: v(S.mfo), title, no: no || '', hasNo: !!no, noNo: !no, date: date || '', hasSub: !!sub, sub: sub || '' }); }
+  info(k, val, o) { return blk('Info', Object.assign({ h: 5, k, v: v(val), font: SANS, fs: '9pt', w: 400, mt: '4pt' }, o || {})); }
+  text(t, o) { return blk('Text', Object.assign({ t, fs: '9pt', w: 400, fg: '#000', st: 'normal', align: 'left', mt: '6pt', h: textH(t) + 2 }, o || {})); }
+  signs(list, stampEach) { return blk('Signs', { cols: list.length, items: list.map(g => ({ role: g[0], name: g[1] || BL, hasStamp: !!stampEach })), h: 22 + (stampEach ? 36 : 0) }); }
+  table(cols, rows, o) { return Object.assign({ grid: cols.map(c => c[2]).join(' '), heads: cols.map(c => ({ t: c[0], align: c[1] ? 'right' : 'left', just: c[1] ? 'flex-end' : 'flex-start' })), hasSupers: false, supers: [], rows, hH: 8 }, o || {}); }
+  // ---- shakllar ----
+  secNak(x, variant) { const L = this.L, D = window.MedixData, nak = x.form === 'nak', priced = !nak || variant === 'price';
+    const cols = nak ? (priced ? [['№', 1, '6mm'], [L.ch_c_prodMaker, 0, '1fr'], [L.ch_c_batch, 0, '18mm'], [L.ch_c_exp, 0, '17mm'], [L.ch_c_unit, 0, '10mm'], [L.ch_c_qty, 1, '11mm'], [L.ch_c_price, 1, '17mm'], [L.ch_c_sum, 1, '21mm'], [L.ch_c_vatP, 1, '8mm'], [L.ch_c_vat, 1, '19mm'], [L.ch_c_total, 1, '21mm']] : [['№', 1, '7mm'], [L.ch_c_prod, 0, '1fr'], [L.ch_c_maker, 0, '28mm'], [L.ch_c_batch, 0, '24mm'], [L.ch_c_exp, 0, '18mm'], [L.ch_c_unit, 0, '12mm'], [L.ch_c_qty, 1, '16mm']])
+      : [['№', 1, '6mm'], [L.ch_c_prod, 0, '1fr'], [L.ch_c_mxik, 0, '18mm'], [L.ch_c_unit, 0, '10mm'], [L.ch_c_qty, 1, '11mm'], [L.ch_c_price, 1, '16mm'], [L.ch_c_supply, 1, '20mm'], [L.ch_c_vatRate, 1, '9mm'], [L.ch_c_vatSum, 1, '18mm'], [L.ch_c_withVat, 1, '20mm']];
+    const flags = l => [l.ctrl && L.ch_ctrl, l.mark && fill(L.ch_mark, { n: fN(l.qty) })].filter(Boolean).join(' · '), sm = { fs: '7.5pt' };
+    const rows = x.lines.map((l, i) => { const f = flags(l), sub2 = [l.maker, f].filter(Boolean).join(' · ');
+      const c = nak ? (priced ? [R(i + 1, sm), cell((l.code ? l.code + ' · ' : '') + l.name, { hasSub: !!sub2, sub: sub2 }), cell(l.batch, { font: MONO, fs: '8pt' }), cell(l.exp, sm), cell(l.unit, sm), R(fN(l.qty), sm), R(fM(l.price), sm), R(fM(l.sum), sm), R(l.vatPct + '%', sm), R(fM(l.vat), sm), R(fM(l.total), sm)] : [R(i + 1, sm), cell((l.code ? l.code + ' · ' : '') + l.name, { hasSub: !!f, sub: f }), cell(l.maker), cell(l.batch, { font: MONO }), cell(l.exp), cell(l.unit), R(fN(l.qty), sm)])
+        : [R(i + 1, sm), cell((l.code ? l.code + ' · ' : '') + l.name), cell(l.mxik || '', { font: MONO }), cell(l.unit), R(fN(l.qty), sm), R(fM(l.price), sm), R(fM(l.sum), sm), R(l.vatPct + '%', sm), R(fM(l.vat), sm), R(fM(l.total), sm)];
+      return row(c, { h: 6.4 + ((nak && priced ? sub2 : f) ? 3.4 : 0) + (String(l.name || '').length > 34 ? 3.4 : 0) }); });
+    const sel = x.seller, buy = x.buyer, pr = (k, val, mono) => ({ k, v: v(val), font: mono ? MONO : SANS, fs: mono ? '8.5pt' : '9pt' });
+    const pc = nak ? [{ title: L.ch_sender, rows: [pr(L.ch_r_name, sel.name), pr('STIR', sel.stir, 1), pr(L.ch_r_addr, sel.address)] }, { title: L.ch_receiver, rows: [pr(L.ch_r_name, buy.name), pr('STIR', buy.stir, 1), pr(L.ch_r_addr, buy.address)].concat(x.kind === 'sv' ? [pr(L.ch_r_lic, buy.lic)] : []) }]
+      : [{ title: L.ch_seller, rows: [pr(L.ch_r_name, sel.name), pr('STIR', sel.stir, 1), pr(L.ch_r_vatNo, sel.vatNo, 1), pr(L.ch_r_addr, sel.address), pr(L.ch_r_bank, sel.bank), pr(L.ch_r_acc, sel.acc, 1), pr('MFO', sel.mfo, 1)] }, { title: L.ch_buyer, rows: [pr(L.ch_r_name, buy.name), pr('STIR', buy.stir, 1), pr(L.ch_r_vatNo, buy.vatNo, 1), pr(L.ch_r_addr, buy.address), pr(L.ch_r_bank, buy.bank), pr(L.ch_r_acc, buy.acc, 1), pr('MFO', buy.mfo, 1)] }];
+    const dl = x.delivery || {}, pre = [];
+    if (!nak) pre.push(blk('Note', { t: L.ch_hfNote, h: 4 }));
+    pre.push(this.hdr(x, L['ch_f_' + x.form], x.no, x.date, !nak && x.src !== x.no ? fill(L.ch_srcDoc, { n: x.src }) : ''), blk('Parties', { cols: pc, h: 8 + Math.max(...pc.map(c => c.rows.length)) * 4.4 }));
+    if (nak) pre.push(this.info(L.ch_basis, x.basis), this.info(L.ch_delivery, dl.trip ? fill(L.ch_byTrip, { t: dl.trip, d: v(dl.driver), c: v(dl.car) }) : x.kind === 'fs' ? L.ch_internal : fill(L.ch_pickup, { r: v(dl.rep), p: v(dl.proxy) })));
+    else pre.push(this.info(L.ch_contract, x.contract), this.info(L.ch_basis, x.basis));
+    const post = [blk('Totals', { left: fill(L.ch_count, { r: x.tot.rows, q: fN(x.tot.qty) }), rows: priced ? [{ k: L.ch_tNet, v: fM(x.tot.net), w: 400, fs: '9pt' }, { k: L.ch_tVat, v: fM(x.tot.vat), w: 400, fs: '9pt' }, { k: L.ch_tTotal, v: fM(x.tot.total), w: 600, fs: '9pt' }] : [], h: priced ? 18 : 8 })];
+    if (priced) post.push(blk('Words', { k: L.ch_inWords, t: D.sumInWordsUz(x.tot.total), h: 9 }));
+    post.push(this.signs(x.signs), blk('Stamp', { h: 36 }));
+    return { doc: x, pre, table: this.table(cols, rows), post }; }
+  secPick(x) { const L = this.L; let last = null; const rows = [];
+    x.lines.forEach(l => { const g = l.zoneLabel; if (g !== last) { rows.push(grp(g)); last = g; } const sub = [l.mark && L.ch_pk_scan, l.ctrl && L.ch_pk_safe].filter(Boolean).join(' · ');
+      rows.push(row([cell(l.code || '', { font: MONO, fs: '8pt' }), cell(l.name, { hasSub: !!sub, sub }), cell(l.batch || '—', { font: MONO, fs: '8pt' }), cell(l.exp || '—', { fs: '8pt' }), cell(l.zoneLabel, { fs: '8pt' }), R(fN(l.qty)), cell('', { isBox: true, ai: 'center' })], { h: 9 + (sub ? 3.4 : 0), minH: '8mm' })); });
+    const cols = [[L.ch_pk_c_code, 0, '18mm'], [L.ch_c_prod, 0, '1fr'], [L.ch_pk_c_batch, 0, '24mm'], [L.ch_c_exp, 0, '17mm'], [L.ch_pk_c_zone, 0, '22mm'], [L.ch_c_qty, 1, '14mm'], [L.ch_pk_c_picked, 0, '15mm']];
+    const pre = [this.hdr(x, L.ch_f_pick, x.no, x.date), blk('Barcode', { h: 27, big: x.no, vb: '0 0 ' + x.bar.w + ' 40', wmm: (x.bar.w * 0.3).toFixed(1) + 'mm', bars: x.bar.bars, lines: [{ k: L.ch_pk_cust, v: v(x.cust) }, { k: L.ch_pk_del, v: x.delivery === 'pickup' ? L.ch_dl_pickup : L.ch_dl_deliver }, { k: L.ch_pk_trip, v: v(x.trip) }, { k: L.ch_pk_ready, v: v(x.ready) }] })];
+    return { doc: x, pre, table: this.table(cols, rows), post: [this.text(fill(L.ch_pk_total, { r: x.tot.rows, q: fN(x.tot.qty) }), { fg: '#444' }), this.signs(x.signs)] }; }
+  secCash(x) { const L = this.L, D = window.MedixData, inn = x.form === 'kio', words = D.sumInWordsUz(x.sum);
+    const pre = [this.hdr(x, L['ch_f_' + x.form], x.no, x.date), this.info(L.ch_cs_acct, x.acct, { mt: '8pt' }), this.info(inn ? L.ch_cs_from : L.ch_cs_to, x.who), this.info(L.ch_cs_basis, x.basisText)];
+    let table = null; if (x.basis.length) { pre.push(this.text(L.ch_cs_alloc, { w: 600, fs: '9.5pt', mt: '8pt' })); table = this.table([[L.ch_cs_c_doc, 0, '1fr'], [L.ch_cs_c_sum, 1, '40mm']], x.basis.map(b => row([cell(b.no, { font: MONO }), R(fM(b.sum))]))); }
+    const post = [blk('Totals', { left: '', rows: [{ k: L.ch_cs_sum, v: fM(x.sum) + " so'm", w: 600, fs: '11pt' }].concat(x.vat ? [{ k: L.ch_cs_vat, v: fM(x.vat), w: 400, fs: '9pt' }] : []), h: 10 }), blk('Words', { k: L.ch_inWords, t: words, h: 9 })];
+    if (!inn) { post.push(blk('Line', { k: L.ch_cs_got, hint: L.ch_cs_gotHint, h: 9 }), blk('Line', { k: L.ch_cs_pass + ' ______ ' + L.ch_cs_passNo, hint: '', h: 9 })); if (x.appr) post.push(this.text(fill(L.ch_cs_appr, { w: x.appr.who, t: x.appr.at }), { mt: '8pt' })); }
+    post.push(this.signs(x.signs));
+    if (inn) post.push(blk('Cut', { t: L.ch_cs_rcpt, h: 10 }), blk('Receipt', { h: 62, title: L.ch_cs_rcpt, sub: L.ch_cs_rcptTo + ' № ' + x.no, rows: [{ k: L.ch_cs_org, v: x.seller.name, font: SANS, fs: '9pt', w: 400 }, { k: L.ch_cs_order, v: x.no, font: MONO, fs: '8.5pt', w: 400 }, { k: L.ch_cs_from, v: v(x.who), font: SANS, fs: '9pt', w: 400 }, { k: L.ch_cs_sum, v: fM(x.sum) + " so'm", font: SANS, fs: '9pt', w: 600 }, { k: L.ch_cs_date, v: x.date, font: SANS, fs: '9pt', w: 400 }], wordsK: L.ch_inWords, words, signRole: L.ch_cs_cashier, signName: x.signs[1][1] || BL }));
+    return { doc: x, pre, table, post }; }
+  secAkt(x) { const L = this.L, D = window.MedixData, T = { sv: 'sale', arch: 'arch', mt: 'pay', yt: 'pay', qm: 'ret', qy: 'ret', ah: 'adv', kr: 'rc', bq: 'arch' }, sm = { fs: '8pt' };
+    const side = n => [cell(n.date, { fs: '7pt', ws: 'nowrap' }), cell(n.no, { font: MONO, fs: '7.5pt', hasSub: !!n.sub, sub: n.sub || '' }), R(n.dr, sm), R(n.cr, sm), cell(''), cell(''), cell(''), cell('')];
+    const our = x.mt ? x.close > 0 : x.close < 0, abs = Math.abs(x.close), oursOpen = x.mt ? x.open >= 0 : x.open <= 0;
+    const rows = [row(side({ date: x.from, no: '', sub: L.ch_ak_open, dr: oursOpen ? fM(Math.abs(x.open)) : '', cr: !oursOpen ? fM(Math.abs(x.open)) : '' }), { w: 600 })]
+      .concat(x.rows.map(m => row(side({ date: m.date, no: m.no || '', sub: L['ch_ak_t_' + (T[m.t] || 'sale')] || m.t, dr: m.dr ? fM(m.dr) : '', cr: m.cr ? fM(m.cr) : '' }), { h: 9.4 })))
+      .concat([row(side({ date: '', no: '', sub: L.ch_ak_turn, dr: fM(x.dr), cr: fM(x.cr) }), { w: 600 }), row(side({ date: x.to, no: '', sub: L.ch_ak_close, dr: our ? fM(abs) : '', cr: !our && abs ? fM(abs) : '' }), { w: 600 })]);
+    const brName = (x.signs[0][0] || '').replace(/^Medix Group /, ''), cols = [[L.ch_ak_c_date, 0, '17.5mm'], [L.ch_ak_c_doc, 0, '1fr'], [L.ch_ak_c_dr, 1, '22mm'], [L.ch_ak_c_cr, 1, '22mm'], [L.ch_ak_c_date, 0, '13mm'], [L.ch_ak_c_doc, 0, '0.7fr'], [L.ch_ak_c_dr, 1, '16mm'], [L.ch_ak_c_cr, 1, '16mm']];
+    const res = !abs ? fill(L.ch_ak_zero, { d: x.to }) : fill(L.ch_ak_res, { d: x.to, f: our ? 'Medix Group ' + brName : x.partyName, s: fM(abs), w: D.sumInWordsUz(abs) });
+    const pre = [this.hdr(x, L.ch_ak_title, x.no, x.date), this.text(fill(L.ch_ak_period, { a: x.from, b: x.to }), { w: 600 }), blk('Parties', { h: 18, cols: [{ title: L.ch_ak_sideA, rows: [{ k: L.ch_r_name, v: x.seller.name, font: SANS, fs: '9pt' }, { k: 'STIR', v: v(x.seller.stir), font: MONO, fs: '8.5pt' }] }, { title: L.ch_ak_sideB, rows: [{ k: L.ch_r_name, v: v(x.partyName), font: SANS, fs: '9pt' }, { k: 'STIR', v: BL, font: MONO, fs: '8.5pt' }] }] })];
+    return { doc: x, pre, table: this.table(cols, rows, { hasSupers: true, supers: [{ t: fill(L.ch_ak_ours, { n: 'Medix Group ' + brName }), span: 4 }, { t: L.ch_ak_theirs, span: 4 }], hH: 13 }), post: [this.text(res, { w: 600, mt: '8pt', h: 14 }), this.signs(x.signs, true)] }; }
+  secNo(x) { const L = this.L, D = window.MedixData, pc = (n, o) => o ? (n - o) / o * 100 : null, fp = v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + (Math.round(Math.abs(v) * 10) / 10).toString().replace('.', ',') + '%';
+    const st = L['nq_st_' + x.st] || x.st, srcL = (L['nq_src_' + x.srcKind] || x.srcKind) + (x.rc ? ' · ' + x.rc : '');
+    const pre = [this.hdr(x, L.nq_pr_title, x.no, x.date), this.info(L.nq_i_type, x.type, { mt: '8pt' }), this.info(L.nq_i_br, x.seller.short || x.branch), this.info(L.nq_i_eff, x.eff), this.info(L.nq_i_src, srcL), this.info(L.nq_ch_st, st)].concat(x.note ? [this.info(L.nq_i_note, x.note)] : []);
+    const rows = x.lines.map((l, i) => row([cell(String(i + 1)), cell(l.code, { font: MONO, fs: '8pt' }), cell(l.name), cell(l.batch || '—', { font: MONO, fs: '8pt' }), R(l.old ? fM(l.old) : '—'), R(fM(l.price), { w: 600 }), R(fp(pc(l.price, l.old)))]));
+    const table = this.table([[L.nq_l_no, 0, '8mm'], [L.nq_l_code, 0, '20mm'], [L.nq_l_prod, 0, '1fr'], [L.nq_l_batch, 0, '22mm'], [L.nq_l_old, 1, '24mm'], [L.nq_l_new, 1, '24mm'], [L.nq_l_chg, 1, '16mm']], rows);
+    return { doc: x, pre, table, post: [this.signs(x.signs)] }; }
+  sections(x, variant) { if (x.form === 'trip') return [].concat(...x.docs.map(d => this.secNak(d, variant))); if (x.form === 'nak' || x.form === 'hf') return [this.secNak(x, variant)]; if (x.form === 'pick') return [this.secPick(x)]; if (x.form === 'picks') return x.docs.map(d => this.secPick(d)); if (x.form === 'kio' || x.form === 'kco') return [this.secCash(x)]; if (x.form === 'akt') return [this.secAkt(x)]; if (x.form === 'no') return [this.secNo(x)]; return []; }
+  paginate(secs) { const pages = [], mh = this.mh || {}; let cur = null, used = 0; const np = doc => { cur = { blocks: [], doc }; pages.push(cur); used = 0; }, put = b => { cur.blocks.push(b); used += b.isTable ? 0 : b.h; };
+    secs.forEach((sec, si) => { sec.pre.concat(sec.post).forEach((b, i) => { b.bid = 's' + si + 'b' + i; if (mh[b.bid] != null) b.h = mh[b.bid]; }); if (sec.table) { sec.table.thid = 's' + si + 't'; if (mh[sec.table.thid] != null) sec.table.hH = mh[sec.table.thid]; sec.table.rows.forEach((r, ri) => { r.rid = 's' + si + 'r' + ri; if (mh[r.rid] != null) r.h = mh[r.rid]; }); } });
+    secs.forEach((sec, si) => { if (!cur || sec.doc !== secs[si - 1].doc) np(sec.doc);
+      sec.pre.forEach(b => { if (used + b.h > PAGE_H && cur.blocks.length) np(sec.doc); put(b); });
+      if (sec.table) { const T = sec.table; let rows = []; used += T.hH;
+        T.rows.forEach(r => { if (used + r.h > PAGE_H - 5 && rows.length) { put(blk('Table', Object.assign({}, T, { rows }))); rows = []; put(blk('More', { h: 4 })); np(sec.doc); used = T.hH; } rows.push(r); used += r.h; });
+        put(blk('Table', Object.assign({}, T, { rows }))); }
+      const postH = sec.post.reduce((a, b) => a + b.h, 0); if (used + postH > PAGE_H) { if (sec.table) put(blk('More', { h: 4 })); np(sec.doc); }
+      sec.post.forEach(put); });
+    return pages; }
+  renderVals() {
+    const L = this.L, p = this.props, s = this.state, D = window.MedixData, req = p.req || {};
+    const base = { L, pages: [], zooms: [], copyOpts: [], variants: [], banners: [], hasBanners: false, dlg: {}, dlgOpen: false, scale: 1, formName: '', docNo: '', pageInfo: '', hasVariant: false, footL: '', close: () => this.close(), closeDlg: () => this.setState({ dlg: null }), stop: e => e.stopPropagation(), pdf: () => {}, print: () => {}, copies: s.copies, setCopies: () => {} };
+    if (!D || !D.printData) return base;
+    let x = D.printData(req.form, req.no, req.q);
+    const fitScale = Math.min(1, (s.w - 48) / 794), scale = s.zoom === '75' ? 0.75 : s.zoom === '100' ? 1 : fitScale;
+    const seg = (list, cur, set) => list.map(([k, label]) => ({ label, on: cur === k, bg: cur === k ? '#FFFFFF' : 'transparent', fg: cur === k ? '#172B2A' : '#5B6B6A', pick: () => this.setState(set(k)) }));
+    const zooms = seg([['75', '75%'], ['100', '100%'], ['fit', L.ch_fit]], s.zoom, k => ({ zoom: k }));
+    if (!x.ok) { const t = x.reason === 'bank' ? L.ch_cs_bank : x.form === 'trip' ? L.ch_trNone : L.ch_notFound; return { ...base, zooms, formName: L['ch_f_' + req.form] || '', docNo: req.no || '', hasBanners: true, banners: [{ tone: 'info', icon: 'info', text: t }] }; }
+    if (req.demoStatus) x = { ...x, status: req.demoStatus };
+    if (req.noMfo) x = { ...x, seller: { ...x.seller, mfo: '' } };
+    if (req.multi && x.lines) { const L0 = x.lines, big = []; for (let i = 0; big.length < 44; i++) big.push(L0[i % L0.length]); x = { ...x, lines: big, tot: { ...x.tot, rows: big.length } }; }
+    const isNak = x.form === 'nak' || x.form === 'trip', variant = s.variant || req.variant || (isNak ? D.prCfg().nakVariant : null);
+    const pgs = this.paginate(this.sections(x, variant)), docCount = new Map(); pgs.forEach(pg => docCount.set(pg.doc, (docCount.get(pg.doc) || 0) + 1));
+    const copies = +s.copies || 1, now = D.nowStr ? D.nowStr() : D.TODAY, user = p.userName || D.DIRECTOR, cfg = D.prCfg();
+    const wmOf = d => d.status === 'draft' ? [L.ch_wmDraft, '#E2E8F0'] : d.status === 'cancelled' ? [L.ch_wmCancel, '#FECACA'] : null;
+    const pages = []; for (let c = 0; c < copies; c++) { const idx = new Map(); pgs.forEach(pg => { const d = pg.doc, k = (idx.get(d) || 0) + 1, n = docCount.get(d), wm = wmOf(d), prior = D.prPrints(d.src, d.form), rn = req.reprintN || (prior > 0 ? prior + 1 : 0); idx.set(d, k);
+      pages.push({ blocks: pg.blocks.map(b => b.pages ? { ...b, t: fill(b.t, { n }) } : b), wm: !!wm, wmText: wm ? wm[0] : '', wmColor: wm ? wm[1] : '', reprint: !!rn && cfg.reprint !== false && !req.noReprint, reprintText: fill(L.ch_reprint, { n: rn }), footR: fill(L.ch_page, { a: k, b: n }) }); }); }
+    const sel = x.seller || (x.docs && x.docs[0] && x.docs[0].seller) || {}, banners = [];
+    if (!sel.mfo || !sel.acc) banners.push({ tone: 'warning', icon: 'triangle-alert', text: fill(L.ch_noMfo, { b: sel.short, f: !sel.mfo ? 'MFO kodi' : 'hisob raqami' }) });
+    if (x.status === 'draft') banners.push({ tone: 'warning', icon: 'file-pen', text: L.ch_draftD }); if (x.status === 'cancelled') banners.push({ tone: 'danger', icon: 'ban', text: L.ch_cancD }); if (x.status === 'other') banners.push({ tone: 'warning', icon: 'triangle-alert', text: L.ch_pickNeed });
+    if (x.form === 'trip' && x.missing) banners.push({ tone: 'info', icon: 'info', text: fill(L.ch_trMissing, { n: x.missing }) });
+    const per = pgs.length;
+    return { ...base, formName: L['ch_f_' + x.form], docNo: x.no, zooms, scale, pageInfo: fill(L.ch_pageOf, { a: 1, b: per }),
+      copyOpts: [1, 2, 3, 4, 5].map(k => ({ value: String(k), label: fill(L.ch_copies, { n: k }) })), copies: s.copies, setCopies: v2 => this.setState({ copies: v2 }),
+      hasVariant: isNak, variants: seg([['price', L.ch_vPrice], ['noprice', L.ch_vNoPrice]], variant, k => ({ variant: k })),
+      pdf: () => this.tryPrint(x, true), print: () => this.tryPrint(x), pages, footL: fill(L.ch_foot, { t: now, u: user }), hasBanners: banners.length > 0, banners,
+      dlgOpen: !!s.dlg, dlg: s.dlg || {} };
+  }
+}
+</script>
+</body>
+</html>

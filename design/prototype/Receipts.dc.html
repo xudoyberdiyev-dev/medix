@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ loading }}"><div style="padding:48px 0;text-align:center;font-size:13px;color:#647574">{{ L.k_loading }}</div></sc-if>
+
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Kirim" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ L.k_title }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" more="{{ hdrMore }}" more-label="{{ L.p_more }}" hint-size="100%,34px"></dc-import>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.k_search }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" date-filter="{{ dateFilter }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.p_fClear }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+      <button onClick="{{ k.pick }}" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:14px 16px;display:flex;flex-direction:column;gap:4px;text-align:left;font:inherit;color:#172B2A;cursor:pointer" style-hover="border-color:#CBD5D3">
+        <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span>
+        <span style="font-size:20px;line-height:28px;font-weight:600;color:{{ k.color }}">{{ k.value }}</span>
+        <span style="font-size:12px;line-height:16px;color:{{ k.subColor }}">{{ k.sub }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="{{ allState }}" on-toggle-all="{{ toggleAll }}" on-sort="{{ onSort }}" scroll-x="{{ true }}" min-width="{{ tMinWidth }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+      <dc-import name="Pagination" total="{{ total }}" page="{{ page }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="package-plus" title="{{ L.k_emptyT }}" text="{{ L.k_emptyD }}" primary="{{ emptyPrimary }}" min-height="360" hint-size="100%,360px"></dc-import></sc-if>
+    <sc-if value="{{ listNoRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.p_noResT }}" text="{{ noResText }}" secondary="{{ noResAction }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+  </div>
+  <sc-if value="{{ hasSel }}"><dc-import name="BulkBar" count-label="{{ selLabel }}" actions="{{ bulkActions }}" on-clear="{{ clearSel }}" clear-label="{{ L.p_clearSel }}" hint-size="0px,0px"></dc-import></sc-if>
+  <div style="height:64px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPick }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="ProductPicker" mode="receipt" doc="{{ pickDoc }}" dict="{{ L }}" role="{{ role }}" narrow="{{ narrow }}" on-back="{{ pickBack }}" on-done="{{ pickDone }}" on-toast="{{ toastFn }}" hint-size="100%,800px"></dc-import>
+</sc-if>
+<sc-if value="{{ isDoc }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Kirim hujjati" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="DocumentHeader" parent-label="{{ L.k_title }}" on-parent="{{ backToList }}" title="{{ dTitle }}" number="{{ dNumber }}" badge="{{ dBadge }}" status="{{ dStatus }}" step-labels="{{ stepLabels }}" steps="{{ dSteps }}" autosave="{{ autosave }}" secondary="{{ dSecondary }}" more="{{ dMore }}" primary="{{ dPrimary }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
+  <sc-if value="{{ hasBanner }}"><dc-import name="StatusBanner" tone="{{ bannerTone }}" text="{{ bannerText }}" hint-size="100%,48px"></dc-import></sc-if>
+  <dc-import name="SavedViews" tabs="{{ docTabs }}" hint-size="100%,38px"></dc-import>
+
+  <sc-if value="{{ tabDoc }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ headEditable }}" hint-placeholder-val="{{ true }}">
+      <section data-head="1" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px;display:grid;grid-template-columns:repeat({{ headCols }},minmax(0,1fr));gap:16px 20px;align-items:start">
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <span style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k_hBranch }}</span>
+          <div title="{{ L.k_branchLocked }}" style="height:34px;padding:0 10px 0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;display:flex;align-items:center;gap:8px;font-size:14px;color:#5B6B6A;cursor:not-allowed"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ branchName }}</span><lucide-i name="lock" size="14" style="color:#647574"></lucide-i></div>
+        </div>
+        <dc-import name="Select" field-key="wh" label="{{ L.k_hWh }}" required="{{ true }}" options="{{ whOpts }}" value="{{ d.wh }}" on-change="{{ onWh }}" placeholder="{{ L.p_choose }}" error="{{ er.wh }}" hint-size="100%,56px"></dc-import>
+        <div data-f="date" style="display:flex;flex-direction:column;min-width:0">
+          <label for="kr-date" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k_hDate }} <span style="color:#B91C1C">*</span></label>
+          <input id="kr-date" value="{{ d.date }}" onChange="{{ on.date }}" onBlur="{{ normDate.date }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="height:34px;padding:0 12px;border:1px solid {{ bd.date }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <sc-if value="{{ er.date }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.date }}</div></sc-if>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <dc-import name="Select" field-key="supplier" label="{{ L.k_hSupplier }}" required="{{ true }}" options="{{ supOpts }}" value="{{ d.supplier }}" on-change="{{ on.supplier }}" placeholder="{{ L.p_choose }}" searchable="{{ true }}" search-ph="{{ L.p_fSearch }}" empty-label="{{ L.p_fNone }}" error="{{ er.supplier }}" hint-size="100%,56px"></dc-import>
+          <sc-if value="{{ hasSupInfo }}"><span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#5B6B6A">{{ supInfo }}<button onClick="{{ openSupCard }}" style="padding:0;border:0;background:transparent;font:inherit;font-size:12px;color:#0F766E;font-weight:500;cursor:pointer" style-hover="text-decoration:underline">{{ L.kt_oeCard }}</button></span></sc-if>
+        </div>
+        <div data-f="invNo" style="display:flex;flex-direction:column;min-width:0">
+          <label for="kr-inv" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k_hInvNo }} <span style="color:#B91C1C">*</span></label>
+          <input id="kr-inv" value="{{ d.invNo }}" onChange="{{ on.invNo }}" placeholder="NB-24871" style="height:34px;padding:0 12px;border:1px solid {{ bd.invNo }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <sc-if value="{{ er.invNo }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.invNo }}</div></sc-if>
+        </div>
+        <div data-f="invDate" style="display:flex;flex-direction:column;min-width:0">
+          <label for="kr-invd" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k_hInvDate }} <span style="color:#B91C1C">*</span></label>
+          <input id="kr-invd" value="{{ d.invDate }}" onChange="{{ on.invDate }}" onBlur="{{ normDate.invDate }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="height:34px;padding:0 12px;border:1px solid {{ bd.invDate }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <sc-if value="{{ er.invDate }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.invDate }}</div></sc-if>
+        </div>
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <label for="kr-sf" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k_hSf }}</label>
+          <input id="kr-sf" value="{{ d.sfNo }}" onChange="{{ on.sfNo }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+        </div>
+        <dc-import name="Select" field-key="payType" label="{{ L.k7_payType }}" required="{{ true }}" options="{{ payOpts }}" value="{{ d.payType }}" on-change="{{ on.payType }}" placeholder="{{ L.p_choose }}" error="{{ er.payType }}" hint-size="100%,56px"></dc-import>
+        <dc-import name="Select" field-key="owner" label="{{ L.k7_owner }}" options="{{ ownerOpts }}" value="{{ d.owner }}" on-change="{{ on.owner }}" placeholder="{{ L.k7_ownerNone }}" searchable="{{ true }}" search-ph="{{ L.p_fSearch }}" empty-label="{{ L.p_fNone }}" hint-size="100%,56px"></dc-import>
+        <sc-if value="{{ showDue }}">
+          <div data-f="due" style="display:flex;flex-direction:column;min-width:0">
+            <label for="kr-due" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k7_due }} <span style="color:#B91C1C">*</span></label>
+            <input id="kr-due" value="{{ d.due }}" onChange="{{ on.due }}" onBlur="{{ normDate.due }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="height:34px;padding:0 12px;border:1px solid {{ bd.due }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            <sc-if value="{{ er.due }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.due }}</div></sc-if>
+            <span style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#5B6B6A"><sc-if value="{{ dueManual }}"><span style="display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:6px;background:#FFFBEB;color:#B45309;font-weight:500"><lucide-i name="pencil" size="12"></lucide-i>{{ L.k7_dueManual }}</span><button onClick="{{ resetDue }}" style="padding:0;border:0;background:transparent;font:inherit;font-size:12px;color:#0F766E;font-weight:500;cursor:pointer" style-hover="text-decoration:underline">{{ L.k7_dueReset }}</button></sc-if><sc-if value="{{ dueAuto }}"><span>{{ dueAutoText }}</span></sc-if></span>
+          </div>
+        </sc-if>
+        <div data-f="fromBonus" style="grid-column:1/-1;display:flex;flex-direction:column;gap:10px;padding-top:4px;border-top:1px solid #EEF2F4">
+          <div style="display:flex;align-items:center;gap:8px 28px;flex-wrap:wrap;padding-top:10px">
+            <button onClick="{{ tg.prepaid }}" style="display:flex;align-items:center;gap:8px;min-height:34px;padding:0;border:0;background:transparent;font:inherit;font-size:14px;color:#172B2A;cursor:pointer;text-align:left"><lucide-i name="{{ ck.prepaid }}" size="18" style="color:{{ ckc.prepaid }}"></lucide-i>{{ L.k7_prepaid }}</button>
+            <button onClick="{{ tg.bonusOn }}" style="display:flex;align-items:center;gap:8px;min-height:34px;padding:0;border:0;background:transparent;font:inherit;font-size:14px;color:#172B2A;cursor:pointer;text-align:left"><lucide-i name="{{ ck.bonusOn }}" size="18" style="color:{{ ckc.bonusOn }}"></lucide-i>{{ L.k7_bonusOn }}</button>
+            <sc-if value="{{ bonusAvailShow }}"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button onClick="{{ tg.fromBonus }}" style="display:flex;align-items:center;gap:8px;min-height:34px;padding:0;border:0;background:transparent;font:inherit;font-size:14px;color:#172B2A;cursor:pointer;text-align:left"><lucide-i name="{{ ck.fromBonus }}" size="18" style="color:{{ ckc.fromBonus }}"></lucide-i>{{ L.k7_fromBonus }}</button><span style="font-size:12px;line-height:16px;color:#15803D;font-weight:500">{{ bonusAvailText }}</span></span></sc-if>
+          </div>
+          <sc-for list="{{ headNotes }}" as="n" hint-placeholder-count="0"><div style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:{{ n.color }}"><lucide-i name="{{ n.icon }}" size="14"></lucide-i>{{ n.text }}</div></sc-for>
+          <sc-if value="{{ bonusOn }}">
+            <div style="display:grid;grid-template-columns:repeat({{ headCols }},minmax(0,1fr));gap:16px 20px;align-items:start">
+              <div data-f="bonusSum" style="display:flex;flex-direction:column;min-width:0">
+                <span style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k7_bonusSum }} <span style="color:#B91C1C">*</span></span>
+                <div style="display:flex;gap:8px">
+                  <div style="display:flex;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;flex:none">
+                    <sc-for list="{{ bonusModes }}" as="m" hint-placeholder-count="2"><button onClick="{{ m.pick }}" style="height:28px;padding:0 10px;border:0;border-radius:6px;background:{{ m.bg }};box-shadow:{{ m.shadow }};font:inherit;font-size:13px;font-weight:500;color:{{ m.color }};cursor:pointer">{{ m.label }}</button></sc-for>
+                  </div>
+                  <input value="{{ bonusVal }}" onChange="{{ onBonusVal }}" inputmode="decimal" placeholder="0" style="flex:1;min-width:0;text-align:right;height:34px;padding:0 12px;border:1px solid {{ bd.bonusSum }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                </div>
+                <span style="margin-top:6px;font-size:12px;line-height:16px;color:#5B6B6A">{{ bonusCalc }}</span>
+                <sc-if value="{{ er.bonusSum }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.bonusSum }}</div></sc-if>
+              </div>
+              <div data-f="bonusDate" style="display:flex;flex-direction:column;min-width:0">
+                <label for="kr-bd" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k7_bonusDate }} <span style="color:#B91C1C">*</span></label>
+                <input id="kr-bd" value="{{ bonusDate }}" onChange="{{ onBonusDate }}" onBlur="{{ normDate.bonus }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="height:34px;padding:0 12px;border:1px solid {{ bd.bonusDate }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                <sc-if value="{{ er.bonusDate }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.bonusDate }}</div></sc-if>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="grid-column:1/-1;display:flex;flex-direction:column;min-width:0">
+          <label for="kr-note" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.k_hNote }}</label>
+          <textarea id="kr-note" value="{{ d.note }}" onChange="{{ on.note }}" rows="2" style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;line-height:20px;color:#172B2A;resize:vertical;outline:none;transition:border-color 120ms ease-out" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></textarea>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ showCards }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+        <sc-for list="{{ postCards }}" as="c" hint-placeholder-count="6">
+          <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:12px 16px;display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ c.label }}</span>
+            <span style="font-size:16px;line-height:24px;font-weight:600;color:{{ c.color }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ c.value }}">{{ c.value }}</span>
+            <span style="font-size:12px;line-height:16px;color:#647574">{{ c.sub }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showDecision }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+        <span style="font-size:14px;font-weight:600">{{ L.k7_decT }}</span>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+          <sc-for list="{{ decisions }}" as="o" hint-placeholder-count="2">
+            <button onClick="{{ o.pick }}" style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid {{ o.border }};border-radius:8px;background:{{ o.bg }};font:inherit;text-align:left;color:#172B2A;cursor:{{ o.cursor }}">
+              <lucide-i name="{{ o.icon }}" size="18" style="color:{{ o.iconColor }};flex:none;margin-top:1px"></lucide-i>
+              <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:600">{{ o.label }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ o.text }}</span></span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ headRead }}"><dc-import name="InfoGrid" title="{{ L.k_hTitle }}" rows="{{ headRows }}" hint-size="100%,320px"></dc-import></sc-if>
+    <sc-if value="{{ bonusPanel }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:{{ bonusPanelColor }}"><lucide-i name="gift" size="16"></lucide-i>{{ bonusPanelText }}</span>
+        <sc-if value="{{ bonusCanDecide }}"><span style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ bonusNo }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#B91C1C;cursor:pointer" style-hover="background:#FEF2F2">{{ L.k7_bonusNo }}</button>
+          <button onClick="{{ bonusOk }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;font-size:13px;font-weight:500;color:#FFFFFF;cursor:pointer" style-hover="background:#115E59"><lucide-i name="check" size="16"></lucide-i>{{ L.k7_bonusOk }}</button>
+        </span></sc-if>
+      </section>
+    </sc-if>
+    <sc-if value="{{ rcPayShow }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;font-variant-numeric:tabular-nums">
+        <div style="display:flex;align-items:center;gap:12px 28px;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600"><lucide-i name="wallet" size="16" style="color:#5B6B6A"></lucide-i>{{ L.tl_rcPay }}</span>
+          <span style="display:flex;flex-direction:column"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.tl_rcPaid }}</span><span style="font-size:15px;line-height:22px;font-weight:600;color:#15803D">{{ rcPaid }}</span></span>
+          <span style="display:flex;flex-direction:column"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.tl_rcLeft }}</span><span style="font-size:15px;line-height:22px;font-weight:600;color:{{ rcLeftColor }}">{{ rcLeft }}</span></span>
+          <span style="font-size:12px;line-height:16px;color:#647574">{{ rcDue }}</span>
+          <sc-if value="{{ rcClosed }}"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:6px;background:#F0FDF4;color:#15803D;font-size:12px;font-weight:500"><lucide-i name="circle-check" size="12"></lucide-i>{{ L.tl_paid }}</span></sc-if>
+        </div>
+        <sc-if value="{{ rcOpen }}"><button onClick="{{ payRc }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="arrow-up-right" size="16" style="color:#5B6B6A"></lucide-i>{{ L.tl_rcPayBtn }}</button></sc-if>
+      </section>
+    </sc-if>
+
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid #EEF2F4">
+        <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:14px;font-weight:600">{{ L.k_lines }}</span><span style="font-size:13px;color:#647574">{{ lineCount }}</span></span>
+        <span style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><sc-if value="{{ hasIssueNote }}"><span style="display:flex;align-items:center;gap:12px;font-size:12px;line-height:16px"><sc-if value="{{ hasErrNote }}"><span style="display:flex;align-items:center;gap:4px;color:#B91C1C"><lucide-i name="circle-x" size="14"></lucide-i>{{ errNote }}</span></sc-if><sc-if value="{{ hasWarnNote }}"><span style="display:flex;align-items:center;gap:4px;color:#B45309"><lucide-i name="triangle-alert" size="14"></lucide-i>{{ warnNote }}</span></sc-if></span></sc-if><dc-import name="ColumnsMenu" columns="{{ gColDefs }}" on-change="{{ setGCols }}" label="{{ L.p_columns }}" hint="{{ L.q_colsHint }}" hint-size="110px,30px"></dc-import><sc-if value="{{ canPick }}"><button onClick="{{ openPicker }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#115E59" style-focus="outline:none;box-shadow:0 0 0 3px rgba(13,148,136,0.3)"><lucide-i name="list-plus" size="16"></lucide-i>{{ pickLabel }}<span style="font-size:11px;font-weight:400;opacity:0.8">Alt+K</span></button></sc-if></span>
+      </div>
+      <dc-import name="DocumentLinesGrid" columns="{{ gCols }}" rows="{{ gRows }}" options="{{ gOpts }}" editable="{{ gridEditable }}" on-edit="{{ onEdit }}" on-add="{{ addLine }}" on-remove="{{ removeLine }}" fixed="{{ gridFixed }}" on-barcode="{{ onBarcode }}" focus-req="{{ focusReq }}" labels="{{ gLabels }}" hint-size="100%,320px"></dc-import>
+      <sc-if value="{{ hasBonusGoods }}"><div style="display:flex;align-items:center;gap:6px;padding:10px 16px;border-top:1px solid #EEF2F4;font-size:13px;color:#15803D"><lucide-i name="gift" size="14"></lucide-i>{{ bonusGoodsText }}</div></sc-if>
+      <dc-import name="TotalsFooter" style="position:sticky;bottom:56px;z-index:4;display:block" items="{{ totItems }}" total-label="{{ L.k_tTotal }}" total-value="{{ totGross }}" bottom="56" hint-size="100%,52px"></dc-import>
+    </section>
+  </sc-if>
+  <sc-if value="{{ tabHistory }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px">
+      <dc-import name="HistoryTimeline" filters="{{ histFilters }}" groups="{{ histGroups }}" empty-label="{{ L.p_hEmpty }}" hint-size="100%,300px"></dc-import>
+    </div>
+  </sc-if>
+  <div style="height:64px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ vsOpen }}"><dc-import name="ValidationSummary" title="{{ vsTitle }}" subtitle="{{ L.k_vsSub }}" errors="{{ vsErrors }}" warnings="{{ vsWarnings }}" warn-title="{{ L.k_vsWarn }}" close-label="{{ L.close }}" on-close="{{ closeVs }}" hint-size="0px,0px"></dc-import></sc-if>
+<sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" with-reason="{{ dlg.withReason }}" reason-label="{{ L.p_dReason }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ onReason }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ dlg.cancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+<sc-if value="{{ blockOpen }}">
+  <div onClick="{{ closeDlg }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+    <div role="alertdialog" aria-modal="true" onClick="{{ stop }}" style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#FEF2F2;color:#B91C1C;display:flex;align-items:center;justify-content:center"><lucide-i name="ban" size="18"></lucide-i></span>
+        <div style="display:flex;flex-direction:column;gap:6px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.k_blockT }}</h2><p style="margin:0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ blockText }}</p></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><button onClick="{{ toQy }}" style="display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="rotate-ccw" size="14"></lucide-i>{{ L.qt_rcToQy }}</button><button onClick="{{ closeDlg }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.k_understood }}</button></div>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;,&quot;purchase&quot;,&quot;keeper&quot;,&quot;operator&quot;,&quot;cashier&quot;,&quot;accountant&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k)=&gt;void&quot;}}">
+const DAY = 86400000;
+const pad = n => String(n).padStart(2, '0');
+const fN = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const neg = n < 0, [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (neg ? '−' : '') + fN(+a) + ',' + b; };
+const okDate = s => /^\d\d\.\d\d\.\d{4}$/.test(s || '');
+const pD = s => { if (!okDate(s)) return null; const [d, m, y] = s.split('.').map(Number); return Date.UTC(y, m - 1, d); };
+const T0 = Date.UTC(2026, 9, 4);
+const hm = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const hms = () => { const d = new Date(); return hm() + ':' + pad(d.getSeconds()); };
+const normD = v => { const dg = String(v || '').replace(/\D/g, ''); return dg.length === 8 ? `${dg.slice(0, 2)}.${dg.slice(2, 4)}.${dg.slice(4)}` : String(v || '').trim(); };
+const parseNum = v => { let s = String(v || '').replace(/\s/g, ''); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); else if (/^\d+\.\d{1,2}$/.test(s)) s = s; else s = s.replace(/\./g, ''); const n = parseFloat(s); return isNaN(n) ? 0 : Math.round(n * 100) / 100; };
+const C2L = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sh', ъ: '', ы: 'i', ь: '', э: 'e', ю: 'yu', я: 'ya', ў: "o'", қ: 'q', ғ: "g'", ҳ: 'h' };
+const toLat = s => String(s || '').toLowerCase().split('').map(ch => C2L[ch] != null ? C2L[ch] : ch).join('');
+const ZT = { recv: ['package-open', '#5B6B6A'], store: ['archive', '#5B6B6A'], cold: ['snowflake', '#1D4ED8'], ctrl: ['lock', '#B91C1C'], quar: ['shield-alert', '#B45309'] };
+const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], accepted: ['package-check', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#B91C1C', '#FEF2F2'] };
+const PAYS = ['cash', 'bank', 'online'], DIFFS = ['short', 'over', 'dmg'];
+const clone = o => JSON.parse(JSON.stringify(o));
+const initials = n => String(n || '').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+const ageOf = d => { const t = pD(d.date); return t == null ? 0 : Math.max(0, Math.round((T0 - t) / DAY)); };
+let LID = 90000;
+
+class Component extends DCLogic {
+  state = { ready: !!window.MedixData, docs: [], view: 'list', listState: 'normal', tab: 'all', q: '', fSup: [], fWh: [], date: { from: null, to: null }, sort: { key: 'date', dir: 'desc' }, page: 1, per: 25, sel: {},
+    doc: null, docTab: 'doc', save: { state: 'saved', time: '' }, failSave: false, vs: null, dlg: null, pendWh: null, reason: '', reasonErr: '', focusReq: null, tried: false, bonusTxt: null };
+  componentDidMount() {
+    const od0 = window.MedixData && window.MedixData.openDocGet ? window.MedixData.openDocGet('receipt') : null;
+    this._flushFn = () => this.flush(); window.__medixFlush = this._flushFn;
+    this.onPop = () => { if (this.state.view === 'pick' && !/[?&]pick/.test(location.hash)) this.closePick(); };
+    window.addEventListener('popstate', this.onPop);
+    this.onKeyK = e => { if (e.altKey && !e.ctrlKey && (e.code === 'KeyK' || e.key === 'k' || e.key === 'K') && this.state.view === 'doc' && this.state.doc && this.mode(this.state.doc) === 'edit' && !this.state.dlg) { e.preventDefault(); this.openPick(); } };
+    window.addEventListener('keydown', this.onKeyK);
+    const init = () => { this.reset(); if (this.props.demo) return this.applyDemo(this.props.demo.k); const D = this.D, q = D.store.navReq, u0 = D.store.urlF;
+      // Y1: ochiq hujjat — boshqa sahifadan qaytganda hujjat ochiladi (yangi URL so'rovi bo'lsa — u ustun)
+      if (od0 && od0.doc && !(q && q.page === 'receipt') && !(u0 && u0.page === 'receipt' && Date.now() - u0.n < 1500)) setTimeout(() => this.openDoc(od0.doc, { save: { state: 'saved', time: '' } }), 0); if (q && q.page === 'receipt' && q.open) { D.store.navReq = null; const d = D.store.receipts.find(x => x.no === q.open); if (d) this.openDoc(d); } if (q && q.page === 'receipt' && q.newBonus) { D.store.navReq = null; const nb = q.newBonus; this.newDoc(); setTimeout(() => this.upd(x => { x.supplier = nb.supplier; x.payType = this.supPay(nb.supplier); x.fromBonus = true; x.prepaid = false; x.bonus = null; }), 0); } const u = D.store.urlF; if (u && u.page === 'receipt' && u.params && ['draft', 'accepted', 'posted', 'cancelled'].includes(u.params.status)) this.setState({ tab: u.params.status }); if (u) this._un = u.n; this._url = setInterval(() => this.applyUrl(), 250); };
+    if (window.MedixData) init(); else this._poll = setInterval(() => { if (window.MedixData) { clearInterval(this._poll); this.setState({ ready: true }, init); } }, 60);
+  }
+  // T10a3 (1.7.4): sahifa ochiq turganda ham manzildagi filtr — ?status=draft|accepted|posted|cancelled, ?q=, ?open=
+  applyUrl() { const D = this.D, u = D && D.store.urlF; if (!u || u.page !== 'receipt' || u.n === this._un || this.props.demo) return; this._un = u.n; const P = u.params || {};
+    if (P.open) { const r = D.store.navReq; if (r && r.page === 'receipt' && r.open === P.open) D.store.navReq = null; const d = D.store.receipts.find(x => x.no === P.open); if (d) return this.openDoc(d); }
+    this.setState({ view: 'list', doc: null, page: 1, tab: ['draft', 'accepted', 'posted', 'cancelled'].includes(P.status) ? P.status : 'all', q: P.q || '' }); }
+  componentWillUnmount() { this._unm = true; this.flush(); if (window.__medixFlush === this._flushFn) window.__medixFlush = null; window.removeEventListener('popstate', this.onPop); window.removeEventListener('keydown', this.onKeyK); clearTimeout(this._pt); clearInterval(this._url); clearInterval(this._poll); clearTimeout(this._sv); }
+  dirty(v) { this.props.onDirty && this.props.onDirty(!!v); }
+  editable(d) { return !!d && ['draft', 'accepted'].includes(d.status) && this.mode(d) !== 'read'; }
+  // Y1: chiqishdan oldin darhol saqlash (700 ms kutmasdan)
+  flush() { if (!this._sv) return; clearTimeout(this._sv); this._sv = null; const st = this.state; if (st.failSave || !st.doc || st.doc.status !== 'draft') return;
+    const D = this.D, d = clone(st.doc); if (!d.no) d.no = this.nextNo(d.branch); const docs = st.docs.some(x => x.id === d.id) ? st.docs.map(x => x.id === d.id ? d : x) : [d, ...st.docs];
+    D.setReceipts(docs); D.openDocSet('receipt', d); if (!this._unm) this.setState({ doc: d, docs, save: { state: 'saved', time: hm() } }); this.dirty(false); }
+  openPick() { const d = this.state.doc, L = this.L; if (!d) return; if (!d.supplier) return this.toast(L.pk_needSup || 'Avval yetkazib beruvchini tanlang');
+    this.flush(); this.D.openDocSet('receipt', this.state.doc); try { history.replaceState(null, '', '#receipt'); history.pushState(null, '', '#receipt?pick=1'); this._pushed = true; } catch (e) { this._pushed = false; } this.setState({ view: 'pick' }); this.scrollTop(); }
+  leavePick(items) { this._pickItems = items || null; if (this._pushed) { this._pushed = false; try { history.back(); } catch (e) {} clearTimeout(this._pt); this._pt = setTimeout(() => { if (this.state.view === 'pick') this.closePick(); }, 400); } else this.closePick(); }
+  closePick() { clearTimeout(this._pt); const items = this._pickItems; this._pickItems = null; this.setState({ view: 'doc' }, () => { if (items && items.length) this.addPicked(items); }); }
+  fill(s, o) { return String(s || '').replace(/\{(\w+)\}/g, (m, k) => o[k] != null ? o[k] : m); }
+  addPicked(items) { const L = this.L, ids = []; let inc = 0; const names = [];
+    this.upd(x => { items.forEach(it => { const p = this.prod(it.pid); if (!p || !(it.qty > 0)) return; names.push(p.name); const ex = x.lines.find(l => l.pid === it.pid && !l.batch); if (ex) { ex.qty = (ex.qty || 0) + it.qty; inc++; return; }
+      const id = ++LID; x.lines.push({ id, pid: p.id, batch: '', mfg: '', exp: '', zone: this.defZone(p, x), qty: it.qty, price: it.cost > 0 ? it.cost : this.defCost(p, x), bonusQty: 0 }); ids.push(id); }); },
+      { kind: 'change', action: this.fill(L.pk_hAdded || "katalogdan {n} ta mahsulot qo'shdi", { n: items.length }), changes: [{ field: L.k_gProduct, from: '', to: names.join(', ') }] });
+    this.toast([ids.length ? this.fill(L.pk_tAdded || "{n} ta mahsulot qo'shildi", { n: ids.length }) : '', inc ? this.fill(L.pk_tInc || '{n} tasida miqdor oshirildi', { n: inc }) : ''].filter(Boolean).join(' · '));
+    if (ids.length) setTimeout(() => this.setState({ focusReq: { rowId: ids[0], key: 'batch', n: Date.now() } }), 80); }
+  componentDidUpdate(pp) { const ps = this._ps || {}; this._ps = this.state; if (this.D && this.state.docs !== ps.docs && this.state.ready) this.D.setReceipts(this.state.docs);
+    const st = this.state; if (this.D && this.D.openDocSet && st.ready && (st.doc !== ps.doc || st.view !== ps.view) && st.view !== 'pick') { if (st.view === 'doc' && this.editable(st.doc)) this.D.openDocSet('receipt', st.doc); else { this.D.openDocSet('receipt', null); if (st.view === 'list') this.dirty(false); } } if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n) && window.MedixData) this.applyDemo(this.props.demo.k); }
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  who() { return this.props.userName || 'Akmal Karimov'; }
+  reset(extra) { const D = this.D, st = D.store; this.setState({ ready: true, docs: st.receipts, ...(extra || {}) }); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  scrollTop() { const m = document.querySelector('main'); m && m.scrollTo({ top: 0 }); }
+  role() { return this.props.role || 'director'; }
+  defCost(p, d) { const D = this.D, lc = D.lastCost(p.id, d && d.branch) || D.lastCost(p.id); return lc ? lc.cost : 0; }
+  can(k) { return this.D.can(this.role(), { create: 'receipt.create', accept: 'receipt.accept', post: 'receipt.post', cancel: 'receipt.cancel', cancelPosted: 'receipt.cancelPosted', bonus: 'supplierBonus.confirm' }[k]); }
+  mode(d) { if (d.status === 'draft') return !d.sent ? (this.can('create') ? 'edit' : 'read') : (this.can('accept') ? 'accept' : 'read'); if (d.status === 'accepted') return this.can('post') ? 'post' : 'read'; return 'read'; }
+  prod(id) { return this.D.PRODUCTS.find(p => p.id === id); }
+  zones(d) { return this.D.zonesFor(d.branch, d.wh); }
+  defZone(p, d) { const z = this.zones(d).map(x => x.key); if (!p) return 'asosiy'; if (p.ctrl && z.includes('seyf')) return 'seyf'; return 'asosiy'; }
+  branchOf(code) { return this.D.BRANCHES.find(b => b.code === code) || this.D.BRANCHES[0]; }
+  supPay(name) { const s = this.D.SUPPLIERS.find(x => x.name === name); return (s && s.mainPay) || 'bank'; }
+  applyDemo(k) {
+    clearTimeout(this._sv);
+    if (k === 'nav:new') return setTimeout(() => this.newDoc(), 0);
+    if (String(k).startsWith('open:')) { const no = k.slice(5), d = this.state.docs.find(x => x.no === no) || this.D.store.receipts.find(x => x.no === no); if (d) setTimeout(() => this.openDoc(d), 0); return; }
+    this.D.resetStore();
+    const base = { view: 'list', listState: 'normal', tab: 'all', q: '', fSup: [], fWh: [], date: { from: null, to: null }, page: 1, sel: {}, doc: null, vs: null, dlg: null, tried: false, failSave: false, save: { state: 'saved', time: '' }, docTab: 'doc' };
+    this.reset(base);
+    const byNo = no => clone(this.D.store.receipts.find(d => d.no === no));
+    const open = (d, extra) => setTimeout(() => this.openDoc(d, extra), 0);
+    if (k === 'lempty') return this.setState({ listState: 'empty' });
+    if (k === 'bqCutoff') return setTimeout(() => { this.newDoc(); this.upd(d => { d.branch = 'FRG'; d.wh = "Marg'ilon ombori"; d.date = '28.09.2026'; d.supplier = 'KRKA Farma'; d.invNo = 'KR-77890'; d.invDate = '28.09.2026'; }); this.setState({ tried: true }); }, 0);
+    if (k === 'new') return setTimeout(() => this.newDoc(), 0);
+    if (k === 'derr') return open(byNo('KR-TSH-000126'));
+    if (k === 'dready') return open(byNo('KR-TSH-000125'));
+    if (k === 'dmark') return open(byNo('KR-TSH-000129'));
+    if (k === 'dposted') return open(byNo('KR-TSH-000124'));
+    if (k === 'dcancel') return open(byNo('KR-TSH-000121'));
+    if (k === 'dblock') return open(byNo('KR-TSH-000124'), { dlg: 'block' });
+    if (k === 'dsave') return open(byNo('KR-TSH-000125'), { failSave: true, save: { state: 'error', time: '' } });
+  }
+  openDoc(d, extra) { this.setState({ view: 'doc', doc: clone(d), docTab: 'doc', tried: false, vs: null, dlg: null, bonusTxt: null, save: { state: 'saved', time: d.status === 'draft' ? '10:31' : '' }, failSave: false, ...(extra || {}) }); this.scrollTop(); }
+  newDoc(from) {
+    const br = this.props.branch && this.props.branch !== 'ALL' ? this.props.branch : 'TSH', b = this.branchOf(from ? from.branch : br), who = this.who();
+    const d = { id: Date.now(), no: null, branch: b.code, wh: from ? from.wh : b.wh[0], date: this.D.TODAY, supplier: from ? from.supplier : '', invNo: '', invDate: '', sfNo: '', note: from ? from.note : '', status: 'draft', createdBy: who,
+      payType: from ? from.payType : 'bank', owner: from ? from.owner || '' : '', prepaid: false, due: '', dueManual: false, bonus: null, fromBonus: false, sent: false,
+      lines: from ? from.lines.map(l => ({ id: ++LID, pid: l.pid, batch: l.batch, mfg: l.mfg, exp: l.exp, zone: l.zone, qty: l.qty, price: l.price, bonusQty: l.bonusQty || 0 })) : [], history: [{ kind: 'create', who, action: from ? from.no + ' hujjatidan nusxa oldi' : 'hujjatni yaratdi', time: this.D.TODAY + ', ' + hm(), changes: [] }] };
+    this.derive(d);
+    this.openDoc(d, { save: { state: 'saved', time: '' } });
+    if (from) this.toast(this.L.k_tCopied);
+  }
+  nextNo(branch) { const nums = this.state.docs.filter(d => d.branch === branch && d.no).map(d => +d.no.split('-')[2]); return 'KR-' + branch + '-' + String(Math.max(0, ...nums) + 1).padStart(6, '0'); }
+  derive(d) { const D = this.D; if (!d.dueManual) d.due = D.rcAutoDue(d);
+    if (d.bonus && d.bonus.on) { const g = this.totals(d).gross; if (d.bonus.mode === 'pct') d.bonus.sum = Math.round(g * (d.bonus.pct || 0)) / 100; else d.bonus.pct = g ? Math.round(d.bonus.sum / g * 10000) / 100 : 0; } }
+  upd(fn, hist) {
+    this.setState(st => { const d = clone(st.doc); fn(d); this.derive(d); if (hist) d.history.push({ ...hist, who: this.who(), time: this.D.TODAY + ', ' + hm() }); return { doc: d }; }, () => this.autosave());
+  }
+  autosave() {
+    if (!this.state.doc || this.state.doc.status !== 'draft') return;
+    clearTimeout(this._sv); this.setState({ save: { state: 'saving', time: '' } }); this.dirty(true);
+    this._sv = setTimeout(() => { this._sv = null;
+      if (this.state.failSave) return this.setState({ save: { state: 'error', time: '' } });
+      this.setState(st => { const d = clone(st.doc); let first = false; if (!d.no) { d.no = this.nextNo(d.branch); first = true; } const docs = st.docs.some(x => x.id === d.id) ? st.docs.map(x => x.id === d.id ? d : x) : [d, ...st.docs]; if (first) setTimeout(() => this.toast(this.L.k_tNumbered(d.no)), 0); return { doc: d, docs, save: { state: 'saved', time: hm() } }; }); this.dirty(false);
+    }, 700);
+  }
+  commitDoc(d) { this.setState(st => ({ doc: d, docs: st.docs.some(x => x.id === d.id) ? st.docs.map(x => x.id === d.id ? d : x) : [d, ...st.docs] })); }
+  totals(d) { let qty = 0, net = 0, vat = 0, bq = 0; d.lines.forEach(l => { const p = this.prod(l.pid), n = (l.qty || 0) * (l.price || 0); qty += l.qty || 0; bq += l.bonusQty || 0; net += n; vat += n * ((p ? p.vat : this.D.CONFIG.vat) / 100); }); vat = Math.round(vat * 100) / 100; net = Math.round(net * 100) / 100; return { qty, bq, net, vat, gross: Math.round((net + vat) * 100) / 100 }; }
+  hasDiff(d) { return d.lines.some(l => this.D.rcHasFact(l)); }
+  money(d) { const D = this.D, g = this.totals(d).gross, pay = D.rcGross({ ...d, decision: d.decision || 'fact' }), adv = d.supplier ? D.debtOf('yt', d.supplier, d.branch).advance : 0, bal = d.supplier ? D.bonusOf(d.supplier, d.branch, d.no).balance : 0;
+    const debt = d.fromBonus ? 0 : d.prepaid ? Math.max(0, Math.round((pay - adv) * 100) / 100) : pay; return { gross: g, pay, adv, bal, debt }; }
+  issues(d) {
+    const L = this.L, D = this.D, M = this.mode(d), res = { lines: {}, errors: [], warnings: [], header: {} }, hdr = (k, lab, msg) => { res.header[k] = msg; res.errors.push({ text: L.k_head + ' · ' + lab + ' — ' + msg, target: { field: k } }); };
+    const hreq = [['wh', L.k_hWh], ['date', L.k_hDate], ['supplier', L.k_hSupplier], ['invNo', L.k_hInvNo], ['invDate', L.k_hInvDate], ['payType', L.k7_payType]];
+    hreq.forEach(([k, lab]) => { const bad = k === 'date' || k === 'invDate' ? !okDate(d[k]) : !d[k]; if (bad) { res.header[k] = d[k] ? L.k_eDate : L.p_errReq; res.errors.push({ text: L.k_head + ' · ' + lab + ' — ' + (d[k] ? L.k_sDateBad : L.k_sEmpty), target: { field: k } }); } });
+    const bqc = okDate(d.date) && d.status === 'draft' && D.bqCutoffErr ? D.bqCutoffErr(d.branch, d.wh, d.date) : null; if (bqc && !res.header.date) hdr('date', L.k_hDate, String(L.bq_eCutoff || '').replace('{d}', bqc.date).replace('{n}', bqc.no));
+    const mo = this.money(d);
+    if (!d.fromBonus) { if (!okDate(d.due)) hdr('due', L.k7_due, d.due ? L.k_eDate : L.p_errReq); else if (okDate(d.date) && pD(d.due) < pD(d.date)) hdr('due', L.k7_due, L.k7_eDueBefore); }
+    if (d.bonus && d.bonus.on) { if (!(d.bonus.sum > 0)) hdr('bonusSum', L.k7_bonusSum, L.k7_eBonusSum); if (!okDate(d.bonus.date)) hdr('bonusDate', L.k7_bonusDate, L.k7_eBonusDate); }
+    if (d.fromBonus && mo.gross > mo.bal) hdr('fromBonus', L.k7_fromBonus, L.k7_eBonusBal(fM(mo.bal), fM(mo.gross)));
+    if (d.prepaid && d.supplier && mo.debt > 0) res.warnings.push({ text: L.k7_advShort(fM(mo.debt)), target: { field: 'fromBonus' } });
+    if (!d.lines.length) res.errors.push({ text: L.k_eNoLines, target: null });
+    const ctrlOk = D.ctrlAllowed(d.branch, d.wh), zones = this.zones(d);
+    d.lines.forEach((l, i) => { const lk = d.status === 'draft' && D.ivLock && l.zone ? D.ivLock(d.branch, d.wh, l.zone) : null; if (lk) res.errors.push({ text: (i + 1) + '. ' + (L.iv_eLockRc || '').replace('{z}', (D.zoneType(d.branch, d.wh, l.zone) || {}).label || l.zone).replace('{n}', lk), target: null }); });
+    d.lines.forEach((l, i) => {
+      const n = i + 1, p = this.prod(l.pid), r = { cells: {}, msgs: [], tone: null };
+      const add = (key, tone, msg, short, extra) => { if (!r.cells[key] || tone === 'danger') r.cells[key] = { tone, ...(extra || {}) }; r.msgs.push(msg); if (tone === 'danger') r.tone = 'danger'; else if (!r.tone) r.tone = 'warning';
+        (tone === 'danger' ? res.errors : res.warnings).push({ text: n + '-' + L.k_row + ' · ' + (p ? p.name : L.k_noProduct) + ' — ' + short, target: { rowId: l.id, key } }); };
+      if (!p) { add('product', 'danger', L.k_eProduct, L.k_sProduct); res.lines[l.id] = r; return; }
+      if (p.active === false) add('product', 'warning', L.k_wInactive, L.k_sInactive);
+      if (!l.batch) add('batch', 'danger', L.k_eBatch, L.k_sBatch);
+      const e = pD(l.exp);
+      if (!e) add('exp', 'danger', L.k_eExp, L.k_sExp);
+      else { const days = Math.round((e - T0) / DAY); if (days < 0) add('exp', 'danger', L.k_eExpired, L.k_sExpired); else if (days < D.CONFIG.expiryWarnDays) add('exp', 'warning', L.k_wNear(days), L.k_sNear(days)); }
+      const z = zones.find(x => x.key === l.zone);
+      if (!z) add('zone', 'danger', L.k_eZone, L.k_sZone);
+      if (p.ctrl && !ctrlOk) add('zone', 'danger', L.k_eCtrl, L.k_sCtrl);
+      if (!(l.qty > 0)) add('qty', 'danger', L.k_eQty, L.k_sQty);
+      if (!(l.price > 0) && !d.fromBonus) add('price', 'danger', L.k_ePrice, L.k_sPrice);
+      if ((M === 'accept' || M === 'post') && D.rcHasFact(l) && !l.diff) add('diff', 'danger', L.k7_eDiff, L.k7_sDiff);
+      if (l.batch && M === 'edit') { const j = d.lines.findIndex((x, xi) => xi < i && x.pid === l.pid && x.batch === l.batch); if (j >= 0) add('batch', 'warning', L.k_wDup(j + 1), L.k_sDup(j + 1), { merge: d.lines[j].id }); }
+      res.lines[l.id] = r;
+    });
+    return res;
+  }
+  goTarget(t) {
+    if (!t) return;
+    this.setState({ docTab: 'doc' });
+    if (t.field) return setTimeout(() => { const el = document.querySelector('[data-screen-label="Kirim hujjati"] [data-f="' + t.field + '"]'); if (!el) return; const m = el.closest('main'); if (m) m.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - 120), behavior: 'smooth' }); const i = el.querySelector('input,button'); i && i.focus({ preventScroll: true }); }, 30);
+    setTimeout(() => this.setState({ focusReq: { ...t, n: Date.now() } }), 30);
+  }
+  check(then) { const is = this.issues(this.state.doc); this.setState({ tried: true }); if (is.errors.length) return this.setState({ vs: is }); then(); }
+  send() { this.check(() => { this.upd(d => { d.sent = true; }, { kind: 'send', action: this.L.k7_hSent, changes: [] }); this.toast(this.L.k7_tSent); }); }
+  stamp(d, kind, action, from, to, extra) { const at = this.D.TODAY + ', ' + hm(); d.history.push({ kind, who: this.who(), action, time: at, changes: [{ field: this.L.k_cStatus, from, to }].concat(extra || []) }); return at; }
+  accept() {
+    const L = this.L, D = this.D, d = clone(this.state.doc), ch = [];
+    d.lines.forEach((l, i) => { if (D.rcHasFact(l)) ch.push({ field: (i + 1) + '-' + L.k_row + ' · ' + L.k7_gFact, from: fN(l.qty), to: fN(l.fact) + ' (' + L['k7_d_' + l.diff] + ')' }); else l.fact = null; });
+    if (!d.no) d.no = this.nextNo(d.branch);
+    d.status = 'accepted'; d.acceptedBy = this.who(); d.acceptedAt = this.stamp(d, 'accept', L.k7_hAccepted, L.k_stDraft, L.k7_stAccepted, ch);
+    clearTimeout(this._sv); this.commitDoc(d); this.setState({ dlg: null, save: { state: 'saved', time: hm() } });
+    const txt = L.k7_nWait(d.no, d.supplier); D.empNames(['branch', 'accountant'], d.branch, true).forEach(n => D.notify(n, 'receipt', 'package-check', txt));
+    this.toast(L.k7_tAccepted);
+  }
+  post() {
+    const L = this.L, D = this.D, d = clone(this.state.doc);
+    d.decision = this.hasDiff(d) ? (d.decision || 'fact') : null; if (!d.due) d.due = D.rcAutoDue(d);
+    if (d.bonus && d.bonus.on) d.bonus.state = 'wait';
+    d.status = 'posted'; d.postedBy = this.who(); d.postedAt = this.stamp(d, 'post', L.k7_hPosted, L.k7_stAccepted, L.k_stPosted, d.decision ? [{ field: L.k7_decT, from: '', to: L['k7_dec' + (d.decision === 'fact' ? 'Fact' : 'Doc')] }] : []);
+    this.commitDoc(d); this.setState({ dlg: null }); this.toast(L.k7_tPosted);
+  }
+  back() { const L = this.L, d = clone(this.state.doc); d.status = 'draft'; d.sent = true; this.stamp(d, 'status', L.k7_hBack, L.k7_stAccepted, L.k_stDraft); this.commitDoc(d); this.toast(L.k7_tBack); }
+  cancelDoc() {
+    const L = this.L, s = this.state;
+    if (!s.reason.trim()) return this.setState({ reasonErr: L.p_dReasonErr });
+    const d = clone(s.doc), was = { draft: L.k_stDraft, accepted: L.k7_stAccepted, posted: L.k_stPosted }[d.status];
+    d.status = 'cancelled'; d.cancelBy = this.who(); d.reason = s.reason.trim(); d.cancelAt = this.stamp(d, 'cancel', L.k_hCancelled, was, L.k_stCancelled, [{ field: L.p_dReason, from: '', to: d.reason }]);
+    clearTimeout(this._sv); this.commitDoc(d); this.setState({ dlg: null }); this.toast(L.k_tCancelled);
+  }
+  decideBonus(ok) {
+    const L = this.L, D = this.D, s = this.state;
+    if (!ok && !s.reason.trim()) return this.setState({ reasonErr: L.p_dReasonErr });
+    const c = D.bonusDecide(s.doc.no, ok, this.who(), ok ? '' : s.reason.trim()); if (!c) return;
+    this.setState({ docs: D.store.receipts, doc: clone(c), dlg: null }); this.toast(ok ? L.k7_tBonusOk(c.bonus.bnsNo) : L.k7_tBonusNo);
+  }
+  onEdit(id, key, val) {
+    const L = this.L, D = this.D;
+    let hist = null;
+    this.upd(d => {
+      const l = d.lines.find(x => x.id === id); if (!l) return;
+      if (key === 'product') { const p = this.prod(val); if (!p) return; if (!l.pid) hist = { kind: 'change', action: L.k_hLineAdded, changes: [{ field: L.k_gProduct, from: '', to: p.name }] }; l.pid = val; l.zone = this.defZone(p, d); if (!l.price) l.price = this.defCost(p, d); }
+      else if (key === 'batch') l.batch = String(val).trim().toUpperCase();
+      else if (key === 'mfg' || key === 'exp') l[key] = normD(val);
+      else if (key === 'zone') l.zone = val;
+      else if (key === 'qty') l.qty = Math.max(0, Math.round(parseNum(val)));
+      else if (key === 'bonusQty') l.bonusQty = Math.max(0, Math.round(parseNum(val)));
+      else if (key === 'fact') { l.fact = String(val).trim() === '' ? null : Math.max(0, Math.round(parseNum(val))); if (!D.rcHasFact(l)) l.diff = null; else if (!l.diff && l.fact > l.qty) l.diff = 'over'; }
+      else if (key === 'diff') l.diff = val;
+      else if (key === 'price') l.price = Math.max(0, parseNum(val));
+      if (hist) d.history.push({ ...hist, who: this.who(), time: this.D.TODAY + ', ' + hm() });
+    });
+  }
+  addLine(pid) {
+    const id = ++LID, d = this.state.doc, p = pid ? this.prod(pid) : null;
+    const l = { id, pid: p ? p.id : null, batch: '', mfg: '', exp: '', zone: this.defZone(p, d), qty: 0, price: p ? this.defCost(p, d) : 0, bonusQty: 0 };
+    this.upd(x => { x.lines.push(l); }, p ? { kind: 'change', action: this.L.k_hLineAdded, changes: [{ field: this.L.k_gProduct, from: '', to: p.name }] } : null);
+    setTimeout(() => this.setState({ focusReq: { rowId: id, key: p ? 'batch' : 'product', n: Date.now() } }), 30);
+    return id;
+  }
+  onBarcode(code) {
+    const q = toLat(code.trim()), D = this.D;
+    const p = D.PRODUCTS.find(x => x.active && (x.code === code.trim() || x.barcodes.includes(code.trim()))) || D.PRODUCTS.find(x => x.active && toLat(x.name).includes(q));
+    if (!p) { this.toast(this.L.k_tNotFound(code)); return false; }
+    this.addLine(p.id); return true;
+  }
+  removeLine(id) { this.upd(d => { d.lines = d.lines.filter(l => l.id !== id); }); }
+  merge(id, into) { this.upd(d => { const a = d.lines.find(l => l.id === into), b = d.lines.find(l => l.id === id); if (!a || !b) return; a.qty += b.qty; a.bonusQty = (a.bonusQty || 0) + (b.bonusQty || 0); d.lines = d.lines.filter(l => l.id !== id); }); this.toast(this.L.k_tMerged); }
+  dueCell(d) {
+    const D = this.D, L = this.L;
+    if (d.fromBonus) return { text: L.k7_fromBonusShort, color: '#15803D' };
+    if (d.prepaid) return { text: L.k7_prepaidShort, color: '#15803D' };
+    const due = D.rcDue(d), t = pD(due); if (t == null) return { text: '—', color: '#647574' };
+    if (d.status !== 'posted') return { text: due, color: d.status === 'cancelled' ? '#647574' : '#5B6B6A' };
+    const rl = D.rcLedger(d.no); if (rl && rl.left <= 0) return { text: due, color: '#647574' };
+    const days = Math.round((t - T0) / DAY); return { text: due, color: days < 0 ? '#B91C1C' : days <= 3 ? '#B45309' : '#172B2A' };
+  }
+  listVals(L) {
+    const s = this.state, D = this.D, br = this.props.branch && this.props.branch !== 'ALL' ? this.props.branch : null;
+    const base = s.listState === 'empty' ? [] : s.docs.filter(d => !br || d.branch === br);
+    const q = toLat(s.q.trim()), from = pD(s.date.from), to = pD(s.date.to);
+    const whName = d => br ? d.wh : d.wh + ' · ' + d.branch;
+    const fit = d => (!q || toLat((d.no || '') + ' ' + d.invNo + ' ' + d.supplier + ' ' + (d.owner || '')).includes(q)) && (!s.fSup.length || s.fSup.includes(d.supplier)) && (!s.fWh.length || s.fWh.includes(whName(d))) && (!from || (pD(d.date) >= from && pD(d.date) <= (to || from)));
+    const inTab = d => s.tab === 'all' || d.status === s.tab;
+    let rows = base.filter(d => inTab(d) && fit(d));
+    const { key, dir } = s.sort || {}, m = dir === 'asc' ? 1 : -1;
+    if (key) rows = [...rows].sort((a, b) => (key === 'date' ? (pD(a.date) - pD(b.date)) || String(a.no).localeCompare(String(b.no)) : key === 'sum' ? this.totals(a).gross - this.totals(b).gross : key === 'due' ? (pD(D.rcDue(a)) || 0) - (pD(D.rcDue(b)) || 0) : String(a.no).localeCompare(String(b.no))) * m);
+    const total = rows.length, pages = Math.max(1, Math.ceil(total / s.per)), page = Math.min(s.page, pages), pageRows = rows.slice((page - 1) * s.per, page * s.per);
+    const cnt = f => base.filter(d => f(d) && fit(d)).length;
+    const tab = k => () => this.setState({ tab: k, page: 1, sel: {} });
+    const views = [['all', L.p_vAll], ['draft', L.k_stDrafts], ['accepted', L.k7_stAccepted], ['posted', L.k_stPosteds], ['cancelled', L.k_stCancelleds]].map(([k, label]) => ({ label, count: cnt(d => k === 'all' || d.status === k), active: s.tab === k, pick: tab(k) }));
+    const stLabel = { draft: L.k_stDraft, accepted: L.k7_stAccepted, posted: L.k_stPosted, cancelled: L.k_stCancelled };
+    const drafts = base.filter(d => d.status === 'draft'), old = drafts.filter(d => ageOf(d) > 3).length, acc = base.filter(d => d.status === 'accepted');
+    const expB = base.filter(d => d.status === 'posted' && d.bonus && d.bonus.on && d.bonus.state === 'wait'), expSum = expB.reduce((a, d) => a + d.bonus.sum, 0);
+    const mon = D.TODAY.slice(3), bgQty = base.filter(d => d.status === 'posted' && String(d.date).slice(3) === mon).reduce((a, d) => a + d.lines.reduce((x, l) => x + (l.bonusQty || 0), 0), 0);
+    const kpis = [{ label: L.k7_kDrafts, value: fN(drafts.length), sub: old ? L.k7_kDraftsOld(old) : '', color: old ? '#B45309' : '#172B2A', subColor: '#B45309', pick: tab('draft') },
+      { label: L.k7_kAccepted, value: fN(acc.length), sub: acc.length ? L.k7_waitPost : '', color: acc.length ? '#B45309' : '#172B2A', subColor: '#5B6B6A', pick: tab('accepted') },
+      { label: L.k7_kExpBonus, value: fM(expSum), sub: L.k7_docs(expB.length), color: '#172B2A', subColor: '#5B6B6A', pick: tab('posted') },
+      { label: L.k7_kBonusGoods, value: L.k7_pcs(fN(bgQty)), sub: '', color: '#172B2A', subColor: '#5B6B6A', pick: tab('posted') }];
+    const sortCol = k => ({ sortable: true, sortDir: s.sort && s.sort.key === k ? s.sort.dir : null });
+    const tColumns = [{ key: 'no', label: L.k_cNo, width: '170px', ...sortCol('no') }, { key: 'date', label: L.k_cDate, width: '104px', ...sortCol('date') }, { key: 'sup', label: L.k_cSupplier, width: 'minmax(170px,1.4fr)' }, { key: 'inv', label: L.k7_cInv, width: '110px' },
+      { key: 'sum', label: L.k_cSum, width: '140px', align: 'right', ...sortCol('sum') }, { key: 'bonus', label: L.k7_cBonus, width: '170px' }, { key: 'bg', label: L.k7_cBonusGoods, width: '96px', align: 'right' }, { key: 'pay', label: L.k7_cPay, width: '124px' },
+      { key: 'due', label: L.k7_cDue2, width: '124px', ...sortCol('due') }, { key: 'owner', label: L.k7_cOwner, width: 'minmax(130px,1fr)' }, { key: 'st', label: L.k_cStatus, width: '200px' }];
+    const tRows = pageRows.map(d => {
+      const c = d.status === 'cancelled', col = c ? '#647574' : null, t = this.totals(d), st = ST[d.status], du = this.dueCell(d), bn = d.bonus && d.bonus.on ? d.bonus : null;
+      const stText = stLabel[d.status] + (d.status === 'draft' && ageOf(d) > 0 ? ' · ' + L.k7_age(ageOf(d)) : '') + (c && d.reason ? ' · ' + d.reason : '');
+      return { id: d.id, selected: !!s.sel[d.id], onOpen: () => this.openDoc(d), onToggle: () => this.setState(x => { const n = { ...x.sel }; if (n[d.id]) delete n[d.id]; else n[d.id] = true; return { sel: n }; }),
+        cells: [{ type: 'mono', text: d.no || L.k_noNumber, color: col }, { type: 'text', text: d.date, color: col }, { type: 'text', text: d.supplier, color: col }, { type: 'mono', text: d.invNo || '—', color: col || '#5B6B6A' },
+          { type: 'text', text: fM(t.gross), color: col, deco: c ? 'line-through' : 'none' }, { type: 'text', text: bn ? fM(bn.sum) + ' · ' + bn.date : '—', color: col || (bn ? (bn.state === 'ok' ? '#15803D' : bn.state === 'no' ? '#647574' : '#172B2A') : '#647574') },
+          { type: 'text', text: t.bq ? fN(t.bq) : '—', color: col || (t.bq ? '#15803D' : '#647574') }, { type: 'text', text: L['k7_pay_' + (d.payType || 'bank')], color: col || '#5B6B6A' }, { type: 'text', text: du.text, color: col || du.color },
+          { type: 'text', text: d.owner || '—', color: col || (d.owner ? '#172B2A' : '#647574') }, { type: 'status', text: stText, icon: st[0], fg: st[1], bg: st[2] }],
+        actions: [{ label: L.p_aOpen, icon: 'arrow-up-right', pick: () => this.openDoc(d) }, ...(this.can('create') ? [{ label: L.p_aCopy, icon: 'copy', pick: () => this.newDoc(d) }] : [])] };
+    });
+    const selPage = pageRows.filter(d => s.sel[d.id]).length, selCount = Object.keys(s.sel).length;
+    const allState = !pageRows.length || !selPage ? 'none' : selPage === pageRows.length ? 'all' : 'some';
+    const sups = D.SUPPLIERS.map(x => x.name), whs = [...new Set(base.map(whName))];
+    const hasFilters = !!(s.fSup.length || s.fWh.length || from);
+    const activeF = [s.q.trim() && L.p_searchWord + ' «' + s.q.trim() + '»', s.fSup.length && L.k_fSupplier, s.fWh.length && L.k_fWh, from && L.k_fDate].filter(Boolean);
+    return {
+      countLabel: fN(base.length), hdrPrimary: this.can('create') ? { label: L.k_new, icon: 'plus', pick: () => this.newDoc() } : null, kpis,
+      hdrMore: [{ label: L.p_export, icon: 'download', pick: () => this.toast(L.p_exportToast) }, { label: L.p_print, icon: 'printer', pick: () => this.toast(L.k_tPrint) }],
+      views, q: s.q, setQ: v => this.setState({ q: v, page: 1 }), fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      fbFilters: [{ label: L.k_fSupplier, options: sups.map(v => ({ value: v, label: v, count: base.filter(d => d.supplier === v).length })), selected: s.fSup, onChange: v => this.setState({ fSup: v, page: 1 }) },
+        { label: L.k_fWh, options: whs.map(v => ({ value: v, label: v, count: base.filter(d => whName(d) === v).length })), selected: s.fWh, onChange: v => this.setState({ fWh: v, page: 1 }) }],
+      dateFilter: { label: L.k_fDate, from: s.date.from, to: s.date.to, onChange: v => this.setState({ date: v, page: 1 }), labels: { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.k_drWeek, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext } },
+      hasFilters, clearFilters: () => this.setState({ fSup: [], fWh: [], date: { from: null, to: null }, page: 1 }),
+      showTable: total > 0, tColumns, tRows, allState, tMinWidth: this.props.narrow ? 1500 : 1400,
+      toggleAll: () => this.setState(x => { const n = { ...x.sel }; if (allState === 'all') pageRows.forEach(d => delete n[d.id]); else pageRows.forEach(d => n[d.id] = true); return { sel: n }; }),
+      onSort: k => this.setState(x => ({ sort: !x.sort || x.sort.key !== k ? { key: k, dir: 'asc' } : x.sort.dir === 'asc' ? { key: k, dir: 'desc' } : null })),
+      total, page, per: s.per, setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 }),
+      listEmpty: base.length === 0, listNoRes: base.length > 0 && total === 0,
+      emptyPrimary: this.can('create') ? { label: L.k_new, icon: 'plus', pick: () => this.newDoc() } : null,
+      noResText: L.p_noResD ? L.p_noResD(activeF.join(', ') || '—') : '', noResAction: { label: L.p_fClear, icon: 'filter-x', pick: () => this.setState({ fSup: [], fWh: [], date: { from: null, to: null }, q: '', tab: 'all', page: 1 }) },
+      hasSel: selCount > 0, selLabel: L.p_selected ? L.p_selected(selCount) : '', clearSel: () => this.setState({ sel: {} }),
+      bulkActions: [{ label: 'Excel', icon: 'download', pick: () => this.toast(L.k_tExcel(selCount)) }]
+    };
+  }
+  docVals(L) {
+    const s = this.state, D = this.D, d = s.doc, M = this.mode(d), editable = M === 'edit';
+    const is = this.issues(d), t = this.totals(d), b = this.branchOf(d.branch), zones = this.zones(d), mo = this.money(d), diff = this.hasDiff(d), bg = D.rcBonusGoods(d);
+    const stLabel = { draft: L.k_stDraft, accepted: L.k7_stAccepted, posted: L.k_stPosted, cancelled: L.k_stCancelled }, st = ST[d.status];
+    const cancelIt = { sep: true, label: L.k_aCancel, icon: 'circle-x', danger: true, pick: () => this.setState({ dlg: d.status === 'posted' && d.soldLine ? 'block' : 'cancel', reason: '', reasonErr: '' }) };
+    const copy = this.can('create') ? [{ label: L.p_aCopy, icon: 'copy', pick: () => this.newDoc(d) }] : [], print = { label: L.p_print, icon: 'printer', pick: () => this.toast(L.k_tPrint) };
+    let primary = null, secondary = [], more = [];
+    if (d.status === 'draft') {
+      if (M === 'edit') primary = { label: L.k7_send, icon: 'send', pick: () => this.send() };
+      if (M === 'accept') primary = { label: L.k7_accept, icon: 'package-check', pick: () => this.check(() => this.setState({ dlg: 'accept' })) };
+      more = [...copy, print, ...(d.no && this.can('cancel') ? [cancelIt] : [])];
+    } else if (d.status === 'accepted') {
+      if (M === 'post') { primary = { label: L.k7_post, icon: 'check', pick: () => this.check(() => this.setState({ dlg: 'post' })) }; secondary = [{ label: L.k7_back, icon: 'undo-2', pick: () => this.back() }]; }
+      more = [...copy, print, ...(this.can('cancel') ? [cancelIt] : [])];
+    } else if (d.status === 'posted') {
+      const qb = D.batches().filter(x => x.doc === d.no && x.branch === d.branch && x.wh === d.wh && x.zoneType === 'recv' && x.qty > 0);
+      const setPr = D.can(this.role(), 'prices.create') ? [{ label: L.nq_rcSetPrice || "Narx qo'yish", icon: 'tag', pick: () => { location.hash = '#prices?rc=' + encodeURIComponent(d.no); } }] : [];
+      secondary = [...setPr, ...(qb.length ? [{ label: L.kc_toStore + ' · ' + qb.length, icon: 'arrow-left-right', pick: () => { D.store.trReq = { new: 'zk', bids: qb.map(x => x.id) }; this.props.onNavigate && this.props.onNavigate('transfer'); } }] : []), print];
+      more = [...copy, ...(this.can('cancelPosted') ? [cancelIt] : [])];
+    } else more = copy;
+    const er = s.tried ? is.header : {}, bd = {}; ['date', 'invNo', 'invDate', 'due', 'bonusSum', 'bonusDate'].forEach(k => bd[k] = er[k] ? '#B91C1C' : '#E2E8F0');
+    const setH = k => e => { const v = e && e.target ? e.target.value : e; this.upd(x => { x[k] = v; if (k === 'supplier') x.payType = this.supPay(v); if (k === 'due') x.dueManual = true; }); };
+    const on = {}; ['date', 'supplier', 'invNo', 'invDate', 'sfNo', 'note', 'payType', 'owner', 'due'].forEach(k => on[k] = setH(k));
+    const sup = D.SUPPLIERS.find(x => x.name === d.supplier), debt = sup ? D.debtOf('yt', sup.name, d.branch || 'TSH').debt : 0;
+    const rcL = d.status === 'posted' && !d.fromBonus && D.rcLedger ? D.rcLedger(d.no) : null;
+    const hidePrice = !this.can('post') && M !== 'edit' && !(d.status === 'draft' && !d.sent);
+    const KEYS = M === 'edit' || (d.status === 'draft' && !d.sent) ? ['product', 'batch', 'mfg', 'exp', 'zone', 'qty', 'bonusQty', 'price', 'vat', 'vatSum', 'sum'] : M === 'accept' || d.status === 'draft' ? ['product', 'batch', 'exp', 'zone', 'qty', 'fact', 'diff', 'bonusQty'] : ['product', 'batch', 'exp', 'zone', 'qty', 'fact', 'diff', 'bonusQty', 'price', 'sum'];
+    const EDS = { edit: { product: 'product', batch: 'mono', mfg: 'date', exp: 'date', zone: 'select', qty: 'number', bonusQty: 'number', price: 'number' }, accept: { zone: 'select', fact: 'number', diff: 'select' }, post: { zone: 'select' }, read: {} }[M];
+    const hid = s.hidCols || ['mfg', 'vat', 'vatSum'];
+    const DEF = { product: [L.k_gProduct, 'minmax(200px,1fr)'], batch: [L.k_gBatch, '110px'], mfg: [L.k_gMfg, '120px'], exp: [L.k_gExp, '150px'], zone: [L.k_gZone, '150px'], qty: [L.k_gQty, '84px', 'right'], fact: [L.k7_gFact, '120px', 'right'], diff: [L.k7_gDiff, '150px'], bonusQty: [L.k7_gBonus, '84px', 'right'],
+      price: [L.k_gPrice, '116px', 'right'], vat: [L.k_gVat, '64px', 'right'], vatSum: [L.k_gVatSum, '120px', 'right'], sum: [L.k_gSum, '130px', 'right'] };
+    const gAll = KEYS.filter(k => !(hidePrice && ['price', 'vat', 'vatSum', 'sum'].includes(k))).map(k => ({ key: k, label: DEF[k][0], width: DEF[k][1], align: DEF[k][2], editor: EDS[k] || null, required: !!EDS[k] && ['product', 'batch', 'exp', 'zone', 'qty', 'price', 'fact'].includes(k), sticky: k === 'product' }));
+    const gCols = gAll.filter(c => !hid.includes(c.key));
+    const gRows = d.lines.map((l, i) => {
+      const p = this.prod(l.pid), r = is.lines[l.id] || { cells: {}, msgs: [] }, ce = k => r.cells[k] ? r.cells[k].tone : null, hf = D.rcHasFact(l);
+      const e = pD(l.exp), days = e != null ? Math.round((e - T0) / DAY) : null, z = zones.find(x => x.key === l.zone), net = (l.qty || 0) * (l.price || 0), vat = net * ((p ? p.vat : D.CONFIG.vat) / 100);
+      const dupInto = r.cells.batch && r.cells.batch.merge, fact = l.fact != null ? l.fact : l.qty;
+      return { id: l.id, n: i + 1, tone: r.tone || (hf ? 'warning' : null), tip: r.msgs.join(' · '), lock: { diff: !hf }, raw: { product: l.pid, batch: l.batch, mfg: l.mfg, exp: l.exp, zone: l.zone, qty: l.qty || '', price: l.price || '', bonusQty: l.bonusQty || '', fact: fact, diff: l.diff || null },
+        cells: {
+          product: p ? { text: p.name, weight: 500, sub: p.maker + ' · ' + (D.FORMS[p.form] || p.form) + ' ' + p.dose, flags: [p.ctrl && { icon: 'lock', color: '#B91C1C', tip: L.p_tipCtrl }, p.mark && { icon: 'scan-barcode', color: '#5B6B6A', tip: L.p_tipMark }, d.fromBonus && { icon: 'gift', color: '#15803D', tip: L.k7_fromBonusShort }].filter(Boolean), err: ce('product') } : { text: '', placeholder: L.k_pickProduct, err: ce('product') },
+          batch: { text: l.batch, mono: true, err: ce('batch'), sub: dupInto ? L.k_dupShort : '', subColor: '#B45309', action: dupInto && editable ? { label: L.k_merge, run: () => this.merge(l.id, dupInto) } : null },
+          mfg: { text: l.mfg },
+          exp: { text: l.exp, err: ce('exp'), badge: days == null ? null : days < 0 ? { label: L.k_expired, fg: '#B91C1C', bg: '#FEF2F2' } : days < D.CONFIG.expiryWarnDays ? { label: L.k_days(days), fg: '#B45309', bg: '#FFFBEB' } : null },
+          zone: z ? { text: z.label, icon: ZT[z.type][0], iconColor: ZT[z.type][1], sub: z.type === 'recv' || z.type === 'quar' ? L.closedSale : '', err: ce('zone') } : { text: '', placeholder: L.p_choose, err: ce('zone') },
+          qty: { text: l.qty ? fN(l.qty) : '', placeholder: '0', err: ce('qty'), weight: 500 },
+          fact: { text: fact != null ? fN(fact) : '', weight: 600, color: hf ? '#B45309' : '#172B2A', sub: hf ? (fact > l.qty ? '+' : '−') + fN(Math.abs(fact - l.qty)) : '', subColor: '#B45309' },
+          diff: { text: l.diff ? L['k7_d_' + l.diff] : hf ? '' : '—', placeholder: L.k7_diffPick, err: ce('diff'), color: '#B45309' },
+          bonusQty: { text: l.bonusQty ? '+' + fN(l.bonusQty) : '', placeholder: '0', color: '#15803D', weight: 500, sub: l.bonusQty && l.batch ? l.batch + '-B' : '', subColor: '#15803D' },
+          price: { text: l.price ? fM(l.price) : '', placeholder: '0,00', err: ce('price') },
+          vat: { text: p ? p.vat + '%' : '', color: '#5B6B6A' }, vatSum: { text: net ? fM(vat) : '' }, sum: { text: net ? fM(net + vat) : '', weight: 500 }
+        } };
+    });
+    const gOpts = { product: D.catalogRows('receipt', d).map(r => r.p).map(p => ({ value: p.id, label: p.name, sub: p.code + ' · ' + p.maker + ' · ' + (D.FORMS[p.form] || p.form) + ' ' + p.dose, flags: [p.ctrl && { icon: 'lock', color: '#B91C1C' }, p.mark && { icon: 'scan-barcode', color: '#5B6B6A' }].filter(Boolean), search: toLat(p.code + ' ' + p.name + ' ' + p.classifier + ' ' + p.contractName + ' ' + p.ikpu + ' ' + p.barcodes.join(' ')) })),
+      zone: zones.map(z => ({ value: z.key, label: z.label, icon: ZT[z.type][0], iconColor: ZT[z.type][1], note: z.type === 'recv' || z.type === 'quar' ? L.closedSale : '' })),
+      diff: DIFFS.map(k => ({ value: k, label: L['k7_d_' + k] })) };
+    const ne = is.errors.filter(x => x.target && x.target.rowId).length, nw = is.warnings.length;
+    const hist = [...d.history].reverse(), groups = [];
+    hist.forEach(h => { const day = h.time.split(',')[0], label = day === '04.10.2026' ? L.today : day === '03.10.2026' ? L.yesterday : day; let g = groups.find(x => x.label === label); if (!g) groups.push(g = { label, items: [] }); g.items.push({ kind: ['post', 'cancel', 'send', 'status', 'accept'].includes(h.kind) ? 'status' : h.kind, initials: initials(h.who), name: h.who, action: h.action, time: h.time, changes: h.changes || [] }); });
+    const goodQ = d.lines.reduce((a, l) => a + D.rcGood(l), 0), dmgQ = d.lines.reduce((a, l) => a + D.rcDmg(l), 0), diffN = d.lines.filter(l => D.rcHasFact(l)).length;
+    const dueTxt = d.fromBonus ? '—' : d.due || D.rcAutoDue(d);
+    const dlgDefs = {
+      accept: { title: L.k7_acceptT, items: [{ icon: 'package-open', text: L.k7_acceptStock(d.lines.length, fN(goodQ + dmgQ + t.bq)) }, ...(diffN ? [{ icon: 'triangle-alert', text: L.k7_acceptDiff(diffN) }] : []), { icon: 'bell', text: L.k7_acceptNotify }], confirm: L.k7_accept, cancel: L.cancel, danger: false, run: () => this.accept() },
+      post: { title: L.k7_postT, items: [{ icon: 'boxes', text: L.k7_postStock(d.lines.length, fN(goodQ)) }, ...(dmgQ && (d.decision || 'fact') === 'fact' ? [{ icon: 'shield-alert', text: L.k7_postQuar(fN(dmgQ)) }] : []), ...(t.bq ? [{ icon: 'gift', text: L.k7_postBonus(fN(t.bq)) }] : []),
+        { icon: 'wallet', text: mo.debt > 0 ? L.k7_postDebt(d.supplier, fM(mo.debt), dueTxt) : L.k7_postNoDebt }, { icon: 'lock', text: L.k_postLock }], confirm: L.k7_post, cancel: L.cancel, danger: false, run: () => this.post() },
+      cancel: { title: L.k_cancelT, text: L.k7_cancelD, items: d.status === 'posted' ? [{ icon: 'package-minus', text: L.k_cancelStock(fN(goodQ), d.lines.length) }, ...(mo.debt > 0 ? [{ icon: 'wallet', text: L.k_cancelDebt(d.supplier, fM(mo.debt)) }] : [])] : [], withReason: true, confirm: L.k_cancelBtn, cancel: L.k_keep, danger: true, run: () => this.cancelDoc() },
+      bonusNo: { title: L.k7_bonusNoT, text: L.k7_bonusNoText, withReason: true, confirm: L.k7_bonusNo, cancel: L.cancel, danger: true, run: () => this.decideBonus(false) },
+      wh: { title: L.k_whT, text: L.k_whD(d.lines.length), confirm: L.k_whBtn, cancel: L.cancel, danger: false, run: () => { const w = s.pendWh; this.setState({ dlg: null }); this.upd(x => { x.wh = w; x.lines.forEach(l => { l.zone = this.defZone(this.prod(l.pid), x); }); }); } }
+    };
+    const sold = d.soldLine ? d.lines[d.soldLine - 1] : null, soldP = sold && this.prod(sold.pid);
+    const bn = d.bonus && d.bonus.on ? d.bonus : null, ckI = v => v ? 'square-check' : 'square', ckC = v => v ? '#0F766E' : '#647574';
+    const tgl = k => () => this.upd(x => { if (k === 'bonusOn') { x.bonus = x.bonus && x.bonus.on ? null : { on: true, mode: 'pct', pct: 0, sum: 0, date: '', state: 'draft' }; if (x.bonus) this.setState({ bonusTxt: null }); return; } x[k] = !x[k]; if (k === 'prepaid' && x.prepaid) x.fromBonus = false; if (k === 'fromBonus' && x.fromBonus) { x.prepaid = false; x.bonus = null; } });
+    const headNotes = [];
+    if (d.prepaid && d.supplier) headNotes.push(mo.debt > 0 ? { icon: 'triangle-alert', color: '#B45309', text: L.k7_advShort(fM(mo.debt)) } : { icon: 'circle-check', color: '#15803D', text: L.k7_advOk(fM(mo.adv)) });
+    if (d.fromBonus) headNotes.push(mo.gross > mo.bal ? { icon: 'circle-x', color: '#B91C1C', text: L.k7_eBonusBal(fM(mo.bal), fM(mo.gross)) } : { icon: 'gift', color: '#15803D', text: L.k7_fromBonusNote });
+    const steps = d.status === 'cancelled' ? [{ label: L.k_stDraft, state: 'done' }, { label: L.k_stCancelled, state: 'fail' }] : [['draft', L.k_stDraft], ['accepted', L.k7_stAccepted], ['posted', L.k_stPosted]].map(([k, label], i, a) => { const ci = a.findIndex(x => x[0] === d.status); return { label, state: i < ci ? 'done' : i === ci ? (k === 'posted' ? 'done' : 'cur') : 'next' }; });
+    const cards = [{ label: L.k7_cSup, value: d.supplier || '—' }, { label: L.k7_cDocSum, value: fM(mo.gross), sub: hidePrice ? '' : '' }, { label: L.k7_cDebtSum, value: fM(mo.debt), sub: d.fromBonus ? L.k7_fromBonusShort : d.prepaid ? L.k7_prepaidShort : diff ? L['k7_dec' + ((d.decision || 'fact') === 'fact' ? 'Fact' : 'Doc')] : '', color: mo.debt ? '#172B2A' : '#15803D' },
+      { label: L.k7_cDue, value: d.fromBonus || (d.prepaid && !mo.debt) ? '—' : dueTxt, sub: d.prepaid ? L.k7_prepaidShort : d.dueManual ? L.k7_dueManual : '' }, { label: L.k7_cExpBonus, value: bn ? fM(bn.sum) : '—', sub: bn ? bn.date : '' }, { label: L.k7_cBonusGoods, value: t.bq ? L.k7_pcs(fN(t.bq)) : '—', sub: t.bq ? '≈ ' + fM(bg.sum) : '', color: t.bq ? '#15803D' : '#172B2A' }].map(c => ({ color: '#172B2A', sub: '', ...c }));
+    const decOn = d.decision || 'fact', decEd = M === 'post';
+    const decisions = [['fact', L.k7_decFact, L.k7_decFactD], ['doc', L.k7_decDoc, L.k7_decDocD]].map(([k, label, text]) => ({ label, text, icon: decOn === k ? 'circle-dot' : 'circle', iconColor: decOn === k ? '#0F766E' : '#647574', border: decOn === k ? '#0F766E' : '#E2E8F0', bg: decOn === k ? '#F0FDFA' : '#FFFFFF', cursor: decEd ? 'pointer' : 'default', pick: () => decEd && this.setState(st => ({ doc: { ...st.doc, decision: k } })) }));
+    const bTxt = s.bonusTxt != null ? s.bonusTxt : bn ? (bn.mode === 'pct' ? (bn.pct ? String(bn.pct).replace('.', ',') : '') : (bn.sum ? fM(bn.sum) : '')) : '';
+    return {
+      d, editable, dTitle: d.no ? L.k_title : L.k_newTitle, dNumber: d.no || '', dBadge: { label: stLabel[d.status], icon: st[0], fg: st[1], bg: st[2] }, dStatus: d.status === 'accepted' ? 'draft' : d.status, dSteps: steps,
+      stepLabels: { draft: L.k_stDraft, posted: L.k_stPosted, cancelled: L.k_stCancelled },
+      autosave: d.status === 'draft' && (M === 'edit' || M === 'accept') ? { state: s.save.state, time: s.save.time, savedLabel: L.k_saved, savingLabel: L.k_saving, errorLabel: L.k_saveErr, onRetry: () => this.setState({ failSave: false }, () => this.autosave()) } : null,
+      dPrimary: primary, dSecondary: secondary, dMore: more, backToList: () => { this.flush(); this.setState({ view: 'list', doc: null }); },
+      hasBanner: d.status !== 'draft' || !!d.sent, bannerTone: d.status === 'posted' ? 'info' : d.status === 'cancelled' ? 'danger' : 'warning',
+      bannerText: d.status === 'posted' ? L.k7_bPosted(d.postedAt, d.postedBy) : d.status === 'accepted' ? L.k7_bAccepted(d.acceptedAt, d.acceptedBy) : d.status === 'cancelled' ? L.k_bCancelled(d.cancelAt, d.cancelBy, d.reason) : L.k7_bSent,
+      docTabs: [['doc', L.k_tabDoc], ['history', L.p_tHistory]].map(([k, label]) => ({ label, active: s.docTab === k, pick: () => this.setState({ docTab: k }) })),
+      tabDoc: s.docTab === 'doc', tabHistory: s.docTab === 'history', headEditable: editable, headRead: !editable, headCols: this.props.narrow ? 2 : 3,
+      branchName: b.name, whOpts: b.wh.map(w => ({ value: w, label: w })), supOpts: D.supPick(d.branch || 'TSH', d.status === 'draft' ? d.supplier : null).concat(d.status !== 'draft' && d.supplier && !D.supsIn(d.branch || 'TSH').some(x => x.name === d.supplier) ? [{ value: d.supplier, label: d.supplier }] : []),
+      payOpts: PAYS.map(k => ({ value: k, label: L['k7_pay_' + k] })), ownerOpts: [{ value: '', label: L.k7_ownerNone }].concat(D.EMPLOYEES.filter(e => e.status !== 'blocked' && (e.branch == null || e.branch === d.branch)).map(e => ({ value: e.name, label: e.name, search: toLat(e.name) }))),
+      showDue: !d.fromBonus, dueManual: !!d.dueManual, dueAuto: !d.dueManual && !!d.supplier, dueAutoText: L.k7_dueAuto(D.rcTerms(d.supplier, d.branch)), resetDue: () => this.upd(x => { x.dueManual = false; }),
+      ck: { prepaid: ckI(d.prepaid), bonusOn: ckI(!!bn), fromBonus: ckI(d.fromBonus) }, ckc: { prepaid: ckC(d.prepaid), bonusOn: ckC(!!bn), fromBonus: ckC(d.fromBonus) }, tg: { prepaid: tgl('prepaid'), bonusOn: tgl('bonusOn'), fromBonus: tgl('fromBonus') },
+      bonusAvailShow: !!d.supplier && (mo.bal > 0 || d.fromBonus), bonusAvailText: L.k7_bonusAvail(fM(mo.bal)), headNotes, bonusOn: !!bn && !d.fromBonus,
+      bonusModes: [['sum', L.k7_modeSum], ['pct', L.k7_modePct]].map(([k, label]) => { const a = bn && bn.mode === k; return { label, bg: a ? '#FFFFFF' : 'transparent', shadow: a ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', color: a ? '#172B2A' : '#5B6B6A', pick: () => { this.setState({ bonusTxt: null }); this.upd(x => { if (x.bonus) x.bonus.mode = k; }); } }; }),
+      bonusVal: bTxt, onBonusVal: e => { const v = e.target.value; this.setState({ bonusTxt: v }); this.upd(x => { if (!x.bonus) return; if (x.bonus.mode === 'pct') x.bonus.pct = Math.min(100, parseNum(v)); else x.bonus.sum = parseNum(v); }); },
+      bonusCalc: bn ? (bn.mode === 'pct' ? L.k7_bonusCalcPct(fM(bn.sum)) : L.k7_bonusCalcSum(String(bn.pct).replace('.', ','))) : '', bonusDate: bn ? bn.date : '', onBonusDate: e => { const v = e.target.value; this.upd(x => { if (x.bonus) x.bonus.date = v; }); },
+      showCards: d.status === 'accepted' || d.status === 'posted', postCards: cards, showDecision: d.status !== 'draft' && d.status !== 'cancelled' && diff && !hidePrice, decisions,
+      bonusPanel: !!bn && d.status !== 'draft', bonusPanelColor: bn && bn.state === 'ok' ? '#15803D' : bn && bn.state === 'no' ? '#5B6B6A' : '#172B2A',
+      bonusPanelText: !bn ? '' : bn.state === 'ok' ? L.k7_bonusOkD(bn.bnsNo, fM(bn.sum)) : bn.state === 'no' ? L.k7_bonusNoD(bn.reason) : L.k7_bonusWait(fM(bn.sum), bn.date),
+      bonusCanDecide: !!bn && d.status === 'posted' && bn.state === 'wait' && this.can('bonus'), bonusOk: () => this.decideBonus(true), bonusNo: () => this.setState({ dlg: 'bonusNo', reason: '', reasonErr: '' }),
+      hasBonusGoods: t.bq > 0, bonusGoodsText: L.k7_bonusGoods(fN(t.bq), fM(bg.sum)),
+      onWh: w => { if (w === d.wh) return; if (d.lines.length) this.setState({ dlg: 'wh', pendWh: w }); else this.upd(x => { x.wh = w; }); },
+      on, er, bd, normDate: { date: () => this.upd(x => { x.date = normD(x.date); }), invDate: () => this.upd(x => { x.invDate = normD(x.invDate); }), due: () => this.upd(x => { x.due = normD(x.due); }), bonus: () => this.upd(x => { if (x.bonus) x.bonus.date = normD(x.bonus.date); }) },
+      rcPayShow: !!rcL, rcPaid: rcL ? fM(rcL.paid) : '', rcLeft: rcL ? fM(rcL.left) : '', rcLeftColor: rcL && rcL.late > 0 ? '#B91C1C' : '#172B2A', rcDue: rcL ? (L.tl_rcDue || '').replace('{d}', rcL.due) : '', rcClosed: !!rcL && rcL.left <= 0, rcOpen: !!rcL && rcL.left > 0,
+      payRc: () => { if (!D.can(this.props.role, 'payments.create')) return this.toast(L.tl_rcWho); D.store.payReq = { kind: 'yt', party: d.supplier, receiptNo: d.no }; this.props.onNavigate && this.props.onNavigate('payments'); },
+      openSupCard: () => sup && D.openParty && D.openParty('yt', sup.name, d.branch), hasSupInfo: !!sup, supInfo: sup ? L.k_supInfo(fM(debt), D.rcTerms(sup.name, d.branch)) : '',
+      headRows: [[L.k_hBranch, b.name], [L.k_hWh, d.wh], [L.k_hDate, d.date], [L.k_hSupplier, d.supplier], [L.k_hInvNo, d.invNo, 1], [L.k_hInvDate, d.invDate], [L.k_hSf, d.sfNo, 1], [L.k7_payType, L['k7_pay_' + (d.payType || 'bank')]], [L.k7_owner, d.owner || L.k7_ownerNone],
+        [L.k7_due, d.fromBonus ? L.k7_fromBonusShort : (d.prepaid ? L.k7_prepaidShort + (mo.debt > 0 ? ' · ' + dueTxt : '') : dueTxt + (d.dueManual ? ' · ' + L.k7_dueManual : ''))], [L.k7_bonusOn, bn ? fM(bn.sum) + ' (' + String(bn.pct).replace('.', ',') + '%) · ' + bn.date : '—'], [L.k_hNote, d.note]].map(([label, value, mono]) => ({ label, value, mono: !!mono })),
+      lineCount: String(d.lines.length), hasIssueNote: !!(ne || nw), hasErrNote: ne > 0, errNote: L.k_nErr(ne), hasWarnNote: nw > 0, warnNote: L.k_nWarn(nw),
+      gColDefs: gAll.filter(c => !c.sticky).map(c => ({ key: c.key, label: c.label, visible: !hid.includes(c.key) })), setGCols: cols => this.setState({ hidCols: cols.filter(c => !c.visible).map(c => c.key) }),
+      gCols, gRows, gOpts, focusReq: s.focusReq, gridEditable: M !== 'read', gridFixed: M !== 'edit', gLabels: { num: '№', add: L.k_addLine, scanPh: L.k_scanPh, remove: L.k_removeLine, empty: L.k_noLines, noOptions: L.p_fNone, scan: L.k_scan, search: L.p_fSearch, keys: L.k_keys },
+      onEdit: (id, k, v) => this.onEdit(id, k, v), addLine: () => this.addLine(), removeLine: id => this.removeLine(id), onBarcode: c => this.onBarcode(c),
+      totItems: [{ label: L.k_tLines, value: String(d.lines.length) }, { label: L.k_tQty, value: fN(t.qty) }, ...(hidePrice ? [] : [{ label: L.k_tNet, value: fM(t.net) }, { label: L.k_tVat, value: fM(t.vat) }])], totGross: hidePrice ? '' : fM(t.gross),
+      histFilters: [['all', L.p_hAll], ['create', L.p_hCreate], ['change', L.p_hChange], ['status', L.p_hStatus]].map(([key, label]) => ({ key, label })), histGroups: groups,
+      vsOpen: !!s.vs, vsTitle: s.vs ? L.k_vsTitle(s.vs.errors.length) : '', closeVs: () => this.setState({ vs: null }),
+      vsErrors: s.vs ? s.vs.errors.map(x => ({ text: x.text, go: () => this.goTarget(x.target) })) : [], vsWarnings: s.vs ? s.vs.warnings.map(x => ({ text: x.text, go: () => this.goTarget(x.target) })) : [],
+      dlgOpen: !!dlgDefs[s.dlg], dlg: dlgDefs[s.dlg] || {}, blockOpen: s.dlg === 'block', toQy: () => { D.store.docReq = { kind: 'qy', receiptNo: d.no }; this.setState({ dlg: null }); this.props.onNavigate && this.props.onNavigate('sreturns'); }, blockText: sold ? L.k_blockD(d.soldLine, soldP.name, sold.batch, fN(d.soldQty)) : ''
+    };
+  }
+  renderVals() {
+    const s = this.state, L = this.L;
+    if (!s.ready || !window.MedixData) return { L, loading: true, isList: false, isDoc: false };
+    const lv = s.view === 'list' ? this.listVals(L) : {}, dv = s.view === 'doc' && s.doc ? this.docVals(L) : {};
+    const canPick = s.view === 'doc' && !!s.doc && this.mode(s.doc) === 'edit';
+    return { L, loading: false, narrow: !!this.props.narrow, isList: s.view === 'list', isDoc: s.view === 'doc' && !!s.doc, ...lv, ...dv,
+      isPick: s.view === 'pick' && !!s.doc, pickDoc: s.doc, pickBack: () => this.leavePick(null), pickDone: items => this.leavePick(items), toastFn: x => this.toast(x), role: this.role(),
+      canPick, openPicker: () => this.openPick(), pickLabel: L.pk_open || "Mahsulot qo'shish",
+      reason: s.reason, reasonErr: s.reasonErr, onReason: v => this.setState({ reason: v, reasonErr: '' }), closeDlg: () => this.setState({ dlg: null }), stop: e => e.stopPropagation() };
+  }
+}
+</script>
+</body>
+</html>

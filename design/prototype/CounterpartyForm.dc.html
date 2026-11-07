@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;align-items:center;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="width:100%;max-width:880px;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <nav style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px"><button onClick="{{ cancel }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ parentLabel }}</button><span style="color:#647574">/</span><span style="color:#5B6B6A">{{ crumb }}</span></nav>
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ formTitle }}</h1>
+    </div>
+    <sc-if value="{{ showErr }}">
+      <div role="alert" style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA">
+        <lucide-i name="circle-alert" size="16" style="color:#B91C1C;margin-top:1px"></lucide-i>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:18px;color:#B91C1C"><span style="font-weight:500">{{ errTitle }}</span><span style="display:flex;flex-wrap:wrap;gap:4px 12px"><sc-for list="{{ errLinks }}" as="e"><button onClick="{{ e.go }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:13px;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ e.label }}</button></sc-for></span></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showDup }}">
+      <div role="status" style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:#EFF6FF;border:1px solid #BFDBFE">
+        <lucide-i name="info" size="16" style="color:#1D4ED8;margin-top:1px"></lucide-i>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:18px;color:#1D4ED8"><span style="font-weight:500;text-wrap:pretty">{{ dupText }}</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-if value="{{ dupCanAdd }}"><button onClick="{{ dupAdd }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59"><lucide-i name="git-branch-plus" size="16"></lucide-i>{{ dupAddLabel }}</button></sc-if><sc-if value="{{ dupHasNote }}"><span style="align-self:center;font-size:12.5px;color:#1D4ED8">{{ dupHasText }}</span></sc-if><button onClick="{{ dupOpen }}" style="height:32px;padding:0 12px;border:1px solid #BFDBFE;border-radius:8px;background:#FFFFFF;color:#1D4ED8;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FBFF">{{ L.kt_dupOpen }}</button></div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-for list="{{ sims }}" as="m">
+      <div role="status" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:#FFFBEB;border:1px solid #FDE68A"><lucide-i name="triangle-alert" size="16" style="color:#B45309;flex:none"></lucide-i><span style="flex:1;font-size:13px;line-height:18px;color:#B45309">{{ m.text }}</span><button onClick="{{ m.open }}" style="padding:0;border:0;background:transparent;color:#B45309;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ L.kt_simOpen }}</button></div>
+    </sc-for>
+
+    <dc-import name="FormSection" title="{{ L.kt_secMain }}" description="{{ L.kt_secMainD }}" stacked="{{ narrow }}" hint-size="100%,200px">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;min-width:0">
+        <sc-for list="{{ mainF }}" as="x">
+          <div data-f="{{ x.k }}" style="display:flex;flex-direction:column;min-width:0;grid-column:{{ x.span }}">
+            <label for="{{ x.id }}" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ x.label }}<sc-if value="{{ x.req }}"> <span style="color:#B91C1C">*</span></sc-if></label>
+            <input id="{{ x.id }}" value="{{ x.value }}" onChange="{{ x.on }}" onBlur="{{ x.blur }}" placeholder="{{ x.ph }}" inputMode="{{ x.im }}" disabled="{{ x.ro }}" style="height:34px;padding:0 12px;border:1px solid {{ x.bd }};border-radius:8px;background:{{ x.bg }};font-family:{{ x.font }};font-size:{{ x.fs }};color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            <sc-if value="{{ x.err }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ x.err }}</div></sc-if>
+          </div>
+        </sc-for>
+        <dc-import name="Select" label="{{ L.kt_lType }}" required="{{ true }}" options="{{ typeOpts }}" value="{{ f.type }}" on-change="{{ setType }}" hint-size="100%,56px"></dc-import>
+        <sc-if value="{{ isSup }}"><dc-import name="Select" label="{{ L.kt_lMainPay }}" required="{{ true }}" options="{{ payOpts }}" value="{{ f.mainPay }}" on-change="{{ setMainPay }}" hint-size="100%,56px"></dc-import></sc-if>
+      </div>
+    </dc-import>
+
+    <dc-import name="FormSection" title="{{ L.kt_secCont }}" description="{{ L.kt_secContD }}" stacked="{{ narrow }}" hint-size="100%,140px">
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <sc-for list="{{ contacts }}" as="k">
+          <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) 34px;gap:8px;align-items:end">
+            <sc-for list="{{ k.fields }}" as="x"><label style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font-size:12px;line-height:16px;font-weight:500">{{ x.label }}</span><input value="{{ x.value }}" onChange="{{ x.on }}" style="height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13.5px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></label></sc-for>
+            <button onClick="{{ k.remove }}" aria-label="{{ L.clear }}" style="width:34px;height:34px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#FEF2F2;color:#B91C1C"><lucide-i name="trash-2" size="16"></lucide-i></button>
+          </div>
+        </sc-for>
+        <button onClick="{{ addContact }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="plus" size="16"></lucide-i>{{ L.kt_addContact }}</button>
+      </div>
+    </dc-import>
+
+    <dc-import name="FormSection" title="{{ L.kt_secBank }}" description="{{ L.kt_secBankD }}" stacked="{{ narrow }}" hint-size="100%,140px">
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <sc-if value="{{ bankLock }}"><div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#5B6B6A"><lucide-i name="lock" size="14"></lucide-i>{{ L.kt_bankLock }}</div></sc-if>
+        <div style="display:grid;grid-template-columns:minmax(0,1.2fr) 120px minmax(0,1.6fr);gap:12px;min-width:0">
+          <sc-for list="{{ bankF }}" as="x">
+            <div data-f="{{ x.k }}" style="display:flex;flex-direction:column;min-width:0"><label style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ x.label }}</label><input value="{{ x.value }}" onChange="{{ x.on }}" disabled="{{ bankLock }}" inputMode="{{ x.im }}" style="height:34px;padding:0 10px;border:1px solid {{ x.bd }};border-radius:8px;background:{{ bankBg }};font-family:{{ x.font }};font-size:13px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><sc-if value="{{ x.err }}"><span style="margin-top:6px;font-size:12px;line-height:16px;color:#B91C1C">{{ x.err }}</span></sc-if></div>
+          </sc-for>
+        </div>
+      </div>
+    </dc-import>
+
+    <sc-if value="{{ isNew }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="FormSection" title="{{ L.kt_secLic }}" description="{{ L.kt_secLicD }}" stacked="{{ narrow }}" hint-size="100%,160px">
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px">
+            <sc-for list="{{ licF }}" as="x"><div data-f="{{ x.k }}" style="display:flex;flex-direction:column;min-width:0"><label style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ x.label }}<sc-if value="{{ x.req }}"> <span style="color:#B91C1C">*</span></sc-if></label><input value="{{ x.value }}" onChange="{{ x.on }}" placeholder="{{ x.ph }}" style="height:34px;padding:0 10px;border:1px solid {{ x.bd }};border-radius:8px;background:#FFFFFF;font-family:{{ x.font }};font-size:13px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><sc-if value="{{ x.err }}"><span style="margin-top:6px;font-size:12px;line-height:16px;color:#B91C1C">{{ x.err }}</span></sc-if></div></sc-for>
+          </div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-top:4px">
+            <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:500">{{ L.kt_lCtrl }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ L.kt_lCtrlHelp }}</span></div>
+            <button role="switch" aria-checked="{{ f.ctrl }}" aria-label="{{ L.kt_lCtrl }}" onClick="{{ toggleCtrl }}" style="width:36px;height:20px;flex:none;padding:2px;border:0;border-radius:999px;background:{{ ctrlBg }};display:flex;justify-content:{{ ctrlJ }};cursor:pointer"><span style="width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></button>
+          </div>
+          <sc-if value="{{ f.ctrl }}"><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px"><sc-for list="{{ ctrlF }}" as="x"><div data-f="{{ x.k }}" style="display:flex;flex-direction:column;min-width:0"><label style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ x.label }} <span style="color:#B91C1C">*</span></label><input value="{{ x.value }}" onChange="{{ x.on }}" placeholder="{{ x.ph }}" style="height:34px;padding:0 10px;border:1px solid {{ x.bd }};border-radius:8px;background:#FFFFFF;font-family:{{ x.font }};font-size:13px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><sc-if value="{{ x.err }}"><span style="margin-top:6px;font-size:12px;line-height:16px;color:#B91C1C">{{ x.err }}</span></sc-if></div></sc-for></div></sc-if>
+        </div>
+      </dc-import>
+      <dc-import name="FormSection" title="{{ L.kt_secTerms }}" description="{{ termsDesc }}" stacked="{{ narrow }}" hint-size="100%,160px">
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <sc-if value="{{ opNote }}"><div style="display:flex;gap:8px;padding:10px 12px;border-radius:8px;background:#F8FAFA;border:1px solid #E2E8F0"><lucide-i name="info" size="16" style="color:#5B6B6A;flex:none;margin-top:1px"></lucide-i><span style="font-size:12.5px;line-height:18px;color:#5B6B6A">{{ L.kt_opLimit }}</span></div></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;align-items:start">
+            <dc-import name="Select" label="{{ L.kt_lBranch }}" required="{{ true }}" options="{{ brOpts }}" value="{{ f.branch }}" on-change="{{ setBranch }}" locked="{{ brLocked }}" hint-size="100%,56px"></dc-import>
+            <sc-if value="{{ isMt }}"><dc-import name="MoneyInput" label="{{ L.kt_lLimit }}" value="{{ f.limit }}" on-change="{{ setLimit }}" required="{{ false }}" compact="{{ true }}" read-only="{{ opNote }}" hint-size="100%,56px"></dc-import></sc-if>
+            <sc-for list="{{ termF }}" as="x"><div data-f="{{ x.k }}" style="display:flex;flex-direction:column;min-width:0"><label style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ x.label }}</label><input value="{{ x.value }}" onChange="{{ x.on }}" inputMode="numeric" disabled="{{ x.ro }}" style="height:34px;padding:0 10px;border:1px solid {{ x.bd }};border-radius:8px;background:{{ x.bg }};font:inherit;font-size:14px;color:#172B2A;outline:none;text-align:right;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><sc-if value="{{ x.err }}"><span style="margin-top:6px;font-size:12px;line-height:16px;color:#B91C1C">{{ x.err }}</span></sc-if></div></sc-for>
+            <sc-if value="{{ isMt }}"><dc-import name="Select" label="{{ L.kt_lPrice }}" options="{{ priceOpts }}" value="{{ f.price }}" on-change="{{ setPrice }}" hint-size="100%,56px"></dc-import></sc-if>
+          </div>
+        </div>
+      </dc-import>
+    </sc-if>
+    <div style="height:24px"></div>
+  </div>
+  <div style="width:100%;align-self:stretch;display:contents">
+    <dc-import name="StickyFormFooter" style="position:sticky;bottom:-24px;z-index:5;display:block;align-self:stretch" dirty="{{ dirty }}" dirty-label="{{ L.kt_dirty }}" cancel-label="{{ L.kt_pnCancel }}" save-label="{{ L.kt_save }}" on-cancel="{{ cancel }}" on-save="{{ save }}" hint-size="100%,64px"></dc-import>
+  </div>
+  <sc-if value="{{ leaveOpen }}"><dc-import name="ConfirmDialog" title="{{ L.p_leaveT }}" text="{{ L.p_leaveD }}" danger="{{ true }}" confirm-label="{{ L.p_leave }}" cancel-label="{{ L.p_stay }}" on-confirm="{{ confirmLeave }}" on-cancel="{{ cancelLeave }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mt&quot;,&quot;yt&quot;],&quot;default&quot;:&quot;mt&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;new&quot;,&quot;edit&quot;],&quot;default&quot;:&quot;new&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cardKey&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;prefill&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;formBranch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;nonce&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ALL&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onCancel&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onSaved&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(key)=&gt;void&quot;},&quot;onOpenCard&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(key,tab,termsReq)=&gt;void&quot;},&quot;onDirty&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(b)=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;}}">
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const reD = /^\d{2}\.\d{2}\.\d{4}$/;
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const MONO = "'JetBrains Mono',monospace";
+class Component extends DCLogic {
+  state = { f: null, base: '', tried: false, leave: null, stirTouched: false };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  mt() { return this.props.kind !== 'yt'; }
+  componentDidMount() { if (!this.D || !this.D.ktByKey) this._p = setInterval(() => { if (this.D && this.D.ktByKey) { clearInterval(this._p); this.init(); } }, 60); else this.init(); }
+  componentWillUnmount() { clearInterval(this._p); this.props.onDirty && this.props.onDirty(false); }
+  componentDidUpdate(pp) { if (pp.nonce !== this.props.nonce) return this.init(); const d = !!this.state.f && JSON.stringify(this.state.f) !== this.state.base; if (d !== this._dirty) { this._dirty = d; this.props.onDirty && this.props.onDirty(d); } }
+  init() { const D = this.D, p = this.props, mt = this.mt(); let f;
+    if (p.mode === 'edit') { const c = D.ktByKey(p.cardKey) || {}; f = { stir: D.stirF(c.stir), name: c.name, legal: c.legal, type: c.type, mainPay: c.mainPay || 'bank', region: c.region, address: c.address, phone: c.phone, email: c.email, contacts: (c.contacts || []).map(x => ({ ...x })), bank: { ...(c.bank || {}) } }; }
+    else f = { stir: '', name: '', legal: '', type: mt ? 'pharmacy' : 'maker', mainPay: 'bank', region: '', address: '', phone: '', email: '', contacts: [{ name: '', pos: '', phone: '' }], bank: { bank: '', mfo: '', acc: '' }, pharmNo: '', pharmUntil: '', ctrl: false, ctrlNo: '', ctrlUntil: '', branch: p.formBranch || (p.branch && p.branch !== 'ALL' ? p.branch : 'TSH'), limit: 0, days: mt ? '30' : '30', disc: '0', price: 'small', lead: '3' };
+    if (p.prefill) { f = { ...f, ...p.prefill }; if (f.stir) f.stir = D.stirF(f.stir); }
+    this.setState({ f, base: JSON.stringify(mt ? { ...f, stir: p.prefill ? '' : f.stir, name: p.prefill ? '' : f.name } : f), tried: !!(p.prefill && p.prefill.stir), leave: null, stirTouched: !!(p.prefill && p.prefill.stir) }); }
+  dup() { const D = this.D, f = this.state.f, d = D.stirD(f.stir); if (d.length !== 9) return null; const c = D.ktByStir(d); return c && c.key !== this.props.cardKey ? c : null; }
+  errs() { const L = this.L, f = this.state.f, p = this.props, D = this.D, e = {}, isNew = p.mode !== 'edit';
+    const sd = D.stirD(f.stir); if (!sd) e.stir = L.kt_eReq; else if (sd.length !== 9 || /[^\d\s]/.test(f.stir)) e.stir = L.kt_eStir;
+    if (!String(f.name || '').trim()) e.name = L.kt_eReq; if (f.email && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(f.email)) e.email = L.kt_eEmail;
+    if (f.bank.mfo && !/^\d{5}$/.test(f.bank.mfo)) e.mfo = L.kt_eMfo; if (f.bank.acc && D.stirD(f.bank.acc).length !== 20) e.acc = L.kt_eAcc;
+    if (isNew) { if (this.mt()) { if (!String(f.pharmNo).trim()) e.pharmNo = L.kt_eReq; if (!reD.test(f.pharmUntil)) e.pharmUntil = L.kt_eDate; }
+      if (f.ctrl) { if (!String(f.ctrlNo).trim()) e.ctrlNo = L.kt_eReq; if (!reD.test(f.ctrlUntil)) e.ctrlUntil = L.kt_eDate; }
+      if (!/^\d+$/.test(String(f.days).trim()) || +f.days > 365) e.days = L.kt_eDays; if (this.mt() && (!/^\d+([.,]\d+)?$/.test(String(f.disc).trim()) || +String(f.disc).replace(',', '.') > 50)) e.disc = L.kt_eDisc; if (!this.mt() && (!/^\d+$/.test(String(f.lead).trim()))) e.lead = L.kt_eDays; }
+    return e; }
+  focus(k) { const el = document.querySelector(`[data-screen-label="${this.screenLabel}"] [data-f="${k}"]`); if (!el) return; const m = el.closest('main'); if (m) m.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - 96), behavior: 'smooth' }); const i = el.querySelector('input,button'); i && i.focus({ preventScroll: true }); }
+  save() { const D = this.D, L = this.L, p = this.props, s = this.state, f = s.f, mt = this.mt(), isNew = p.mode !== 'edit', R = D.KT_R, role = p.role;
+    this.setState({ tried: true, stirTouched: true });
+    if (isNew && !D.canR(role, 'KT_R', mt ? 'createC' : 'createS')) return p.onToast && p.onToast(fill(L.kt_who, { r: (mt ? R.createC : R.createS).map(r => L['r_' + r] || r).join(', ') }));
+    if (this.dup()) { const m = document.querySelector('main'); m && m.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    const e = this.errs(), ks = Object.keys(e); if (ks.length) return setTimeout(() => this.focus(ks[0]), 0);
+    const who = p.userName;
+    if (isNew) {
+      const lic = []; if (f.pharmNo) lic.push({ id: 'l1', kind: 'pharm', no: f.pharmNo.trim(), issued: D.TODAY, until: f.pharmUntil, file: 'litsenziya_' + f.pharmNo.replace(/\W+/g, '_') + '.pdf' }); if (f.ctrl) lic.push({ id: 'l2', kind: 'ctrl', no: f.ctrlNo.trim(), issued: D.TODAY, until: f.ctrlUntil, file: 'nazorat_' + f.ctrlNo.replace(/\W+/g, '_') + '.pdf' });
+      const terms = mt ? { limit: !D.can(role, 'clients.terms') ? 0 : Math.round((f.limit || 0) * 100) / 100, days: +f.days, disc: +String(f.disc).replace(',', '.'), price: f.price } : { days: +f.days, lead: +f.lead };
+      const r = D.ktCreate({ kind: p.kind, branch: f.branch, stir: f.stir, name: f.name.trim(), legal: f.legal.trim() || undefined, type: f.type, mainPay: mt ? undefined : f.mainPay, region: f.region, address: f.address, phone: f.phone, email: f.email, contacts: f.contacts.filter(x => x.name.trim()), bank: f.bank, lic, terms, src: 'form' }, who);
+      if (r.err) return; this.setState({ base: JSON.stringify(f) }); p.onDirty && p.onDirty(false); p.onToast && p.onToast(fill(L.kt_tCreated, { n: r.card.name })); return p.onSaved && p.onSaved(r.card.key); }
+    const c = D.ktCopy(D.ktByKey(p.cardKey)), ch = [], canC = D.canR(role, 'KT_R', mt ? 'contactC' : 'contactS') || D.canR(role, 'KT_R', 'all'), canB = D.canR(role, 'KT_R', 'bank');
+    const fields = ['name', 'legal', 'type', 'region', 'address', 'phone', 'email'].concat(mt ? [] : ['mainPay']);
+    if (canC) { fields.forEach(k => { if (String(c[k] || '') !== String(f[k] || '')) { ch.push({ label: k, from: k === 'type' ? L['kt_ty_' + c[k]] : k === 'mainPay' ? L['k7_pay_' + (c[k] || 'bank')] : c[k], to: k === 'type' ? L['kt_ty_' + f[k]] : k === 'mainPay' ? L['k7_pay_' + f[k]] : f[k] }); c[k] = f[k]; } }); if (JSON.stringify(c.contacts) !== JSON.stringify(f.contacts.filter(x => x.name.trim()))) { ch.push({ label: 'contacts', from: String((c.contacts || []).length), to: String(f.contacts.filter(x => x.name.trim()).length) }); c.contacts = f.contacts.filter(x => x.name.trim()); } }
+    const bankCh = JSON.stringify(c.bank) !== JSON.stringify(f.bank); if (bankCh && canB) { ch.push({ label: 'bank', from: `${c.bank.bank} · ${c.bank.mfo}`, to: `${f.bank.bank} · ${f.bank.mfo}` }); c.bank = { ...f.bank }; }
+    if (!ch.length && !canC && !canB) return p.onToast && p.onToast(fill(L.kt_who, { r: [...new Set(D.whoCan(mt ? 'clients.contact' : 'suppliers.contact').concat(D.whoCan('clients.bank')))].map(r => L['r_' + r] || r).join(', ') }));
+    if (ch.length) D.ktSave(c, who, bankCh && canB && ch.length === 1 ? 'bank' : 'edit', ch);
+    this.setState({ base: JSON.stringify(f) }); p.onDirty && p.onDirty(false); p.onToast && p.onToast(L.kt_tSaved); p.onSaved && p.onSaved(c.key); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, mt = this.mt(), narrow = !!p.narrow, isNew = p.mode !== 'edit';
+    this.screenLabel = isNew ? (mt ? L.kt_fNewC : L.kt_fNewS) : L.kt_fEdit;
+    const base = { L, f: {}, mainF: [], bankF: [], licF: [], ctrlF: [], termF: [], contacts: [], sims: [], errLinks: [], typeOpts: [], brOpts: [], priceOpts: [], isNew, isMt: mt, narrow, screenLabel: this.screenLabel };
+    if (!D || !D.ktByKey || !s.f) return base;
+    const f = s.f, R = D.KT_R, role = p.role, e = s.tried ? this.errs() : {}, stirE = s.stirTouched ? this.errs().stir : '';
+    const set = (k, v) => this.setState(st => ({ f: { ...st.f, [k]: v } })), setB = (k, v) => this.setState(st => ({ f: { ...st.f, bank: { ...st.f.bank, [k]: v } } }));
+    const canC = isNew || D.canR(role, 'KT_R', mt ? 'contactC' : 'contactS') || D.canR(role, 'KT_R', 'all'), canB = isNew || D.canR(role, 'KT_R', 'bank');
+    const inp = (k, label, o) => { const er = k === 'stir' ? (stirE || '') : (e[k] || ''), ro = !!(o && o.ro); return { k, id: 'kf-' + k, label, value: f[k] == null ? '' : String(f[k]), on: ev => set(k, ev.target.value), blur: k === 'stir' ? () => this.setState({ stirTouched: true }) : null, req: !!(o && o.req), err: er, bd: er ? '#B91C1C' : '#E2E8F0', bg: ro ? '#F8FAFA' : '#FFFFFF', ro, ph: (o && o.ph) || '', im: (o && o.im) || 'text', font: o && o.mono ? MONO : 'inherit', fs: o && o.mono ? '13px' : '14px', span: (o && o.span) || 'auto' }; };
+    const mainF = [inp('stir', L.kt_lStir, { req: true, mono: true, ph: '302 118 447', im: 'numeric', ro: !isNew }), inp('name', L.kt_lName, { req: true, ro: !canC }), inp('legal', L.kt_lLegal, { span: '1 / -1', ro: !canC, ph: '«Shifo Farm» MChJ' }), inp('region', L.kt_lRegion, { ro: !canC }), inp('phone', L.kt_lPhone, { mono: true, ph: '+998 71 000 00 00', ro: !canC }), inp('address', L.kt_lAddr, { span: '1 / -1', ro: !canC }), inp('email', L.kt_lEmail, { ro: !canC })];
+    const dup = this.dup(), dupT = dup ? (mt ? dup.cTerms : dup.sTerms) : null, bn = c => (D.BRANCHES.find(b => b.code === c) || {}).name || c, homeBr = dup ? Object.keys(dupT)[0] || '' : '';
+    const sims = !dup && isNew && String(f.name || '').trim().length >= 3 ? D.ktSimilar(f.name, p.cardKey).filter(x => x.card.stir !== D.stirD(f.stir)).map(x => ({ text: fill(L.kt_simT, { n: `${x.card.name} (STIR ${D.stirF(x.card.stir)})` }), open: () => p.onOpenCard && p.onOpenCard(x.card.key, 'gen') })) : [];
+    const errKeys = Object.keys(e), labels = { stir: L.kt_lStir, name: L.kt_lName, email: L.kt_lEmail, mfo: L.kt_lMfo, acc: L.kt_lAcc, pharmNo: L.kt_lPharmNo, pharmUntil: L.kt_lPharmUntil, ctrlNo: L.kt_lCtrlNo, ctrlUntil: L.kt_lCtrlUntil, days: L.kt_lDays, disc: L.kt_lDisc, lead: L.kt_lLead };
+    const termLab = isNew ? bn(f.branch) : '';
+    const opNote = mt && isNew && !D.can(role, 'clients.terms');
+    const num = (k, label, ro) => ({ k, label, value: String(f[k] == null ? '' : f[k]), on: ev => set(k, ev.target.value.replace(/[^\d.,]/g, '')), err: e[k] || '', bd: e[k] ? '#B91C1C' : '#E2E8F0', ro: !!ro, bg: ro ? '#F8FAFA' : '#FFFFFF' });
+    const linp = (k, label, req, ph, mono) => ({ k, label, req, ph, value: f[k] || '', on: ev => set(k, ev.target.value), err: e[k] || '', bd: e[k] ? '#B91C1C' : '#E2E8F0', font: mono ? MONO : 'inherit' });
+    return {
+      ...base, f, parentLabel: mt ? L.kt_tC : L.kt_tS, crumb: isNew ? (mt ? L.kt_fNewC : L.kt_fNewS) : f.name, formTitle: isNew ? (mt ? L.kt_fNewC : L.kt_fNewS) : f.name,
+      showErr: s.tried && errKeys.length > 0 && !dup, errTitle: fill(L.kt_errT, { n: errKeys.length }), errLinks: errKeys.map(k => ({ label: labels[k] || k, go: () => this.focus(k) })),
+      showDup: !!dup, dupText: dup ? fill(L.kt_dupT, { k: mt ? L.kt_dupKC : L.kt_dupKS, n: dup.name, b: Object.keys(dupT).map(bn).join(', ') || bn(homeBr) }) : '',
+      dupCanAdd: !!dup && isNew && !dupT[f.branch], dupAddLabel: fill(L.kt_dupAdd, { b: bn(f.branch) }), dupHasNote: !!dup && isNew && !!dupT[f.branch], dupHasText: fill(L.kt_dupHas, { b: bn(f.branch) }),
+      dupAdd: () => { p.onDirty && p.onDirty(false); p.onOpenCard && p.onOpenCard(dup.key, 'terms', { br: f.branch, prefill: mt ? { limit: f.limit || 0, days: +f.days || 30, disc: +f.disc || 0 } : { days: +f.days || 30 } }); },
+      dupOpen: () => { p.onDirty && p.onDirty(false); p.onOpenCard && p.onOpenCard(dup.key, 'gen'); }, sims,
+      mainF, typeOpts: D.KT_TYPES.filter(t => mt ? t !== 'maker' : true).map(t => ({ value: t, label: L['kt_ty_' + t] })), setType: v => canC ? set('type', v) : null, isSup: !mt, payOpts: ['cash', 'bank', 'online'].map(k => ({ value: k, label: L['k7_pay_' + k] })), setMainPay: v => canC ? set('mainPay', v) : null,
+      contacts: f.contacts.map((k, i) => ({ fields: [['name', L.kt_lCName], ['pos', L.kt_lCPos], ['phone', L.kt_lCPhone]].map(([kk, label]) => ({ label, value: k[kk] || '', on: ev => { const v = ev.target.value; this.setState(st => ({ f: { ...st.f, contacts: st.f.contacts.map((x, j) => j === i ? { ...x, [kk]: v } : x) } })); } })), remove: () => this.setState(st => ({ f: { ...st.f, contacts: st.f.contacts.filter((_, j) => j !== i) } })) })),
+      addContact: () => this.setState(st => ({ f: { ...st.f, contacts: st.f.contacts.concat([{ name: '', pos: '', phone: '' }]) } })),
+      bankLock: !canB, bankBg: canB ? '#FFFFFF' : '#F8FAFA', bankF: [['bank', L.kt_lBank, 'text', 'inherit'], ['mfo', L.kt_lMfo, 'numeric', MONO], ['acc', L.kt_lAcc, 'numeric', MONO]].map(([k, label, im, font]) => ({ k, label, im, font, value: k === 'acc' ? D.accF(f.bank.acc) : f.bank[k] || '', on: ev => setB(k, k === 'acc' ? D.stirD(ev.target.value).slice(0, 20) : ev.target.value), err: e[k] || '', bd: e[k] ? '#B91C1C' : '#E2E8F0' })),
+      licF: [linp('pharmNo', L.kt_lPharmNo, mt, 'FA-0000-2026', true), linp('pharmUntil', L.kt_lPharmUntil, mt, 'kk.oo.yyyy', false)], ctrlF: [linp('ctrlNo', L.kt_lCtrlNo, true, 'LZ-0000-2026', true), linp('ctrlUntil', L.kt_lCtrlUntil, true, 'kk.oo.yyyy', false)],
+      ctrlBg: f.ctrl ? '#0F766E' : '#CBD5D3', ctrlJ: f.ctrl ? 'flex-end' : 'flex-start', toggleCtrl: () => set('ctrl', !f.ctrl),
+      termsDesc: (mt ? L.kt_secTermsD : L.kt_secTermsSD) + (termLab ? ' · ' + termLab : ''), opNote, brLocked: D.can(role, 'clients.create') && !D.can(role, 'clients.all'), brOpts: D.BRANCHES.map(b => ({ value: b.code, label: b.name })), setBranch: v => set('branch', v),
+      setLimit: v => set('limit', v == null ? 0 : v), termF: mt ? [num('days', L.kt_lDays), num('disc', L.kt_lDisc)] : [num('days', L.kt_lDays), num('lead', L.kt_lLead)], priceOpts: D.KT_PRICE.map(k => ({ value: k, label: L['kt_pr_' + k] })), setPrice: v => set('price', v),
+      dirty: JSON.stringify(f) !== s.base, cancel: () => { if (JSON.stringify(f) !== s.base) return this.setState({ leave: () => p.onCancel && p.onCancel() }); p.onCancel && p.onCancel(); }, save: () => this.save(),
+      leaveOpen: !!s.leave, confirmLeave: () => { const fn = s.leave; p.onDirty && p.onDirty(false); this.setState({ leave: null, base: JSON.stringify(f) }, () => fn && fn()); }, cancelLeave: () => this.setState({ leave: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

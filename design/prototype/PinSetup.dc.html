@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;font-family:Inter,system-ui,sans-serif;color:#172B2A">
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label for="{{ g.id }}" style="font-size:13px;line-height:18px;font-weight:500">{{ g.label }}</label>
+      <div style="position:relative;display:flex;gap:10px;width:206px">
+        <sc-for list="{{ g.cells }}" as="c"><span style="width:44px;height:44px;flex:none;border:1px solid {{ c.bd }};border-radius:8px;background:#FFFFFF;box-shadow:{{ c.sh }};display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;transition:border-color 120ms ease-out">{{ c.t }}</span></sc-for>
+        <input id="{{ g.id }}" value="{{ g.value }}" onChange="{{ g.on }}" onFocus="{{ g.focus }}" onBlur="{{ g.blur }}" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="{{ g.label }}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;cursor:text">
+      </div>
+      <sc-if value="{{ g.hasErr }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ g.err }}</span></sc-if>
+    </div>
+  </sc-for>
+  <span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ L.bs_pinRules }}</span>
+  <div style="display:flex;gap:8px;justify-content:{{ just }}">
+    <sc-if value="{{ hasCancel }}"><button onClick="{{ cancel }}" style="height:44px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer" style-hover="border-color:#647574">{{ cancelLabel }}</button></sc-if>
+    <button onClick="{{ submit }}" style="flex:{{ btnFlex }};height:44px;padding:0 18px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.bs_pinSave }}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:360},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;first&quot;,&quot;change&quot;],&quot;default&quot;:&quot;first&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;weak&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;current&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;1234&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;onDone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;},&quot;onCancel&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;},&quot;cancelLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { cur: '', p1: '', p2: '', tried: false, focus: null };
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.boot(); }
+  componentDidUpdate(pp) { if (this.props.demo !== pp.demo) this.boot(); }
+  boot() { const k = this.props.demo; if (k === 'weak') this.setState({ cur: '', p1: '1111', p2: '1111', tried: true }); else this.setState({ cur: '', p1: '', p2: '', tried: false }); }
+  errs() { const L = this.L, s = this.state, D = window.MedixData, e = {}, ch = this.props.mode === 'change';
+    if (ch && s.cur.length < 4) e.cur = L.bs_pinE4; else if (ch && s.cur !== (this.props.current || '1234')) e.cur = L.bs_pinWrong;
+    const w = D ? D.pinWeak(s.p1) : null; if (w === 'format') e.p1 = L.bs_pinE4; else if (w === 'same') e.p1 = L.bs_pinWeakSame; else if (w === 'seq') e.p1 = L.bs_pinWeakSeq; else if (ch && s.p1 === s.cur) e.p1 = L.bs_pinSame;
+    if (!e.p1 && s.p2 !== s.p1) e.p2 = L.bs_pinMismatch; return e; }
+  renderVals() {
+    const L = this.L, s = this.state, p = this.props, ch = p.mode === 'change', e = s.tried ? this.errs() : {};
+    const live = s.p1.length === 4 && window.MedixData && window.MedixData.pinWeak(s.p1) ? this.errs().p1 : null; if (live && !e.p1) e.p1 = live;
+    const grp = (k, label) => ({ id: 'pin-' + k, label, value: s[k], hasErr: !!e[k], err: e[k] || '', on: ev => this.setState({ [k]: ev.target.value.replace(/\D/g, '').slice(0, 4) }), focus: () => this.setState({ focus: k }), blur: () => this.setState({ focus: null }),
+      cells: [0, 1, 2, 3].map(i => { const on = s.focus === k && i === Math.min(s[k].length, 3); return { t: s[k][i] ? '•' : '', bd: e[k] ? '#B91C1C' : on ? '#0D9488' : '#CBD5D3', sh: on ? '0 0 0 3px rgba(13,148,136,0.15)' : 'none' }; }) });
+    const groups = (ch ? [grp('cur', L.bs_pinCur)] : []).concat([grp('p1', L.bs_pinNew), grp('p2', L.bs_pinRep)]);
+    return { L, groups, hasCancel: !!p.onCancel, cancel: () => p.onCancel && p.onCancel(), cancelLabel: p.cancelLabel || L.bs_cancel, just: p.onCancel ? 'flex-end' : 'stretch', btnFlex: p.onCancel ? '0 0 auto' : '1',
+      submit: () => { if (Object.keys(this.errs()).length) return this.setState({ tried: true }); p.onDone && p.onDone(s.p1); } };
+  }
+}
+</script>
+</body>
+</html>

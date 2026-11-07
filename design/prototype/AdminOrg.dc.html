@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:20px;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+
+  <sc-if value="{{ isCompany }}" hint-placeholder-val="{{ false }}">
+    <dc-import name="PageHeader" title="{{ L.n_company }}" subtitle="{{ L.bs_coSub }}" primary="{{ coEdit }}" hint-size="100%,56px"></dc-import>
+    <div style="max-width:720px">
+      <dc-import name="InfoGrid" title="{{ L.bs_coCard }}" rows="{{ coRows }}" hint-size="100%,240px"></dc-import>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isBrList }}" hint-placeholder-val="{{ false }}">
+    <dc-import name="PageHeader" title="{{ L.n_branches }}" count="{{ brCount }}" subtitle="{{ L.bs_brSub }}" primary="{{ brNew }}" hint-size="100%,56px"></dc-import>
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+      <dc-import name="DataTable" columns="{{ brCols }}" rows="{{ brRows }}" scroll-x="{{ narrow }}" min-width="{{ brMin }}" row-actions-label="{{ L.bs_rowMenu }}" hint-size="100%,260px"></dc-import>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isBrCard }}" hint-placeholder-val="{{ false }}">
+    <dc-import name="RecordHeader" parent-label="{{ L.n_branches }}" on-parent="{{ backList }}" title="{{ card.name }}" badges="{{ card.badges }}" meta="{{ card.legal }}" mono="{{ card.code }}" primary="{{ card.edit }}" secondary="{{ card.sec }}" read-only="{{ readOnly }}" read-only-label="{{ L.bs_readOnly }}" more-label="{{ L.bs_more }}" hint-size="100%,76px"></dc-import>
+    <div style="display:flex;gap:4px;border-bottom:1px solid #E2E8F0;overflow-x:auto">
+      <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="5"><button onClick="{{ tb.pick }}" style="flex:none;height:40px;padding:0 12px;border:0;border-bottom:2px solid {{ tb.line }};margin-bottom:-1px;background:transparent;font:inherit;font-size:13px;font-weight:{{ tb.w }};color:{{ tb.fg }};cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px" style-hover="color:#172B2A">{{ tb.label }}<sc-if value="{{ tb.hasN }}"><span style="height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11.5px;line-height:18px;font-weight:500">{{ tb.n }}</span></sc-if></button></sc-for>
+    </div>
+    <sc-if value="{{ tInfo }}">
+      <div style="max-width:820px"><dc-import name="InfoGrid" title="{{ L.bs_igReq }}" rows="{{ card.info }}" hint-size="100%,420px"></dc-import></div>
+    </sc-if>
+    <sc-if value="{{ tList }}">
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:{{ lt.grid }};gap:12px;padding:10px 16px;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">
+          <sc-for list="{{ lt.heads }}" as="h"><span style="text-align:{{ h.al }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ h.t }}</span></sc-for>
+        </div>
+        <sc-for list="{{ lt.rows }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:{{ lt.grid }};gap:12px;align-items:center;min-height:48px;padding:6px 16px;border-bottom:1px solid #EEF2F4">
+            <sc-for list="{{ r.c }}" as="c">
+              <span style="min-width:0;display:flex;align-items:center;gap:8px;justify-content:{{ c.jc }};font-family:{{ c.font }};font-size:{{ c.fs }};color:{{ c.fg }}">
+                <sc-if value="{{ c.av }}"><span style="width:28px;height:28px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif">{{ c.avT }}</span></sc-if>
+                <sc-if value="{{ c.isLink }}"><button onClick="{{ c.pick }}" style="padding:0;border:0;background:transparent;font:inherit;color:#0F766E;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-hover="color:#0F766E;text-decoration:underline">{{ c.t }}</button></sc-if>
+                <sc-if value="{{ c.isPlain }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.t }}</span></sc-if>
+                <sc-if value="{{ c.isPill }}"><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ c.bg }};color:{{ c.pfg }};font-size:12px;line-height:22px;font-weight:500;white-space:nowrap">{{ c.t }}</span></sc-if>
+              </span>
+            </sc-for>
+          </div>
+        </sc-for>
+        <sc-if value="{{ lt.empty }}"><div style="padding:32px 16px;text-align:center;font-size:13px;color:#5B6B6A">{{ lt.emptyT }}</div></sc-if>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isWh }}" hint-placeholder-val="{{ false }}">
+    <dc-import name="PageHeader" title="{{ L.n_warehouses }}" count="{{ whCount }}" subtitle="{{ whSub }}" primary="{{ whNew }}" hint-size="100%,56px"></dc-import>
+    <sc-if value="{{ narrow }}">
+      <button onClick="{{ toggleList }}" style="align-self:flex-start;display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="border-color:#647574"><lucide-i name="panel-left" size="16"></lucide-i>{{ L.bs_whList }} · {{ selName }}<lucide-i name="{{ listChev }}" size="14" style="color:#647574"></lucide-i></button>
+    </sc-if>
+    <div style="display:grid;grid-template-columns:{{ whGrid }};gap:16px;align-items:start">
+      <sc-if value="{{ listShown }}">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:2px">
+          <sc-for list="{{ whGroups }}" as="g" hint-placeholder-count="4">
+            <div style="padding:10px 8px 4px;font-size:12px;line-height:16px;font-weight:600;color:#5B6B6A;display:flex;justify-content:space-between;gap:8px"><span>{{ g.name }}</span><span style="font-family:'JetBrains Mono',monospace;font-weight:400;color:#647574">{{ g.code }}</span></div>
+            <sc-for list="{{ g.items }}" as="w">
+              <button onClick="{{ w.pick }}" style="display:flex;align-items:center;gap:10px;min-height:40px;padding:6px 8px;border:0;border-radius:8px;background:{{ w.bg }};font:inherit;color:inherit;text-align:left;cursor:pointer" style-hover="background:#F5F7F8">
+                <lucide-i name="{{ w.icon }}" size="16" style="color:{{ w.ic }}"></lucide-i>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:13px;line-height:18px;font-weight:{{ w.fw }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ w.name }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ w.sub }}</span></span>
+                <sc-if value="{{ w.off }}"><span style="flex:none;height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11px;line-height:18px;font-weight:500">{{ L.bs_closed }}</span></sc-if>
+              </button>
+            </sc-for>
+          </sc-for>
+        </div>
+      </sc-if>
+      <div style="min-width:0;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0;font-size:18px;line-height:24px;font-weight:600">{{ wh.name }}</h2><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ wh.stBg }};color:{{ wh.stFg }};font-size:12px;line-height:22px;font-weight:500">{{ wh.st }}</span></div>
+              <span style="font-size:13px;color:#5B6B6A">{{ wh.brName }}</span>
+            </div>
+            <sc-if value="{{ canEdit }}">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button onClick="{{ wh.close }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="border-color:#647574"><lucide-i name="archive-x" size="16"></lucide-i>{{ L.bs_whClose }}</button>
+                <button onClick="{{ wh.edit }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="border-color:#647574"><lucide-i name="pencil" size="16"></lucide-i>{{ L.bs_edit }}</button>
+              </div>
+            </sc-if>
+          </div>
+          <dc-import name="InfoGrid" title="{{ L.bs_igWh }}" rows="{{ wh.info }}" hint-size="100%,170px"></dc-import>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #E2E8F0">
+            <span style="font-size:14px;line-height:20px;font-weight:600">{{ L.bs_zonesT }} <span style="font-weight:400;color:#647574">{{ wh.zn }}</span></span>
+            <sc-if value="{{ canEdit }}"><button onClick="{{ addZone }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#0F766E;cursor:pointer" style-hover="background:#F0FDFA"><lucide-i name="plus" size="16"></lucide-i>{{ L.bs_zAdd }}</button></sc-if>
+          </div>
+          <div style="overflow-x:auto">
+            <div style="min-width:640px">
+              <div style="display:grid;grid-template-columns:{{ zGrid }};gap:12px;padding:10px 16px;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">
+                <span>{{ L.bs_zType }}</span><span>{{ L.bs_zName }}</span><span>{{ L.bs_zSale }}</span><span style="text-align:right">{{ L.bs_zStock }}</span><span>{{ L.bs_status }}</span><span></span>
+              </div>
+              <sc-for list="{{ zones }}" as="z" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:{{ zGrid }};gap:12px;align-items:center;min-height:48px;padding:6px 16px;border-bottom:1px solid #EEF2F4;background:{{ z.rowBg }};opacity:{{ z.op }}">
+                  <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:28px;height:28px;flex:none;border-radius:8px;background:{{ z.tbg }};color:{{ z.tfg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ z.ticon }}" size="15"></lucide-i></span><span style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ z.tl }}</span></span>
+                  <span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ z.name }}</span>
+                  <span style="font-size:13px;color:{{ z.saleFg }}">{{ z.sale }}</span>
+                  <span style="text-align:right;display:flex;flex-direction:column;align-items:flex-end"><span>{{ z.qty }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ z.prods }}</span></span>
+                  <span><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ z.stBg }};color:{{ z.stFg }};font-size:12px;line-height:22px;font-weight:500;white-space:nowrap">{{ z.st }}</span></span>
+                  <span style="display:flex;justify-content:flex-end"><sc-if value="{{ canEdit }}"><button onClick="{{ z.menu }}" aria-label="{{ L.bs_rowMenu }}" style="width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EEF2F4"><lucide-i name="ellipsis" size="16"></lucide-i></button></sc-if></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ menuOpen }}">
+    <div onClick="{{ closeMenu }}" style="position:fixed;inset:0;z-index:180"></div>
+    <div style="position:fixed;top:{{ menuTop }}px;left:{{ menuLeft }}px;z-index:181;width:240px;padding:4px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+      <sc-for list="{{ menuItems }}" as="m"><button onClick="{{ m.run }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:0;border-radius:6px;background:transparent;font:inherit;font-size:13px;color:{{ m.fg }};cursor:pointer;text-align:left" style-hover="background:#F8FAFA"><lucide-i name="{{ m.icon }}" size="16" style="color:{{ m.fg }}"></lucide-i>{{ m.label }}</button></sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ coOpen }}">
+    <div style="position:fixed;inset:0;z-index:175">
+      <div onClick="{{ coClose }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+      <div role="dialog" aria-modal="true" style="position:absolute;top:0;right:0;bottom:0;width:440px;max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 24px;border-bottom:1px solid #E2E8F0">
+          <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.bs_coEditT }}</h2>
+          <button onClick="{{ coClose }}" style="width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label for="bs-co" style="font-size:13px;line-height:18px;font-weight:500">{{ L.bs_coName }} <span style="color:#B91C1C">*</span></label>
+            <input id="bs-co" value="{{ coName }}" onChange="{{ onCoName }}" style="height:34px;padding:0 10px;border:1px solid {{ coBd }};border-radius:8px;background:#FFFFFF;font-size:14px">
+            <sc-if value="{{ coErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ L.bs_eReq }}</span></sc-if>
+            <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.bs_coNameHint }}</span>
+          </div>
+        </div>
+        <div style="flex:none;display:flex;justify-content:flex-end;gap:8px;padding:12px 24px;border-top:1px solid #E2E8F0">
+          <button onClick="{{ coClose }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="border-color:#647574">{{ L.bs_cancel }}</button>
+          <button onClick="{{ coSave }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.bs_save }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ bpOpen }}">
+    <dc-import name="BranchPanel" key="{{ bpKey }}" lang="uz" initial="{{ bpInitial }}" existing="{{ bpExisting }}" edit-id="{{ bpId }}" code-locked="{{ bpLocked }}" code-lock-text="{{ L.bs_codeLock }}" on-save="{{ bpSave }}" on-close="{{ bpClose }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ wpOpen }}">
+    <dc-import name="WarehousePanel" key="{{ wpKey }}" lang="uz" initial="{{ wpInitial }}" branches="{{ wpBranches }}" preset-branch-id="{{ wpPreset }}" edit-id="{{ wpId }}" start-tab="basic" on-save="{{ wpSave }}" on-close="{{ wpClose }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+
+  <sc-if value="{{ chkOpen }}">
+    <div style="position:fixed;inset:0;z-index:190;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div onClick="{{ chkCancel }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+      <div role="dialog" aria-modal="true" style="position:relative;width:560px;max-width:100%;max-height:100%;overflow:auto;background:#FFFFFF;border-radius:12px;box-shadow:0 16px 40px rgba(18,60,58,0.18);display:flex;flex-direction:column">
+        <div style="padding:20px 24px 12px;display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ chk.title }}</h2>
+          <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ chk.sub }}</p>
+        </div>
+        <div style="padding:0 24px;display:flex;flex-direction:column">
+          <sc-for list="{{ chk.list }}" as="c">
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid #EEF2F4">
+              <span style="display:flex;padding-top:2px;color:{{ c.ic }}"><lucide-i name="{{ c.icon }}" size="18"></lucide-i></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:14px;line-height:20px;font-weight:500">{{ c.label }}</span>
+                <span style="font-size:13px;line-height:18px;color:{{ c.vfg }}">{{ c.value }}</span>
+              </div>
+              <sc-if value="{{ c.hasLink }}"><button onClick="{{ c.go }}" style="flex:none;padding:2px 0 0;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#0F766E;cursor:pointer;white-space:nowrap" style-hover="color:#0F766E;text-decoration:underline">{{ c.link }}</button></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ chk.blocked }}">
+          <div style="margin:4px 24px 0;padding:10px 12px;border:1px solid #FECACA;border-radius:8px;background:#FEF2F2;color:#B91C1C;font-size:13px;line-height:18px;display:flex;gap:8px;align-items:flex-start"><lucide-i name="ban" size="16" style="margin-top:1px"></lucide-i><span><b style="font-weight:600">{{ L.bs_cantClose }}</b> {{ chk.failText }}</span></div>
+        </sc-if>
+        <sc-if value="{{ chk.ok }}">
+          <div style="margin:4px 24px 0;display:flex;flex-direction:column;gap:6px">
+            <label for="bs-cr" style="font-size:13px;line-height:18px;font-weight:500">{{ L.bs_reason }} <span style="color:#B91C1C">*</span></label>
+            <textarea id="bs-cr" value="{{ reason }}" onChange="{{ onReason }}" rows="3" style="padding:8px 10px;border:1px solid {{ reasonBd }};border-radius:8px;font:inherit;font-size:14px;resize:vertical"></textarea>
+            <sc-if value="{{ reasonErr }}"><span style="font-size:12px;color:#B91C1C">{{ L.bs_eReason }}</span></sc-if>
+          </div>
+        </sc-if>
+        <div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 24px 20px">
+          <button onClick="{{ chkCancel }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="border-color:#647574">{{ chk.cancelL }}</button>
+          <sc-if value="{{ chk.ok }}"><button onClick="{{ chkConfirm }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#B91C1C;color:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer">{{ chk.confirmL }}</button></sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ zdOpen }}">
+    <div style="position:fixed;inset:0;z-index:190;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div onClick="{{ zdCancel }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+      <div role="dialog" aria-modal="true" style="position:relative;width:460px;max-width:100%;background:#FFFFFF;border-radius:12px;box-shadow:0 16px 40px rgba(18,60,58,0.18);padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+        <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ zd.title }}</h2>
+        <sc-if value="{{ zd.hasName }}">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label for="bs-zn" style="font-size:13px;line-height:18px;font-weight:500">{{ L.bs_zName }} <span style="color:#B91C1C">*</span></label>
+            <input id="bs-zn" value="{{ zd.name }}" onChange="{{ zdOnName }}" style="height:34px;padding:0 10px;border:1px solid {{ zd.bd }};border-radius:8px;font-size:14px">
+            <sc-if value="{{ zd.hasErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ zd.err }}</span></sc-if>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;line-height:18px;font-weight:500">{{ L.bs_zType }}</span>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+            <sc-for list="{{ zd.types }}" as="o"><button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 10px;border:1px solid {{ o.bd }};border-radius:8px;background:{{ o.bg }};font:inherit;font-size:13px;color:{{ o.fg }};cursor:{{ o.cur }};text-align:left"><lucide-i name="{{ o.icon }}" size="16" style="color:{{ o.ic }}"></lucide-i>{{ o.label }}</button></sc-for>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button onClick="{{ zdCancel }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="border-color:#647574">{{ L.bs_cancel }}</button>
+          <button onClick="{{ zdOk }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ zd.okL }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ ruleOpen }}">
+    <div style="position:fixed;inset:0;z-index:195;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div onClick="{{ ruleClose }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+      <div role="alertdialog" aria-modal="true" style="position:relative;width:440px;max-width:100%;background:#FFFFFF;border-radius:12px;box-shadow:0 16px 40px rgba(18,60,58,0.18);padding:20px 24px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;flex:none;border-radius:50%;background:#FFFBEB;color:#B45309;display:flex;align-items:center;justify-content:center"><lucide-i name="lock" size="16"></lucide-i></span><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ rule.title }}</h2></div>
+        <p style="margin:0;font-size:14px;line-height:20px;color:#172B2A;text-wrap:pretty">{{ rule.text }}</p>
+        <sc-if value="{{ rule.hasHint }}"><p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ rule.hint }}</p></sc-if>
+        <div style="display:flex;justify-content:flex-end"><button onClick="{{ ruleClose }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.bs_understood }}</button></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dlgOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.bs_cancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;page&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;company&quot;,&quot;branches&quot;,&quot;warehouses&quot;],&quot;default&quot;:&quot;company&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round((n || 0) * 100) / 100).toFixed(2).split('.'); return (a[0] === '-' ? '−' : '') + fN(Math.abs(+a)) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const stirF = s => String(s || '').replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+const ZT = { recv: ['package-open', '#5B6B6A', '#F5F7F8'], store: ['archive', '#5B6B6A', '#F5F7F8'], cold: ['snowflake', '#1D4ED8', '#EFF6FF'], quar: ['shield-alert', '#B45309', '#FFFBEB'], ctrl: ['lock', '#B91C1C', '#FEF2F2'], ship: ['truck', '#5B6B6A', '#F5F7F8'] };
+const ZKEY = { recv: 'qabul', store: 'asosiy', cold: 'sovuq', ctrl: 'seyf', quar: 'karantin', ship: null };
+const cp = x => JSON.parse(JSON.stringify(x));
+const ini = n => String(n || '').split(' ').map(x => x[0] || '').join('').slice(0, 2).toUpperCase();
+class Component extends DCLogic {
+  state = { card: null, tab: 'info', bp: null, wp: null, co: null, chk: null, reason: '', rTried: false, sel: null, listOpen: false, menu: null, zd: null, rule: null, dlg: null, v: 0 };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { const D = this.D; if (D && D.store.bsSel) { this.setState({ sel: D.store.bsSel }); D.store.bsSel = null; } this.runDemo(); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.runDemo(); if (pp.page !== this.props.page) this.setState({ card: null, chk: null, menu: null }); }
+  runDemo() {
+    const k = this.props.demo && this.props.demo.k; if (!k) return;
+    if (k === 'bsBranchClose') this.setState({ card: 'TSH', tab: 'info' }, () => this.openBrClose('TSH'));
+    if (k === 'bsZoneLocked') { this.setState({ sel: 'w1' }, () => { const w = this.whs().find(x => x.id === 'w1'); const z = w.zones.find(x => x.type === 'store'); this.zoneType(w, z); }); }
+  }
+  bump() { this.setState(s => ({ v: s.v + 1 })); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who() { return this.props.userName || this.D.DIRECTOR; }
+  canEdit() { return this.D.can(this.props.role, 'company.edit'); }
+  brs() { return this.D.store.brs || []; }
+  whs() { return this.D.store.whs || []; }
+  brName(c) { const b = this.brs().find(x => x.code === c); return b ? b.name : c; }
+  emps(br) { return (this.D.store.emps || []).filter(e => e.branch === br); }
+  head(br) { const D = this.D; return (D.store.emps || []).find(e => D.can(e.role, 'approvals.branch') && e.branch === br && e.status !== 'blocked'); }
+  roleName(id) { const r = this.D.rlRoles().find(x => x.id === id); return r ? (r.std ? this.L['r_' + r.id] : r.name) : '—'; }
+  zoneStock(w, z) { const D = this.D; if (!z.key || z.active === false) return { qty: 0, prods: 0, cold: 0, ctrl: 0 }; const first = w.zones.find(x => x.key === z.key && x.active !== false); if (first && first.id !== z.id) return { qty: 0, prods: 0, cold: 0, ctrl: 0 }; return D.bsStock(w.branch, w.name, z.key); }
+  docsText(by) { const k = Object.keys(by || {}); return k.map(x => x.toUpperCase() + ' ' + by[x]).join(', '); }
+  // ---- Filial yopish / ombor yopish ----
+  openBrClose(code) { this.setState({ chk: { kind: 'br', code }, reason: '', rTried: false }); }
+  openWhClose(w) { this.setState({ chk: { kind: 'wh', id: w.id }, reason: '', rTried: false }); }
+  chkView() {
+    const D = this.D, L = this.L, c = this.state.chk; if (!c) return { list: [] };
+    const res = c.kind === 'br' ? D.bsBranchCheck(c.code) : (() => { const w = this.whs().find(x => x.id === c.id); return D.bsWhCheck(w.branch, w.name); })();
+    const val = x => x.key === 'stock' ? fill(L.bs_ckStockV, { q: fN(x.qty), s: fM(x.val) }) : x.key === 'docs' ? (x.n ? fill(L.bs_ckDocsV, { n: x.n, list: this.docsText(x.by) }) : fill(L.bs_ckNone, {})) : x.key === 'transit' ? fill(L.bs_ckTransitV, { n: x.n }) : fM(x.sum);
+    const list = res.list.map(x => ({ label: L['bs_ck_' + x.key], value: val(x), icon: x.ok ? 'circle-check' : 'circle-x', ic: x.ok ? '#15803D' : '#B91C1C', vfg: x.ok ? '#5B6B6A' : '#B91C1C', hasLink: !x.ok, link: L.bs_open, go: () => { this.setState({ chk: null }); this.props.onNavigate && this.props.onNavigate(x.page); } }));
+    const nm = c.kind === 'br' ? this.brName(c.code) : (this.whs().find(x => x.id === c.id) || {}).name;
+    const fails = res.list.filter(x => !x.ok).length;
+    return { list, ok: res.ok, blocked: !res.ok, failText: fill(L.bs_failText, { n: fails, m: res.list.length }), title: fill(c.kind === 'br' ? L.bs_brCloseT : L.bs_whCloseT, { n: nm }), sub: c.kind === 'br' ? L.bs_brCloseSub : L.bs_whCloseSub, cancelL: res.ok ? L.bs_cancel : L.bs_closeDlg, confirmL: c.kind === 'br' ? L.bs_brCloseOk : L.bs_whCloseOk };
+  }
+  chkConfirm() {
+    const D = this.D, L = this.L, c = this.state.chk, r = this.state.reason.trim(); if (!r) return this.setState({ rTried: true });
+    if (c.kind === 'br') { const list = this.brs().map(b => b.code === c.code ? { ...b, active: false } : b); D.bsSave('brs', list, this.who(), this.brName(c.code), [{ f: L.bs_status, from: L.bs_active, to: L.bs_closed }, { f: L.bs_reason, from: '', to: r }], 'branches'); }
+    else { const w = this.whs().find(x => x.id === c.id); D.bsSave('whs', this.whs().map(x => x.id === c.id ? { ...x, active: false } : x), this.who(), w.name + ' · ' + this.brName(w.branch), [{ f: L.bs_status, from: L.bs_active, to: L.bs_closed }, { f: L.bs_reason, from: '', to: r }], 'warehouses'); }
+    this.setState({ chk: null }); this.toast(L.bs_closedToast); this.bump();
+  }
+  // ---- Filial tahrirlash ----
+  bpSave(data) {
+    const D = this.D, L = this.L, bp = this.state.bp;
+    if (!bp.id) { const nb = { ...data, id: 'b' + Date.now(), active: true }; D.bsSave('brs', this.brs().concat([nb]), this.who(), nb.name, [{ f: L.bs_status, from: '', to: L.bs_created }], 'branches'); this.setState({ bp: null }); this.toast(fill(L.bs_brAdded, { n: nb.name })); return this.bump(); }
+    const old = this.brs().find(b => b.id === bp.id), F = [['name', L.bs_fName], ['legal', L.bs_fLegal], ['stir', 'STIR'], ['vatNo', L.bs_fVatNo], ['region', L.bs_fRegion], ['address', L.bs_fAddress], ['phone', L.bs_fPhone], ['director', L.bs_fDirector], ['accountant', L.bs_fAccountant]];
+    const diff = F.filter(([k]) => String(old[k] || '') !== String(data[k] || '')).map(([k, f]) => ({ f, from: k === 'stir' ? stirF(old[k]) : old[k] || '', to: k === 'stir' ? stirF(data[k]) : data[k] || '' }));
+    if (!!old.vat !== !!data.vat) diff.push({ f: L.bs_fVat, from: old.vat ? L.bs_yes : L.bs_no, to: data.vat ? L.bs_yes : L.bs_no });
+    if (JSON.stringify(old.banks || []) !== JSON.stringify(data.banks || [])) diff.push({ f: L.bs_fBanks, from: (old.banks || []).map(x => x.bank).join(', '), to: (data.banks || []).map(x => x.bank).join(', ') });
+    const apply = () => { D.bsSave('brs', this.brs().map(b => b.id === bp.id ? { ...old, ...data, code: old.code, id: old.id } : b), this.who(), old.name, diff, 'branches'); this.setState({ bp: null, dlg: null }); this.toast(diff.length ? L.bs_saved : L.bs_noChanges); this.bump(); };
+    if (String(old.stir) !== String(data.stir)) { const n = D.bsDocCount(old.code); return this.setState({ dlg: { title: L.bs_stirT, text: fill(L.bs_stirText, { n: fN(n), a: stirF(old.stir), b: stirF(data.stir) }), items: [], danger: false, confirm: L.bs_save, run: apply } }); }
+    apply();
+  }
+  // ---- Ombor va zonalar ----
+  rule(title, text, hint) { this.setState({ rule: { title: title || this.L.bs_ruleT, text, hint: hint || '' }, menu: null }); }
+  reqLast(w, z) { const L = this.L; if (!this.D.ZT_REQ.includes(z.type)) return null; const n = w.zones.filter(x => x.type === z.type && x.active !== false).length; return n <= 1 ? fill(L.bs_rReq, { t: L['bs_zt_' + z.type] }) : null; }
+  zoneType(w, z) {
+    const L = this.L, st = this.zoneStock(w, z);
+    if (st.qty > 0) return this.rule(L.bs_rTypeT, fill(L.bs_rStock, { q: fN(st.qty), p: st.prods }), L.bs_rStockHint);
+    const rq = this.reqLast(w, z); if (rq) return this.rule(L.bs_rTypeT, rq);
+    this.setState({ menu: null, zd: { mode: 'type', wid: w.id, zid: z.id, type: z.type, name: z.name } });
+  }
+  zoneClose(w, z) {
+    const L = this.L, st = this.zoneStock(w, z);
+    if (st.qty > 0) return this.rule(L.bs_rCloseT, fill(L.bs_rStock, { q: fN(st.qty), p: st.prods }), L.bs_rStockHint);
+    const rq = this.reqLast(w, z); if (rq) return this.rule(L.bs_rCloseT, rq);
+    this.setState({ menu: null, dlg: { title: fill(L.bs_zCloseT, { n: z.name }), text: L.bs_zCloseText, items: [], danger: true, confirm: L.bs_zCloseOk, run: () => this.zoneSet(w, z, { active: false, open: false }, [{ f: L.bs_status, from: L.bs_active, to: L.bs_closed }]) } });
+  }
+  zoneSet(w, z, patch, diff) { const D = this.D; D.bsSave('whs', this.whs().map(x => x.id === w.id ? { ...x, zones: x.zones.map(y => y.id === z.id ? { ...y, ...patch } : y) } : x), this.who(), z.name + ' · ' + w.name, diff, 'warehouses'); this.setState({ dlg: null, menu: null, zd: null }); this.toast(this.L.bs_saved); this.bump(); }
+  zdOk() {
+    const L = this.L, D = this.D, zd = this.state.zd, w = this.whs().find(x => x.id === zd.wid);
+    if (zd.mode === 'type') { const z = w.zones.find(x => x.id === zd.zid); if (zd.type === z.type) return this.setState({ zd: null }); if (zd.type === 'ctrl' && !w.ctrl) return; return this.zoneSet(w, z, { type: zd.type, key: ZKEY[zd.type], open: ['store', 'cold', 'ctrl'].includes(zd.type) }, [{ f: L.bs_zType, from: L['bs_zt_' + z.type], to: L['bs_zt_' + zd.type] }]); }
+    const nm = zd.name.trim(); if (!nm || w.zones.some(x => x.name.trim().toLowerCase() === nm.toLowerCase())) return this.setState({ zd: { ...zd, tried: true } });
+    if (zd.type === 'ctrl' && !w.ctrl) return;
+    const nz = { id: w.id + '-z' + Date.now(), name: nm, type: zd.type, key: ZKEY[zd.type], open: ['store', 'cold', 'ctrl'].includes(zd.type), active: true };
+    D.bsSave('whs', this.whs().map(x => x.id === w.id ? { ...x, zones: x.zones.concat([nz]) } : x), this.who(), nm + ' · ' + w.name, [{ f: L.bs_zAddedF, from: '', to: nm + ' (' + L['bs_zt_' + zd.type] + ')' }], 'warehouses');
+    this.setState({ zd: null }); this.toast(fill(L.bs_zAdded, { n: nm })); this.bump();
+  }
+  wpOpen(w) {
+    if (!w) return this.setState({ wp: { id: null, initial: null, preset: this.whs().find(x => x.id === this.state.sel) ? this.whs().find(x => x.id === this.state.sel).branch : 'TSH', k: Date.now() } });
+    this.setState({ wp: { id: w.id, k: Date.now(), initial: { branchId: w.branch, name: w.name, same: false, address: w.address, type: /Sovuq/.test(w.name) ? 'cold' : 'normal', controlled: !!w.ctrl, zones: w.zones.filter(z => z.active !== false).map(z => ({ id: z.id, name: z.name, type: z.type, open: !!z.open })) } } });
+  }
+  wpSave(data) {
+    const D = this.D, L = this.L, wp = this.state.wp;
+    if (!wp.id) { const nw = { id: 'w' + Date.now(), branch: data.branchId, name: data.name, address: data.same ? (this.brs().find(b => b.code === data.branchId) || {}).address : data.address, ctrl: !!data.controlled, active: true, zones: data.zones.map((z, i) => ({ id: 'n' + Date.now() + '-' + i, name: z.name, type: z.type, key: ZKEY[z.type], open: !!z.open, active: true })) };
+      const miss = D.ZT_REQ.filter(t => !nw.zones.some(z => z.type === t)); if (miss.length) return this.rule(L.bs_ruleT, fill(L.bs_rNeed, { t: miss.map(t => L['bs_zt_' + t]).join(', ') }));
+      D.bsSave('whs', this.whs().concat([nw]), this.who(), nw.name + ' · ' + this.brName(nw.branch), [{ f: L.bs_status, from: '', to: L.bs_created }], 'warehouses'); this.setState({ wp: null, sel: nw.id }); this.toast(fill(L.bs_whAdded, { n: nw.name })); return this.bump(); }
+    const w = this.whs().find(x => x.id === wp.id), act = w.zones.filter(z => z.active !== false);
+    if (w.ctrl && !data.controlled) { const st = D.bsStock(w.branch, w.name); if (st.ctrl > 0) return this.rule(L.bs_rCtrlT, fill(L.bs_rCtrl, { q: fN(st.ctrl) }), L.bs_rStockHint); }
+    for (const z of act) { const nz = data.zones.find(x => x.id === z.id), st = this.zoneStock(w, z);
+      if ((!nz || nz.type !== z.type) && st.qty > 0) return this.rule(nz ? L.bs_rTypeT : L.bs_rCloseT, fill(L.bs_rStockZ, { z: z.name, q: fN(st.qty), p: st.prods }), L.bs_rStockHint); }
+    const miss = D.ZT_REQ.filter(t => !data.zones.some(z => z.type === t)); if (miss.length) return this.rule(L.bs_ruleT, fill(L.bs_rNeed, { t: miss.map(t => L['bs_zt_' + t]).join(', ') }));
+    const diff = []; if (w.name !== data.name) diff.push({ f: L.bs_fName, from: w.name, to: data.name });
+    const addr = data.same ? (this.brs().find(b => b.code === w.branch) || {}).address : data.address; if (addr && addr !== w.address) diff.push({ f: L.bs_fAddress, from: w.address, to: addr });
+    if (!!w.ctrl !== !!data.controlled) diff.push({ f: L.bs_ctrlL, from: w.ctrl ? L.bs_yes : L.bs_no, to: data.controlled ? L.bs_yes : L.bs_no });
+    const zones = w.zones.map(z => { if (z.active === false) return z; const nz = data.zones.find(x => x.id === z.id); if (!nz) { diff.push({ f: z.name, from: L.bs_active, to: L.bs_closed }); return { ...z, active: false, open: false }; } if (nz.name !== z.name) diff.push({ f: L.bs_zName, from: z.name, to: nz.name }); if (nz.type !== z.type) diff.push({ f: nz.name, from: L['bs_zt_' + z.type], to: L['bs_zt_' + nz.type] }); return { ...z, name: nz.name, type: nz.type, key: ZKEY[nz.type], open: !!nz.open }; });
+    data.zones.filter(z => !w.zones.some(x => x.id === z.id)).forEach((z, i) => { zones.push({ id: w.id + '-n' + Date.now() + i, name: z.name, type: z.type, key: ZKEY[z.type], open: !!z.open, active: true }); diff.push({ f: L.bs_zAddedF, from: '', to: z.name }); });
+    D.bsSave('whs', this.whs().map(x => x.id === w.id ? { ...x, name: data.name, address: addr || w.address, ctrl: !!data.controlled, zones } : x), this.who(), data.name + ' · ' + this.brName(w.branch), diff, 'warehouses');
+    this.setState({ wp: null }); this.toast(diff.length ? L.bs_saved : L.bs_noChanges); this.bump();
+  }
+  renderVals() {
+    const L = this.L, D = this.D, s = this.state, p = this.props, narrow = !!p.narrow, page = p.page || 'company';
+    const base = { L, narrow, isCompany: false, isBrList: false, isBrCard: false, isWh: false, coRows: [], brRows: [], brCols: [], card: {}, tabs: [], lt: { heads: [], rows: [] }, whGroups: [], wh: {}, zones: [], chk: { list: [] }, zd: { types: [] }, rule: {}, dlg: {}, menuItems: [] };
+    if (!D || !D.store.brs) return base;
+    const canEdit = this.canEdit(), brs = this.brs(), whs = this.whs(), emps = D.store.emps || [];
+    const out = { ...base, canEdit, readOnly: !canEdit };
+    // Kompaniya
+    if (page === 'company') {
+      const wd = (D.store.audit || []).find(a => a.kind === 'wizardDone');
+      Object.assign(out, { isCompany: true, coEdit: canEdit ? { label: L.bs_edit, icon: 'pencil', pick: () => this.setState({ co: { name: D.store.co.name, tried: false } }) } : null,
+        coRows: [{ label: L.bs_coName, value: D.store.co.name }, { label: L.n_branches, value: String(brs.filter(b => b.active !== false).length) }, { label: L.bs_whN, value: String(whs.filter(w => w.active !== false).length) }, { label: L.n_staff, value: String(emps.length) }, { label: L.bs_launched, value: wd ? wd.at.slice(0, 16) + ' · ' + wd.who : '—' }] });
+    }
+    // Filiallar
+    if (page === 'branches' && !s.card) {
+      const ST = b => b.active !== false ? { type: 'status', text: L.bs_active, icon: 'circle-check', bg: '#F0FDF4', fg: '#15803D' } : { type: 'status', text: L.bs_closed, icon: 'circle-minus', bg: '#EEF2F4', fg: '#5B6B6A' };
+      Object.assign(out, { isBrList: true, brCount: String(brs.length), brNew: canEdit ? { label: L.bs_brNew, icon: 'plus', pick: () => this.setState({ bp: { id: null, initial: null, k: Date.now() } }) } : null, brMin: narrow ? 1100 : 0,
+        brCols: [{ key: 'code', label: L.bs_cCode, width: '72px' }, { key: 'name', label: L.bs_cName, width: 'minmax(160px,1.4fr)' }, { key: 'stir', label: 'STIR', width: '120px' }, { key: 'head', label: L.r_branch, width: 'minmax(170px,1.2fr)' }, { key: 'wh', label: L.bs_cWh, width: '84px', align: 'right' }, { key: 'em', label: L.bs_cEmp, width: '84px', align: 'right' }, { key: 'debt', label: L.bs_cDebt, width: '170px', align: 'right' }, { key: 'st', label: L.bs_status, width: '120px' }],
+        brRows: brs.map(b => { const h = this.head(b.code); return { id: b.id, selected: false, onToggle: () => {}, onOpen: () => this.setState({ card: b.code, tab: 'info' }),
+          cells: [{ type: 'mono', text: b.code }, { type: 'text', text: b.name, weight: 500 }, { type: 'mono', text: stirF(b.stir) }, h ? { type: 'person', text: D.empName(h), av: ini(D.empName(h)) } : { type: 'text', text: L.bs_noHead, color: '#647574' }, { type: 'text', text: String(whs.filter(w => w.branch === b.code && w.active !== false).length) }, { type: 'text', text: String(this.emps(b.code).length) }, { type: 'text', text: fM(D.bsCustDebt(b.code)) }, ST(b)],
+          actions: [{ label: L.bs_open, icon: 'arrow-up-right', pick: () => this.setState({ card: b.code, tab: 'info' }) }].concat(canEdit ? [{ label: L.bs_edit, icon: 'pencil', pick: () => this.setState({ bp: { id: b.id, initial: cp(b), k: Date.now() } }) }, { sep: true, label: L.bs_brClose, icon: 'archive-x', danger: true, pick: () => this.openBrClose(b.code) }] : []) }; }) });
+    }
+    if (page === 'branches' && s.card) {
+      const b = brs.find(x => x.code === s.card) || brs[0], bw = whs.filter(w => w.branch === b.code), be = this.emps(b.code), acc = D.ACCOUNTS.filter(a => a.branch === b.code);
+      const hist = D.auditList().filter(a => (a.objType === 'branch' && a.obj === b.name) || ((a.objType === 'wh' || a.objType === 'zone') && a.obj.endsWith(' · ' + b.name)) || (a.objType === 'wh' && bw.some(w => a.obj.indexOf(w.name) === 0 && a.obj.indexOf(b.name) > 0)));
+      const off = b.active === false;
+      out.card = { name: b.name, legal: b.legal, code: b.code, badges: [off ? { label: L.bs_closed, icon: 'circle-minus', bg: '#EEF2F4', fg: '#5B6B6A' } : { label: L.bs_active, icon: 'circle-check', bg: '#F0FDF4', fg: '#15803D' }],
+        edit: canEdit ? { label: L.bs_edit, icon: 'pencil', pick: () => this.setState({ bp: { id: b.id, initial: cp(b), k: Date.now() } }) } : null,
+        sec: canEdit && !off ? [{ label: L.bs_brClose, icon: 'archive-x', pick: () => this.openBrClose(b.code) }] : [],
+        info: [{ label: L.bs_fLegal, value: b.legal }, { label: 'STIR', value: stirF(b.stir), mono: true }, { label: L.bs_fVat, value: b.vat ? L.bs_yes + (b.vatNo ? ' · ' + b.vatNo : '') : L.bs_no }, { label: L.bs_fRegion, value: b.region }, { label: L.bs_fAddress, value: b.address }, { label: L.bs_fPhone, value: b.phone ? '+998 ' + String(b.phone).replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4') : '' }, { label: L.r_branch, value: this.head(b.code) ? D.empName(this.head(b.code)) : L.bs_noHead }, { label: L.bs_fDirector, value: b.director }, { label: L.bs_fAccountant, value: b.accountant }, { label: L.bs_fBanks, value: (b.banks || []).map(x => x.bank + ' · ' + x.acc).join('; ') }, { label: L.bs_cDebt, value: fM(D.bsCustDebt(b.code)) }] };
+      const tabDef = [['info', L.bs_tInfo, null], ['whs', L.bs_tWh, bw.length], ['emps', L.n_staff, be.length], ['money', L.bs_tMoney, acc.length], ['hist', L.bs_tHist, hist.length]];
+      out.tabs = tabDef.map(([k, l, n]) => { const on = s.tab === k; return { label: l, n: n != null ? String(n) : '', hasN: n != null, line: on ? '#0D9488' : 'transparent', fg: on ? '#172B2A' : '#5B6B6A', w: on ? 500 : 400, pick: () => this.setState({ tab: k }) }; });
+      const C = (t, x) => ({ t: t == null || t === '' ? '—' : String(t), jc: x && x.r ? 'flex-end' : 'flex-start', font: x && x.mono ? "'JetBrains Mono',monospace" : 'inherit', fs: x && x.mono ? '12.5px' : '14px', fg: (x && x.fg) || '#172B2A', av: !!(x && x.av), avT: x && x.av, isLink: !!(x && x.pick), pick: x && x.pick, isPill: !!(x && x.bg), bg: x && x.bg, pfg: x && x.pfg, isPlain: !(x && (x.pick || x.bg)) });
+      let lt = null;
+      if (s.tab === 'whs') lt = { grid: 'minmax(160px,1.2fr) minmax(200px,2fr) 80px 140px 110px', heads: [[L.bs_cName], [L.bs_fAddress], [L.bs_zonesT, 1], [L.bs_zStock, 1], [L.bs_status]], rows: bw.map(w => { const st = D.bsStock(w.branch, w.name); return { c: [C(w.name, { pick: () => { D.store.bsSel = w.id; p.onNavigate && p.onNavigate('warehouses'); } }), C(w.address, { fg: '#5B6B6A' }), C(w.zones.filter(z => z.active !== false).length, { r: 1 }), C(fN(st.qty) + ' ' + L.bs_pcs, { r: 1 }), C(w.active !== false ? L.bs_active : L.bs_closed, { bg: w.active !== false ? '#F0FDF4' : '#EEF2F4', pfg: w.active !== false ? '#15803D' : '#5B6B6A' })] }; }) };
+      if (s.tab === 'emps') lt = { grid: 'minmax(200px,1.6fr) minmax(140px,1fr) 160px 120px', heads: [[L.bs_cEmpName], [L.bs_cRole], [L.bs_lastLogin], [L.bs_status]], rows: be.map(e => { const ll = D.lastLogin(D.empName(e)); return { c: [C(D.empName(e), { av: ini(D.empName(e)), pick: () => { D.store.bsEmp = e.id; p.onNavigate && p.onNavigate('staff'); } }), C(this.roleName(e.role)), C(ll ? ll.at.slice(0, 16) : L.bs_never, { mono: !!ll, fg: ll ? '#172B2A' : '#647574' }), C(L['rl_st_' + e.status] || e.status, { bg: e.status === 'blocked' ? '#FEF2F2' : e.status === 'active' ? '#F0FDF4' : '#EEF2F4', pfg: e.status === 'blocked' ? '#B91C1C' : e.status === 'active' ? '#15803D' : '#5B6B6A' })] }; }) };
+      if (s.tab === 'money') lt = { grid: 'minmax(220px,2fr) 120px 180px 110px', heads: [[L.bs_cAcc], [L.bs_cKind], [L.bs_cBal, 1], ['']], rows: acc.map(a => ({ c: [C(a.name), C(a.kind === 'cash' ? L.bs_kCash : L.bs_kBank, { fg: '#5B6B6A' }), C(fM(D.accBalance(a.id)), { r: 1 }), C(L.bs_open, { pick: () => p.onNavigate && p.onNavigate(a.kind === 'cash' ? 'cash' : 'bank') })] })) };
+      if (s.tab === 'hist') lt = { grid: '170px minmax(160px,1fr) minmax(220px,2fr)', heads: [[L.bs_cTime], [L.bs_cWho], [L.bs_cDetail]], rows: hist.slice(0, 50).map(a => ({ c: [C(a.at, { mono: 1 }), C(a.who, { av: ini(a.who) }), C((a.diff || []).map(d => d.f + ': ' + (d.from || '—') + ' → ' + (d.to || '—')).join('; ') || a.text, { fg: '#5B6B6A' })] })) };
+      out.tInfo = s.tab === 'info'; out.tList = !!lt;
+      if (lt) out.lt = { grid: lt.grid, heads: lt.heads.map(h => ({ t: h[0], al: h[1] ? 'right' : 'left' })), rows: lt.rows, empty: !lt.rows.length, emptyT: L.bs_noRows };
+      Object.assign(out, { isBrCard: true, backList: () => this.setState({ card: null }) });
+    }
+    // Omborlar va zonalar
+    if (page === 'warehouses') {
+      const sel = whs.find(w => w.id === s.sel) || whs[0], showList = !narrow || s.listOpen;
+      out.whGroups = brs.map(b => ({ name: b.name, code: b.code, items: whs.filter(w => w.branch === b.code).map(w => { const on = w.id === sel.id, z = w.zones.filter(x => x.active !== false); return { name: w.name, sub: fill(L.bs_zN, { n: z.length }) + (z.some(x => x.type === 'cold') ? ' · ' + L.bs_zt_cold : ''), icon: z.some(x => x.type === 'cold') ? 'snowflake' : 'warehouse', ic: on ? '#0F766E' : '#647574', bg: on ? '#DDF5EE' : 'transparent', fw: on ? 600 : 500, off: w.active === false, pick: () => this.setState({ sel: w.id, listOpen: false }) }; }) })).filter(g => g.items.length);
+      const keepers = emps.filter(e => D.can(e.role, 'special.whs') && e.branch === sel.branch && (e.whs || []).includes(sel.name)).map(e => D.empName(e));
+      const act = sel.zones.filter(z => z.active !== false), off = sel.active === false;
+      out.wh = { name: sel.name, brName: this.brName(sel.branch), st: off ? L.bs_closed : L.bs_active, stBg: off ? '#EEF2F4' : '#F0FDF4', stFg: off ? '#5B6B6A' : '#15803D', zn: String(sel.zones.length),
+        info: [{ label: L.bs_fAddress, value: sel.address }, { label: L.bs_keepers, value: keepers.join(', ') || L.bs_noKeeper }, { label: L.bs_ctrlL, value: sel.ctrl ? L.bs_ctrlYes : L.bs_no }, { label: L.bs_coldL, value: act.some(z => z.type === 'cold') ? L.bs_yes : L.bs_no }],
+        close: () => off ? this.toast(L.bs_alreadyClosed) : this.openWhClose(sel), edit: () => this.wpOpen(sel) };
+      out.zones = sel.zones.map(z => { const T = ZT[z.type] || ZT.store, st = this.zoneStock(sel, z), zo = z.active === false;
+        return { name: z.name, tl: L['bs_zt_' + z.type], ticon: T[0], tfg: T[1], tbg: T[2], sale: z.open ? L.bs_saleOpen : L.bs_saleClosed, saleFg: z.open ? '#15803D' : '#5B6B6A', qty: fN(st.qty) + ' ' + L.bs_pcs, prods: fill(L.bs_prodN, { n: st.prods }), st: zo ? L.bs_closed : L.bs_active, stBg: zo ? '#EEF2F4' : '#F0FDF4', stFg: zo ? '#5B6B6A' : '#15803D', op: zo ? 0.6 : 1, rowBg: '#FFFFFF',
+          menu: e => { const r = e.currentTarget.getBoundingClientRect(); this.setState({ menu: { wid: sel.id, zid: z.id, top: Math.min(r.bottom + 4, window.innerHeight - 160), left: r.right - 240 } }); } }; });
+      Object.assign(out, { isWh: true, whCount: String(whs.length), whSub: fill(L.bs_whSub, { z: whs.reduce((a, w) => a + w.zones.filter(z => z.active !== false).length, 0) }), whNew: canEdit ? { label: L.bs_whNew, icon: 'plus', pick: () => this.wpOpen(null) } : null,
+        whGrid: narrow ? 'minmax(0,1fr)' : '280px minmax(0,1fr)', listShown: showList, selName: sel.name + ' · ' + sel.branch, listChev: s.listOpen ? 'chevron-up' : 'chevron-down', toggleList: () => this.setState({ listOpen: !s.listOpen }),
+        zGrid: 'minmax(140px,1.1fr) minmax(130px,1.2fr) 90px 130px 100px 36px', addZone: () => this.setState({ zd: { mode: 'add', wid: sel.id, name: '', type: 'store', tried: false } }) });
+      if (s.menu) { const w = whs.find(x => x.id === s.menu.wid), z = w && w.zones.find(x => x.id === s.menu.zid);
+        if (z) out.menuItems = [{ label: L.bs_zChType, icon: 'shapes', fg: '#172B2A', run: () => this.zoneType(w, z) }].concat(z.active === false ? [{ label: L.bs_zReopen, icon: 'rotate-ccw', fg: '#172B2A', run: () => this.zoneSet(w, z, { active: true }, [{ f: L.bs_status, from: L.bs_closed, to: L.bs_active }]) }] : [{ label: z.open ? L.bs_zSaleOff : L.bs_zSaleOn, icon: z.open ? 'eye-off' : 'eye', fg: '#172B2A', run: () => this.zoneSet(w, z, { open: !z.open }, [{ f: L.bs_zSale, from: z.open ? L.bs_saleOpen : L.bs_saleClosed, to: z.open ? L.bs_saleClosed : L.bs_saleOpen }]) }, { label: L.bs_zClose, icon: 'archive-x', fg: '#B91C1C', run: () => this.zoneClose(w, z) }]);
+        Object.assign(out, { menuOpen: !!z, menuTop: s.menu.top, menuLeft: Math.max(8, s.menu.left) }); }
+    }
+    out.closeMenu = () => this.setState({ menu: null });
+    // Kompaniya paneli
+    const co = s.co; Object.assign(out, { coOpen: !!co, coName: co ? co.name : '', coErr: !!(co && co.tried && !co.name.trim()), coBd: co && co.tried && !co.name.trim() ? '#B91C1C' : '#E2E8F0', onCoName: e => this.setState({ co: { ...co, name: e.target.value } }), coClose: () => this.setState({ co: null }),
+      coSave: () => { if (!co.name.trim()) return this.setState({ co: { ...co, tried: true } }); const old = D.store.co.name; if (old !== co.name.trim()) { D.store.co = { ...D.store.co, name: co.name.trim() }; D.auditAdd({ kind: 'edit', act: 'change', who: this.who(), obj: L.n_company, objType: 'setting', page: 'company', text: L.bs_coName, diff: [{ f: L.bs_coName, from: old, to: co.name.trim() }] }); } this.setState({ co: null }); this.toast(L.bs_saved); } });
+    // Panellar
+    const bp = s.bp; Object.assign(out, { bpOpen: !!bp, bpKey: bp ? String(bp.k) : '', bpInitial: bp ? bp.initial : null, bpId: bp ? bp.id : null, bpLocked: !!(bp && bp.id), bpExisting: brs.map(b => ({ id: b.id, name: b.name, code: b.code, stir: b.stir })), bpSave: d => this.bpSave(d), bpClose: () => this.setState({ bp: null }) });
+    const wp = s.wp; Object.assign(out, { wpOpen: !!wp, wpKey: wp ? String(wp.k) : '', wpInitial: wp ? wp.initial : null, wpId: wp ? wp.id : null, wpPreset: wp ? wp.preset || '' : '', wpBranches: brs.map(b => ({ id: b.code, name: b.name, code: b.code, address: b.address })), wpSave: d => this.wpSave(d), wpClose: () => this.setState({ wp: null }) });
+    // Tekshiruv oynasi
+    Object.assign(out, { chkOpen: !!s.chk, chk: s.chk ? this.chkView() : { list: [] }, chkCancel: () => this.setState({ chk: null }), chkConfirm: () => this.chkConfirm(), reason: s.reason, onReason: e => this.setState({ reason: e.target.value }), reasonErr: s.rTried && !s.reason.trim(), reasonBd: s.rTried && !s.reason.trim() ? '#B91C1C' : '#E2E8F0' });
+    // Zona oynasi
+    const zd = s.zd; if (zd) { const w = whs.find(x => x.id === zd.wid), nm = zd.name.trim(), dup = zd.mode === 'add' && nm && w.zones.some(x => x.name.trim().toLowerCase() === nm.toLowerCase()), err = zd.mode === 'add' && zd.tried ? (!nm ? L.bs_eReq : dup ? L.bs_eZDup : '') : dup ? L.bs_eZDup : '';
+      out.zd = { title: zd.mode === 'add' ? fill(L.bs_zAddT, { w: w.name }) : fill(L.bs_zTypeT, { n: zd.name }), hasName: zd.mode === 'add', name: zd.name, hasErr: !!err, err, bd: err ? '#B91C1C' : '#E2E8F0', okL: zd.mode === 'add' ? L.bs_zAddOk : L.bs_save,
+        types: Object.keys(ZT).map(t => { const on = zd.type === t, dis = t === 'ctrl' && !w.ctrl; return { label: L['bs_zt_' + t] + (dis ? ' · ' + L.bs_ctrlNeed : ''), icon: ZT[t][0], ic: dis ? '#647574' : ZT[t][1], bd: on ? '#0D9488' : '#E2E8F0', bg: on ? '#DDF5EE' : '#FFFFFF', fg: dis ? '#647574' : '#172B2A', cur: dis ? 'not-allowed' : 'pointer', pick: () => !dis && this.setState({ zd: { ...zd, type: t } }) }; }) }; }
+    Object.assign(out, { zdOpen: !!zd, zdOnName: e => this.setState({ zd: { ...zd, name: e.target.value } }), zdCancel: () => this.setState({ zd: null }), zdOk: () => this.zdOk() });
+    Object.assign(out, { ruleOpen: !!s.rule, rule: s.rule ? { ...s.rule, hasHint: !!s.rule.hint } : {}, ruleClose: () => this.setState({ rule: null }), dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }) });
+    return out;
+  }
+}
+</script>
+</body>
+</html>

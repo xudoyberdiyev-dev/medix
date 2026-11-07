@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ wizOpen }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="ImportWizard" type="{{ x.type }}" branch="{{ x.branch }}" wh="{{ x.wh }}" cutoff="{{ x.cutoff }}" place="{{ place }}" preset="{{ wizPreset }}" dict="{{ L }}" narrow="{{ narrow }}" on-done="{{ wizDone }}" on-cancel="{{ wizCancel }}" on-toast="{{ toastFn }}" hint-size="100%,720px"></dc-import>
+</sc-if>
+<sc-if value="{{ docOpen }}" hint-placeholder-val="{{ true }}">
+  <dc-import name="DocumentHeader" parent-label="{{ L.bq_title }}" on-parent="{{ back }}" title="{{ title }}" number="{{ dNumber }}" badge="{{ dBadge }}" status="{{ dStatus }}" steps="{{ dSteps }}" sub="{{ dSub }}" autosave="{{ autosave }}" primary="{{ dPrimary }}" secondary="{{ dSecondary }}" more="{{ dMore }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
+  <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+  <dc-import name="SavedViews" tabs="{{ docTabs }}" hint-size="100%,38px"></dc-import>
+  <sc-if value="{{ tabDoc }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ true }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+        <span style="font-size:15px;line-height:20px;font-weight:600">{{ L.bq_head }}</span>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.bq_hType }} <span style="color:#B91C1C">*</span></span>
+          <div style="display:flex;gap:2px;padding:2px;border-radius:8px;background:#EEF2F4;max-width:720px;flex-wrap:wrap">
+            <sc-for list="{{ types }}" as="m"><button onClick="{{ m.pick }}" aria-pressed="{{ m.on }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 10px;border:0;border-radius:6px;background:{{ m.bg }};box-shadow:{{ m.sh }};color:{{ m.fg }};font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap"><lucide-i name="{{ m.icon }}" size="14"></lucide-i>{{ m.label }}</button></sc-for>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat({{ headCols }},minmax(0,1fr));gap:16px 20px;align-items:start">
+          <dc-import name="Select" label="{{ L.bq_hBranch }}" required="{{ true }}" options="{{ brOpts }}" value="{{ x.branch }}" on-change="{{ setBranch }}" placeholder="{{ L.qt_choose }}" error="{{ eBranch }}" hint-size="100%,56px"></dc-import>
+          <sc-if value="{{ isGoods }}"><dc-import name="Select" label="{{ L.bq_hWh }}" required="{{ true }}" options="{{ whOpts }}" value="{{ whVal }}" on-change="{{ setWh }}" placeholder="{{ L.qt_choose }}" error="{{ eWh }}" hint-size="100%,56px"></dc-import></sc-if>
+          <label style="display:flex;flex-direction:column;gap:6px;min-width:0">
+            <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.bq_hCut }} <span style="color:#B91C1C">*</span></span>
+            <input value="{{ x.cutoff }}" onChange="{{ onCut }}" placeholder="kk.oo.yyyy" inputMode="numeric" style="height:34px;padding:0 12px;border:1px solid {{ cutBorder }};border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            <sc-if value="{{ eCut }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ eCut }}</span></sc-if>
+          </label>
+          <dc-import name="Select" label="{{ L.bq_hSrc }}" options="{{ srcOpts }}" value="{{ x.source }}" on-change="{{ setSrc }}" hint-size="100%,56px"></dc-import>
+          <label style="display:flex;flex-direction:column;gap:6px;min-width:0;grid-column:span {{ noteSpan }}">
+            <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.bq_hNote }}</span>
+            <input value="{{ x.note }}" onChange="{{ onNote }}" placeholder="{{ L.bq_notePh }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          </label>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ headRead }}"><dc-import name="InfoGrid" title="{{ L.bq_head }}" rows="{{ headRows }}" hint-size="100%,160px"></dc-import></sc-if>
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #EEF2F4">
+        <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+          <span style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600">{{ L.bq_linesT }}<span style="height:20px;padding:0 7px;border-radius:10px;background:#EEF2F4;color:#5B6B6A;font-size:12px;line-height:20px;font-weight:500">{{ lineCount }}</span></span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;line-height:18px;color:#5B6B6A;min-width:0"><lucide-i name="file-spreadsheet" size="14" style="flex:none"></lucide-i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ fileText }}</span></span>
+        </div>
+        <sc-if value="{{ isEdit }}"><button onClick="{{ openWiz }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="upload" size="16" style="color:#0F766E"></lucide-i>{{ impLabel }}</button></sc-if>
+      </div>
+      <sc-if value="{{ hasLines }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="none" scroll-x="{{ true }}" min-width="{{ tMinW }}" sticky-first="{{ true }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,300px"></dc-import>
+        <sc-if value="{{ showPager }}"><dc-import name="Pagination" total="{{ pgTotal }}" page="{{ pgPage }}" per-page="{{ pgPer }}" on-page="{{ setPgPage }}" on-per="{{ setPgPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import></sc-if>
+        <dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ totLabel }}" total-value="{{ totValue }}" bottom="{{ -24 }}" hint-size="100%,52px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ noLines }}"><dc-import name="EmptyState" icon="file-spreadsheet" tone="brand" title="{{ L.bq_linesEmptyT }}" text="{{ L.bq_linesEmptyD }}" primary="{{ emptyPrimary }}" min-height="260" hint-size="100%,260px"></dc-import></sc-if>
+    </section>
+  </sc-if>
+  <sc-if value="{{ tabHist }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px"><dc-import name="HistoryTimeline" groups="{{ histGroups }}" empty-label="{{ L.qt_histEmpty }}" hint-size="100%,240px"></dc-import></div>
+  </sc-if>
+  <div style="height:48px"></div>
+</sc-if>
+  <sc-if value="{{ vsOpen }}"><dc-import name="ValidationSummary" title="{{ vsTitle }}" subtitle="{{ L.qt_vsSub }}" errors="{{ vsErrors }}" warnings="{{ vsWarnings }}" warn-title="{{ L.qt_vsWarn }}" close-label="{{ L.qt_close }}" on-close="{{ closeVs }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" with-reason="{{ dlg.withReason }}" reason-label="{{ dlg.reasonLabel }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ onReason }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.qt_back }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;no&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;BQ-FRG-000003&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;req&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;act&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;hl&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;wiz&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;docKey&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;accountant&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ALL&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onOpen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(no)=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const ST = { draft: ['file-pen', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
+const TICON = { goods: 'boxes', mt: 'hand-coins', yt: 'truck', cash: 'banknote' };
+const ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2);
+const reD = /^\d{2}\.\d{2}\.\d{4}$/;
+class Component extends DCLogic {
+  state = { x: null, tab: 'doc', wiz: null, tried: false, vs: null, dlg: null, reason: '', reasonErr: '', save: null, savedAt: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    if (!this.D || !this.D.bqSum) this._p = setInterval(() => { if (this.D && this.D.bqSum) { clearInterval(this._p); this.load(); } }, 60); else this.load();
+    this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); clearTimeout(this._sv); }
+  componentDidUpdate(pp) { if (pp.docKey !== this.props.docKey) this.load(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(rs) { const L = this.L; return fill(L.qz_who, { r: rs.map(r => L['r_' + r] || r).join(', ') }); }
+  my() { const b = this.props.branch; return b && b !== 'ALL' ? b : null; }
+  load() {
+    const D = this.D, p = this.props; if (!D || !D.bqSum) return;
+    let x = p.no ? D.bqCopy(D.bqByNo(p.no)) : null;
+    if (!x) { const at = D.nowStr(), r = p.req || {}, br = r.branch || this.my() || 'FRG', type = r.type || (D.can(p.role, 'opening.goods') ? 'goods' : 'mt'); x = { no: null, id: null, branch: br, type, wh: type === 'goods' ? (r.wh || '') : '', cutoff: D.BQ_CUT, source: 'smartup', file: '', note: '', status: 'draft', lines: [], createdBy: p.userName, createdAt: at, log: [{ kind: 'create', who: p.userName, at }] }; }
+    clearTimeout(this._sv);
+    this.setState({ x, tab: 'doc', wiz: p.wiz || null, tried: false, vs: null, dlg: null, save: null, page: null }, () => {
+      if (p.act === 'post') setTimeout(() => this.tryPost(), 60); if (p.act === 'cancel') setTimeout(() => this.tryCancel(), 60); if (p.act === 'dup') setTimeout(() => this.checkDup(true), 60); });
+  }
+  persist() { const x = this.state.x; if (!x || x.status !== 'draft') return; clearTimeout(this._sv); this.setState({ save: 'saving' }); this._sv = setTimeout(() => { const r = this.D.saveBq(this.state.x); this.setState(s => ({ x: { ...s.x, no: r.no, id: r.id }, save: 'saved', savedAt: this.D.nowStr().slice(11) })); }, 400); }
+  upd(fn) { const x = JSON.parse(JSON.stringify(this.state.x)); fn(x); this.setState({ x }, () => this.persist()); }
+  canEdit(x) { const D = this.D, r = this.props.role; return D.can(r, 'opening.create') && (x.type !== 'goods' || D.can(r, 'opening.goods')); }
+  dupDoc(x) { const d = this.D.bqPosted(x.type, x.branch, x.wh); return d && d.id !== x.id ? d : null; }
+  placeOf(x) { const D = this.D, b = D.BRANCHES.find(z => z.code === x.branch) || {}; return x.type === 'goods' && x.wh ? D.whName(x.branch, x.wh) : (b.name || x.branch); }
+  checkDup(open) { const L = this.L, x = this.state.x, d = this.dupDoc(x); if (!d) return false;
+    this.setState({ dlg: { type: 'dup', title: L.bq_dDupT, text: fill(L.bq_bDup, { p: x.type === 'goods' ? L.bq_dupWh : L.bq_dupBr, d: d.cutoff, n: d.no }), items: [{ icon: 'database', text: `${d.no} · ${L['bq_t_' + d.type]} · ${this.placeOf(d)}` }], confirm: L.bq_openExisting, run: () => { this.setState({ dlg: null }); this.props.onOpen && this.props.onOpen(d.no); } } }); return true; }
+  errs(x) { const D = this.D, L = this.L, e = [];
+    if (!x.branch) e.push({ k: 'branch', text: L.bq_eBranch }); if (x.type === 'goods' && !x.wh) e.push({ k: 'wh', text: L.bq_eWh }); if (!reD.test(x.cutoff || '') || pD(x.cutoff) == null) e.push({ k: 'cut', text: L.bq_eCut });
+    if (!x.lines.length) e.push({ k: 'lines', text: L.bq_eLines });
+    const d = this.dupDoc(x); if (d) e.push({ k: 'dup', text: fill(L.bq_eDup, { p: x.type === 'goods' ? D.whName(x.branch, x.wh) : this.placeOf(x), n: d.no }) });
+    if (x.type === 'goods' && x.wh) { const zk = D.zonesFor(x.branch, x.wh).map(z => z.key); x.lines.forEach(l => { const pr = D.prodById(l.pid) || {}; if (!zk.includes(l.zone)) e.push({ text: fill(L.bq_eZone, { p: pr.name, b: l.batch, z: l.zone }) }); if (!(l.qty > 0) || l.qty % 1) e.push({ text: fill(L.bq_eQty, { p: pr.name, b: l.batch }) }); }); }
+    return e; }
+  branchDebt(type, br) { const D = this.D; return type === 'mt' ? D.custsIn(br).reduce((a, c) => a + D.debtState('mt', c.id, br).L.debt, 0) : D.SUPPLIERS.reduce((a, sp) => a + D.supDebt(sp.name, br), 0); }
+  tryPost() {
+    const D = this.D, L = this.L, x = this.state.x, R = D.BQ_ROLES; clearTimeout(this._sv); this.setState({ tried: true });
+    if (!x) return; if (this.dupDoc(x)) return this.checkDup(true);
+    const e = this.errs(x); if (e.length) return this.setState({ vs: { errs: e } });
+    if (!D.canR(this.props.role, 'BQ_ROLES', 'approve')) return this.toast(this.who(R.approve));
+    const sm = D.bqSum(x), items = [], bn = (D.BRANCHES.find(b => b.code === x.branch) || {}).name || x.branch;
+    if (x.type === 'goods') { items.push({ icon: 'package-plus', color: '#15803D', text: fill(L.bq_cfGoods, { w: this.placeOf(x), n: fN(sm.n), q: fN(sm.qty), s: fM(sm.cost) }) }); if (sm.quar) items.push({ icon: 'shield-alert', color: '#B45309', text: fill(L.bq_cfQuar, { n: sm.quar }) }); const nw = x.lines.filter(l => l.warn && l.warn.length).length; if (nw) items.push({ icon: 'triangle-alert', color: '#B45309', text: fill(L.bq_cfWarn, { n: nw }) }); }
+    if (x.type === 'mt' || x.type === 'yt') { const a = this.branchDebt(x.type, x.branch), add = x.lines.reduce((s2, l) => s2 + Math.max(0, l.left || 0), 0);
+      items.push({ icon: 'hand-coins', color: '#15803D', text: fill(L.bq_cfDebt, { b: bn, n: sm.n, c: sm.parties, s: fM(sm.left) }) }, { icon: 'trending-up', text: fill(x.type === 'mt' ? L.bq_cfDebtTot : L.bq_cfDebtTotYt, { b: bn, a: fM(a), c: fM(a + add) }) });
+      if (sm.overdue) items.push({ icon: 'clock-alert', color: '#B45309', text: fill(L.bq_cfOd, { n: sm.overdue }) }); if (sm.adv) items.push({ icon: 'wallet', text: fill(L.bq_cfAdv, { n: sm.adv }) }); items.push({ icon: 'archive', text: L.bq_cfArch }); }
+    if (x.type === 'cash') x.lines.forEach(l => { const a = D.accById(l.acct) || {}; items.push({ icon: a.kind === 'cash' ? 'banknote' : 'landmark', color: '#15803D', text: fill(L.bq_cfCash, { a: a.name || l.acct, s: fM(l.sum) }) }); });
+    items.push({ icon: 'calendar-x', text: fill(L.bq_cfCut, { d: x.cutoff }) }, { icon: 'lock', text: L.bq_cfLock });
+    this.setState({ dlg: { type: 'post', title: fill(L.bq_dPostT, { n: x.no || L.bq_newT }), items, confirm: L.bq_post, run: () => this.doPost() } });
+  }
+  doPost() { const D = this.D, L = this.L, x = this.state.x.id ? this.state.x : D.saveBq(this.state.x), r = D.bqPost(x, this.props.userName); if (r.err) { this.setState({ dlg: null }); return this.checkDup(true); } this.setState({ x: r.doc, dlg: null, tried: false }); this.toast(fill(L.bq_tPosted, { n: r.doc.no })); }
+  tryCancel() {
+    const D = this.D, L = this.L, x = this.state.x; if (!D.can(this.props.role, 'opening.cancel')) return this.toast(L.bq_whoCancel);
+    const mv = D.bqFirstMove(x);
+    if (mv) return this.setState({ dlg: { type: 'blocked', title: L.bq_dBlockT, text: fill(L.bq_dBlockD, { p: x.type === 'goods' ? L.bq_pWh : x.type === 'cash' ? L.bq_pAcct : L.bq_pParty }), items: [{ icon: 'link', color: '#B91C1C', text: fill(L.bq_blockFirst, { n: mv.no, d: mv.date }) }], confirm: L.bq_openMove, run: () => { this.setState({ dlg: null }); this.openMove(mv); } } });
+    this.setState({ reason: '', reasonErr: '', dlg: { type: 'cancel', title: fill(L.bq_dCancelT, { n: x.no }), text: L.bq_dCancelD, items: [], withReason: true, reasonLabel: L.bq_reason, danger: true, confirm: L.bq_cancel, run: () => { const rs = this.state.reason.trim(); if (!rs) return this.setState({ reasonErr: L.bq_req }); const r = D.bqCancel(this.state.x, this.props.userName, rs); if (r.err) return this.tryCancel(); this.setState({ x: r.doc, dlg: null }); this.toast(fill(L.bq_tCancelled, { n: r.doc.no })); } } });
+  }
+  openMove(mv) { const D = this.D, no = mv.no;
+    if (/^FS-|^OK-|^ZK-/.test(no)) D.store.trReq = { open: no }; else if (/^IN-/.test(no)) setTimeout(() => { D.store.navReq = { page: 'inventory', open: no }; }, 0); else if (/^(MT|YT)-/.test(no)) D.store.payReq = { open: no }; else if (/^(KO|BO|IO)-/.test(no)) D.store.cashReq = { open: no };
+    this.props.onNavigate && this.props.onNavigate(mv.page); }
+  openWiz() { const D = this.D, L = this.L, x = this.state.x, R = D.BQ_ROLES;
+    if (!D.canR(this.props.role, 'BQ_ROLES', 'create')) return this.toast(this.who(R.create)); if (x.type === 'goods' && !D.canR(this.props.role, 'BQ_ROLES', 'goods')) return this.toast(L.bq_bAccGoods);
+    if (this.dupDoc(x)) return this.checkDup(true);
+    const e = this.errs(x).filter(z => ['branch', 'wh', 'cut'].includes(z.k)); if (e.length) return this.setState({ tried: true, vs: { errs: e } });
+    this.setState({ wiz: { step: 1, n: Date.now() } }); }
+  wizDone(res) { const D = this.D, L = this.L, at = D.nowStr(), who = this.props.userName, c = JSON.parse(JSON.stringify(this.state.x));
+    c.lines = res.lines; c.file = res.file; c.source = 'smartup'; c.log = (c.log || []).concat([{ kind: 'import', who, at, n: res.lines.length, f: res.file }]);
+    const r = D.saveBq(c); this.setState({ x: r, wiz: null, tab: 'doc' }); this.toast(fill(L.bq_tDraft, { n: res.lines.length })); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, x: {}, screenLabel: L.bq_title, banners: [], docTabs: [], dMore: [], dSecondary: [], dSub: [], types: [], brOpts: [], whOpts: [], srcOpts: [], headRows: [], tColumns: [], tRows: [], totItems: [], histGroups: [], dlg: {}, isEdit: true, tabDoc: true, docOpen: true, wizOpen: false, headCols: 3, lineCount: '', fileText: '', impLabel: '', toastFn: t => this.toast(t) };
+    if (!D || !s.x || !D.bqSum) return base;
+    const x = s.x, st = x.status, R = D.BQ_ROLES, role = p.role, canEdit = this.canEdit(x), isEdit = st === 'draft' && canEdit, back = () => { clearTimeout(this._sv); if (this.state.save === 'saving') D.saveBq(this.state.x); p.onBack && p.onBack(); };
+    const place = this.placeOf(x), sm = D.bqSum(x), errs = s.tried && st === 'draft' ? this.errs(x) : [], er = k => (errs.find(e => e.k === k) || {}).text || '', dup = st === 'draft' ? this.dupDoc(x) : null;
+    const wizOpen = !!s.wiz;
+    let dPrimary = null; const dMore = [{ label: L.bq_print, icon: 'printer', pick: () => this.toast(L.bq_tPrint) }], dSecondary = [], banners = [];
+    if (st === 'draft') { dPrimary = { label: L.bq_post, icon: 'check', pick: () => this.tryPost() }; if (isEdit) dSecondary.push({ label: L.bq_imp, icon: 'upload', pick: () => this.openWiz() }); if (isEdit && x.id) dMore.push({ label: L.bq_delete, icon: 'trash-2', danger: true, pick: () => this.setState({ dlg: { type: 'del', title: L.bq_dDelT, text: L.bq_dDelD, items: [], danger: true, confirm: L.bq_delete, run: () => { clearTimeout(this._sv); D.deleteBq(x.id); this.setState({ dlg: null }); this.toast(L.bq_tDeleted); back(); } } }) });
+      if (dup) banners.push({ tone: 'danger', icon: 'octagon-x', title: L.bq_bDupT, text: fill(L.bq_bDup, { p: x.type === 'goods' ? L.bq_dupWh : L.bq_dupBr, d: dup.cutoff, n: dup.no }) });
+      banners.push({ tone: 'info', icon: 'info', text: L.bq_bDraft });
+      if (x.type === 'goods' && !D.canR(role, 'BQ_ROLES', 'goods')) banners.push({ tone: 'neutral', icon: 'eye', text: L.bq_bAccGoods });
+      if (!D.canR(role, 'BQ_ROLES', 'approve')) banners.push({ tone: 'neutral', icon: 'stamp', text: L.bq_bNoAppr }); }
+    if (st === 'posted') { banners.push({ tone: 'success', icon: 'circle-check', text: fill(x.seed ? L.bq_bSeed : L.bq_bPosted, { at: String(x.postedAt || '').replace(' ', ', '), who: x.postedBy }) }); if (x.type === 'mt' || x.type === 'yt') banners.push({ tone: 'info', icon: 'archive', text: L.bq_bSeedDebt }); dMore.push({ label: L.bq_cancel, icon: 'circle-x', danger: true, pick: () => this.tryCancel() }); }
+    if (st === 'cancelled') banners.push({ tone: 'neutral', icon: 'circle-x', title: fill(L.bq_bCancel, { at: String(x.cancelledAt || '').replace(' ', ', '), who: x.cancelledBy }), text: x.cancelReason || '' });
+    const hlLine = p.hl ? x.lines.findIndex(l => l.id === p.hl) : -1; if (hlLine >= 0) { const hl = x.lines[hlLine]; banners.unshift({ tone: 'info', icon: 'archive', text: fill(L.bq_bHl, { n: hl.sysNo || '', k: hlLine + 1 }) }); }
+    const types = D.BQ_TYPES.map(k => { const on = x.type === k; return { label: L['bq_t_' + k], icon: TICON[k], on, bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', fg: on ? '#172B2A' : '#5B6B6A',
+      pick: () => { if (k === 'goods' && !D.canR(role, 'BQ_ROLES', 'goods')) return this.toast(L.bq_bAccGoods); if (k === x.type) return; this.upd(y => { y.type = k; y.lines = []; y.file = ''; y.wh = k === 'goods' ? (D.BRANCHES.find(b => b.code === y.branch) || { wh: [''] }).wh[0] : ''; }); } }; });
+    const brs = D.BRANCHES.filter(b => !this.my() || b.code === this.my() || D.allBr(role));
+    const brObj = D.BRANCHES.find(b => b.code === x.branch) || { wh: [] };
+    const cost = D.can(role, 'special.cost');
+    let tColumns = [], tRows = [], totItems = [], totLabel = L.bq_tTotal, totValue = '';
+    const act = l => isEdit ? [{ label: L.bq_rmLine, icon: 'trash-2', danger: true, pick: () => this.upd(y => { y.lines = y.lines.filter(z => z.id !== l.id); }) }] : [];
+    if (x.type === 'goods') {
+      tColumns = [{ key: 'p', label: L.bq_gProd, width: 'minmax(220px,1.6fr)' }, { key: 'b', label: L.bq_gBatch, width: '130px' }, { key: 'e', label: L.bq_gExp, width: '110px' }, { key: 'z', label: L.bq_gZone, width: '140px' }, { key: 'q', label: L.bq_gQty, width: '96px', align: 'right' }, ...(cost ? [{ key: 'c', label: L.bq_gCost, width: '120px', align: 'right' }, { key: 's', label: L.bq_gSum, width: '150px', align: 'right' }] : [])];
+      tRows = x.lines.map(l => { const pr = D.prodById(l.pid) || {}, z = x.wh ? D.zoneType(x.branch, x.wh, l.zone) : { label: l.zone }, ed = pD(l.exp), exp = ed != null && ed < pD(D.TODAY);
+        return { id: l.id, hl: l.id === p.hl, onOpen: () => {}, onToggle: () => {}, cells: [{ type: 'name', text: pr.name || '—', sub: [pr.maker, (l.warn || []).includes('cost0') ? L.bq_m_cost0 : ''].filter(Boolean).join(' · '), weight: 500, badge: l.zone === 'karantin' ? L.bq_quarTag : '', badgeFg: '#B45309', badgeBg: '#FFFBEB' }, { type: 'mono', text: l.batch }, { type: 'text', text: l.exp, color: exp ? '#B91C1C' : '#5B6B6A' }, { type: 'text', text: z.label, color: '#5B6B6A' }, { type: 'text', text: fN(l.qty), weight: 600 }, ...(cost ? [{ type: 'text', text: fM(l.cost), color: (l.cost || 0) > 0 ? '#5B6B6A' : '#B45309' }, { type: 'text', text: fM((l.qty || 0) * (l.cost || 0)), weight: 600 }] : [])], actions: act(l) }; });
+      totItems = [{ label: L.bq_tBatches, value: fN(sm.n) }, { label: L.bq_tQty, value: fN(sm.qty) }]; totLabel = L.bq_tCost; totValue = cost ? fM(sm.cost) : '—';
+    } else if (x.type === 'cash') {
+      tColumns = [{ key: 'a', label: L.bq_gAcct, width: 'minmax(240px,1fr)' }, { key: 'k', label: L.bq_gKind, width: '120px' }, { key: 's', label: L.bq_gSum, width: '180px', align: 'right' }];
+      tRows = x.lines.map(l => { const a = D.accById(l.acct) || {}; return { id: l.id, hl: l.id === p.hl, onOpen: () => {}, onToggle: () => {}, cells: [{ type: 'name', text: a.name || l.acct, sub: a.acc || '', weight: 500 }, { type: 'icontext', icon: a.kind === 'cash' ? 'banknote' : 'landmark', text: a.kind === 'cash' ? L.bq_kCash : L.bq_kBank }, { type: 'text', text: fM(l.sum), weight: 600, color: l.sum < 0 ? '#B91C1C' : '#172B2A' }], actions: act(l) }; });
+      totItems = [{ label: L.bq_tRows, value: fN(sm.n) }]; totValue = fM(sm.sum);
+    } else {
+      const mt = x.type === 'mt';
+      tColumns = [{ key: 'p', label: mt ? L.bq_gCust : L.bq_gSup, width: 'minmax(200px,1.4fr)' }, { key: 'e', label: L.bq_gExt, width: '150px' }, { key: 'n', label: L.bq_gSys, width: '140px' }, { key: 'd', label: L.bq_gDate, width: '100px' }, { key: 'u', label: L.bq_gDue, width: '120px' }, { key: 's', label: L.bq_gSum, width: '140px', align: 'right' }, { key: 'pd', label: L.bq_gPaid, width: '130px', align: 'right' }, { key: 'l', label: L.bq_gLeft, width: '140px', align: 'right' }];
+      tRows = x.lines.map(l => { const od = l.left > 0 && pD(l.due) < pD(D.TODAY), adv = l.left < 0;
+        return { id: l.id, hl: l.id === p.hl, onOpen: () => {}, onToggle: () => {}, cells: [{ type: 'name', text: D.partyName(x.type, l.party) || '—', sub: D.partyStir(x.type, l.party) ? 'STIR ' + D.partyStir(x.type, l.party) : '', weight: 500, badge: adv ? L.bq_advTag : od ? L.bq_odTag : '', badgeFg: adv ? '#1D4ED8' : '#B91C1C', badgeBg: adv ? '#EFF6FF' : '#FEF2F2' }, { type: 'mono', text: l.extNo || '—' }, { type: 'mono', text: l.sysNo || '—', color: l.sysNo ? '#172B2A' : '#647574' }, { type: 'text', text: l.date, color: '#5B6B6A' }, { type: 'text', text: l.due, color: od ? '#B91C1C' : '#5B6B6A' }, { type: 'text', text: fM(l.sum) }, { type: 'text', text: fM(l.paid || 0), color: '#5B6B6A' }, { type: 'text', text: fM(l.left), weight: 600, color: adv ? '#1D4ED8' : '#172B2A' }], actions: act(l) }; });
+      totItems = [{ label: L.bq_tRows, value: fN(sm.n) }, { label: L.bq_tSum, value: fM(sm.sum) }, { label: L.bq_tPaid, value: fM(sm.paid) }]; totLabel = L.bq_tLeft; totValue = fM(sm.left);
+    }
+    const per = s.per || 25, pages = Math.max(1, Math.ceil(tRows.length / per)), hlPage = hlLine >= 0 ? Math.floor(hlLine / per) + 1 : 1, page = Math.min(pages, s.page || hlPage);
+    const pgTotal = tRows.length; tRows = tRows.slice((page - 1) * per, page * per);
+    const bn = brObj.name || x.branch;
+    const headRows = [{ label: L.bq_hBranch, value: bn }, ...(x.type === 'goods' ? [{ label: L.bq_hWh, value: x.wh || '—' }] : []), { label: L.bq_hType, value: L['bq_t_' + x.type] }, { label: L.bq_hCut, value: x.cutoff }, { label: L.bq_hSrc, value: L['bq_src_' + x.source] || '—' }, { label: L.bq_hFile, value: x.file || '—' }, ...(x.note ? [{ label: L.bq_hNote, value: x.note }] : [])];
+    const evs = (x.log || []).slice().reverse(), days = [...new Set(evs.map(e => String(e.at).slice(0, 10)))];
+    const histGroups = days.map(day => ({ label: day, items: evs.filter(e => String(e.at).slice(0, 10) === day).map(e => ({ kind: e.kind === 'posted' ? 'status' : e.kind === 'import' ? 'edit' : e.kind, initials: ini(e.who), name: e.who, action: L['bq_h_' + e.kind] || e.kind, time: String(e.at).slice(11), changes: e.kind === 'import' ? [{ label: L.bq_hFile, to: fill(L.bq_hImpN, { n: e.n, f: e.f || x.file }) }] : e.reason ? [{ label: L.bq_reason, to: e.reason }] : [] })) }));
+    const S = ST[st];
+    return {
+      ...base, x, place, back, screenLabel: x.no || L.bq_title, title: x.no ? L.bq_doc : L.bq_newT, dNumber: x.no || '', dBadge: { label: L['bq_st_' + st], icon: S[0], fg: S[1], bg: S[2] }, dStatus: st === 'cancelled' ? 'cancelled' : st === 'posted' ? 'posted' : 'draft',
+      dSteps: st === 'cancelled' ? null : ['draft', 'posted'].map(k => ({ label: L['bq_st_' + k], state: st === 'posted' || (k === 'draft' && st !== 'draft') ? 'done' : k === st ? 'cur' : 'next' })),
+      dSub: [{ text: place, icon: x.type === 'goods' ? 'warehouse' : 'building-2' }, { text: L['bq_t_' + x.type], icon: TICON[x.type] }, { text: x.cutoff, icon: 'calendar' }], dPrimary, dSecondary, dMore, banners,
+      autosave: st === 'draft' && (x.no || s.save) ? { state: s.save === 'saving' ? 'saving' : 'saved', time: s.savedAt || '', savedLabel: L.qt_saved, savingLabel: L.qt_saving, errorLabel: L.qt_saveErr } : null,
+      docTabs: [['doc', L.qt_tabDoc], ['hist', L.qt_tabHist]].map(([k, label]) => ({ label, count: k === 'hist' ? (x.log || []).length : null, active: s.tab === k, pick: () => this.setState({ tab: k }) })), tabDoc: s.tab === 'doc', tabHist: s.tab === 'hist', histGroups,
+      isEdit, headRead: !isEdit, headCols: narrow ? 2 : 3, noteSpan: narrow ? 2 : x.type === 'goods' ? 1 : 2, headRows, types, isGoods: x.type === 'goods',
+      brOpts: brs.map(b => ({ value: b.code, label: b.name })), setBranch: v => this.upd(y => { y.branch = v; y.wh = y.type === 'goods' ? (D.BRANCHES.find(b => b.code === v) || { wh: [''] }).wh[0] : ''; y.lines = y.type === 'goods' ? [] : y.lines; }), eBranch: er('branch'),
+      whOpts: brObj.wh.map(w => { const r = D.bqStatus('goods', x.branch, w); return { value: w, label: w, sub: L['bq_st_' + r.st] + (r.doc && r.doc.id !== x.id ? ' · ' + r.doc.no : '') }; }), whVal: x.wh || null, setWh: v => this.upd(y => { y.wh = v; }), eWh: er('wh'),
+      onCut: e => { const v = e.target.value; this.upd(y => { y.cutoff = v; }); }, eCut: er('cut'), cutBorder: er('cut') ? '#B91C1C' : '#E2E8F0',
+      srcOpts: ['smartup', 'manual', 'other'].map(k => ({ value: k, label: L['bq_src_' + k] })), setSrc: v => this.upd(y => { y.source = v; }), onNote: e => { const v = e.target.value; this.upd(y => { y.note = v; }); },
+      lineCount: fN(x.lines.length), fileText: x.file || L.bq_noFile, impLabel: x.lines.length ? L.bq_reImp : L.bq_imp, openWiz: () => this.openWiz(),
+      hasLines: x.lines.length > 0, noLines: !x.lines.length, emptyPrimary: isEdit ? { label: L.bq_imp, icon: 'upload', pick: () => this.openWiz() } : null,
+      showPager: pgTotal > 25, pgTotal, pgPage: page, pgPer: per, setPgPage: n => this.setState({ page: n }), setPgPer: n => this.setState({ per: n, page: 1 }),
+      tColumns, tRows, tMinW: x.type === 'cash' ? 640 : x.type === 'goods' ? 1080 : 1240, totItems, totLabel, totValue,
+      wizOpen, docOpen: !wizOpen, wizPreset: s.wiz, wizDone: res => this.wizDone(res), wizCancel: () => this.setState({ wiz: null }),
+      vsOpen: !!s.vs, vsTitle: s.vs ? fill(L.qt_vsTitle, { n: s.vs.errs.length }) : '', closeVs: () => this.setState({ vs: null }), vsErrors: s.vs ? s.vs.errs.map(e => ({ text: e.text, go: () => this.setState({ vs: null }) })) : [], vsWarnings: [],
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }), reason: s.reason, reasonErr: s.reasonErr, onReason: v => this.setState({ reason: v, reasonErr: '' })
+    };
+  }
+}
+</script>
+</body>
+</html>

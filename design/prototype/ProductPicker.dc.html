@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div ref="{{ rootRef }}" data-screen-label="Mahsulot qo'shish" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600">Mahsulot qo'shish</h1><span style="font-size:13px;color:#5B6B6A">{{ docLabel }}</span></div>
+    </div>
+    <button onClick="{{ back }}" title="Esc — qidiruvga; tanlov saqlanib qoladi" style="display:flex;align-items:center;gap:6px;white-space:nowrap;height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="border-color:#CBD5D3;background:#F8FAFA"><lucide-i name="arrow-left" size="16"></lucide-i>Hujjatga qaytish</button>
+  </div>
+
+  <section style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px 20px;padding:14px 16px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+    <sc-for list="{{ facts }}" as="f" hint-placeholder-count="6">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ f.label }}</span>
+        <span style="font-size:14px;line-height:20px;font-weight:500;color:{{ f.color }};overflow-wrap:anywhere">{{ f.value }}</span>
+      </div>
+    </sc-for>
+  </section>
+
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0">
+    <div data-pk-search="1" style="flex:1;min-width:0">
+      <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="Kod, nom, klassifikator yoki shtrix-kod" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.p_fClear }}" columns="{{ colDefs }}" on-columns="{{ setCols }}" on-columns-reset="{{ resetCols }}" columns-reset-label="{{ L.p_colsReset }}" columns-label="{{ L.p_columns }}" columns-hint="{{ L.p_colsHint }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+    </div>
+    <sc-if value="{{ isOrder }}" hint-placeholder-val="{{ true }}">
+      <button role="switch" aria-checked="{{ onlyAv }}" onClick="{{ toggleAv }}" title="Alt+A" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid {{ avBorder }};border-radius:8px;background:{{ avBg }};font:inherit;font-size:13px;font-weight:500;color:{{ avFg }};cursor:pointer;white-space:nowrap"><lucide-i name="{{ avIcon }}" size="16"></lucide-i>Faqat bor mahsulotlar</button>
+    </sc-if>
+  </div>
+  <sc-if value="{{ hasMinDays }}"><div style="margin-top:-8px;font-size:12px;line-height:16px;color:#B45309">{{ minDaysNote }}</div></sc-if>
+
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+    <div style="overflow-x:auto">
+      <div style="min-width:{{ minW }}">
+        <div style="display:grid;grid-template-columns:{{ grid }};align-items:center;min-height:40px;border-bottom:1px solid #E2E8F0;background:#F8FAFA;border-radius:10px 10px 0 0">
+          <sc-for list="{{ hCols }}" as="h" hint-placeholder-count="7">
+            <button onClick="{{ h.pick }}" disabled="{{ h.static }}" style="display:flex;align-items:center;justify-content:{{ h.justify }};gap:4px;height:40px;padding:0 12px;border:0;background:transparent;font:inherit;font-size:12px;font-weight:500;color:#5B6B6A;cursor:{{ h.cursor }};text-align:{{ h.align }};min-width:0;white-space:nowrap">{{ h.label }}<sc-if value="{{ h.sorted }}"><lucide-i name="{{ h.icon }}" size="14"></lucide-i></sc-if></button>
+          </sc-for>
+        </div>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+          <div onClick="{{ r.focus }}" style="display:grid;grid-template-columns:{{ grid }};align-items:center;min-height:52px;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};box-shadow:{{ r.ring }};cursor:pointer" style-hover="background:{{ r.hover }}">
+            <sc-for list="{{ r.cells }}" as="c">
+              <div style="display:flex;flex-direction:column;align-items:{{ c.items }};justify-content:center;gap:2px;padding:6px 12px;min-width:0">
+                <sc-if value="{{ c.isName }}">
+                  <span style="display:flex;align-items:center;gap:6px;min-width:0;max-width:100%"><span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.text }}</span><sc-for list="{{ c.flags }}" as="g"><span title="{{ g.tip }}" style="display:flex;color:{{ g.color }}"><lucide-i name="{{ g.icon }}" size="14"></lucide-i></span></sc-for></span>
+                  <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#647574"><span>{{ c.sub }}</span><sc-if value="{{ c.hasDoc }}"><span style="padding:0 6px;border-radius:4px;background:#DDF5EE;color:#0F766E;font-weight:500">{{ c.docText }}</span></sc-if></span>
+                </sc-if>
+                <sc-if value="{{ c.isText }}">
+                  <span style="font-family:{{ c.font }};font-size:13px;color:{{ c.color }};text-align:{{ c.align }};white-space:nowrap">{{ c.text }}</span>
+                  <sc-if value="{{ c.hasSub }}"><span style="font-size:12px;line-height:16px;color:{{ c.subColor }};white-space:nowrap">{{ c.sub }}</span></sc-if>
+                </sc-if>
+                <sc-if value="{{ c.isQty }}">
+                  <input data-pq="{{ c.pid }}" value="{{ c.value }}" onChange="{{ c.onChange }}" onFocus="{{ c.onFocus }}" disabled="{{ c.disabled }}" inputmode="numeric" placeholder="{{ c.ph }}" aria-label="Miqdor" style="width:100%;max-width:120px;height:32px;padding:0 10px;border:1px solid {{ c.border }};border-radius:8px;background:{{ c.inBg }};font:inherit;font-size:14px;text-align:right;color:#172B2A;outline:none;box-sizing:border-box" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                  <sc-if value="{{ c.hasMsg }}"><span style="font-size:12px;line-height:16px;color:{{ c.msgColor }};white-space:nowrap">{{ c.msg }}</span></sc-if>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noRows }}">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:40px 16px;text-align:center;color:#5B6B6A"><lucide-i name="search-x" size="24"></lucide-i><span>Mos mahsulot topilmadi</span><sc-if value="{{ hasFilters }}"><button onClick="{{ clearFilters }}" style="padding:0;border:0;background:transparent;font:inherit;font-size:13px;color:#0F766E;cursor:pointer;text-decoration:underline">Filtrlarni tozalash</button></sc-if></div>
+        </sc-if>
+      </div>
+    </div>
+  </section>
+  <div style="font-size:12px;line-height:16px;color:#647574">↑ ↓ — qatorlar · Enter — miqdorga / keyingi qator · Esc — qidiruvga · Ctrl+Enter — qo'shish</div>
+
+  <div style="position:sticky;bottom:-24px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;margin:0 -24px -24px;background:#FFFFFF;border-top:1px solid #E2E8F0;box-shadow:0 -4px 12px rgba(18,60,58,0.06)">
+    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0"><span style="font-weight:600">{{ selText }}</span><span style="color:#5B6B6A">{{ sumLabel }}</span><span style="font-weight:600">{{ sumText }}</span><sc-if value="{{ hasSelErr }}"><span style="display:flex;align-items:center;gap:4px;font-size:12px;color:#B91C1C"><lucide-i name="circle-x" size="14"></lucide-i>{{ selErr }}</span></sc-if></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onClick="{{ clearSel }}" disabled="{{ noSel }}" style="white-space:nowrap;height:36px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="border-color:#CBD5D3;background:#F8FAFA">Tanlovni tozalash</button>
+      <button onClick="{{ done }}" disabled="{{ noSel }}" style="white-space:nowrap;display:flex;align-items:center;gap:8px;height:36px;padding:0 16px;border:0;border-radius:8px;background:{{ doneBg }};font:inherit;font-size:13px;font-weight:500;color:#FFFFFF;cursor:{{ doneCursor }}" style-hover="background:{{ doneHover }}"><lucide-i name="check" size="16"></lucide-i>Qo'shish va qaytish<span style="font-size:11px;font-weight:400;opacity:0.8">Ctrl+Enter</span></button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;order&quot;,&quot;receipt&quot;],&quot;default&quot;:&quot;order&quot;,&quot;tsType&quot;:&quot;'order'|'receipt'&quot;},&quot;doc&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;operator&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onDone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(items)=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round((n || 0) * 100) / 100).toFixed(2).split('.'); return fN(+a) + ',' + b; };
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const pInt = v => { const n = parseInt(String(v == null ? '' : v).replace(/[^\d]/g, ''), 10); return isNaN(n) ? 0 : n; };
+// Y1: buyurtma va kirim uchun yagona katalog sahifasi. Qatorlar — D.catalogRows (OrderEntry/Receipts ro'yxati bilan bitta manba)
+const COLS = { order: ['code', 'name', 'maker', 'avail', 'price', 'exp', 'mm', 'qty'], receipt: ['code', 'name', 'maker', 'stock', 'cost', 'qty'] };
+const DEF = { code: ['Kod', '112px', 'left'], name: ['Mahsulot', 'minmax(240px,2fr)', 'left'], maker: ['Ishlab chiqaruvchi', 'minmax(140px,1fr)', 'left'], avail: ['Mavjud qoldiq', '124px', 'right'], price: ['Narx (QQS bilan)', '132px', 'right'], exp: ['Eng yaqin muddat', '132px', 'left'], mm: ['Min / max', '104px', 'right'], stock: ['Hozirgi qoldiq', '124px', 'right'], cost: ['Oxirgi kirim narxi', '150px', 'right'], qty: ['Miqdor', '156px', 'right'] };
+const PX = { code: 112, name: 260, maker: 150, avail: 124, price: 132, exp: 132, mm: 104, stock: 124, cost: 150, qty: 156 };
+const FIXED = ['name', 'qty'];
+class Component extends DCLogic {
+  state = { q: '', fMaker: [], fCat: [], fCountry: [], fFlags: [], onlyAv: true, sort: { key: 'name', dir: 'asc' }, sel: {}, hi: 0, cols: null };
+  rootRef = React.createRef();
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  mode() { return this.props.mode === 'receipt' ? 'receipt' : 'order'; }
+  doc() { return this.props.doc || { lines: [] }; }
+  componentDidMount() {
+    const D = this.D, od = D && D.openDocGet ? D.openDocGet(this.mode()) : null;
+    if (od && od.pickSel && od.doc && od.doc.id === this.doc().id) this.setState({ sel: od.pickSel });
+    this.onKey = e => this.key(e); window.addEventListener('keydown', this.onKey);
+    setTimeout(() => this.focusSearch(), 60);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  root() { return this.rootRef.current || document.querySelector('[data-screen-label="Mahsulot qo\'shish"]'); }
+  focusSearch() { const el = this.root() && this.root().querySelector('[data-pk-search] input'); el && el.focus(); }
+  focusQty(pid) { const el = this.root() && this.root().querySelector('input[data-pq="' + pid + '"]'); if (el) { el.focus(); el.select && el.select(); } }
+  keepSel(sel) { const D = this.D, k = this.mode(); if (D && D.store.openDocs && D.store.openDocs[k]) D.store.openDocs[k].pickSel = sel; }
+  setSel(pid, v) { this.setState(st => { const sel = { ...st.sel }; if (v === '' || v == null) delete sel[pid]; else sel[pid] = v; this.keepSel(sel); return { sel }; }); }
+  key(e) {
+    const t = e.target, inSearch = !!(t && t.closest && t.closest('[data-pk-search]') && t.tagName === 'INPUT'), pq = t && t.getAttribute && t.getAttribute('data-pq'), nav = this._nav || [];
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); return this.done(); }
+    if (e.altKey && (e.code === 'KeyA' || e.key === 'a' || e.key === 'A') && this.mode() === 'order') { e.preventDefault(); return this.setState(s => ({ onlyAv: !s.onlyAv })); }
+    if (e.key === 'Escape' && (pq || inSearch)) { e.preventDefault(); return this.focusSearch(); }
+    if (!nav.length) return;
+    if (inSearch && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); const n = nav.length, h = Math.min(this.state.hi, n - 1); return this.setState({ hi: (h + (e.key === 'ArrowDown' ? 1 : -1) + n) % n }); }
+    if (inSearch && e.key === 'Enter') { e.preventDefault(); const id = nav[Math.min(this.state.hi, nav.length - 1)]; return id != null && this.focusQty(id); }
+    if (pq && (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); const i = nav.indexOf(+pq), j = e.key === 'ArrowUp' ? i - 1 : i + 1; if (j >= 0 && j < nav.length) { this.setState({ hi: j }); this.focusQty(nav[j]); } }
+  }
+  items(rowsById) { return Object.keys(this.state.sel).map(k => ({ pid: +k, qty: pInt(this.state.sel[k]), cost: rowsById[k] ? rowsById[k].cost : null })).filter(x => x.qty > 0); }
+  done() { const D = this.D; if (!D) return; const rows = this._byId || {}, it = this.items(rows); if (!it.length) return this.props.onToast && this.props.onToast('Miqdor yozilgan mahsulot yo\'q');
+    this.keepSel({}); this.props.onDone && this.props.onDone(it); }
+  renderVals() {
+    const D = this.D, L = this.L, s = this.state, p = this.props, mode = this.mode(), isOrder = mode === 'order', d = this.doc(), narrow = !!p.narrow;
+    const base = { L, rootRef: this.rootRef, narrow, isOrder, facts: [], rows: [], hCols: [], grid: '1fr', minW: '0px', fbFilters: [], fbLabels: {}, colDefs: [], back: () => p.onBack && p.onBack(), backLabel: 'Hujjatga qaytish', docLabel: '', selText: '', sumLabel: '', sumText: '', noSel: true, doneBg: '#647574', doneHover: '#647574', doneCursor: 'not-allowed' };
+    if (!D || !D.catalogRows) return base;
+    const all = D.catalogRows(mode, d), byId = {}; all.forEach(r => { byId[r.id] = r; }); this._byId = byId;
+    const inDoc = {}; (d.lines || []).forEach(l => { if (l.pid) inDoc[l.pid] = (inDoc[l.pid] || 0) + (l.qty || 0); });
+    const c = isOrder && d.cust ? D.custAt(d.cust, d.branch) : null, b = D.BRANCHES.find(x => x.code === d.branch) || {};
+    // tepa — hujjatning qisqa ma'lumoti (o'zgartirilmaydi)
+    let facts;
+    if (isOrder) { const debt = c ? D.debtOf('mt', c.id, d.branch).debt : 0, left = c ? c.limit - debt : 0;
+      facts = [['Mijoz', c ? c.name : '—'], ['Narx turi', c ? D.ptName(c.priceType) || '—' : '—'], ['Qarz', fM(debt)], ['Limit (qolgan)', c ? fM(c.limit) + ' (' + fM(left) + ')' : '—', left < 0 ? '#B91C1C' : null], ['Ombor', (b.name || d.branch || '') + ' · ' + (d.wh || '—')], ["To'lov turi", L['oe_pay_' + (d.payType || 'bank')] || D.payTypeName(d.payType)], ['Yetkazish sanasi', d.delivery === 'pickup' ? (L.b_delPickupLong || 'Olib ketish') + ' · ' + (d.delivDate || '—') : d.delivDate || '—']]; }
+    else { const bn = d.bonus && d.bonus.on;
+      facts = [['Yetkazib beruvchi', d.supplier || '—'], ['Yuk xati', d.invNo ? d.invNo + (d.invDate ? ' · ' + d.invDate : '') : '—'], ["To'lov turi", L['k7_pay_' + (d.payType || 'bank')] || D.payTypeName(d.payType)], ["To'lov kuni", d.fromBonus ? (L.k7_fromBonusShort || 'Bonus hisobidan') : d.due || '—'], ['Kim nomiga', d.owner || L.k7_ownerNone || 'Kompaniya tovari'], ['Bonus', bn ? 'Bor · ' + fM(d.bonus.sum || 0) : "Yo'q", bn ? '#15803D' : null], ['Ombor', (b.name || d.branch || '') + ' · ' + (d.wh || '—')]]; }
+    facts = facts.map(([label, value, color]) => ({ label, value, color: color || '#172B2A' }));
+    // filtrlar
+    const q = (D.toLat ? D.toLat(s.q.trim()) : s.q.trim()).toLowerCase(), lat = v => (D.toLat ? D.toLat(String(v || '')) : String(v || '')).toLowerCase();
+    const FL = [['mark', L.p_stMark || 'Markirovkali', 'scan-barcode', '#5B6B6A'], ['ctrl', L.p_stCtrl || 'Nazoratdagi', 'lock', '#B91C1C'], ['rx', 'Retsept', 'file-text', '#1D4ED8']];
+    const uniq = k => { const m = {}; all.forEach(r => { const v = r.p[k]; if (v) m[v] = (m[v] || 0) + 1; }); return Object.keys(m).sort().map(v => ({ value: v, label: v, count: m[v] })); };
+    const fbFilters = [['p_fMaker', 'Ishlab chiqaruvchi', 'maker', 'fMaker'], ['p_fCat', 'Kategoriya', 'cat', 'fCat'], ['p_fCountry', 'Davlat', 'country', 'fCountry']].map(([lk, lb, k, sk]) => ({ label: L[lk] || lb, options: uniq(k), selected: s[sk], onChange: v => this.setState({ [sk]: v }) }))
+      .concat([{ label: 'Belgilar', options: FL.map(([v, label, icon, iconColor]) => ({ value: v, label, icon, iconColor, count: all.filter(r => r.p[v]).length })), selected: s.fFlags, onChange: v => this.setState({ fFlags: v }) }]);
+    const hasFilters = !!(s.fMaker.length || s.fCat.length || s.fCountry.length || s.fFlags.length || s.q.trim());
+    const qtyOf = id => pInt(s.sel[id]);
+    let list = all.filter(r => { const x = r.p; if (s.sel[r.id] && qtyOf(r.id) > 0) return true;
+      if (q && !lat(`${x.code} ${x.name} ${x.classifier} ${(x.barcodes || []).join(' ')}`).includes(q)) return false;
+      if (s.fMaker.length && !s.fMaker.includes(x.maker)) return false; if (s.fCat.length && !s.fCat.includes(x.cat)) return false; if (s.fCountry.length && !s.fCountry.includes(x.country)) return false;
+      if (s.fFlags.length && !s.fFlags.some(f => x[f])) return false; if (isOrder && s.onlyAv && !(r.avail > 0)) return false; return true; });
+    const sk = s.sort || { key: 'name', dir: 'asc' }, sm = sk.dir === 'asc' ? 1 : -1, SV = { code: r => r.p.code, name: r => r.p.name, maker: r => r.p.maker, avail: r => r.avail, stock: r => r.stock, price: r => r.price || 0, cost: r => r.cost || 0, exp: r => pD(r.exp) || 9e15, mm: r => r.minQty };
+    const fv = SV[sk.key] || SV.name; list = [...list].sort((a, b2) => { const x = fv(a), y = fv(b2); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * sm; });
+    // ustunlar
+    const keys0 = COLS[mode], cfg = s.cols || keys0.filter(k => !FIXED.includes(k)).map(k => ({ key: k, visible: true }));
+    const tg = cfg.filter(x => x.visible).map(x => x.key), cols = (tg.includes('code') ? ['code'] : []).concat(['name'], tg.filter(k => k !== 'code'), ['qty']);
+    const grid = cols.map(k => DEF[k][1]).join(' '), minW = cols.reduce((a, k) => a + PX[k], 0) + 'px';
+    const hCols = cols.map(k => { const st = k === 'qty', on = sk.key === k; return { label: DEF[k][0], align: DEF[k][2], justify: DEF[k][2] === 'right' ? 'flex-end' : 'flex-start', static: st, cursor: st ? 'default' : 'pointer', sorted: on, icon: sk.dir === 'asc' ? 'arrow-up' : 'arrow-down', pick: () => !st && this.setState(x => ({ sort: x.sort && x.sort.key === k ? { key: k, dir: x.sort.dir === 'asc' ? 'desc' : 'asc' } : { key: k, dir: 'asc' } })) }; });
+    const colDefs = cfg.map(x => ({ key: x.key, label: DEF[x.key][0], visible: x.visible }));
+    // qatorlar
+    const nav = [], hi = Math.min(s.hi, Math.max(0, list.length - 1)), disc = c ? c.disc || 0 : 0; let nSel = 0, sum = 0, nErr = 0;
+    const flagsOf = x => [x.ctrl && { icon: 'lock', color: '#B91C1C', tip: L.p_stCtrl || 'Nazoratdagi' }, x.mark && { icon: 'scan-barcode', color: '#5B6B6A', tip: L.p_stMark || 'Markirovkali' }, x.rx && { icon: 'file-text', color: '#1D4ED8', tip: 'Retsept' }].filter(Boolean);
+    const rows = list.map((r, i) => { const x = r.p, raw = s.sel[r.id] == null ? '' : String(s.sel[r.id]), qn = pInt(raw), has = qn > 0, ind = inDoc[r.id] || 0, canQ = isOrder ? r.price != null : true;
+      let msg = '', tone = null;
+      if (has && isOrder) { const tot = qn + ind; if (tot > r.avail) { msg = 'Mavjud: ' + fN(r.avail); tone = 'err'; } else if (r.minQty && tot < r.minQty) { msg = 'Min: ' + fN(r.minQty); tone = 'err'; } else if (r.maxQty && tot > r.maxQty) { msg = 'Maks: ' + fN(r.maxQty) + ' · tasdiq kerak'; tone = 'warn'; } }
+      if (!canQ) msg = "Narx yo'q";
+      if (has) { nSel++; sum += isOrder ? qn * (r.price || 0) * (1 - disc / 100) : qn * (r.cost || 0) * (1 + (r.vat || 0) / 100); if (tone === 'err') nErr++; }
+      if (canQ) nav.push(r.id);
+      const cell = k => {
+        if (k === 'name') return { isName: true, items: 'stretch', text: x.name, flags: flagsOf(x), sub: `${D.FORMS[x.form] || x.form} ${x.dose} · ${x.unit}`, hasDoc: ind > 0, docText: 'Hujjatda: ' + fN(ind) };
+        if (k === 'qty') return { isQty: true, items: 'flex-end', pid: r.id, value: raw, disabled: !canQ, ph: canQ ? '0' : '—', border: tone === 'err' ? '#B91C1C' : tone === 'warn' ? '#D97706' : has ? '#0D9488' : '#E2E8F0', inBg: canQ ? '#FFFFFF' : '#F1F5F4', hasMsg: !!msg, msg, msgColor: tone === 'err' || !canQ ? '#B91C1C' : '#B45309',
+          onChange: e => this.setSel(r.id, e.target.value.replace(/[^\d]/g, '')), onFocus: () => this.state.hi !== i && this.setState({ hi: i }) };
+        const T = (text, o) => Object.assign({ isText: true, items: DEF[k][2] === 'right' ? 'flex-end' : 'flex-start', text, align: DEF[k][2], color: '#172B2A', font: 'inherit', hasSub: false, sub: '', subColor: '#647574' }, o || {});
+        if (k === 'code') return T(x.code, { font: "'JetBrains Mono',monospace", color: '#5B6B6A' });
+        if (k === 'maker') return T(x.maker, { color: '#5B6B6A' });
+        if (k === 'avail') return T(r.avail > 0 ? fN(r.avail) : 'Yo\'q', { color: r.avail > 0 ? '#172B2A' : '#647574', hasSub: !!(r.minDays && r.availAll !== r.avail), sub: 'jami ' + fN(r.availAll), subColor: '#B45309' });
+        if (k === 'price') return T(r.price != null ? fM(r.price) : '—', { color: r.price != null ? '#172B2A' : '#647574', hasSub: !!r.fallback, sub: r.fallback ? 'bazaviy narx' : '', subColor: '#B45309' });
+        if (k === 'exp') return T(r.exp || '—', { color: r.exp ? '#172B2A' : '#647574' });
+        if (k === 'mm') return T((r.minQty ? fN(r.minQty) : '—') + ' / ' + (r.maxQty ? fN(r.maxQty) : '—'), { color: '#5B6B6A' });
+        if (k === 'stock') return T(fN(r.stock), { color: r.stock > 0 ? '#172B2A' : '#647574' });
+        if (k === 'cost') return T(r.cost ? fM(r.cost) : '—', { hasSub: !!r.costSrc, sub: r.costSrc === 'sup' ? 'shu yetkazib beruvchidan' : 'oxirgi kirim', subColor: '#647574' });
+        return T('');
+      };
+      const bg = tone === 'err' ? '#FEF2F2' : tone === 'warn' ? '#FFFBEB' : has ? '#F0FDFA' : '#FFFFFF';
+      return { id: r.id, bg, hover: tone === 'err' ? '#FEE2E2' : tone === 'warn' ? '#FEF3C7' : has ? '#E6FAF4' : '#F8FAFA', ring: i === hi ? 'inset 3px 0 0 #0D9488' : 'none', focus: () => { this.setState({ hi: i }); canQ && this.focusQty(r.id); }, cells: cols.map(cell) };
+    });
+    this._nav = nav;
+    const ok = nSel > 0;
+    return { ...base, facts, docLabel: isOrder ? (d.no || 'Yangi buyurtma') + (c ? ' · ' + c.name : '') : (d.no || 'Yangi kirim') + (d.supplier ? ' · ' + d.supplier : ''),
+      q: s.q, setQ: v => this.setState({ q: v, hi: 0 }), fbFilters, fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone }, hasFilters,
+      clearFilters: () => this.setState({ q: '', fMaker: [], fCat: [], fCountry: [], fFlags: [], hi: 0 }),
+      colDefs, setCols: cs => this.setState({ cols: cs.map(x => ({ key: x.key, visible: x.visible !== false })) }), resetCols: () => this.setState({ cols: null }),
+      onlyAv: !!s.onlyAv, toggleAv: () => this.setState(x => ({ onlyAv: !x.onlyAv, hi: 0 })), avIcon: s.onlyAv ? 'toggle-right' : 'toggle-left', avBorder: s.onlyAv ? '#0D9488' : '#E2E8F0', avBg: s.onlyAv ? '#F0FDFA' : '#FFFFFF', avFg: s.onlyAv ? '#0F766E' : '#5B6B6A',
+      hasMinDays: !!(isOrder && c && c.minDays), minDaysNote: c && c.minDays ? 'Mijoz sharti: yaroqlilik muddati kamida ' + c.minDays + ' kun — mavjud qoldiq shu bo\'yicha' : '',
+      grid, minW, hCols, rows, noRows: rows.length === 0,
+      selText: 'Tanlangan: ' + fN(nSel) + ' ta mahsulot', sumLabel: isOrder ? '· summa' : '· faktura summasi', sumText: fM(sum) + " so'm", hasSelErr: nErr > 0, selErr: nErr + ' ta qatorda xato — hujjatda ko\'rinadi',
+      noSel: !ok, doneBg: ok ? '#0F766E' : '#647574', doneHover: ok ? '#115E59' : '#647574', doneCursor: ok ? 'pointer' : 'not-allowed',
+      clearSel: () => { this.keepSel({}); this.setState({ sel: {} }); }, done: () => this.done() };
+  }
+}
+</script>
+</body>
+</html>

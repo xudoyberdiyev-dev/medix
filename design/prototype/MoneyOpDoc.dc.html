@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="{{ title }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="DocumentHeader" print-items="{{ printItems }}" print-label="{{ L.ch_printMenu }}" parent-label="{{ parentLabel }}" on-parent="{{ back }}" title="{{ title }}" number="{{ number }}" badge="{{ badge }}" steps="{{ steps }}" autosave="{{ autosave }}" secondary="{{ secondary }}" primary="{{ primary }}" more="{{ more }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
+  <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+  <dc-import name="SavedViews" tabs="{{ tabs }}" hint-size="100%,38px"></dc-import>
+  <sc-if value="{{ tabDoc }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:{{ layoutCols }};gap:20px;align-items:start;min-width:0">
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+        <sc-if value="{{ editable }}" hint-placeholder-val="{{ true }}">
+          <dc-import name="FormSection" title="{{ secTitle }}" description="{{ secDesc }}" stacked="{{ true }}" hint-size="100%,420px">
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;min-width:0">
+              <div data-f="type" style="grid-column:1/-1;display:flex;flex-direction:column;min-width:0">
+                <span style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ segLabel }} <span style="color:#B91C1C">*</span></span>
+                <div role="radiogroup" aria-label="{{ segLabel }}" style="display:flex;flex-wrap:wrap;gap:4px;padding:3px;background:#F5F7F8;border:1px solid {{ bd.type }};border-radius:8px">
+                  <sc-for list="{{ segs }}" as="m" hint-placeholder-count="2"><button role="radio" aria-checked="{{ m.on }}" onClick="{{ m.pick }}" title="{{ m.tip }}" style="flex:1 1 150px;display:flex;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 10px;border:0;border-radius:6px;background:{{ m.bg }};box-shadow:{{ m.sh }};color:{{ m.fg }};font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap"><lucide-i name="{{ m.icon }}" size="16"></lucide-i>{{ m.label }}<sc-if value="{{ m.locked }}"><lucide-i name="lock" size="12" style="color:#647574"></lucide-i></sc-if></button></sc-for>
+                </div>
+                <sc-if value="{{ er.type }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.type }}</div></sc-if>
+              </div>
+              <sc-if value="{{ isIo }}">
+                <div data-f="from" style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <dc-import name="Select" field-key="from" label="{{ L.kb_hFrom }}" required="{{ true }}" options="{{ fromOpts }}" value="{{ d.from }}" on-change="{{ onFrom }}" placeholder="{{ L.tl_choose }}" error="{{ er.from }}" hint-size="100%,56px"></dc-import>
+                  <sc-if value="{{ fromBal }}"><span style="display:flex;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A">{{ L.kb_bal }}<span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ fromBal }}</span></span></sc-if>
+                </div>
+                <div data-f="to" style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <dc-import name="Select" field-key="to" label="{{ L.kb_hTo }}" required="{{ true }}" options="{{ toOpts }}" value="{{ d.to }}" on-change="{{ onTo }}" placeholder="{{ L.tl_choose }}" error="{{ er.to }}" hint-size="100%,56px"></dc-import>
+                  <sc-if value="{{ toBal }}"><span style="display:flex;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A">{{ L.kb_bal }}<span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ toBal }}</span></span></sc-if>
+                </div>
+              </sc-if>
+              <sc-if value="{{ isOp }}">
+                <div data-f="acct" style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;min-width:0;max-width:520px">
+                  <dc-import name="Select" field-key="acct" label="{{ acctLabel }}" required="{{ true }}" options="{{ acctOpts }}" value="{{ d.acct }}" on-change="{{ onAcct }}" placeholder="{{ L.tl_choose }}" error="{{ er.acct }}" hint-size="100%,56px"></dc-import>
+                  <sc-if value="{{ acctBal }}"><span style="display:flex;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A">{{ L.kb_bal }}<span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ acctBal }}</span></span></sc-if>
+                </div>
+              </sc-if>
+              <div data-f="date" style="display:flex;flex-direction:column;min-width:0">
+                <label for="mo-date" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.tl_hDate }} <span style="color:#B91C1C">*</span></label>
+                <input id="mo-date" value="{{ d.date }}" onChange="{{ onDate }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="height:34px;padding:0 12px;border:1px solid {{ bd.date }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                <sc-if value="{{ er.date }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.date }}</div></sc-if>
+              </div>
+              <div data-f="sum" style="min-width:0">
+                <dc-import name="MoneyInput" label="{{ L.tl_hSum }}" required="{{ true }}" value="{{ d.sum }}" on-change="{{ onSum }}" suffix="{{ L.tl_som }}" error="{{ er.sum }}" bold="{{ true }}" hint-size="100%,56px"></dc-import>
+              </div>
+              <sc-if value="{{ isOp }}">
+                <div data-f="item" style="display:flex;flex-direction:column;min-width:0">
+                  <dc-import name="Select" field-key="item" label="{{ itemLabel }}" required="{{ true }}" options="{{ itemOpts }}" value="{{ d.item }}" on-change="{{ onItem }}" placeholder="{{ L.tl_choose }}" error="{{ er.item }}" hint-size="100%,56px"></dc-import>
+                </div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;min-width:0">
+                <label for="mo-base" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.kb_hBase }}</label>
+                <input id="mo-base" value="{{ d.baseNo }}" onChange="{{ onBase }}" placeholder="AV-0412" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A;outline:none" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+              </div>
+              <label data-f="note" style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;min-width:0">
+                <span style="font-size:12px;line-height:16px;font-weight:500">{{ noteLabel }}<sc-if value="{{ noteReq }}"> <span style="color:#B91C1C">*</span></sc-if></span>
+                <textarea value="{{ d.note }}" onChange="{{ onNote }}" rows="2" style="padding:7px 12px;border:1px solid {{ bd.note }};border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;line-height:20px;color:#172B2A;resize:vertical;outline:none" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></textarea>
+                <sc-if value="{{ er.note }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.note }}</span></sc-if>
+              </label>
+              <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <label style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px dashed #CBD5D3;border-radius:8px;font-size:13px;color:#0F766E;cursor:pointer;background:#FFFFFF" style-hover="background:#F8FAFA"><lucide-i name="paperclip" size="16"></lucide-i>{{ L.kb_file }}<input type="file" accept="image/*,.pdf" onChange="{{ onFile }}" style="display:none"></label>
+                <sc-if value="{{ fileName }}"><span style="display:flex;align-items:center;gap:6px;font-size:13px"><lucide-i name="file-check" size="16" style="color:#15803D"></lucide-i>{{ fileName }}<button onClick="{{ clearFile }}" aria-label="×" style="width:24px;height:24px;border:0;border-radius:6px;background:transparent;color:#647574;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#FEF2F2;color:#B91C1C"><lucide-i name="x" size="14"></lucide-i></button></span></sc-if>
+              </div>
+            </div>
+          </dc-import>
+          <sc-if value="{{ isOp }}"><button onClick="{{ toMt }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="info" size="14"></lucide-i>{{ L.kb_useMt }}</button></sc-if>
+        </sc-if>
+        <sc-if value="{{ readView }}"><dc-import name="InfoGrid" title="{{ L.kb_iHead }}" rows="{{ infoRows }}" hint-size="100%,260px"></dc-import></sc-if>
+      </div>
+      <aside style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ L.kb_sideT }}</span>
+        <dc-import name="SideSummary" kpis="{{ kpis }}" columns="{{ kpiCols }}" hint-size="100%,200px"></dc-import>
+        <sc-if value="{{ isIo }}"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ totalNote }}</span></sc-if>
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ ruleNote }}</span>
+      </aside>
+    </div>
+  </sc-if>
+  <sc-if value="{{ tabHist }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px"><dc-import name="HistoryTimeline" groups="{{ histGroups }}" empty-label="{{ L.tl_histEmpty }}" hint-size="100%,240px"></dc-import></div>
+  </sc-if>
+  <sc-if value="{{ hasFooter }}"><dc-import name="StickyFormFooter" style="position:sticky;bottom:-24px;z-index:5;display:block;align-self:stretch" dirty="{{ footDirty }}" dirty-label="{{ footNote }}" cancel-label="{{ L.tl_back }}" save-label="{{ footSave }}" max-width="{{ 1280 }}" on-cancel="{{ back }}" on-save="{{ footRun }}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{ noFooter }}"><div style="height:48px"></div></sc-if>
+  <sc-if value="{{ vsOpen }}"><dc-import name="ValidationSummary" title="{{ vsTitle }}" subtitle="{{ L.tl_vsSub }}" errors="{{ vsErrors }}" warnings="{{ vsWarnings }}" warn-title="{{ L.tl_vsWarn }}" close-label="{{ L.tl_close }}" on-close="{{ closeVs }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" with-reason="{{ dlg.withReason }}" reason-label="{{ dlg.reasonLabel }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ onReason }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.tl_back }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ blockOpen }}">
+    <div onClick="{{ closeDlg }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="alertdialog" aria-modal="true" onClick="{{ stop }}" style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#FEF2F2;color:#B91C1C;display:flex;align-items:center;justify-content:center"><lucide-i name="ban" size="18"></lucide-i></span>
+          <div style="display:flex;flex-direction:column;gap:8px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.tl_blockT }}</h2><sc-for list="{{ blockItems }}" as="x"><p style="margin:0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ x.text }}</p></sc-for><p style="margin:0;font-size:13px;line-height:18px;color:#172B2A">{{ L.kb_blockHint }}</p></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end"><button onClick="{{ closeDlg }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.tl_understood }}</button></div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ko&quot;,&quot;bo&quot;,&quot;io&quot;],&quot;default&quot;:&quot;ko&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cashier&quot;,&quot;accountant&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;cashier&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Nigora Xasanova&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;initial&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;req&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;docKey&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;act&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;parentLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Kassa&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const r2 = x => Math.round(x * 100) / 100;
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); if (!m) return null; const t = Date.UTC(+m[3], +m[2] - 1, +m[1]), d = new Date(t); return d.getUTCDate() === +m[1] && d.getUTCMonth() === +m[2] - 1 ? t : null; };
+const T0 = Date.UTC(2026, 9, 4);
+const ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2);
+const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], pending: ['clock', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
+const IOT = { k2b: ['cash', 'bank', 'landmark'], b2k: ['bank', 'cash', 'banknote'], k2k: ['cash', 'cash', 'arrow-right-left'], t2b: ['term', 'bank', 'credit-card'] };
+class Component extends DCLogic {
+  state = { d: null, tab: 'doc', save: null, savedAt: null, tried: false, vs: null, dlg: null, reason: '', reasonErr: '' };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.init(); this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400); }
+  componentWillUnmount() { clearInterval(this._poll); clearTimeout(this._sv); clearTimeout(this._it); }
+  componentDidUpdate(pp) { if (pp.docKey !== this.props.docKey) this.init(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  role() { return this.props.role || 'director'; }
+  can(k) { return this.D.canR(this.role(), 'MOP_ROLES', k); }
+  init() {
+    const D = this.D; if (!D) { this._it = setTimeout(() => this.init(), 60); return; }
+    const p = this.props, d = p.initial ? D.mopCopy(p.initial) : this.blank(p.req || {});
+    this._edited = false;
+    this.setState({ d, tab: 'doc', save: null, savedAt: null, tried: false, vs: null, dlg: null, reason: '', reasonErr: '' }, () => {
+      if (p.act === 'tryPost') setTimeout(() => this.primaryRun(), 80); if (p.act === 'cancel') setTimeout(() => this.tryCancel(), 80);
+    });
+  }
+  blank(req) {
+    const p = this.props, D = this.D, br = p.branch && p.branch !== 'ALL' ? p.branch : 'TSH', kind = req.kind || p.kind || 'ko', at = D.nowStr();
+    const d = { kind, no: null, id: null, branch: br, date: req.date || D.TODAY, sum: req.sum != null ? req.sum : null, item: req.item || null, note: req.note || '', baseNo: '', file: null, status: 'draft', createdBy: p.userName, createdAt: at, log: [{ kind: 'create', who: p.userName, at }] };
+    if (kind === 'io') { d.ioType = req.ioType || 'k2b'; const T = IOT[d.ioType]; d.from = req.from || this.first(br, T[0]); d.to = req.to || this.first(br, T[1], d.from); }
+    else { d.dir = req.dir || 'out'; d.acct = req.acct || this.first(br, kind === 'ko' ? 'cash' : 'bank'); }
+    return d;
+  }
+  till() { const D = this.D; return D.tillAccts ? D.tillAccts(this.role(), this.props.userName) : null; }
+  first(br, kind, not) { const t = kind === 'cash' ? this.till() : null, l = this.D.accountsOf(br, kind).filter(x => x.id !== not), a = (t && l.find(x => t.includes(x.id))) || l[0]; return a ? a.id : null; }
+  upd(fn) { const d = JSON.parse(JSON.stringify(this.state.d)); fn(d); this.setState({ d }); this.persist(d); }
+  canCreate(d) { return this.can(d.kind); }
+  persist(d) {
+    if (d.status !== 'draft' || !this.canCreate(d)) return; if (d.sum == null && !d.note) return;
+    clearTimeout(this._sv); this.setState({ save: 'saving' });
+    this._sv = setTimeout(() => { const D = this.D, cur = { ...this.state.d }; if (cur.no && !this._edited) { cur.log = (cur.log || []).concat([{ kind: 'change', who: this.props.userName, at: D.nowStr() }]); this._edited = true; }
+      const r = D.saveMop(cur); this.setState(s => ({ d: { ...s.d, no: r.no, id: r.id, log: r.log }, save: 'saved', savedAt: D.nowStr().slice(11) })); }, 450);
+  }
+  effects(d) { if (d.kind === 'io') return [d.from && { acct: d.from, delta: -(d.sum || 0) }, d.to && { acct: d.to, delta: d.sum || 0 }].filter(Boolean); return d.acct ? [{ acct: d.acct, delta: d.dir === 'in' ? (d.sum || 0) : -(d.sum || 0) }] : []; }
+  check(d) {
+    const D = this.D, L = this.L, errs = [], fe = {}, e = (t, f) => { errs.push({ text: t, f }); if (f && !fe[f]) fe[f] = t; };
+    const dt = pD(d.date); if (dt == null) e(L.tl_eDate, 'date'); else if (dt > T0) e(L.tl_eFuture, 'date'); else if (d.status !== 'posted' && d.status !== 'cancelled' && D.bqCutoffErr && D.bqCutoffErr(d.branch, null, d.date)) { const bqc = D.bqCutoffErr(d.branch, null, d.date); e(String(L.bq_eCutoff || '').replace('{d}', bqc.date).replace('{n}', bqc.no), 'date'); }
+    const accs = d.kind === 'io' ? [d.from, d.to] : [d.acct];
+    if (d.kind === 'io') { if (!d.from) e(L.kb_eFrom, 'from'); if (!d.to) e(L.kb_eTo, 'to'); if (d.from && d.from === d.to) e(L.kb_eSame, 'to'); if (d.status === 'draft' && this.role() === 'cashier' && d.ioType !== 'k2b') e(L.kb_eCashierIo, 'type'); }
+    else { if (!d.acct) e(d.kind === 'ko' ? L.tl_eCash : L.tl_eBank, 'acct'); if (!d.item) e(L.kb_eItem, 'item'); if (d.dir === 'out' && !String(d.note || '').trim()) e(L.kb_eNote, 'note'); }
+    { const tl = d.status === 'draft' ? this.till() : null, ca = d.kind === 'io' ? (IOT[d.ioType || 'k2b'][0] === 'cash' ? d.from : null) : d.kind === 'ko' ? d.acct : null; if (tl && ca && !tl.includes(ca)) e(L.kb_eTill, d.kind === 'io' ? 'from' : 'acct'); }
+    if (d.sum == null) e(L.tl_eSum, 'sum'); else if (!(d.sum > 0)) e(L.tl_eSumPos, 'sum');
+    if (dt != null && d.status !== 'posted' && d.status !== 'cancelled') accs.forEach(a => { if (a && D.dayClosed(a, d.date) && !d.adj) e(fill(L.kb_eClosed, { d: d.date }), 'date'); });
+    const src = d.kind === 'io' ? d.from : d.dir === 'out' ? d.acct : null;
+    if (src && d.sum > 0 && d.status !== 'posted' && d.status !== 'cancelled') { const bal = D.accBalance(src), a = D.accById(src); if (d.sum > bal + 0.004) e(fill(L.kb_eShort, { a: a.name, b: fM(bal), c: fM(d.sum), x: fM(d.sum - bal) }), 'sum'); }
+    return { errs, fe, warns: [] };
+  }
+  goField(f) { this.setState({ vs: null, tab: 'doc' }); setTimeout(() => { const el = document.querySelector(`[data-f="${f}"]`); if (!el) return; const m = document.querySelector('main'); if (m) { const r = el.getBoundingClientRect(), mr = m.getBoundingClientRect(); m.scrollTo({ top: m.scrollTop + r.top - mr.top - 80, behavior: 'smooth' }); } const i = el.querySelector('input,button,textarea'); i && i.focus && i.focus({ preventScroll: true }); }, 60); }
+  tryPost(mode) { const c = this.check(this.state.d); this.setState({ tried: true }); if (c.errs.length) return this.setState({ vs: c }); this.setState({ dlg: mode }); }
+  primaryRun() { const x = this.primaryDef(); x && x.pick && x.pick(); }
+  primaryDef() {
+    const d = this.state.d, L = this.L, D = this.D, st = d.status, appr = this.can('approve');
+    if (st === 'draft') { if (!this.canCreate(d)) return { label: L.tl_post, icon: 'check', pick: () => this.toast(L['kb_who_' + d.kind]) };
+      if (D.mopNeedsApproval(d) && !appr) return { label: L.tl_send, icon: 'send', pick: () => this.tryPost('send') };
+      return { label: L.tl_post, icon: 'check', pick: () => this.tryPost('post') }; }
+    if (st === 'pending') return { label: L.tl_post, icon: 'check', pick: () => appr ? this.tryPost('post') : this.toast(L.kb_whoApprove) };
+    return null;
+  }
+  tryCancel() {
+    const D = this.D, d = this.state.d, L = this.L; if (!this.can('cancel')) return this.toast(L.kb_whoCancel);
+    const bad = D.mopEffects(d).filter(e => e.delta > 0 && D.accBalance(e.acct) - e.delta < -0.004);
+    if (bad.length) return this.setState({ dlg: 'block', block: bad.map(e => { const a = D.accById(e.acct), bal = D.accBalance(e.acct); return { text: fill(L.kb_blockCancel, { a: a.name, b: fM(bal), c: fM(e.delta), x: fM(e.delta - bal) }) }; }) });
+    this.setState({ dlg: 'cancel', reason: '', reasonErr: '' });
+  }
+  doPost(mode) {
+    const D = this.D, L = this.L, who = this.props.userName; clearTimeout(this._sv);
+    const saved = D.saveMop(this.state.d), r = mode === 'send' ? D.sendMop(saved, who) : D.postMop(saved, who);
+    this.setState({ d: r, dlg: null, tried: false, save: null }); this.toast(fill(mode === 'send' ? L.tl_tSent : L.tl_tPosted, { n: r.no }));
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, narrow, title: '', banners: [], tabs: [], segs: [], fromOpts: [], toOpts: [], acctOpts: [], itemOpts: [], kpis: [], histGroups: [], infoRows: [], er: {}, bd: {}, d: {}, dlg: {}, more: [], secondary: [], vsErrors: [], vsWarnings: [], blockItems: [] };
+    if (!D || !s.d) return base;
+    const d = s.d, K = d.kind, st = d.status, editable = st === 'draft' && this.canCreate(d), c = this.check(d), show = s.tried ? c.fe : {}, S = ST[st];
+    const er = {}; ['type', 'from', 'to', 'acct', 'date', 'sum', 'item', 'note'].forEach(k => { er[k] = show[k] || ''; }); const bd = {}; Object.keys(er).forEach(k => { bd[k] = er[k] ? '#B91C1C' : '#E2E8F0'; });
+    const title = (d.no ? L['kb_' + K + 'Doc'] : L['kb_' + K + 'New']) || '', at = x => String(x || '').replace(' ', ', ');
+    const accName = id => (D.accById(id) || {}).name || '—';
+    const opt = a => ({ value: a.id, label: a.kind === 'bank' ? `${a.bank} · ${a.acc}` : a.name }), tl = this.till(), tOk = a => a.kind !== 'cash' || !tl || tl.includes(a.id);
+    const segs = K === 'io' ? ['k2b', 'b2k', 'k2k', 't2b'].map(t => { const on = d.ioType === t, locked = this.role() === 'cashier' && t !== 'k2b'; return { label: L['kb_io_' + t], icon: IOT[t][2], on, locked, tip: locked ? L.kb_whoIo : '', bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.10), 0 0 0 1px #0D9488' : 'none', fg: on ? '#0F766E' : '#5B6B6A',
+        pick: () => { if (locked) return this.toast(L.kb_whoIo); this.upd(x => { x.ioType = t; x.from = this.first(x.branch, IOT[t][0]); x.to = this.first(x.branch, IOT[t][1], x.from); }); } }; })
+      : ['in', 'out'].map(t => { const on = d.dir === t; return { label: t === 'in' ? L.tl_in : L.tl_out, icon: t === 'in' ? 'arrow-down-left' : 'arrow-up-right', on, locked: false, tip: '', bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.10), 0 0 0 1px #0D9488' : 'none', fg: on ? '#0F766E' : '#5B6B6A', pick: () => this.upd(x => { x.dir = t; x.item = null; }) }; });
+    const T = K === 'io' ? IOT[d.ioType || 'k2b'] : null;
+    // header
+    const pr = this.primaryDef(), more = [{ label: L.tl_print, icon: 'printer', pick: () => this.toast(L.tl_tPrint) }], secondary = [];
+    if (st === 'posted') more.push({ label: L.tl_cancel, icon: 'circle-x', danger: true, sep: true, pick: () => this.tryCancel() });
+    if (st === 'draft' && d.id && this.canCreate(d)) more.push({ label: L.tl_del, icon: 'trash-2', danger: true, sep: true, pick: () => this.setState({ dlg: 'delete' }) });
+    if (st === 'pending') secondary.push({ label: L.tl_ret, icon: 'undo-2', pick: () => this.can('approve') ? this.setState({ dlg: 'return', reason: '', reasonErr: '' }) : this.toast(L.kb_whoApprove) });
+    const needAp = D.mopNeedsApproval(d);
+    const steps = st === 'cancelled' ? [{ label: L.tl_st_draft, state: 'done' }, { label: L.tl_st_posted, state: 'done' }, { label: L.tl_st_cancelled, state: 'fail' }]
+      : [{ label: L.tl_st_draft, state: st === 'draft' ? 'cur' : 'done' }, ...(needAp || st === 'pending' ? [{ label: L.tl_st_pending, state: st === 'pending' ? 'cur' : st === 'draft' ? 'next' : 'done' }] : []), { label: L.tl_st_posted, state: st === 'posted' ? 'cur' : 'next' }];
+    const banners = [];
+    if (st === 'draft' && needAp && !this.can('approve')) banners.push({ tone: 'info', icon: 'info', text: fill(L.kb_needAp, { s: fM(D.MOP_RULE.approveOver) }) });
+    if (st === 'pending') banners.push({ tone: 'warning', icon: 'clock', text: fill(L.kb_bPending, { who: d.sentBy, at: at(d.sentAt) }) });
+    if (st === 'draft' && d.returned) banners.push({ tone: 'warning', icon: 'undo-2', text: fill(L.tl_bReturned, { who: d.returned.by, at: at(d.returned.at), r: d.returned.note }) });
+    if (st === 'posted') banners.push({ tone: 'success', icon: 'circle-check', text: fill(L.tl_bPosted, { at: at(d.postedAt), who: d.postedBy }) });
+    if (st === 'cancelled') banners.push({ tone: 'neutral', icon: 'circle-x', title: fill(L.tl_bCancelled, { at: at(d.cancelledAt), who: d.cancelledBy }), text: d.cancelReason || '' });
+    // side
+    const effs = this.effects(d), live = st === 'draft' || st === 'pending';
+    const kpis = effs.map(e => { const b0 = D.accBalance(e.acct, live ? null : d.id), b1 = r2(b0 + e.delta); return { label: accName(e.acct), value: fM(live ? b0 : D.accBalance(e.acct)), note: live ? fill(L.kb_after, { s: fM(b1) }) : '', color: live && b1 < 0 ? '#B91C1C' : '#172B2A', size: '20px' }; });
+    // dialogs
+    let dlg = null; const who = p.userName;
+    if (s.dlg === 'post' || s.dlg === 'send') {
+      const items = effs.map(e => { const b0 = D.accBalance(e.acct); return { icon: e.delta > 0 ? 'arrow-down-left' : 'arrow-up-right', text: fill(L.kb_dMove, { a: accName(e.acct), x: fM(b0), y: fM(r2(b0 + e.delta)) }) }; });
+      if (K === 'io') items.push({ icon: 'scale', color: '#15803D', text: fill(L.kb_dTotal, { s: fM(D.totalMoney(d.branch)) }) });
+      if (K !== 'io') items.push({ icon: 'tag', text: fill(L.kb_dItem, { i: d.item || '—' }) });
+      dlg = s.dlg === 'send' ? { title: L.tl_dSendT, text: L.kb_dSendNote, items, confirm: L.tl_send, danger: false, run: () => this.doPost('send') } : { title: L.kb_dPostT, items, confirm: L.tl_post, danger: false, run: () => this.doPost('post') };
+    }
+    if (s.dlg === 'cancel') {
+      const items = D.mopEffects(d).map(e => { const b0 = D.accBalance(e.acct); return { icon: 'undo-2', text: fill(L.kb_dMove, { a: accName(e.acct), x: fM(b0), y: fM(r2(b0 - e.delta)) }) }; });
+      dlg = { title: fill(L.kb_dCancelT, { n: d.no }), items, withReason: true, reasonLabel: L.tl_reasonLbl, confirm: L.tl_cancel, danger: true,
+        run: () => { const r = this.state.reason.trim(); if (r.length < 10) return this.setState({ reasonErr: L.tl_reasonShort }); const x = D.cancelMop(d.id, who, r); this.setState({ d: x, dlg: null }); this.toast(fill(L.tl_tCancelled, { n: x.no })); } };
+    }
+    if (s.dlg === 'return') dlg = { title: L.tl_dReturnT, text: L.tl_dReturnD, items: [], withReason: true, reasonLabel: L.tl_returnLbl, confirm: L.tl_ret, danger: false,
+      run: () => { const r = this.state.reason.trim(); if (r.length < 10) return this.setState({ reasonErr: L.tl_reasonShort }); const x = D.returnMop(d, who, r); this.setState({ d: x, dlg: null }); this.toast(fill(L.tl_tReturned, { n: x.no })); } };
+    if (s.dlg === 'delete') dlg = { title: L.tl_dDeleteT, text: L.kb_dDeleteD, items: [], confirm: L.tl_del, danger: true, run: () => { clearTimeout(this._sv); D.deleteMop(d.id); this.setState({ dlg: null }); this.toast(L.tl_tDeleted); p.onBack && p.onBack(); } };
+    const evs = (d.log || []).slice().reverse(), days = [...new Set(evs.map(e => e.at.slice(0, 10)))];
+    const histGroups = days.map(day => ({ label: day, items: evs.filter(e => e.at.slice(0, 10) === day).map(e => ({ kind: e.kind === 'change' ? 'change' : e.kind === 'create' ? 'create' : 'status', initials: ini(e.who), name: e.who, action: L['tl_h_' + e.kind] || e.kind, time: e.at.slice(11), changes: e.reason ? [{ label: L.tl_hReason, to: e.reason }] : [] })) }));
+    const infoRows = [{ label: L.kb_iType, value: K === 'io' ? L['kb_io_' + (d.ioType || 'k2b')] : (d.dir === 'in' ? L.tl_in : L.tl_out) },
+      ...(K === 'io' ? [{ label: L.kb_hFrom, value: accName(d.from) }, { label: L.kb_hTo, value: accName(d.to) }] : [{ label: K === 'ko' ? L.tl_hCash : L.tl_hBank, value: accName(d.acct) }, { label: L.kb_hItem, value: d.item || '—' }]),
+      { label: L.tl_iDate, value: d.date }, { label: L.tl_iSum, value: `${fM(d.sum || 0)} ${L.tl_som}` }, { label: L.kb_hBase, value: d.baseNo || '—', mono: true }, { label: L.tl_iNote, value: d.note || '—' }, { label: L.tl_iBy, value: `${d.createdBy} · ${at(d.createdAt)}` }, ...(d.file ? [{ label: L.kb_file, value: d.file.name }] : [])];
+    const bal = id => id ? fM(D.accBalance(id)) : '';
+    const showFooter = editable || st === 'pending';
+    return {
+      ...base, title, printItems: d.no ? D.printItems('mop', d.no, L) : [], number: d.no || '', badge: { label: L['tl_st_' + st], icon: S[0], fg: S[1], bg: S[2] }, steps, primary: pr, more, secondary, banners, parentLabel: p.parentLabel || L.kb_cash,
+      autosave: st === 'draft' && (d.no || s.save) ? { state: s.save === 'saving' ? 'saving' : 'saved', time: s.savedAt || '', savedLabel: L.tl_saved, savingLabel: L.tl_saving, errorLabel: L.tl_saveErr } : null,
+      back: () => { clearTimeout(this._sv); if (this.state.save === 'saving') D.saveMop(this.state.d); p.onBack && p.onBack(); },
+      tabs: [['doc', L.tl_tabDoc], ['hist', L.tl_tabHist]].map(([k, label]) => ({ label, count: k === 'hist' ? (d.log || []).length : null, active: s.tab === k, pick: () => this.setState({ tab: k }) })), tabDoc: s.tab === 'doc', tabHist: s.tab === 'hist', histGroups,
+      layoutCols: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) 300px', kpiCols: narrow ? 2 : 1, editable, readView: !editable, infoRows,
+      d: { ...d, note: d.note || '', baseNo: d.baseNo || '' }, er, bd, isIo: K === 'io', isOp: K !== 'io', segs, segLabel: K === 'io' ? L.kb_ioType : L.kb_dir,
+      secTitle: K === 'io' ? L.kb_secIo : L.kb_secOp, secDesc: K === 'io' ? L.kb_secIoD : L.kb_secOpD,
+      fromOpts: T ? D.accountsOf(d.branch, T[0]).filter(tOk).map(opt) : [], toOpts: T ? D.accountsOf(d.branch, T[1]).filter(a => a.id !== d.from).map(opt) : [], fromBal: bal(d.from), toBal: bal(d.to),
+      onFrom: v => this.upd(x => { x.from = v; if (x.to === v) x.to = this.first(x.branch, IOT[x.ioType][1], v); }), onTo: v => this.upd(x => { x.to = v; }),
+      acctOpts: K !== 'io' ? D.accountsOf(d.branch, K === 'ko' ? 'cash' : 'bank').filter(tOk).map(opt) : [], acctBal: bal(d.acct), acctLabel: K === 'ko' ? L.tl_hCash : L.tl_hBank, onAcct: v => this.upd(x => { x.acct = v; }),
+      itemOpts: (D.MOP_ITEMS[d.dir || 'out'] || []).map(i => ({ value: i, label: i })), itemLabel: d.dir === 'in' ? L.kb_hItemIn : L.kb_hItem, onItem: v => this.upd(x => { x.item = v; }),
+      noteLabel: L.kb_hNote, noteReq: K !== 'io' && d.dir === 'out',
+      onDate: e => { const v = e.target.value; this.upd(x => { x.date = v; }); }, onSum: n => this.upd(x => { x.sum = n; }), onNote: e => { const v = e.target.value; this.upd(x => { x.note = v; }); }, onBase: e => { const v = e.target.value; this.upd(x => { x.baseNo = v; }); },
+      onFile: e => { const f = e.target.files && e.target.files[0]; if (f) this.upd(x => { x.file = { name: f.name, size: f.size }; }); }, clearFile: () => this.upd(x => { x.file = null; }), fileName: d.file ? d.file.name : '',
+      toMt: () => { D.store.payReq = { kind: 'mt' }; p.onNavigate && p.onNavigate('payments'); },
+      kpis, totalNote: fill(L.kb_totalNote, { s: fM(D.totalMoney(d.branch)) }), ruleNote: K === 'ko' ? fill(L.kb_rule, { s: fM(D.MOP_RULE.approveOver) }) : '',
+      hasFooter: showFooter, noFooter: !showFooter, footDirty: s.tried && c.errs.length > 0, footNote: fill(L.tl_footErr, { n: c.errs.length }), footSave: pr ? pr.label : '', footRun: () => this.primaryRun(),
+      vsOpen: !!s.vs, vsTitle: s.vs ? fill(L.tl_vsTitle, { n: s.vs.errs.length }) : '', closeVs: () => this.setState({ vs: null }), vsErrors: s.vs ? s.vs.errs.map(x => ({ text: x.text, go: () => this.goField(x.f) })) : [], vsWarnings: [],
+      dlgOpen: !!dlg, dlg: dlg || {}, closeDlg: () => this.setState({ dlg: null }), reason: s.reason, reasonErr: s.reasonErr, onReason: v => this.setState({ reason: v, reasonErr: '' }),
+      blockOpen: s.dlg === 'block', blockItems: s.block || [], stop: e => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>

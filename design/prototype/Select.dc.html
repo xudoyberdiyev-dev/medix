@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div data-f="{{ fieldKey }}" style="display:flex;flex-direction:column;position:relative;min-width:0;font-family:Inter,system-ui,sans-serif">
+  <sc-if value="{{ hasLabel }}"><span style="font-size:12px;line-height:16px;font-weight:500;color:#172B2A;margin-bottom:6px">{{ label }}<sc-if value="{{ required }}"> <span style="color:#B91C1C">*</span></sc-if></span></sc-if>
+  <button onClick="{{ toggle }}" disabled="{{ locked }}" title="{{ lockTip }}" style="width:100%;height:34px;padding:0 10px 0 12px;border:1px solid {{ border }};border-radius:8px;background:{{ bg }};display:flex;align-items:center;gap:8px;font-size:14px;color:{{ color }};text-align:left;cursor:{{ cursor }};box-shadow:{{ ring }};transition:border-color 120ms ease-out" style-hover="border-color:{{ hoverBorder }}">
+    <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ valueLabel }}</span>
+    <lucide-i name="{{ icon }}" size="14" style="color:#647574"></lucide-i>
+  </button>
+  <sc-if value="{{ open }}">
+    <div onClick="{{ toggle }}" style="position:fixed;inset:0;z-index:40"></div>
+    <div style="position:absolute;top:{{ popTop }}px;left:0;right:0;min-width:220px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);z-index:41;display:flex;flex-direction:column">
+      <sc-if value="{{ searchable }}">
+        <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-bottom:1px solid #EEF2F4;color:#647574"><lucide-i name="search" size="16"></lucide-i><input ref="{{ qRef }}" value="{{ q }}" onChange="{{ onQ }}" placeholder="{{ searchPh }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:13px;color:#172B2A"></div>
+      </sc-if>
+      <div style="max-height:240px;overflow-y:auto;padding:4px">
+        <sc-for list="{{ opts }}" as="o"><button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:{{ o.bg }};font-size:13px;color:{{ o.color }};cursor:pointer;text-align:left" style-hover="background:#F8FAFA"><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.label }}</span><sc-if value="{{ o.selected }}"><lucide-i name="check" size="16" style="color:#0F766E"></lucide-i></sc-if></button></sc-for>
+        <sc-if value="{{ none }}"><div style="padding:10px 8px;font-size:13px;color:#647574">{{ emptyLabel }}</div></sc-if>
+      </div>
+      <sc-if value="{{ hasFooter }}">
+        <button onClick="{{ footerPick }}" style="display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border:0;border-top:1px solid #EEF2F4;border-radius:0 0 10px 10px;background:#FFFFFF;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;text-align:left" style-hover="background:#DDF5EE"><lucide-i name="plus" size="14"></lucide-i>{{ footerLabel }}</button>
+      </sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ hasError }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ error }}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:360,&quot;height&quot;:340},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Kategoriya&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;required&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;options&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{value,label}[]&quot;},&quot;value&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(v)=&gt;void&quot;},&quot;placeholder&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Tanlang&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;searchable&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;error&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;locked&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;fieldKey&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;}}">
+const C2L = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 's', ч: 'ch', ш: 'sh', щ: 'sh', ъ: "'", ы: 'i', ь: '', э: 'e', ю: 'yu', я: 'ya', ў: "o'", қ: 'q', ғ: "g'", ҳ: 'h' };
+const toLat = v => String(v || '').toLowerCase().replace(/[ʻʼ‘’`]/g, "'").split('').map(ch => C2L[ch] != null ? C2L[ch] : ch).join('');
+class Component extends DCLogic {
+  state = { open: false, q: '' };
+  qRef = React.createRef();
+  componentDidUpdate(pp, ps) { ps = this._ps || {}; this._ps = this.state; if (this.state.open && !ps.open) setTimeout(() => this.qRef.current && this.qRef.current.focus(), 0); }
+  renderVals() {
+    const p = this.props, s = this.state, opts = p.options || [], q = s.q.trim().toLowerCase();
+    const cur = opts.find(o => o.value === p.value);
+    const ql = toLat(q), shown = opts.filter(o => !q || toLat(o.search || o.label).includes(ql) || o.label.toLowerCase().includes(q));
+    const err = !!p.error, locked = !!p.locked;
+    return {
+      fieldKey: p.fieldKey || '', hasLabel: !!p.label, label: p.label, required: !!p.required, locked, lockTip: locked ? p.lockTip : '',
+      valueLabel: cur ? cur.label : (p.placeholder || ''), color: locked ? '#647574' : cur ? '#172B2A' : '#647574', bg: locked ? '#F8FAFA' : '#FFFFFF',
+      border: err ? '#B91C1C' : s.open ? '#0D9488' : '#E2E8F0', hoverBorder: err ? '#B91C1C' : locked ? '#E2E8F0' : '#CBD5D3', ring: s.open ? '0 0 0 3px rgba(13,148,136,0.15)' : 'none',
+      cursor: locked ? 'not-allowed' : 'pointer', icon: locked ? 'lock' : 'chevron-down', open: s.open, popTop: p.label ? 60 : 38,
+      toggle: () => !locked && this.setState(st => ({ open: !st.open, q: '' })),
+      searchable: !!p.searchable, q: s.q, onQ: e => this.setState({ q: e.target.value }), qRef: this.qRef, searchPh: p.searchPh,
+      opts: shown.map(o => ({ label: o.label, color: o.muted ? '#647574' : '#172B2A', selected: o.value === p.value, bg: o.value === p.value ? '#DDF5EE' : 'transparent', pick: () => { this.setState({ open: false }); p.onChange && p.onChange(o.value); } })),
+      none: shown.length === 0, emptyLabel: p.emptyLabel,
+      hasFooter: !!p.footerLabel, footerLabel: p.footerLabel, footerPick: () => { this.setState({ open: false }); p.onFooter && p.onFooter(); },
+      hasError: err, error: p.error
+    };
+  }
+}
+</script>
+</body>
+</html>

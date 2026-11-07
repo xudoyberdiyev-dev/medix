@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Jo'natish" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ L.j_title }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" hint-size="100%,34px"></dc-import>
+  <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+
+  <sc-if value="{{ tReady }}" hint-placeholder-val="{{ true }}">
+    <p style="margin:0;display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty"><lucide-i name="info" size="14" style="flex:none;margin-top:2px"></lucide-i>{{ L.j_tripInDocs }}</p>
+    <sc-if value="{{ readyEmpty }}">
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px"><dc-import name="EmptyState" icon="package-check" title="{{ L.j_emptyT }}" text="{{ L.j_emptyD }}" min-height="360" hint-size="100%,360px"></dc-import></div>
+    </sc-if>
+    <sc-if value="{{ hasPickup }}" hint-placeholder-val="{{ true }}">
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <lucide-i name="user" size="16" style="color:#5B6B6A"></lucide-i>
+          <h2 style="margin:0;font-size:14px;line-height:20px;font-weight:600">{{ L.j_gPickup }}</h2>
+          <span style="height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11.5px;line-height:18px;font-weight:500">{{ pickupN }}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat({{ cardCols }},minmax(0,1fr));gap:12px">
+          <sc-for list="{{ pickups }}" as="c" hint-placeholder-count="3">
+            <article style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                <span style="font-size:14px;line-height:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+                <button onClick="{{ c.open }}" style="align-self:flex-start;padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:18px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ c.no }}</button>
+              </div>
+              <div style="font-size:13px;line-height:18px;color:#172B2A">{{ c.meta }}</div>
+              <sc-if value="{{ c.hasBadges }}">
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <sc-for list="{{ c.badges }}" as="b"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ b.bg }};color:{{ b.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ b.icon }}" size="12"></lucide-i>{{ b.text }}</span></sc-for>
+                </div>
+              </sc-if>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;border-top:1px solid #EEF2F4;flex-wrap:wrap">
+                <span style="display:flex;align-items:center;gap:4px;font-size:12px;line-height:16px;color:{{ c.waitColor }}"><lucide-i name="clock" size="12"></lucide-i>{{ c.wait }}</span>
+                <sc-if value="{{ c.canHand }}"><button onClick="{{ c.hand }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A"><lucide-i name="hand-helping" size="16"></lucide-i>{{ L.j_hand }}</button></sc-if>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ hasDeliver }}" hint-placeholder-val="{{ true }}">
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <lucide-i name="truck" size="16" style="color:#5B6B6A"></lucide-i>
+          <h2 style="margin:0;font-size:14px;line-height:20px;font-weight:600">{{ L.j_gDeliver }}</h2>
+          <span style="height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11.5px;line-height:18px;font-weight:500">{{ deliverN }}</span>
+        </div>
+        <sc-for list="{{ areas }}" as="a" hint-placeholder-count="3">
+          <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+            <div style="display:flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-bottom:1px solid #E2E8F0">
+              <lucide-i name="map-pin" size="14" style="color:#5B6B6A"></lucide-i>
+              <span style="font-size:13px;font-weight:600">{{ a.label }}</span>
+              <span style="height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11.5px;line-height:18px;font-weight:500">{{ a.n }}</span>
+              <span style="margin-left:auto;font-size:12px;color:#5B6B6A">{{ a.sum }}</span>
+            </div>
+            <dc-import name="DataTable" selectable="{{ false }}" columns="{{ dColumns }}" rows="{{ a.rows }}" all-state="{{ a.allState }}" on-toggle-all="{{ a.toggleAll }}" scroll-x="{{ narrow }}" min-width="{{ dMinWidth }}" sticky-top="{{ 0 }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,140px"></dc-import>
+          </div>
+        </sc-for>
+      </section>
+    </sc-if>
+    <sc-if value="{{ hasSel }}"><dc-import name="BulkBar" count-label="{{ selLabel }}" actions="{{ bulkActions }}" on-clear="{{ clearSel }}" clear-label="{{ L.j_clearSel }}" hint-size="0px,0px"></dc-import></sc-if>
+  </sc-if>
+
+  <sc-if value="{{ tTrips }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+      <sc-if value="{{ hasTrips }}"><dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="none" scroll-x="{{ narrow }}" min-width="{{ tMinWidth }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,240px"></dc-import></sc-if>
+      <sc-if value="{{ noTrips }}"><dc-import name="EmptyState" icon="route" title="{{ L.j_tripsEmptyT }}" text="{{ L.j_tripsEmptyD }}" primary="{{ hdrPrimary }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ tDone }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+      <sc-if value="{{ hasSales }}"><dc-import name="DataTable" columns="{{ sColumns }}" rows="{{ sRows }}" all-state="none" scroll-x="{{ narrow }}" min-width="{{ sMinWidth }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,240px"></dc-import></sc-if>
+      <sc-if value="{{ noSales }}"><dc-import name="EmptyState" icon="receipt" tone="neutral" title="{{ L.j_doneEmptyT }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+    </div>
+  </sc-if>
+  <div style="height:64px"></div>
+</div>
+</sc-if>
+<sc-if value="{{ isTrip }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="TripPage" trip-no="{{ tripNo }}" preset="{{ tripPreset }}" demo="{{ tripDemo }}" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-back="{{ backToList }}" on-toast="{{ toastFn }}" on-open-order="{{ openOrderFn }}" hint-size="100%,800px"></dc-import>
+</sc-if>
+<sc-if value="{{ handOpen }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="HandoffPanel" order-id="{{ handId }}" dict="{{ L }}" user-name="{{ userName }}" narrow="{{ narrow }}" can-act="{{ canShip }}" on-close="{{ closeHand }}" on-toast="{{ toastFn }}" hint-size="0px,0px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;operator&quot;,&quot;keeper&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;branch&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Bekzod Tursunov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
+const TRIP_ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], planned: ['calendar', '#5B6B6A', '#EEF2F4'], transit: ['truck', '#1D4ED8', '#EFF6FF'], retwait: ['undo-2', '#B45309', '#FFFBEB'], done: ['check', '#15803D', '#F0FDF4'], cancelled: ['x', '#5B6B6A', '#EEF2F4'] };
+const DEMO_HAND = { h_normal: 'BY-TSH-000332', h_ctrl: 'BY-TSH-000317', h_limit: 'BY-TSH-000316' };
+const DEMO_TRIP = { t_planned: 'RS-TSH-000045', t_load: 'RS-TSH-000045', t_transit: 'RS-TSH-000044', t_partial: 'RS-TSH-000044', t_done: 'RS-TSH-000042' };
+class Component extends DCLogic {
+  state = { view: 'list', tab: 'ready', sel: {}, handId: null, tripNo: null, tripPreset: null, tripDemo: null, empty: false, ready: !!window.MedixData };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'shipments' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.tab) this.setState({ tab: P.tab, sel: {} }); if (P.open && /^RS-/.test(P.open)) this.setState({ tab: 'trips', tripNo: P.open }); }
+  componentDidMount() {
+    this._url = setInterval(() => this.applyUrl(), 250);
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.setState({ ready: true }); this.applyDemo(); } }, 60);
+    else this.applyDemo();
+    this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.applyDemo(); }
+  applyDemo() {
+    const d = this.props.demo, D = this.D; if (!d || !D) return;
+    const k = d.k, base = { sel: {}, empty: false, handId: null, tripDemo: null, tripPreset: null, tripNo: null };
+    D.shipReset();
+    if (k === 'r_normal' || k === 'r_empty') return this.setState({ ...base, view: 'list', tab: 'ready', empty: k === 'r_empty' });
+    if (DEMO_HAND[k]) { const o = D.orderByNo(DEMO_HAND[k]); return this.setState({ ...base, view: 'list', tab: 'ready', handId: o ? o.id : null }); }
+    if (k === 't_new') return this.setState({ ...base, view: 'trip', tripPreset: [], tripDemo: { k, n: d.n } });
+    if (DEMO_TRIP[k]) return this.setState({ ...base, view: 'trip', tripNo: DEMO_TRIP[k], tripDemo: { k, n: d.n } });
+  }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  canPlan() { return this.D.can(this.props.role, 'shipments.trip'); }
+  canShip() { return this.D.can(this.props.role, 'shipments.ship'); }
+  openTrip(no, preset) { this.setState({ view: 'trip', tripNo: no || null, tripPreset: preset || [], tripDemo: null, sel: {} }); }
+  openOrder(id) { const D = this.D; D.store.openReq = id; this.props.onNavigate && this.props.onNavigate('orders'); }
+  ago(m) { const L = this.L; return m < 60 ? fill(L.j_agoM, { n: m }) : m < 1440 ? fill(L.j_agoH, { n: Math.floor(m / 60) }) : fill(L.j_agoD, { n: Math.floor(m / 1440) }); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const common = { L, role: p.role, branch: p.branch, userName: p.userName, narrow, toastFn: t => this.toast(t), openOrderFn: id => this.openOrder(id),
+      isList: s.view === 'list', isTrip: s.view === 'trip', tripNo: s.tripNo, tripPreset: s.tripPreset, tripDemo: s.tripDemo,
+      backToList: () => this.setState({ view: 'list', tripNo: null, tripPreset: null, tripDemo: null, tab: s.tripNo || s.view === 'trip' ? 'trips' : s.tab }),
+      handOpen: s.handId != null, handId: s.handId, closeHand: () => this.setState({ handId: null }) };
+    if (!D) return { ...common, views: [], pickups: [], areas: [], tRows: [], sRows: [], dColumns: [], tColumns: [], sColumns: [] };
+    const br = p.branch && p.branch !== 'ALL' ? p.branch : null, planner = this.canPlan(), shipper = this.canShip();
+    // T5: haydovchi (trip.driver, rejalashtirish/jo'natish huquqisiz) — faqat o'ziga biriktirilgan reyslar
+    const drv = D.can(p.role, 'trip.driver') && !planner && !shipper, mine = t => (D.driverById(t.driver) || {}).name === p.userName, tab = drv ? 'trips' : s.tab;
+    const ready = s.empty || drv ? [] : D.shipReady(br).map(o => D.shipInfo(o));
+    const pick = ready.filter(i => i.o.delivery === 'pickup'), deliv = ready.filter(i => i.o.delivery !== 'pickup');
+    const badges = i => [i.ctrl && { icon: 'shield-alert', fg: '#B91C1C', bg: '#FEF2F2', text: L.j_bCtrl }, i.short > 0 && { icon: 'triangle-alert', fg: '#B45309', bg: '#FFFBEB', text: fill(L.j_bShort, { n: fN(i.short) }) }].filter(Boolean);
+    const pickups = pick.map(i => { const b = badges(i); return { name: i.c.name, no: i.o.no, meta: fill(L.j_meta, { l: i.lines, q: fN(i.qty), s: fM(i.sum) }), badges: b, hasBadges: b.length > 0,
+      wait: fill(L.j_picked, { t: this.ago(i.waitMin) }), waitColor: i.waitMin > 120 ? '#B45309' : '#5B6B6A', canHand: shipper, hand: () => this.setState({ handId: i.o.id }), open: () => this.openOrder(i.o.id) }; });
+    const dColumns = [{ key: 'no', label: L.j_cNo, width: '124px' }, { key: 'cust', label: L.j_cCust, width: 'minmax(150px,1fr)' }, { key: 'addr', label: L.j_cAddr, width: 'minmax(160px,1.2fr)' }, { key: 'dd', label: L.j_cDelDate, width: '128px' },
+      { key: 'l', label: L.j_cLines, width: '72px', align: 'right' }, { key: 'sum', label: L.j_cSum, width: '132px', align: 'right' }, { key: 'f', label: L.j_cFlags, width: '96px' }];
+    const today = D.TODAY;
+    const areaNames = [...D.AREA_ORDER, ...new Set(deliv.map(i => i.area).filter(a => !D.AREA_ORDER.includes(a)))];
+    const areas = areaNames.map(a => {
+      const list = deliv.filter(i => i.area === a); if (!list.length) return null;
+      const free = list.filter(i => !i.trip), selN = free.filter(i => s.sel[i.o.id]).length;
+      return { label: a, n: list.length, sum: fM(list.reduce((x, i) => x + i.sum, 0)),
+        allState: 'none', toggleAll: () => {},
+        rows: list.map(i => {
+          const o = i.o, dd = pD(o.delivDate), td = pD(today);
+          const dcell = dd === td ? { type: 'status', text: L.j_today, icon: 'calendar', fg: '#1D4ED8', bg: '#EFF6FF' } : dd < td ? { type: 'status', text: o.delivDate, icon: 'calendar-x', fg: '#B91C1C', bg: '#FEF2F2' } : { type: 'text', text: o.delivDate };
+          const flags = [i.ctrl && { icon: 'shield-alert', color: '#B91C1C', tip: L.j_bCtrl }, i.short > 0 && { icon: 'triangle-alert', color: '#B45309', tip: fill(L.j_bShort, { n: fN(i.short) }) }, i.trip && { icon: 'route', color: '#0F766E', tip: fill(L.j_inTrip, { t: i.trip }) }].filter(Boolean);
+          return { id: o.id, selected: !!s.sel[o.id], onOpen: () => this.openOrder(o.id),
+            onToggle: () => {},
+            cells: [{ type: 'mono', text: o.no }, { type: 'name', text: i.c.name, sub: o.delivTime ? fill(L.j_until, { t: o.delivTime }) : i.c.phone, weight: 500 }, { type: 'text', text: i.c.address, color: '#5B6B6A' }, dcell,
+              { type: 'text', text: String(i.lines) }, { type: 'text', text: fM(i.sum) }, { type: 'flags', flags }],
+            actions: [{ label: L.j_openOrder, icon: 'arrow-up-right', pick: () => this.openOrder(o.id) }, ...(i.trip ? [{ label: L.j_openTrip, icon: 'route', pick: () => this.openTrip(i.trip) }] : [])] };
+        }) };
+    }).filter(Boolean);
+    const selIds = Object.keys(s.sel).map(Number).filter(id => deliv.some(i => i.o.id === id && !i.trip));
+    // trips
+    const trips = D.store.trips.filter(t => (!br || t.branch === br) && (!drv || mine(t))).slice().sort((a, b) => (pD(b.date) - pD(a.date)) || b.no.localeCompare(a.no));
+    const tripSum = t => t.stops.reduce((x, st) => { const o = D.store.orders.find(y => y.id === st.oid); return x + (o ? (o.sale ? o.sale.sum : D.saleTotals(o).total) : 0); }, 0);
+    const tColumns = [{ key: 'no', label: L.j_cNo, width: '128px' }, { key: 'd', label: L.j_cDate, width: '100px' }, { key: 'dr', label: L.j_cDriver, width: 'minmax(150px,1fr)' }, { key: 'car', label: L.j_cCar, width: 'minmax(150px,1fr)' },
+      { key: 'n', label: L.j_cStops, width: '80px', align: 'right' }, { key: 'sum', label: L.j_cSum, width: '132px', align: 'right' }, { key: 'st', label: L.j_cStatus, width: '150px' }, { key: 'pr', label: L.j_cProg, width: '132px' }];
+    const tRows = trips.map(t => {
+      const d = D.driverById(t.driver) || {}, car = D.carByNo(t.car) || {}, S = TRIP_ST[t.status] || TRIP_ST.draft, n = t.stops.length;
+      const okN = t.stops.filter(x => x.res === 'ok' || x.res === 'part').length, marked = t.stops.filter(x => x.res).length;
+      const prog = t.status === 'done' ? fill(L.j_prog, { a: okN, b: n }) : t.status === 'transit' ? fill(L.j_finProg, { a: marked, b: n }) : fill(L.j_prog, { a: 0, b: n });
+      return { id: t.no, onOpen: () => this.openTrip(t.no), onToggle: () => {},
+        cells: [{ type: 'mono', text: t.no }, { type: 'text', text: t.date }, { type: 'name', text: d.name || '—', sub: d.phone || '', weight: 500 },
+          { type: 'name', text: t.car || '—', sub: car.type || '', weight: 400, flags: car.fridge ? [{ icon: 'snowflake', color: '#1D4ED8', tip: L.j_fridge }] : [] },
+          { type: 'text', text: String(n) }, { type: 'text', text: fM(tripSum(t)) }, { type: 'status', text: L['j_st_' + t.status], icon: S[0], fg: S[1], bg: S[2] }, { type: 'text', text: prog, color: t.status === 'done' ? '#15803D' : '#5B6B6A' }],
+        actions: [{ label: L.j_openTrip, icon: 'arrow-up-right', pick: () => this.openTrip(t.no) }] };
+    });
+    // sales (30 kun)
+    const from = pD(today) - 30 * 86400000;
+    const sales = D.store.sales.filter(x => (!br || x.branch === br) && pD(x.at.slice(0, 10)) >= from);
+    const sColumns = [{ key: 'no', label: L.j_cSaleNo, width: '136px' }, { key: 'o', label: L.j_cOrder, width: '128px' }, { key: 'c', label: L.j_cCust, width: 'minmax(150px,1fr)' }, { key: 'm', label: L.j_cMethod, width: '170px' },
+      { key: 't', label: L.j_cTime, width: '128px' }, { key: 'sum', label: L.j_cSum, width: '132px', align: 'right' }, { key: 'by', label: L.j_cBy, width: '140px' }];
+    const sRows = sales.map(x => { const c = D.custById(x.cust) || {}; return { id: x.no, onOpen: () => this.openOrder(x.oid), onToggle: () => {},
+      cells: [{ type: 'mono', text: x.no }, { type: 'mono', text: x.ono, color: '#5B6B6A' }, { type: 'name', text: c.name || '—', sub: c.region || '', weight: 500 },
+        { type: 'icontext', icon: x.method === 'pickup' ? 'user' : 'truck', text: x.method === 'pickup' ? L.j_mPickup : fill(L.j_mTrip, { t: x.trip || '—' }) }, { type: 'text', text: x.at.replace(' ', ', ') }, { type: 'text', text: fM(x.sum) }, { type: 'text', text: x.by, color: '#5B6B6A' }],
+      actions: [{ label: L.j_openOrder, icon: 'arrow-up-right', pick: () => this.openOrder(x.oid) }] }; });
+    const active = trips.filter(t => ['draft', 'planned', 'transit', 'retwait'].includes(t.status)).length;
+    const hdrPrimary = null; // T9-4a2: reys faqat Ombor mudiri panelining «Hujjatlashtirish» yorlig'ida tuziladi
+    return {
+      ...common, countLabel: fN(ready.length), hdrPrimary, canShip: shipper,
+      views: [['ready', L.j_vReady, ready.length], ['trips', L.j_vTrips, active], ['done', L.j_vDone, sales.length]].filter(v => !drv || v[0] === 'trips').map(([k, label, count]) => ({ label, count, active: tab === k, pick: () => this.setState({ tab: k, sel: {} }) })),
+      tReady: tab === 'ready', tTrips: tab === 'trips', tDone: tab === 'done',
+      readyEmpty: ready.length === 0, hasPickup: pickups.length > 0, pickups, pickupN: pickups.length, cardCols: narrow ? 2 : 3,
+      hasDeliver: deliv.length > 0, deliverN: deliv.length, areas, dColumns, dMinWidth: narrow ? 900 : 0,
+      hasSel: false, selLabel: fill(L.j_selN, { n: selIds.length }), clearSel: () => this.setState({ sel: {} }),
+      bulkActions: [],
+      hasTrips: tRows.length > 0, noTrips: tRows.length === 0, tColumns, tRows, tMinWidth: narrow ? 1000 : 0,
+      hasSales: sRows.length > 0, noSales: sRows.length === 0, sColumns, sRows, sMinWidth: narrow ? 1000 : 0
+    };
+  }
+}
+</script>
+</body>
+</html>

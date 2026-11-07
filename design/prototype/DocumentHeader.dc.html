@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<header style="margin:-24px -24px 0;padding:20px 24px;background:#FFFFFF;border-bottom:1px solid #E2E8F0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px 24px;flex-wrap:wrap;font-family:Inter,system-ui,sans-serif;color:#172B2A">
+  <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+    <nav style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px"><button onClick="{{ onParent }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ parentLabel }}</button><span style="color:#647574">/</span><span style="color:#5B6B6A;font-family:{{ crumbFont }};font-size:{{ crumbSize }};white-space:nowrap">{{ crumbCurrent }}</span></nav>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ title }}</h1>
+      <sc-if value="{{ hasNumber }}"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;line-height:28px;color:#5B6B6A">{{ number }}</span></sc-if>
+      <span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ badge.bg }};color:{{ badge.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ badge.icon }}" size="12"></lucide-i>{{ badge.label }}</span>
+    </div>
+    <sc-if value="{{ hasSub }}"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;line-height:18px;color:#5B6B6A"><sc-for list="{{ subParts }}" as="sp"><sc-if value="{{ sp.dot }}"><span style="color:#647574">·</span></sc-if><span style="display:inline-flex;align-items:center;gap:4px"><sc-if value="{{ sp.icon }}"><lucide-i name="{{ sp.icon }}" size="14"></lucide-i></sc-if>{{ sp.text }}</span></sc-for></div></sc-if>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:flex-end">
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      <sc-if value="{{ hasStepper }}" hint-placeholder-val="{{ true }}"><dc-import name="StatusStepper" status="{{ status }}" labels="{{ stepLabels }}" steps="{{ customSteps }}" hint-size="220px,16px"></dc-import></sc-if>
+      <sc-if value="{{ hasAutosave }}"><dc-import name="AutosaveIndicator" state="{{ autosave.state }}" time="{{ autosave.time }}" saved-label="{{ autosave.savedLabel }}" saving-label="{{ autosave.savingLabel }}" error-label="{{ autosave.errorLabel }}" on-retry="{{ autosave.onRetry }}" hint-size="140px,24px"></dc-import></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <sc-if value="{{ hasPrint }}"><div style="position:relative">
+        <button onClick="{{ printClick }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA"><lucide-i name="printer" size="16" style="color:#5B6B6A"></lucide-i>{{ printLabel }}<sc-if value="{{ printMulti }}"><lucide-i name="chevron-down" size="14" style="color:#5B6B6A"></lucide-i></sc-if></button>
+        <sc-if value="{{ printOpen }}"><div role="menu" style="position:absolute;right:0;top:40px;z-index:40;min-width:220px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px;display:flex;flex-direction:column">
+          <sc-for list="{{ printList }}" as="m"><button role="menuitem" onClick="{{ m.run }}" style="height:34px;padding:0 10px;border:0;border-radius:6px;background:transparent;text-align:left;font-size:13px;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:8px" style-hover="background:#F8FAFA"><lucide-i name="file-text" size="14" style="color:#5B6B6A"></lucide-i>{{ m.label }}</button></sc-for>
+        </div></sc-if>
+      </div></sc-if>
+      <sc-for list="{{ secondaryList }}" as="b">
+        <button onClick="{{ b.pick }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:{{ b.fg }};cursor:pointer;white-space:nowrap;transition:background 120ms ease-out" style-hover="background:{{ b.hoverBg }}" style-active="background:{{ b.activeBg }}"><lucide-i name="{{ b.icon }}" size="16" style="color:{{ b.iconFg }}"></lucide-i>{{ b.label }}</button>
+      </sc-for>
+      <sc-if value="{{ hasMore }}">
+        <div style="position:relative">
+          <button onClick="{{ toggleMore }}" aria-label="{{ moreLabel }}" title="{{ moreLabel }}" style="width:34px;height:34px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA"><lucide-i name="ellipsis" size="16"></lucide-i></button>
+          <sc-if value="{{ moreOpen }}">
+            <div onClick="{{ toggleMore }}" style="position:fixed;inset:0;z-index:40"></div>
+            <div style="position:absolute;top:40px;right:0;min-width:220px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px;z-index:41">
+              <sc-for list="{{ moreItems }}" as="m">
+                <sc-if value="{{ m.sep }}"><div style="height:1px;background:#EEF2F4;margin:4px 0"></div></sc-if>
+                <button onClick="{{ m.run }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;font-size:13px;color:{{ m.color }};cursor:pointer;text-align:left;white-space:nowrap" style-hover="background:{{ m.hover }}"><lucide-i name="{{ m.icon }}" size="16" style="color:{{ m.iconColor }}"></lucide-i>{{ m.label }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasPrimary }}">
+        <button onClick="{{ primary.pick }}" aria-disabled="{{ pDis }}" title="{{ pTitle }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px 0 12px;border:0;border-radius:8px;background:{{ pBg }};color:#FFFFFF;font-size:13px;font-weight:500;cursor:{{ pCursor }};white-space:nowrap;transition:background 120ms ease-out" style-hover="background:{{ pHover }}" style-active="background:{{ pActive }}"><lucide-i name="{{ primary.icon }}" size="16"></lucide-i>{{ primary.label }}<sc-if value="{{ primary.kbd }}"><span style="margin-left:4px;height:18px;padding:0 5px;border-radius:4px;background:rgba(255,255,255,0.16);font-size:12px;line-height:18px;font-weight:500;font-family:'JetBrains Mono',monospace">{{ primary.kbd }}</span></sc-if></button>
+      </sc-if>
+    </div>
+  </div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:120},&quot;parentLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Kirim&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onParent&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Kirim&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;number&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;KR-TSH-000125&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;badge&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,fg,bg}&quot;},&quot;status&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;draft&quot;,&quot;posted&quot;,&quot;cancelled&quot;],&quot;default&quot;:&quot;draft&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;stepLabels&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;autosave&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{state,time,onRetry,...}&quot;},&quot;secondary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;[]&quot;},&quot;more&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;[]&quot;},&quot;primary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,pick}&quot;},&quot;moreLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Boshqa amallar&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { open: false, pOpen: false };
+  renderVals() {
+    const p = this.props, more = p.more || [], dis = !!(p.primary && p.primary.disabled);
+    return {
+      pDis: dis, pTitle: (p.primary && p.primary.tip) || '', pBg: dis ? '#647574' : '#0F766E', pHover: dis ? '#647574' : '#115E59', pActive: dis ? '#647574' : '#134E4A', pCursor: dis ? 'not-allowed' : 'pointer',
+      hasNumber: !!p.number, crumbCurrent: p.number || p.title || '', title: p.title || '', crumbFont: p.number ? "'JetBrains Mono',monospace" : 'inherit', crumbSize: p.number ? '12.5px' : '12px',
+      badge: { label: '', ...(p.badge || {}) }, hasStepper: !p.hideStepper, hasSub: !!(p.sub && p.sub.length), subParts: (p.sub || []).map((x, i) => ({ text: x.text, icon: x.icon || '', dot: i > 0 })), status: p.status || 'draft', stepLabels: p.stepLabels, customSteps: p.steps || null, hasAutosave: !!p.autosave, autosave: p.autosave || {},
+      secondaryList: (p.secondary || []).map(b => ({ ...b, fg: b.danger ? '#B91C1C' : '#172B2A', iconFg: b.danger ? '#B91C1C' : '#5B6B6A', hoverBg: b.danger ? '#FEF2F2' : '#F8FAFA', activeBg: b.danger ? '#FEE2E2' : '#EEF2F4' })), hasPrint: !!(p.printItems && p.printItems.length), printLabel: p.printLabel || 'Chop etish', printMulti: (p.printItems || []).length > 1, printOpen: this.state.pOpen, printClick: () => { const it = p.printItems || []; if (it.length === 1) return it[0].pick(); this.setState(s => ({ pOpen: !s.pOpen, open: false })); }, printList: (p.printItems || []).map(m => ({ label: m.label, run: () => { this.setState({ pOpen: false }); m.pick(); } })), hasPrimary: !!p.primary, primary: p.primary || {}, hasMore: more.length > 0, moreOpen: this.state.open,
+      toggleMore: () => this.setState(s => ({ open: !s.open })),
+      moreItems: more.map(m => ({ ...m, sep: !!m.sep, color: m.danger ? '#B91C1C' : '#172B2A', iconColor: m.danger ? '#B91C1C' : '#5B6B6A', hover: m.danger ? '#FEF2F2' : '#F8FAFA', run: () => { this.setState({ open: false }); m.pick && m.pick(); } }))
+    };
+  }
+}
+</script>
+</body>
+</html>

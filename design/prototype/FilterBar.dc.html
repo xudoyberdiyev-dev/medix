@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:Inter,system-ui,sans-serif">
+  <label style="display:flex;align-items:center;gap:8px;width:{{ searchW }}px;max-width:100%;height:34px;padding:0 10px;border:1px solid {{ searchBorder }};border-radius:8px;background:#FFFFFF;color:#647574;cursor:text;box-shadow:{{ searchRing }};transition:border-color 120ms ease-out">
+    <lucide-i name="search" size="16"></lucide-i>
+    <input ref="{{ searchRef }}" value="{{ query }}" onChange="{{ onQ }}" onFocus="{{ focusQ }}" onBlur="{{ blurQ }}" placeholder="{{ searchPh }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:13px;color:#172B2A">
+    <sc-if value="{{ hasQ }}"><button onClick="{{ clearQ }}" aria-label="{{ clearLabel }}" style="width:20px;height:20px;border:0;border-radius:5px;background:transparent;color:#647574;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="x" size="14"></lucide-i></button></sc-if>
+    <sc-if value="{{ showSlash }}" hint-placeholder-val="{{ true }}"><span style="height:20px;min-width:20px;padding:0 5px;border:1px solid #E2E8F0;border-radius:5px;background:#FFFFFF;font-size:11px;line-height:18px;color:#5B6B6A;text-align:center">/</span></sc-if>
+  </label>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:{{ chipsFlex }};order:{{ chipsOrder }}">
+    <sc-for list="{{ chips }}" as="f" hint-placeholder-count="3">
+      <dc-import name="FilterChip" label="{{ f.label }}" options="{{ f.options }}" selected="{{ f.selected }}" on-change="{{ f.onChange }}" search-ph="{{ fl.search }}" reset-label="{{ fl.reset }}" apply-label="{{ fl.apply }}" clear-label="{{ fl.remove }}" empty-label="{{ fl.none }}" hint-size="130px,34px"></dc-import>
+    </sc-for>
+    <sc-for list="{{ ranges }}" as="r">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;height:auto;min-height:34px;padding:0 4px 0 10px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }}">
+        <span style="font-size:13px;font-weight:500;color:#172B2A;white-space:nowrap">{{ r.label }}</span>
+        <input value="{{ r.fromTxt }}" onChange="{{ r.onFrom }}" onBlur="{{ r.commit }}" onKeyDown="{{ r.key }}" placeholder="{{ r.fromPh }}" inputmode="decimal" style="width:120px;height:26px;padding:0 8px;border:1px solid #E2E8F0;border-radius:6px;font-size:12.5px;text-align:right;outline:none;color:#172B2A" style-focus="border-color:#0F766E">
+        <span style="color:#647574">–</span>
+        <input value="{{ r.toTxt }}" onChange="{{ r.onTo }}" onBlur="{{ r.commit }}" onKeyDown="{{ r.key }}" placeholder="{{ r.toPh }}" inputmode="decimal" style="width:120px;height:26px;padding:0 8px;border:1px solid #E2E8F0;border-radius:6px;font-size:12.5px;text-align:right;outline:none;color:#172B2A" style-focus="border-color:#0F766E">
+        <sc-for list="{{ r.presets }}" as="pr"><button onClick="{{ pr.pick }}" style="height:24px;padding:0 8px;border:0;border-radius:6px;background:{{ pr.bg }};font-size:12px;color:{{ pr.color }};cursor:pointer;white-space:nowrap" style-hover="background:#EEF2F4">{{ pr.label }}</button></sc-for>
+        <sc-if value="{{ r.active }}"><button onClick="{{ r.clear }}" aria-label="{{ fl.remove }}" style="width:24px;height:24px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EEF2F4"><lucide-i name="x" size="14"></lucide-i></button></sc-if>
+      </div>
+    </sc-for>
+    <sc-if value="{{ hasDate }}">
+      <sc-if value="{{ hasDateKinds }}"><div style="display:flex;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;height:34px;box-sizing:border-box"><sc-for list="{{ dateKinds }}" as="k"><button onClick="{{ k.pick }}" style="height:28px;padding:0 10px;border:0;border-radius:6px;background:{{ k.bg }};box-shadow:{{ k.sh }};font-size:12.5px;font-weight:500;color:{{ k.color }};cursor:pointer;white-space:nowrap">{{ k.label }}</button></sc-for></div></sc-if>
+      <dc-import name="DateRangePicker" label="{{ date.label }}" from="{{ date.from }}" to="{{ date.to }}" on-change="{{ date.onChange }}" labels="{{ date.labels }}" hint-size="90px,34px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ hasMore }}"><button onClick="{{ toggleMore }}" aria-expanded="{{ moreOpen }}" style="flex:none;display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px {{ moreBorderStyle }} {{ moreBorder }};border-radius:8px;background:{{ moreBg }};font-size:13px;font-weight:500;color:{{ moreColor }};cursor:pointer;white-space:nowrap" style-hover="border-color:#647574"><lucide-i name="sliders-horizontal" size="15"></lucide-i>{{ moreText }}<lucide-i name="{{ moreIcon }}" size="14"></lucide-i></button></sc-if>
+    <sc-if value="{{ hasActive }}"><button onClick="{{ onClearAll }}" style="flex:none;height:34px;padding:0 6px;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="color:#0F766E;text-decoration:underline">{{ clearAllLabel }}</button></sc-if>
+  </div>
+  <sc-if value="{{ moreShown }}">
+    <div style="flex:1 1 100%;order:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1px solid #E2E8F0;border-radius:10px;background:#F8FAFA">
+      <sc-for list="{{ chipsMore }}" as="f">
+        <dc-import name="FilterChip" label="{{ f.label }}" options="{{ f.options }}" selected="{{ f.selected }}" on-change="{{ f.onChange }}" search-ph="{{ fl.search }}" reset-label="{{ fl.reset }}" apply-label="{{ fl.apply }}" clear-label="{{ fl.remove }}" empty-label="{{ fl.none }}" hint-size="130px,34px"></dc-import>
+      </sc-for>
+      <sc-for list="{{ rangesMore }}" as="r">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;height:auto;min-height:34px;padding:0 4px 0 10px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }}">
+        <span style="font-size:13px;font-weight:500;color:#172B2A;white-space:nowrap">{{ r.label }}</span>
+        <input value="{{ r.fromTxt }}" onChange="{{ r.onFrom }}" onBlur="{{ r.commit }}" onKeyDown="{{ r.key }}" placeholder="{{ r.fromPh }}" inputmode="decimal" style="width:120px;height:26px;padding:0 8px;border:1px solid #E2E8F0;border-radius:6px;font-size:12.5px;text-align:right;outline:none;color:#172B2A" style-focus="border-color:#0F766E">
+        <span style="color:#647574">–</span>
+        <input value="{{ r.toTxt }}" onChange="{{ r.onTo }}" onBlur="{{ r.commit }}" onKeyDown="{{ r.key }}" placeholder="{{ r.toPh }}" inputmode="decimal" style="width:120px;height:26px;padding:0 8px;border:1px solid #E2E8F0;border-radius:6px;font-size:12.5px;text-align:right;outline:none;color:#172B2A" style-focus="border-color:#0F766E">
+        <sc-for list="{{ r.presets }}" as="pr"><button onClick="{{ pr.pick }}" style="height:24px;padding:0 8px;border:0;border-radius:6px;background:{{ pr.bg }};font-size:12px;color:{{ pr.color }};cursor:pointer;white-space:nowrap" style-hover="background:#EEF2F4">{{ pr.label }}</button></sc-for>
+        <sc-if value="{{ r.active }}"><button onClick="{{ r.clear }}" aria-label="{{ fl.remove }}" style="width:24px;height:24px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EEF2F4"><lucide-i name="x" size="14"></lucide-i></button></sc-if>
+      </div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <div style="flex:1"></div>
+  <sc-if value="{{ hasToggle }}">
+    <button role="switch" aria-checked="{{ toggle.on }}" onClick="{{ flip }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 4px;border:0;background:transparent;font-size:13px;color:#172B2A;cursor:pointer;white-space:nowrap"><span style="width:32px;height:18px;flex:none;padding:2px;border-radius:999px;background:{{ tgBg }};display:flex;justify-content:{{ tgJust }};transition:background 120ms ease-out"><span style="width:14px;height:14px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></span>{{ toggle.label }}</button>
+  </sc-if>
+  <sc-if value="{{ hasColumns }}">
+    <div style="position:relative">
+      <button onClick="{{ toggleCols }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA"><lucide-i name="columns-3" size="16" style="color:#5B6B6A"></lucide-i>{{ columnsLabel }}</button>
+      <sc-if value="{{ colsOpen }}">
+        <div onClick="{{ toggleCols }}" style="position:fixed;inset:0;z-index:40"></div>
+        <div style="position:absolute;top:40px;right:0;width:250px;max-height:460px;overflow-y:auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px;z-index:41">
+          <div style="padding:8px 10px 6px;font-size:12px;line-height:16px;color:#647574">{{ columnsHint }}</div>
+          <sc-for list="{{ colItems }}" as="c">
+            <div draggable="true" onDragStart="{{ c.dragStart }}" onDragOver="{{ c.dragOver }}" onDrop="{{ c.drop }}" onDragEnd="{{ dragEnd }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 6px 0 4px;border-radius:6px;background:{{ c.bg }};border-top:2px solid {{ c.dropLine }}">
+              <span style="display:flex;color:#647574;cursor:grab"><lucide-i name="grip-vertical" size="16"></lucide-i></span>
+              <button role="checkbox" aria-checked="{{ c.visible }}" onClick="{{ c.toggle }}" style="flex:1;display:flex;align-items:center;gap:8px;height:30px;padding:0;border:0;background:transparent;font-size:13px;color:#172B2A;cursor:pointer;text-align:left">
+                <span style="width:16px;height:16px;flex:none;border-radius:4px;border:1px solid {{ c.cbBorder }};background:{{ c.cbBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ c.visible }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span>{{ c.label }}
+              </button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ hasColReset }}"><div style="border-top:1px solid #EEF2F4;margin-top:4px;padding:4px 0 0"><button onClick="{{ colReset }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;font-size:13px;color:#0F766E;font-weight:500;cursor:pointer;text-align:left" style-hover="background:#F8FAFA"><lucide-i name="rotate-ccw" size="14"></lucide-i>{{ colResetLabel }}</button></div></sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:120},&quot;query&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onQuery&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(v)=&gt;void&quot;},&quot;searchPh&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Nomi, MNN yoki shtrix-kod&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;searchWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:320,&quot;tsType&quot;:&quot;number&quot;},&quot;filters&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,options,selected,onChange}[]&quot;},&quot;chipLabels&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{search,reset,apply,remove,none}&quot;},&quot;dateFilter&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,from,to,onChange,labels}&quot;},&quot;hasActive&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onClearAll&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;clearAllLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Filtrlarni tozalash&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;columns&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{key,label,visible}[]&quot;},&quot;onColumns&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(cols)=&gt;void&quot;},&quot;columnsLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Ustunlar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;columnsHint&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;slashFocus&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;clearLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Tozalash&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { focus: false, colsOpen: false, drag: null, over: null, moreOpen: false, rt: {} };
+  searchRef = React.createRef();
+  componentDidMount() {
+    this.onKey = e => {
+      if (e.key !== '/' || this.props.slashFocus === false) return;
+      const t = e.target, tag = t && t.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+      e.preventDefault(); this.searchRef.current && this.searchRef.current.focus();
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  rangeVals(f, i) {
+    const s = this.state, fN = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'), fM = n => n == null || n === '' ? '' : (() => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return fN(+a) + ',' + b; })();
+    const pn = v => { let x = String(v || '').replace(/\s/g, ''); if (!x) return null; if (x.includes(',')) x = x.replace(/\./g, '').replace(',', '.'); else x = x.replace(/\./g, ''); const n = parseFloat(x); return isNaN(n) ? null : Math.round(n * 100) / 100; };
+    const k = f.key || 'r' + i, t = s.rt[k] || {}, ft = t.from != null ? t.from : fM(f.from), tt = t.to != null ? t.to : fM(f.to), active = f.from != null || f.to != null;
+    const set = (w, v) => this.setState(st => ({ rt: { ...st.rt, [k]: { ...(st.rt[k] || {}), [w]: v } } }));
+    const commit = () => { const a = pn(ft), b = pn(tt); this.setState(st => { const n = { ...st.rt }; delete n[k]; return { rt: n }; }); f.onChange && f.onChange(a, b); };
+    return { label: f.label, fromTxt: ft, toTxt: tt, fromPh: f.fromPh || 'dan', toPh: f.toPh || 'gacha', active, border: active ? '#0D9488' : '#E2E8F0', bg: active ? '#F0FDFA' : '#FFFFFF',
+      onFrom: e => set('from', e.target.value), onTo: e => set('to', e.target.value), commit, key: e => { if (e.key === 'Enter') commit(); }, clear: () => { this.setState(st => { const n = { ...st.rt }; delete n[k]; return { rt: n }; }); f.onChange && f.onChange(null, null); },
+      presets: (f.presets || []).map(pr => { const on = pr.from === f.from && pr.to === f.to && active; return { label: pr.label, bg: on ? '#DDF5EE' : '#F1F5F4', color: on ? '#0F766E' : '#5B6B6A', pick: () => { this.setState(st => { const n = { ...st.rt }; delete n[k]; return { rt: n }; }); f.onChange && f.onChange(pr.from, pr.to); } }; }) };
+  }
+  filterVals() {
+    const p = this.props, s = this.state, all = p.filters || [], isR = f => f.kind === 'range', main = all.filter(f => !f.more), more = all.filter(f => f.more);
+    const act = f => isR(f) ? (f.from != null || f.to != null) : !!(f.selected && f.selected.length), nAct = more.filter(act).length, open = s.moreOpen || false;
+    const ml = p.moreLabel || "Ko'proq filtrlar";
+    return { chips: main.filter(f => !isR(f)), ranges: main.filter(isR).map((f, i) => this.rangeVals(f, i)), chipsMore: more.filter(f => !isR(f)), rangesMore: more.filter(isR).map((f, i) => this.rangeVals(f, 100 + i)),
+      hasMore: more.length > 0, moreShown: more.length > 0 && open, moreOpen: open, moreText: nAct ? ml + ' · ' + nAct : ml, moreIcon: open ? 'chevron-up' : 'chevron-down', toggleMore: () => this.setState(st => ({ moreOpen: !st.moreOpen })),
+      moreBorder: nAct ? '#0D9488' : '#CBD5D3', moreBorderStyle: nAct ? 'solid' : 'dashed', moreBg: nAct ? '#F0FDFA' : '#FFFFFF', moreColor: nAct ? '#0F766E' : '#172B2A' };
+  }
+  renderVals() {
+    const p = this.props, s = this.state, q = p.query || '', cols = p.columns || [];
+    const setCols = c => p.onColumns && p.onColumns(c);
+    return {
+      searchW: p.searchWidth || 320, query: q, hasQ: !!q, showSlash: !q && p.slashFocus !== false,
+      onQ: e => p.onQuery && p.onQuery(e.target.value), clearQ: () => p.onQuery && p.onQuery(''),
+      focusQ: () => this.setState({ focus: true }), blurQ: () => this.setState({ focus: false }), searchRef: this.searchRef,
+      searchBorder: s.focus ? '#0D9488' : '#E2E8F0', searchRing: s.focus ? '0 0 0 3px rgba(13,148,136,0.15)' : 'none',
+      chipsFlex: p.narrow ? '1 1 100%' : '0 1 auto', chipsOrder: p.narrow ? 3 : 0,
+      ...this.filterVals(), fl: p.chipLabels || {}, hasDate: !!p.dateFilter, date: p.dateFilter || {},
+      hasDateKinds: !!(p.dateFilter && p.dateFilter.kinds && p.dateFilter.kinds.length), dateKinds: ((p.dateFilter || {}).kinds || []).map(k => { const on = k.value === p.dateFilter.kind; return { label: k.label, bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', color: on ? '#172B2A' : '#5B6B6A', pick: () => p.dateFilter.onKind && p.dateFilter.onKind(k.value) }; }),
+      hasActive: !!p.hasActive, hasToggle: !!p.toggle, toggle: p.toggle || {}, tgBg: p.toggle && p.toggle.on ? '#0F766E' : '#647574', tgJust: p.toggle && p.toggle.on ? 'flex-end' : 'flex-start', flip: () => p.toggle && p.toggle.onChange && p.toggle.onChange(!p.toggle.on), hasColumns: cols.length > 0, colsOpen: s.colsOpen, toggleCols: () => this.setState(st => ({ colsOpen: !st.colsOpen })),
+      dragEnd: () => this.setState({ drag: null, over: null }), hasColReset: !!p.onColumnsReset, colResetLabel: p.columnsResetLabel || '', colReset: () => p.onColumnsReset && p.onColumnsReset(),
+      colItems: cols.map((c, i) => ({ label: c.label, visible: c.visible, cbBg: c.visible ? '#0F766E' : '#FFFFFF', cbBorder: c.visible ? '#0F766E' : '#647574',
+        bg: s.drag === i ? '#F8FAFA' : 'transparent', dropLine: s.over === i && s.drag !== i ? '#0D9488' : 'transparent',
+        toggle: () => setCols(cols.map((x, j) => j === i ? { ...x, visible: !x.visible || cols.filter(y => y.visible).length === 1 } : x)),
+        dragStart: e => { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(i)); } catch (_) {} this.setState({ drag: i }); },
+        dragOver: e => { e.preventDefault(); if (s.over !== i) this.setState({ over: i }); },
+        drop: e => { e.preventDefault(); const from = this.state.drag; this.setState({ drag: null, over: null }); if (from == null) return; const a = [...cols]; const [m] = a.splice(from, 1); a.splice(i, 0, m); setCols(a); } }))
+    };
+  }
+}
+</script>
+</body>
+</html>

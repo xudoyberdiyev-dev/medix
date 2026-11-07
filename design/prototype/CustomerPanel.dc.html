@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="font-family:Inter,system-ui,sans-serif;font-size:13px;line-height:18px;color:#172B2A;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isEmpty }}">
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+    <dc-import name="EmptyState" icon="user-round-search" tone="neutral" title="{{ L.b_cpEmptyT }}" text="{{ L.b_cpEmpty }}" min-height="{{ emptyH }}" hint-size="100%,240px"></dc-import>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isCompact }}">
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:12px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;min-width:160px;flex:0 1 auto">
+      <button onClick="{{ openCard }}" title="{{ L.kt_oeCard }}" style="padding:0;border:0;background:transparent;font:inherit;text-align:left;cursor:pointer;color:inherit;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" style-hover="color:#0F766E;text-decoration:underline;text-underline-offset:3px">{{ c.name }}</button>
+      <span style="font-size:12px;line-height:16px;color:#647574">{{ c.region }}</span>
+    </div>
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;line-height:16px;color:#5B6B6A"><span>{{ L.b_cpDebtLimit }}</span><span style="color:#172B2A;font-weight:500">{{ debtLimit }}</span></div>
+      <div style="position:relative;height:8px;border-radius:4px;background:#EEF2F4;display:flex;overflow:visible">
+        <span style="display:block;height:100%;width:{{ bar.debt }}%;background:#5B6B6A;border-radius:4px 0 0 4px"></span>
+        <span style="display:block;height:100%;width:{{ bar.order }}%;background:#0D9488"></span>
+        <span style="display:block;height:100%;width:{{ bar.over }}%;background:repeating-linear-gradient(135deg,#B91C1C 0 4px,#FCA5A5 4px 7px);border-radius:0 4px 4px 0"></span>
+        <span style="position:absolute;top:-4px;bottom:-4px;left:{{ bar.limit }}%;width:2px;margin-left:-1px;background:#172B2A"></span>
+      </div>
+    </div>
+    <sc-if value="{{ hasOverdue }}"><div style="display:flex;flex-direction:column"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.b_cpOverdue }}</span><span style="font-size:13px;font-weight:600;color:#B91C1C">{{ overdueText }}</span></div></sc-if>
+    <button onClick="{{ onDetails }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="panel-right-open" size="16" style="color:#5B6B6A"></lucide-i>{{ L.b_cpMore }}</button>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isFull }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <button onClick="{{ openCard }}" title="{{ L.kt_oeCard }}" style="padding:0;border:0;background:transparent;font:inherit;text-align:left;cursor:pointer;color:inherit;font-size:16px;line-height:22px;font-weight:600;text-wrap:pretty" style-hover="color:#0F766E;text-decoration:underline;text-underline-offset:3px">{{ c.name }}</button>
+        <sc-if value="{{ hasClose }}"><button onClick="{{ onClose }}" aria-label="{{ L.close }}" style="width:28px;height:28px;flex:none;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EEF2F4"><lucide-i name="x" size="16"></lucide-i></button></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;font-size:12.5px;line-height:18px;color:#5B6B6A">
+        <span>{{ L.b_cpStir }} <span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ c.stir }}</span></span>
+        <span>{{ c.region }}</span>
+        <a href="{{ telHref }}" style="color:#0F766E;text-decoration:none;width:max-content" style-hover="text-decoration:underline">{{ c.phone }}</a>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span title="{{ lic.tip }}" style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ lic.bg }};color:{{ lic.fg }};font-size:12px;font-weight:500"><lucide-i name="{{ lic.icon }}" size="12"></lucide-i>{{ lic.label }}</span>
+        <sc-if value="{{ isBlocked }}"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:#FEF2F2;color:#B91C1C;font-size:12px;font-weight:500"><lucide-i name="lock" size="12"></lucide-i>{{ L.b_cpBlocked }}</span></sc-if>
+      </div>
+    </div>
+
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:13px;font-weight:600">{{ L.b_cpCredit }}</span>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:13px">
+        <span style="color:#5B6B6A">{{ L.b_cpLimit }}</span><span style="text-align:right">{{ limitText }}</span>
+        <span style="color:#5B6B6A">{{ L.b_cpDebt }}</span><button onClick="{{ openDebt }}" title="{{ L.qz_openCard }}" style="justify-self:end;display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;font:inherit;font-size:13px;color:#0F766E;cursor:pointer;text-decoration:underline;text-decoration-color:#99D5CE;text-underline-offset:3px" style-hover="color:#0F766E">{{ debtText }}<lucide-i name="arrow-up-right" size="12"></lucide-i></button>
+        <span style="color:#5B6B6A">{{ L.b_cpOverdue }}</span><span style="text-align:right;color:{{ overdueColor }};font-weight:{{ overdueWeight }}">{{ overdueText }}</span>
+        <span style="color:#5B6B6A">{{ L.b_cpThis }}</span><span style="text-align:right;color:#0F766E;font-weight:500">{{ orderText }}</span>
+      </div>
+      <div style="position:relative;height:10px;margin:4px 0;border-radius:5px;background:#EEF2F4;display:flex">
+        <span title="{{ L.b_cpDebt }}" style="display:block;height:100%;width:{{ bar.debt }}%;background:#5B6B6A;border-radius:5px 0 0 5px"></span>
+        <span title="{{ L.b_cpThis }}" style="display:block;height:100%;width:{{ bar.order }}%;background:#0D9488"></span>
+        <span title="{{ L.b_cpOverPart }}" style="display:block;height:100%;width:{{ bar.over }}%;background:repeating-linear-gradient(135deg,#B91C1C 0 4px,#FCA5A5 4px 7px);border-radius:0 5px 5px 0"></span>
+        <span title="{{ L.b_cpLimit }}" style="position:absolute;top:-4px;bottom:-4px;left:{{ bar.limit }}%;width:2px;margin-left:-1px;background:#172B2A;border-radius:1px"></span>
+      </div>
+      <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:{{ restColor }}"><sc-if value="{{ isOver }}"><lucide-i name="triangle-alert" size="14"></lucide-i></sc-if>{{ restText }}</span>
+    </div>
+
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:13px;font-weight:600">{{ L.b_cpTerms }}</span>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:13px">
+        <span style="color:#5B6B6A">{{ L.b_cpPayTerm }}</span><span style="text-align:right">{{ payTerm }}</span>
+        <span style="color:#5B6B6A">{{ L.b_cpDisc }}</span><span style="text-align:right">{{ discText }}</span>
+        <span style="color:#5B6B6A">{{ L.b_cpMinDays }}</span><span style="text-align:right;color:{{ minColor }};font-weight:{{ minWeight }}">{{ minText }}</span>
+      </div>
+    </div>
+
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px 16px 8px;display:flex;flex-direction:column;gap:4px">
+      <span style="font-size:13px;font-weight:600;margin-bottom:6px">{{ L.b_cpRecent }}</span>
+      <sc-for list="{{ recent }}" as="o" hint-placeholder-count="5">
+        <div style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px 10px;padding:6px 0;border-top:1px solid #EEF2F4">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ o.no }}</span>
+          <span style="font-size:12px;color:#647574">{{ o.date }}</span>
+          <span style="font-size:12.5px;text-align:right">{{ o.sum }}</span>
+          <span style="grid-column:1/-1"><dc-import name="OrderStatus" status="{{ o.status }}" dict="{{ L }}" hint-size="110px,22px"></dc-import></span>
+        </div>
+      </sc-for>
+      <sc-if value="{{ noRecent }}"><span style="padding:6px 0 8px;font-size:12.5px;color:#647574">{{ L.b_cpNoRecent }}</span></sc-if>
+    </div>
+
+    <sc-if value="{{ hasAdd }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:13px;font-weight:600">{{ L.b_cpTop }}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <sc-for list="{{ top }}" as="t" hint-placeholder-count="6">
+          <button onClick="{{ t.add }}" title="{{ L.b_cpTopTip }}" style="display:flex;align-items:center;gap:4px;height:28px;max-width:100%;padding:0 10px 0 8px;border:1px solid #E2E8F0;border-radius:999px;background:#FFFFFF;font-size:12.5px;color:#172B2A;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#DDF5EE;border-color:#99D5C9"><lucide-i name="plus" size="12" style="color:#0F766E;flex:none"></lucide-i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span></button>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:360,&quot;height&quot;:900},&quot;custId&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;tsType&quot;:&quot;number&quot;},&quot;orderSum&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:13500000,&quot;tsType&quot;:&quot;number&quot;},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;excludeNo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;onAdd&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(pid)=&gt;void&quot;},&quot;onDetails&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;}}">
+const fN = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const pD = s => { const [d, m, y] = String(s).split('.').map(Number); return Date.UTC(y, m - 1, d); };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+class Component extends DCLogic {
+  componentDidMount() { if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.forceUpdate(); } }, 60); }
+  componentWillUnmount() { clearInterval(this._p); }
+  renderVals() {
+    const p = this.props, L = p.dict || {}, D = window.MedixData, c0 = D && p.custId ? (D.custAt ? D.custAt(p.custId, p.branch) : D.custById(p.custId)) : null, ds0 = c0 && D.debtOf ? D.debtOf('mt', c0.id, p.branch || c0.at || undefined) : null, c = c0 ? { ...c0, debt: ds0 ? ds0.debt : 0, overdue: ds0 ? ds0.overdue : 0, overdueDays: ds0 ? ds0.overdueDays : 0 } : null;
+    const mode = !c ? 'empty' : p.compact ? 'compact' : 'full';
+    const base = { L, isEmpty: mode === 'empty', isCompact: mode === 'compact', isFull: mode === 'full', emptyH: p.compact ? 120 : 280, c: c || {}, bar: {}, lic: {}, recent: [], top: [], hasClose: !!p.onClose, hasAdd: !!p.onAdd, onClose: () => p.onClose && p.onClose(), onDetails: () => p.onDetails && p.onDetails() };
+    if (!c) return base;
+    const cDebt = c.debt;
+    const order = p.orderSum || 0, sum = cDebt + order, scale = Math.max(c.limit, sum) || 1;
+    const gray = Math.min(c.debt, c.limit), teal = Math.max(0, Math.min(sum, c.limit) - gray), red = Math.max(0, sum - c.limit);
+    const lv = D.licValid(c), lic = !c.license ? { label: L.b_licNone, icon: 'lock-open', fg: '#5B6B6A', bg: '#EEF2F4', tip: L.b_licNoneTip }
+      : lv ? { label: L.b_licOk, icon: 'lock', fg: '#15803D', bg: '#F0FDF4', tip: fill(L.b_licTip, { no: c.license.no, d: c.license.until }) }
+      : { label: L.b_licExp, icon: 'lock', fg: '#B91C1C', bg: '#FEF2F2', tip: fill(L.b_licTip, { no: c.license.no, d: c.license.until }) };
+    const mine = D.store.orders.filter(o => o.cust === c.id && o.no && o.no !== p.excludeNo && o.status !== 'draft');
+    const recent = [...mine].sort((a, b) => pD(b.date) - pD(a.date) || b.no.localeCompare(a.no)).slice(0, 5).map(o => ({ no: o.no, date: o.date, sum: fM(D.orderTotals(o).total), status: o.status }));
+    const agg = {}; D.store.orders.filter(o => o.cust === c.id).forEach(o => o.lines.forEach(l => { agg[l.pid] = (agg[l.pid] || 0) + l.qty; }));
+    const fallback = [11, 2, 4, 1, 21, 8, 5, 3].filter(id => D.prodById(id));
+    const ids = [...Object.keys(agg).map(Number).sort((a, b) => agg[b] - agg[a]), ...fallback].filter((v, i, a) => a.indexOf(v) === i).filter(id => { const x = D.prodById(id); return x && x.active; }).slice(0, 6);
+    const over = sum > c.limit;
+    return { ...base, openCard: () => window.MedixData && window.MedixData.openParty && window.MedixData.openParty('mt', c.id), lic, isBlocked: !!c.blocked, telHref: 'tel:' + c.phone.replace(/\s/g, ''),
+      bar: { debt: gray / scale * 100, order: teal / scale * 100, over: red / scale * 100, limit: c.limit / scale * 100 },
+      limitText: fM(c.limit), debtText: fM(cDebt), openDebt: () => D.openDebt && D.openDebt({ kind: 'mt', party: c.id, branch: c.at || p.branch }), orderText: fM(order), debtLimit: `${fN(sum)} / ${fN(c.limit)}`,
+      hasOverdue: c.overdue > 0, overdueText: c.overdue > 0 ? `${fM(c.overdue)} · ${fill(L.b_days, { n: c.overdueDays })}` : fM(0), overdueColor: c.overdue > 0 ? '#B91C1C' : '#172B2A', overdueWeight: c.overdue > 0 ? 600 : 400,
+      isOver: over, restText: over ? fill(L.b_cpOverBy, { s: fM(sum - c.limit) }) : fill(L.b_cpLeft, { s: fM(c.limit - sum) }), restColor: over ? '#B91C1C' : '#5B6B6A',
+      payTerm: fill(L.b_payTerm, { n: c.terms }), discText: c.disc ? c.disc + '%' : L.b_none, minText: c.minDays ? fill(L.b_minDaysV, { n: c.minDays }) : L.b_none, minColor: c.minDays ? '#B45309' : '#172B2A', minWeight: c.minDays ? 500 : 400,
+      recent, noRecent: !recent.length,
+      top: ids.map(id => ({ name: D.prodById(id).name, add: () => p.onAdd && p.onAdd(id) })) };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:sticky;top:0;z-index:5;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-variant-numeric:tabular-nums">
+  <div style="height:56px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;padding:0 8px 0 4px;background:#FFFFFF;border-bottom:1px solid #E2E8F0">
+    <div style="display:flex;align-items:center;min-width:0">
+      <button onClick="{{ back }}" aria-label="{{ backLabel }}" style="height:48px;min-width:48px;padding:0 12px;display:flex;align-items:center;gap:6px;border:0;border-radius:8px;background:transparent;color:#0F766E;font-size:16px;font-weight:500;cursor:pointer;white-space:nowrap" style-active="background:#F0FDFA"><lucide-i name="arrow-left" size="22"></lucide-i>{{ backText }}</button>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;min-width:0">
+      <span style="font-size:17px;line-height:22px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ title }}</span>
+      <sc-if value="{{ hasSub }}"><span style="font-size:13px;line-height:16px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ sub }}</span></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0">
+      <sc-if value="{{ hasProgress }}"><span style="font-size:16px;font-weight:600;white-space:nowrap;padding-right:8px">{{ progressText }}</span></sc-if>
+      <sc-if value="{{ hasTest }}"><button onClick="{{ test }}" style="height:48px;padding:0 14px;display:flex;align-items:center;gap:6px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap" style-active="background:#EEF2F4"><lucide-i name="scan-line" size="18" style="color:#0F766E"></lucide-i>{{ testLabel }}</button></sc-if>
+      <button onClick="{{ toggleScanner }}" title="{{ scannerText }}" style="height:48px;padding:0 12px;display:flex;align-items:center;gap:8px;border:0;border-radius:8px;background:transparent;color:{{ scannerFg }};font-size:14px;cursor:pointer;white-space:nowrap"><lucide-i name="bluetooth" size="18"></lucide-i><span style="width:8px;height:8px;border-radius:50%;background:{{ scannerDot }}"></span><span style="display:{{ scannerLabelDisplay }}">{{ scannerText }}</span></button>
+      <span title="{{ user }}" style="width:36px;height:36px;border-radius:50%;background:#DDF5EE;color:#0F766E;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none">{{ initials }}</span>
+    </div>
+  </div>
+  <sc-if value="{{ hasProgress }}"><div style="height:4px;background:#E2E8F0"><div style="height:100%;width:{{ pct }}%;background:#0D9488;transition:width 200ms ease-out"></div></div></sc-if>
+  <div aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;z-index:400;border:4px solid {{ flashColor }};opacity:{{ flashOp }};transition:opacity 150ms ease-out"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1024,&quot;height&quot;:120},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Terish navbati&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sub&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;backLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Navbat&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;user&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Sardor Aliyev&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scanner&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;progress&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{done,total,label}&quot;},&quot;flashColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#15803D&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;flashN&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onTest&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onScanner&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;testLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Skanni sinash&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scannerOn&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Skaner ulangan&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scannerOff&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Skaner topilmadi&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { on: false };
+  componentDidUpdate(pp) { const p = this.props; if (p.flashN && p.flashN !== pp.flashN) { clearTimeout(this._t); this.setState({ on: true }); this._t = setTimeout(() => this.setState({ on: false }), 600); } }
+  componentWillUnmount() { clearTimeout(this._t); }
+  renderVals() {
+    const p = this.props, sc = p.scanner !== false, pr = p.progress;
+    const ini = String(p.user || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    return { back: () => p.onBack && p.onBack(), backText: p.backLabel || '', backLabel: p.backLabel || 'Orqaga', title: p.title || '', sub: p.sub || '', hasSub: !!p.sub,
+      hasProgress: !!pr, progressText: pr ? pr.label : '', pct: pr && pr.total ? Math.round(pr.done / pr.total * 100) : 0,
+      hasTest: !!p.onTest, test: () => p.onTest && p.onTest(), testLabel: p.testLabel || 'Skanni sinash',
+      toggleScanner: () => p.onScanner && p.onScanner(), scannerText: sc ? (p.scannerOn || 'Skaner ulangan') : (p.scannerOff || 'Skaner topilmadi'), scannerFg: sc ? '#172B2A' : '#647574', scannerDot: sc ? '#15803D' : '#647574', scannerLabelDisplay: p.compact ? 'none' : 'inline',
+      user: p.user || '', initials: ini, flashColor: p.flashColor || '#15803D', flashOp: this.state.on ? 1 : 0 };
+  }
+}
+</script>
+</body>
+</html>

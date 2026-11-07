@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div data-screen-label="Hisobotlar" style="display:flex;flex-direction:column;gap:16px;min-height:100%;color:#172B2A">
+  <sc-if value="{{ isCatalog }}" hint-placeholder-val="{{ true }}">
+    <dc-import name="PageHeader" title="{{ L.hs_title }}" count="" subtitle="{{ L.hs_sub }}" hint-size="100%,64px"></dc-import>
+    <sc-if value="{{ hasSaved }}">
+      <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;line-height:20px;font-weight:600">{{ L.hs_mine }}</span><dc-import name="SavedViews" tabs="{{ savedTabs }}" hint-size="100%,38px"></dc-import></div>
+    </sc-if>
+    <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <h2 style="margin:0;font-size:14px;line-height:20px;font-weight:600">{{ g.title }}</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+          <sc-for list="{{ g.cards }}" as="c"><button onClick="{{ c.pick }}" style="position:relative;min-height:96px;padding:16px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;display:flex;gap:12px;align-items:flex-start;text-align:left;cursor:pointer;font:inherit;color:inherit" style-hover="background:#F8FAFA">
+            <span style="width:36px;height:36px;flex:none;border-radius:8px;background:#DDF5EE;display:flex;align-items:center;justify-content:center"><lucide-i name="{{ c.icon }}" size="20" style="color:#0F766E"></lucide-i></span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding-right:{{ c.pr }}"><span style="font-size:14px;line-height:20px;font-weight:600">{{ c.name }}</span><span style="font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ c.desc }}</span></span>
+            <sc-if value="{{ c.cost }}"><span style="position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:12px;font-weight:500"><lucide-i name="lock" size="12"></lucide-i>{{ L.hs_costTag }}</span></sc-if>
+            <sc-if value="{{ c.hasSec }}"><span style="position:absolute;bottom:12px;right:12px;font-size:12px;color:#0F766E">{{ c.sec }}</span></sc-if>
+          </button></sc-for>
+        </div>
+      </section>
+    </sc-for>
+  </sc-if>
+  <sc-if value="{{ isReport }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px">
+      <sc-for list="{{ crumbs }}" as="b"><button onClick="{{ b.pick }}" style="border:0;background:transparent;padding:0;font:inherit;font-size:13px;color:{{ b.fg }};cursor:pointer" style-hover="text-decoration:underline">{{ b.label }}</button><sc-if value="{{ b.sep }}"><lucide-i name="chevron-right" size="14" style="color:#647574"></lucide-i></sc-if></sc-for>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0"><h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ rTitle }}</h1><p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ rSub }}</p></div>
+      <div style="display:flex;gap:8px;flex:none">
+        <button onClick="{{ askSave }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;color:#172B2A" style-hover="background:#F8FAFA"><lucide-i name="bookmark" size="16" style="color:#5B6B6A"></lucide-i>{{ L.hs_save }}</button>
+        <button onClick="{{ print }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;color:#172B2A" style-hover="background:#F8FAFA"><lucide-i name="printer" size="16" style="color:#5B6B6A"></lucide-i>{{ L.hs_print }}</button>
+        <button onClick="{{ exportCsv }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#115E59"><lucide-i name="file-spreadsheet" size="16"></lucide-i>{{ L.hs_export }}</button>
+      </div>
+    </div>
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+        <div style="width:170px"><dc-import name="Select" label="{{ L.hs_period }}" required="{{ false }}" options="{{ presetOpts }}" value="{{ preset }}" on-change="{{ setPreset }}" hint-size="170px,58px"></dc-import></div>
+        <dc-import name="DateRangePicker" label="{{ L.hs_dates }}" from="{{ from }}" to="{{ to }}" today="{{ today }}" on-change="{{ setDates }}" hint-size="220px,58px"></dc-import>
+        <div style="width:190px"><dc-import name="Select" label="{{ L.hs_branch }}" required="{{ false }}" options="{{ brOpts }}" value="{{ brVal }}" on-change="{{ setBr }}" locked="{{ brLocked }}" hint-size="190px,58px"></dc-import></div>
+        <sc-if value="{{ hasGroup }}">
+          <div style="width:170px"><dc-import name="Select" label="{{ L.hs_g1 }}" required="{{ false }}" options="{{ g1Opts }}" value="{{ g1 }}" on-change="{{ setG1 }}" hint-size="170px,58px"></dc-import></div>
+          <div style="width:170px"><dc-import name="Select" label="{{ L.hs_g2 }}" required="{{ false }}" options="{{ g2Opts }}" value="{{ g2 }}" on-change="{{ setG2 }}" hint-size="170px,58px"></dc-import></div>
+        </sc-if>
+        <sc-if value="{{ hasVat }}"><div role="tablist" style="display:flex;height:34px;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;gap:2px">
+          <sc-for list="{{ vatSeg }}" as="v"><button role="tab" aria-selected="{{ v.on }}" onClick="{{ v.pick }}" style="height:28px;padding:0 12px;border:0;border-radius:6px;background:{{ v.bg }};color:{{ v.fg }};font:inherit;font-size:13px;font-weight:500;cursor:pointer">{{ v.label }}</button></sc-for>
+        </div></sc-if>
+        <sc-if value="{{ hasFsToggle }}"><button onClick="{{ toggleFs }}" aria-pressed="{{ withFs }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#172B2A"><span style="width:30px;height:18px;border-radius:9px;background:{{ fsBg }};position:relative;flex:none"><span style="position:absolute;top:2px;left:{{ fsX }};width:14px;height:14px;border-radius:50%;background:#FFFFFF"></span></span>{{ L.hs_withFs }}</button></sc-if>
+      </div>
+      <sc-if value="{{ hasFilters }}"><dc-import name="FilterBar" filters="{{ fbFilters }}" has-active="{{ fActive }}" on-clear-all="{{ clearF }}" clear-all-label="{{ L.hs_clearF }}" query="{{ fq }}" on-query="{{ onFq }}" search-ph="{{ L.hs_searchPh }}" search-width="{{ 260 }}" hint-size="100%,40px"></dc-import></sc-if>
+      <span style="font-size:12px;line-height:16px;color:#647574">{{ asOf }}</span>
+    </section>
+    <sc-if value="{{ hasBanner }}"><dc-import name="StatusBanner" tone="info" icon="info" title="" text="{{ L.hs_fsBanner }}" hint-size="100%,48px"></dc-import></sc-if>
+    <div style="display:grid;grid-template-columns:repeat({{ kpiCols }},minmax(0,1fr));gap:16px">
+      <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4"><div style="min-height:112px;padding:16px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">{{ k.label }}</span>
+        <span style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap"><span style="font-size:24px;line-height:30px;font-weight:600;font-variant-numeric:tabular-nums">{{ k.value }}</span><span style="font-size:12px;color:#647574">{{ k.unit }}</span></span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:{{ k.dFg }}"><lucide-i name="{{ k.dIcon }}" size="14"></lucide-i><span style="font-weight:500">{{ k.dText }}</span><span style="color:#647574">{{ k.dSub }}</span></span>
+      </div></sc-for>
+    </div>
+    <sc-if value="{{ costNote }}"><span style="font-size:12px;color:#647574">{{ L.hs_costHidden }}</span></sc-if>
+    <sc-if value="{{ hasMatrix }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <h2 style="margin:0;font-size:14px;line-height:20px;font-weight:600">{{ L.hs_matrix }}</h2>
+        <div style="overflow-x:auto"><div style="min-width:640px;display:grid;grid-template-columns:150px repeat(5,minmax(0,1fr));border:1px solid #EEF2F4;border-radius:8px;overflow:hidden">
+          <sc-for list="{{ mx }}" as="c"><button onClick="{{ c.pick }}" disabled="{{ c.dis }}" style="min-height:44px;padding:8px 12px;border:0;border-right:1px solid #EEF2F4;border-bottom:1px solid #EEF2F4;background:{{ c.bg }};font:inherit;font-size:13px;font-weight:{{ c.w }};color:{{ c.fg }};text-align:{{ c.align }};font-variant-numeric:tabular-nums;cursor:{{ c.cur }}">{{ c.t }}</button></sc-for>
+        </div></div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ hasChart }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:14px;font-weight:600">{{ chartTitle }}</h2><button onClick="{{ toggleChart }}" style="border:0;background:transparent;padding:0;color:#0F766E;font:inherit;font-size:13px;cursor:pointer">{{ chartToggle }}</button></div>
+        <sc-if value="{{ chartOpen }}"><div style="position:relative">
+          <svg viewBox="{{ ch.vb }}" preserveAspectRatio="none" style="width:100%;height:160px;display:block;overflow:visible">
+            <sc-for list="{{ ch.gridY }}" as="g"><line x1="0" x2="600" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF2F4" stroke-width="1"></line></sc-for>
+            <sc-for list="{{ ch.bars }}" as="r"><rect x="{{ r.x }}" y="{{ r.y }}" width="{{ r.w }}" height="{{ r.h }}" rx="2" fill="{{ r.fill }}" onMouseEnter="{{ r.enter }}" onMouseLeave="{{ r.leave }}" style="cursor:pointer"></rect></sc-for>
+          </svg>
+          <div style="display:grid;grid-template-columns:repeat({{ ch.n }},minmax(0,1fr));margin-top:6px"><sc-for list="{{ ch.xl }}" as="x"><span style="font-size:12px;color:#647574;text-align:center;white-space:nowrap;overflow:hidden">{{ x.t }}</span></sc-for></div>
+          <sc-if value="{{ ch.hasTip }}"><div style="position:absolute;top:0;left:{{ ch.tipX }};transform:translateX(-50%);background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:8px 10px;display:flex;flex-direction:column;gap:2px;pointer-events:none;white-space:nowrap"><span style="font-size:12px;color:#5B6B6A">{{ ch.tip.d }}</span><span style="font-size:13px;font-weight:600">{{ ch.tip.s }}</span><span style="font-size:12px;color:#647574">{{ ch.tip.n }}</span></div></sc-if>
+        </div></sc-if>
+      </section>
+    </sc-if>
+    <sc-if value="{{ hasGpViews }}"><dc-import name="SavedViews" tabs="{{ gpTabs }}" hint-size="100%,38px"></dc-import></sc-if>
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #EEF2F4">
+        <span style="font-size:14px;font-weight:600">{{ tableTitle }}</span>
+        <dc-import name="ColumnsMenu" columns="{{ colMenu }}" on-change="{{ setCols }}" label="{{ L.hs_cols }}" hint-size="120px,34px"></dc-import>
+      </div>
+      <sc-if value="{{ hasRows }}">
+        <dc-import name="DataTable" selectable="{{ false }}" columns="{{ tCols }}" rows="{{ tRows }}" foot="{{ tFoot }}" on-sort="{{ onSort }}" sticky-first="{{ true }}" sticky-foot="{{ true }}" foot-border="#CBD5D3" scroll-x="{{ true }}" min-width="{{ tMin }}" loading="{{ loading }}" skeleton-count="{{ 6 }}" hint-size="100%,400px"></dc-import>
+        <sc-if value="{{ paged }}"><div style="padding:8px 16px;border-top:1px solid #E2E8F0"><dc-import name="Pagination" total="{{ total }}" per-page="50" page="{{ pg }}" on-page="{{ setPg }}" hint-size="100%,40px"></dc-import></div></sc-if>
+      </sc-if>
+      <sc-if value="{{ isEmpty }}"><dc-import name="EmptyState" icon="chart-column" tone="neutral" title="{{ L.hs_emptyT }}" text="{{ emptyText }}" primary="{{ emptyBtn }}" min-height="{{ 260 }}" hint-size="100%,260px"></dc-import></sc-if>
+    </section>
+    <sc-if value="{{ hasFootNote }}"><span style="font-size:12px;line-height:16px;color:#647574">{{ footNote }}</span></sc-if>
+  </sc-if>
+  <sc-if value="{{ dlgOpen }}">
+    <div onClick="{{ closeDlg }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:420px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:6px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ dlg.title }}</h2><p style="margin:0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ dlg.text }}</p></div>
+        <sc-if value="{{ dlg.input }}"><input value="{{ saveName }}" onChange="{{ onSaveName }}" placeholder="{{ L.hs_saveName }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></sc-if>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button onClick="{{ closeDlg }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer">{{ L.hs_cancel }}</button>
+          <button onClick="{{ dlg.ok }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer">{{ dlg.okLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const fM = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fN = n => Number(n || 0).toLocaleString('de-DE');
+const fP = n => n == null || !isFinite(n) ? '—' : (Math.round(n * 10) / 10).toFixed(1).replace('.', ',') + '%';
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const SKEY = 'medix-rpt-saved';
+const GK = ['branch', 'cust', 'prod', 'cat', 'maker', 'region', 'op', 'day', 'week', 'month'];
+const FK = ['cust', 'prod', 'cat', 'maker', 'region', 'ptype', 'op'];
+const DEF = { sv: ['branch', 'cust'], gp: ['prod', 'cust'], fs: ['', ''] };
+const XV = ['op', 'sg', 'sc']; // T10b: Operatorlar savdosi, Ta'minotchi xodim / korxona tovari
+class Component extends DCLogic {
+  state = { view: 'catalog', preset: 'month', from: '', to: '', g1: 'branch', g2: 'cust', vat: 'net', withFs: false, f: {}, open: {}, drill: null, sort: null, hide: null, pg: 1, chart: true, gpv: 'all', tip: null, dlg: null, saveName: '', saved: [], loading: false, big: false };
+  get L() { return this.props.dict || {}; }
+  get D() { return window.MedixData; }
+  componentDidMount() { let sv = []; try { sv = JSON.parse(localStorage.getItem(SKEY) || '[]'); } catch (e) {} this.setState({ saved: sv }); this._url = setInterval(() => this.applyUrl(), 250); this._p = setInterval(() => { if (this.D && !this._rd) { this._rd = 1; this.forceUpdate(); } }, 80); this.applyDemo(); }
+  componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearTimeout(this._lt); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.applyDemo(); }
+  applyUrl() { const D = this.D, u = D && D.store.urlF; if (!u || u.page !== 'reports' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (!P.r) return this.setState({ view: 'catalog', drill: null }); const f = {}; FK.forEach(k => { if (P[k]) f[k] = [P[k]]; }); const sup = P.r === 'sg' || P.r === 'sc'; this.openReport(P.r, Object.assign({ preset: P.from ? 'custom' : (P.period || (sup ? 'ytd' : 'month')), from: P.from || '', to: P.to || P.from || '', f }, P.who && XV.includes(P.r) ? { drill: { v1: P.who, l1: P.who } } : {})); }
+  applyDemo() { const d = this.props.demo; if (!d) return; const k = d.k;
+    if (k === 'hsEmpty') this.openReport('sv', { preset: 'custom', from: '01.09.2026', to: '29.09.2026' });
+    else if (k === 'hsNoCost') this.setState({ view: 'catalog' });
+    else if (k === 'hsNegative') this.openReport('gp', { gpv: 'neg' });
+    else if (k === 'hsDrill') { const D = this.D, c = D && D.CUSTOMERS.find(x => x.name === 'Shifo Farm'); this.openReport('sv', { open: { TSH: true }, drill: { v1: 'TSH', l1: 'Toshkent filiali', v2: c ? c.name : 'Shifo Farm', l2: 'Shifo Farm' } }); }
+    else if (k === 'hsSaved') { const s = { id: 'demo', name: 'Toshkent — oylik savdo', r: 'sv', preset: 'month', g1: 'branch', g2: 'cust', vat: 'net', withFs: false, f: {} }, list = [s].concat((this.state.saved || []).filter(x => x.id !== 'demo')); this.persist(list); this.setState({ view: 'catalog' }); }
+    else if (k === 'hsExportBig') { this.openReport('sv', { big: true }); setTimeout(() => this.exportCsv(), 300); } }
+  persist(list) { try { localStorage.setItem(SKEY, JSON.stringify(list)); } catch (e) {} this.setState({ saved: list }); }
+  openReport(r, x) { if (this.ownOnly() && r !== 'sv') { r = 'sv'; x = {}; } const g = DEF[r] || ['', ''], narrow = !!this.props.narrow; this.setState(Object.assign({ view: r, preset: 'month', from: '', to: '', g1: g[0], g2: g[1], vat: 'net', withFs: false, f: {}, open: {}, drill: null, sort: null, hide: narrow ? ['share', 'markup', 'vat'] : [], pg: 1, gpv: 'all', tip: null, big: false, loading: true }, x || {})); clearTimeout(this._lt); this._lt = setTimeout(() => this.setState({ loading: false }), 250); }
+  range() { const s = this.state, D = this.D; return s.preset === 'custom' && s.from ? { from: s.from, to: s.to || s.from } : D.rptRange(s.preset); }
+  key(x, k) { const D = this.D; if (k === 'branch') return x.branch; if (k === 'day') return x.date; if (k === 'month') return x.date.slice(3); if (k === 'week') { const t = D.pD(x.date), dw = (new Date(t).getUTCDay() + 6) % 7; return D.fD ? D.fD(t - dw * 86400000) : x.date; } return x[k]; }
+  label(v, k) { const D = this.D; if (k === 'branch') return (D.BRANCHES.find(b => b.code === v) || {}).name || v; if (k === 'week') return fill(this.L.hs_weekOf, { d: v }); return v == null || v === '' ? '—' : String(v); }
+  ownOnly() { const D = this.D, role = this.props.role || 'director'; return !!D && !D.can(role, 'reports.view') && D.can(role, 'reports.own'); } // T12a: operator — faqat o'z buyurtmalari bo'yicha sotuvlar
+  facts() { const s = this.state, D = this.D, r = this.range(), B = this.props.branch || 'ALL'; let F = D.rptFacts(r.from, r.to, B, s.withFs && s.view === 'sv'); if (this.ownOnly()) { const me = this.props.userName || ''; F = F.filter(x => x.op === me); } FK.forEach(k => { const v = s.f[k]; if (v && v.length) F = F.filter(x => v.includes(String(x[k]))); }); const q = (s.fq || '').trim().toLowerCase(); if (q) F = F.filter(x => (x.prod + ' ' + x.cust + ' ' + x.doc).toLowerCase().includes(q)); return F; }
+  agg(F) { const o = { docs: new Set(), qty: 0, gross: 0, ret: 0, net: 0, vat: 0, cost: 0 }; F.forEach(x => { if (x.kind !== 'qm') o.docs.add(x.doc); o.qty += x.qty; o.gross += x.gross; o.ret += x.ret; o.net += x.net; o.vat += x.vat; o.cost += x.cost; o.tot2 = (o.tot2 || 0) + (x.sum != null ? x.sum : x.net + x.vat); }); o.n = o.docs.size; o.total = Math.round((o.tot2 || 0) * 100) / 100; /* T11b: QQS bilan — Savdo kartasi bilan bir xil (rptFacts.sum) */ o.gp = o.net - o.cost; o.margin = o.net ? o.gp / o.net * 100 : null; o.markup = o.cost ? o.gp / o.cost * 100 : null; return o; }
+  group(F, k) { const m = new Map(); F.forEach(x => { const v = this.key(x, k); if (!m.has(v)) m.set(v, []); m.get(v).push(x); }); return [...m.entries()].map(([v, L]) => ({ v, label: this.label(v, k), F: L, a: this.agg(L) })); }
+  sorted(list) { const s = this.state.sort; if (!s) return list.sort((a, b) => (this.state.view === 'gp' ? b.a.gp - a.a.gp : b.a.net - a.a.net)); const val = g => s.key === 'name' ? g.label : s.key === 'docs' ? g.a.n : g.a[s.key]; return list.sort((a, b) => { const x = val(a), y = val(b); return (typeof x === 'string' ? x.localeCompare(y) : (x || 0) - (y || 0)) * (s.dir === 'asc' ? 1 : -1); }); }
+  cols() { const L = this.L, s = this.state, D = this.D, cost = D.can(this.props.role, 'special.cost'), gross = s.vat === 'gross';
+    if (s.view === 'op') return s.drill ? [['doc', L.tb_t_sv, '150px'], ['ono', L.tb_c_order, '150px'], ['date', L.tb_c_date, '100px'], ['cust', L.hs_c_cust, 'minmax(180px,1fr)'], ['qty', L.tb_c_qty, '90px', 1], ['net', L.hs_c_net, '150px', 1]]
+      : [['name', L.tb_c_emp, 'minmax(200px,1.6fr)'], ['n', L.tb_c_orders, '120px', 1], ['qty', L.tb_c_qty, '100px', 1], ['net', L.tb_k_sales, '160px', 1], ['share', L.hs_c_share, '150px', 1], ['st', L.tb_c_st, '110px']];
+    if (s.view === 'sg' || s.view === 'sc') { const dn = ', ' + (L.tb_pcs || '{n}').replace('{n} ', ''), sm = ", so'm";
+      if (s.drill) return [['type', L.tb_c_type, '110px'], ['doc', L.tb_c_doc, '150px'], ['date', L.tb_c_date, '100px'], ['party', L.tb_c_party, 'minmax(180px,1fr)'], ['ono', L.tb_c_order, '140px'], ['qty', L.tb_c_qty, '90px', 1]].concat(cost ? [['sum', L.tb_c_sum + sm, '140px', 1]] : []);
+      return [['name', s.view === 'sg' ? L.tb_c_emp : L.tb_c_sup, 'minmax(200px,1.6fr)'], ['rcs', L.tb_c_rcs, '90px', 1], ['inQ', L.tb_c_in + dn, '120px', 1]].concat(cost ? [['inS', L.tb_c_in + sm, '150px', 1]] : []).concat([['soldQ', L.tb_c_sold + dn, '110px', 1]]).concat(cost ? [['soldS', L.tb_c_sold + sm, '150px', 1]] : []).concat([['leftQ', L.tb_c_left + dn, '110px', 1]]).concat(cost ? [['leftS', L.tb_c_left + sm, '150px', 1]] : []).concat([['otherQ', L.tb_c_other + dn, '120px', 1]]).concat(cost ? [['otherS', L.tb_c_other + sm, '150px', 1]] : []).concat([['last', L.tb_c_last, '110px'], ['st', L.tb_c_st, '100px']]); }
+    if (s.drill) { if (s.view === 'gp') return [['doc', L.hs_c_doc, '150px'], ['date', L.hs_c_date, '100px'], ['batch', L.hs_c_batch, '130px'], ['qty', L.hs_c_qty, '90px', 1], ['price', L.hs_c_price, '120px', 1], ['bcost', L.hs_c_bcost, '120px', 1], ['gp', L.hs_c_gp, '130px', 1]]; return [['doc', L.hs_c_doc, '150px'], ['date', L.hs_c_date, '100px'], ['cust', L.hs_c_cust, 'minmax(160px,1fr)'], ['qty', L.hs_c_qty, '90px', 1], ['net', L.hs_c_net, '140px', 1], ['vat', L.hs_c_vat, '120px', 1], ['total', L.hs_c_total, '140px', 1]]; }
+    if (s.view === 'gp') return [['name', L.hs_c_name, 'minmax(220px,1.6fr)'], ['qty', L.hs_c_qty, '90px', 1], ['net', L.hs_c_netNoVat, '140px', 1], ['cost', L.hs_c_cost, '140px', 1], ['gp', L.hs_c_gp, '140px', 1], ['margin', L.hs_c_margin, '90px', 1], ['markup', L.hs_c_markup, '90px', 1]];
+    if (s.view === 'fs') return [['no', L.hs_c_fs, '140px'], ['inv', L.hs_c_hf, '140px'], ['date', L.hs_c_date, '100px'], ['from', L.hs_c_from, '120px'], ['to', L.hs_c_to, '120px'], ['status', L.hs_c_status, '130px'], ['sent', L.hs_c_sent, '90px', 1], ['recv', L.hs_c_recv, '90px', 1], ['diff', L.hs_c_diff, '80px', 1]].concat(cost ? [['cost', L.hs_c_costSum, '120px', 1]] : []).concat([['vat', L.hs_c_vat, '110px', 1], ['total', L.hs_c_total, '120px', 1], ['paid', L.hs_c_paid, '120px', 1], ['left', L.hs_c_left, '120px', 1]]);
+    return [['name', L.hs_c_name, 'minmax(180px,1.6fr)'], ['docs', L.hs_c_docs, '64px', 1], ['qty', L.hs_c_qty, '80px', 1], ['gross', L.hs_c_gross, '128px', 1], ['ret', L.hs_c_ret, '112px', 1], ['net', L.hs_c_net, '128px', 1], ['vat', L.hs_c_vat, '108px', 1]].concat(gross ? [['total', L.hs_c_total, '128px', 1]] : []).concat([['share', L.hs_c_share, '120px', 1]]); } // T11b: 1280 px da siljitishsiz (QQS bilan rejimida — 1440)
+  cells(a, tot, name) { const s = this.state, red = '#B91C1C', neg = a.gp < 0;
+    const m = { docs: { type: 'text', text: fN(a.n) }, qty: { type: 'text', text: fN(a.qty) }, gross: { type: 'text', text: fM(a.gross) }, ret: { type: 'text', text: a.ret ? '−' + fM(a.ret) : fM(0), color: a.ret ? red : '#172B2A' }, net: { type: 'text', text: fM(a.net) }, vat: { type: 'text', text: fM(a.vat) }, total: { type: 'text', text: fM(a.total) }, share: { type: 'bar', pct: tot.net ? a.net / tot.net * 100 : 0, text: fP(tot.net ? a.net / tot.net * 100 : 0) }, cost: { type: 'text', text: fM(a.cost) }, gp: { type: neg ? 'icontext' : 'text', icon: 'trending-down', text: fM(a.gp), color: neg ? red : '#172B2A' }, margin: { type: 'text', text: fP(a.margin), color: neg ? red : '#172B2A' }, markup: { type: 'text', text: fP(a.markup), color: neg ? red : '#172B2A' } };
+    return this.vis().filter(c => c[0] !== 'name').map(c => m[c[0]] || { type: 'text', text: '' }); }
+  vis() { const h = this.state.hide || []; return this.cols().filter(c => c[0] === 'name' || c[0] === 'doc' || c[0] === 'no' || !h.includes(c[0])); }
+  open(href) { const p = this.props; if (p.onOpen) p.onOpen(href); }
+  csvDownload(name, lines) { const blob = new Blob(['\ufeff' + lines.map(r => r.map(v => { const t = String(v == null ? '' : v); return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }).join(';')).join('\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+  exportCsv(force) { const s = this.state, L = this.L, D = this.D, r = this.range(), B = this.props.branch || 'ALL', out = this._lastRows || [], n = s.big ? 12480 : out.length;
+    if (n > 10000 && !force) return this.setState({ dlg: { title: L.hs_bigT, text: fill(L.hs_bigD, { n: fN(n) }), okLabel: L.hs_bigOk, ok: () => { this.setState({ dlg: null }); this.exportCsv(true); } } });
+    if (XV.includes(s.view)) { const nm = { op: 'Operatorlar_savdosi', sg: 'Taminotchi_xodim_tovari', sc: 'Taminotchi_korxona_tovari' }[s.view] + '_' + B + '_' + r.from + '-' + r.to + '.xlsx'; D.xlsxDownload(nm, [this.vis().map(c => c[1])].concat(out), this.title()); this.props.onToast && this.props.onToast(fill(L.hs_exported, { f: nm })); return; }
+    const name = { sv: 'Savdo', gp: 'Yalpi_foyda', fs: 'Filiallararo_savdo' }[s.view] + '_' + B + '_' + r.from + '-' + r.to + '.csv';
+    const head = [[L.hs_csvReport, this.title()], [L.hs_period, r.from + ' – ' + r.to], [L.hs_branch, B], [L.hs_g1, s.g1 || '—'], [L.hs_g2, s.g2 || '—'], [L.hs_vatMode, s.vat === 'net' ? L.hs_noVat : L.hs_withVat], []];
+    this.csvDownload(name, head.concat([this.vis().map(c => c[1])]).concat(out)); this.props.onToast && this.props.onToast(fill(L.hs_exported, { f: name })); }
+  title() { const L = this.L; return { sv: L.hs_r_sv, gp: L.hs_r_gp, fs: L.hs_r_fs, op: L.tb_r_op, sg: L.tb_r_sg, sc: L.tb_r_sc }[this.state.view] || L.hs_title; }
+  xView(out, r, B, cost, V) { const s = this.state, L = this.L, D = this.D, isOp = s.view === 'op', by = s.view === 'sg' ? 'owner' : 'supplier', sel = s.f.who || [], q = (s.fq || '').trim().toLowerCase();
+    const all = isOp ? D.opSales(r.from, r.to, B) : D.supGoods(B, by, r.from, r.to);
+    out.hasFilters = true; out.fbFilters = [{ label: isOp || by === 'owner' ? L.tb_f_emp : L.tb_f_sup, options: all.map(x => ({ value: x.who, label: x.who })), selected: sel, onChange: v => this.setState({ f: { ...s.f, who: v }, pg: 1, drill: null }) }];
+    out.fq = s.fq || ''; out.onFq = v => this.setState({ fq: typeof v === 'string' ? v : (v && v.target ? v.target.value : ''), pg: 1 }); out.fActive = sel.length > 0 || !!q; out.clearF = () => this.setState({ f: {}, fq: '', pg: 1 });
+    let list = all.filter(x => (!sel.length || sel.includes(x.who)) && (!q || x.who.toLowerCase().includes(q)));
+    if (s.drill) list = all.filter(x => x.who === s.drill.v1);
+    if (s.sort && !s.drill) { const k = s.sort.key, val = x => k === 'name' ? x.who : k === 'rcs' ? x.rcs.length : k === 'st' ? (x.active ? 1 : 0) : k === 'last' ? (D.pD(x.last) || 0) : k === 'share' ? x.net : x[k]; list = list.slice().sort((a, b) => { const x = val(a), y = val(b); return (typeof x === 'string' ? x.localeCompare(y) : (x || 0) - (y || 0)) * (s.sort.dir === 'asc' ? 1 : -1); }); }
+    const T = {}, sumK = isOp ? ['n', 'qty', 'net'] : ['rcs', 'inQ', 'inS', 'soldQ', 'soldS', 'leftQ', 'leftS', 'otherQ', 'otherS']; sumK.forEach(k => { T[k] = list.reduce((a, x) => a + (k === 'rcs' ? x.rcs.length : x[k]), 0); });
+    const kp = (label, value, unit) => ({ label, value, unit: unit || '', dIcon: isOp ? 'calendar' : 'clock', dText: isOp ? (L.hs_period || '') : (L.bh_n_today || ''), dSub: '', dFg: '#647574' }), mon = k => cost ? fM(T[k + 'S']) : fN(T[k + 'Q']), un = cost ? "so'm" : (L.tb_pcs || '').replace('{n} ', '');
+    out.kpis = isOp ? [kp(L.tb_k_sales, fM(T.net), "so'm"), kp(L.tb_k_orders, fN(T.n)), kp(L.tb_k_active, fN(list.filter(x => x.active).length) + ' / ' + fN(list.length)), kp(L.tb_k_avg, T.n ? fM(T.net / T.n) : '—', "so'm")]
+      : [kp(L.tb_k_in, mon('in'), un), kp(L.tb_k_sold, mon('sold'), un), kp(L.tb_k_left, mon('left'), un), kp(L.tb_k_other, mon('other'), un)];
+    const st = a => ({ type: 'status', text: a ? L.tb_active : L.tb_passive, icon: a ? 'circle-check' : 'circle-pause', fg: a ? '#15803D' : '#5B6B6A', bg: a ? '#F0FDF4' : '#F5F7F8' }), tx = t => ({ type: 'text', text: t });
+    let rows = [], csv = [];
+    if (s.drill) { const x = all.find(y => y.who === s.drill.v1); let docs = [];
+      if (x && isOp) { const m = {}; x.lines.forEach(f => { const d = m[f.doc] || (m[f.doc] = { doc: f.doc, kind: f.kind, date: f.date, cust: f.cust, sale: f.sale || f.doc, qty: 0, net: 0 }); d.qty += f.qty; d.net += f.net; }); docs = Object.values(m).sort((a, b) => D.pD(b.date) - D.pD(a.date));
+        rows = docs.map(d => { const od = D.orderOfSale ? D.orderOfSale(d.sale) : null, ono = od ? od.no : '', mm = { doc: { type: 'link', text: d.doc, pick: () => this.open((d.kind === 'qm' ? '#creturns' : '#shipments') + '?open=' + d.doc) }, ono: ono ? { type: 'link', text: ono, pick: () => this.open('#orders?open=' + ono) } : tx('—'), date: tx(d.date), cust: tx(d.cust || '—'), qty: tx(fN(d.qty)), net: tx(fM(d.net)) };
+          csv.push(V.map(c => ({ doc: d.doc, ono, date: d.date, cust: d.cust, qty: d.qty, net: Math.round(d.net * 100) / 100 })[c[0]])); return { id: d.doc, cells: V.map(c => mm[c[0]]) }; });
+        const tq = docs.reduce((a, d) => a + d.qty, 0), tn = docs.reduce((a, d) => a + d.net, 0); out.tFoot = { cells: V.map(c => ({ text: c[0] === 'doc' ? L.hs_total : c[0] === 'qty' ? fN(tq) : c[0] === 'net' ? fM(tn) : '' })) }; csv.push(V.map(c => c[0] === 'doc' ? L.hs_total : c[0] === 'qty' ? tq : c[0] === 'net' ? Math.round(tn * 100) / 100 : ''));
+      } else if (x) { docs = x.rcs.map(rc => ({ type: 'kr', doc: rc.no, date: rc.date, party: by === 'owner' ? rc.supplier : (rc.owner || '—'), ono: '', qty: null, sum: rc.sum, href: '#receipt?open=' + rc.no })).concat(x.sales.map(sl => ({ type: sl.kind, doc: sl.no, date: sl.date, party: sl.cust || '—', ono: sl.ono, qty: sl.qty, sum: sl.sum, href: (sl.kind === 'qm' ? '#creturns' : '#shipments') + '?open=' + sl.no })));
+        const rcQ = {}; D.store.receipts.forEach(rc => { rcQ[rc.no] = rc.lines.reduce((a, l) => a + (l.pid ? (D.rcGood ? D.rcGood(l) + D.rcDmg(l) : l.qty || 0) + (l.bonusQty > 0 ? l.bonusQty : 0) : 0), 0); }); docs.forEach(d => { if (d.type === 'kr') d.qty = rcQ[d.doc] || 0; });
+        rows = docs.map(d => { const mm = { type: tx(L['tb_t_' + d.type]), doc: { type: 'link', text: d.doc, pick: () => this.open(d.href) }, date: tx(d.date), party: tx(d.party), ono: d.ono ? { type: 'link', text: d.ono, pick: () => this.open('#orders?open=' + d.ono) } : tx('—'), qty: tx(fN(d.qty)), sum: tx(fM(d.sum)) };
+          csv.push(V.map(c => ({ type: L['tb_t_' + d.type], doc: d.doc, date: d.date, party: d.party, ono: d.ono, qty: d.qty, sum: d.sum })[c[0]])); return { id: d.type + d.doc, cells: V.map(c => mm[c[0]]) }; });
+        const kq = docs.filter(d => d.type === 'kr'), sq = docs.filter(d => d.type !== 'kr'), sm = (l, k) => l.reduce((a, d) => a + (d[k] || 0), 0), ft = { qty: L.tb_t_kr + ' ' + fN(sm(kq, 'qty')) + ' · ' + L.tb_k_sold + ' ' + fN(sm(sq, 'qty')), sum: L.tb_t_kr + ' ' + fM(sm(kq, 'sum')) + ' · ' + L.tb_k_sold + ' ' + fM(sm(sq, 'sum')) }; // T11a: Jami — kirim va sotildi alohida
+        out.tFoot = { cells: V.map(c => ({ text: c[0] === 'type' ? L.hs_total : ft[c[0]] || '', align: ft[c[0]] ? 'right' : 'left' })) }; csv.push(V.map(c => c[0] === 'type' ? L.hs_total : c[0] === 'qty' ? sm(kq, 'qty') + ' / ' + sm(sq, 'qty') : c[0] === 'sum' ? Math.round(sm(kq, 'sum') * 100) / 100 + ' / ' + Math.round(sm(sq, 'sum') * 100) / 100 : '')); }
+      out.tableTitle = fill(L.tb_docsT, { w: s.drill.l1, n: rows.length });
+    } else {
+      rows = list.map(x => { const sh = T.net ? x.net / T.net * 100 : 0, mm = { name: { type: 'link', text: x.who, pick: () => this.setState({ drill: { v1: x.who, l1: x.who } }) }, n: tx(fN(x.n)), qty: tx(fN(x.qty)), net: tx(fM(x.net)), share: { type: 'bar', pct: sh, text: fP(sh) }, st: st(x.active), rcs: tx(fN(x.rcs ? x.rcs.length : 0)), last: tx(x.last || '—'),
+          inQ: tx(fN(x.inQ)), inS: tx(fM(x.inS)), soldQ: tx(fN(x.soldQ)), soldS: tx(fM(x.soldS)), leftQ: tx(fN(x.leftQ)), leftS: { type: 'text', text: fM(x.leftS) }, otherQ: { type: 'text', text: fN(x.otherQ), color: x.otherQ ? '#B45309' : '#647574' }, otherS: { type: 'text', text: fM(x.otherS), color: x.otherS ? '#B45309' : '#647574' } };
+        csv.push(V.map(c => ({ name: x.who, n: x.n, qty: x.qty, net: x.net, share: sh.toFixed(1), st: x.active ? L.tb_active : L.tb_passive, rcs: x.rcs ? x.rcs.length : 0, last: x.last || '', inQ: x.inQ, inS: x.inS, soldQ: x.soldQ, soldS: x.soldS, leftQ: x.leftQ, leftS: x.leftS, otherQ: x.otherQ, otherS: x.otherS })[c[0]]));
+        return { id: x.who, cells: V.map(c => mm[c[0]]), onOpen: () => this.setState({ drill: { v1: x.who, l1: x.who } }) }; });
+      const ft = k => k === 'name' ? L.hs_total : k === 'share' ? '100,0%' : T[k] == null ? '' : /S$|^net$/.test(k) ? fM(T[k]) : fN(T[k]);
+      out.tFoot = { cells: V.map(c => ({ text: ft(c[0]) })) }; csv.push(V.map(c => c[0] === 'name' ? L.hs_total : T[c[0]] != null ? Math.round(T[c[0]] * 100) / 100 : ''));
+      out.tableTitle = fill(L.tb_rowsN, { n: rows.length }); }
+    out.hasFootNote = true; out.footNote = isOp ? fill(L.tb_opNote, { f: r.from, t: r.to }) : L.tb_perNote + (cost ? '' : ' · ' + L.tb_qtyNote);
+    return { rows, csv }; }
+  renderVals() {
+    const L = this.L, p = this.props, s = this.state, D = this.D, role = p.role || 'director', narrow = !!p.narrow;
+    const base = { L, isCatalog: true, isReport: false, groups: [], hasSaved: false, savedTabs: [], catCols: narrow ? 2 : 3, dlgOpen: false, dlg: {}, crumbs: [], kpis: [], tCols: [], tRows: [], presetOpts: [], brOpts: [], g1Opts: [], g2Opts: [], vatSeg: [], fbFilters: [], colMenu: [], mx: [], ch: { gridY: [], bars: [], xl: [] }, gpTabs: [] };
+    if (!D || !D.rptFacts) return base;
+    const can = k => D.can(role, k), cost = can('special.cost'), nav = k => D.navCan(role, k), B = p.branch || 'ALL';
+    const dlgV = { dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }), stop: e => e.stopPropagation(), saveName: s.saveName, onSaveName: e => this.setState({ saveName: e.target.value }) };
+    if (s.view === 'catalog') {
+      const card = (icon, name, desc, pick, x) => { const o = Object.assign({ icon, name, desc, pick, cost: false, hasSec: false, sec: '' }, x || {}); o.pr = o.cost ? '72px' : '0px'; return o; };
+      const g1 = [(can('reports.view') || can('reports.own')) && card('chart-column', L.hs_r_sv, can('reports.view') ? L.hs_d_sv : (L.hs_d_svOwn || "Faqat siz kiritgan buyurtmalar bo'yicha sotuvlar"), () => this.openReport('sv')), cost && card('trending-up', L.hs_r_gp, L.hs_d_gp, () => this.openReport('gp'), { cost: true })].filter(Boolean);
+      const g2 = [can('reports.view') && card('arrow-left-right', L.hs_r_fs, L.hs_d_fs, () => this.openReport('fs', { preset: 'ytd' }))].filter(Boolean);
+      const ext = [['pickrep', 'timer', L.pr_title, L.pr_catD, L.hs_sec_wh], ['markrep', 'scan-barcode', L.mr_title, L.mr_catD, L.hs_sec_wh], ['cdebt', 'hand-coins', L.hs_x_cdebt, L.hs_xd_cdebt, L.hs_sec_money], ['sdebt', 'receipt-text', L.hs_x_sdebt, L.hs_xd_sdebt, L.hs_sec_money], ['recon', 'file-check-2', L.hs_x_recon, L.hs_xd_recon, L.hs_sec_money], ['expiry', 'calendar-clock', L.hs_x_expiry, L.hs_xd_expiry, L.hs_sec_wh], ['marking', 'scan-barcode', L.hs_x_marking, L.hs_xd_marking, L.hs_sec_wh], ['audit', 'scroll-text', L.hs_x_audit, L.hs_xd_audit, L.hs_sec_admin]].filter(x => nav(x[0])).map(x => card(x[1], x[2], x[3], () => this.open('#' + x[0]), { hasSec: true, sec: x[4] + ' →' }));
+      const g3 = can('reports.view') ? [card('users', L.tb_r_op, L.tb_d_op, () => this.openReport('op')), card('user-check', L.tb_r_sg, L.tb_d_sg, () => this.openReport('sg', { preset: 'ytd' })), card('factory', L.tb_r_sc, L.tb_d_sc, () => this.openReport('sc', { preset: 'ytd' }))] : [];
+      const groups = [[L.hs_g_sales, g1], [L.hs_g_group, g2], [L.tb_g_staff, g3], [L.hs_g_other, ext]].filter(g => g[1].length).map(([title, cards]) => ({ title, cards }));
+      const sv = (s.saved || []).filter(x => x.r !== 'gp' || cost);
+      return { ...base, ...dlgV, groups, hasSaved: sv.length > 0, savedTabs: sv.map(x => ({ label: x.name, active: false, pick: () => this.openReport(x.r, { preset: x.preset, g1: x.g1, g2: x.g2, vat: x.vat, withFs: x.withFs, f: x.f || {} }) })) };
+    }
+    if (s.view === 'gp' && !cost) return { ...base, ...dlgV };
+    const r = this.range(), brName = B === 'ALL' ? L.hs_allBr : (D.BRANCHES.find(b => b.code === B) || {}).name, gross = s.vat === 'gross', isFs = s.view === 'fs';
+    const presetOpts = [['day', L.hs_p_day], ['week', L.hs_p_week], ['month', L.hs_p_month], ['prevMonth', L.hs_p_prev], ['quarter', L.hs_p_q], ['ytd', L.hs_p_ytd], ['custom', L.hs_p_custom]].map(([value, label]) => ({ value, label }));
+    const gOpts = GK.map(k => ({ value: k, label: L['hs_gk_' + k] }));
+    const crumbs = [{ label: L.hs_title, pick: () => this.setState({ view: 'catalog', drill: null }) }, { label: this.title(), pick: () => this.setState({ drill: null }) }];
+    if (s.drill) { crumbs.push({ label: s.drill.l1, pick: () => this.setState({ drill: null, open: { ...s.open, [s.drill.v1]: true } }) }); if (s.drill.l2) crumbs.push({ label: s.drill.l2, pick: () => this.setState({ drill: null }) }); crumbs.push({ label: L.hs_docs, pick: () => {} }); }
+    const cr = crumbs.map((c, i) => ({ ...c, sep: i < crumbs.length - 1, fg: i < crumbs.length - 1 ? '#0D9488' : '#5B6B6A' }));
+    const out = { ...base, ...dlgV, isCatalog: false, isReport: true, crumbs: cr, rTitle: this.title(), rSub: r.from + ' – ' + r.to + ' · ' + brName + (isFs || XV.includes(s.view) ? '' : ' · ' + (gross ? L.hs_withVat : L.hs_noVat)),
+      askSave: () => this.setState({ saveName: '', dlg: { title: L.hs_saveT, text: L.hs_saveD, input: true, okLabel: L.hs_save, ok: () => { const nm = (this.state.saveName || '').trim() || this.title(); this.persist([{ id: 'r' + Date.now(), name: nm, r: s.view, preset: s.preset === 'custom' ? 'month' : s.preset, g1: s.g1, g2: s.g2, vat: s.vat, withFs: s.withFs, f: s.f }].concat(s.saved || [])); this.setState({ dlg: null }); p.onToast && p.onToast(fill(L.hs_saved, { n: nm })); } } }),
+      print: () => window.print(), exportCsv: () => this.exportCsv(),
+      presetOpts, preset: s.preset, setPreset: v => this.setState({ preset: v, from: v === 'custom' ? r.from : '', to: v === 'custom' ? r.to : '', pg: 1, drill: null }), from: r.from, to: r.to, today: D.TODAY, setDates: v => this.setState({ preset: 'custom', from: v.from || '', to: v.to || v.from || '', pg: 1, drill: null }),
+      brOpts: [{ value: 'ALL', label: L.hs_allBr }].concat(D.BRANCHES.map(b => ({ value: b.code, label: b.name }))), brVal: B, brLocked: !can('reports.all'), setBr: v => p.onBranch && p.onBranch(v),
+      hasGroup: !isFs && !XV.includes(s.view), g1Opts: gOpts, g1: s.g1, setG1: v => this.setState({ g1: v, g2: v === s.g2 ? '' : s.g2, open: {}, drill: null, pg: 1 }), g2Opts: [{ value: '', label: L.hs_none }].concat(gOpts.filter(o => o.value !== s.g1)), g2: s.g2, setG2: v => this.setState({ g2: v, open: {}, drill: null, pg: 1 }),
+      hasVat: s.view === 'sv', vatSeg: [['net', L.hs_noVat], ['gross', L.hs_withVat]].map(([k, label]) => ({ label, on: s.vat === k, bg: s.vat === k ? '#FFFFFF' : 'transparent', fg: s.vat === k ? '#172B2A' : '#5B6B6A', pick: () => this.setState({ vat: k }) })),
+      hasFsToggle: s.view === 'sv', withFs: s.withFs, fsBg: s.withFs ? '#0F766E' : '#CBD5D3', fsX: s.withFs ? '14px' : '2px', toggleFs: () => this.setState({ withFs: !s.withFs }),
+      asOf: fill(L.hs_asOf, { t: D.nowStr ? D.nowStr() : D.TODAY }), hasBanner: isFs, kpiCols: narrow ? 2 : 4, loading: s.loading, setCols: cs => this.setState({ hide: cs.filter(c => !c.visible).map(c => c.key) }), setPg: n => this.setState({ pg: n }),
+      onSort: k => this.setState(st => ({ sort: st.sort && st.sort.key === k ? { key: k, dir: st.sort.dir === 'asc' ? 'desc' : 'asc' } : { key: k, dir: 'desc' } })),
+      chartOpen: s.chart, toggleChart: () => this.setState({ chart: !s.chart }), chartToggle: s.chart ? L.hs_hideChart : L.hs_showChart };
+    const kp = (label, value, unit, dl) => Object.assign({ label, value, unit: unit || '' }, dl || { dIcon: 'minus', dText: L.hs_noCmp, dSub: '', dFg: '#647574' });
+    const prev = D.rptPrev(r.from, r.to), dlt = (c, pv, up) => { if (!prev.cmp || !pv) return null; const pc = (c - pv) / Math.abs(pv) * 100, u = pc >= 0; return { dIcon: u ? 'trending-up' : 'trending-down', dText: (u ? '+' : '') + pc.toFixed(1).replace('.', ',') + '%', dSub: L.hs_vsPrev, dFg: u === up ? '#15803D' : '#B91C1C' }; };
+    out.colMenu = this.cols().filter(c => !['name', 'doc', 'no'].includes(c[0])).map(c => ({ key: c[0], label: c[1], visible: !(s.hide || []).includes(c[0]) }));
+    const V = this.vis(), tCols = V.map(c => ({ key: c[0], label: c[1], width: c[2], align: c[3] ? 'right' : 'left', sortable: !s.drill, sortDir: s.sort && s.sort.key === c[0] ? s.sort.dir : null }));
+    out.tCols = tCols; out.tMin = V.reduce((a, c) => a + (parseInt(c[2]) || 200) + 0, 0);
+    let rows = [], csv = [];
+    if (XV.includes(s.view)) { const x = this.xView(out, r, B, cost, V); rows = x.rows; csv = x.csv; }
+    else if (isFs) {
+      const docs = D.rptFsDocs(r.from, r.to, B), all = D.rptFsDocs(null, null, B), ST = { transit: ['info', '#1D4ED8', '#EFF6FF', 'truck'], received: ['success', '#15803D', '#F0FDF4', 'circle-check'], diff: ['warning', '#B45309', '#FFFBEB', 'triangle-alert'], rejected: ['danger', '#B91C1C', '#FEF2F2', 'circle-x'] };
+      const bn = c => (D.BRANCHES.find(b => b.code === c) || {}).name || c;
+      out.kpis = [kp(L.hs_k_turn, fM(docs.reduce((a, x) => a + x.total, 0)), "so'm"), kp(L.hs_k_transit, fM(all.reduce((a, x) => a + x.transitCost, 0)), "so'm"), kp(L.hs_k_grp, fM(all.reduce((t, x) => t + x.left, 0)), "so'm"), kp(L.hs_k_diffN, fN(docs.filter(x => x.diff !== 0 || x.status === 'diff').length), '')];
+      out.costNote = !cost; out.hasMatrix = true; const codes = D.BRANCHES.map(b => b.code), sum = (a, b) => docs.filter(x => (!a || x.from === a) && (!b || x.to === b)).reduce((t, x) => t + x.total, 0), mx = [];
+      const hd = (t, al) => ({ t, align: al || 'left', bg: '#F8FAFA', w: 500, fg: '#5B6B6A', cur: 'default', dis: true, pick: () => {} });
+      mx.push(hd(L.hs_mxFromTo)); codes.forEach(c => mx.push(hd(bn(c), 'right'))); mx.push(hd(L.hs_total, 'right'));
+      codes.forEach(a => { mx.push(hd(bn(a))); codes.forEach(b => { const v = a === b ? null : sum(a, b); mx.push({ t: v == null ? '' : v ? fM(v) : '—', align: 'right', bg: a === b ? '#F8FAFA' : '#FFFFFF', w: 400, fg: v ? '#172B2A' : '#647574', cur: v ? 'pointer' : 'default', dis: !v, pick: () => this.setState({ fsPair: [a, b] }) }); }); mx.push({ t: fM(sum(a, null)), align: 'right', bg: '#F8FAFA', w: 600, fg: '#172B2A', cur: 'default', dis: true, pick: () => {} }); });
+      mx.push(hd(L.hs_total)); codes.forEach(b => mx.push({ t: fM(sum(null, b)), align: 'right', bg: '#F8FAFA', w: 600, fg: '#172B2A', cur: 'default', dis: true, pick: () => {} })); mx.push({ t: fM(sum(null, null)), align: 'right', bg: '#F8FAFA', w: 600, fg: '#172B2A', cur: 'default', dis: true, pick: () => {} });
+      out.mx = mx; const list = s.fsPair ? docs.filter(x => x.from === s.fsPair[0] && x.to === s.fsPair[1]) : docs;
+      if (s.fsPair) out.crumbs = cr.concat([{ label: bn(s.fsPair[0]) + ' → ' + bn(s.fsPair[1]), pick: () => this.setState({ fsPair: null }), sep: false, fg: '#0F766E' }]);
+      const T = { sent: 0, recv: 0, diff: 0, cost: 0, vat: 0, total: 0, paid: 0, left: 0 };
+      rows = list.map(x => { Object.keys(T).forEach(k => T[k] += x[k]); const st = ST[x.status] || ST.received, m = { no: { type: 'link', text: x.no, pick: () => this.open('#transfer?open=' + x.no) }, inv: { type: 'mono', text: x.inv }, date: { type: 'text', text: x.date }, from: { type: 'text', text: bn(x.from) }, to: { type: 'text', text: bn(x.to) }, status: { type: 'status', text: L['hs_fs_' + x.status], icon: st[3], fg: st[1], bg: st[2] }, sent: { type: 'text', text: fN(x.sent) }, recv: { type: 'text', text: x.status === 'transit' ? '—' : fN(x.recv) }, diff: { type: 'text', text: x.diff ? fN(x.diff) : '—', color: x.diff ? '#B45309' : '#647574' }, cost: { type: 'text', text: fM(x.cost) }, vat: { type: 'text', text: fM(x.vat) }, total: { type: 'text', text: fM(x.total) }, paid: { type: 'text', text: fM(x.paid) }, left: { type: 'text', text: fM(x.left), color: x.left ? '#B45309' : '#172B2A' } };
+        csv.push(V.map(c => ({ no: x.no, inv: x.inv, date: x.date, from: x.from, to: x.to, status: x.status, sent: x.sent, recv: x.recv, diff: x.diff, cost: x.cost, vat: x.vat, total: x.total, paid: x.paid, left: x.left })[c[0]]));
+        return { id: x.no, cells: V.map(c => m[c[0]]), onOpen: () => this.open('#transfer?open=' + x.no) }; });
+      out.tFoot = { cells: V.map(c => ({ text: c[0] === 'no' ? L.hs_total : ['sent', 'recv', 'diff'].includes(c[0]) ? fN(T[c[0]]) : T[c[0]] != null ? fM(T[c[0]]) : '' })) };
+      out.tableTitle = L.hs_fsDocs; out.hasFootNote = false;
+    } else {
+      let F = this.facts(); const tot = this.agg(F);
+      if (s.view === 'gp') { const pr = D.rptFacts(prev.from, prev.to, B), pa = this.agg(pr); out.kpis = [kp(L.hs_k_net, fM(tot.net), "so'm", dlt(tot.net, pa.net, true)), kp(L.hs_k_cost, fM(tot.cost), "so'm", dlt(tot.cost, pa.cost, false)), kp(L.hs_k_gp, fM(tot.gp), "so'm", dlt(tot.gp, pa.gp, true)), kp(L.hs_k_margin, fP(tot.margin), '', null)]; out.hasFootNote = true; out.footNote = L.hs_gpNote; }
+      else { const pr = D.rptFacts(prev.from, prev.to, B, s.withFs), pa = this.agg(pr), shown = gross ? tot.total : tot.net; out.kpis = [kp(L.hs_k_net, fM(shown), "so'm", dlt(shown, gross ? pa.total : pa.net, true)), kp(L.hs_k_docs, fN(tot.n), '', dlt(tot.n, pa.n, true)), kp(L.hs_k_avg, tot.n ? fM(shown / tot.n) : '—', "so'm", null), kp(L.hs_k_retShare, fP(tot.gross ? tot.ret / tot.gross * 100 : 0), '', null)]; out.hasFootNote = true; out.footNote = L.hs_retNote; }
+      FK.forEach(k => {}); const opt = k => [...new Set(D.rptFacts(r.from, r.to, B, s.withFs && s.view === 'sv').map(x => String(x[k])))].sort().map(v => ({ value: v, label: k === 'ptype' ? (L['hs_pt_' + v] || v) : v }));
+      out.hasFilters = true; out.fbFilters = FK.map(k => ({ label: L['hs_f_' + k], options: opt(k), selected: s.f[k] || [], onChange: v => this.setState({ f: { ...s.f, [k]: v }, pg: 1, drill: null }) })); out.fq = s.fq || ''; out.onFq = v => this.setState({ fq: typeof v === 'string' ? v : (v && v.target ? v.target.value : ''), pg: 1 }); out.fActive = FK.some(k => (s.f[k] || []).length) || !!(s.fq || '').trim(); out.clearF = () => this.setState({ f: {}, fq: '', pg: 1 });
+      const per = Math.round((D.pD(r.to) - D.pD(r.from)) / 86400000) + 1, unit = per <= 31 ? 'day' : per <= 120 ? 'week' : 'month', bars = this.group(F, unit).sort((a, b) => D.pD(a.F[0].date) - D.pD(b.F[0].date)), mxv = Math.max(1, ...bars.map(b => s.view === 'gp' ? b.a.gp : b.a.net)), bw = 600 / Math.max(1, bars.length);
+      out.hasChart = F.length > 0 && !s.drill; out.chartTitle = s.view === 'gp' ? L.hs_chartGp : L.hs_chartSv;
+      out.ch = { vb: '0 0 600 160', n: Math.max(1, bars.length), gridY: [0, 40, 80, 120].map(y => ({ y: y + 0.5 })), bars: bars.map((b, i) => { const v = s.view === 'gp' ? b.a.gp : b.a.net, h = Math.max(2, Math.abs(v) / mxv * 150), w = Math.min(bw * 0.6, 40); return { x: i * bw + (bw - w) / 2, y: 160 - h, w, h, fill: v < 0 ? '#B91C1C' : s.tip === i ? '#0F766E' : '#0D9488', enter: () => this.setState({ tip: i }), leave: () => this.setState({ tip: null }) }; }), xl: bars.map(b => ({ t: b.label.slice(0, 10) })), hasTip: s.tip != null && !!bars[s.tip], tipX: s.tip != null ? ((s.tip + 0.5) / Math.max(1, bars.length) * 100) + '%' : '0', tip: s.tip != null && bars[s.tip] ? { d: bars[s.tip].label, s: fM(s.view === 'gp' ? bars[s.tip].a.gp : bars[s.tip].a.net) + " so'm", n: fill(L.hs_docsN, { n: bars[s.tip].a.n }) } : {} };
+      if (s.drill) {
+        const D1 = F.filter(x => this.key(x, s.g1) === s.drill.v1 && (!s.drill.l2 || !s.g2 || this.key(x, s.g2) === s.drill.v2));
+        if (s.view === 'gp') { rows = D1.map((x, i) => { const g = x.net - x.cost; csv.push([x.doc, x.date, x.batch, x.qty, x.price, x.bcost, g.toFixed(2)]); return { id: x.doc + i, stripe: g < 0 ? '#B91C1C' : null, cells: [{ type: 'link', text: x.doc, pick: () => this.open('#shipments?open=' + x.doc) }, { type: 'text', text: x.date }, { type: 'mono', text: x.batch }, { type: 'text', text: fN(x.qty) }, { type: 'text', text: fM(x.price) }, { type: 'text', text: fM(x.bcost) }, { type: g < 0 ? 'icontext' : 'text', icon: 'trending-down', text: fM(g), color: g < 0 ? '#B91C1C' : '#172B2A' }] }; }); const a = this.agg(D1); out.tFoot = { cells: [{ text: L.hs_total }, { text: '' }, { text: '' }, { text: fN(a.qty) }, { text: '' }, { text: fM(a.cost) }, { text: fM(a.gp) }] }; }
+        else { const byDoc = this.group(D1, 'doc'); rows = byDoc.map(g => { csv.push([g.v, g.F[0].date, g.F[0].cust, g.a.qty, g.a.net.toFixed(2), g.a.vat.toFixed(2), g.a.total.toFixed(2)]); return { id: g.v, cells: [{ type: 'link', text: g.v, pick: () => this.open((g.F[0].kind === 'fs' ? '#transfer' : '#shipments') + '?open=' + g.v) }, { type: 'text', text: g.F[0].date }, { type: 'text', text: g.F[0].cust }, { type: 'text', text: fN(g.a.qty) }, { type: 'text', text: fM(g.a.net) }, { type: 'text', text: fM(g.a.vat) }, { type: 'text', text: fM(g.a.total) }] }; }); const a = this.agg(D1); out.tFoot = { cells: [{ text: L.hs_total }, { text: '' }, { text: '' }, { text: fN(a.qty) }, { text: fM(a.net) }, { text: fM(a.vat) }, { text: fM(a.total) }] }; }
+        rows = rows.map(r0 => ({ ...r0, cells: r0.cells.filter((c, i) => V[i]) }));
+        out.tableTitle = fill(L.hs_docsOf, { n: rows.length });
+      } else {
+        let G1 = this.sorted(this.group(F, s.g1));
+        if (s.view === 'gp') { if (s.gpv === 'neg') G1 = G1.filter(g => g.a.gp < 0); else if (s.gpv === 'top') G1 = G1.slice().sort((a, b) => b.a.gp - a.a.gp).slice(0, 20); else if (s.gpv === 'low') G1 = G1.slice().sort((a, b) => (a.a.margin || 0) - (b.a.margin || 0)).slice(0, 20); }
+        G1.forEach(g => { const on = !!s.open[g.v], hasL2 = !!s.g2, neg = g.a.gp < 0 && s.view === 'gp';
+          const nm = hasL2 ? { type: 'icontext', icon: on ? 'chevron-down' : 'chevron-right', text: g.label } : { type: 'link', text: g.label, pick: () => this.setState({ drill: { v1: g.v, l1: g.label } }) };
+          rows.push({ id: 'g' + g.v, rowBg: hasL2 ? '#F8FAFA' : null, bold: hasL2, stripe: neg ? '#B91C1C' : null, cells: [nm].concat(this.cells(g.a, tot)), onOpen: () => hasL2 ? this.setState({ open: { ...s.open, [g.v]: !on } }) : this.setState({ drill: { v1: g.v, l1: g.label } }) });
+          csv.push([g.label].concat(this.csvVals(g.a, tot)));
+          if (hasL2 && on) this.sorted(this.group(g.F, s.g2)).forEach(h => { const ng = h.a.gp < 0 && s.view === 'gp'; rows.push({ id: 'g' + g.v + '|' + h.v, stripe: ng ? '#B91C1C' : null, cells: [{ type: 'link', text: h.label, indent: 24, pick: () => this.setState({ drill: { v1: g.v, l1: g.label, v2: h.v, l2: h.label } }) }].concat(this.cells(h.a, tot)), onOpen: () => this.setState({ drill: { v1: g.v, l1: g.label, v2: h.v, l2: h.label } }) }); csv.push(['  ' + h.label].concat(this.csvVals(h.a, tot))); }); });
+        const tc = this.cells(tot, tot); out.tFoot = { cells: [{ text: L.hs_total }].concat(tc.map(c => ({ text: c.type === 'bar' ? '100,0%' : c.text, color: c.color }))) };
+        csv.push([L.hs_total].concat(this.csvVals(tot, tot)));
+        out.tableTitle = fill(L.hs_rowsN, { n: G1.length, g: L['hs_gk_' + s.g1] });
+        out.hasGpViews = s.view === 'gp'; out.gpTabs = [['all', L.hs_v_all], ['neg', L.hs_v_neg], ['top', L.hs_v_top], ['low', L.hs_v_low]].map(([k, label]) => ({ label, active: s.gpv === k, pick: () => this.setState({ gpv: k }) }));
+      }
+    }
+    this._lastRows = csv;
+    const total = rows.length, paged = total > 100, pg = Math.min(s.pg, Math.max(1, Math.ceil(total / 50)));
+    out.tRows = paged ? rows.slice((pg - 1) * 50, pg * 50) : rows; out.total = total; out.paged = paged; out.pg = pg;
+    out.hasRows = total > 0 || s.loading; out.isEmpty = !total && !s.loading;
+    out.emptyText = D.pD(r.from) < D.pD(D.DATA_FROM) ? L.hs_beforeData : ''; out.emptyBtn = { label: L.hs_clearF, icon: 'filter-x', pick: () => this.setState({ f: {}, preset: 'month', from: '', to: '', drill: null }) };
+    return out;
+  }
+  csvVals(a, tot) { const m = { docs: a.n, qty: a.qty, gross: a.gross.toFixed(2), ret: (-a.ret).toFixed(2), net: a.net.toFixed(2), vat: a.vat.toFixed(2), total: a.total.toFixed(2), share: tot.net ? (a.net / tot.net * 100).toFixed(1) : '0', cost: a.cost.toFixed(2), gp: a.gp.toFixed(2), margin: a.margin == null ? '' : a.margin.toFixed(1), markup: a.markup == null ? '' : a.markup.toFixed(1) }; return this.vis().filter(c => c[0] !== 'name').map(c => m[c[0]]); }
+}
+</script>
+</body>
+</html>

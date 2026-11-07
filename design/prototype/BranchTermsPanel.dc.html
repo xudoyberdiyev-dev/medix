@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div onClick="{{ close }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.24);display:flex;justify-content:flex-end;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <aside role="dialog" aria-modal="true" aria-label="{{ title }}" onClick="{{ stop }}" style="width:440px;max-width:100%;height:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:-8px 0 24px rgba(18,60,58,0.10);display:flex;flex-direction:column">
+    <header style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #EEF2F4">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cardName }}</span>
+        <span style="font-size:17px;line-height:24px;font-weight:600">{{ title }}</span>
+      </div>
+      <button onClick="{{ close }}" aria-label="{{ L.kt_pnCancel }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button>
+    </header>
+    <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ notes }}" as="n"><div style="display:flex;gap:8px;padding:10px 12px;border-radius:8px;background:{{ n.bg }};border:1px solid {{ n.bd }}"><lucide-i name="{{ n.icon }}" size="16" style="color:{{ n.fg }};flex:none;margin-top:1px"></lucide-i><span style="font-size:12.5px;line-height:18px;color:{{ n.fg }};text-wrap:pretty">{{ n.text }}</span></div></sc-for>
+      <sc-if value="{{ isNew }}"><dc-import name="Select" label="{{ L.kt_tBranch }}" required="{{ true }}" options="{{ brOpts }}" value="{{ f.br }}" on-change="{{ setBr }}" placeholder="{{ L.kt_choose }}" error="{{ er.br }}" hint-size="100%,56px"></dc-import></sc-if>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0">
+        <span style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:500">{{ L.kt_tActive }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ activeHelp }}</span></span>
+        <button role="switch" aria-checked="{{ f.active }}" aria-label="{{ L.kt_tActive }}" onClick="{{ toggleActive }}" style="width:36px;height:20px;flex:none;padding:2px;border:0;border-radius:999px;background:{{ swBg }};display:flex;justify-content:{{ swJ }};cursor:pointer"><span style="width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></button>
+      </div>
+      <sc-if value="{{ isMt }}" hint-placeholder-val="{{ true }}">
+        <dc-import name="MoneyInput" label="{{ L.kt_lLimit }}" value="{{ f.limit }}" on-change="{{ setLimit }}" required="{{ false }}" compact="{{ true }}" read-only="{{ limitRo }}" hint="{{ limitHint }}" error="{{ er.limit }}" hint-size="100%,56px"></dc-import>
+      </sc-if>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px">
+        <sc-for list="{{ nums }}" as="x">
+          <label style="display:flex;flex-direction:column;gap:6px;min-width:0">
+            <span style="font-size:12px;line-height:16px;font-weight:500">{{ x.label }}</span>
+            <input value="{{ x.value }}" onChange="{{ x.on }}" inputMode="numeric" aria-invalid="{{ x.bad }}" style="height:34px;padding:0 10px;border:1px solid {{ x.bd }};border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A;outline:none;text-align:right;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            <sc-if value="{{ x.err }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ x.err }}</span></sc-if>
+          </label>
+        </sc-for>
+      </div>
+      <sc-if value="{{ isMt }}" hint-placeholder-val="{{ true }}">
+        <dc-import name="Select" label="{{ L.kt_tPrice }}" options="{{ priceOpts }}" value="{{ f.price }}" on-change="{{ setPrice }}" hint-size="100%,56px"></dc-import>
+      </sc-if>
+      <dc-import name="Select" label="{{ personLabel }}" options="{{ personOpts }}" value="{{ personVal }}" on-change="{{ setPerson }}" placeholder="{{ L.kt_choose }}" hint-size="100%,56px"></dc-import>
+      <sc-if value="{{ isMt }}" hint-placeholder-val="{{ true }}">
+        <label style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.kt_tAddr }}</span>
+          <input value="{{ f.addr }}" onChange="{{ onAddr }}" style="height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+        </label>
+      </sc-if>
+    </div>
+    <footer style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid #EEF2F4">
+      <button onClick="{{ close }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.kt_pnCancel }}</button>
+      <button onClick="{{ save }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59"><lucide-i name="check" size="16"></lucide-i>{{ L.kt_pnSave }}</button>
+    </footer>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mt&quot;,&quot;yt&quot;],&quot;default&quot;:&quot;mt&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;card&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;br&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;prefill&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;nonce&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;userBranch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ALL&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onSave&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(br,terms,isNew)=&gt;void&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onDenied&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(roles)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+// 0-b: ro'yxatlar EMPLOYEES dan
+const STAFF = new Proxy({}, { get: (t, br) => window.MedixData ? window.MedixData.empNames(['operator', 'keeper', 'branch'], br) : [] });
+const BUY = new Proxy({}, { get: (t, br) => window.MedixData ? window.MedixData.empNames(['purchase', 'operator', 'branch'], br) : [] });
+class Component extends DCLogic {
+  state = { f: null, tried: false };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.init(); this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate(pp) { if (pp.nonce !== this.props.nonce) this.init(); }
+  mt() { return this.props.kind !== 'yt'; }
+  init() { const p = this.props, card = p.card || {}, T = (this.mt() ? card.cTerms : card.sTerms) || {}, br = p.br || '', cur = br && T[br];
+    const def = this.mt() ? { br: '', active: true, limit: 0, days: 30, disc: 0, price: (window.MedixData && window.MedixData.ptBase ? window.MedixData.ptBase().code : 'base'), minMonths: 0, operator: '', addr: card.address || '' } : { br: '', active: true, days: 30, buyer: '', lead: 3 };
+    const f = { ...def, ...(cur || {}), br: br || (p.userBranch && p.userBranch !== 'ALL' && !T[p.userBranch] ? p.userBranch : ''), ...(p.prefill || {}) };
+    if (!cur && f.br && this.mt() && !f.operator) f.operator = (STAFF[f.br] || [''])[0]; if (!cur && f.br && !this.mt() && !f.buyer) f.buyer = (BUY[f.br] || [''])[0];
+    ['days', 'disc', 'minMonths', 'lead'].forEach(k => { if (f[k] != null) f[k] = String(f[k]); });
+    this.setState({ f, tried: false }); }
+  errs() { const L = this.L, f = this.state.f, p = this.props, T = (this.mt() ? p.card.cTerms : p.card.sTerms) || {}, e = {}, int = v => /^\d+$/.test(String(v).trim());
+    if (!f.br) e.br = L.kt_eBr; else if (!p.br && T[f.br]) e.br = L.kt_eBrDup;
+    if (this.mt()) { if (!(f.limit >= 0)) e.limit = L.kt_eNum; if (!int(f.days) || +f.days > 365) e.days = L.kt_eDays; if (!/^\d+([.,]\d+)?$/.test(String(f.disc).trim()) || +String(f.disc).replace(',', '.') > 50) e.disc = L.kt_eDisc; if (!int(f.minMonths) || +f.minMonths > 36) e.minMonths = L.kt_eNum; }
+    else { if (!int(f.days) || +f.days > 365) e.days = L.kt_eDays; if (!int(f.lead) || +f.lead > 365) e.lead = L.kt_eDays; }
+    return e; }
+  renderVals() {
+    const L = this.L, s = this.state, p = this.props, D = this.D, f = s.f || {}, mt = this.mt(), card = p.card || {}, T = (mt ? card.cTerms : card.sTerms) || {};
+    const e = s.tried && s.f ? this.errs() : {}, isNew = !p.br, role = p.role, R = D ? D.KT_R : {};
+    const set = (k, v) => this.setState(st => ({ f: { ...st.f, [k]: v } }));
+    const brName = c => ((D && D.BRANCHES.find(b => b.code === c)) || {}).name || c;
+    const notes = [];
+    if (!isNew && D && f.br) { const ref = mt ? card.cust : card.sup, ds = D.debtState(p.kind, ref, f.br); notes.push({ icon: 'info', fg: '#1D4ED8', bg: '#EFF6FF', bd: '#BFDBFE', text: fill(L.kt_pnDebtNote, { d: fM(ds.L.debt), s: L['qz_st_' + ds.status] || ds.status }) }); }
+    const own = !D.allBr(role) && D.can(role, 'clients.terms') && p.userBranch && p.userBranch !== 'ALL' ? p.userBranch : null; if (own) notes.push({ icon: 'building-2', fg: '#5B6B6A', bg: '#F8FAFA', bd: '#E2E8F0', text: fill(L.kt_pnOwn, { b: brName(own) }) });
+    const limitRo = mt && !D.can(role, 'clients.terms');
+    const num = (k, label) => ({ label, value: f[k] == null ? '' : String(f[k]), on: ev => set(k, ev.target.value.replace(/[^\d.,]/g, '')), err: e[k] || '', bad: !!e[k], bd: e[k] ? '#B91C1C' : '#E2E8F0' });
+    const nums = mt ? [num('days', L.kt_lDays), num('disc', L.kt_lDisc), num('minMonths', L.kt_tMin + ', ' + String(fill(L.kt_monthsN, { n: '' })).trim())] : [num('days', L.kt_lDays), num('lead', L.kt_lLead)];
+    const people = (mt ? STAFF : BUY)[f.br] || [], cur = mt ? f.operator : f.buyer;
+    return {
+      L, f, isMt: mt, isNew, title: isNew ? L.kt_pnNewT : fill(L.kt_pnEditT, { b: brName(p.br) }), cardName: card.name || '', notes, er: e,
+      brOpts: D ? D.BRANCHES.filter(b => !own || b.code === own).map(b => ({ value: b.code, label: b.name, sub: T[b.code] ? L.kt_eBrDup : '' })) : [], setBr: v => this.setState(st => ({ f: { ...st.f, br: v, ...(mt ? { operator: (STAFF[v] || [''])[0] } : { buyer: (BUY[v] || [''])[0] }) } })),
+      activeHelp: f.active ? L.kt_st_active : L.kt_pnInactive, swBg: f.active ? '#0F766E' : '#CBD5D3', swJ: f.active ? 'flex-end' : 'flex-start', toggleActive: () => set('active', !f.active),
+      setLimit: v => set('limit', v == null ? 0 : v), limitRo, limitHint: limitRo ? L.kt_pnOpLimit : '',
+      nums, priceOpts: (D ? (D.store.ptypes || []).filter(t => t.active || t.code === f.price) : []).map(t => ({ value: t.code, label: t.name })), setPrice: v => set('price', v),
+      personLabel: mt ? L.kt_tOp : L.kt_tBuyer, personOpts: [...new Set(people.concat(cur ? [cur] : []))].map(n => ({ value: n, label: n })), personVal: cur || null, setPerson: v => set(mt ? 'operator' : 'buyer', v),
+      onAddr: ev => set('addr', ev.target.value), stop: ev => ev.stopPropagation(), close: () => p.onClose && p.onClose(),
+      save: () => { const need = mt ? R.termsC : R.termsS; if (!D.canR(role, 'KT_R', mt ? 'termsC' : 'termsS')) return p.onDenied && p.onDenied(need); if (own && f.br !== own) return p.onDenied && p.onDenied(D.rlRoles().filter(r => r.active !== false && r.scope === 'all').map(r => r.id));
+        const er = this.errs(); if (Object.keys(er).length) return this.setState({ tried: true });
+        const out = mt ? { active: !!f.active, limit: Math.round((f.limit || 0) * 100) / 100, days: +f.days, disc: +String(f.disc).replace(',', '.'), price: f.price, minMonths: +f.minMonths, operator: f.operator || '', addr: f.addr || '' } : { active: !!f.active, days: +f.days, buyer: f.buyer || '', lead: +f.lead };
+        p.onSave && p.onSave(f.br, out, isNew); }
+    };
+  }
+}
+</script>
+</body>
+</html>

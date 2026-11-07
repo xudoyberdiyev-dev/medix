@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;min-height:calc(100% + 48px);margin:-24px;background:#F5F7F8;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:15px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="TabletShell" title="{{ shTitle }}" sub="{{ shSub }}" back-label="{{ L.iv_title }}" user="{{ userName }}" scanner="{{ scanner }}" progress="{{ progress }}" on-back="{{ back }}" on-test="{{ shellTest }}" on-scanner="{{ toggleScanner }}" test-label="{{ L.iv_scanTest }}" scanner-on="{{ L.tr_scOn }}" scanner-off="{{ L.tr_scOff }}" hint-size="100%,56px"></dc-import>
+  <div style="flex:1;display:flex;flex-direction:column;gap:16px;padding:16px 16px 120px;max-width:1100px;width:100%;margin:0 auto;box-sizing:border-box">
+    <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+    <sc-for list="{{ sections }}" as="g" hint-placeholder-count="1">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;background:#F8FAFA;border-bottom:1px solid #E2E8F0">
+          <lucide-i name="{{ g.icon }}" size="18" style="color:#5B6B6A"></lucide-i>
+          <span style="font-size:15px;font-weight:600">{{ g.label }}</span>
+          <span style="flex:1"></span>
+          <span style="font-size:13px;color:#5B6B6A">{{ g.prog }}</span>
+        </div>
+        <sc-for list="{{ g.rows }}" as="r">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:12px;align-items:center;padding:10px 16px;min-height:68px;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};box-shadow:inset 4px 0 0 {{ r.stripe }}">
+            <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+              <span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.name }}</span><sc-for list="{{ r.flags }}" as="f"><lucide-i name="{{ f.icon }}" size="16" style="color:{{ f.color }}"></lucide-i></sc-for></span>
+              <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#5B6B6A"><span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ r.batch }}</span><span>{{ r.exp }}</span><sc-if value="{{ r.expired }}"><span style="height:20px;padding:0 6px;border-radius:5px;background:#FEF2F2;color:#B91C1C;font-size:12px;line-height:20px;font-weight:500">{{ L.iv_toQuar }}</span></sc-if><sc-if value="{{ r.showBook }}"><span>· {{ r.bookText }}</span></sc-if><sc-if value="{{ r.isNotFound }}"><span style="color:#B45309">· {{ L.iv_notFound }}</span></sc-if></span>
+            </div>
+            <sc-if value="{{ r.isPlain }}">
+              <input value="{{ r.val }}" onChange="{{ r.onVal }}" onFocus="{{ r.select }}" inputMode="numeric" aria-label="{{ L.iv_cCounted }}" placeholder="—" style="height:44px;width:100%;min-width:0;padding:0 14px;border:1px solid {{ r.border }};border-radius:10px;background:#FFFFFF;font:inherit;font-size:20px;font-weight:600;text-align:right;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            </sc-if>
+            <sc-if value="{{ r.isMark }}">
+              <button onClick="{{ r.scan }}" style="height:44px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 12px;border:1px solid {{ r.border }};border-radius:10px;background:#F0FDFA;color:#0F766E;font-size:14px;font-weight:500;cursor:pointer"><lucide-i name="scan-barcode" size="18"></lucide-i><span style="font-size:20px;font-weight:600;color:#172B2A">{{ r.codesN }}</span></button>
+            </sc-if>
+            <button onClick="{{ r.notFound }}" title="{{ L.iv_notFound }}" style="height:44px;padding:0 12px;display:flex;align-items:center;gap:6px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;color:#5B6B6A;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-active="background:#EEF2F4"><lucide-i name="search-x" size="16"></lucide-i>{{ r.nfLabel }}</button>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+  </div>
+  <div style="position:sticky;bottom:0;z-index:6;background:#FFFFFF;border-top:1px solid #E2E8F0;box-shadow:0 -4px 12px rgba(18,60,58,0.06)">
+    <div style="height:4px;background:#EEF2F4"><div style="height:100%;width:{{ pct }}%;background:#0D9488"></div></div>
+    <div style="display:flex;align-items:center;gap:16px;padding:12px 16px;max-width:1100px;margin:0 auto;box-sizing:border-box">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1">
+        <span style="font-size:17px;font-weight:600">{{ progText }}</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#5B6B6A"><lucide-i name="{{ saveIcon }}" size="14" style="color:#15803D"></lucide-i>{{ saveText }}</span>
+      </div>
+      <button onClick="{{ finish }}" style="height:52px;padding:0 22px;display:flex;align-items:center;gap:8px;border:0;border-radius:10px;background:#0F766E;color:#FFFFFF;font-size:16px;font-weight:600;cursor:pointer" style-active="background:#115E59"><lucide-i name="flag" size="20"></lucide-i>{{ L.iv_finish }}</button>
+    </div>
+  </div>
+  <sc-if value="{{ scanOpen }}"><dc-import name="ScanPanel" title="{{ L.iv_scanT }}" subtitle="{{ scSub }}" lines="{{ scLines }}" line-value="{{ scLine }}" on-line="{{ scPick }}" done="{{ scDone }}" need="{{ scNeed }}" scans="{{ scans }}" err-n="{{ errN }}" on-test="{{ scTest }}" on-undo="{{ scUndo }}" on-manual="{{ scManual }}" on-close="{{ scClose }}" width="460px" labels="{{ scLabels }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ false }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ dlg.cancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1024,&quot;height&quot;:768},&quot;no&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;docKey&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;preset&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;keeper&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;keeper&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Sardor Aliyev&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onDone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(no)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const ZICON = { store: 'boxes', ctrl: 'lock-keyhole', cold: 'snowflake', quar: 'shield-alert', recv: 'package-open' };
+const num = v => { const t = String(v == null ? '' : v).replace(/\s/g, '').replace(/\./g, ''); return t === '' ? null : /^\d+$/.test(t) ? +t : NaN; };
+class Component extends DCLogic {
+  state = { x: null, vals: {}, scanId: null, scans: [], errN: 0, dlg: null, savedAt: null, scanner: true, hi: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.load(); } }, 60); else this.load(); }
+  componentWillUnmount() { clearInterval(this._p); }
+  componentDidUpdate(pp) { if (pp.docKey !== this.props.docKey) this.load(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  load() {
+    const D = this.D, x = D.ivCopy(D.ivByNo(this.props.no)); if (!x) return;
+    this.X = x; const vals = {}; x.lines.forEach(l => { vals[l.id] = l.counted == null ? '' : String(l.counted); });
+    this.setState({ x, vals, scanId: null, scans: [], errN: 0, dlg: null, savedAt: null }, () => {
+      const pr = this.props.preset || {};
+      if (pr.scan) { const l = x.lines.find(y => (D.prodById(y.pid) || {}).mark && y.counted == null) || x.lines.find(y => (D.prodById(y.pid) || {}).mark); if (l) { this.setState({ scanId: l.id }); (pr.pre || 0) && setTimeout(() => { for (let i = 0; i < pr.pre; i++) this.scTest(); if (pr.dup) setTimeout(() => { const c = (this.cur() || {}).codes || []; if (c[0]) this.handle(c[0]); }, 80); }, 80); } }
+      if (pr.finish) setTimeout(() => this.finish(), 120);
+    });
+  }
+  cur(id) { const k = id || this.state.scanId; return this.X ? this.X.lines.find(l => l.id === k) : null; }
+  canEdit() { return this.D.can(this.props.role, 'inventory.count') && this.state.x && this.state.x.status === 'count'; }
+  guard() { if (this.canEdit()) return true; this.toast(this.state.x && this.state.x.status !== 'count' ? this.L.iv_tNotCount : fill(this.L.qz_who, { r: this.D.IV_ROLES.count.map(r => this.L['r_' + r]).join(', ') })); return false; }
+  save(fn) { const D = this.D, x = D.ivCopy(this.X); fn(x); const r = D.saveIv(x); this.X = r; this.setState({ x: r, savedAt: D.nowStr().slice(11) }); return r; }
+  setVal(id, v) { if (!this.guard()) return; this.setState(s => ({ vals: { ...s.vals, [id]: v } })); const n = num(v); if (n === null || !isNaN(n)) this.save(x => { const l = x.lines.find(y => y.id === id); l.counted = n; l.notFound = false; }); }
+  handle(code) {
+    const D = this.D, L = this.L, l = this.cur(); if (!l || !this.guard()) return;
+    const m = D.markByCode(code), t = D.nowStr().slice(11, 16), id = 's' + Date.now() + Math.random();
+    const err = (label, detail) => this.setState(s => ({ scans: [{ id, ok: false, icon: 'circle-x', color: '#B91C1C', label, code: String(code).slice(0, 34), time: t, detail }, ...s.scans].slice(0, 30), errN: s.errN + 1 }));
+    if (!m) return err(L.iv_sNotFound, '');
+    if (this.X.lines.some(y => (y.codes || []).includes(m.code))) return err(L.iv_sDup, L.iv_sDupD);
+    if (m.bid !== l.bid) { const other = this.X.lines.find(y => y.bid === m.bid); return err(L.iv_sOther, other ? fill(L.iv_sOtherD, { b: m.batch, z: other.zoneLabel }) : fill(L.iv_sOutD, { b: m.batch, w: D.whName(m.branch, m.wh), z: m.zone })); }
+    this.save(x => { const y = x.lines.find(z => z.id === l.id); y.codes = [...(y.codes || []), m.code]; y.counted = y.codes.length; y.notFound = false; });
+    this.setState(s => ({ scans: [{ id, ok: true, icon: 'circle-check', color: '#15803D', label: L.iv_sOk, code: m.serial, time: t, detail: '' }, ...s.scans].slice(0, 30) }));
+  }
+  scTest() { const D = this.D, l = this.cur(); if (!l) return; const used = new Set(this.X.lines.flatMap(y => y.codes || [])); const m = D.marks().find(c => c.bid === l.bid && !used.has(c.code)); if (m) this.handle(m.code); else this.toast(this.L.iv_tAllScanned); }
+  finish() {
+    const D = this.D, L = this.L, x = this.X; if (!this.guard()) return;
+    const unc = x.lines.filter(l => l.counted == null);
+    if (unc.length) return this.setState({ dlg: { title: fill(L.iv_dUncT, { n: unc.length }), text: L.iv_dUncD, items: unc.slice(0, 6).map(l => ({ icon: 'circle-dashed', text: `${(D.prodById(l.pid) || {}).name} · ${l.batch} · ${l.zoneLabel}` })).concat(unc.length > 6 ? [{ icon: 'more-horizontal', text: fill(L.iv_more, { n: unc.length - 6 }) }] : []), confirm: L.iv_markZero, cancel: L.iv_backToCount,
+      run: () => { const r = this.save(y => y.lines.forEach(l => { if (l.counted == null) { l.counted = 0; l.notFound = true; } })); this.done(r); } } });
+    this.setState({ dlg: { title: L.iv_dFinT, text: fill(L.iv_dFinD, { n: x.lines.length }), items: [], confirm: L.iv_finish, cancel: L.qt_back, run: () => this.done(x) } });
+  }
+  done(x) { const D = this.D, r = D.ivStep(x, 'check', this.props.userName); this.setState({ dlg: null }); this.toast(fill(this.L.iv_tFinished, { n: r.no })); this.props.onDone && this.props.onDone(r.no); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props;
+    const base = { L, screenLabel: L.iv_countT, sections: [], banners: [], scans: [], scLines: [], dlg: {}, userName: p.userName, back: () => p.onBack && p.onBack(), progress: null, pct: 0 };
+    if (!D || !s.x) return base;
+    const x = s.x, open = !x.blind || D.can(p.role, 'inventory.openCount'), zs = D.ivZones(x);
+    const done = x.lines.filter(l => l.counted != null).length, n = x.lines.length;
+    const banners = [];
+    if (x.status !== 'count') banners.push({ tone: 'neutral', icon: 'info', text: L.iv_tNotCount });
+    banners.push(x.blind ? { tone: 'info', icon: 'eye-off', text: open ? L.iv_bBlindMgr : L.iv_bBlind } : { tone: 'neutral', icon: 'eye', text: L.iv_bOpen });
+    if (x.lines.some(l => (D.prodById(l.pid) || {}).mark)) banners.push({ tone: 'neutral', icon: 'scan-barcode', text: L.iv_bMark });
+    const rowOf = l => { const pr = D.prodById(l.pid) || {}, v = s.vals[l.id] == null ? '' : s.vals[l.id], bad = isNaN(num(v)), cnt = l.counted != null, isM = !!pr.mark;
+      return { name: pr.name, batch: l.batch, exp: l.exp, expired: l.days != null && l.days < 0, flags: [pr.ctrl && { icon: 'shield-alert', color: '#B91C1C' }, isM && { icon: 'scan-barcode', color: '#5B6B6A' }].filter(Boolean),
+        showBook: open, bookText: fill(L.iv_bookN, { n: fN(l.book) }), isPlain: !isM, isMark: isM, val: v, onVal: e => this.setVal(l.id, e.target.value), select: e => e.target.select(), codesN: fN((l.codes || []).length),
+        scan: () => this.guard() && this.setState({ scanId: l.id, scans: [], errN: 0 }), border: bad ? '#B91C1C' : cnt ? '#0D9488' : '#CBD5D3', bg: s.hi === l.id ? '#F0FDFA' : '#FFFFFF', stripe: cnt ? '#0D9488' : 'transparent', isNotFound: !!l.notFound,
+        nfLabel: L.iv_notFoundBtn, notFound: () => { if (!this.guard()) return; this.setState(st => ({ vals: { ...st.vals, [l.id]: '0' } })); this.save(y => { const z = y.lines.find(q => q.id === l.id); z.counted = 0; z.codes = []; z.notFound = true; }); } }; };
+    const sections = zs.map(z => { const ls = x.lines.filter(l => l.zone === z); if (!ls.length) return null; const zt = D.zoneType(x.branch, x.wh, z); return { label: zt.label, icon: ZICON[zt.type] || 'boxes', prog: fill(L.iv_secProg, { d: ls.filter(l => l.counted != null).length, n: ls.length }), rows: ls.map(rowOf) }; }).filter(Boolean);
+    const l = this.cur(), lp = l ? D.prodById(l.pid) || {} : {};
+    const markLines = x.lines.filter(y => (D.prodById(y.pid) || {}).mark);
+    return {
+      ...base, screenLabel: L.iv_countT + ' · ' + x.no, shTitle: fill(L.iv_countTitle, { n: x.no }), shSub: `${D.whName(x.branch, x.wh)} · ${zs.map(z => D.zoneType(x.branch, x.wh, z).label).join(', ')}`,
+      scanner: s.scanner, toggleScanner: () => this.setState(st => ({ scanner: !st.scanner })), progress: { done, total: n, label: L.iv_rowsU },
+      shellTest: () => { const nx = x.lines.find(y => y.counted == null); if (!nx) return this.toast(L.iv_tAllDone); const pr = D.prodById(nx.pid) || {}; if (pr.mark) return this.setState({ scanId: nx.id, scans: [], errN: 0 }); this.setState({ hi: nx.id }); this.toast(fill(L.iv_tBarcode, { p: pr.name, b: nx.batch })); },
+      banners, sections, pct: n ? Math.round(done / n * 100) : 0, progText: fill(L.iv_progText, { d: done, n }), saveIcon: s.savedAt ? 'cloud-check' : 'hard-drive', saveText: s.savedAt ? fill(L.iv_savedAt, { t: s.savedAt }) : L.iv_saveLocal,
+      finish: () => this.finish(),
+      scanOpen: !!l, scSub: l ? `${lp.name} · ${l.batch}` : '', scLines: markLines.map(y => ({ value: y.id, label: `${(D.prodById(y.pid) || {}).name} · ${y.batch} · ${fN((y.codes || []).length)}` })), scLine: s.scanId, scPick: v => this.setState({ scanId: v, scans: [], errN: 0 }),
+      scDone: l ? (l.codes || []).length : 0, scNeed: open && l ? l.book : 0, scans: s.scans, errN: s.errN, scTest: () => this.scTest(), scManual: c => this.handle(c), scClose: () => this.setState({ scanId: null }),
+      scUndo: () => { if (!l || !(l.codes || []).length || !this.guard()) return; this.save(y => { const z = y.lines.find(q => q.id === l.id); z.codes = z.codes.slice(0, -1); z.counted = z.codes.length || null; }); },
+      scLabels: { close: L.qt_close, test: L.iv_scanTest, empty: L.iv_scanEmpty, readyText: L.iv_scanReady },
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

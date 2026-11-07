@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<ol aria-label="{{ ariaLabel }}" style="display:flex;align-items:center;gap:8px;margin:0;padding:0;list-style:none;font-family:Inter,system-ui,sans-serif;font-size:12px;line-height:16px">
+  <sc-for list="{{ steps }}" as="st" hint-placeholder-count="2">
+    <sc-if value="{{ st.hasLine }}"><li aria-hidden="true" style="width:24px;height:1px;background:{{ st.line }}"></li></sc-if>
+    <li aria-current="{{ st.current }}" style="display:flex;align-items:center;gap:6px;color:{{ st.color }};font-weight:{{ st.weight }};white-space:nowrap">
+      <span style="width:8px;height:8px;border-radius:50%;box-sizing:border-box;background:{{ st.dot }};border:{{ st.ring }}"></span>{{ st.label }}
+    </li>
+  </sc-for>
+</ol>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:40},&quot;status&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;draft&quot;,&quot;posted&quot;,&quot;cancelled&quot;],&quot;default&quot;:&quot;draft&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;labels&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{draft,posted,cancelled}&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, st = p.status || 'draft', lb = { draft: 'Qoralama', posted: 'Tasdiqlangan', cancelled: 'Bekor qilingan', ...(p.labels || {}) };
+    const done = { dot: '#0F766E', ring: '0', color: '#172B2A', weight: 400 };
+    const cur = { dot: '#FFFFFF', ring: '2px solid #0F766E', color: '#172B2A', weight: 600 };
+    const next = { dot: '#CBD5D3', ring: '0', color: '#647574', weight: 400 };
+    const ST = { done, cur, next, fail: { dot: '#B91C1C', ring: '0', color: '#B91C1C', weight: 600 } };
+    if (p.steps) return { ariaLabel: p.ariaLabel || 'Hujjat holati', steps: p.steps.map((x, i) => ({ label: x.label, ...ST[x.state || 'next'], hasLine: i > 0, line: x.state === 'next' ? '#CBD5D3' : x.state === 'fail' ? '#B91C1C' : '#0F766E', current: x.state === 'cur' ? 'step' : 'false' })) };
+    const steps = st === 'draft' ? [{ label: lb.draft, ...cur, current: 'step' }, { label: lb.posted, ...next, line: '#CBD5D3' }]
+      : st === 'posted' ? [{ label: lb.draft, ...done }, { label: lb.posted, ...done, weight: 600, current: 'step', line: '#0F766E' }]
+      : [{ label: lb.draft, ...done }, { label: lb.cancelled, dot: '#B91C1C', ring: '0', color: '#B91C1C', weight: 600, current: 'step', line: '#B91C1C' }];
+    return { ariaLabel: p.ariaLabel || 'Hujjat holati', steps: steps.map((x, i) => ({ ...x, hasLine: i > 0, current: x.current || 'false' })) };
+  }
+}
+</script>
+</body>
+</html>

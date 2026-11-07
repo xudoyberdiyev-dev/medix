@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Buyurtmalar" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ L.b_title }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" more="{{ hdrMore }}" more-label="{{ L.p_more }}" hint-size="100%,34px"></dc-import>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div role="tablist" style="display:flex;flex-wrap:wrap;gap:6px;min-width:0">
+      <sc-for list="{{ stTabs }}" as="t" hint-placeholder-count="8"><button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:108px;padding:7px 12px;border:1px solid {{ t.bd }};border-radius:8px;background:{{ t.bg }};box-shadow:{{ t.sh }};cursor:pointer;font:inherit;text-align:left;transition:border-color 120ms ease-out" style-hover="border-color:#99D8CB">
+        <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;line-height:16px;font-weight:{{ t.w }};color:{{ t.fg }};white-space:nowrap">{{ t.label }}<span style="min-width:20px;height:18px;padding:0 6px;border-radius:9px;background:{{ t.cBg }};color:{{ t.cFg }};font-size:11.5px;line-height:18px;font-weight:600;text-align:center">{{ t.n }}</span></span>
+        <span style="font-size:12px;line-height:16px;color:#5B6B6A;font-variant-numeric:tabular-nums;white-space:nowrap">{{ t.sum }}</span>
+      </button></sc-for>
+      <sc-if value="{{ lateOn }}"><button onClick="{{ lateOff }}" style="align-self:center;display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid #FECACA;border-radius:15px;background:#FEF2F2;color:#B91C1C;font:inherit;font-size:12.5px;font-weight:500;cursor:pointer">{{ lateLabel }}<lucide-i name="x" size="14"></lucide-i></button></sc-if>
+    </div>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.b_search }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" date-filter="{{ dateFilter }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.p_fClear }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="{{ allState }}" on-toggle-all="{{ toggleAll }}" on-sort="{{ onSort }}" scroll-x="{{ narrow }}" min-width="{{ tMinWidth }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+      <dc-import name="Pagination" total="{{ total }}" page="{{ page }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="clipboard-list" title="{{ L.b_emptyT }}" text="{{ L.b_emptyD }}" primary="{{ hdrPrimary }}" min-height="360" hint-size="100%,360px"></dc-import></sc-if>
+    <sc-if value="{{ listNoRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.p_noResT }}" text="{{ noResText }}" secondary="{{ noResAction }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+  </div>
+  <sc-if value="{{ hasSel }}"><dc-import name="BulkBar" count-label="{{ selLabel }}" actions="{{ bulkActions }}" on-clear="{{ clearSel }}" clear-label="{{ L.p_clearSel }}" hint-size="0px,0px"></dc-import></sc-if>
+  <div style="height:64px"></div>
+</div>
+</sc-if>
+<sc-if value="{{ isCard }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="OrderCard" order-id="{{ cardId }}" dict="{{ L }}" role="{{ role }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-toast="{{ toastFn }}" on-back="{{ backToList }}" on-copy="{{ copyOrder }}" hint-size="100%,800px"></dc-import>
+</sc-if>
+<sc-if value="{{ isEntry }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="OrderEntry" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" user-name="{{ userName }}" doc="{{ entryDoc }}" demo="{{ entryDemo }}" narrow="{{ narrow }}" on-toast="{{ toastFn }}" on-saved="{{ onSaved }}" on-back="{{ backToList }}" on-dirty="{{ dirtyFn }}" on-pick="{{ onPick }}" pick-add="{{ pickAdd }}" hint-size="100%,800px"></dc-import>
+</sc-if>
+<sc-if value="{{ isPick }}" hint-placeholder-val="{{ false }}">
+<dc-import name="ProductPicker" mode="order" doc="{{ entryDoc }}" dict="{{ L }}" role="{{ role }}" narrow="{{ narrow }}" on-back="{{ pickBack }}" on-done="{{ pickDone }}" on-toast="{{ toastFn }}" hint-size="100%,800px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;operator&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;operator&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Malika Yusupova&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onDirty&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(d)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
+const toLat = s => String(s || '').toLowerCase().replace(/[ʻʼ‘’`']/g, "'");
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const CARD_DEMO = { pending: 'BY-TSH-000340', queued: 'BY-TSH-000337', marking: 'BY-TSH-000333', picking: 'BY-TSH-000335', checking: 'BY-TSH-000317', docs: 'BY-TSH-000313', loading: 'BY-TSH-000312', ready: 'BY-TSH-000333', shipped: 'BY-TSH-000331', delivered: 'BY-TSH-000329', rejected: 'BY-TSH-000324', cancelled: 'BY-TSH-000325' };
+const OPENS = ['draft', 'pending'];
+// T9-1: «Navbatda» ikki filtrga bo'linadi — vaqt kutilmoqda / vaqt berildi
+const VIEWS = [['all', null], ['drafts', ['draft']], ['pending', ['pending']], ['qWait', o => o.status === 'queued' && !o.tm], ['qTime', o => o.status === 'queued' && !!o.tm], ['picking', ['picking']], ['marking', ['marking']], ['checking', ['checking']], ['docs', ['docs']], ['loading', ['loading', 'ready']], ['shipped', ['shipped']], ['delivered', ['delivered']], ['closed', ['cancelled', 'rejected']]];
+const inV = (f, o) => !f || (typeof f === 'function' ? f(o) : f.includes(o.status));
+class Component extends DCLogic {
+  state = { pickAdd: null, view: 'list', cardId: null, doc: null, entryDemo: null, listEmpty: false, tab: 'all', late: false, fPay: [], q: '', fCust: [], fStatus: [], fDel: [], fRegion: [], fOp: [], date: { from: null, to: null }, sort: null, page: 1, per: 20, sel: {}, hl: null, ready: !!window.MedixData };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'orders' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if ('pick' in P) return; const o = P.open ? D.store.orders.find(x => x.no === P.open) : null; if (o) return this.setState({ view: 'card', cardId: o.id }); const LEG = { qWait: 'queued', qTime: 'queued', closed: 'cancelled', ready: 'loading' }, tb = P.tab ? (LEG[P.tab] || P.tab) : P.status ? (LEG[P.status] || P.status) : 'all'; this.setState({ view: 'list', late: P.late === '1', fPay: [], tab: tb === 'all' || (D.ST_ALL || []).includes(tb) ? tb : 'all', q: '', fCust: [], fDel: [], fRegion: [], date: P.date ? { from: P.date, to: P.date } : { from: null, to: null }, page: 1, fStatus: [], fOp: P.op ? [P.op] : [] }); }
+  componentDidMount() {
+    this._url = setInterval(() => this.applyUrl(), 250);
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.setState({ ready: true }); } }, 60);
+    this.applyDemo();
+    const D = this.D; if (D && D.store.openReq != null && !this.props.demo) { const id = D.store.openReq; D.store.openReq = null; this.setState({ view: 'card', cardId: id }); }
+    this.onKey = e => {
+      if (this.state.view !== 'list' || e.ctrlKey || e.metaKey || e.altKey || (e.key !== 'n' && e.key !== 'N')) return;
+      const t = e.target, tag = t && t.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+      if (!this.canCreate()) return; e.preventDefault(); this.newOrder();
+    };
+    window.addEventListener('keydown', this.onKey);
+    // Y1: ochiq hujjat — boshqa sahifadan qaytganda ro'yxat emas, hujjat ochiladi (yangi URL filtri bo'lsa — u ustun)
+    if (D && !this.props.demo && this.state.view === 'list' && this.canCreate()) { const od = D.openDocGet('order'), u = D.store.urlF, fresh = u && u.page === 'orders' && Date.now() - u.n < 1500; if (od && od.doc && !fresh) { if (u && u.page === 'orders') this._un = u.n; this.setState({ view: 'entry', doc: od.doc, entryDemo: null }); } }
+    this.onPop = () => { if (this.state.view === 'pick' && !/[?&]pick/.test(location.hash)) this.closePick(); };
+    window.addEventListener('popstate', this.onPop);
+  }
+  openPick(doc) { try { history.replaceState(null, '', '#orders'); history.pushState(null, '', '#orders?pick=1'); this._pushed = true; } catch (e) { this._pushed = false; } this.setState({ view: 'pick', doc, pickAdd: null }); const m = document.querySelector('main'); m && m.scrollTo({ top: 0 }); }
+  leavePick(items) { this._pickItems = items || null; if (this._pushed) { this._pushed = false; try { history.back(); } catch (e) {} clearTimeout(this._pt); this._pt = setTimeout(() => { if (this.state.view === 'pick') this.closePick(); }, 400); } else this.closePick(); }
+  closePick() { clearTimeout(this._pt); const items = this._pickItems, od = this.D && this.D.openDocGet('order'); this._pickItems = null; this.setState({ view: 'entry', doc: od ? od.doc : this.state.doc, entryDemo: null, pickAdd: items && items.length ? { items, n: Date.now() } : null }); }
+  componentWillUnmount() { clearTimeout(this._pt); window.removeEventListener('popstate', this.onPop); clearInterval(this._url); clearInterval(this._p); clearTimeout(this._hl); window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.applyDemo(); }
+  applyDemo() {
+    const d = this.props.demo; if (!d) return;
+    if (d.k === 'open') { const D = this.D, id = D && D.store.openReq; if (D) D.store.openReq = null; return id != null && this.setState({ view: 'card', cardId: id, doc: null, entryDemo: null }); }
+    if (d.k.indexOf('card_') === 0) { const D = this.D, no = CARD_DEMO[d.k.slice(5)], o = D && D.store.orders.find(x => x.no === no); return this.setState({ view: 'card', cardId: o ? o.id : null, doc: null, entryDemo: null }); }
+    if (d.k === 'list' || d.k === 'lempty') this.setState({ view: 'list', listEmpty: d.k === 'lempty', doc: null, entryDemo: null, tab: 'all', page: 1 });
+    else this.setState({ view: 'entry', doc: null, entryDemo: { k: d.k, n: d.n } });
+  }
+  canCreate() { return !!this.D && this.D.can(this.props.role, 'orders.create'); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  newOrder() { this.setState({ view: 'entry', doc: null, entryDemo: null, pickAdd: null }); }
+  openOrder(o) { if (o.status === 'draft' && this.canCreate()) this.setState({ view: 'entry', doc: JSON.parse(JSON.stringify(o)), entryDemo: null, pickAdd: null }); else this.setState({ view: 'card', cardId: o.id }); }
+  copyOrder(o) { const c = JSON.parse(JSON.stringify(o)), id = Date.now(); Object.assign(c, { id, no: null, status: 'draft', date: this.D.TODAY, time: '', delivDate: this.D.TOMORROW, op: this.props.userName || c.op, log: null, viaAppr: false, appr: null, rej: null, canc: null, ship: null, pays: null, short: null, reason: '', mgrNote: '', returned: null, decidedAt: null }); c.lines = c.lines.map((l, i) => ({ id: id * 10 + i, pid: l.pid, qty: l.qty, price: null })); this.toast(this.L.t_copy); this.setState({ view: 'entry', doc: c, entryDemo: null, pickAdd: null }); }
+  issue(o, t) {
+    const L = this.L, c = this.D.custById(o.cust); if (!c || !OPENS.includes(o.status)) return null;
+    const Dq = this.D.debtOf('mt', c.id, o.branch), over = Dq.debt + t.total - c.limit, r = [];
+    if (c.blocked) r.push(fill(L.b_crBlocked, { r: c.blocked }));
+    if (over > 0) r.push(fill(L.b_crOver, { s: fM(over) }));
+    if (Dq.overdue > 0) r.push(fill(L.b_crOverdue, { s: fM(Dq.overdue), n: Dq.overdueDays }));
+    return r.length ? r.join(' · ') : null;
+  }
+  stSub(o) { const D = this.D, L = this.L, st = o.status; if (st === 'queued') return o.tm ? { sub: L.q9_tmGiven, subColor: '#1D4ED8' } : { sub: L.q9_tmWait, subColor: '#B45309' };
+    const tm = D.pickTimer ? D.pickTimer(o) : null; if (!tm) return {};
+    if (tm.run) return tm.left < 0 ? { sub: fill(L.q9_late, { n: -tm.left }), subColor: '#B91C1C' } : { sub: fill(L.q9_left, { n: tm.left }), subColor: '#5B6B6A' };
+    return tm.diff < 0 ? { sub: fill(L.q9_resLate, { d: -tm.diff }), subColor: '#B91C1C' } : { sub: tm.diff > 0 ? fill(L.q9_resOk, { s: tm.spent, d: tm.diff }) : fill(L.q9_resOnTime, { s: tm.spent }), subColor: '#15803D' }; }
+  printSel() { const D = this.D, L = this.L, nos = Object.keys(this.state.sel).map(id => D.store.orders.find(o => String(o.id) === String(id))).filter(o => o && ['queued', 'picking'].includes(o.status)).map(o => o.no);
+    if (!nos.length) return this.toast(L.q9_printNone); window.medixPrint && window.medixPrint(nos.length === 1 ? 'pick' : 'picks', nos[0], { q: nos }); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const common = { L, role: p.role, branch: p.branch, userName: p.userName, narrow, toastFn: t => this.toast(t), dirtyFn: d => p.onDirty && p.onDirty(d),
+      isList: s.view === 'list', isEntry: s.view === 'entry', isPick: s.view === 'pick', pickAdd: s.pickAdd, onPick: d => this.openPick(d), pickBack: () => this.leavePick(null), pickDone: items => this.leavePick(items), isCard: s.view === 'card' && s.cardId != null, cardId: s.cardId, copyOrder: x => this.copyOrder(x), entryDoc: s.doc, entryDemo: s.entryDemo,
+      backToList: () => { p.onDirty && p.onDirty(false); this.setState({ view: 'list', doc: null, entryDemo: null, cardId: null, pickAdd: null }); },
+      onSaved: x => { p.onDirty && p.onDirty(false); clearTimeout(this._hl); this.setState({ view: 'list', doc: null, entryDemo: null, listEmpty: false, tab: 'all', late: false, fPay: [], q: '', fCust: [], fStatus: [], fDel: [], fRegion: [], fOp: [], date: { from: null, to: null }, sort: null, page: 1, hl: x.id }); this._hl = setTimeout(() => this.setState({ hl: null }), 2000); } };
+    if (!D || s.view !== 'list') return { ...common, views: [], fbFilters: [], tColumns: [], tRows: [] };
+    const br = p.branch && p.branch !== 'ALL' ? p.branch : null;
+    const base = s.listEmpty ? [] : D.store.orders.filter(o => o.no && (!br || o.branch === br));
+    const cust = o => D.custById(o.cust) || { name: '—', region: '' };
+    const q = toLat(s.q.trim()), from = pD(s.date.from), to = pD(s.date.to);
+    const fit = o => { const c = cust(o); return (!q || toLat(`${o.no} ${c.name} ${c.stir || ''}`).includes(q)) && (!s.fCust.length || s.fCust.includes(c.name)) && (!s.fStatus.length || s.fStatus.includes(o.status)) && (!s.fDel.length || s.fDel.includes(o.delivery)) && (!s.fRegion.length || s.fRegion.includes(c.region)) && (!s.fOp.length || s.fOp.includes(o.op)) && (!s.fPay.length || s.fPay.includes(D.payTypeOf(o))) && (!s.late || D.orderLate(o)) && (!from || (pD(o.date) >= from && pD(o.date) <= (to || from))); };
+    const inTab = o => s.tab === 'all' || D.stKey(o.status) === s.tab; // T10a: yorliq = holat (13 + Hammasi)
+    const T = {}; base.forEach(o => T[o.id] = D.orderTotals(o));
+    let rows = base.filter(o => inTab(o) && fit(o));
+    const key = s.sort && s.sort.key, m = s.sort && s.sort.dir === 'asc' ? 1 : -1;
+    const dt = o => pD(o.date) + (+String(o.time || '0:0').replace(':', '') || 0) * 60;
+    rows = [...rows].sort((a, b) => key === 'sum' ? (T[a.id].total - T[b.id].total) * m : key === 'no' ? a.no.localeCompare(b.no) * m : key === 'delDate' ? (pD(a.delivDate) - pD(b.delivDate)) * m : (dt(a) - dt(b)) * (key ? m : -1));
+    if (s.hl) { const i = rows.findIndex(o => o.id === s.hl); if (i > 0) rows.unshift(rows.splice(i, 1)[0]); }
+    const total = rows.length, pages = Math.max(1, Math.ceil(total / s.per)), page = Math.min(s.page, pages), pageRows = rows.slice((page - 1) * s.per, page * s.per);
+    const cnt = f => base.filter(o => f(o) && fit(o)).length;
+    const fitted = base.filter(fit), stS = D.ordStats(fitted, { statuses: D.ST_ALL, late: false }), allSum = stS.reduce((a, x) => a + x.sum, 0); // T10a: bosh sahifa bloki bilan bir funksiya
+    const stTabs = [{ status: 'all', n: fitted.length, sum: allSum }, ...stS].map(x => { const on = s.tab === x.status, warn = x.status === 'pending' && x.n > 0, bad = ['undelivered', 'rejected'].includes(x.status) && x.n > 0;
+      return { label: x.status === 'all' ? L.p_vAll : L['b_st_' + x.status], n: fN(x.n), sum: fM(x.sum), on, bd: on ? '#0F766E' : '#E2E8F0', bg: on ? '#F0FAF7' : '#FFFFFF', sh: on ? 'inset 0 0 0 1px #0F766E' : 'none', w: on ? 600 : 500, fg: '#172B2A', cBg: on ? '#0F766E' : warn ? '#FEF3C7' : bad ? '#FEE2E2' : '#EEF2F4', cFg: on ? '#FFFFFF' : warn ? '#B45309' : bad ? '#B91C1C' : '#5B6B6A', pick: () => this.setState({ tab: x.status, page: 1, sel: {} }) }; });
+    const views = [];
+    const sortCol = k => ({ sortable: true, sortDir: s.sort && s.sort.key === k ? s.sort.dir : null });
+    // T11b: 1280 px da «Holat» va «Hozir kimda» siljitishsiz — Yetkazish + sana bitta ustunda; To'lov turi ≥1400, Qatorlar va Operator ≥1600 px
+    const VW = typeof window !== 'undefined' ? window.innerWidth : 1600, mid = narrow || VW >= 1400, wide = narrow || VW >= 1600;
+    const tColumns = [{ key: 'no', label: L.b_cNo, width: '150px', ...sortCol('no') }, { key: 'date', label: L.b_cDate, width: '104px', ...sortCol('date') }, { key: 'cust', label: L.b_cCust, width: 'minmax(130px,1fr)' },
+      { key: 'delDate', label: L.b_cDel, width: '104px', ...sortCol('delDate') }].concat(mid ? [{ key: 'pay', label: L.oe_hPayType, width: '108px' }] : []).concat(wide ? [{ key: 'lines', label: L.b_cLines, width: '64px', align: 'right' }] : [])
+      .concat([{ key: 'sum', label: L.b_cSum, width: '120px', align: 'right', ...sortCol('sum') }, { key: 'st', label: L.b_cStatus, width: '164px' }, { key: 'now', label: L.b_cNow || 'Hozir kimda', width: '116px' }]).concat(wide ? [{ key: 'op', label: L.b_cOp, width: '94px' }] : []);
+    const shortName = n => { const a = String(n || '').split(' '); return a.length > 1 ? `${a[0]} ${a[1][0]}.` : n; };
+    const ST = D.ORDER_STATUS;
+    const tRows = pageRows.map(o => {
+      const c = cust(o), t = T[o.id], st = ST[o.status], dead = o.status === 'cancelled' || o.status === 'rejected', col = dead ? '#647574' : null, iss = this.issue(o, t);
+      return { id: o.id, hl: s.hl === o.id, selected: !!s.sel[o.id], onOpen: () => this.openOrder(o), onToggle: () => this.setState(x => { const n = { ...x.sel }; if (n[o.id]) delete n[o.id]; else n[o.id] = true; return { sel: n }; }),
+        cells: [{ type: 'mono', text: o.no, color: col }, { type: 'name', text: o.date, sub: o.time || '', weight: 400, color: col },
+          { type: 'name', text: c.name, sub: c.region, weight: 500, color: col, flags: iss ? [{ icon: 'triangle-alert', color: '#B45309', tip: iss }] : [] },
+          { type: 'name', text: o.delivery === 'pickup' ? L.b_delPickup : L.b_delDeliver, sub: o.delivDate, weight: 400, color: col },
+          ...(mid ? [{ type: 'text', text: L['oe_pay_' + D.payTypeOf(o)] || D.payTypeName(D.payTypeOf(o)), color: col || '#5B6B6A' }] : []),
+          ...(wide ? [{ type: 'text', text: String(o.lines.length), color: col }] : []), { type: 'text', text: fM(t.total), color: col },
+          { type: 'status', text: L['b_st_' + o.status], icon: st.icon, fg: st.fg, bg: st.bg, ...this.stSub(o) }, (() => { const h = D.holderOf ? D.holderOf(o) : null; return { type: 'text', text: !h ? '—' : h.who ? shortName(h.who) : (L['r_' + h.role] || h.role), color: !h ? '#647574' : h.who ? '#172B2A' : '#647574' }; })()].concat(wide ? [{ type: 'text', text: shortName(o.op), color: col || '#5B6B6A' }] : []),
+        actions: [{ label: L.p_aOpen, icon: 'arrow-up-right', pick: () => this.openOrder(o) }] };
+    });
+    const selPage = pageRows.filter(o => s.sel[o.id]).length, selCount = Object.keys(s.sel).length;
+    const allState = !pageRows.length || !selPage ? 'none' : selPage === pageRows.length ? 'all' : 'some';
+    const uniq = f => [...new Set(base.map(f))].filter(Boolean).sort((a, b) => String(a).localeCompare(String(b)));
+    const opt = (vals, f, lab) => vals.map(v => ({ value: v, label: lab ? lab(v) : v, count: base.filter(o => f(o) === v).length }));
+    const set = k => v => this.setState({ [k]: v, page: 1 });
+    const clear = { fCust: [], fStatus: [], fDel: [], fRegion: [], fOp: [], fPay: [], late: false, date: { from: null, to: null }, page: 1 };
+    const hasFilters = !!(s.fCust.length || s.fStatus.length || s.fDel.length || s.fRegion.length || s.fOp.length || s.fPay.length || s.late || from);
+    const activeF = [s.q.trim() && `${L.p_searchWord} «${s.q.trim()}»`, s.fCust.length && L.b_fCust, s.fStatus.length && L.b_fStatus, from && L.b_fDate, s.fDel.length && L.b_fDel, s.fRegion.length && L.b_fRegion, s.fOp.length && L.b_fOp].filter(Boolean);
+    const hdrPrimary = this.canCreate() ? { label: L.b_new, icon: 'plus', kbd: 'N', pick: () => this.newOrder() } : null;
+    return {
+      ...common, countLabel: fN(base.length), hdrPrimary,
+      hdrMore: [{ label: L.p_export, icon: 'download', pick: () => this.toast(L.p_exportToast) }],
+      views, q: s.q, setQ: v => this.setState({ q: v, page: 1 }), fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      fbFilters: [
+        { label: L.b_fCust, options: opt(uniq(o => cust(o).name), o => cust(o).name), selected: s.fCust, onChange: set('fCust') },
+        { label: L.b_fStatus, options: opt(Object.keys(ST).filter(k => base.some(o => o.status === k)), o => o.status, k => L['b_st_' + k]), selected: s.fStatus, onChange: set('fStatus') },
+        { label: L.b_fDel, options: opt(['deliver', 'pickup'], o => o.delivery, k => k === 'pickup' ? L.b_delPickup : L.b_delDeliver), selected: s.fDel, onChange: set('fDel') },
+        { label: L.b_fRegion, options: opt(uniq(o => cust(o).region), o => cust(o).region), selected: s.fRegion, onChange: set('fRegion') },
+        { label: L.b_fOp, options: opt(uniq(o => o.op), o => o.op), selected: s.fOp, onChange: set('fOp') },
+        { label: L.oe_hPayType, options: opt(D.PT3, o => D.payTypeOf(o), k => L['oe_pay_' + k]), selected: s.fPay, onChange: set('fPay') }],
+      stTabs, lateOn: !!s.late, lateLabel: (L.bh_stLate || '') + ' · ' + (D.CONFIG ? D.CONFIG.orderLateDays : 2) + '+ kun', lateOff: () => this.setState({ late: false, page: 1 }),
+      dateFilter: { label: L.b_fDate, from: s.date.from, to: s.date.to, onChange: v => this.setState({ date: v, page: 1 }), labels: { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.k_drWeek, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext } },
+      hasFilters, clearFilters: () => this.setState(clear),
+      showTable: total > 0, tColumns, tRows, allState, tMinWidth: narrow ? 1310 : 0,
+      toggleAll: () => this.setState(x => { const n = { ...x.sel }; if (allState === 'all') pageRows.forEach(o => delete n[o.id]); else pageRows.forEach(o => n[o.id] = true); return { sel: n }; }),
+      onSort: k => this.setState(x => ({ sort: !x.sort || x.sort.key !== k ? { key: k, dir: 'asc' } : x.sort.dir === 'asc' ? { key: k, dir: 'desc' } : null })),
+      total, page, per: s.per, setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 }),
+      listEmpty: base.length === 0, listNoRes: base.length > 0 && total === 0,
+      noResText: L.p_noResD ? L.p_noResD(activeF.join(', ') || '—') : '', noResAction: { label: L.p_fClear, icon: 'filter-x', pick: () => this.setState({ ...clear, q: '', tab: 'all' }) },
+      hasSel: selCount > 0, selLabel: L.p_selected ? L.p_selected(selCount) : '', clearSel: () => this.setState({ sel: {} }),
+      bulkActions: [{ label: L.q9_printSheets, icon: 'printer', pick: () => this.printSel() }, { label: 'Excel', icon: 'download', pick: () => this.toast(L.p_exportToast) }]
+    };
+  }
+}
+</script>
+</body>
+</html>

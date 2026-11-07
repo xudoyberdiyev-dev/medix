@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isTabs }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Narxlar" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ L.nr_title }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" hint-size="100%,34px"></dc-import>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid #E2E8F0">
+    <div role="tablist" style="display:flex;gap:4px">
+      <sc-for list="{{ mainTabs }}" as="t"><button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="height:40px;padding:0 14px;border:0;border-bottom:2px solid {{ t.line }};margin-bottom:-1px;background:transparent;color:{{ t.fg }};font-size:14px;font-weight:{{ t.w }};cursor:pointer">{{ t.label }}</button></sc-for>
+    </div>
+    <div style="width:220px;padding-bottom:6px"><dc-import name="Select" label="" required="{{ false }}" options="{{ brOpts }}" value="{{ scrBr }}" on-change="{{ setScrBr }}" locked="{{ brLocked }}" hint-size="100%,34px"></dc-import></div>
+  </div>
+  <sc-if value="{{ isTypes }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" selectable="{{ false }}" on-sort="{{ onSort }}" scroll-x="{{ true }}" min-width="1180" row-actions-label="{{ L.rowActions }}" hint-size="100%,420px"></dc-import>
+    </div>
+    <div style="position:sticky;bottom:0;z-index:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 -4px 12px rgba(18,60,58,0.06)">
+      <sc-if value="{{ hasSel }}">
+        <span style="font-weight:600;margin-right:auto;min-width:0">{{ selName }}</span>
+        <sc-for list="{{ selActions }}" as="a"><button onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid {{ a.border }};border-radius:8px;background:{{ a.bg }};color:{{ a.fg }};font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="filter:brightness(0.97)"><lucide-i name="{{ a.icon }}" size="16"></lucide-i>{{ a.label }}</button></sc-for>
+      </sc-if>
+      <sc-if value="{{ noSel }}"><span style="font-size:13px;color:#647574">{{ L.nq_selHint }}</span></sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isChanges }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <dc-import name="SavedViews" tabs="{{ chViews }}" hint-size="100%,38px"></dc-import>
+      <dc-import name="FilterBar" query="{{ chQ }}" on-query="{{ setChQ }}" search-ph="{{ L.nq_ch_search }}" clear-label="{{ L.clear }}" filters="{{ chFilters }}" chip-labels="{{ fbLabels }}" date-filter="{{ chDate }}" has-active="{{ chActive }}" on-clear-all="{{ chClear }}" clear-all-label="{{ L.p_fClear }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+      <sc-if value="{{ chHas }}" hint-placeholder-val="{{ true }}">
+        <dc-import name="DataTable" columns="{{ chColumns }}" rows="{{ chRows }}" selectable="{{ false }}" scroll-x="{{ true }}" min-width="1240" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+        <sc-if value="{{ chPager }}"><dc-import name="Pagination" total="{{ chTotal }}" page="{{ chPage }}" per-page="25" on-page="{{ setChPage }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import></sc-if>
+      </sc-if>
+      <sc-if value="{{ chEmpty }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.nq_emptyT }}" text="{{ L.nq_emptyD }}" min-height="260" hint-size="100%,260px"></dc-import></sc-if>
+    </div>
+  </sc-if>
+  <div style="height:32px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSet }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Narx o'rnatish" style="display:flex;flex-direction:column;gap:14px;min-width:0">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+      <nav style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px"><button onClick="{{ toTypes }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="text-decoration:underline">{{ L.nq_setBack }}</button><span style="color:#647574">/</span><span style="color:#5B6B6A">{{ L.nq_aSet }}</span></nav>
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ setTitle }}</h1>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <sc-if value="{{ isProdMode }}"><button onClick="{{ doImport }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA"><lucide-i name="upload" size="16"></lucide-i>{{ L.nq_impXls }}</button></sc-if>
+      <button onClick="{{ doExport }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="download" size="16"></lucide-i>{{ L.nq_export }}</button>
+      <button onClick="{{ toTypes }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.nq_close }}</button>
+      <button onClick="{{ trySave }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59"><lucide-i name="check" size="16"></lucide-i>{{ L.nq_save }}</button>
+    </div>
+  </div>
+  <sc-if value="{{ hasBanner }}"><dc-import name="StatusBanner" tone="success" icon="circle-check" title="{{ bannerText }}" text="" hint-size="100%,48px"></dc-import></sc-if>
+  <div role="tablist" aria-label="{{ L.nq_modeL }}" style="display:inline-flex;align-self:flex-start;padding:3px;border-radius:9px;background:#EEF2F4;gap:2px"><sc-for list="{{ modeOpts }}" as="o"><button role="tab" aria-selected="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 14px;border:0;border-radius:7px;background:{{ o.bg }};box-shadow:{{ o.sh }};color:{{ o.fg }};font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap"><lucide-i name="{{ o.icon }}" size="15"></lucide-i>{{ o.label }}</button></sc-for></div>
+<sc-if value="{{ isProdMode }}" hint-placeholder-val="{{ true }}">
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 16px;align-items:start">
+    <dc-import name="Select" label="{{ L.nq_s_type }}" required="{{ false }}" options="{{ typeOpts }}" value="{{ set.type }}" on-change="{{ setType }}" hint-size="100%,58px"></dc-import>
+    <dc-import name="Select" label="{{ L.nq_s_br }}" required="{{ false }}" options="{{ setBrOpts }}" value="{{ set.br }}" on-change="{{ setBr }}" locked="{{ brLocked }}" hint-size="100%,58px"></dc-import>
+    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_s_eff }}</span><input value="{{ set.eff }}" onChange="{{ onEff }}" placeholder="kk.oo.yyyy" inputMode="numeric" style="height:34px;padding:0 10px;border:1px solid {{ effBd }};border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><sc-if value="{{ hasEffErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ set.effErr }}</span></sc-if></label>
+    <dc-import name="Select" label="{{ L.nq_s_rel }}" required="{{ false }}" options="{{ relOpts }}" value="{{ set.rel }}" on-change="{{ setRel }}" hint-size="100%,58px"></dc-import>
+    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_s_pct }}</span><div style="display:flex;gap:6px"><input value="{{ set.pct }}" onChange="{{ onPct }}" placeholder="{{ L.nq_s_pctPh }}" inputMode="decimal" style="flex:1;min-width:0;height:34px;padding:0 10px;border:1px solid {{ pctBd }};border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><button onClick="{{ applyPct }}" style="height:34px;padding:0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.nq_s_apply }}</button></div><sc-if value="{{ hasPctErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ set.pctErr }}</span></sc-if></label>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_s_rnd }}</span><div style="display:inline-flex;align-self:flex-start;padding:2px;border-radius:8px;background:#EEF2F4;gap:2px"><sc-for list="{{ rndOpts }}" as="o"><button onClick="{{ o.pick }}" aria-pressed="{{ o.on }}" style="height:30px;padding:0 10px;border:0;border-radius:6px;background:{{ o.bg }};box-shadow:{{ o.sh }};color:{{ o.fg }};font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap">{{ o.label }}</button></sc-for></div></div>
+  </section>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="FilterBar" query="{{ set.q }}" on-query="{{ setQ }}" search-ph="{{ L.nq_s_search }}" search-width="380" clear-label="{{ L.clear }}" filters="{{ setFilters }}" chip-labels="{{ fbLabels }}" has-active="{{ setActive }}" on-clear-all="{{ setClear }}" clear-all-label="{{ L.p_fClear }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+    <dc-import name="SavedViews" tabs="{{ setViews }}" hint-size="100%,38px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow-x:auto;margin-top:-4px">
+    <div style="min-width:{{ gridMin }}px">
+      <div style="display:grid;grid-template-columns:{{ gridCols }};min-height:40px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">
+        <sc-for list="{{ gridHead }}" as="h"><span style="padding:6px 10px;text-align:{{ h.align }}">{{ h.label }}</span></sc-for>
+      </div>
+      <sc-for list="{{ gridRows }}" as="r" hint-placeholder-count="8">
+        <div style="display:grid;grid-template-columns:{{ gridCols }};min-height:52px;align-items:center;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};font-size:13px">
+          <span style="padding:0 10px;color:#647574">{{ r.n }}</span>
+          <span style="padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#5B6B6A">{{ r.code }}</span>
+          <span style="padding:6px 10px;display:flex;flex-direction:column;min-width:0"><button onClick="{{ r.openHist }}" style="align-self:flex-start;max-width:100%;padding:0;border:0;background:transparent;font:inherit;font-weight:500;color:#172B2A;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-hover="color:#0F766E;text-decoration:underline">{{ r.name }}</button><span style="font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></span>
+          <span style="padding:0 10px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.cat }}</span>
+          <sc-if value="{{ showBatch }}"><span style="padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px">{{ r.batch }}</span><span style="padding:0 10px;color:#5B6B6A">{{ r.exp }}</span></sc-if>
+          <sc-if value="{{ showCost }}"><span style="padding:0 10px;text-align:right">{{ r.avg }}</span><span style="padding:0 10px;text-align:right;color:#5B6B6A">{{ r.last }}</span></sc-if>
+          <span style="padding:6px 10px;display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-weight:500;color:{{ r.curFg }}">{{ r.cur }}</span><sc-if value="{{ r.hasNext }}"><span style="height:18px;padding:0 6px;border-radius:5px;background:#EFF6FF;color:#1D4ED8;font-size:11px;line-height:18px;font-weight:500;white-space:nowrap">{{ r.next }}</span></sc-if></span>
+          <span style="padding:6px 10px;display:flex;flex-direction:column;align-items:stretch;gap:2px"><input value="{{ r.raw }}" onChange="{{ r.onIn }}" inputMode="decimal" aria-label="{{ L.nq_k_new }}" style="height:32px;padding:0 8px;border:1px solid {{ r.inBd }};border-radius:6px;background:{{ r.inBg }};font:inherit;font-size:13px;font-weight:600;text-align:right;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><span style="font-size:11px;line-height:14px;color:#647574;text-align:right">{{ r.net }}</span></span>
+          <span style="padding:0 10px;text-align:right;font-weight:500;color:{{ r.chgFg }}">{{ r.chg }}</span>
+          <sc-if value="{{ showCost }}"><span style="padding:0 10px;text-align:right;color:{{ r.mkFg }}">{{ r.mk }}</span></sc-if>
+          <span style="padding:0 8px;display:flex;gap:4px;justify-content:center"><sc-for list="{{ r.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="16"></lucide-i></span></sc-for></span>
+        </div>
+      </sc-for>
+      <sc-if value="{{ gridEmpty }}"><div style="padding:40px 16px;text-align:center;color:#647574;font-size:13px">{{ L.nq_emptyT }}</div></sc-if>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ isRcPick }}" hint-placeholder-val="{{ false }}">
+  <section style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px">
+    <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;line-height:22px;font-weight:600">{{ L.nq_rcPickT }}</span><span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ L.nq_rcPickD }}</span></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <label style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:240px;max-width:420px"><span style="font-size:13px;font-weight:500">{{ L.nq_rcSearchL }}</span><input value="{{ rcQ }}" onChange="{{ onRcQ }}" placeholder="{{ L.nq_rcSearch }}" style="height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></label>
+      <div style="width:220px"><dc-import name="Select" label="{{ L.nq_s_br }}" required="{{ false }}" options="{{ setBrOpts }}" value="{{ set.br }}" on-change="{{ setBr }}" locked="{{ brLocked }}" hint-size="100%,58px"></dc-import></div>
+    </div>
+  </section>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+    <sc-if value="{{ rcHas }}" hint-placeholder-val="{{ true }}"><dc-import name="DataTable" columns="{{ rcColumns }}" rows="{{ rcRows }}" selectable="{{ false }}" scroll-x="{{ true }}" min-width="860" hint-size="100%,320px"></dc-import></sc-if>
+    <sc-if value="{{ rcEmpty }}"><div style="padding:40px 16px;text-align:center;color:#647574;font-size:13px">{{ L.nq_rcNone }}</div></sc-if>
+  </div>
+</sc-if>
+<sc-if value="{{ isRcSet }}" hint-placeholder-val="{{ false }}">
+  <section style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0"><lucide-i name="package-check" size="18" style="color:#0F766E;flex:none"></lucide-i><button onClick="{{ rcInfo.open }}" title="{{ L.nq_rcOpen }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ rcInfo.no }}</button><span style="height:22px;padding:0 8px;border-radius:6px;background:#F0FDF4;color:#15803D;font-size:12px;line-height:22px;font-weight:500">{{ L.nq_rcPosted }}</span></div>
+      <button onClick="{{ rcInfo.change }}" style="display:flex;align-items:center;gap:6px;white-space:nowrap;height:32px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="replace" size="15"></lucide-i>{{ L.nq_rcChange }}</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 16px">
+      <sc-for list="{{ rcInfo.facts }}" as="f"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ f.k }}</span><span style="font-size:14px;line-height:20px;font-weight:500;overflow:hidden;text-overflow:ellipsis">{{ f.v }}</span></div></sc-for>
+    </div>
+  </section>
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 16px;align-items:start">
+    <dc-import name="Select" label="{{ L.nq_s_type }}" required="{{ false }}" options="{{ typeOpts }}" value="{{ set.type }}" on-change="{{ setType }}" hint-size="100%,58px"></dc-import>
+    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_s_eff }}</span><input value="{{ set.eff }}" onChange="{{ onEff }}" placeholder="kk.oo.yyyy" inputMode="numeric" style="height:34px;padding:0 10px;border:1px solid {{ effBd }};border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><sc-if value="{{ hasEffErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ set.effErr }}</span></sc-if></label>
+    <sc-if value="{{ showCost }}"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_s_mkRc }}</span><div style="display:flex;gap:6px"><input value="{{ set.pct }}" onChange="{{ onPct }}" placeholder="{{ L.nq_s_pctPh }}" inputMode="decimal" style="flex:1;min-width:0;height:34px;padding:0 10px;border:1px solid {{ pctBd }};border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><button onClick="{{ applyPct }}" style="height:34px;padding:0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.nq_s_apply }}</button></div><sc-if value="{{ hasPctErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ set.pctErr }}</span></sc-if></label></sc-if>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_s_rnd }}</span><div style="display:inline-flex;align-self:flex-start;padding:2px;border-radius:8px;background:#EEF2F4;gap:2px"><sc-for list="{{ rndOpts }}" as="o"><button onClick="{{ o.pick }}" aria-pressed="{{ o.on }}" style="height:30px;padding:0 10px;border:0;border-radius:6px;background:{{ o.bg }};box-shadow:{{ o.sh }};color:{{ o.fg }};font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap">{{ o.label }}</button></sc-for></div></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;visibility:hidden">.</span><button onClick="{{ copyGen }}" style="display:flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA"><lucide-i name="copy" size="15"></lucide-i>{{ L.nq_copyGen }}</button></div>
+  </section>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="FilterBar" query="{{ set.q }}" on-query="{{ setQ }}" search-ph="{{ L.nq_s_search }}" search-width="380" clear-label="{{ L.clear }}" filters="{{ noFilters }}" chip-labels="{{ fbLabels }}" has-active="{{ setActive }}" on-clear-all="{{ setClear }}" clear-all-label="{{ L.p_fClear }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+    <dc-import name="SavedViews" tabs="{{ setViews }}" hint-size="100%,38px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow-x:auto;margin-top:-4px">
+    <div style="min-width:{{ gridMin }}px">
+      <div style="display:grid;grid-template-columns:{{ gridCols }};min-height:40px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">
+        <sc-for list="{{ gridHead }}" as="h"><span style="padding:6px 10px;text-align:{{ h.align }}">{{ h.label }}</span></sc-for>
+      </div>
+      <sc-for list="{{ gridRows }}" as="r" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:{{ gridCols }};min-height:52px;align-items:center;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};font-size:13px">
+          <span style="padding:0 10px;color:#647574">{{ r.n }}</span>
+          <span style="padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#5B6B6A">{{ r.code }}</span>
+          <span style="padding:6px 10px;display:flex;flex-direction:column;min-width:0"><button onClick="{{ r.openHist }}" style="align-self:flex-start;max-width:100%;padding:0;border:0;background:transparent;font:inherit;font-weight:500;color:#172B2A;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-hover="color:#0F766E;text-decoration:underline">{{ r.name }}</button><span style="font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span></span>
+          <span style="padding:6px 10px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ r.batch }}</span><sc-if value="{{ r.bonus }}"><span title="{{ L.nq_bonusTip }}" style="height:18px;padding:0 6px;border-radius:5px;background:#F0FDF4;color:#15803D;font-size:11px;line-height:18px;font-weight:600">{{ L.nq_bonus }}</span></sc-if></span>
+          <span style="padding:0 10px;color:#5B6B6A">{{ r.exp }}</span>
+          <span style="padding:0 10px;text-align:right">{{ r.inQty }}</span>
+          <span style="padding:0 10px;text-align:right;color:{{ r.stockFg }}">{{ r.stock }}</span>
+          <sc-if value="{{ showCost }}"><span style="padding:0 10px;text-align:right">{{ r.cost }}</span></sc-if>
+          <span style="padding:6px 10px;display:flex;flex-direction:column;align-items:flex-end;gap:3px"><span style="font-weight:500;color:{{ r.curFg }}">{{ r.cur }}</span><span style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"><span style="height:18px;padding:0 6px;border-radius:5px;background:{{ r.tagBg }};color:{{ r.tagFg }};font-size:11px;line-height:18px;font-weight:500;white-space:nowrap">{{ r.tag }}</span><sc-if value="{{ r.hasNext }}"><span style="height:18px;padding:0 6px;border-radius:5px;background:#EFF6FF;color:#1D4ED8;font-size:11px;line-height:18px;font-weight:500;white-space:nowrap">{{ r.next }}</span></sc-if></span></span>
+          <span style="padding:6px 10px;display:flex;flex-direction:column;align-items:stretch;gap:2px"><input value="{{ r.raw }}" onChange="{{ r.onIn }}" inputMode="decimal" aria-label="{{ L.nq_k_new }}" style="height:32px;padding:0 8px;border:1px solid {{ r.inBd }};border-radius:6px;background:{{ r.inBg }};font:inherit;font-size:13px;font-weight:600;text-align:right;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><span style="font-size:11px;line-height:14px;color:#647574;text-align:right">{{ r.net }}</span></span>
+          <sc-if value="{{ showCost }}"><span title="{{ r.mkTip }}" style="padding:0 10px;text-align:right;color:{{ r.mkFg }}">{{ r.mk }}</span></sc-if>
+          <span style="padding:0 10px;text-align:right;font-weight:500;color:{{ r.chgFg }}">{{ r.chg }}</span>
+          <span style="padding:0 8px;display:flex;gap:4px;justify-content:center"><sc-for list="{{ r.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="16"></lucide-i></span></sc-for></span>
+        </div>
+      </sc-for>
+      <sc-if value="{{ gridEmpty }}"><div style="padding:40px 16px;text-align:center;color:#647574;font-size:13px">{{ L.nq_emptyT }}</div></sc-if>
+    </div>
+  </div>
+</sc-if>
+  <sc-if value="{{ showFoot }}" hint-placeholder-val="{{ true }}"><div style="position:sticky;bottom:0;z-index:5;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 -4px 12px rgba(18,60,58,0.06)">
+    <span style="flex:1;min-width:0;font-size:13px;color:#5B6B6A">{{ footText }}</span>
+    <button onClick="{{ trySave }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59"><lucide-i name="check" size="16"></lucide-i>{{ L.nq_save }}</button>
+  </div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDoc }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Narx o'zgartirish hujjati" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+      <nav style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px"><button onClick="{{ toChanges }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="text-decoration:underline">{{ L.nq_tabChanges }}</button><span style="color:#647574">/</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#5B6B6A;white-space:nowrap">{{ dv.no }}</span></nav>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ dv.title }}</h1><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ dv.stBg }};color:{{ dv.stFg }};font-size:12px;font-weight:500"><lucide-i name="{{ dv.stIcon }}" size="12"></lucide-i>{{ dv.stLabel }}</span></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <sc-for list="{{ docActions }}" as="a"><button onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid {{ a.border }};border-radius:8px;background:{{ a.bg }};color:{{ a.fg }};font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="filter:brightness(0.97)"><lucide-i name="{{ a.icon }}" size="16"></lucide-i>{{ a.label }}</button></sc-for>
+    </div>
+  </div>
+  <sc-for list="{{ docBanners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.text }}" text="" hint-size="100%,48px"></dc-import></sc-for>
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px 20px">
+    <sc-for list="{{ docInfo }}" as="i"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ i.k }}</span><span style="font-weight:500;overflow-wrap:anywhere">{{ i.v }}<sc-if value="{{ i.hasLink }}" hint-placeholder-val="{{ false }}"><a href="{{ i.href }}" style="color:#0F766E;text-decoration:underline;text-underline-offset:2px" style-hover="color:#0B5F58">{{ i.link }}</a></sc-if></span></div></sc-for>
+  </section>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+    <dc-import name="DataTable" columns="{{ dlColumns }}" rows="{{ dlRows }}" selectable="{{ false }}" scroll-x="{{ true }}" min-width="900" row-actions-label="{{ L.rowActions }}" hint-size="100%,300px"></dc-import>
+  </div>
+  <div style="height:32px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isImport }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="ImportWizard" type="prices" branch="{{ impBr }}" wh="" cutoff="" place="{{ impPlace }}" type-label="{{ L.nr_title }}" preset="{{ impPreset }}" dict="{{ L }}" narrow="{{ narrow }}" on-done="{{ impDone }}" on-cancel="{{ impCancel }}" on-toast="{{ toastFn }}" hint-size="100%,720px"></dc-import>
+</sc-if>
+
+<sc-if value="{{ editOpen }}">
+<div onClick="{{ closeEdit }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.24);display:flex;justify-content:flex-end">
+  <aside role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:440px;max-width:100%;height:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:-8px 0 24px rgba(18,60,58,0.10);display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #EEF2F4"><span style="font-size:17px;line-height:24px;font-weight:600">{{ ed.title }}</span><button onClick="{{ closeEdit }}" aria-label="{{ L.nq_close }}" style="width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button></header>
+    <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:16px">
+      <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_f_name }} <span style="color:#B91C1C">*</span></span><input value="{{ ed.name }}" onChange="{{ ed.onName }}" style="height:36px;padding:0 10px;border:1px solid {{ ed.nameBd }};border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><sc-if value="{{ ed.hasNameErr }}"><span style="font-size:12px;color:#B91C1C">{{ ed.nameErr }}</span></sc-if></label>
+      <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_f_alt }}</span><input value="{{ ed.alt }}" onChange="{{ ed.onAlt }}" style="height:36px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></label>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_f_cur }}</span><span style="height:36px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;display:flex;align-items:center;color:#5B6B6A">so'm</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">{{ L.nq_f_kind }}</span><span style="height:36px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;display:flex;align-items:center;color:#5B6B6A">{{ L.nq_kindSale }}</span></div>
+      </div>
+      <sc-for list="{{ ed.toggles }}" as="g">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EEF2F4">
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:13px;font-weight:500">{{ g.label }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ g.hint }}</span></div>
+          <button role="switch" aria-checked="{{ g.on }}" onClick="{{ g.flip }}" style="width:40px;height:22px;flex:none;padding:2px;border:0;border-radius:11px;background:{{ g.bg }};display:flex;justify-content:{{ g.just }};cursor:{{ g.cur }};opacity:{{ g.op }}"><span style="width:18px;height:18px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,0.2)"></span></button>
+        </div>
+      </sc-for>
+      <sc-if value="{{ ed.hasErr }}"><dc-import name="StatusBanner" tone="danger" icon="triangle-alert" title="{{ ed.err }}" text="" hint-size="100%,48px"></dc-import></sc-if>
+    </div>
+    <footer style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid #EEF2F4">
+      <button onClick="{{ closeEdit }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.nq_cancel }}</button>
+      <button onClick="{{ saveEdit }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.nq_save }}</button>
+    </footer>
+  </aside>
+</div>
+</sc-if>
+
+<sc-if value="{{ attOpen }}">
+<div onClick="{{ closeAtt }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.32);display:flex;align-items:center;justify-content:center;padding:24px">
+  <div role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:560px;max-width:100%;max-height:min(680px,100%);background:#FFFFFF;border-radius:12px;box-shadow:0 16px 48px rgba(18,60,58,0.24);display:flex;flex-direction:column">
+    <header style="display:flex;flex-direction:column;gap:4px;padding:18px 20px 12px"><span style="font-size:17px;line-height:24px;font-weight:600">{{ att.title }}</span><span style="font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ att.sub }}</span></header>
+    <div style="padding:0 20px 10px"><input value="{{ att.q }}" onChange="{{ att.onQ }}" placeholder="{{ L.nq_attSearch }}" style="width:100%;box-sizing:border-box;height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></div>
+    <div style="flex:1;overflow-y:auto;border-top:1px solid #EEF2F4;border-bottom:1px solid #EEF2F4">
+      <sc-for list="{{ att.rows }}" as="c"><button role="checkbox" aria-checked="{{ c.on }}" onClick="{{ c.flip }}" style="width:100%;display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 20px;border:0;border-bottom:1px solid #F1F5F4;background:{{ c.bg }};text-align:left;font:inherit;cursor:pointer" style-hover="background:#F8FAFA"><span style="width:16px;height:16px;flex:none;border:1px solid {{ c.cbBd }};border-radius:4px;background:{{ c.cbBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ c.on }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:500">{{ c.name }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ c.sub }}</span></span></button></sc-for>
+    </div>
+    <footer style="display:flex;align-items:center;gap:8px;padding:12px 20px"><span style="flex:1;font-size:13px;color:#5B6B6A">{{ att.count }}</span><button onClick="{{ closeAtt }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ L.nq_cancel }}</button><button onClick="{{ saveAtt }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.nq_save }}</button></footer>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ thOpen }}">
+<div onClick="{{ closeTh }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.24);display:flex;justify-content:flex-end">
+  <aside role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:440px;max-width:100%;height:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:-8px 0 24px rgba(18,60,58,0.10);display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #EEF2F4"><span style="font-size:17px;line-height:24px;font-weight:600">{{ th.title }}</span><button onClick="{{ closeTh }}" aria-label="{{ L.nq_close }}" style="width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button></header>
+    <div style="flex:1;overflow-y:auto;padding:8px 20px 16px;display:flex;flex-direction:column">
+      <sc-for list="{{ th.rows }}" as="h"><div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-bottom:1px solid #EEF2F4"><span style="font-size:13px"><span style="font-weight:600">{{ h.who }}</span> {{ h.what }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ h.at }}</span><sc-for list="{{ h.ch }}" as="c"><span style="font-size:12.5px;line-height:18px;color:#5B6B6A">{{ c }}</span></sc-for></div></sc-for>
+      <sc-if value="{{ th.none }}"><span style="padding:24px 0;color:#647574;font-size:13px">{{ L.nq_histNone }}</span></sc-if>
+    </div>
+  </aside>
+</div>
+</sc-if>
+
+<sc-if value="{{ saveOpen }}">
+<div onClick="{{ closeSave }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.32);display:flex;align-items:center;justify-content:center;padding:24px">
+  <div role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:540px;max-width:100%;max-height:min(680px,100%);background:#FFFFFF;border-radius:12px;box-shadow:0 16px 48px rgba(18,60,58,0.24);display:flex;flex-direction:column">
+    <header style="padding:18px 20px 8px"><span style="font-size:17px;line-height:24px;font-weight:600">{{ L.nq_dlgT }}</span></header>
+    <div style="flex:1;overflow-y:auto;padding:4px 20px 12px;display:flex;flex-direction:column;gap:10px;font-size:13.5px;line-height:20px">
+      <sc-for list="{{ sv.items }}" as="i"><div style="display:flex;gap:8px;align-items:flex-start"><span style="display:flex;margin-top:2px;color:{{ i.color }}"><lucide-i name="{{ i.icon }}" size="16"></lucide-i></span><span style="text-wrap:pretty">{{ i.text }}</span></div></sc-for>
+      <sc-if value="{{ sv.hasBig }}"><div style="display:flex;flex-direction:column;border:1px solid #FDE68A;border-radius:8px;background:#FFFBEB"><span style="padding:8px 12px 4px;font-size:12px;font-weight:600;color:#B45309">{{ L.nq_d_big }}</span><sc-for list="{{ sv.big }}" as="b"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;padding:4px 12px;font-size:12.5px"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.name }}</span><span style="color:#5B6B6A">{{ b.range }}</span><span style="font-weight:600;color:#B45309">{{ b.pct }}</span></div></sc-for><span style="height:6px"></span></div></sc-if>
+    </div>
+    <footer style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid #EEF2F4"><button onClick="{{ closeSave }}" style="white-space:nowrap;height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ L.nq_cancel }}</button><button onClick="{{ doSave }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.nq_d_save }}</button></footer>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ deactOpen }}"><dc-import name="ConfirmDialog" title="{{ dx.title }}" text="{{ dx.text }}" danger="{{ dx.danger }}" confirm-label="{{ dx.ok }}" cancel-label="{{ L.nq_cancel }}" on-confirm="{{ dx.confirm }}" on-cancel="{{ dx.cancel }}" hint-size="0px,0px"></dc-import></sc-if>
+<sc-if value="{{ reasonOpen }}"><dc-import name="ConfirmDialog" title="{{ rs.title }}" text="{{ rs.text }}" with-reason="{{ true }}" reason-label="{{ L.nq_reason }}" reason="{{ rs.reason }}" reason-error="{{ rs.err }}" on-reason="{{ rs.onReason }}" danger="{{ true }}" confirm-label="{{ rs.ok }}" cancel-label="{{ L.nq_cancel }}" on-confirm="{{ rs.confirm }}" on-cancel="{{ rs.cancel }}" hint-size="0px,0px"></dc-import></sc-if>
+<sc-if value="{{ histOpen }}"><dc-import name="PriceHistoryPanel" pid="{{ hist.pid }}" type="{{ hist.type }}" branch="{{ hist.br }}" role="{{ role }}" dict="{{ L }}" on-close="{{ closeHist }}" on-open-no="{{ openNoFn }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;,&quot;purchase&quot;,&quot;operator&quot;,&quot;accountant&quot;,&quot;keeper&quot;,&quot;cashier&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,a)=&gt;void&quot;},&quot;onDirty&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(b)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const pDT = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})[ ,]*(\d{2})?:?(\d{2})?/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)) : 0; };
+const fPct = v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + (Math.round(Math.abs(v) * 10) / 10).toString().replace('.', ',') + '%';
+const num = s => { const t = String(s == null ? '' : s).replace(/[\s\u00a0]/g, '').replace(/\./g, '').replace(',', '.').replace('−', '-'); if (!t || t === '-' || t === '+') return null; const n = +t; return isNaN(n) ? null : n; };
+const pctNum = s => { const t = String(s == null ? '' : s).replace(/\s/g, '').replace(',', '.').replace('−', '-'); if (!t) return null; const n = +t; return isNaN(n) ? null : n; };
+const NST = { posted: ['circle-check', '#15803D', '#F0FDF4'], pending: ['clock', '#1D4ED8', '#EFF6FF'], rejected: ['circle-x', '#B91C1C', '#FEF2F2'], cancelled: ['ban', '#5B6B6A', '#EEF2F4'], draft: ['file-pen', '#B45309', '#FFFBEB'] };
+const RND = [0, 100, 500, 1000];
+class Component extends DCLogic {
+  state = { view: 'types', scrBr: null, selType: null, sort: { key: 'name', dir: 'asc' }, edit: null, attach: null, deact: null, typeHist: null, set: null, saveDlg: false, banner: null, hist: null,
+    ch: { tab: 'all', q: '', fType: [], fBr: [], from: null, to: null, page: 1 }, doc: null, reason: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    const ready = () => this.D && this.D.ptStats;
+    if (!ready()) this._p = setInterval(() => { if (ready()) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._poll = setInterval(() => { const D = this.D; if (!ready()) return; const u = D.store.urlF; if (u && u.page === 'prices' && u.n !== this._un) { this._un = u.n; this.applyUrl(u.params || {}); }
+      const r = D.store.navReq; if (r && r.page === 'prices') { D.store.navReq = null; if (r.open) this.openDoc(r.open); else if (r.rc) this.goRc(r.rc); }
+      if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 300);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who() { return this.props.userName || this.D.DIRECTOR; }
+  can(k) { return this.D.can(this.props.role, k); }
+  whoCan(k) { const L = this.L; return fill(L.nr_who, { r: this.D.whoCan(k).map(r => L['r_' + r] || r).join(', ') }); }
+  url(h) { try { history.replaceState(null, '', '#prices' + h); } catch (e) {} }
+  dirty(raw) { this.props.onDirty && this.props.onDirty(Object.keys(raw || {}).length > 0); }
+  propBr() { const b = this.props.branch; return b && b !== 'ALL' ? b : null; }
+  scrBr() { const s = this.state.scrBr; if (s) return s; return this.propBr() || (this.can('prices.all') ? 'ALL' : 'TSH'); }
+  brName(c) { return c === 'ALL' ? this.L.nq_allBr : ((this.D.BRANCHES.find(b => b.code === c) || {}).name || c); }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D || !D.ptStats) return;
+    const u = D.store.urlF; if (!d) { if (D.store.demoDirty) D.restoreBase(); this.setState({ view: 'types', selType: null, set: null, doc: null, banner: null, hist: null }); if (u && u.page === 'prices' && u.n !== this._un) { this._un = u.n; this.applyUrl(u.params || {}); } return; }
+    D.restoreBase(true); const k = d.k, om = 8;
+    this.setState({ view: 'types', selType: null, set: null, doc: null, banner: null, hist: null, saveDlg: false, reason: null }, () => {
+      if (k === 'noPrice') return this.goSet('base', 'TSH', { tab: 'noPrice' });
+      if (k === 'hist') return this.goSet('base', 'TSH', {}, () => this.setState({ hist: { pid: om, type: 'base', br: 'TSH' } }));
+      if (k === 'pct') return this.goSet('base', 'TSH', { pct: '25', rnd: 500, fMaker: ['KRKA'] }, () => this.applyPct());
+      if (k === 'below') return this.goSet('base', 'TSH', { q: 'omep', raw: { 8: '24.000' } }, () => this.trySave());
+      if (k === 'past') return this.goSet('base', 'TSH', { eff: '01.10.2026', raw: { 8: '38.000' } }, () => this.trySave());
+      if (k === 'future' || k === 'byDate') return this.setState({ view: 'changes' });
+    });
+  }
+  applyUrl(P) { const D = this.D;
+    if (P.branch && P.branch !== 'ALL') this.setState({ scrBr: P.branch });
+    if (P.open) return this.openDoc(P.open);
+    if (P.rc || P.mode === 'rc') return this.goRc(P.rc || null);
+    if (P.set) { const t = (D.store.ptypes || []).find(x => x.id === P.set || x.code === P.set); if (t) return this.goSet(t.code, P.br || this.scrBr(), P.q ? { q: P.q } : {}); }
+    if (P.tab === 'changes') return this.setState({ view: 'changes', doc: null, set: null });
+    if (P.tab === 'types') return this.setState({ view: 'types', doc: null, set: null });
+  }
+  goSet(code, br, extra, cb) { const D = this.D, t = D.ptByCode(code); if (!t) return; let b = br || this.scrBr(); if (b === 'ALL' && !this.can('prices.all')) b = this.propBr() || 'TSH';
+    const set = { type: code, br: b, eff: D.TODAY, rel: t.batch ? 'batch' : 'avg', pct: '', rnd: 0, q: '', fMaker: [], fCat: [], fCountry: [], fSup: [], tab: 'all', raw: {}, src: 'set', effErr: '', pctErr: '', mode: 'prod', rc: null, rcQ: '', ...(extra || {}) };
+    this.setState({ view: 'set', set, banner: null, saveDlg: false, hist: null }, cb); this.url('?set=' + t.id + '&br=' + b + (set.mode === 'rc' ? '&mode=rc' + (set.rc ? '&rc=' + encodeURIComponent(set.rc) : '') : '')); }
+  rcOf(no) { return no ? (this.D.store.receipts || []).find(x => x.no === no && x.status === 'posted') || null : null; }
+  goRc(no) { const D = this.D, d = this.rcOf(no); if (no && !d) this.toast(this.L.nq_rcNotFound); this.goSet(D.ptBase().code, d ? d.branch : null, { mode: 'rc', rc: d ? d.no : null }); }
+  rcSum(d) { const D = this.D; return Math.round(d.lines.reduce((a, l) => a + (l.qty || 0) * (l.price || 0) * (1 + D.vatOf(l.pid) / 100), 0) * 100) / 100; }
+  rcRowsOf() { const D = this.D, S = this.state.set, d = this.rcOf(S.rc); if (!d) return []; const br = d.branch, base = D.ptBase().code, pt = D.ptByCode(S.type) || {}, warn = D.CONFIG.priceWarnPct || 20, BS = D.batches(), seen = {}, items = [];
+    d.lines.forEach(l => { const p = l.pid && D.prodById(l.pid); if (!p) return; const fb = !!d.fromBonus, q = D.rcGood(l) + (D.rcDmg ? D.rcDmg(l) : 0);
+      const add = (batch, exp, qty, cost, bonus) => { const k = p.id + '|' + batch; if (seen[k]) { seen[k].inQty += qty; return; } const it = { p, batch, exp, inQty: qty, cost, bonus }; seen[k] = it; items.push(it); };
+      if (q > 0) add(l.batch, l.exp, q, fb ? 0 : (l.price || 0), fb); if (l.bonusQty > 0) add(l.batch + '-B', l.exp, l.bonusQty, 0, true); });
+    return items.map(it => { const p = it.p, key = p.id + '|' + it.batch, vat = D.vatOf(p.id), stock = BS.filter(b => b.pid === p.id && b.branch === br && b.batch === it.batch && b.zoneType !== 'ship').reduce((a, b) => a + (b.qty || 0), 0);
+      const costV = it.cost > 0 ? Math.round(D.withVat(p.id, it.cost) * 100) / 100 : 0, bE = D.priceAt(p.id, S.type, br, D.TODAY, it.batch), gE = (!pt.batch && D.priceAt(p.id, S.type, br, D.TODAY)) || D.priceAt(p.id, base, br, D.TODAY), cur = bE || gE, nxt = D.priceNext(p.id, S.type, br, D.TODAY, it.batch);
+      const raw = S.raw[key], nv = num(raw), valid = nv != null && nv > 0, changed = valid && (!bE || Math.abs(nv - bE.price) > 0.004);
+      const chg = changed && cur ? (nv - cur.price) / cur.price * 100 : null, eff = valid ? nv : cur ? cur.price : null, mk = eff != null && costV > 0 ? (eff - costV) / costV * 100 : null;
+      const below = changed && costV > 0 && nv < costV, big = chg != null && Math.abs(chg) > warn;
+      return { key, p, batch: it.batch, exp: it.exp, vat, inQty: it.inQty, stock, costV, bonus: it.bonus, cur, isB: !!bE, gen: gE, nxt, raw, nv, valid, changed, chg, mk, below, big, cb: costV > 0 ? { costV } : null, bad: raw != null && raw !== '' && !valid }; }); }
+  openDoc(no) { this.setState({ view: 'doc', doc: no, reason: null }); this.url('?open=' + encodeURIComponent(no)); }
+  upSet(patch, cb) { this.setState(s => ({ set: { ...s.set, ...patch } }), cb); }
+  // Narx o'rnatish qatorlari
+  setRows() { if (this.state.set && this.state.set.mode === 'rc') return this.rcRowsOf(); const D = this.D, S = this.state.set, pt = D.ptByCode(S.type) || {}, brC = S.br === 'ALL' ? 'TSH' : S.br, base = D.ptBase().code, warn = D.CONFIG.priceWarnPct || 20;
+    let items;
+    if (pt.batch) { const seen = {}; items = D.batches().filter(b => b.branch === brC && b.qty > 0 && b.zoneType !== 'quar' && b.status !== 'expired').filter(b => { const k = b.pid + '|' + b.batch, p = D.prodById(b.pid); if (seen[k] || !p || !p.active) return false; seen[k] = 1; return true; }).map(b => ({ p: D.prodById(b.pid), batch: b.batch, exp: b.exp, bcost: b.cost })).sort((a, b) => a.p.name.localeCompare(b.p.name) || String(a.exp).localeCompare(String(b.exp))); }
+    else items = D.PRODUCTS.filter(p => p.active).map(p => ({ p, batch: null }));
+    return items.map(it => { const p = it.p, key = it.batch ? p.id + '|' + it.batch : String(p.id), vat = D.vatOf(p.id);
+      const av = D.avgCost(p.id, brC), lc = D.lastCost(p.id, brC), avgV = av != null ? Math.round(D.withVat(p.id, av) * 100) / 100 : null, lastV = lc ? Math.round(D.withVat(p.id, lc.cost) * 100) / 100 : null, batchV = it.bcost ? Math.round(D.withVat(p.id, it.bcost) * 100) / 100 : null;
+      const cb = D.costBasis(p.id, brC, it.batch || undefined), cur = D.priceAt(p.id, S.type, brC, D.TODAY, it.batch), nxt = D.priceNext(p.id, S.type, brC, D.TODAY, it.batch), bp = D.priceAt(p.id, base, brC);
+      const raw = S.raw[key], nv = num(raw), valid = nv != null && nv > 0, changed = valid && (!cur || Math.abs(nv - cur.price) > 0.004);
+      const chg = changed && cur ? (nv - cur.price) / cur.price * 100 : null, eff = valid ? nv : cur ? cur.price : null, mk = eff != null && avgV ? (eff - avgV) / avgV * 100 : null;
+      const below = changed && cb && nv < cb.costV, big = chg != null && Math.abs(chg) > warn;
+      return { key, p, batch: it.batch, exp: it.exp, vat, avgV, lastV, batchV, cb, cur, nxt, bp, raw, nv, valid, changed, chg, mk, below, big, bad: raw != null && raw !== '' && !valid };
+    });
+  }
+  visRows(R) { const D = this.D, S = this.state.set, q = D.toLat(String(S.q || '').trim().toLowerCase());
+    const V = { all: () => true, noPrice: r => !r.cur, changed: r => r.changed, below: r => r.below, big: r => r.big };
+    const F0 = R.filter(r => { const p = r.p; if (q && !D.toLat([p.code, p.name, p.classifier, p.ikpu, p.farmId, (p.barcodes || []).join(' '), r.batch || ''].join(' ').toLowerCase()).includes(q)) return false;
+      return (!S.fMaker.length || S.fMaker.includes(p.maker)) && (!S.fCat.length || S.fCat.includes(p.cat)) && (!S.fCountry.length || S.fCountry.includes(p.country)) && (!S.fSup.length || S.fSup.includes(p.supplyBy || '—')); });
+    return { F0, F: F0.filter(V[S.tab] || V.all), V }; }
+  applyPct() { const S = this.state.set, L = this.L, n = pctNum(S.pct); if (n == null) return this.upSet({ pctErr: L.nq_e_pct });
+    const { F } = this.visRows(this.setRows()), raw = { ...S.raw }; let k = 0;
+    if (S.mode === 'rc') { let sk = 0; F.forEach(r => { if (!(r.costV > 0)) { sk++; return; } let v = r.costV * (1 + n / 100); v = S.rnd ? this.D.r100up(v, S.rnd) : Math.round(v); raw[r.key] = fN(v); k++; }); this.upSet({ raw, pctErr: '' }); this.dirty(raw); return this.toast(fill(L.nq_tApplied, { n: k }) + (sk ? fill(L.nq_tSkipBonus, { k: sk }) : '')); }
+    F.forEach(r => { const b = S.rel === 'last' ? r.lastV : S.rel === 'base' ? (r.bp ? r.bp.price : null) : S.rel === 'batch' ? (r.batchV || r.avgV) : r.avgV; if (!(b > 0)) return; let v = b * (1 + n / 100); v = S.rnd ? this.D.r100up(v, S.rnd) : Math.round(v); raw[r.key] = fN(v); k++; });
+    this.upSet({ raw, pctErr: '' }); this.dirty(raw); this.toast(fill(L.nq_tApplied, { n: k })); }
+  copyGen() { const S = this.state.set, L = this.L, { F } = this.visRows(this.setRows()), raw = { ...S.raw }; let k = 0; F.forEach(r => { if (!r.gen) return; let v = r.gen.price; if (S.rnd) v = this.D.r100up(v, S.rnd); raw[r.key] = fN(v); k++; }); this.upSet({ raw }); this.dirty(raw); this.toast(fill(L.nq_tCopied, { n: k })); }
+  trySave() { const D = this.D, L = this.L, S = this.state.set; if (!this.can('prices.create')) return this.toast(this.whoCan('prices.create'));
+    const t = pD(S.eff); if (!/^\d{2}\.\d{2}\.\d{4}$/.test(S.eff || '') || t == null) return this.upSet({ effErr: L.nq_e_eff });
+    if (t < pD(D.TODAY)) return this.upSet({ effErr: L.nq_e_past });
+    const R = this.setRows(); if (R.some(r => r.bad)) return this.toast(L.nq_e_price); if (!R.some(r => r.changed)) return this.toast(L.nq_e_none);
+    this.setState({ saveDlg: true }); this.upSet({ effErr: '' }); }
+  doSave() { const D = this.D, L = this.L, S = this.state.set, rcD = S.mode === 'rc' ? this.rcOf(S.rc) : null, R = this.setRows().filter(r => r.changed), brs = rcD ? [rcD.branch] : S.br === 'ALL' ? D.BRANCHES.map(b => b.code) : [S.br];
+    const docs = D.nrSet({ type: S.type, branch: brs[0], branches: brs, eff: S.eff, src: rcD ? 'rc' : S.src, rc: rcD ? rcD.no : null, note: '', lines: R.map(r => ({ pid: r.p.id, batch: r.batch, price: r.nv })) }, this.who());
+    const parts = docs.map(d => d.status === 'pending' ? fill(L.nq_bnPending, { no: d.no }) : fill(L.nq_bnPosted, { no: d.no, n: d.lines.length, d: d.eff }));
+    this.setState({ saveDlg: false, banner: fill(L.nq_bnSaved, { list: parts.join('; ') }) }); this.upSet({ raw: {}, src: 'set', tab: 'all' }); this.dirty({}); }
+  doExport() { const D = this.D, L = this.L, S = this.state.set, { F } = this.visRows(this.setRows());
+    const head = [L.nq_k_code, L.nq_k_prod, ...(D.ptByCode(S.type).batch || S.mode === 'rc' ? [L.nq_k_batch] : []), L.nq_k_cur, L.nq_k_new];
+    D.xlsxDownload('Narxlar_' + S.type + '_' + S.br + '.xlsx', [head].concat(F.map(r => [String(r.p.code), r.p.name, ...(r.batch != null ? [r.batch] : []), r.cur ? r.cur.price : '', r.valid ? r.nv : ''])), L.nr_title || 'Narxlar'); }
+  impDone(res) { const L = this.L, S = this.state.set, lines = (res && res.lines) || [], allBase = lines.every(l => l.type === 'base'), raw = { ...S.raw }; let n = 0, k = 0;
+    lines.forEach(l => { if (!(l.type === S.type || (allBase && S.type !== 'base'))) { k++; return; } raw[l.batch ? l.pid + '|' + l.batch : String(l.pid)] = fN(l.price); n++; });
+    this.setState(st => ({ view: 'set', set: { ...st.set, raw, src: 'excel', tab: 'changed' } })); this.dirty(raw); this.toast(fill(L.nq_tImp, { n, s: k ? fill(L.nq_tImpSkip, { k }) : '' })); }
+  ptHasPrices(code) { return (this.D.store.prices || []).some(e => e.type === code); }
+  saveEdit() { const D = this.D, L = this.L, e = this.state.edit; if (!this.can('lookups.ptypes')) return this.toast(this.whoCan('lookups.ptypes'));
+    const old = e.id ? (D.store.ptypes || []).find(x => x.id === e.id) : null;
+    const r = D.ptSave({ ...(old || {}), name: String(e.name || '').trim(), alt: e.alt || '', batch: !!e.batch, base: !!e.base, active: e.active !== false }, this.who());
+    if (r.err) { const M = { name: L.nq_e_name, dup: L.nq_e_dup, batchLocked: L.nq_e_batchLocked, baseOff: L.nq_e_baseOff, inUse: fill(L.nq_e_inUse, { n: r.n }) }; return this.setState({ edit: { ...e, err: M[r.err] || r.err, errF: r.err } }); }
+    this.setState({ edit: null, selType: r.t.id }); this.toast(fill(L.nq_tSaved, { n: r.t.name })); }
+  askDeact(t) { const D = this.D, L = this.L; if (!this.can('lookups.ptypes')) return this.toast(this.whoCan('lookups.ptypes'));
+    if (!t.active) { const r = D.ptSave({ ...t, active: true }, this.who()); if (!r.err) this.toast(fill(L.nq_tAct, { n: t.name })); return; }
+    if (t.base) return this.setState({ deact: { t, block: L.nq_e_baseOff } });
+    const n = D.ptCusts(t.code).length; if (n) return this.setState({ deact: { t, block: fill(L.nq_e_inUse, { n }) } });
+    this.setState({ deact: { t } }); }
+  openAttach(t) { const D = this.D, L = this.L, br = this.scrBr(); if (!this.can('lookups.ptypes') && !this.can('clients.edit')) return this.toast(this.whoCan('lookups.ptypes'));
+    if (br === 'ALL') return this.toast(L.nq_attPickBr);
+    const sel = {}; D.custsIn(br).forEach(c => { if (c.bt[br] && c.bt[br].price === t.code) sel[c.id] = true; }); this.setState({ attach: { t, br, q: '', sel } }); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, narrow, role: p.role, isTabs: true, isTypes: true, isChanges: false, isSet: false, isDoc: false, isImport: false, mainTabs: [], brOpts: [], tColumns: [], tRows: [], selActions: [], chViews: [], chFilters: [], chColumns: [], chRows: [], fbLabels: {}, typeOpts: [], setBrOpts: [], relOpts: [], rndOpts: [], setFilters: [], setViews: [], gridHead: [], gridRows: [], set: {}, dv: {}, docActions: [], docBanners: [], docInfo: [], dlColumns: [], dlRows: [], ed: { toggles: [] }, att: { rows: [] }, th: { rows: [] }, sv: { items: [], big: [] }, dx: {}, rs: {}, hist: {}, stop: e => e.stopPropagation(), toastFn: t => this.toast(t) };
+    if (!D || !D.ptStats) return base;
+    const scr = this.scrBr(), canAll = this.can('prices.all'), canCost = this.can('prices.cost'), fbLabels = { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone };
+    const brOpts = (canAll ? [{ value: 'ALL', label: L.nq_allBr }] : []).concat(D.BRANCHES.filter(b => canAll || !this.propBr() || b.code === this.propBr()).map(b => ({ value: b.code, label: b.name })));
+    const ptypes = D.store.ptypes || [], ptN = c => D.ptName(c);
+    const common = { ...base, fbLabels, brOpts, scrBr: scr, brLocked: !canAll && !!this.propBr(), setScrBr: v => this.setState({ scrBr: v }), openNoFn: no => this.openDoc(no),
+      toTypes: () => { this.setState({ view: 'types', set: null, banner: null }); this.dirty({}); this.url('?tab=types'); }, toChanges: () => { this.setState({ view: 'changes', doc: null, reason: null }); this.url('?tab=changes'); },
+      histOpen: !!s.hist, hist: s.hist || {}, closeHist: () => this.setState({ hist: null }) };
+    const tabs = ['types', 'changes'].map(k => { const on = s.view === k; return { label: k === 'types' ? L.nq_tabTypes : L.nq_tabChanges, on, line: on ? '#0D9488' : 'transparent', fg: on ? '#172B2A' : '#5B6B6A', w: on ? 600 : 500, pick: () => { this.setState({ view: k }); this.url('?tab=' + k); } }; });
+    // Dialoglar (umumiy)
+    const e = s.edit, edOld = e && e.id ? ptypes.find(x => x.id === e.id) : null, batchLock = !!(edOld && this.ptHasPrices(edOld.code));
+    const tg = (label, hint, on, flip, dis) => ({ label, hint, on: !!on, bg: on ? '#0F766E' : '#CBD5D3', just: on ? 'flex-end' : 'flex-start', cur: dis ? 'not-allowed' : 'pointer', op: dis ? 0.5 : 1, flip: dis ? () => {} : flip });
+    const setE = x => this.setState(st => ({ edit: { ...st.edit, ...x, err: '', errF: '' } }));
+    const ed = e ? { title: e.id ? fill(L.nq_pnEdit, { n: edOld ? edOld.name : '' }) : L.nq_pnNew, name: e.name || '', alt: e.alt || '', onName: ev => setE({ name: ev.target.value }), onAlt: ev => setE({ alt: ev.target.value }),
+      nameBd: e.errF === 'name' || e.errF === 'dup' ? '#B91C1C' : '#E2E8F0', hasNameErr: e.errF === 'name' || e.errF === 'dup', nameErr: e.err, hasErr: !!e.err && e.errF !== 'name' && e.errF !== 'dup', err: e.err,
+      toggles: [tg(L.nq_f_batch, batchLock ? L.nq_f_batchLock : '', e.batch, () => setE({ batch: !e.batch }), batchLock), tg(L.nq_f_base, L.nq_f_baseHint, e.base, () => setE({ base: !e.base }), !!(edOld && edOld.base)), tg(L.nq_f_active, e.active !== false ? L.nq_active : L.nq_inactive, e.active !== false, () => setE({ active: e.active === false }), false)] } : { toggles: [] };
+    const A = s.attach, attRows = A ? D.custsIn(A.br).filter(c => { const q = D.toLat(A.q.trim().toLowerCase()); return !q || D.toLat((c.name + ' ' + c.stir).toLowerCase()).includes(q); }).map(c => { const on = !!A.sel[c.id], curT = (c.bt[A.br] || {}).price; return { name: c.name, sub: 'STIR ' + c.stir + ' · ' + fill(L.nq_attNow, { t: ptN(curT) || ptN(D.ptBase().code) }), on, bg: on ? '#F0FDFA' : '#FFFFFF', cbBg: on ? '#0F766E' : '#FFFFFF', cbBd: on ? '#0F766E' : '#647574', flip: () => this.setState(st => ({ attach: { ...st.attach, sel: { ...st.attach.sel, [c.id]: !on } } })) }; }) : [];
+    const att = A ? { title: fill(L.nq_attT, { t: A.t.name, b: this.brName(A.br) }), sub: fill(L.nq_attSub, { t: A.t.name }), q: A.q, onQ: ev => this.setState(st => ({ attach: { ...st.attach, q: ev.target.value } })), rows: attRows, count: fill(L.nq_attN, { n: Object.values(A.sel).filter(Boolean).length }) } : { rows: [] };
+    const TH = s.typeHist ? ptypes.find(x => x.id === s.typeHist) : null;
+    const th = TH ? { title: fill(L.nq_histT, { n: TH.name }), rows: (TH.hist || []).slice().reverse().map(h => ({ who: h.who, what: L['nq_h_' + h.kind] || h.kind, at: h.at, ch: (h.changes || []).map(c => `${c.label}: ${c.from || '—'} → ${c.to || '—'}`) })), none: !(TH.hist || []).length } : { rows: [] };
+    const X = s.deact, dx = X ? (X.block ? { title: L.nq_deactNo, text: X.block, danger: false, ok: L.nq_close, confirm: () => this.setState({ deact: null }), cancel: () => this.setState({ deact: null }) } : { title: fill(L.nq_deactT, { n: X.t.name }), text: L.nq_deactD, danger: true, ok: L.nq_aDeact, confirm: () => { const r = D.ptSave({ ...X.t, active: false }, this.who()); this.setState({ deact: null }); if (r.err) this.toast(r.err === 'inUse' ? fill(L.nq_e_inUse, { n: r.n }) : L.nq_e_baseOff); else this.toast(fill(L.nq_tDeact, { n: X.t.name })); }, cancel: () => this.setState({ deact: null }) }) : {};
+    const RS = s.reason, rs = RS ? { title: RS.title, text: RS.text, reason: RS.reason, err: RS.err, ok: RS.ok, onReason: v => this.setState(st => ({ reason: { ...st.reason, reason: typeof v === 'string' ? v : (v && v.target ? v.target.value : ''), err: '' } })), confirm: () => { if (!String(RS.reason || '').trim()) return this.setState(st => ({ reason: { ...st.reason, err: L.nq_e_reason } })); RS.run(RS.reason.trim()); }, cancel: () => this.setState({ reason: null }) } : {};
+    const dlg = { editOpen: !!e, ed, closeEdit: () => this.setState({ edit: null }), saveEdit: () => this.saveEdit(), attOpen: !!A, att, closeAtt: () => this.setState({ attach: null }), saveAtt: () => { const ids = Object.keys(A.sel).filter(k => A.sel[k]).map(Number), n = D.ptAttach(A.t.code, ids, A.br, this.who()); this.setState({ attach: null }); this.toast(fill(L.nq_tAttached, { n })); },
+      thOpen: !!TH, th, closeTh: () => this.setState({ typeHist: null }), deactOpen: !!X, dx, reasonOpen: !!RS, rs };
+    // ===== Import
+    if (s.view === 'import' && s.set) { const brC = s.set.br === 'ALL' ? 'TSH' : s.set.br; return { ...common, ...dlg, isTabs: false, isImport: true, impBr: brC, impPlace: this.brName(s.set.br) + ' · ' + ptN(s.set.type), impPreset: { step: 1, n: this._impN }, impDone: r => this.impDone(r), impCancel: () => this.setState({ view: 'set' }) }; }
+    // ===== Narx o'rnatish
+    if (s.view === 'set' && s.set) {
+      const S = s.set, pt = D.ptByCode(S.type) || {}, R = this.setRows(), { F0, F, V } = this.visRows(R), uniq = a => [...new Set(a.filter(Boolean))].sort();
+      const ch = R.filter(r => r.changed), nBelow = ch.filter(r => r.below).length, nBig = ch.filter(r => r.big).length;
+      const fl = (k, label, vals, get) => ({ label, options: vals.map(v => ({ value: v, label: v, count: R.filter(r => get(r.p) === v).length })), selected: S[k], onChange: v => this.upSet({ [k]: v }) });
+      const showBatch = !!pt.batch;
+      const cols = [['№', 'left', '44px'], [L.nq_k_code, 'left', '92px'], [L.nq_k_prod, 'left', 'minmax(220px,1.6fr)'], [L.nq_k_cat, 'left', '130px']]
+        .concat(showBatch ? [[L.nq_k_batch, 'left', '110px'], [L.nq_k_exp, 'left', '96px']] : []).concat(canCost ? [[L.nq_k_avg, 'right', '128px'], [L.nq_k_last, 'right', '112px']] : [])
+        .concat([[L.nq_k_cur, 'right', '150px'], [L.nq_k_new, 'right', '150px'], [L.nq_k_chg, 'right', '88px']]).concat(canCost ? [[L.nq_k_mk, 'right', '80px']] : []).concat([['', 'center', '64px']]);
+      const gridMin = cols.reduce((a, c) => a + (parseInt(c[2].replace('minmax(', ''), 10) || 0), 0);
+      const setRaw = (key, v) => { const raw = { ...this.state.set.raw }; if (v === '') delete raw[key]; else raw[key] = v; this.upSet({ raw }); this.dirty(raw); };
+      const gridRows = F.map((r, i) => ({ n: i + 1, code: r.p.code, name: r.p.name, sub: [r.p.maker, r.p.country].filter(Boolean).join(' · '), cat: r.p.cat || '—', batch: r.batch || '', exp: r.exp || '',
+        avg: r.avgV != null ? fM(r.avgV) : '—', last: r.lastV != null ? fM(r.lastV) : '—', cur: r.cur ? fM(r.cur.price) : '—', curFg: r.cur ? '#172B2A' : '#B45309', hasNext: !!r.nxt, next: r.nxt ? fill(L.nq_nextChip, { p: fM(r.nxt.price), d: r.nxt.eff }) : '',
+        raw: r.raw == null ? '' : r.raw, onIn: ev => setRaw(r.key, ev.target.value), net: r.valid ? fill(L.nq_noVat, { v: fM(r.nv / (1 + r.vat / 100)) }) : '',
+        inBd: r.bad || r.below ? '#B91C1C' : r.big ? '#D97706' : r.changed ? '#0D9488' : '#E2E8F0', inBg: r.changed ? '#F0FDFA' : '#FFFFFF', bg: r.below ? '#FEF7F7' : '#FFFFFF',
+        chg: fPct(r.chg), chgFg: r.chg == null ? '#647574' : r.chg > 0 ? '#15803D' : '#B91C1C', mk: fPct(r.mk), mkFg: r.mk != null && r.mk < 0 ? '#B91C1C' : '#5B6B6A',
+        flags: [r.below && { icon: 'trending-down', color: '#B91C1C', tip: fill(L.nq_flBelow, { c: fM(r.cb.costV) }) }, r.big && { icon: 'triangle-alert', color: '#D97706', tip: fill(L.nq_flBig, { x: fPct(r.chg) }) }].filter(Boolean),
+        openHist: () => this.setState({ hist: { pid: r.p.id, type: S.type, br: S.br === 'ALL' ? 'TSH' : S.br } }) }));
+      const relOpts = [['avg', L.nq_rel_avg], ['last', L.nq_rel_last], ['base', L.nq_rel_base]].concat(showBatch ? [['batch', L.nq_rel_batch]] : []).map(([value, label]) => ({ value, label }));
+      const rcD = S.mode === 'rc' ? this.rcOf(S.rc) : null, brs = rcD ? [rcD.branch] : S.br === 'ALL' ? D.BRANCHES.map(b => b.code) : [S.br];
+      const withCur = ch.filter(r => r.chg != null), avgChg = withCur.length ? withCur.reduce((a, r) => a + r.chg, 0) / withCur.length : null;
+      const drafts = s.saveDlg ? D.nrDraftImpact(S.type, brs, S.eff, ch.map(r => ({ pid: r.p.id, batch: r.batch || null, price: r.nv }))).n : 0;
+      const sv = s.saveDlg ? { items: [{ icon: 'calendar-check', color: '#0F766E', text: fill(L.nq_d_eff, { n: ch.length, d: S.eff }) }, { icon: 'percent', color: '#5B6B6A', text: fill(L.nq_d_avg, { x: fPct(avgChg) }) }, { icon: 'git-branch', color: '#5B6B6A', text: fill(L.nq_d_brs, { b: brs.map(b => this.brName(b)).join(', ') }) }, { icon: 'clipboard-list', color: drafts ? '#B45309' : '#5B6B6A', text: drafts ? fill(L.nq_d_drafts, { n: drafts }) : L.nq_d_drafts0 }, { icon: 'lock', color: '#5B6B6A', text: L.nq_d_conf }].concat(nBelow ? [{ icon: 'trending-down', color: '#B91C1C', text: fill(L.nq_d_below, { n: nBelow }) }] : []),
+        hasBig: nBig > 0, big: ch.filter(r => r.big).map(r => ({ name: r.p.name + (r.batch ? ' · ' + r.batch : ''), range: fM(r.cur.price) + ' → ' + fM(r.nv), pct: fPct(r.chg) })) } : { items: [], big: [] };
+      const isRc = S.mode === 'rc', costRc = canCost || this.can('special.cost'), RCB = { bg: '#F0FDFA', fg: '#0F766E' }, GEN = { bg: '#EEF2F4', fg: '#5B6B6A' };
+      const modeOpts = [['prod', L.nq_modeProd, 'package'], ['rc', L.nq_modeRc, 'package-check']].map(([k, label, icon]) => { const on = (S.mode || 'prod') === k; return { label, icon, on, bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.10)' : 'none', fg: on ? '#0F766E' : '#5B6B6A', pick: () => { if (on) return; const b0 = D.ptBase().code; if (k === 'rc') { this.upSet({ mode: 'rc', rc: null, raw: {}, tab: 'all', type: b0, pct: '', q: '' }); this.url('?set=' + (D.ptByCode(b0) || {}).id + '&br=' + S.br + '&mode=rc'); } else { this.upSet({ mode: 'prod', rc: null, raw: {}, tab: 'all', pct: '', q: '' }); this.url('?set=' + pt.id + '&br=' + S.br); } this.dirty({}); } }; });
+      let rcX = { isProdMode: !isRc, isRcPick: false, isRcSet: false, showFoot: true };
+      if (isRc) { const d = rcD; if (!d) { const q = D.toLat(String(S.rcQ || '').trim().toLowerCase()), okBr = b => S.br === 'ALL' ? brOpts.some(o => o.value === b) : b === S.br;
+          const list = (D.store.receipts || []).filter(x => x.status === 'posted' && x.no && okBr(x.branch) && (!q || D.toLat([x.no, x.supplier, x.date, x.invNo || ''].join(' ').toLowerCase()).includes(q))).sort((a, b) => (pD(b.date) - pD(a.date)) || (a.no < b.no ? 1 : -1));
+          const rcColumns = [{ key: 'no', label: L.nq_rcNo, width: '150px' }, { key: 'd', label: L.nq_rcDate, width: '110px' }, { key: 's', label: L.nq_rcSup, width: 'minmax(200px,1.4fr)' }, { key: 'o', label: L.nq_rcOwner, width: 'minmax(140px,1fr)' }, { key: 'n', label: L.nq_rcLinesH, width: '90px', align: 'right' }, { key: 'sum', label: L.nq_rcSum, width: '150px', align: 'right' }, { key: 'b', label: L.nq_rcBr, width: '130px' }];
+          const rcRows = list.map(x => ({ id: x.no, onOpen: () => this.goRc(x.no), onToggle: () => {}, cells: [{ type: 'mono', text: x.no }, { type: 'text', text: x.date, color: '#5B6B6A' }, { type: 'text', text: x.supplier || '—' }, { type: 'text', text: x.owner || '—', color: x.owner ? '#172B2A' : '#647574' }, { type: 'text', text: fN(x.lines.filter(l => l.pid).length) }, { type: 'text', text: fM(this.rcSum(x)), weight: 500 }, { type: 'text', text: this.brName(x.branch), color: '#5B6B6A' }], actions: [{ label: L.nq_rcPick, icon: 'arrow-right', pick: () => this.goRc(x.no) }] }));
+          rcX = { isProdMode: false, isRcPick: true, isRcSet: false, showFoot: false, rcQ: S.rcQ || '', onRcQ: ev => this.upSet({ rcQ: ev.target.value }), rcColumns, rcRows, rcHas: rcRows.length > 0, rcEmpty: !rcRows.length };
+        } else {
+          const cols2 = [['№', 'left', '44px'], [L.nq_k_code, 'left', '92px'], [L.nq_k_prod, 'left', 'minmax(200px,1.6fr)'], [L.nq_k_batch, 'left', '120px'], [L.nq_k_exp, 'left', '96px'], [L.nq_k_inQty, 'right', '96px'], [L.nq_k_stock, 'right', '96px']].concat(costRc ? [[L.nq_k_rcCost, 'right', '124px']] : []).concat([[L.nq_k_cur, 'right', '140px'], [L.nq_k_new, 'right', '140px']]).concat(costRc ? [[L.nq_k_mk, 'right', '80px']] : []).concat([[L.nq_k_chg, 'right', '88px'], ['', 'center', '56px']]);
+          const setRaw2 = (key, v) => { const raw = { ...this.state.set.raw }; if (v === '') delete raw[key]; else raw[key] = v; this.upSet({ raw }); this.dirty(raw); };
+          const rows2 = F.map((r, i) => ({ n: i + 1, code: r.p.code, name: r.p.name, sub: [r.p.maker, r.p.country].filter(Boolean).join(' · '), batch: r.batch, bonus: !!r.bonus, exp: r.exp || '—', inQty: fN(r.inQty), stock: fN(r.stock), stockFg: r.stock > 0 ? '#172B2A' : '#647574',
+            cost: r.bonus ? '0,00' : fM(r.costV), cur: r.cur ? fM(r.cur.price) : '—', curFg: r.cur ? '#172B2A' : '#B45309', tag: r.isB ? L.nq_tagBatch : L.nq_tagGen, tagBg: r.isB ? RCB.bg : GEN.bg, tagFg: r.isB ? RCB.fg : GEN.fg, hasNext: !!r.nxt, next: r.nxt ? fill(L.nq_nextChip, { p: fM(r.nxt.price), d: r.nxt.eff }) : '',
+            raw: r.raw == null ? '' : r.raw, onIn: ev => setRaw2(r.key, ev.target.value), net: r.valid ? fill(L.nq_noVat, { v: fM(r.nv / (1 + r.vat / 100)) }) : '',
+            inBd: r.bad || r.below ? '#B91C1C' : r.big ? '#D97706' : r.changed ? '#0D9488' : '#E2E8F0', inBg: r.changed ? '#F0FDFA' : '#FFFFFF', bg: r.below ? '#FEF7F7' : '#FFFFFF',
+            mk: r.bonus ? '—' : fPct(r.mk), mkTip: r.bonus ? L.nq_bonusTip : '', mkFg: r.mk != null && r.mk < 0 ? '#B91C1C' : '#5B6B6A', chg: fPct(r.chg), chgFg: r.chg == null ? '#647574' : r.chg > 0 ? '#15803D' : '#B91C1C',
+            flags: [r.below && { icon: 'trending-down', color: '#B91C1C', tip: costRc ? fill(L.nq_flBelow, { c: fM(r.costV) }) : L.nq_flBelow0 }, r.big && { icon: 'triangle-alert', color: '#D97706', tip: fill(L.nq_flBig, { x: fPct(r.chg) }) }].filter(Boolean),
+            openHist: () => this.setState({ hist: { pid: r.p.id, type: S.type, br: d.branch } }) }));
+          rcX = { isProdMode: false, isRcPick: false, isRcSet: true, showFoot: true, noFilters: [], copyGen: () => this.copyGen(),
+            rcInfo: { no: d.no, open: () => { location.hash = '#receipt?open=' + encodeURIComponent(d.no); }, change: () => { this.upSet({ rc: null, raw: {}, tab: 'all' }); this.dirty({}); this.url('?set=' + pt.id + '&br=' + S.br + '&mode=rc'); },
+              facts: [[L.nq_rcDate, d.date], [L.nq_rcSup, d.supplier || '—'], [L.nq_rcOwner, d.owner || '—'], [L.nq_rcSum, fM(this.rcSum(d))], [L.nq_rcBr, this.brName(d.branch) + ' · ' + d.wh], [L.nq_rcLinesH, fill(L.nq_rcLines, { n: R.length })]].map(([k, v]) => ({ k, v })) },
+            gridCols: cols2.map(c => c[2]).join(' '), gridMin: cols2.reduce((a, c) => a + (parseInt(c[2].replace('minmax(', ''), 10) || 0), 0), gridHead: cols2.map(c => ({ label: c[0], align: c[1] })), gridRows: rows2, gridEmpty: !rows2.length, showCost: costRc,
+            setViews: ['all', 'changed', 'below', 'big'].map(k => { const n = F0.filter(V[k]).length; return { label: L['nq_v_' + k], count: n, tone: k === 'below' && n ? 'danger' : k === 'big' && n ? 'warning' : null, active: S.tab === k, pick: () => this.upSet({ tab: k }) }; }),
+            setActive: !!S.q, setClear: () => this.upSet({ q: '', tab: 'all' }) };
+        } }
+      return { ...common, ...dlg, isTabs: false, isSet: true, set: S, modeOpts, setTitle: fill(L.nq_setT, { t: pt.name, c: pt.cur || "so'm", b: this.brName(S.br) }),
+        typeOpts: ptypes.filter(t => t.active).map(t => ({ value: t.code, label: t.name })), setType: v => { const t = D.ptByCode(v); this.upSet({ type: v, raw: {}, rel: t && t.batch ? 'batch' : (S.rel === 'batch' ? 'avg' : S.rel) }); this.dirty({}); this.url('?set=' + t.id + '&br=' + S.br + (S.mode === 'rc' ? '&mode=rc' + (S.rc ? '&rc=' + encodeURIComponent(S.rc) : '') : '')); },
+        setBrOpts: brOpts, setBr: v => { this.upSet({ br: v }); this.url('?set=' + pt.id + '&br=' + v + (S.mode === 'rc' ? '&mode=rc' : '')); },
+        onEff: ev => this.upSet({ eff: ev.target.value, effErr: '' }), effBd: S.effErr ? '#B91C1C' : '#E2E8F0', hasEffErr: !!S.effErr,
+        relOpts, setRel: v => this.upSet({ rel: v }), onPct: ev => this.upSet({ pct: ev.target.value, pctErr: '' }), pctBd: S.pctErr ? '#B91C1C' : '#E2E8F0', hasPctErr: !!S.pctErr, applyPct: () => this.applyPct(),
+        rndOpts: RND.map(n => { const on = S.rnd === n; return { label: n ? fN(n) : L.nq_rndOff, on, bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.10)' : 'none', fg: on ? '#0F766E' : '#5B6B6A', pick: () => this.upSet({ rnd: n }) }; }),
+        setQ: v => this.upSet({ q: v }), setFilters: [fl('fMaker', L.nq_f_maker, uniq(R.map(r => r.p.maker)), p => p.maker), fl('fCat', L.nq_f_cat, uniq(R.map(r => r.p.cat)), p => p.cat), fl('fCountry', L.nq_f_country, uniq(R.map(r => r.p.country)), p => p.country), fl('fSup', L.nq_f_sup, uniq(R.map(r => r.p.supplyBy || '—')), p => p.supplyBy || '—')],
+        setActive: !!(S.q || S.fMaker.length || S.fCat.length || S.fCountry.length || S.fSup.length), setClear: () => this.upSet({ q: '', fMaker: [], fCat: [], fCountry: [], fSup: [], tab: 'all' }),
+        setViews: ['all', 'noPrice', 'changed', 'below', 'big'].map(k => { const n = F0.filter(V[k]).length; return { label: L['nq_v_' + k], count: n, tone: k === 'below' && n ? 'danger' : (k === 'noPrice' || k === 'big') && n ? 'warning' : null, active: S.tab === k, pick: () => this.upSet({ tab: k }) }; }),
+        showBatch, showCost: canCost, gridCols: cols.map(c => c[2]).join(' '), gridMin, gridHead: cols.map(c => ({ label: c[0], align: c[1] })), gridRows, gridEmpty: !gridRows.length,
+        footText: fill(L.nq_foot, { n: ch.length, m: nBelow, k: nBig }), trySave: () => this.trySave(), doExport: () => this.doExport(), doImport: () => { if (!this.can('prices.create')) return this.toast(this.whoCan('prices.create')); this._impN = Date.now(); this.setState({ view: 'import' }); },
+        hasBanner: !!s.banner, bannerText: s.banner || '', saveOpen: s.saveDlg, sv, closeSave: () => this.setState({ saveDlg: false }), doSave: () => this.doSave(), ...rcX };
+    }
+    // ===== NO hujjati
+    const x = s.view === 'doc' && s.doc ? D.nrByNo(s.doc) : null;
+    if (x) { const st = NST[x.status] || NST.posted, T0 = pD(D.TODAY), fut = pD(x.eff) > T0, canBelow = this.can('prices.below'), who = this.who();
+      const lastLog = k => [...(x.log || [])].reverse().find(l => l.kind === k) || {};
+      const btn = (label, icon, pick, kind) => ({ label, icon, pick, bg: kind === 'pri' ? '#0F766E' : '#FFFFFF', fg: kind === 'pri' ? '#FFFFFF' : kind === 'dng' ? '#B91C1C' : '#172B2A', border: kind === 'pri' ? '#0F766E' : '#E2E8F0' });
+      const acts = [btn(L.nq_d_print, 'printer', () => window.medixPrint && window.medixPrint('no', x.no))];
+      if (x.status === 'pending') { acts.push(btn(L.nq_d_reject, 'x', () => { if (!canBelow) return this.toast(this.whoCan('prices.below')); this.setState({ reason: { title: fill(L.nq_rejT, { n: x.no }), text: L.nq_rejD, ok: L.nq_d_reject, reason: '', err: '', run: r => { const res = D.nrReject(x, who, r, p.role); this.setState({ reason: null }); if (res.err) return this.toast(this.whoCan('prices.below')); this.toast(fill(L.nq_tRejected, { n: x.no })); } } }); }, 'dng'));
+        acts.push(btn(L.nq_d_approve, 'circle-check', () => { if (!canBelow) return this.toast(this.whoCan('prices.below')); const res = D.nrApprove(x, who, p.role); if (res.err) return this.toast(this.whoCan('prices.below')); this.toast(fill(L.nq_tApproved, { n: x.no })); }, 'pri')); }
+      if (x.status === 'posted' && fut) acts.push(btn(L.nq_d_cancel, 'ban', () => { if (!this.can('prices.create')) return this.toast(this.whoCan('prices.create')); this.setState({ reason: { title: fill(L.nq_cxlT, { n: x.no }), text: L.nq_cxlD, ok: L.nq_d_cancel, reason: '', err: '', run: r => { const res = D.nrCancel(x, who, r); this.setState({ reason: null }); if (res.err) return this.toast(L.nr_bnLocked); this.toast(fill(L.nq_tCancelled, { n: x.no })); } } }); }, 'dng'));
+      const banners = [];
+      if (x.status === 'pending') { banners.push({ tone: 'warning', icon: 'clock', text: fill(L.nq_bn_pending, { at: x.sentAt || x.createdAt, who: x.createdBy }) }); if (!canBelow) banners.push({ tone: 'info', icon: 'lock', text: fill(L.nq_bn_lock, { r: D.whoCan('prices.below').map(r => L['r_' + r] || r).join(', ') }) }); }
+      if (x.status === 'posted') { banners.push({ tone: 'success', icon: 'circle-check', text: fill(L.nq_bn_posted, { at: x.postedAt || x.createdAt, who: x.approvedBy || x.postedBy || x.createdBy, d: x.eff }) }); if (fut) banners.push({ tone: 'info', icon: 'calendar-clock', text: fill(L.nq_bn_future, { d: x.eff }) }); }
+      if (x.status === 'rejected') banners.push({ tone: 'danger', icon: 'circle-x', text: fill(L.nq_bn_rejected, { at: x.rejectedAt, who: x.rejectedBy, r: x.rejectReason }) });
+      if (x.status === 'cancelled') banners.push({ tone: 'info', icon: 'ban', text: fill(L.nq_bn_cancelled, { at: x.cancelledAt, who: x.cancelledBy, r: x.cancelReason }) });
+      const showLc = canCost;
+      const dlColumns = [{ key: 'n', label: L.nq_l_no, width: '56px' }, { key: 'c', label: L.nq_l_code, width: '100px' }, { key: 'p', label: L.nq_l_prod, width: 'minmax(220px,1fr)' }, { key: 'b', label: L.nq_l_batch, width: '120px' }, { key: 'o', label: L.nq_l_old, width: '130px', align: 'right' }, { key: 'v', label: L.nq_l_new, width: '130px', align: 'right' }, { key: 'x', label: L.nq_l_chg, width: '96px', align: 'right' }].concat(showLc ? [{ key: 'k', label: L.nq_l_cost, width: '150px', align: 'right' }] : []);
+      const dlRows = (x.lines || []).map((l, i) => { const pr = D.prodById(l.pid) || {}, chg = l.old ? (l.price - l.old) / l.old * 100 : null, cost = l.cost != null ? l.cost : ((D.costBasis(l.pid, x.branch, l.batch || undefined) || {}).costV), below = cost != null && l.price < cost;
+        return { id: 'l' + i, onOpen: () => this.setState({ hist: { pid: l.pid, type: x.type, br: x.branch } }), onToggle: () => {}, cells: [{ type: 'text', text: String(i + 1), color: '#647574' }, { type: 'mono', text: pr.code || '' }, { type: 'name', text: pr.name || '—', sub: pr.maker || '', weight: 500 }, { type: 'mono', text: l.batch || '—' }, { type: 'text', text: l.old ? fM(l.old) : '—', color: '#5B6B6A' }, { type: 'text', text: fM(l.price), weight: 600, color: below ? '#B91C1C' : '#172B2A' }, { type: 'text', text: fPct(chg), color: chg == null ? '#647574' : chg > 0 ? '#15803D' : '#B91C1C' }].concat(showLc ? [{ type: 'text', text: cost != null ? fM(cost) : '—', color: below ? '#B91C1C' : '#5B6B6A' }] : []), actions: [] }; });
+      return { ...common, ...dlg, isTabs: false, isDoc: true,
+        dv: { no: x.no, title: fill(L.nq_docT, { n: x.no }), stLabel: L['nq_st_' + x.status] || x.status, stIcon: st[0], stFg: st[1], stBg: st[2] }, docActions: acts, docBanners: banners,
+        docInfo: [[L.nq_i_type, ptN(x.type)], [L.nq_i_br, this.brName(x.branch)], [L.nq_i_eff, x.eff], [L.nq_i_src, (L['nq_src_' + x.src] || x.src) + (x.rc ? ' · ' : ''), x.rc], [L.nq_i_by, x.createdBy], [L.nq_i_at, x.createdAt], [L.nq_i_post, x.approvedBy || x.postedBy || '—'], [L.nq_i_note, x.note || '—']].map(([k, v, rc]) => ({ k, v: v || '—', hasLink: !!rc, link: rc || '', href: rc ? '#receipt?open=' + encodeURIComponent(rc) : '' })) /* T11a: kirim raqami — havola */, dlColumns, dlRows };
+    }
+    // ===== Narx o'zgarishlari
+    if (s.view === 'changes') { const C = s.ch, setC = x => this.setState(st => ({ ch: { ...st.ch, ...x, page: x.page || 1 } }));
+      const inBr = d => scr === 'ALL' || d.branch === scr, all = (D.store.nos || []).filter(inBr), q = D.toLat(C.q.trim().toLowerCase());
+      const matchQ = d => !q || D.toLat([d.no, d.note || '', (d.lines || []).map(l => (D.prodById(l.pid) || {}).name || '').join(' ')].join(' ').toLowerCase()).includes(q);
+      const inDate = d => { const t = pD(d.createdAt); return (!C.from || t >= pD(C.from)) && (!C.to || t <= pD(C.to)); };
+      const base0 = all.filter(d => matchQ(d) && inDate(d) && (!C.fType.length || C.fType.includes(d.type)) && (!C.fBr.length || C.fBr.includes(d.branch)));
+      const rows = base0.filter(d => C.tab === 'all' || d.status === C.tab).sort((a, b) => pDT(b.createdAt) - pDT(a.createdAt) || (a.no < b.no ? 1 : -1));
+      const slice = rows.slice((C.page - 1) * 25, C.page * 25), T0 = pD(D.TODAY);
+      const chColumns = [{ key: 'no', label: L.nq_ch_no, width: '150px' }, { key: 'd', label: L.nq_ch_date, width: '120px' }, { key: 'e', label: L.nq_ch_eff, width: '116px' }, { key: 't', label: L.nq_ch_type, width: 'minmax(150px,1fr)' }, { key: 'b', label: L.nq_ch_br, width: '130px' }, { key: 'l', label: L.nq_ch_lines, width: '84px', align: 'right' }, { key: 's', label: L.nq_ch_src, width: '124px' }, { key: 'w', label: L.nq_ch_who, width: '150px' }, { key: 'st', label: L.nq_ch_st, width: '170px' }, { key: 'n', label: L.nq_ch_note, width: 'minmax(180px,1.2fr)' }];
+      const chRows = slice.map(d => { const S2 = NST[d.status] || NST.posted; return { id: d.no, onOpen: () => this.openDoc(d.no), onToggle: () => {}, cells: [{ type: 'mono', text: d.no }, { type: 'text', text: String(d.createdAt || '').slice(0, 10), color: '#5B6B6A' }, { type: 'text', text: d.eff, color: pD(d.eff) > T0 ? '#1D4ED8' : '#5B6B6A', weight: pD(d.eff) > T0 ? 600 : 400 }, { type: 'text', text: ptN(d.type) }, { type: 'text', text: this.brName(d.branch), color: '#5B6B6A' }, { type: 'text', text: fN((d.lines || []).length) }, d.rc ? { type: 'link', text: (L.nq_src_rc || "Kirim bo'yicha") + ' · ' + d.rc, pick: () => { location.hash = '#receipt?open=' + encodeURIComponent(d.rc); } } : { type: 'text', text: L['nq_src_' + d.src] || d.src, color: '#5B6B6A' }, { type: 'text', text: d.createdBy || '—', color: '#5B6B6A' }, { type: 'status', text: L['nq_st_' + d.status] || d.status, icon: S2[0], fg: S2[1], bg: S2[2] }, { type: 'text', text: d.note || '—', color: '#5B6B6A' }], actions: [{ label: L.qz_open || L.nq_aHist, icon: 'arrow-up-right', pick: () => this.openDoc(d.no) }] }; });
+      const uq = a => [...new Set(a)];
+      const drL = { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.k_drWeek, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext };
+      return { ...common, ...dlg, mainTabs: tabs, isTypes: false, isChanges: true, countLabel: fN(all.length), hdrPrimary: null,
+        chViews: ['all', 'pending', 'posted', 'rejected', 'cancelled'].map(k => { const n = base0.filter(d => k === 'all' || d.status === k).length; return { label: k === 'all' ? L.nq_v_all : L['nq_st_' + k], count: n, tone: k === 'pending' && n ? 'warning' : null, active: C.tab === k, pick: () => setC({ tab: k }) }; }),
+        chQ: C.q, setChQ: v => setC({ q: v }),
+        chFilters: [{ label: L.nq_ch_type, options: uq(all.map(d => d.type)).map(t => ({ value: t, label: ptN(t), count: all.filter(d => d.type === t).length })), selected: C.fType, onChange: v => setC({ fType: v }) }].concat(scr === 'ALL' ? [{ label: L.nq_ch_br, options: D.BRANCHES.map(b => ({ value: b.code, label: b.name, count: all.filter(d => d.branch === b.code).length })), selected: C.fBr, onChange: v => setC({ fBr: v }) }] : []),
+        chDate: { label: L.nq_ch_date_f, from: C.from, to: C.to, labels: drL, onChange: v => setC({ from: v && v.from || null, to: v && (v.to || v.from) || null }) },
+        chActive: !!(C.q || C.fType.length || C.fBr.length || C.from), chClear: () => setC({ q: '', fType: [], fBr: [], from: null, to: null, tab: 'all' }),
+        chHas: chRows.length > 0, chEmpty: !chRows.length, chColumns, chRows, chPager: rows.length > 25, chTotal: rows.length, chPage: C.page, setChPage: n => this.setState(st => ({ ch: { ...st.ch, page: n } })) };
+    }
+    // ===== Narx turlari
+    const stats = {}; ptypes.forEach(t => { stats[t.id] = D.ptStats(t.code, scr); });
+    const SO = s.sort, val = (t, k) => k === 'prods' ? stats[t.id].priced : k === 'custs' ? stats[t.id].custs : k === 'last' ? (pD(stats[t.id].last) || 0) : k === 'batch' ? +t.batch : k === 'base' ? +t.base : k === 'status' ? +!t.active : String(t[k] || '').toLowerCase();
+    const list = ptypes.slice().sort((a, b) => { const x1 = val(a, SO.key), x2 = val(b, SO.key); return (x1 < x2 ? -1 : x1 > x2 ? 1 : 0) * (SO.dir === 'asc' ? 1 : -1); });
+    const col = (key, label, width, align) => ({ key, label, width, align, sortable: true, sortDir: SO.key === key ? SO.dir : null });
+    const tColumns = [col('name', L.nq_c_name, 'minmax(200px,1.4fr)'), col('alt', L.nq_c_alt, 'minmax(140px,1fr)'), col('cur', L.nq_c_cur, '84px'), col('kind', L.nq_c_kind, '112px'), col('batch', L.nq_c_batch, '128px'), col('base', L.nq_c_base, '92px'), col('prods', L.nq_c_prods, '120px', 'right'), col('custs', L.nq_c_custs, '160px', 'right'), col('last', L.nq_c_last, '130px'), col('status', L.nq_c_status, '100px')];
+    const yn = (on, strong) => ({ type: 'chips', chips: [{ label: on ? L.nq_yes : L.nq_no, fg: on ? (strong ? '#0F766E' : '#1D4ED8') : '#5B6B6A', bg: on ? (strong ? '#DDF5EE' : '#EFF6FF') : '#EEF2F4' }] });
+    const tRows = list.map(t => { const st = stats[t.id]; return { id: t.id, selected: s.selType === t.id, onOpen: () => this.setState({ selType: t.id }), onToggle: () => {}, cells: [{ type: 'name', text: t.name, weight: 600 }, { type: 'text', text: t.alt || '—', color: '#5B6B6A' }, { type: 'text', text: t.cur || "so'm", color: '#5B6B6A' }, { type: 'text', text: L.nq_kindSale, color: '#5B6B6A' }, yn(t.batch), yn(t.base, true), { type: 'text', text: fN(st.priced) + ' / ' + fN(st.total), color: st.priced < st.total ? '#B45309' : '#172B2A', weight: 500 }, { type: 'text', text: fN(st.custs) }, { type: 'text', text: st.last || '—', color: '#5B6B6A' }, { type: 'status', text: t.active ? L.nq_active : L.nq_inactive, icon: t.active ? 'circle-check' : 'circle-pause', fg: t.active ? '#15803D' : '#5B6B6A', bg: t.active ? '#F0FDF4' : '#EEF2F4' }],
+      actions: [{ label: L.nq_aSet, icon: 'tag', pick: () => this.goSet(t.code, scr) }, { label: L.nq_aEdit, icon: 'pencil', pick: () => this.setState({ selType: t.id, edit: { id: t.id, name: t.name, alt: t.alt, batch: t.batch, base: t.base, active: t.active } }) }, { label: L.nq_aHist, icon: 'history', pick: () => this.setState({ selType: t.id, typeHist: t.id }) }] }; });
+    const sel = ptypes.find(t => t.id === s.selType);
+    const b2 = (label, icon, pick, kind) => ({ label, icon, pick, bg: kind === 'pri' ? '#0F766E' : '#FFFFFF', fg: kind === 'pri' ? '#FFFFFF' : kind === 'dng' ? '#B91C1C' : '#172B2A', border: kind === 'pri' ? '#0F766E' : '#E2E8F0' });
+    const selActions = sel ? [b2(L.nq_aSet, 'tag', () => { if (!sel.active) return this.toast(L.nq_inactive); this.goSet(sel.code, scr); }, 'pri'), b2(L.nq_aEdit, 'pencil', () => this.setState({ edit: { id: sel.id, name: sel.name, alt: sel.alt, batch: sel.batch, base: sel.base, active: sel.active } })), b2(L.nq_aAttach, 'users', () => this.openAttach(sel)), b2(L.nq_aHist, 'history', () => this.setState({ typeHist: sel.id })), b2(sel.active ? L.nq_aDeact : L.nq_aAct, sel.active ? 'circle-pause' : 'circle-play', () => this.askDeact(sel), sel.active ? 'dng' : '')] : [];
+    return { ...common, ...dlg, mainTabs: tabs, countLabel: fN(ptypes.length), hdrPrimary: { label: L.nq_newType, icon: 'plus', pick: () => { if (!this.can('lookups.ptypes')) return this.toast(this.whoCan('lookups.ptypes')); this.setState({ edit: { name: '', alt: '', batch: false, base: false, active: true } }); } },
+      tColumns, tRows, onSort: k => this.setState(st => ({ sort: { key: k, dir: st.sort.key === k && st.sort.dir === 'asc' ? 'desc' : 'asc' } })), hasSel: !!sel, noSel: !sel, selName: sel ? sel.name : '', selActions };
+  }
+}
+</script>
+</body>
+</html>

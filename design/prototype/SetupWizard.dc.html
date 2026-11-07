@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="height:100%;width:100%;display:flex;flex-direction:column;background:#F5F7F8;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <header style="height:64px;flex:none;background:#FFFFFF;border-bottom:1px solid #E2E8F0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:0 24px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:28px;height:28px;border-radius:7px;background:#0D9488;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">M</div>
+      <span style="font-size:15px;font-weight:600;letter-spacing:0.02em">MEDIX</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="display:flex;align-items:center">
+        <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+          <sc-if value="{{ s.hasLine }}"><span style="width:{{ lineW }}px;height:1px;margin:0 8px;background:{{ s.lineColor }}"></span></sc-if>
+          <button onClick="{{ s.go }}" disabled="{{ s.locked }}" aria-label="{{ s.name }}" style="display:flex;align-items:center;gap:8px;padding:2px;border:0;border-radius:999px;background:transparent;cursor:{{ s.cursor }}">
+            <span style="width:24px;height:24px;flex:none;border-radius:50%;box-sizing:border-box;border:{{ s.border }};background:{{ s.bg }};color:{{ s.numColor }};font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">
+              <sc-if value="{{ s.done }}"><lucide-i name="check" size="14" style="color:#FFFFFF"></lucide-i></sc-if>
+              <sc-if value="{{ s.showNum }}">{{ s.n }}</sc-if>
+            </span>
+            <sc-if value="{{ showStepNames }}"><span style="font-size:13px;line-height:18px;color:{{ s.nameColor }};font-weight:{{ s.nameWeight }};white-space:nowrap">{{ s.name }}</span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ compact }}"><span style="font-size:12px;line-height:16px;font-weight:600;color:#172B2A;white-space:nowrap">{{ curStepName }}</span></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:12px;min-width:0">
+      <button onClick="{{ openModal }}" title="{{ w.later }}" style="min-width:0;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out,color 120ms ease-out" style-hover="background:#F5F7F8;color:#172B2A">{{ w.later }}</button>
+      <span style="width:28px;height:28px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">AK</span>
+    </div>
+  </header>
+
+  <sc-if value="{{ isWide }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;min-height:0;position:relative">
+      <sc-if value="{{ isStep4 }}"><dc-import name="WizRoles" dict="{{ dict }}" demo="{{ childDemo }}" narrow="{{ narrow }}" user-name="{{ userName }}" on-back="{{ back }}" on-next="{{ wideNext }}" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import></sc-if>
+      <sc-if value="{{ isStep5 }}"><dc-import name="WizStaff" dict="{{ dict }}" demo="{{ childDemo }}" narrow="{{ narrow }}" branches="{{ branchRefs }}" on-back="{{ back }}" on-next="{{ wideNext }}" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import></sc-if>
+      <sc-if value="{{ isStep6 }}"><dc-import name="WizFinish" dict="{{ dict }}" demo="{{ childDemo }}" narrow="{{ narrow }}" company-name="{{ companyName }}" branches="{{ branchesAll }}" warehouses="{{ warehousesAll }}" user-name="{{ userName }}" on-back="{{ back }}" on-go="{{ goStep }}" on-launch="{{ launch }}" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import></sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isClassic }}" hint-placeholder-val="{{ true }}">
+  <div ref="{{ scrollRef }}" style="flex:1;overflow-y:auto;padding:40px 24px 32px">
+    <div style="max-width:1040px;margin:0 auto;display:grid;grid-template-columns:{{ gridCols }};gap:40px;align-items:start">
+      <div style="min-width:0;display:flex;flex-direction:column">
+        <span style="font-size:12px;line-height:16px;font-weight:500;color:#0F766E">{{ stepOf }}</span>
+        <h1 style="margin:6px 0 0;font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.01em">{{ title }}</h1>
+        <p style="margin:8px 0 0;max-width:560px;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ desc }}</p>
+
+        <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ showErrBlock }}">
+            <div role="alert" style="margin-top:24px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA">
+              <lucide-i name="circle-alert" size="16" style="color:#B91C1C"></lucide-i>
+              <span style="flex:1;font-size:13px;line-height:18px;color:#B91C1C">{{ w.errBlock }}</span>
+              <button onClick="{{ goField }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer;white-space:nowrap">{{ w.goField }}</button>
+            </div>
+          </sc-if>
+          <div style="margin-top:24px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:28px;display:flex;flex-direction:column;gap:24px">
+            <div style="display:flex;flex-direction:column">
+              <label for="wz-name" style="font-size:13px;line-height:18px;font-weight:500">{{ w.name }} <span style="color:#B91C1C">*</span></label>
+              <input id="wz-name" ref="{{ nameRef }}" value="{{ name }}" onChange="{{ onName }}" onFocus="{{ focusName }}" onBlur="{{ blurName }}" placeholder="{{ w.namePh }}" maxlength="80" style="margin-top:6px;width:100%;height:44px;padding:0 14px;border:1px solid {{ nameBorder }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ nameShadow }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+              <sc-if value="{{ nameErr }}">
+                <div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ w.errName }}</div>
+              </sc-if>
+              <div style="margin-top:6px;font-size:12px;line-height:16px;color:#647574;text-wrap:pretty">{{ w.nameHelp }}</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column">
+              <span style="font-size:13px;line-height:18px;font-weight:500">{{ w.logo }}</span>
+              <input type="file" ref="{{ fileRef }}" onChange="{{ onFile }}" accept=".png,.svg,image/png,image/svg+xml" style="display:none">
+              <sc-if value="{{ logoEmpty }}" hint-placeholder-val="{{ true }}">
+                <div role="button" tabindex="0" onClick="{{ pickFile }}" onKeyDown="{{ dropKey }}" onDragOver="{{ onDragOver }}" onDragLeave="{{ onDragLeave }}" onDrop="{{ onDrop }}" style="margin-top:6px;height:112px;border:1.5px dashed {{ dropBorder }};border-radius:10px;background:{{ dropBg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0 16px;text-align:center;cursor:pointer;transition:background 120ms ease-out,border-color 120ms ease-out">
+                  <lucide-i name="image-up" size="24" style="color:#5B6B6A"></lucide-i>
+                  <span style="font-size:13px;line-height:18px;color:#172B2A">{{ w.drop1 }}<span style="color:#0F766E;font-weight:500">{{ w.drop2 }}</span></span>
+                  <span style="font-size:12px;line-height:16px;color:#647574">{{ w.dropHelp }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ logoUploading }}">
+                <div style="margin-top:6px;height:112px;border:1.5px dashed #0D9488;border-radius:10px;background:#F8FAFA;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:0 24px">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px">
+                    <lucide-i name="file-image" size="16" style="color:#5B6B6A"></lucide-i>
+                    <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ upName }}</span>
+                    <span style="color:#5B6B6A">{{ w.uploading }}</span>
+                    <span style="min-width:36px;text-align:right;font-weight:500">{{ upPct }}%</span>
+                  </div>
+                  <div style="height:4px;border-radius:2px;background:#EEF2F4;overflow:hidden"><div style="height:100%;width:{{ upPct }}%;background:#0D9488;border-radius:2px"></div></div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ logoReady }}">
+                <div style="margin-top:6px;display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #E2E8F0;border-radius:10px">
+                  <span style="width:56px;height:56px;flex:none;border-radius:10px;border:1px solid #E2E8F0;background:#FFFFFF;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="{{ logoUrl }}" alt="" style="max-width:44px;max-height:44px;display:block"></span>
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column">
+                    <span style="font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ logoName }}</span>
+                    <span style="font-size:12px;line-height:16px;color:#647574">{{ logoSize }}</span>
+                  </span>
+                  <button onClick="{{ pickFile }}" style="height:30px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out" style-hover="background:#F8FAFA">{{ w.replace }}</button>
+                  <button onClick="{{ removeLogo }}" style="height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#B91C1C;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out" style-hover="background:#FEF2F2">{{ w.remove }}</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ hasLogoErr }}">
+                <div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ logoErr }}</div>
+              </sc-if>
+            </div>
+
+            <div style="display:flex;flex-direction:column">
+              <span style="font-size:13px;line-height:18px;font-weight:500">{{ w.lang }} <span style="color:#B91C1C">*</span></span>
+              <div role="radiogroup" style="margin-top:6px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+                <sc-for list="{{ langCards }}" as="l" hint-placeholder-count="3">
+                  <button role="radio" aria-checked="{{ l.selected }}" onClick="{{ l.pick }}" style="position:relative;min-height:72px;padding:14px 32px 14px 14px;border:1.5px solid {{ l.border }};border-radius:10px;background:{{ l.bg }};display:flex;flex-direction:column;justify-content:center;gap:2px;text-align:left;cursor:pointer;transition:background 120ms ease-out,border-color 120ms ease-out">
+                    <span style="font-size:14px;line-height:20px;font-weight:500;color:#172B2A">{{ l.label }}</span>
+                    <span style="font-size:12px;line-height:16px;color:#647574">{{ l.sample }}</span>
+                    <sc-if value="{{ l.selected }}"><span style="position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:#0D9488;color:#FFFFFF;display:flex;align-items:center;justify-content:center"><lucide-i name="check" size="12"></lucide-i></span></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="margin-top:6px;font-size:12px;line-height:16px;color:#647574">{{ w.langHelp }}</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column">
+              <span style="font-size:13px;line-height:18px;font-weight:500">{{ w.cur }}</span>
+              <div aria-readonly="true" style="margin-top:6px;height:44px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;display:flex;align-items:center;justify-content:space-between;font-size:14px;color:#5B6B6A">
+                <span>{{ w.curVal }}</span><lucide-i name="lock" size="14" style="color:#647574"></lucide-i>
+              </div>
+              <div style="margin-top:6px;font-size:12px;line-height:16px;color:#647574">{{ w.curHelp }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ step2Err }}">
+            <div role="alert" style="margin-top:24px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA">
+              <lucide-i name="circle-alert" size="16" style="color:#B91C1C"></lucide-i>
+              <span style="flex:1;font-size:13px;line-height:18px;color:#B91C1C">{{ w.brErr }}</span>
+              <button onClick="{{ openNew }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer;white-space:nowrap">{{ w.brAdd }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ brEmpty }}">
+            <div style="margin-top:24px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:48px 28px;display:flex;flex-direction:column;align-items:center;text-align:center">
+              <span style="width:48px;height:48px;border-radius:50%;background:#DDF5EE;color:#0F766E;display:flex;align-items:center;justify-content:center"><lucide-i name="building-2" size="22"></lucide-i></span>
+              <div style="margin-top:16px;font-size:16px;line-height:24px;font-weight:600">{{ w.brEmptyT }}</div>
+              <div style="margin-top:4px;max-width:400px;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ w.brEmptyD }}</div>
+              <button onClick="{{ openNew }}" style="margin-top:20px;display:flex;align-items:center;gap:6px;height:44px;padding:0 16px 0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A"><lucide-i name="plus" size="16"></lucide-i>{{ w.brFirst }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ brFilled }}">
+            <div style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <span style="font-size:14px;line-height:20px;font-weight:600">{{ brCountLabel }}</span>
+              <button onClick="{{ openNew }}" style="display:flex;align-items:center;gap:6px;height:44px;padding:0 12px 0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA"><lucide-i name="plus" size="16" style="color:#5B6B6A"></lucide-i>{{ w.brAdd }}</button>
+            </div>
+            <div style="margin-top:12px;display:grid;grid-template-columns:{{ brCols }};gap:16px">
+              <sc-for list="{{ branches }}" as="b" hint-placeholder-count="2">
+                <div style="position:relative;background:{{ b.bg }};border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px;display:flex;flex-direction:column;gap:6px;min-width:0;transition:background 600ms ease-out,border-color 120ms ease-out" style-hover="border-color:#CBD5D3">
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                    <span style="font-size:15px;line-height:22px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.name }}</span>
+                    <span style="height:20px;padding:0 6px;border-radius:6px;background:#F5F7F8;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:20px;color:#5B6B6A">{{ b.code }}</span>
+                    <span style="flex:1"></span>
+                    <span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:#F0FDF4;color:#15803D;font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="circle-check" size="12"></lucide-i>{{ w.active }}</span>
+                  </div>
+                  <div style="font-size:13px;line-height:18px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.legal }}</div>
+                  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font-size:12px;line-height:16px;color:#5B6B6A">
+                    <span style="display:inline-flex;align-items:center;gap:4px"><lucide-i name="hash" size="12" style="color:#647574"></lucide-i><span style="font-family:'JetBrains Mono',monospace">{{ b.stirView }}</span></span><span style="color:#647574">·</span>
+                    <span style="display:inline-flex;align-items:center;gap:4px"><lucide-i name="map-pin" size="12" style="color:#647574"></lucide-i>{{ b.city }}</span><span style="color:#647574">·</span>
+                    <span style="display:inline-flex;align-items:center;gap:4px"><lucide-i name="landmark" size="12" style="color:#647574"></lucide-i>{{ b.bankCount }}</span>
+                  </div>
+                  <div style="margin-top:8px;padding-top:12px;border-top:1px solid #EEF2F4;display:flex;align-items:center;gap:4px">
+                    <span style="flex:1;font-size:12px;line-height:16px;color:#647574">{{ w.noWh }}</span>
+                    <button onClick="{{ b.edit }}" style="height:28px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#DDF5EE">{{ w.edit }}</button>
+                    <div style="position:relative">
+                      <button onClick="{{ b.toggleMenu }}" aria-label="{{ w.more }}" style="width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="ellipsis" size="16"></lucide-i></button>
+                      <sc-if value="{{ b.menuOpen }}">
+                        <div style="position:absolute;right:0;top:32px;z-index:6;width:180px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px">
+                          <button onClick="{{ b.edit }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;font-size:13px;cursor:pointer;text-align:left" style-hover="background:#F8FAFA"><lucide-i name="pencil" size="16" style="color:#5B6B6A"></lucide-i>{{ w.edit }}</button>
+                          <button onClick="{{ b.askDelete }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:#B91C1C;font-size:13px;cursor:pointer;text-align:left" style-hover="background:#FEF2F2"><lucide-i name="trash-2" size="16"></lucide-i>{{ w.del }}</button>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+              <button onClick="{{ openNew }}" style="min-height:156px;border:1.5px dashed #CBD5D3;border-radius:12px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#5B6B6A;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out,border-color 120ms ease-out,color 120ms ease-out" style-hover="background:#DDF5EE;border-color:#0F766E;color:#0F766E"><lucide-i name="plus" size="20"></lucide-i>{{ w.brAdd }}</button>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ step3Err }}">
+            <div role="alert" style="margin-top:24px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA">
+              <lucide-i name="circle-alert" size="16" style="color:#B91C1C"></lucide-i>
+              <span style="flex:1;font-size:13px;line-height:18px;color:#B91C1C">{{ w.whErr }}</span>
+            </div>
+          </sc-if>
+          <div style="margin-top:24px;font-size:13px;line-height:18px;color:#5B6B6A">{{ whSummary }}</div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:16px">
+            <sc-for list="{{ whGroups }}" as="g" hint-placeholder-count="2">
+              <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+                <div style="min-height:56px;display:flex;align-items:center;gap:8px;padding:8px 12px 8px 20px;border-bottom:1px solid #EEF2F4;flex-wrap:wrap">
+                  <span style="font-size:15px;line-height:22px;font-weight:600">{{ g.name }}</span>
+                  <span style="height:20px;padding:0 6px;border-radius:6px;background:#F5F7F8;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:20px;color:#5B6B6A">{{ g.code }}</span>
+                  <sc-if value="{{ g.noWh }}"><span title="{{ w.whNoneTip }}" aria-label="{{ w.whNoneTip }}" style="display:flex;color:#B45309"><lucide-i name="triangle-alert" size="16"></lucide-i></span></sc-if>
+                  <span style="font-size:13px;color:#647574">{{ g.meta }}</span>
+                  <span style="flex:1"></span>
+                  <sc-if value="{{ g.addPrimary }}"><button onClick="{{ g.add }}" style="display:flex;align-items:center;gap:6px;height:44px;padding:0 12px 0 10px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A"><lucide-i name="plus" size="16"></lucide-i>{{ w.whAdd }}</button></sc-if>
+                  <sc-if value="{{ g.addTertiary }}"><button onClick="{{ g.add }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#DDF5EE"><lucide-i name="plus" size="16"></lucide-i>{{ w.whAdd }}</button></sc-if>
+                </div>
+                <sc-if value="{{ g.noWh }}">
+                  <div style="height:72px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#647574;flex-wrap:wrap">{{ w.whNone }}<button onClick="{{ g.add }}" style="display:flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer"><lucide-i name="plus" size="14"></lucide-i>{{ w.whAdd }}</button></div>
+                </sc-if>
+                <sc-for list="{{ g.rows }}" as="r">
+                  <div role="button" tabindex="0" onClick="{{ r.open }}" onKeyDown="{{ r.key }}" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;min-height:64px;padding:12px 12px 12px 20px;border-top:{{ r.sep }};background:{{ r.bg }};cursor:pointer;border-radius:{{ r.radius }};transition:background 600ms ease-out" style-hover="background:#F8FAFA">
+                    <span style="width:36px;height:36px;flex:none;border-radius:8px;background:{{ r.iconBg }};color:{{ r.iconFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ r.icon }}" size="18"></lucide-i></span>
+                    <span style="flex:1 1 160px;min-width:0;display:flex;flex-direction:column">
+                      <span style="font-size:14px;line-height:20px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+                      <span style="font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.addr }}</span>
+                    </span>
+                    <span style="display:flex;flex-wrap:wrap;gap:4px;flex:{{ chipsFlex }};order:{{ chipsOrder }}">
+                      <sc-for list="{{ r.chips }}" as="c"><span style="height:24px;padding:0 6px;border-radius:6px;background:{{ c.bg }};color:{{ c.fg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ c.icon }}" size="12"></lucide-i>{{ c.name }}</span></sc-for>
+                      <sc-if value="{{ r.hasMore }}"><span style="height:24px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:12px;line-height:24px;font-weight:500">{{ r.more }}</span></sc-if>
+                    </span>
+                    <span style="display:flex;align-items:center;gap:6px;flex:none">
+                      <span style="font-size:12px;color:#647574;white-space:nowrap">{{ w.keeperNone }}</span>
+                      <sc-if value="{{ r.controlled }}"><span title="{{ w.ctrlTip }}" aria-label="{{ w.ctrlTip }}" style="display:flex;color:#B91C1C"><lucide-i name="lock" size="14"></lucide-i></span></sc-if>
+                      <button onClick="{{ r.edit }}" style="height:28px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#DDF5EE">{{ w.edit }}</button>
+                      <span style="position:relative;display:flex">
+                        <button onClick="{{ r.toggleMenu }}" aria-label="{{ w.more }}" style="width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EEF2F4;color:#172B2A"><lucide-i name="ellipsis" size="16"></lucide-i></button>
+                        <sc-if value="{{ r.menuOpen }}">
+                          <div style="position:absolute;right:0;top:32px;z-index:6;width:180px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px">
+                            <button onClick="{{ r.edit }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;font-size:13px;cursor:pointer;text-align:left" style-hover="background:#F8FAFA"><lucide-i name="pencil" size="16" style="color:#5B6B6A"></lucide-i>{{ w.edit }}</button>
+                            <button onClick="{{ r.del }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:#B91C1C;font-size:13px;cursor:pointer;text-align:left" style-hover="background:#FEF2F2"><lucide-i name="trash-2" size="16"></lucide-i>{{ w.del }}</button>
+                          </div>
+                        </sc-if>
+                      </span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isPlaceholder }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:24px;min-height:320px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center">
+            <lucide-i name="{{ phIcon }}" size="40" style="color:#647574"></lucide-i>
+            <div style="margin-top:8px;font-size:14px;font-weight:500">{{ title }}</div>
+            <div style="font-size:13px;line-height:18px;color:#5B6B6A">{{ w.phSub }}</div>
+          </div>
+        </sc-if>
+      </div>
+
+      <aside style="position:{{ helpPos }};top:0;display:flex;flex-direction:column;gap:16px;min-width:0">
+        <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:13px;line-height:18px;font-weight:600">{{ w.whatT }}</span>
+            <div style="display:flex;flex-direction:column">
+              <div style="align-self:flex-start;height:32px;padding:0 12px;border-radius:8px;background:#123C3A;color:#FFFFFF;font-size:13px;font-weight:600;display:flex;align-items:center;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ companyName }}</div>
+              <div style="margin-left:16px;border-left:1px solid #CBD5D3;padding-top:8px;display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ diagram }}" as="d">
+                  <div style="display:flex;align-items:center">
+                    <span style="width:12px;height:1px;flex:none;background:#CBD5D3"></span>
+                    <sc-if value="{{ d.real }}"><div style="flex:1;min-width:0;height:30px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:12px"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5B6B6A">{{ d.code }}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.name }}</span></div></sc-if>
+                    <sc-if value="{{ d.ghost }}"><div style="flex:1;height:30px;border:1px dashed #CBD5D3;border-radius:8px;background:#F8FAFA"></div></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;padding-top:4px">
+              <sc-for list="{{ w.whatList }}" as="x"><div style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;color:#5B6B6A"><lucide-i name="check" size="14" style="color:#0F766E"></lucide-i>{{ x }}</div></sc-for>
+            </div>
+          </div>
+          <div style="background:#DDF5EE;border:1px solid #DDF5EE;border-radius:12px;padding:16px;display:flex;gap:10px">
+            <lucide-i name="lightbulb" size="16" style="color:#0F766E;margin-top:2px"></lucide-i>
+            <span style="font-size:13px;line-height:19px;color:#172B2A;text-wrap:pretty">{{ w.tip2 }}</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:13px;line-height:18px;font-weight:600">{{ w.zWhat }}</span>
+            <div style="height:220px;border:1px solid #EEF2F4;border-radius:10px;background:#FFFFFF;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:12px">
+              <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+                <span style="height:24px;padding:0 6px;border-radius:6px;background:{{ zd.recv.bg }};color:{{ zd.recv.fg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ zd.recv.icon }}" size="12"></lucide-i>{{ zd.recv.name }}</span><lucide-i name="arrow-right" size="14" style="color:#647574"></lucide-i><span style="height:24px;padding:0 6px;border-radius:6px;background:{{ zd.store.bg }};color:{{ zd.store.fg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ zd.store.icon }}" size="12"></lucide-i>{{ zd.store.name }}</span><lucide-i name="arrow-right" size="14" style="color:#647574"></lucide-i><span style="height:24px;padding:0 6px;border-radius:6px;background:{{ zd.ship.bg }};color:{{ zd.ship.fg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ zd.ship.icon }}" size="12"></lucide-i>{{ zd.ship.name }}</span>
+              </div>
+              <div style="display:flex;justify-content:center">
+                <div style="display:flex;flex-direction:column;align-items:center">
+                  <span style="width:1px;height:16px;background:#CBD5D3"></span>
+                  <div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid #CBD5D3"><span style="height:24px;padding:0 6px;border-radius:6px;background:{{ zd.cold.bg }};color:{{ zd.cold.fg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ zd.cold.icon }}" size="12"></lucide-i>{{ zd.cold.name }}</span><span style="height:24px;padding:0 6px;border-radius:6px;background:{{ zd.quar.bg }};color:{{ zd.quar.fg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ zd.quar.icon }}" size="12"></lucide-i>{{ zd.quar.name }}</span></div>
+                </div>
+              </div>
+            </div>
+            <span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ w.zNote }}</span>
+          </div>
+          <div style="background:#DDF5EE;border:1px solid #DDF5EE;border-radius:12px;padding:16px;display:flex;gap:10px">
+            <lucide-i name="lightbulb" size="16" style="color:#0F766E;margin-top:2px"></lucide-i>
+            <span style="font-size:13px;line-height:19px;color:#172B2A;text-wrap:pretty">{{ w.tip3 }}</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ notStep2 }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px;display:flex;flex-direction:column;gap:12px">
+          <span style="font-size:13px;line-height:18px;font-weight:600">{{ w.prevT }}</span>
+          <div style="width:260px;max-width:100%;height:120px;border-radius:10px;background:#123C3A;padding:12px;display:flex;flex-direction:column;gap:6px;overflow:hidden;align-self:center">
+            <div style="display:flex;align-items:center;gap:8px;height:32px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06)">
+              <sc-if value="{{ logoReady }}"><span style="width:24px;height:24px;flex:none;border-radius:6px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="{{ logoUrl }}" alt="" style="max-width:20px;max-height:20px;display:block"></span></sc-if>
+              <sc-if value="{{ logoNotReady }}" hint-placeholder-val="{{ true }}"><span style="width:24px;height:24px;flex:none;border-radius:6px;background:#0D9488;color:#FFFFFF;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">M</span></sc-if>
+              <span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:{{ prevNameColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ prevName }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;height:20px;padding:0 6px;border-radius:5px;background:rgba(45,212,191,0.10)"><span style="width:10px;height:10px;border-radius:3px;background:#2DD4BF;opacity:0.7"></span><span style="width:72px;height:6px;border-radius:3px;background:rgba(255,255,255,0.55)"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;height:20px;padding:0 6px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(255,255,255,0.18)"></span><span style="width:96px;height:6px;border-radius:3px;background:rgba(255,255,255,0.14)"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;height:20px;padding:0 6px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(255,255,255,0.18)"></span><span style="width:60px;height:6px;border-radius:3px;background:rgba(255,255,255,0.14)"></span></div>
+          </div>
+        </div>
+        <div style="background:#DDF5EE;border:1px solid #DDF5EE;border-radius:12px;padding:16px;display:flex;gap:10px">
+          <lucide-i name="lightbulb" size="16" style="color:#0F766E;margin-top:2px"></lucide-i>
+          <span style="font-size:13px;line-height:19px;color:#172B2A;text-wrap:pretty">{{ w.tip }}</span>
+        </div>
+        </sc-if>
+      </aside>
+    </div>
+  </div>
+
+  <div aria-hidden="true" style="height:52px;flex:none;background:#F5F7F8"></div>
+  <footer style="height:72px;flex:none;background:#FFFFFF;border-top:1px solid #E2E8F0;padding:0 24px">
+    <div style="max-width:1040px;height:100%;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px">
+      <div style="display:flex">
+        <sc-if value="{{ canBack }}">
+          <button onClick="{{ back }}" style="display:flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA"><lucide-i name="arrow-left" size="16" style="color:#5B6B6A"></lucide-i>{{ w.back }}</button>
+        </sc-if>
+      </div>
+      <div aria-live="polite" style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap">
+        <sc-if value="{{ saving }}">{{ spinner }}{{ w.saving }}</sc-if>
+        <sc-if value="{{ saved }}" hint-placeholder-val="{{ true }}"><lucide-i name="cloud" size="16" style="color:#0F766E"></lucide-i>{{ w.saved }}</sc-if>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <sc-if value="{{ nextPrimary }}" hint-placeholder-val="{{ true }}"><button onClick="{{ next }}" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A">{{ w.next }}<lucide-i name="arrow-right" size="16"></lucide-i></button></sc-if>
+        <sc-if value="{{ nextSecondary }}"><button onClick="{{ next }}" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out" style-hover="background:#F8FAFA">{{ w.next }}<lucide-i name="arrow-right" size="16" style="color:#5B6B6A"></lucide-i></button></sc-if>
+      </div>
+    </div>
+  </footer>
+  </sc-if>
+
+  <sc-if value="{{ panelOpen }}">
+    <dc-import name="BranchPanel" key="{{ panelKey }}" lang="{{ lang }}" initial="{{ panelInitial }}" existing="{{ existing }}" edit-id="{{ panelEditId }}" show-errors="{{ panelErrors }}" on-save="{{ onPanelSave }}" on-close="{{ closePanel }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ whPanelOpen }}">
+    <dc-import name="WarehousePanel" lang="{{ lang }}" initial="{{ whInitial }}" branches="{{ branchRefs }}" preset-branch-id="{{ whPresetBranch }}" edit-id="{{ whEditId }}" start-tab="{{ whStartTab }}" on-save="{{ onWhSave }}" on-close="{{ closeWh }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ missOpen }}">
+    <div onClick="{{ closeMiss }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="alertdialog" aria-modal="true" onClick="{{ stop }}" style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px">
+        <div style="display:flex;gap:12px">
+          <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#FFFBEB;color:#B45309;display:flex;align-items:center;justify-content:center"><lucide-i name="triangle-alert" size="16"></lucide-i></span>
+          <div style="display:flex;flex-direction:column">
+            <h2 style="margin:4px 0 0;font-size:17px;line-height:24px;font-weight:600">{{ w.missT }}</h2>
+            <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ missText }}</p>
+          </div>
+        </div>
+        <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ missContinue }}" style="height:36px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ w.missGo }}</button>
+          <button onClick="{{ missAdd }}" style="height:36px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ w.whAdd }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ delOpen }}">
+    <div onClick="{{ cancelDel }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="alertdialog" aria-modal="true" onClick="{{ stop }}" style="width:440px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px">
+        <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ delTitle }}</h2>
+        <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#5B6B6A">{{ delText }}</p>
+        <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:8px">
+          <button onClick="{{ cancelDel }}" style="height:36px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ w.cancel }}</button>
+          <button onClick="{{ confirmDel }}" style="height:36px;padding:0 14px;border:0;border-radius:8px;background:#B91C1C;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#B91C1C">{{ w.del }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ toastOpen }}">
+    <div style="position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:180;display:flex;align-items:center;gap:10px;height:44px;padding:0 16px 0 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);font-size:13px;white-space:nowrap">
+      <span style="width:20px;height:20px;border-radius:50%;background:#F0FDF4;color:#15803D;display:flex;align-items:center;justify-content:center"><lucide-i name="check" size="12"></lucide-i></span>{{ toastText }}
+    </div>
+  </sc-if>
+  <sc-if value="{{ menuScrim }}"><div onClick="{{ closeMenu }}" style="position:fixed;inset:0;z-index:5"></div></sc-if>
+  <sc-if value="{{ modalOpen }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column">
+        <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;text-wrap:pretty">{{ w.mTitle }}</h2>
+        <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ w.mText }}</p>
+        <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:8px">
+          <button ref="{{ stayRef }}" onClick="{{ closeModal }}" style="height:36px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA">{{ w.stay }}</button>
+          <button onClick="{{ exit }}" style="height:36px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A">{{ w.exit }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const KEY = 'medix-wizard-v1';
+const W = {
+  uz: { later: 'Keyinroq davom ettirish', stepOf: n => `${n}-qadam · 6 tadan`, steps: ['Kompaniya', 'Filiallar', 'Omborlar va zonalar', 'Rollar va ruxsatlar', 'Xodimlar', 'Yakun'],
+    t1: "Kompaniya ma'lumotlari", d1: "Kompaniyangiz nomi tizim sarlavhasida, hisobotlarda va chop etiladigan hujjatlarda ko'rinadi. Bularni keyinroq ham o'zgartirish mumkin.",
+    name: 'Kompaniya nomi', namePh: 'masalan, Medix Group', nameHelp: "Bu guruhning umumiy nomi. Filiallarning yuridik nomlari keyingi qadamda kiritiladi.",
+    logo: 'Logotip', drop1: 'Faylni shu yerga tashlang yoki ', drop2: 'tanlang', dropHelp: 'PNG yoki SVG, 2 MB gacha. Kvadrat shakl tavsiya etiladi.', uploading: 'Yuklanmoqda…',
+    replace: 'Almashtirish', remove: "O'chirish", tooBig: 'Fayl hajmi 2 MB dan oshmasligi kerak.', badType: 'Faqat PNG yoki SVG fayl yuklash mumkin.',
+    lang: 'Tizimning asosiy tili', langHelp: "Har bir xodim o'z tilini keyin profilida alohida tanlashi mumkin.", cur: 'Valyuta', curVal: "So'm (UZS)", curHelp: "Barcha hisob-kitoblar so'mda, tiyinlari bilan yuritiladi.",
+    prevT: "Sidebar'da shunday ko'rinadi", prevPh: 'Kompaniya nomi', tip: "Sozlashni bir o'tirishda tugatish shart emas. Hammasi avtomatik saqlanadi — keyingi kirishda shu joydan davom etasiz.",
+    back: 'Orqaga', next: 'Keyingi qadam', saved: 'Avtomatik saqlandi · hozirgina', saving: 'Saqlanmoqda…', errName: 'Kompaniya nomini kiriting', errBlock: "Davom etish uchun 1 ta maydonni to'ldiring", goField: "Maydonga o'tish",
+    mTitle: 'Sozlashni keyinroq davom ettirasizmi?', mText: "Kiritilgan ma'lumotlar saqlangan. Keyingi kirishda shu qadamdan boshlaysiz.", stay: 'Qolish', exit: 'Chiqish', phSub: 'Bu qadam keyingi promptda quriladi' },
+  cy: { later: 'Кейинроқ давом эттириш', stepOf: n => `${n}-қадам · 6 тадан`, steps: ['Компания', 'Филиаллар', 'Омборлар ва зоналар', 'Роллар', 'Ходимлар', 'Yakun'],
+    t1: 'Компания маълумотлари', d1: 'Компаниянгиз номи тизим сарлавҳасида, ҳисоботларда ва чоп этиладиган ҳужжатларда кўринади. Буларни кейинроқ ҳам ўзгартириш мумкин.',
+    name: 'Компания номи', namePh: 'масалан, Medix Group', nameHelp: 'Бу гуруҳнинг умумий номи. Филиалларнинг юридик номлари кейинги қадамда киритилади.',
+    logo: 'Логотип', drop1: 'Файлни шу ерга ташланг ёки ', drop2: 'танланг', dropHelp: 'PNG ёки SVG, 2 МБ гача. Квадрат шакл тавсия этилади.', uploading: 'Юкланмоқда…',
+    replace: 'Алмаштириш', remove: 'Ўчириш', tooBig: 'Файл ҳажми 2 МБ дан ошмаслиги керак.', badType: 'Фақат PNG ёки SVG файл юклаш мумкин.',
+    lang: 'Тизимнинг асосий тили', langHelp: 'Ҳар бир ходим ўз тилини кейин профилида алоҳида танлаши мумкин.', cur: 'Валюта', curVal: 'Сўм (UZS)', curHelp: 'Барча ҳисоб-китоблар сўмда, тийинлари билан юритилади.',
+    prevT: 'Сайдбарда шундай кўринади', prevPh: 'Компания номи', tip: 'Созлашни бир ўтиришда тугатиш шарт эмас. Ҳаммаси автоматик сақланади — кейинги киришда шу жойдан давом этасиз.',
+    back: 'Орқага', next: 'Кейинги қадам', saved: 'Автоматик сақланди · ҳозиргина', saving: 'Сақланмоқда…', errName: 'Компания номини киритинг', errBlock: 'Давом этиш учун 1 та майдонни тўлдиринг', goField: 'Майдонга ўтиш',
+    mTitle: 'Созлашни кейинроқ давом эттирасизми?', mText: 'Киритилган маълумотлар сақланган. Кейинги киришда шу қадамдан бошлайсиз.', stay: 'Қолиш', exit: 'Чиқиш', phSub: 'Бу қадам кейинги промптда қурилади' },
+  ru: { later: 'Продолжить позже', stepOf: n => `Шаг ${n} из 6`, steps: ['Компания', 'Филиалы', 'Склады и зоны', 'Rollar va ruxsatlar', 'Сотрудники', 'Yakun'],
+    t1: 'Данные компании', d1: 'Название компании отображается в заголовке системы, в отчётах и печатных документах. Всё это можно изменить позже.',
+    name: 'Название компании', namePh: 'например, Medix Group', nameHelp: 'Общее название группы. Юридические названия филиалов вводятся на следующем шаге.',
+    logo: 'Логотип', drop1: 'Перетащите файл сюда или ', drop2: 'выберите', dropHelp: 'PNG или SVG, до 2 МБ. Рекомендуется квадратная форма.', uploading: 'Загрузка…',
+    replace: 'Заменить', remove: 'Удалить', tooBig: 'Размер файла не должен превышать 2 МБ.', badType: 'Можно загрузить только PNG или SVG.',
+    lang: 'Основной язык системы', langHelp: 'Каждый сотрудник позже может выбрать свой язык в профиле.', cur: 'Валюта', curVal: 'Сум (UZS)', curHelp: 'Все расчёты ведутся в сумах, с точностью до тийина.',
+    prevT: 'Так это выглядит в боковом меню', prevPh: 'Название компании', tip: 'Не обязательно завершать настройку за один раз. Всё сохраняется автоматически — при следующем входе продолжите с этого места.',
+    back: 'Назад', next: 'Следующий шаг', saved: 'Сохранено автоматически · только что', saving: 'Сохранение…', errName: 'Введите название компании', errBlock: 'Чтобы продолжить, заполните 1 поле', goField: 'Перейти к полю',
+    mTitle: 'Продолжить настройку позже?', mText: 'Введённые данные сохранены. При следующем входе вы начнёте с этого шага.', stay: 'Остаться', exit: 'Выйти', phSub: 'Этот шаг будет построен в следующем промпте' }
+};
+const W2 = {
+  uz: { t2: 'Filiallar', d2: "Har bir filial — o'z savdosi, omborlari va hisobi bo'lgan alohida yuridik shaxs. Kamida bitta filial qo'shing; qolganlarini keyin ham qo'shish mumkin.",
+    brErr: "Davom etish uchun kamida bitta filial qo'shing", brAdd: "Filial qo'shish", brEmptyT: "Hali filial qo'shilmagan", brEmptyD: "Filial qo'shilgandan keyin unga omborlar va xodimlar biriktiriladi.", brFirst: "Birinchi filialni qo'shish",
+    brCount: n => `${n} ta filial`, active: 'Faol', noWh: "Omborlar: hali yo'q", edit: 'Tahrirlash', more: 'Boshqa amallar', del: "O'chirish", cancel: 'Bekor qilish',
+    delT: n => `«${n}» o'chirilsinmi?`, delText: "Filial hali ishlatilmagan, uni o'chirish mumkin.", banks: n => `${n} ta hisob`,
+    whatT: 'Filial nima?', whatList: ["O'z STIR raqami", "O'z omborlari va kassasi", "O'z hisobotlari"], tip2: 'Qisqa belgi hujjat raqamlarida ishlatiladi. Masalan, Toshkent filialining kirim hujjati: TSH-KR-000123.',
+    added: n => `${n} qo'shildi`, updated: n => `${n} saqlandi`, deleted: n => `${n} o'chirildi`, ph3: "Omborlar va zonalar — keyingi promptda" },
+  cy: { t2: 'Филиаллар', d2: 'Ҳар бир филиал — ўз савдоси, омборлари ва ҳисоби бўлган алоҳида юридик шахс. Камида битта филиал қўшинг; қолганларини кейин ҳам қўшиш мумкин.',
+    brErr: 'Давом этиш учун камида битта филиал қўшинг', brAdd: 'Филиал қўшиш', brEmptyT: 'Ҳали филиал қўшилмаган', brEmptyD: 'Филиал қўшилгандан кейин унга омборлар ва ходимлар бириктирилади.', brFirst: 'Биринчи филиални қўшиш',
+    brCount: n => `${n} та филиал`, active: 'Фаол', noWh: 'Омборлар: ҳали йўқ', edit: 'Таҳрирлаш', more: 'Бошқа амаллар', del: 'Ўчириш', cancel: 'Бекор қилиш',
+    delT: n => `«${n}» ўчирилсинми?`, delText: 'Филиал ҳали ишлатилмаган, уни ўчириш мумкин.', banks: n => `${n} та ҳисоб`,
+    whatT: 'Филиал нима?', whatList: ['Ўз СТИР рақами', 'Ўз омборлари ва кассаси', 'Ўз ҳисоботлари'], tip2: 'Қисқа белги ҳужжат рақамларида ишлатилади. Масалан, Тошкент филиалининг кирим ҳужжати: TSH-KR-000123.',
+    added: n => `${n} қўшилди`, updated: n => `${n} сақланди`, deleted: n => `${n} ўчирилди`, ph3: 'Омборлар ва зоналар — кейинги промптда' },
+  ru: { t2: 'Филиалы', d2: 'Каждый филиал — отдельное юридическое лицо со своими продажами, складами и учётом. Добавьте хотя бы один филиал; остальные можно добавить позже.',
+    brErr: 'Чтобы продолжить, добавьте хотя бы один филиал', brAdd: 'Добавить филиал', brEmptyT: 'Филиалов пока нет', brEmptyD: 'После добавления филиала к нему привязываются склады и сотрудники.', brFirst: 'Добавить первый филиал',
+    brCount: n => `Филиалов: ${n}`, active: 'Активен', noWh: 'Склады: пока нет', edit: 'Изменить', more: 'Другие действия', del: 'Удалить', cancel: 'Отмена',
+    delT: n => `Удалить «${n}»?`, delText: 'Филиал ещё не использовался, его можно удалить.', banks: n => `Счетов: ${n}`,
+    whatT: 'Что такое филиал?', whatList: ['Собственный ИНН', 'Свои склады и касса', 'Своя отчётность'], tip2: 'Краткий код используется в номерах документов. Например, приходный документ Ташкентского филиала: TSH-KR-000123.',
+    added: n => `${n}: добавлен`, updated: n => `${n}: сохранён`, deleted: n => `${n}: удалён`, ph3: 'Склады и зоны — в следующем промпте' }
+};
+['uz', 'cy', 'ru'].forEach(k => Object.assign(W[k], W2[k]));
+const MOCK = [
+  { id: 'b1', name: 'Toshkent filiali', code: 'TSH', legal: '"Medix Toshkent" MChJ', stir: '305482117', vat: true, vatNo: '326030012345', region: 'Toshkent shahri', address: "Chilonzor tumani, Bunyodkor ko'chasi, 12-uy", same: true, actual: '', phone: '712005040', banks: [{ bank: 'Kapitalbank', acc: '20208000400123456001', main: true }, { bank: 'Hamkorbank', acc: '20208000900765432002', main: false }], director: 'Karimov Akmal Rustamovich', accountant: 'Yo\'ldosheva Gulnora Botirovna' },
+  { id: 'b2', name: 'Samarqand filiali', code: 'SMQ', legal: '"Medix Samarqand" MChJ', stir: '306117248', vat: true, vatNo: '326030022871', region: 'Samarqand viloyati', address: "Samarqand sh., Amir Temur ko'chasi, 45-uy", same: true, actual: '', phone: '662331820', banks: [{ bank: 'Ipoteka bank', acc: '20208000300456789011', main: true }], director: 'Usmonov Farrux Ilhomovich', accountant: 'Rahimova Malika Sobirovna' },
+  { id: 'b3', name: 'Buxoro filiali', code: 'BXR', legal: '"Medix Buxoro" MChJ', stir: '307905361', vat: false, vatNo: '', region: 'Buxoro viloyati', address: "Buxoro sh., Piridastgir ko'chasi, 7-uy", same: true, actual: '', phone: '652214455', banks: [{ bank: 'Asakabank', acc: '20208000200987654021', main: true }], director: 'Jo\'rayev Sanjar Akramovich', accountant: 'Qodirova Dildora Anvarovna' },
+  { id: 'b4', name: "Farg'ona filiali", code: 'FRG', legal: '"Medix Farg\'ona" MChJ', stir: '308224590', vat: true, vatNo: '326030034409', region: "Farg'ona viloyati", address: "Farg'ona sh., Al-Farg'oniy ko'chasi, 21-uy", same: true, actual: '', phone: '732447090', banks: [{ bank: 'Agrobank', acc: '20208000600112233031', main: true }, { bank: "O'zmilliybank", acc: '20208000700445566032', main: false }], director: 'Nazarov Otabek Yusufovich', accountant: 'Mirzayeva Feruza Toxirovna' }
+];
+const W3 = {
+  uz: { t3: 'Omborlar va zonalar', d3: "Har bir filialga uning omborlarini qo'shing. Har bir omborda kamida bitta zona bo'ladi — tizim tovarning aynan qayerda turganini shu orqali biladi.",
+    sum: (w, z, b) => `${w} ta ombor · ${z} ta zona · ${b} ta filialda`, meta: (w, z) => `${w} ta ombor · ${z} ta zona`, whAdd: "Ombor qo'shish", whNone: "Bu filialda hali ombor yo'q", whNoneTip: "Ombor qo'shilmagan",
+    keeperNone: 'Belgilanmagan', ctrlTip: 'Nazoratdagi mahsulotlar saqlanadi', whErr: "Davom etish uchun kamida bitta ombor qo'shing.",
+    missT: "Ba'zi filiallarda ombor yo'q", miss: (n, c) => `${n} ${c > 1 ? 'filiallarida' : 'filialida'} hali ombor yo'q. ${c > 1 ? 'Ular' : 'U'} omborsiz savdo qila olmaydi.`, and: ' va ', missGo: 'Baribir davom etish',
+    zWhat: 'Zona nima?', zNote: 'Karantin va qabul zonasidagi tovar sotuvga chiqmaydi — u avval tekshiriladi.', tip3: "Zonalarni noldan o'ylab topish shart emas: «Tayyor to'plam» bir bosishda standart zonalarni qo'shadi.",
+    whAdded: (n, z) => `${n} qo'shildi · ${z} ta zona`, whDelT: n => `«${n}» o'chirilsinmi?`, whDelText: "Ombor hali ishlatilmagan, uni o'chirish mumkin.", ph4: 'Rollar — keyingi promptda',
+    zt: { recv: 'Qabul', store: 'Saqlash', cold: 'Sovuq', quar: 'Karantin', ship: "Jo'natish" } },
+  cy: { t3: 'Омборлар ва зоналар', d3: 'Ҳар бир филиалга унинг омборларини қўшинг. Ҳар бир омборда камида битта зона бўлади — тизим товарнинг айнан қаерда турганини шу орқали билади.',
+    sum: (w, z, b) => `${w} та омбор · ${z} та зона · ${b} та филиалда`, meta: (w, z) => `${w} та омбор · ${z} та зона`, whAdd: 'Омбор қўшиш', whNone: 'Бу филиалда ҳали омбор йўқ', whNoneTip: 'Омбор қўшилмаган',
+    keeperNone: 'Белгиланмаган', ctrlTip: 'Назоратдаги маҳсулотлар сақланади', whErr: 'Давом этиш учун камида битта омбор қўшинг.',
+    missT: 'Баъзи филиалларда омбор йўқ', miss: (n, c) => `${n} ${c > 1 ? 'филиалларида' : 'филиалида'} ҳали омбор йўқ. ${c > 1 ? 'Улар' : 'У'} омборсиз савдо қила олмайди.`, and: ' ва ', missGo: 'Барибир давом этиш',
+    zWhat: 'Зона нима?', zNote: 'Карантин ва қабул зонасидаги товар сотувга чиқмайди — у аввал текширилади.', tip3: 'Зоналарни нолдан ўйлаб топиш шарт эмас: «Тайёр тўплам» бир босишда стандарт зоналарни қўшади.',
+    whAdded: (n, z) => `${n} қўшилди · ${z} та зона`, whDelT: n => `«${n}» ўчирилсинми?`, whDelText: 'Омбор ҳали ишлатилмаган, уни ўчириш мумкин.', ph4: 'Роллар — кейинги промптда',
+    zt: { recv: 'Қабул', store: 'Сақлаш', cold: 'Совуқ', quar: 'Карантин', ship: 'Жўнатиш' } },
+  ru: { t3: 'Склады и зоны', d3: 'Добавьте каждому филиалу его склады. В каждом складе есть хотя бы одна зона — так система знает, где именно лежит товар.',
+    sum: (w, z, b) => `Складов: ${w} · зон: ${z} · филиалов: ${b}`, meta: (w, z) => `Складов: ${w} · зон: ${z}`, whAdd: 'Добавить склад', whNone: 'В этом филиале пока нет складов', whNoneTip: 'Склад не добавлен',
+    keeperNone: 'Не назначен', ctrlTip: 'Хранятся подконтрольные препараты', whErr: 'Чтобы продолжить, добавьте хотя бы один склад.',
+    missT: 'В некоторых филиалах нет складов', miss: (n, c) => `${c > 1 ? 'В филиалах' : 'В филиале'} ${n} пока нет складов. Без склада ${c > 1 ? 'они не смогут' : 'он не сможет'} продавать.`, and: ' и ', missGo: 'Всё равно продолжить',
+    zWhat: 'Что такое зона?', zNote: 'Товар из зон карантина и приёмки не поступает в продажу — сначала его проверяют.', tip3: 'Не нужно придумывать зоны с нуля: «Шаблон» добавляет стандартные зоны одним нажатием.',
+    whAdded: (n, z) => `${n}: добавлен · зон: ${z}`, whDelT: n => `Удалить «${n}»?`, whDelText: 'Склад ещё не использовался, его можно удалить.', ph4: 'Роли — в следующем промпте',
+    zt: { recv: 'Приёмка', store: 'Хранение', cold: 'Холод', quar: 'Карантин', ship: 'Отгрузка' } }
+};
+['uz', 'cy', 'ru'].forEach(k => Object.assign(W[k], W3[k]));
+const ZT = {
+  recv: { icon: 'package-open', fg: '#5B6B6A', bg: '#F5F7F8' }, store: { icon: 'archive', fg: '#5B6B6A', bg: '#F5F7F8' }, cold: { icon: 'snowflake', fg: '#1D4ED8', bg: '#EFF6FF' },
+  quar: { icon: 'shield-alert', fg: '#B45309', bg: '#FFFBEB' }, ctrl: { icon: 'lock', fg: '#B91C1C', bg: '#FEF2F2' }, ship: { icon: 'truck', fg: '#5B6B6A', bg: '#F5F7F8' }
+};
+const STD_Z = () => [['Qabul', 'recv', false], ['Asosiy saqlash', 'store', true], ['Karantin', 'quar', false], ["Jo'natish", 'ship', false]];
+const mkWh = (id, branchId, name, address, cold, ctrl) => {
+  let z = STD_Z();
+  if (cold) z.splice(2, 0, ['Sovuq saqlash', 'cold', true]);
+  if (ctrl) z.splice(cold ? 3 : 2, 0, ['Seyf', 'ctrl', true]);
+  return { id, branchId, name, same: false, address, type: cold ? 'cold' : 'normal', controlled: !!ctrl, zones: z.map(([n, t, o], i) => ({ id: id + '-z' + i, name: n, type: t, open: o })) };
+};
+const MOCK_WH = [
+  mkWh('w1', 'b1', 'Asosiy ombor', "Toshkent, Sergeli tumani, Yangi Sergeli ko'chasi, 7", false, true),
+  mkWh('w2', 'b1', 'Sovuq ombor', "Toshkent, Sergeli tumani, Yangi Sergeli ko'chasi, 7A", true),
+  mkWh('w3', 'b1', 'Chilonzor ombori', "Toshkent, Chilonzor tumani, Qatortol ko'chasi, 28", false),
+  mkWh('w4', 'b2', 'Asosiy ombor', "Samarqand, Spitamen shoh ko'chasi, 112", false),
+  mkWh('w5', 'b2', 'Sovuq ombor', "Samarqand, Spitamen shoh ko'chasi, 112B", true),
+  mkWh('w6', 'b3', 'Asosiy ombor', "Buxoro, Qayum Murtazoyev ko'chasi, 15", false),
+  mkWh('w7', 'b3', "G'ijduvon ombori", "G'ijduvon, Navoiy ko'chasi, 4", false),
+  mkWh('w8', 'b4', 'Asosiy ombor', "Farg'ona, Marg'ilon ko'chasi, 61", false),
+  mkWh('w9', 'b4', "Qo'qon ombori", "Qo'qon, Turkiston ko'chasi, 9", false),
+  mkWh('w10', 'b4', "Marg'ilon ombori", "Marg'ilon, Burhoniddin Marg'inoniy ko'chasi, 33", false)
+];
+const CITY = r => r.replace(/ (viloyati|shahri|Respublikasi)$/, '');
+const LANGS = [['uz', "O'zbekcha (lotin)", 'Tizimga kirish'], ['cy', 'Ўзбекча', 'Тизимга кириш'], ['ru', 'Русский', 'Вход в систему']];
+const PH_ICONS = [null, null, 'warehouse', 'shield-check', 'users-round'];
+const SPIN = React.createElement('span', { style: { width: 12, height: 12, flex: 'none', borderRadius: '50%', border: '2px solid #E2E8F0', borderTopColor: '#0D9488', animation: 'mx-spin 700ms linear infinite', boxSizing: 'border-box' } });
+const fmtSize = b => b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1048576).toFixed(1).replace('.', ',')} MB`;
+
+const RESET_DATA = () => ({ step: 1, done: 3, name: 'Medix Group', logo: null, sysLang: 'uz', branches: JSON.parse(JSON.stringify(MOCK)), warehouses: JSON.parse(JSON.stringify(MOCK_WH)) });
+const loadSaved = () => { try { const v = JSON.parse(localStorage.getItem(KEY)) || {}; return v.reset ? RESET_DATA() : v; } catch (e) { return {}; } };
+const DEMO_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0D9488"/><text x="32" y="43" font-family="Inter,Arial" font-size="32" font-weight="600" fill="#FFFFFF" text-anchor="middle">M</text></svg>');
+
+class Component extends DCLogic {
+  state = Object.assign({ step: 1, done: 0, name: '', logo: null, branches: [], warehouses: [], whPanel: null, whDel: null, whMenu: null, whHl: null, step3Err: false, miss: false, panel: null, del: null, menu: null, hl: null, toast: null, step2Err: false, sysLang: 'uz', tried: false, focus: null, drag: false, up: null, logoErr: '', saving: false, modal: false, narrow: false },
+    loadSaved(), { tried: false, saving: false, modal: false, up: null, logoErr: '', panel: null, del: null, menu: null, hl: null, toast: null, step2Err: false, whPanel: null, whDel: null, whMenu: null, whHl: null, step3Err: false, miss: false });
+  scrollRef = React.createRef(); nameRef = React.createRef(); fileRef = React.createRef(); stayRef = React.createRef();
+
+  componentDidMount() {
+    this.onResize = () => { const n = window.innerWidth <= 1100, c = window.innerWidth <= 1360; if (n !== this.state.narrow || c !== this.state.compact) this.setState({ narrow: n, compact: c }); };
+    this.onResize(); window.addEventListener('resize', this.onResize);
+    this.onKey = e => { if (e.key === 'Escape' && this.state.modal) this.setState({ modal: false }); };
+    window.addEventListener('keydown', this.onKey);
+    if (this.state.step === 1) setTimeout(() => this.nameRef.current && this.nameRef.current.focus(), 50);
+    if (this.props.demo) this.applyDemo(this.props.demo.k);
+  }
+  componentWillUnmount() { clearTimeout(this._ht); clearTimeout(this._tt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); clearTimeout(this._st); clearInterval(this._ui); }
+  componentDidUpdate(pp, ps) {
+    ps = this._ps || {}; this._ps = this.state;
+    if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n)) this.applyDemo(this.props.demo.k);
+    if (this.state.modal && !ps.modal) setTimeout(() => this.stayRef.current && this.stayRef.current.focus(), 0);
+  }
+  persist(patch) {
+    this.setState(patch, () => {
+      const { step, done, name, logo, sysLang, branches, warehouses } = this.state;
+      try { localStorage.setItem(KEY, JSON.stringify({ step, done, name, logo, sysLang, branches, warehouses })); } catch (e) {}
+    });
+  }
+  touch(patch) {
+    this.persist({ ...patch, saving: true });
+    clearTimeout(this._st); this._st = setTimeout(() => this.setState({ saving: false }), 1000);
+  }
+  handleFile(f) {
+    if (!f) return;
+    const okType = /\.(png|svg)$/i.test(f.name) || /image\/(png|svg\+xml)/.test(f.type);
+    if (!okType) return this.setState({ logoErr: 'badType', drag: false });
+    if (f.size > 2 * 1024 * 1024) return this.setState({ logoErr: 'tooBig', drag: false });
+    this.setState({ logoErr: '', drag: false, up: { name: f.name, pct: 0 } });
+    const rd = new FileReader();
+    rd.onload = () => { this._url = rd.result; };
+    rd.readAsDataURL(f);
+    clearInterval(this._ui);
+    this._ui = setInterval(() => {
+      const u = this.state.up; if (!u) return clearInterval(this._ui);
+      const pct = Math.min(100, u.pct + 8 + Math.round(Math.random() * 10));
+      if (pct >= 100 && this._url) { clearInterval(this._ui); this.touch({ up: null, logo: { name: f.name, size: f.size, url: this._url } }); this._url = null; }
+      else this.setState({ up: { ...u, pct: Math.min(pct, 99) } });
+    }, 90);
+  }
+  scrollToName() {
+    const box = this.scrollRef.current, el = this.nameRef.current;
+    if (box && el) box.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 120), behavior: 'smooth' });
+    el && el.focus({ preventScroll: true });
+  }
+  go(step) { this.persist({ step, tried: false }); if (this.scrollRef.current) this.scrollRef.current.scrollTop = 0; if (step === 1) setTimeout(() => this.nameRef.current && this.nameRef.current.focus(), 0); }
+  applyDemo(k) {
+    if (k === 'start') { this.go(1); return; }
+    if (k === 'reset') { this.persist({ ...RESET_DATA(), panel: null, del: null, menu: null, whPanel: null, whDel: null, whMenu: null, up: null, modal: false, miss: false, tried: false, step2Err: false, step3Err: false }); return; }
+    if (k === 'co-up') {
+      clearInterval(this._ui);
+      this.persist({ step: 1, done: 0, name: 'Medix Group', logo: null, tried: false, panel: null, whPanel: null, modal: false });
+      this._url = DEMO_LOGO;
+      this.setState({ logoErr: '', up: { name: 'medix-logo.svg', pct: 6 } });
+      this._ui = setInterval(() => {
+        const u = this.state.up; if (!u) return clearInterval(this._ui);
+        const pct = u.pct + 3;
+        if (pct >= 100) { clearInterval(this._ui); this.touch({ up: null, logo: { name: 'medix-logo.svg', size: 18432, url: DEMO_LOGO } }); this._url = null; }
+        else this.setState({ up: { ...u, pct } });
+      }, 120);
+      return;
+    }
+    if (k && /^(rl|xd|yk)/.test(k)) { const st = k.startsWith('rl') ? 4 : k.startsWith('xd') ? 5 : 6; this.persist({ step: st, done: Math.max(this.state.done || 0, st - 1, 3), name: this.state.name || 'Medix Group', name: 'Medix Group', branches: JSON.parse(JSON.stringify(MOCK)), warehouses: k === 'ykBlock' ? JSON.parse(JSON.stringify(MOCK_WH)).filter(x => x.branchId !== 'b3') : JSON.parse(JSON.stringify(MOCK_WH)), panel: null, whPanel: null, modal: false, childDemo: { k, n: Date.now() } }); return; }
+    if (k && k.startsWith('wh')) {
+      const b3 = { step: 3, done: 2, name: this.state.name || 'Medix Group', branches: JSON.parse(JSON.stringify(MOCK)), panel: null, del: null, menu: null, whPanel: null, whDel: null, whMenu: null, step3Err: false, miss: false, modal: false };
+      const full = JSON.parse(JSON.stringify(MOCK_WH));
+      if (k === 'wh-empty') this.persist({ ...b3, warehouses: [] });
+      if (k === 'wh-full') this.persist({ ...b3, warehouses: full });
+      if (k === 'wh-some') this.persist({ ...b3, warehouses: full.filter(w => w.branchId === 'b1' || w.branchId === 'b4') });
+      if (k === 'wh-panel') { this.persist({ ...b3, warehouses: full }); this.setState({ whPanel: { id: 'w1', initial: full[0], tab: 'zones', n: Date.now() } }); }
+      return;
+    }
+    if (!k || !k.startsWith('br')) return;
+    const base = { step: 2, done: 1, name: this.state.name || 'Medix Group', panel: null, del: null, menu: null, step2Err: false, modal: false };
+    if (k === 'br-empty') this.persist({ ...base, branches: [] });
+    if (k === 'br-4') this.persist({ ...base, branches: JSON.parse(JSON.stringify(MOCK)) });
+    if (k === 'br-err') { this.persist({ ...base, branches: JSON.parse(JSON.stringify(MOCK)) }); this.setState({ panel: { id: null, errors: true, initial: { name: 'Navoiy filiali', code: 'TSH', legal: '', stir: '30744', region: 'Navoiy viloyati', address: "Navoiy sh., Galaba shoh ko'chasi, 3-uy", banks: [{ bank: 'Kapitalbank', acc: '20208000400111222333', main: true }] }, n: Date.now() } }); }
+  }
+  flash(text) { clearTimeout(this._tt); this.setState({ toast: text }); this._tt = setTimeout(() => this.setState({ toast: null }), 2600); }
+  saveBranch(data) {
+    const w = W[this.props.lang] || W.uz, p = this.state.panel;
+    if (p && p.id) { this.touch({ branches: this.state.branches.map(b => b.id === p.id ? { ...data, id: p.id } : b), panel: null }); this.flash(w.updated(data.name)); return; }
+    const id = 'b' + Date.now();
+    this.touch({ branches: [...this.state.branches, { ...data, id }], panel: null, hl: id, step2Err: false });
+    this.flash(w.added(data.name));
+    clearTimeout(this._ht); this._ht = setTimeout(() => this.setState({ hl: null }), 1500);
+  }
+  saveWh(data) {
+    const w = W[this.props.lang] || W.uz, p = this.state.whPanel;
+    if (p && p.id) { this.touch({ warehouses: this.state.warehouses.map(x => x.id === p.id ? { ...data, id: p.id } : x), whPanel: null }); this.flash(w.updated(data.name)); return; }
+    const id = 'w' + Date.now();
+    this.touch({ warehouses: [...this.state.warehouses, { ...data, id }], whPanel: null, whHl: id, step3Err: false });
+    this.flash(w.whAdded(data.name, data.zones.length));
+    clearTimeout(this._ht); this._ht = setTimeout(() => this.setState({ whHl: null }), 1500);
+  }
+  missing() { return this.state.branches.filter(b => !this.state.warehouses.some(x => x.branchId === b.id)); }
+  advance() { const s = this.state; this.persist({ done: Math.max(s.done, s.step), miss: false }); this.go(s.step + 1); }
+  next() {
+    const s = this.state;
+    if (s.step === 3) {
+      if (!s.warehouses.length) { this.setState({ step3Err: true }); if (this.scrollRef.current) this.scrollRef.current.scrollTop = 0; return; }
+      if (this.missing().length) { this.setState({ miss: true }); return; }
+    }
+    if (s.step === 2 && !s.branches.length) { this.setState({ step2Err: true }); if (this.scrollRef.current) this.scrollRef.current.scrollTop = 0; return; }
+    if (s.step === 1 && !s.name.trim()) { this.setState({ tried: true }); setTimeout(() => this.scrollToName(), 0); return; }
+    if (s.step >= 6) return;
+    this.persist({ done: Math.max(s.done, s.step) });
+    this.go(s.step + 1);
+  }
+
+  whVals(w) {
+    const s = this.state, stop = f => e => { e.stopPropagation(); f(); };
+    const zc = s.warehouses.reduce((a, x) => a + x.zones.length, 0);
+    const none = !s.warehouses.length;
+    const whGroups = s.branches.map((b, bi) => {
+      const list = s.warehouses.filter(x => x.branchId === b.id);
+      const add = () => this.setState({ whPanel: { id: null, initial: null, preset: b.id, tab: 'basic', n: Date.now() }, whMenu: null });
+      return { name: b.name, code: b.code, noWh: !list.length, meta: w.meta(list.length, list.reduce((a, x) => a + x.zones.length, 0)), add,
+        addPrimary: none && bi === 0, addTertiary: !(none && bi === 0),
+        rows: list.map((x, i) => {
+          const open = () => this.setState({ whPanel: { id: x.id, initial: x, tab: 'basic', n: Date.now() }, whMenu: null });
+          return { name: x.name, addr: x.same ? (b.address || '') : x.address, controlled: x.controlled,
+            icon: x.type === 'cold' ? 'snowflake' : 'warehouse', iconBg: x.type === 'cold' ? '#EFF6FF' : '#F5F7F8', iconFg: x.type === 'cold' ? '#1D4ED8' : '#5B6B6A',
+            chips: x.zones.slice(0, 4).map(z => ({ ...ZT[z.type], name: z.name })), hasMore: x.zones.length > 4, more: '+' + (x.zones.length - 4),
+            sep: i ? '1px solid #EEF2F4' : '0', radius: i === list.length - 1 ? '0 0 12px 12px' : '0', bg: s.whHl === x.id ? '#DDF5EE' : '#FFFFFF',
+            open, key: e => { if (e.key === 'Enter') open(); }, edit: stop(open),
+            menuOpen: s.whMenu === x.id, toggleMenu: stop(() => this.setState(st => ({ whMenu: st.whMenu === x.id ? null : x.id }))),
+            del: stop(() => this.setState({ whMenu: null, whDel: x.id })) };
+        }) };
+    });
+    const miss = this.missing(), names = miss.map(b => b.name.replace(/ filiali$/, ''));
+    const joined = names.length > 1 ? names.slice(0, -1).join(', ') + w.and + names[names.length - 1] : names[0] || '';
+    const zd = Object.fromEntries(['recv', 'store', 'ship', 'cold', 'quar'].map(k => [k, { ...ZT[k], name: w.zt[k] }]));
+    const p = s.whPanel;
+    return {
+      whSummary: w.sum(s.warehouses.length, zc, s.branches.length), whGroups, step3Err: s.step3Err && none, zd,
+      chipsFlex: s.narrow ? '1 1 100%' : '0 1 auto', chipsOrder: s.narrow ? 3 : 0,
+      menuScrim: !!s.menu || !!s.whMenu, closeMenu: () => this.setState({ menu: null, whMenu: null }),
+      whPanelOpen: !!p, whInitial: p ? p.initial : null, whPresetBranch: p ? p.preset || '' : '', whEditId: p ? p.id : null, whStartTab: p ? p.tab : 'basic',
+      branchRefs: s.branches.map(b => ({ id: b.id, name: b.name, code: b.code, address: b.address })),
+      onWhSave: d => this.saveWh(d), closeWh: () => this.setState({ whPanel: null }),
+      missOpen: s.miss, missText: w.miss(joined, names.length), closeMiss: () => this.setState({ miss: false }),
+      missContinue: () => this.advance(),
+      missAdd: () => this.setState({ miss: false, whPanel: { id: null, initial: null, preset: miss[0] && miss[0].id, tab: 'basic', n: Date.now() } })
+    };
+  }
+  renderVals() {
+    const s = this.state, w = W[this.props.lang] || W.uz;
+    const nameErr = s.tried && !s.name.trim();
+    const steps = w.steps.map((name, i) => {
+      const n = i + 1, done = n <= s.done && n !== s.step, cur = n === s.step;
+      return { n, name, done, showNum: !done, hasLine: i > 0, locked: !done,
+        lineColor: n <= s.done + 1 && (n - 1) <= s.done ? '#0F766E' : '#E2E8F0',
+        border: done ? '0' : cur ? '2px solid #0D9488' : '1px solid #E2E8F0', bg: done ? '#0F766E' : '#FFFFFF',
+        numColor: cur ? '#0D9488' : '#647574', nameColor: done || cur ? '#172B2A' : '#647574', nameWeight: cur ? 600 : 400,
+        cursor: done ? 'pointer' : 'default', go: () => done && this.go(n) };
+    });
+    return {
+      w, steps, lineW: s.narrow ? 24 : 40, showStepNames: !s.compact, narrow: s.narrow, compact: !!s.compact, curStepName: w.steps[s.step - 1],
+      scrollRef: this.scrollRef, nameRef: this.nameRef, fileRef: this.fileRef, stayRef: this.stayRef,
+      gridCols: s.narrow ? 'minmax(0,1fr)' : 'minmax(0,680px) 320px', helpPos: s.narrow ? 'static' : 'sticky',
+      stepOf: w.stepOf(s.step), title: s.step === 1 ? w.t1 : s.step === 2 ? w.t2 : s.step === 3 ? w.t3 : w.steps[s.step - 1], desc: s.step === 1 ? w.d1 : s.step === 2 ? w.d2 : s.step === 3 ? w.d3 : s.step === 4 ? w.ph4 : w.phSub,
+      isWide: s.step >= 4, isClassic: s.step < 4, isStep4: s.step === 4, isStep5: s.step === 5, isStep6: s.step === 6, dict: this.props.dict || {}, childDemo: s.childDemo || null, userName: this.props.userName || 'Akmal Karimov',
+      wideNext: () => this.advance(), goStep: n => this.go(n), launch: pg => { try { localStorage.setItem(KEY, JSON.stringify({ reset: true })); } catch (e) {} this.props.onLaunch && this.props.onLaunch(pg); },
+      branchesAll: s.branches, warehousesAll: s.warehouses,
+      isStep1: s.step === 1, isStep2: s.step === 2, isStep3: s.step === 3, notStep2: s.step !== 2 && s.step !== 3, isPlaceholder: s.step > 3,
+      step2Err: s.step2Err && !s.branches.length, brEmpty: !s.branches.length, brFilled: s.branches.length > 0, brCountLabel: w.brCount(s.branches.length),
+      brCols: s.narrow ? 'minmax(0,1fr)' : 'repeat(2,minmax(0,1fr))',
+      branches: s.branches.map(b => ({ ...b, bg: s.hl === b.id ? '#DDF5EE' : '#FFFFFF', stirView: b.stir.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3'), city: CITY(b.region || ''), bankCount: w.banks((b.banks || []).length),
+        menuOpen: s.menu === b.id, toggleMenu: () => this.setState(st => ({ menu: st.menu === b.id ? null : b.id })),
+        edit: () => this.setState({ menu: null, panel: { id: b.id, initial: b, errors: false, n: Date.now() } }),
+        askDelete: () => this.setState({ menu: null, del: b.id }) })),
+      menuScrim: !!s.menu, closeMenu: () => this.setState({ menu: null }),
+      openNew: () => this.setState({ panel: { id: null, initial: null, errors: false, n: Date.now() }, menu: null }),
+      panelOpen: !!s.panel, panelKey: s.panel ? s.panel.n : 0, panelInitial: s.panel ? s.panel.initial : null, panelEditId: s.panel ? s.panel.id : null, panelErrors: !!(s.panel && s.panel.errors),
+      existing: s.branches.map(b => ({ id: b.id, name: b.name, code: b.code, stir: b.stir })), lang: this.props.lang || 'uz',
+      onPanelSave: d => this.saveBranch(d), closePanel: () => this.setState({ panel: null }),
+      delOpen: !!s.del || !!s.whDel, delText: s.whDel ? w.whDelText : w.delText,
+      delTitle: s.whDel ? w.whDelT((s.warehouses.find(x => x.id === s.whDel) || {}).name || '') : s.del ? w.delT((s.branches.find(b => b.id === s.del) || {}).name || '') : '',
+      cancelDel: () => this.setState({ del: null, whDel: null }),
+      confirmDel: () => { if (s.whDel) { const x = s.warehouses.find(v => v.id === s.whDel); this.touch({ warehouses: s.warehouses.filter(v => v.id !== s.whDel), whDel: null }); x && this.flash(w.deleted(x.name)); return; } const b = s.branches.find(x => x.id === s.del); this.touch({ branches: s.branches.filter(x => x.id !== s.del), del: null }); b && this.flash(w.deleted(b.name)); },
+      toastOpen: !!s.toast, toastText: s.toast || '',
+      companyName: s.name.trim() || 'Medix Group',
+      diagram: s.branches.length ? s.branches.map(b => ({ real: true, ghost: false, code: b.code, name: b.name })) : [{ real: false, ghost: true }, { real: false, ghost: true }],
+      nextPrimary: !(s.step === 2 && !s.branches.length) && !(s.step === 3 && !s.warehouses.length), nextSecondary: (s.step === 2 && !s.branches.length) || (s.step === 3 && !s.warehouses.length),
+      ...this.whVals(w),
+      phIcon: PH_ICONS[s.step - 1] || 'circle',
+      showErrBlock: nameErr, goField: () => this.scrollToName(),
+      name: s.name, onName: e => this.touch({ name: e.target.value }), focusName: () => this.setState({ focus: 'name' }), blurName: () => this.setState({ focus: null }),
+      nameErr, nameBorder: nameErr ? '#B91C1C' : s.focus === 'name' ? '#0D9488' : '#E2E8F0',
+      nameShadow: s.focus === 'name' ? (nameErr ? '0 0 0 3px rgba(185,28,28,0.12)' : '0 0 0 3px rgba(13,148,136,0.15)') : 'none',
+      logoEmpty: !s.logo && !s.up, logoUploading: !!s.up, logoReady: !!s.logo && !s.up, logoNotReady: !s.logo || !!s.up,
+      upName: s.up ? s.up.name : '', upPct: s.up ? s.up.pct : 0,
+      logoUrl: s.logo ? s.logo.url : '', logoName: s.logo ? s.logo.name : '', logoSize: s.logo ? fmtSize(s.logo.size) : '',
+      hasLogoErr: !!s.logoErr, logoErr: s.logoErr ? w[s.logoErr] : '',
+      dropBorder: s.drag ? '#0D9488' : '#CBD5D3', dropBg: s.drag ? '#DDF5EE' : '#F8FAFA',
+      pickFile: () => { const i = this.fileRef.current; if (i) { i.value = ''; i.click(); } },
+      dropKey: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.fileRef.current && this.fileRef.current.click(); } },
+      onFile: e => this.handleFile(e.target.files && e.target.files[0]),
+      onDragOver: e => { e.preventDefault(); if (!this.state.drag) this.setState({ drag: true }); },
+      onDragLeave: () => this.setState({ drag: false }),
+      onDrop: e => { e.preventDefault(); this.handleFile(e.dataTransfer.files && e.dataTransfer.files[0]); },
+      removeLogo: () => this.touch({ logo: null, logoErr: '' }),
+      langCards: LANGS.map(([k, label, sample]) => ({ label, sample, selected: s.sysLang === k, border: s.sysLang === k ? '#0D9488' : '#E2E8F0', bg: s.sysLang === k ? '#DDF5EE' : '#FFFFFF', pick: () => this.touch({ sysLang: k }) })),
+      prevName: s.name.trim() || w.prevPh, prevNameColor: s.name.trim() ? '#FFFFFF' : '#7FA39E',
+      canBack: s.step > 1, back: () => this.go(s.step - 1), next: () => this.next(),
+      saving: s.saving, saved: !s.saving, spinner: SPIN,
+      modalOpen: s.modal, openModal: () => this.setState({ modal: true }), closeModal: () => this.setState({ modal: false }), stop: e => e.stopPropagation(),
+      exit: () => { this.setState({ modal: false }); this.props.onExit && this.props.onExit(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

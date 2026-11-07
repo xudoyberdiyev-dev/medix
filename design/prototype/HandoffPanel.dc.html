@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="position:fixed;inset:0;z-index:120;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div onClick="{{ close }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+  <aside role="dialog" aria-modal="true" data-screen-label="Mijozga topshirish" style="position:absolute;top:0;right:0;bottom:0;width:{{ width }};max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+    <header style="flex:none;padding:20px 24px 16px;border-bottom:1px solid #E2E8F0;display:flex;align-items:flex-start;gap:12px">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ L.j_handTitle }}</span>
+        <h2 style="margin:0;font-size:18px;line-height:24px;font-weight:600;text-wrap:pretty">{{ custName }}</h2>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#5B6B6A">{{ orderNo }}</span><dc-import name="OrderStatus" status="{{ status }}" dict="{{ L }}" hint-size="110px,22px"></dc-import></div>
+      </div>
+      <button onClick="{{ close }}" aria-label="{{ L.j_close }}" style="width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="x" size="18"></lucide-i></button>
+    </header>
+
+    <sc-if value="{{ isForm }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px">
+        <section style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><h3 style="margin:0;font-size:14px;font-weight:600">{{ L.j_lines }}</h3><span style="font-size:12px;color:#5B6B6A">{{ linesMeta }}</span></div>
+          <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden">
+            <sc-for list="{{ lines }}" as="l" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;min-height:44px;padding:6px 12px;border-bottom:1px solid #EEF2F4">
+                <div style="display:flex;flex-direction:column;min-width:0">
+                  <span style="display:flex;align-items:center;gap:6px;font-size:13px;line-height:18px;font-weight:500;min-width:0"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.name }}</span><sc-for list="{{ l.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;flex:none;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="14"></lucide-i></span></sc-for></span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.batches }}</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:6px;white-space:nowrap;font-size:13px">
+                  <sc-if value="{{ l.short }}"><span style="color:#647574;text-decoration:line-through">{{ l.ordered }}</span></sc-if>
+                  <span title="{{ l.tip }}" style="font-weight:600;color:{{ l.color }}">{{ l.qty }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="display:flex;flex-direction:column;gap:12px">
+          <h3 style="margin:0;font-size:14px;font-weight:600">{{ L.j_rep }}</h3>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 16px">
+            <label style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.j_repName }} <span style="color:#B91C1C">*</span></span>
+              <input value="{{ name }}" onChange="{{ onName }}" placeholder="{{ L.j_repNamePh }}" style="height:34px;padding:0 12px;border:1px solid {{ nameBorder }};border-radius:8px;font:inherit;font-size:14px;color:#172B2A;outline:none;background:#FFFFFF" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+              <sc-if value="{{ nameErr }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ L.j_req }}</span></sc-if>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.j_poa }} <span style="color:#B91C1C">*</span></span>
+              <input value="{{ poa }}" onChange="{{ onPoa }}" placeholder="12/2026" style="height:34px;padding:0 12px;border:1px solid {{ poaBorder }};border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#172B2A;outline:none;background:#FFFFFF" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+              <sc-if value="{{ poaErr }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ L.j_req }}</span></sc-if>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.j_poaDate }}</span>
+              <input value="{{ poaDate }}" onChange="{{ onPoaDate }}" placeholder="dd.mm.yyyy" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;color:#172B2A;outline:none;background:#FFFFFF" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            </label>
+            <label style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.j_phone }}</span>
+              <input value="{{ phone }}" onChange="{{ onPhone }}" placeholder="+998 __ ___ __ __" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;color:#172B2A;outline:none;background:#FFFFFF" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            </label>
+          </div>
+        </section>
+
+
+        <sc-if value="{{ hasCtrl }}">
+          <section style="display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid #FECACA;border-radius:10px;background:#FFFFFF">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#B91C1C"><lucide-i name="shield-alert" size="16"></lucide-i>{{ L.j_ctrlT }}</div>
+            <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.j_ctrlD }}</span>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 16px;font-size:13px">
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5B6B6A">{{ L.j_licNo }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:13px">{{ licNo }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5B6B6A">{{ L.j_licUntil }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:{{ licColor }}">{{ licUntil }}</span></div>
+            </div>
+            <sc-if value="{{ licBad }}"><dc-import name="StatusBanner" tone="danger" text="{{ L.j_licBad }}" hint-size="100%,44px"></dc-import></sc-if>
+            <button role="checkbox" aria-checked="{{ idOk }}" onClick="{{ toggleId }}" style="display:flex;align-items:center;gap:10px;min-height:36px;padding:0;border:0;background:transparent;text-align:left;cursor:pointer;font-size:13px;line-height:18px;color:#172B2A">
+              <span style="width:20px;height:20px;flex:none;border-radius:4px;border:1px solid {{ idCb.border }};background:{{ idCb.bg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ idOk }}"><lucide-i name="check" size="14"></lucide-i></sc-if></span>
+              <span>{{ L.j_idCheck }} <span style="color:#B91C1C">*</span></span>
+            </button>
+          </section>
+        </sc-if>
+
+        <section style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:10px;background:#F8FAFA">
+          <h3 style="margin:0 0 2px;font-size:14px;font-weight:600">{{ L.j_fin }}</h3>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:#5B6B6A">{{ L.j_saleSum }}</span><span style="font-weight:600">{{ saleSum }}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;flex-wrap:wrap"><span style="color:#5B6B6A">{{ L.j_custDebt }}</span><span style="display:flex;align-items:center;gap:6px"><span style="color:#5B6B6A">{{ debtBefore }}</span><lucide-i name="arrow-right" size="14" style="color:#647574"></lucide-i><span style="font-weight:600;color:{{ debtColor }}">{{ debtAfter }}</span></span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:#5B6B6A">{{ L.j_dueDate }}</span><span>{{ due }} <span style="color:#647574">· {{ termText }}</span></span></div>
+          <sc-if value="{{ overLimit }}"><div style="display:flex;gap:8px;margin-top:4px;padding:8px 10px;border:1px solid #FDE68A;border-radius:8px;background:#FFFBEB;font-size:12px;line-height:16px;color:#B45309"><lucide-i name="triangle-alert" size="14" style="flex:none;margin-top:1px"></lucide-i><span style="text-wrap:pretty">{{ overText }}</span></div></sc-if>
+        </section>
+      </div>
+      <footer style="flex:none;padding:12px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap">
+        <sc-if value="{{ showErr }}"><span style="margin-right:auto;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ errText }}</span></sc-if>
+        <sc-if value="{{ noRights }}"><span style="margin-right:auto;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A"><lucide-i name="lock" size="14"></lucide-i>{{ L.j_noRights }}</span></sc-if>
+        <button onClick="{{ close }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.j_cancel }}</button>
+        <sc-if value="{{ canAct }}"><button onClick="{{ submit }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 16px 0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A"><lucide-i name="hand-helping" size="16"></lucide-i>{{ L.j_handBtn }}</button></sc-if>
+      </footer>
+    </sc-if>
+
+    <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:32px 24px;text-align:center">
+        <span style="width:64px;height:64px;border-radius:50%;background:#F0FDF4;color:#15803D;display:flex;align-items:center;justify-content:center"><lucide-i name="circle-check" size="32"></lucide-i></span>
+        <div style="margin-top:8px;font-size:17px;line-height:24px;font-weight:600">{{ L.j_doneT }} · <span style="font-family:'JetBrains Mono',monospace;font-size:16px">{{ saleNo }}</span></div>
+        <div style="font-size:13px;line-height:18px;color:#5B6B6A">{{ doneSub }}</div>
+        <div style="margin-top:12px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:10px;background:#F8FAFA;text-align:left">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#5B6B6A">{{ L.j_saleSum }}</span><span style="font-weight:600">{{ saleSum }}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#5B6B6A">{{ L.j_custDebt }}</span><span style="font-weight:600">{{ debtAfter }}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#5B6B6A">{{ L.j_dueDate }}</span><span>{{ due }}</span></div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+          <button onClick="{{ printWay }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="printer" size="16" style="color:#5B6B6A"></lucide-i>{{ L.j_printWay }}</button>
+          <button onClick="{{ printWay }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="file-text" size="16" style="color:#5B6B6A"></lucide-i>{{ L.j_printInv }}</button>
+        </div>
+      </div>
+      <footer style="flex:none;padding:12px 24px;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end">
+        <button onClick="{{ close }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.j_close }}</button>
+      </footer>
+    </sc-if>
+  </aside>
+  <sc-if value="{{ confirmOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ L.j_handCT }}" items="{{ confirmItems }}" danger="{{ false }}" confirm-label="{{ L.j_handBtn }}" cancel-label="{{ L.j_cancel }}" on-confirm="{{ doHand }}" on-cancel="{{ cancelConfirm }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;orderId&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Sardor Aliyev&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;canAct&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const CB = on => ({ bg: on ? '#0F766E' : '#FFFFFF', border: on ? '#0F766E' : '#647574' });
+class Component extends DCLogic {
+  state = { name: '', poa: '', poaDate: '', phone: '', idOk: false, tried: false, confirm: false, ready: !!window.MedixData };
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60);
+    this.onKey = e => { if (e.key === 'Escape' && !this.state.confirm) this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { clearInterval(this._p); window.removeEventListener('keydown', this.onKey); }
+  renderVals() {
+    const L = this.L, D = window.MedixData, p = this.props, s = this.state;
+    const close = () => p.onClose && p.onClose();
+    const base = { L, close, width: p.narrow ? '70%' : '520px', lines: [], confirmItems: [], isForm: true, isDone: false };
+    const o = D && D.store.orders.find(x => x.id === p.orderId); if (!o) return base;
+    const c = D.custById(o.cust) || {}, done = !!(o.sale && o.sale.method === 'pickup');
+    const picks = D.picksOf(o), ps = o.lines.map(l => D.prodById(l.pid) || {});
+    const lines = o.lines.map(l => {
+      const pr = D.prodById(l.pid) || {}, sh = D.shortOf(o, l), got = l.qty - sh, bs = picks.filter(x => x.pid === l.pid).map(x => x.batch);
+      const flags = [pr.ctrl && { icon: 'shield-alert', color: '#B91C1C', tip: L.j_bCtrl }].filter(Boolean);
+      return { name: pr.name, flags, batches: bs.length ? [...new Set(bs)].join(', ') : '—', short: sh > 0, ordered: fN(l.qty), qty: fN(got), color: sh > 0 ? '#B45309' : '#172B2A', tip: sh > 0 ? fill(L.j_bShort, { n: fN(sh) }) : '' };
+    });
+    const t = D.saleTotals(o), sale = done ? o.sale.sum : t.total, ctrl = ps.some(x => x.ctrl), lic = c.license || null, licOk = D.licValid(c);
+    const dNow = D.debtOf('mt', c.id, o.branch).debt, before = done ? dNow - o.sale.sum : dNow, after = before + sale, over = after - c.limit, due = done ? o.sale.due : D.dueDate(o, D.nowStr());
+    const errs = { name: !s.name.trim(), poa: !s.poa.trim(), ctrl: ctrl && (!s.idOk || !licOk) };
+    const bad = Object.values(errs).some(Boolean), canAct = !!p.canAct && !done;
+    const shortSum = o.lines.reduce((a, l) => a + D.shortOf(o, l), 0);
+    return {
+      ...base, custName: c.name, orderNo: o.no, status: o.status, isForm: !done, isDone: done, lines,
+      linesMeta: fill(L.j_meta, { l: o.lines.length, q: fN(t.qty), s: fM(t.total) }) + (shortSum ? ' · ' + fill(L.j_bShort, { n: fN(shortSum) }) : ''),
+      name: s.name, poa: s.poa, poaDate: s.poaDate, phone: s.phone,
+      onName: e => this.setState({ name: e.target.value }), onPoa: e => this.setState({ poa: e.target.value }), onPoaDate: e => this.setState({ poaDate: e.target.value }), onPhone: e => this.setState({ phone: e.target.value }),
+      nameErr: s.tried && errs.name, poaErr: s.tried && errs.poa, nameBorder: s.tried && errs.name ? '#B91C1C' : '#E2E8F0', poaBorder: s.tried && errs.poa ? '#B91C1C' : '#E2E8F0',
+
+      hasCtrl: ctrl, idOk: s.idOk, idCb: { ...CB(s.idOk), border: s.tried && !s.idOk ? '#B91C1C' : CB(s.idOk).border }, toggleId: () => this.setState(x => ({ idOk: !x.idOk })),
+      licNo: lic ? lic.no : '—', licUntil: lic ? lic.until : '—', licBad: ctrl && !licOk, licColor: licOk ? '#172B2A' : '#B91C1C',
+      saleSum: fM(sale), debtBefore: fM(before), debtAfter: fM(after), debtColor: over > 0 ? '#B45309' : '#172B2A', due, termText: fill(L.j_termDays, { n: c.terms || 0 }),
+      overLimit: over > 0 && !done, overText: fill(L.j_overLim, { s: fM(over) }),
+      showErr: s.tried && bad, errText: ctrl && !licOk ? L.j_licBad : L.j_fixErr, canAct, noRights: !p.canAct && !done,
+      submit: () => { if (bad) return this.setState({ tried: true }); this.setState({ tried: true, confirm: true }); },
+      confirmOpen: s.confirm, cancelConfirm: () => this.setState({ confirm: false }),
+      confirmItems: [{ icon: 'package-minus', text: fill(L.j_hc1, { l: o.lines.length, q: fN(t.qty) }) }, { icon: 'hand-coins', text: fill(L.j_hc2, { c: c.name, s: fM(sale) }) }, { icon: 'file-text', text: L.j_hc3 },
+        ...(over > 0 ? [{ icon: 'triangle-alert', color: '#B45309', text: fill(L.j_overLim, { s: fM(over) }) }] : [])],
+      doHand: () => { const rep = `${s.name.trim()} · ${fill(L.j_poaShort, { n: s.poa.trim() })}${s.poaDate ? ' ' + s.poaDate : ''}`; const r = D.handOff(o.id, p.userName, rep); this.setState({ confirm: false }); p.onToast && p.onToast(fill(L.j_tHanded, { n: r.sale.no })); },
+      saleNo: done ? o.sale.no : '', doneSub: done ? fill(L.j_doneD, { i: o.sale.inv }) : '', printWay: () => p.onToast && p.onToast(L.j_tNext)
+    };
+  }
+}
+</script>
+</body>
+</html>

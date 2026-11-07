@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>@keyframes mx-pulse{0%,100%{opacity:1}50%{opacity:.5}}</style></helmet>
+<div style="font-family:Inter,system-ui,sans-serif;font-size:13px;line-height:18px;color:#172B2A;font-variant-numeric:tabular-nums;overflow-x:{{ overflowX }};border-radius:10px 10px 0 0">
+  <div style="min-width:{{ minWidth }}px">
+    <div style="display:grid;grid-template-columns:{{ grid }};position:sticky;top:{{ stickyTop }}px;z-index:2;height:38px;background:#F8FAFA;border-bottom:1px solid #E2E8F0;border-radius:10px 10px 0 0">
+      <sc-if value="{{ sel }}"><div style="padding-left:14px;display:flex;align-items:center;position:{{ cbPos }};left:0;z-index:3;background:#F8FAFA">
+        <button onClick="{{ toggleAll }}" aria-label="{{ selectAllLabel }}" title="{{ selectAllLabel }}" style="width:16px;height:16px;padding:0;border:1px solid {{ allBorder }};border-radius:4px;background:{{ allBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 120ms ease-out">
+          <sc-if value="{{ allChecked }}"><lucide-i name="check" size="12"></lucide-i></sc-if>
+          <sc-if value="{{ allPartial }}"><lucide-i name="minus" size="12"></lucide-i></sc-if>
+        </button>
+      </div></sc-if>
+      <sc-if value="{{ ex }}"><div style="position:{{ cbPos }};left:{{ exLeft }}px;z-index:3;background:#F8FAFA"></div></sc-if>
+      <sc-for list="{{ cols }}" as="c" hint-placeholder-count="6">
+        <div style="min-width:0;padding:0 12px;display:flex;align-items:center;justify-content:{{ c.justify }};position:{{ c.pos }};left:{{ c.left }}px;z-index:{{ c.z }};background:{{ c.sbg }};box-shadow:{{ c.sh }}">
+          <sc-if value="{{ c.sortable }}">
+            <button onClick="{{ c.sort }}" title="{{ c.label }}" style="display:flex;align-items:center;gap:4px;min-width:0;padding:0;border:0;background:transparent;font-size:12px;font-weight:500;color:{{ c.color }};cursor:pointer;transition:color 120ms ease-out" style-hover="color:#172B2A">
+              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</span>
+              <sc-if value="{{ c.hasArrow }}"><lucide-i name="{{ c.arrow }}" size="12"></lucide-i></sc-if>
+            </button>
+          </sc-if>
+          <sc-if value="{{ c.plain }}"><span title="{{ c.label }}" style="font-size:12px;font-weight:500;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</span></sc-if>
+        </div>
+      </sc-for>
+      <div></div>
+    </div>
+    <sc-if value="{{ loading }}">
+      <div aria-busy="true">
+        <sc-for list="{{ skel }}" as="k" hint-placeholder-count="8">
+          <div style="display:grid;grid-template-columns:{{ grid }};height:44px;align-items:center;border-bottom:1px solid #EEF2F4">
+            <sc-if value="{{ sel }}"><span style="padding-left:14px"><span style="display:block;width:16px;height:16px;border-radius:4px;background:#F5F7F8"></span></span></sc-if>
+            <sc-if value="{{ ex }}"><span></span></sc-if>
+            <sc-for list="{{ k.bars }}" as="b">
+              <span style="padding:0 12px;display:flex;flex-direction:column;gap:6px;align-items:{{ b.align }}"><span style="display:block;width:{{ b.w }};height:10px;border-radius:4px;background:#EEF2F4;animation:mx-pulse 1.6s ease-in-out infinite"></span></span>
+            </sc-for>
+            <span></span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ready }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ items }}" as="r" hint-placeholder-count="8">
+        <div onMouseEnter="{{ r.enter }}" onMouseLeave="{{ leave }}" onClick="{{ r.open }}" style="display:grid;grid-template-columns:{{ grid }};height:44px;background:{{ r.bg }};box-shadow:{{ r.stripe }};font-weight:{{ r.fw }};border-bottom:1px solid #EEF2F4;cursor:pointer;transition:background 600ms ease-out">
+          <sc-if value="{{ sel }}"><div onClick="{{ r.toggle }}" style="padding-left:14px;display:flex;align-items:center;position:{{ cbPos }};left:0;z-index:1;background:{{ r.bg }};transition:background 600ms ease-out">
+            <span role="checkbox" aria-checked="{{ r.selected }}" style="width:16px;height:16px;border:1px solid {{ r.cbBorder }};border-radius:4px;background:{{ r.cbBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center;transition:background 120ms ease-out"><sc-if value="{{ r.selected }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span>
+          </div></sc-if>
+          <sc-if value="{{ ex }}"><div onClick="{{ r.expand }}" aria-expanded="{{ r.isOpen }}" style="display:flex;align-items:center;justify-content:center;position:{{ cbPos }};left:{{ exLeft }}px;z-index:1;background:{{ r.bg }};color:#5B6B6A;transition:background 600ms ease-out"><sc-if value="{{ r.expandable }}"><lucide-i name="{{ r.chev }}" size="16"></lucide-i></sc-if></div></sc-if>
+          <sc-for list="{{ r.cells }}" as="c">
+            <div style="min-width:0;padding:0 12px 0 {{ c.padL }};display:flex;flex-direction:column;justify-content:center;align-items:{{ c.align }};position:{{ c.pos }};left:{{ c.left }}px;z-index:{{ c.z }};background:{{ c.sbg }};box-shadow:{{ c.sh }};transition:background 600ms ease-out">
+              <sc-if value="{{ c.isName }}">
+                <div style="display:flex;align-items:center;gap:6px;min-width:0;max-width:100%">
+                  <span style="font-weight:{{ c.weight }};color:{{ c.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.pre }}<sc-if value="{{ c.hasHit }}"><span style="background:#DDF5EE;border-radius:3px">{{ c.hit }}</span></sc-if>{{ c.post }}</span>
+                  <sc-if value="{{ c.hasBadge }}"><span style="flex:none;height:18px;padding:0 6px;border-radius:6px;background:{{ c.badgeBg }};color:{{ c.badgeFg }};font-size:11.5px;line-height:18px;font-weight:500">{{ c.badge }}</span></sc-if>
+                  <sc-for list="{{ c.nflags }}" as="f"><span title="{{ f.tip }}" aria-label="{{ f.tip }}" style="display:flex;flex:none;color:{{ f.color }};cursor:help"><lucide-i name="{{ f.icon }}" size="14"></lucide-i></span></sc-for>
+                </div>
+                <span style="max-width:100%;font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.sub }}</span>
+              </sc-if>
+              <sc-if value="{{ c.isPerson }}"><div style="display:flex;align-items:center;gap:10px;min-width:0;max-width:100%"><span style="width:28px;height:28px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ c.av }}</span><span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.text }}</span><span style="font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.sub }}</span></span></div></sc-if>
+              <sc-if value="{{ c.isText }}"><span title="{{ c.text }}" style="max-width:100%;color:{{ c.color }};text-decoration:{{ c.deco }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.text }}</span></sc-if>
+              <sc-if value="{{ c.isIconText }}"><span style="display:flex;align-items:center;gap:6px;max-width:100%;color:{{ c.color }};white-space:nowrap;overflow:hidden"><lucide-i name="{{ c.icon }}" size="14" style="color:#5B6B6A;flex:none"></lucide-i><span style="overflow:hidden;text-overflow:ellipsis">{{ c.text }}</span></span></sc-if>
+              <sc-if value="{{ c.isLink }}"><button onClick="{{ c.onLink }}" title="{{ c.text }}" style="max-width:100%;padding:0;border:0;background:transparent;font:inherit;font-size:13px;color:{{ c.linkColor }};cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left" style-hover="text-decoration:underline">{{ c.text }}</button></sc-if>
+              <sc-if value="{{ c.isMono }}"><span style="max-width:100%;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:{{ c.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.text }}</span></sc-if>
+              <sc-if value="{{ c.isFlags }}">
+                <span style="display:flex;align-items:center;gap:8px">
+                  <sc-for list="{{ c.flags }}" as="f"><span title="{{ f.tip }}" aria-label="{{ f.tip }}" style="display:flex;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="16"></lucide-i></span></sc-for>
+                </span>
+              </sc-if>
+              <sc-if value="{{ c.isBar }}"><span style="display:flex;align-items:center;gap:8px;width:100%"><span style="flex:1;min-width:24px;height:6px;border-radius:3px;background:#EEF2F4;overflow:hidden"><span style="display:block;height:100%;width:{{ c.pctW }}%;background:{{ c.barColor }};border-radius:3px"></span></span><span style="flex:none;width:52px;text-align:right;font-size:12px;color:{{ c.color }};font-weight:{{ c.weight }}">{{ c.text }}</span></span></sc-if>
+              <sc-if value="{{ c.isChips }}"><span style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;max-width:100%"><sc-for list="{{ c.chips }}" as="h"><span title="{{ h.tip }}" style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;background:{{ h.bg }};color:{{ h.fg }};font-size:12px;font-weight:500;white-space:nowrap"><sc-if value="{{ h.icon }}"><lucide-i name="{{ h.icon }}" size="12"></lucide-i></sc-if>{{ h.label }}</span></sc-for></span></sc-if>
+              <sc-if value="{{ c.isStatus }}"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ c.bg }};color:{{ c.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ c.icon }}" size="12"></lucide-i>{{ c.text }}</span><sc-if value="{{ c.sub }}"><span style="margin-top:2px;max-width:100%;font-size:12px;line-height:16px;font-weight:500;color:{{ c.subColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.sub }}</span></sc-if></sc-if>
+            </div>
+          </sc-for>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding-right:8px">
+            <sc-if value="{{ r.hasActions }}">
+              <button onClick="{{ r.menu }}" aria-label="{{ rowActionsLabel }}" style="width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ r.menuOp }};transition:background 120ms ease-out" style-hover="background:#EEF2F4;color:#172B2A" style-focus="opacity:1"><lucide-i name="ellipsis" size="16"></lucide-i></button>
+            </sc-if>
+          </div>
+        </div>
+        <sc-if value="{{ r.isOpen }}">
+          <div style="background:#F8FAFA;border-bottom:1px solid #E2E8F0">
+            <div style="position:sticky;left:0;width:max-content;max-width:100%;padding:0 12px 6px {{ subPad }}px;box-sizing:border-box">
+              <div style="display:grid;grid-template-columns:{{ r.subGrid }};height:30px;align-items:center;font-size:11.5px;font-weight:500;color:#647574">
+                <sc-for list="{{ r.subHead }}" as="h"><span title="{{ h.label }}" style="padding:0 10px;text-align:{{ h.align }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ h.label }}</span></sc-for>
+              </div>
+              <sc-for list="{{ r.subRows }}" as="k">
+                <div onClick="{{ k.open }}" style="display:grid;grid-template-columns:{{ r.subGrid }};min-height:40px;align-items:center;border-top:1px solid #E2E8F0;cursor:{{ k.cursor }};transition:background 120ms ease-out" style-hover="background:#EEF2F4">
+                  <sc-for list="{{ k.cells }}" as="x">
+                    <div style="min-width:0;padding:0 10px;display:flex;align-items:center;justify-content:{{ x.justify }};gap:6px">
+                      <sc-if value="{{ x.isText }}"><span title="{{ x.text }}" style="min-width:0;color:{{ x.color }};font-weight:{{ x.weight }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.text }}</span></sc-if>
+                      <sc-if value="{{ x.isMono }}"><span style="min-width:0;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:{{ x.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.text }}</span></sc-if>
+                      <sc-if value="{{ x.isStatus }}"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;background:{{ x.bg }};color:{{ x.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ x.icon }}" size="12"></lucide-i>{{ x.text }}</span></sc-if>
+                      <sc-if value="{{ x.isLink }}"><button onClick="{{ x.onLink }}" title="{{ x.text }}" style="display:flex;align-items:center;gap:4px;min-width:0;padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer;white-space:nowrap" style-hover="text-decoration:underline">{{ x.text }}<lucide-i name="arrow-up-right" size="13"></lucide-i></button></sc-if>
+                      <sc-if value="{{ x.isFlags }}"><span style="display:flex;align-items:center;gap:6px"><sc-for list="{{ x.flags }}" as="f"><span title="{{ f.tip }}" aria-label="{{ f.tip }}" style="display:flex;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="15"></lucide-i></span></sc-for></span></sc-if>
+                      <sc-if value="{{ x.hasBadge }}"><span style="flex:none;height:20px;padding:0 6px;border-radius:6px;background:{{ x.badgeBg }};color:{{ x.badgeFg }};font-size:11.5px;line-height:20px;font-weight:500;white-space:nowrap">{{ x.badge }}</span></sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ hasFoot }}">
+      <div style="display:grid;grid-template-columns:{{ grid }};min-height:44px;background:#F8FAFA;border-top:1px solid {{ footBorder }};font-weight:600;position:{{ footPos }};bottom:0;z-index:2">
+        <sc-if value="{{ sel }}"><div style="position:{{ cbPos }};left:0;z-index:1;background:#F8FAFA"></div></sc-if>
+        <sc-if value="{{ ex }}"><div style="position:{{ cbPos }};left:{{ exLeft }}px;z-index:1;background:#F8FAFA"></div></sc-if>
+        <sc-for list="{{ footCells }}" as="c">
+          <div style="min-width:0;padding:0 12px;display:flex;align-items:center;justify-content:{{ c.justify }};position:{{ c.pos }};left:{{ c.left }}px;z-index:{{ c.z }};background:#F8FAFA;box-shadow:{{ c.sh }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ c.color }}">{{ c.text }}</span></div>
+        </sc-for>
+        <div></div>
+      </div>
+    </sc-if>
+  </div>
+  <sc-if value="{{ menuOpen }}">
+    <div onClick="{{ closeMenu }}" style="position:fixed;inset:0;z-index:50"></div>
+    <div style="position:fixed;top:{{ menuTop }}px;left:{{ menuLeft }}px;width:220px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px;z-index:51">
+      <sc-for list="{{ menuItems }}" as="m">
+        <sc-if value="{{ m.sep }}"><div style="height:1px;background:#EEF2F4;margin:4px 0"></div></sc-if>
+        <button onClick="{{ m.run }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;font-size:13px;color:{{ m.color }};cursor:pointer;text-align:left" style-hover="background:{{ m.hover }}"><lucide-i name="{{ m.icon }}" size="16" style="color:{{ m.iconColor }}"></lucide-i>{{ m.label }}</button>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:420},&quot;columns&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{key,label,width?,align?,sortable?,sortDir?}[]&quot;},&quot;rows&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{id,selected,onToggle,onOpen,cells,actions}[]&quot;},&quot;allState&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;'none'|'some'|'all'&quot;},&quot;onToggleAll&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onSort&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(key)=&gt;void&quot;},&quot;loading&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;scrollX&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;minWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;},&quot;selectAllLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Hammasini tanlash&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;rowActionsLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Qator amallari&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { hover: null, menu: null, pos: null };
+  renderVals() {
+    const p = this.props, s = this.state, cols = p.columns || [], rows = p.rows || [];
+    const sel = p.selectable !== false, ex = !!p.expandable, grid = (sel ? '40px ' : '') + (ex ? '32px ' : '') + cols.map(c => c.width || 'minmax(0,1fr)').join(' ') + ' 44px';
+    const all = p.allState || 'none';
+    const mrow = s.menu != null && rows.find(r => r.id === s.menu);
+    const W = ['70%', '55%', '45%', '60%', '50%', '65%', '40%', '58%'], sf = !!p.stickyFirst;
+    const sc = p.stickyCount != null ? p.stickyCount : (sf ? 1 : 0), offs = cols.map((c, i) => (sel ? 40 : 0) + (ex ? 32 : 0) + cols.slice(0, i).reduce((a, x) => a + (parseInt(x.width, 10) || 0), 0));
+    const stk = (i, bg) => i < sc ? { pos: 'sticky', left: offs[i], z: 1, sbg: bg, sh: i === sc - 1 ? '8px 0 8px -8px rgba(18,60,58,0.18)' : 'none' } : { pos: 'static', left: 0, z: 0, sbg: 'transparent', sh: 'none' };
+    const subOf = r => { const S = r.sub || {}, H = S.head || []; return { subGrid: S.grid || '', subHead: H.map(h => ({ label: h.label || '', align: h.align || 'left' })),
+      subRows: (S.rows || []).map(k => ({ id: k.id, cursor: k.onOpen ? 'pointer' : 'default', open: e => { e.stopPropagation(); k.onOpen && k.onOpen(); },
+        cells: (k.cells || []).map((c, i) => ({ text: '', ...c, justify: (H[i] || {}).align === 'right' ? 'flex-end' : 'flex-start', color: c.color || '#172B2A', weight: c.weight || 400, isText: !c.type || c.type === 'text', isMono: c.type === 'mono', isStatus: c.type === 'status', isLink: c.type === 'link', isFlags: c.type === 'flags', flags: c.flags || [], hasBadge: !!c.badge, badgeBg: c.badgeBg || '#EEF2F4', badgeFg: c.badgeFg || '#5B6B6A', onLink: e => { e.stopPropagation(); c.pick && c.pick(); } })) })) }; };
+    return {
+      ex, exLeft: sel ? 40 : 0, subPad: (sel ? 40 : 0) + (ex ? 32 : 0),
+      sel, footBorder: p.footBorder || '#E2E8F0', footPos: p.stickyFoot ? 'sticky' : 'static', grid, minWidth: p.minWidth || 0, overflowX: p.scrollX ? 'auto' : 'visible', stickyTop: p.stickyTop != null ? p.stickyTop : -24,
+      selectAllLabel: p.selectAllLabel, rowActionsLabel: p.rowActionsLabel,
+      allChecked: all === 'all', allPartial: all === 'some', allBg: all === 'none' ? '#FFFFFF' : '#0F766E', allBorder: all === 'none' ? '#647574' : '#0F766E',
+      toggleAll: () => p.onToggleAll && p.onToggleAll(),
+      cbPos: sc ? 'sticky' : 'static', hasFoot: !!p.foot, footCells: (p.foot ? p.foot.cells || [] : []).map((c, i) => ({ ...stk(i, '#F8FAFA'), text: c.text, color: c.color || '#172B2A', justify: (cols[i] || {}).align === 'right' ? 'flex-end' : 'flex-start' })),
+      cols: cols.map((c, i) => ({ ...stk(i, '#F8FAFA'), z: i < sc ? 3 : 0, label: c.label || '', justify: c.align === 'right' ? 'flex-end' : 'flex-start', sortable: !!c.sortable, plain: !c.sortable,
+        hasArrow: !!c.sortDir, arrow: c.sortDir === 'desc' ? 'arrow-down' : 'arrow-up', color: c.sortDir ? '#172B2A' : '#5B6B6A', sort: () => p.onSort && p.onSort(c.key) })),
+      loading: !!p.loading, ready: !p.loading,
+      skel: Array.from({ length: p.skeletonCount || 8 }, (_, i) => ({ bars: cols.map((c, j) => ({ w: W[(i + j) % W.length], align: c.align === 'right' ? 'flex-end' : 'flex-start' })) })),
+      items: rows.map(r => {
+        const hov = s.hover === r.id, rbg = r.selected || r.hl ? '#DDF5EE' : hov ? '#F8FAFA' : '#FFFFFF';
+        return { ...r, bg: r.selected || r.hl ? '#DDF5EE' : hov ? '#F8FAFA' : (r.rowBg || '#FFFFFF'), stripe: r.stripe ? 'inset 3px 0 0 ' + r.stripe : 'none', fw: r.bold ? 600 : 'inherit', cbBg: r.selected ? '#0F766E' : '#FFFFFF', cbBorder: r.selected ? '#0F766E' : '#647574',
+          expandable: ex && !!r.expandable, isOpen: ex && !!r.expandable && !!r.expanded, chev: r.expanded ? 'chevron-down' : 'chevron-right', expand: e => { e.stopPropagation(); r.expandable && r.onExpand && r.onExpand(); }, ...(ex && r.expandable && r.expanded ? subOf(r) : { subGrid: '', subHead: [], subRows: [] }),
+          hasActions: !!(r.actions && r.actions.length), menuOp: hov || s.menu === r.id ? 1 : 0,
+          enter: () => s.hover !== r.id && this.setState({ hover: r.id }),
+          open: () => r.onOpen && r.onOpen(), toggle: e => { e.stopPropagation(); r.onToggle && r.onToggle(); },
+          menu: e => { e.stopPropagation(); const b = e.currentTarget.getBoundingClientRect(); this.setState(st => st.menu === r.id ? { menu: null } : { menu: r.id, pos: { top: Math.min(b.bottom + 4, window.innerHeight - 200), left: b.right - 220 } }); },
+          cells: (r.cells || []).map((c, i) => ({ post: '', sub: '', label: '', ...c, ...stk(i, r.rowBg && !hov && !r.selected ? r.rowBg : rbg), padL: (12 + (c.indent || 0)) + 'px', isBar: c.type === 'bar', pctW: Math.max(0, Math.min(100, c.pct || 0)), barColor: c.barColor || '#0D9488', deco: c.deco || 'none', weight: c.weight || 500, badgeBg: c.badgeBg || '#EEF2F4', badgeFg: c.badgeFg || '#5B6B6A', align: (cols[i] || {}).align === 'right' ? 'flex-end' : 'flex-start', color: c.color || '#172B2A',
+            isName: c.type === 'name', isPerson: c.type === 'person', isText: c.type === 'text', isMono: c.type === 'mono', isLink: c.type === 'link', linkColor: c.color && c.color !== '#172B2A' ? c.color : '#0D9488', onLink: e => { e.stopPropagation(); c.pick && c.pick(); }, isFlags: c.type === 'flags', isStatus: c.type === 'status', isChips: c.type === 'chips', isIconText: c.type === 'icontext', nflags: c.type === 'name' ? (c.flags || []) : [],
+            hasHit: !!c.hit, hasBadge: !!c.badge, pre: c.pre != null ? c.pre : c.text })) };
+      }),
+      leave: () => this.setState({ hover: null }),
+      menuOpen: !!mrow, menuTop: s.pos ? s.pos.top : 0, menuLeft: s.pos ? s.pos.left : 0, closeMenu: () => this.setState({ menu: null }),
+      menuItems: mrow ? mrow.actions.map(m => ({ ...m, sep: !!m.sep, color: m.danger ? '#B91C1C' : '#172B2A', iconColor: m.danger ? '#B91C1C' : '#5B6B6A', hover: m.danger ? '#FEF2F2' : '#F8FAFA',
+        run: () => { this.setState({ menu: null }); m.pick && m.pick(); } })) : []
+    };
+  }
+}
+</script>
+</body>
+</html>

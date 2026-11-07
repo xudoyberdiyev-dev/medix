@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="min-height:{{ minH }}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:32px 24px;font-family:Inter,system-ui,sans-serif">
+  <span style="width:64px;height:64px;border-radius:50%;background:{{ circleBg }};color:{{ circleFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ iconName }}" size="{{ iconSize }}"></lucide-i></span>
+  <div style="margin-top:10px;font-size:14px;line-height:20px;font-weight:600;color:#172B2A">{{ title }}</div>
+  <sc-if value="{{ hasText }}"><div style="max-width:420px;font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ text }}</div></sc-if>
+  <sc-if value="{{ hasActions }}">
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+      <sc-if value="{{ hasPrimary }}"><button onClick="{{ primary.pick }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px 0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A"><lucide-i name="{{ primary.icon }}" size="16"></lucide-i>{{ primary.label }}</button></sc-if>
+      <sc-if value="{{ hasSecondary }}"><button onClick="{{ secondary.pick }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA"><lucide-i name="{{ secondary.icon }}" size="16" style="color:#5B6B6A"></lucide-i>{{ secondary.label }}</button></sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:600,&quot;height&quot;:320},&quot;icon&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;package&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Katalog hali bo'sh&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;brand&quot;,&quot;neutral&quot;,&quot;danger&quot;],&quot;default&quot;:&quot;brand&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;minHeight&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:280,&quot;tsType&quot;:&quot;number&quot;},&quot;primary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,pick}&quot;},&quot;secondary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,pick}&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, tone = { danger: ['#FEF2F2', '#B91C1C'], neutral: ['#F5F7F8', '#647574'], success: ['#F0FDF4', '#15803D'] }[p.tone] || ['#DDF5EE', '#0F766E'];
+    return { iconName: p.icon || 'package', iconSize: p.iconSize || 28, circleBg: tone[0], circleFg: tone[1], minH: p.minHeight || 280,
+      hasText: !!p.text, hasPrimary: !!p.primary, hasSecondary: !!p.secondary, hasActions: !!(p.primary || p.secondary), primary: p.primary || {}, secondary: p.secondary || {} };
+  }
+}
+</script>
+</body>
+</html>

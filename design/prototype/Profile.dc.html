@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:20px;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="display:flex;align-items:center;gap:14px">
+    <span style="width:48px;height:48px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ av }}</span>
+    <div style="display:flex;flex-direction:column;min-width:0"><h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.bs_prTitle }}</h1><span style="font-size:13px;color:#5B6B6A">{{ name }} · {{ roleName }}</span></div>
+  </div>
+  <div style="display:grid;grid-template-columns:{{ grid }};gap:16px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <section style="display:flex;flex-direction:column;gap:8px">
+        <dc-import name="InfoGrid" title="{{ L.bs_prMine }}" rows="{{ info }}" hint-size="100%,240px"></dc-import>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#647574"><lucide-i name="info" size="14"></lucide-i>{{ L.bs_prMineNote }}</span>
+      </section>
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:12px">
+        <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">{{ L.bs_prLang }}</h2>
+        <div role="radiogroup" style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ langs }}" as="l"><button role="radio" aria-checked="{{ l.on }}" onClick="{{ l.pick }}" style="display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:1px solid {{ l.bd }};border-radius:8px;background:{{ l.bg }};font:inherit;font-size:14px;cursor:pointer;text-align:left"><span style="width:16px;height:16px;flex:none;border-radius:50%;border:1px solid {{ l.dot }};display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ l.fill }}"></span></span>{{ l.label }}</button></sc-for>
+        </div>
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ L.bs_prLangNote }}</span>
+      </section>
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column"><h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">{{ L.bs_prPw }}</h2><span style="font-size:13px;color:#5B6B6A">{{ pwMeta }}</span></div>
+          <button onClick="{{ openPw }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="border-color:#647574"><lucide-i name="key-round" size="15"></lucide-i>{{ L.bs_prPwBtn }}</button>
+        </div>
+      </section>
+      <sc-if value="{{ hasPin }}">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">{{ L.bs_pinL }}</h2><span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:{{ pinFg }}"><lucide-i name="{{ pinIcon }}" size="14"></lucide-i>{{ pinState }}</span></div>
+            <button onClick="{{ openPin }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="border-color:#647574"><lucide-i name="grid-3x3" size="15"></lucide-i>{{ pinBtn }}</button>
+          </div>
+        </section>
+      </sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #E2E8F0;flex-wrap:wrap">
+          <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">{{ L.bs_prSess }}</h2>
+          <sc-if value="{{ hasOthers }}"><button onClick="{{ endOthers }}" style="padding:0;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#B91C1C;cursor:pointer" style-hover="text-decoration:underline">{{ L.bs_prSessEnd }}</button></sc-if>
+        </div>
+        <sc-for list="{{ sess }}" as="x" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid #EEF2F4">
+            <span style="width:32px;height:32px;flex:none;border-radius:8px;background:#F5F7F8;color:#5B6B6A;display:flex;align-items:center;justify-content:center"><lucide-i name="{{ x.icon }}" size="16"></lucide-i></span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500">{{ x.device }}<sc-if value="{{ x.cur }}"><span style="height:20px;padding:0 6px;border-radius:6px;background:#DDF5EE;color:#0F766E;font-size:11.5px;line-height:20px;font-weight:500">{{ L.bs_prThis }}</span></sc-if></span>
+              <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ x.browser }} · <span style="font-family:'JetBrains Mono',monospace">{{ x.ip }}</span></span>
+            </div>
+            <span style="flex:none;font-size:12px;color:#647574;text-align:right">{{ x.last }}</span>
+          </div>
+        </sc-for>
+      </section>
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #E2E8F0">
+          <h2 style="margin:0;font-size:15px;line-height:22px;font-weight:600">{{ L.bs_prActs }}</h2>
+          <sc-if value="{{ canAudit }}"><button onClick="{{ seeAll }}" style="padding:0;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#0F766E;cursor:pointer;display:flex;align-items:center;gap:4px" style-hover="color:#0F766E;text-decoration:underline">{{ L.bs_prSeeAll }}<lucide-i name="arrow-up-right" size="14"></lucide-i></button></sc-if>
+        </div>
+        <sc-for list="{{ acts }}" as="a" hint-placeholder-count="5">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 20px;border-bottom:1px solid #EEF2F4">
+            <lucide-i name="{{ a.icon }}" size="15" style="color:{{ a.ic }};margin-top:2px"></lucide-i>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:13px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b style="font-weight:500">{{ a.act }}</b> · {{ a.obj }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ a.at }}</span></div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noActs }}"><div style="padding:24px 20px;font-size:13px;color:#5B6B6A;text-align:center">{{ L.bs_noRows }}</div></sc-if>
+      </section>
+    </div>
+  </div>
+
+  <sc-if value="{{ panelOpen }}">
+    <div style="position:fixed;inset:0;z-index:175">
+      <div onClick="{{ closePanel }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+      <div role="dialog" aria-modal="true" style="position:absolute;top:0;right:0;bottom:0;width:440px;max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 24px;border-bottom:1px solid #E2E8F0">
+          <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ panelTitle }}</h2>
+          <button onClick="{{ closePanel }}" style="width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px">
+          <sc-if value="{{ isPwPanel }}">
+            <sc-for list="{{ pwFields }}" as="f">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <label for="{{ f.id }}" style="font-size:13px;line-height:18px;font-weight:500">{{ f.label }}</label>
+                <input id="{{ f.id }}" type="password" value="{{ f.value }}" onChange="{{ f.on }}" autocomplete="{{ f.ac }}" style="height:34px;padding:0 10px;border:1px solid {{ f.bd }};border-radius:8px;font-size:14px">
+                <sc-if value="{{ f.hasErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ f.err }}</span></sc-if>
+              </div>
+            </sc-for>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ reqs }}" as="r"><div style="display:flex;align-items:center;gap:8px;font-size:13px;line-height:18px;color:{{ r.fg }}"><lucide-i name="{{ r.icon }}" size="15" style="color:{{ r.ic }}"></lucide-i>{{ r.label }}</div></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isPinPanel }}">
+            <dc-import name="PinSetup" mode="{{ pinMode }}" current="{{ pinCur }}" dict="{{ L }}" on-done="{{ pinDone }}" on-cancel="{{ closePanel }}" hint-size="100%,320px"></dc-import>
+          </sc-if>
+        </div>
+        <sc-if value="{{ isPwPanel }}">
+          <div style="flex:none;display:flex;justify-content:flex-end;gap:8px;padding:12px 24px;border-top:1px solid #E2E8F0">
+            <button onClick="{{ closePanel }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="border-color:#647574">{{ L.bs_cancel }}</button>
+            <button onClick="{{ savePw }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.bs_save }}</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ dlgOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ true }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.bs_cancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;,&quot;operator&quot;,&quot;keeper&quot;,&quot;cashier&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;lang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;uz&quot;,&quot;cy&quot;,&quot;ru&quot;],&quot;default&quot;:&quot;uz&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onLang&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;}}">
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const ini = n => String(n || '').split(' ').map(x => x[0] || '').join('').slice(0, 2).toUpperCase();
+const ACT = { create: ['file-plus', '#0F766E'], approve: ['circle-check', '#15803D'], cancel: ['circle-x', '#B91C1C'], change: ['pencil', '#5B6B6A'], login: ['log-in', '#0F766E'], loginFail: ['shield-x', '#B91C1C'], block: ['ban', '#B91C1C'], perm: ['shield-check', '#7C3AED'], setting: ['settings', '#B45309'] };
+class Component extends DCLogic {
+  state = { panel: null, pw: { cur: '', a: '', b: '' }, pwTried: false, dlg: null, v: 0 };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.runDemo(); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.runDemo(); }
+  runDemo() { const k = this.props.demo && this.props.demo.k; if (k === 'prSessions') this.setState({ panel: null, dlg: null }); }
+  name() { return this.props.userName || (this.D && this.D.DIRECTOR); }
+  emp() { const n = this.name(); return (this.D.store.emps || []).find(e => this.D.empName(e) === n); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  pwErr() { const L = this.L, p = this.state.pw, e = {}; if (!p.cur) e.cur = L.bs_eReq; const ok = this.reqOk(); if (!ok.every(Boolean)) e.a = L.bs_prPwWeak; if (p.b !== p.a) e.b = L.bs_prPwMismatch; return e; }
+  reqOk() { const p = this.state.pw, D = this.D; return [p.a.length >= (D.CONFIG.pwMin || 8), /\d/.test(p.a), /\p{L}/u.test(p.a), !!p.a && p.a !== p.cur]; }
+  savePw() { const L = this.L, D = this.D; if (Object.keys(this.pwErr()).length) return this.setState({ pwTried: true }); const e = this.emp(); if (e) { D.store.actor = this.name(); D.empAct(e.id, 'pwChange', L.bs_aPwSelf); D.store.actor = null; } D.store.pwAt = D.store.pwAt || {}; D.store.pwAt[this.name()] = D.TODAY; this.setState({ panel: null, pw: { cur: '', a: '', b: '' }, pwTried: false }); this.toast(L.bs_prPwDone); }
+  pinDone(code) { const L = this.L, D = this.D, e = this.emp(), was = !!D.pinOf(this.name()); D.pinSet(this.name(), code || '1234'); if (e) { D.store.actor = this.name(); D.empAct(e.id, 'pinSet', was ? L.bs_aPinChange : L.bs_aPinSet); D.store.actor = null; } this.setState({ panel: null }); this.toast(L.bs_pinSaved); }
+  renderVals() {
+    const L = this.L, D = this.D, s = this.state, p = this.props, narrow = !!p.narrow;
+    const base = { L, info: [], langs: [], sess: [], acts: [], pwFields: [], reqs: [], dlg: {} };
+    if (!D || !D.store.emps) return base;
+    const nm = this.name(), e = this.emp(), role = p.role || (e && e.role), br = e ? e.branch : null, brN = br ? (D.BRANCHES.find(b => b.code === br) || {}).name : L.rl_scAll;
+    const pinOn = D.pinNeeded(role), pin = D.pinOf(nm), sess = D.sessionsOf(nm) || [], acts = D.empAudit(nm, 20);
+    const lang = p.lang || 'uz', langs = [['uz', "O'zbek (lotin)"], ['cy', 'Ўзбек (кирилл)'], ['ru', 'Русский']].map(([k, label]) => { const on = lang === k; return { label, on, bd: on ? '#0D9488' : '#E2E8F0', bg: on ? '#DDF5EE' : '#FFFFFF', dot: on ? '#0F766E' : '#647574', fill: on ? '#0F766E' : 'transparent', pick: () => p.onLang && p.onLang(k) }; });
+    const pw = s.pw, pe = s.pwTried ? this.pwErr() : {}, ok = this.reqOk();
+    const fld = (k, label, ac) => ({ id: 'pr-' + k, label, value: pw[k], on: ev => this.setState({ pw: { ...pw, [k]: ev.target.value } }), ac, hasErr: !!pe[k], err: pe[k] || '', bd: pe[k] ? '#B91C1C' : '#E2E8F0' });
+    const pwAt = (D.store.pwAt || {})[nm];
+    return { ...base, narrow, grid: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) minmax(0,1fr)', name: nm, av: ini(nm), roleName: L['r_' + role] || role,
+      info: [{ label: L.bs_fFio, value: e ? [e.last, e.first, e.mid].filter(Boolean).join(' ') : nm }, { label: L.rl_cRole, value: L['r_' + role] || role }, { label: L.rl_cBranch, value: brN }, { label: L.rl_cLogin, value: e ? e.login : '', mono: true }, { label: L.rl_cPhone, value: e ? e.phone : '', mono: true }],
+      langs, pwMeta: pwAt ? fill(L.bs_prPwAt, { d: pwAt }) : L.bs_prPwHint, openPw: () => this.setState({ panel: 'pw', pwTried: false, pw: { cur: '', a: '', b: '' } }),
+      hasPin: pinOn, pinState: pin ? fill(L.bs_pinSetOn, { d: pin }) : L.bs_pinNotSet, pinFg: pin ? '#15803D' : '#B45309', pinIcon: pin ? 'circle-check' : 'circle-alert', pinBtn: pin ? L.bs_pinChange : L.bs_pinSetBtn, openPin: () => this.setState({ panel: 'pin' }),
+      sess: sess.map(x => ({ ...x, icon: /Android|planshet/.test(x.device) ? 'tablet' : /macOS/.test(x.device) ? 'laptop' : 'monitor', last: x.cur ? L.bs_prNow : x.last })), hasOthers: sess.some(x => !x.cur),
+      endOthers: () => this.setState({ dlg: { title: L.bs_prSessEndT, text: fill(L.bs_prSessEndText, { n: sess.filter(x => !x.cur).length }), items: [], confirm: L.bs_sessOk, run: () => { D.store.sess[nm] = sess.filter(x => x.cur); if (e) { D.store.actor = nm; D.empAct(e.id, 'sessEnd', fill(L.bs_aSess, { n: sess.length - 1 })); D.store.actor = null; } this.setState({ dlg: null }); this.toast(L.bs_sessDone); } } }),
+      acts: acts.map(a => { const A = ACT[a.act] || ACT.change; return { icon: A[0], ic: A[1], act: L['bs_act_' + a.act] || a.act, obj: a.obj, at: a.at }; }), noActs: !acts.length,
+      canAudit: D.navCan(role, 'audit'), seeAll: () => { D.store.auditReq = { who: nm }; p.onNavigate && p.onNavigate('audit'); },
+      panelOpen: !!s.panel, isPwPanel: s.panel === 'pw', isPinPanel: s.panel === 'pin', panelTitle: s.panel === 'pw' ? L.bs_prPwBtn : pin ? L.bs_pinChange : L.bs_pinSetBtn, closePanel: () => this.setState({ panel: null }),
+      pwFields: [fld('cur', L.bs_prPwCur, 'current-password'), fld('a', L.bs_prPwNew, 'new-password'), fld('b', L.bs_prPwRep, 'new-password')],
+      reqs: [fill(L.bs_req1, { n: D.CONFIG.pwMin }), L.bs_req2, L.bs_req3, L.bs_req4].map((l, i) => ({ label: l, icon: ok[i] ? 'circle-check' : 'circle', ic: ok[i] ? '#15803D' : '#647574', fg: ok[i] ? '#172B2A' : '#5B6B6A' })), savePw: () => this.savePw(),
+      pinMode: pin ? 'change' : 'first', pinCur: (D.store.pinCode || {})[nm] || '1234', pinDone: c => this.pinDone(c),
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }) };
+  }
+}
+</script>
+</body>
+</html>

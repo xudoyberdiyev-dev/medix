@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div ref="{{ rootRef }}" data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="RecordHeader" parent-label="{{ parentLabel }}" on-parent="{{ back }}" title="{{ c.name }}" badges="{{ badges }}" meta="{{ meta }}" mono="{{ stirText }}" more="{{ more }}" primary="{{ primary }}" more-label="{{ L.p_more }}" read-only="{{ readOnly }}" read-only-label="{{ L.kt_ro }}" hint-size="100%,80px"></dc-import>
+  <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,44px"></dc-import></sc-for>
+  <dc-import name="SavedViews" tabs="{{ tabs }}" hint-size="100%,38px"></dc-import>
+  <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+    <div style="flex:1 1 560px;display:flex;flex-direction:column;gap:16px;min-width:0">
+      <sc-if value="{{ tGen }}" hint-placeholder-val="{{ true }}">
+        <dc-import name="InfoGrid" title="{{ L.kt_gMain }}" rows="{{ mainRows }}" hint-size="100%,220px"></dc-import>
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+          <div style="padding:14px 20px;border-bottom:1px solid #EEF2F4;font-size:14px;font-weight:600">{{ L.kt_gContacts }}</div>
+          <sc-for list="{{ contacts }}" as="k">
+            <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 180px;gap:12px;align-items:center;min-height:48px;padding:6px 20px;border-bottom:1px solid #EEF2F4">
+              <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:28px;height:28px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ k.ini }}</span><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.name }}</span></span>
+              <span style="color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.pos }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ k.phone }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noContacts }}"><div style="padding:16px 20px;font-size:13px;color:#647574">{{ L.kt_noContacts }}</div></sc-if>
+        </section>
+        <dc-import name="InfoGrid" title="{{ L.kt_gBank }}" rows="{{ bankRows }}" hint-size="100%,140px"></dc-import>
+      </sc-if>
+
+      <sc-if value="{{ tLic }}" hint-placeholder-val="{{ false }}">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #EEF2F4"><span style="font-size:14px;font-weight:600">{{ L.kt_tabLic }}</span><button onClick="{{ openLicForm }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="plus" size="16" style="color:#0F766E"></lucide-i>{{ L.kt_addLic }}</button></div>
+          <div style="overflow-x:auto"><div style="min-width:760px">
+            <div style="display:grid;grid-template-columns:minmax(0,1.3fr) 150px 110px 150px 150px minmax(0,1fr);height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span style="padding:0 16px">{{ L.kt_lType }}</span><span style="padding:0 12px">{{ L.kt_lNo }}</span><span style="padding:0 12px">{{ L.kt_lIssued }}</span><span style="padding:0 12px">{{ L.kt_lUntil }}</span><span style="padding:0 12px">{{ L.kt_lStatus }}</span><span style="padding:0 16px 0 12px">{{ L.kt_lFile }}</span></div>
+            <sc-for list="{{ lics }}" as="l">
+              <div style="display:grid;grid-template-columns:minmax(0,1.3fr) 150px 110px 150px 150px minmax(0,1fr);min-height:48px;align-items:center;border-bottom:1px solid #EEF2F4;font-size:13px">
+                <span style="padding:0 16px;display:flex;align-items:center;gap:8px;min-width:0"><lucide-i name="{{ l.icon }}" size="16" style="color:{{ l.iconColor }};flex:none"></lucide-i><span style="font-weight:500">{{ l.kind }}</span></span>
+                <span style="padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ l.no }}</span>
+                <span style="padding:0 12px;color:#5B6B6A">{{ l.issued }}</span>
+                <span style="padding:0 12px;color:{{ l.untilColor }}">{{ l.until }}</span>
+                <span style="padding:0 12px;display:flex"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ l.bg }};color:{{ l.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ l.stIcon }}" size="12"></lucide-i>{{ l.st }}</span></span>
+                <span style="padding:0 16px 0 12px;min-width:0"><button onClick="{{ fileToast }}" style="display:flex;align-items:center;gap:6px;max-width:100%;padding:0;border:0;background:transparent;font:inherit;font-size:12.5px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline"><lucide-i name="paperclip" size="14" style="flex:none"></lucide-i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.file }}</span></button></span>
+              </div>
+            </sc-for>
+          </div></div>
+          <sc-if value="{{ noLics }}"><dc-import name="EmptyState" icon="shield-off" tone="neutral" title="{{ L.kt_noLicT }}" text="{{ L.kt_bnLicNone }}" min-height="200" hint-size="100%,200px"></dc-import></sc-if>
+        </section>
+        <sc-if value="{{ licFormOpen }}">
+          <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+            <span style="font-size:14px;font-weight:600">{{ L.kt_licT }}</span>
+            <div style="display:grid;grid-template-columns:repeat({{ licCols }},minmax(0,1fr));gap:12px 16px;align-items:start">
+              <dc-import name="Select" label="{{ L.kt_lType }}" options="{{ licKinds }}" value="{{ lf.kind }}" on-change="{{ setLfKind }}" hint-size="100%,56px"></dc-import>
+              <sc-for list="{{ lfFields }}" as="x">
+                <label style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font-size:12px;line-height:16px;font-weight:500">{{ x.label }} <span style="color:#B91C1C">*</span></span><input value="{{ x.value }}" onChange="{{ x.on }}" placeholder="{{ x.ph }}" style="height:34px;padding:0 10px;border:1px solid {{ x.bd }};border-radius:8px;background:#FFFFFF;font-family:{{ x.font }};font-size:13.5px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"><sc-if value="{{ x.err }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ x.err }}</span></sc-if></label>
+              </sc-for>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px">
+              <button onClick="{{ closeLicForm }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ L.kt_pnCancel }}</button>
+              <button onClick="{{ saveLic }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.kt_licSave }}</button>
+            </div>
+          </section>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ tTerms }}" hint-placeholder-val="{{ false }}">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #EEF2F4"><span style="font-size:14px;font-weight:600">{{ L.kt_tabTerms }}</span><button onClick="{{ addTerms }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="git-branch-plus" size="16" style="color:#0F766E"></lucide-i>{{ L.kt_addTerms }}</button></div>
+          <div style="overflow-x:auto"><div style="min-width:{{ termsMinW }}px">
+            <div style="display:grid;grid-template-columns:{{ termsGrid }};height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><sc-for list="{{ termsHead }}" as="h"><span style="padding:0 12px;text-align:{{ h.align }};white-space:nowrap">{{ h.label }}</span></sc-for></div>
+            <sc-for list="{{ termsRows }}" as="r">
+              <button onClick="{{ r.open }}" style="display:grid;grid-template-columns:{{ termsGrid }};width:100%;min-height:52px;align-items:center;padding:0;border:0;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};text-align:left;font:inherit;font-size:13px;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">
+                <sc-for list="{{ r.cells }}" as="x"><span title="{{ x.text }}" style="padding:0 12px;display:flex;flex-direction:column;align-items:{{ x.align }};min-width:0"><span style="max-width:100%;font-weight:{{ x.weight }};color:{{ x.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.text }}</span><sc-if value="{{ x.sub }}"><span style="max-width:100%;font-size:12px;line-height:16px;color:{{ x.subColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.sub }}</span></sc-if></span></sc-for>
+              </button>
+            </sc-for>
+          </div></div>
+          <sc-if value="{{ noTerms }}"><dc-import name="EmptyState" icon="git-branch" tone="neutral" title="{{ L.kt_noTermsT }}" text="{{ L.kt_noTermsD }}" primary="{{ addTermsAct }}" min-height="220" hint-size="100%,220px"></dc-import></sc-if>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ tList }}" hint-placeholder-val="{{ false }}">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow-x:auto">
+          <div style="padding:12px 16px;border-bottom:1px solid #EEF2F4;display:flex;justify-content:space-between;align-items:center;gap:12px;min-width:640px"><span style="font-size:14px;font-weight:600">{{ gList.title }}</span><button onClick="{{ gListGo }}" style="display:flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;font-size:12.5px;font-weight:500;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ gList.goLabel }}<lucide-i name="arrow-up-right" size="14"></lucide-i></button></div>
+          <div style="min-width:640px">
+            <div style="display:grid;grid-template-columns:160px 110px 140px minmax(160px,1fr) 150px;height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span style="padding:0 16px">{{ L.kt_dNo }}</span><span style="padding:0 12px">{{ L.kt_dDate }}</span><span style="padding:0 12px">{{ L.kt_dBranch }}</span><span style="padding:0 12px">{{ L.kt_dStatus }}</span><span style="padding:0 16px 0 12px;text-align:right">{{ L.kt_dSum }}</span></div>
+            <sc-for list="{{ gList.rows }}" as="d">
+              <div style="display:grid;grid-template-columns:160px 110px 140px minmax(160px,1fr) 150px;min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4;font-size:13px">
+                <span style="padding:0 16px"><button onClick="{{ d.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ d.no }}</button></span>
+                <span style="padding:0 12px;color:#5B6B6A">{{ d.date }}</span><span style="padding:0 12px;color:#5B6B6A">{{ d.branch }}</span>
+                <span style="padding:0 12px;display:flex"><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ d.bg }};color:{{ d.fg }};font-size:12px;line-height:22px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.st }}</span></span>
+                <span style="padding:0 16px 0 12px;text-align:right;font-weight:500">{{ d.sum }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ gListEmpty }}"><div style="padding:24px 16px;font-size:13px;color:#647574">{{ L.ys_listEmpty }}</div></sc-if>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ tDocs }}" hint-placeholder-val="{{ false }}">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow-x:auto">
+          <div style="padding:12px 16px;border-bottom:1px solid #EEF2F4;display:flex;justify-content:space-between;gap:12px;min-width:640px"><span style="font-size:14px;font-weight:600">{{ docsTitle }}</span><span style="font-size:12.5px;color:#5B6B6A">{{ docsNote }}</span></div>
+          <div style="min-width:640px">
+            <div style="display:grid;grid-template-columns:160px 110px 120px 150px minmax(140px,1fr);height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span style="padding:0 16px">{{ L.kt_dNo }}</span><span style="padding:0 12px">{{ L.kt_dDate }}</span><span style="padding:0 12px">{{ L.kt_dBranch }}</span><span style="padding:0 12px">{{ L.kt_dStatus }}</span><span style="padding:0 16px 0 12px;text-align:right">{{ L.kt_dSum }}</span></div>
+            <sc-for list="{{ docs }}" as="d">
+              <div style="display:grid;grid-template-columns:160px 110px 120px 150px minmax(140px,1fr);height:44px;align-items:center;border-bottom:1px solid #EEF2F4;font-size:13px">
+                <span style="padding:0 16px"><button onClick="{{ d.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ d.no }}</button></span>
+                <span style="padding:0 12px;color:#5B6B6A">{{ d.date }}</span><span style="padding:0 12px;color:#5B6B6A">{{ d.branch }}</span>
+                <span style="padding:0 12px;display:flex"><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ d.bg }};color:{{ d.fg }};font-size:12px;line-height:22px;font-weight:500;white-space:nowrap">{{ d.st }}</span></span>
+                <span style="padding:0 16px 0 12px;text-align:right;font-weight:500">{{ d.sum }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ noDocs }}"><dc-import name="EmptyState" icon="file-x" tone="neutral" title="{{ L.kt_noDocsT }}" text="" min-height="200" hint-size="100%,200px"></dc-import></sc-if>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ tProds }}" hint-placeholder-val="{{ false }}">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow-x:auto">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid #EEF2F4;min-width:640px">
+            <span style="font-size:14px;font-weight:600">{{ L.kt_tabProds }}</span>
+            <div role="radiogroup" aria-label="{{ L.kt_pPeriod }}" style="display:inline-flex;height:32px;padding:2px;gap:2px;border-radius:8px;background:#EEF2F4"><sc-for list="{{ periods }}" as="v"><button role="radio" aria-checked="{{ v.on }}" onClick="{{ v.pick }}" style="height:28px;padding:0 12px;border:0;border-radius:6px;background:{{ v.bg }};box-shadow:{{ v.sh }};color:{{ v.color }};font-size:12.5px;font-weight:500;cursor:pointer">{{ v.label }}</button></sc-for></div>
+          </div>
+          <div style="min-width:640px">
+            <div style="display:grid;grid-template-columns:minmax(200px,1.6fr) 150px 110px 110px 90px;height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span style="padding:0 16px">{{ L.kt_pProd }}</span><span style="padding:0 12px;text-align:right">{{ L.kt_pLastPrice }}</span><span style="padding:0 12px">{{ L.kt_pLastDate }}</span><span style="padding:0 12px;text-align:right">{{ L.kt_pQty }}</span><span style="padding:0 16px 0 12px;text-align:right">{{ L.kt_pN }}</span></div>
+            <sc-for list="{{ prods }}" as="x">
+              <div style="display:grid;grid-template-columns:minmax(200px,1.6fr) 150px 110px 110px 90px;height:44px;align-items:center;border-bottom:1px solid #EEF2F4;font-size:13px">
+                <span style="padding:0 16px;display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.name }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ x.maker }}</span></span>
+                <span style="padding:0 12px;text-align:right">{{ x.price }}</span><span style="padding:0 12px;color:#5B6B6A">{{ x.date }}</span><span style="padding:0 12px;text-align:right;font-weight:500">{{ x.qty }}</span><span style="padding:0 16px 0 12px;text-align:right;color:#5B6B6A">{{ x.n }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ noProds }}"><dc-import name="EmptyState" icon="package-open" tone="neutral" title="{{ L.kt_noProdsT }}" text="" min-height="200" hint-size="100%,200px"></dc-import></sc-if>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ tHist }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px"><dc-import name="HistoryTimeline" filters="{{ histFilters }}" groups="{{ hist }}" empty-label="{{ L.qt_histEmpty }}" hint-size="100%,300px"></dc-import></div>
+      </sc-if>
+    </div>
+    <div style="flex:{{ asideFlex }};min-width:0;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:600">{{ sumTitle }}</span>
+        <sc-if value="{{ hasSumBrs }}"><div style="display:inline-flex;height:28px;padding:2px;gap:2px;border-radius:7px;background:#EEF2F4"><sc-for list="{{ sumBrs }}" as="v"><button onClick="{{ v.pick }}" aria-pressed="{{ v.on }}" style="height:24px;padding:0 8px;border:0;border-radius:5px;background:{{ v.bg }};box-shadow:{{ v.sh }};color:{{ v.color }};font-size:12px;font-weight:500;cursor:pointer">{{ v.label }}</button></sc-for></div></sc-if>
+      </div>
+      <sc-if value="{{ sumHas }}"><dc-import name="SideSummary" kpis="{{ kpis }}" columns="{{ 2 }}" bars-title="{{ L.kt_sBars }}" bars="{{ bars }}" hint-size="100%,360px"></dc-import></sc-if>
+      <sc-if value="{{ sumNone }}"><div style="padding:16px;border:1px dashed #CBD5D3;border-radius:10px;font-size:13px;color:#5B6B6A">{{ L.kt_sNoTerms }}</div></sc-if>
+    </div>
+  </div>
+  <div style="height:48px"></div>
+  <sc-if value="{{ panelOpen }}"><dc-import name="BranchTermsPanel" kind="{{ kind }}" card="{{ c }}" br="{{ panel.br }}" prefill="{{ panel.prefill }}" nonce="{{ panel.n }}" user-branch="{{ branch }}" dict="{{ L }}" role="{{ role }}" on-save="{{ saveTerms }}" on-close="{{ closePanel }}" on-denied="{{ denied }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" with-reason="{{ dlg.withReason }}" reason-label="{{ L.kt_dBlockReason }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ onReason }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.kt_pnCancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;cardKey&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;c2&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mt&quot;,&quot;yt&quot;],&quot;default&quot;:&quot;mt&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;gen&quot;,&quot;lic&quot;,&quot;terms&quot;,&quot;docs&quot;,&quot;prods&quot;,&quot;hist&quot;],&quot;default&quot;:&quot;gen&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;termsReq&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{br,prefill}&quot;},&quot;act&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;nonce&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onEdit&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(key)=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,a)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2);
+const ST = { active: ['circle-check', '#15803D', '#F0FDF4'], blocked: ['ban', '#B91C1C', '#FEF2F2'], inactive: ['circle-pause', '#5B6B6A', '#EEF2F4'] };
+const LS = { ok: ['shield-check', '#15803D', '#F0FDF4'], soon: ['clock-alert', '#B45309', '#FFFBEB'], expired: ['shield-x', '#B91C1C', '#FEF2F2'], none: ['shield-off', '#5B6B6A', '#EEF2F4'] };
+const DST = { draft: ['#5B6B6A', '#EEF2F4'], pending: ['#B45309', '#FFFBEB'], queued: ['#1D4ED8', '#EFF6FF'], picking: ['#1D4ED8', '#EFF6FF'], marking: ['#1D4ED8', '#EFF6FF'], ready: ['#0F766E', '#DDF5EE'], shipped: ['#0F766E', '#DDF5EE'], delivered: ['#15803D', '#F0FDF4'], posted: ['#15803D', '#F0FDF4'], rejected: ['#B91C1C', '#FEF2F2'], cancelled: ['#5B6B6A', '#EEF2F4'] };
+const reD = /^\d{2}\.\d{2}\.\d{4}$/;
+class Component extends DCLogic {
+  state = { tab: 'gen', panel: null, dlg: null, reason: '', reasonErr: '', lf: null, lfTried: false, period: 'all', sumBr: null, wide: true };
+  rootRef = React.createRef();
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  mt() { return this.props.kind !== 'yt'; }
+  componentDidMount() {
+    if (!this.D || !this.D.ktByKey) this._p = setInterval(() => { if (this.D && this.D.ktByKey) { clearInterval(this._p); this.init(); } }, 60); else this.init();
+    this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+    try { this._ro = new ResizeObserver(es => { const w = es[0].contentRect.width, wide = w > 1100; if (wide !== this.state.wide) this.setState({ wide }); }); this.rootRef.current && this._ro.observe(this.rootRef.current); } catch (e) {}
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); this._ro && this._ro.disconnect(); }
+  componentDidUpdate(pp) { if (pp.nonce !== this.props.nonce || pp.cardKey !== this.props.cardKey) this.init(); }
+  init() { const p = this.props, tr = p.termsReq; this.setState({ tab: p.tab || 'gen', panel: tr ? { br: tr.br && this.terms()[tr.br] ? tr.br : '', prefill: tr.br && !this.terms()[tr.br] ? { br: tr.br, ...(tr.prefill || {}) } : (tr.prefill || null), n: Date.now() } : null, dlg: null, lf: null, sumBr: null });
+    if (p.act === 'block') setTimeout(() => this.askBlock(), 60); if (p.act === 'activate') setTimeout(() => this.askActivate(), 60); }
+  card() { return this.D.ktByKey(this.props.cardKey); }
+  terms() { const c = this.card(); return c ? (this.mt() ? c.cTerms : c.sTerms) : {}; }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(rs) { const L = this.L; return fill(L.kt_who, { r: rs.map(r => L['r_' + r] || r).join(', ') }); }
+  can(k) { return this.D.canR(this.props.role, 'KT_R', k); }
+  save(c, kind, ch) { return this.D.ktSave(c, this.props.userName, kind, ch); }
+  askBlock() { const D = this.D, L = this.L, c = this.card(), need = this.mt() ? 'blockC' : 'blockS'; if (!this.can(need)) return this.toast(this.who(D.KT_R[need]));
+    const imp = D.ktBlockImpact(c);
+    this.setState({ reason: '', reasonErr: '', dlg: { title: fill(L.kt_dBlockT, { n: c.name }), withReason: true, danger: true, confirm: L.kt_dBlockGo,
+      items: this.props.kind === 'yt' ? [{ icon: 'ban', color: '#B91C1C', text: L.kt_dBlockNewS }] : [{ icon: 'ban', color: '#B91C1C', text: L.kt_dBlockNew }, { icon: 'truck', color: imp.cont ? '#15803D' : null, text: imp.cont ? fill(L.kt_dBlockCont, { n: imp.cont, nos: imp.nos.join(', ') }) : L.kt_dBlockCont0 }, ...(imp.pend ? [{ icon: 'clock', color: '#B45309', text: fill(L.kt_dBlockPend, { n: imp.pend }) }] : []), { icon: 'hand-coins', text: L.kt_dBlockDebt }],
+      run: () => { const r = this.state.reason.trim(); if (!r) return this.setState({ reasonErr: L.kt_eReason }); const x = D.ktCopy(this.card()), was = x.status; x.status = 'blocked'; x.reason = r; x.statusAt = D.nowStr(); x.statusBy = this.props.userName; this.save(x, 'block', [{ label: 'status', from: was, to: 'blocked' }, { label: 'reason', to: r }]); this.setState({ dlg: null }); this.toast(fill(L.kt_tBlocked, { n: x.name })); } } }); }
+  askInactive() { const D = this.D, L = this.L, c = this.card(), need = this.mt() ? 'blockC' : 'blockS'; if (!this.can(need)) return this.toast(this.who(D.KT_R[need]));
+    this.setState({ dlg: { title: fill(L.kt_dInactT, { n: c.name }), text: L.kt_dInactD, items: [], danger: true, confirm: L.kt_dInactGo, run: () => { const x = D.ktCopy(this.card()), was = x.status; x.status = 'inactive'; x.statusAt = D.nowStr(); x.statusBy = this.props.userName; this.save(x, 'inactive', [{ label: 'status', from: was, to: 'inactive' }]); this.setState({ dlg: null }); this.toast(fill(L.kt_tInact, { n: x.name })); } } }); }
+  askActivate() { const D = this.D, L = this.L, c = this.card(), need = this.mt() ? 'blockC' : 'blockS'; if (!this.can(need)) return this.toast(this.who(D.KT_R[need]));
+    this.setState({ dlg: { title: fill(L.kt_dActT, { n: c.name }), text: '', items: c.reason ? [{ icon: 'info', text: fill(L.kt_bnBlocked, { r: c.reason, at: c.statusAt, who: c.statusBy }) }] : [], danger: false, confirm: L.kt_dActGo, run: () => { const x = D.ktCopy(this.card()), was = x.status; x.status = 'active'; x.reason = ''; x.statusAt = D.nowStr(); x.statusBy = this.props.userName; this.save(x, 'activate', [{ label: 'status', from: was, to: 'active' }]); this.setState({ dlg: null }); this.toast(L.kt_tAct); } } }); }
+  openPanel(br) { const need = this.mt() ? 'termsC' : 'termsS'; if (!this.can(need)) return this.toast(this.who(this.D.KT_R[need])); this.setState({ panel: { br: br || '', prefill: null, n: Date.now() } }); }
+  saveTerms(br, t, isNew) { const D = this.D, L = this.L, x = D.ktCopy(this.card()), T = this.mt() ? x.cTerms : x.sTerms, old = T[br] || {}, ch = [];
+    if (isNew) ch.push({ label: 'termsAdd', br, to: br }); else Object.keys(t).forEach(k => { if (String(old[k]) !== String(t[k])) ch.push({ label: k, br, from: old[k], to: t[k] }); });
+    T[br] = t; if (!this.mt() && !x.sup) x.sup = x.name; this.save(x, isNew ? 'termsAdd' : 'terms', ch); this.setState({ panel: null, tab: 'terms', sumBr: br });
+    const bn = (D.BRANCHES.find(b => b.code === br) || {}).name; this.toast(fill(isNew ? L.kt_tTermsAdded : L.kt_tTermsSaved, { b: bn })); }
+  saveLic() { const D = this.D, L = this.L, f = this.state.lf, e = this.licErr(f); if (Object.keys(e).length) return this.setState({ lfTried: true });
+    if (!this.can('lic')) return this.toast(this.who(D.KT_R.lic));
+    const x = D.ktCopy(this.card()), id = 'l' + ((x.lic || []).length + 1) + '-' + Date.now() % 1000; x.lic = (x.lic || []).concat([{ id, kind: f.kind, no: f.no.trim(), issued: f.issued, until: f.until, file: 'litsenziya_' + f.no.replace(/\W+/g, '_') + '.pdf' }]);
+    this.save(x, 'lic', [{ label: 'lic', to: `${L['kt_lk_' + f.kind]} · ${f.no.trim()} · ${f.until}` }]); this.setState({ lf: null, lfTried: false }); this.toast(fill(L.kt_tLic, { n: f.no.trim() })); }
+  licErr(f) { const L = this.L, e = {}; if (!f) return e; if (!f.no.trim()) e.no = L.kt_eLicNo; if (!reD.test(f.issued)) e.issued = L.kt_eLicDate; if (!reD.test(f.until)) e.until = L.kt_eLicDate; else if (reD.test(f.issued) && pD(f.until) <= pD(f.issued)) e.until = L.kt_eLicOrder; return e; }
+  mtLists(c) {
+    const D = this.D, L = this.L, p = this.props, id = c.cust, bn = b => (D.BRANCHES.find(x => x.code === b) || {}).name || b, nav = (k, a) => p.onNavigate && p.onNavigate(k, a);
+    const G = { ok: ['#15803D', '#F0FDF4'], warn: ['#B45309', '#FFFBEB'], bad: ['#B91C1C', '#FEF2F2'], mute: ['#5B6B6A', '#F1F5F4'] }, row = (no, date, branch, st, tone, sum, open) => ({ no, date, branch: bn(branch), st, fg: G[tone][0], bg: G[tone][1], sum: fM(sum), open });
+    const inv = {}; Object.keys(c.cTerms || {}).forEach(b => D.ledger('mt', id, b).invoices.forEach(x => { inv[x.no] = x; }));
+    const sales = (D.store.sales || []).filter(s => s.cust === id).map(s => { const x = inv[s.no], late = x && x.left > 0 && x.late > 0; return row(s.no + (s.inv ? ' · ' + s.inv : ''), s.at.slice(0, 10), s.branch, x ? (x.left > 0 ? (late ? fill(L.pb_late, { n: x.late }) : L.k7_due + ' ' + x.due) + ' · ' + fM(x.left) : L.pb_stPaid) : '—', !x ? 'mute' : !(x.left > 0) ? 'ok' : late ? 'bad' : 'warn', s.sum, () => nav('shipments', { open: s.no })); });
+    const pays = (D.store.pays || []).filter(x => x.kind === 'mt' && x.party === id).map(x => row(x.no, x.date, x.branch, L['tl_st_' + x.status] || x.status, x.status === 'posted' ? 'ok' : x.status === 'cancelled' ? 'mute' : 'warn', x.sum, () => { D.store.payReq = { open: x.no }; nav('payments'); }))
+      .concat((D.store.advs || []).filter(x => x.kind === 'mt' && x.party === id).map(x => row(x.no, x.date, x.branch, 'AH · ' + (L['tl_st_' + x.status] || x.status), x.status === 'posted' ? 'ok' : 'mute', (x.alloc || []).reduce((a, y) => a + (y.sum || 0), 0), () => D.openDebt({ kind: 'mt', party: id, branch: x.branch, adv: x.no }))));
+    const sb = no => (D.store.sales || []).find(s => s.no === no) || {};
+    const qm = ((D.store.docs || {}).qm || []).filter(d => (d.cust != null ? d.cust : sb(d.saleNo).cust) === id).map(d => row(d.no || '—', d.date, d.branch || sb(d.saleNo).branch, L['kt_ds_' + d.status] || d.status, d.status === 'posted' ? 'ok' : d.status === 'cancelled' ? 'mute' : 'warn', D.docSum ? D.docSum(d) : 0, () => { D.store.docReq = { kind: 'qm', open: d.no }; nav('creturns'); }));
+    const rec = (D.store.recons || []).filter(x => x.kind === 'mt' && x.party === id).map(x => row(x.no, x.date || String(x.createdAt || '').slice(0, 10), x.branch, L['tl_st_' + x.status] || x.status || '', 'mute', x.closing != null ? x.closing : 0, () => { D.store.reconReq = { kind: 'mt', open: x.no }; nav('recon'); }));
+    const mk = (title, rows, go) => ({ title, rows, note: '', go, goLabel: L.ys_goPage });
+    return { sales: mk(L.ys_tabSales, sales, () => nav('shipments', { cust: id })), pays: mk(L.ys_tabPays, pays, () => { D.store.payReq = { filter: { kind: 'mt', party: id } }; nav('payments'); }), qm: mk(L.ys_tabQm, qm, () => nav('creturns')), recon: mk(L.ys_tabRecon, rec, () => { D.store.reconReq = { kind: 'mt', party: id }; nav('recon'); }) };
+  }
+  ytLists(c) {
+    const D = this.D, L = this.L, p = this.props, sup = c.sup, bn = b => (D.BRANCHES.find(x => x.code === b) || {}).name || b, nav = (k, a) => p.onNavigate && p.onNavigate(k, a);
+    const G = { ok: ['#15803D', '#F0FDF4'], warn: ['#B45309', '#FFFBEB'], bad: ['#B91C1C', '#FEF2F2'], mute: ['#5B6B6A', '#F1F5F4'] }, row = (no, date, branch, st, tone, sum, open) => ({ no, date, branch: bn(branch), st, fg: G[tone][0], bg: G[tone][1], sum: fM(sum), open });
+    const inv = D.supInvoices('ALL').filter(x => x.party === sup), byNo = {}; inv.forEach(x => byNo[x.no] = x);
+    const docs = inv.map(x => { const k = D.supDueBucket(x), st = !(x.left > 0) ? (x.prepaid ? L.k7_prepaidShort : L.pb_stPaid) : (k === 'late' ? fill(L.pb_late, { n: -x.days }) : k === 'today' ? L.pb_today : L.k7_due + ' ' + x.due) + ' · ' + fM(x.left);
+      return { ...row(x.no, x.date, x.branch, (x.archive ? L.pb_archive + ' · ' : '') + st, !(x.left > 0) ? 'ok' : k === 'late' ? 'bad' : k ? 'warn' : 'mute', x.sum, () => x.archive ? D.openDebt({ kind: 'yt', party: sup, branch: x.branch }) : nav('receipt', 'open:' + x.no)), t: D.pD ? 0 : 0 }; });
+    D.store.receipts.forEach(r => { if (r.supplier === sup && r.status !== 'posted' && r.no) docs.push(row(r.no, r.date, r.branch, ({ draft: L.k_stDraft, accepted: L.k7_stAccepted, cancelled: L.k_stCancelled })[r.status], r.status === 'cancelled' ? 'mute' : 'warn', D.rcGross(r), () => nav('receipt', 'open:' + r.no))); });
+    const pays = (D.store.pays || []).filter(x => x.kind === 'yt' && x.party === sup).map(x => row(x.no, x.date, x.branch, L['tl_st_' + x.status] || x.status, x.status === 'posted' ? 'ok' : x.status === 'cancelled' ? 'mute' : 'warn', x.sum, () => { D.store.payReq = { open: x.no }; nav('payments'); }))
+      .concat((D.store.advs || []).filter(x => x.kind === 'yt' && x.party === sup).map(x => row(x.no, x.date, x.branch, 'AH · ' + (L['tl_st_' + x.status] || x.status), x.status === 'posted' ? 'ok' : 'mute', (x.alloc || []).reduce((a, y) => a + (y.sum || 0), 0), () => D.openDebt({ kind: 'yt', party: sup, branch: x.branch, adv: x.no }))));
+    const bon = []; D.BRANCHES.forEach(b => { const o = D.bonusOf(sup, b.code); o.history.forEach(h => bon.push(row(h.no, h.date, b.code, h.kind === 'bns' ? L.pb_bOk : L.k7_fromBonusShort, h.kind === 'bns' ? 'ok' : 'mute', h.sum, () => h.kind === 'bns' ? nav('sdebt', { tab: 'bonus' }) : nav('receipt', 'open:' + h.no)))); o.expected.forEach(x => bon.push(row(x.no, x.date, b.code, L.pb_bWait + ' · ' + x.date, 'warn', x.sum, () => nav('receipt', 'open:' + x.no)))); });
+    const rcOf = no => D.store.receipts.find(r => r.no === no);
+    const qy = ((D.store.docs || {}).qy || []).filter(d => (d.supplier || (rcOf(d.receiptNo) || {}).supplier) === sup).map(d => row(d.no || '—', d.date, d.branch || (rcOf(d.receiptNo) || {}).branch, L['kt_ds_' + d.status] || d.status, d.status === 'posted' ? 'ok' : d.status === 'cancelled' ? 'mute' : 'warn', D.docSum ? D.docSum(d) : 0, () => { D.store.docReq = { kind: 'qy', open: d.no }; nav('sreturns'); }));
+    const rec = (D.store.recons || []).filter(x => x.kind === 'yt' && x.party === sup).map(x => row(x.no, x.date || String(x.createdAt || '').slice(0, 10), x.branch, L['tl_st_' + x.status] || x.status || '', 'mute', x.closing != null ? x.closing : 0, () => { D.store.reconReq = { kind: 'yt', open: x.no }; nav('recon'); }));
+    const mk = (title, rows, page, go) => ({ title, rows, note: fill(L.kt_lastN, { n: rows.length }), go: go || (() => nav(page)), goLabel: L.ys_goPage });
+    return { docs, pays: mk(L.ys_tabPays, pays, 'payments', () => { D.store.payReq = { filter: { kind: 'yt', party: sup } }; nav('payments'); }), bonus: mk(L.ys_tabBonus, bon, 'sdebt', () => nav('sdebt', { tab: 'bonus' })), qy: mk(L.ys_tabQy, qy, 'sreturns'), recon: mk(L.ys_tabRecon, rec, 'recon', () => { D.store.reconReq = { kind: 'yt', party: sup }; nav('recon'); }) };
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, mt = this.mt();
+    const base = { L, c: {}, kind: p.kind, role: p.role, branch: p.branch, badges: [], more: [], banners: [], tabs: [], mainRows: [], bankRows: [], contacts: [], lics: [], termsHead: [], termsRows: [], docs: [], prods: [], periods: [], hist: [], histFilters: [], kpis: [], bars: [], sumBrs: [], licKinds: [], lfFields: [], dlg: {}, panel: {}, tGen: true, rootRef: this.rootRef, asideFlex: '0 0 340px' };
+    if (!D || !D.ktByKey) return base; const c = this.card(); if (!c) return { ...base, screenLabel: '—' };
+    const T = mt ? c.cTerms : c.sTerms, brs = Object.keys(T), my = p.branch && p.branch !== 'ALL' ? p.branch : null, today = pD(D.TODAY), bn = code => (D.BRANCHES.find(b => b.code === code) || {}).name || code;
+    const pl = D.ktLic(c, 'pharm'), ps = D.ktLicState(pl), cl = D.ktLic(c, 'ctrl'), cs = D.ktLicState(cl), S = ST[c.status], LSx = LS[ps.st];
+    const badges = [{ label: L['kt_st_' + c.status], icon: S[0], fg: S[1], bg: S[2] }, { label: L['kt_ty_' + c.type], icon: mt ? 'store' : 'factory', fg: '#5B6B6A', bg: '#F5F7F8' }, { label: fill(L['kt_ls_' + ps.st], { n: ps.days }), icon: LSx[0], fg: LSx[1], bg: LSx[2] }];
+    if (cs.st === 'ok' || cs.st === 'soon') badges.push({ label: L.kt_lk_ctrl, icon: 'lock', fg: '#B91C1C', bg: '#FEF2F2' });
+    if (c.cust != null && c.sup) badges.push({ label: L.kt_both, icon: 'repeat', fg: '#1D4ED8', bg: '#EFF6FF' });
+    const banners = [];
+    if (c.status === 'blocked') banners.push({ tone: 'danger', icon: 'ban', text: fill(L.kt_bnBlocked, { r: c.reason, at: c.statusAt, who: c.statusBy }) });
+    if (c.status === 'inactive') banners.push({ tone: 'neutral', icon: 'circle-pause', text: fill(L.kt_bnInactive, { at: c.statusAt, who: c.statusBy }) });
+    [['pharm', pl, ps], ['ctrl', cl, cs]].forEach(([k, l, st]) => { if (!l) return; if (st.st === 'soon') banners.push({ tone: 'warning', icon: 'clock-alert', text: fill(L.kt_bnLicSoon, { k: L['kt_lk_' + k], d: l.until, n: st.days }) }); if (st.st === 'expired' && (k === 'pharm' || mt)) banners.push({ tone: k === 'pharm' ? 'danger' : 'warning', icon: 'shield-x', text: k === 'pharm' ? fill(L.kt_bnLicExp, { k: L['kt_lk_' + k], d: l.until }) : fill(L.kt_bnLicExp, { k: L['kt_lk_' + k], d: l.until }).split('.')[0] + '.' }); });
+    if (!pl && mt) banners.push({ tone: 'danger', icon: 'shield-off', text: L.kt_bnLicNone });
+    const blockNeed = mt ? 'blockC' : 'blockS';
+    const more = [{ label: L.kt_addTerms, icon: 'git-branch-plus', pick: () => this.openPanel('') }, { label: L.kt_addLic, icon: 'shield-plus', pick: () => this.setState({ tab: 'lic', lf: { kind: 'pharm', no: '', issued: D.TODAY, until: '' }, lfTried: false }) },
+      c.status === 'blocked' ? { label: L.kt_bActivate, icon: 'circle-check', sep: true, pick: () => this.askActivate() } : { label: L.kt_bBlock, icon: 'ban', danger: true, sep: true, pick: () => this.askBlock() },
+      c.status === 'inactive' ? { label: L.kt_bActivate, icon: 'circle-play', pick: () => this.askActivate() } : { label: L.kt_bInactive, icon: 'circle-pause', danger: true, pick: () => this.askInactive() },
+      { label: L.kt_noDelete, icon: 'info', pick: () => this.toast(L.kt_noDelete) }];
+    const tabsK = ['gen', 'lic', 'terms', 'docs'].concat(mt ? ['sales', 'pays', 'qm', 'recon'] : ['pays', 'bonus', 'qy', 'recon', 'prods'], ['hist']);
+    const gl = mt ? this.mtLists(c) : this.ytLists(c);
+    const tabs = tabsK.map(k => ({ label: k === 'docs' ? (mt ? L.kt_tabOrders : L.kt_tabReceipts) : gl[k] && gl[k].rows ? gl[k].title : L['kt_tab' + { gen: 'Gen', lic: 'Lic', terms: 'Terms', prods: 'Prods', hist: 'Hist' }[k]], count: gl[k] && gl[k].rows ? gl[k].rows.length : k === 'docs' ? (mt ? D.ktDocs(c, p.kind).length : gl.docs.length) : k === 'terms' ? brs.length : k === 'lic' ? (c.lic || []).length : k === 'hist' ? (c.hist || []).length : null, active: s.tab === k, pick: () => this.setState({ tab: k }) }));
+    const mainRows = [{ label: L.kt_iLegal, value: c.legal || '—' }, { label: L.kt_iShort, value: c.name }, { label: L.kt_iStir, value: D.stirF(c.stir), mono: true }, { label: L.kt_iType, value: L['kt_ty_' + c.type] }, { label: L.kt_iRegion, value: c.region || '—' }, { label: L.kt_iAddr, value: c.address || '—' }, { label: L.kt_iPhone, value: c.phone || '—', mono: true }, { label: L.kt_iEmail, value: c.email || '—' }, { label: L.kt_iRoles, value: [c.cust != null ? L.kt_roleC : '', c.sup ? L.kt_roleS : ''].filter(Boolean).join(' · ') }];
+    const bankRows = [{ label: L.kt_iBank, value: c.bank.bank || '—' }, { label: L.kt_iMfo, value: c.bank.mfo || '—', mono: true }, { label: L.kt_iAcc, value: c.bank.acc ? D.accF(c.bank.acc) : '—', mono: true }];
+    const lics = (c.lic || []).slice().sort((a, b) => (a.kind === b.kind ? pD(b.until) - pD(a.until) : a.kind === 'pharm' ? -1 : 1)).map(l => { const st = D.ktLicState(l), X = LS[st.st]; return { kind: L['kt_lk_' + l.kind], icon: l.kind === 'ctrl' ? 'lock' : 'shield', iconColor: l.kind === 'ctrl' ? '#B91C1C' : '#0F766E', no: l.no, issued: l.issued, until: l.until, untilColor: st.st === 'expired' ? '#B91C1C' : st.st === 'soon' ? '#B45309' : '#172B2A', st: fill(L['kt_ls_' + st.st], { n: st.days }), stIcon: X[0], fg: X[1], bg: X[2], file: l.file }; });
+    const lf = s.lf, le = s.lfTried ? this.licErr(lf) : {}, lfSet = k => ev => { const v = ev.target.value; this.setState(st => ({ lf: { ...st.lf, [k]: v } })); };
+    const lfFields = lf ? [['no', L.kt_lNo, 'FA-0000-2026', "'JetBrains Mono',monospace"], ['issued', L.kt_lIssued, 'kk.oo.yyyy', 'inherit'], ['until', L.kt_lUntil, 'kk.oo.yyyy', 'inherit']].map(([k, label, ph, font]) => ({ label, ph, font, value: lf[k], on: lfSet(k), err: le[k] || '', bd: le[k] ? '#B91C1C' : '#E2E8F0' })) : [];
+    // terms
+    const termsHead = mt ? [[L.kt_tBranch, 'left'], [L.kt_tActive, 'left'], [L.kt_tLimit, 'right'], [L.kt_tDays, 'right'], [L.kt_tDisc, 'right'], [L.kt_tPrice, 'left'], [L.kt_tMin, 'right'], [L.kt_tOp, 'left'], [L.kt_tAddr, 'left']] : [[L.kt_tBranch, 'left'], [L.kt_tActive, 'left'], [L.kt_tDays, 'right'], [L.kt_tBuyer, 'left'], [L.kt_tLead, 'right'], [L.kt_c_ourDebt, 'right']];
+    const termsGrid = mt ? '150px 90px 150px 100px 90px 120px 110px 150px minmax(180px,1fr)' : '160px 90px 120px minmax(160px,1fr) 130px 160px';
+    const ref = mt ? c.cust : c.sup;
+    const termsRows = D.BRANCHES.filter(b => T[b.code]).map(b => { const t = T[b.code], ds = D.debtState(p.kind, ref, b.code), off = t.active === false, A = (text, al, extra) => ({ text: text == null || text === '' ? '—' : String(text), align: al === 'right' ? 'flex-end' : 'flex-start', weight: 400, color: off ? '#647574' : '#172B2A', sub: '', subColor: '#647574', ...(extra || {}) });
+      const lim = mt ? A(fM(t.limit), 'right', { weight: 600, sub: fill(L.kt_sUsed, {}) + ': ' + (t.limit ? Math.round(ds.L.debt / t.limit * 100) + '%' : '—'), subColor: t.limit && ds.L.debt > t.limit ? '#B91C1C' : '#647574' }) : null;
+      const cells = mt ? [A(b.name, 'left', { weight: 600, sub: fM(ds.L.debt), subColor: ds.status === 'overdue' ? '#B91C1C' : ds.status === 'limit' ? '#B45309' : '#647574' }), A(off ? L.kt_no : L.kt_yes, 'left', { color: off ? '#B45309' : '#15803D' }), lim, A(fill(L.kt_daysN, { n: t.days }), 'right'), A((t.disc || 0) + '%', 'right'), A(L['kt_pr_' + t.price], 'left'), A(t.minMonths ? fill(L.kt_monthsN, { n: t.minMonths }) : '—', 'right'), A(t.operator, 'left'), A(t.addr, 'left')]
+        : [A(b.name, 'left', { weight: 600 }), A(off ? L.kt_no : L.kt_yes, 'left', { color: off ? '#B45309' : '#15803D' }), A(fill(L.kt_daysN, { n: t.days }), 'right'), A(t.buyer, 'left'), A(fill(L.kt_daysN, { n: t.lead }), 'right'), A(fM(ds.L.debt), 'right', { weight: 600 })];
+      return { cells, bg: b.code === (s.sumBr || my) ? '#F0FAF8' : '#FFFFFF', open: () => this.openPanel(b.code) }; });
+    // docs
+    const docsRaw = mt ? D.ktDocs(c, p.kind) : [], docs = !mt ? gl.docs : docsRaw.map(d => { const X = DST[d.status] || DST.draft; return { no: d.no, date: d.date, branch: d.branch, st: L['kt_ds_' + d.status] || d.status, fg: X[0], bg: X[1], sum: fM(d.sum), open: () => { if (mt) { D.store.openReq = d.id; p.onNavigate && p.onNavigate('orders'); } else p.onNavigate && p.onNavigate('receipt', 'open:' + d.no); } }; });
+    // products (yt)
+    const from = s.period === '30' ? D.addDays ? D.addDays(D.TODAY, -30) : null : s.period === '90' ? (D.addDays ? D.addDays(D.TODAY, -90) : null) : null;
+    const fromD = s.period === 'all' ? null : (() => { const t = today - (+s.period) * 86400000, d = new Date(t); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '.' + d.getUTCFullYear(); })();
+    const prods = mt || s.tab !== 'prods' ? [] : D.ktSupProducts(c.sup, fromD, null).map(x => { const pr = D.prodById(x.pid) || {}; return { name: pr.name || '—', maker: pr.maker || '', price: fM(x.price), date: x.last, qty: fN(x.qty), n: fN(x.n) }; });
+    const periods = [['30', '30 kun'], ['90', '90 kun'], ['all', L.kt_hfAll]].map(([k, label]) => { const on = s.period === k; return { label, on, bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', color: on ? '#172B2A' : '#5B6B6A', pick: () => this.setState({ period: k }) }; });
+    // history
+    const fmtV = (lab, v) => v == null || v === '' ? '' : lab === 'limit' ? fM(v) : lab === 'days' || lab === 'lead' ? fill(L.kt_daysN, { n: v }) : lab === 'disc' ? v + '%' : lab === 'price' ? L['kt_pr_' + v] || v : lab === 'minMonths' ? fill(L.kt_monthsN, { n: v }) : lab === 'active' ? (v ? L.kt_yes : L.kt_no) : lab === 'status' ? L['kt_st_' + v] || v : lab === 'src' ? L['kt_src_' + v] || v : String(v);
+    const KIND = { create: 'create', edit: 'edit', terms: 'limit', termsAdd: 'limit', block: 'status', inactive: 'status', activate: 'status', lic: 'lic', bank: 'edit' };
+    const evs = (c.hist || []).slice().reverse(), days = [...new Set(evs.map(e => String(e.at).slice(0, 10)))];
+    const hist = days.map(day => ({ label: day, items: evs.filter(e => String(e.at).slice(0, 10) === day).map(e => ({ kind: KIND[e.kind] || 'edit', initials: ini(e.who), name: e.who, action: L['kt_h_' + e.kind] || e.kind, time: String(e.at).slice(11), changes: (e.changes || []).map(ch => ({ label: fill(L['kt_hf_' + ch.label] || ch.label, { b: ch.br ? bn(ch.br) : '' }), from: fmtV(ch.label, ch.from), to: ch.label === 'termsAdd' ? bn(ch.br) + (ch.to === 'import' ? ' · ' + L.kt_src_import : '') : fmtV(ch.label, ch.to) })) })) }));
+    // side summary
+    const sb = s.sumBr && T[s.sumBr] ? s.sumBr : my && T[my] ? my : brs[0], sumHas = !!sb;
+    let kpis = [], bars = [];
+    if (sb) { const ds = D.debtState(p.kind, ref, sb), t = T[sb], last = D.ktLast(c, p.kind), debtPick = () => D.openDebt({ kind: p.kind, party: ref, branch: sb });
+      kpis = mt ? (() => { const ci = D.ktCustInfo(c, sb), ag = ci.aging, pt = ((D.store.ptypes || []).find(x => x.code === t.price) || {}).name || t.price, odNote = ci.overdue > 0 ? fill(L.pb_late, { n: ci.maxLate }) + ' · 1–30: ' + fM(ag[1]) + ' · 31–60: ' + fM(ag[2]) + ' · 61–90: ' + fM(ag[3]) + ' · 90+: ' + fM(ag[4]) : '';
+          return [{ label: L.kt_sDebt, value: fM(ds.L.debt), pick: debtPick, pickTip: L.kt_openDebt, size: '18px' }, { label: L.kt_sOver, value: ci.overdue > 0 ? fM(ci.overdue) : '—', note: odNote, color: ci.overdue > 0 ? '#B91C1C' : null, size: '18px', pick: ci.overdue > 0 ? debtPick : null },
+            { label: L.kt_sLimit, value: fM(t.limit), size: '16px', note: L.ys_limitLeft + ': ' + (t.limit ? fM(Math.max(0, t.limit - ds.L.debt)) : '—'), warn: !!t.limit && ds.L.debt > t.limit }, { label: L.ys_cPrice, value: pt, size: '16px' },
+            { label: L.kt_sAdv, value: ds.L.advance > 0 ? fM(ds.L.advance) : '—', size: '16px' }, { label: L.ys_cLastSale, value: ci.lastSale ? ci.lastSale.date : '—', note: ci.lastSale ? fM(ci.lastSale.sum) + ' · ' + ci.lastSale.no : '', size: '16px' },
+            { label: L.kt_sLastP, value: last.pay ? last.pay.date : '—', note: last.pay ? fM(last.pay.sum) + (last.pay.no ? ' · ' + last.pay.no : '') : '', size: '16px' }, { label: L.ys_fOp, value: t.operator || '—', size: '16px' }]; })()
+        : (() => { const si = D.ktSupInfo(c, sb), bo = D.bonusOf(c.sup, sb), nx = si.next; return [{ label: L.kt_sOurDebt, value: fM(ds.L.debt), pick: debtPick, pickTip: L.kt_openDebt, size: '18px' }, { label: L.kt_sOver, value: ds.L.overdue > 0 ? fM(ds.L.overdue) : '—', color: ds.L.overdue > 0 ? '#B91C1C' : null, size: '18px' },
+          { label: L.ys_cNext, value: nx ? nx.date : '—', note: nx ? fM(nx.sum) + ' · ' + nx.no : '', color: nx && nx.days < 0 ? '#B91C1C' : nx && nx.days <= 3 ? '#B45309' : null, size: '16px' }, { label: L.ys_cBonus, value: bo.balance > 0 ? fM(bo.balance) : '—', color: bo.balance > 0 ? '#15803D' : null, size: '16px' },
+          { label: L.pb_expected, value: bo.expSum > 0 ? fM(bo.expSum) : '—', note: bo.expected.length ? bo.expected.map(x => x.date).join(', ') : '', size: '16px' }, { label: L.kt_sAdv, value: ds.L.advance > 0 ? fM(ds.L.advance) : '—', size: '16px' },
+          { label: L.kt_sLastR, value: last.order ? last.order.date : '—', note: last.order ? last.order.no : '', size: '16px' }, { label: L.kt_sLastP, value: last.pay ? last.pay.date : '—', note: last.pay ? fM(last.pay.sum) + (last.pay.no ? ' · ' + last.pay.no : '') : '', size: '16px' }]; })();
+      const dmap = brs.map(b => ({ b, d: D.debtState(p.kind, ref, b).L.debt })), mx = Math.max(1, ...dmap.map(x => x.d));
+      bars = dmap.map(x => ({ name: bn(x.b), qty: fM(x.d), qtyColor: '#172B2A', pct: Math.round(x.d / mx * 100) })); }
+    const sumBrs = brs.map(b => { const on = b === sb; return { label: b, on, bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', color: on ? '#172B2A' : '#5B6B6A', pick: () => this.setState({ sumBr: b }) }; });
+    const canEdit = this.can(mt ? 'contactC' : 'contactS') || this.can('bank') || this.can('all');
+    return {
+      ...base, c, screenLabel: c.name, parentLabel: mt ? L.kt_tC : L.kt_tS, back: () => p.onBack && p.onBack(), badges, meta: [c.region, c.legal].filter(Boolean).join(' · '), stirText: 'STIR ' + D.stirF(c.stir), more, banners, readOnly: !canEdit,
+      primary: { label: L.kt_edit, icon: 'pencil', pick: () => { if (!canEdit) return this.toast(this.who([...(mt ? D.KT_R.contactC : D.KT_R.contactS), 'accountant'])); p.onEdit && p.onEdit(c.key); } },
+      tabs, tGen: s.tab === 'gen', tList: !!(gl[s.tab] && gl[s.tab].rows), gList: gl[s.tab] && gl[s.tab].rows ? gl[s.tab] : { rows: [], title: '', note: '' }, gListEmpty: !!(gl[s.tab] && gl[s.tab].rows) && !gl[s.tab].rows.length, gListGo: () => gl[s.tab] && gl[s.tab].go && gl[s.tab].go(), tLic: s.tab === 'lic', tTerms: s.tab === 'terms', tDocs: s.tab === 'docs', tProds: s.tab === 'prods', tHist: s.tab === 'hist',
+      mainRows, bankRows, contacts: (c.contacts || []).map(k => ({ ...k, ini: ini(k.name) })), noContacts: !(c.contacts || []).length,
+      lics, noLics: !lics.length, fileToast: () => this.toast(L.kt_tFile), openLicForm: () => this.setState({ lf: { kind: 'pharm', no: '', issued: D.TODAY, until: '' }, lfTried: false }), licFormOpen: !!lf, lf: lf || {}, lfFields, licCols: this.state.wide ? 4 : 2,
+      licKinds: ['pharm', 'ctrl'].map(k => ({ value: k, label: L['kt_lk_' + k] })), setLfKind: v => this.setState(st => ({ lf: { ...st.lf, kind: v } })), closeLicForm: () => this.setState({ lf: null }), saveLic: () => this.saveLic(),
+      termsHead: termsHead.map(([label, al]) => ({ label, align: al })), termsGrid, termsRows, termsMinW: mt ? 1180 : 860, noTerms: !termsRows.length, addTerms: () => this.openPanel(''), addTermsAct: { label: L.kt_addTerms, icon: 'git-branch-plus', pick: () => this.openPanel('') },
+      docsTitle: mt ? L.kt_tabOrders : L.kt_tabReceipts, docsNote: fill(L.kt_lastN, { n: 20 }), docs, noDocs: !docs.length, prods, noProds: !prods.length, periods,
+      hist, histFilters: [{ key: 'all', label: L.kt_hfAll }, { key: 'limit', label: L.kt_hfLimit }, { key: 'status', label: L.kt_hfStatus }, { key: 'lic', label: L.kt_hfLic }],
+      sumTitle: sb ? fill(L.kt_sTitle, { b: bn(sb) }) : L.kt_sNoTerms, sumHas, sumNone: !sumHas, kpis, bars, sumBrs, hasSumBrs: brs.length > 1, asideFlex: this.state.wide ? '0 0 340px' : '1 1 100%',
+      panelOpen: !!s.panel, panel: s.panel || {}, saveTerms: (br, t, isNew) => this.saveTerms(br, t, isNew), closePanel: () => this.setState({ panel: null }), denied: rs => this.toast(this.who(rs)),
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }), reason: s.reason, reasonErr: s.reasonErr, onReason: v => this.setState({ reason: v, reasonErr: '' })
+    };
+  }
+}
+</script>
+</body>
+</html>

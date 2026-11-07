@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:16px;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <dc-import name="PageHeader" title="{{ L.n_audit }}" count="{{ total }}" primary="{{ exportBtn }}" hint-size="100%,52px"></dc-import>
+    <span style="display:flex;align-items:center;gap:6px;font-size:13px;line-height:18px;color:#647574"><lucide-i name="lock" size="14"></lucide-i>{{ L.bs_auImmutable }}</span>
+  </div>
+  <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <div style="flex:1;min-width:0">
+      <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.bs_auSearch }}" filters="{{ filters }}" chip-labels="{{ chipLabels }}" date-filter="{{ dateFilter }}" has-active="{{ hasActive }}" on-clear-all="{{ clearAll }}" clear-all-label="{{ L.bs_clearF }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+    </div>
+    <sc-if value="{{ brLocked }}"><span style="display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;color:#5B6B6A;font-size:13px;white-space:nowrap"><lucide-i name="lock" size="14"></lucide-i>{{ brLockText }}</span></sc-if>
+  </div>
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+      <dc-import name="DataTable" columns="{{ columns }}" rows="{{ rows }}" scroll-x="{{ true }}" min-width="{{ tMin }}" sticky-first="{{ false }}" hint-size="100%,600px"></dc-import>
+      <div style="padding:8px 16px;border-top:1px solid #E2E8F0">
+        <dc-import name="Pagination" total="{{ total }}" per-page="50" page="{{ pg }}" per-options="{{ perOpts }}" on-page="{{ setPg }}" prev-label="{{ L.bs_prev }}" next-label="{{ L.bs_next }}" per-label="{{ L.bs_perPage }}" hint-size="100%,40px"></dc-import>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isEmpty }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px">
+      <dc-import name="EmptyState" icon="search-x" title="{{ L.bs_auEmptyT }}" text="{{ L.bs_auEmptyD }}" min-height="320" secondary="{{ clearAction }}" hint-size="100%,320px"></dc-import>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ panelOpen }}">
+    <div style="position:fixed;inset:0;z-index:175">
+      <div onClick="{{ closePanel }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+      <div role="dialog" aria-modal="true" style="position:absolute;top:0;right:0;bottom:0;width:480px;max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+        <div style="min-height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 12px 24px;border-bottom:1px solid #E2E8F0">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            <span style="width:32px;height:32px;flex:none;border-radius:8px;background:{{ sp.ibg }};color:{{ sp.ic }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ sp.icon }}" size="16"></lucide-i></span>
+            <div style="display:flex;flex-direction:column;min-width:0"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sp.title }}</h2><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ sp.at }}</span></div>
+          </div>
+          <button onClick="{{ closePanel }}" aria-label="{{ L.bs_closeDlg }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px">
+          <dc-import name="InfoGrid" title="{{ L.bs_igRecord }}" rows="{{ sp.info }}" stacked="{{ false }}" hint-size="100%,300px"></dc-import>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:13px;line-height:18px;font-weight:600">{{ L.bs_auDiffT }}</span>
+            <sc-if value="{{ sp.hasDiff }}">
+              <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><span style="padding:8px 10px">{{ L.bs_auField }}</span><span style="padding:8px 10px">{{ L.bs_auBefore }}</span><span style="padding:8px 10px">{{ L.bs_auAfter }}</span></div>
+                <sc-for list="{{ sp.diff }}" as="d">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);border-bottom:1px solid #EEF2F4;font-size:13px;line-height:18px">
+                    <span style="padding:8px 10px;font-weight:500;overflow-wrap:anywhere">{{ d.f }}</span>
+                    <span style="padding:8px 10px;background:#FEF2F2;color:#B91C1C;overflow-wrap:anywhere">{{ d.from }}</span>
+                    <span style="padding:8px 10px;background:#F0FDF4;color:#15803D;overflow-wrap:anywhere">{{ d.to }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ sp.noDiff }}"><span style="font-size:13px;color:#647574">{{ L.bs_auNoDiff }}</span></sc-if>
+          </div>
+        </div>
+        <sc-if value="{{ sp.canOpen }}">
+          <div style="flex:none;padding:14px 24px;border-top:1px solid #E2E8F0"><button onClick="{{ sp.open }}" style="padding:0;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#0F766E;cursor:pointer;display:flex;align-items:center;gap:4px" style-hover="color:#0F766E;text-decoration:underline">{{ L.bs_auOpenObj }}<lucide-i name="arrow-up-right" size="14"></lucide-i></button></div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dlgOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ false }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.bs_cancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;}}">
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const ini = n => String(n || '').split(' ').map(x => x[0] || '').join('').slice(0, 2).toUpperCase();
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(n * 100) / 100).toFixed(2).split('.'); return fN(+a) + ',' + b; };
+const fV = v => v == null || v === '' ? '—' : typeof v === 'number' ? (Number.isInteger(v) && Math.abs(v) < 100000 ? fN(v) : fM(v)) : String(v);
+const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
+const ACT = { create: ['file-plus', '#0F766E', '#F0FDFA'], approve: ['circle-check', '#15803D', '#F0FDF4'], cancel: ['circle-x', '#B91C1C', '#FEF2F2'], change: ['pencil', '#5B6B6A', '#F5F7F8'], login: ['log-in', '#0F766E', '#F0FDFA'], loginFail: ['shield-x', '#B91C1C', '#FEF2F2'], block: ['ban', '#B91C1C', '#FEF2F2'], perm: ['shield-check', '#7C3AED', '#F5F3FF'], setting: ['settings', '#B45309', '#FFFBEB'] };
+const DOCT = ['kr', 'by', 'qm', 'hc', 'qy', 'mt', 'yt', 'tr', 'io', 'ko', 'bo', 'as', 'bq', 'no', 'iv'];
+const D0 = { from: '28.09.2026', to: '04.10.2026' };
+class Component extends DCLogic {
+  state = { q: '', date: { ...D0 }, fWho: [], fBr: [], fAct: [], fObj: [], view: 'all', pg: 1, sel: null, dlg: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { const D = this.D; if (D && D.store.auditReq) { const r = D.store.auditReq; D.store.auditReq = null; this.setState({ fWho: r.who ? [r.who] : [], date: { from: null, to: null } }); } this.runDemo(); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.runDemo(); }
+  runDemo() { const k = this.props.demo && this.props.demo.k; if (!k) return; const reset = { q: '', date: { ...D0 }, fWho: [], fBr: [], fAct: [], fObj: [], view: 'all', pg: 1, sel: null };
+    if (k === 'bsAuditDiff') { const a = this.D.auditList().find(x => x.act === 'cancel' && (x.diff || []).length >= 2) || this.D.auditList().find(x => (x.diff || []).length); this.setState({ ...reset, sel: a ? a.id : null }); }
+    if (k === 'bsAuditEmpty') this.setState({ ...reset, q: 'SV-TSH-999999', fAct: ['loginFail'] }); }
+  brLock() { return !this.D.allBr(this.props.role) ? (this.props.branch && this.props.branch !== 'ALL' ? this.props.branch : 'TSH') : null; }
+  roleName(id) { return id ? (this.L['r_' + id] || id) : '—'; }
+  brName(c) { return c ? ((this.D.BRANCHES.find(b => b.code === c) || {}).name || c) : this.L.rl_scAll; }
+  otName(t) { return this.L['bs_ot_' + t] || String(t || '').toUpperCase(); }
+  inView(a, v) { return v === 'cancel' ? a.act === 'cancel' : v === 'fail' ? a.act === 'loginFail' : v === 'perm' ? a.act === 'perm' || a.act === 'setting' : v === 'ctrl' ? a.ctrl : true; }
+  base() { const D = this.D, s = this.state, lock = this.brLock(), q = D.toLat(s.q.trim().toLowerCase()), f = pD(s.date.from), t = pD(s.date.to);
+    return D.auditList().filter(a => (!lock || a.branch === lock) && (f == null || a.t >= f) && (t == null || a.t < t + 86400000) && (!q || D.toLat((a.obj + ' ' + a.text + ' ' + a.who).toLowerCase()).includes(q))
+      && (!s.fWho.length || s.fWho.includes(a.who)) && (!s.fBr.length || s.fBr.includes(a.branch || 'ALL')) && (!s.fAct.length || s.fAct.includes(a.act)) && (!s.fObj.length || s.fObj.includes(DOCT.includes(a.objType) ? 'doc:' + a.objType : a.objType))); }
+  exportCsv(list) { const L = this.L, esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = [[L.bs_cTime, L.bs_cWho, L.rl_cRole, L.rl_cBranch, L.bs_cAction, L.bs_cObject, L.bs_cDetail, L.bs_cDevice].map(esc).join(';')].concat(list.map(a => [a.at, a.who, this.roleName(a.role), this.brName(a.branch), L['bs_act_' + a.act] || a.act, a.obj, a.text, a.device].map(esc).join(';'))).join('\n');
+    const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })), el = document.createElement('a'); el.href = url; el.download = 'audit-jurnali.csv'; document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    this.setState({ dlg: null }); this.props.onToast && this.props.onToast(fill(L.bs_auExported, { n: fN(list.length) })); }
+  renderVals() {
+    const L = this.L, D = this.D, s = this.state, p = this.props, narrow = !!p.narrow;
+    if (!D) return { L, views: [], filters: [], columns: [], rows: [], sp: { info: [], diff: [] }, dlg: {} };
+    const lock = this.brLock(), pre = this.base(), list = pre.filter(a => this.inView(a, s.view)), all = D.auditList().filter(a => !lock || a.branch === lock);
+    const pages = Math.max(1, Math.ceil(list.length / 50)), pg = Math.min(s.pg, pages), shown = list.slice((pg - 1) * 50, pg * 50);
+    const cnt = (fn) => all.filter(fn).length, set = k => v => this.setState({ [k]: v, pg: 1 });
+    const who = [...new Set(all.map(a => a.who))].sort(), objT = [...new Set(all.map(a => DOCT.includes(a.objType) ? 'doc:' + a.objType : a.objType))].filter(Boolean);
+    const filters = [{ label: L.bs_cWho, options: who.map(w => ({ value: w, label: w, count: cnt(a => a.who === w) })), selected: s.fWho, onChange: set('fWho') }]
+      .concat(lock ? [] : [{ label: L.rl_cBranch, options: [{ value: 'ALL', label: L.rl_scAll, count: cnt(a => !a.branch) }].concat(D.BRANCHES.map(b => ({ value: b.code, label: b.name, count: cnt(a => a.branch === b.code) }))), selected: s.fBr, onChange: set('fBr') }])
+      .concat([{ label: L.bs_cAction, options: Object.keys(ACT).map(k => ({ value: k, label: L['bs_act_' + k], count: cnt(a => a.act === k) })), selected: s.fAct, onChange: set('fAct') },
+        { label: L.bs_auObjType, options: objT.map(t => ({ value: t, label: t.startsWith('doc:') ? L.bs_ot_doc + ' · ' + this.otName(t.slice(4)) : this.otName(t), count: cnt(a => (DOCT.includes(a.objType) ? 'doc:' + a.objType : a.objType) === t) })), selected: s.fObj, onChange: set('fObj') }]);
+    const hide = narrow, columns = [{ key: 't', label: L.bs_cTime, width: '168px' }, { key: 'w', label: L.bs_cWho, width: 'minmax(170px,1.2fr)' }, { key: 'r', label: L.rl_cRole, width: '140px' }, { key: 'b', label: L.rl_cBranch, width: '130px' }, { key: 'a', label: L.bs_cAction, width: '160px' }, { key: 'o', label: L.bs_cObject, width: 'minmax(150px,1fr)' }]
+      .concat(hide ? [] : [{ key: 'd', label: L.bs_cDetail, width: 'minmax(160px,1.4fr)' }, { key: 'v', label: L.bs_cDevice, width: '220px' }]);
+    const rows = shown.map(a => { const A = ACT[a.act] || ACT.change; return { id: a.id, selected: s.sel === a.id, onToggle: () => {}, onOpen: () => this.setState({ sel: a.id }),
+      cells: [{ type: 'mono', text: a.at }, { type: 'person', text: a.who, av: ini(a.who) }, { type: 'text', text: this.roleName(a.role), color: '#5B6B6A' }, { type: 'text', text: a.branch || '—', color: '#5B6B6A' }, { type: 'icontext', icon: A[0], text: L['bs_act_' + a.act] || a.act },
+        a.page && D.navCan(p.role, a.page) && a.act !== 'login' && a.act !== 'loginFail' ? { type: 'link', text: a.obj, pick: () => this.openObj(a) } : { type: 'text', text: a.obj }]
+        .concat(hide ? [] : [{ type: 'text', text: (a.diff || []).length ? a.diff.map(d => d.f).join(', ') : a.text || '—', color: '#5B6B6A' }, { type: 'text', text: a.device, color: '#647574' }]) }; });
+    const sel = s.sel && D.auditList().find(a => a.id === s.sel), A = sel ? ACT[sel.act] || ACT.change : ACT.change;
+    const sp = sel ? { title: (L['bs_act_' + sel.act] || sel.act) + ' · ' + sel.obj, at: sel.at, icon: A[0], ic: A[1], ibg: A[2],
+      info: [{ label: L.bs_cWho, value: sel.who }, { label: L.rl_cRole, value: this.roleName(sel.role) }, { label: L.rl_cBranch, value: this.brName(sel.branch) }, { label: L.bs_cAction, value: L['bs_act_' + sel.act] || sel.act }, { label: L.bs_cObject, value: sel.obj }, { label: L.bs_auObjType, value: this.otName(sel.objType) }, { label: L.bs_cDetail, value: sel.text }, { label: L.bs_cDevice, value: sel.device }],
+      diff: (sel.diff || []).map(d => ({ f: d.f === d.f && D.ROLE_IDS.includes(d.f) ? this.roleName(d.f) : d.f || '—', from: d.op === '+' ? '—' : fV(d.op === '-' ? (L['rl_p_' + String(d.from).replace('.', '_')] || d.from) : d.from), to: d.op === '-' ? '—' : fV(d.op === '+' ? (L['rl_p_' + String(d.to).replace('.', '_')] || d.to) : d.to) })),
+      hasDiff: !!(sel.diff || []).length, noDiff: !(sel.diff || []).length, canOpen: !!(sel.page && D.navCan(p.role, sel.page)), open: () => this.openObj(sel) } : { info: [], diff: [] };
+    const hasActive = !!(s.q || s.fWho.length || s.fBr.length || s.fAct.length || s.fObj.length || s.date.from !== D0.from || s.date.to !== D0.to);
+    const clear = () => this.setState({ q: '', fWho: [], fBr: [], fAct: [], fObj: [], date: { ...D0 }, view: 'all', pg: 1 });
+    return { L, narrow, total: String(list.length), q: s.q, setQ: v => this.setState({ q: v, pg: 1 }), filters, hasActive, clearAll: clear, clearAction: { label: L.bs_clearF, icon: 'filter-x', pick: clear },
+      chipLabels: { search: L.rl_search, reset: L.rl_clearAll, apply: L.rl_apply, remove: L.rl_clearAll, none: L.rl_noRows },
+      dateFilter: { label: L.bs_auPeriod, from: s.date.from, to: s.date.to, onChange: v => this.setState({ date: v, pg: 1 }), labels: { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.k_drWeek, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext } },
+      brLocked: !!lock, brLockText: fill(L.bs_auBrLock, { b: this.brName(lock) }),
+      views: [['all', L.bs_vAll], ['cancel', L.bs_auVCancel], ['fail', L.bs_auVFail], ['perm', L.bs_auVPerm], ['ctrl', L.bs_auVCtrl]].map(([k, l]) => ({ label: l, count: pre.filter(a => this.inView(a, k)).length, active: s.view === k, tone: k === 'fail' && pre.some(a => a.act === 'loginFail') ? 'warning' : null, pick: () => this.setState({ view: k, pg: 1 }) })),
+      columns, rows, tMin: narrow ? 900 : 1320, hasRows: list.length > 0, isEmpty: list.length === 0, pg, setPg: n => this.setState({ pg: n }), perOpts: [50],
+      exportBtn: { label: L.bs_auExport, icon: 'file-spreadsheet', pick: () => list.length > 5000 ? this.setState({ dlg: { title: L.bs_auBigT, text: fill(L.bs_auBig, { n: fN(list.length) }), items: [], confirm: L.bs_auExport, run: () => this.exportCsv(list) } }) : this.exportCsv(list) },
+      panelOpen: !!sel, sp, closePanel: () => this.setState({ sel: null }), dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }) };
+  }
+  openObj(a) { const D = this.D; this.setState({ sel: null }); if (a.objType === 'emp') { const e = (D.store.emps || []).find(x => D.empName(x) === a.obj); if (e) D.store.bsEmp = e.id; } else if (a.obj && a.obj !== 'Qoralama') D.store.navReq = { page: a.page, open: a.obj }; this.props.onNavigate && this.props.onNavigate(a.page); }
+}
+</script>
+</body>
+</html>

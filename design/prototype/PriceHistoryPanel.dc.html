@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ overlay }}" hint-placeholder-val="{{ true }}">
+<div onClick="{{ close }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.24);display:flex;justify-content:flex-end;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <aside role="dialog" aria-modal="true" aria-label="{{ L.nr_hpT }}" onClick="{{ stop }}" style="width:540px;max-width:100%;height:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:-8px 0 24px rgba(18,60,58,0.10);display:flex;flex-direction:column">
+    <header style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #EEF2F4">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.nr_hpT }} · {{ brName }}</span>
+        <span style="font-size:17px;line-height:24px;font-weight:600">{{ pName }}</span>
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ pSub }}</span>
+      </div>
+      <button onClick="{{ close }}" aria-label="{{ L.nr_hpClose }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button>
+    </header>
+    <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:16px">
+      <dc-import name="Select" label="{{ L.nr_hpType }}" required="{{ false }}" options="{{ typeOpts }}" value="{{ type }}" on-change="{{ setType }}" hint-size="100%,58px"></dc-import>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+        <sc-for list="{{ kpis }}" as="k"><div style="display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid #E2E8F0;border-radius:10px;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span><span style="font-size:16px;line-height:22px;font-weight:600;color:{{ k.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.value }}</span><span style="font-size:11.5px;line-height:16px;color:#647574">{{ k.note }}</span></div></sc-for>
+      </div>
+      <sc-if value="{{ hasChart }}">
+        <section style="border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:600">{{ L.nr_hpChart }}</span>
+          <svg viewBox="0 0 460 150" width="100%" height="150" role="img" aria-label="{{ L.nr_hpChart }}" style="display:block;overflow:visible">
+            <sc-for list="{{ grid }}" as="g"><line x1="40" x2="452" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF2F4" stroke-width="1"></line><text x="34" y="{{ g.ty }}" text-anchor="end" font-size="10" fill="#647574">{{ g.label }}</text></sc-for>
+            <line x1="{{ todayX }}" x2="{{ todayX }}" y1="8" y2="128" stroke="#647574" stroke-width="1" stroke-dasharray="3 3"></line>
+            <polyline points="{{ pts }}" fill="none" stroke="#0F766E" stroke-width="2" stroke-linejoin="round"></polyline>
+            <sc-if value="{{ hasFut }}"><polyline points="{{ futPts }}" fill="none" stroke="#1D4ED8" stroke-width="2" stroke-dasharray="4 3"></polyline></sc-if>
+            <sc-for list="{{ dots }}" as="d"><circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.5" fill="{{ d.fill }}" stroke="#FFFFFF" stroke-width="1.5"><title>{{ d.tip }}</title></circle></sc-for>
+            <sc-for list="{{ xlab }}" as="x"><text x="{{ x.x }}" y="146" text-anchor="middle" font-size="10" fill="#647574">{{ x.label }}</text></sc-for>
+          </svg>
+        </section>
+      </sc-if>
+      <sc-if value="{{ hasRows }}">
+        <section style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:{{ cols }};min-height:36px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><sc-for list="{{ head }}" as="h"><span style="padding:0 10px;text-align:{{ h.align }}">{{ h.label }}</span></sc-for></div>
+          <sc-for list="{{ rows }}" as="r">
+            <div style="display:grid;grid-template-columns:{{ cols }};min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4;font-size:13px;background:{{ r.bg }}">
+              <span style="padding:0 10px;display:flex;flex-direction:column"><span>{{ r.eff }}</span><sc-if value="{{ r.hasTag }}"><span style="font-size:11px;line-height:14px;font-weight:500;color:{{ r.tagColor }}">{{ r.tag }}</span></sc-if></span>
+              <sc-if value="{{ isBatch }}"><span style="padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px">{{ r.batch }}</span></sc-if>
+              <span style="padding:0 10px;text-align:right;font-weight:600">{{ r.price }}</span>
+              <span style="padding:0 10px;display:flex;align-items:center;justify-content:flex-end;gap:2px;color:{{ r.pctColor }}"><sc-if value="{{ r.hasArrow }}"><lucide-i name="{{ r.arrow }}" size="14"></lucide-i></sc-if>{{ r.pct }}</span>
+              <span style="padding:0 10px"><button onClick="{{ r.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ r.doc }}</button></span>
+              <span style="padding:0 10px;font-size:12.5px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.who }}</span>
+            </div>
+          </sc-for>
+        </section>
+      </sc-if>
+      <sc-if value="{{ noHist }}"><div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:32px 16px;border:1px dashed #CBD5D3;border-radius:10px;text-align:center"><lucide-i name="tag" size="22" style="color:#647574"></lucide-i><span style="font-size:14px;font-weight:500">{{ L.nq_hpEmpty }}</span></div></sc-if>
+    </div>
+    <footer style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid #EEF2F4">
+      <button onClick="{{ close }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.nr_hpClose }}</button>
+    </footer>
+  </aside>
+</div>
+</sc-if>
+<sc-if value="{{ inline }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:14px;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div style="width:260px;max-width:100%"><dc-import name="Select" label="{{ L.nr_hpType }}" required="{{ false }}" options="{{ typeOpts }}" value="{{ type }}" on-change="{{ setType }}" hint-size="100%,58px"></dc-import></div>
+    <button onClick="{{ openSet }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F0FDFA"><lucide-i name="arrow-up-right" size="16"></lucide-i>{{ L.nq_hpOpen }}</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+    <sc-for list="{{ kpis }}" as="k"><div style="display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span><span style="font-size:16px;line-height:22px;font-weight:600;color:{{ k.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.value }}</span><span style="font-size:11.5px;line-height:16px;color:#647574">{{ k.note }}</span></div></sc-for>
+  </div>
+  <sc-if value="{{ hasChart }}">
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+      <span style="font-size:13px;font-weight:600">{{ L.nr_hpChart }}</span>
+      <svg viewBox="0 0 460 150" width="100%" height="160" preserveAspectRatio="none" role="img" aria-label="{{ L.nr_hpChart }}" style="display:block;overflow:visible">
+        <sc-for list="{{ grid }}" as="g"><line x1="40" x2="452" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF2F4" stroke-width="1"></line><text x="34" y="{{ g.ty }}" text-anchor="end" font-size="10" fill="#647574">{{ g.label }}</text></sc-for>
+        <line x1="{{ todayX }}" x2="{{ todayX }}" y1="8" y2="128" stroke="#647574" stroke-width="1" stroke-dasharray="3 3"></line>
+        <polyline points="{{ pts }}" fill="none" stroke="#0F766E" stroke-width="2" stroke-linejoin="round"></polyline>
+        <sc-if value="{{ hasFut }}"><polyline points="{{ futPts }}" fill="none" stroke="#1D4ED8" stroke-width="2" stroke-dasharray="4 3"></polyline></sc-if>
+        <sc-for list="{{ dots }}" as="d"><circle cx="{{ d.x }}" cy="{{ d.y }}" r="3.5" fill="{{ d.fill }}" stroke="#FFFFFF" stroke-width="1.5"><title>{{ d.tip }}</title></circle></sc-for>
+        <sc-for list="{{ xlab }}" as="x"><text x="{{ x.x }}" y="146" text-anchor="middle" font-size="10" fill="#647574">{{ x.label }}</text></sc-for>
+      </svg>
+    </section>
+  </sc-if>
+  <sc-if value="{{ hasRows }}">
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;overflow-x:auto">
+      <div style="min-width:560px">
+        <div style="display:grid;grid-template-columns:{{ cols }};min-height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><sc-for list="{{ head }}" as="h"><span style="padding:0 12px;text-align:{{ h.align }}">{{ h.label }}</span></sc-for></div>
+        <sc-for list="{{ rows }}" as="r">
+          <div style="display:grid;grid-template-columns:{{ cols }};min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4;font-size:13px;background:{{ r.bg }}">
+            <span style="padding:0 12px;display:flex;align-items:center;gap:8px">{{ r.eff }}<sc-if value="{{ r.hasTag }}"><span style="height:20px;padding:0 6px;border-radius:6px;background:{{ r.tagBg }};color:{{ r.tagColor }};font-size:11.5px;line-height:20px;font-weight:500">{{ r.tag }}</span></sc-if></span>
+            <sc-if value="{{ isBatch }}"><span style="padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:12px">{{ r.batch }}</span></sc-if>
+            <span style="padding:0 12px;text-align:right;font-weight:600">{{ r.price }}</span>
+            <span style="padding:0 12px;display:flex;align-items:center;justify-content:flex-end;gap:2px;color:{{ r.pctColor }}"><sc-if value="{{ r.hasArrow }}"><lucide-i name="{{ r.arrow }}" size="14"></lucide-i></sc-if>{{ r.pct }}</span>
+            <span style="padding:0 12px"><button onClick="{{ r.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ r.doc }}</button></span>
+            <span style="padding:0 12px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.who }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+  <sc-if value="{{ noHist }}"><div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:36px 16px;background:#FFFFFF;border:1px dashed #CBD5D3;border-radius:10px;text-align:center"><lucide-i name="tag" size="22" style="color:#647574"></lucide-i><span style="font-size:14px;font-weight:500">{{ L.nq_hpEmpty }}</span></div></sc-if>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800},&quot;pid&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:8,&quot;tsType&quot;:&quot;number&quot;},&quot;type&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;base&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;inline&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onOpenNo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(no)=&gt;void&quot;},&quot;onOpenSet&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(type)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const MON = ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avg', 'sen', 'okt', 'noy', 'dek'];
+class Component extends DCLogic {
+  state = { type: null };
+  get D() { return window.MedixData; }
+  componentDidMount() { this.onKey = e => { if (e.key === 'Escape' && !this.props.inline) this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate(pp) { if (pp.pid !== this.props.pid || pp.type !== this.props.type) this.setState({ type: null }); }
+  renderVals() {
+    const p = this.props, L = p.dict || {}, D = this.D, inline = !!p.inline;
+    const base = { L, overlay: !inline, inline, typeOpts: [], kpis: [], grid: [], dots: [], xlab: [], rows: [], head: [], close: () => p.onClose && p.onClose(), stop: e => e.stopPropagation() };
+    if (!D || !D.priceHist || !D.ptByCode) return base;
+    const type = this.state.type || p.type || D.ptBase().code, pt = D.ptByCode(type) || {}, isBatch = !!pt.batch;
+    const pr = D.prodById(p.pid) || {}, br = p.branch && p.branch !== 'ALL' ? p.branch : 'TSH', T0 = pD(D.TODAY), H = D.priceHist(p.pid, type, br), showCost = D.can(p.role, 'prices.cost');
+    const cur = isBatch ? null : D.priceAt(p.pid, type, br), nxt = isBatch ? null : D.priceNext(p.pid, type, br), lc = D.costBasis(p.pid, br);
+    const bCol = isBatch || H.some(h => h.batch), HG = isBatch ? H : H.filter(h => !h.batch);
+    const nos = D.store.nos || [], docOf = no => nos.find(x => x.no === no);
+    const prevOf = (h, i, arr) => { for (let j = i + 1; j < arr.length; j++) if ((arr[j].batch || null) === (h.batch || null)) return arr[j]; return null; };
+    const desc = H.slice().reverse();
+    const rows = desc.map((h, i) => { const prev = prevOf(h, i, desc), pct = prev ? (h.price - prev.price) / prev.price * 100 : null, doc = docOf(h.doc), isCur = cur && h === cur, isFut = pD(h.eff) > T0;
+      return { eff: h.eff, batch: h.batch || '—', price: fM(h.price), pct: pct == null ? '—' : (pct > 0 ? '+' : pct < 0 ? '−' : '') + (Math.round(Math.abs(pct) * 10) / 10).toString().replace('.', ',') + '%', pctColor: pct > 0 ? '#15803D' : pct < 0 ? '#B91C1C' : '#5B6B6A', hasArrow: !!pct, arrow: pct > 0 ? 'arrow-up' : 'arrow-down',
+        doc: h.doc, who: doc ? (doc.approvedBy || doc.postedBy || doc.createdBy || '') : '', hasTag: !!(isCur || isFut || (h.batch && !isBatch)), tag: [isCur ? L.nr_hpCur : isFut ? L.nr_hpFut : '', h.batch && !isBatch ? (L.y2_hpBatch || 'Partiya narxi') : ''].filter(Boolean).join(' · '), tagColor: isFut ? '#1D4ED8' : h.batch && !isBatch ? '#0F766E' : '#15803D', tagBg: isFut ? '#EFF6FF' : '#DDF5EE', bg: isCur ? '#F0FAF8' : '#FFFFFF', open: () => p.onOpenNo && p.onOpenNo(h.doc) }; });
+    const from = T0 - 365 * 86400000, to = T0 + 45 * 86400000, X = t => 40 + (t - from) / (to - from) * 412;
+    const vals = HG.map(h => h.price), mn = vals.length ? Math.min(...vals) * 0.96 : 0, mx = vals.length ? Math.max(...vals) * 1.03 : 1, Y = v => 128 - (v - mn) / ((mx - mn) || 1) * 116;
+    const past = HG.filter(h => pD(h.eff) <= T0), fut = HG.filter(h => pD(h.eff) > T0), step = []; let lastV = null; const startH = past.filter(h => pD(h.eff) <= from).pop();
+    if (startH) { lastV = startH.price; step.push([X(from), Y(lastV)]); }
+    past.filter(h => pD(h.eff) > from).forEach(h => { const x = X(pD(h.eff)); if (lastV != null) step.push([x, Y(lastV)]); step.push([x, Y(h.price)]); lastV = h.price; });
+    if (lastV != null) step.push([X(T0), Y(lastV)]);
+    const futPts = fut.length && lastV != null ? [[X(T0), Y(lastV)], [X(pD(fut[0].eff)), Y(lastV)], [X(pD(fut[0].eff)), Y(fut[0].price)], [452, Y(fut[0].price)]] : [];
+    const months = []; for (let i = 0; i <= 12; i += 3) { const d = new Date(from + i * 30.4 * 86400000); months.push({ x: X(d.getTime()), label: MON[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2) }); }
+    const head = [[L.nr_hpEff, 'left']].concat(bCol ? [[L.nq_l_batch, 'left']] : []).concat([[L.nr_hpPrice + ' (QQS bilan)', 'right'], [L.nr_hpPct, 'right'], [L.nr_hpDoc, 'left'], [L.nr_hpWho, 'left']]).map(([label, align]) => ({ label, align }));
+    const cols = inline ? (bCol ? '150px 120px 140px 100px 150px minmax(120px,1fr)' : '170px 150px 110px 150px minmax(120px,1fr)') : (bCol ? '96px 92px 104px 80px 124px minmax(0,1fr)' : '110px 112px 86px 124px minmax(0,1fr)');
+    const hasChart = !isBatch && HG.length > 0;
+    return { ...base, brName: (D.BRANCHES.find(b => b.code === br) || {}).name, pName: pr.name || '—', pSub: [pr.maker, pr.cat, pr.unit].filter(Boolean).join(' · '), type, isBatch: bCol,
+      typeOpts: (D.store.ptypes || []).filter(t => t.active || t.code === type).map(t => ({ value: t.code, label: t.name })), setType: v => this.setState({ type: v }),
+      kpis: [{ label: L.nr_hpCur, value: cur ? fM(cur.price) : '—', note: cur ? cur.eff : (isBatch ? '' : L.nq_hpEmpty), color: cur ? '#172B2A' : '#B45309' }, { label: L.nr_hpFut, value: nxt ? fM(nxt.price) : '—', note: nxt ? nxt.eff : '', color: nxt ? '#1D4ED8' : '#647574' }].concat(showCost ? [{ label: L.nq_l_cost, value: lc ? fM(lc.costV) : '—', note: lc ? (lc.batch || lc.date || '') : '', color: '#172B2A' }] : []),
+      hasChart, hasRows: H.length > 0, noHist: !H.length, pts: step.map(q => q.map(v => v.toFixed(1)).join(',')).join(' '), hasFut: futPts.length > 0, futPts: futPts.map(q => q.map(v => v.toFixed(1)).join(',')).join(' '), todayX: X(T0).toFixed(1),
+      dots: HG.filter(h => pD(h.eff) >= from).map(h => ({ x: X(pD(h.eff)).toFixed(1), y: Y(h.price).toFixed(1), fill: pD(h.eff) > T0 ? '#1D4ED8' : '#0F766E', tip: `${h.eff} · ${fM(h.price)}` })),
+      grid: vals.length ? [0, 0.5, 1].map(f => { const v = mn + (mx - mn) * f; return { y: Y(v).toFixed(1), ty: (Y(v) + 3).toFixed(1), label: fN(Math.round(v / 100) * 100) }; }) : [], xlab: months, rows, head, cols,
+      openSet: () => p.onOpenSet && p.onOpenSet(type) };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums">
+  <sc-if value="{{ isActive }}">
+    <div style="display:flex;align-items:center;height:34px;border:1px solid #0D9488;border-radius:8px;background:#DDF5EE;color:#0F766E;font-size:13px">
+      <button onClick="{{ toggle }}" style="height:100%;padding:0 4px 0 10px;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px"><lucide-i name="calendar" size="14"></lucide-i>{{ label }}: {{ rangeText }}</button>
+      <button onClick="{{ clear }}" aria-label="{{ lb.remove }}" style="width:26px;height:100%;border:0;background:transparent;color:#0F766E;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0 8px 8px 0" style-hover="background:rgba(13,148,136,0.15)"><lucide-i name="x" size="14"></lucide-i></button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isIdle }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ toggle }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px dashed #CBD5D3;border-radius:8px;background:#FFFFFF;color:#5B6B6A;font-size:13px;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out,color 120ms ease-out" style-hover="background:#F8FAFA;color:#172B2A"><lucide-i name="plus" size="14"></lucide-i>{{ label }}</button>
+  </sc-if>
+  <sc-if value="{{ open }}">
+    <div onClick="{{ toggle }}" style="position:fixed;inset:0;z-index:40"></div>
+    <div role="dialog" style="position:absolute;top:40px;left:{{ popLeft }};width:{{ popW }}px;max-width:calc(100vw - 32px);background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);z-index:41;display:flex;flex-direction:column;color:#172B2A">
+      <div style="display:flex;min-width:0">
+        <div style="width:148px;flex:none;padding:8px;border-right:1px solid #EEF2F4;display:flex;flex-direction:column;gap:2px">
+          <sc-for list="{{ presets }}" as="p"><button onClick="{{ p.pick }}" style="height:32px;padding:0 10px;border:0;border-radius:6px;background:{{ p.bg }};color:{{ p.color }};font-size:13px;font-weight:{{ p.weight }};text-align:left;cursor:pointer" style-hover="background:#F8FAFA">{{ p.label }}</button></sc-for>
+        </div>
+        <div style="flex:1;min-width:0;padding:12px 16px;display:flex;gap:24px;flex-wrap:wrap">
+          <sc-for list="{{ months }}" as="m">
+            <div style="width:224px;display:flex;flex-direction:column;gap:6px">
+              <div style="height:28px;display:flex;align-items:center;justify-content:space-between">
+                <sc-if value="{{ m.first }}"><button onClick="{{ prev }}" aria-label="{{ lb.prev }}" style="width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="chevron-left" size="16"></lucide-i></button></sc-if>
+                <sc-if value="{{ m.notFirst }}"><span style="width:28px"></span></sc-if>
+                <span style="font-size:13px;font-weight:600">{{ m.title }}</span>
+                <sc-if value="{{ m.last }}"><button onClick="{{ next }}" aria-label="{{ lb.next }}" style="width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="chevron-right" size="16"></lucide-i></button></sc-if>
+                <sc-if value="{{ m.notLast }}"><span style="width:28px"></span></sc-if>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,32px);row-gap:2px">
+                <sc-for list="{{ weekdays }}" as="w"><span style="height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#647574">{{ w }}</span></sc-for>
+                <sc-for list="{{ m.days }}" as="d">
+                  <span style="height:32px;display:flex;align-items:center;justify-content:center;background:{{ d.band }};border-radius:{{ d.bandR }}">
+                    <sc-if value="{{ d.real }}">
+                      <button onClick="{{ d.pick }}" onMouseEnter="{{ d.hover }}" style="width:30px;height:30px;padding:0;border:0;border-radius:50%;background:{{ d.bg }};color:{{ d.color }};font-size:12.5px;font-weight:{{ d.weight }};text-decoration:{{ d.deco }};text-underline-offset:3px;cursor:pointer;transition:background 120ms ease-out" style-hover="box-shadow:inset 0 0 0 1px #0D9488">{{ d.n }}</button>
+                    </sc-if>
+                  </span>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px 10px 16px;border-top:1px solid #EEF2F4">
+        <span style="font-size:13px;color:{{ draftColor }}">{{ draftText }}</span>
+        <div style="display:flex;gap:8px">
+          <button onClick="{{ reset }}" style="height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;font-size:13px;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A">{{ lb.reset }}</button>
+          <button onClick="{{ apply }}" style="height:30px;padding:0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ lb.apply }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:720,&quot;height&quot;:440},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Sana&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;from&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;to&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;today&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;04.10.2026&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;({from,to})=&gt;void&quot;},&quot;labels&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;alignRight&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const DAY = 86400000;
+const pD = s => { if (!s) return null; const [d, m, y] = s.split('.').map(Number); return Date.UTC(y, m - 1, d); };
+const fD = t => { const d = new Date(t); return `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}`; };
+const MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+class Component extends DCLogic {
+  state = { open: false, a: null, b: null, hover: null, view: null };
+  today() { return pD(this.props.today || '04.10.2026'); }
+  toggle() {
+    if (this.state.open) return this.setState({ open: false });
+    const a = pD(this.props.from), b = pD(this.props.to), base = new Date(a || this.today());
+    this.setState({ open: true, a, b, hover: null, view: Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - (a ? 0 : 1), 1) });
+  }
+  renderVals() {
+    const p = this.props, s = this.state, lb = { remove: 'Filtrni olib tashlash', prev: 'Oldingi oy', next: 'Keyingi oy', reset: 'Tozalash', apply: "Qo'llash", today: 'Bugun', yesterday: 'Kecha', week: 'Shu hafta', month: 'Shu oy', lastMonth: "O'tgan oy", pick: 'Oraliqni tanlang', ...(p.labels || {}) };
+    const T = this.today(), td = new Date(T), wd = (td.getUTCDay() + 6) % 7;
+    const mStart = Date.UTC(td.getUTCFullYear(), td.getUTCMonth(), 1), mEnd = Date.UTC(td.getUTCFullYear(), td.getUTCMonth() + 1, 0);
+    const pm = [Date.UTC(td.getUTCFullYear(), td.getUTCMonth() - 1, 1), Date.UTC(td.getUTCFullYear(), td.getUTCMonth(), 0)];
+    const presetDefs = [['today', T, T], ['yesterday', T - DAY, T - DAY], ['week', T - wd * DAY, T - wd * DAY + 6 * DAY], ['month', mStart, mEnd], ['lastMonth', pm[0], pm[1]]];
+    const lo = s.a, hi = s.b != null ? s.b : (s.a != null && s.hover != null ? s.hover : null);
+    const r0 = lo != null && hi != null ? Math.min(lo, hi) : lo, r1 = lo != null && hi != null ? Math.max(lo, hi) : lo;
+    const month = off => {
+      const v = new Date(s.view || mStart), y = v.getUTCFullYear(), m = v.getUTCMonth() + off, first = Date.UTC(y, m, 1), fd = new Date(first), n = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(), lead = (fd.getUTCDay() + 6) % 7;
+      const days = [];
+      for (let i = 0; i < lead; i++) days.push({ real: false, band: 'transparent', bandR: '0' });
+      for (let d = 1; d <= n; d++) {
+        const t = Date.UTC(y, m, d), end = t === r0 || t === r1, inR = r0 != null && r1 != null && t >= r0 && t <= r1, col = (lead + d - 1) % 7;
+        const band = inR && r0 !== r1 ? '#DDF5EE' : 'transparent';
+        const lR = t === r0 || col === 0 || d === 1, rR = t === r1 || col === 6 || d === n;
+        days.push({ real: true, n: d, bg: end ? '#0F766E' : 'transparent', color: end ? '#FFFFFF' : '#172B2A', weight: end || t === T ? 600 : 400, deco: t === T && !end ? 'underline' : 'none',
+          band, bandR: `${lR ? 16 : 0}px ${rR ? 16 : 0}px ${rR ? 16 : 0}px ${lR ? 16 : 0}px`,
+          hover: () => s.a != null && s.b == null && s.hover !== t && this.setState({ hover: t }),
+          pick: () => this.setState(st => st.a == null || st.b != null ? { a: t, b: null } : t < st.a ? { a: t, b: st.a } : { b: t }) });
+      }
+      return { title: `${MONTHS[fd.getUTCMonth()]} ${fd.getUTCFullYear()}`, days, first: off === 0, notFirst: off !== 0, last: off === 1 || p.single, notLast: !(off === 1 || p.single) };
+    };
+    const narrow = typeof window !== 'undefined' && window.innerWidth < 760;
+    const sel = pD(p.from), selTo = pD(p.to);
+    return {
+      lb, label: p.label || 'Sana', isActive: !!sel, isIdle: !sel, rangeText: sel ? (selTo && selTo !== sel ? `${fD(sel)} – ${fD(selTo)}` : fD(sel)) : '',
+      open: s.open, toggle: () => this.toggle(), clear: () => p.onChange && p.onChange({ from: null, to: null }),
+      popW: narrow ? 420 : 668, popLeft: p.alignRight ? 'auto' : '0',
+      presets: presetDefs.map(([k, a, b]) => { const on = s.a === a && (s.b === b || (s.b == null && a === b)); return { label: lb[k], bg: on ? '#DDF5EE' : 'transparent', color: on ? '#0F766E' : '#172B2A', weight: on ? 500 : 400, pick: () => this.setState({ a, b, view: Date.UTC(new Date(a).getUTCFullYear(), new Date(a).getUTCMonth() - (narrow ? 0 : (new Date(a).getUTCMonth() === new Date(b).getUTCMonth() ? 1 : 0)), 1) }) }; }),
+      weekdays: ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'], months: narrow ? [month(0)].map(m => ({ ...m, last: true, notLast: false })) : [month(0), month(1)],
+      prev: () => this.setState(st => { const v = new Date(st.view); return { view: Date.UTC(v.getUTCFullYear(), v.getUTCMonth() - 1, 1) }; }),
+      next: () => this.setState(st => { const v = new Date(st.view); return { view: Date.UTC(v.getUTCFullYear(), v.getUTCMonth() + 1, 1) }; }),
+      draftText: r0 != null ? (r1 !== r0 ? `${fD(r0)} – ${fD(r1)}` : fD(r0)) : lb.pick, draftColor: r0 != null ? '#172B2A' : '#647574',
+      reset: () => this.setState({ a: null, b: null, hover: null }),
+      apply: () => { this.setState({ open: false }); p.onChange && p.onChange(s.a == null ? { from: null, to: null } : { from: fD(Math.min(s.a, s.b != null ? s.b : s.a)), to: fD(Math.max(s.a, s.b != null ? s.b : s.a)) }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

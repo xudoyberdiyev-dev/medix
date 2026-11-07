@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div onClick="{{ close }}" style="position:fixed;inset:0;z-index:170;background:rgba(18,43,42,0.24);display:flex;justify-content:flex-end;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px">
+  <aside role="dialog" aria-modal="true" aria-label="{{ title }}" onClick="{{ stop }}" style="width:420px;max-width:100%;height:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:-8px 0 24px rgba(18,60,58,0.10);display:flex;flex-direction:column">
+    <header style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #EEF2F4">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ kindLabel }}</span><span style="font-size:17px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</span></div>
+      <button onClick="{{ close }}" aria-label="{{ L.nr_pnCancel }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button>
+    </header>
+    <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+      <sc-if value="{{ roNote }}"><div style="display:flex;gap:8px;padding:10px 12px;border-radius:8px;background:#F8FAFA;border:1px solid #E2E8F0"><lucide-i name="eye" size="16" style="color:#5B6B6A;flex:none;margin-top:1px"></lucide-i><span style="font-size:12.5px;line-height:18px;color:#5B6B6A">{{ roNote }}</span></div></sc-if>
+      <sc-for list="{{ fields }}" as="x">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <sc-if value="{{ x.isText }}"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;line-height:16px;font-weight:500">{{ x.label }}<sc-if value="{{ x.req }}"> <span style="color:#B91C1C">*</span></sc-if></span><input value="{{ x.value }}" onChange="{{ x.on }}" placeholder="{{ x.ph }}" disabled="{{ x.ro }}" inputMode="{{ x.im }}" style="height:34px;padding:0 10px;border:1px solid {{ x.bd }};border-radius:8px;background:{{ x.bg }};font-family:{{ x.font }};font-size:13.5px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></label></sc-if>
+          <sc-if value="{{ x.isSel }}"><dc-import name="Select" label="{{ x.label }}" options="{{ x.opts }}" value="{{ x.value }}" on-change="{{ x.onSel }}" placeholder="{{ L.kt_choose }}" hint-size="100%,56px"></dc-import></sc-if>
+          <sc-if value="{{ x.isSw }}"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0"><span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500"><sc-if value="{{ x.icon }}"><lucide-i name="{{ x.icon }}" size="16" style="color:#1D4ED8"></lucide-i></sc-if>{{ x.label }}</span><button role="switch" aria-checked="{{ x.value }}" aria-label="{{ x.label }}" onClick="{{ x.toggle }}" style="width:36px;height:20px;flex:none;padding:2px;border:0;border-radius:999px;background:{{ x.swBg }};display:flex;justify-content:{{ x.swJ }};cursor:pointer"><span style="width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></button></div></sc-if>
+          <sc-if value="{{ x.err }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ x.err }}</span></sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ hasHist }}">
+        <div style="display:flex;flex-direction:column;gap:8px;padding-top:6px;border-top:1px solid #EEF2F4">
+          <span style="font-size:13px;font-weight:600">{{ L.nr_pnHist }}</span>
+          <sc-for list="{{ hist }}" as="h"><div style="display:flex;flex-direction:column;gap:2px;font-size:12.5px;line-height:18px"><span><span style="font-weight:500">{{ h.who }}</span> <span style="color:#5B6B6A">{{ h.action }}</span></span><sc-if value="{{ h.ch }}"><span style="color:#5B6B6A">{{ h.ch }}</span></sc-if><span style="font-size:11.5px;color:#647574">{{ h.at }}</span></div></sc-for>
+        </div>
+      </sc-if>
+    </div>
+    <footer style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid #EEF2F4">
+      <button onClick="{{ close }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.nr_pnCancel }}</button>
+      <button onClick="{{ save }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59"><lucide-i name="check" size="16"></lucide-i>{{ L.nr_pnSave }}</button>
+    </footer>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;makers&quot;,&quot;cats&quot;,&quot;units&quot;,&quot;ptypes&quot;,&quot;regions&quot;,&quot;drivers&quot;,&quot;cars&quot;,&quot;items&quot;],&quot;default&quot;:&quot;makers&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;item&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;nonce&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;canEdit&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;roText&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;onSave&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(item,changes)=&gt;void&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onDenied&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;}}">
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const FIELDS = { makers: [['name', 't', 1], ['country', 't']], countries: [['name', 't', 1]], cats: [['name', 't', 1], ['parent', 'parent']], units: [['name', 't', 1], ['short', 't', 1], ['frac', 'sw']], ptypes: [['name', 't', 1], ['desc', 't'], ['code', 'ro']],
+  regions: [['name', 't', 1], ['prov', 't'], ['branch', 'br'], ['driver', 'drv']], drivers: [['name', 't', 1], ['phone', 'mono'], ['lic', 'mono'], ['branch', 'br']], cars: [['no', 'mono', 1], ['model', 't'], ['fridge', 'sw'], ['cap', 'num'], ['branch', 'br']], items: [['name', 't', 1], ['dir', 'dir']] };
+const LB = { name: 'f_name', country: 'f_country', parent: 'f_parent', short: 'f_short', frac: 'f_frac', desc: 'f_desc', code: 'f_code', prov: 'f_prov', branch: 'f_branch', driver: 'f_driver', phone: 'f_phone', lic: 'f_lic', no: 'f_no', model: 'f_model', fridge: 'f_fridge', cap: 'f_cap', dir: 'f_dir' };
+class Component extends DCLogic {
+  state = { f: null, tried: false };
+  get D() { return window.MedixData; }
+  componentDidMount() { this.init(); this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate(pp) { if (pp.nonce !== this.props.nonce) this.init(); }
+  init() { const it = this.props.item || {}, k = this.props.kind; this.setState({ f: { ...(k === 'items' ? { dir: 'out' } : {}), ...(k === 'cars' ? { fridge: false, cap: 1000, branch: 'TSH' } : {}), ...(k === 'drivers' || k === 'regions' ? { branch: 'TSH' } : {}), ...it }, tried: false }); }
+  errs() { const L = this.props.dict || {}, f = this.state.f, k = this.props.kind, D = this.D, e = {};
+    (FIELDS[k] || []).forEach(([key, t, req]) => { if (req && !String(f[key] == null ? '' : f[key]).trim()) e[key] = L.nr_eReq; });
+    const nk = k === 'cars' ? 'no' : 'name'; if (!e[nk] && f[nk]) { const dp = D.lkDup(k, f[nk], f.id); if (dp) e[nk] = fill(L.nr_eDupName, { n: dp.name || dp.no }); }
+    if (k === 'cars' && f.no && !e.no && !/^\d{2} [A-Z] \d{3} [A-Z]{2}$/.test(String(f.no).trim().toUpperCase())) e.no = L.nr_eCarNo;
+    if (k === 'cars' && !(+f.cap > 0)) e.cap = L.nr_eNum; return e; }
+  renderVals() {
+    const p = this.props, L = p.dict || {}, D = this.D, s = this.state, k = p.kind, f = s.f || {}, can = !!p.canEdit;
+    const base = { L, fields: [], hist: [], close: () => p.onClose && p.onClose(), stop: e => e.stopPropagation() };
+    if (!D || !s.f) return base;
+    const e = s.tried ? this.errs() : {}, set = (key, v) => this.setState(st => ({ f: { ...st.f, [key]: v } }));
+    const lk = D.store.lk, brOpts = D.BRANCHES.map(b => ({ value: b.code, label: b.name }));
+    const fields = (FIELDS[k] || []).map(([key, t, req]) => { const label = L['nr_' + LB[key]] || key, er = e[key] || '';
+      if (t === 'sw') return { isSw: true, label, value: !!f[key], icon: key === 'fridge' ? 'snowflake' : '', swBg: f[key] ? '#0F766E' : '#CBD5D3', swJ: f[key] ? 'flex-end' : 'flex-start', toggle: () => can && set(key, !f[key]), err: er };
+      if (t === 'parent') return { isSel: true, label, value: f.parent || '', opts: [{ value: '', label: L.nr_f_root }].concat(lk.cats.filter(c => !c.parent && c.id !== f.id && c.active).map(c => ({ value: c.id, label: c.name }))), onSel: v => can && set('parent', v || null), err: er };
+      if (t === 'br') return { isSel: true, label, value: f.branch || null, opts: brOpts, onSel: v => can && set('branch', v), err: er };
+      if (t === 'drv') return { isSel: true, label, value: f.driver || null, opts: lk.drivers.filter(d => d.active).map(d => ({ value: d.did, label: d.name, sub: d.phone })), onSel: v => can && set('driver', v), err: er };
+      if (t === 'dir') return { isSel: true, label, value: f.dir, opts: [{ value: 'out', label: L.nr_dir_out }, { value: 'in', label: L.nr_dir_in }], onSel: v => can && set('dir', v), err: er };
+      const ro = !can || t === 'ro', mono = t === 'mono';
+      return { isText: true, label, req: !!req, value: f[key] == null ? '' : String(f[key]), on: ev => set(key, key === 'no' ? ev.target.value.toUpperCase() : ev.target.value), ph: key === 'no' ? '01 A 123 BC' : key === 'lic' ? 'AF 1234567' : '', ro, im: t === 'num' ? 'numeric' : 'text', font: mono ? "'JetBrains Mono',monospace" : 'inherit', bd: er ? '#B91C1C' : '#E2E8F0', bg: ro ? '#F8FAFA' : '#FFFFFF', err: er }; });
+    const hist = (f.hist || []).slice().reverse().map(h => ({ who: h.who, action: L['nr_h_lk_' + h.kind] || h.kind, at: h.at, ch: (h.changes || []).map(c => `${L['nr_' + LB[c.label]] || c.label}: ${c.from != null && c.from !== '' ? c.from + ' → ' : ''}${c.to}`).join(' · ') }));
+    return { ...base, kindLabel: L['nr_k_' + k], title: f.id ? (f.name || f.no) : fill(L.nr_pnNew, { k: L['nr_k_' + k] }), fields, hist, hasHist: hist.length > 0, roNote: can ? '' : p.roText || '',
+      save: () => { if (!can) return p.onDenied && p.onDenied(); const er = this.errs(); if (Object.keys(er).length) return this.setState({ tried: true }); const it = p.item || {}, ch = []; (FIELDS[k] || []).forEach(([key]) => { if (String(it[key] == null ? '' : it[key]) !== String(f[key] == null ? '' : f[key])) ch.push({ label: key, from: it[key] == null ? '' : String(it[key]), to: String(f[key] == null ? '' : f[key]) }); });
+        const out = { ...f }; if (k === 'cars') { out.no = String(out.no).trim().toUpperCase(); out.cap = +out.cap; } if (k === 'drivers' && !out.did) out.did = Math.max(0, ...lk.drivers.map(d => d.did || 0)) + 1; p.onSave && p.onSave(out, ch); } };
+  }
+}
+</script>
+</body>
+</html>

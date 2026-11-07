@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="{{ title }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="DocumentHeader" print-items="{{ printItems }}" print-label="{{ L.ch_printMenu }}" parent-label="{{ L.tl_title }}" on-parent="{{ back }}" title="{{ title }}" number="{{ number }}" badge="{{ badge }}" steps="{{ steps }}" autosave="{{ autosave }}" secondary="{{ secondary }}" primary="{{ primary }}" more="{{ more }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
+  <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+  <sc-if value="{{ hasUnalloc }}"><div style="display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap;padding:10px 14px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:8px"><lucide-i name="link-2" size="16" style="color:#1D4ED8;flex:none"></lucide-i><span style="flex:1;min-width:200px;font-size:13px;line-height:18px;color:#1D4ED8;text-wrap:pretty">{{ unallocText }}</span><button onClick="{{ linkAdv }}" style="height:32px;padding:0 12px;border:1px solid #BFDBFE;border-radius:8px;background:#FFFFFF;color:#1D4ED8;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#DBEAFE">{{ L.nq_unallocBtn }}</button></div></sc-if>
+  <sc-if value="{{ hasOdInfo }}">
+    <div role="status" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-radius:10px;background:#EFF6FF;border:1px solid #BFDBFE;font-size:13px;line-height:20px;color:#1D4ED8">
+      <lucide-i name="info" size="16" style="flex:none"></lucide-i><span style="flex:1;min-width:200px;text-wrap:pretty">{{ odText }}</span>
+      <button onClick="{{ openOdOrder }}" style="display:flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;color:#1D4ED8;font-size:13px;font-weight:600;cursor:pointer" style-hover="text-decoration:underline">{{ L.tl_bOverdueLink }}<lucide-i name="arrow-right" size="14"></lucide-i></button>
+    </div>
+  </sc-if>
+  <dc-import name="SavedViews" tabs="{{ tabs }}" hint-size="100%,38px"></dc-import>
+
+  <sc-if value="{{ tabDoc }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:{{ layoutCols }};gap:20px;align-items:start;min-width:0">
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0;order:{{ mainOrder }}">
+        <sc-if value="{{ editable }}" hint-placeholder-val="{{ true }}">
+          <dc-import name="FormSection" title="{{ L.tl_secPay }}" description="{{ L.tl_secPayD }}" stacked="{{ true }}" hint-size="100%,360px">
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;min-width:0">
+              <div style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;min-width:0">
+                <dc-import name="Select" field-key="party" label="{{ partyLabel }}" required="{{ true }}" options="{{ partyOpts }}" value="{{ d.party }}" on-change="{{ onParty }}" placeholder="{{ L.tl_choose }}" searchable="{{ true }}" search-ph="{{ L.tl_searchPh }}" empty-label="{{ L.tl_none }}" error="{{ er.party }}" hint-size="100%,56px"></dc-import>
+                <sc-if value="{{ partyWarn }}"><span style="display:flex;align-items:flex-start;gap:6px;font-size:12px;line-height:16px;color:#B45309"><lucide-i name="lock" size="14" style="flex:none;margin-top:1px"></lucide-i>{{ partyWarn }}</span></sc-if>
+              </div>
+              <div data-f="date" style="display:flex;flex-direction:column;min-width:0">
+                <label for="pd-date" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.tl_hDate }} <span style="color:#B91C1C">*</span></label>
+                <input id="pd-date" value="{{ d.date }}" onChange="{{ onDate }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="height:34px;padding:0 12px;border:1px solid {{ bd.date }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                <sc-if value="{{ er.date }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.date }}</div></sc-if>
+              </div>
+              <div data-f="sum" style="grid-column:1/-1;min-width:0;max-width:360px">
+                <dc-import name="MoneyInput" label="{{ L.tl_hSum }}" required="{{ true }}" value="{{ d.sum }}" on-change="{{ onSum }}" suffix="{{ L.tl_som }}" error="{{ er.sum }}" bold="{{ true }}" hint-size="100%,56px"></dc-import>
+              </div>
+              <div data-f="method" style="grid-column:1/-1;display:flex;flex-direction:column;min-width:0">
+                <span style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.tl_hMethod }} <span style="color:#B91C1C">*</span></span>
+                <div role="radiogroup" aria-label="{{ L.tl_hMethod }}" style="display:flex;flex-wrap:wrap;gap:4px;padding:3px;background:#F5F7F8;border:1px solid {{ bd.method }};border-radius:8px">
+                  <sc-for list="{{ methods }}" as="m" hint-placeholder-count="3"><button role="radio" aria-checked="{{ m.on }}" onClick="{{ m.pick }}" title="{{ m.tip }}" style="flex:1 1 150px;display:flex;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 10px;border:0;border-radius:6px;background:{{ m.bg }};box-shadow:{{ m.sh }};color:{{ m.fg }};font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap"><lucide-i name="{{ m.icon }}" size="16"></lucide-i>{{ m.label }}<sc-if value="{{ m.locked }}"><lucide-i name="lock" size="12" style="color:#647574"></lucide-i></sc-if></button></sc-for>
+                </div>
+                <sc-if value="{{ er.method }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.method }}</div></sc-if>
+              </div>
+              <div data-f="acct" style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                <dc-import name="Select" field-key="acct" label="{{ acctLabel }}" required="{{ true }}" options="{{ acctOpts }}" value="{{ d.acct }}" on-change="{{ onAcct }}" placeholder="{{ L.tl_choose }}" error="{{ er.acct }}" hint-size="100%,56px"></dc-import>
+                <sc-if value="{{ hasAcctInfo }}"><span style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#5B6B6A"><span>{{ acctInfoLabel }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{{ acctInfoColor }}">{{ acctInfo }}</span></span></sc-if>
+              </div>
+              <sc-if value="{{ isBank }}">
+                <div data-f="payNo" style="display:flex;flex-direction:column;min-width:0">
+                  <label for="pd-payno" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.tl_hPayNo }} <span style="color:#B91C1C">*</span></label>
+                  <input id="pd-payno" value="{{ d.payNo }}" onChange="{{ onPayNo }}" placeholder="0702" style="height:34px;padding:0 12px;border:1px solid {{ bd.payNo }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A;outline:none" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                  <sc-if value="{{ er.payNo }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.payNo }}</div></sc-if>
+                </div>
+                <div style="display:flex;flex-direction:column;min-width:0">
+                  <label for="pd-bdate" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.tl_hBankDate }}</label>
+                  <input id="pd-bdate" value="{{ d.bankDate }}" onChange="{{ onBankDate }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                </div>
+              </sc-if>
+              <sc-if value="{{ isCard }}">
+                <div data-f="checkNo" style="display:flex;flex-direction:column;min-width:0">
+                  <label for="pd-check" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.tl_hCheck }} <span style="color:#B91C1C">*</span></label>
+                  <input id="pd-check" value="{{ d.checkNo }}" onChange="{{ onCheck }}" placeholder="004811" style="height:34px;padding:0 12px;border:1px solid {{ bd.checkNo }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A;outline:none" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                  <sc-if value="{{ er.checkNo }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.checkNo }}</div></sc-if>
+                </div>
+              </sc-if>
+              <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;min-width:0">
+                <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.tl_hNote }}</span>
+                <textarea value="{{ d.note }}" onChange="{{ onNote }}" rows="2" style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;line-height:20px;color:#172B2A;resize:vertical;outline:none" style-hover="border-color:#CBD5D3" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></textarea>
+              </label>
+            </div>
+          </dc-import>
+        </sc-if>
+        <sc-if value="{{ readView }}"><dc-import name="InfoGrid" title="{{ L.tl_iHead }}" rows="{{ infoRows }}" hint-size="100%,220px"></dc-import></sc-if>
+
+        <section data-f="alloc" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+          <sc-if value="{{ showGrid }}" hint-placeholder-val="{{ true }}"><dc-import name="AllocationGrid" kind="{{ kind }}" rows="{{ gRows }}" editable="{{ editable }}" hints="{{ gHints }}" manual="{{ manual }}" on-auto="{{ onAuto }}" labels="{{ gLabels }}" hint-size="100%,220px"></dc-import></sc-if>
+          <sc-if value="{{ showNoOpen }}">
+            <div style="padding:12px 16px;border-bottom:1px solid #EEF2F4;font-size:14px;font-weight:600">{{ gLabels.title }}</div>
+            <dc-import name="EmptyState" icon="wallet" tone="neutral" title="{{ noOpenT }}" text="{{ noOpenD }}" min-height="200" hint-size="100%,200px"></dc-import>
+          </sc-if>
+          <sc-if value="{{ showPick }}">
+            <div style="padding:12px 16px;border-bottom:1px solid #EEF2F4;font-size:14px;font-weight:600">{{ gLabels.title }}</div>
+            <div style="padding:28px 16px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#647574;text-align:center"><lucide-i name="arrow-up" size="16"></lucide-i>{{ L.tl_pickParty }}</div>
+          </sc-if>
+          <dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ L.tl_tAdv }}" total-value="{{ totAdv }}" bottom="{{ totBottom }}" hint-size="100%,52px"></dc-import>
+        </section>
+      </div>
+
+      <aside style="display:flex;flex-direction:column;gap:16px;min-width:0;order:{{ asideOrder }}">
+        <sc-if value="{{ hasParty }}">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:12px;line-height:16px;color:#647574">{{ sideCaption }}</span>
+            <button onClick="{{ openCard }}" title="{{ L.kt_oeCard }}" style="padding:0;border:0;background:transparent;font:inherit;text-align:left;cursor:pointer;color:inherit;font-size:15px;line-height:22px;font-weight:600" style-hover="color:#0F766E;text-decoration:underline;text-underline-offset:3px">{{ partyName }}</button>
+          </div>
+          <dc-import name="SideSummary" kpis="{{ kpis }}" columns="{{ kpiCols }}" bars-title="{{ barsTitle }}" bars="{{ bars }}" hint-size="100%,320px"></dc-import>
+          <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:14px;font-weight:600">{{ cardTitle }}</span>
+            <sc-for list="{{ cardRows }}" as="r">
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ r.label }}</span>
+                <span style="font-family:{{ r.font }};font-size:{{ r.size }};line-height:18px;color:{{ r.color }};word-break:break-all">{{ r.value }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ hasPendingLink }}"><button onClick="{{ openPending }}" style="display:flex;align-items:center;gap:6px;padding:8px 0 0;border:0;border-top:1px solid #EEF2F4;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;text-align:left" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="clock" size="14"></lucide-i>{{ pendingText }}</button></sc-if>
+          </section>
+          <span style="font-size:12px;line-height:16px;color:#647574">{{ branchNote }}</span>
+        </sc-if>
+        <sc-if value="{{ noParty }}">
+          <div style="padding:20px 16px;border:1px dashed #CBD5D3;border-radius:10px;font-size:13px;line-height:18px;color:#647574;text-align:center;text-wrap:pretty">{{ L.tl_pickParty }}</div>
+        </sc-if>
+      </aside>
+    </div>
+  </sc-if>
+  <sc-if value="{{ tabHist }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px"><dc-import name="HistoryTimeline" groups="{{ histGroups }}" empty-label="{{ L.tl_histEmpty }}" hint-size="100%,240px"></dc-import></div>
+  </sc-if>
+  <sc-if value="{{ hasFooter }}"><dc-import name="StickyFormFooter" style="position:sticky;bottom:-24px;z-index:5;display:block;align-self:stretch" dirty="{{ footDirty }}" dirty-label="{{ footNote }}" cancel-label="{{ L.tl_toList }}" save-label="{{ footSave }}" max-width="{{ 1280 }}" on-cancel="{{ back }}" on-save="{{ footRun }}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{ noFooter }}"><div style="height:48px"></div></sc-if>
+
+  <sc-if value="{{ archOpen }}">
+    <div onClick="{{ closeArch }}" style="position:fixed;inset:0;z-index:150;background:rgba(18,43,42,0.20)"></div>
+    <aside role="dialog" aria-label="{{ L.kb_arch }}" style="position:fixed;top:0;right:0;bottom:0;z-index:151;width:380px;max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid #EEF2F4">
+        <span style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600"><lucide-i name="archive" size="18" style="color:#5B6B6A"></lucide-i>{{ L.kb_arch }}</span>
+        <button onClick="{{ closeArch }}" aria-label="{{ L.tl_close }}" style="width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="x" size="18"></lucide-i></button>
+      </div>
+      <div style="padding:16px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px">
+        <dc-import name="InfoGrid" title="{{ L.kb_archInfo }}" rows="{{ archRows }}" stacked="{{ true }}" hint-size="100%,320px"></dc-import>
+        <sc-if value="{{ archBq }}"><button onClick="{{ openArchBq }}" style="display:flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="database" size="16" style="color:#0F766E"></lucide-i>{{ L.bq_openFull }} · {{ archBqNo }}</button></sc-if>
+        <sc-if value="{{ archNoBq }}"><span style="font-size:12px;line-height:16px;color:#647574">{{ L.kb_archLater }}</span></sc-if>
+      </div>
+    </aside>
+  </sc-if>
+  <sc-if value="{{ vsOpen }}"><dc-import name="ValidationSummary" title="{{ vsTitle }}" subtitle="{{ L.tl_vsSub }}" errors="{{ vsErrors }}" warnings="{{ vsWarnings }}" warn-title="{{ L.tl_vsWarn }}" close-label="{{ L.tl_close }}" on-close="{{ closeVs }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" with-reason="{{ dlg.withReason }}" reason-label="{{ dlg.reasonLabel }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ onReason }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.tl_back }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ blockOpen }}">
+    <div onClick="{{ closeDlg }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="alertdialog" aria-modal="true" onClick="{{ stop }}" style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#FEF2F2;color:#B91C1C;display:flex;align-items:center;justify-content:center"><lucide-i name="ban" size="18"></lucide-i></span>
+          <div style="display:flex;flex-direction:column;gap:8px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.tl_blockT }}</h2><p style="margin:0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ blockText }}</p><p style="margin:0;font-size:13px;line-height:18px;color:#172B2A">{{ L.tl_blockHint }}</p></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end"><button onClick="{{ closeDlg }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.tl_understood }}</button></div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mt&quot;,&quot;yt&quot;],&quot;default&quot;:&quot;mt&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cashier&quot;,&quot;accountant&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;accountant&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Jasur Ergashev&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;initial&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;req&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;docKey&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;act&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k)=&gt;void&quot;},&quot;onOpenSale&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(oid)=&gt;void&quot;},&quot;onOpenRc&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(no)=&gt;void&quot;},&quot;onChanged&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(p)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const r2 = x => Math.round(x * 100) / 100;
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); if (!m) return null; const t = Date.UTC(+m[3], +m[2] - 1, +m[1]), d = new Date(t); return d.getUTCDate() === +m[1] && d.getUTCMonth() === +m[2] - 1 ? t : null; };
+const T0 = Date.UTC(2026, 9, 4);
+const ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2);
+const AK2M = { cash: 'cash', term: 'online', bank: 'bank' }, M2AK = { cash: 'cash', online: 'term', bank: 'bank' };
+const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], pending: ['clock', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
+const MICON = { cash: 'banknote', bank: 'landmark', online: 'credit-card' };
+class Component extends DCLogic {
+  state = { arch: null, d: null, tab: 'doc', save: null, savedAt: null, tried: false, vs: null, dlg: null, reason: '', reasonErr: '', manual: false, odInfo: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    this.init();
+    this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._poll); clearTimeout(this._sv); clearTimeout(this._it); }
+  componentDidUpdate(pp) { if (pp.docKey !== this.props.docKey) this.init(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  role() { return this.props.role || 'director'; }
+  can(k) { return this.D.canR(this.role(), 'PAY_ROLES', k); }
+  init() {
+    const D = this.D; if (!D) { this._it = setTimeout(() => this.init(), 60); return; }
+    const p = this.props; let d = p.initial ? D.payCopy(p.initial) : this.blank(p.req || {}), manual = false;
+    if (d.status === 'draft' && d.auto) { d.auto = false; d.alloc = this.autoList(d); }
+    else if (d.status === 'draft' && d.alloc.length) manual = !this.isAuto(d);
+    if (p.req && p.req.manual) { d.alloc = p.req.manual.map(([no, sum]) => ({ no, sum })); manual = true; }
+    this._edited = false;
+    this.setState({ d, tab: 'doc', save: null, savedAt: null, tried: false, vs: null, dlg: null, manual, odInfo: null, reason: '', reasonErr: '' }, () => {
+      if (!p.initial && d.party != null) this.persist(d);
+      const a = p.act; if (a === 'tryPost') setTimeout(() => this.primaryRun(), 80); if (a === 'cancel') setTimeout(() => this.tryCancel(), 80);
+    });
+  }
+  blank(req) {
+    const p = this.props, D = this.D, br = p.branch && p.branch !== 'ALL' ? p.branch : 'TSH', kind = req.kind || p.kind || 'mt', at = D.nowStr();
+    const ra = req.acct ? D.accById(req.acct) : null, method = req.method || (ra ? AK2M[ra.kind] || 'bank' : (this.can('cashOnly') ? 'cash' : 'bank'));
+    const d = { kind, no: null, id: null, branch: br, date: D.TODAY, party: req.party != null ? req.party : null, method, acct: req.noAcct ? null : (req.acct || this.defAcct(br, method)), sum: req.sum != null ? req.sum : null, alloc: [], status: 'draft',
+      payNo: req.payNo || '', bankDate: method === 'bank' ? D.TODAY : '', checkNo: req.checkNo || '', note: '', createdBy: p.userName, createdAt: at, log: [{ kind: 'create', who: p.userName, at }] };
+    const no = req.saleNo || req.receiptNo;
+    if (no && d.party != null) { const inv = D.ledger(kind, d.party, br).invoices.find(x => x.no === no); if (inv && d.sum == null) d.sum = inv.left; d.first = no; }
+    if (d.party != null && d.sum != null) d.alloc = this.autoList(d);
+    return d;
+  }
+  till() { const D = this.D; return D.tillAccts ? D.tillAccts(this.role(), this.props.userName) : null; }
+  defAcct(br, method) { const t = method === 'cash' ? this.till() : null, l = this.D.accountsOf(br, M2AK[method] || 'bank'), a = (t && l.find(x => t.includes(x.id))) || l[0]; return a ? a.id : null; }
+  led(d) { return d.party == null ? null : this.D.ledger(d.kind, d.party, d.branch, d.id); }
+  autoList(d) { const L = this.led(d); if (!L) return []; const m = this.D.autoAlloc(L.invoices.filter(x => x.left > 0), Math.max(0, d.sum || 0), d.first); return Object.keys(m).map(no => ({ no, sum: m[no] })); }
+  isAuto(d) { const a = this.autoList(d), m = {}; a.forEach(x => { m[x.no] = x.sum; }); const b = (d.alloc || []).filter(x => x.sum > 0); return b.length === a.length && b.every(x => Math.abs((m[x.no] || 0) - x.sum) < 0.005); }
+  upd(fn, realloc) {
+    const d = JSON.parse(JSON.stringify(this.state.d)); fn(d);
+    if (realloc) d.alloc = this.autoList(d);
+    this.setState({ d }); this.persist(d);
+  }
+  persist(d) {
+    if (d.status !== 'draft' || !this.can('create')) return; if (d.party == null && d.sum == null) return;
+    clearTimeout(this._sv); this.setState({ save: 'saving' });
+    this._sv = setTimeout(() => {
+      const D = this.D, cur = { ...this.state.d };
+      if (cur.no && !this._edited) { cur.log = (cur.log || []).concat([{ kind: 'change', who: this.props.userName, at: D.nowStr() }]); this._edited = true; }
+      const r = D.savePay(cur); this.setState(s => ({ d: { ...s.d, no: r.no, id: r.id, log: r.log }, save: 'saved', savedAt: D.nowStr().slice(11) }));
+    }, 450);
+  }
+  partyName(d) { const D = this.D; if (d.party == null) return ''; return d.kind === 'mt' ? (D.custById(d.party) || {}).name || '' : d.party; }
+  acctName(id) { const a = this.D.accById(id); return a ? a.name : '—'; }
+  check(d) {
+    const D = this.D, L = this.L, errs = [], warns = [], rowErr = {}, fe = {};
+    const e = (text, f) => { errs.push({ text, f }); if (f && !fe[f]) fe[f] = text; };
+    if (d.party == null) e(L.tl_eParty, 'party');
+    const dt = pD(d.date); if (dt == null) e(L.tl_eDate, 'date'); else if (dt > T0) e(L.tl_eFuture, 'date'); else if (d.status === 'draft' && D.bqCutoffErr && D.bqCutoffErr(d.branch, null, d.date)) { const bqc = D.bqCutoffErr(d.branch, null, d.date); e(String(L.bq_eCutoff || '').replace('{d}', bqc.date).replace('{n}', bqc.no), 'date'); } else if (d.status === 'draft' && d.method === 'cash' && d.acct && D.dayClosed && D.dayClosed(d.acct, d.date)) e(fill(L.kb_eClosed, { d: d.date }), 'date');
+    if (d.sum == null) e(L.tl_eSum, 'sum'); else if (!(d.sum > 0)) e(L.tl_eSumPos, 'sum');
+    if (!d.acct) e(d.method === 'cash' ? L.tl_eCash : L.tl_eBank, 'acct');
+    { const tl = d.status === 'draft' && d.method === 'cash' ? this.till() : null; if (tl && d.acct && !tl.includes(d.acct)) e(L.kb_eTill, 'acct'); }
+    if (d.method === 'bank' && !String(d.payNo || '').trim()) e(L.tl_ePayNo, 'payNo');
+    if (d.method === 'online' && !String(d.checkNo || '').trim()) e(L.tl_eCheck, 'checkNo');
+    if (d.status === 'draft' && d.method !== 'cash' && this.can('cashOnly')) e(L.tl_eCashier, 'method');
+    const Lg = this.led(d), inv = Lg ? Lg.invoices : []; let tot = 0;
+    (d.alloc || []).forEach(a => { const x = inv.find(i => i.no === a.no); tot += a.sum || 0; if (x && a.sum > x.left + 0.004) { rowErr[a.no] = 1; e(fill(L.tl_eRow, { n: a.no, s: fM(x.left) }), 'alloc'); } });
+    tot = r2(tot);
+    if (d.sum > 0 && tot > d.sum + 0.004) e(fill(L.tl_eOverAlloc, { a: fM(tot), b: fM(d.sum) }), 'alloc');
+    if (d.kind === 'yt' && d.method === 'cash' && d.acct && d.sum > 0 && d.status !== 'posted' && d.status !== 'cancelled') { const bal = D.accBalance(d.acct); if (d.sum > bal + 0.004) e(fill(L.tl_eCashShort, { a: fM(bal), b: fM(d.sum), c: fM(d.sum - bal) }), 'sum'); }
+    const adv = d.sum > 0 && Lg ? Math.max(0, r2(d.sum - tot)) : 0;
+    if (adv > 0) warns.push({ text: d.kind === 'mt' ? fill(L.tl_wAdvMt, { s: fM(adv) }) : fill(L.tl_wAdvYt, { s: fM(adv) }) });
+    return { errs, warns, rowErr, fe, tot, adv, Lg };
+  }
+  goField(f) {
+    this.setState({ vs: null, tab: 'doc' });
+    setTimeout(() => { const el = document.querySelector(`[data-f="${f}"]`); if (!el) return; const m = document.querySelector('main'); if (m) { const r = el.getBoundingClientRect(), mr = m.getBoundingClientRect(); m.scrollTo({ top: m.scrollTop + r.top - mr.top - 80, behavior: 'smooth' }); } const i = el.querySelector('input,button,textarea'); i && i.focus && i.focus({ preventScroll: true }); }, 60);
+  }
+  tryPost(mode) { const c = this.check(this.state.d); this.setState({ tried: true }); if (c.errs.length) return this.setState({ vs: c }); this.setState({ dlg: mode }); }
+  primaryRun() { const x = this.primaryDef(); x && x.pick && x.pick(); }
+  primaryDef() {
+    const d = this.state.d, L = this.L, K = d.kind, st = d.status;
+    if (st === 'draft') {
+      if (K === 'mt') return { label: L.tl_post, icon: 'check', pick: () => this.can('postMt') ? this.tryPost('post') : this.toast(L.tl_whoPostMt) };
+      if (this.can('direct')) return { label: L.tl_post, icon: 'check', pick: () => this.tryPost('post') };
+      return { label: L.tl_send, icon: 'send', pick: () => this.can('sendYt') ? this.tryPost('send') : this.toast(L.tl_whoSendYt) };
+    }
+    if (st === 'pending') return { label: L.tl_post, icon: 'check', pick: () => this.can('postYt') ? this.tryPost('post') : this.toast(L.tl_whoPostYt) };
+    return null;
+  }
+  tryCancel() {
+    const D = this.D, d = this.state.d, L = this.L;
+    if (!this.can('cancel')) return this.toast(L.tl_whoCancel);
+    if (d.kind === 'mt' && d.method === 'cash') { const bal = D.accBalance(d.acct); if (bal - d.sum < -0.004) return this.setState({ dlg: 'block' }); }
+    this.setState({ dlg: 'cancel', reason: '', reasonErr: '' });
+  }
+  doPost(mode) {
+    const D = this.D, L = this.L, who = this.props.userName, d0 = this.state.d;
+    const before = d0.kind === 'mt' ? D.custLedger(d0.party) : null;
+    clearTimeout(this._sv);
+    const saved = D.savePay({ ...d0, auto: false });
+    const r = mode === 'send' ? D.sendPay(saved, who) : D.postPay(saved, who);
+    let od = null;
+    if (r.kind === 'mt' && r.status === 'posted' && before && before.overdue > 0) { const after = D.custLedger(r.party), pend = D.custPending(r.party); if (after.overdue === 0 && pend.length) od = { n: pend.length, id: pend[0].id }; }
+    this.setState({ d: r, dlg: null, tried: false, odInfo: od, save: null });
+    this.toast(fill(mode === 'send' ? L.tl_tSent : L.tl_tPosted, { n: r.no }));
+    this.props.onChanged && this.props.onChanged(r);
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, narrow, title: L.tl_mtDoc, banners: [], hasUnalloc: false, unallocText: '', linkAdv: () => {}, tabs: [], methods: [], partyOpts: [], acctOpts: [], gRows: [], gLabels: {}, totItems: [], kpis: [], bars: [], cardRows: [], histGroups: [], infoRows: [], er: {}, bd: {}, d: {}, dlg: {}, more: [], secondary: [], vsErrors: [], vsWarnings: [] };
+    if (!D || !s.d) return base;
+    const d = s.d, K = d.kind, st = d.status, role = this.role(), editable = st === 'draft' && this.can('create');
+    const c = this.check(d), show = s.tried ? c.fe : {}, Lg = c.Lg, br = D.BRANCHES.find(b => b.code === d.branch) || {}, brShort = (br.name || '').replace(' filiali', '');
+    const er = { party: show.party || '', date: show.date || '', sum: show.sum || '', acct: show.acct || '', payNo: show.payNo || '', checkNo: show.checkNo || '', method: show.method || '' };
+    const bd = {}; Object.keys(er).forEach(k => { bd[k] = er[k] ? '#B91C1C' : '#E2E8F0'; });
+    const cust = K === 'mt' && d.party != null ? D.custById(d.party) : null, sup = K === 'yt' && d.party != null ? D.supByName(d.party) : null;
+    const title = d.no ? (K === 'mt' ? L.tl_mtDoc : L.tl_ytDoc) : (K === 'mt' ? L.tl_mtNewT : L.tl_ytNewT), S = ST[st];
+    // header
+    const pr = this.primaryDef(), more = [{ label: L.tl_print, icon: 'printer', pick: () => this.toast(L.tl_tPrint) }], secondary = [];
+    if (st === 'posted') more.push({ label: L.tl_cancel, icon: 'circle-x', danger: true, sep: true, pick: () => this.tryCancel() });
+    if (st === 'draft' && d.id && this.can('create')) more.push({ label: L.tl_del, icon: 'trash-2', danger: true, sep: true, pick: () => this.setState({ dlg: 'delete' }) });
+    if (st === 'pending') secondary.push({ label: L.tl_ret, icon: 'undo-2', pick: () => this.can('postYt') ? this.setState({ dlg: 'return', reason: '', reasonErr: '' }) : this.toast(L.tl_whoReturn) });
+    const steps = K === 'mt'
+      ? (st === 'cancelled' ? [{ label: L.tl_st_draft, state: 'done' }, { label: L.tl_st_posted, state: 'done' }, { label: L.tl_st_cancelled, state: 'fail' }] : [{ label: L.tl_st_draft, state: st === 'draft' ? 'cur' : 'done' }, { label: L.tl_st_posted, state: st === 'posted' ? 'cur' : 'next' }])
+      : (st === 'cancelled' ? [{ label: L.tl_st_draft, state: 'done' }, { label: L.tl_st_pending, state: 'done' }, { label: L.tl_st_posted, state: 'done' }, { label: L.tl_st_cancelled, state: 'fail' }] : [{ label: L.tl_st_draft, state: st === 'draft' ? 'cur' : 'done' }, { label: L.tl_st_pending, state: st === 'pending' ? 'cur' : st === 'draft' ? 'next' : 'done' }, { label: L.tl_st_posted, state: st === 'posted' ? 'cur' : 'next' }]);
+    // banners
+    const at = x => String(x || '').replace(' ', ', '), banners = [];
+    if (st === 'pending') banners.push({ tone: 'warning', icon: 'clock', text: fill(L.tl_bPending, { who: d.sentBy, at: at(d.sentAt) }) });
+    if (st === 'draft' && d.returned) banners.push({ tone: 'warning', icon: 'undo-2', text: fill(L.tl_bReturned, { who: d.returned.by, at: at(d.returned.at), r: d.returned.note }) });
+    if (st === 'posted') banners.push({ tone: 'success', icon: 'circle-check', text: fill(L.tl_bPosted, { at: at(d.postedAt), who: d.postedBy }) });
+    if (st === 'cancelled') banners.push({ tone: 'neutral', icon: 'circle-x', title: fill(L.tl_bCancelled, { at: at(d.cancelledAt), who: d.cancelledBy }), text: d.cancelReason || '' });
+    if (c.adv > 0 && st !== 'cancelled') banners.push({ tone: 'warning', icon: 'piggy-bank', text: c.warns[0].text });
+    const unalloc = st === 'posted' && d.sum > 0 ? Math.max(0, Math.round((d.sum - (d.alloc || []).reduce((s2, x) => s2 + (x.sum || 0), 0)) * 100) / 100) : 0;
+    // form
+    const custs = K === 'mt' ? D.custsIn(d.branch) : [];
+    const partyOpts = K === 'mt' ? custs.map(x => ({ value: x.id, label: x.name + (x.blocked ? ' · ' + L.tl_blocked : ''), muted: !!x.blocked, search: `${x.name} ${x.stir}` })) : D.supPick(d.branch || 'TSH', d.party);
+    const tl = d.method === 'cash' ? this.till() : null, accs = D.accountsOf(d.branch, M2AK[d.method] || 'bank').filter(a => !tl || tl.includes(a.id));
+    const acctOpts = accs.map(a => ({ value: a.id, label: a.kind === 'bank' ? `${a.bank} · ${a.acc}` : a.name }));
+    const ac = D.accById(d.acct), bal = ac ? D.accBalance(ac.id) : 0;
+    const methods = ['cash', 'bank', 'online'].map(m => { const on = d.method === m, locked = m !== 'cash' && this.can('cashOnly'); return { label: L['tl_m_' + m], icon: MICON[m], on, locked, tip: locked ? L.tl_whoCashier : '', bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.10), 0 0 0 1px #0D9488' : 'none', fg: on ? '#0F766E' : '#5B6B6A',
+      pick: () => { if (locked) return this.toast(L.tl_whoCashier); if (d.method === m) return; this.upd(x => { x.method = m; x.acct = this.defAcct(x.branch, m); if (m === 'bank' && !x.bankDate) x.bankDate = D.TODAY; }); } }; });
+    // allocation
+    const inv = Lg ? Lg.invoices : [], am = {}; (d.alloc || []).forEach(a => { am[a.no] = r2((am[a.no] || 0) + a.sum); });
+    const visible = inv.filter(x => x.left > 0 || am[x.no] > 0);
+    const gRows = visible.map(x => ({ no: x.no, onOpen: x.oid != null ? () => p.onOpenSale && p.onOpenSale(x.oid) : x.rc ? () => p.onOpenRc && p.onOpenRc(x.no) : x.open ? () => this.setState({ arch: x.no }) : null, arch: !!x.open, tip: x.open ? L.kb_archTip : '',
+      date: x.date, ext: x.extNo, due: x.due, sum: x.sum, ret: x.ret, prior: x.paid, left: x.left, late: x.late, value: am[x.no] || null, err: c.rowErr[x.no] ? L.tl_eRowShort : '',
+      onValue: n => { this.setState({ manual: true }); this.upd(z => { z.alloc = (z.alloc || []).filter(a => a.no !== x.no); if (n > 0) z.alloc.push({ no: x.no, sum: r2(n) }); }); } }));
+    const gLabels = { arch: L.kb_arch, title: K === 'mt' ? L.tl_gTitle : L.tl_gTitleYt, auto: L.tl_auto, manual: L.tl_manual, manualTip: L.tl_manualTip, paid: L.tl_paid, after: L.tl_after, days: L.tl_days,
+      c_no: K === 'mt' ? L.tl_c_no : L.tl_c_noYt, c_date: L.tl_c_date, c_ext: L.tl_c_ext, c_due: L.tl_c_due, c_sum: K === 'mt' ? L.tl_c_sum : L.tl_c_sumYt, c_ret: K === 'mt' ? L.tl_c_ret : L.tl_c_retYt, c_prior: L.tl_c_prior, c_left: L.tl_c_left, c_late: L.tl_c_late, c_val: L.tl_c_val };
+    // side
+    const kpis = [], cardRows = []; let bars = [], barsTitle = '';
+    const Lc = d.party == null ? null : D.ledger(K, d.party, d.branch);
+    if (Lc) { const Lg = Lc;
+      const odNote = Lg.overdue > 0 ? fill(L.tl_sOldest, { n: Lg.overdueDays }) : L.tl_sNoOverdue, last = Lg.last;
+      kpis.push({ label: K === 'mt' ? L.tl_sDebt : L.tl_sOurDebt, value: fM(Lg.debt), size: '20px', pickTip: L.qz_openCard, pick: () => D.openDebt && D.openDebt({ kind: K, party: d.party, branch: d.branch }) });
+      kpis.push({ label: L.tl_sOverdue, value: fM(Lg.overdue), note: odNote, color: Lg.overdue > 0 ? '#B91C1C' : '#172B2A', size: '20px' });
+      if (K === 'yt') kpis.push({ label: L.tl_sTerms, value: fill(L.tl_sTermsV, { n: (sup || {}).terms || 0 }), size: '20px' });
+      kpis.push({ label: K === 'mt' ? L.tl_sAdv : L.tl_sAdvYt, value: fM(Lg.advance), size: '20px' });
+      kpis.push({ label: L.tl_sLast, value: last ? fM(last.sum) : '—', note: last ? `${last.date} · ${last.no}` : L.tl_sNoLast, size: '20px' });
+      if (cust) {
+        const pct = cust.limit ? Math.round(Lg.debt / cust.limit * 100) : 0;
+        barsTitle = L.tl_sLimit; bars = [{ name: fill(L.tl_sLimitUse, { p: pct }), qty: `${fN(Lg.debt)} / ${fN(cust.limit)}`, qtyColor: pct > 100 ? '#B91C1C' : '#172B2A', pct: Math.min(100, pct) }];
+        cardRows.push({ label: L.tl_sLic, value: cust.license ? fill(L.tl_sLicV, { no: cust.license.no, d: cust.license.until }) : L.tl_sNoLic }, { label: L.tl_sStir, value: cust.stir, mono: true });
+      }
+      if (sup) cardRows.push({ label: L.tl_sBank, value: sup.bank || '—' }, { label: L.tl_sAcc, value: sup.acc || '—', mono: true }, { label: L.tl_sStir, value: sup.stir, mono: true });
+    }
+    const pend = cust ? D.custPending(cust.id) : [];
+    // totals
+    const totItems = [{ label: L.tl_tSum, value: fM(d.sum || 0) }, { label: L.tl_tAlloc, value: fM(c.tot) }];
+    // dialogs
+    let dlg = null; const who = p.userName, nm = this.partyName(d), aName = this.acctName(d.acct), isCash = d.method === 'cash';
+    if (s.dlg === 'post' || s.dlg === 'send') {
+      const before = Lg ? Lg.debt : 0, after = r2(before - c.tot);
+      let full = 0, part = 0, odAfter = 0; inv.forEach(x => { const a = am[x.no] || 0; if (a > 0) { if (a >= x.left - 0.004) full++; else part++; } if (x.late > 0) odAfter += Math.max(0, x.left - a); });
+      const items = [{ icon: 'hand-coins', text: fill(K === 'mt' ? L.tl_dDebtMt : L.tl_dDebtYt, { c: nm, a: fM(before), b: fM(after) }) }];
+      if (full + part) items.push({ icon: 'receipt-text', text: fill(K === 'mt' ? L.tl_dClose : L.tl_dCloseYt, { f: full, p: part }) });
+      items.push({ icon: MICON[d.method], text: fill(K === 'mt' ? (isCash ? L.tl_dInCash : L.tl_dIn) : (isCash ? L.tl_dOutCash : L.tl_dOut), { a: aName, s: fM(d.sum) }) });
+      if (Lg && Lg.overdue > 0 && odAfter < 0.005) items.push({ icon: 'clock', color: '#15803D', text: fill(L.tl_dOdClosed, { s: fM(Lg.overdue) }) });
+      c.warns.forEach(w => items.push({ icon: 'triangle-alert', color: '#B45309', text: w.text }));
+      dlg = s.dlg === 'send' ? { title: L.tl_dSendT, text: L.tl_dSendNote, items, confirm: L.tl_send, danger: false, run: () => this.doPost('send') }
+        : { title: K === 'mt' ? L.tl_dPostMtT : L.tl_dPostYtT, items, confirm: L.tl_post, danger: false, run: () => this.doPost('post') };
+    }
+    if (s.dlg === 'cancel') {
+      const now = D.ledger(K, d.party, d.branch), ex = D.ledger(K, d.party, d.branch, d.id), b0 = D.accBalance(d.acct), b1 = r2(b0 + (K === 'mt' ? -d.sum : d.sum));
+      const items = [{ icon: 'hand-coins', text: fill(K === 'mt' ? L.tl_dCancelDebtMt : L.tl_dCancelDebtYt, { c: nm, a: fM(now.debt), b: fM(ex.debt) }) }, { icon: MICON[d.method], text: fill(L.tl_dCancelAccIn, { a: aName, x: fM(b0), y: fM(b1) }) }];
+      if (Math.abs(now.advance - ex.advance) > 0.004) items.push({ icon: 'piggy-bank', text: fill(L.tl_dCancelAdv, { a: fM(now.advance), b: fM(ex.advance) }) });
+      dlg = { title: fill(L.tl_dCancelT, { n: d.no }), items, withReason: true, reasonLabel: L.tl_reasonLbl, confirm: L.tl_cancel, danger: true,
+        run: () => { const r = this.state.reason.trim(); if (r.length < 10) return this.setState({ reasonErr: L.tl_reasonShort }); const x = D.cancelPay(d.id, who, r); this.setState({ d: x, dlg: null, odInfo: null }); this.toast(fill(L.tl_tCancelled, { n: x.no })); p.onChanged && p.onChanged(x); } };
+    }
+    if (s.dlg === 'return') dlg = { title: L.tl_dReturnT, text: L.tl_dReturnD, items: [], withReason: true, reasonLabel: L.tl_returnLbl, confirm: L.tl_ret, danger: false,
+      run: () => { const r = this.state.reason.trim(); if (r.length < 10) return this.setState({ reasonErr: L.tl_reasonShort }); const x = D.returnPay(d, who, r); this.setState({ d: x, dlg: null }); this.toast(fill(L.tl_tReturned, { n: x.no })); p.onChanged && p.onChanged(x); } };
+    if (s.dlg === 'delete') dlg = { title: L.tl_dDeleteT, text: L.tl_dDeleteD, items: [], confirm: L.tl_del, danger: true, run: () => { clearTimeout(this._sv); D.deletePay(d.id); this.setState({ dlg: null }); this.toast(L.tl_tDeleted); p.onBack && p.onBack(); } };
+    const blockBal = s.dlg === 'block' ? D.accBalance(d.acct) : 0;
+    // history
+    const evs = (d.log || []).slice().reverse(), days = [...new Set(evs.map(e => e.at.slice(0, 10)))];
+    const histGroups = days.map(day => ({ label: day, items: evs.filter(e => e.at.slice(0, 10) === day).map(e => ({ kind: e.kind === 'change' ? 'change' : e.kind === 'create' ? 'create' : 'status', initials: ini(e.who), name: e.who, action: L['tl_h_' + e.kind] || e.kind, time: e.at.slice(11), changes: e.reason ? [{ label: L.tl_hReason, to: e.reason }] : [] })) }));
+    // read view
+    const infoRows = [{ label: L.tl_iParty, value: nm || '—' }, { label: L.tl_iDate, value: d.date }, { label: L.tl_iMethod, value: L['tl_m_' + d.method] }, { label: L.tl_iAcct, value: ac ? (ac.kind !== 'bank' ? ac.name : `${ac.bank} · ${ac.acc}`) : '—', mono: ac && ac.kind === 'bank' },
+      ...(d.method === 'bank' ? [{ label: L.tl_iPayNo, value: d.payNo || '—', mono: true }, { label: L.tl_iBankDate, value: d.bankDate || '—' }] : []), ...(d.method === 'online' ? [{ label: L.tl_iCheck, value: d.checkNo || '—', mono: true }] : []),
+      { label: L.tl_iSum, value: `${fM(d.sum || 0)} ${L.tl_som}` }, { label: L.tl_iBy, value: `${d.createdBy} · ${at(d.createdAt)}` }, ...(d.note ? [{ label: L.tl_iNote, value: d.note }] : [])];
+    const showFooter = editable || (st === 'pending');
+    const ax = s.arch ? inv.find(x => x.no === s.arch) : null;
+    const archRows = ax ? [{ label: L.kb_aNo, value: ax.no, mono: true }, { label: L.kb_aDate, value: ax.date }, { label: L.kb_aDue, value: ax.due }, { label: L.kb_aParty, value: nm }, { label: L.kb_aSum, value: fM(ax.sum) }, { label: L.kb_aPaid, value: fM(ax.paid) }, { label: L.kb_aLeft, value: fM(ax.left) }, { label: L.kb_aNote, value: L.kb_aNoteV }] : [];
+    return {
+      ...base, openCard: () => d.party != null && D.openParty && D.openParty(K, d.party), kind: K, title, printItems: d.no ? D.printItems('pay', d.no, L) : [], number: d.no || '', badge: { label: L['tl_st_' + st], icon: S[0], fg: S[1], bg: S[2] }, steps, primary: pr, more, secondary,
+      autosave: st === 'draft' && (d.no || s.save) ? { state: s.save === 'saving' ? 'saving' : 'saved', time: s.savedAt || '', savedLabel: L.tl_saved, savingLabel: L.tl_saving, errorLabel: L.tl_saveErr } : null,
+      back: () => { clearTimeout(this._sv); if (this.state.save === 'saving') D.savePay(this.state.d); p.onBack && p.onBack(); }, banners, hasUnalloc: unalloc > 0, unallocText: L.nq_unalloc, linkAdv: () => D.openDebt && D.openDebt({ kind: K, party: d.party, branch: d.branch, adv: 'new' }),
+      hasOdInfo: !!s.odInfo, odText: s.odInfo ? fill(L.tl_bOverdueClosed, { n: s.odInfo.n }) : '', openOdOrder: () => { p.onNavigate && p.onNavigate('approvals'); },
+      tabs: [['doc', L.tl_tabDoc], ['hist', L.tl_tabHist]].map(([k, label]) => ({ label, count: k === 'hist' ? (d.log || []).length : null, active: s.tab === k, pick: () => this.setState({ tab: k }) })),
+      tabDoc: s.tab === 'doc', tabHist: s.tab === 'hist', histGroups,
+      layoutCols: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) 300px', mainOrder: narrow ? 2 : 1, asideOrder: narrow ? 1 : 2, kpiCols: narrow ? 3 : 1,
+      infoRows, archOpen: !!ax, archRows, closeArch: () => this.setState({ arch: null }), archBq: !!(ax && D.bqOfArch && D.bqOfArch(ax.no)), archNoBq: !(ax && D.bqOfArch && D.bqOfArch(ax.no)), archBqNo: ax && D.bqOfArch && D.bqOfArch(ax.no) ? D.bqOfArch(ax.no).no : '', openArchBq: () => { const h = D.bqOfArch(ax.no); if (!h) return; this.setState({ arch: null }); setTimeout(() => { D.store.navReq = { page: 'opening', open: h.no, line: h.line }; }, 0); p.onNavigate && p.onNavigate('opening'); }, editable, readView: !editable, d: { ...d, payNo: d.payNo || '', checkNo: d.checkNo || '', bankDate: d.bankDate || '', note: d.note || '' }, er, bd,
+      partyLabel: K === 'mt' ? L.tl_hCust : L.tl_hSup, partyOpts, partyWarn: cust && cust.blocked ? fill(L.tl_blockedWhy, { r: cust.blocked }) : '',
+      onParty: v => { this.setState({ manual: false }); this.upd(x => { x.party = v; x.first = null; x.alloc = []; }, true); },
+      onDate: e => { const v = e.target.value; this.upd(x => { x.date = v; }); }, onSum: n => this.upd(x => { x.sum = n; }, !this.state.manual),
+      onPayNo: e => { const v = e.target.value; this.upd(x => { x.payNo = v; }); }, onBankDate: e => { const v = e.target.value; this.upd(x => { x.bankDate = v; }); }, onCheck: e => { const v = e.target.value; this.upd(x => { x.checkNo = v; }); }, onNote: e => { const v = e.target.value; this.upd(x => { x.note = v; }); },
+      methods, isBank: d.method === 'bank', isCard: d.method === 'online', acctLabel: d.method === 'cash' ? L.tl_hCash : d.method === 'online' ? L.tl_hTerm : L.tl_hBank, acctOpts, onAcct: v => this.upd(x => { x.acct = v; }),
+      hasAcctInfo: !!ac, acctInfoLabel: ac && ac.kind === 'cash' ? L.tl_cashBal : L.tl_bankBal, acctInfo: fM(bal), acctInfoColor: K === 'yt' && isCash && d.sum > bal ? '#B91C1C' : '#172B2A',
+      showGrid: !!Lg && visible.length > 0, showNoOpen: !!Lg && visible.length === 0, showPick: !Lg, noOpenT: K === 'mt' ? L.tl_noOpenT : L.tl_noOpenTYt, noOpenD: K === 'mt' ? L.tl_noOpenD : L.tl_noOpenDYt,
+      gRows, gLabels, gHints: st !== 'cancelled', manual: s.manual, onAuto: () => { this.setState({ manual: false }); this.upd(x => { x.first = null; }, true); },
+      totItems, totAdv: fM(c.adv), totBottom: showFooter ? 40 : -24,
+      hasParty: !!Lg, noParty: !Lg, partyName: nm, sideCaption: K === 'mt' ? L.tl_sCust : L.tl_sSup, kpis, bars, barsTitle, cardTitle: K === 'mt' ? L.tl_sCustCard : L.tl_sReq,
+      cardRows: cardRows.map(r => ({ ...r, font: r.mono ? "'JetBrains Mono',monospace" : 'inherit', size: r.mono ? '12.5px' : '13px', color: '#172B2A' })),
+      hasPendingLink: pend.length > 0, pendingText: fill(L.tl_sPending, { n: pend.length }), openPending: () => { D.store.openReq = pend[0].id; p.onNavigate && p.onNavigate('orders'); },
+      branchNote: fill(L.tl_sBranchOnly, { b: br.name || '' }),
+      hasFooter: showFooter, noFooter: !showFooter, footDirty: c.errs.length > 0 && s.tried, footNote: fill(L.tl_footErr, { n: c.errs.length }), footSave: pr ? pr.label : '', footRun: () => this.primaryRun(),
+      vsOpen: !!s.vs, vsTitle: s.vs ? fill(L.tl_vsTitle, { n: s.vs.errs.length }) : '', closeVs: () => this.setState({ vs: null }),
+      vsErrors: s.vs ? s.vs.errs.map(x => ({ text: x.text, go: () => this.goField(x.f) })) : [], vsWarnings: s.vs ? s.vs.warns.map(x => ({ text: x.text, go: () => this.setState({ vs: null }) })) : [],
+      dlgOpen: !!dlg, dlg: dlg || {}, closeDlg: () => this.setState({ dlg: null }), reason: s.reason, reasonErr: s.reasonErr, onReason: v => this.setState({ reason: v, reasonErr: '' }),
+      blockOpen: s.dlg === 'block', stop: e => e.stopPropagation(), blockText: fill(L.tl_blockCash, { a: fM(blockBal), b: fM(d.sum), c: fM(d.sum - blockBal) })
+    };
+  }
+}
+</script>
+</body>
+</html>

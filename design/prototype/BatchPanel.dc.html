@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div onClick="{{ close }}" style="position:fixed;inset:0;z-index:140;background:rgba(18,43,42,0.30)"></div>
+<aside role="dialog" aria-label="{{ name }}" style="position:fixed;top:0;right:0;bottom:0;width:{{ width }};max-width:100vw;z-index:150;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-variant-numeric:tabular-nums">
+  <div style="padding:16px 20px;border-bottom:1px solid #E2E8F0;display:flex;align-items:flex-start;gap:12px">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+      <h2 style="margin:0;font-size:16px;line-height:22px;font-weight:600">{{ name }}</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:13px;color:#5B6B6A">{{ L.q_batch }} <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A">{{ batchNo }}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ st.bg }};color:{{ st.fg }};font-size:12px;font-weight:500"><lucide-i name="{{ st.icon }}" size="12"></lucide-i>{{ st.label }}</span></div>
+    </div>
+    <button onClick="{{ close }}" aria-label="{{ L.close }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="x" size="18"></lucide-i></button>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px">
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:12px;font-weight:500;color:#5B6B6A">{{ L.q_expiry }}</span>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:24px;line-height:30px;font-weight:600;letter-spacing:-0.02em">{{ exp }}</span><sc-if value="{{ hasExpBadge }}"><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ expBadge.bg }};color:{{ expBadge.fg }};font-size:12px;line-height:22px;font-weight:500">{{ expBadge.label }}</span></sc-if></div>
+      <div style="height:6px;border-radius:3px;background:#EEF2F4;overflow:hidden"><div style="height:100%;width:{{ lifePct }}%;background:{{ lifeColor }};border-radius:3px"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#647574"><span>{{ L.q_mfg }}: {{ mfg }}</span><span>{{ lifeNote }}</span></div>
+    </section>
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:12px;font-weight:500;color:#5B6B6A">{{ L.q_split }}</span>
+      <span style="font-size:14px;line-height:20px;font-weight:500">{{ splitText }}</span>
+      <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#EEF2F4;gap:2px">
+        <sc-for list="{{ segs }}" as="g"><div title="{{ g.label }}" style="width:{{ g.pct }}%;background:{{ g.color }}"></div></sc-for>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#5B6B6A"><sc-for list="{{ segs }}" as="g"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:{{ g.color }}"></span>{{ g.legend }}</span></sc-for></div>
+    </section>
+    <dc-import name="InfoGrid" title="{{ L.q_details }}" rows="{{ info }}" stacked="{{ narrowInfo }}" hint-size="100%,320px"></dc-import>
+    <sc-if value="{{ hasDoc }}"><button onClick="{{ openDoc }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;margin-top:-12px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="file-text" size="14"></lucide-i>{{ L.q_openDoc }} <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ docNo }}</span></button></sc-if>
+    <section style="display:flex;flex-direction:column">
+      <span style="font-size:14px;font-weight:600;padding-bottom:8px">{{ L.q_moves }}</span>
+      <sc-for list="{{ moves }}" as="m">
+        <div style="display:grid;grid-template-columns:88px minmax(0,1fr) 80px 70px;gap:8px;align-items:center;min-height:40px;border-bottom:1px solid #EEF2F4;font-size:13px">
+          <span style="color:#5B6B6A">{{ m.date }}</span>
+          <span style="display:flex;flex-direction:column;min-width:0"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.type }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#647574">{{ m.no }}</span></span>
+          <span style="text-align:right;font-weight:500;color:{{ m.color }}">{{ m.delta }}</span>
+          <span style="text-align:right;color:#5B6B6A">{{ m.bal }}</span>
+        </div>
+      </sc-for>
+    </section>
+    <sc-if value="{{ hasCodes }}">
+      <section style="border:1px solid #E2E8F0;border-radius:10px">
+        <button onClick="{{ toggleCodes }}" aria-expanded="{{ codesOpen }}" style="width:100%;display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:0;background:transparent;font-size:14px;font-weight:600;color:#172B2A;cursor:pointer;text-align:left"><lucide-i name="{{ codesIcon }}" size="16" style="color:#5B6B6A"></lucide-i><span style="flex:1">{{ L.q_codes }}</span><span style="font-size:12px;font-weight:400;color:#647574">{{ codesCount }}</span></button>
+        <sc-if value="{{ codesOpen }}">
+          <div style="padding:0 14px 12px 38px;display:flex;flex-direction:column;gap:6px">
+            <sc-for list="{{ codes }}" as="c"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A">{{ c }}</span></sc-for>
+            <button onClick="{{ allCodes }}" style="align-self:flex-start;margin-top:4px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="text-decoration:underline">{{ allLabel }}</button>
+          </div>
+        </sc-if>
+      </section>
+    </sc-if>
+  </div>
+  <div style="padding:14px 20px;border-top:1px solid #E2E8F0;display:flex;gap:20px;flex-wrap:wrap">
+    <button onClick="{{ moveZone }}" style="display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="arrow-left-right" size="14"></lucide-i>{{ moveLabel }}</button>
+    <button onClick="{{ writeOff }}" style="display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="package-minus" size="14"></lucide-i>{{ L.q_writeOff }}</button>
+    <sc-if value="{{ canSupRet }}"><button onClick="{{ supRet }}" style="display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="rotate-ccw" size="14"></lucide-i>{{ L.qt_aQy }}</button></sc-if>
+  </div>
+</aside>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:860},&quot;batch&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;canCost&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;width&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;480px&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onOpenDoc&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(no)=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;}}">
+const DAY = 86400000, T0 = Date.UTC(2026, 9, 4);
+const fN = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(n * 100) / 100).toFixed(2).split('.'); return fN(+a) + ',' + b; };
+const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
+const ST = { open: ['circle-check', '#15803D', '#F0FDF4'], quar: ['shield-alert', '#B45309', '#FFFBEB'], recv: ['package-open', '#5B6B6A', '#F5F7F8'], ship: ['truck', '#5B6B6A', '#F5F7F8'], expired: ['circle-x', '#B91C1C', '#FEF2F2'] };
+class Component extends DCLogic {
+  state = { codesOpen: false };
+  componentDidMount() { this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  renderVals() {
+    const p = this.props, L = p.dict || {}, b = p.batch || {}, pr = b.p || {}, D = window.MedixData;
+    const st = ST[b.status] || ST.open, br = D ? (D.BRANCHES.find(x => x.code === b.branch) || {}).name : b.branch;
+    const e = pD(b.exp), m = pD(b.mfg), days = b.days;
+    const life = e && m ? Math.max(0, Math.min(100, Math.round((T0 - m) / (e - m) * 100))) : 0;
+    const lifeColor = days < 0 || days <= 30 ? '#B91C1C' : days <= 90 || life > 85 ? '#B45309' : '#15803D';
+    const expBadge = days == null ? null : days < 0 ? { label: L.k_expired, fg: '#B91C1C', bg: '#FEF2F2' } : days <= 30 ? { label: L.k_days(days), fg: '#B91C1C', bg: '#FEF2F2' } : days <= 90 ? { label: L.k_days(days), fg: '#B45309', bg: '#FFFBEB' } : { label: L.k_days(days), fg: '#5B6B6A', bg: '#F5F7F8' };
+    const segs = [[L.q_avail, b.avail, '#0D9488'], [L.q_reserved, b.reservedQty, '#CBD5D3'], [L.q_closed, b.closed, '#FDE68A']].filter(x => x[1] > 0).map(([label, q, color]) => ({ label, legend: `${label}: ${fN(q)}`, qty: fN(q), pct: b.qty ? q / b.qty * 100 : 0, color }));
+    const split = `${L.q_total} ${fN(b.qty || 0)} = ` + segs.map(s => `${s.label} ${s.qty}`).join(' + ');
+    const docNo = b.doc || L.q_openingDoc;
+    const bqo = !b.doc && window.MedixData && window.MedixData.bqOfBatch ? window.MedixData.bqOfBatch(b) : null;
+    const moves = [{ date: bqo ? bqo.cutoff : b.docDate || '01.09.2026', type: b.doc ? L.q_mvReceipt : bqo ? (L.bq_title || L.q_mvOpening) : L.q_mvOpening, no: b.doc || (bqo ? bqo.no : 'SMARTUP-0001'), delta: '+' + fN(b.qty || 0), bal: fN(b.qty || 0), color: '#15803D' }];
+    if (b.reservedQty) { let bal = b.qty; (b.resDocs && b.resDocs.length ? b.resDocs : [{ no: '—', qty: b.reservedQty, date: '03.10.2026' }]).forEach(r => { bal -= r.qty; moves.push({ date: r.date, type: L.q_mvReserve, no: r.no, delta: fN(r.qty), bal: fN(bal), color: '#5B6B6A' }); }); }
+    (b.moves || []).forEach(m => moves.push({ date: m.date, type: m.label || L.tr_mvPick || "Terish → Jo'natish zonasi", no: m.no, delta: (m.delta > 0 ? '+' : '−') + fN(Math.abs(m.delta)), bal: fN(b.qty || 0), color: m.kind === 'sale' ? '#B91C1C' : m.delta > 0 ? '#15803D' : '#B45309' }));
+    if (b.status === 'expired') moves.push({ date: b.exp, type: L.q_mvBlocked, no: '—', delta: '−' + fN(b.qty), bal: '0', color: '#B91C1C' });
+    const gt = String((pr.barcodes || ['0000000'])[0]).slice(-7), code = i => `0104780${gt}21${((b.qty * 31 + i * 2654435761) >>> 0).toString(36).toUpperCase().padStart(6, '0').slice(-6)}`;
+    const MD = window.MedixData, mk = MD && MD.marks && pr.mark ? MD.marks().filter(m => m.bid === b.id && ['stock', 'picked', 'quar', 'returned'].includes(m.status)) : null;
+    const info = [[L.q_branch, br], [L.q_wh, b.wh], [L.q_zone, b.zoneLabel], [L.q_mfg, b.mfg], [L.q_exp, b.exp], ...(p.canCost ? [[L.q_cost, b.cost ? fM(b.cost) + ' ' + L.som : '']] : []), [L.q_doc, docNo, 1], [L.q_supplier, b.supplier], ...(pr.mark ? [[L.q_marking, L.q_scanned(fN(b.scanned || 0))]] : [])].map(([label, value, mono]) => ({ label, value, mono: !!mono }));
+    return {
+      L, name: pr.name, batchNo: b.batch, st: { icon: st[0], fg: st[1], bg: st[2], label: L['q_st_' + (b.status || 'open')] }, width: p.width || '480px', close: () => p.onClose && p.onClose(),
+      exp: b.exp || '—', mfg: b.mfg || '—', hasExpBadge: !!expBadge, expBadge: expBadge || {}, lifePct: days < 0 ? 100 : life, lifeColor, lifeNote: L.q_lifeUsed(days < 0 ? 100 : life),
+      segs, splitText: split, info, narrowInfo: false, hasDoc: !!b.doc, docNo: b.doc, openDoc: () => p.onOpenDoc && p.onOpenDoc(b.doc), moves,
+      hasCodes: !!pr.mark, codesOpen: this.state.codesOpen, codesIcon: this.state.codesOpen ? 'chevron-down' : 'chevron-right', toggleCodes: () => this.setState(s => ({ codesOpen: !s.codesOpen })),
+      codesCount: fN(mk ? mk.length : b.scanned || 0), codes: mk ? mk.slice(0, 5).map(m => m.code.replace(/\u001d/g, '')) : [0, 1, 2, 3, 4].slice(0, b.scanned || 0).map(code), allLabel: L.q_allCodes(fN(mk ? mk.length : b.scanned || 0)), allCodes: () => p.onMarks ? p.onMarks(b) : p.onToast && p.onToast(L.q_tNext),
+      moveZone: () => p.onMove ? p.onMove(b) : p.onToast && p.onToast(L.q_tNext), moveLabel: p.onMove ? (b.zoneType === 'quar' ? L.kc_backToStore : L.kc_move) : L.q_moveZone, writeOff: () => p.onWriteoff ? p.onWriteoff(b) : p.onToast && p.onToast(L.q_tNext), canSupRet: !!(p.onSupReturn && b.zoneType === 'quar' && b.doc), supRet: () => p.onSupReturn && p.onSupReturn(b)
+    };
+  }
+}
+</script>
+</body>
+</html>

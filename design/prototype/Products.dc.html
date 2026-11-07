@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Mahsulotlar" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ L.p_title }}" count="{{ countLabel }}" secondary="{{ hdrSecondary }}" more="{{ hdrMore }}" primary="{{ hdrPrimary }}" more-label="{{ L.p_more }}" hint-size="100%,34px"></dc-import>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.p_search }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.p_fClear }}" columns="{{ colDefs }}" on-columns="{{ setCols }}" on-columns-reset="{{ resetCols }}" columns-reset-label="{{ L.p_colsReset }}" columns-label="{{ L.p_columns }}" columns-hint="{{ L.p_colsHint }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="{{ allState }}" on-toggle-all="{{ toggleAll }}" on-sort="{{ onSort }}" loading="{{ listLoading }}" scroll-x="{{ true }}" sticky-count="{{ stickyCount }}" min-width="{{ tMinWidth }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+      <sc-if value="{{ showPager }}">
+        <dc-import name="Pagination" total="{{ total }}" page="{{ page }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import>
+      </sc-if>
+    </sc-if>
+    <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="package" title="{{ L.p_emptyT }}" text="{{ L.p_emptyD }}" primary="{{ emptyPrimary }}" secondary="{{ emptySecondary }}" min-height="360" hint-size="100%,360px"></dc-import></sc-if>
+    <sc-if value="{{ listNoRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.p_noResT }}" text="{{ noResText }}" secondary="{{ noResAction }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+    <sc-if value="{{ listError }}"><dc-import name="EmptyState" icon="cloud-off" tone="danger" title="{{ L.p_errT }}" text="{{ L.p_errD }}" secondary="{{ retryAction }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+  </div>
+  <sc-if value="{{ hasSel }}">
+    <dc-import name="BulkBar" count-label="{{ selLabel }}" actions="{{ bulkActions }}" select-all="{{ selectAllLink }}" on-clear="{{ clearSel }}" clear-label="{{ L.p_clearSel }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+  <div style="height:64px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isImport }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="ImportWizard" type="products" branch="" wh="" cutoff="" place="{{ L.p_impPlace }}" type-label="{{ L.p_title }}" preset="{{ impPreset }}" dict="{{ L }}" narrow="{{ narrow }}" on-done="{{ impDone }}" on-cancel="{{ backToList }}" on-toast="{{ toastFn }}" hint-size="100%,720px"></dc-import>
+</sc-if>
+
+<sc-if value="{{ isCard }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Mahsulot kartochkasi" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <sc-if value="{{ cardLoading }}"><dc-import name="EmptyState" icon="loader" tone="neutral" title="{{ L.p_cardLoading }}" text="" min-height="360" hint-size="100%,360px"></dc-import></sc-if>
+  <sc-if value="{{ cardMissing }}"><dc-import name="EmptyState" icon="file-x" tone="danger" title="{{ L.p_cardMissT }}" text="{{ L.p_cardMissD }}" secondary="{{ missAction }}" min-height="360" hint-size="100%,360px"></dc-import></sc-if>
+  <sc-if value="{{ cardReady }}" hint-placeholder-val="{{ true }}">
+  <dc-import name="RecordHeader" parent-label="{{ L.p_title }}" on-parent="{{ backToList }}" title="{{ c.name }}" badges="{{ c.badges }}" meta="{{ c.meta }}" mono="{{ c.code }}" more="{{ cardMore }}" primary="{{ cardPrimary }}" more-label="{{ L.p_more }}" read-only="{{ readOnly }}" read-only-label="{{ L.p_readOnly }}" hint-size="100%,80px"></dc-import>
+  <dc-import name="SavedViews" tabs="{{ cardTabs }}" hint-size="100%,38px"></dc-import>
+
+  <sc-if value="{{ tabGeneral }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+      <div style="flex:1 1 480px;display:flex;flex-direction:column;gap:16px;min-width:0;order:{{ genMainOrder }}">
+        <sc-for list="{{ infoCards }}" as="ic"><dc-import name="InfoGrid" title="{{ ic.title }}" rows="{{ ic.rows }}" hint-size="100%,200px"></dc-import></sc-for>
+      </div>
+      <div style="flex:{{ asideFlex }};min-width:0"><dc-import name="SideSummary" kpis="{{ c.kpis }}" columns="{{ kpiCols }}" bars-title="{{ L.p_sByBranch }}" bars="{{ c.branchBars }}" hint-size="100%,360px"></dc-import></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ tabStock }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow-x:auto">
+      <sc-if value="{{ c.hasStock }}">
+        <div style="min-width:940px;font-size:13px;line-height:18px">
+          <div style="display:grid;grid-template-columns:{{ stGrid }};height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+            <span style="padding:0 16px">{{ L.p_qWh }}</span><span style="padding:0 12px">{{ L.p_qZone }}</span><span style="padding:0 12px">{{ L.p_qBatch }}</span><span style="padding:0 12px">{{ L.p_qExp }}</span><sc-if value="{{ canCost }}"><span style="padding:0 12px;text-align:right">{{ L.p_qCost }}</span></sc-if><span style="padding:0 12px;text-align:right">{{ L.p_qQty }}</span><span style="padding:0 12px;text-align:right">{{ L.p_qReserved }}</span><span style="padding:0 16px 0 12px;text-align:right">{{ L.p_qAvail }}</span>
+          </div>
+          <sc-for list="{{ c.stockGroups }}" as="g">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;height:36px;padding:0 16px;background:#F8FAFA;border-bottom:1px solid #EEF2F4;font-size:13px"><span style="font-weight:600">{{ g.name }}</span><span style="color:#5B6B6A">{{ L.p_qTotal }}: <span style="color:#172B2A;font-weight:600">{{ g.total }}</span> · {{ L.p_qAvail }}: <span style="color:#172B2A;font-weight:600">{{ g.avail }}</span></span></div>
+            <sc-for list="{{ g.rows }}" as="r">
+              <div style="display:grid;grid-template-columns:{{ stGrid }};min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4">
+                <span style="padding:0 16px">{{ r.wh }}</span>
+                <span style="padding:0 12px;display:flex"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 6px;border-radius:6px;background:{{ r.zBg }};color:{{ r.zFg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ r.zIcon }}" size="12"></lucide-i>{{ r.zone }}</span></span>
+                <span style="padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ r.batch }}</span>
+                <span style="padding:0 12px;display:flex;flex-direction:column"><span>{{ r.exp }}</span><span style="font-size:12px;line-height:16px;color:{{ r.expColor }}">{{ r.expNote }}</span></span>
+                <sc-if value="{{ canCost }}"><span style="padding:0 12px;text-align:right">{{ r.cost }}</span></sc-if>
+                <span style="padding:0 12px;text-align:right;font-weight:500">{{ r.qty }}</span><span style="padding:0 12px;text-align:right;color:#5B6B6A">{{ r.res }}</span><span style="padding:0 16px 0 12px;text-align:right;font-weight:500;color:{{ r.availColor }}">{{ r.avail }}</span>
+              </div>
+            </sc-for>
+          </sc-for>
+          <div style="height:48px;display:flex;align-items:center;padding:0 16px"><button onClick="{{ openStockPage }}" style="display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ L.p_qOpen }}<lucide-i name="arrow-right" size="14"></lucide-i></button></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ c.noStock }}"><dc-import name="EmptyState" icon="package-open" tone="neutral" title="{{ L.p_noStockT }}" text="{{ L.p_noStock }}" min-height="280" hint-size="100%,280px"></dc-import></sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ tabPrices }}" hint-placeholder-val="{{ false }}">
+    <dc-import name="PriceHistoryPanel" inline="{{ true }}" pid="{{ c.pid }}" type="base" branch="{{ prBr }}" role="{{ prRole }}" dict="{{ L }}" on-open-no="{{ prOpenNo }}" on-open-set="{{ prOpenSet }}" hint-size="100%,420px"></dc-import>
+  </sc-if>
+
+  <sc-if value="{{ tabMoves }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);font-size:13px;line-height:18px;overflow-x:auto">
+      <sc-if value="{{ c.hasMoves }}">
+        <div style="min-width:900px">
+          <div style="display:grid;grid-template-columns:110px minmax(0,1.8fr) 90px minmax(0,1fr) 90px 90px 100px;height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span style="padding:0 16px">{{ L.p_mDate }}</span><span style="padding:0 12px">{{ L.p_mDoc }}</span><span style="padding:0 12px">{{ L.p_mBranch }}</span><span style="padding:0 12px">{{ L.p_mWh }}</span><span style="padding:0 12px;text-align:right">{{ L.p_mIn }}</span><span style="padding:0 12px;text-align:right">{{ L.p_mOut }}</span><span style="padding:0 16px 0 12px;text-align:right">{{ L.p_mBal }}</span></div>
+          <sc-for list="{{ c.moves }}" as="m">
+            <div style="display:grid;grid-template-columns:110px minmax(0,1.8fr) 90px minmax(0,1fr) 90px 90px 100px;height:44px;align-items:center;border-bottom:1px solid #EEF2F4">
+              <span style="padding:0 16px">{{ m.date }}</span>
+              <span style="padding:0 12px;display:flex;align-items:center;gap:6px;min-width:0"><span style="color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.type }}</span><button onClick="{{ m.open }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-family:'JetBrains Mono',monospace;font-size:12.5px;cursor:pointer;white-space:nowrap" style-hover="color:#0F766E;text-decoration:underline">{{ m.no }}</button></span>
+              <span style="padding:0 12px;color:#5B6B6A">{{ m.branch }}</span><span style="padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.wh }}</span>
+              <span style="padding:0 12px;text-align:right;color:#15803D;font-weight:500">{{ m.inQ }}</span><span style="padding:0 12px;text-align:right;color:#172B2A">{{ m.outQ }}</span><span style="padding:0 16px 0 12px;text-align:right;font-weight:500">{{ m.bal }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ c.noMoves }}"><dc-import name="EmptyState" icon="arrow-left-right" tone="neutral" title="{{ L.p_noMovesT }}" text="{{ L.p_noStock }}" min-height="280" hint-size="100%,280px"></dc-import></sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ tabHistory }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px">
+      <dc-import name="HistoryTimeline" filters="{{ histFilters }}" groups="{{ c.history }}" empty-label="{{ L.p_hEmpty }}" hint-size="100%,400px"></dc-import>
+    </div>
+  </sc-if>
+  </sc-if>
+  <div style="height:64px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Mahsulot formasi" style="display:flex;flex-direction:column;align-items:center;min-width:0">
+  <div ref="{{ formTop }}" style="width:100%;max-width:880px;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <nav style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px"><button onClick="{{ formBack }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ L.p_title }}</button><span style="color:#647574">/</span><span style="color:#5B6B6A">{{ formCrumb }}</span></nav>
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ formTitle }}</h1>
+    </div>
+    <sc-if value="{{ showErrBlock }}">
+      <div role="alert" style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA">
+        <lucide-i name="circle-alert" size="16" style="color:#B91C1C;margin-top:1px"></lucide-i>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:18px;color:#B91C1C">
+          <span style="font-weight:500">{{ errTitle }}</span>
+          <span style="display:flex;flex-wrap:wrap;gap:4px 12px"><sc-for list="{{ errLinks }}" as="e"><button onClick="{{ e.go }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:13px;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ e.label }}</button></sc-for></span>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showDup }}">
+      <div role="alert" style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:#FFFBEB;border:1px solid #FDE68A">
+        <lucide-i name="triangle-alert" size="16" style="color:#B45309;margin-top:1px"></lucide-i>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:18px;color:#B45309">
+          <span>{{ dupText }}</span>
+          <button onClick="{{ openDup }}" style="align-self:flex-start;padding:0;border:0;background:transparent;color:#B45309;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ L.p_dupOpen }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <dc-import name="FormSection" title="{{ L.p_secBasic }}" description="{{ L.p_secBasicD }}" stacked="{{ narrow }}" rt="{{ rt }}" hint-size="100%,160px">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;min-width:0">
+        <div data-f="name" style="grid-column:1/-1;display:flex;flex-direction:column;min-width:0">
+          <label for="pf-name" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lName }} <span style="color:#B91C1C">*</span></label>
+          <input id="pf-name" value="{{ f.name }}" onChange="{{ on.name }}" placeholder="Omeprazol 20mg" style="height:34px;padding:0 12px;border:1px solid {{ bd.name }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <sc-if value="{{ er.name }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.name }}</div></sc-if>
+        </div>
+        <div data-f="contractName" style="grid-column:1/-1;display:flex;flex-direction:column;min-width:0">
+          <label for="pf-contract" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lContract }} <span style="color:#B91C1C">*</span></label>
+          <input id="pf-contract" value="{{ f.contractName }}" onChange="{{ on.contractName }}" placeholder="Омепразол капсулы 20 мг №28" style="height:34px;padding:0 12px;border:1px solid {{ bd.contractName }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <span style="margin-top:6px;font-size:12px;line-height:16px;color:#647574">{{ L.p_lContractH }}</span>
+          <sc-if value="{{ er.contractName }}"><div style="margin-top:4px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.contractName }}</div></sc-if>
+        </div>
+        <div data-f="classifier" style="display:flex;flex-direction:column;min-width:0">
+          <label for="pf-cls" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lClassifier }} <span style="color:#B91C1C">*</span></label>
+          <input id="pf-cls" value="{{ f.classifier }}" onChange="{{ on.classifier }}" placeholder="Omeprazol" style="height:34px;padding:0 12px;border:1px solid {{ bd.classifier }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <sc-if value="{{ er.classifier }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.classifier }}</div></sc-if>
+        </div>
+        <dc-import name="Select" field-key="maker" label="{{ L.p_lMaker }}" required="{{ true }}" options="{{ makerSel }}" value="{{ f.maker }}" on-change="{{ on.maker }}" placeholder="{{ L.p_choose }}" searchable="{{ true }}" search-ph="{{ L.p_fSearch }}" empty-label="{{ L.p_fNone }}" footer-label="{{ L.p_newMaker }}" on-footer="{{ newMaker }}" error="{{ er.maker }}" hint-size="100%,56px"></dc-import>
+        <dc-import name="Select" field-key="cat" label="{{ L.p_lCat }}" required="{{ true }}" options="{{ catSel }}" value="{{ f.cat }}" on-change="{{ on.cat }}" placeholder="{{ L.p_choose }}" searchable="{{ true }}" search-ph="{{ L.p_fSearch }}" empty-label="{{ L.p_fNone }}" error="{{ er.cat }}" hint-size="100%,56px"></dc-import>
+        <dc-import name="Select" field-key="supplyBy" label="{{ L.p_lSupply }}" options="{{ supplySel }}" value="{{ f.supplyBy }}" on-change="{{ on.supplyBy }}" placeholder="{{ L.p_choose }}" searchable="{{ true }}" search-ph="{{ L.p_fSearch }}" empty-label="{{ L.p_fNone }}" hint-size="100%,56px"></dc-import>
+        <dc-import name="Select" field-key="form" label="{{ L.p_lForm }}" options="{{ formSel }}" value="{{ f.form }}" on-change="{{ on.form }}" placeholder="{{ L.p_choose }}" hint-size="100%,56px"></dc-import>
+        <dc-import name="Select" field-key="country" label="{{ L.p_lCountry }}" options="{{ countrySel }}" value="{{ f.country }}" on-change="{{ on.country }}" placeholder="{{ L.p_choose }}" searchable="{{ true }}" search-ph="{{ L.p_fSearch }}" empty-label="{{ L.p_fNone }}" hint-size="100%,56px"></dc-import>
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <label for="pf-dose" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lDose }}</label>
+          <input id="pf-dose" value="{{ f.dose }}" onChange="{{ on.dose }}" placeholder="20 mg" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+        </div>
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <label for="pf-pack" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lPack }}</label>
+          <input id="pf-pack" value="{{ f.pack }}" onChange="{{ on.pack }}" inputmode="numeric" placeholder="28" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+        </div>
+        <div data-f="minQty" style="display:flex;flex-direction:column;min-width:0">
+          <label for="pf-minQty" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lMinQty }}</label>
+          <input id="pf-minQty" value="{{ f.minQty }}" onChange="{{ on.minQty }}" inputmode="numeric" placeholder="10" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <span style="margin-top:6px;font-size:12px;line-height:16px;color:#647574;text-wrap:pretty">{{ L.p_mmHelp }}</span>
+        </div>
+        <div data-f="maxQty" style="display:flex;flex-direction:column;min-width:0">
+          <label for="pf-maxQty" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lMaxQty }}</label>
+          <input id="pf-maxQty" value="{{ f.maxQty }}" onChange="{{ on.maxQty }}" inputmode="numeric" placeholder="300" style="height:34px;padding:0 12px;border:1px solid {{ bd.maxQty }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <sc-if value="{{ er.maxQty }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.maxQty }}</div></sc-if>
+        </div>
+      </div>
+    </dc-import>
+
+    <dc-import name="FormSection" title="{{ L.p_secId }}" description="{{ L.p_secIdD }}" stacked="{{ narrow }}" rt="{{ rt }}" hint-size="100%,160px">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;min-width:0">
+        <div data-f="code" style="grid-column:1/-1;display:flex;flex-direction:column;min-width:0">
+          <label for="pf-code" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lCode }} <span style="color:#B91C1C">*</span></label>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <input id="pf-code" value="{{ f.code }}" onChange="{{ on.code }}" inputmode="numeric" maxlength="8" placeholder="48203315" style="width:160px;height:34px;padding:0 12px;border:1px solid {{ bd.code }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:0.04em;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            <button onClick="{{ genCode }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="refresh-cw" size="14" style="color:#5B6B6A"></lucide-i>{{ L.p_genCode }}</button>
+            <span style="font-size:12px;line-height:16px;color:#647574">{{ L.p_codeHelp }}</span>
+          </div>
+          <sc-if value="{{ codeErrText }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ codeErrText }}<sc-if value="{{ codeDupName }}"><button onClick="{{ openCodeDup }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:12px;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ codeDupName }}</button></sc-if></div></sc-if>
+        </div>
+        <div data-f="barcode" style="grid-column:1/-1;display:flex;flex-direction:column;min-width:0">
+          <label for="pf-bc" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lBarcodes }}</label>
+          <div style="min-height:34px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:4px 6px;border:1px solid {{ bd.barcode }};border-radius:8px;background:#FFFFFF">
+            <sc-for list="{{ bcChips }}" as="b"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 4px 0 8px;border-radius:6px;background:#F5F7F8;border:1px solid #EEF2F4;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A">{{ b.code }}<button onClick="{{ b.remove }}" aria-label="{{ L.clear }}" style="width:18px;height:18px;border:0;border-radius:4px;background:transparent;color:#647574;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EEF2F4;color:#172B2A"><lucide-i name="x" size="12"></lucide-i></button></span></sc-for>
+            <input id="pf-bc" value="{{ bcInput }}" onChange="{{ onBcInput }}" onKeyDown="{{ onBcKey }}" onBlur="{{ onBcBlur }}" inputmode="numeric" placeholder="{{ L.p_bcPh }}" style="flex:1;min-width:200px;height:24px;border:0;outline:none;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A">
+          </div>
+          <sc-if value="{{ bcErrText }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ bcErrText }}</div></sc-if>
+          <sc-if value="{{ hasBcErr }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ L.p_bcDup }}<button onClick="{{ openBcDup }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:12px;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ bcDupName }}</button></div></sc-if>
+        </div>
+        <div data-f="ikpu" style="display:flex;flex-direction:column;min-width:0">
+          <label for="pf-ikpu" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lIkpu }} <span style="color:#B91C1C">*</span></label>
+          <input id="pf-ikpu" value="{{ f.ikpu }}" onChange="{{ on.ikpu }}" placeholder="03004001001000000" style="height:34px;padding:0 12px;border:1px solid {{ bd.ikpu }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <sc-if value="{{ er.ikpu }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.ikpu }}</div></sc-if>
+        </div>
+        <div data-f="farmId" style="display:flex;flex-direction:column;min-width:0">
+          <label for="pf-farm" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lFarm }} <span style="color:#B91C1C">*</span></label>
+          <input id="pf-farm" value="{{ f.farmId }}" onChange="{{ on.farmId }}" placeholder="FRM-0001234" style="height:34px;padding:0 12px;border:1px solid {{ bd.farmId }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          <sc-if value="{{ er.farmId }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.farmId }}</div></sc-if>
+        </div>
+      </div>
+    </dc-import>
+
+    <dc-import name="FormSection" title="{{ L.p_secUnits }}" description="{{ L.p_secUnitsD }}" stacked="{{ narrow }}" rt="{{ rt }}" hint-size="100%,160px">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;min-width:0">
+        <dc-import name="Select" field-key="unit" label="{{ L.p_lBaseUnit }}" options="{{ unitSel }}" value="{{ f.unit }}" on-change="{{ on.unit }}" locked="{{ unitsLocked }}" lock-tip="{{ L.p_lockedTip }}" hint-size="100%,56px"></dc-import>
+        <div title="{{ lockTitle }}" style="display:flex;flex-direction:column;min-width:0">
+          <label for="pf-per" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lPerPack }}</label>
+          <div style="position:relative">
+            <input id="pf-per" value="{{ f.perPack }}" onChange="{{ on.perPack }}" disabled="{{ unitsLocked }}" inputmode="numeric" style="width:100%;height:34px;padding:0 34px 0 12px;border:1px solid #E2E8F0;border-radius:8px;background:{{ lockBg }};font-size:14px;color:{{ lockColor }};outline:none;cursor:{{ lockCursor }};transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            <sc-if value="{{ unitsLocked }}"><span style="position:absolute;right:10px;top:9px;display:flex;color:#647574"><lucide-i name="lock" size="14"></lucide-i></span></sc-if>
+          </div>
+        </div>
+      </div>
+    </dc-import>
+
+    <dc-import name="FormSection" title="{{ L.p_secStorage }}" description="{{ L.p_secStorageD }}" stacked="{{ narrow }}" rt="{{ rt }}" hint-size="100%,160px">
+      <div style="display:flex;flex-direction:column;min-width:0">
+        <sc-for list="{{ toggles }}" as="t">
+          <div title="{{ t.tip }}" style="display:flex;flex-direction:column;gap:12px;padding:12px 0;border-bottom:{{ t.sep }}">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+              <div style="display:flex;flex-direction:column"><span style="display:flex;align-items:center;gap:6px;font-size:13px;line-height:18px;font-weight:500">{{ t.label }}<sc-if value="{{ t.locked }}"><lucide-i name="lock" size="12" style="color:#647574"></lucide-i></sc-if></span><span style="font-size:12px;line-height:16px;color:#647574">{{ t.help }}</span></div>
+              <button role="switch" aria-checked="{{ t.on }}" aria-label="{{ t.label }}" onClick="{{ t.toggle }}" disabled="{{ t.locked }}" style="width:36px;height:20px;flex:none;padding:2px;border:0;border-radius:999px;background:{{ t.bg }};opacity:{{ t.op }};display:flex;justify-content:{{ t.justify }};cursor:{{ t.cursor }};transition:background 120ms ease-out"><span style="width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></button>
+            </div>
+            <sc-if value="{{ t.showCtrl }}">
+              <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA"><lucide-i name="lock" size="16" style="color:#B91C1C;margin-top:1px"></lucide-i><span style="font-size:13px;line-height:18px;color:#B91C1C">{{ L.p_ctrlInfo }}</span></div>
+            </sc-if>
+            <sc-if value="{{ t.showMark }}">
+              <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:#F8FAFA;border:1px solid #E2E8F0"><lucide-i name="scan-barcode" size="16" style="color:#5B6B6A;margin-top:1px"></lucide-i><span style="font-size:13px;line-height:18px;color:#172B2A">{{ L.p_markInfo }}</span></div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </dc-import>
+
+    <dc-import name="FormSection" title="{{ L.p_secTax }}" description="{{ L.p_secTaxD }}" stacked="{{ narrow }}" rt="{{ rt }}" hint-size="100%,160px">
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.p_lVat }}</span>
+        <div role="radiogroup" style="display:inline-flex;align-self:flex-start;height:34px;padding:2px;gap:2px;border-radius:8px;background:#EEF2F4">
+          <sc-for list="{{ vatOpts }}" as="v"><button role="radio" aria-checked="{{ v.on }}" onClick="{{ v.pick }}" style="height:30px;padding:0 14px;border:0;border-radius:6px;background:{{ v.bg }};box-shadow:{{ v.sh }};color:{{ v.color }};font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out,color 120ms ease-out">{{ v.label }}</button></sc-for>
+        </div>
+      </div>
+    </dc-import>
+
+    <dc-import name="FormSection" title="{{ L.p_secNote }}" description="{{ L.p_secNoteD }}" stacked="{{ narrow }}" rt="{{ rt }}" hint-size="100%,120px">
+      <div style="display:flex;flex-direction:column;min-width:0">
+        <label for="pf-note" style="font-size:12px;line-height:16px;font-weight:500;margin-bottom:6px">{{ L.p_lNote }}</label>
+        <textarea id="pf-note" value="{{ f.note }}" onChange="{{ on.note }}" rows="3" placeholder="{{ L.p_notePh }}" style="padding:8px 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-family:inherit;font-size:14px;line-height:20px;color:#172B2A;outline:none;resize:vertical" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></textarea>
+      </div>
+    </dc-import>
+    <div style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:#EFF6FF;border:1px solid #BFDBFE"><lucide-i name="info" size="16" style="color:#1D4ED8;margin-top:1px"></lucide-i><span style="font-size:13px;line-height:18px;color:#1D4ED8">{{ L.p_priceInfo }}</span></div>
+    <div style="height:24px"></div>
+  </div>
+  <div style="width:100%;align-self:stretch;display:contents">
+    <dc-import name="StickyFormFooter" style="position:sticky;bottom:-24px;z-index:5;display:block;align-self:stretch" dirty="{{ dirty }}" dirty-label="{{ L.p_dirty }}" cancel-label="{{ L.cancel }}" save-label="{{ L.p_save }}" on-cancel="{{ formBack }}" on-save="{{ saveForm }}" hint-size="100%,64px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ deactOpen }}">
+  <dc-import name="ConfirmDialog" title="{{ deactTitle }}" items="{{ deactItems }}" with-reason="{{ true }}" reason-label="{{ L.p_dReason }}" reason="{{ deactReason }}" reason-error="{{ deactErr }}" on-reason="{{ onDeactReason }}" danger="{{ true }}" confirm-label="{{ L.p_aDeact }}" cancel-label="{{ L.cancel }}" on-confirm="{{ confirmDeact }}" on-cancel="{{ cancelDeact }}" hint-size="0px,0px"></dc-import>
+</sc-if>
+<sc-if value="{{ mkOpen }}">
+  <dc-import name="ConfirmDialog" title="{{ L.p_mkT }}" text="{{ mkText }}" with-reason="{{ true }}" reason-label="{{ L.p_mkName }}" reason="{{ mkName }}" reason-error="{{ mkErr }}" on-reason="{{ onMkName }}" confirm-label="{{ L.p_mkAdd }}" cancel-label="{{ L.cancel }}" on-confirm="{{ confirmMk }}" on-cancel="{{ cancelMk }}" hint-size="0px,0px"></dc-import>
+</sc-if>
+<sc-if value="{{ leaveOpen }}">
+  <dc-import name="ConfirmDialog" title="{{ L.p_leaveT }}" text="{{ L.p_leaveD }}" danger="{{ true }}" confirm-label="{{ L.p_leave }}" cancel-label="{{ L.p_stay }}" on-confirm="{{ confirmLeave }}" on-cancel="{{ cancelLeave }}" hint-size="0px,0px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const MD = () => window.MedixData;
+const FORMKEYS = ['tablet', 'capsule', 'ampoule', 'vial', 'syrup', 'ointment', 'pen', 'powder', 'gel'];
+const ZT = { recv: ['package-open', '#5B6B6A', '#F5F7F8'], quar: ['shield-alert', '#B45309', '#FFFBEB'], ship: ['truck', '#5B6B6A', '#F5F7F8'], store: ['archive', '#5B6B6A', '#F5F7F8'], cold: ['snowflake', '#1D4ED8', '#EFF6FF'], ctrl: ['lock', '#B91C1C', '#FEF2F2'] };
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(n * 100) / 100).toFixed(2).split('.'); return fN(+a) + ',' + b; };
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const dStr = t => { const d = new Date(t); return `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}`; };
+const COL_KEY = 'medix-prod-cols-v2';
+const COLS0 = ['code', 'name', 'contractName', 'classifier', 'maker', 'country', 'cat', 'form', 'dose', 'unit', 'pack', 'barcode', 'ikpu', 'farmId', 'supplyBy', 'ctrl', 'mark', 'rx', 'vat', 'minQty', 'maxQty', 'stock', 'price', 'note', 'status'];
+const CW = { code: 104, name: 250, contractName: 260, classifier: 180, maker: 150, country: 120, cat: 160, form: 110, dose: 100, unit: 80, pack: 100, barcode: 150, ikpu: 170, farmId: 130, supplyBy: 160, ctrl: 110, mark: 110, rx: 100, vat: 80, minQty: 104, maxQty: 104, stock: 100, price: 120, note: 220, status: 110 };
+const NUM = ['pack', 'minQty', 'maxQty', 'stock', 'price'], MONO = ['code', 'barcode', 'ikpu', 'farmId'];
+const emptyForm = () => ({ code: '', name: '', contractName: '', classifier: '', maker: '', cat: '', supplyBy: '', form: '', country: '', dose: '', pack: '', barcodes: [], ikpu: '', farmId: '', unit: 'dona', perPack: '', ctrl: false, mark: false, rx: false, vat: '12', minQty: '', maxQty: '', note: '' });
+const loadCols = () => { try { const v = JSON.parse(localStorage.getItem(COL_KEY) || 'null'); if (Array.isArray(v) && v.length) { const known = v.filter(c => COLS0.includes(c.key)); COLS0.forEach(k => { if (!known.some(c => c.key === k)) known.push({ key: k, visible: true }); }); return known; } } catch (e) {} return COLS0.map(k => ({ key: k, visible: true })); };
+const saveCols = c => { try { localStorage.setItem(COL_KEY, JSON.stringify(c)); } catch (e) {} };
+const DOC_HREF = { kr: 'receipt', qm: 'creturns', hc: 'writeoff', qy: 'sreturns', tr: 'transfer', iv: 'inventory' };
+
+class Component extends DCLogic {
+  state = { view: 'list', listState: 'normal', tab: 'all', q: '', fMaker: [], fCat: [], fCountry: [], fSupply: [], fStatus: [], sort: null, page: 1, per: 25, sel: {},
+    cols: loadCols(), cardId: 1, cardTab: 'general', cardLoading: false, deact: null, deactReason: '', deactErr: '', imp: null,
+    mode: 'new', editId: null, f: emptyForm(), base: '', tried: false, bcInput: '', bcErr: '', codeErr: null, leave: null, mk: false, mkName: '', mkErr: '' };
+  formTop = React.createRef();
+  get D() { return MD(); }
+  componentDidMount() {
+    this._poll = setInterval(() => { const D = MD(); if (!D) return; this.applyUrl(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 300);
+    if (this.props.demo) this.applyDemo(this.props.demo.k); else this.applyUrl();
+  }
+  componentWillUnmount() { clearInterval(this._poll); clearTimeout(this._rtm); clearTimeout(this._ctm); this.props.onDirty && this.props.onDirty(false); }
+  componentDidUpdate(pp) { const d = this.state.view === 'form' && JSON.stringify(this.state.f) !== this.state.base; if (d !== this._dirty) { this._dirty = d; this.props.onDirty && this.props.onDirty(d); } if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n)) this.applyDemo(this.props.demo.k); }
+  applyUrl() { const D = MD(), u = D && D.store.urlF; if (!u || u.page !== 'products' || u.n === this._un) return; this._un = u.n; const P = u.params || {};
+    if (P.open) { const p = D.prodById(+P.open) || D.prodByCode(P.open); if (p) this.openCard(p.id); else this.setState({ view: 'card', cardId: -1 }); }
+    else if (P.new) this.openForm('new');
+    else if (P.q != null) this.setState({ ...this.resetList(), q: P.q }); }
+  setHash(h) { try { if (/^#?products/.test(location.hash.replace('#', '')) || location.hash === '' || /products/.test(location.hash)) history.replaceState(null, '', '#' + h); } catch (e) {} }
+  who() { const D = MD(); return this.props.userName || (D && D.empNames(this.props.role || 'director')[0]) || 'Akmal Karimov'; }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  scrollTop() { const m = document.querySelector('main'); m && m.scrollTo({ top: 0 }); }
+  resetList() { return { view: 'list', listState: 'normal', tab: 'all', q: '', fMaker: [], fCat: [], fCountry: [], fSupply: [], fStatus: [], sort: null, page: 1, sel: {} }; }
+  toList() { this.setState({ view: 'list' }); this.setHash('products'); }
+  applyDemo(k) {
+    clearTimeout(this._rtm); const D = MD(); const base = { deact: null, leave: null, mk: false };
+    if (k === 'list') { this.setHash('products'); return this.setState({ ...base, ...this.resetList() }); }
+    if (k === 'loading' || k === 'empty' || k === 'error') return this.setState({ ...base, ...this.resetList(), listState: k });
+    if (k === 'nores') return this.setState({ ...base, ...this.resetList(), fMaker: ['Novo Nordisk'], q: 'paracetamol' });
+    if (k === 'prefill') return this.openForm('new', { name: (this.props.demo && this.props.demo.name) || '' });
+    if (k === 'fnew') return this.openForm('new');
+    if (k === 'ferr') { this.openForm('new'); return setTimeout(() => this.saveForm(), 0); }
+    if (k === 'fdup') { this.openForm('new', { name: 'Demidrol 1% 1ml', maker: 'Nobel', cat: 'Antigistaminlar', form: 'ampoule' }); return setTimeout(() => this.saveForm(), 0); }
+    if (k === 'flock') return this.openForm('edit', null, 1);
+    if (k === 'card') return this.openCard(8);
+    if (k === 'cnew' && D) { let p = D.PRODUCTS.find(x => x.name === 'Sefuroksim 750mg'); if (!p) { const r = D.prodSave({ code: D.prodNewCode(), name: 'Sefuroksim 750mg', contractName: 'Цефуроксим порошок 750 мг №1', classifier: 'Sefuroksim', maker: 'KRKA', country: 'Sloveniya', cat: 'Antibiotiklar', form: 'vial', dose: '750 mg', pack: '1', perPack: '1', unit: 'dona', barcodes: [], ikpu: '03004001001099001', farmId: 'FRM-0099001', supplyBy: '', ctrl: false, mark: true, rx: true, vat: '12', note: '' }, this.who(), { temp: true }); p = r.p; } return this.openCard(p.id); }
+  }
+  guard(fn) { if (this.state.view === 'form' && JSON.stringify(this.state.f) !== this.state.base) this.setState({ leave: fn }); else fn(); }
+  openCard(id, tab) { clearTimeout(this._ctm); this.setState({ view: 'card', cardId: id, cardTab: tab || 'general', deact: null, leave: null, tried: false, cardLoading: true }); this._ctm = setTimeout(() => this.setState({ cardLoading: false }), 220); this.setHash('products?open=' + id); this.scrollTop(); }
+  openForm(mode, prefill, id) {
+    const D = MD(); let f = emptyForm();
+    if (mode === 'edit') { const p = D.prodById(id); f = { ...f, ...this.toForm(p) }; } else f.code = D ? D.prodNewCode() : '';
+    if (prefill) f = { ...f, ...prefill };
+    this.setState({ view: 'form', mode, editId: mode === 'edit' ? id : null, f, base: JSON.stringify(f), tried: false, bcInput: '', bcErr: '', codeErr: null, leave: null, deact: null });
+    this.setHash(mode === 'edit' ? 'products?open=' + id : 'products?new=1'); this.scrollTop();
+  }
+  toForm(p) { const f = emptyForm(); Object.keys(f).forEach(k => { if (p[k] != null) f[k] = p[k]; }); f.barcodes = [...(p.barcodes || [])]; f.vat = p.vatNone ? 'none' : String(p.vat != null ? p.vat : 12); f.pack = String(p.pack || ''); f.perPack = String(p.perPack || ''); return f; }
+  copyOf(p) { const D = MD(); return { ...this.toForm(p), code: D.prodNewCode(), name: p.name + ' (nusxa)', barcodes: [] }; }
+  formErrors() { const f = this.state.f, L = this.props.dict || {}, e = {};
+    ['name', 'contractName', 'classifier', 'maker', 'cat', 'ikpu', 'farmId'].forEach(k => { if (!String(f[k] || '').trim()) e[k] = L.p_errReq; });
+    if (!/^[1-9]\d{7}$/.test(f.code)) e.code = L.p_eCodeFmt; if (+f.maxQty > 0 && +f.minQty > +f.maxQty) e.maxQty = L.p_eMaxMin; return e; }
+  dupOf() { const D = MD(), f = this.state.f, n = f.name.trim().toLowerCase(); return n && f.maker ? D.PRODUCTS.find(p => p.id !== this.state.editId && p.name.toLowerCase() === n && p.maker === f.maker) : null; }
+  bcDupOf() { const D = MD(), f = this.state.f; for (const b of f.barcodes) { const p = D.PRODUCTS.find(x => x.id !== this.state.editId && (x.barcodes || []).includes(b)); if (p) return p; } return null; }
+  focusField(k) {
+    const el = document.querySelector(`[data-screen-label="Mahsulot formasi"] [data-f="${k}"]`); if (!el) return;
+    const m = el.closest('main'); if (m) m.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - 96), behavior: 'smooth' });
+    const i = el.querySelector('input,button,textarea'); i && i.focus({ preventScroll: true });
+  }
+  addBc() { const L = this.props.dict || {}, D = MD(), s = this.state, v = s.bcInput.trim(); if (!v) return true;
+    const e = D.eanCheck(v); if (e) { this.setState({ bcErr: e === 'len' ? L.p_bcLen(v.length) : e === 'digits' ? L.p_bcDigits : L.p_bcCheck }); return false; }
+    if (s.f.barcodes.includes(v)) { this.setState({ bcErr: L.p_bcHave }); return false; }
+    this.setState(st => ({ f: { ...st.f, barcodes: [...st.f.barcodes, v] }, bcInput: '', bcErr: '' })); return true; }
+  saveForm() {
+    const s = this.state, L = this.props.dict || {}, D = MD(), e = this.formErrors(), keys = Object.keys(e);
+    this.setState({ tried: true });
+    if (s.bcInput.trim() && !this.addBc()) return setTimeout(() => this.focusField('barcode'), 0);
+    if (keys.length) return setTimeout(() => this.focusField(keys[0]), 0);
+    if (this.dupOf()) return this.scrollTop();
+    if (this.bcDupOf()) return setTimeout(() => this.focusField('barcode'), 0);
+    const f = { ...this.state.f, barcodes: [...this.state.f.barcodes, ...(s.bcInput.trim() && !this.state.f.barcodes.includes(s.bcInput.trim()) ? [s.bcInput.trim()] : [])] };
+    if (s.mode === 'edit') f.id = s.editId;
+    const r = D.prodSave(f, this.who());
+    if (r.err) { this.setState({ codeErr: r }); return setTimeout(() => this.focusField('code'), 0); }
+    this.setState({ base: JSON.stringify(s.f) }, () => { this.openCard(r.p.id); this.toast(r.codeChanged ? L.p_codeChanged : L.p_saved); });
+  }
+  askDeact(ids) { this.setState({ deact: ids, deactReason: '', deactErr: '' }); }
+  confirmDeact() {
+    const L = this.props.dict || {}, s = this.state, D = MD();
+    if (!s.deactReason.trim()) return this.setState({ deactErr: L.p_dReasonErr });
+    const n = D.prodSetActive(s.deact, false, this.who(), s.deactReason.trim()), one = s.deact.length === 1 ? D.prodById(s.deact[0]) : null;
+    this.setState({ deact: null, sel: {} }); this.toast(one ? L.p_deactivated(one.name) : L.p_bulkDeact(n));
+  }
+  activate(p) { const L = this.props.dict || {}; MD().prodSetActive([p.id], true, this.who(), ''); this.toast(L.p_activated(p.name)); }
+  stockOf(pid) { return (this._stock && this._stock[pid]) || 0; }
+  colLabels(L) { return { code: L.p_cCode, name: L.p_cName, contractName: L.p_cContract, classifier: L.p_cClassifier, maker: L.p_cMaker, country: L.p_cCountry, cat: L.p_cCat, form: L.p_cForm, dose: L.p_cDose, unit: L.p_cUnit, pack: L.p_cPack, barcode: L.p_cBarcode, ikpu: L.p_cIkpu, farmId: L.p_cFarm, supplyBy: L.p_cSupply, ctrl: L.p_cCtrl, mark: L.p_cMark, rx: L.p_cRx, vat: L.p_cVat, minQty: L.p_cMinQty, maxQty: L.p_cMaxQty, stock: L.p_cStock, price: L.p_cPrice, note: L.p_cNote, status: L.p_cStatus }; }
+  rawVal(p, k, L) { if (k === 'barcode') return (p.barcodes || []).join(', '); if (k === 'stock') return this.stockOf(p.id); if (k === 'form') return L['p_fm_' + p.form] || p.form || ''; if (k === 'vat') return p.vatNone ? L.p_vatNone : (p.vat || 0) + '%'; if (['ctrl', 'mark', 'rx'].includes(k)) return p[k] ? L.p_yes : ''; if (k === 'status') return p.active ? L.p_active : L.p_inactive; if (k === 'pack') return +p.pack || 0; if (k === 'minQty' || k === 'maxQty') return +p[k] || 0; return p[k] == null ? '' : p[k]; }
+  listVals(L, canEdit) {
+    const s = this.state, D = MD(), all = s.listState === 'empty' ? [] : D.PRODUCTS;
+    const inTab = p => s.tab === 'all' || (s.tab === 'active' && p.active) || (s.tab === 'inactive' && !p.active) || (s.tab === 'ctrl' && p.ctrl) || (s.tab === 'mark' && p.mark) || (s.tab === 'rx' && p.rx);
+    const q = s.q.trim(), hit = {};
+    let rows = all.filter(p => { if (!inTab(p)) return false; if (q) { const m = D.prodMatch(p, q); if (!m) return false; hit[p.id] = m; }
+      return (!s.fMaker.length || s.fMaker.includes(p.maker)) && (!s.fCat.length || s.fCat.includes(p.cat)) && (!s.fCountry.length || s.fCountry.includes(p.country || '—')) && (!s.fSupply.length || s.fSupply.includes(p.supplyBy || '—')) && (!s.fStatus.length || s.fStatus.includes(p.active ? 'active' : 'inactive')); });
+    if (s.sort) { const { key, dir } = s.sort, m = dir === 'asc' ? 1 : -1; rows = [...rows].sort((a, b) => { const x = this.rawVal(a, key, L), y = this.rawVal(b, key, L); return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'uz')) * m; }); }
+    const total = rows.length, pages = Math.max(1, Math.ceil(total / s.per)), page = Math.min(s.page, pages);
+    const pageRows = rows.slice((page - 1) * s.per, page * s.per);
+    const cnt = f => all.filter(f).length;
+    const views = [['all', L.p_vAll, () => true], ['active', L.p_vActive, p => p.active], ['ctrl', L.p_vCtrl, p => p.ctrl], ['mark', L.p_vMark, p => p.mark], ['rx', L.p_vRx, p => p.rx], ['inactive', L.p_vInactive, p => !p.active]]
+      .map(([k, label, f]) => ({ label, count: cnt(f), active: s.tab === k, pick: () => this.setState({ tab: k, page: 1, sel: {} }) }));
+    const CL = this.colLabels(L), visCols = s.cols.filter(c => c.visible).map(c => c.key);
+    const stickyCount = ['code', 'name'].filter((k, i) => visCols[i] === k).length;
+    const tColumns = visCols.map(k => ({ key: k, label: CL[k], width: CW[k] + 'px', align: NUM.includes(k) ? 'right' : 'left', sortable: true, sortDir: s.sort && s.sort.key === k ? s.sort.dir : null }));
+    const FL = { code: L.p_cCode, contractName: L.p_cContract, classifier: L.p_cClassifier, barcode: L.p_cBarcode, ikpu: L.p_cIkpu, farmId: L.p_cFarm };
+    const cell = (p, k) => {
+      if (k === 'name') { const m = hit[p.id], nm = m && m.field === 'name', i = nm ? p.name.toLowerCase().indexOf(q.toLowerCase()) : -1;
+        return { type: 'name', pre: i >= 0 ? p.name.slice(0, i) : p.name, hit: i >= 0 ? p.name.slice(i, i + q.length) : '', post: i >= 0 ? p.name.slice(i + q.length) : '', hasHit: i >= 0, sub: m && m.field && !nm ? `${FL[m.field]}: ${m.value}` : `${L['p_fm_' + p.form] || p.form || ''} ${p.dose || ''} · №${p.pack || '—'}`, color: p.active ? '#172B2A' : '#647574', badge: p.active ? '' : L.p_inactive, hasBadge: !p.active }; }
+      if (MONO.includes(k)) { const v = k === 'barcode' ? (p.barcodes || [])[0] : p[k]; return { type: 'mono', text: v || '—' }; }
+      if (k === 'stock') { const n = this.stockOf(p.id); return { type: 'text', text: fN(n), color: n ? '#172B2A' : '#647574' }; }
+      if (k === 'price') { const bp = D.basePrice(p.id, this.props.branch && this.props.branch !== 'ALL' ? this.props.branch : 'TSH'); return { type: 'text', text: bp ? fM(bp) : L.p_noPrice, color: bp ? '#172B2A' : '#647574' }; }
+      if (k === 'pack') return { type: 'text', text: p.pack || '—' };
+      if (k === 'minQty' || k === 'maxQty') return p[k] ? { type: 'text', text: fN(p[k]) } : { type: 'text', text: '—', color: '#647574' };
+      if (k === 'ctrl') return p.ctrl ? { type: 'status', text: L.p_stCtrl, icon: 'lock', fg: '#B91C1C', bg: '#FEF2F2' } : { type: 'text', text: '—', color: '#647574' };
+      if (k === 'mark') return p.mark ? { type: 'status', text: L.p_yes, icon: 'scan-barcode', fg: '#5B6B6A', bg: '#F5F7F8' } : { type: 'text', text: '—', color: '#647574' };
+      if (k === 'rx') return { type: 'text', text: p.rx ? L.p_yes : '—', color: p.rx ? '#172B2A' : '#647574' };
+      if (k === 'status') return { type: 'status', text: p.active ? L.p_active : L.p_inactive, icon: p.active ? 'circle-check' : 'circle-slash', fg: p.active ? '#15803D' : '#5B6B6A', bg: p.active ? '#F0FDF4' : '#EEF2F4' };
+      const v = this.rawVal(p, k, L); return { type: 'text', text: v === '' ? '—' : String(v), color: v === '' ? '#647574' : '#172B2A' };
+    };
+    const tRows = pageRows.map(p => ({ id: p.id, selected: !!s.sel[p.id], cells: visCols.map(k => cell(p, k)),
+      onToggle: () => this.setState(st => { const n = { ...st.sel }; if (n[p.id]) delete n[p.id]; else n[p.id] = true; return { sel: n }; }),
+      onOpen: () => this.openCard(p.id),
+      actions: [{ label: L.p_aOpen, icon: 'arrow-up-right', pick: () => this.openCard(p.id) }, ...(canEdit ? [{ label: L.p_aEdit, icon: 'pencil', pick: () => this.openForm('edit', null, p.id) }, { label: L.p_aCopy, icon: 'copy', pick: () => this.openForm('new', this.copyOf(p)) },
+        p.active ? { sep: true, label: L.p_aDeact, icon: 'circle-slash', danger: true, pick: () => this.askDeact([p.id]) } : { sep: true, label: L.p_aAct, icon: 'circle-check', pick: () => this.activate(p) }] : [])] }));
+    const selPage = pageRows.filter(p => s.sel[p.id]).length, selIds = Object.keys(s.sel).map(Number), selCount = selIds.length;
+    const allState = !pageRows.length || !selPage ? 'none' : selPage === pageRows.length ? 'all' : 'some';
+    const uniq = a => [...new Set(a)].sort((x, y) => String(x).localeCompare(String(y), 'uz'));
+    const opt = (vals, f) => vals.map(v => ({ value: v[0], label: v[1], count: cnt(f(v[0])) }));
+    const hasFilters = s.fMaker.length + s.fCat.length + s.fCountry.length + s.fSupply.length + s.fStatus.length > 0;
+    const activeF = [q && `${L.p_searchWord} «${q}»`, s.fMaker.length && L.p_fMaker, s.fCat.length && L.p_fCat, s.fCountry.length && L.p_fCountry, s.fSupply.length && L.p_fSupply, s.fStatus.length && L.p_fStatus].filter(Boolean);
+    const normal = s.listState === 'normal';
+    const exportRows = list => { const head = visCols.map(k => CL[k]), br = this.props.branch && this.props.branch !== 'ALL' ? this.props.branch : 'TSH';
+      const val = (p, k) => { if (k === 'price') return D.basePrice(p.id, br) || ''; const v = this.rawVal(p, k, L); return typeof v === 'boolean' ? (v ? L.p_yes : '') : MONO.includes(k) ? String(v == null ? '' : v) : v; };
+      D.xlsxDownload(`Mahsulotlar_${D.TODAY}.xlsx`, [head].concat(list.map(p => visCols.map(k => val(p, k)))), L.p_title);
+      this.toast(L.p_exportDone(list.length)); };
+    const clearAllF = { fMaker: [], fCat: [], fCountry: [], fSupply: [], fStatus: [], page: 1 };
+    const goImport = () => this.setState({ view: 'import', imp: { step: 1, n: Date.now() } });
+    return {
+      countLabel: fN(all.length),
+      hdrSecondary: canEdit ? [{ label: L.p_import, icon: 'upload', pick: goImport }] : [],
+      hdrMore: [{ label: L.p_export, icon: 'download', pick: () => exportRows(rows) }],
+      hdrPrimary: canEdit ? { label: L.p_add, icon: 'plus', pick: () => this.openForm('new') } : null,
+      views, q: s.q, setQ: v => this.setState({ q: v, page: 1 }),
+      fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      colDefs: s.cols.map(c => ({ key: c.key, label: CL[c.key], visible: c.visible })), setCols: cols => { const c = cols.map(x => ({ key: x.key, visible: x.visible })); saveCols(c); this.setState({ cols: c }); },
+      resetCols: () => { try { localStorage.removeItem(COL_KEY); } catch (e) {} this.setState({ cols: COLS0.map(k => ({ key: k, visible: true })) }); },
+      makerOpts: opt(uniq(all.map(p => p.maker)).map(m => [m, m]), v => p => p.maker === v),
+      catOpts: opt(uniq(all.map(p => p.cat)).map(c => [c, c]), v => p => p.cat === v),
+      countryOpts: opt(uniq(all.map(p => p.country || '—')).map(c => [c, c]), v => p => (p.country || '—') === v),
+      supplyOpts: opt(uniq(all.map(p => p.supplyBy || '—')).map(c => [c, c]), v => p => (p.supplyBy || '—') === v),
+      statusOpts: opt([['active', L.p_active], ['inactive', L.p_inactive]], v => p => (p.active ? 'active' : 'inactive') === v),
+      fbFilters: [[L.p_fMaker, 'makerOpts', 'fMaker'], [L.p_fCat, 'catOpts', 'fCat'], [L.p_fCountry, 'countryOpts', 'fCountry'], [L.p_fSupply, 'supplyOpts', 'fSupply'], [L.p_fStatus, 'statusOpts', 'fStatus']].map(([label, ok, sk]) => ({ label, optKey: ok, selected: s[sk], onChange: v => this.setState({ [sk]: v, page: 1 }) })),
+      hasFilters, clearFilters: () => this.setState(clearAllF),
+      showTable: (normal && total > 0) || s.listState === 'loading', listLoading: s.listState === 'loading', showPager: normal && total > 0,
+      tColumns, tRows, allState, stickyCount, tMinWidth: 40 + 44 + visCols.reduce((a, k) => a + CW[k], 0),
+      toggleAll: () => this.setState(st => { const n = { ...st.sel }; if (allState === 'all') pageRows.forEach(p => delete n[p.id]); else pageRows.forEach(p => n[p.id] = true); return { sel: n }; }),
+      onSort: k => this.setState(st => ({ sort: !st.sort || st.sort.key !== k ? { key: k, dir: 'asc' } : st.sort.dir === 'asc' ? { key: k, dir: 'desc' } : null })),
+      total, page, per: s.per, setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 }),
+      listEmpty: s.listState === 'empty', listNoRes: normal && total === 0 && all.length > 0, listError: s.listState === 'error',
+      emptyPrimary: canEdit ? { label: L.p_add, icon: 'plus', pick: () => this.openForm('new') } : null, emptySecondary: canEdit ? { label: L.p_importExcel, icon: 'upload', pick: goImport } : null,
+      noResText: L.p_noResD ? L.p_noResD(activeF.join(', ') || '—') : '', noResAction: { label: L.p_fClear, icon: 'filter-x', pick: () => this.setState({ ...clearAllF, q: '', tab: 'all' }) },
+      retryAction: { label: L.p_retry, icon: 'rotate-ccw', pick: () => { this.setState({ listState: 'loading' }); this._rtm = setTimeout(() => this.setState({ listState: 'normal' }), 1000); } },
+      hasSel: normal && selCount > 0, selLabel: L.p_selected ? L.p_selected(selCount) : '', clearSel: () => this.setState({ sel: {} }),
+      selectAllLink: allState === 'all' && total > pageRows.length && selCount < total ? { label: L.p_selectAllN(fN(total)), pick: () => this.setState({ sel: Object.fromEntries(rows.map(p => [p.id, true])) }) } : null,
+      bulkActions: [{ label: L.p_export, icon: 'download', pick: () => exportRows(all.filter(p => s.sel[p.id])) }, ...(canEdit ? [{ label: L.p_aDeact, icon: 'circle-slash', danger: true, pick: () => this.askDeact(selIds.filter(id => (D.prodById(id) || {}).active)) }] : [])]
+    };
+  }
+  fixFilters(v) { if (v.fbFilters) v.fbFilters = v.fbFilters.map(f => ({ ...f, options: v[f.optKey] })); return v; }
+  histOf(p, L) { const D = MD(), ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const items = D.prodHist(p.id).map(a => ({ kind: a.kind === 'create' ? 'create' : a.kind === 'status' ? 'status' : 'change', initials: ini(a.who), name: a.who, action: a.kind === 'create' ? L.p_h10 : a.kind === 'status' ? (a.text ? `${L.p_hStatusA} · ${a.text}` : L.p_hStatusA) : (a.diff || []).some(x => x.key === 'code') ? L.p_hCodeA : L.p_hChangeA, time: String(a.at).slice(0, 16).replace(' ', ', '), d: String(a.at).slice(0, 10), changes: (a.diff || []).map(x => ({ field: x.f, from: x.from === '—' ? '' : x.from, hasFrom: x.from && x.from !== '—', to: x.to })) }));
+    if (p.createdAt) items.push({ kind: 'create', initials: ini(p.createdBy), name: p.createdBy || '—', action: L.p_h10, time: String(p.createdAt).slice(0, 16).replace(' ', ', '), d: String(p.createdAt).slice(0, 10), changes: [{ field: L.p_lCode, from: '', hasFrom: false, to: p.code }] });
+    const groups = []; items.forEach(it => { let g = groups.find(x => x.d === it.d); if (!g) { g = { d: it.d, label: it.d === D.TODAY ? L.today : it.d, items: [] }; groups.push(g); } g.items.push(it); }); return groups; }
+  cardVals(L, canEdit, canCost) {
+    const s = this.state, D = MD(), p = D.prodById(s.cardId);
+    if (!p) return { cardMissing: true, missAction: { label: L.p_backList, icon: 'arrow-left', pick: () => this.toList() } };
+    const bt = D.batches().filter(b => b.pid === p.id && b.qty > 0), total = bt.reduce((a, b) => a + b.qty, 0), W = D.CONFIG.expiryWarnDays;
+    const nBatch = new Set(bt.map(b => b.batch)).size;
+    const near = bt.length ? Math.min(...bt.map(b => pD(b.exp) || Infinity)) : null, nearDays = near != null && isFinite(near) ? Math.round((near - pD(D.TODAY)) / 86400000) : null;
+    const avg = total ? bt.reduce((a, b) => a + (b.cost || 0) * b.qty, 0) / total : null;
+    const byBr = D.BRANCHES.map(b => ({ code: b.code, name: b.name, q: bt.filter(x => x.branch === b.code).reduce((a, x) => a + x.qty, 0) }));
+    const maxQ = Math.max(1, ...byBr.map(b => b.q));
+    const badges = [p.active ? { label: L.p_active, icon: 'circle-check', fg: '#15803D', bg: '#F0FDF4' } : { label: L.p_inactive, icon: 'circle-slash', fg: '#5B6B6A', bg: '#EEF2F4' },
+      p.ctrl && { label: L.p_stCtrl, icon: 'lock', fg: '#B91C1C', bg: '#FEF2F2' }, p.mark && { label: L.p_stMark, icon: 'scan-barcode', fg: '#5B6B6A', bg: '#F5F7F8' }, p.rx && { label: L.p_vRx, icon: 'file-text', fg: '#5B6B6A', bg: '#F5F7F8' }].filter(Boolean);
+    const yn = v => v ? L.p_yes : L.p_no, u = p.unit || 'dona';
+    const groups = byBr.map(b => ({ ...b, rows: bt.filter(x => x.branch === b.code) })).filter(g => g.rows.length).map(g => ({ name: g.name, total: fN(g.rows.reduce((a, b) => a + b.qty, 0)) + ' ' + u, avail: fN(g.rows.reduce((a, b) => a + (b.avail || 0), 0)) + ' ' + u,
+      rows: g.rows.map(b => { const d = b.days, z = ZT[b.zoneType] || ZT.store; return { wh: b.wh, zone: b.zoneLabel, zIcon: z[0], zFg: z[1], zBg: z[2], batch: b.batch, exp: b.exp, expNote: d == null ? '' : d < 0 ? L.k_expired : d <= W ? L.daysLeft(d) : '', expColor: d < 0 ? '#B91C1C' : '#B45309', cost: fM(b.cost || 0), qty: fN(b.qty), res: fN(b.reservedQty || 0), avail: fN(b.avail || 0), availColor: b.avail ? '#172B2A' : '#647574' }; }) }));
+    const pr = [], brP = this.props.branch && this.props.branch !== 'ALL' ? this.props.branch : 'TSH';
+    const open = h => this.props.onOpen ? this.props.onOpen(h) : this.toast(L.p_docToast);
+    const moves = D.prodMoves(p.id).map(m => { const href = m.kind === 'sv' ? (() => { const o = D.orderOfSale(m.no); return o ? '#orders?open=' + o.no : ''; })() : DOC_HREF[m.kind] ? `#${DOC_HREF[m.kind]}?open=${m.no}` : '';
+      return { date: m.date, type: m.type, no: m.no, branch: m.branch, wh: m.wh, inQ: m.q > 0 ? '+' + fN(m.q) : m.zone ? '↔ ' + fN(m.zone) : '', outQ: m.q < 0 ? '−' + fN(-m.q) : '', bal: fN(m.bal), open: () => href && open(href) }; });
+    const kpis = [{ label: L.p_sTotal, value: `${fN(total)} ${u}` }, { label: L.p_sBatches, value: String(nBatch) },
+      { label: L.p_sNearest, value: nearDays != null ? dStr(near) : '—', warn: nearDays != null && nearDays <= W, note: nearDays != null ? (nearDays < 0 ? L.k_expired : L.daysLeft(nearDays)) : '' }].concat(canCost ? [{ label: L.p_sAvgCost, value: avg ? fM(avg) : '—' }] : []);
+    return {
+      cardMissing: false, prBr: brP, prRole: this.props.role, prOpenNo: no => open('#prices?open=' + encodeURIComponent(no)), prOpenSet: ty => { const pt = D.ptByCode(ty) || {}; open('#prices?set=' + (pt.id || ty) + '&br=' + brP + '&q=' + encodeURIComponent(p.code)); }, c: { pid: p.id, name: p.name, code: p.code, badges, meta: `${p.maker} · ${p.cat}${p.country ? ' · ' + p.country : ''}`,
+        kpis: kpis.map(k => ({ ...k, size: '22px', color: k.warn ? '#B45309' : k.value === '—' ? '#647574' : '#172B2A', hasNote: !!k.note })),
+        branchBars: byBr.map(b => ({ name: b.name, qty: fN(b.q), qtyColor: b.q ? '#172B2A' : '#647574', pct: Math.round(b.q / maxQ * 100) })),
+        hasStock: bt.length > 0, noStock: bt.length === 0, stockGroups: groups, prices: pr,
+        moves, hasMoves: moves.length > 0, noMoves: moves.length === 0, history: this.histOf(p, L) },
+      stGrid: canCost ? 'minmax(0,1.2fr) 150px 130px 130px 110px 100px 90px 100px' : 'minmax(0,1.2fr) 150px 130px 130px 100px 90px 100px',
+      cardTabs: [['general', L.p_tGeneral], ['stock', L.p_tStock], ['prices', L.p_tPrices], ['moves', L.p_tMoves], ['history', L.p_tHistory]].map(([k, label]) => ({ label, active: s.cardTab === k, pick: () => this.setState({ cardTab: k }) })),
+      tabGeneral: s.cardTab === 'general', tabStock: s.cardTab === 'stock', tabPrices: s.cardTab === 'prices', tabMoves: s.cardTab === 'moves', tabHistory: s.cardTab === 'history',
+      asideFlex: this.props.narrow ? '1 1 100%' : '0 1 320px', genMainOrder: this.props.narrow ? 2 : 0, kpiCols: this.props.narrow ? 4 : 2,
+      infoCards: [
+        { title: L.p_iBasic, rows: [[L.p_lName, p.name], [L.p_lContract, p.contractName], [L.p_lClassifier, p.classifier], [L.p_lMaker, p.maker], [L.p_lCountry, p.country], [L.p_lCat, p.cat], [L.p_lSupply, p.supplyBy], [L.p_lForm, L['p_fm_' + p.form]], [L.p_lDose, p.dose]] },
+        { title: L.p_iId, rows: [[L.p_lCode, p.code, 1], [L.p_lBarcodes, (p.barcodes || []).join(', '), 1], [L.p_lIkpu, p.ikpu, 1], [L.p_lFarm, p.farmId, 1]] },
+        { title: L.p_iPack, rows: [[L.p_lBaseUnit, u], [L.p_lPack, p.pack], [L.p_lPerPack, p.perPack], [L.p_lMinQty, p.minQty ? fN(p.minQty) : '—'], [L.p_lMaxQty, p.maxQty ? fN(p.maxQty) : '—']] },
+        { title: L.p_iStorage, rows: [[L.p_lCtrl, yn(p.ctrl)], [L.p_lMark, p.mark ? L.p_required : L.p_notRequired], [L.p_lRx, yn(p.rx)]] },
+        { title: L.p_iTax, rows: [[L.p_lVat, p.vatNone ? L.p_vatNone : (p.vat || 0) + '%']] }
+      ].concat(p.note ? [{ title: L.p_iNote, rows: [[L.p_lNote, p.note]] }] : []).map(c => ({ title: c.title, rows: c.rows.map(([label, value, mono]) => ({ label, value: value || '—', mono: !!mono && !!value })) })),
+      openStockPage: () => { D.store.urlF = { page: 'stock', params: { q: p.code }, n: Date.now() }; this.props.onNavigate && this.props.onNavigate('stock'); },
+      histFilters: [['all', L.p_hAll], ['create', L.p_hCreate], ['change', L.p_hChange], ['status', L.p_hStatus]].map(([key, label]) => ({ key, label })),
+      cardPrimary: canEdit ? { label: L.p_aEdit, icon: 'pencil', pick: () => this.openForm('edit', null, p.id) } : null,
+      cardMore: canEdit ? [{ label: L.p_aCopy, icon: 'copy', pick: () => this.openForm('new', this.copyOf(p)) },
+        p.active ? { sep: true, label: L.p_aDeact, icon: 'circle-slash', danger: true, pick: () => this.askDeact([p.id]) } : { sep: true, label: L.p_aAct, icon: 'circle-check', pick: () => this.activate(p) }] : []
+    };
+  }
+  formVals(L) {
+    const s = this.state, D = MD(), f = s.f, e = s.tried ? this.formErrors() : {}, dup = s.tried ? this.dupOf() : null, bcDup = this.bcDupOf();
+    const set = k => ev => { const v = ev && ev.target ? ev.target.value : ev; this.setState(st => ({ f: { ...st.f, [k]: v } })); };
+    const on = {}; ['name', 'contractName', 'classifier', 'maker', 'cat', 'supplyBy', 'form', 'country', 'dose', 'ikpu', 'farmId', 'unit', 'note'].forEach(k => on[k] = set(k));
+    on.pack = ev => this.setState(st => ({ f: { ...st.f, pack: ev.target.value.replace(/\D/g, '') } })); on.minQty = ev => this.setState(st => ({ f: { ...st.f, minQty: ev.target.value.replace(/\D/g, '').slice(0, 6) } })); on.maxQty = ev => this.setState(st => ({ f: { ...st.f, maxQty: ev.target.value.replace(/\D/g, '').slice(0, 6) } })); on.perPack = ev => this.setState(st => ({ f: { ...st.f, perPack: ev.target.value.replace(/\D/g, '') } }));
+    on.code = ev => this.setState(st => ({ f: { ...st.f, code: ev.target.value.replace(/\D/g, '').slice(0, 8) }, codeErr: null }));
+    const liveCode = f.code.length === 8 && /^[1-9]/.test(f.code) ? D.prodByCode(f.code, s.editId) : null, codeDup = (s.codeErr && s.codeErr.other) || liveCode;
+    const codeErrText = codeDup ? L.p_eCodeDup : (e.code || (s.codeErr && s.codeErr.err === 'codeFmt' ? L.p_eCodeFmt : ''));
+    const bd = {}; ['name', 'contractName', 'classifier', 'ikpu', 'farmId', 'code', 'barcode', 'maxQty'].forEach(k => { const bad = k === 'barcode' ? !!bcDup || !!s.bcErr : k === 'code' ? !!codeErrText : !!e[k]; bd[k] = bad ? '#B91C1C' : '#E2E8F0'; });
+    const edP = s.mode === 'edit' ? D.prodById(s.editId) : null, locked = !!(edP && D.prodHasMoves(edP.id));
+    const keys = Object.keys(e), fl = { name: L.p_lName, contractName: L.p_lContract, classifier: L.p_lClassifier, maker: L.p_lMaker, cat: L.p_lCat, ikpu: L.p_lIkpu, farmId: L.p_lFarm, code: L.p_lCode, maxQty: L.p_lMaxQty };
+    const tg = (k, label, help, lockable, extra) => { const lk = lockable && locked; return { label, help, on: !!f[k], locked: lk, tip: lk ? L.p_lockedTip : '', op: lk ? 0.55 : 1, cursor: lk ? 'not-allowed' : 'pointer', bg: f[k] ? '#0F766E' : '#647574', justify: f[k] ? 'flex-end' : 'flex-start', toggle: () => !lk && this.setState(st => ({ f: { ...st.f, [k]: !st.f[k] } })), ...extra }; };
+    const toggles = [tg('ctrl', L.p_lCtrl, L.p_ctrlHelp, true, { showCtrl: f.ctrl }), tg('mark', L.p_lMark, L.p_markHelp, true, { showMark: f.mark }), tg('rx', L.p_lRx, L.p_rxHelp, false, {})].map((t, i) => ({ ...t, sep: i < 2 ? '1px solid #EEF2F4' : '0' }));
+    const lk = D.store.lk || {}, act = a => (a || []).filter(x => x.active !== false && !x.mergedInto);
+    const makers = [...new Set(act(lk.makers).map(m => m.name).concat(f.maker ? [f.maker] : []))].sort();
+    const cats = [...new Set(act(lk.cats).filter(c => c.parent).map(c => c.name).concat(D.PRODUCTS.map(p => p.cat)).concat(f.cat ? [f.cat] : []))].sort();
+    const countries = [...new Set(act(lk.countries).map(c => c.name).concat(f.country ? [f.country] : []))].sort((a, b) => a.localeCompare(b, 'uz'));
+    const emps = D.EMPLOYEES.filter(x => D.empNames([x.role]).includes(x.name)).map(x => x.name), units = act(lk.units).map(x => x.name);
+    return {
+      f, on, er: e, bd, formTop: this.formTop,
+      formTitle: s.mode === 'edit' ? (edP ? edP.name : '') : L.p_fNew, formCrumb: s.mode === 'edit' ? L.p_aEdit : L.p_fNew,
+      showErrBlock: keys.length > 0, errTitle: L.p_errN ? L.p_errN(keys.length) : '', errLinks: keys.map(k => ({ label: fl[k], go: () => this.focusField(k) })),
+      showDup: !!dup && !keys.length, dupText: dup ? L.p_dupT(dup.name, dup.maker) : '', openDup: () => dup && this.guard(() => this.openCard(dup.id)),
+      codeErrText, codeDupName: codeDup ? codeDup.name : '', openCodeDup: () => codeDup && this.guard(() => this.openCard(codeDup.id)),
+      genCode: () => this.setState(st => ({ f: { ...st.f, code: D.prodNewCode() }, codeErr: null })),
+      makerSel: makers.map(m => ({ value: m, label: m })), catSel: cats.map(c => ({ value: c, label: c })), formSel: FORMKEYS.map(k => ({ value: k, label: L['p_fm_' + k] })),
+      countrySel: countries.map(c => ({ value: c, label: c })), supplySel: [{ value: '', label: '—' }].concat([...new Set(emps.concat(f.supplyBy ? [f.supplyBy] : []))].map(n => ({ value: n, label: n }))),
+      unitSel: [...new Set(units.concat([f.unit]).filter(Boolean))].map(x => ({ value: x, label: x })),
+      newMaker: () => this.setState({ mk: true, mkName: '', mkErr: '' }),
+      bcChips: f.barcodes.map(code => ({ code, remove: () => this.setState(st => ({ f: { ...st.f, barcodes: st.f.barcodes.filter(b => b !== code) } })) })),
+      bcInput: s.bcInput, onBcInput: ev => this.setState({ bcInput: ev.target.value.replace(/\s/g, '').slice(0, 14), bcErr: '' }),
+      onBcKey: ev => { if (ev.key === 'Enter' || ev.key === ',') { ev.preventDefault(); this.addBc(); } else if (ev.key === 'Backspace' && !s.bcInput && f.barcodes.length) this.setState(st => ({ f: { ...st.f, barcodes: st.f.barcodes.slice(0, -1) } })); },
+      onBcBlur: () => { if (s.bcInput.trim()) this.addBc(); },
+      bcErrText: s.bcErr, hasBcErr: !!bcDup, bcDupName: bcDup ? bcDup.name : '', openBcDup: () => bcDup && this.guard(() => this.openCard(bcDup.id)),
+      unitsLocked: locked, lockTitle: locked ? L.p_lockedTip : '', lockBg: locked ? '#F8FAFA' : '#FFFFFF', lockColor: locked ? '#647574' : '#172B2A', lockCursor: locked ? 'not-allowed' : 'text',
+      toggles, vatOpts: [['12', '12%'], ['0', '0%'], ['none', L.p_vatNone]].map(([v, label]) => ({ label, on: f.vat === v, bg: f.vat === v ? '#FFFFFF' : 'transparent', sh: f.vat === v ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', color: f.vat === v ? '#172B2A' : '#5B6B6A', pick: () => this.setState(st => ({ f: { ...st.f, vat: v } })) })),
+      dirty: JSON.stringify(f) !== s.base, saveForm: () => this.saveForm(),
+      formBack: () => this.guard(() => s.mode === 'edit' ? this.openCard(s.editId) : this.toList())
+    };
+  }
+  impDone(res) { const D = MD(), L = this.props.dict || {}, who = this.who(); let ok = 0, bad = 0;
+    (res.lines || []).forEach(l => { const r = D.prodSave({ ...l, code: l.codeAuto || D.prodByCode(l.code) ? D.prodNewCode() : l.code, supplyBy: '', ctrl: false, mark: false, rx: false, vat: '12' }, who); if (r.ok) ok++; else bad++; });
+    this.setState({ ...this.resetList(), imp: null }); this.setHash('products'); this.toast(L.p_impDone(ok, bad)); }
+  renderVals() {
+    const D = MD(), s = this.state, L = this.props.dict || {};
+    if (!D) return { L, isList: true, showTable: true, listLoading: true, tColumns: [], tRows: [] };
+    this._stock = {}; D.batches().forEach(b => { this._stock[b.pid] = (this._stock[b.pid] || 0) + b.qty; });
+    const role = this.props.role || 'director', canEdit = D.can(role, 'products.create'), canCost = D.can(role, 'special.cost');
+    const lv = s.view === 'list' ? this.fixFilters(this.listVals(L, canEdit)) : {}, cv = s.view === 'card' && !s.cardLoading ? this.cardVals(L, canEdit, canCost) : {}, fv = s.view === 'form' ? this.formVals(L) : {};
+    const ids = s.deact || [], dps = ids.map(id => D.prodById(id)).filter(Boolean);
+    let deactItems = [];
+    if (dps.length) { const bt = D.batches().filter(b => ids.includes(b.pid) && b.qty > 0), tot = bt.reduce((a, b) => a + b.qty, 0), oo = new Set(); ids.forEach(id => D.prodOpenOrders(id).forEach(o => oo.add(o.id)));
+      deactItems = [{ text: L.p_dKeep(dps.length === 1 ? `${fN(tot)} ${dps[0].unit}` : fN(tot), new Set(bt.map(b => b.pid + '|' + b.batch)).size), icon: 'boxes', color: '#5B6B6A' }, { text: L.p_dOrders(oo.size), icon: 'clipboard-list', color: '#5B6B6A' }, { text: L.p_dNoNew, icon: 'ban', color: '#B91C1C' }]; }
+    return {
+      L, rt: (this._rt = (this._rt || 0) + 1), ...lv, ...cv, ...fv, narrow: !!this.props.narrow, canEdit, canCost, readOnly: !canEdit,
+      isList: s.view === 'list', isCard: s.view === 'card', isForm: s.view === 'form', isImport: s.view === 'import',
+      cardLoading: s.view === 'card' && s.cardLoading, cardReady: s.view === 'card' && !s.cardLoading && !cv.cardMissing,
+      impPreset: s.imp, impDone: r => this.impDone(r), backToList: () => this.toList(), toastFn: t => this.toast(t),
+      deactOpen: dps.length > 0, deactTitle: dps.length > 1 ? L.p_dTitleN(dps.length) : L.p_dTitle, deactItems, deactReason: s.deactReason, deactErr: s.deactErr, onDeactReason: v => this.setState({ deactReason: v, deactErr: '' }),
+      confirmDeact: () => this.confirmDeact(), cancelDeact: () => this.setState({ deact: null }),
+      mkOpen: s.mk, mkName: s.mkName, mkErr: s.mkErr, mkText: L.p_mkD, onMkName: v => this.setState({ mkName: v, mkErr: '' }), cancelMk: () => this.setState({ mk: false }),
+      confirmMk: () => { const n = s.mkName.trim(); if (!n) return this.setState({ mkErr: L.p_errReq }); const dup = D.lkDup('makers', n); if (dup) return this.setState({ mkErr: L.p_mkDup(dup.name) });
+        const dd = D.store.demoDirty; D.lkSave('makers', { name: n, country: s.f.country || '', active: true }, this.who(), 'create'); D.store.demoDirty = dd;
+        this.setState(st => ({ mk: false, f: { ...st.f, maker: n } })); this.toast(L.p_mkAdded(n)); },
+      leaveOpen: !!s.leave, confirmLeave: () => { const fn = s.leave; this.setState({ leave: null, base: JSON.stringify(s.f) }, () => fn && fn()); }, cancelLeave: () => this.setState({ leave: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:16px;font-family:Inter,system-ui,sans-serif;color:#172B2A">
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <sc-for list="{{ chips }}" as="f">
+      <button onClick="{{ f.pick }}" style="height:30px;padding:0 12px;border:1px solid {{ f.border }};border-radius:8px;background:{{ f.bg }};color:{{ f.color }};font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA">{{ f.label }}</button>
+    </sc-for>
+  </div>
+  <sc-for list="{{ shown }}" as="g">
+    <div style="display:flex;flex-direction:column">
+      <div style="font-size:12px;line-height:16px;font-weight:500;color:#647574;padding-bottom:8px">{{ g.label }}</div>
+      <sc-for list="{{ g.items }}" as="e">
+        <div style="position:relative;display:flex;gap:12px;padding-bottom:{{ e.pb }}">
+          <sc-if value="{{ e.line }}"><span style="position:absolute;left:11.5px;top:28px;bottom:0;width:1px;background:#E2E8F0"></span></sc-if>
+          <span style="width:24px;height:24px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ e.initials }}</span>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;padding-top:2px">
+            <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:13px;line-height:18px">
+              <span style="font-weight:500">{{ e.name }}</span><span style="color:#5B6B6A">{{ e.action }}</span><span style="font-size:12px;color:#647574;font-variant-numeric:tabular-nums">{{ e.time }}</span>
+            </div>
+            <sc-if value="{{ e.hasChanges }}">
+              <div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;border-radius:8px;background:#F8FAFA;border:1px solid #EEF2F4">
+                <sc-for list="{{ e.changes }}" as="c">
+                  <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:12px;font-size:13px;line-height:18px">
+                    <span style="color:#5B6B6A">{{ c.field }}</span>
+                    <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-variant-numeric:tabular-nums"><sc-if value="{{ c.hasFrom }}"><span style="color:#647574;text-decoration:line-through">{{ c.from }}</span><lucide-i name="arrow-right" size="12" style="color:#647574"></lucide-i></sc-if><span style="color:#172B2A">{{ c.to }}</span></span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-for>
+  <sc-if value="{{ none }}"><div style="padding:32px 0;text-align:center;font-size:13px;color:#647574">{{ emptyLabel }}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:720,&quot;height&quot;:520},&quot;filters&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{key,label}[]&quot;},&quot;groups&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,items:{kind,initials,name,action,time,changes}[]}[]&quot;},&quot;emptyLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Yozuv yo'q&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { f: 'all' };
+  renderVals() {
+    const p = this.props, f = this.state.f, filters = p.filters || [];
+    const groups = (p.groups || []).map(g => ({ label: g.label, items: g.items.filter(e => f === 'all' || e.kind === f) })).filter(g => g.items.length);
+    return {
+      chips: filters.map(x => { const a = x.key === f; return { label: x.label, bg: a ? '#DDF5EE' : '#FFFFFF', border: a ? '#0D9488' : '#E2E8F0', color: a ? '#0F766E' : '#5B6B6A', pick: () => this.setState({ f: x.key }) }; }),
+      shown: groups.map(g => ({ label: g.label, items: g.items.map((e, i) => ({ ...e, line: i < g.items.length - 1, pb: i < g.items.length - 1 ? '16px' : '0', hasChanges: !!(e.changes && e.changes.length),
+        changes: (e.changes || []).map(c => ({ ...c, hasFrom: c.from != null && c.from !== '' })) })) })),
+      none: groups.length === 0, emptyLabel: p.emptyLabel
+    };
+  }
+}
+</script>
+</body>
+</html>

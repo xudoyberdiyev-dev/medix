@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="{{ listTitle }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+    <dc-import name="PageHeader" title="{{ listTitle }}" count="{{ countLabel }}" subtitle="{{ listSub }}" primary="{{ listPrimary }}" secondary="{{ listSecondary }}" hint-size="100%,34px"></dc-import>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">
+      <sc-for list="{{ cards }}" as="c" hint-placeholder-count="3">
+        <button onClick="{{ c.open }}" style="display:flex;flex-direction:column;gap:10px;padding:16px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);text-align:left;cursor:pointer;min-width:0;font:inherit;color:#172B2A;transition:border-color 120ms ease-out" style-hover="border-color:#647574">
+          <span style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;width:100%">
+            <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:32px;height:32px;flex:none;border-radius:8px;background:#F5F7F8;color:#5B6B6A;display:flex;align-items:center;justify-content:center"><lucide-i name="{{ c.icon }}" size="16"></lucide-i></span><span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;line-height:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.sub }}</span></span></span>
+            <span style="display:inline-flex;align-items:center;gap:4px;flex:none;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ c.bBg }};color:{{ c.bFg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ c.bIcon }}" size="12"></lucide-i>{{ c.badge }}</span>
+          </span>
+          <sc-if value="{{ c.hasAcc }}"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:16px;color:#5B6B6A">{{ c.acc }}</span></sc-if>
+          <span style="font-size:24px;line-height:30px;font-weight:600;letter-spacing:-0.02em;white-space:nowrap">{{ c.bal }}</span>
+          <span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ c.foot }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <sc-if value="{{ hasDrv }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;display:flex;flex-direction:column;min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #EEF2F4">
+          <span style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600"><lucide-i name="truck" size="16"></lucide-i>{{ L.dc_title }}</span>
+          <span style="font-size:14px;font-weight:600">{{ drvTotal }}</span>
+        </div>
+        <sc-for list="{{ drvTrips }}" as="t">
+          <div style="display:flex;flex-direction:column;gap:10px;padding:12px 16px;border-bottom:1px solid #EEF2F4">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+              <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;font-weight:600">{{ t.driver }}</span><span style="font-size:12px;color:#5B6B6A"><span style="font-family:'JetBrains Mono',monospace">{{ t.trip }}</span> · {{ t.stLabel }}</span></span>
+              <span style="display:flex;align-items:center;gap:10px"><span style="font-size:15px;font-weight:600">{{ t.sum }}</span><sc-if value="{{ t.closed }}"><button onClick="{{ t.open }}" style="min-height:40px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="hand-coins" size="16"></lucide-i>{{ L.dc_accept }}</button></sc-if></span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <sc-for list="{{ t.rows }}" as="r"><span style="display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#5B6B6A"><span style="min-width:0"><span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ r.no }}</span> · {{ r.cust }}<sc-if value="{{ r.hasNote }}"><span style="color:#B45309"> · {{ r.note }}</span></sc-if></span><span style="flex:none;color:#172B2A">{{ r.sum }}</span></span></sc-for>
+            </div>
+            <sc-if value="{{ t.editing }}">
+              <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:8px;background:#F8FAFA">
+                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5B6B6A;max-width:260px">{{ L.dc_got }} *<input value="{{ t.got }}" onChange="{{ t.onGot }}" inputMode="decimal" style="height:40px;padding:0 10px;border:1px solid {{ t.gotBorder }};border-radius:8px;font-size:15px;text-align:right"></input></label>
+                <sc-if value="{{ t.hasDiff }}"><span style="font-size:13px;font-weight:600;color:{{ t.diffFg }}">{{ t.diffText }}</span></sc-if>
+                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5B6B6A">{{ t.noteLabel }}<textarea value="{{ t.note }}" onChange="{{ t.onNote }}" rows="2" style="padding:8px 10px;border:1px solid {{ t.noteBorder }};border-radius:8px;font:inherit;font-size:14px;resize:vertical"></textarea></label>
+                <sc-if value="{{ t.hasErr }}"><span role="alert" style="font-size:13px;color:#B91C1C">{{ t.err }}</span></sc-if>
+                <div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ t.save }}" style="min-height:40px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer">{{ L.dc_confirm }}</button><button onClick="{{ t.cancel }}" style="min-height:40px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A;cursor:pointer">{{ L.cancel }}</button></div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </section>
+    </sc-if>
+    <div style="height:48px"></div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isAcct }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="{{ a.name }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+    <nav style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px"><button onClick="{{ toList }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ listTitle }}</button><span style="color:#647574">/</span><span style="color:#5B6B6A">{{ a.name }}</span></nav>
+    <dc-import name="PageHeader" title="{{ a.name }}" subtitle="{{ acctSub }}" primary="{{ hdrPrimary }}" secondary="{{ hdrSecondary }}" hint-size="100%,34px"></dc-import>
+    <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.kb_search }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" date-filter="{{ dateFilter }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.tl_clearF }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+    <div style="display:grid;grid-template-columns:repeat({{ sumCols }},minmax(0,1fr));gap:12px">
+      <sc-for list="{{ sums }}" as="k" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:4px;padding:14px 16px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+          <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><lucide-i name="{{ k.icon }}" size="14" style="color:{{ k.iconFg }}"></lucide-i>{{ k.label }}</span>
+          <span style="font-size:20px;line-height:28px;font-weight:600;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.value }}</span>
+          <span style="font-size:12px;line-height:16px;color:#647574">{{ k.note }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #EEF2F4">
+        <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:14px;font-weight:600">{{ L.kb_journal }}</span><span style="font-size:13px;color:#647574">{{ rowCount }}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ dayBadge.bg }};color:{{ dayBadge.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ dayBadge.icon }}" size="12"></lucide-i>{{ dayBadge.label }}</span>
+      </div>
+      <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+        <div style="overflow-x:auto;min-width:0">
+          <div style="min-width:{{ minW }}px">
+            <div style="display:grid;grid-template-columns:{{ grid }};height:36px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0">
+              <sc-for list="{{ cols }}" as="c" hint-placeholder-count="8"><div style="padding:0 12px;height:100%;display:flex;align-items:center;justify-content:{{ c.justify }};font-size:12px;font-weight:500;color:#5B6B6A;position:{{ c.pos }};right:0;background:#F8FAFA;box-shadow:{{ c.shadow }};z-index:{{ c.z }};min-width:0"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</span></div></sc-for>
+            </div>
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+              <div style="display:grid;grid-template-columns:{{ grid }};min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4;color:{{ r.color }}">
+                <span style="padding:0 12px;white-space:nowrap;font-size:13px">{{ r.time }}</span>
+                <span style="padding:4px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0"><button onClick="{{ r.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:{{ r.linkColor }};text-decoration:{{ r.deco }};cursor:pointer;white-space:nowrap" style-hover="text-decoration:underline">{{ r.no }}</button><sc-if value="{{ r.dead }}"><span style="height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11px;line-height:18px;font-weight:500">{{ L.tl_st_cancelled }}</span></sc-if></span>
+                <span style="padding:0 12px;display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;text-decoration:{{ r.deco }}"><lucide-i name="{{ r.icon }}" size="14" style="color:#5B6B6A"></lucide-i>{{ r.type }}</span>
+                <span title="{{ r.party }}" style="padding:0 12px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;font-weight:500;text-decoration:{{ r.deco }}">{{ r.party }}</span>
+                <span title="{{ r.note }}" style="padding:0 12px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:{{ r.sub }}">{{ r.note }}</span>
+                <sc-if value="{{ isBank }}"><span style="padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:{{ r.sub }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.payNo }}</span><span style="padding:0 12px;font-size:13px;color:{{ r.sub }};white-space:nowrap">{{ r.bankDate }}</span></sc-if>
+                <span style="padding:0 12px;text-align:right;white-space:nowrap;font-size:13px;font-weight:500;text-decoration:{{ r.deco }}">{{ r.inS }}</span>
+                <span style="padding:0 12px;text-align:right;white-space:nowrap;font-size:13px;font-weight:500;text-decoration:{{ r.deco }}">{{ r.outS }}</span>
+                <span style="padding:0 12px;text-align:right;white-space:nowrap;font-size:13px;font-weight:600;position:sticky;right:0;align-self:stretch;display:flex;align-items:center;justify-content:flex-end;background:#FFFFFF;box-shadow:-8px 0 8px -8px rgba(18,60,58,0.16), inset 1px 0 0 #EEF2F4;color:{{ r.balColor }}">{{ r.bal }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ noRows }}"><dc-import name="EmptyState" icon="{{ emptyIcon }}" tone="neutral" title="{{ emptyT }}" text="{{ emptyD }}" min-height="220" hint-size="100%,220px"></dc-import></sc-if>
+      <dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ L.kb_endBal }}" total-value="{{ endBal }}" bottom="{{ -24 }}" hint-size="100%,52px"></dc-import>
+    </section>
+    <div style="height:48px"></div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isOp }}" hint-placeholder-val="{{ false }}"><dc-import name="MoneyOpDoc" kind="{{ op.kind }}" dict="{{ L }}" role="{{ role }}" branch="{{ opBranch }}" user-name="{{ userName }}" initial="{{ op.initial }}" req="{{ op.req }}" doc-key="{{ op.key }}" act="{{ op.act }}" parent-label="{{ opParent }}" narrow="{{ narrow }}" on-back="{{ backFromOp }}" on-toast="{{ toastFn }}" on-navigate="{{ navFn }}" hint-size="100%,700px"></dc-import></sc-if>
+<sc-if value="{{ isClose }}" hint-placeholder-val="{{ false }}"><dc-import name="CashClose" acct="{{ close.acct }}" date="{{ close.date }}" dict="{{ L }}" role="{{ role }}" user-name="{{ userName }}" preset="{{ close.preset }}" doc-key="{{ close.key }}" narrow="{{ narrow }}" on-back="{{ backFromOp }}" on-toast="{{ toastFn }}" hint-size="100%,700px"></dc-import></sc-if>
+
+<sc-if value="{{ reconOpen }}">
+  <div onClick="{{ closeRecon }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+    <div role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:540px;max-width:100%;max-height:calc(100vh - 48px);overflow-y:auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.kb_reconT }}</h2><span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ a.name }} · <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ accGrouped }}</span></span></div>
+      <div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px">
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;line-height:16px;font-weight:500">{{ L.tl_hDate }}</span><input value="{{ recon.date }}" onChange="{{ onReconDate }}" maxlength="10" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:14px;outline:none"></label>
+        <dc-import name="MoneyInput" label="{{ L.kb_stmtBal }}" required="{{ true }}" value="{{ recon.bal }}" on-change="{{ onReconBal }}" suffix="{{ L.tl_som }}" bold="{{ true }}" hint-size="100%,56px"></dc-import>
+      </div>
+      <span style="display:flex;gap:6px;font-size:13px;color:#5B6B6A">{{ L.kb_sysBal }}<span style="font-weight:600;color:#172B2A">{{ reconSys }}</span></span>
+      <sc-if value="{{ reconOk }}"><dc-import name="StatusBanner" tone="success" icon="circle-check" title="{{ L.kb_reconOk }}" text="{{ reconOkText }}" hint-size="100%,48px"></dc-import></sc-if>
+      <sc-if value="{{ reconBad }}">
+        <dc-import name="StatusBanner" tone="danger" icon="circle-alert" title="{{ reconBadTitle }}" text="{{ L.kb_reconBadD }}" hint-size="100%,48px"></dc-import>
+        <div style="border:1px solid #E2E8F0;border-radius:10px;overflow:hidden">
+          <sc-for list="{{ reconRows }}" as="r"><div style="display:grid;grid-template-columns:56px 130px minmax(0,1fr) 130px;gap:8px;padding:8px 12px;border-bottom:1px solid #EEF2F4;font-size:13px;line-height:18px;color:{{ r.color }}"><span>{{ r.time }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ r.no }}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.party }}</span><span style="text-align:right;font-weight:500">{{ r.sum }}</span></div></sc-for>
+          <sc-if value="{{ reconNoRows }}"><div style="padding:12px;font-size:13px;color:#647574">{{ L.kb_noMovesDay }}</div></sc-if>
+        </div>
+      </sc-if>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button onClick="{{ closeRecon }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ L.tl_close }}</button>
+        <button onClick="{{ runRecon }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59"><lucide-i name="scale" size="16"></lucide-i>{{ L.kb_reconRun }}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cash&quot;,&quot;bank&quot;],&quot;default&quot;:&quot;cash&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cashier&quot;,&quot;accountant&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;cashier&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Nigora Xasanova&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,arg)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const r2 = x => Math.round(x * 100) / 100;
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const fD = t => { const d = new Date(t); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '.' + d.getUTCFullYear(); };
+const DAY = 86400000, TODAY = '04.10.2026', YEST = '03.10.2026';
+const grp4 = s => String(s || '').replace(/(\d{4})(?=\d)/g, '$1 ');
+const C2L = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 's', ч: 'ch', ш: 'sh', ў: "o'", қ: 'q', ғ: "g'", ҳ: 'h' };
+const toLat = s => String(s || '').toLowerCase().split('').map(ch => C2L[ch] != null ? C2L[ch] : ch).join('');
+const KIND_ICON = { mt: 'arrow-down-left', yt: 'arrow-up-right', ko: 'banknote', bo: 'landmark', io: 'arrow-right-left' };
+const CLEAR = { q: '', fDir: [], fKind: [], fItem: [], range: { from: TODAY, to: TODAY } };
+class Component extends DCLogic {
+  state = { view: 'list', acct: null, ...CLEAR, op: null, close: null, recon: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  get bank() { return this.props.mode === 'bank'; }
+  componentDidMount() {
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._url = setInterval(() => this.applyUrl(), 250);
+    this._poll = setInterval(() => { const D = this.D; if (!D) return; if (D.store.cashReq) this.consume(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); clearInterval(this._url); }
+  // T10a3 (1.7.4): manzildagi filtr — ?acct=, ?new=ko|bo&acct=, ?close=acct (kassa), ?recon=open (bank), ?open= (cashReq orqali)
+  applyUrl() { const D = this.D, u = D && D.store.urlF, pg = this.bank ? 'bank' : 'cash'; if (!u || u.page !== pg || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.open || this.props.demo) return;
+    const kindA = this.bank ? 'bank' : 'cash', opKind = this.bank ? 'bo' : 'ko', br = this.props.branch && this.props.branch !== 'ALL' ? this.props.branch : null, ok = id => { const a = id && D.accById(id); return a && (a.kind === kindA || (this.bank && a.kind === 'term')) ? a.id : null; }, base = { ...CLEAR, op: null, close: null, recon: null };
+    if (P.new === opKind) { if (!this.can(opKind)) return this.toast(this.L['kb_who_' + opKind]); const ac = ok(P.acct); return this.setState({ ...base, acct: ac, view: ac ? 'acct' : 'list' }, () => this.openOp({ kind: opKind, req: ac ? { kind: opKind, acct: ac, date: TODAY } : { kind: opKind } })); }
+    if (!this.bank && ok(P.close)) { if (!this.can('close')) return this.toast(this.L.kb_whoClose); if (!this.tillOk(P.close)) return this.toast(this.L.kb_eTill); const lc = D.lastClosed(P.close), yU = !lc || pD(lc.date) < pD(YEST), dt = yU ? fD(pD(lc ? lc.date : YEST) + DAY) : TODAY; return this.setState({ ...base, view: 'acct', acct: P.close }, () => this.openClose(P.close, dt)); }
+    if (this.bank && P.recon === 'open') { const acs = D.ACCOUNTS.filter(a => a.kind === 'bank' && (!br || a.branch === br)), open = acs.filter(a => { const r = (D.store.recon || {})[a.id], t = r ? pD(r.date) : -Infinity; return D.accMoves(a.id).some(m => m.status === 'posted' && pD(m.date) > t); }); if (open.length) return this.setState({ ...base, view: 'acct', acct: open[0].id, recon: this.can('recon') ? { date: TODAY, bal: null, res: null } : null }); return this.setState({ ...base, view: 'list', acct: null }); }
+    if (ok(P.acct)) return this.setState({ ...base, view: 'acct', acct: P.acct, range: pD(P.from) != null ? { from: P.from, to: pD(P.to) != null ? P.to : P.from } : base.range, fDir: ['in', 'out'].includes(P.dir) ? [P.dir] : [], fKind: P.kind ? String(P.kind).split(',') : [] }); // Y4: ?from=&to=&dir=&kind=
+    this.setState({ ...base, view: 'list', acct: null }); }
+  componentDidUpdate(pp) { const d = this.props.demo; if ((d && (!pp.demo || pp.demo.n !== d.n)) || pp.mode !== this.props.mode) this.boot(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  can(k) { return this.D.canR(this.props.role, 'MOP_ROLES', k); }
+  consume() {
+    const D = this.D, r = D.store.cashReq; D.store.cashReq = null; if (!r) return;
+    if (r.open) { const m = D.mopByNo(r.open); if (m) this.openOp({ initial: m, kind: m.kind }); return; }
+    if (r.acct) this.setState({ view: 'acct', acct: r.acct, ...CLEAR, range: { from: r.date || TODAY, to: r.date || TODAY } });
+  }
+  tillOk(id) { const D = this.D, a = D.accById(id), tl = a && a.kind === 'cash' && D.tillAccts ? D.tillAccts(this.props.role, this.props.userName) : null; return !tl || tl.includes(id); }
+  openOp(o) { this.setState({ view: 'op', op: { kind: o.kind, initial: o.initial || null, req: o.req || null, act: o.act || '', key: Date.now() } }); }
+  openClose(acct, date, preset) { this.setState({ view: 'close', close: { acct, date, preset: preset || null, key: Date.now() } }); }
+  // demo uchun: Farm Lux MT → IO inkassatsiya → KO 350 000 → KO 2,5 mln (tasdiqlashda)
+  chain(n) {
+    const D = this.D, cs = 'Nigora Xasanova', at = D.nowStr(), lg = w => [{ kind: 'create', who: w, at }];
+    if (n >= 1) { const L0 = D.custLedger(13), al = D.autoAlloc(L0.invoices.filter(x => x.left > 0), 15000000); D.postPay(D.savePay({ kind: 'mt', branch: 'TSH', date: TODAY, party: 13, method: 'cash', acct: 'K-TSH', sum: 15000000, alloc: Object.keys(al).map(no => ({ no, sum: al[no] })), status: 'draft', payNo: '', bankDate: '', checkNo: '', note: '', createdBy: cs, createdAt: at, log: lg(cs) }), cs); }
+    if (n >= 2) D.postMop(D.saveMop({ kind: 'io', branch: 'TSH', date: TODAY, ioType: 'k2b', from: 'K-TSH', to: 'B-TSH-1', sum: 15000000, note: 'Inkassatsiya', baseNo: '', status: 'draft', createdBy: cs, createdAt: at, log: lg(cs) }), cs);
+    if (n >= 3) D.postMop(D.saveMop({ kind: 'ko', branch: 'TSH', date: TODAY, dir: 'out', acct: 'K-TSH', sum: 350000, item: "Transport va yoqilg'i", note: "Yetkazib berish mashinasiga yoqilg'i", baseNo: '', status: 'draft', createdBy: cs, createdAt: at, log: lg(cs) }), cs);
+    if (n >= 4) D.sendMop(D.saveMop({ kind: 'ko', branch: 'TSH', date: TODAY, dir: 'out', acct: 'K-TSH', sum: 2500000, item: 'Ish haqi', note: "Haydovchilarga oktabr avansi", baseNo: '', status: 'draft', createdBy: cs, createdAt: at, log: lg(cs) }), cs);
+  }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D) return;
+    if (!d) { if (D.store.cashReq) return this.consume(); return this.setState({ view: 'list', op: null, close: null, recon: null }); }
+    D.payReset(); const k = d.k, base = { ...CLEAR, recon: null, op: null, close: null };
+    if (k === 'emptyDay') return this.setState({ ...base, view: 'acct', acct: 'K-TSH', range: { from: '27.09.2026', to: '27.09.2026' } });
+    if (k === 'yesterday') return this.setState({ ...base, view: 'acct', acct: 'K-TSH-2' });
+    this.setState(base);
+    if (k === 'koPending') { this.chain(4); const m = D.store.mops.find(x => x.status === 'pending'); return this.openOp({ kind: 'ko', initial: m }); }
+    if (k === 'koErrors') return this.openOp({ kind: 'ko', req: { kind: 'ko', dir: 'out', acct: 'K-TSH' }, act: 'tryPost' });
+    if (k === 'ioCollect') { this.chain(1); return this.openOp({ kind: 'io', req: { kind: 'io', ioType: 'k2b', from: 'K-TSH', to: 'B-TSH-1', sum: 15000000, note: 'Inkassatsiya' } }); }
+    if (k === 'ioBlocked') {
+      const cs = 'Nigora Xasanova', at = D.nowStr(), lg = [{ kind: 'create', who: cs, at }];
+      const io = D.postMop(D.saveMop({ kind: 'io', branch: 'TSH', date: TODAY, ioType: 'b2k', from: 'B-TSH-1', to: 'K-TSH', sum: 15000000, note: "Ish haqi uchun naqd olish", baseNo: '', status: 'draft', createdBy: 'Jasur Ergashev', createdAt: at, log: lg }), 'Jasur Ergashev');
+      D.postMop(D.saveMop({ kind: 'ko', branch: 'TSH', date: TODAY, dir: 'out', acct: 'K-TSH', sum: 14000000, item: 'Ish haqi', note: "Sentabr ish haqi — kassadan berildi", baseNo: '', status: 'draft', createdBy: cs, createdAt: at, log: lg }), 'Bekzod Tursunov');
+      return this.openOp({ kind: 'io', initial: D.mopById(io.id), act: 'cancel' });
+    }
+    if (k === 'closeOk') return this.openClose('K-TSH', TODAY, { counts: { 200000: 33, 50000: 1, 20000: 2, 2000: 2 } });
+    if (k === 'closeShort') { this.chain(4); return this.openClose('K-TSH', TODAY, { counts: { 200000: 31, 100000: 1, 20000: 1, 10000: 1, 5000: 1, 2000: 2 } }); }
+    if (k === 'closedErr') return this.openOp({ kind: 'ko', req: { kind: 'ko', dir: 'out', acct: 'K-TSH', date: YEST, sum: 120000, item: "Xo'jalik xarajatlari", note: "Kechagi xarid cheki" }, act: 'tryPost' });
+    if (k === 'reconOk' || k === 'reconDiff') { this.chain(2); const bal = k === 'reconOk' ? 194650000 : 194600000; this.setState({ view: 'acct', acct: 'B-TSH-1', recon: { date: TODAY, bal, res: null } }); return setTimeout(() => this.runRecon(), 120); }
+  }
+  drvVals(L, D, p, brAll) { if (this.bank || !D.drvCash) return { hasDrv: false, drvTrips: [] }; const s = this.state, list = D.drvCash(brAll ? null : p.branch), by = {}, canAcc = this.can('ko') || D.can(p.role, 'cash.create');
+    list.forEach(x => { (by[x.trip] = by[x.trip] || []).push(x); });
+    const drvTrips = Object.keys(by).map(no => { const xs = by[no], tot = xs.reduce((a, x) => a + x.sum, 0), f = s.dc && s.dc.trip === no ? s.dc : null, gv = f ? parseFloat(String(f.got).replace(/\s/g, '').replace(',', '.')) : null, diff = f && gv >= 0 ? Math.round((gv - tot) * 100) / 100 : 0, needNote = !!f && gv >= 0 && Math.abs(diff) > 0.009;
+      const err = f && f.tried ? (!(gv >= 0) ? L.dc_eSum : needNote && !f.note.trim() ? L.dc_eNote : '') : '';
+      return { trip: no, driver: xs[0].driver, stLabel: L['j_st_' + xs[0].tripSt] || xs[0].tripSt, sum: fM(tot) + " so'm", rows: xs.map(x => ({ no: x.ono, cust: (D.custById(x.cust) || {}).name || '', sum: fM(x.sum), hasNote: !!x.note, note: x.note })),
+        closed: !f && canAcc, editing: !!f, open: () => this.setState({ dc: { trip: no, got: String(tot), note: '', tried: false } }), got: f ? f.got : '', gotBorder: f && f.tried && !(gv >= 0) ? '#B91C1C' : '#E2E8F0',
+        onGot: e => this.setState({ dc: { ...s.dc, got: e.target.value } }), onNote: e => this.setState({ dc: { ...s.dc, note: e.target.value } }), note: f ? f.note : '', noteLabel: needNote ? L.dc_note + ' *' : L.dc_note, noteBorder: f && f.tried && needNote && !f.note.trim() ? '#B91C1C' : '#E2E8F0',
+        hasDiff: needNote, diffText: fill(diff < 0 ? L.dc_short : L.dc_over, { s: fM(Math.abs(diff)) }), diffFg: diff < 0 ? '#B91C1C' : '#B45309', hasErr: !!err, err, cancel: () => this.setState({ dc: null }),
+        save: () => { const r = D.cashAccept(no, p.userName, f.got, f.note); if (r.err) return this.setState({ dc: { ...f, tried: true } }); this.setState({ dc: null }); this.toast(fill(L.dc_tDone, { n: r.mts.length, s: fM(gv) })); } }; });
+    return { hasDrv: drvTrips.length > 0, drvTrips, drvTotal: fM(list.reduce((a, x) => a + x.sum, 0)) + " so'm" }; }
+  runRecon() { const D = this.D, r = this.state.recon; if (!r || r.bal == null || pD(r.date) == null) return; const res = D.reconcile(this.state.acct, r.date, r.bal, this.props.userName); this.setState({ recon: { ...r, res } }); if (res.ok) this.toast(this.L.kb_reconOk); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow, bank = this.bank;
+    const base = { L, narrow, role: p.role, userName: p.userName, isBank: bank, cards: [], sums: [], rows: [], cols: [], banners: [], fbFilters: [], fbLabels: {}, totItems: [], a: {}, dayBadge: {}, op: {}, close: {}, recon: {}, reconRows: [], toastFn: t => this.toast(t), listTitle: bank ? L.kb_bank : L.kb_cash };
+    if (!D) return { ...base, isList: true };
+    const nav = (k, a) => p.onNavigate && p.onNavigate(k, a);
+    const kindA = bank ? 'bank' : 'cash', brAll = !p.branch || p.branch === 'ALL';
+    const accs = D.ACCOUNTS.filter(a => (a.kind === kindA || (bank && a.kind === 'term')) && (brAll || a.branch === p.branch)), brName = c => ((D.BRANCHES.find(b => b.code === c) || {}).name || c);
+    const todayMv = id => D.accMoves(id).filter(m => m.date === TODAY && m.status === 'posted');
+    const opKind = bank ? 'bo' : 'ko';
+    const common = { ...base, navFn: nav, backFromOp: () => this.setState({ view: s.acct ? 'acct' : 'list', op: null, close: null }), opBranch: brAll ? 'TSH' : p.branch, opParent: s.acct ? (D.accById(s.acct) || {}).name : base.listTitle, op: s.op || {}, close: s.close || {},
+      listPrimary: { label: bank ? L.kb_newBo : L.kb_newKo, icon: 'plus', pick: () => this.can(opKind) ? this.openOp({ kind: opKind, req: { kind: opKind } }) : this.toast(L['kb_who_' + opKind]) },
+      listSecondary: [{ label: L.kb_newIo, icon: 'arrow-right-left', pick: () => this.can('io') ? this.openOp({ kind: 'io', req: { kind: 'io', ioType: bank ? 'b2k' : 'k2b' } }) : this.toast(L.kb_who_io) }] };
+    const ro = bank && !this.can('bo') && !this.can('recon'); if (ro) { common.listPrimary = null; common.listSecondary = []; } // Y4: kassir bankda faqat ko'radi
+    if (s.view === 'op' && s.op) return { ...common, isOp: true };
+    if (s.view === 'close' && s.close) return { ...common, isClose: true };
+    if (s.view !== 'acct' || !s.acct) {
+      const cards = accs.map(a => {
+        const mv = todayMv(a.id), inS = mv.filter(m => m.dir === 'in').reduce((t, m) => t + m.sum, 0), outS = mv.filter(m => m.dir === 'out').reduce((t, m) => t + m.sum, 0);
+        let badge, bIcon, bFg, bBg;
+        if (!bank) { const lc = D.lastClosed(a.id); if (lc && lc.date === TODAY) { badge = fill(L.kb_cClosed, { d: TODAY }); bIcon = 'lock'; bFg = '#15803D'; bBg = '#F0FDF4'; } else if (!lc || pD(lc.date) < pD(YEST)) { badge = fill(L.kb_cNotClosed, { d: YEST }); bIcon = 'triangle-alert'; bFg = '#B45309'; bBg = '#FFFBEB'; } else { badge = L.kb_dayOpen; bIcon = 'lock-open'; bFg = '#1D4ED8'; bBg = '#EFF6FF'; } }
+        else { const rc = (D.store.recon || {})[a.id]; if (rc) { badge = fill(L.kb_cRecon, { d: rc.date }); bIcon = 'circle-check'; bFg = '#15803D'; bBg = '#F0FDF4'; } else { badge = L.kb_cNoRecon; bIcon = 'triangle-alert'; bFg = '#B45309'; bBg = '#FFFBEB'; } }
+        const all = D.accMoves(a.id).filter(m => m.status === 'posted'), last = all[all.length - 1];
+        return { name: bank ? a.bank : a.name.split(' · ').slice(1).join(' · ') || a.name, sub: bank ? brName(a.branch) : `${brName(a.branch)} · ${fill(L.kb_resp, { n: a.resp })}`, icon: a.kind === 'term' ? 'credit-card' : bank ? 'landmark' : 'banknote', hasAcc: a.kind === 'bank', acc: a.kind === 'bank' ? grp4(a.acc) : '', bal: fM(D.accBalance(a.id)), badge, bIcon, bFg, bBg,
+          foot: bank ? (last ? fill(L.kb_lastMove, { d: last.date }) : L.kb_noMoves) : fill(L.kb_today, { a: fM(inS), b: fM(outS) }), open: () => this.setState({ view: 'acct', acct: a.id, ...CLEAR }) };
+      });
+      const dv = this.drvVals(L, D, p, brAll);
+      return { ...common, ...dv, isList: true, countLabel: String(accs.length), listSub: fill(L.kb_listSub, { s: fM(accs.reduce((t, a) => t + D.accBalance(a.id), 0)) }), cards };
+    }
+    // ---- hisob sahifasi ----
+    const a = D.accById(s.acct), f = pD(s.range.from) != null ? s.range.from : TODAY, t = pD(s.range.to) != null ? s.range.to : f, single = f === t;
+    const all = D.accMoves(a.id), start = D.accBalance(a.id, null, fD(pD(f) - DAY));
+    let run = start, inS = 0, outS = 0;
+    const per = all.filter(m => pD(m.date) >= pD(f) && pD(m.date) <= pD(t)).map(m => { const live = m.status === 'posted'; if (live) { if (m.dir === 'in') { run += m.sum; inS += m.sum; } else { run -= m.sum; outS += m.sum; } } return { ...m, bal: r2(run), live }; });
+    const end = r2(run), q = toLat(s.q.trim());
+    const shown = per.filter(m => (!s.fDir.length || s.fDir.includes(m.dir)) && (!s.fKind.length || s.fKind.includes(m.kind)) && (!s.fItem.length || s.fItem.includes(m.item)) && (!q || toLat(`${m.no} ${m.party} ${m.item} ${m.note}`).includes(q)));
+    const typeLbl = m => m.kind === 'io' ? L.kb_ioShort : m.dir === 'in' ? L.tl_in : L.tl_out;
+    const rows = shown.map(m => ({ time: single ? m.time : `${m.date.slice(0, 5)} ${m.time}`, no: m.no, dead: !m.live, deco: m.live ? 'none' : 'line-through', color: m.live ? '#172B2A' : '#647574', sub: m.live ? '#5B6B6A' : '#647574', linkColor: m.live ? '#0D9488' : '#647574',
+      icon: m.dir === 'in' ? 'arrow-down-left' : 'arrow-up-right', type: typeLbl(m), party: m.party || m.item || '—', note: m.note || '—', payNo: m.payNo || '—', bankDate: m.bankDate || '—',
+      inS: m.dir === 'in' ? fM(m.sum) : '', outS: m.dir === 'out' ? fM(m.sum) : '', bal: fM(m.bal), balColor: m.live ? '#172B2A' : '#647574',
+      open: () => { if (m.kind === 'mt' || m.kind === 'yt') { D.store.payReq = { open: m.no }; nav('payments'); } else { const x = D.mopById(m.id); if (x) this.openOp({ kind: x.kind, initial: x }); } } }));
+    const W = [['time', single ? 64 : 110], ['doc', 150], ['type', 100], ['party', 0], ['note', 0], ...(bank ? [['payNo', 120], ['bankDate', 104]] : []), ['in', 130], ['out', 130], ['bal', 150]];
+    const grid = W.map(([k, w]) => w ? w + 'px' : (k === 'party' ? 'minmax(170px,1fr)' : 'minmax(180px,1.2fr)')).join(' ');
+    const cols = W.map(([k]) => ({ label: L['kb_c_' + k], justify: ['in', 'out', 'bal'].includes(k) ? 'flex-end' : 'flex-start', pos: k === 'bal' ? 'sticky' : 'static', shadow: k === 'bal' ? '-8px 0 8px -8px rgba(18,60,58,0.16), inset 1px 0 0 #E2E8F0' : 'none', z: k === 'bal' ? 2 : 0 }));
+    const lc = !bank ? D.lastClosed(a.id) : null, closedT = !bank && D.dayClosed(a.id, t), rc = bank ? (D.store.recon || {})[a.id] : null;
+    const banners = [];
+    const yUnclosed = !bank && (!lc || pD(lc.date) < pD(YEST));
+    if (yUnclosed) banners.push({ tone: 'warning', icon: 'triangle-alert', title: fill(L.kb_bNotClosedT, { d: fD(pD(lc ? lc.date : YEST) + DAY) }), text: L.kb_bNotClosedD });
+    const dayBadge = bank ? (rc ? { label: fill(L.kb_cRecon, { d: rc.date }), icon: 'circle-check', fg: '#15803D', bg: '#F0FDF4' } : { label: L.kb_cNoRecon, icon: 'triangle-alert', fg: '#B45309', bg: '#FFFBEB' })
+      : closedT ? { label: single ? fill(L.kb_cClosed, { d: t }) : L.kb_dayClosed, icon: 'lock', fg: '#15803D', bg: '#F0FDF4' } : { label: L.kb_dayOpen, icon: 'lock-open', fg: '#1D4ED8', bg: '#EFF6FF' };
+    const lbl = single ? ['kb_sStart', 'kb_sEnd'] : ['kb_pStart', 'kb_pEnd'];
+    const sums = [{ label: L[lbl[0]], value: fM(start), note: single ? f : `${f} — ${t}`, icon: 'flag', iconFg: '#5B6B6A' }, { label: L.tl_in, value: fM(inS), note: fill(L.kb_nDocs, { n: per.filter(m => m.live && m.dir === 'in').length }), icon: 'arrow-down-left', iconFg: '#15803D' },
+      { label: L.tl_out, value: fM(outS), note: fill(L.kb_nDocs, { n: per.filter(m => m.live && m.dir === 'out').length }), icon: 'arrow-up-right', iconFg: '#5B6B6A' }, { label: L[lbl[1]], value: fM(end), note: fill(L.kb_formula, {}), icon: closedT ? 'lock' : 'flag-triangle-right', iconFg: closedT ? '#15803D' : '#5B6B6A' }];
+    const closeDate = yUnclosed ? fD(pD(lc ? lc.date : YEST) + DAY) : (pD(t) > pD(TODAY) ? TODAY : t);
+    const hdrSecondary = [{ label: L.kb_newIo, icon: 'arrow-right-left', pick: () => this.can('io') ? this.openOp({ kind: 'io', req: { kind: 'io', ioType: bank ? 'b2k' : 'k2b', [bank ? 'from' : 'from']: a.id } }) : this.toast(L.kb_who_io) },
+      bank ? { label: L.kb_recon, icon: 'scale', pick: () => this.can('recon') ? this.setState({ recon: { date: t, bal: null, res: null } }) : this.toast(L.kb_whoRecon) }
+        : { label: L.kb_close, icon: 'lock', pick: () => { if (!this.can('close')) return this.toast(L.kb_whoClose); if (!this.tillOk(a.id)) return this.toast(L.kb_eTill); if (D.dayClosed(a.id, closeDate)) return this.openClose(a.id, closeDate); this.openClose(a.id, closeDate); } }];
+    const items = [...new Set(per.map(m => m.item).filter(x => x && !String(x).includes('·')))];
+    const opt = (vals, lab, key) => vals.map(v => ({ value: v, label: lab(v), count: per.filter(m => key(m) === v).length }));
+    const r = s.recon, rSys = r && pD(r.date) != null ? D.accBalance(a.id, null, r.date) : 0;
+    const reconMoves = r && r.res && !r.res.ok ? all.filter(m => m.date === r.date) : [];
+    const roA = bank && !this.can('bo') && !this.can('recon');
+    return {
+      ...common, isAcct: true, a, toList: () => this.setState({ view: 'list', acct: null }), acctSub: bank ? `${brName(a.branch)} · ${grp4(a.acc)}` : `${brName(a.branch)} · ${fill(L.kb_resp, { n: a.resp })}`,
+      hdrPrimary: { label: bank ? L.kb_newBo : L.kb_newKo, icon: 'plus', pick: () => this.can(opKind) ? this.openOp({ kind: opKind, req: { kind: opKind, acct: a.id, date: single && pD(t) <= pD(TODAY) ? t : TODAY } }) : this.toast(L['kb_who_' + opKind]) }, hdrSecondary, banners,
+      q: s.q, setQ: v => this.setState({ q: v }), fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      fbFilters: [{ label: L.kb_fDir, options: opt(['in', 'out'], v => v === 'in' ? L.tl_in : L.tl_out, m => m.dir), selected: s.fDir, onChange: v => this.setState({ fDir: v }) },
+        { label: L.kb_fKind, options: opt(['mt', 'yt', 'ko', 'bo', 'io'].filter(k => bank ? k !== 'ko' : k !== 'bo'), v => v.toUpperCase(), m => m.kind), selected: s.fKind, onChange: v => this.setState({ fKind: v }) },
+        { label: L.kb_fItem, options: opt(items, v => v, m => m.item), selected: s.fItem, onChange: v => this.setState({ fItem: v }) }],
+      dateFilter: { label: L.tl_fDate, from: s.range.from, to: s.range.to, onChange: v => this.setState({ range: { from: v && v.from ? v.from : TODAY, to: v && (v.to || v.from) ? (v.to || v.from) : TODAY } }), labels: { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.k_drWeek, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext } },
+      hasFilters: !!(s.fDir.length || s.fKind.length || s.fItem.length || s.q || !single || f !== TODAY), clearFilters: () => this.setState({ ...CLEAR }),
+      sums, sumCols: narrow ? 2 : 4, rowCount: String(shown.length), hasRows: rows.length > 0, noRows: rows.length === 0, rows, cols, grid, minW: W.reduce((x, [k, w]) => x + (w || (k === 'party' ? 170 : 180)), 0),
+      emptyIcon: bank ? 'landmark' : 'banknote', emptyT: per.length ? L.tl_noResT : (bank ? L.kb_emptyBank : L.kb_emptyCash), emptyD: per.length ? L.tl_noResD : fill(L.kb_emptyD, { s: fM(end) }), dayBadge,
+      totItems: [{ label: L[lbl[0]] + ':', value: fM(start) }, { label: L.tl_in + ':', value: fM(inS) }, { label: L.tl_out + ':', value: fM(-outS) }], endBal: fM(end),
+      reconOpen: !!r, recon: r || {}, accGrouped: grp4(a.acc), reconSys: fM(rSys), onReconDate: e => { const v = e.target.value; this.setState(st => ({ recon: { ...st.recon, date: v, res: null } })); }, onReconBal: n => this.setState(st => ({ recon: { ...st.recon, bal: n, res: null } })),
+      runRecon: () => this.runRecon(), closeRecon: () => this.setState({ recon: null }), stop: e => e.stopPropagation(),
+      reconOk: !!(r && r.res && r.res.ok), reconOkText: r && r.res ? fill(L.kb_reconOkD, { d: r.date }) : '', reconBad: !!(r && r.res && !r.res.ok), reconBadTitle: r && r.res ? fill(L.kb_reconBad, { s: fM(Math.abs(r.res.diff)), w: r.res.diff > 0 ? L.kb_more : L.kb_less }) : '',
+      reconRows: reconMoves.map(m => ({ time: m.time, no: m.no, party: m.party || m.item || '—', sum: (m.dir === 'in' ? '+' : '−') + fM(m.sum), color: m.status === 'posted' ? '#172B2A' : '#647574' })), reconNoRows: !!(r && r.res && !r.res.ok) && reconMoves.length === 0,
+      ...(roA ? { hdrPrimary: null, hdrSecondary: [] } : {})
+    };
+  }
+}
+</script>
+</body>
+</html>

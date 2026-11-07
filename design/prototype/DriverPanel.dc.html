@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Haydovchi paneli" style="display:flex;flex-direction:column;gap:14px;width:100%;max-width:680px;margin:0 auto;min-width:0;color:#172B2A;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums">
+  <div style="display:flex;flex-direction:column;gap:2px">
+    <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.dv_title }}</h1>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ sub }}</p>
+  </div>
+  <div role="tablist" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:#EEF2F4;border-radius:10px">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="2">
+      <button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="min-height:48px;border:0;border-radius:8px;background:{{ t.bg }};box-shadow:{{ t.sh }};font:inherit;font-size:15px;font-weight:{{ t.w }};color:{{ t.fg }};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">{{ t.label }}<sc-if value="{{ t.hasN }}"><span style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#0F766E;color:#FFFFFF;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{ t.n }}</span></sc-if></button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isMine }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ noTrip }}"><div style="padding:40px 16px;text-align:center;color:#5B6B6A;font-size:15px;line-height:22px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;text-wrap:pretty">{{ L.dv_noTrip }}</div></sc-if>
+    <sc-if value="{{ multi }}">
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none">
+        <sc-for list="{{ tripChips }}" as="c"><button onClick="{{ c.pick }}" aria-pressed="{{ c.on }}" style="flex:none;min-height:48px;padding:0 14px;border:1px solid {{ c.border }};border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap">{{ c.label }}</button></sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasTrip }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600">{{ trip.no }}</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:999px;background:{{ trip.bg }};color:{{ trip.fg }};font-size:13px;font-weight:600"><lucide-i name="{{ trip.icon }}" size="14"></lucide-i>{{ trip.st }}</span>
+        </div>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14px;color:#5B6B6A"><lucide-i name="truck" size="16"></lucide-i>{{ trip.car }}</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:14px;color:#5B6B6A"><lucide-i name="calendar" size="16"></lucide-i>{{ trip.meta }}</span>
+        <sc-if value="{{ trip.hasCash }}"><span style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:#B45309"><lucide-i name="banknote" size="16"></lucide-i>{{ trip.cash }}</span></sc-if>
+      </section>
+      <sc-if value="{{ trip.hasInfo }}"><div role="status" style="display:flex;align-items:flex-start;gap:8px;padding:12px 14px;border-radius:10px;background:{{ trip.infoBg }};color:{{ trip.infoFg }};font-size:14px;line-height:20px"><lucide-i name="info" size="18" style="flex:none;margin-top:1px"></lucide-i><span style="text-wrap:pretty">{{ trip.info }}</span></div></sc-if>
+
+      <sc-for list="{{ stops }}" as="x">
+        <article style="background:#FFFFFF;border:1px solid {{ x.border }};border-left:4px solid {{ x.mark }};border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <span style="flex:none;width:28px;height:28px;border-radius:999px;background:{{ x.nBg }};color:{{ x.nFg }};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ x.n }}</span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+              <span style="font-size:16px;line-height:22px;font-weight:600;text-wrap:pretty">{{ x.cust }}</span>
+              <span style="font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ x.addr }}</span>
+            </div>
+            <sc-if value="{{ x.hasRes }}"><span style="flex:none;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:6px;background:{{ x.rBg }};color:{{ x.rFg }};font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="{{ x.rIcon }}" size="13"></lucide-i>{{ x.rText }}</span></sc-if>
+          </div>
+          <sc-if value="{{ x.hasPhone }}"><a href="{{ x.tel }}" style="align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;border:1px solid #CBD5D3;border-radius:8px;color:#0F766E;font-size:15px;font-weight:600;text-decoration:none"><lucide-i name="phone" size="18"></lucide-i>{{ x.phone }}</a></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;font-size:13px;line-height:18px">
+            <span style="color:#5B6B6A">{{ L.dv_order }}<br><b style="font-family:'JetBrains Mono',monospace;color:#172B2A;font-weight:600">{{ x.no }}</b></span>
+            <span style="color:#5B6B6A">{{ L.dv_nak }}<br><b style="font-family:'JetBrains Mono',monospace;color:#172B2A;font-weight:600">{{ x.nak }}</b></span>
+            <span style="color:#5B6B6A">{{ L.dv_places }}<br><b style="color:#172B2A;font-size:15px">{{ x.places }}</b></span>
+            <span style="color:#5B6B6A">{{ L.dv_sum }}<br><b style="color:#172B2A;font-size:15px">{{ x.sum }}</b></span>
+            <span style="color:#5B6B6A">{{ L.dv_pay }}<br><b style="color:#172B2A">{{ x.pay }}</b></span>
+            <sc-if value="{{ x.isCash }}"><span style="color:#B45309">{{ L.dv_collect }}<br><b style="font-size:15px">{{ x.collect }}</b></span></sc-if>
+          </div>
+          <sc-if value="{{ x.hasNote }}"><span style="display:flex;gap:6px;font-size:13px;line-height:18px;color:#172B2A;padding:8px 10px;border-radius:8px;background:#F8FAFA"><lucide-i name="message-square" size="14" style="flex:none;margin-top:2px;color:#5B6B6A"></lucide-i>{{ x.note }}</span></sc-if>
+          <sc-if value="{{ x.hasResInfo }}"><span style="font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ x.resInfo }}</span></sc-if>
+
+          <sc-if value="{{ x.loadAsk }}"><button onClick="{{ x.loadOpen }}" style="min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><lucide-i name="package-check" size="18"></lucide-i>{{ L.dv_loadOk }}</button></sc-if>
+          <sc-if value="{{ x.loadForm }}">
+            <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:#F8FAFA">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:#5B6B6A">{{ L.dv_countPl }}<input value="{{ x.lf.cnt }}" onChange="{{ x.lf.onCnt }}" inputMode="numeric" style="height:52px;padding:0 12px;border:1px solid {{ x.lf.border }};border-radius:8px;font-size:20px;font-weight:600;text-align:center;background:#FFFFFF"></input></label>
+              <sc-if value="{{ x.lf.diff }}">
+                <span style="font-size:14px;font-weight:600;color:#B91C1C">{{ x.lf.diffText }}</span>
+                <label style="display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:#5B6B6A">{{ L.dv_diffNote }} *<textarea value="{{ x.lf.note }}" onChange="{{ x.lf.onNote }}" rows="2" style="padding:10px 12px;border:1px solid {{ x.lf.noteBorder }};border-radius:8px;font:inherit;font-size:15px;resize:vertical;min-height:52px"></textarea></label>
+              </sc-if>
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px"><button onClick="{{ x.lf.save }}" style="min-height:48px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:15px;font-weight:600;cursor:pointer">{{ L.dv_confirm }}</button><button onClick="{{ x.lf.cancel }}" style="min-height:48px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:15px;color:#172B2A;cursor:pointer">{{ L.dv_cancel }}</button></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ x.loaded }}"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:{{ x.ldFg }}"><lucide-i name="circle-check" size="18"></lucide-i>{{ x.ldText }}</span><button onClick="{{ x.unload }}" style="min-height:48px;padding:0 12px;border:0;background:transparent;font:inherit;font-size:14px;color:#0F766E;cursor:pointer">{{ L.dv_recount }}</button></div></sc-if>
+
+          <sc-if value="{{ x.resAsk }}">
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+              <button onClick="{{ x.pickOk }}" style="min-height:56px;padding:4px;border:1px solid #BBF7D0;border-radius:10px;background:#F0FDF4;color:#15803D;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><lucide-i name="check" size="18"></lucide-i>{{ L.dv_rOk }}</button>
+              <button onClick="{{ x.pickPart }}" style="min-height:56px;padding:4px;border:1px solid #FDE68A;border-radius:10px;background:#FFFBEB;color:#B45309;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><lucide-i name="split" size="18"></lucide-i>{{ L.dv_rPart }}</button>
+              <button onClick="{{ x.pickFail }}" style="min-height:56px;padding:4px;border:1px solid #FECACA;border-radius:10px;background:#FEF2F2;color:#B91C1C;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><lucide-i name="x" size="18"></lucide-i>{{ L.dv_rFail }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ x.canEdit }}"><button onClick="{{ x.edit }}" style="align-self:flex-start;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="pencil" size="16"></lucide-i>{{ L.dv_edit }}</button></sc-if>
+        </article>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ hasBar }}">
+      <div style="position:sticky;bottom:0;z-index:5;margin:0 -4px;padding:10px 4px calc(10px + env(safe-area-inset-bottom));background:#F5F7F8;box-shadow:0 -10px 12px -6px rgba(245,247,248,0.95);border-top:1px solid #E2E8F0;display:flex;flex-direction:column;gap:6px">
+        <sc-if value="{{ bar.hasHint }}"><span style="text-align:center;font-size:13px;color:#5B6B6A">{{ bar.hint }}</span></sc-if>
+        <button onClick="{{ bar.go }}" aria-disabled="{{ bar.off }}" style="min-height:56px;border:0;border-radius:12px;background:{{ bar.bg }};color:#FFFFFF;font:inherit;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(15,118,110,0.25)"><lucide-i name="{{ bar.icon }}" size="20"></lucide-i>{{ bar.label }}</button>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ doneEmpty }}"><div style="padding:40px 16px;text-align:center;color:#5B6B6A;font-size:15px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px">{{ L.dv_doneEmpty }}</div></sc-if>
+    <sc-for list="{{ done }}" as="d">
+      <article style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">{{ d.no }}</span><span style="font-size:13px;color:#5B6B6A">{{ d.date }}</span></div>
+        <span style="font-size:14px;color:#172B2A">{{ d.orders }}</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:6px;background:#F0FDF4;color:#15803D;font-size:13px;font-weight:600"><lucide-i name="check" size="13"></lucide-i>{{ d.ok }}</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:6px;background:#FFFBEB;color:#B45309;font-size:13px;font-weight:600"><lucide-i name="split" size="13"></lucide-i>{{ d.part }}</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:6px;background:#FEF2F2;color:#B91C1C;font-size:13px;font-weight:600"><lucide-i name="x" size="13"></lucide-i>{{ d.fail }}</span>
+        </div>
+        <sc-if value="{{ d.hasCash }}"><span style="font-size:14px;color:#5B6B6A">{{ L.dv_cashT }}: <b style="color:#172B2A">{{ d.cash }}</b></span></sc-if>
+      </article>
+    </sc-for>
+  </sc-if>
+
+  <sc-if value="{{ formOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:190;background:rgba(23,43,42,0.45);display:flex;align-items:flex-end;justify-content:center">
+      <div role="dialog" aria-modal="true" aria-label="{{ f.title }}" style="width:100%;max-width:640px;max-height:94vh;box-sizing:border-box;overflow-y:auto;background:#FFFFFF;border-radius:16px 16px 0 0;display:flex;flex-direction:column">
+        <div style="position:sticky;top:0;z-index:2;background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #EEF2F4">
+          <button onClick="{{ f.close }}" aria-label="{{ L.dv_cancel }}" style="flex:none;width:48px;height:48px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;color:#172B2A;cursor:pointer;display:flex;align-items:center;justify-content:center"><lucide-i name="x" size="20"></lucide-i></button>
+          <div style="display:flex;flex-direction:column;min-width:0"><span style="font-size:17px;font-weight:600;color:{{ f.fg }}">{{ f.title }}</span><span style="font-size:13px;color:#5B6B6A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.sub }}</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+          <sc-if value="{{ f.isFail }}">
+            <span style="font-size:14px;font-weight:600;color:#5B6B6A">{{ L.dv_reason }} *</span>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ f.reasons }}" as="r"><button onClick="{{ r.pick }}" aria-pressed="{{ r.on }}" style="min-height:52px;padding:0 14px;border:1px solid {{ r.border }};border-radius:10px;background:{{ r.bg }};color:{{ r.fg }};font:inherit;font-size:15px;font-weight:500;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px"><lucide-i name="{{ r.icon }}" size="18"></lucide-i>{{ r.label }}</button></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ f.isPart }}">
+            <span style="font-size:14px;font-weight:600;color:#5B6B6A">{{ L.dv_partT }}</span>
+            <sc-for list="{{ f.lines }}" as="l">
+              <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid {{ l.border }};border-radius:10px">
+                <div style="display:flex;align-items:center;gap:10px"><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:500">{{ l.name }}</span><span style="font-size:13px;color:#5B6B6A">{{ l.sub }}</span></span>
+                  <label style="flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:#5B6B6A">{{ L.dv_retQty }}<input value="{{ l.val }}" onChange="{{ l.onVal }}" inputMode="numeric" aria-label="{{ l.aria }}" style="width:84px;height:48px;padding:0 8px;border:1px solid {{ l.inBorder }};border-radius:8px;font-size:17px;font-weight:600;text-align:center"></input></label></div>
+                <sc-if value="{{ l.hasRet }}"><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ l.reasons }}" as="r"><button onClick="{{ r.pick }}" aria-pressed="{{ r.on }}" style="min-height:44px;padding:0 12px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }};color:{{ r.fg }};font:inherit;font-size:14px;cursor:pointer">{{ r.label }}</button></sc-for></div></sc-if>
+              </div>
+            </sc-for>
+            <sc-if value="{{ f.hasRetSum }}"><span style="font-size:14px;font-weight:600;color:#B45309">{{ f.retSum }}</span></sc-if>
+          </sc-if>
+          <sc-if value="{{ f.needPhoto }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:14px;font-weight:600;color:#5B6B6A">{{ L.dv_photo }} *</span>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px">
+                <label style="min-height:52px;border:1px solid {{ f.photoBorder }};border-radius:10px;background:#FFFFFF;color:#0F766E;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><lucide-i name="camera" size="20"></lucide-i>{{ L.dv_camera }}<input type="file" accept="image/*" capture="environment" onChange="{{ f.onFile }}" style="position:absolute;width:1px;height:1px;opacity:0"></input></label>
+                <sc-if value="{{ showDemo }}" hint-placeholder-val="{{ true }}"><button onClick="{{ f.sample }}" style="min-height:52px;border:1px dashed #CBD5D3;border-radius:10px;background:#F8FAFA;color:#5B6B6A;font:inherit;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><lucide-i name="image" size="18"></lucide-i>{{ L.dv_sample }}</button></sc-if>
+              </div>
+              <sc-if value="{{ f.hasPhotos }}"><div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ f.photos }}" as="ph"><span style="position:relative;width:88px;height:66px;border-radius:8px;overflow:hidden;border:1px solid #E2E8F0;background:#EEF2F4"><img src="{{ ph.url }}" alt="{{ ph.name }}" style="width:100%;height:100%;object-fit:cover;display:block"></img><button onClick="{{ ph.rm }}" aria-label="{{ L.dv_rmPhoto }}" style="position:absolute;top:2px;right:2px;width:28px;height:28px;border:0;border-radius:999px;background:rgba(23,43,42,0.7);color:#FFFFFF;cursor:pointer;display:flex;align-items:center;justify-content:center"><lucide-i name="x" size="14"></lucide-i></button></span></sc-for></div></sc-if>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:600;color:#5B6B6A">{{ L.dv_sign }}</span><button onClick="{{ f.sigClear }}" style="min-height:40px;padding:0 12px;border:0;background:transparent;font:inherit;font-size:14px;color:#0F766E;cursor:pointer">{{ L.dv_clear }}</button></div>
+              <canvas ref="{{ sigRef }}" width="640" height="220" onPointerDown="{{ f.sDown }}" onPointerMove="{{ f.sMove }}" onPointerUp="{{ f.sUp }}" onPointerLeave="{{ f.sUp }}" aria-label="{{ L.dv_sign }}" style="width:100%;height:170px;touch-action:none;background:#FFFFFF;border:1px dashed #647574;border-radius:10px;cursor:crosshair"></canvas>
+            </div>
+          </sc-if>
+          <sc-if value="{{ f.isCash }}">
+            <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:#FFFBEB">
+              <span style="font-size:14px;color:#92400E">{{ f.cashExp }}</span>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:#5B6B6A">{{ L.dv_cashGot }} *<input value="{{ f.cash }}" onChange="{{ f.onCash }}" inputMode="decimal" style="height:52px;padding:0 12px;border:1px solid {{ f.cashBorder }};border-radius:8px;font-size:20px;font-weight:600;text-align:right;background:#FFFFFF"></input></label>
+              <sc-if value="{{ f.cashDiff }}"><span style="font-size:14px;font-weight:600;color:#B91C1C">{{ f.cashDiffText }}</span></sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ f.showNote }}"><label style="display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:#5B6B6A">{{ f.noteLabel }}<textarea value="{{ f.note }}" onChange="{{ f.onNote }}" rows="2" style="padding:10px 12px;border:1px solid {{ f.noteBorder }};border-radius:8px;font:inherit;font-size:15px;resize:vertical;min-height:52px"></textarea></label></sc-if>
+          <sc-if value="{{ f.hasErr }}"><div role="alert" style="padding:10px 12px;border-radius:8px;background:#FEF2F2;color:#B91C1C;font-size:14px;line-height:20px">{{ f.err }}</div></sc-if>
+        </div>
+        <div style="position:sticky;bottom:0;background:#FFFFFF;border-top:1px solid #EEF2F4;padding:12px 16px calc(12px + env(safe-area-inset-bottom))">
+          <button onClick="{{ f.save }}" style="width:100%;min-height:56px;border:0;border-radius:12px;background:{{ f.saveBg }};color:#FFFFFF;font:inherit;font-size:16px;font-weight:600;cursor:pointer">{{ f.saveLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Dilshod Rahimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => fN(n) + " so'm";
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const num = v => { const x = parseFloat(String(v == null ? '' : v).replace(/\s/g, '').replace(/\./g, '').replace(',', '.')); return isNaN(x) ? null : x; };
+const RICON = { refused: 'user-x', closed: 'store', noMoney: 'wallet', damaged: 'package-x', other: 'ellipsis' };
+class Component extends DCLogic {
+  state = { tab: 'mine', tripNo: null, lf: null, form: null, n: 0 };
+  sigRef = React.createRef();
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  me() { return this.props.userName || ''; }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  bump() { this.setState({ n: Date.now() }); }
+  componentDidMount() { this._t = setInterval(() => this.forceUpdate(), 3000); }
+  componentWillUnmount() { clearInterval(this._t); }
+  componentDidUpdate(pp, ps) { const f = this.state.form, c = this.sigRef.current; if (f && c && (!ps.form || ps.form.oid !== f.oid || ps.form.res !== f.res) && f.sign) { const img = new Image(); img.onload = () => { const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0); }; img.src = f.sign; } }
+  pt(e) { const c = this.sigRef.current, r = c.getBoundingClientRect(); return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height]; }
+  sDown(e) { const c = this.sigRef.current; if (!c) return; this._draw = true; try { c.setPointerCapture(e.pointerId); } catch (x) {} const g = c.getContext('2d'), [x, y] = this.pt(e); g.lineWidth = 3; g.lineCap = 'round'; g.strokeStyle = '#172B2A'; g.beginPath(); g.moveTo(x, y); }
+  sMove(e) { if (!this._draw) return; const c = this.sigRef.current, g = c.getContext('2d'), [x, y] = this.pt(e); g.lineTo(x, y); g.stroke(); this._dirty = true; }
+  sUp() { if (!this._draw) return; this._draw = false; const c = this.sigRef.current; if (c && this._dirty) { const u = c.toDataURL('image/png'); this.setState(st => st.form ? { form: { ...st.form, sign: u } } : null); } }
+  sClear() { const c = this.sigRef.current; if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); this._dirty = false; this.setState(st => st.form ? { form: { ...st.form, sign: null } } : null); }
+  openForm(t, o, res, st) { const prev = st && st.res === res ? st : null, ret = {}, lr = {};
+    if (prev && prev.qty) o.lines.forEach(l => { const q = this.D.shippedQty(o, l), d = prev.qty[l.id]; if (d != null && d < q) { ret[l.id] = String(q - d); lr[l.id] = (prev.lr || {})[l.id] || ''; } });
+    this._dirty = false;
+    this.setState({ form: { trip: t.no, oid: o.id, res, photos: prev ? (prev.photos || []).slice() : [], sign: prev ? prev.sign : null, reason: prev ? prev.reason || '' : '', note: prev ? prev.note || '' : '', ret, lr, cash: prev && prev.cash ? String(Math.round(prev.cash.sum)) : '', cashNote: prev && prev.cash ? prev.cash.note || '' : '', tried: false } }); }
+  onFile(e) { const fl = e.target.files && e.target.files[0]; if (!fl) return; const rd = new FileReader(); rd.onload = () => this.setState(st => st.form ? { form: { ...st.form, photos: st.form.photos.concat([{ name: fl.name, url: rd.result }]).slice(0, 4) } } : null); rd.readAsDataURL(fl); e.target.value = ''; }
+  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  _rv() {
+    const D = this.D, L = this.L, s = this.state, me = this.me();
+    const base = { L, sub: me, tabs: [], stops: [], tripChips: [], done: [], trip: {}, bar: {}, f: { reasons: [], lines: [], photos: [] }, sigRef: this.sigRef };
+    if (!D || !D.tripsOfDriver) return base;
+    const all = D.tripsOfDriver(me), live = all.filter(t => ['planned', 'transit', 'retwait'].includes(t.status)).sort((a, b) => ({ transit: 0, planned: 1, retwait: 2 }[a.status] - { transit: 0, planned: 1, retwait: 2 }[b.status]) || a.no.localeCompare(b.no));
+    const done = all.filter(t => t.status === 'done').sort((a, b) => D.pDT(b.doneAt || b.date + ' 00:00') - D.pDT(a.doneAt || a.date + ' 00:00'));
+    const tabs = [['mine', L.dv_tMine, live.length], ['done', L.dv_tDone, done.length]].map(([k, label, n]) => { const on = s.tab === k; return { label, on, n, hasN: n > 0 && k === 'mine', bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.12)' : 'none', w: on ? 600 : 500, fg: on ? '#0F766E' : '#5B6B6A', pick: () => this.setState({ tab: k, form: null, lf: null }) }; });
+    const d0 = D.drvByName(me), out = { ...base, sub: [me, d0 ? d0.phone : ''].filter(Boolean).join(' · '), tabs, isMine: s.tab === 'mine', isDone: s.tab === 'done', formOpen: false };
+    const ST = { planned: [L.dv_stLoad, 'package', '#EFF6FF', '#1D4ED8'], transit: [L.j_st_transit, 'truck', '#DDF5EE', '#0F766E'], retwait: [L.j_st_retwait, 'undo-2', '#FFFBEB', '#B45309'], done: [L.j_st_done, 'check', '#F0FDF4', '#15803D'] };
+    if (s.tab === 'mine') {
+      const t = live.find(x => x.no === s.tripNo) || live[0];
+      out.noTrip = !t; out.hasTrip = !!t; out.multi = live.length > 1;
+      out.tripChips = live.map(x => { const on = t && x.no === t.no; return { label: x.no.slice(-6) + ' · ' + ST[x.status][0], on, border: on ? '#0F766E' : '#E2E8F0', bg: on ? '#0F766E' : '#FFFFFF', fg: on ? '#FFFFFF' : '#172B2A', pick: () => this.setState({ tripNo: x.no, lf: null, form: null }) }; });
+      if (t) { const S = ST[t.status], car = D.carByNo(t.car) || {}, rows = t.stops.map((st, i) => ({ st, i, o: D.orderById(st.oid) })).filter(r => r.o);
+        const cashSum = t.stops.reduce((a, x) => a + (x.cash ? x.cash.sum : 0), 0), loadedN = t.stops.filter(x => x.loaded).length, resN = t.stops.filter(x => x.res).length;
+        const info = t.status === 'planned' ? L.dv_infoLoad : t.status === 'retwait' ? L.dv_infoWait : '';
+        out.trip = { no: t.no, st: S[0], icon: S[1], bg: S[2], fg: S[3], car: [t.car, (car.type || '').split(' · ')[0]].filter(Boolean).join(' · '), meta: fill(L.dv_tripMeta, { d: t.date, n: rows.length }), hasCash: cashSum > 0, cash: fill(L.dv_cashHeld, { s: fM(cashSum) }), hasInfo: !!info, info, infoBg: t.status === 'retwait' ? '#FFFBEB' : '#EFF6FF', infoFg: t.status === 'retwait' ? '#92400E' : '#1D4ED8' };
+        const ordered = t.status === 'transit' ? rows.filter(r => !r.st.res).concat(rows.filter(r => r.st.res)) : rows;
+        out.stops = ordered.map(({ st, i, o }) => { const c = D.custAt(o.cust, o.branch) || D.custById(o.cust) || {}, pt = D.payTypeOf(o), sum = o.sale ? o.sale.sum : D.saleTotals(o).total, ex = pt === 'cash' ? (st.res ? D.cashExpect(o, st) : sum) : 0, pl = D.placesOf(o);
+          const lf = s.lf && s.lf.oid === o.id ? s.lf : null, lcnt = lf ? lf.cnt : '', lc = parseInt(lcnt, 10), ldiff = !!lf && lc >= 0 && lc !== pl;
+          const resC = st.res === 'ok' ? ['#F0FDF4', '#15803D', 'check', L.dv_rOk, '#22C55E'] : st.res === 'part' ? ['#FFFBEB', '#B45309', 'split', L.dv_rPart, '#F59E0B'] : st.res === 'fail' ? ['#FEF2F2', '#B91C1C', 'x', L.dv_rFail, '#EF4444'] : null;
+          const R = st.res ? D.stopReturns(o, st) : null, resInfo = !st.res ? '' : [st.res === 'fail' ? (D.FAIL_LABEL[st.reason] || '') + (st.note ? ': ' + st.note : '') : '', st.res === 'part' && R ? fill(L.dv_retInfo, { q: fN(R.qty), s: fM(R.sum) }) : '', st.cash ? fill(L.dv_cashGotT, { s: fM(st.cash.sum) }) + (st.cash.note ? ' · ' + st.cash.note : '') : '', (st.photos || []).length ? fill(L.dv_photosN, { n: st.photos.length }) : '', st.sign ? L.dv_signed : '', st.at ? st.at.slice(11) : ''].filter(Boolean).join(' · ');
+          const transit = t.status === 'transit';
+          return { n: i + 1, cust: c.name || '', addr: [c.region, c.address].filter(Boolean).join(', ') || '—', hasPhone: !!c.phone, phone: c.phone || '', tel: 'tel:' + String(c.phone || '').replace(/[^\d+]/g, ''), no: o.no, nak: (o.dc && o.dc.nak) || (o.sale && o.sale.nak) || '—', places: fill(L.dv_placesN, { n: pl }), sum: fM(sum), pay: L['k7_pay_' + pt] || pt, isCash: pt === 'cash' && st.res !== 'fail', collect: fM(ex), hasNote: !!o.note, note: o.note,
+            border: resC ? '#E2E8F0' : '#E2E8F0', mark: resC ? resC[4] : t.status === 'planned' && st.loaded ? '#22C55E' : '#CBD5D3', nBg: resC ? resC[0] : '#EEF2F4', nFg: resC ? resC[1] : '#172B2A', hasRes: !!resC, rBg: resC ? resC[0] : '', rFg: resC ? resC[1] : '', rIcon: resC ? resC[2] : 'check', rText: resC ? resC[3] : '', hasResInfo: !!resInfo, resInfo,
+            loadAsk: t.status === 'planned' && !st.loaded && !lf, loadForm: !!lf, loaded: t.status === 'planned' && !!st.loaded, ldText: st.load ? fill(st.load.cnt === st.load.exp ? L.dv_loadedOk : L.dv_loadedDiff, { c: st.load.cnt, e: st.load.exp }) : L.dv_loaded, ldFg: st.load && st.load.cnt !== st.load.exp ? '#B45309' : '#15803D',
+            loadOpen: () => this.setState({ lf: { oid: o.id, cnt: String(pl), note: '', tried: false } }), unload: () => { D.tripUnload(t.no, o.id); this.bump(); },
+            lf: lf ? { cnt: lcnt, border: lf.tried && !(lc >= 0) ? '#B91C1C' : ldiff ? '#B45309' : '#E2E8F0', onCnt: e => this.setState({ lf: { ...lf, cnt: String(e.target.value || '').replace(/\D/g, '').slice(0, 4) } }), diff: ldiff, diffText: fill(L.dv_loadDiff, { c: lc, e: pl }), note: lf.note, onNote: e => this.setState({ lf: { ...lf, note: e.target.value } }), noteBorder: lf.tried && ldiff && !lf.note.trim() ? '#B91C1C' : '#E2E8F0',
+              cancel: () => this.setState({ lf: null }), save: () => { const r = D.tripLoad(t.no, o.id, me, lcnt, lf.note); if (r.err) return this.setState({ lf: { ...lf, tried: true } }); this.setState({ lf: null }); if (ldiff) this.toast(L.dv_tDiff); } } : {},
+            resAsk: transit && !st.res, canEdit: transit && !!st.res && !(st.edits >= 1), edit: () => this.openForm(t, o, st.res, st),
+            pickOk: () => this.openForm(t, o, 'ok', st), pickPart: () => this.openForm(t, o, 'part', st), pickFail: () => this.openForm(t, o, 'fail', st) }; });
+        const allLoaded = loadedN === t.stops.length, allRes = resN === t.stops.length;
+        out.hasBar = t.status === 'planned' || t.status === 'transit';
+        out.bar = t.status === 'planned' ? { label: L.dv_start, icon: 'truck', off: !allLoaded, bg: allLoaded ? '#0F766E' : '#8FB5B1', hasHint: true, hint: fill(L.dv_loadedN, { a: loadedN, b: t.stops.length }), go: () => { if (!allLoaded) return this.toast(L.dv_eLoadAll); const r = D.tripStart(t.no, me); if (r) this.toast(fill(L.dv_tStarted, { n: r.stops.length })); this.bump(); } }
+          : { label: L.dv_finish, icon: 'flag', off: !allRes, bg: allRes ? '#0F766E' : '#8FB5B1', hasHint: true, hint: fill(L.dv_resN, { a: resN, b: t.stops.length }), go: () => { if (!allRes) return this.toast(L.dv_eResAll); const r = D.tripFinish(t.no, me); if (r) this.toast(r.status === 'done' ? L.dv_tFinDone : L.dv_tWait); this.bump(); } };
+      }
+    }
+    if (s.tab === 'done') { out.doneEmpty = !done.length;
+      out.done = done.map(t => { const c = k => t.stops.filter(x => x.res === k).length, cs = t.stops.reduce((a, x) => a + (x.cash ? x.cash.sum : 0), 0); return { no: t.no, date: (t.doneAt || t.date).replace(' ', ', '), orders: fill(L.dv_ordersN, { n: t.stops.length }), ok: fill(L.dv_okN, { n: c('ok') }), part: fill(L.dv_partN, { n: c('part') }), fail: fill(L.dv_failN, { n: c('fail') }), hasCash: cs > 0, cash: fM(cs) }; }); }
+    if (s.form) { const f = s.form, o = D.orderById(f.oid), t = D.tripByNo(f.trip);
+      if (o && t && t.status === 'transit') { const c = D.custById(o.cust) || {}, pt = D.payTypeOf(o), upd = patch => this.setState(st => ({ form: { ...st.form, ...patch } }));
+        const qty = {}; if (f.res === 'part') o.lines.forEach(l => { const q = D.shippedQty(o, l), r = Math.min(q, parseInt(f.ret[l.id], 10) || 0); qty[l.id] = q - r; });
+        const sim = { res: f.res, qty: f.res === 'part' ? qty : null }, R = f.res === 'part' ? D.stopReturns(o, sim) : { qty: 0, sum: 0 }, exp = D.cashExpect(o, sim), cg = num(f.cash), isCash = pt === 'cash' && f.res !== 'fail', cDiff = isCash && cg != null && Math.abs(cg - exp) > 0.009;
+        const T = { ok: [L.dv_rOk, '#15803D'], part: [L.dv_rPart, '#B45309'], fail: [L.dv_rFail, '#B91C1C'] }[f.res];
+        const errMap = { photo: L.dv_ePhoto, reason: L.dv_eReason, partNone: L.dv_ePartNone, partReason: L.dv_ePartReason, cash: L.dv_eCash, cashNote: L.dv_eCashNote, locked: L.dv_eLocked, state: L.dv_eState };
+        const noteReq = (f.res === 'fail' && f.reason === 'other') || cDiff;
+        out.formOpen = true;
+        out.f = { title: T[0], fg: T[1], sub: o.no + ' · ' + (c.name || ''), close: () => this.setState({ form: null }), isFail: f.res === 'fail', isPart: f.res === 'part', needPhoto: f.res !== 'fail',
+          reasons: D.FAIL_REASONS.map(k => { const on = f.reason === k; return { label: D.FAIL_LABEL[k], icon: RICON[k], on, border: on ? '#B91C1C' : '#E2E8F0', bg: on ? '#FEF2F2' : '#FFFFFF', fg: on ? '#B91C1C' : '#172B2A', pick: () => upd({ reason: k }) }; }),
+          lines: o.lines.map(l => { const p0 = D.prodById(l.pid) || {}, q = D.shippedQty(o, l), v = f.ret[l.id] || '', rq = parseInt(v, 10) || 0, lrv = f.lr[l.id] || '';
+            return { name: p0.name || '', sub: fill(L.dv_shippedQ, { q: fN(q) }), val: v, aria: (p0.name || '') + ' — ' + L.dv_retQty, onVal: e => { const x = String(e.target.value || '').replace(/\D/g, '').slice(0, 5); upd({ ret: { ...f.ret, [l.id]: x && +x > q ? String(q) : x } }); }, hasRet: rq > 0, border: rq > 0 ? '#FDE68A' : '#E2E8F0', inBorder: f.tried && rq > 0 && !lrv ? '#B91C1C' : '#E2E8F0',
+              reasons: D.PART_REASONS.map(k => { const on = lrv === k; return { label: D.PART_LABEL[k], on, border: on ? '#B45309' : '#E2E8F0', bg: on ? '#FFFBEB' : '#FFFFFF', fg: on ? '#B45309' : '#172B2A', pick: () => upd({ lr: { ...f.lr, [l.id]: k } }) }; }) }; }),
+          hasRetSum: R.qty > 0, retSum: fill(L.dv_retInfo, { q: fN(R.qty), s: fM(R.sum) }),
+          photos: f.photos.map((ph, k) => ({ ...ph, rm: () => upd({ photos: f.photos.filter((_, j) => j !== k) }) })), hasPhotos: f.photos.length > 0, photoBorder: f.tried && !f.photos.length ? '#B91C1C' : '#0F766E',
+          onFile: e => this.onFile(e), sample: () => upd({ photos: f.photos.concat([{ name: 'namuna-' + (f.photos.length + 1) + '.jpg', url: D.SAMPLE_PHOTO }]).slice(0, 4) }),
+          sigClear: () => this.sClear(), sDown: e => this.sDown(e), sMove: e => this.sMove(e), sUp: e => this.sUp(e),
+          isCash, cashExp: fill(L.dv_cashExp, { s: fM(exp) }), cash: f.cash, onCash: e => upd({ cash: String(e.target.value || '').replace(/[^\d\s.,]/g, '').slice(0, 16) }), cashBorder: f.tried && isCash && cg == null ? '#B91C1C' : '#E2E8F0', cashDiff: cDiff, cashDiffText: fill(L.dv_cashDiff, { s: fM(Math.abs((cg || 0) - exp)) }),
+          showNote: f.res === 'fail' || isCash || f.res === 'part', noteLabel: noteReq ? L.dv_note + ' *' : L.dv_note, note: f.res === 'fail' ? f.note : f.cashNote, onNote: e => upd(f.res === 'fail' ? { note: e.target.value } : { cashNote: e.target.value }), noteBorder: f.tried && noteReq && !(f.res === 'fail' ? f.note : f.cashNote).trim() ? '#B91C1C' : '#E2E8F0',
+          hasErr: !!f.err, err: f.err ? errMap[f.err] || f.err : '', saveLabel: L.dv_save, saveBg: T[1],
+          save: () => { const r = D.stopSet(f.trip, f.oid, me, { res: f.res, photos: f.photos, sign: f.sign, reason: f.reason, note: f.res === 'fail' ? f.note : '', ret: f.ret, lr: f.lr, cash: cg == null ? '' : String(cg), cashNote: f.cashNote });
+            if (r.err) return upd({ tried: true, err: r.err }); this.setState({ form: null }); this.toast(fill(L.dv_tSaved, { no: o.no })); } }; }
+      else setTimeout(() => this.state.form && this.setState({ form: null }), 0); }
+    return out;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Buyurtma kartochkasi" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="DocumentHeader" print-items="{{ printItems }}" print-label="{{ L.ch_printMenu }}" parent-label="{{ L.b_title }}" on-parent="{{ back }}" title="{{ L.bk_title }}" number="{{ o.no }}" badge="{{ badge }}" sub="{{ sub }}" hide-stepper="{{ true }}" secondary="{{ secondary }}" more="{{ more }}" primary="{{ primary }}" more-label="{{ L.p_more }}" hint-size="100%,96px"></dc-import>
+  <sc-if value="{{ noCancelNote }}"><div style="margin-top:-8px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A"><lucide-i name="info" size="14" style="color:#647574"></lucide-i>{{ L.bk_noCancel }}</div></sc-if>
+
+  <section aria-label="{{ L.bk_tOrder }}" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:12px 8px;min-height:64px;box-sizing:border-box;display:grid;grid-template-columns:repeat({{ stepN }},minmax(0,1fr))">
+    <sc-for list="{{ steps }}" as="st" hint-placeholder-count="6">
+      <div title="{{ st.tip }}" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;cursor:{{ st.cursor }}">
+        <sc-if value="{{ st.hasLine }}"><span style="position:absolute;top:9px;left:calc(50% + 14px);width:calc(100% - 28px);height:2px;border-radius:1px;background:{{ st.lineColor }}"></span></sc-if>
+        <span style="width:20px;height:20px;flex:none;box-sizing:border-box;border-radius:50%;background:{{ st.bg }};border:{{ st.border }};display:flex;align-items:center;justify-content:center;color:#FFFFFF">
+          <sc-if value="{{ st.done }}"><lucide-i name="check" size="12"></lucide-i></sc-if>
+          <sc-if value="{{ st.cur }}"><span style="width:8px;height:8px;border-radius:50%;background:#0F766E"></span></sc-if>
+          <sc-if value="{{ st.fail }}"><lucide-i name="x" size="12"></lucide-i></sc-if>
+        </span>
+        <div style="display:flex;flex-direction:column;align-items:center;min-width:0;max-width:100%;padding:0 4px">
+          <sc-if value="{{ st.showLabel }}"><span title="{{ st.label }}" style="max-width:100%;font-size:11.5px;line-height:15px;font-weight:{{ st.weight }};color:{{ st.color }};text-align:center;overflow-wrap:anywhere;hyphens:auto">{{ st.label }}</span></sc-if>
+          <sc-if value="{{ st.hasTime }}"><span style="font-size:11px;line-height:14px;color:#647574;text-align:center;max-width:100%">{{ st.time }}</span><span style="font-size:11px;line-height:14px;color:#5B6B6A;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ st.who }}</span></sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </section>
+
+  <sc-if value="{{ isPending }}">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <dc-import name="StatusBanner" tone="warning" icon="clock" title="{{ waitTitle }}" text="{{ levelText }}" hint-size="100%,64px"></dc-import>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:0 4px">
+        <sc-for list="{{ chips }}" as="ch"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:{{ ch.bg }};color:{{ ch.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ ch.icon }}" size="12"></lucide-i>{{ ch.text }}</span></sc-for>
+        <sc-if value="{{ hasOpNote }}"><span style="font-size:13px;line-height:18px;color:#5B6B6A;font-style:italic;text-wrap:pretty">«{{ opNote }}» — {{ o.op }}</span></sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isRejected }}"><dc-import name="StatusBanner" tone="danger" icon="octagon-x" text="{{ rejText }}" hint-size="100%,48px"></dc-import></sc-if>
+  <sc-if value="{{ isCancelled }}"><dc-import name="StatusBanner" tone="neutral" icon="circle-x" title="{{ cancTitle }}" text="{{ cancText }}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{ isPartial }}"><dc-import name="StatusBanner" tone="warning" icon="package-x" text="{{ partialText }}" hint-size="100%,48px"></dc-import></sc-if>
+
+  <sc-if value="{{ hasPk }}">
+    <section aria-label="{{ pk.title }}" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0">
+          <span style="font-size:15px;line-height:22px;font-weight:600">{{ pk.title }}</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:{{ pk.chipBg }};color:{{ pk.chipFg }};font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="{{ pk.chipIcon }}" size="13"></lucide-i>{{ pk.chip }}</span>
+        </div>
+        <sc-if value="{{ pk.hasEdit }}"><button onClick="{{ pk.edit }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA"><lucide-i name="pencil" size="14" style="color:#5B6B6A"></lucide-i>{{ L.q9_edit }}</button></sc-if>
+      </div>
+      <sc-if value="{{ pk.hasInfo }}"><div style="display:flex;flex-wrap:wrap;gap:6px 24px;font-size:13px;line-height:18px;color:#5B6B6A"><sc-for list="{{ pk.info }}" as="i"><span style="display:flex;align-items:center;gap:6px;color:{{ i.color }}"><lucide-i name="{{ i.icon }}" size="14" style="flex:none"></lucide-i>{{ i.text }}</span></sc-for></div></sc-if>
+      <sc-if value="{{ pk.hasForm }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+          <sc-for list="{{ pk.fields }}" as="f">
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <span style="font-size:12px;line-height:16px;font-weight:500">{{ f.label }} <span style="color:#B91C1C">*</span></span>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ f.presets }}" as="pr"><button onClick="{{ pr.pick }}" aria-pressed="{{ pr.on }}" style="height:32px;min-width:48px;padding:0 10px;border:1px solid {{ pr.border }};border-radius:8px;background:{{ pr.bg }};color:{{ pr.fg }};font-size:13px;font-weight:500;cursor:pointer">{{ pr.label }}</button></sc-for>
+                <div style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;box-sizing:border-box;border:1px solid {{ f.border }};border-radius:8px;background:#FFFFFF"><input value="{{ f.val }}" onChange="{{ f.onChange }}" inputmode="numeric" aria-label="{{ f.label }}" placeholder="{{ L.q9_custom }}" style="width:56px;border:0;outline:none;font:inherit;font-size:13px;text-align:right;background:transparent;color:#172B2A"><span style="font-size:12px;color:#647574">{{ L.q9_min }}</span></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ pk.err }}"><div style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ L.q9_eReq }}</div></sc-if>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <sc-if value="{{ pk.hasCancelEdit }}"><button onClick="{{ pk.cancelEdit }}" style="height:32px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA">{{ L.bk_back2 }}</button></sc-if>
+          <button onClick="{{ pk.save }}" style="height:32px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#115E59">{{ L.q9_save }}</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ pk.hasClock }}"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:10px;border-top:1px dashed #E2E8F0;font-size:12px;line-height:16px;color:#647574"><lucide-i name="clock" size="13"></lucide-i><span>{{ pk.clock }}</span><button onClick="{{ pk.clk5 }}" style="height:24px;padding:0 8px;border:1px solid #E2E8F0;border-radius:6px;background:#FFFFFF;font-size:12px;color:#5B6B6A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA">{{ L.q9_clk5 }}</button><button onClick="{{ pk.clk15 }}" style="height:24px;padding:0 8px;border:1px solid #E2E8F0;border-radius:6px;background:#FFFFFF;font-size:12px;color:#5B6B6A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA">{{ L.q9_clk15 }}</button></div></sc-if>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+    <dc-import name="CustomerPanel" cust-id="{{ o.cust }}" order-sum="{{ panelSum }}" exclude-no="{{ o.no }}" compact="{{ true }}" dict="{{ L }}" on-details="{{ openPanel }}" hint-size="100%,64px"></dc-import>
+  </sc-if>
+
+  <div style="display:grid;grid-template-columns:{{ layoutCols }};gap:24px;align-items:start;min-width:0">
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <dc-import name="SavedViews" tabs="{{ tabs }}" hint-size="100%,38px"></dc-import>
+
+      <sc-if value="{{ tOrder }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+            <dc-import name="InfoGrid" title="{{ L.bk_iGeneral }}" rows="{{ info1 }}" stacked="{{ true }}" hint-size="100%,220px"></dc-import>
+            <dc-import name="InfoGrid" title="{{ L.bk_iDelivery }}" rows="{{ info2 }}" stacked="{{ true }}" hint-size="100%,220px"></dc-import>
+            <dc-import name="InfoGrid" title="{{ L.bk_iTerms }}" rows="{{ info3 }}" stacked="{{ true }}" hint-size="100%,220px"></dc-import>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow:hidden">
+            <div style="overflow-x:auto">
+              <div style="min-width:760px;font-size:13px;line-height:18px">
+                <div style="display:grid;grid-template-columns:{{ lGrid }};height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+                  <sc-for list="{{ lHead }}" as="h"><span style="padding:0 12px;text-align:{{ h.align }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ h.label }}</span></sc-for>
+                </div>
+                <sc-for list="{{ lRows }}" as="r" hint-placeholder-count="4">
+                  <div onClick="{{ r.toggle }}" role="button" aria-expanded="{{ r.open }}" title="{{ L.y2_lineTip }}" style="display:grid;grid-template-columns:{{ lGrid }};min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4;cursor:pointer;background:{{ r.bg }}" style-hover="background:#F8FAFA">
+                    <span style="padding:4px 12px;min-width:0;display:flex;flex-direction:column;justify-content:center"><span style="display:flex;align-items:center;gap:6px;min-width:0"><lucide-i name="{{ r.chev }}" size="14" style="color:#647574;flex:none"></lucide-i><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><sc-for list="{{ r.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;color:{{ f.color }};flex:none"><lucide-i name="{{ f.icon }}" size="14"></lucide-i></span></sc-for></span><sc-if value="{{ r.hasShort }}"><span style="font-size:12px;line-height:16px;font-weight:600;color:#B91C1C">{{ r.shortText }}</span></sc-if></span>
+                    <span style="padding:0 12px;text-align:right">{{ r.qty }}</span>
+                    <span title="{{ r.pickTip }}" style="padding:0 12px;text-align:right;color:{{ r.pickColor }};font-weight:{{ r.pickWeight }}">{{ r.picked }}</span>
+                    <span title="{{ r.shipTip }}" style="padding:0 12px;text-align:right;color:{{ r.shipColor }};font-weight:{{ r.shipWeight }}">{{ r.shipped }}</span>
+                    <span style="padding:0 12px;display:flex;flex-direction:column;align-items:flex-end"><span>{{ r.price }}</span><sc-if value="{{ r.hasBp }}"><span style="font-size:11px;line-height:14px;color:#0F766E;font-weight:500">{{ r.bpNote }}</span></sc-if></span>
+                    <span style="padding:0 12px;text-align:right;color:#5B6B6A">{{ r.disc }}</span>
+                    <span style="padding:0 12px;text-align:right;font-weight:500">{{ r.sum }}</span>
+                  </div>
+                  <sc-if value="{{ r.open }}"><div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px 12px 32px;background:#F8FAFA;border-bottom:1px solid #EEF2F4">
+                    <span style="font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">{{ r.splitT }}</span>
+                    <sc-for list="{{ r.split }}" as="s"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;min-width:110px">{{ s.batch }}</span><span style="color:#5B6B6A;min-width:84px">{{ s.exp }}</span><span style="min-width:150px">{{ s.qtyPrice }}</span><span style="font-weight:500;min-width:110px">{{ s.sum }}</span><sc-if value="{{ s.isB }}"><span style="height:18px;padding:0 6px;border-radius:5px;background:#F0FDFA;color:#0F766E;font-size:11px;line-height:18px;font-weight:500">{{ L.nq_tagBatch }}</span></sc-if></div></sc-for>
+                    <sc-if value="{{ r.splitFz }}"><span style="font-size:12px;line-height:16px;color:#647574">{{ L.y2_fzNote }}</span></sc-if>
+                  </div></sc-if>
+                </sc-for>
+              </div>
+            </div>
+            <dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ L.b_tTotal }}" total-value="{{ totValue }}" bottom="{{ footBottom }}" hint-size="100%,52px"></dc-import>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tPick }}">
+        <sc-if value="{{ hasPicks }}">
+          <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+            <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ pickMeta }}</span>
+            <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow-x:auto">
+              <div style="min-width:720px;font-size:13px;line-height:18px">
+                <div style="display:grid;grid-template-columns:{{ pGrid }};height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+                  <sc-for list="{{ pHead }}" as="h"><span style="padding:0 12px;text-align:{{ h.align }};white-space:nowrap">{{ h.label }}</span></sc-for>
+                </div>
+                <sc-for list="{{ pRows }}" as="r">
+                  <div style="display:grid;grid-template-columns:{{ pGrid }};min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4;box-shadow:{{ r.edge }}">
+                    <span style="padding:0 12px;min-width:0;display:flex;align-items:center;gap:6px"><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><sc-if value="{{ r.dev }}"><span title="{{ r.dev }}" style="display:flex;color:#B45309;flex:none;cursor:help"><lucide-i name="triangle-alert" size="14"></lucide-i></span></sc-if></span>
+                    <span style="padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:{{ r.batchColor }}">{{ r.batch }}</span>
+                    <span style="padding:0 12px">{{ r.exp }}</span>
+                    <span style="padding:0 12px;color:#5B6B6A">{{ r.zone }}</span>
+                    <span style="padding:0 12px;text-align:right;font-weight:500">{{ r.qty }}</span>
+                    <span style="padding:0 12px;display:flex;align-items:center;gap:4px;color:{{ r.markColor }}"><sc-if value="{{ r.hasMark }}"><lucide-i name="check" size="14"></lucide-i></sc-if>{{ r.mark }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noPicks }}"><div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px"><dc-import name="EmptyState" icon="scan-line" tone="neutral" title="{{ L.bk_pickEmptyT }}" text="{{ pickEmptyText }}" min-height="260" hint-size="100%,260px"></dc-import></div></sc-if>
+      </sc-if>
+
+      <sc-if value="{{ tShip }}">
+        <sc-if value="{{ hasShip }}"><dc-import name="InfoGrid" title="{{ L.bk_tShip }}" rows="{{ shipRows }}" hint-size="100%,240px"></dc-import></sc-if>
+        <sc-if value="{{ hasShipMedia }}"><section style="margin-top:12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span style="font-size:14px;font-weight:600">{{ L.bk_shPhotos }}</span><div style="display:flex;gap:10px;flex-wrap:wrap"><sc-for list="{{ shipMedia }}" as="m"><figure style="margin:0;display:flex;flex-direction:column;gap:4px;width:160px"><img src="{{ m.url }}" alt="{{ m.name }}" style="width:160px;height:120px;object-fit:contain;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;display:block"></img><figcaption style="font-size:12px;color:#5B6B6A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.name }}</figcaption></figure></sc-for></div></section></sc-if>
+        <sc-if value="{{ noShip }}"><div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px"><dc-import name="EmptyState" icon="truck" tone="neutral" title="{{ L.bk_shEmptyT }}" text="{{ L.bk_shEmpty }}" min-height="260" hint-size="100%,260px"></dc-import></div></sc-if>
+      </sc-if>
+
+      <sc-if value="{{ tPay }}">
+        <sc-if value="{{ hasPay }}">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <sc-if value="{{ hasAhBanner }}"><dc-import name="StatusBanner" tone="info" icon="wallet" title="{{ ahBanner }}" hint-size="100%,48px"></dc-import></sc-if>
+            <div style="display:grid;grid-template-columns:repeat({{ payCols }},minmax(0,1fr));gap:12px">
+              <sc-for list="{{ payKpis }}" as="k">
+                <div style="display:flex;flex-direction:column;gap:4px;padding:16px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;min-width:0">
+                  <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span>
+                  <span style="font-size:18px;line-height:24px;font-weight:600;color:{{ k.color }};white-space:nowrap">{{ k.value }}</span>
+                  <sc-if value="{{ k.note }}"><span style="font-size:12px;line-height:16px;font-weight:500;color:{{ k.noteColor }}">{{ k.note }}</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 20px;border-bottom:1px solid #EEF2F4"><span style="font-size:14px;font-weight:600">{{ L.tl_ocPayList }}</span><sc-if value="{{ payOpen }}"><button onClick="{{ payAccept }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="hand-coins" size="16" style="color:#5B6B6A"></lucide-i>{{ L.tl_ocAccept }}</button></sc-if></div>
+              <sc-for list="{{ payRows }}" as="r">
+                <div style="display:grid;grid-template-columns:136px 100px minmax(0,1fr) 150px;gap:12px;align-items:center;padding:10px 20px;border-bottom:1px solid #EEF2F4;font-size:13px;line-height:18px">
+                  <span><sc-if value="{{ r.isLink }}"><button onClick="{{ r.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ r.no }}</button></sc-if><sc-if value="{{ r.isPlain }}"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ r.no }}</span></sc-if></span>
+                  <span>{{ r.date }}</span><span style="color:#5B6B6A">{{ r.method }}</span><span style="text-align:right;font-weight:500">{{ r.sum }}</span></div>
+              </sc-for>
+              <sc-if value="{{ noPayRows }}"><div style="padding:16px 20px;font-size:13px;color:#647574">{{ L.bk_payNone }}</div></sc-if>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noPay }}"><div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px"><dc-import name="EmptyState" icon="wallet" tone="neutral" title="{{ L.bk_payEmptyT }}" text="{{ L.bk_payEmpty }}" min-height="260" hint-size="100%,260px"></dc-import></div></sc-if>
+      </sc-if>
+
+      <sc-if value="{{ tHist }}">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:20px 24px">
+          <dc-import name="HistoryTimeline" groups="{{ hist }}" filters="{{ histFilters }}" empty-label="{{ L.bk_hEmpty }}" hint-size="100%,300px"></dc-import>
+        </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+      <div style="position:sticky;top:24px;min-width:0">
+        <dc-import name="CustomerPanel" cust-id="{{ o.cust }}" order-sum="{{ panelSum }}" exclude-no="{{ o.no }}" dict="{{ L }}" hint-size="320px,600px"></dc-import>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ panelOpen }}">
+    <div onClick="{{ closePanel }}" style="position:fixed;inset:0;z-index:120;background:rgba(18,43,42,0.20)"></div>
+    <div style="position:fixed;top:0;right:0;bottom:0;width:360px;max-width:100vw;z-index:121;background:#F5F7F8;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);overflow-y:auto;padding:16px;box-sizing:border-box">
+      <dc-import name="CustomerPanel" cust-id="{{ o.cust }}" order-sum="{{ panelSum }}" exclude-no="{{ o.no }}" dict="{{ L }}" on-close="{{ closePanel }}" hint-size="100%,600px"></dc-import>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasDlg }}">
+    <dc-import name="DecisionDialog" kind="{{ dlg }}" order-id="{{ o.id }}" dict="{{ L }}" role="{{ role }}" user-name="{{ userName }}" on-close="{{ closeDlg }}" on-done="{{ onDone }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+
+  <sc-if value="{{ finOpen }}"><dc-import name="PickConfirm" order-id="{{ orderId }}" dict="{{ L }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-close="{{ finClose }}" on-done="{{ finDone }}" hint-size="0px,0px"></dc-import></sc-if>
+  <div style="height:48px"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;orderId&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5005,&quot;tsType&quot;:&quot;number&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;operator&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onCopy&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(order)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
+const fD = t => { const d = new Date(t); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '.' + d.getUTCFullYear(); };
+const DAY = 86400000;
+const FLOW = ['draft', 'pending', 'queued', 'picking', 'marking', 'checking', 'docs', 'loading', 'shipped', 'delivered'];
+const EV = { draft: 'create', pending: 'send', queued: ['approve', 'confirm'], picking: 'pickStart', marking: 'picked', checking: 'marked', docs: 'checked', loading: 'documented', shipped: 'shipped', delivered: 'delivered' };
+const PRESETS = [15, 30, 60, 120];
+const fAt = a => a ? a.slice(0, 5) + ' ' + a.slice(11) : '';
+const waitText = (m, L) => { const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60; return d ? fill(L.bk_wD, { d, h }) : h ? fill(L.bk_wH, { h, m: mm }) : fill(L.bk_wM, { m: mm }); };
+class Component extends DCLogic {
+  state = { tab: 'order', dlg: null, panelOpen: false, ready: !!window.MedixData, tmEdit: false, tmP: null, tmM: null, tmTried: false, finOpen: false, fin: {}, finTried: false };
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60); }
+  componentWillUnmount() { clearInterval(this._p); }
+  componentDidUpdate(pp) { if (pp.orderId !== this.props.orderId) this.setState({ tab: 'order', dlg: null, tmEdit: false, tmP: null, tmM: null, tmTried: false, finOpen: false, fin: {}, finTried: false }); }
+  who() { return this.props.userName || ''; }
+  saveTime(o) { const D = window.MedixData, L = this.L, s = this.state, pv = o.tm, pm = parseInt(s.tmP != null ? s.tmP : pv ? pv.pickMin : '', 10), mm = parseInt(s.tmM != null ? s.tmM : pv ? pv.markMin : '', 10);
+    if (!(pm > 0) || !(mm > 0)) return this.setState({ tmTried: true });
+    const n = D.setQueueTime(o.id, pm, mm, this.who()); if (!n) return; this.setState({ tmEdit: false, tmP: null, tmM: null, tmTried: false }); this.toast(fill(pv ? L.q9_tEdited : L.q9_tSaved, { no: o.no })); }
+  startPick(o) { const D = window.MedixData, L = this.L, lk = D.pickLock ? D.pickLock(o) : null; if (lk) return this.toast(fill(L.iv_tPickLock, { z: lk.zone, n: lk.no }));
+    const n = D.startPick(o.id, this.who()); if (!n && D.activePickOf(this.who(), o.branch)) return this.toast(L.pp_oneActive); if (n) { this.toast(fill(L.q9_tStarted, { no: o.no })); this.setState({ tab: 'order' }); } }
+  resText(tmr) { const L = this.L; if (!tmr || tmr.run) return ''; return tmr.diff > 0 ? fill(L.q9_resOk, { s: tmr.spent, d: tmr.diff }) : tmr.diff === 0 ? fill(L.q9_resOnTime, { s: tmr.spent }) : fill(L.q9_resLate, { d: -tmr.diff }); }
+  pkVals(o, st) { const D = window.MedixData, L = this.L, p = this.props, s = this.state, tm = o.tm, tmr = D.pickTimer(o), canQ = st === 'queued' && D.can(p.role, 'orders.queue'), mkI = (icon, text, color) => ({ icon, text, color: color || '#5B6B6A' });
+    const tmInfo = tm ? [mkI('timer', fill(L.q9_tmVal, { p: tm.pickMin, m: tm.markMin })), mkI('user-round', fill(L.q9_tmBy, { who: tm.by, at: fAt(tm.at) }))].concat(tm.hist && tm.hist.length ? [mkI('history', fill(L.q9_tmHist, { n: tm.hist.length }))] : []) : [];
+    const clock = { hasClock: false, clock: '', clk5: () => {}, clk15: () => {} }, iss = (o.issues || []).map(x => mkI('triangle-alert', fill(L.pp_issueLine, { r: L['pp_r_' + x.reason] || x.reason, n: x.note ? ' — ' + x.note : '', who: x.by, at: x.at.slice(11) }), '#B91C1C'));
+    if (st === 'queued') { const editing = canQ && (!tm || s.tmEdit), vP = s.tmP != null ? s.tmP : tm ? String(tm.pickMin) : '', vM = s.tmM != null ? s.tmM : tm ? String(tm.markMin) : '';
+      const fld = (label, v, key) => { const bad = s.tmTried && !(parseInt(v, 10) > 0); return { label, val: v, border: bad ? '#B91C1C' : '#E2E8F0', onChange: e => this.setState({ [key]: String(e.target.value || '').replace(/\D/g, '').slice(0, 4) }),
+        presets: PRESETS.map(x => { const on = v === String(x); return { label: String(x), on, border: on ? '#0D9488' : '#E2E8F0', bg: on ? '#F0FDFA' : '#FFFFFF', fg: on ? '#0F766E' : '#172B2A', pick: () => this.setState({ [key]: String(x) }) }; }) }; };
+      const info = tm ? tmInfo.concat(!D.can(p.role, 'picking.do') ? [] : []) : [mkI('info', canQ ? L.q9_tmHint : L.q9_whoTime)];
+      return { title: L.q9_tmT, chip: tm ? L.q9_tmGiven : L.q9_tmWait, chipIcon: tm ? 'circle-check' : 'clock', chipBg: tm ? '#EFF6FF' : '#FFFBEB', chipFg: tm ? '#1D4ED8' : '#B45309',
+        hasEdit: canQ && !!tm && !s.tmEdit, edit: () => this.setState({ tmEdit: true, tmP: String(tm.pickMin), tmM: String(tm.markMin), tmTried: false }), hasInfo: !editing || !!tm, info: editing && tm ? tmInfo.slice(1) : info,
+        hasForm: editing, fields: [fld(L.q9_tmPick, vP, 'tmP'), fld(L.q9_tmMark, vM, 'tmM')], err: s.tmTried && !(parseInt(vP, 10) > 0 && parseInt(vM, 10) > 0), save: () => this.saveTime(o),
+        hasCancelEdit: !!tm && s.tmEdit, cancelEdit: () => this.setState({ tmEdit: false, tmP: null, tmM: null, tmTried: false }), ...clock }; }
+    const base = { hasEdit: false, edit: () => {}, hasForm: false, fields: [], err: false, save: () => {}, hasCancelEdit: false, cancelEdit: () => {}, hasInfo: true };
+    const now = D.nowStr(), clk = { hasClock: !D.demoUi || D.demoUi(), clock: fill(L.q9_clk, { t: now.slice(11) }), clk5: () => { D.clkAdd(5); this.forceUpdate(); }, clk15: () => { D.clkAdd(15); this.forceUpdate(); } };
+    if (st === 'picking') { const pkO = o.pk || D.ensurePk(o), late = tmr && tmr.left < 0;
+      return { ...base, title: L.q9_pickT, chip: tmr ? (late ? fill(L.q9_late, { n: -tmr.left }) : fill(L.q9_left, { n: tmr.left })) : L.b_st_picking, chipIcon: late ? 'alarm-clock-off' : 'timer', chipBg: late ? '#FEF2F2' : '#EFF6FF', chipFg: late ? '#B91C1C' : '#1D4ED8',
+        info: [mkI('user-round', fill(L.q9_picker, { who: pkO.by || '—', at: fAt(pkO.start) }))].concat(tmInfo.slice(0, 1), iss), ...clk }; }
+    const rt = this.resText(tmr), late = tmr && !tmr.run && tmr.diff < 0, rc = { chip: rt || L.b_st_marking, chipIcon: late ? 'alarm-clock-off' : 'circle-check', chipBg: late ? '#FEF2F2' : '#F0FDF4', chipFg: late ? '#B91C1C' : '#15803D' };
+    const pkO = o.pk || D.ensurePk(o), who = [mkI('user-round', fill(L.q9_pickedBy, { who: pkO.by || '—', a: fAt(pkO.start), b: pkO.end ? pkO.end.slice(11) : '' }))];
+    const mk = o.mk, mkLn = () => { if (!mk) return []; if (mk.none) return [mkI('scan-barcode', fill(L.q9_mkNone, { who: mk.by }))]; const sm = D.mkSum(o), mt = D.markTimer(o), ok = sm.got >= sm.need, res = mk.end && mt ? ' · ' + (mt.diff < 0 ? fill(L.q9_resLate, { d: -mt.diff }) : L.pp_resOnTime) : '';
+      return [mkI('scan-barcode', fill(L.q9_mkInfo, { got: fN(sm.got), need: fN(sm.need), ok: ok && mk.end ? '✓' : '' }), ok && mk.end ? '#15803D' : null), mkI('user-round', mk.end ? fill(L.q9_mkBy, { who: mk.by, a: fAt(mk.start), b: mk.end.slice(11) }) + res : fill(L.q9_mkRun, { who: mk.by, at: fAt(mk.start) }), mt && !mk.end && mt.left < 0 ? '#B91C1C' : null)]; }; // T9-3: faqat ma'lumot — skanerlash Markirovkachi panelida
+    if (st === 'marking') return { ...base, title: L.b_st_marking, ...rc, chip: rt || L.q9_noRes, info: who.concat(tm ? [mkI('timer', fill(L.mp_tm, { n: tm.markMin }))] : [], mk ? mkLn() : [mkI('clock', L.q9_mkQueue)], iss), ...clk };
+    const chkLn = o.chk && o.chk.by ? [mkI('clipboard-check', o.chk.end ? fill(L.w4_chkBy, { who: o.chk.by, a: fAt(o.chk.start), b: o.chk.end.slice(11), n: o.chk.places }) : fill(L.w4_chkRun, { who: o.chk.by, at: fAt(o.chk.start) }))] : [], dcLn = o.dc && o.dc.nak ? [mkI('file-text', fill(L.w4_dcInfo, { nak: o.dc.nak, trip: o.dc.trip || L.w4_pickupW }))] : [], rwLn = o.att && o.att.length ? [mkI('rotate-ccw', fill(L.w4_attN, { n: o.att.length + 1 }), '#B45309')] : [];
+    if (rt || (['checking', 'docs', 'loading'].includes(st) && mk)) return { ...base, title: L.q9_resT2, ...rc, chip: rt || L['b_st_' + st], info: who.concat(mkLn(), chkLn, dcLn, rwLn, iss), ...clock };
+    return null; }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  finVals(o, st) { const L = this.L, open = this.state.finOpen && st === 'picking';
+    return { finOpen: open, orderId: o.id, userName: this.who(), narrow: !!this.props.narrow, finClose: () => this.setState({ finOpen: false }), finDone: n => { this.setState({ finOpen: false }); if (n) this.toast(fill(L.q9_tFinished, { no: o.no })); } }; }
+  renderVals() {
+    const L = this.L, D = window.MedixData, p = this.props, s = this.state, narrow = !!p.narrow;
+    const o = D && D.store.orders.find(x => x.id === p.orderId);
+    const base = { L, o: o || {}, role: p.role, userName: p.userName, narrow, wide: !narrow, back: () => p.onBack && p.onBack(), steps: [], tabs: [], lRows: [], lHead: [], pRows: [], pHead: [], hist: [], info1: [], info2: [], info3: [], chips: [], payKpis: [], payRows: [], totItems: [], sub: [], secondary: [], more: [], printItems: [] };
+    if (!D || !o) return base;
+    const c = D.custById(o.cust) || {}, st = o.status, log = D.orderLog(o), b = D.BRANCHES.find(x => x.code === o.branch) || D.BRANCHES[0];
+    const S = D.ORDER_STATUS[st], cr = D.creditCheck(o), t = D.orderTotals(o), picks = D.picksOf(o);
+    const evAt = k => { const ks = [].concat(k); const e = log.filter(x => ks.includes(x.kind)).pop(); return e; };
+    const hasAppr = st === 'pending' || log.some(e => e.kind === 'send');
+    // stepper
+    let flow = FLOW.filter(k => k !== 'pending' || hasAppr), endFail = null, curIdx = flow.indexOf(st === 'ready' ? 'loading' : st);
+    if (st === 'rejected') { curIdx = flow.indexOf('pending'); endFail = { label: L.b_st_rejected, e: evAt('reject') }; }
+    if (st === 'undelivered') { curIdx = flow.indexOf('shipped'); endFail = { label: L.b_st_undelivered, e: evAt('undelivered') }; }
+    if (st === 'cancelled') { const from = (o.canc && o.canc.from) || 'queued'; curIdx = Math.max(0, flow.indexOf(from)); endFail = { label: L.b_st_cancelled, e: evAt('cancel') }; }
+    let stepsArr = flow.map((k, i) => ({ k, label: L['b_st_' + k], e: evAt(EV[k]) }));
+    if (endFail) stepsArr = stepsArr.slice(0, curIdx + 1).concat([{ k: 'fail', label: endFail.label, e: endFail.e, fail: true }]);
+    const lastDone = st === 'delivered' || endFail;
+    const steps = stepsArr.map((x, i) => {
+      const done = !x.fail && (i < curIdx || (lastDone && i <= curIdx)), cur = !x.fail && !done && i === curIdx, fail = !!x.fail;
+      const tm = x.e && (done || fail || cur) ? x.e.at : '';
+      return { label: x.label, done, cur, fail, hasLine: i < stepsArr.length - 1, lineColor: (i < curIdx || (endFail && i < stepsArr.length - 1 && i < curIdx)) ? '#0F766E' : '#E2E8F0',
+        bg: done ? '#0F766E' : fail ? '#B91C1C' : '#FFFFFF', border: done || fail ? '0' : cur ? '2px solid #0F766E' : '1.5px solid #CBD5D3',
+        color: fail ? '#B91C1C' : done || cur ? '#172B2A' : '#647574', weight: cur || fail ? 600 : 500, showLabel: !narrow || cur || fail || (lastDone && i === curIdx),
+        hasTime: !!tm && (!narrow || cur || fail), time: tm ? tm.slice(0, 5) + ' ' + tm.slice(11) : '', who: tm && x.e && x.e.who ? String(x.e.who).split(' ')[0] : '', tip: x.e ? `${x.e.who} · ${x.e.at.slice(0, 10)}, ${x.e.at.slice(11)}` : x.label, cursor: x.e ? 'help' : 'default' };
+    });
+    // roles & actions
+    const mgr = D.can(p.role, 'orders.manage'), own = D.can(p.role, 'orders.cancel') && o.op === p.userName, canCanc = D.canCancelOrder(p.role, p.userName, o), canCopy = D.can(p.role, 'orders.create');
+    const canRet = mgr || (own && st === 'pending'), canApp = st === 'pending' && D.canApprove(cr.level || 'branch', p.role), canDo = D.can(p.role, 'picking.do');
+    const dlg = k => () => this.setState({ dlg: k });
+    const print = { label: L.bk_print, icon: 'printer', pick: () => window.medixPrint && window.medixPrint('pick', o.no) }, copy = { label: L.bk_copy, icon: 'copy', pick: () => p.onCopy && p.onCopy(o) };
+    const cancel = { sep: true, label: L.bk_cancel, icon: 'circle-x', danger: true, pick: dlg('cancel') };
+    let primary = null, secondary = [], more = [];
+    if (st === 'pending') { if (canApp) { primary = { label: L.bk_approve, icon: 'check', pick: dlg('approve') }; secondary = [{ label: L.bk_return, icon: 'undo-2', pick: dlg('return') }, { label: L.bk_reject, icon: 'octagon-x', danger: true, pick: dlg('reject') }]; }
+      else if (D.can(p.role, 'approvals.branch')) { const k = (cr.level || 'branch') === 'director' ? 'approvals.director' : 'approvals.branch'; primary = { label: L.bk_approve, icon: 'lock', pick: () => this.toast(fill(L.kt_who, { r: D.whoCan(k).map(r => L['r_' + r] || r).join(', ') })) }; }
+      more = [print, ...(canCanc ? [cancel] : [])]; }
+    else if (st === 'queued') { if (o.tm && canDo) primary = { label: L.q9_start, icon: 'play', pick: () => this.startPick(o) }; /* T12a: Navbatdan qoralamaga qaytarish yo'q — faqat bekor qilish */ more = [print, ...(canCopy ? [copy] : []), ...(canCanc ? [cancel] : [])]; }
+    else if (st === 'picking') { if (canDo && D.pickerOf(o) === p.userName) primary = { label: L.q9_finish, icon: 'package-check', pick: () => this.setState({ finOpen: true }) }; more = [print, ...(canCanc ? [cancel] : [])]; }
+    else if (st === 'marking') more = [print, ...(canCanc ? [cancel] : [])];
+    else if (['checking', 'docs', 'loading', 'ready'].includes(st)) more = [print, ...(canCanc ? [cancel] : [])];
+    else more = [print, ...(canCopy ? [copy] : [])];
+    // header
+    const sub = [{ text: c.name }, { text: o.delivery === 'pickup' ? L.b_delPickupLong : L.b_delDeliver, icon: o.delivery === 'pickup' ? 'user' : 'truck' }, { text: o.delivDate, icon: 'calendar' }];
+    // banners
+    const lvl = cr.level === 'director' ? L.bk_lvDirector : L.bk_lvBranch;
+    const chips = cr.issues.map(i => i.k === 'limit' ? { icon: 'gauge', text: fill(L.bk_chLimit, { p: Math.round(i.pct) }), fg: i.danger ? '#B91C1C' : '#B45309', bg: i.danger ? '#FEF2F2' : '#FFFBEB' }
+      : i.k === 'overdue' ? { icon: 'clock-alert', text: fill(L.bk_chOverdue, { s: (i.sum / 1e6).toFixed(1).replace('.', ',') + ' mln', n: i.days }), fg: i.danger ? '#B91C1C' : '#B45309', bg: i.danger ? '#FEF2F2' : '#FFFBEB' }
+      : i.k === 'maxQty' ? { icon: 'package-plus', text: fill(L.oe_chMax, { n: i.items.length }), fg: '#B45309', bg: '#FFFBEB' }
+      : { icon: 'lock', text: L.bk_chBlocked, fg: '#B91C1C', bg: '#FEF2F2' });
+    const rej = evAt('reject'), canc = evAt('cancel'), send = evAt('send');
+    // lines
+    const pickBy = {}; picks.forEach(x => pickBy[x.pid] = (pickBy[x.pid] || 0) + x.qty);
+    const pickStarted = ['marking', 'checking', 'docs', 'loading', 'ready', 'shipped', 'delivered'].includes(st), shippedSt = ['shipped', 'delivered', 'undelivered'].includes(st);
+    const lGrid = 'minmax(180px,1fr) 88px 88px 100px 104px 84px 128px';
+    const lHead = [[L.bk_cProduct, 'left'], [L.bk_cOrdered, 'right'], [L.bk_cPicked, 'right'], [L.bk_cShipped, 'right'], [L.bk_cPrice, 'right'], [L.bk_cDisc, 'right'], [L.bk_cSum, 'right']].map(([label, align]) => ({ label, align }));
+    const preRes = ['queued', 'picking'].includes(st), qres = preRes ? D.queueRes(o) : [], shortBy = {}; qres.forEach(x => { shortBy[x.pid] = (shortBy[x.pid] || 0) + x.short; });
+    const lRows = o.lines.map((l, li) => {
+      const pr = D.prodById(l.pid) || {}, price = D.linePrice(l, o), g = (l.qty || 0) * price, n = g * (1 - (c.disc || 0) / 100), sum = n;
+      const pk = pickBy[l.pid], short = D.shortOf(o, l), pkShort = pk != null && pk < l.qty, shQ = shippedSt ? l.qty - short : null;
+      const flags = []; if (pr.ctrl) flags.push({ icon: 'shield-alert', color: '#5B6B6A', tip: L.bk_fCtrl }); if (pr.mark) flags.push({ icon: 'qr-code', color: '#5B6B6A', tip: L.bk_fMark });
+      return { name: pr.name, flags, qty: fN(l.qty), picked: pickStarted && pk != null ? fN(pk) : '—', pickColor: pkShort ? '#B45309' : pk != null ? '#172B2A' : '#647574', pickWeight: pkShort ? 600 : 400, pickTip: pkShort ? fill(L.bk_short, { n: fN(l.qty - pk) }) : '',
+        shipped: shQ != null ? fN(shQ) : '—', shipColor: shQ != null && shQ < l.qty ? '#B45309' : shQ != null ? '#172B2A' : '#647574', shipWeight: shQ != null && shQ < l.qty ? 600 : 400, shipTip: shQ != null && shQ < l.qty ? fill(L.bk_short, { n: fN(l.qty - shQ) }) : '',
+        price: fM(price), disc: (c.disc || 0) + '%', sum: fM(sum), ...(() => { const sp = D.lineSplit ? D.lineSplit(l, o) : [], open = this.state.lx === (l.id || li), nB = sp.filter(x => x.src === 'batch').length;
+          return { open, chev: open ? 'chevron-down' : 'chevron-right', bg: open ? '#F8FAFA' : '#FFFFFF', toggle: () => this.setState(st => ({ lx: st.lx === (l.id || li) ? null : (l.id || li) })), hasBp: nB > 0, bpNote: sp.length > 1 ? fill(L.y2_bpMix || '', { n: sp.length }) : (L.nq_tagBatch || ''), splitT: L.y2_splitT || '', splitFz: !!l.fz,
+            split: sp.map(x => ({ batch: x.batch || (L.y2_noBatch || '—'), exp: x.exp || '', qtyPrice: fN(x.qty) + ' × ' + fM(x.price), sum: fM(x.qty * x.price), isB: x.src === 'batch' })) }; })(), hasShort: shortBy[l.pid] > 0, shortText: fill(L.q9_short, { n: fN(shortBy[l.pid] || 0) }) };
+    });
+    // pick tab
+    const pS = evAt('pickStart'), pE = evAt('picked');
+    const queue = D.store.orders.filter(x => x.branch === o.branch && x.status === 'queued').map(x => ({ id: x.id, at: D.pDT((D.orderLog(x).filter(e => e.kind === 'approve' || e.kind === 'confirm').pop() || {}).at || (x.date + ' ' + x.time)) })).sort((a, b2) => a.at - b2.at);
+    const qPos = queue.findIndex(x => x.id === o.id) + 1;
+    const pickEmptyText = st === 'queued' ? fill(L.bk_pickEmpty, { n: qPos || 1 }) : L.bk_pickNotYet;
+    const pGrid = 'minmax(180px,1fr) 130px 104px 120px 88px 120px';
+    const pHead = [[L.bk_cProduct, 'left'], [L.bk_pBatch, 'left'], [L.bk_pExp, 'left'], [L.bk_pZone, 'left'], [L.bk_pQty, 'right'], [L.bk_pMark, 'left']].map(([label, align]) => ({ label, align }));
+    const planRows = []; qres.forEach(x => { const pr = D.prodById(x.pid) || {}; x.plan.forEach(b2 => planRows.push({ name: pr.name, batch: b2.batch, batchColor: '#172B2A', exp: b2.exp, zone: b2.zoneLabel || b2.zone, qty: fN(b2.qty), dev: '', edge: 'none', hasMark: false, mark: pr.mark ? L.bk_fMark : '—', markColor: '#647574' })); if (x.short > 0) planRows.push({ name: pr.name, batch: fill(L.q9_short, { n: fN(x.short) }), batchColor: '#B91C1C', exp: '—', zone: '—', qty: '—', dev: '', edge: 'inset 3px 0 0 #B91C1C', hasMark: false, mark: '—', markColor: '#647574' }); });
+    const pRows = preRes ? planRows : picks.map(x => ({ name: x.p ? x.p.name : '', batch: x.batch, batchColor: '#172B2A', exp: x.exp, zone: x.zone, qty: fN(x.qty), dev: x.dev || '', edge: x.dev ? 'inset 3px 0 0 #B45309' : 'none', hasMark: !!x.mark, mark: x.mark || '—', markColor: x.mark ? '#15803D' : '#647574' }));
+    const pickMeta = preRes ? (pS && st === 'picking' ? fill(L.bk_pickMetaRun, { who: pS.who, from: pS.at.slice(0, 5) + ' ' + pS.at.slice(11) }) + ' · ' : '') + L.q9_resT : pS ? (pE ? fill(L.bk_pickMeta, { who: pS.who, from: pS.at.slice(0, 5) + ' ' + pS.at.slice(11), to: pE.at.slice(11) }) : fill(L.bk_pickMetaRun, { who: pS.who, from: pS.at.slice(0, 5) + ' ' + pS.at.slice(11) })) : '';
+    // ship tab
+    const sh = o.ship || {}, shE = evAt('shipped'), dE = evAt('delivered');
+    const shipRows = [{ label: L.bk_shDriver, value: sh.driver || '—' }, { label: L.bk_shCar, value: sh.car || '—', mono: true }, { label: L.bk_shAt, value: shE ? shE.at.replace(' ', ', ') : '' }, { label: L.bk_shDel, value: dE ? dE.at.replace(' ', ', ') : L.bk_shOnWay }, { label: L.bk_shRecv, value: sh.receiver || '' }, ...(o.sale ? [{ label: L.j_saleNo, value: o.sale.no, mono: true }, { label: L.j_invNo, value: o.sale.inv, mono: true }] : []), ...(sh.trip ? [{ label: L.j_trip, value: sh.trip, mono: true }] : []), ...(sh.res ? [{ label: L.bk_shRes, value: ({ ok: L.dv_rOk, part: L.dv_rPart, fail: L.dv_rFail }[sh.res] || '') + (o.reason && st === 'undelivered' ? ' · ' + o.reason.replace(/^Yetkazilmadi: /, '') : '') + (o.ret ? ' · ' + fill(L.dv_retInfo, { q: fN(o.ret.qty), s: fM(o.ret.sum) + " so'm" }) : '') }] : []), ...(sh.cash ? [{ label: L.bk_shCash, value: fM(sh.cash.sum) + " so'm" + (sh.cash.note ? ' · ' + sh.cash.note : '') }] : [])];
+    const shipMedia = (sh.photos || []).map(p => ({ url: p.url, name: p.name || '' })).concat(sh.sign ? [{ url: sh.sign, name: L.bk_shSign }] : []);
+    // pay tab
+    let payKpis = [], payRows = [], payOpen = false, payAccept = () => {}, ahBanner = '';
+    if (shippedSt) {
+      const o2 = { ...o, lines: o.lines.map(l => ({ ...l, qty: l.qty - D.shortOf(o, l) })) }, sale = o.sale ? o.sale.sum - (o.ret ? o.ret.sum : 0) - (D.store.docs ? D.store.docs.qm.filter(q => q.status === 'posted' && q.saleNo === o.sale.no).reduce((a, q) => a + D.docSum(q), 0) : 0) : D.orderTotals(o2).total;
+      const lx = o.sale && D.saleLedger ? D.saleLedger(o.sale.no) : null, pays = lx ? lx.pays : [], paid = lx ? lx.paid : 0, left = lx ? lx.left : Math.max(0, sale);
+      const due = lx ? pD(lx.due) : (pD((shE ? shE.at : o.delivDate).slice(0, 10)) || 0) + (c.terms || 0) * DAY, late = lx ? lx.late : 0;
+      payOpen = !!lx && left > 0;
+      payAccept = () => { if (!D.can(p.role, 'payments.create')) return this.toast(L.tl_ocWho); D.store.payReq = { kind: 'mt', party: o.cust, saleNo: o.sale.no }; try { history.replaceState(null, '', '#'); } catch (e) {} location.hash = 'payments'; };
+      payKpis = [{ label: L.bk_paySale, value: fM(sale), color: '#172B2A' }, { label: L.bk_payPaid, value: fM(paid), color: '#15803D' }, { label: L.bk_payLeft, value: fM(left), color: left > 0 ? '#172B2A' : '#15803D', note: left > 0 ? '' : L.bk_payClosed, noteColor: '#15803D' },
+        { label: L.bk_payDue, value: fD(due), color: late > 0 ? '#B91C1C' : '#172B2A', note: late > 0 ? fill(L.bk_payLate, { n: late }) : fill(L.b_payTerm, { n: c.terms }), noteColor: late > 0 ? '#B91C1C' : '#647574' }];
+      payRows = pays.map(x => ({ no: x.no, isLink: D.can(p.role, 'payments.view'), isPlain: !D.can(p.role, 'payments.view'), open: () => { D.store.payReq = { open: x.no }; try { history.replaceState(null, '', '#'); } catch (e) {} location.hash = 'payments'; }, date: x.date, method: L['tl_m_' + x.method] || x.method, sum: fM(x.sum) }));
+      if (o.sale && D.store.docs) D.store.docs.qm.filter(q => q.status === 'posted' && q.saleNo === o.sale.no).forEach(q => { const qs = D.docSum(q); payRows.push({ no: q.no, isLink: false, isPlain: true, open: () => {}, date: q.postedAt.slice(0, 10), method: fill(L.qt_payRet || '', { n: q.no }), sum: fM(-qs) }); });
+      if (lx && lx.ahs && lx.ahs.length) { lx.ahs.forEach(h => { const a = D.advByNo(h.no) || {}; payRows.push({ no: h.no, isLink: true, isPlain: false, open: () => D.openDebt({ kind: 'mt', party: o.cust, branch: o.branch, adv: h.no }), date: a.date || '', method: L.qz_fromAdv, sum: fM(h.sum) }); });
+        ahBanner = lx.ahs.map(h => fill(L.qz_bAutoT, { s: fM(h.sum), n: h.no })).join(' · '); }
+    }
+    // history
+    const byDay = {}; [...log].reverse().forEach(e => { const d = e.at.slice(0, 10); (byDay[d] = byDay[d] || []).push(e); });
+    const ini = n => String(n || '?').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const hist = Object.keys(byDay).map(d => ({ label: d, items: byDay[d].map(e => {
+      const ch = []; if (e.kind === 'send') ch.push({ field: L.bk_hLevel, to: e.level === 'director' ? L.bk_lvDirector : L.bk_lvBranch }); if (e.note) ch.push({ field: L.bk_hNote, to: e.note }); if (e.reason) ch.push({ field: L.bk_hReason, to: e.reason }); if (e.released) ch.push({ field: L.bk_hStock, to: L.bk_released }); if (e.reasons && e.reasons.length) ch.push({ field: L.oe_hReasons, to: e.reasons.join('; ') }); if (e.fromDraft) ch.push({ field: L.bk_hStock, to: L.oe_hFromDraft });
+      if (e.kind === 'time' || e.kind === 'timeEdit') { ch.push({ field: L.q9_tmPick, to: e.pickMin + ' ' + L.q9_min }, { field: L.q9_tmMark, to: e.markMin + ' ' + L.q9_min }); if (e.from) ch.push({ field: L.q9_was, to: e.from + ' ' + L.q9_min }); }
+      if (e.kind === 'issue') { ch.push({ field: L.pp_issueF, to: L['pp_r_' + e.reason] || e.reason }); if (e.note) ch.push({ field: L.pp_noteF, to: e.note }); }
+      if (e.kind === 'pickDev') { ch.push({ field: L.bk_cProduct, to: e.product }, { field: L.q9_batchCh, to: e.from + ' → ' + e.to }); if (e.reason) ch.push({ field: L.bk_hReason, to: e.reason }); }
+      if (e.kind === 'picked' && e.spent != null) ch.push({ field: L.q9_resF, to: this.resText({ run: false, spent: e.spent, diff: e.diff == null ? 0 : e.diff }) });
+      return { kind: e.kind, initials: ini(e.who), name: e.who, action: L['bk_h_' + e.kind] || e.kind, time: e.at.slice(11), changes: ch }; }) }));
+    const pkv = this.pkVals(o, st);
+    const panelSum = ['draft', 'pending', 'queued', 'picking', 'marking', 'checking', 'docs', 'loading', 'ready'].includes(st) ? t.total : 0;
+    const tabs = [['order', L.bk_tOrder], ['pick', L.bk_tPick], ['ship', L.bk_tShip], ['pay', L.bk_tPay], ['hist', L.bk_tHist]].map(([k, label]) => ({ label, active: s.tab === k, count: k === 'hist' ? log.length : null, pick: () => this.setState({ tab: k }) }));
+    return {
+      ...base, badge: { label: L['b_st_' + st], icon: S.icon, fg: S.fg, bg: S.bg }, sub, primary, secondary, more, printItems: o.no ? D.printItems('order', o.no, L) : [],
+      noCancelNote: shippedSt, stepN: steps.length, steps,
+      isPending: st === 'pending', waitTitle: fill(L.bk_waitBanner, { w: waitText(D.waitMin(o), L) }), levelText: fill(L.bk_needLevel, { l: lvl }) + (cr.level === 'director' ? '' : ''), chips, hasOpNote: !!(o.mgrNote || (send && send.note)), opNote: o.mgrNote || (send && send.note) || '',
+      isRejected: st === 'rejected', rejText: fill(L.bk_rejBanner, { at: rej ? rej.at.replace(' ', ', ') : '', who: rej ? rej.who : '', r: o.reason || '—' }),
+      isCancelled: st === 'cancelled', cancTitle: fill(L.bk_cancBanner, { at: canc ? canc.at.replace(' ', ', ') : '', who: canc ? canc.who : '', r: o.reason || '—' }), cancText: o.ret && o.ret.full ? fill(L.j_failCard || '', { n: fN(o.ret.qty) }) : L.bk_released, isPartial: !!(o.ret && !o.ret.full), partialText: o.ret ? fill(L.j_partCard || '', { n: fN(o.ret.qty) }) : '',
+      layoutCols: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) 320px', panelSum, openPanel: () => this.setState({ panelOpen: true }), closePanel: () => this.setState({ panelOpen: false }), panelOpen: s.panelOpen && narrow,
+      tabs, tOrder: s.tab === 'order', tPick: s.tab === 'pick', tShip: s.tab === 'ship', tPay: s.tab === 'pay', tHist: s.tab === 'hist',
+      infoCols: narrow ? 1 : 3,
+      info1: [{ label: L.b_cNo, value: o.no, mono: true }, { label: L.b_hDate, value: `${o.date}, ${o.time || ''}` }, { label: L.bk_iOp, value: o.op }],
+      info2: [{ label: L.b_hWh, value: `${b.name} · ${o.wh}` }, { label: L.b_hDelivery, value: o.delivery === 'pickup' ? L.b_delPickupLong : L.b_delDeliver }, { label: L.b_hDelDate, value: o.delivDate }, { label: L.b_hAddress, value: o.delivery === 'pickup' ? '' : (o.address || c.address) }],
+      info3: [{ label: L.oe_hPayType, value: (L['oe_pay_' + D.payTypeOf(o)] || D.payTypeName(D.payTypeOf(o))) + ' · ' + fill(L.b_payTerm, { n: c.terms }) }, { label: L.b_gDisc, value: (c.disc || 0) + '%' }, { label: L.b_hNote, value: o.note || '' }],
+      lGrid, lHead, lRows, footBottom: narrow ? -24 : -24,
+      totItems: [{ label: L.b_tLines, value: fN(t.lines) }, { label: L.b_tQty, value: fN(t.qty) }, { label: L.b_tGross, value: fM(t.gross) }, { label: L.b_tDisc, value: fM(t.disc) }, { label: L.b_tVat, value: fM(t.vat) }], totValue: fM(t.total),
+      hasPicks: picks.length > 0, noPicks: picks.length === 0, pickMeta, pGrid, pHead, pRows, pickEmptyText,
+      hasShip: shippedSt, noShip: !shippedSt, shipRows, hasShipMedia: shipMedia.length > 0, shipMedia,
+      hasPay: shippedSt, noPay: !shippedSt, payOpen, payAccept, payKpis, payCols: narrow ? 2 : 4, payRows, noPayRows: payRows.length === 0, hasAhBanner: !!ahBanner, ahBanner,
+      hist, histFilters: [], ...this.finVals(o, st), hasPk: !!pkv, pk: pkv || {}, stop: e => e.stopPropagation(),
+      hasDlg: !!s.dlg, dlg: s.dlg, closeDlg: () => this.setState({ dlg: null }),
+      onDone: (n, k) => { this.setState({ dlg: null }); this.toast(fill(L['t_' + { approve: 'approved', reject: 'rejected', return: 'returned', cancel: 'cancelled' }[k]], { no: n.no })); if (k === 'return') p.onBack && p.onBack(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

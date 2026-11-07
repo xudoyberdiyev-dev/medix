@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Markirovka" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="PageHeader" title="{{ L.iv_mkTitle }}" count="{{ countLabel }}" subtitle="{{ L.iv_mkSub }}" hint-size="100%,34px"></dc-import>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="3">
+      <button onClick="{{ k.pick }}" aria-pressed="{{ k.active }}" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:#FFFFFF;border:1px solid {{ k.border }};border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);text-align:left;cursor:pointer;min-width:0;font:inherit;color:#172B2A" style-hover="border-color:#647574">
+        <span style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><span style="width:24px;height:24px;flex:none;border-radius:6px;background:{{ k.iconBg }};color:{{ k.iconFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ k.icon }}" size="14"></lucide-i></span>{{ k.label }}</span>
+        <span style="font-size:clamp(18px,1.6vw,24px);line-height:30px;font-weight:600;letter-spacing:-0.02em;color:{{ k.valColor }}">{{ k.value }}</span>
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ k.note }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.iv_mkSearch }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearF }}" clear-all-label="{{ L.qz_clearF }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+    <sc-if value="{{ showCodes }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="none" scroll-x="{{ true }}" min-width="1400" sticky-first="{{ true }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,360px"></dc-import>
+      <dc-import name="Pagination" total="{{ total }}" page="{{ page }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ showMis }}" hint-placeholder-val="{{ false }}">
+      <dc-import name="DataTable" columns="{{ mColumns }}" rows="{{ mRows }}" all-state="none" scroll-x="{{ true }}" min-width="1100" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,200px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ misEmpty }}"><dc-import name="EmptyState" icon="circle-check" tone="neutral" title="{{ L.iv_mkMisNoneT }}" text="{{ L.iv_mkMisNoneD }}" min-height="240" hint-size="100%,240px"></dc-import></sc-if>
+    <sc-if value="{{ noRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.qz_noResT }}" text="{{ L.qz_noResD }}" min-height="240" hint-size="100%,240px"></dc-import></sc-if>
+  </div>
+  <div style="height:48px"></div>
+
+  <sc-if value="{{ panelOpen }}">
+    <div onClick="{{ closePanel }}" style="position:fixed;inset:0;background:rgba(18,43,42,0.30);z-index:80"></div>
+    <aside role="dialog" aria-label="{{ L.iv_mkPanel }}" style="position:fixed;top:0;right:0;bottom:0;width:{{ panelW }};max-width:100vw;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);z-index:81;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:16px 16px 12px 20px;border-bottom:1px solid #EEF2F4">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.iv_mkPanel }}</span>
+          <span style="font-size:16px;line-height:22px;font-weight:600">{{ pc.name }}</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ pc.bg }};color:{{ pc.fg }};font-size:12px;line-height:22px;font-weight:500;display:flex;align-items:center;gap:4px"><lucide-i name="{{ pc.icon }}" size="13"></lucide-i>{{ pc.status }}</span><span style="font-size:12.5px;color:#5B6B6A">{{ pc.place }}</span></span>
+        </div>
+        <button onClick="{{ closePanel }}" aria-label="{{ L.qt_close }}" style="width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8"><lucide-i name="x" size="18"></lucide-i></button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:20px">
+        <div style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:18px;word-break:break-all">{{ pc.full }}</div>
+        <section style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:600">{{ L.iv_mkGs1 }}</span>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+            <sc-for list="{{ pc.parts }}" as="g">
+              <div style="display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid #E2E8F0;border-radius:8px;min-width:0">
+                <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#5B6B6A"><span style="height:18px;padding:0 5px;border-radius:4px;background:#EEF2F4;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:18px;color:#172B2A">({{ g.ai }})</span>{{ g.label }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;word-break:break-all">{{ g.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+        <section style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:600">{{ L.iv_mkHist }}</span>
+          <dc-import name="HistoryTimeline" groups="{{ pc.hist }}" empty-label="{{ L.qt_histEmpty }}" hint-size="100%,160px"></dc-import>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ pc.links }}" as="d"><button onClick="{{ d.open }}" style="display:flex;align-items:center;gap:4px;height:28px;padding:0 10px;border:1px solid #E2E8F0;border-radius:6px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:12px;color:#0F766E;cursor:pointer" style-hover="background:#F0FDFA">{{ d.no }}<lucide-i name="arrow-up-right" size="13"></lucide-i></button></sc-for>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;keeper&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;keeper&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,a)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const MS = { stock: ['warehouse', '#15803D', '#F0FDF4'], picked: ['package-check', '#1D4ED8', '#EFF6FF'], sold: ['shopping-cart', '#5B6B6A', '#EEF2F4'], quar: ['shield-alert', '#B45309', '#FFFBEB'], returned: ['undo-2', '#B45309', '#FFFBEB'], writeoff: ['package-minus', '#B91C1C', '#FEF2F2'], transit: ['truck', '#1D4ED8', '#EFF6FF'] };
+const short = c => { const x = c.replace(/\u001d/g, ''); return x.slice(0, 8) + '…' + x.slice(18, 26); };
+const PAGE = { KR: ['receipt', 'open:'], SV: ['orders', null], BY: ['orders', null], QM: ['creturns', null], HC: ['writeoff', null], OK: ['transfer', 'tr'], FS: ['transfer', 'tr'], ZK: ['transfer', 'tr'], IN: ['inventory', 'iv'] };
+class Component extends DCLogic {
+  state = { tab: 'all', q: '', fProd: [], fWh: [], page: 1, per: 50, panel: null, kpiTab: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._poll = setInterval(() => { const D = this.D; if (!D) return; if (D.store.navReq && D.store.navReq.page === 'marking') this.consume(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  consume() { const D = this.D, r = D.store.navReq; D.store.navReq = null; if (!r) return; if (r.code) { const m = D.markByCode(r.code); if (m) this.setState({ panel: m.code }); } if (r.bid) { const b = D.batches().find(x => x.id === r.bid); if (b) this.setState({ tab: 'all', q: b.batch, page: 1 }); } }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D) return;
+    const base = { tab: 'all', q: '', fProd: [], fWh: [], page: 1, panel: null };
+    if (!d) { if (D.store.demoDirty) D.restoreBase(); this.setState(base); if (D.store.navReq && D.store.navReq.page === 'marking') this.consume(); return; }
+    D.payReset(); this.setState(base);
+    if (d.k === 'mkPanel') { const m = D.marks().find(c => c.status === 'sold' && c.p.name === 'Demidrol 1% 1ml') || D.marks()[0]; return this.setState({ panel: m.code }); }
+    if (d.k === 'mkMismatch') { const b = D.batches().find(x => x.id === 'O7'); D.store.markAdj = { ...(D.store.markAdj || {}), [b ? b.id : 'O7']: -2 }; D.store.v++; return this.setState({ tab: 'mis' }); }
+  }
+  openDoc(no) { const p = this.props, D = this.D, pre = String(no).slice(0, 2), m = PAGE[pre]; if (!m) return; if (m[1] === 'tr') D.store.trReq = { open: no }; else if (m[1] === 'iv') D.store.navReq = { page: 'inventory', open: no }; p.onNavigate && p.onNavigate(m[0], m[1] === 'open:' ? 'open:' + no : undefined); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, narrow, kpis: [], views: [], tRows: [], tColumns: [], mRows: [], mColumns: [], fbFilters: [], fbLabels: {}, pc: { parts: [], hist: [], links: [] } };
+    if (!D || !D.marks) return base;
+    const my = p.branch && p.branch !== 'ALL' ? p.branch : null, all = D.marks().filter(m => !my || m.branch === my), mis = D.markMismatch(my);
+    const inWh = all.filter(m => ['stock', 'picked', 'quar', 'returned'].includes(m.status)), today = all.filter(m => m.hist.some(h => h && h.date === D.TODAY)).length;
+    const VS = [['all', null], ...Object.keys(MS).map(k => [k, [k]]), ['mis', 'mis']], cur = VS.find(v => v[0] === s.tab) || VS[0];
+    const q = s.q.trim().replace(/[\s()]/g, '').toLowerCase();
+    const fit = m => (!cur[1] || cur[1] === 'mis' || cur[1].includes(m.status)) && (!q || `${m.code.replace(/\u001d/g, '')} ${m.p.name} ${m.batch} ${m.gtin} ${m.serial}`.toLowerCase().includes(q)) && (!s.fProd.length || s.fProd.includes(m.pid)) && (!s.fWh.length || s.fWh.includes(m.branch + '|' + m.wh));
+    const rows = cur[1] === 'mis' ? [] : all.filter(fit), pages = Math.max(1, Math.ceil(rows.length / s.per)), page = Math.min(s.page, pages), vis = rows.slice((page - 1) * s.per, page * s.per);
+    const tColumns = [{ key: 'c', label: L.iv_mkCode, width: '200px' }, { key: 'p', label: L.qt_gProduct, width: 'minmax(200px,1.4fr)' }, { key: 'g', label: 'GTIN', width: '150px' }, { key: 's', label: L.iv_mkSerial, width: '110px' }, { key: 'b', label: L.qt_gBatch, width: '120px' }, { key: 'e', label: L.qt_gExp, width: '104px' }, { key: 'w', label: L.iv_mkPlace, width: 'minmax(200px,1fr)' }, { key: 'st', label: L.qt_cStatus, width: '180px' }];
+    const tRows = vis.map(m => { const S = MS[m.status]; return { id: m.code, onOpen: () => this.setState({ panel: m.code }), onToggle: () => {}, cells: [{ type: 'mono', text: short(m.code) }, { type: 'text', text: m.p.name }, { type: 'mono', text: m.gtin, color: '#5B6B6A' }, { type: 'mono', text: m.serial, color: '#5B6B6A' }, { type: 'mono', text: m.batch }, { type: 'text', text: m.exp, color: '#5B6B6A' }, { type: 'text', text: `${D.whName(m.branch, m.wh)} · ${m.zone}`, color: '#5B6B6A' }, { type: 'status', text: L['iv_ms_' + m.status], icon: S[0], fg: S[1], bg: S[2] }], actions: [{ label: L.iv_mkOpen, icon: 'scan-barcode', pick: () => this.setState({ panel: m.code }) }] }; });
+    const mColumns = [{ key: 'b', label: L.qt_gBatch, width: '130px' }, { key: 'p', label: L.qt_gProduct, width: 'minmax(200px,1.4fr)' }, { key: 'w', label: L.iv_mkPlace, width: 'minmax(200px,1fr)' }, { key: 'q', label: L.iv_mkQty, width: '100px', align: 'right' }, { key: 'c', label: L.iv_mkCodes, width: '100px', align: 'right' }, { key: 'd', label: L.iv_cDiff, width: '100px', align: 'right' }];
+    const mRows = mis.map(x => ({ id: x.b.id, onOpen: () => p.onNavigate && p.onNavigate('stock', { panel: x.b.id }), onToggle: () => {}, cells: [{ type: 'mono', text: x.b.batch }, { type: 'text', text: x.b.p.name }, { type: 'text', text: `${D.whName(x.b.branch, x.b.wh)} · ${x.b.zoneLabel}`, color: '#5B6B6A' }, { type: 'text', text: fN(x.qty) }, { type: 'text', text: fN(x.codes) }, { type: 'text', text: (x.diff > 0 ? '+' : '−') + fN(Math.abs(x.diff)), weight: 600, color: '#B45309' }], actions: [{ label: L.iv_mkToBatch, icon: 'arrow-up-right', pick: () => p.onNavigate && p.onNavigate('stock', { panel: x.b.id }) }] }));
+    const kp = (label, icon, fg, bg, value, note, tab, warn) => ({ label, icon, iconFg: fg, iconBg: bg, value, note, valColor: warn ? '#B45309' : '#172B2A', active: s.tab === tab, border: s.tab === tab ? '#0D9488' : '#E2E8F0', pick: () => this.setState({ tab: s.tab === tab ? 'all' : tab, page: 1 }) });
+    const kpis = [kp(L.iv_mkKWh, 'warehouse', '#0F766E', '#DDF5EE', fN(inWh.length), L.iv_mkKWhN, 'stock'), kp(L.iv_mkKToday, 'scan-line', '#1D4ED8', '#EFF6FF', fN(today), L.iv_mkKTodayN, 'all'), kp(L.iv_mkKMis, 'triangle-alert', '#B45309', '#FFFBEB', fill(L.qz_nCnt, { n: mis.length }), L.iv_mkKMisN, 'mis', mis.length > 0)];
+    const opt = (arr, key, lab) => { const m = new Map(); arr.forEach(x => { const k = key(x); if (!m.has(k)) m.set(k, { value: k, label: lab(x), count: 0 }); m.get(k).count++; }); return [...m.values()].sort((a, b) => String(a.label).localeCompare(String(b.label))); };
+    const fbFilters = [{ label: L.qt_gProduct, options: opt(all, m => m.pid, m => m.p.name), selected: s.fProd, onChange: v => this.setState({ fProd: v, page: 1 }) }, { label: L.iv_hWh, options: opt(all, m => m.branch + '|' + m.wh, m => D.whName(m.branch, m.wh)), selected: s.fWh, onChange: v => this.setState({ fWh: v, page: 1 }) }];
+    const pm = s.panel ? D.marks().find(m => m.code === s.panel) : null, S = pm ? MS[pm.status] : MS.stock;
+    const hist = pm ? [{ label: pm.p.name + ' · ' + pm.batch, items: pm.hist.filter(Boolean).slice().reverse().map(h => ({ kind: h.kind, initials: String(h.no || '—').slice(0, 2), name: h.label, action: h.no || '', time: h.date || '', changes: [] })) }] : [];
+    return {
+      ...base, countLabel: fN(all.length), kpis, views: VS.map(([k, f]) => ({ label: L['iv_ms_' + k] || (k === 'all' ? L.iv_vAll : L.iv_mkMis), count: f === 'mis' ? mis.length : all.filter(m => !f || f.includes(m.status)).length, tone: f === 'mis' && mis.length ? 'warning' : null, active: s.tab === k, pick: () => this.setState({ tab: k, page: 1 }) })),
+      q: s.q, setQ: v => { const m = D.markByCode(v); this.setState({ q: m ? '' : v, page: 1, ...(m ? { panel: m.code } : {}) }); }, fbFilters, fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      hasFilters: !!(s.fProd.length || s.fWh.length), clearF: () => this.setState({ fProd: [], fWh: [], q: '' }),
+      showCodes: cur[1] !== 'mis' && rows.length > 0, showMis: cur[1] === 'mis' && mis.length > 0, misEmpty: cur[1] === 'mis' && !mis.length, noRes: cur[1] !== 'mis' && !rows.length,
+      tColumns, tRows, mColumns, mRows, total: rows.length, page, per: s.per, setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 }),
+      panelOpen: !!pm, panelW: narrow ? '70%' : '480px', closePanel: () => this.setState({ panel: null }),
+      pc: pm ? { name: pm.p.name, status: L['iv_ms_' + pm.status], icon: S[0], fg: S[1], bg: S[2], place: `${D.whName(pm.branch, pm.wh)} · ${pm.zone}`, full: pm.code.replace(/\u001d/g, '<GS>'),
+        parts: [{ ai: '01', label: 'GTIN', value: pm.gtin }, { ai: '21', label: L.iv_mkSerial, value: pm.serial }, { ai: '17', label: L.qt_gExp, value: pm.exp }, { ai: '10', label: L.qt_gBatch, value: pm.batch }], hist,
+        links: [...new Set(pm.hist.filter(h => h && h.no).map(h => h.no))].map(no => ({ no, open: () => { this.setState({ panel: null }); this.openDoc(no); } })) } : base.pc
+    };
+  }
+}
+</script>
+</body>
+</html>

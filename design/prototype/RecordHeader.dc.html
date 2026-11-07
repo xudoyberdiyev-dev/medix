@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:Inter,system-ui,sans-serif;color:#172B2A">
+  <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+    <nav style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px"><button onClick="{{ onParent }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ parentLabel }}</button><span style="color:#647574">/</span><span style="color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</span></nav>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ title }}</h1>
+      <sc-for list="{{ badgeList }}" as="b"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ b.bg }};color:{{ b.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ b.icon }}" size="12"></lucide-i>{{ b.label }}</span></sc-for>
+    </div>
+    <sc-if value="{{ hasMeta }}"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;line-height:18px;color:#5B6B6A">{{ meta }}<sc-if value="{{ hasMono }}"><span style="color:#647574">·</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ mono }}</span></sc-if></div></sc-if>
+  </div>
+  <sc-if value="{{ hasActions }}">
+    <dc-import name="PageHeader" title="" more="{{ more }}" primary="{{ primary }}" secondary="{{ secondary }}" more-label="{{ moreLabel }}" hint-size="160px,34px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ readOnly }}"><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 8px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:12px;font-weight:500"><lucide-i name="eye" size="14"></lucide-i>{{ readOnlyLabel }}</span></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:120},&quot;parentLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Mahsulotlar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onParent&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Demidrol 1% 1ml&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;badges&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,fg,bg}[]&quot;},&quot;meta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Nobel · Antigistaminlar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mono&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;8699540090123&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;more&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;[]&quot;},&quot;primary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,pick}&quot;},&quot;secondary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;[]&quot;},&quot;moreLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Boshqa amallar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;readOnly&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;readOnlyLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Faqat ko'rish&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return { badgeList: p.badges || [], hasMeta: !!p.meta, hasMono: !!p.mono, readOnly: !!p.readOnly,
+      hasActions: !p.readOnly && !!(p.primary || (p.more && p.more.length) || (p.secondary && p.secondary.length)) };
+  }
+}
+</script>
+</body>
+</html>

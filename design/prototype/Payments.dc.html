@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="To'lovlar" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ L.tl_title }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" secondary="{{ hdrSecondary }}" hint-size="100%,34px"></dc-import>
+  <div style="display:grid;grid-template-columns:repeat({{ kpiCols }},minmax(0,1fr));gap:12px">
+    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+      <button onClick="{{ k.pick }}" aria-pressed="{{ k.active }}" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:#FFFFFF;border:1px solid {{ k.border }};border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);text-align:left;cursor:pointer;min-width:0;font:inherit;color:#172B2A;transition:border-color 120ms ease-out" style-hover="border-color:#647574">
+        <span style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><span style="width:24px;height:24px;flex:none;border-radius:6px;background:{{ k.iconBg }};color:{{ k.iconFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ k.icon }}" size="14"></lucide-i></span>{{ k.label }}</span>
+        <span style="font-size:24px;line-height:30px;font-weight:600;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ k.value }}</span>
+        <span style="font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ k.note }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.tl_search }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" date-filter="{{ dateFilter }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.tl_clearF }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="none" scroll-x="{{ scrollX }}" min-width="{{ tMinWidth }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 24px;min-height:48px;padding:10px 20px;background:#F8FAFA;border-top:1px solid #E2E8F0">
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ L.tl_totNote }}</span>
+        <span style="display:flex;align-items:baseline;gap:8px 24px;flex-wrap:wrap;font-size:13px;line-height:18px">
+          <span style="display:flex;gap:6px;white-space:nowrap"><span style="color:#5B6B6A">{{ L.tl_totIn }}:</span><span style="font-weight:500">{{ totIn }}</span></span>
+          <span style="display:flex;gap:6px;white-space:nowrap"><span style="color:#5B6B6A">{{ L.tl_totOut }}:</span><span style="font-weight:500">{{ totOut }}</span></span>
+          <span style="display:flex;gap:8px;align-items:baseline;white-space:nowrap;padding-left:20px;border-left:1px solid #E2E8F0"><span style="color:#5B6B6A">{{ L.tl_totNet }}:</span><span style="font-size:16px;line-height:22px;font-weight:600">{{ totNet }}</span></span>
+        </span>
+      </div>
+      <dc-import name="Pagination" total="{{ total }}" page="{{ page }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="wallet" tone="brand" title="{{ L.tl_emptyT }}" text="{{ L.tl_emptyD }}" primary="{{ hdrPrimary }}" min-height="340" hint-size="100%,340px"></dc-import></sc-if>
+    <sc-if value="{{ noRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.tl_noResT }}" text="{{ L.tl_noResD }}" primary="{{ clearAction }}" min-height="300" hint-size="100%,300px"></dc-import></sc-if>
+  </div>
+  <div style="height:48px"></div>
+</div>
+</sc-if>
+<sc-if value="{{ isDoc }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="PaymentDoc" kind="{{ doc.kind }}" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" user-name="{{ userName }}" initial="{{ doc.initial }}" req="{{ doc.req }}" doc-key="{{ doc.key }}" act="{{ doc.act }}" narrow="{{ narrow }}" on-back="{{ backToList }}" on-toast="{{ toastFn }}" on-navigate="{{ navFn }}" on-open-sale="{{ openSale }}" on-open-rc="{{ openRc }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cashier&quot;,&quot;accountant&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;accountant&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Jasur Ergashev&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,arg)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const r2 = x => Math.round(x * 100) / 100;
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const C2L = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 's', ч: 'ch', ш: 'sh', щ: 'sh', ъ: "'", ы: 'i', ь: '', э: 'e', ю: 'yu', я: 'ya', ў: "o'", қ: 'q', ғ: "g'", ҳ: 'h' };
+const toLat = s => String(s || '').toLowerCase().replace(/[ʻʼ‘’`]/g, "'").split('').map(ch => C2L[ch] != null ? C2L[ch] : ch).join('');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], pending: ['clock', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
+const CLEAR = { fParty: [], fMethod: [], fAcct: [], fStatus: [], fBy: [], date: { from: null, to: null }, q: '', page: 1 };
+class Component extends DCLogic {
+  state = { view: 'list', tab: 'all', ...CLEAR, per: 25, doc: null, empty: false, ready: !!window.MedixData };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  // T10a3 (1.7.4): ?open= — hujjatning o'zi ochiladi («Ko'rib chiqish»); ?kind=mt|yt, ?status=, ?new=mt|yt&acct=
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'payments' || u.n === this._un || this.props.demo) return; this._un = u.n; const P = u.params || {};
+    if (P.open) { D.store.payReq = null; const x = D.payByNo(P.open); if (x) return this.open(x); }
+    if (P.new === 'mt' || P.new === 'yt') { if (!this.canCreate()) return this.toast(this.L.tl_whoCreate); return this.openNew(Object.assign({ kind: P.new }, P.acct ? { acct: P.acct } : {})); }
+    const tab = P.status === 'pending' ? 'pending' : P.status === 'cancelled' ? 'cancelled' : P.kind === 'mt' ? 'in' : P.kind === 'yt' ? 'out' : 'all';
+    this.setState({ view: 'list', doc: null, tab, fParty: [], fMethod: [], fAcct: [], fBy: [], date: { from: null, to: null }, q: P.q || (P.open && !D.payByNo(P.open) ? P.open : ''), page: 1, fStatus: P.status && !['pending', 'cancelled'].includes(P.status) ? [P.status] : [], ...(pD(P.from) != null ? { date: { from: P.from, to: pD(P.to) != null ? P.to : P.from } } : {}), ...(P.acct ? { fAcct: String(P.acct).split(',') } : {}), ...(P.method ? { fMethod: [P.method] } : {}) }); } // Y4: ?from=&to=&acct=&method=
+  componentDidMount() {
+    this._url = setInterval(() => this.applyUrl(), 250);
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.setState({ ready: true }); this.boot(); } }, 60); else this.boot();
+    this._poll = setInterval(() => { const D = this.D; if (!D) return; if (D.store.payReq) this.consumeReq(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  br() { const b = this.props.branch; return b && b !== 'ALL' ? b : 'TSH'; }
+  open(initial, act) { this.setState({ view: 'doc', doc: { kind: initial.kind, initial, req: null, act: act || '', key: Date.now() } }); }
+  openNew(req, act) { this.setState({ view: 'doc', doc: { kind: req.kind || 'mt', initial: null, req, act: act || '', key: Date.now() } }); }
+  canCreate() { return this.D.can(this.props.role, 'payments.create'); }
+  newDoc(kind) { if (!this.canCreate()) return this.toast(this.L.tl_whoCreate); this.openNew({ kind }); }
+  consumeReq() {
+    const D = this.D, r = D.store.payReq; D.store.payReq = null; if (!r) return;
+    if (r.open) { const x = D.payByNo(r.open); if (x) this.open(x); return; }
+    this.openNew(r);
+  }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D) return;
+    if (!d) { if (D.store.demoDirty || !D.store.era) D.restoreBase(); if (D.store.payReq) return this.consumeReq(); return this.setState({ view: 'list', doc: null, empty: false }); }
+    D.payReset(); const k = d.k, byNo = (no, act) => { const x = D.payByNo(no); if (x) this.open(x, act); };
+    const base = { ...CLEAR, tab: 'all', empty: false, view: 'list', doc: null };
+    if (k === 'list') return this.setState(base);
+    if (k === 'empty') return this.setState({ ...base, empty: true });
+    if (k === 'nores') return this.setState({ ...base, q: 'MT-TSH-000999' });
+    this.setState(base);
+    if (k === 'auto') return this.openNew({ kind: 'mt', party: 2, method: 'bank', acct: 'B-TSH-1', sum: 40000000, payNo: '0702' });
+    if (k === 'manual') return this.openNew({ kind: 'mt', party: 2, method: 'bank', acct: 'B-TSH-1', sum: 40000000, payNo: '0702', manual: [['SV-TSH-000210', 25000000], ['SV-TSH-000167', 15000000]] });
+    if (k === 'adv') return this.openNew({ kind: 'mt', party: 13, method: 'cash', acct: 'K-TSH', sum: 15000000 });
+    if (k === 'noopen') {
+      const L0 = D.custLedger(13), alloc = L0.invoices.filter(x => x.left > 0).map(x => ({ no: x.no, sum: x.left }));
+      const p0 = D.savePay({ kind: 'mt', branch: 'TSH', date: D.TODAY, party: 13, method: 'cash', acct: 'K-TSH', sum: 15000000, alloc, status: 'draft', payNo: '', bankDate: '', checkNo: '', note: '', createdBy: 'Nigora Xasanova', createdAt: '04.10.2026 15:10', log: [{ kind: 'create', who: 'Nigora Xasanova', at: '04.10.2026 15:10' }] });
+      D.postPay(p0, 'Nigora Xasanova');
+      return this.openNew({ kind: 'mt', party: 13, method: 'cash', acct: 'K-TSH', sum: 2000000 });
+    }
+    if (k === 'errors') return this.openNew({ kind: 'mt', method: 'bank', noAcct: true }, 'tryPost');
+    if (k === 'posted') return byNo('MT-TSH-000010');
+    if (k === 'cancelDlg') return byNo('MT-TSH-000010', 'cancel');
+    if (k === 'ytPending') return byNo('YT-TSH-000005');
+    if (k === 'ytCash') return this.openNew({ kind: 'yt', party: 'Nobel Pharmsanoat', method: 'cash', acct: 'K-TSH', sum: 5000000 }, 'tryPost');
+    if (k === 'ytCancelled') return byNo('YT-TSH-000006');
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, narrow, role: p.role, branch: p.branch, userName: p.userName, isList: true, isDoc: false, kpis: [], views: [], tRows: [], tColumns: [], fbFilters: [], fbLabels: {}, doc: {}, toastFn: t => this.toast(t) };
+    if (!D) return base;
+    const nav = (k, a) => p.onNavigate && p.onNavigate(k, a);
+    const docVals = { doc: s.doc || {}, backToList: () => this.setState({ view: 'list', doc: null }), navFn: nav,
+      openSale: oid => { D.store.openReq = oid; nav('orders'); }, openRc: no => nav('receipt', 'open:' + no) };
+    if (s.view === 'doc' && s.doc) return { ...base, ...docVals, isList: false, isDoc: true };
+    const brAll = !p.branch || p.branch === 'ALL', inBr = x => brAll || x.branch === p.branch;
+    const all = s.empty ? [] : D.store.pays.filter(inBr);
+    const pName = x => x.kind === 'mt' ? (D.custById(x.party) || {}).name || '—' : x.party;
+    const allocOf = x => r2((x.alloc || []).reduce((a, y) => a + (y.sum || 0), 0));
+    const today = D.TODAY, posted = all.filter(x => x.status === 'posted');
+    const sumOf = a => r2(a.reduce((t, x) => t + x.sum, 0));
+    const inT = posted.filter(x => x.kind === 'mt' && x.date === today), outT = posted.filter(x => x.kind === 'yt' && x.date === today), pend = all.filter(x => x.status === 'pending'), drafts = all.filter(x => x.status === 'draft');
+    const VS = [['all', null], ['in', x => x.kind === 'mt'], ['out', x => x.kind === 'yt'], ['pending', x => x.status === 'pending'], ['cancelled', x => x.status === 'cancelled']];
+    const cur = VS.find(v => v[0] === s.tab) || VS[0];
+    const q = toLat(s.q.trim()), from = pD(s.date.from), to = pD(s.date.to);
+    const fit = x => (!cur[1] || cur[1](x)) && (!q || toLat(`${x.no} ${pName(x)} ${x.payNo || ''} ${x.checkNo || ''}`).includes(q)) && (!s.fParty.length || s.fParty.includes(pName(x))) && (!s.fMethod.length || s.fMethod.includes(x.method))
+      && (!s.fAcct.length || s.fAcct.includes(x.acct)) && (!s.fStatus.length || s.fStatus.includes(x.status)) && (!s.fBy.length || s.fBy.includes(x.createdBy)) && (!from || (pD(x.date) >= from && pD(x.date) <= (to || from)));
+    const rows = all.filter(fit).sort((a, b) => (pD(b.date) - pD(a.date)) || (b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0));
+    const total = rows.length, pages = Math.max(1, Math.ceil(total / s.per)), page = Math.min(s.page, pages), shown = rows.slice((page - 1) * s.per, page * s.per);
+    const tColumns = [{ key: 'no', label: L.tl_cNo, width: '140px' }, { key: 'date', label: L.tl_cDate, width: '108px' }, { key: 'type', label: L.tl_cType, width: '96px' }, { key: 'party', label: L.tl_cParty, width: 'minmax(170px,1fr)' }, { key: 'm', label: L.tl_cMethod, width: '136px' }, { key: 'acct', label: L.tl_cAcct, width: '170px' },
+      { key: 'sum', label: L.tl_cSum, width: '136px', align: 'right' }, { key: 'alloc', label: L.tl_cAlloc, width: '128px', align: 'right' }, { key: 'adv', label: L.tl_cAdv, width: '128px', align: 'right' }, { key: 'st', label: L.tl_cStatus, width: '140px' }, { key: 'by', label: L.tl_cBy, width: '136px' }];
+    const tRows = shown.map(x => { const S = ST[x.status], dead = x.status === 'cancelled', col = dead ? '#647574' : null, a = allocOf(x), adv = r2(x.sum - a), ac = D.accById(x.acct), out = x.kind === 'yt';
+      const c = x.kind === 'mt' ? D.custById(x.party) || {} : D.supByName(x.party) || {};
+      return { id: x.id, onOpen: () => this.open(x), onToggle: () => {},
+        cells: [{ type: 'mono', text: x.no, color: col }, { type: 'text', text: x.date, color: col }, { type: 'icontext', icon: out ? 'arrow-up-right' : 'arrow-down-left', text: out ? L.tl_out : L.tl_in, color: col },
+          { type: 'name', text: pName(x), sub: x.kind === 'mt' ? c.region || '' : `${L.tl_sStir} ${c.stir || ''}`, weight: 500, color: col }, { type: 'text', text: L['tl_m_' + x.method], color: col || '#5B6B6A' }, { type: 'link', text: ac ? ac.name : '—', color: col, pick: () => { if (!ac) return; D.store.cashReq = { acct: ac.id, date: x.date }; nav(ac.kind === 'cash' ? 'cash' : 'bank'); } },
+          { type: 'text', text: fM(out ? -x.sum : x.sum), color: col, weight: 600 }, { type: 'text', text: x.auto ? '—' : fM(a), color: col || '#5B6B6A' }, (() => { const ah = adv > 0 && !x.auto && !dead && D.advsOf ? D.advsOf(x.kind, x.party, x.branch).filter(h => h.status === 'posted' && pD(h.date) >= pD(x.date))[0] : null;
+            return ah ? { type: 'link', text: ah.no, pick: () => D.openDebt({ kind: x.kind, party: x.party, branch: x.branch, adv: ah.no }) } : { type: 'text', text: adv > 0 && !x.auto && !dead ? fM(adv) : '—', color: col || (adv > 0 && !x.auto ? '#B45309' : '#647574') }; })(),
+          { type: 'status', text: L['tl_st_' + x.status], icon: S[0], fg: S[1], bg: S[2] }, { type: 'text', text: x.createdBy, color: '#5B6B6A' }],
+        actions: [{ label: L.tl_open, icon: 'arrow-up-right', pick: () => this.open(x) }] }; });
+    const pr = rows.filter(x => x.status === 'posted'), tIn = sumOf(pr.filter(x => x.kind === 'mt')), tOut = sumOf(pr.filter(x => x.kind === 'yt'));
+    const uniq = (arr, f) => [...new Set(arr.map(f))];
+    const opt = (vals, lab, key) => vals.map(v => ({ value: v, label: lab(v), count: all.filter(x => key(x) === v).length }));
+    const fbFilters = [
+      { label: L.tl_fParty, options: opt(uniq(all, pName).sort(), v => v, pName), selected: s.fParty, onChange: v => this.setState({ fParty: v, page: 1 }) },
+      { label: L.tl_fMethod, options: opt(['cash', 'bank', 'online'], v => L['tl_m_' + v], x => x.method), selected: s.fMethod, onChange: v => this.setState({ fMethod: v, page: 1 }) },
+      { label: L.tl_fAcct, options: opt(uniq(all, x => x.acct), v => (D.accById(v) || {}).name || v, x => x.acct), selected: s.fAcct, onChange: v => this.setState({ fAcct: v, page: 1 }) },
+      { label: L.tl_fStatus, options: opt(['draft', 'pending', 'posted', 'cancelled'], v => L['tl_st_' + v], x => x.status), selected: s.fStatus, onChange: v => this.setState({ fStatus: v, page: 1 }) },
+      { label: L.tl_fBy, options: opt(uniq(all, x => x.createdBy).sort(), v => v, x => x.createdBy), selected: s.fBy, onChange: v => this.setState({ fBy: v, page: 1 }) }];
+    const hasFilters = !!(s.fParty.length || s.fMethod.length || s.fAcct.length || s.fStatus.length || s.fBy.length || s.date.from);
+    const clear = () => this.setState({ ...CLEAR, tab: 'all' });
+    const kp = (k, label, icon, fg, bg, value, note, pick, active) => ({ label, icon, iconFg: fg, iconBg: bg, value, note, pick, active, border: active ? '#0D9488' : '#E2E8F0' });
+    const dToday = s.date.from === today && (!s.date.to || s.date.to === today);
+    const kpis = [
+      kp('in', L.tl_kIn, 'arrow-down-left', '#15803D', '#F0FDF4', fM(sumOf(inT)), fill(L.tl_kDocs, { n: inT.length }), () => this.setState({ ...CLEAR, tab: 'in', fStatus: ['posted'], date: { from: today, to: today } }), s.tab === 'in' && dToday),
+      kp('out', L.tl_kOut, 'arrow-up-right', '#5B6B6A', '#EEF2F4', fM(sumOf(outT)), fill(L.tl_kDocs, { n: outT.length }), () => this.setState({ ...CLEAR, tab: 'out', fStatus: ['posted'], date: { from: today, to: today } }), s.tab === 'out' && dToday),
+      kp('pend', L.tl_kPending, 'clock', '#B45309', '#FFFBEB', fill(L.tl_kN, { n: pend.length }), fM(sumOf(pend)), () => this.setState({ ...CLEAR, tab: 'pending' }), s.tab === 'pending'),
+      kp('draft', L.tl_kDrafts, 'file-pen', '#5B6B6A', '#F8FAFA', fill(L.tl_kN, { n: drafts.length }), fM(sumOf(drafts)), () => this.setState({ ...CLEAR, tab: 'all', fStatus: ['draft'] }), s.tab === 'all' && s.fStatus.length === 1 && s.fStatus[0] === 'draft')];
+    return {
+      ...base, ...docVals, isList: true, isDoc: false, countLabel: fN(all.length),
+      hdrPrimary: { label: L.tl_newMt, icon: 'plus', pick: () => this.newDoc('mt') }, hdrSecondary: [{ label: L.tl_newYt, icon: 'arrow-up-right', pick: () => this.newDoc('yt') }],
+      kpis, kpiCols: narrow ? 2 : 4,
+      views: VS.map(([k, f]) => { const n = all.filter(x => !f || f(x)).length; return { label: L['tl_v' + k[0].toUpperCase() + k.slice(1)], count: n, tone: k === 'pending' && n ? 'warning' : null, active: s.tab === k, pick: () => this.setState({ tab: k, page: 1 }) }; }),
+      q: s.q, setQ: v => this.setState({ q: v, page: 1 }), fbFilters, fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      dateFilter: { label: L.tl_fDate, from: s.date.from, to: s.date.to, onChange: v => this.setState({ date: v, page: 1 }), labels: { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.k_drWeek, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext } },
+      hasFilters, clearFilters: clear, clearAction: { label: L.tl_clearF, icon: 'filter-x', pick: clear },
+      showTable: total > 0, listEmpty: all.length === 0, noRes: all.length > 0 && total === 0, tColumns, tRows, scrollX: true, tMinWidth: 1500,
+      totIn: fM(tIn), totOut: fM(-tOut), totNet: fM(tIn - tOut), total, page, per: s.per, setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -3,10 +3,14 @@
 Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testlar → CI yashil → hisobot. Bosqich tugasa — `develop → main` PR.
 
 ## Egasi talabi (07.11.2026 21:45) — MUDDAT 11.11.2026
-- **UI prototip bilan AYNAN bir xil bo'lishi shart** (Claude Design prototipi → `design/prototype/`, egasi zip yuboradi). Har ekran prototip bilan yonma-yon solishtirilib qayta quriladi; Direktor panelidan boshlanadi.
+- **UI prototip bilan AYNAN bir xil bo'lishi shart** (Claude Design prototipi → `design/prototype/` ✅ 07.11 22:45 qo'shildi; ko'rish: `scripts/prototype-shot.cjs`, yo'riqnoma: `design/prototype/README.md`). Har ekran prototip bilan yonma-yon solishtirilib qayta quriladi; Direktor panelidan boshlanadi.
 - **Prototipdagi UI'da bor, lekin backendda yo'q qismlar — majburiy yaratiladi** (API + baza + test). Har ekranni moslashda «UI'da bor / backendda yo'q» ro'yxati tuzilib, bajariladi.
 - Navbat: E1–E6 → prototip kelgach UI moslash (ekranma-ekran) + yetishmagan backend → SmartUp mijozlar importi (namuna kelgach) → yakuniy e2e → PR.
 - Loyiha **11.11.2026** gacha to'liq tugatilishi kerak.
+
+### UI moslash (prototip → haqiqiy) — har ekran AYNAN, yetishmagan backend bilan
+Navbat: Direktor bosh sahifasi → boshqa rollar bosh sahifalari → Buyurtmalar/OrderEntry/OrderCard → Kirim → Qoldiqlar/Muddat → Mahsulotlar/Narxlar/Kontragentlar → Pul (To'lovlar, Kassa, Kunni yopish, Bank, Qarzlar, Akt sverka) → panellar (Ombor mudiri, Yig'uvchi, Markirovkachi, Haydovchi, Kassir) → Jo'natish/Reys → Ko'chirishlar/Inventarizatsiya/BQ → Hisobotlar → Sozlamalar/Admin/Usta/Profil → Login.
+- [ ] Direktor bosh sahifasi (Home + screenshots/t10b-dir*)
 
 ## Egasi javoblari (07.11.2026 18:12) — BIRINCHI NAVBATDA BAJARILADI
 Bu javoblar SPEC/T12 dan ustun. Har birini kod + test + e2e bilan joriy qiling, PLAN'da belgilang:
