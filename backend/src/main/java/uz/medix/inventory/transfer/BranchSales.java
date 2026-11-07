@@ -1,7 +1,6 @@
 package uz.medix.inventory.transfer;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -45,7 +44,7 @@ import uz.medix.shared.security.Actor;
 
 /**
  * FS — filiallararo savdo (SPEC 2: guruh ichida tannarxda, HF va QQS bilan; guruh ichidagi qarz umumiy jamiga kirmaydi).
- * Qoralama (sotuvchi filial) → «Jo'natish»: tovar sotuvchi zonadan chiqadi, qator narxi = partiya tannarxi (QQS ichida ajratiladi),
+ * Qoralama (sotuvchi filial) → «Jo'natish»: tovar sotuvchi zonadan chiqadi, qator narxi = partiya tannarxi (QQSsiz baza, QQS ustiga qo'shiladi — E2),
  * HF raqami, xaridor filial sotuvchiga qarzdor ({@code branch_ledger}) — «Yo'lda» → «Qabul» (xaridor filial): tovar o'sha partiya
  * bilan xaridor ombori zonasiga kiradi, farq — kamomad. Har o'tish bitta tranzaksiya: hujjat {@code FOR UPDATE}, qoldiq satrlari
  * partiya tartibida qulflanadi, jurnal + qoldiq (StockLedger) + qarz + holat + audit.
@@ -264,8 +263,8 @@ class BranchSales {
     }
 
     /**
-     * Jo'natish: tovar sotuvchi zonadan chiqadi; har qator narxi = partiya tannarxi (QQS ichida: summa × stavka / (100 + stavka),
-     * HALF_UP); HF raqami; xaridor filial sotuvchiga qarzdor. Xaridor filialning qabul qiluvchilariga bildirishnoma.
+     * Jo'natish: tovar sotuvchi zonadan chiqadi; har qator narxi = partiya tannarxi (QQSsiz baza), QQS ustiga qo'shiladi
+     * ({@link FsPricing}, E2); qator summasi — QQS bilan; HF raqami; xaridor filial sotuvchiga qarzdor. Xaridor filialning qabul qiluvchilariga bildirishnoma.
      */
     @Transactional
     void send(Actor actor, long id) {
@@ -285,9 +284,9 @@ class BranchSales {
                     .param("b", l.batchId())
                     .query((rs, n) -> new Price(rs.getBigDecimal("cost"), rs.getBigDecimal("vat_rate")))
                     .single();
-            Money amount = new Money(p.cost()).times(l.qty());
-            Money vat = new Money(amount.amount().multiply(p.vatRate())
-                    .divide(BigDecimal.valueOf(100).add(p.vatRate()), Money.SCALE, RoundingMode.HALF_UP));
+            FsPricing.Line priced = FsPricing.line(p.cost(), l.qty(), p.vatRate());
+            Money amount = priced.gross();
+            Money vat = priced.vat();
             jdbc.sql("""
                     UPDATE branch_sale_line SET unit_cost = :c, amount = :a, vat_rate = :r, vat_amount = :v WHERE id = :id""")
                     .param("c", p.cost())

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockLedger.DocRef;
 import uz.medix.inventory.StockLedger.Move;
+import uz.medix.inventory.transfer.FsPricing;
 import uz.medix.inventory.writeoff.WriteOffModels.Reason;
 import uz.medix.inventory.writeoff.WriteOffModels.ShortageKind;
 import uz.medix.inventory.writeoff.WriteOffModels.Status;
@@ -63,7 +64,7 @@ class BranchSaleShortages {
     private record Sale(long id, String number, long sellerBranchId, String sellerName, long buyerBranchId, String buyerName,
             long fromZoneId, Long toZoneId, String status, int shortageQty) {}
 
-    private record Missing(long batchId, int qty, BigDecimal unitCost) {}
+    private record Missing(long batchId, int qty, BigDecimal unitCost, BigDecimal vatRate) {}
 
     private final JdbcClient jdbc;
     private final WriteOffs writeOffs;
@@ -104,7 +105,8 @@ class BranchSaleShortages {
         Money amount = Money.ZERO;
         List<LineQty> lines = new ArrayList<>();
         for (Missing m : missing) {
-            amount = amount.plus(new Money(m.unitCost()).times(m.qty()));
+            // Qarzdagi summa QQS bilan (jo'natishdagi kabi, E2)
+            amount = amount.plus(FsPricing.line(m.unitCost(), m.qty(), m.vatRate()).gross());
             lines.add(new LineQty(m.batchId(), m.qty()));
         }
         Long writeOffId = null;
@@ -168,7 +170,7 @@ class BranchSaleShortages {
         if (canSeeCost && s.shortageQty() > 0) {
             Money total = Money.ZERO;
             for (Missing m : missing(s.id())) {
-                total = total.plus(new Money(m.unitCost()).times(m.qty()));
+                total = total.plus(FsPricing.line(m.unitCost(), m.qty(), m.vatRate()).gross());
             }
             amount = total.amount().toPlainString();
         }
@@ -189,10 +191,11 @@ class BranchSaleShortages {
 
     private List<Missing> missing(long saleId) {
         return jdbc.sql("""
-                SELECT batch_id, qty - received_qty AS missing, unit_cost FROM branch_sale_line
+                SELECT batch_id, qty - received_qty AS missing, unit_cost, vat_rate FROM branch_sale_line
                 WHERE sale_id = :s AND received_qty IS NOT NULL AND received_qty < qty ORDER BY line_no""")
                 .param("s", saleId)
-                .query((rs, n) -> new Missing(rs.getLong("batch_id"), rs.getInt("missing"), rs.getBigDecimal("unit_cost")))
+                .query((rs, n) -> new Missing(rs.getLong("batch_id"), rs.getInt("missing"), rs.getBigDecimal("unit_cost"),
+                        rs.getBigDecimal("vat_rate")))
                 .list();
     }
 

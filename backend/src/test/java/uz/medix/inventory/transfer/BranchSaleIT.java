@@ -100,7 +100,7 @@ class BranchSaleIT {
         return w.zones().stream().filter(z -> z.type() == t).findFirst().orElseThrow().id();
     }
 
-    /** Partiya (tannarx 1 000,00, QQS 12%) va zonada boshlang'ich qoldiq. */
+    /** Partiya (tannarx 1 000,00, QQS 12% — FS da ustiga: dona uchun 1 120,00) va zonada boshlang'ich qoldiq. */
     private long stocked(long zone, String name, int qty) {
         long p = jdbc.sql("""
                 INSERT INTO product (code, name, unit_id, search_text) SELECT :c, :n, id, lower(:n) FROM unit WHERE short_name = 'dona' RETURNING id""")
@@ -194,21 +194,22 @@ class BranchSaleIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("IN_TRANSIT"))
                 .andExpect(jsonPath("$.invoiceNumber").value(matchesPattern("HF-[A-Z]{3}-\\d{6}")))
-                .andExpect(jsonPath("$.total").value("4000.00"))
-                .andExpect(jsonPath("$.vatTotal").value("428.57"))
+                // E2 (07.11): tannarx — QQSsiz baza, QQS 12% ustiga: 4 × 1 000 = 4 000 + 480 = 4 480
+                .andExpect(jsonPath("$.total").value("4480.00"))
+                .andExpect(jsonPath("$.vatTotal").value("480.00"))
                 .andExpect(jsonPath("$.lines[0].unitCost").value("1000.00"))
                 .andExpect(jsonPath("$.lines[0].vatRate").value("12"));
         assertThat(bal(seller.main(), b)).isEqualTo(6);
-        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("4000.00");
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("4480.00");
         mvc.perform(get("/api/branch-sales/balances").cookie(manager))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.debtor.id == " + buyer.branchId() + ")].amount").value(org.hamcrest.Matchers.hasItem("4000.00")));
+                .andExpect(jsonPath("$[?(@.debtor.id == " + buyer.branchId() + ")].amount").value(org.hamcrest.Matchers.hasItem("4480.00")));
         byte[] bytes = mvc.perform(get("/api/branch-sales/" + id + "/pdf").cookie(manager))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsByteArray();
         try (var pdf = org.apache.pdfbox.Loader.loadPDF(bytes)) {
             String text = new org.apache.pdfbox.text.PDFTextStripper().getText(pdf);
-            assertThat(text).contains("Filiallararo savdo").contains("Hisob-faktura").contains("4.000,00").contains("428,57");
+            assertThat(text).contains("Filiallararo savdo").contains("Hisob-faktura").contains("4.480,00").contains("480,00");
         }
         // Guruh ichidagi qarz mijoz / YB qarzi jurnaliga yozilmaydi
         assertThat(jdbc.sql("SELECT count(*) FROM party_ledger WHERE doc_id = :id AND doc_type = 'FS'").param("id", id).query(Long.class)
@@ -261,7 +262,7 @@ class BranchSaleIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.shortageQty").value(2));
         assertThat(bal(buyer.main(), b)).isEqualTo(3);
-        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("5000.00");
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("5600.00");
     }
 
     /** FS: 5 dona jo'natildi (5 000,00), 3 tasi qabul qilindi — kamomad 2 (2 000,00). */
@@ -288,7 +289,7 @@ class BranchSaleIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.open").value(true))
                 .andExpect(jsonPath("$.shortageQty").value(2))
-                .andExpect(jsonPath("$.amount").value("2000.00"))
+                .andExpect(jsonPath("$.amount").value("2240.00"))
                 .andExpect(jsonPath("$.canResolveAsBuyer").value(true))
                 .andExpect(jsonPath("$.canResolveAsSeller").value(false));
         // Tovar sotuvchi omborida topildi — faqat sotuvchi filial qaytaradi
@@ -303,7 +304,7 @@ class BranchSaleIT {
                 .andExpect(jsonPath("$.history[0].debtChange").value("-2000.00"));
         assertThat(bal(seller.main(), b)).isEqualTo(2);
         assertThat(bal(buyer.main(), b)).isEqualTo(3);
-        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("3000.00");
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("3360.00");
         send(post("/api/branch-sales/" + id + "/shortage/resolve"), sellerManager, "{\"kind\":\"RETURN\"}")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("transfer.shortage.notOpen"));
@@ -332,7 +333,7 @@ class BranchSaleIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.open").value(false))
                 .andExpect(jsonPath("$.history[0].writeOffStatus").value("PENDING"));
-        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("3000.00");
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("3360.00");
         long hc = jdbc.sql("SELECT id FROM write_off WHERE source_branch_sale_id = :s").param("s", id).query(Long.class).single();
         assertThat(jdbc.sql("SELECT zone_id FROM write_off WHERE id = :h").param("h", hc).query(Long.class).single()).isEqualTo(seller.main());
 
@@ -349,8 +350,8 @@ class BranchSaleIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.open").value(false))
                 .andExpect(jsonPath("$.history[0].writeOffStatus").value("POSTED"))
-                .andExpect(jsonPath("$.history[0].debtChange").value("2000.00"));
-        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("5000.00");
+                .andExpect(jsonPath("$.history[0].debtChange").value("2240.00"));
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("5600.00");
         assertThat(bal(buyer.main(), b)).isEqualTo(3);
         assertThat(bal(seller.main(), b)).isZero();
         assertThat(jdbc.sql("SELECT count(*) FROM branch_ledger WHERE doc_type = 'FSK' AND doc_id = :s").param("s", id).query(Integer.class)
@@ -451,6 +452,6 @@ class BranchSaleIT {
         pool.shutdown();
         assertThat(ok).isEqualTo(6);
         assertThat(bal(seller.main(), b)).isEqualTo(2);
-        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("18000.00");
+        assertThat(debt(buyer.branchId(), seller.branchId())).isEqualByComparingTo("20160.00");
     }
 }
