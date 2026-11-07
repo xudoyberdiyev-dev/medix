@@ -128,6 +128,16 @@ export function PickingPage() {
                       {o.marked ? <Badge tone="info">{t("picking.marking")}</Badge> : null}
                     </div>
                     <div className="mt-1">{o.customer}</div>
+                    {o.contract || o.invoice ? (
+                      <div className="mt-1 text-caption text-text-secondary">
+                        {[
+                          o.contract ? t("picking.contract", { number: o.contract }) : null,
+                          o.invoice ? t("picking.invoice", { number: o.invoice }) : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </div>
+                    ) : null}
                     <div className="mt-1 text-caption text-text-secondary">
                       {t("picking.meta", {
                         lines: formatQuantity(o.lines),

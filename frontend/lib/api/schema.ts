@@ -7245,6 +7245,8 @@ export interface components {
             lineId: number;
         };
         PickQueueItem: {
+            /** @description Mijozning amaldagi shartnomasi (shu filial; SPEC 213) */
+            contract?: string;
             customer: string;
             /**
              * Format: date-time
@@ -7253,6 +7255,8 @@ export interface components {
             deadline?: string;
             /** Format: int64 */
             id: number;
+            /** @description Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa */
+            invoice?: string;
             /** Format: int32 */
             lines: number;
             marked: boolean;

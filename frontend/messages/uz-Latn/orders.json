@@ -268,7 +268,9 @@
     "doneTodayMeta": "{lines} qator · {qty} dona · {time}",
     "onTime": "Vaqtida",
     "late": "Kechikdi",
-    "repickOnly": "Qayta yigʻish: faqat {count} ta qator (qolganlari Joʻnatish zonasida)"
+    "repickOnly": "Qayta yigʻish: faqat {count} ta qator (qolganlari Joʻnatish zonasida)",
+    "contract": "Shartnoma: {number}",
+    "invoice": "HF: {number}"
   },
   "otherBatch": {
     "title": "Boshqa partiyadan oldim",

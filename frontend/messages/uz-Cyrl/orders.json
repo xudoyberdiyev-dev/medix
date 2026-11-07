@@ -268,7 +268,9 @@
     "doneTodayMeta": "{lines} қатор · {qty} дона · {time}",
     "onTime": "Вақтида",
     "late": "Кечикди",
-    "repickOnly": "Қайта йиғиш: фақат {count} та қатор (қолганлари Жўнатиш зонасида)"
+    "repickOnly": "Қайта йиғиш: фақат {count} та қатор (қолганлари Жўнатиш зонасида)",
+    "contract": "Шартнома: {number}",
+    "invoice": "ҲФ: {number}"
   },
   "otherBatch": {
     "title": "Бошқа партиядан олдим",

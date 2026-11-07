@@ -268,7 +268,9 @@
     "doneTodayMeta": "{lines} строк · {qty} шт · {time}",
     "onTime": "Вовремя",
     "late": "С опозданием",
-    "repickOnly": "Повторная сборка: только {count} стр. (остальные — в зоне отгрузки)"
+    "repickOnly": "Повторная сборка: только {count} стр. (остальные — в зоне отгрузки)",
+    "contract": "Договор: {number}",
+    "invoice": "СФ: {number}"
   },
   "otherBatch": {
     "title": "Взял из другой партии",

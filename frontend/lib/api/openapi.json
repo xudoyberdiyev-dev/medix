@@ -16987,6 +16987,10 @@
       "PickQueueItem" : {
         "type" : "object",
         "properties" : {
+          "contract" : {
+            "type" : "string",
+            "description" : "Mijozning amaldagi shartnomasi (shu filial; SPEC 213)"
+          },
           "customer" : {
             "type" : "string"
           },
@@ -16998,6 +17002,10 @@
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "invoice" : {
+            "type" : "string",
+            "description" : "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa"
           },
           "lines" : {
             "type" : "integer",
