@@ -673,6 +673,13 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   await expect(page.getByRole("columnheader", { name: /Toʻlov turi/ })).toBeVisible();
   await page.goto("/reports/expenses");
   await expect(page.getByRole("heading", { name: "Xarajatlar", level: 1 })).toBeVisible();
+  // Qaytarishlar: katalogdan ochiladi, mijoz boʻyicha guruhlashda ulush ustuni
+  await page.goto("/reports");
+  await page.getByRole("link", { name: /^Qaytarishlar/ }).click();
+  await expect(page.getByRole("heading", { name: "Qaytarishlar", level: 1 })).toBeVisible();
+  await page.getByRole("tab", { name: "Mijoz" }).click();
+  await expect(page.getByRole("columnheader", { name: /Mijoz/ })).toBeVisible();
+  await expect(page.getByText(/ruxsat/i)).toHaveCount(0);
   await page.goto("/debts/customers");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText(/ruxsat/i)).toHaveCount(0);
