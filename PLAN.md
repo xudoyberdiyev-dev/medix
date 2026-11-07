@@ -11,7 +11,9 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 
 ### UI moslash (prototip → haqiqiy) — har ekran AYNAN, yetishmagan backend bilan
 Navbat: Direktor bosh sahifasi → boshqa rollar bosh sahifalari → Buyurtmalar/OrderEntry/OrderCard → Kirim → Qoldiqlar/Muddat → Mahsulotlar/Narxlar/Kontragentlar → Pul (To'lovlar, Kassa, Kunni yopish, Bank, Qarzlar, Akt sverka) → panellar (Ombor mudiri, Yig'uvchi, Markirovkachi, Haydovchi, Kassir) → Jo'natish/Reys → Ko'chirishlar/Inventarizatsiya/BQ → Hisobotlar → Sozlamalar/Admin/Usta/Profil → Login.
-- [ ] Direktor bosh sahifasi (Home + screenshots/t10b-dir*)
+- [x] Direktor bosh sahifasi ✅ 08.11 01:30 (prototip bo'yicha: salomlashish, 4 to'lov turi kartasi, «To'lov turlari bo'yicha» jadvali, savdo dinamikasi, «Diqqat», holat kataklari, filiallar kesimi (muddati o'tgan, qoldiq tannarxda, pul, guruh qarzi), qarzdorlar, operatorlar, ta'minotchilar, qarz muddatlari; backend: to'lov turi bo'yicha qarzlar, kunlik savdo, IT)
+- [x] Filial rahbari bosh sahifasi ✅ 08.11 01:50 (`/api/home/branch`: tasdiqlarim — ruxsat bo'yicha 9 hujjat turi, KPI QQSsiz + oldingi davr bilan, yalpi foyda/marja, bugungi reyslar, pul hisoblari + kun yopilgani; Bugungi oqim; IT)
+- [ ] Boshqa rollar bosh sahifalari (Buxgalter, Operator, Xarid, Ombor/panellar — prototip variantlari)
 
 ## Egasi javoblari (07.11.2026 18:12) — BIRINCHI NAVBATDA BAJARILADI
 Bu javoblar SPEC/T12 dan ustun. Har birini kod + test + e2e bilan joriy qiling, PLAN'da belgilang:

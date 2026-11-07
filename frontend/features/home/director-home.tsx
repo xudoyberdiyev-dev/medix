@@ -311,8 +311,8 @@ function DirectorBody({ home: h }: { home: Home }) {
       </div>
       {h.supplierStaff && h.supplierCompanies ? (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <Suppliers title={t("supplierStaff")} party={t("employee")} block={h.supplierStaff} href="/reports" />
-          <Suppliers title={t("supplierCompany")} party={t("supplier")} block={h.supplierCompanies} href="/reports" />
+          <Suppliers title={t("supplierStaff")} party={t("employee")} block={h.supplierStaff} href="/reports/supplier-goods" />
+          <Suppliers title={t("supplierCompany")} party={t("supplier")} block={h.supplierCompanies} href="/reports/supplier-goods" />
         </div>
       ) : null}
       <Aging card={h.customerDebt} attention={h.attention} />
@@ -349,7 +349,7 @@ export function PaymentCard({ icon, title, note, value }: { icon: typeof Banknot
 }
 
 /** Prototip kartasi: sarlavha (+ «Hammasi →» havolasi) va tana. */
-function Panel({ title, href, children, footer }: { title: string; href?: string; children: ReactNode; footer?: ReactNode }) {
+export function Panel({ title, href, children, footer }: { title: string; href?: string; children: ReactNode; footer?: ReactNode }) {
   const t = useTranslations("home.dir");
   return (
     <section className="flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-surface">
@@ -367,7 +367,7 @@ function Panel({ title, href, children, footer }: { title: string; href?: string
   );
 }
 
-interface MiniCol<T> {
+export interface MiniCol<T> {
   key: string;
   title: string;
   right?: boolean;
@@ -375,7 +375,7 @@ interface MiniCol<T> {
 }
 
 /** Karta ichidagi ixcham jadval (prototip): kulrang sarlavha, 44 px qatorlar, «Jami» qatori. */
-function MiniTable<T>({
+export function MiniTable<T>({
   caption,
   cols,
   rows,
@@ -672,7 +672,7 @@ function SalesChart({ home: h }: { home: Home }) {
   );
 }
 
-function Attention({ home }: { home: Home }) {
+export function Attention({ home }: { home: Home }) {
   const t = useTranslations("home.attention");
   const td = useTranslations("home.dir");
   const me = useMe();
@@ -703,7 +703,7 @@ function Attention({ home }: { home: Home }) {
   );
 }
 
-const STATUS_ICON: Record<(typeof ORDER_STATUSES)[number], LucideIcon> = {
+export const STATUS_ICON: Record<(typeof ORDER_STATUSES)[number], LucideIcon> = {
   DRAFT: FilePen,
   PENDING_APPROVAL: Stamp,
   QUEUED: ListOrdered,
@@ -735,7 +735,7 @@ const ORDER_STATUSES = [
   "CANCELLED",
 ] as const;
 
-function isOrderStatus(s: string): s is (typeof ORDER_STATUSES)[number] {
+export function isOrderStatus(s: string): s is (typeof ORDER_STATUSES)[number] {
   return (ORDER_STATUSES as readonly string[]).includes(s);
 }
 

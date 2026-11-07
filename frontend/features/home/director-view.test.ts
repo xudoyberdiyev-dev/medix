@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { axisLabel, firstName, greetKey, maxCents, mergeSuppliers, minusMoney, share, sumMoney, toCents } from "./director-view";
+import {
+  axisLabel,
+  firstName,
+  greetKey,
+  maxCents,
+  mergeSuppliers,
+  minusMoney,
+  pctDelta,
+  share,
+  sumMoney,
+  toCents,
+  waitParts,
+} from "./director-view";
 
 describe("director-view", () => {
   it("salomlashish soat bo'yicha", () => {
@@ -45,5 +57,19 @@ describe("director-view", () => {
     expect(axisLabel("2026-10-04", 0, 4)).toBe("04.10");
     expect(axisLabel("2026-10-02", 1, 30)).toBe("");
     expect(axisLabel("2026-10-30", 29, 30)).toBe("30.10");
+  });
+});
+
+describe("pctDelta / waitParts", () => {
+  it("foiz o'zgarish", () => {
+    expect(pctDelta("110.00", "100.00")).toEqual({ text: "+10,0%", up: true });
+    expect(pctDelta("90.00", "100.00")).toEqual({ text: "−10,0%", up: false });
+    expect(pctDelta("1.00", "3.00")).toEqual({ text: "−66,7%", up: false });
+    expect(pctDelta("5.00", "0.00")).toBeNull();
+  });
+  it("kutish", () => {
+    expect(waitParts(45)).toEqual({ key: "waitM", n: 45 });
+    expect(waitParts(250)).toEqual({ key: "waitH", n: 4 });
+    expect(waitParts(3000)).toEqual({ key: "waitD", n: 2 });
   });
 });

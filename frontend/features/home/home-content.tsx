@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/ui/system-states";
 import { useMe } from "@/features/auth/session";
 import { CashierPanel } from "@/features/cash/cashier-panel";
+import { BranchHome } from "@/features/home/branch-home";
 import { DirectorHome } from "@/features/home/director-home";
 import { OperatorHome } from "@/features/home/operator-home";
 import { PurchaserHome } from "@/features/home/purchaser-home";
@@ -31,7 +32,7 @@ export function HomeContent() {
         <div className="mb-6 empty:hidden">
           <SetupBanner />
         </div>
-        <DirectorHome />
+        {role === "BRANCH_MANAGER" ? <BranchHome /> : <DirectorHome />}
       </>
     );
   return (

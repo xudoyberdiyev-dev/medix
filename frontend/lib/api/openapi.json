@@ -905,7 +905,7 @@
     },
     "/api/branch-sales/{id}" : {
       "get" : {
-        "operationId" : "get_18",
+        "operationId" : "get_19",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1061,7 +1061,7 @@
     "/api/branch-sales/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi, summa (special.cost) va hal qilish tarixi.",
-        "operationId" : "get_19",
+        "operationId" : "get_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1647,7 +1647,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_17",
+        "operationId" : "get_18",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3194,6 +3194,50 @@
         },
         "summary" : "Nofaol qilish",
         "tags" : [ "expense-items" ]
+      }
+    },
+    "/api/home/branch" : {
+      "get" : {
+        "operationId" : "get_17",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchHomeView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filial rahbari bosh sahifasi: tasdiqlarim, ko'rsatkichlar, bugungi reyslar, pul hisoblari",
+        "tags" : [ "home" ]
       }
     },
     "/api/home/director" : {
@@ -12233,6 +12277,93 @@
         },
         "required" : [ "amount", "creditor", "debtor" ]
       },
+      "BranchHomeView" : {
+        "type" : "object",
+        "properties" : {
+          "accounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/HomeAccount"
+            }
+          },
+          "approvals" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PendingApproval"
+            }
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "kpi" : {
+            "$ref" : "#/components/schemas/BranchKpi"
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "trips" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/HomeTrip"
+            }
+          }
+        },
+        "required" : [ "accounts", "approvals", "branchId", "branchName", "from", "kpi", "to", "today", "trips" ]
+      },
+      "BranchKpi" : {
+        "type" : "object",
+        "properties" : {
+          "bank" : {
+            "type" : "string"
+          },
+          "cash" : {
+            "type" : "string"
+          },
+          "debt" : {
+            "type" : "string"
+          },
+          "margin" : {
+            "type" : "string",
+            "description" : "Marja, % (bir kasr)"
+          },
+          "money" : {
+            "type" : "string"
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "profit" : {
+            "type" : "string"
+          },
+          "profitPrev" : {
+            "type" : "string"
+          },
+          "sales" : {
+            "type" : "string"
+          },
+          "salesDocs" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "salesPrev" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "bank", "cash", "debt", "money", "overdue", "sales", "salesDocs", "salesPrev" ]
+      },
       "BranchPayment" : {
         "type" : "object",
         "properties" : {
@@ -14502,6 +14633,55 @@
           }
         },
         "required" : [ "attention", "avgSale", "branches", "customerDebt", "customerDebtBy", "daily", "expenses", "from", "groupDebt", "operators", "orderStatuses", "sales", "salesDocs", "staleDays", "supplierDebt", "supplierDebtBy", "to", "today", "topDebtors" ]
+      },
+      "HomeAccount" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "closedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "balance", "id", "kind", "name" ]
+      },
+      "HomeTrip" : {
+        "type" : "object",
+        "properties" : {
+          "driver" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "orders" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "vehicle" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "driver", "id", "number", "orders", "status", "vehicle" ]
       },
       "ImportResult" : {
         "type" : "object",
@@ -17356,6 +17536,38 @@
           }
         },
         "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "customer", "customerId", "id", "number", "paymentDate", "source", "status" ]
+      },
+      "PendingApproval" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "href" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "page" : {
+            "type" : "boolean"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "waitMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "createdBy", "href", "id", "number", "page", "type", "waitMinutes" ]
       },
       "PendingBonus" : {
         "type" : "object",

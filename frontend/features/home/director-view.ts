@@ -72,3 +72,26 @@ export function sumMoney(values: string[]): string {
   const abs = neg ? -c : c;
   return `${neg ? "-" : ""}${abs / 100n}.${String(abs % 100n).padStart(2, "0")}`;
 }
+
+/** Oldingi davrga nisbatan o'zgarish, % (bir kasr, vergul bilan): oldingi nol bo'lsa — null («Taqqoslash yo'q»). */
+export function pctDelta(cur: string, prev: string): { text: string; up: boolean } | null {
+  const p = toCents(prev);
+  if (p === 0n) return null;
+  const c = toCents(cur);
+  const absP = p < 0n ? -p : p;
+  // Tiyinlarda butun arifmetika: (c − p) / |p| × 1000 → bir kasrli foiz, yarmi yuqoriga
+  const num = (c - p) * 1000n;
+  const neg = num < 0n;
+  const q = ((neg ? -num : num) * 2n + absP) / (2n * absP);
+  const s = `${q / 10n},${q % 10n}`;
+  return { text: `${neg ? "−" : "+"}${s}%`, up: !neg };
+}
+
+export type WaitUnit = "waitM" | "waitH" | "waitD";
+
+/** Kutish vaqti: daqiqa / soat / kun (prototip waitText). */
+export function waitParts(min: number): { key: WaitUnit; n: number } {
+  if (min < 60) return { key: "waitM", n: min };
+  if (min < 1440) return { key: "waitH", n: Math.floor(min / 60) };
+  return { key: "waitD", n: Math.floor(min / 1440) };
+}

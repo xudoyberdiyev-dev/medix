@@ -373,7 +373,7 @@ export interface paths {
             cookie?: never;
         };
         /** FS hujjati */
-        get: operations["get_18"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -473,7 +473,7 @@ export interface paths {
          * FS kamomadi
          * @description Ochiqmi, summa (special.cost) va hal qilish tarixi.
          */
-        get: operations["get_19"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -732,7 +732,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_17"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1348,6 +1348,23 @@ export interface paths {
         put?: never;
         /** Nofaol qilish */
         post: operations["deactivate_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/home/branch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filial rahbari bosh sahifasi: tasdiqlarim, ko'rsatkichlar, bugungi reyslar, pul hisoblari */
+        get: operations["get_17"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5392,6 +5409,36 @@ export interface components {
             creditor: components["schemas"]["BranchRef"];
             debtor: components["schemas"]["BranchRef"];
         };
+        BranchHomeView: {
+            accounts: components["schemas"]["HomeAccount"][];
+            approvals: components["schemas"]["PendingApproval"][];
+            /** Format: int64 */
+            branchId: number;
+            branchName: string;
+            /** Format: date */
+            from: string;
+            kpi: components["schemas"]["BranchKpi"];
+            /** Format: date */
+            to: string;
+            /** Format: date */
+            today: string;
+            trips: components["schemas"]["HomeTrip"][];
+        };
+        BranchKpi: {
+            bank: string;
+            cash: string;
+            debt: string;
+            /** @description Marja, % (bir kasr) */
+            margin?: string;
+            money: string;
+            overdue: string;
+            profit?: string;
+            profitPrev?: string;
+            sales: string;
+            /** Format: int32 */
+            salesDocs: number;
+            salesPrev: string;
+        };
         BranchPayment: {
             amount: string;
             cancelReason?: string;
@@ -6225,6 +6272,25 @@ export interface components {
             /** Format: date */
             today: string;
             topDebtors: components["schemas"]["Debtor"][];
+        };
+        HomeAccount: {
+            balance: string;
+            /** Format: date-time */
+            closedAt?: string;
+            /** Format: int64 */
+            id: number;
+            kind: string;
+            name: string;
+        };
+        HomeTrip: {
+            driver: string;
+            /** Format: int64 */
+            id: number;
+            number: string;
+            /** Format: int32 */
+            orders: number;
+            status: string;
+            vehicle: string;
         };
         ImportResult: {
             applied: boolean;
@@ -7384,6 +7450,18 @@ export interface components {
             source: "MANUAL" | "DRIVER";
             /** @enum {string} */
             status: "DRAFT" | "POSTED" | "CANCELLED";
+        };
+        PendingApproval: {
+            amount?: string;
+            createdBy: string;
+            href: string;
+            /** Format: int64 */
+            id: number;
+            number: string;
+            page: boolean;
+            type: string;
+            /** Format: int64 */
+            waitMinutes: number;
         };
         PendingBonus: {
             amount: string;
@@ -9901,7 +9979,7 @@ export interface operations {
             };
         };
     };
-    get_18: {
+    get_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -10015,7 +10093,7 @@ export interface operations {
             };
         };
     };
-    get_19: {
+    get_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -10420,7 +10498,7 @@ export interface operations {
             };
         };
     };
-    get_17: {
+    get_18: {
         parameters: {
             query: {
                 branchId: number;
@@ -11395,6 +11473,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpenseItem"];
+                };
+            };
+        };
+    };
+    get_17: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchHomeView"];
                 };
             };
         };
