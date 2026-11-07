@@ -85,7 +85,9 @@
       "title": "Hali operatsiya yoʻq",
       "description": "Xarajat va boshqa kirimlar «Kirim / chiqim» tugmasi bilan yoziladi."
     },
-    "cancelled": "Operatsiya bekor qilindi"
+    "cancelled": "Operatsiya bekor qilindi",
+    "itemFilter": "Modda",
+    "itemChip": "Modda: {name} {period}"
   },
   "io": {
     "caption": "Hisoblar orasida oʻtkazmalar",

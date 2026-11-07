@@ -40,10 +40,50 @@ export const DOC_TITLE: Record<DocTitleKey, string> = {
 
 export const isDocTitleKey = (v: string): v is DocTitleKey => Object.hasOwn(DOC_TITLE, v);
 
-export function useCashOps(branchId: number | null, status: CashOpStatus | null) {
+/** Xarajatlar hisoboti qatoridan oʻtish (SPEC 8): /cash?tab=ops&expenseItemId=…&item=Nomi&from=…&to=… */
+export interface OpsFilter {
+  expenseItemId: number;
+  item: string;
+  from: string | null;
+  to: string | null;
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function opsFilterFromParams(params: Pick<URLSearchParams, "get">): OpsFilter | null {
+  const id = Number(params.get("expenseItemId"));
+  if (!Number.isInteger(id) || id <= 0) return null;
+  const date = (k: string) => {
+    const v = params.get(k);
+    return v && ISO_DATE.test(v) ? v : null;
+  };
+  return { expenseItemId: id, item: params.get("item") ?? `#${id}`, from: date("from"), to: date("to") };
+}
+
+export function opsFilterHref(f: OpsFilter): string {
+  const p = new URLSearchParams({ tab: "ops", expenseItemId: String(f.expenseItemId), item: f.item });
+  if (f.from) p.set("from", f.from);
+  if (f.to) p.set("to", f.to);
+  return `/cash?${p.toString()}`;
+}
+
+export function useCashOps(branchId: number | null, status: CashOpStatus | null, filter: OpsFilter | null = null) {
   return useQuery({
-    queryKey: ["cash-ops", branchId, status],
-    queryFn: () => unwrap(api.GET("/api/cash-ops", { params: { query: { branchId: branchId as number, status: status ?? undefined } } })),
+    queryKey: ["cash-ops", branchId, status, filter?.expenseItemId ?? null, filter?.from ?? null, filter?.to ?? null],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/cash-ops", {
+          params: {
+            query: {
+              branchId: branchId as number,
+              status: status ?? undefined,
+              expenseItemId: filter?.expenseItemId,
+              from: filter?.from ?? undefined,
+              to: filter?.to ?? undefined,
+            },
+          },
+        }),
+      ),
     enabled: branchId != null,
   });
 }

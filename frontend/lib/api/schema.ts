@@ -9888,6 +9888,7 @@ export interface operations {
                 status?: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
                 from?: string;
                 to?: string;
+                expenseItemId?: number;
             };
             header?: never;
             path?: never;

@@ -68,8 +68,9 @@ class CashController {
     List<CashOp> listOps(@RequestParam(required = false) Long branchId, @RequestParam(required = false) Long accountId,
             @RequestParam(required = false) OpStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ops.list(actor(), branchId, accountId, status, from, to);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long expenseItemId) {
+        return ops.list(actor(), branchId, accountId, status, from, to, expenseItemId);
     }
 
     @GetMapping(value = "/api/cash-ops/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)

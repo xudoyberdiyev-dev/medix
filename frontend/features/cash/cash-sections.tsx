@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { EmptyState, ErrorState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
@@ -29,6 +30,7 @@ import {
   type DayClose,
   type Move,
   type Transfer,
+  type OpsFilter,
 } from "./api";
 import { ReasonDialog, refreshMoney } from "./op-dialogs";
 
@@ -232,11 +234,11 @@ function Sum(props: { label: string; value: string }) {
 
 // ===== KO / BO =====
 
-export function OpsTab(props: { branchId: number }) {
+export function OpsTab(props: { branchId: number; filter?: OpsFilter | null; onClearFilter?: () => void }) {
   const tc = useTranslations("cash");
   const me = useMe();
   const qc = useQueryClient();
-  const list = useCashOps(props.branchId, null);
+  const list = useCashOps(props.branchId, null, props.filter ?? null);
   const [cancelling, setCancelling] = useState<CashOp | null>(null);
   const mayCancel = can(me.data, CASH_CANCEL);
   const columns: TableColumn<CashOp>[] = [
@@ -249,8 +251,21 @@ export function OpsTab(props: { branchId: number }) {
     { key: "out", title: tc("col.out"), align: "right", render: (o) => (o.direction === "OUT" ? money(o.amount) : "") },
     { key: "status", title: tc("col.status"), render: (o) => <OpStatusBadge status={o.status} /> },
   ];
+  const f = props.filter;
   return (
     <>
+      {f ? (
+        <div className="mb-3">
+          <FilterChip
+            label={tc("ops.itemChip", {
+              name: f.item,
+              period: f.from && f.to ? (f.from === f.to ? formatIsoDate(f.from) : `${formatIsoDate(f.from)} – ${formatIsoDate(f.to)}`) : "",
+            })}
+            what={tc("ops.itemFilter")}
+            onClear={() => props.onClearFilter?.()}
+          />
+        </div>
+      ) : null}
       {list.error ? (
         <ErrorState onRetry={() => list.refetch()} />
       ) : (

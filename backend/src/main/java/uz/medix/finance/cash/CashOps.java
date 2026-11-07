@@ -277,12 +277,15 @@ class CashOps {
     }
 
     @Transactional(readOnly = true)
-    List<CashOp> list(Actor actor, Long branchId, Long accountId, OpStatus status, LocalDate from, LocalDate to) {
+    /** @param expenseItemId modda (Xarajatlar hisoboti qatoridan o'tish, SPEC 8) — ixtiyoriy */
+    List<CashOp> list(Actor actor, Long branchId, Long accountId, OpStatus status, LocalDate from, LocalDate to, Long expenseItemId) {
         return jdbc.sql(SELECT + """
                  WHERE (CAST(:b AS BIGINT) IS NULL OR o.branch_id = :b) AND (CAST(:a AS BIGINT) IS NULL OR o.account_id = :a)
                    AND (CAST(:s AS VARCHAR) IS NULL OR o.status = :s)
                    AND (CAST(:f AS DATE) IS NULL OR o.op_date >= :f) AND (CAST(:t AS DATE) IS NULL OR o.op_date <= :t)
+                   AND (CAST(:i AS BIGINT) IS NULL OR o.expense_item_id = :i)
                 ORDER BY o.op_date DESC, o.id DESC LIMIT 500""")
+                .param("i", expenseItemId)
                 .param("b", branchId)
                 .param("a", accountId)
                 .param("s", status == null ? null : status.name())

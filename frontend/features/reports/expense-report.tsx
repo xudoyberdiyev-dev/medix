@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download, Wallet } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
@@ -11,6 +11,7 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
+import { opsFilterHref } from "@/features/cash/api";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
 import { api, unwrap } from "@/lib/api/client";
@@ -54,6 +55,8 @@ export function ExpenseReportPage() {
   const t = useTranslations("reports");
   const me = useMe();
   const allowed = can(me.data, "reports.all") || can(me.data, "reports.view");
+  const router = useRouter();
+  const canOpenOps = can(me.data, "cash.view") || can(me.data, "bank.view");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
   const period = usePeriodState();
@@ -157,6 +160,11 @@ export function ExpenseReportPage() {
           pagination={table.pagination}
           rowKey={(x) => x.key}
           loading={report.isLoading}
+          onRowClick={
+            canOpenOps && r && groupBy === "ITEM"
+              ? (x) => router.push(opsFilterHref({ expenseItemId: Number(x.key), item: x.name, from: r.from, to: r.to }))
+              : undefined
+          }
           totals={r && r.rows.length > 0 ? totals : undefined}
           emptyState={<EmptyState icon={Wallet} title={t(`expenses.empty.${direction}`)} description={t("emptyHint")} />}
         />

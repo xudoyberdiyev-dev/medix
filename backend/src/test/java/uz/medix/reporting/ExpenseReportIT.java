@@ -155,6 +155,11 @@ class ExpenseReportIT {
         mvc.perform(get("/api/reports/expenses").param("branchId", "" + b).param("from", t).param("groupBy", "MONTH").cookie(director.cookie()))
                 .andExpect(jsonPath("$.rows.length()").value(1))
                 .andExpect(jsonPath("$.rows[0].key").value(t.substring(0, 7)));
+        // Qatordan hujjatlarga: shu moddaning KO/BO ro'yxati (barcha holatlar)
+        mvc.perform(get("/api/cash-ops").param("branchId", "" + b).param("expenseItemId", "" + fuel).param("from", t).param("to", t)
+                        .cookie(director.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(5));
         // Filial rahbari: o'z filiali (branchId'siz ham), boshqa filial — yopiq
         mvc.perform(get("/api/reports/expenses").param("from", t).cookie(manager))
                 .andExpect(jsonPath("$.branchId").value(b))

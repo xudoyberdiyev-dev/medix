@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { ArrowLeftRight, Banknote, HandCoins, Landmark, LockKeyhole, Plus, Truck, UserRound } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { ensureCsrf, useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatDateTime, formatMoney } from "@/lib/format";
-import { CASH_APPROVE, CASH_CLOSE, CASH_IO, usableAccount } from "@/features/cash/api";
+import { CASH_APPROVE, CASH_CLOSE, CASH_IO, opsFilterFromParams, usableAccount } from "@/features/cash/api";
 import { ClosesTab, OpsTab, PendingOps, StatementTab, TransfersTab } from "@/features/cash/cash-sections";
 import { BankReconTab } from "@/features/cash/bank-recon";
 import { AccountDialog } from "@/features/cash/account-dialog";
@@ -58,7 +59,10 @@ export function CashPage() {
   const kassa = target ?? (kassas[0] ? String(kassas[0].id) : null);
   const [pending, setPending] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
-  const [tab, setTab] = useState("statement");
+  const params = useSearchParams();
+  // Xarajatlar hisobotidan: ?tab=ops&expenseItemId=… — KO/BO roʻyxati shu modda va davr bilan
+  const [opsFilter, setOpsFilter] = useState(() => opsFilterFromParams(params));
+  const [tab, setTab] = useState(() => (params.get("tab") === "ops" ? "ops" : "statement"));
   const [dialog, setDialog] = useState<"op" | "io" | "close" | "cashiers" | "account" | null>(null);
   const canIo = can(me.data, CASH_IO);
   const canClose = can(me.data, CASH_CLOSE);
@@ -239,7 +243,7 @@ export function CashPage() {
             {tab === "statement" ? (
               <StatementTab accountId={current} />
             ) : tab === "ops" ? (
-              <OpsTab branchId={branchId} />
+              <OpsTab branchId={branchId} filter={opsFilter} onClearFilter={() => setOpsFilter(null)} />
             ) : tab === "io" ? (
               <TransfersTab branchId={branchId} />
             ) : tab === "bank" && canBank ? (
