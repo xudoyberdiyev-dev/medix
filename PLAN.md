@@ -6,6 +6,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - **UI prototip bilan AYNAN bir xil bo'lishi shart** (Claude Design prototipi → `design/prototype/` ✅ 07.11 22:45 qo'shildi; ko'rish: `scripts/prototype-shot.cjs`, yo'riqnoma: `design/prototype/README.md`). Har ekran prototip bilan yonma-yon solishtirilib qayta quriladi; Direktor panelidan boshlanadi.
 - **Prototipdagi UI'da bor, lekin backendda yo'q qismlar — majburiy yaratiladi** (API + baza + test). Har ekranni moslashda «UI'da bor / backendda yo'q» ro'yxati tuzilib, bajariladi.
 - Navbat: E1–E6 → prototip kelgach UI moslash (ekranma-ekran) + yetishmagan backend → SmartUp mijozlar importi (namuna kelgach) → yakuniy e2e → PR.
+- **Tashqi integratsiyalar (egasi 07.11 22:44):** prototipda tashqi xizmatga bog'liq qism bo'lsa (e-faktura, «Asl belgisi», bank API, 1C va h.k.) — ekran, tugma, forma va ichki mantiq TO'LIQ quriladi (ma'lumot bazada saqlanadi, holatlar ishlaydi), faqat tashqi chaqiruv o'rnida aniq banner chiqadi: «Integratsiya hali ulanmagan — <xizmat nomi>. Ma'lumot MEDIX'da saqlandi, ulangandan keyin avtomatik yuboriladi.» (Alert, info rangida, uch tilda). Integratsiya `integration` modulida adapter interfeysi + «ulanmagan» stub bilan qilinadi — keyin faqat adapter almashtiriladi.
 - Loyiha **11.11.2026** gacha to'liq tugatilishi kerak.
 
 ### UI moslash (prototip → haqiqiy) — har ekran AYNAN, yetishmagan backend bilan
