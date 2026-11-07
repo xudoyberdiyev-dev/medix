@@ -101,6 +101,9 @@ final class PriceChangeModels {
 
     record PricePage(List<PriceRow> items, long total, int page, int size) {}
 
+    /** Narxlar jadvali saralash ustuni (SPEC 4 «Jadvallar standarti»). */
+    enum PriceSort { CODE, NAME, MANUFACTURER }
+
     /** «Kirim bo'yicha» rejimi: o'tkazilgan kirim partiyasi va uning amaldagi partiya narxlari. */
     record ReceiptBatch(
             long batchId,

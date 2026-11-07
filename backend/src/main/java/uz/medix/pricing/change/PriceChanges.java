@@ -31,6 +31,7 @@ import uz.medix.pricing.change.PriceChangeModels.PriceChangeRequest;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeSummary;
 import uz.medix.pricing.change.PriceChangeModels.PricePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceRow;
+import uz.medix.pricing.change.PriceChangeModels.PriceSort;
 import uz.medix.pricing.change.PriceChangeModels.ReceiptBatch;
 import uz.medix.pricing.change.PriceChangeModels.ReceiptBatches;
 import uz.medix.pricing.change.PriceChangeModels.Status;
@@ -98,7 +99,7 @@ class PriceChanges {
     }
 
     @Transactional(readOnly = true)
-    PricePage prices(long branchId, String q, Long manufacturerId, LocalDate at, int page, int size) {
+    PricePage prices(long branchId, String q, Long manufacturerId, LocalDate at, PriceSort sort, boolean desc, int page, int size) {
         StringBuilder where = new StringBuilder(" WHERE p.active");
         Map<String, Object> params = new HashMap<>();
         if (manufacturerId != null) {
@@ -119,13 +120,17 @@ class PriceChanges {
         long total = jdbc.sql("SELECT count(*) FROM product p" + where).params(params).query(Long.class).single();
         record Prod(long id, String code, String name, String manufacturer) {}
         List<Prod> prods = jdbc.sql("SELECT p.id, p.code, p.name, m.name AS manufacturer FROM product p "
-                        + "LEFT JOIN manufacturer m ON m.id = p.manufacturer_id" + where + " ORDER BY lower(p.name), p.id LIMIT :l OFFSET :o")
+                        + "LEFT JOIN manufacturer m ON m.id = p.manufacturer_id" + where + orderBy(sort, desc) + ", p.id LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", size)
                 .param("o", (long) page * size)
                 .query(Prod.class)
                 .list();
-        Map<String, Money> current = currentPrices(branchId, prods.stream().map(Prod::id).toList(), at);
+        Map<String, Money> current = new HashMap<>();
+        List<Long> ids = prods.stream().map(Prod::id).toList();
+        for (int from = 0; from < ids.size(); from += 5_000) {
+            current.putAll(currentPrices(branchId, ids.subList(from, Math.min(ids.size(), from + 5_000)), at));
+        }
         List<PriceRow> rows = new ArrayList<>();
         for (Prod p : prods) {
             Map<String, String> prices = new LinkedHashMap<>();
@@ -137,6 +142,15 @@ class PriceChanges {
             rows.add(new PriceRow(p.id(), p.code(), p.name(), p.manufacturer(), prices));
         }
         return new PricePage(rows, total, page, size);
+    }
+
+    static String orderBy(PriceSort sort, boolean desc) {
+        String dir = desc ? " DESC" : "";
+        return switch (sort == null ? PriceSort.NAME : sort) {
+            case CODE -> " ORDER BY p.code" + dir;
+            case NAME -> " ORDER BY lower(p.name)" + dir;
+            case MANUFACTURER -> " ORDER BY lower(m.name)" + dir + " NULLS LAST, lower(p.name)";
+        };
     }
 
     // ===== NO: o'qish =====
