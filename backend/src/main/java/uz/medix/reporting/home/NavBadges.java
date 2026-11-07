@@ -25,7 +25,8 @@ class NavBadges {
     record Badge(int count, boolean danger) {}
 
     record NavBadgesView(@Schema(nullable = true) Badge orders, @Schema(nullable = true) Badge shipments,
-            @Schema(nullable = true) Badge expiry) {}
+            @Schema(nullable = true) Badge expiry,
+            @Schema(nullable = true, description = "Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida)") String company) {}
 
     private final JdbcClient jdbc;
     private final Clock clock;
@@ -39,8 +40,9 @@ class NavBadges {
     @Transactional(readOnly = true)
     NavBadgesView get(Actor actor, Set<String> authorities, Long branchId) {
         Long b = branchId != null && actor.canAccessBranch(branchId) ? branchId : actor.allBranches() ? null : actor.branchId();
+        String company = jdbc.sql("SELECT name FROM company ORDER BY id LIMIT 1").query(String.class).optional().orElse(null);
         if (b == null && !actor.allBranches()) {
-            return new NavBadgesView(null, null, null);
+            return new NavBadgesView(null, null, null, company);
         }
         long scope = b == null ? -1L : b;
         Badge orders = authorities.contains("orders.view") ? new Badge(count("""
@@ -63,7 +65,7 @@ class NavBadges {
                     .single();
             expiry = new Badge(e.near(), e.expired() > 0);
         }
-        return new NavBadgesView(orders, shipments, expiry);
+        return new NavBadgesView(orders, shipments, expiry, company);
     }
 
     private int count(String sql, long scope) {

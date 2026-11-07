@@ -16394,6 +16394,10 @@
           },
           "shipments" : {
             "$ref" : "#/components/schemas/Badge"
+          },
+          "company" : {
+            "type" : "string",
+            "description" : "Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida)"
           }
         }
       },

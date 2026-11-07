@@ -6979,6 +6979,8 @@ export interface components {
             expiry?: components["schemas"]["Badge"];
             orders?: components["schemas"]["Badge"];
             shipments?: components["schemas"]["Badge"];
+            /** @description Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida) */
+            company?: string;
         };
         NotificationItem: {
             body?: string;

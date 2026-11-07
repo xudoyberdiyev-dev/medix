@@ -7,14 +7,17 @@ import type { components } from "@/lib/api/schema";
 export type NavBadge = components["schemas"]["Badge"];
 
 /** Sidebar nishonlari (prototip navBadges): son 0 boʻlsa koʻrsatilmaydi; har daqiqada va real vaqt hodisasida yangilanadi. */
-export function useNavBadges(branchId: number | null | undefined): Partial<Record<string, NavBadge | null>> {
+export function useNavBadges(branchId: number | null | undefined): {
+  badges: Partial<Record<string, NavBadge | null>>;
+  company: string | null;
+} {
   const q = useQuery({
     queryKey: ["nav-badges", branchId ?? null],
     queryFn: () => unwrap(api.GET("/api/nav/badges", { params: { query: { branchId: branchId ?? undefined } } })),
     enabled: branchId !== undefined,
     refetchInterval: 60_000,
   });
-  return badgeMap(q.data);
+  return { badges: badgeMap(q.data), company: q.data?.company ?? null };
 }
 
 /** Menyu kaliti → nishon: buyurtmalar (tasdiq kutmoqda), joʻnatish (tayyor), muddat nazorati (yaqin / oʻtgan — qizil). */

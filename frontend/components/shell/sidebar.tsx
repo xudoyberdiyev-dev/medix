@@ -58,7 +58,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
     return () => document.removeEventListener("mousedown", onDoc);
   }, [menu]);
   const selectedBranch = useBranchStore((s) => s.branchId);
-  const badges = useNavBadges(me.data ? (me.data.allBranches ? (selectedBranch ?? null) : null) : undefined);
+  const { badges, company } = useNavBadges(me.data ? (me.data.allBranches ? (selectedBranch ?? null) : null) : undefined);
   const rail = variant === "rail";
   // Ixcham koʻrinish: 768–1279 px da har doim, ≥1280 da — yigʻilganda
   const mini = rail && collapsed;
@@ -82,6 +82,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
         </span>
         <span className={cn("flex min-w-0 flex-col", compact("hidden", "max-xl:hidden"))}>
           <span className="text-subtitle leading-5 text-white">MEDIX</span>
+          {company ? <span className="truncate text-[11px] leading-[14px] text-sidebar-text/75">{company}</span> : null}
         </span>
       </div>
       <nav aria-label={t("shell.mainMenu")} className={cn("flex-1 overflow-y-auto px-3 pb-4", compact("px-2", "max-xl:px-2"))}>

@@ -17,3 +17,4 @@ backend/out/
 
 # Deploy: pgBackRest kalitlari (namunasi — *.conf.example)
 deploy/pgbackrest/conf.d/*.conf
+__pycache__/
