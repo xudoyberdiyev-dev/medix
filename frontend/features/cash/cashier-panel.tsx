@@ -27,6 +27,10 @@ type DayPoint = components["schemas"]["DayPoint"];
 const money = (v: string) => <span className="tabular-nums">{formatMoney(v)}</span>;
 
 /** Kunlik dinamika ustuni uchun nisbat (0–100), tiyinlarda — float faqat koʻrinish kengligi uchun. */
+
+type AccountKind = "CASH" | "TERMINAL" | "BANK";
+const ACCOUNT_KINDS: readonly AccountKind[] = ["CASH", "TERMINAL", "BANK"];
+
 export function barPercent(value: string, max: bigint): number {
   if (max <= 0n) return 0;
   return Number((toCents(value) * 100n) / max);
@@ -53,11 +57,12 @@ export function CashierPanel() {
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
   const [account, setAccount] = useState<string | null>(null);
+  const [kind, setKind] = useState<AccountKind | null>(null);
   const isoFrom = parseUzDate(from);
   const isoTo = parseUzDate(to);
   const accounts = useAccounts(allowed ? branchId : null);
   const panel = useQuery({
-    queryKey: ["cash-panel", branchId, isoFrom, isoTo, account],
+    queryKey: ["cash-panel", branchId, isoFrom, isoTo, account, kind],
     queryFn: () =>
       unwrap(
         api.GET("/api/cash-panel", {
@@ -67,6 +72,7 @@ export function CashierPanel() {
               from: isoFrom ?? undefined,
               to: isoTo ?? undefined,
               accountId: account ? Number(account) : undefined,
+              kind: kind ?? undefined,
             },
           },
         }),
@@ -129,8 +135,25 @@ export function CashierPanel() {
               onChange={(v) => setAccount(v === "all" ? null : v)}
               options={[
                 { value: "all", label: t("allAccounts") },
-                ...(accounts.data ?? []).map((a) => ({ value: String(a.id), label: a.name, sub: `${tk(a.kind)} · ${a.code}` })),
+                ...(accounts.data ?? [])
+                  .filter((a) => !kind || a.kind === kind)
+                  .map((a) => ({ value: String(a.id), label: a.name, sub: `${tk(a.kind)} · ${a.code}` })),
               ]}
+            />
+          </div>
+          <div className="w-44">
+            <Select
+              label={t("kind")}
+              size="sm"
+              value={kind ?? "all"}
+              onChange={(v) => {
+                const next = ACCOUNT_KINDS.find((k) => k === v) ?? null;
+                setKind(next);
+                // Tanlangan hisob boshqa turda boʻlsa — tanlov tozalanadi
+                const acc = (accounts.data ?? []).find((a) => String(a.id) === account);
+                if (next && acc && acc.kind !== next) setAccount(null);
+              }}
+              options={[{ value: "all", label: t("allKinds") }, ...ACCOUNT_KINDS.map((k) => ({ value: k, label: tk(k) }))]}
             />
           </div>
         </div>

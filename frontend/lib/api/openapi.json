@@ -1680,6 +1680,15 @@
             "type" : "integer",
             "format" : "int64"
           }
+        }, {
+          "description" : "To'lov turi: CASH — kassalar, TERMINAL, BANK",
+          "in" : "query",
+          "name" : "kind",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TERMINAL", "BANK" ]
+          }
         } ],
         "responses" : {
           "200" : {

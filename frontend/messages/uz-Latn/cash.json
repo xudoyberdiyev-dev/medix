@@ -227,7 +227,9 @@
     "recentEmpty": {
       "title": "Operatsiya yoʻq",
       "description": "Pul harakati boʻlgach shu yerda koʻrinadi."
-    }
+    },
+    "kind": "Toʻlov turi",
+    "allKinds": "Barcha turlar"
   },
   "bank": {
     "noAccount": {

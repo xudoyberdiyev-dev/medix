@@ -227,7 +227,9 @@
     "recentEmpty": {
       "title": "Операций нет",
       "description": "Появятся здесь после движения денег."
-    }
+    },
+    "kind": "Тип оплаты",
+    "allKinds": "Все типы"
   },
   "bank": {
     "noAccount": {

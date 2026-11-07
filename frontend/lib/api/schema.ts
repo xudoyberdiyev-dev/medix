@@ -10341,6 +10341,8 @@ export interface operations {
                 from?: string;
                 to?: string;
                 accountId?: number;
+                /** @description To'lov turi: CASH — kassalar, TERMINAL, BANK */
+                kind?: "CASH" | "TERMINAL" | "BANK";
             };
             header?: never;
             path?: never;
