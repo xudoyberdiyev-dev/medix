@@ -62,7 +62,8 @@ public class Accounts {
                 .list();
     }
 
-    private void ensureDefaults(long branchId) {
+    /** Filialning standart hisoblari (kassa, Terminal) birinchi murojaatda yaratiladi; chaqiruvchi tranzaksiyasida. */
+    public void ensureDefaults(long branchId) {
         // Filial qatori qulflanadi — parallel birinchi murojaatda takror yaratilmaydi
         jdbc.sql("SELECT id FROM branch WHERE id = :b FOR UPDATE").param("b", branchId).query(Long.class).single();
         boolean any = jdbc.sql("SELECT EXISTS (SELECT 1 FROM money_account WHERE branch_id = :b)").param("b", branchId).query(Boolean.class).single();

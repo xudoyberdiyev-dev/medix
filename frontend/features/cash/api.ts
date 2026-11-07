@@ -32,6 +32,7 @@ export const DOC_TITLE: Record<string, string> = {
   KO: "Kassa operatsiyasi",
   BO: "Bank operatsiyasi",
   IO: "Oʻtkazma",
+  FIO: "Filiallararo toʻlov",
 };
 
 export function useCashOps(branchId: number | null, status: CashOpStatus | null) {
