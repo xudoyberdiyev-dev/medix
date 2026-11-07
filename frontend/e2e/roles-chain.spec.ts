@@ -300,6 +300,7 @@ test("Kassir: haydovchidagi pulni qabul qiladi (MT)", async ({ page }) => {
 
 test("Haydovchi: pul topshirilgach reys «Yakunlangan reyslar»da", async ({ page }) => {
   await login(page, "driver.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
   await page.goto("/driver");
   // Boshqa spec'lardagi reyslar faol boʻlishi mumkin — faqat tarix yorligʻi tekshiriladi
   await page.getByRole("tab", { name: "Yakunlangan reyslar" }).click();
