@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, BellOff } from "lucide-react";
 import Link from "next/link";
@@ -14,6 +15,7 @@ const KEY = ["notifications"] as const;
 
 /** Bildirishnomalar (TopBar): oʻqilmaganlar soni, oxirgi 50 ta, oʻqildi belgisi. Real vaqtda (SSE) yangilanadi. */
 export function NotificationBell() {
+  const t = useTranslations("notifications");
   const me = useMe();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -53,7 +55,7 @@ export function NotificationBell() {
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        aria-label={unread > 0 ? `Bildirishnomalar: ${unread} ta oʻqilmagan` : "Bildirishnomalar"}
+        aria-label={unread > 0 ? t("unread", { count: unread }) : t("title")}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className="relative flex size-control-md items-center justify-center rounded-control hover:bg-background"
@@ -68,19 +70,19 @@ export function NotificationBell() {
       {open ? (
         <div className="absolute right-0 z-30 mt-1 w-96 rounded-card border border-border bg-surface shadow-overlay">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <span className="text-subtitle">Bildirishnomalar</span>
+            <span className="text-subtitle">{t("title")}</span>
             {unread > 0 ? (
               <button type="button" className="text-primary hover:underline" onClick={() => read.mutate("all")}>
-                Hammasini oʻqildi deb belgilash
+                {t("markAll")}
               </button>
             ) : null}
           </div>
           {list.error ? (
-            <p className="px-4 py-6 text-center text-text-secondary">Bildirishnomalarni yuklab boʻlmadi. Birozdan keyin qayta oching.</p>
+            <p className="px-4 py-6 text-center text-text-secondary">{t("loadError")}</p>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-text-secondary">
               <BellOff size={20} strokeWidth={1.5} aria-hidden />
-              <span>Hozircha bildirishnoma yoʻq</span>
+              <span>{t("empty")}</span>
             </div>
           ) : (
             <ul className="max-h-96 overflow-y-auto">

@@ -28,9 +28,14 @@ import {
   HandCoins,
   type LucideIcon,
 } from "lucide-react";
+import type uzLatn from "@/messages/uz-Latn.json";
+
+export type NavKey = keyof typeof uzLatn.nav;
+export type NavGroupKey = keyof typeof uzLatn.navGroups;
 
 export interface NavItem {
-  key: string;
+  /** Lugʻat kaliti ham (`nav.<key>`); `label` — uz-Latn matni (lugʻat bilan bir xil, testda tekshiriladi). */
+  key: NavKey;
   label: string;
   href: string;
   icon: LucideIcon;
@@ -39,6 +44,8 @@ export interface NavItem {
 }
 
 export interface NavGroup {
+  /** Lugʻat kaliti (`navGroups.<key>`); sarlavhasiz guruhda yoʻq. */
+  key?: NavGroupKey;
   title?: string;
   items: NavItem[];
 }
@@ -47,6 +54,7 @@ export interface NavGroup {
 export const navigation: NavGroup[] = [
   { items: [{ key: "home", label: "Bosh sahifa", href: "/", icon: LayoutDashboard }] },
   {
+    key: "sales",
     title: "Savdo",
     items: [
       {
@@ -59,6 +67,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "warehouse",
     title: "Ombor",
     items: [
       { key: "warehouse", label: "Monitor", href: "/warehouse", icon: MonitorDot, anyOf: ["orders.queue"] },
@@ -115,6 +124,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "money",
     title: "Pul",
     items: [
       { key: "payments", label: "Toʻlovlar", href: "/payments", icon: Wallet, anyOf: ["payments.view"] },
@@ -125,6 +135,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "references",
     title: "Maʼlumotnomalar",
     items: [
       { key: "products", label: "Mahsulotlar", href: "/products", icon: Pill, anyOf: ["products.view"] },
@@ -135,6 +146,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "analysis",
     title: "Tahlil",
     items: [
       {
@@ -147,6 +159,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "admin",
     title: "Boshqaruv",
     items: [
       {

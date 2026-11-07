@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import {
   ChartColumn,
@@ -27,7 +28,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
 import { matchesSearch } from "@/lib/search";
-import { navigationFor } from "./nav";
+import { navigationFor, type NavGroup, type NavItem } from "./nav";
 
 type ServerHit = components["schemas"]["Hit"];
 export type HitKind = ServerHit["kind"] | "PAGE" | "REPORT";
@@ -71,11 +72,19 @@ export const MIN_QUERY = 2;
 const LOCAL_LIMIT = 5;
 
 /** Sahifalar (menyudan, ruxsat bo'yicha) va hisobotlar (katalogdan) — serversiz, darhol. */
-export function localHits(query: string, permissions: string[] | undefined): PaletteHit[] {
+export function localHits(
+  query: string,
+  permissions: string[] | undefined,
+  /** Menyu nomlari joriy tilda (berilmasa — uz-Latn). Qidiruv ikkala yozuvda ham ishlaydi. */
+  labels: { item: (i: NavItem) => string; group: (g: NavGroup) => string } = {
+    item: (i) => i.label,
+    group: (g) => g.title ?? "",
+  },
+): PaletteHit[] {
   if (!permissions || query.trim().length < MIN_QUERY) return [];
   const pages = navigationFor(permissions)
-    .flatMap((g) => g.items.map((i) => ({ ...i, group: g.title ?? "" })))
-    .filter((i) => matchesSearch(query, [i.label, i.group]))
+    .flatMap((g) => g.items.map((i) => ({ ...i, label: labels.item(i), base: i.label, group: labels.group(g) })))
+    .filter((i) => matchesSearch(query, [i.label, i.base, i.group]))
     .slice(0, LOCAL_LIMIT)
     .map<PaletteHit>((i) => ({ key: `page-${i.key}`, kind: "PAGE", title: i.label, subtitle: i.group || null, link: i.href }));
   const reports = visibleReports(permissions)
@@ -105,11 +114,12 @@ function useDebounced(value: string, ms: number): string {
 /** Ctrl+K universal qidiruv (SPEC 4 «Umumiy»): hujjat, mahsulot, kontragent, hisobot va sahifalar. */
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const ref = useDialog(open, onClose);
+  const label = useTranslations("search")("label");
   if (!open) return null;
   return (
     <dialog
       ref={ref}
-      aria-label="Qidiruv"
+      aria-label={label}
       onClick={(e: MouseEvent<HTMLDialogElement>) => e.target === e.currentTarget && onClose()}
       className="mx-auto mt-[12vh] w-full max-w-xl flex-col rounded-modal bg-surface p-0 text-text-primary shadow-overlay open:flex backdrop:bg-overlay"
     >
@@ -122,6 +132,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
   const me = useMe();
   const router = useRouter();
   const listId = useId();
+  const t = useTranslations();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const q = useDebounced(query.trim(), 200);
@@ -132,7 +143,10 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
     staleTime: 30_000,
   });
   const hits = useMemo<PaletteHit[]>(() => {
-    const local = localHits(query, me.data?.permissions);
+    const local = localHits(query, me.data?.permissions, {
+      item: (i) => t(`nav.${i.key}`),
+      group: (g) => (g.key ? t(`navGroups.${g.key}`) : ""),
+    });
     const remote =
       q.length >= MIN_QUERY
         ? (server.data?.hits ?? []).map<PaletteHit>((h) => ({
@@ -144,7 +158,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
           }))
         : [];
     return [...local, ...remote];
-  }, [query, q, me.data?.permissions, server.data]);
+  }, [query, q, me.data?.permissions, server.data, t]);
   const groups = groupHits(hits);
   const flat = groups.flatMap((g) => g.hits);
   const current = Math.min(active, Math.max(flat.length - 1, 0));
@@ -180,34 +194,36 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
           aria-expanded={flat.length > 0}
           aria-controls={listId}
           aria-activedescendant={flat[current] ? `${listId}-${flat[current].key}` : undefined}
-          aria-label="Qidirish"
-          placeholder="Hujjat raqami, mahsulot, mijoz, STIR, hisobot…"
+          aria-label={t("shell.search")}
+          placeholder={t("search.placeholder")}
           value={query}
           onChange={(e) => (setQuery(e.target.value), setActive(0))}
           onKeyDown={onKeyDown}
           className="h-14 flex-1 bg-transparent text-body outline-none placeholder:text-text-disabled"
         />
-        {loading ? <Loader2 size={16} strokeWidth={1.5} aria-label="Qidirilmoqda" className="animate-spin text-text-secondary" /> : null}
+        {loading ? (
+          <Loader2 size={16} strokeWidth={1.5} aria-label={t("search.searching")} className="animate-spin text-text-secondary" />
+        ) : null}
         <kbd className="rounded-sm border border-border px-1.5 text-caption text-text-secondary">Esc</kbd>
       </div>
       <div className="max-h-[60vh] overflow-y-auto py-2">
         {short ? (
-          <p className="px-4 py-6 text-center text-text-secondary">Kamida 2 ta belgi yozing. Kirill yoki lotinda — farqi yoʻq.</p>
+          <p className="px-4 py-6 text-center text-text-secondary">{t("search.short", { min: MIN_QUERY })}</p>
         ) : server.error && flat.length === 0 ? (
           <p role="alert" className="px-4 py-6 text-center text-text-secondary">
-            Qidiruv bajarilmadi. Ulanishni tekshirib, qayta yozing.
+            {t("search.failed")}
           </p>
         ) : flat.length === 0 && !loading ? (
           <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-text-secondary">
             <SearchX size={20} strokeWidth={1.5} aria-hidden />
-            <span>Hech narsa topilmadi. Boshqa soʻz yoki hujjat raqamini yozib koʻring.</span>
+            <span>{t("search.empty")}</span>
           </div>
         ) : (
-          <ul id={listId} role="listbox" aria-label="Natijalar">
+          <ul id={listId} role="listbox" aria-label={t("search.results")}>
             {groups.map((g) => (
               <li key={g.kind} role="presentation">
-                <div className="px-4 pt-2 pb-1 text-caption font-medium text-text-secondary">{g.label}</div>
-                <ul role="group" aria-label={g.label}>
+                <div className="px-4 pt-2 pb-1 text-caption font-medium text-text-secondary">{t(`search.kinds.${g.kind}`)}</div>
+                <ul role="group" aria-label={t(`search.kinds.${g.kind}`)}>
                   {g.hits.map((h) => {
                     const selected = flat[current]?.key === h.key;
                     const Icon = KIND_ICONS[h.kind] ?? FileText;

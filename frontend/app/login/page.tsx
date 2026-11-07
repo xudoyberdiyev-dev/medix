@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { LoginForm } from "./login-form";
+import { LanguageSwitcher } from "@/components/shell/language-switcher";
+import { LoginForm, LoginHeading } from "./login-form";
 
 export const metadata: Metadata = { title: "Kirish — MEDIX" };
 
@@ -15,12 +16,12 @@ export default function LoginPage() {
           <span className="text-page-title">MEDIX</span>
         </div>
         <div className="rounded-card border border-border bg-surface p-8">
-          <h1 className="text-section-title">Tizimga kirish</h1>
-          <p className="mt-1 mb-8 text-text-secondary">Login va parolni administrator beradi.</p>
+          <LoginHeading />
           <Suspense>
             <LoginForm />
           </Suspense>
         </div>
+        <LanguageSwitcher className="mx-auto mt-6 w-56" />
       </div>
     </main>
   );

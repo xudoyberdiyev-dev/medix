@@ -1,0 +1,101 @@
+{
+  "common": {
+    "loading": "Yuklanmoqda…",
+    "retry": "Qayta urinish",
+    "close": "Yopish",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "networkError": "Server bilan aloqa yoʻq. Internetni tekshirib, qayta urinib koʻring."
+  },
+  "language": {
+    "label": "Til",
+    "hint": "Interfeys tili. Hujjatlar va maʼlumotlar oʻzgarmaydi."
+  },
+  "shell": {
+    "mainMenu": "Asosiy menyu",
+    "profile": "Profil",
+    "logout": "Chiqish",
+    "search": "Qidirish",
+    "branch": "Filial",
+    "allBranches": "Barcha filiallar"
+  },
+  "navGroups": {
+    "sales": "Savdo",
+    "warehouse": "Ombor",
+    "money": "Pul",
+    "references": "Maʼlumotnomalar",
+    "analysis": "Tahlil",
+    "admin": "Boshqaruv"
+  },
+  "nav": {
+    "home": "Bosh sahifa",
+    "orders": "Buyurtmalar",
+    "warehouse": "Monitor",
+    "receipts": "Kirim",
+    "picking": "Yigʻish",
+    "marking": "Markirovka",
+    "shipments": "Joʻnatish",
+    "driver": "Reysim",
+    "stock": "Qoldiqlar",
+    "zone-transfers": "Zona koʻchirishlari",
+    "warehouse-transfers": "Ombor koʻchirishlari",
+    "branch-sales": "Filiallararo savdo",
+    "inventory-counts": "Inventarizatsiya",
+    "write-offs": "Hisobdan chiqarish",
+    "supplier-returns": "YB ga qaytarish",
+    "expiry": "Muddat nazorati",
+    "opening": "Boshlangʻich qoldiq",
+    "payments": "Toʻlovlar",
+    "cash": "Kassa",
+    "customer-debts": "Mijozlar qarzi",
+    "supplier-debts": "YB qarzi",
+    "bonuses": "Bonus balans",
+    "products": "Mahsulotlar",
+    "customers": "Mijozlar",
+    "suppliers": "Yetkazib beruvchilar",
+    "prices": "Narxlar",
+    "dictionaries": "Kichik maʼlumotnomalar",
+    "reports": "Hisobotlar",
+    "settings": "Sozlamalar"
+  },
+  "search": {
+    "label": "Qidiruv",
+    "placeholder": "Hujjat raqami, mahsulot, mijoz, STIR, hisobot…",
+    "empty": "Hech narsa topilmadi. Boshqa soʻz yoki hujjat raqamini yozib koʻring.",
+    "results": "Natijalar",
+    "kinds": {
+      "PAGE": "Sahifalar",
+      "REPORT": "Hisobotlar",
+      "ORDER": "Buyurtmalar",
+      "RECEIPT": "Kirimlar",
+      "PRICE_CHANGE": "Narx oʻzgarishlari (NO)",
+      "TRIP": "Reyslar",
+      "PRODUCT": "Mahsulotlar",
+      "CUSTOMER": "Mijozlar",
+      "SUPPLIER": "Yetkazib beruvchilar",
+      "EMPLOYEE": "Xodimlar"
+    },
+    "searching": "Qidirilmoqda",
+    "short": "Kamida {min} ta belgi yozing. Kirill yoki lotinda — farqi yoʻq.",
+    "failed": "Qidiruv bajarilmadi. Ulanishni tekshirib, qayta yozing."
+  },
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "unread": "Bildirishnomalar: {count} ta oʻqilmagan",
+    "markAll": "Hammasini oʻqildi deb belgilash",
+    "loadError": "Bildirishnomalarni yuklab boʻlmadi. Birozdan keyin qayta oching.",
+    "empty": "Hozircha bildirishnoma yoʻq"
+  },
+  "login": {
+    "pageTitle": "Kirish — MEDIX",
+    "title": "Tizimga kirish",
+    "subtitle": "Login va parolni administrator beradi.",
+    "login": "Login",
+    "loginPlaceholder": "Loginni kiriting",
+    "password": "Parol",
+    "passwordPlaceholder": "Parolni kiriting",
+    "submit": "Tizimga kirish",
+    "requiredLogin": "Login kiritilmagan. Administrator bergan loginni yozing.",
+    "requiredPassword": "Parol kiritilmagan. Parolni yozing."
+  }
+}

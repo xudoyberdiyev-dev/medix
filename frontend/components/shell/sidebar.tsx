@@ -1,6 +1,7 @@
 "use client";
 
 import { LogOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
@@ -17,16 +18,17 @@ export function Sidebar() {
   const router = useRouter();
   const me = useMe();
   const logout = useLogout();
+  const t = useTranslations();
   return (
     <aside className="flex w-sidebar shrink-0 flex-col bg-brand-900 text-sidebar-text print:hidden">
       <div className="flex h-topbar items-center gap-3 px-5">
         <span className="flex size-8 items-center justify-center rounded-control bg-primary-button font-semibold text-white">M</span>
         <span className="text-subtitle text-white">MEDIX</span>
       </div>
-      <nav aria-label="Asosiy menyu" className="flex-1 overflow-y-auto px-3 pb-4">
+      <nav aria-label={t("shell.mainMenu")} className="flex-1 overflow-y-auto px-3 pb-4">
         {navigationFor(me.data?.permissions).map((group, gi) => (
-          <div key={group.title ?? gi} className="mt-4 first:mt-2">
-            {group.title ? <div className="px-3 pb-1 text-caption font-medium">{group.title}</div> : null}
+          <div key={group.key ?? gi} className="mt-4 first:mt-2">
+            {group.key ? <div className="px-3 pb-1 text-caption font-medium">{t(`navGroups.${group.key}`)}</div> : null}
             <ul>
               {group.items.map((item) => {
                 const active = isActive(pathname, item.href);
@@ -42,7 +44,7 @@ export function Sidebar() {
                     >
                       {active ? <span aria-hidden className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-sidebar-active" /> : null}
                       <Icon size={20} strokeWidth={1.5} aria-hidden />
-                      <span>{item.label}</span>
+                      <span>{t(`nav.${item.key}`)}</span>
                     </Link>
                   </li>
                 );
@@ -55,7 +57,7 @@ export function Sidebar() {
         <div className="flex items-center gap-3 border-t border-sidebar-item-active-bg px-4 py-3">
           <Link
             href="/profile"
-            title="Profil"
+            title={t("shell.profile")}
             className="flex min-w-0 flex-1 items-center gap-3 rounded-control focus-visible:outline-sidebar-active"
           >
             <Avatar name={me.data.fullName} decorative />
@@ -66,8 +68,8 @@ export function Sidebar() {
           </Link>
           <button
             type="button"
-            aria-label="Chiqish"
-            title="Chiqish"
+            aria-label={t("shell.logout")}
+            title={t("shell.logout")}
             disabled={logout.isPending}
             onClick={() => logout.mutate(undefined, { onSettled: () => router.replace("/login") })}
             className="flex size-control-md items-center justify-center rounded-control hover:bg-sidebar-item-active-bg hover:text-white focus-visible:outline-sidebar-active"

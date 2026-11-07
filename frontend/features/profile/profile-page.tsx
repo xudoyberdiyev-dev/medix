@@ -2,6 +2,8 @@
 
 import { CircleCheck, KeyRound, ShieldAlert } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "@/components/shell/language-switcher";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,8 +33,18 @@ export function ProfilePage() {
         <InfoCard profile={profile.data} />
         <PinCard profile={profile.data} />
         <PasswordCard />
+        <LanguageCard />
       </div>
     </>
+  );
+}
+
+function LanguageCard() {
+  const t = useTranslations("language");
+  return (
+    <Card title={t("label")}>
+      <LanguageSwitcher className="max-w-xs" />
+    </Card>
   );
 }
 
