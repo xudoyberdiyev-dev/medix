@@ -460,7 +460,12 @@
     "returnedSum": "Қайтди:",
     "customerPays": "Мижоз тўлайди:",
     "allBack": "Ҳамма товар қайтмоқда",
-    "allBackHint": "«Қисман» эмас, «Етказилмади» ни сабаб билан белгиланг."
+    "allBackHint": "«Қисман» эмас, «Етказилмади» ни сабаб билан белгиланг.",
+    "tabTrip": "Жорий рейс",
+    "tabHistory": "Якунланган рейслар",
+    "historyEmpty": "Якунланган рейс йўқ",
+    "historyEmptyHint": "Рейс якунланиб, қайтган товар ва нақд пул топширилгач шу ерда кўринади.",
+    "historyMeta": "{date} · {vehicle} · {orders} та буюртма · {places} жой · {amount} сўм"
   },
   "shipments": {
     "tripStatus": {

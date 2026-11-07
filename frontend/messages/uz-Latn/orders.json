@@ -460,7 +460,12 @@
     "returnedSum": "Qaytdi:",
     "customerPays": "Mijoz toʻlaydi:",
     "allBack": "Hamma tovar qaytmoqda",
-    "allBackHint": "«Qisman» emas, «Yetkazilmadi» ni sabab bilan belgilang."
+    "allBackHint": "«Qisman» emas, «Yetkazilmadi» ni sabab bilan belgilang.",
+    "tabTrip": "Joriy reys",
+    "tabHistory": "Yakunlangan reyslar",
+    "historyEmpty": "Yakunlangan reys yoʻq",
+    "historyEmptyHint": "Reys yakunlanib, qaytgan tovar va naqd pul topshirilgach shu yerda koʻrinadi.",
+    "historyMeta": "{date} · {vehicle} · {orders} ta buyurtma · {places} joy · {amount} soʻm"
   },
   "shipments": {
     "tripStatus": {

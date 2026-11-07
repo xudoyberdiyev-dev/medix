@@ -4205,6 +4205,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/mine/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Yakunlangan reyslarim (haydovchi)
+         * @description O'z reyslari: yakunlangan va bekor qilingan, oxirgi 100 ta.
+         */
+        get: operations["mineHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/options": {
         parameters: {
             query?: never;
@@ -15373,6 +15393,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
+    mineHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripSummary"][];
                 };
             };
         };

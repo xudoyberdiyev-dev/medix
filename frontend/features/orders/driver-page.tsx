@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, CircleCheck, CircleX, Flag, PackageCheck, PackageMinus, Signature, Truck } from "lucide-react";
+import { Camera, CircleCheck, CircleX, Flag, History, PackageCheck, PackageMinus, Signature, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
+import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
@@ -43,6 +44,7 @@ export function DriverPage() {
   const [places, setPlaces] = useState<Record<number, string>>({});
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const [tab, setTab] = useState<"trip" | "history">("trip");
 
   if (me.data && !allowed) return <ForbiddenState description={tr("driver.forbidden")} />;
 
@@ -84,8 +86,21 @@ export function DriverPage() {
   return (
     <>
       <h1 className="mb-4 text-page-title">{tr("driver.title")}</h1>
+      <div className="mb-4">
+        <Tabs
+          aria-label={tr("driver.title")}
+          items={[
+            { key: "trip", label: tr("driver.tabTrip") },
+            { key: "history", label: tr("driver.tabHistory") },
+          ]}
+          value={tab}
+          onChange={(k) => setTab(k === "history" ? "history" : "trip")}
+        />
+      </div>
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
-      {trip.error ? (
+      {tab === "history" ? (
+        <TripHistory />
+      ) : trip.error ? (
         <ErrorState onRetry={() => trip.refetch()} />
       ) : trip.isPending ? (
         <Skeleton className="h-40 w-full" />
@@ -104,6 +119,49 @@ export function DriverPage() {
         />
       )}
     </>
+  );
+}
+
+/** «Yakunlangan reyslar» (SPEC 5.4): haydovchining yakunlangan va bekor qilingan reyslari, oxirgi 100 ta. */
+function TripHistory() {
+  const tr = useTranslations("orders");
+  const trips = useQuery({
+    queryKey: ["trips", "mine", "history"],
+    queryFn: () => unwrap(api.GET("/api/trips/mine/history")),
+  });
+  if (trips.error) return <ErrorState onRetry={() => trips.refetch()} />;
+  if (trips.isPending) return <Skeleton className="h-24 w-full" />;
+  if (trips.data.length === 0)
+    return (
+      <Card>
+        <EmptyState icon={History} title={tr("driver.historyEmpty")} description={tr("driver.historyEmptyHint")} />
+      </Card>
+    );
+  return (
+    <ul className="flex flex-col gap-2">
+      {trips.data.map((t) => {
+        const st = TRIP_STATUS[t.status];
+        return (
+          <li key={t.id} className="flex flex-col gap-1 rounded-card border border-border bg-surface p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono">{t.number}</span>
+              <Badge tone={st.tone} icon={st.icon}>
+                {tr(`shipments.tripStatus.${t.status}`)}
+              </Badge>
+            </div>
+            <div className="text-caption text-text-secondary">
+              {tr("driver.historyMeta", {
+                date: formatIsoDate(t.tripDate),
+                vehicle: t.vehicle,
+                orders: formatQuantity(t.orders),
+                places: formatQuantity(t.places),
+                amount: formatMoney(t.total),
+              })}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

@@ -9685,6 +9685,29 @@
         "tags" : [ "trips" ]
       }
     },
+    "/api/trips/mine/history" : {
+      "get" : {
+        "description" : "O'z reyslari: yakunlangan va bekor qilingan, oxirgi 100 ta.",
+        "operationId" : "mineHistory",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TripSummary"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yakunlangan reyslarim (haydovchi)",
+        "tags" : [ "trips" ]
+      }
+    },
     "/api/trips/options" : {
       "get" : {
         "description" : "Filialning faol mashinalari (band joylar bilan) va haydovchilari.",
