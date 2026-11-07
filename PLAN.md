@@ -199,6 +199,7 @@ Manba: `docs/SPEC.md` 16-bo'lim. Har bosqich: kichik vazifalar → kod → testl
 - 01.11.2026 — Spring Session REQUIRES_NEW tranzaksiyada ishlaydi: sessiyani o'zgartiradigan integratsion testlar `@Transactional` bo'lmaydi.
 
 ## Sessiya jurnali
+- 07.11.2026 06:50 — zanjir: davom (kontekst og'irlashdi). CI (develop) to'liq yashil: backend (BranchSaleIT 7, BranchPaymentIT 2), frontend 184 test, e2e (FS kamomadi → qaytarish). Keyingi sessiya: №5 kirill/rus poydevori.
 - 07.11.2026 06:05–06:45 — ertalabki oyna, 1-sessiya: FS kamomadi (V42) + filiallararo to'lov (V43) + UI + e2e; CI backend testlari yashil (OpenAPI yangilandi). Keyingi: №5 kirill/rus poydevori.
 - 07.11.2026 04:31 — davom sessiyasi (fire_trigger): oyna tugashiga 29 daqiqa; oyna hisoboti allaqachon yozilgan. FS kamomadini hal qilish (pul + qoldiq, CI bilan) oynaga sigʻmaydi — keyingi oynaga qoldirildi. CI (develop) yashil.
 - 07.11.2026 03:38–04:30 — zanjir sessiyasi (tungi oyna): FS — V41 + servis + API + IT 5 test + UI + filiallararo qarz paneli + FS/HF PDF + «Diqqat» + e2e (CI yashil). Oyna hisoboti yozildi. HF FS uchun sotuv HF hisoblagichidan (bitta filial ichida HF raqamlari yagona). Kamomadni hal qilish — keyingi sessiya.
