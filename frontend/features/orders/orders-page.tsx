@@ -1,12 +1,14 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Ban,
   CircleCheck,
   CircleX,
   ClipboardList,
   Clock,
+  Columns3,
+  FileDown,
   FilePen,
   ListOrdered,
   PackageCheck,
@@ -29,11 +31,22 @@ import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
-import { idParam } from "@/lib/url-filters";
 import { useBranchStore } from "@/lib/stores/branch";
+import { useHiddenColumns } from "@/lib/use-hidden-columns";
+import { SavedViews } from "@/components/ui/saved-views";
+import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
 import { ORDER_CREATE, useOrders, type OrderStatus, type OrderSummary } from "./api";
 import type { OrdersT } from "./i18n";
 import { OrderDrawer } from "./order-drawer";
+import {
+  DEFAULT_ORDER_FILTERS,
+  hasOrderFilters,
+  ordersExportHref,
+  parseOrderFilters,
+  serializeOrderFilters,
+  type OrderFilters,
+  type OrderSort,
+} from "./url-state";
 
 const STATUS_STYLE: Record<OrderStatus, { tone: "neutral" | "warning" | "info" | "success" | "danger"; icon: LucideIcon }> = {
   DRAFT: { tone: "neutral", icon: FilePen },
@@ -102,22 +115,61 @@ export function soldLabel(s: { from: string | null; to: string | null }, t: Orde
   return s.from ? t("list.soldFrom", { date: day(s.from) }) : t("list.soldTo", { date: day(s.to ?? "") });
 }
 
-/** Buyurtmalar (SPEC 5.2): holat yorliqlari (soni, summasi), «Hozir kimda», qidiruv (raqam, mijoz, STIR), «Mening buyurtmalarim». */
+const ALWAYS = ["number", "customer", "status"];
+
+/** Sana maydoni (KK.OO.YYYY): toʻgʻri yoki boʻsh boʻlsa — darhol qoʻllanadi. */
+function DayField({
+  label,
+  value,
+  onApply,
+  invalid,
+}: {
+  label: string;
+  value: string | null;
+  onApply: (iso: string | null) => void;
+  invalid: string;
+}) {
+  const [text, setText] = useState(formatIsoDate(value));
+  const [seen, setSeen] = useState(value);
+  if (seen !== value) {
+    // URL tashqaridan oʻzgardi (koʻrinish, tozalash) — maydon ham yangilanadi
+    setSeen(value);
+    setText(formatIsoDate(value));
+  }
+  const parsed = parseUzDate(text);
+  return (
+    <div className="w-36">
+      <TextField
+        label={label}
+        size="sm"
+        value={text}
+        placeholder="04.10.2026"
+        error={parsed === null ? invalid : undefined}
+        onChange={(v) => {
+          setText(v);
+          const iso = parseUzDate(v);
+          if (iso !== null && (iso ?? null) !== value) onApply(iso ?? null);
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Buyurtmalar (SPEC 5.2, jadval standarti SPEC 120): holat yorliqlari (soni, summasi), «Hozir kimda», qidiruv (raqam, mijoz, STIR —
+ * lotin/kirill farqsiz), buyurtma sanasi, saralash, «Ustunlar», «Koʻrinishlar», .xlsx eksport, jami qatori; filtrlar URL'da.
+ */
 export function OrdersPage() {
   const t = useTranslations("orders");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
+  const router = useRouter();
+  const pathname = usePathname();
   const params = useSearchParams();
-  const initialStatus = params.get("status");
-  const [status, setStatus] = useState<string | null>(initialStatus);
-  const [search, setSearch] = useState("");
-  const [q, setQ] = useState("");
-  const [mine, setMine] = useState(params.get("mine") === "1");
-  // Hisobotdan oʻtish (Savdo hisoboti qatori): mijoz, operator, sotuv davri
-  const [customer, setCustomer] = useState(() => idParam(params, "customerId", "customer", t("list.customer")));
-  const [operator, setOperator] = useState(() => idParam(params, "operatorId", "operator", t("list.operator")));
-  const [sold, setSold] = useState(() => soldParam(params));
-  const [page, setPage] = useState(1);
+  const filters = parseOrderFilters(new URLSearchParams(params.toString()), { customer: t("list.customer"), operator: t("list.operator") });
+  const [search, setSearch] = useState(filters.q);
+  const [hidden, setHidden] = useHiddenColumns("medix-orders-columns");
+  const [columnsOpen, setColumnsOpen] = useState(false);
   // Bildirishnomadan oʻtish: ?open=<id> — buyurtma kartochkasi darhol ochiladi
   const [editor, setEditor] = useState<{ id: number | null } | null>(() => {
     const id = Number(params.get("open"));
@@ -127,24 +179,20 @@ export function OrdersPage() {
   const allowed = canAny(me.data, ["orders.view", "approvals.view"]);
   const canCreate = can(me.data, ORDER_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
-  const orders = useOrders({
-    branchId,
-    status: (status as OrderStatus | null) ?? null,
-    q,
-    mine,
-    page,
-    customerId: customer?.id ?? null,
-    operatorId: operator?.id ?? null,
-    soldFrom: sold?.from ?? null,
-    soldTo: sold?.to ?? null,
-  });
+  const orders = useOrders(filters, branchId);
+
+  const apply = (patch: Partial<OrderFilters>) => {
+    const next = { ...filters, ...patch, ...("page" in patch ? {} : { page: 1 }) };
+    const qs = serializeOrderFilters(next);
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   if (me.data && !allowed) return <ForbiddenState description={t("list.forbidden")} />;
 
-  const columns: TableColumn<OrderSummary>[] = [
-    { key: "number", title: t("list.col.number"), mono: true },
-    { key: "orderDate", title: t("list.col.date"), render: (o) => day(o.orderDate) },
-    { key: "customer", title: t("list.col.customer") },
+  const allColumns: TableColumn<OrderSummary>[] = [
+    { key: "number", title: t("list.col.number"), mono: true, sortable: true },
+    { key: "orderDate", title: t("list.col.date"), sortable: true, render: (o) => day(o.orderDate) },
+    { key: "customer", title: t("list.col.customer"), sortable: true },
     {
       key: "deliveryType",
       title: t("list.col.delivery"),
@@ -165,6 +213,7 @@ export function OrdersPage() {
       key: "total",
       title: t("list.col.total"),
       align: "right",
+      sortable: true,
       render: (o) => <span className="tabular-nums">{formatMoney(o.total)}</span>,
     },
     {
@@ -185,27 +234,43 @@ export function OrdersPage() {
       ),
     },
   ];
+  const columns = allColumns.filter((c) => ALWAYS.includes(c.key) || !hidden.includes(c.key));
 
-  const filtered = Boolean(status) || Boolean(q) || mine || customer != null || operator != null || sold != null;
+  const filtered = hasOrderFilters(filters);
+  const clearAll = () => (setSearch(""), apply({ ...DEFAULT_ORDER_FILTERS, sort: filters.sort, desc: filters.desc }));
+  const current = orders.data?.statuses.find((x) => (x.status ?? null) === filters.status) ?? orders.data?.statuses[0];
+  const soldNow = filters.soldFrom || filters.soldTo ? { from: filters.soldFrom, to: filters.soldTo } : null;
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("list.title")}</h1>
-        {canCreate ? (
-          <Button icon={Plus} onClick={() => setEditor({ id: null })}>
-            {t("list.create")}
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {orders.data && orders.data.total > 0 ? (
+            <a
+              href={ordersExportHref(filters, branchId)}
+              download
+              className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-4 font-medium hover:bg-background"
+            >
+              <FileDown size={16} strokeWidth={1.5} aria-hidden />
+              {t("list.export")}
+            </a>
+          ) : null}
+          {canCreate ? (
+            <Button icon={Plus} onClick={() => setEditor({ id: null })}>
+              {t("list.create")}
+            </Button>
+          ) : null}
+        </div>
       </div>
       {orders.data ? (
         <div className="mb-3 flex flex-col gap-2">
           <Tabs
             aria-label={t("list.statusTabs")}
             items={statusTabs(orders.data.statuses, t)}
-            value={status ?? ALL}
-            onChange={(k) => (setStatus(k === ALL ? null : k), setPage(1))}
+            value={filters.status ?? ALL}
+            onChange={(k) => apply({ status: k === ALL ? null : (k as OrderStatus) })}
           />
-          <p className="text-caption text-text-secondary tabular-nums">{tabSummary(orders.data.statuses, status, t)}</p>
+          <p className="text-caption text-text-secondary tabular-nums">{tabSummary(orders.data.statuses, filters.status, t)}</p>
         </div>
       ) : null}
       {orders.error ? (
@@ -217,57 +282,120 @@ export function OrdersPage() {
           rows={orders.data?.items ?? []}
           rowKey={(o) => String(o.id)}
           loading={orders.isPending}
+          activeKey={editor?.id != null ? String(editor.id) : undefined}
           onRowClick={(o) => setEditor({ id: o.id })}
+          sort={filters.sort === "CREATED" ? undefined : { key: SORT_COLUMN[filters.sort], dir: filters.desc ? "desc" : "asc" }}
+          onSortChange={(s) => {
+            const sort = COLUMN_SORT[s.key] ?? "CREATED";
+            apply({ sort, desc: s.dir === "desc" });
+          }}
+          totals={
+            current && current.count > 0
+              ? {
+                  number: <span className="font-medium">{t("list.totalRow", { count: formatQuantity(current.count) })}</span>,
+                  total: <span className="font-medium tabular-nums">{formatMoney(current.total)}</span>,
+                }
+              : undefined
+          }
           toolbar={
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="w-80">
-                <TextField
-                  label={t("list.search")}
-                  variant="search"
-                  size="sm"
-                  value={search}
-                  onChange={(v) => {
-                    setSearch(v);
-                    clearTimeout(debounce.current);
-                    debounce.current = setTimeout(() => (setQ(v.trim()), setPage(1)), 300);
-                  }}
-                  placeholder={t("list.searchPlaceholder")}
-                  className="[&>label]:sr-only"
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="w-80">
+                  <TextField
+                    label={t("list.search")}
+                    variant="search"
+                    size="sm"
+                    value={search}
+                    onChange={(v) => {
+                      setSearch(v);
+                      clearTimeout(debounce.current);
+                      debounce.current = setTimeout(() => apply({ q: v.trim() }), 300);
+                    }}
+                    placeholder={t("list.searchPlaceholder")}
+                    className="[&>label]:sr-only"
+                  />
+                </div>
+                <DayField
+                  label={t("list.orderFrom")}
+                  value={filters.orderFrom}
+                  invalid={t("list.dateInvalid")}
+                  onApply={(v) => apply({ orderFrom: v })}
                 />
+                <DayField
+                  label={t("list.orderTo")}
+                  value={filters.orderTo}
+                  invalid={t("list.dateInvalid")}
+                  onApply={(v) => apply({ orderTo: v })}
+                />
+                {canCreate ? <Checkbox label={t("list.mine")} checked={filters.mine} onChange={(v) => apply({ mine: v })} /> : null}
+                <div className="ml-auto flex items-center gap-2">
+                  <SavedViews
+                    storageKey="medix-orders-views"
+                    query={serializeOrderFilters({ ...filters, page: 1 })}
+                    hidden={hidden}
+                    onApply={(v) => {
+                      setSearch(new URLSearchParams(v.query).get("q") ?? "");
+                      setHidden(v.hidden);
+                      router.replace(v.query ? `${pathname}?${v.query}` : pathname, { scroll: false });
+                    }}
+                  />
+                  <div className="relative">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={Columns3}
+                      onClick={() => setColumnsOpen((o) => !o)}
+                      aria-expanded={columnsOpen}
+                    >
+                      {t("list.columns")}
+                    </Button>
+                    {columnsOpen ? (
+                      <div className="absolute right-0 z-30 mt-1 flex w-60 flex-col gap-2 rounded-control border border-border bg-surface p-3 shadow-overlay">
+                        {allColumns
+                          .filter((c) => !ALWAYS.includes(c.key))
+                          .map((c) => (
+                            <Checkbox
+                              key={c.key}
+                              label={c.title}
+                              checked={!hidden.includes(c.key)}
+                              onChange={(on) => setHidden(on ? hidden.filter((h) => h !== c.key) : [...hidden, c.key])}
+                            />
+                          ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </div>
-              {canCreate ? <Checkbox label={t("list.mine")} checked={mine} onChange={(v) => (setMine(v), setPage(1))} /> : null}
-              {customer ? (
-                <FilterChip
-                  label={t("list.customerChip", { name: customer.name })}
-                  what={t("list.customer")}
-                  onClear={() => (setCustomer(null), setPage(1))}
-                />
-              ) : null}
-              {operator ? (
-                <FilterChip
-                  label={t("list.operatorChip", { name: operator.name })}
-                  what={t("list.operator")}
-                  onClear={() => (setOperator(null), setPage(1))}
-                />
-              ) : null}
-              {sold ? (
-                <FilterChip label={soldLabel(sold, t)} what={t("list.soldPeriod")} onClear={() => (setSold(null), setPage(1))} />
+              {filters.customer || filters.operator || soldNow ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {filters.customer ? (
+                    <FilterChip
+                      label={t("list.customerChip", { name: filters.customer.name })}
+                      what={t("list.customer")}
+                      onClear={() => apply({ customer: null })}
+                    />
+                  ) : null}
+                  {filters.operator ? (
+                    <FilterChip
+                      label={t("list.operatorChip", { name: filters.operator.name })}
+                      what={t("list.operator")}
+                      onClear={() => apply({ operator: null })}
+                    />
+                  ) : null}
+                  {soldNow ? (
+                    <FilterChip
+                      label={soldLabel(soldNow, t)}
+                      what={t("list.soldPeriod")}
+                      onClear={() => apply({ soldFrom: null, soldTo: null })}
+                    />
+                  ) : null}
+                </div>
               ) : null}
             </div>
           }
           emptyState={
             filtered ? (
-              <NoResultsState
-                onClearFilters={() => (
-                  setStatus(null),
-                  setSearch(""),
-                  setQ(""),
-                  setMine(false),
-                  setCustomer(null),
-                  setOperator(null),
-                  setSold(null)
-                )}
-              />
+              <NoResultsState onClearFilters={clearAll} />
             ) : (
               <EmptyState icon={ClipboardList} title={t("list.emptyTitle")} description={t("list.emptyHint")} />
             )
@@ -275,10 +403,10 @@ export function OrdersPage() {
           pagination={
             orders.data && orders.data.total > 50
               ? {
-                  page,
+                  page: filters.page,
                   pageSize: 50,
                   total: orders.data.total,
-                  onPageChange: setPage,
+                  onPageChange: (page) => apply({ page }),
                   onPageSizeChange: () => undefined,
                   pageSizeOptions: [50],
                 }
@@ -290,3 +418,12 @@ export function OrdersPage() {
     </>
   );
 }
+
+const SORT_COLUMN: Record<OrderSort, string> = {
+  CREATED: "",
+  NUMBER: "number",
+  DATE: "orderDate",
+  CUSTOMER: "customer",
+  TOTAL: "total",
+};
+const COLUMN_SORT: Record<string, OrderSort> = { number: "NUMBER", orderDate: "DATE", customer: "CUSTOMER", total: "TOTAL" };

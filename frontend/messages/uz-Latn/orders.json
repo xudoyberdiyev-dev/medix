@@ -74,7 +74,14 @@
       "operator": "Operator",
       "holder": "Hozir kimda",
       "status": "Holat"
-    }
+    },
+    "orderFrom": "Sana (dan)",
+    "orderTo": "Sana (gacha)",
+    "dateInvalid": "KK.OO.YYYY koʻrinishida yozing",
+    "export": "Excel'ga yuklash",
+    "columns": "Ustunlar",
+    "totalRow": "Jami: {count} ta",
+    "clearFilters": "Filtrlarni tozalash"
   },
   "drawer": {
     "kind": "Buyurtma",

@@ -2046,7 +2046,7 @@ export interface paths {
         };
         /**
          * Buyurtmalar
-         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi.
+         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).
          */
         get: operations["list_11"];
         put?: never;
@@ -12114,6 +12114,8 @@ export interface operations {
                 orderTo?: string;
                 q?: string;
                 mine?: boolean;
+                sort?: "CREATED" | "NUMBER" | "DATE" | "CUSTOMER" | "TOTAL";
+                desc?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -12220,6 +12222,8 @@ export interface operations {
                 orderTo?: string;
                 q?: string;
                 mine?: boolean;
+                sort?: "CREATED" | "NUMBER" | "DATE" | "CUSTOMER" | "TOTAL";
+                desc?: boolean;
             };
             header?: never;
             path?: never;

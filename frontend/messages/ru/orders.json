@@ -74,7 +74,14 @@
       "operator": "Оператор",
       "holder": "Сейчас у кого",
       "status": "Статус"
-    }
+    },
+    "orderFrom": "Дата (с)",
+    "orderTo": "Дата (по)",
+    "dateInvalid": "Введите в формате ДД.ММ.ГГГГ",
+    "export": "Выгрузить в Excel",
+    "columns": "Столбцы",
+    "totalRow": "Итого: {count}",
+    "clearFilters": "Сбросить фильтры"
   },
   "drawer": {
     "kind": "Заказ",

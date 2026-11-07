@@ -74,7 +74,14 @@
       "operator": "Оператор",
       "holder": "Ҳозир кимда",
       "status": "Ҳолат"
-    }
+    },
+    "orderFrom": "Сана (дан)",
+    "orderTo": "Сана (гача)",
+    "dateInvalid": "КК.ОО.ЙЙЙЙ кўринишида ёзинг",
+    "export": "Excel'га юклаш",
+    "columns": "Устунлар",
+    "totalRow": "Жами: {count} та",
+    "clearFilters": "Филтрларни тозалаш"
   },
   "drawer": {
     "kind": "Буюртма",
