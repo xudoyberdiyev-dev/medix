@@ -92,6 +92,7 @@ docs/  design/  reports/  PLAN.md
 - Modullar orasida faqat ochiq API yoki Spring Modulith hodisalari; `ModularityTest` yashil bo'lishi shart.
 - Java: DTO — record; xato matnlari foydalanuvchi tilida (i18n kalit); Optional; `-Werror` yoqilgan.
 - TypeScript: `strict`, `any` taqiqlangan; API tiplari faqat OpenAPI'dan.
+- **Tillar (uz-Latn, uz-Cyrl, ru):** til `MEDIX_LOCALE` cookie'da (URL'da emas). Frontend matni — `frontend/messages/uz-Latn.json` + `ru.json` (qo'lda), `useTranslations`; server matni — `messages.properties` + `messages_ru.properties` (qo'lda). Kirill ikkalasida ham avtomatik: `cd frontend && pnpm i18n:cyrl` (tuzatish — `messages/uz-Cyrl.overrides.json`). Yangi kalit = uch tilda; testlar kalit va o'rinbosar mosligini tekshiradi.
 - Prototipdagi demo vositalari (demo soat, demo skaner, demo rejimi) haqiqiy dasturga o'tkazilmaydi.
 - Bir vaqtda bitta modul.
 

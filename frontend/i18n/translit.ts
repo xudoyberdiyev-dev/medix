@@ -41,7 +41,7 @@ const VOWELS = new Set("aeiouAEIOU");
 /** Qisqartmalar: harfma-harf emas, soʻzning kirill yozuvidagi bosh harflari. */
 const ABBR: Record<string, string> = { YB: "ЕБ" };
 /** Oʻgirilmaydigan soʻzlar (brend, qisqartma, klavish). */
-const KEEP = new Set(["MEDIX", "PDF", "PIN", "Ctrl", "Enter", "Esc", "Excel", "xlsx", "SMS", "QR", "ID", "API", "URL", "SKU"]);
+const KEEP = new Set(["MEDIX", "PDF", "PIN", "Ctrl", "K", "Enter", "Esc", "Excel", "xlsx", "SMS", "QR", "ID", "API", "URL", "SKU"]);
 
 function isLetter(ch: string | undefined): boolean {
   return ch !== undefined && /[A-Za-z]/.test(ch);
@@ -67,7 +67,7 @@ function plain(text: string): string {
         i = j;
         continue;
       }
-      if (KEEP.has(word) || /[0-9]/.test(word) || /^[A-Z]$/.test(word)) {
+      if (KEEP.has(word) || /[0-9]/.test(word)) {
         out += word;
         i = j;
         continue;

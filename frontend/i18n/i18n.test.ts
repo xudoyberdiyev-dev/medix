@@ -4,7 +4,10 @@ import ru from "@/messages/ru.json";
 import overrides from "@/messages/uz-Cyrl.overrides.json";
 import uzCyrl from "@/messages/uz-Cyrl.json";
 import uzLatn from "@/messages/uz-Latn.json";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { buildCyrillic } from "./cyrl";
+import { propertiesToCyrillic } from "./properties";
 import { resolveLocale } from "./config";
 import { toCyrillic, type Messages } from "./translit";
 
@@ -26,6 +29,7 @@ describe("toCyrillic", () => {
     ["Elektron", "Электрон"],
     ["Shtrix-kod GS1", "Штрих-код GS1"],
     ["YB qarzi", "ЕБ қарзи"],
+    ["U oʻchirilgan", "У ўчирилган"],
     ["MEDIX tizimi, Ctrl K", "MEDIX тизими, Ctrl K"],
   ])("%s → %s", (latin, cyr) => expect(toCyrillic(latin)).toBe(cyr));
 
@@ -38,6 +42,12 @@ describe("toCyrillic", () => {
 describe("lugʻatlar", () => {
   it("uz-Cyrl uz-Latn dan yasalgan (pnpm i18n:cyrl)", () => {
     expect(uzCyrl).toEqual(buildCyrillic(uzLatn, overrides));
+  });
+
+  it("backend messages_uz_Cyrl.properties messages.properties dan yasalgan (pnpm i18n:cyrl)", () => {
+    const dir = join(process.cwd(), "../backend/src/main/resources");
+    const latin = readFileSync(join(dir, "messages.properties"), "utf8");
+    expect(readFileSync(join(dir, "messages_uz_Cyrl.properties"), "utf8")).toBe(propertiesToCyrillic(latin));
   });
 
   it("ru va uz-Latn kalitlari bir xil", () => {

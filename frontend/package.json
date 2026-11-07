@@ -14,7 +14,7 @@
     "api:gen": "openapi-typescript lib/api/openapi.json -o lib/api/schema.ts",
     "api:check": "pnpm api:gen && git diff --exit-code -- lib/api/schema.ts",
     "e2e": "playwright test",
-    "i18n:cyrl": "node --experimental-strip-types --no-warnings scripts/i18n-cyrl.ts"
+    "i18n:cyrl": "node --experimental-strip-types --no-warnings scripts/i18n-cyrl.ts && node --experimental-strip-types --no-warnings scripts/i18n-backend.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
