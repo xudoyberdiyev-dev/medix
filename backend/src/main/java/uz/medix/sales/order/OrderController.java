@@ -325,9 +325,10 @@ class OrderController {
 
     @PostMapping("/{id}/return-to-pick")
     @PreAuthorize("hasAuthority('orders.check')")
-    @Operation(summary = "Yig'ishga qaytarish", description = "Sabab bilan; tovar olingan joyiga qaytadi, zahira qayta qo'yiladi.")
-    OrderDetail returnToPick(@PathVariable long id, @Valid @RequestBody OrderReasonRequest r) {
-        picking.returnToPick(actor(), id, r.reason());
+    @Operation(summary = "Yig'ishga qaytarish", description = "Sabab bilan, tanlangan qatorlar (bo'sh — butun buyurtma); shu qatorlar tovari "
+            + "olingan joyiga qaytadi, zahira qayta qo'yiladi, kodlari bekor qilinadi; qayta yig'ish va markirovkada faqat shu qatorlar (SPEC 188).")
+    OrderDetail returnToPick(@PathVariable long id, @Valid @RequestBody OrderModels.ReturnToPickRequest r) {
+        picking.returnToPick(actor(), id, r.reason(), r.lineIds());
         return detail(id);
     }
 

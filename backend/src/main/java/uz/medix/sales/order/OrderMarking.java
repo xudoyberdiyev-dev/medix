@@ -69,12 +69,21 @@ class OrderMarking {
 
     /** Bekor qilish yoki «Yig'ishga qaytarish»da: buyurtmaning faol kodlari bo'shaydi (tarixda qoladi). */
     static void releaseCodes(JdbcClient jdbc, long orderId, long by, String reason) {
+        releaseCodes(jdbc, orderId, null, by, reason);
+    }
+
+    /** Faqat tanlangan qatorlar kodlari (null — butun buyurtma) bekor qilinadi. */
+    static void releaseCodes(JdbcClient jdbc, long orderId, java.util.Collection<Long> lines, long by, String reason) {
+        if (lines != null && lines.isEmpty()) {
+            return;
+        }
         jdbc.sql("""
                 UPDATE sales_order_mark SET status = 'RELEASED', closed_by = :by, closed_at = now(), close_reason = :r
-                WHERE order_id = :o AND status = 'ACTIVE'""")
+                WHERE order_id = :o AND status = 'ACTIVE'""" + (lines == null ? "" : " AND line_id IN (:lines)"))
                 .param("by", by)
                 .param("r", reason)
                 .param("o", orderId)
+                .params(lines == null ? Map.of() : Map.of("lines", lines))
                 .update();
     }
 

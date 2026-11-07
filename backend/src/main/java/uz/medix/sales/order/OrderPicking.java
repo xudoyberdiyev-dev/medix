@@ -1,6 +1,7 @@
 package uz.medix.sales.order;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -223,6 +224,11 @@ class OrderPicking {
                 .param("id", id)
                 .query(LineRow.class)
                 .list();
+        // Qator bo'yicha qaytarilgan bo'lsa — faqat shu qatorlar qayta yig'iladi; markirovkaga faqat ular sabab bo'ladi
+        Set<Long> repick = repickLines(id);
+        if (repick != null) {
+            lines = lines.stream().filter(l -> repick.contains(l.id())).toList();
+        }
         Map<Long, Long> override = new HashMap<>();
         if (confirms != null) {
             Set<Long> known = new HashSet<>(lines.stream().map(LineRow::id).toList());
@@ -324,7 +330,8 @@ class OrderPicking {
             throw MedixException.badRequest("order.checkAllLines");
         }
         jdbc.sql("""
-                UPDATE sales_order SET status = 'DOCUMENTING', places = :p, checked_by = :by, checked_at = now(), status_changed_at = now(),
+                UPDATE sales_order SET status = 'DOCUMENTING', places = :p, checked_by = :by, checked_at = now(), repick_line_ids = NULL,
+                       status_changed_at = now(),
                        updated_at = now(), version = version + 1 WHERE id = :id""")
                 .param("p", places)
                 .param("by", actor.employeeId())
@@ -335,23 +342,39 @@ class OrderPicking {
     }
 
     /**
-     * «Yig'ishga qaytarish» (sabab bilan): tovar Jo'natish zonasidan olingan joyiga qaytadi, FEFO zahira qayta qo'yiladi,
-     * buyurtma «Navbatda»ga (berilgan vaqt saqlanadi). V1: butun buyurtma; qator bo'yicha qaytarish — keyin.
+     * «Yig'ishga qaytarish» (sabab bilan, SPEC 188): tanlangan qatorlar (bo'sh — butun buyurtma) tovari Jo'natish zonasidan olingan joyiga
+     * qaytadi, shu qatorlarga FEFO zahira qayta qo'yiladi va kodlari bekor qilinadi (tarixda qoladi); buyurtma «Navbatda»ga (berilgan vaqt
+     * saqlanadi). Qayta yig'ish va markirovkada faqat shu qatorlar ochiq; qolganlari Jo'natish zonasida, kodlari bilan qoladi.
      */
     @Transactional
-    void returnToPick(Actor actor, long id, String reason) {
+    void returnToPick(Actor actor, long id, String reason, List<Long> lineIds) {
         Head h = lock(id, actor);
         if (h.status() != OrderStatus.CHECKING && h.status() != OrderStatus.MARKING) {
             throw MedixException.conflict("order.badStatus", h.status().name());
         }
+        List<Long> all = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :id ORDER BY line_no").param("id", id).query(Long.class).list();
+        Set<Long> chosen = lineIds == null || lineIds.isEmpty() ? new HashSet<>(all) : new HashSet<>(lineIds);
+        if (!all.containsAll(chosen)) {
+            throw MedixException.badRequest("order.lineUnknown");
+        }
+        boolean whole = chosen.size() == all.size();
+        if (!whole && jdbc.sql("SELECT EXISTS (SELECT 1 FROM sales_order_pick_return WHERE order_id = :id AND line_id IS NULL)")
+                .param("id", id).query(Boolean.class).single()) {
+            // Eski (qatorsiz) qaytarish yozuvi bor — qator bo'yicha qoldiqni aniqlab bo'lmaydi
+            throw MedixException.conflict("order.repickWholeOnly");
+        }
         List<Move> moves = new ArrayList<>();
-        for (Orders.NetPick n : orders.netPicked(id)) {
+        for (Orders.LinePick n : orders.netPickedByLine(id)) {
+            if (!chosen.contains(n.lineId())) {
+                continue;
+            }
             moves.add(Move.out(n.shippingZone(), n.batchId(), n.qty()));
             moves.add(Move.in(n.storageZone(), n.batchId(), n.qty()));
             jdbc.sql("""
-                    INSERT INTO sales_order_pick_return (order_id, batch_id, from_zone_id, to_zone_id, qty, reason, created_by)
-                    VALUES (:o, :b, :f, :t, :q, :r, :by)""")
+                    INSERT INTO sales_order_pick_return (order_id, line_id, batch_id, from_zone_id, to_zone_id, qty, reason, created_by)
+                    VALUES (:o, :l, :b, :f, :t, :q, :r, :by)""")
                     .param("o", id)
+                    .param("l", n.lineId())
                     .param("b", n.batchId())
                     .param("f", n.shippingZone())
                     .param("t", n.storageZone())
@@ -360,17 +383,35 @@ class OrderPicking {
                     .param("by", actor.employeeId())
                     .update();
         }
-        stock.post(new DocRef(Orders.DOC_TYPE, id, h.number()), moves);
+        if (!moves.isEmpty()) {
+            stock.post(new DocRef(Orders.DOC_TYPE, id, h.number()), moves);
+        }
         // Kodlar bekor qilinadi (tarixda qoladi), qayta markirovkada yana urish mumkin (SPEC 5.2)
-        OrderMarking.releaseCodes(jdbc, id, actor.employeeId(), reason.strip());
+        OrderMarking.releaseCodes(jdbc, id, whole ? null : chosen, actor.employeeId(), reason.strip());
+        List<Long> repick = whole ? null : all.stream().filter(chosen::contains).toList();
+        String repickText = repick == null ? null : "{" + String.join(",", repick.stream().map(String::valueOf).toList()) + "}";
         jdbc.sql("""
                 UPDATE sales_order SET status = 'QUEUED', picker_id = NULL, pick_started_at = NULL, pick_finished_at = NULL, fefo_deviation = false,
-                       marker_id = NULL, mark_started_at = NULL, mark_finished_at = NULL, status_changed_at = now(), updated_at = now(), version = version + 1 WHERE id = :id""")
+                       marker_id = NULL, mark_started_at = NULL, mark_finished_at = NULL, repick_line_ids = CAST(:rp AS BIGINT[]),
+                       status_changed_at = now(),
+                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("rp", repickText, Types.VARCHAR)
                 .param("id", id)
                 .update();
-        orders.reserveAgain(id);
+        orders.reserveAgain(id, whole ? null : chosen);
+        Map<String, Object> after = new HashMap<>();
+        after.put("status", OrderStatus.QUEUED.name());
+        if (!whole) {
+            after.put("lines", repick);
+        }
         audit.record(AuditEntry.of("order.returnToPick", "sales_order", id)
-                .change(Map.of("status", h.status().name()), Map.of("status", OrderStatus.QUEUED.name())).withReason(reason.strip()));
+                .change(Map.of("status", h.status().name()), after).withReason(reason.strip()));
+    }
+
+    /** Qayta yig'iladigan qatorlar (null — barcha qatorlar). */
+    private Set<Long> repickLines(long id) {
+        List<Long> ids = jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list();
+        return ids.isEmpty() ? null : new HashSet<>(ids);
     }
 
     private static Instant instant(Timestamp t) {

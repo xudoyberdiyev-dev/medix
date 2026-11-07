@@ -471,7 +471,8 @@ class Orders {
                 h.createdBy(), h.createdById(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
                 h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
                 instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), documents(id),
-                holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines));
+                holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines,
+                jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list()));
     }
 
     private OrderModels.OrderDocuments documents(long orderId) {
@@ -906,14 +907,34 @@ class Orders {
                 .list();
     }
 
+    /** Qator bo'yicha sof yig'ilgan (yig'ilgan − shu qatordan qaytarilgan): «Yig'ishga qaytarish» tanlangan qatorlar uchun (SPEC 188). */
+    record LinePick(long lineId, long storageZone, long shippingZone, long batchId, int qty) {}
+
+    List<LinePick> netPickedByLine(long orderId) {
+        return jdbc.sql("""
+                SELECT line_id, storage_zone, shipping_zone, batch_id, sum(qty) AS qty FROM (
+                    SELECT line_id, from_zone_id AS storage_zone, to_zone_id AS shipping_zone, batch_id, qty FROM sales_order_pick WHERE order_id = :id
+                    UNION ALL
+                    SELECT line_id, to_zone_id, from_zone_id, batch_id, -qty FROM sales_order_pick_return WHERE order_id = :id AND line_id IS NOT NULL) t
+                GROUP BY line_id, storage_zone, shipping_zone, batch_id HAVING sum(qty) > 0 ORDER BY line_id, storage_zone, batch_id""")
+                .param("id", orderId)
+                .query(LinePick.class)
+                .list();
+    }
+
     /** FEFO zahira (SPEC 6-7): «Navbatda»ga o'tishda — sotuvga ochiq zona va mijozning minimal yaroqlilik talabi bilan. */
     void reserveAgain(long orderId) {
+        reserveAgain(orderId, null);
+    }
+
+    /** Faqat tanlangan qatorlarga (null — barchasiga) zahira qayta qo'yiladi. */
+    void reserveAgain(long orderId, java.util.Set<Long> onlyLines) {
         Head h = jdbc.sql("SELECT id, number, branch_id, warehouse_id, customer_id, status, created_by FROM sales_order WHERE id = :id")
                 .param("id", orderId)
                 .query((rs, n) -> new Head(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getLong("warehouse_id"),
                         rs.getLong("customer_id"), OrderStatus.valueOf(rs.getString("status")), rs.getLong("created_by")))
                 .single();
-        List<LineRow> rows = lineRows(orderId);
+        List<LineRow> rows = lineRows(orderId).stream().filter(r -> onlyLines == null || onlyLines.contains(r.id())).toList();
         reserve(h, rows, evaluate(h.branchId(), h.warehouseId(), h.customerId(),
                 rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList()));
     }

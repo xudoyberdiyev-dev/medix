@@ -590,6 +590,62 @@ class OrderIT {
         assertThat(qtyIn(p.main(), prod)).isEqualTo(17);
     }
 
+    @Test
+    void returnToPickSelectedLinesOnly() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        long a = product(p, "BY Qator A", "1000", 5, null, null);
+        long b = product(p, "BY Qator B", "1000", 5, null, null);
+        long shipping = zoneOf(p.warehouseId(), "SHIPPING");
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        long o = draft(operator, order(p, c, new long[][] {{a, 2}, {b, 3}}));
+        send(post("/api/orders/" + o + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+        send(post("/api/orders/" + o + "/time"), keeper, "{\"pickMinutes\":15}").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("CHECKING"));
+        long lineA = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o AND product_id = :p").param("o", o).param("p", a)
+                .query(Long.class).single();
+        long lineB = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o AND product_id = :p").param("o", o).param("p", b)
+                .query(Long.class).single();
+
+        // Boshqa buyurtma qatori — rad etiladi
+        send(post("/api/orders/" + o + "/return-to-pick"), keeper, "{\"reason\":\"B singan\",\"lineIds\":[999999999]}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("order.lineUnknown"));
+        // Faqat B qatori: B tovari joyiga, zahira faqat B ga; A Jo'natish zonasida qoladi (SPEC 188)
+        send(post("/api/orders/" + o + "/return-to-pick"), keeper, "{\"reason\":\"B singan\",\"lineIds\":[" + lineB + "]}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("QUEUED"))
+                .andExpect(jsonPath("$.repickLineIds.length()").value(1))
+                .andExpect(jsonPath("$.repickLineIds[0]").value(lineB));
+        assertThat(qtyIn(shipping, a)).isEqualTo(2);
+        assertThat(qtyIn(shipping, b)).isZero();
+        assertThat(qtyIn(p.main(), b)).isEqualTo(5);
+        assertThat(jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_reservation WHERE doc_type = 'BY' AND doc_id = :o AND status = 'ACTIVE' "
+                        + "AND doc_line_id = :l").param("o", o).param("l", lineB).query(Long.class).single())
+                .isEqualTo(3);
+        assertThat(jdbc.sql("SELECT count(*) FROM stock_reservation WHERE doc_type = 'BY' AND doc_id = :o AND status = 'ACTIVE' AND doc_line_id = :l")
+                        .param("o", o).param("l", lineA).query(Long.class).single())
+                .isZero();
+        assertThat(jdbc.sql("SELECT line_id FROM sales_order_pick_return WHERE order_id = :o").param("o", o).query(Long.class).list())
+                .containsOnly(lineB);
+
+        // Qayta yig'ish — faqat B; A ikki marta olinmaydi
+        send(post("/api/orders/" + o + "/pick/start"), picker, "").andExpect(status().isOk());
+        send(post("/api/orders/" + o + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("CHECKING"));
+        assertThat(qtyIn(shipping, a)).isEqualTo(2);
+        assertThat(qtyIn(shipping, b)).isEqualTo(3);
+        assertThat(qtyIn(p.main(), a)).isEqualTo(3);
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_order_pick WHERE order_id = :o AND line_id = :l").param("o", o).param("l", lineA)
+                        .query(Long.class).single())
+                .isEqualTo(1);
+        send(post("/api/orders/" + o + "/check"), keeper, "{\"checkedLines\":[" + lineA + "," + lineB + "],\"places\":1}")
+                .andExpect(jsonPath("$.status").value("DOCUMENTING"))
+                .andExpect(jsonPath("$.repickLineIds.length()").value(0));
+    }
+
     /** Tasodifiy EAN-13 (to'g'ri nazorat raqami bilan) → GTIN-14. */
     private static String ean13() {
         StringBuilder b = new StringBuilder("478");

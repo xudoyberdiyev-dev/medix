@@ -48,6 +48,11 @@ final class OrderModels {
 
     record OrderReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
+    /** «Yig'ishga qaytarish»: sabab va qatorlar (bo'sh yoki yo'q — butun buyurtma, SPEC 188). */
+    record ReturnToPickRequest(
+            @NotBlank(message = "{validation.required}") @Size(max = 300) String reason,
+            @Schema(nullable = true, description = "Qaytariladigan qatorlar; bo'sh — butun buyurtma") @Size(max = 500) List<Long> lineIds) {}
+
     /** «N ta muammo» paneli: qator (yoki sarlavha — null) va aniq matn. */
     record OrderIssue(IssueLevel level, String code, String message, @Schema(nullable = true) Integer lineNo) {}
 
@@ -159,7 +164,9 @@ final class OrderModels {
             @Schema(nullable = true, description = "Joylar soni (quti)") Integer places,
             OrderDocuments documents,
             @Schema(description = "«Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2)") String holder,
-            List<OrderLine> lines) {}
+            List<OrderLine> lines,
+            @Schema(description = "Qator bo'yicha «Yig'ishga qaytarish»dan keyin qayta yig'iladigan qatorlar; bo'sh — barcha qatorlar (SPEC 188)")
+            List<Long> repickLineIds) {}
 
     /** Buyurtmadan yozilgan hujjatlar (SPEC 7). */
     record OrderDocuments(
