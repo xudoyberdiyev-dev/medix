@@ -60,7 +60,7 @@ class CashPanel {
     }
 
     @Transactional
-    Panel panel(Actor actor, long branchId, LocalDate from, LocalDate to, Long accountId) {
+    Panel panel(Actor actor, long branchId, LocalDate from, LocalDate to, Long accountId, Accounts.Kind kind) {
         LocalDate t = to == null ? ops.today() : to;
         LocalDate f = from == null ? t : from;
         if (f.isAfter(t)) {
@@ -73,7 +73,11 @@ class CashPanel {
         if (accountId != null && all.stream().noneMatch(a -> a.id() == accountId)) {
             throw MedixException.notFound("error.notFound");
         }
-        List<Accounts.Account> scope = accountId == null ? all : all.stream().filter(a -> a.id() == accountId).toList();
+        // SPEC 8: filtr — hisob va to'lov turi (Naqd → kassa, Terminal, Bank)
+        List<Accounts.Account> scope = all.stream()
+                .filter(a -> accountId == null || a.id() == accountId)
+                .filter(a -> kind == null || a.kind() == kind)
+                .toList();
         List<Long> ids = scope.stream().map(Accounts.Account::id).toList();
         Money cash = Money.ZERO;
         Money terminal = Money.ZERO;
