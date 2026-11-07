@@ -8,7 +8,7 @@ import { EmptyState, ForbiddenState } from "@/components/ui/system-states";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 
-export type ReportKey = "sales" | "operators" | "gross-profit" | "debts" | "stock" | "suppliers" | "pickers" | "markers";
+export type ReportKey = "sales" | "operators" | "products" | "gross-profit" | "debts" | "stock" | "suppliers" | "pickers" | "markers";
 
 /** `title`/`description` — uz-Latn (Ctrl+K qidiruvi uchun); UI tarjimasi `reports.catalog.items.<key>` dan. */
 export interface ReportEntry {
@@ -39,10 +39,17 @@ export const REPORTS: ReportEntry[] = [
     anyOf: ["reports.all", "reports.view"],
   },
   {
+    key: "products",
+    title: "Mahsulotlar savdosi",
+    description: "Dona va sof savdo mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha; mijoz filtri.",
+    href: "/reports/products",
+    anyOf: ["reports.all", "reports.view"],
+  },
+  {
     key: "gross-profit",
     title: "Yalpi foyda",
-    description: "Sof savdo, tannarx va yalpi foyda (QQSsiz) — mijoz, operator, filial yoki kun boʻyicha.",
-    href: "/reports/sales",
+    description: "Mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha tannarx, yalpi foyda (QQSsiz) va rentabellik.",
+    href: "/reports/products",
     anyOf: ["reports.all", "reports.view"],
     allOf: ["prices.cost"],
   },

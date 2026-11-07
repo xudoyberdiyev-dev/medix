@@ -7693,6 +7693,119 @@
         "tags" : [ "reports" ]
       }
     },
+    "/api/reports/product-sales" : {
+      "get" : {
+        "operationId" : "productSales",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "groupBy",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PRODUCT", "CATEGORY", "MANUFACTURER" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductSalesView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mahsulotlar savdosi: dona va sof savdo mahsulot / kategoriya / ishlab chiqaruvchi bo'yicha; tannarx, yalpi foyda va rentabellik — prices.cost",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/product-sales/export" : {
+      "get" : {
+        "operationId" : "productSalesExport",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "groupBy",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PRODUCT", "CATEGORY", "MANUFACTURER" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mahsulotlar savdosi .xlsx",
+        "tags" : [ "reports" ]
+      }
+    },
     "/api/reports/sales" : {
       "get" : {
         "operationId" : "salesReport",
@@ -16871,6 +16984,99 @@
           }
         },
         "required" : [ "active", "code", "controlled", "id", "marked", "name", "prescription", "unit", "vatRate" ]
+      },
+      "ProductSalesRow" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Mahsulot kodi (faqat PRODUCT)"
+          },
+          "cost" : {
+            "type" : "string"
+          },
+          "key" : {
+            "type" : "string"
+          },
+          "margin" : {
+            "type" : "string",
+            "description" : "Rentabellik, %: yalpi foyda / sof savdo QQSsiz × 100 (1 xona)"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Bo'sh — kategoriya / ishlab chiqaruvchi ko'rsatilmagan"
+          },
+          "net" : {
+            "type" : "string"
+          },
+          "profit" : {
+            "type" : "string",
+            "description" : "Yalpi foyda: sof savdo QQSsiz − tannarx"
+          },
+          "qtyNet" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "qtyReturned" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "qtySold" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "returns" : {
+            "type" : "string"
+          },
+          "sales" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "key", "name", "net", "qtyNet", "qtyReturned", "qtySold", "returns", "sales" ]
+      },
+      "ProductSalesView" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "costVisible" : {
+            "type" : "boolean"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "groupBy" : {
+            "type" : "string",
+            "enum" : [ "PRODUCT", "CATEGORY", "MANUFACTURER" ]
+          },
+          "mineOnly" : {
+            "type" : "boolean"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductSalesRow"
+            }
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "$ref" : "#/components/schemas/ProductSalesRow"
+          },
+          "truncated" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "costVisible", "from", "groupBy", "mineOnly", "rows", "to", "total", "truncated" ]
       },
       "Profile" : {
         "type" : "object",

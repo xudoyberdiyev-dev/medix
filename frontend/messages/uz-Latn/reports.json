@@ -22,9 +22,13 @@
         "title": "Operatorlar savdosi",
         "description": "Har operatorning sof savdosi va buyurtmalari tanlangan davrda."
       },
+      "products": {
+        "title": "Mahsulotlar savdosi",
+        "description": "Dona va sof savdo mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha; mijoz filtri."
+      },
       "gross-profit": {
         "title": "Yalpi foyda",
-        "description": "Sof savdo, tannarx va yalpi foyda (QQSsiz) — mijoz, operator, filial yoki kun boʻyicha."
+        "description": "Mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha tannarx, yalpi foyda (QQSsiz) va rentabellik."
       },
       "debts": {
         "title": "Qarzlar",
@@ -115,5 +119,23 @@
     "left": "Qoldi",
     "emptyTitle": "Davrda harakat va qoldiq yoʻq",
     "note": "Tannarxda. Olib keldi — davrdagi kirim; Sotildi — sotuv − qaytarish; Boshqa — hisobdan oʻtkazish va h.k.; Qoldi — hozirgi qoldiq. Aktiv — davrda kirim qilgan, Passiv — kirim yoʻq, qoldigʻi bor."
+  },
+  "products": {
+    "title": "Mahsulotlar savdosi",
+    "forbidden": "Mahsulotlar savdosi sizning rolingiz uchun yopiq.",
+    "group": {
+      "PRODUCT": "Mahsulot",
+      "CATEGORY": "Kategoriya",
+      "MANUFACTURER": "Ishlab chiqaruvchi"
+    },
+    "unspecified": "Koʻrsatilmagan",
+    "qtySold": "Sotildi, dona",
+    "qtyReturned": "Qaytdi, dona",
+    "qtyNet": "Sof, dona",
+    "margin": "Rentabellik",
+    "customer": "Mijoz",
+    "customerChip": "Mijoz: {name}",
+    "note": "Sof savdo = sotuv − qaytarish (partiya qatorlari boʻyicha); yetkazilmagan (bekor qilingan) sotuvlar kirmaydi.",
+    "noteCost": "Sof savdo = sotuv − qaytarish; yetkazilmaganlar kirmaydi. Yalpi foyda = sof savdo QQSsiz − partiya tannarxi; rentabellik = yalpi foyda / sof savdo QQSsiz."
   }
 }

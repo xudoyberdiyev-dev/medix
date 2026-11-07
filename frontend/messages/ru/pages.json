@@ -37,5 +37,6 @@
   "warehouseTransfers": "Перемещения между складами",
   "warehouse": "Панель заведующего складом",
   "writeOffs": "Списание",
-  "zoneTransfers": "Перемещения по зонам"
+  "zoneTransfers": "Перемещения по зонам",
+  "reportsProducts": "Продажи товаров"
 }

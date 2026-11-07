@@ -3429,6 +3429,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/product-sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mahsulotlar savdosi: dona va sof savdo mahsulot / kategoriya / ishlab chiqaruvchi bo'yicha; tannarx, yalpi foyda va rentabellik — prices.cost */
+        get: operations["productSales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/product-sales/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mahsulotlar savdosi .xlsx */
+        get: operations["productSalesExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/sales": {
         parameters: {
             query?: never;
@@ -7288,6 +7322,44 @@ export interface components {
             prescription: boolean;
             unit: string;
             vatRate: string;
+        };
+        ProductSalesRow: {
+            /** @description Mahsulot kodi (faqat PRODUCT) */
+            code?: string;
+            cost?: string;
+            key: string;
+            /** @description Rentabellik, %: yalpi foyda / sof savdo QQSsiz × 100 (1 xona) */
+            margin?: string;
+            /** @description Bo'sh — kategoriya / ishlab chiqaruvchi ko'rsatilmagan */
+            name: string;
+            net: string;
+            /** @description Yalpi foyda: sof savdo QQSsiz − tannarx */
+            profit?: string;
+            /** Format: int32 */
+            qtyNet: number;
+            /** Format: int32 */
+            qtyReturned: number;
+            /** Format: int32 */
+            qtySold: number;
+            returns: string;
+            sales: string;
+        };
+        ProductSalesView: {
+            /** Format: int64 */
+            branchId?: number;
+            costVisible: boolean;
+            /** Format: int64 */
+            customerId?: number;
+            /** Format: date */
+            from: string;
+            /** @enum {string} */
+            groupBy: "PRODUCT" | "CATEGORY" | "MANUFACTURER";
+            mineOnly: boolean;
+            rows: components["schemas"]["ProductSalesRow"][];
+            /** Format: date */
+            to: string;
+            total: components["schemas"]["ProductSalesRow"];
+            truncated: boolean;
         };
         Profile: {
             branchName?: string;
@@ -13904,6 +13976,56 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WorkerRow"];
                 };
+            };
+        };
+    };
+    productSales: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                groupBy?: "PRODUCT" | "CATEGORY" | "MANUFACTURER";
+                customerId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductSalesView"];
+                };
+            };
+        };
+    };
+    productSalesExport: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                groupBy?: "PRODUCT" | "CATEGORY" | "MANUFACTURER";
+                customerId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

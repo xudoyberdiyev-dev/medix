@@ -661,6 +661,13 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Savdo hisoboti" })).toBeVisible();
   await expect(page.getByText("Davrda savdo yoʻq")).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Excelʼga yuklab olish/ })).toBeVisible();
+  // Mahsulotlar savdosi: sotilgan mahsulot qatori; kategoriya boʻyicha guruhlash
+  await page.goto("/reports");
+  await page.getByRole("link", { name: /^Mahsulotlar savdosi/ }).click();
+  await expect(page.getByRole("heading", { name: "Mahsulotlar savdosi" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /Paracetamol E2E/ }).first()).toBeVisible();
+  await page.getByRole("tab", { name: "Kategoriya" }).click();
+  await expect(page.getByRole("columnheader", { name: /Kategoriya/ })).toBeVisible();
   await page.goto("/debts/customers");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText(/ruxsat/i)).toHaveCount(0);
