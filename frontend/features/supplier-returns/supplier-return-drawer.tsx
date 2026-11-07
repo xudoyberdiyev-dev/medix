@@ -15,7 +15,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { ZONE_LABELS } from "@/features/organization/api";
+import { ZONE_LABELS, zoneLabel as zoneTypeLabel } from "@/features/organization/api";
 import { searchSuppliers, useReceipts } from "@/features/receipts/api";
 import { describeError } from "@/features/setup/form-error";
 import { useLineErrorText } from "@/features/zone-transfers/line-error";
@@ -39,8 +39,9 @@ import { SupplierReturnStatusBadge } from "./supplier-returns-page";
 
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
 const zoneLabel = (z: { name: string; type: string }) => {
-  const t = ZONE_LABELS[z.type as keyof typeof ZONE_LABELS];
-  return !t || z.name === t ? z.name : `${z.name} · ${t}`;
+  const type = z.type as keyof typeof ZONE_LABELS;
+  const t = ZONE_LABELS[type];
+  return !t || z.name === t ? z.name : `${z.name} · ${zoneTypeLabel(type)}`;
 };
 
 function BonusBadge() {

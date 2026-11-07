@@ -18,7 +18,7 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { PAYMENT_TYPE_VALUES, formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
-import { useWarehouses, ZONE_LABELS, type Zone } from "@/features/organization/api";
+import { useWarehouses, zoneLabel, type Zone } from "@/features/organization/api";
 import { searchProducts } from "@/features/prices/api";
 import { useEmployeeOptions } from "@/features/products/api";
 import { describeError } from "@/features/setup/form-error";
@@ -470,7 +470,7 @@ function Editor({ doc, onClose, onCreated }: { doc: ReceiptDetail | null; onClos
               label={t("field.zone")}
               value={adding.zone}
               onChange={(v) => setAdding((a) => ({ ...a, zone: v }))}
-              options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: ZONE_LABELS[z.type] }))}
+              options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: zoneLabel(z.type) }))}
             />
             <TextField label={t("field.batch")} value={adding.batch} onChange={(v) => setAdding((a) => ({ ...a, batch: v }))} />
             <TextField

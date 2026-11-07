@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
-import { ZONE_LABELS, type Zone } from "@/features/organization/api";
+import { zoneLabel, type Zone } from "@/features/organization/api";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { type CatalogInput, type CatalogPick, collectPicks, EMPTY_INPUT } from "./receipt-catalog";
@@ -129,7 +129,7 @@ export function ReceiptCatalogDialog({
             size="sm"
             value={zone}
             onChange={setZone}
-            options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: ZONE_LABELS[z.type] }))}
+            options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: zoneLabel(z.type) }))}
             className="w-56"
           />
           {supplierId !== null ? <Checkbox label={t("supplierOnly")} checked={supplierOnly} onChange={setSupplierOnly} /> : null}

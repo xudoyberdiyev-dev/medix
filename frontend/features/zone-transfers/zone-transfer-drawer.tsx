@@ -14,7 +14,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useWarehouses, ZONE_LABELS } from "@/features/organization/api";
+import { useWarehouses, ZONE_LABELS, zoneLabel } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
 import { formatDate, formatDateTime, formatQuantity } from "@/lib/format";
 import {
@@ -180,7 +180,7 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
   const selfApprove = approval && can(me.data, TRANSFER_QUAR);
   const zoneOption = (z: (typeof zones)[number]) => ({
     value: String(z.id),
-    label: z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${ZONE_LABELS[z.type]}`,
+    label: z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${zoneLabel(z.type)}`,
   });
   const rows = stock.data ?? [];
   const picked = linesFrom(rows, qty);

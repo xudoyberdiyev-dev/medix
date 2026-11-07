@@ -14,7 +14,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useWarehouses, ZONE_LABELS } from "@/features/organization/api";
+import { useWarehouses, zoneLabel } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
 import { linesFrom, type ZoneStockRow } from "@/features/zone-transfers/api";
 import { useLineErrorText } from "@/features/zone-transfers/line-error";
@@ -253,7 +253,7 @@ function ReceiveModal({ doc, onClose }: { doc: WarehouseTransferDetail; onClose:
           label={t("receive.zone")}
           value={zone}
           onChange={setZoneId}
-          options={zones.map((z) => ({ value: String(z.id), label: `${z.name} · ${ZONE_LABELS[z.type]}` }))}
+          options={zones.map((z) => ({ value: String(z.id), label: `${z.name} · ${zoneLabel(z.type)}` }))}
           required
         />
         <p className="text-caption text-text-secondary">{t("receive.hint")}</p>
@@ -382,7 +382,7 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
             label={t("form.zone")}
             value={fromId}
             onChange={(v) => (setFromId(v), setQty({}))}
-            options={zones.map((z) => ({ value: String(z.id), label: `${z.name} · ${ZONE_LABELS[z.type]}` }))}
+            options={zones.map((z) => ({ value: String(z.id), label: `${z.name} · ${zoneLabel(z.type)}` }))}
             disabled={!warehouse}
             required
           />

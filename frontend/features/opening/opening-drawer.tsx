@@ -17,7 +17,7 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
-import { useWarehouses, ZONE_LABELS } from "@/features/organization/api";
+import { useWarehouses, zoneLabel } from "@/features/organization/api";
 import { searchProducts } from "@/features/prices/api";
 import { describeError } from "@/features/setup/form-error";
 import { formatMoney, formatQuantity } from "@/lib/format";
@@ -325,7 +325,7 @@ function Editor({
               label={t("drawer.zone")}
               value={adding.zone}
               onChange={(v) => setAdding((a) => ({ ...a, zone: v }))}
-              options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: ZONE_LABELS[z.type] }))}
+              options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: zoneLabel(z.type) }))}
             />
             <TextField label={t("drawer.batch")} value={adding.batch} onChange={(v) => setAdding((a) => ({ ...a, batch: v }))} />
             <TextField

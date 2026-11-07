@@ -15,7 +15,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useWarehouses, ZONE_LABELS } from "@/features/organization/api";
+import { useWarehouses, ZONE_LABELS, zoneLabel } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
 import { useLineErrorText } from "@/features/zone-transfers/line-error";
 import { formatDate, formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
@@ -330,7 +330,7 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
             onChange={(v) => (setZoneId(v), setQty({}))}
             options={zones.map((z) => ({
               value: String(z.id),
-              label: z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${ZONE_LABELS[z.type]}`,
+              label: z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${zoneLabel(z.type)}`,
             }))}
             disabled={!warehouse}
             required
