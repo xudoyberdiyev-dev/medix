@@ -4844,6 +4844,29 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/pick-done-today" : {
+      "get" : {
+        "description" : "O'zi bugun yig'ib bo'lgan buyurtmalar, vaqtida / kechikkan.",
+        "operationId" : "pickDoneToday",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PickDoneItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bugun yakunlanganlar (Yig'uvchi)",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/pick-queue" : {
       "get" : {
         "description" : "Vaqt berilgan «Navbatda» va «Yig'ilmoqda» buyurtmalar.",
@@ -16741,6 +16764,49 @@
           }
         },
         "required" : [ "batchId", "bonus", "expiryDate", "free", "number", "reserved" ]
+      },
+      "PickDoneItem" : {
+        "type" : "object",
+        "properties" : {
+          "customer" : {
+            "type" : "string"
+          },
+          "finishedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "onTime" : {
+            "type" : "boolean"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "customer", "finishedAt", "id", "lines", "number", "onTime", "startedAt", "status", "totalQty" ]
       },
       "PickFinishRequest" : {
         "type" : "object",

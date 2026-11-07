@@ -2158,6 +2158,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/pick-done-today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bugun yakunlanganlar (Yig'uvchi)
+         * @description O'zi bugun yig'ib bo'lgan buyurtmalar, vaqtida / kechikkan.
+         */
+        get: operations["pickDoneToday"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/pick-queue": {
         parameters: {
             query?: never;
@@ -7173,6 +7193,25 @@ export interface components {
             number: string;
             /** Format: int32 */
             reserved: number;
+        };
+        PickDoneItem: {
+            customer: string;
+            /** Format: date-time */
+            finishedAt: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lines: number;
+            /** Format: int32 */
+            minutes?: number;
+            number: string;
+            onTime: boolean;
+            /** Format: date-time */
+            startedAt: string;
+            /** @enum {string} */
+            status: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
+            /** Format: int64 */
+            totalQty: number;
         };
         PickFinishRequest: {
             lines?: components["schemas"]["PickLineConfirm"][];
@@ -12213,6 +12252,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MonitorBoard"];
+                };
+            };
+        };
+    };
+    pickDoneToday: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickDoneItem"][];
                 };
             };
         };

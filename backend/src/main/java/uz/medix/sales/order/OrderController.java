@@ -252,6 +252,13 @@ class OrderController {
         return picking.queue(actor());
     }
 
+    @GetMapping("/pick-done-today")
+    @PreAuthorize("hasAuthority('picking.do')")
+    @Operation(summary = "Bugun yakunlanganlar (Yig'uvchi)", description = "O'zi bugun yig'ib bo'lgan buyurtmalar, vaqtida / kechikkan.")
+    List<OrderModels.PickDoneItem> pickDoneToday() {
+        return picking.doneToday(actor());
+    }
+
     @PostMapping("/{id}/pick/start")
     @PreAuthorize("hasAuthority('picking.do')")
     @Operation(summary = "Yig'ishni boshlash", description = "Bir yig'uvchida bitta faol buyurtma.")

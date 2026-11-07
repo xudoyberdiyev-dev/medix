@@ -15,7 +15,7 @@ import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
-import { formatQuantity } from "@/lib/format";
+import { formatDateTime, formatQuantity } from "@/lib/format";
 import { useOrder } from "./api";
 import { IssueButton } from "./issues";
 import { MyToday } from "./my-today";
@@ -146,6 +146,7 @@ export function PickingPage() {
                   </li>
                 ))}
             </ul>
+            <DoneToday enabled={allowed} />
           </section>
         </div>
       )}
@@ -285,5 +286,54 @@ function ActivePick({ id, deadline, now }: { id: number; deadline: Date | null; 
         onClose={() => setChoosing(null)}
       />
     </Card>
+  );
+}
+
+/** «Bugun yakunlanganlar» (SPEC 5.4): oʻzi bugun yigʻgan buyurtmalar — vaqt va vaqtida / kechikkan belgisi. */
+function DoneToday({ enabled }: { enabled: boolean }) {
+  const t = useTranslations("orders");
+  const done = useQuery({
+    queryKey: ["orders", "pick-done-today"],
+    queryFn: () => unwrap(api.GET("/api/orders/pick-done-today")),
+    enabled,
+  });
+  return (
+    <div className="mt-6">
+      <h2 className="mb-3 text-subtitle">{t("picking.doneToday")}</h2>
+      {done.error ? (
+        <ErrorState onRetry={() => done.refetch()} />
+      ) : done.isPending ? (
+        <Skeleton className="h-16 w-full" />
+      ) : done.data.length === 0 ? (
+        <p className="text-text-secondary">{t("picking.doneTodayEmpty")}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {done.data.map((o) => (
+            <li key={o.id} className="flex items-center justify-between gap-2 rounded-card border border-border p-3">
+              <span className="min-w-0">
+                <span className="font-mono">{o.number}</span>
+                <span className="ml-2 text-text-secondary">{o.customer}</span>
+                <span className="block text-caption text-text-secondary">
+                  {t("picking.doneTodayMeta", {
+                    lines: formatQuantity(o.lines),
+                    qty: formatQuantity(o.totalQty),
+                    time: formatDateTime(new Date(o.finishedAt)).slice(-5),
+                  })}
+                </span>
+              </span>
+              {o.onTime ? (
+                <Badge tone="success" icon={CheckCircle2}>
+                  {t("picking.onTime")}
+                </Badge>
+              ) : (
+                <Badge tone="warning" icon={Timer}>
+                  {t("picking.late")}
+                </Badge>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

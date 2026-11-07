@@ -528,6 +528,15 @@ class OrderIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CHECKING"))
                 .andExpect(jsonPath("$.fefoDeviation").value(false));
+        // «Bugun yakunlanganlar» — faqat o'zi yig'ganlari
+        mvc.perform(get("/api/orders/pick-done-today").cookie(picker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(o1))
+                .andExpect(jsonPath("$[0].status").value("CHECKING"))
+                .andExpect(jsonPath("$[0].onTime").value(true));
+        mvc.perform(get("/api/orders/pick-done-today").cookie(otherPicker)).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/orders/pick-done-today").cookie(keeper)).andExpect(status().isForbidden());
         assertThat(qtyIn(shipping, prod)).isEqualTo(4);
         assertThat(qtyIn(p.main(), prod)).isEqualTo(16);
         assertThat(jdbc.sql("SELECT string_agg(status, ',') FROM stock_reservation WHERE doc_type = 'BY' AND doc_id = :o").param("o", o1)

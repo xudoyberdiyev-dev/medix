@@ -205,6 +205,10 @@ final class OrderModels {
 
     record PickFinishRequest(@Schema(nullable = true) List<@Valid PickLineConfirm> lines) {}
 
+    /** «Bugun yakunlanganlar» (Yig'uvchi, SPEC 5.4): o'zi bugun yig'ib bo'lgan buyurtmalar; vaqtida — berilgan daqiqa ichida. */
+    record PickDoneItem(long id, String number, String customer, OrderStatus status, int lines, long totalQty, Instant startedAt,
+            Instant finishedAt, @Schema(nullable = true) Integer minutes, boolean onTime) {}
+
     /** Yig'uvchi navbati kartasi (SPEC 5.4). */
     record PickQueueItem(
             long id,

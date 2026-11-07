@@ -252,7 +252,12 @@
     "confirmHint": "Partiya tasdigʻi: «Ha, shundan oldim» — koʻrsatilgan partiyalardan.",
     "confirmHintOther": "Partiya tasdigʻi: «Ha, shundan oldim» — koʻrsatilgan partiyalardan; {count} qator — boshqa partiyadan.",
     "printPickSheet": "Terish varagʻini chop etish",
-    "finish": "Yigʻishni yakunlash"
+    "finish": "Yigʻishni yakunlash",
+    "doneToday": "Bugun yakunlanganlar",
+    "doneTodayEmpty": "Bugun hali yigʻish yakunlanmagan.",
+    "doneTodayMeta": "{lines} qator · {qty} dona · {time}",
+    "onTime": "Vaqtida",
+    "late": "Kechikdi"
   },
   "otherBatch": {
     "title": "Boshqa partiyadan oldim",

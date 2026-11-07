@@ -18,6 +18,7 @@ import uz.medix.inventory.StockReservations;
 import uz.medix.inventory.StockReservations.Allocation;
 import uz.medix.inventory.StockReservations.Free;
 import uz.medix.sales.order.OrderModels.OrderStatus;
+import uz.medix.sales.order.OrderModels.PickDoneItem;
 import uz.medix.sales.order.OrderModels.PickLineConfirm;
 import uz.medix.sales.order.OrderModels.PickQueueItem;
 import uz.medix.shared.audit.AuditEntry;
@@ -112,6 +113,30 @@ class OrderPicking {
                 .stream()
                 .filter(java.util.Objects::nonNull)
                 .toList();
+    }
+
+    /** «Bugun yakunlanganlar»: shu yig'uvchi bugun (Toshkent) yakunlagan buyurtmalar, oxirgisi birinchi. */
+    @Transactional(readOnly = true)
+    List<PickDoneItem> doneToday(Actor actor) {
+        return jdbc.sql("""
+                SELECT o.id, o.number, c.name AS customer, o.status, o.pick_minutes, o.pick_started_at, o.pick_finished_at,
+                       (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
+                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l WHERE l.order_id = o.id) AS total_qty
+                FROM sales_order o JOIN counterparty c ON c.id = o.customer_id
+                WHERE o.picker_id = :p AND o.pick_finished_at IS NOT NULL
+                  AND (o.pick_finished_at AT TIME ZONE 'Asia/Tashkent')::date = (now() AT TIME ZONE 'Asia/Tashkent')::date
+                ORDER BY o.pick_finished_at DESC, o.id DESC LIMIT 200""")
+                .param("p", actor.employeeId())
+                .query((rs, n) -> {
+                    Instant started = instant(rs.getTimestamp("pick_started_at"));
+                    Instant finished = instant(rs.getTimestamp("pick_finished_at"));
+                    Integer minutes = (Integer) rs.getObject("pick_minutes");
+                    boolean onTime = minutes == null || started == null || !finished.isAfter(started.plusSeconds(minutes * 60L));
+                    return new PickDoneItem(rs.getLong("id"), rs.getString("number"), rs.getString("customer"),
+                            OrderStatus.valueOf(rs.getString("status")), rs.getInt("lines"), rs.getLong("total_qty"), started, finished, minutes,
+                            onTime);
+                })
+                .list();
     }
 
     /** «Yig'ishni boshlash»: vaqt berilgan bo'lishi shart; bir yig'uvchida bitta faol buyurtma (SPEC 5.2). */
