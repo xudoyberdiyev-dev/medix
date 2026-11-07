@@ -543,5 +543,11 @@
     "ready": "Imzo tayyor",
     "empty": "Imzo hali chizilmagan",
     "clear": "Tozalash"
+  },
+  "gs1": {
+    "format": "Kod oʻqilmadi: GS1 formati emas yoki (01), (21), (10), (91) maydonlaridan biri yoʻq. Kodni qayta skanerlang.",
+    "gtinInvalid": "Koddagi GTIN notoʻgʻri (nazorat raqami mos emas). Qadoqdagi boshqa kodni skanerlang.",
+    "kindInvalid": "Koddagi tur (91) notoʻgʻri: Q (quti) yoki D (dona) boʻlishi kerak.",
+    "expiryInvalid": "Koddagi yaroqlilik sanasi (17) notoʻgʻri. Kodni qayta skanerlang."
   }
 }

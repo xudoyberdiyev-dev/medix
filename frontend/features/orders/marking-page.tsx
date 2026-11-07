@@ -21,7 +21,7 @@ import { api, unwrap } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatQuantity } from "@/lib/format";
-import { GS, GS1_ERROR_TEXT, parseGs1 } from "@/lib/gs1";
+import { GS, parseGs1 } from "@/lib/gs1";
 import { codesExportUrl } from "./api";
 import { IssueButton } from "./issues";
 import { MyToday } from "./my-today";
@@ -261,7 +261,11 @@ function ActiveMarking({ work }: { work: MarkWork }) {
   async function scanOne(raw: string) {
     const parsed = parseGs1(raw);
     if (!parsed.ok) {
-      show({ ok: false, title: tr("marking.rejected"), detail: GS1_ERROR_TEXT[parsed.error] });
+      show({
+        ok: false,
+        title: tr("marking.rejected"),
+        detail: tr(`gs1.${parsed.error.slice("marking.".length) as "format" | "gtinInvalid" | "kindInvalid" | "expiryInvalid"}`),
+      });
       return;
     }
     try {
