@@ -1,1 +1,1 @@
-▶️ MEDIX: 06:08 sessiya boshlandi — reja: UI moslash — Buyurtma kiritish 2-qism (toʻliq sahifa /orders/new, /orders/[id]), keyin OrderCard, ProductPicker
+▶️ MEDIX: 14:06 sessiya boshlandi — reja: UI moslash — Mahsulotlar / Narxlar / Kontragentlar (prototip)
