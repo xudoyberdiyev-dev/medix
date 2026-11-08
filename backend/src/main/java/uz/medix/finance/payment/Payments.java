@@ -75,7 +75,6 @@ class Payments implements CustomerPayments {
 
     // ===== Ochiq qarzlar =====
 
-    @Transactional(readOnly = true)
     /** Mijoz hujjati (masalan, SV) bo'yicha to'lov holati: summa, yopilgan, ochiq qism, muddat va taqsimlangan MT lar. */
     @Transactional(readOnly = true)
     DocPayment docPayment(Actor actor, String docType, long docId) {
@@ -109,6 +108,7 @@ class Payments implements CustomerPayments {
         return new DocPayment(total.toString(), total.minus(open).toString(), open.toString(), own.due(), overdue, lines);
     }
 
+    @Transactional(readOnly = true)
     OpenDocs openDocs(Actor actor, long branchId, long customerId) {
         if (!actor.canAccessBranch(branchId)) {
             throw MedixException.notFound("error.notFound");
