@@ -709,6 +709,33 @@
     "credit": "Kredit",
     "debtNow": "Joriy qarz",
     "withOrder": "Shu buyurtma bilan",
-    "overLimit": "Limitdan {amount} oshadi"
+    "overLimit": "Limitdan {amount} oshadi",
+    "tHistory": "Tarix",
+    "history": {
+      "approve": "Tasdiqlandi",
+      "backToDocumenting": "Hujjatlashtirishga qaytarildi",
+      "cancel": "Bekor qilindi",
+      "check": "Tekshirildi",
+      "create": "Yaratildi",
+      "delivered": "Yetkazildi",
+      "documented": "Hujjatlashtirildi",
+      "issue": "Muammo bildirildi",
+      "issueResolve": "Muammo hal qilindi",
+      "markConfirm": "Markirovkasiz qatorlar tasdiqlandi",
+      "markFinish": "Markirovka tugadi",
+      "markRemove": "Kod olib tashlandi",
+      "markStart": "Markirovka boshlandi",
+      "partial": "Qisman yetkazildi",
+      "pickFinish": "Yigʻish tugadi",
+      "pickStart": "Yigʻish boshlandi",
+      "reject": "Rad etildi",
+      "returnAccept": "Qaytgan tovar qabul qilindi",
+      "returnToDraft": "Qoralamaga qaytarildi",
+      "returnToPick": "Yigʻishga qaytarildi",
+      "submit": "Yuborildi",
+      "time": "Vaqt berildi",
+      "undelivered": "Yetkazilmadi",
+      "update": "Tahrirlandi"
+    }
   }
 }

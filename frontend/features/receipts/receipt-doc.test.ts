@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dueTone } from "./list-state";
-import { centsToMoney, expectedBonus, groupByDay, toCentsBig } from "./receipt-doc";
+import { groupByDay } from "@/lib/history";
+import { centsToMoney, expectedBonus, toCentsBig } from "./receipt-doc";
 
 const base = { amount: "1000.00", actualAmount: undefined, debtAmount: undefined };
 

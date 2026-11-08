@@ -2524,6 +2524,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buyurtma tarixi
+         * @description Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.
+         */
+        get: operations["history_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{id}/invoice": {
         parameters: {
             query?: never;
@@ -7379,6 +7399,13 @@ export interface components {
             customers: components["schemas"]["FilterOption"][];
             operators: components["schemas"]["FilterOption"][];
             regions: components["schemas"]["FilterOption"][];
+        };
+        OrderHistoryEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            reason?: string;
         };
         OrderIssue: {
             code: string;
@@ -13402,6 +13429,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    history_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderHistoryEvent"][];
                 };
             };
         };

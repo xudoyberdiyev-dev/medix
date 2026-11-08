@@ -68,6 +68,14 @@ export function useOrders(f: OrderFilters, branchId: number | null) {
   });
 }
 
+/** OrderCard «Tarix» yorligʻi — audit jurnalidan. */
+export function useOrderHistory(id: number) {
+  return useQuery({
+    queryKey: ["orders", "history", id],
+    queryFn: () => unwrap(api.GET("/api/orders/{id}/history", { params: { path: { id } } })),
+  });
+}
+
 export function useOrder(id: number | null) {
   return useQuery({
     queryKey: ["orders", "one", id],

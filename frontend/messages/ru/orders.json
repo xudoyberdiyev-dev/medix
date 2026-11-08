@@ -709,6 +709,33 @@
     "credit": "Кредит",
     "debtNow": "Текущий долг",
     "withOrder": "С этим заказом",
-    "overLimit": "Превышение лимита на {amount}"
+    "overLimit": "Превышение лимита на {amount}",
+    "tHistory": "История",
+    "history": {
+      "approve": "Одобрен",
+      "backToDocumenting": "Возвращён на оформление",
+      "cancel": "Отменён",
+      "check": "Проверен",
+      "create": "Создан",
+      "delivered": "Доставлен",
+      "documented": "Оформлен",
+      "issue": "Сообщено о проблеме",
+      "issueResolve": "Проблема решена",
+      "markConfirm": "Строки без маркировки подтверждены",
+      "markFinish": "Маркировка завершена",
+      "markRemove": "Код удалён",
+      "markStart": "Маркировка начата",
+      "partial": "Доставлен частично",
+      "pickFinish": "Сборка завершена",
+      "pickStart": "Сборка начата",
+      "reject": "Отклонён",
+      "returnAccept": "Возврат принят",
+      "returnToDraft": "Возвращён в черновик",
+      "returnToPick": "Возвращён на сборку",
+      "submit": "Отправлен",
+      "time": "Назначено время",
+      "undelivered": "Не доставлен",
+      "update": "Изменён"
+    }
   }
 }

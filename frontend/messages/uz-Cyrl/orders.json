@@ -709,6 +709,33 @@
     "credit": "Кредит",
     "debtNow": "Жорий қарз",
     "withOrder": "Шу буюртма билан",
-    "overLimit": "Лимитдан {amount} ошади"
+    "overLimit": "Лимитдан {amount} ошади",
+    "tHistory": "Тарих",
+    "history": {
+      "approve": "Тасдиқланди",
+      "backToDocumenting": "Ҳужжатлаштиришга қайтарилди",
+      "cancel": "Бекор қилинди",
+      "check": "Текширилди",
+      "create": "Яратилди",
+      "delivered": "Етказилди",
+      "documented": "Ҳужжатлаштирилди",
+      "issue": "Муаммо билдирилди",
+      "issueResolve": "Муаммо ҳал қилинди",
+      "markConfirm": "Маркировкасиз қаторлар тасдиқланди",
+      "markFinish": "Маркировка тугади",
+      "markRemove": "Код олиб ташланди",
+      "markStart": "Маркировка бошланди",
+      "partial": "Қисман етказилди",
+      "pickFinish": "Йиғиш тугади",
+      "pickStart": "Йиғиш бошланди",
+      "reject": "Рад этилди",
+      "returnAccept": "Қайтган товар қабул қилинди",
+      "returnToDraft": "Қораламага қайтарилди",
+      "returnToPick": "Йиғишга қайтарилди",
+      "submit": "Юборилди",
+      "time": "Вақт берилди",
+      "undelivered": "Етказилмади",
+      "update": "Таҳрирланди"
+    }
   }
 }

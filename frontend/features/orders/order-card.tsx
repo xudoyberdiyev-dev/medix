@@ -3,9 +3,10 @@
 import { Check, ChevronDown, ChevronRight, TriangleAlert, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Fragment, useState, type ReactNode } from "react";
+import { HistoryTimeline } from "@/components/ui/history-timeline";
 import { Tabs } from "@/components/ui/tabs";
 import { formatDate, formatMoney, formatQuantity, formatTime } from "@/lib/format";
-import type { OrderDetail } from "./api";
+import { useOrderHistory, type OrderDetail } from "./api";
 import { day } from "./orders-page";
 
 type Status = OrderDetail["status"];
@@ -165,6 +166,72 @@ function InfoCard({ title, rows }: { title: string; rows: { label: string; value
 }
 
 /** Buyurtma kartasi tanasi (prototip `OrderCard`): yorliqlar, uchta maʼlumot kartasi, qatorlar (buyurtma / yigʻilgan / joʻnatilgan). */
+const HISTORY_ACTIONS = new Set<string>([
+  "approve",
+  "backToDocumenting",
+  "cancel",
+  "check",
+  "create",
+  "delivered",
+  "documented",
+  "issue",
+  "issueResolve",
+  "markConfirm",
+  "markFinish",
+  "markRemove",
+  "markStart",
+  "partial",
+  "pickFinish",
+  "pickStart",
+  "reject",
+  "returnAccept",
+  "returnToDraft",
+  "returnToPick",
+  "submit",
+  "time",
+  "undelivered",
+  "update",
+]);
+type HistoryAction =
+  | "approve"
+  | "backToDocumenting"
+  | "cancel"
+  | "check"
+  | "create"
+  | "delivered"
+  | "documented"
+  | "issue"
+  | "issueResolve"
+  | "markConfirm"
+  | "markFinish"
+  | "markRemove"
+  | "markStart"
+  | "partial"
+  | "pickFinish"
+  | "pickStart"
+  | "reject"
+  | "returnAccept"
+  | "returnToDraft"
+  | "returnToPick"
+  | "submit"
+  | "time"
+  | "undelivered"
+  | "update";
+
+function OrderHistory({ id }: { id: number }) {
+  const t = useTranslations("orders.card.history");
+  const q = useOrderHistory(id);
+  return (
+    <HistoryTimeline
+      query={q}
+      label={(a) => {
+        const k = a.replace(/^order\./, "");
+        return HISTORY_ACTIONS.has(k) ? t(k as HistoryAction) : a;
+      }}
+    />
+  );
+}
+
 export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: ReactNode }) {
   const t = useTranslations("orders");
   const [tab, setTab] = useState("order");
@@ -180,9 +247,12 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
         items={[
           { key: "order", label: t("card.tOrder") },
           { key: "ship", label: t("card.tShip") },
+          { key: "history", label: t("card.tHistory") },
         ]}
       />
-      {tab === "ship" ? (
+      {tab === "history" ? (
+        <OrderHistory id={doc.id} />
+      ) : tab === "ship" ? (
         (shipping ?? <p className="rounded-card border border-border bg-surface p-5 text-text-secondary">{t("card.shipEmpty")}</p>)
       ) : (
         <>

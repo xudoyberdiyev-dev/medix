@@ -6,7 +6,6 @@ import {
   Check,
   CircleCheck,
   ClipboardCheck,
-  History,
   PackagePlus,
   Trash2,
   Undo2,
@@ -21,10 +20,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
 import { Drawer } from "@/components/ui/drawer";
+import { HistoryTimeline } from "@/components/ui/history-timeline";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Checkbox, Radio } from "@/components/ui/selection-controls";
-import { EmptyState, ErrorState, Skeleton } from "@/components/ui/system-states";
+import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
@@ -37,7 +37,7 @@ import { searchProducts } from "@/features/prices/api";
 import { useEmployeeOptions } from "@/features/products/api";
 import { describeError } from "@/features/setup/form-error";
 import { cn } from "@/lib/cn";
-import { formatDateTime, formatMoney, formatQuantity, formatTime } from "@/lib/format";
+import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import {
   BONUS_CONFIRM,
   RECEIPT_ACCEPT,
@@ -60,7 +60,7 @@ import {
   type Resolution,
 } from "./api";
 import { ReceiptCatalogDialog } from "./receipt-catalog-dialog";
-import { centsToMoney, expectedBonus, groupByDay, toCentsBig } from "./receipt-doc";
+import { centsToMoney, expectedBonus, toCentsBig } from "./receipt-doc";
 import { ReceiptStatusBadge, day } from "./receipts-page";
 
 /** Kirim qatori manzili boʻla oladigan zonalar (Qabul va Joʻnatish — yoʻq). */
@@ -907,32 +907,14 @@ const historyKey = (a: string) => (a in HISTORY_ACTIONS ? HISTORY_ACTIONS[a as k
 function ReceiptHistory({ id }: { id: number }) {
   const t = useTranslations("receipts.history");
   const q = useReceiptHistory(id);
-  if (q.error) return <ErrorState onRetry={() => q.refetch()} />;
-  if (!q.data) return <Skeleton className="h-40 w-full" />;
-  if (q.data.length === 0) return <EmptyState icon={History} title={t("empty")} description={t("emptyHint")} />;
-  const groups = groupByDay(q.data);
-  const historyLabel = (a: string) => {
-    const k = historyKey(a);
-    return k ? t(`action.${k}`) : a;
-  };
   return (
-    <div className="flex flex-col gap-4 rounded-card border border-border bg-surface p-4">
-      {groups.map((g) => (
-        <section key={g.day} className="flex flex-col gap-2">
-          <h3 className="text-caption font-medium text-text-secondary">{g.day}</h3>
-          <ol className="flex flex-col gap-2 border-l border-border pl-4">
-            {g.items.map((e, i) => (
-              <li key={`${e.at}-${i}`} className="flex flex-wrap items-baseline gap-x-2 text-body">
-                <span className="font-mono text-caption text-text-secondary tabular-nums">{formatTime(new Date(e.at))}</span>
-                <span className="font-medium">{historyLabel(e.action)}</span>
-                {e.employee ? <span className="text-text-secondary">· {e.employee}</span> : null}
-                {e.reason ? <span className="text-text-secondary">— {e.reason}</span> : null}
-              </li>
-            ))}
-          </ol>
-        </section>
-      ))}
-    </div>
+    <HistoryTimeline
+      query={q}
+      label={(a) => {
+        const k = historyKey(a);
+        return k ? t(`action.${k}`) : a;
+      }}
+    />
   );
 }
 

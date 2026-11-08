@@ -60,5 +60,9 @@
     "month": "Shu oy",
     "from": "Dan",
     "to": "Gacha"
+  },
+  "history": {
+    "empty": "Tarix hali yoʻq",
+    "emptyHint": "Hujjat bilan qilingan har bir amal shu yerda koʻrinadi."
   }
 }

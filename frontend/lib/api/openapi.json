@@ -5758,6 +5758,38 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.",
+        "operationId" : "history_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrderHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buyurtma tarixi",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/{id}/invoice" : {
       "get" : {
         "description" : "O'tkazilgan sotuv qatorlari (partiya, QQS) — chop etish uchun; sotuv bo'lmasa 404.",
@@ -17500,6 +17532,25 @@
           }
         },
         "required" : [ "customers", "operators", "regions" ]
+      },
+      "OrderHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
       },
       "OrderIssue" : {
         "type" : "object",
