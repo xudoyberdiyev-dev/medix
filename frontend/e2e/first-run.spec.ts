@@ -145,8 +145,13 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 6. Yakun
-  await page.getByRole("button", { name: "Ustani yakunlash" }).click();
-  await expect(page.getByText("Sozlash yakunlandi")).toBeVisible();
+  await expect(page.getByText("Tizimni ishga tushirishga tayyorlik")).toBeVisible();
+  await expect(page.getByText(/· Kirmagan — 1$/)).toBeVisible();
+  await page.getByRole("button", { name: "Tizimni ishga tushirish" }).click();
+  const launch = page.getByRole("dialog", { name: "Tizim ishga tushirilsinmi?" });
+  await launch.getByRole("button", { name: /Baribir davom etish|Tizimni ishga tushirish/ }).click();
+  await expect(page.getByText("Tizim ishga tushirildi")).toBeVisible();
+  await page.getByRole("button", { name: "Bosh sahifaga oʻtish" }).click();
   await expect(page).toHaveURL(/\/$/);
 
   // Sozlamalar → Filiallar, Omborlar, Xodimlar

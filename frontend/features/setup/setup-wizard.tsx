@@ -1,23 +1,18 @@
 "use client";
 
 import { Lock } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, KpiCard } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
-import { toast } from "@/components/ui/toast";
 import { useMe } from "@/features/auth/session";
 import { ApiError } from "@/lib/api/client";
-import { formatQuantity } from "@/lib/format";
-import { firstIncompleteStep, useCompleteSetup, useSetupStatus, type SetupStatus } from "./api";
-import { describeError } from "./form-error";
+import { firstIncompleteStep, useSetupStatus, type SetupStatus } from "./api";
 import { CompanyStep } from "./company-step";
 import { BranchesStep } from "./branches-step";
 import { StaffManager } from "@/features/employees/staff-manager";
 import { RolesMatrix } from "@/features/roles/roles-matrix";
+import { FinishStep } from "./finish-step";
 import { WarehousesStep } from "./warehouses-step";
 import { SETUP_STEPS, WizardFrame } from "./wizard-frame";
 
@@ -85,6 +80,7 @@ export function SetupWizard() {
  * foydalanuvchi tugmasi bilan oʻzgaradi — avtomatik saqlash holatni yangilaganda usta oʻzi keyingi qadamga sakramaydi.
  */
 function WizardSteps({ status: s }: { status: SetupStatus }) {
+  const ts = useTranslations("setup");
   const [current, setStep] = useState(() => firstIncompleteStep(s));
   const go = (i: number) => setStep(Math.max(0, Math.min(i, SETUP_STEPS.length - 1)));
   // Qadamga faqat oldingilari bajarilgan boʻlsa oʻtiladi
@@ -101,17 +97,12 @@ function WizardSteps({ status: s }: { status: SetupStatus }) {
       </WizardFrame>
     );
   if (current === 4) return <StaffStep status={s} nav={nav} onBack={() => go(3)} onDone={() => go(5)} />;
-
   return (
-    <WizardFrame
-      {...nav}
-      onBack={() => go(current - 1)}
-      onNext={current < SETUP_STEPS.length - 1 ? () => go(current + 1) : undefined}
-      nextDisabled={!canLeaveStep(current, s)}
-    >
-      {current === 5 ? <FinishStep status={s} /> : null}
+    <WizardFrame {...nav} wide>
+      <FinishStep status={s} stepOf={ts("stepOf", { n: 6, total: 6 })} onGo={go} onBack={() => go(4)} />
     </WizardFrame>
   );
+  return null;
 }
 
 function StaffStep({
@@ -141,48 +132,4 @@ function StaffStep({
 
 function Centered({ children }: { children: ReactNode }) {
   return <main className="mx-auto max-w-[720px] px-[24px] py-[64px]">{children}</main>;
-}
-
-function FinishStep({ status }: { status: SetupStatus }) {
-  const t = useTranslations("setup.finish");
-  const router = useRouter();
-  const complete = useCompleteSetup();
-  const err = describeError(complete.error);
-  const zones = status.warehouses.reduce((n, w) => n + w.zones.length, 0);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-        <KpiCard label={t("branches")} value={formatQuantity(status.branches.length)} unit={t("unit")} />
-        <KpiCard
-          label={t("warehouses")}
-          value={formatQuantity(status.warehouses.length)}
-          unit={t("unit")}
-          note={t("zones", { count: formatQuantity(zones) })}
-        />
-        <KpiCard label={t("employees")} value={formatQuantity(status.employees.length)} unit={t("unit")} />
-      </div>
-      {status.blockers.map((b) => (
-        <Alert key={b} tone="warning" title={b} />
-      ))}
-      {err.message ? <Alert tone="danger" title={err.message} /> : null}
-      <div className="flex justify-end">
-        <Button
-          size="lg"
-          disabled={status.blockers.length > 0}
-          loading={complete.isPending}
-          onClick={() =>
-            complete.mutate(undefined, {
-              onSuccess: () => {
-                toast({ tone: "success", title: t("done"), description: t("doneDescription") });
-                router.replace("/");
-              },
-            })
-          }
-        >
-          {t("complete")}
-        </Button>
-      </div>
-    </div>
-  );
 }
