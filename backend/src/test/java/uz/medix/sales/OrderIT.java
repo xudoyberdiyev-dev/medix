@@ -304,6 +304,14 @@ class OrderIT {
                 .andExpect(jsonPath("$.lines[0].reserved.length()").value(0));
         mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin").cookie(operator))
                 .andExpect(jsonPath("$.items[0].available").value(50));
+        // «Tarix» yorligʻi — audit: yaratildi → yuborildi → bekor qilindi (sababi bilan)
+        mvc.perform(get("/api/orders/" + doc + "/history").cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("order.create"))
+                .andExpect(jsonPath("$[?(@.action == 'order.submit')]").isNotEmpty())
+                .andExpect(jsonPath("$[-1].action").value("order.cancel"))
+                .andExpect(jsonPath("$[-1].reason").value("Mijoz voz kechdi"));
+        mvc.perform(get("/api/orders/" + doc + "/history").cookie(foreign)).andExpect(status().isNotFound());
     }
 
     @Test

@@ -152,6 +152,14 @@ class OrderController {
         return invoices.find(actor(), id).orElseThrow(() -> MedixException.notFound("error.notFound"));
     }
 
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
+    @Operation(summary = "Buyurtma tarixi", description = "Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.")
+    List<OrderModels.OrderHistoryEvent> history(@PathVariable long id) {
+        detail(id);
+        return orders.history(id);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
     @Operation(summary = "Buyurtma", description = "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.")

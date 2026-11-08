@@ -309,6 +309,20 @@ class Orders {
         }
     }
 
+    /** Buyurtma tarixi — audit jurnalidan (eng eskisi birinchi). Kirish huquqi — {@code find} bilan tekshiriladi. */
+    @Transactional(readOnly = true)
+    List<OrderModels.OrderHistoryEvent> history(long id) {
+        return jdbc.sql("""
+                SELECT a.occurred_at, e.full_name AS employee, a.action, a.reason
+                FROM audit_log a LEFT JOIN employee e ON e.id = a.employee_id
+                WHERE a.entity_type = 'sales_order' AND a.entity_id = :id
+                ORDER BY a.occurred_at, a.id""")
+                .param("id", String.valueOf(id))
+                .query((rs, n) -> new OrderModels.OrderHistoryEvent(rs.getTimestamp("occurred_at").toInstant(), rs.getString("employee"),
+                        rs.getString("action"), rs.getString("reason")))
+                .list();
+    }
+
     @Transactional(readOnly = true)
     OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, int page, int size) {
         return list(actor, branchId, status, filter, q, mine, OrderSort.CREATED, true, page, size);

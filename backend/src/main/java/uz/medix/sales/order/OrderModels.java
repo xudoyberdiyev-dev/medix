@@ -291,4 +291,7 @@ final class OrderModels {
     record CheckRequest(
             @NotNull(message = "{validation.required}") @Size(min = 1, max = MAX_LINES) List<Long> checkedLines,
             @NotNull(message = "{validation.required}") @Min(1) @Max(10_000) Integer places) {}
+
+    /** Buyurtma tarixi (audit): kim, qachon, nima qildi. */
+    record OrderHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
 }
