@@ -37,7 +37,7 @@ import { isKnownAction } from "@/features/audit/audit-page";
 import { can as canMe } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useWarehouses } from "@/features/organization/api";
-import { AllBranchesDialog } from "./employees-page";
+import { AllBranchesDialog } from "./all-branches-dialog";
 import { useRoleMatrix } from "@/features/roles/roles-matrix";
 import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
