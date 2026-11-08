@@ -114,7 +114,7 @@ class Orders {
     record Terms(BigDecimal creditLimit, Integer paymentDays, Long priceTypeId, String priceType, Integer minShelfLifeDays) {}
 
     record Product(long id, String code, String name, String manufacturer, boolean active, boolean controlled, boolean marked,
-            Integer minQty, Integer maxQty) {}
+            Integer minQty, Integer maxQty, BigDecimal vatRate) {}
 
     /** Baholash natijasi: qator narxlari, jami, muammolar va tasdiq darajasi. */
     record Evaluation(Map<Long, Quote> quotes, Map<Long, Available> available, Map<Long, Product> products, Money total,
@@ -165,7 +165,7 @@ class Orders {
             return m;
         }
         jdbc.sql("""
-                SELECT p.id, p.code, p.name, mf.name AS manufacturer, p.active, p.controlled, p.marked, p.min_qty, p.max_qty
+                SELECT p.id, p.code, p.name, mf.name AS manufacturer, p.active, p.controlled, p.marked, p.min_qty, p.max_qty, p.vat_rate
                 FROM product p LEFT JOIN manufacturer mf ON mf.id = p.manufacturer_id WHERE p.id IN (:ids)""")
                 .param("ids", ids)
                 .query(Product.class)
@@ -504,6 +504,7 @@ class Orders {
         boolean draft = status == OrderStatus.DRAFT;
         boolean priceChanged = false;
         List<OrderLine> lines = new ArrayList<>();
+        Money vatTotal = Money.ZERO;
         for (LineRow r : rows) {
             Product p = ev.products().get(r.productId());
             Quote q = ev.quotes().get(r.productId());
@@ -514,9 +515,15 @@ class Orders {
             }
             Money shown = draft ? current : stored;
             Available a = ev.available().get(r.productId());
+            Money amount = shown == null ? null : shown.times(r.qty());
+            // QQS narx ichida (SPEC 68): qator QQSi = summa × stavka / (100 + stavka), HALF_UP — sotuvdagi kabi
+            Money vat = amount == null ? null : includedVat(amount, p.vatRate());
+            if (vat != null) {
+                vatTotal = vatTotal.plus(vat);
+            }
             lines.add(new OrderLine(r.id(), r.lineNo(), r.productId(), p.code(), p.name(), p.manufacturer(), r.qty(),
                     stored == null ? null : stored.toString(), current == null ? null : current.toString(),
-                    shown == null ? null : shown.times(r.qty()).toString(), r.priceType(), a == null ? 0 : a.qty(),
+                    amount == null ? null : amount.toString(), vat == null ? null : vat.toString(), r.priceType(), a == null ? 0 : a.qty(),
                     a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked(), List.of()));
         }
         Map<Long, List<OrderModels.ReservedBatch>> reserved = new HashMap<>();
@@ -535,12 +542,21 @@ class Orders {
         return Optional.of(new OrderDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.customerId(), h.customer(),
                 h.customerTin(), h.orderDate().toLocalDate(), DeliveryType.valueOf(h.deliveryType()), localDate(h.deliveryDate()), h.address(),
                 PaymentType.valueOf(h.paymentType()), h.note(), status,
-                h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, priceChanged, ev.credit(), issues,
+                h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, vatTotal.toString(), priceChanged,
+                ev.credit(), issues,
                 h.createdBy(), h.createdById(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
                 h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
                 instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), documents(id),
                 holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines,
                 jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list()));
+    }
+
+    /** Narx ichidagi QQS: summa × stavka / (100 + stavka), 2 xona HALF_UP; stavka yoʻq yoki 0 — QQS 0. */
+    static Money includedVat(Money amount, BigDecimal rate) {
+        if (rate == null || rate.signum() == 0) {
+            return Money.ZERO;
+        }
+        return new Money(amount.amount().multiply(rate).divide(BigDecimal.valueOf(100).add(rate), Money.SCALE, RoundingMode.HALF_UP));
     }
 
     private OrderModels.OrderDocuments documents(long orderId) {

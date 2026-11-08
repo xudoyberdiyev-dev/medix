@@ -229,6 +229,9 @@ class OrderIT {
                 .andExpect(jsonPath("$.status").value("DRAFT"))
                 .andExpect(jsonPath("$.address").value("Chilonzor 5"))
                 .andExpect(jsonPath("$.total").value("25005.00"))
+                // QQS narx ichida: 25 005 × 12 / 112 = 2 679,11 (HALF_UP)
+                .andExpect(jsonPath("$.vatTotal").value("2679.11"))
+                .andExpect(jsonPath("$.lines[0].vatAmount").value("2679.11"))
                 .andExpect(jsonPath("$.lines[0].available").value(50))
                 .andExpect(jsonPath("$.credit.creditLimit").value("100000.00"))
                 .andExpect(jsonPath("$.credit.limitLeft").value("100000.00"))
@@ -268,7 +271,8 @@ class OrderIT {
         mvc.perform(get("/api/orders/" + doc).cookie(operator))
                 .andExpect(jsonPath("$.priceChanged").value(true))
                 .andExpect(jsonPath("$.issues[*].code", hasItem("order.priceChanged")))
-                .andExpect(jsonPath("$.total").value("26000.00"));
+                .andExpect(jsonPath("$.total").value("26000.00"))
+                .andExpect(jsonPath("$.vatTotal").value("2785.71"));
 
         send(post("/api/orders/" + doc + "/submit"), operator, "")
                 .andExpect(status().isOk())

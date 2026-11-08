@@ -80,6 +80,7 @@ final class OrderModels {
             @Schema(nullable = true, description = "Muzlatilgan yoki oxirgi saqlangan narx") String price,
             @Schema(nullable = true, description = "Hozirgi narx (qoralamada)") String currentPrice,
             @Schema(nullable = true) String amount,
+            @Schema(nullable = true, description = "Summa ichidagi QQS") String vatAmount,
             @Schema(nullable = true) String priceType,
             @Schema(description = "Sotuvga mavjud qoldiq") int available,
             @Schema(nullable = true) LocalDate nearestExpiry,
@@ -90,7 +91,7 @@ final class OrderModels {
             @Schema(description = "FEFO zahira (Navbatda va keyin)") List<ReservedBatch> reserved) {
 
         OrderLine withReserved(List<ReservedBatch> r) {
-            return new OrderLine(id, lineNo, productId, productCode, productName, manufacturer, qty, price, currentPrice, amount, priceType,
+            return new OrderLine(id, lineNo, productId, productCode, productName, manufacturer, qty, price, currentPrice, amount, vatAmount, priceType,
                     available, nearestExpiry, minQty, maxQty, controlled, marked, r);
         }
     }
@@ -158,6 +159,7 @@ final class OrderModels {
             @Schema(nullable = true) ApprovalLevel approvalLevel,
             List<String> approvalReasons,
             String total,
+            @Schema(description = "Jami ichidagi QQS (qatorlar bo'yicha, narx QQS bilan)") String vatTotal,
             @Schema(description = "Qoralamada narx o'zgargan qatorlar bor") boolean priceChanged,
             CustomerCredit credit,
             List<OrderIssue> issues,
