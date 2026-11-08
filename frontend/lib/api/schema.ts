@@ -4143,6 +4143,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stock/expiry-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Muddat nazorati — guruhlar
+         * @description Prototip «ExpiryControl» kartalari: partiya × zona soni, miqdor, tannarxda summa.
+         */
+        get: operations["expiryGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stock/export": {
         parameters: {
             query?: never;
@@ -6527,6 +6547,16 @@ export interface components {
             d61to90: number;
             /** Format: int32 */
             expired: number;
+        };
+        ExpiryGroup: {
+            /** Format: int64 */
+            batches: number;
+            /** @description EXPIRED, D30 (0–30), D90 (31–90), D180 (91–180) */
+            group: string;
+            /** Format: int64 */
+            qty: number;
+            /** @description Tannarxda — faqat special.cost */
+            value?: string;
         };
         Facet: {
             /** Format: int64 */
@@ -9066,6 +9096,8 @@ export interface components {
             bonus: boolean;
             /** @description Faqat special.cost ruxsati bilan */
             cost?: string;
+            /** @description Tannarxda summa (miqdor × tannarx) — faqat special.cost */
+            costSum?: string;
             /**
              * Format: int64
              * @description Yaroqlilikka qolgan kunlar (manfiy — o'tgan)
@@ -16102,7 +16134,10 @@ export interface operations {
                 warehouseId?: number;
                 q?: string;
                 sellableOnly?: boolean;
+                /** @description -1 — faqat muddati o'tganlar */
                 expiringWithinDays?: number;
+                /** @description Muddat guruhi: yaroqlilikka kamida shuncha kun qolgan (0 — o'tganlarsiz) */
+                minDaysLeft?: number;
                 /** @description Berilmasa: nom (muddat nazoratida — yaroqlilik) */
                 sort?: "NAME" | "CODE" | "EXPIRY" | "QTY" | "WAREHOUSE";
                 desc?: boolean;
@@ -16149,6 +16184,28 @@ export interface operations {
             };
         };
     };
+    expiryGroups: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpiryGroup"][];
+                };
+            };
+        };
+    };
     export: {
         parameters: {
             query?: {
@@ -16157,6 +16214,7 @@ export interface operations {
                 q?: string;
                 sellableOnly?: boolean;
                 expiringWithinDays?: number;
+                minDaysLeft?: number;
                 sort?: "NAME" | "CODE" | "EXPIRY" | "QTY" | "WAREHOUSE";
                 desc?: boolean;
             };

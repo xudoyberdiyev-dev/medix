@@ -200,5 +200,31 @@
       "doc_QM": "Qaytgan tovar",
       "doc_SV": "Sotuv"
     }
+  },
+  "ex": {
+    "threshold": "Ogohlantirish chegarasi: {days} kun",
+    "settings": "Sozlamalarda oʻzgartirish",
+    "banner": "{n} ta partiyaning muddati oʻtgan — ular sotuvdan avtomatik chiqarilgan. Hisobdan chiqaring yoki yetkazib beruvchiga qaytaring.",
+    "woAll": "Hammasini hisobdan chiqarish",
+    "g": {
+      "EXPIRED": "Muddati oʻtgan",
+      "D30": "30 kun ichida",
+      "D90": "31–90 kun",
+      "D180": "91–180 kun"
+    },
+    "units": "birlik",
+    "cLoc": "Ombor / Zona",
+    "cLeft": "Qolgan kun",
+    "cTip": "Tavsiya",
+    "tip": {
+      "expired": "Hisobdan chiqarish yoki qaytarish",
+      "reserved": "Buyurtmada band: {n}",
+      "d30": "Birinchi navbatda sotish",
+      "d90": "Sotuvda ustuvor qilish",
+      "watch": "Kuzatuvda"
+    },
+    "safeT": "{days} kun ichida muddati tugaydigan partiya yoʻq",
+    "safeD": "Hozircha xavf yoʻq. Yangi kirimlar avtomatik tekshiriladi.",
+    "noneInGroup": "Bu guruhda partiya yoʻq"
   }
 }

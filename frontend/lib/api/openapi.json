@@ -9608,8 +9608,18 @@
             "default" : false
           }
         }, {
+          "description" : "-1 — faqat muddati o'tganlar",
           "in" : "query",
           "name" : "expiringWithinDays",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "description" : "Muddat guruhi: yaroqlilikka kamida shuncha kun qolgan (0 — o'tganlarsiz)",
+          "in" : "query",
+          "name" : "minDaysLeft",
           "required" : false,
           "schema" : {
             "type" : "integer",
@@ -9704,6 +9714,38 @@
         "tags" : [ "stock" ]
       }
     },
+    "/api/stock/expiry-groups" : {
+      "get" : {
+        "description" : "Prototip «ExpiryControl» kartalari: partiya × zona soni, miqdor, tannarxda summa.",
+        "operationId" : "expiryGroups",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ExpiryGroup"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Muddat nazorati — guruhlar",
+        "tags" : [ "stock" ]
+      }
+    },
     "/api/stock/export" : {
       "get" : {
         "operationId" : "export",
@@ -9741,6 +9783,14 @@
         }, {
           "in" : "query",
           "name" : "expiringWithinDays",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "minDaysLeft",
           "required" : false,
           "schema" : {
             "type" : "integer",
@@ -15439,6 +15489,28 @@
           }
         },
         "required" : [ "d0to30", "d31to60", "d61to90", "expired" ]
+      },
+      "ExpiryGroup" : {
+        "type" : "object",
+        "properties" : {
+          "batches" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "group" : {
+            "type" : "string",
+            "description" : "EXPIRED, D30 (0–30), D90 (31–90), D180 (91–180)"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Tannarxda — faqat special.cost"
+          }
+        },
+        "required" : [ "batches", "group", "qty" ]
       },
       "Facet" : {
         "type" : "object",
@@ -21744,6 +21816,10 @@
           "cost" : {
             "type" : "string",
             "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "costSum" : {
+            "type" : "string",
+            "description" : "Tannarxda summa (miqdor × tannarx) — faqat special.cost"
           },
           "daysLeft" : {
             "type" : "integer",
