@@ -19,6 +19,7 @@ import { useWarehouses } from "@/features/organization/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
+import { BatchPanel } from "./batch-panel";
 import {
   STOCK_SORT_COLUMNS,
   parseStockFilters,
@@ -93,6 +94,7 @@ export function StockPage({
   const f = parseStockFilters(new URLSearchParams(params.toString()));
   const { q, warehouseId, sellableOnly, days, sort, desc, page, size } = f;
   const [search, setSearch] = useState(q);
+  const [panel, setPanel] = useState<{ batchId: number; zoneId: number } | null>(null);
   const apply = (patch: Partial<StockFilters>) => {
     const view = params.get("view");
     const qs = [view ? `view=${view}` : "", serializeStockFilters({ ...f, page: 1, ...patch })].filter(Boolean).join("&");
@@ -207,6 +209,7 @@ export function StockPage({
           columns={columns}
           rows={stock.data?.items ?? []}
           rowKey={(r) => `${r.zoneId}:${r.batchId}`}
+          onRowClick={(r) => setPanel({ batchId: r.batchId, zoneId: r.zoneId })}
           loading={stock.isPending}
           sort={{ key: stockSortColumn(f, mode), dir: desc ? "desc" : "asc" }}
           onSortChange={(s) => apply({ sort: STOCK_SORT_COLUMNS[s.key] ?? null, desc: s.dir === "desc" })}
@@ -297,6 +300,7 @@ export function StockPage({
           }
         />
       )}
+      {panel ? <BatchPanel batchId={panel.batchId} zoneId={panel.zoneId} onClose={() => setPanel(null)} /> : null}
     </>
   );
 }

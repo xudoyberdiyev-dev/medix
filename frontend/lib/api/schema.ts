@@ -4123,6 +4123,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stock/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Partiya kartasi (BatchPanel)
+         * @description Partiya × zona: muddat, taqsimot (mavjud / band / yopiq), tafsilotlar, kirim hujjati va shu zonadagi barcha harakatlar (qoldiq bilan). Filial doirasida.
+         */
+        get: operations["batch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stock/export": {
         parameters: {
             query?: never;
@@ -4172,6 +4192,26 @@ export interface paths {
          * @description Filial doirasida (boshqa filtrlarsiz).
          */
         get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/transit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Yo'ldagi tovar
+         * @description Jo'natilgan, qabul qilinmagan OK va FS qatorlari hamda qabulda yetishmagan, hal qilinmagan miqdorlar (prototip «Yo'lda»). Filial doirasi: jo'natuvchi yoki qabul qiluvchi filial.
+         */
+        get: operations["transit"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5537,6 +5577,60 @@ export interface components {
             /** Format: int32 */
             count: number;
             danger: boolean;
+        };
+        BatchCard: {
+            /** Format: int64 */
+            available: number;
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            bonus: boolean;
+            branch: string;
+            /** Format: int64 */
+            closed: number;
+            /** @description Birlik tannarxi — faqat special.cost */
+            cost?: string;
+            expired: boolean;
+            /** Format: date */
+            expiryDate: string;
+            marked: boolean;
+            moves: components["schemas"]["BatchMove"][];
+            /** Format: date */
+            producedOn?: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int64 */
+            qty: number;
+            /** Format: date */
+            receiptDate?: string;
+            /** Format: int64 */
+            receiptId?: number;
+            receiptNumber?: string;
+            /** Format: int64 */
+            reserved: number;
+            supplier?: string;
+            warehouse: string;
+            zone: string;
+            /** Format: int64 */
+            zoneId: number;
+            /** @enum {string} */
+            zoneType: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
+        };
+        BatchMove: {
+            /**
+             * Format: int64
+             * @description Shu partiya × zona qoldig'i harakatdan keyin
+             */
+            balance: number;
+            /** Format: int64 */
+            docId: number;
+            docNumber: string;
+            docType: string;
+            /** Format: date-time */
+            occurredAt: string;
+            /** Format: int32 */
+            qty: number;
         };
         BlockRequest: {
             reason: string;
@@ -9042,7 +9136,7 @@ export interface components {
             transitDocs: number;
             /**
              * Format: int64
-             * @description Yo'lda (ombor ko'chirishi jo'natilgan, qabul qilinmagan) — dona
+             * @description Yo'lda (OK va FS jo'natilgan, qabul qilinmagan + hal qilinmagan kamomad) — dona
              */
             transitQty: number;
             /** @description Tannarxda qoldiq — faqat special.cost */
@@ -9373,6 +9467,32 @@ export interface components {
              * @description Bo'sh bo'lsa — bugun
              */
             transferDate?: string;
+        };
+        TransitRow: {
+            batchNumber: string;
+            /** Format: int64 */
+            docId: number;
+            fromBranch: string;
+            fromWarehouse: string;
+            /** @description OK — ombor ko'chirishi, FS — filiallararo savdo */
+            kind: string;
+            number: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /**
+             * Format: int64
+             * @description Yo'ldagi (yoki kamomad bo'lsa — hal qilinmagan) miqdor
+             */
+            qty: number;
+            /** Format: date-time */
+            sentAt?: string;
+            /** @description Qabul qilingan, lekin yetishmagan va hal qilinmagan miqdor */
+            shortage: boolean;
+            toBranch: string;
+            toWarehouse: string;
+            /** @description Tannarxda — faqat special.cost */
+            value?: string;
         };
         TreeNode: {
             branch: string;
@@ -16006,6 +16126,29 @@ export interface operations {
             };
         };
     };
+    batch: {
+        parameters: {
+            query: {
+                batchId: number;
+                zoneId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchCard"];
+                };
+            };
+        };
+    };
     export: {
         parameters: {
             query?: {
@@ -16090,6 +16233,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StockSummary"];
+                };
+            };
+        };
+    };
+    transit: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransitRow"][];
                 };
             };
         };

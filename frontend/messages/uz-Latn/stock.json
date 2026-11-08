@@ -68,7 +68,7 @@
       "quar": "Karantinda",
       "quarN": "tekshiruv kutmoqda",
       "transit": "Yoʻlda",
-      "transitN": "{n} ta koʻchirish hujjati"
+      "transitN": "{n} ta hujjat · bosing — roʻyxat"
     },
     "f": {
       "wh": "Filial / Ombor",
@@ -139,6 +139,66 @@
       "tree": "Filial / Ombor / Zona",
       "products": "Mahsulotlar"
     },
-    "vWh": "Ombor daraxti"
+    "vWh": "Ombor daraxti",
+    "tr": {
+      "tTitle": "Yoʻldagi tovar",
+      "tDesc": "Joʻnatilgan, hali qabul qilinmagan — hech bir omborda sotuvga ochiq emas",
+      "tNone": "Yoʻlda tovar yoʻq",
+      "tRoute": "Yoʻnalish",
+      "tDoc": "Hujjat",
+      "tValue": "Tannarxda",
+      "tShort": "Kamomad — hal qilinmagan",
+      "tOk": "Ombor koʻchirishi",
+      "tFs": "Filiallararo savdo"
+    },
+    "bp": {
+      "kind": "Partiya",
+      "st": {
+        "open": "Sotuvda",
+        "quar": "Karantinda",
+        "recv": "Qabulda",
+        "ship": "Joʻnatish zonasida",
+        "expired": "Muddati oʻtgan"
+      },
+      "expiry": "Yaroqlilik muddati",
+      "expired": "Muddati oʻtgan",
+      "mfg": "Ishlab chiqarilgan",
+      "lifeUsed": "Muddatning {n}% oʻtgan",
+      "split": "Taqsimot",
+      "total": "Jami",
+      "avail": "Mavjud",
+      "reserved": "Band",
+      "closed": "Yopiq",
+      "details": "Tafsilotlar",
+      "branch": "Filial",
+      "wh": "Ombor",
+      "zone": "Zona",
+      "exp": "Yaroqlilik",
+      "cost": "Tannarx",
+      "doc": "Kirim hujjati",
+      "supplier": "Yetkazib beruvchi",
+      "marking": "Markirovka",
+      "markingYes": "Markirovkali — kodlar chiqishda skanerlanadi",
+      "bonus": "Bonus",
+      "bonusYes": "Bonus tovar (tannarx 0)",
+      "openDoc": "Hujjatni ochish",
+      "moves": "Harakatlar",
+      "noMoves": "Harakat yoʻq",
+      "move": "Zonaga koʻchirish",
+      "writeOff": "Hisobdan chiqarish",
+      "supReturn": "Yetkazib beruvchiga qaytarish",
+      "open": "Partiya kartasini ochish",
+      "doc_KR": "Kirim",
+      "doc_BQ": "Boshlangʻich qoldiq",
+      "doc_ZK": "Zona koʻchirishi",
+      "doc_OK": "Ombor koʻchirishi",
+      "doc_HC": "Hisobdan chiqarish",
+      "doc_QY": "Yetkazib beruvchiga qaytarish",
+      "doc_IN": "Inventarizatsiya",
+      "doc_FS": "Filiallararo savdo",
+      "doc_BY": "Buyurtma — terish",
+      "doc_QM": "Qaytgan tovar",
+      "doc_SV": "Sotuv"
+    }
   }
 }

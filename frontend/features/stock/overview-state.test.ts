@@ -46,6 +46,17 @@ describe("qoldiqlar ekrani URL holati", () => {
     expect(quar.expiry).toEqual([]);
   });
 
+  it("«Yoʻlda» kartasi: yoqiladi, URL'da, boshqa kartalar oʻchadi", () => {
+    const tr = { ...DEFAULT_OVERVIEW, expiry: NEAR_BUCKETS, ...kpiPatch({ ...DEFAULT_OVERVIEW, expiry: NEAR_BUCKETS }, "transit") };
+    expect(tr.transit).toBe(true);
+    expect(tr.expiry).toEqual([]);
+    expect(kpiActive(tr, "transit")).toBe(true);
+    expect(kpiActive({ ...tr, expiry: NEAR_BUCKETS }, "near")).toBe(false);
+    expect(serializeOverview(tr)).toBe("transit=1");
+    expect(parseOverview(new URLSearchParams("transit=1")).transit).toBe(true);
+    expect({ ...tr, ...kpiPatch(tr, "transit") }.transit).toBe(false);
+  });
+
   it("server soʻrovi: boʻsh roʻyxatlar yuborilmaydi, sahifa 0 dan", () => {
     const q = productQuery({ ...DEFAULT_OVERVIEW, suppliers: [0, 4], page: 3 }, 2);
     expect(q.supplierId).toEqual([0, 4]);

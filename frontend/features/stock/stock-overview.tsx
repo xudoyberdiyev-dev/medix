@@ -57,6 +57,8 @@ import {
   type StockFlag,
 } from "./overview-state";
 import { StockPage, stockExportHref } from "./stock-page";
+import { BatchPanel } from "./batch-panel";
+import { StockTransit } from "./stock-transit";
 import { StockTree } from "./stock-tree";
 
 type ProductRow = components["schemas"]["ProductStockRow"];
@@ -182,7 +184,15 @@ const facetOptions = (facets: Facet[] | undefined, selected: number[], none: str
 };
 
 /** Mahsulot qatori ochilganda — partiya × zona (prototip `kidsHead`): ombor, zona, partiya, ishlab chiqarilgan, yaroqlilik, soni, band, mavjud, tannarx, kirim hujjati, yetkazib beruvchi. */
-function BatchKids({ product, branchId }: { product: ProductRow; branchId: number | null }) {
+function BatchKids({
+  product,
+  branchId,
+  onOpen,
+}: {
+  product: ProductRow;
+  branchId: number | null;
+  onOpen: (batchId: number, zoneId: number) => void;
+}) {
   const t = useTranslations("stock");
   const rows = useQuery({
     queryKey: ["stock", "kids", product.productId, branchId],
@@ -226,7 +236,14 @@ function BatchKids({ product, branchId }: { product: ProductRow; branchId: numbe
           {items.map((r) => {
             const avail = r.sellable && r.daysLeft >= 0 ? r.qty - r.reserved : 0;
             return (
-              <tr key={`${r.zoneId}:${r.batchId}`} className="border-t border-border">
+              <tr
+                key={`${r.zoneId}:${r.batchId}`}
+                className="cursor-pointer border-t border-border transition-colors hover:bg-table-header"
+                title={t("ov.bp.open")}
+                onClick={(e) => {
+                  if (!(e.target as HTMLElement).closest("a")) onOpen(r.batchId, r.zoneId);
+                }}
+              >
                 <td className="py-1.5 pr-3">{r.warehouse}</td>
                 <td className="py-1.5 pr-3">
                   <Badge tone={r.zoneType === "QUARANTINE" ? "warning" : r.zoneType === "COLD" ? "info" : "neutral"}>{r.zone}</Badge>
@@ -281,6 +298,7 @@ export function StockOverview() {
   const [search, setSearch] = useState(f.q);
   const [more, setMore] = useState(hasMoreFilters(f));
   const [open, setOpen] = useState<string[]>([]);
+  const [panel, setPanel] = useState<{ batchId: number; zoneId: number } | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const apply = (patch: Partial<OverviewFilters>) => {
     const qs = serializeOverview({ ...f, page: 1, ...patch });
@@ -484,7 +502,7 @@ export function StockOverview() {
           note={t("ov.k.transitN", { n: s?.transitDocs ?? 0 })}
           icon={Truck}
           tone="info"
-          href="/warehouse-transfers?status=IN_TRANSIT"
+          {...kpi("transit")}
         />
       </div>
 
@@ -504,7 +522,9 @@ export function StockOverview() {
         />
       </div>
 
-      {f.view === "batch" ? (
+      {f.transit ? (
+        <StockTransit branchId={branchId} />
+      ) : f.view === "batch" ? (
         <StockPage mode="stock" embedded />
       ) : f.view === "wh" ? (
         <StockTree
@@ -628,7 +648,9 @@ export function StockOverview() {
               onSortChange={(x) => apply({ sort: PRODUCT_SORT_COLUMNS[x.key] ?? null, desc: x.dir === "desc" })}
               onRowClick={(r) => r.batches > 0 && toggle(String(r.productId))}
               expandedKeys={open}
-              renderExpanded={(r) => <BatchKids product={r} branchId={branchId} />}
+              renderExpanded={(r) => (
+                <BatchKids product={r} branchId={branchId} onOpen={(batchId, zoneId) => setPanel({ batchId, zoneId })} />
+              )}
               totals={
                 data && data.total > 0
                   ? {
@@ -664,6 +686,7 @@ export function StockOverview() {
           )}
         </>
       )}
+      {panel ? <BatchPanel batchId={panel.batchId} zoneId={panel.zoneId} onClose={() => setPanel(null)} /> : null}
     </>
   );
 }

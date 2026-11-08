@@ -9667,6 +9667,43 @@
         "tags" : [ "stock" ]
       }
     },
+    "/api/stock/batch" : {
+      "get" : {
+        "description" : "Partiya × zona: muddat, taqsimot (mavjud / band / yopiq), tafsilotlar, kirim hujjati va shu zonadagi barcha harakatlar (qoldiq bilan). Filial doirasida.",
+        "operationId" : "batch",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "batchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "zoneId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BatchCard"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Partiya kartasi (BatchPanel)",
+        "tags" : [ "stock" ]
+      }
+    },
     "/api/stock/export" : {
       "get" : {
         "operationId" : "export",
@@ -9944,6 +9981,38 @@
           }
         },
         "summary" : "Qoldiqlar — kartalar va filtr variantlari",
+        "tags" : [ "stock" ]
+      }
+    },
+    "/api/stock/transit" : {
+      "get" : {
+        "description" : "Jo'natilgan, qabul qilinmagan OK va FS qatorlari hamda qabulda yetishmagan, hal qilinmagan miqdorlar (prototip «Yo'lda»). Filial doirasi: jo'natuvchi yoki qabul qiluvchi filial.",
+        "operationId" : "transit",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TransitRow"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yo'ldagi tovar",
         "tags" : [ "stock" ]
       }
     },
@@ -12805,6 +12874,129 @@
           }
         },
         "required" : [ "count", "danger" ]
+      },
+      "BatchCard" : {
+        "type" : "object",
+        "properties" : {
+          "available" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "bonus" : {
+            "type" : "boolean"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "closed" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cost" : {
+            "type" : "string",
+            "description" : "Birlik tannarxi — faqat special.cost"
+          },
+          "expired" : {
+            "type" : "boolean"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "moves" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BatchMove"
+            }
+          },
+          "producedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          },
+          "reserved" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "zone" : {
+            "type" : "string"
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zoneType" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "available", "batchId", "batchNumber", "bonus", "branch", "closed", "expired", "expiryDate", "marked", "moves", "productId", "productName", "qty", "reserved", "warehouse", "zone", "zoneId", "zoneType" ]
+      },
+      "BatchMove" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shu partiya × zona qoldig'i harakatdan keyin"
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "balance", "docId", "docNumber", "docType", "occurredAt", "qty" ]
       },
       "BlockRequest" : {
         "type" : "object",
@@ -21696,7 +21888,7 @@
           "transitQty" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Yo'lda (ombor ko'chirishi jo'natilgan, qabul qilinmagan) — dona"
+            "description" : "Yo'lda (OK va FS jo'natilgan, qabul qilinmagan + hal qilinmagan kamomad) — dona"
           },
           "value" : {
             "type" : "string",
@@ -22521,6 +22713,62 @@
           }
         },
         "required" : [ "amount", "branchId", "fromAccountId", "toAccountId" ]
+      },
+      "TransitRow" : {
+        "type" : "object",
+        "properties" : {
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fromBranch" : {
+            "type" : "string"
+          },
+          "fromWarehouse" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string",
+            "description" : "OK — ombor ko'chirishi, FS — filiallararo savdo"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Yo'ldagi (yoki kamomad bo'lsa — hal qilinmagan) miqdor"
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "shortage" : {
+            "type" : "boolean",
+            "description" : "Qabul qilingan, lekin yetishmagan va hal qilinmagan miqdor"
+          },
+          "toBranch" : {
+            "type" : "string"
+          },
+          "toWarehouse" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Tannarxda — faqat special.cost"
+          }
+        },
+        "required" : [ "batchNumber", "docId", "fromBranch", "fromWarehouse", "kind", "number", "productId", "productName", "qty", "shortage", "toBranch", "toWarehouse" ]
       },
       "TreeNode" : {
         "type" : "object",

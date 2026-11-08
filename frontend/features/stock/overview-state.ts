@@ -28,6 +28,8 @@ export interface OverviewFilters {
   supplyBy: number[];
   suppliers: number[];
   flags: StockFlag[];
+  /** «Yoʻlda» kartasi bosilgan — asosiy jadval oʻrnida yoʻldagi tovar roʻyxati (prototip). */
+  transit: boolean;
   sort: ProductSort | null;
   desc: boolean;
   page: number;
@@ -47,6 +49,7 @@ export const DEFAULT_OVERVIEW: OverviewFilters = {
   supplyBy: [],
   suppliers: [],
   flags: [],
+  transit: false,
   sort: null,
   desc: false,
   page: 1,
@@ -100,6 +103,7 @@ export function parseOverview(p: URLSearchParams): OverviewFilters {
     supplyBy: ids(p.get("supply")),
     suppliers: ids(p.get("supplier")),
     flags: codes(p.get("flag"), STOCK_FLAGS),
+    transit: p.get("transit") === "1",
     sort: SORTS.find((x) => x === p.get("psort")) ?? null,
     desc: p.get("desc") === "1",
     page: Number.isInteger(page) && page > 1 ? page : 1,
@@ -123,6 +127,7 @@ export function serializeOverview(f: OverviewFilters): string {
   list("supply", f.supplyBy);
   list("supplier", f.suppliers);
   list("flag", f.flags);
+  if (f.transit) p.set("transit", "1");
   if (f.sort) p.set("psort", f.sort);
   if (f.desc) p.set("desc", "1");
   if (f.page > 1) p.set("page", String(f.page));
@@ -142,17 +147,20 @@ export function hasAnyFilter(f: OverviewFilters): boolean {
 export const sameSet = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((x) => b.includes(x));
 
 /** Kartalar filtr sifatida (prototip): bosilsa yoqiladi, yana bosilsa — oʻchadi; boshqa karta filtrlarini almashtiradi. */
-export type KpiKey = "near" | "expired" | "quar";
+export type KpiKey = "near" | "expired" | "quar" | "transit";
 export function kpiActive(f: OverviewFilters, k: KpiKey): boolean {
+  if (k === "transit") return f.transit;
+  if (f.transit) return false;
   if (k === "near") return sameSet(f.expiry, NEAR_BUCKETS) && f.zones.length === 0;
   if (k === "expired") return sameSet(f.expiry, ["EXPIRED"]) && f.zones.length === 0;
   return sameSet(f.zones, ["QUARANTINE"]) && f.expiry.length === 0;
 }
 export function kpiPatch(f: OverviewFilters, k: KpiKey): Partial<OverviewFilters> {
-  if (kpiActive(f, k)) return { expiry: [], zones: [] };
-  if (k === "near") return { expiry: NEAR_BUCKETS, zones: [] };
-  if (k === "expired") return { expiry: ["EXPIRED"], zones: [] };
-  return { zones: ["QUARANTINE"], expiry: [] };
+  if (kpiActive(f, k)) return { expiry: [], zones: [], transit: false };
+  if (k === "transit") return { expiry: [], zones: [], transit: true };
+  if (k === "near") return { expiry: NEAR_BUCKETS, zones: [], transit: false };
+  if (k === "expired") return { expiry: ["EXPIRED"], zones: [], transit: false };
+  return { zones: ["QUARANTINE"], expiry: [], transit: false };
 }
 
 /** Mahsulot boʻyicha jadval soʻrovi parametrlari (serverga). */
