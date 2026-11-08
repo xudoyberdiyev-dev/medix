@@ -112,6 +112,10 @@ final class ProductModels {
             @Schema(nullable = true) @Min(1) @Max(100_000) Integer perPack,
             @Schema(nullable = true) @Size(max = 1000) String note) {}
 
+    /** Audit yozuvi (mahsulot bo'yicha): eski/yangi qiymat — JSON. */
+    record HistoryRow(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String oldValue,
+            @Schema(nullable = true) String newValue, @Schema(nullable = true) String reason) {}
+
     record ChangeCodeRequest(
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[1-9][0-9]{7}$", message = "{validation.productCode}") String code,
             @NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}

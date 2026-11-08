@@ -281,6 +281,19 @@ public class Products {
                 history));
     }
 
+    @Transactional(readOnly = true)
+    List<ProductModels.HistoryRow> history(long id) {
+        return jdbc.sql("""
+                SELECT a.occurred_at, e.full_name, a.action, a.old_value::text AS old_value, a.new_value::text AS new_value, a.reason
+                FROM audit_log a LEFT JOIN employee e ON e.id = a.employee_id
+                WHERE a.entity_type = 'product' AND a.entity_id = :id
+                ORDER BY a.occurred_at DESC, a.id DESC LIMIT 200""")
+                .param("id", String.valueOf(id))
+                .query((rs, n) -> new ProductModels.HistoryRow(rs.getTimestamp("occurred_at").toInstant(), rs.getString("full_name"),
+                        rs.getString("action"), rs.getString("old_value"), rs.getString("new_value"), rs.getString("reason")))
+                .list();
+    }
+
     // ===== Yozish =====
 
     @Transactional

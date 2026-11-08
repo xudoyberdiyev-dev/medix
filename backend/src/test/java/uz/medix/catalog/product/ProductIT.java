@@ -195,6 +195,22 @@ class ProductIT {
                 .andExpect(jsonPath("$.items[0].stock").value(0))
                 .andExpect(jsonPath("$.items[0].price").doesNotExist())
                 .andExpect(jsonPath("$.views").doesNotExist());
+        // Kartochka: tarix (yaratish, nofaol qilish), qoldiq (yo'q), narx tarixi (yo'q)
+        mvc.perform(get("/api/products/" + b + "/history").cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].action").value("product.deactivate"))
+                .andExpect(jsonPath("$[0].reason").value("Sinov"))
+                .andExpect(jsonPath("$[1].action").value("product.create"));
+        mvc.perform(get("/api/stock/product-card/" + a).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.lines", hasSize(0)))
+                .andExpect(jsonPath("$.moves", hasSize(0)));
+        mvc.perform(get("/api/stock/product-card/999999999").cookie(purchaser)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/prices/history").param("productId", String.valueOf(a)).cookie(loginAs("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows", hasSize(0)));
     }
 
     @Test

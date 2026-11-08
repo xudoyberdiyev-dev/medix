@@ -140,6 +140,13 @@ class ProductController {
         return products.find(id).orElseThrow(() -> MedixException.notFound("error.notFound"));
     }
 
+    @GetMapping("/{id}/history")
+    @Operation(summary = "Mahsulot tarixi (kartochka «Tarix»)", description = "Yaratish, tahrir, kod va holat o'zgarishlari — yangilari birinchi.")
+    List<ProductModels.HistoryRow> history(@PathVariable long id) {
+        products.find(id).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        return products.history(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize(MANAGE)
