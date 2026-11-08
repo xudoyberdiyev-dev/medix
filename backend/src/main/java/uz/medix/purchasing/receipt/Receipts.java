@@ -32,9 +32,13 @@ import uz.medix.purchasing.receipt.ReceiptModels.PaymentType;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptDetail;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptLine;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptLineRequest;
+import uz.medix.purchasing.receipt.ReceiptModels.ReceiptFacet;
+import uz.medix.purchasing.receipt.ReceiptModels.ReceiptFilter;
+import uz.medix.purchasing.receipt.ReceiptModels.ReceiptKpi;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptPage;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptRequest;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptStatus;
+import uz.medix.purchasing.receipt.ReceiptModels.ReceiptStatusCount;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptSummary;
 import uz.medix.purchasing.receipt.ReceiptModels.Resolution;
 import uz.medix.shared.audit.AuditEntry;
@@ -44,6 +48,7 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.text.SearchText;
 
 /**
  * KR — kirim (SPEC 5.1). Qoralama (qoldiq va qarzga ta'sir qilmaydi) → Qabul qilindi (Ombor mudiri sanaydi; tovar Qabul
@@ -84,52 +89,139 @@ class Receipts {
 
     // ===== O'qish =====
 
+    /** Chegirma (bonus) summasi: SUM — qiymat, PERCENT — qarzdan (o'tkazilmagan bo'lsa qatorlar summasidan) foiz, HALF_UP. */
+    private static final String BONUS_SQL = """
+            CASE r.discount_kind WHEN 'SUM' THEN r.discount_value
+                 WHEN 'PERCENT' THEN round(coalesce(r.debt_amount, t.amount, 0) * r.discount_value / 100, 2) END""";
+    private static final String LINES_SQL = """
+             LEFT JOIN (SELECT receipt_id, count(*) AS lines, sum(qty + bonus_qty) AS qty, sum(bonus_qty) AS bonus_qty,
+                               sum(price * qty) AS amount
+                        FROM receipt_line GROUP BY receipt_id) t ON t.receipt_id = r.id""";
+
     @Transactional(readOnly = true)
-    ReceiptPage list(Actor actor, Long branchId, ReceiptStatus status, Long supplierId, int page, int size, boolean prices) {
-        StringBuilder where = new StringBuilder(" WHERE true");
+    ReceiptPage list(Actor actor, ReceiptFilter f, int page, int size, boolean prices) {
+        // Doira: filial (va tanlangan filial) — kartalar va filtr variantlari shu doirada
+        StringBuilder scope = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
         if (!actor.allBranches()) {
-            where.append(" AND r.branch_id = :own");
+            scope.append(" AND r.branch_id = :own");
             params.put("own", actor.branchId() == null ? -1L : actor.branchId());
         }
-        if (branchId != null) {
-            where.append(" AND r.branch_id = :b");
-            params.put("b", branchId);
+        if (f.branchId() != null) {
+            scope.append(" AND r.branch_id = :b");
+            params.put("b", f.branchId());
         }
-        if (status != null) {
-            where.append(" AND r.status = :s");
-            params.put("s", status.name());
+        StringBuilder where = new StringBuilder(scope);
+        if (!f.supplierIds().isEmpty()) {
+            where.append(" AND r.supplier_id IN (:sups)");
+            params.put("sups", f.supplierIds());
         }
-        if (supplierId != null) {
-            where.append(" AND r.supplier_id = :sup");
-            params.put("sup", supplierId);
+        if (!f.warehouseIds().isEmpty()) {
+            where.append(" AND r.warehouse_id IN (:whs)");
+            params.put("whs", f.warehouseIds());
         }
-        long total = jdbc.sql("SELECT count(*) FROM receipt r" + where).params(params).query(Long.class).single();
+        if (f.from() != null) {
+            where.append(" AND r.receipt_date >= :from");
+            params.put("from", f.from());
+        }
+        if (f.to() != null || f.from() != null) {
+            where.append(" AND r.receipt_date <= :to");
+            params.put("to", f.to() != null ? f.to() : f.from());
+        }
+        String nq = SearchText.normalize(f.q());
+        if (!nq.isEmpty()) {
+            // Raqam, yuk xati, kim nomiga yoki YB nomi — lotin/kirill farqsiz (counterparty.search_text)
+            where.append(" AND (r.number ILIKE :q ESCAPE '\\' OR r.invoice_number ILIKE :q ESCAPE '\\' OR ow.full_name ILIKE :q ESCAPE '\\' OR (true");
+            String[] parts = nq.split(" ");
+            for (int i = 0; i < parts.length && i < 8; i++) {
+                where.append(" AND c.search_text LIKE :w").append(i).append(" ESCAPE '\\'");
+                params.put("w" + i, "%" + SearchText.likeEscape(parts[i]) + "%");
+            }
+            where.append("))");
+            params.put("q", "%" + SearchText.likeEscape(f.q().strip()) + "%");
+        }
+        String from = " FROM receipt r JOIN counterparty c ON c.id = r.supplier_id LEFT JOIN employee ow ON ow.id = r.owner_id";
+        List<ReceiptStatusCount> statuses = new ArrayList<>();
+        Map<String, Long> byStatus = new HashMap<>();
+        record Cnt(String status, long cnt) {}
+        jdbc.sql("SELECT r.status, count(*) AS cnt" + from + where + " GROUP BY r.status").params(params).query(Cnt.class).list()
+                .forEach(c -> byStatus.put(c.status(), c.cnt()));
+        statuses.add(new ReceiptStatusCount(null, byStatus.values().stream().mapToLong(Long::longValue).sum()));
+        for (ReceiptStatus st : ReceiptStatus.values()) {
+            statuses.add(new ReceiptStatusCount(st, byStatus.getOrDefault(st.name(), 0L)));
+        }
+        StringBuilder listWhere = new StringBuilder(where);
+        if (f.status() != null) {
+            listWhere.append(" AND r.status = :s");
+            params.put("s", f.status().name());
+        }
+        long total = f.status() == null ? statuses.getFirst().count() : byStatus.getOrDefault(f.status().name(), 0L);
+        String dir = f.desc() ? " DESC" : " ASC";
+        String order = switch (f.sort()) {
+            case CREATED -> " ORDER BY r.created_at DESC, r.id DESC";
+            case NUMBER -> " ORDER BY r.number" + dir + ", r.id" + dir;
+            case DATE -> " ORDER BY r.receipt_date" + dir + ", r.number" + dir + ", r.id" + dir;
+            case AMOUNT -> " ORDER BY coalesce(r.debt_amount, t.amount, 0)" + dir + ", r.id" + dir;
+            case DUE -> " ORDER BY r.due_date" + dir + " NULLS LAST, r.id" + dir;
+        };
         List<ReceiptSummary> items = jdbc.sql("""
                 SELECT r.id, r.number, r.branch_id, w.name AS warehouse, r.supplier_id, c.name AS supplier, r.receipt_date, r.invoice_number,
-                       r.status, coalesce(t.lines, 0) AS lines, coalesce(t.qty, 0) AS qty, t.amount, r.due_date, r.prepaid, r.debt_amount,
-                       e.full_name AS created_by, r.created_at
-                FROM receipt r
-                JOIN warehouse w ON w.id = r.warehouse_id
-                JOIN counterparty c ON c.id = r.supplier_id
-                JOIN employee e ON e.id = r.created_by
-                LEFT JOIN (SELECT receipt_id, count(*) AS lines, sum(qty + bonus_qty) AS qty, sum(price * qty) AS amount
-                           FROM receipt_line GROUP BY receipt_id) t ON t.receipt_id = r.id""" + where
-                        + " ORDER BY r.created_at DESC, r.id DESC LIMIT :l OFFSET :o")
+                       r.status, coalesce(t.lines, 0) AS lines, coalesce(t.qty, 0) AS qty, coalesce(t.bonus_qty, 0) AS bonus_qty, t.amount,
+                       r.due_date, r.prepaid, r.debt_amount, e.full_name AS created_by, r.created_at, r.payment_type, ow.full_name AS owner,
+                       r.from_bonus, r.discount_date, r.cancel_reason,
+                       EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id) AS bonus_confirmed, """ + BONUS_SQL + """
+                 AS bonus_amount""" + from + """
+                 JOIN warehouse w ON w.id = r.warehouse_id
+                 JOIN employee e ON e.id = r.created_by""" + LINES_SQL + listWhere + order + " LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", size)
                 .param("o", (long) page * size)
                 .query((rs, n) -> {
                     BigDecimal debt = rs.getBigDecimal("debt_amount");
                     BigDecimal amount = debt != null ? debt : rs.getBigDecimal("amount");
+                    BigDecimal bonus = rs.getBigDecimal("bonus_amount");
                     return new ReceiptSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getString("warehouse"),
                             rs.getLong("supplier_id"), rs.getString("supplier"), rs.getDate("receipt_date").toLocalDate(),
                             rs.getString("invoice_number"), ReceiptStatus.valueOf(rs.getString("status")), rs.getInt("lines"), rs.getLong("qty"),
                             prices && amount != null ? new Money(amount).toString() : null, localDate(rs.getDate("due_date")),
-                            rs.getBoolean("prepaid"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant());
+                            rs.getBoolean("prepaid"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
+                            PaymentType.valueOf(rs.getString("payment_type")), rs.getString("owner"), rs.getBoolean("from_bonus"),
+                            rs.getLong("bonus_qty"), prices && bonus != null ? new Money(bonus).toString() : null,
+                            localDate(rs.getDate("discount_date")), rs.getBoolean("bonus_confirmed"), rs.getString("cancel_reason"));
                 })
                 .list();
-        return new ReceiptPage(items, total, page, size);
+        boolean manyBranches = actor.allBranches() && f.branchId() == null;
+        List<ReceiptFacet> suppliers = jdbc.sql("SELECT c.id, c.name, count(*) AS cnt FROM receipt r JOIN counterparty c ON c.id = r.supplier_id"
+                        + scope + " GROUP BY c.id, c.name ORDER BY c.name")
+                .params(params)
+                .query((rs, n) -> new ReceiptFacet(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt")))
+                .list();
+        List<ReceiptFacet> warehouses = jdbc.sql("""
+                        SELECT w.id, w.name, b.code, count(*) AS cnt FROM receipt r JOIN warehouse w ON w.id = r.warehouse_id
+                        JOIN branch b ON b.id = r.branch_id""" + scope + " GROUP BY w.id, w.name, b.code ORDER BY w.name, b.code")
+                .params(params)
+                .query((rs, n) -> new ReceiptFacet(rs.getLong("id"),
+                        manyBranches ? rs.getString("name") + " · " + rs.getString("code") : rs.getString("name"), rs.getLong("cnt")))
+                .list();
+        LocalDate today = today();
+        record KpiRow(long drafts, long oldDrafts, long accepted, BigDecimal expectedBonus, long expectedBonusDocs, long bonusGoodsMonth) {}
+        KpiRow k = jdbc.sql("""
+                SELECT count(*) FILTER (WHERE r.status = 'DRAFT') AS drafts,
+                       count(*) FILTER (WHERE r.status = 'DRAFT' AND r.receipt_date < :old) AS old_drafts,
+                       count(*) FILTER (WHERE r.status = 'ACCEPTED') AS accepted,
+                       coalesce(sum(""" + BONUS_SQL + """
+                ) FILTER (WHERE r.status = 'POSTED' AND sb.id IS NULL AND r.discount_kind IS NOT NULL), 0) AS expected_bonus,
+                       count(*) FILTER (WHERE r.status = 'POSTED' AND sb.id IS NULL AND r.discount_kind IS NOT NULL) AS expected_bonus_docs,
+                       coalesce(sum(t.bonus_qty) FILTER (WHERE r.status = 'POSTED' AND r.receipt_date >= :month), 0) AS bonus_goods_month
+                FROM receipt r LEFT JOIN supplier_bonus sb ON sb.receipt_id = r.id""" + LINES_SQL + scope)
+                .params(params)
+                .param("old", today.minusDays(3))
+                .param("month", today.withDayOfMonth(1))
+                .query(KpiRow.class)
+                .single();
+        ReceiptKpi kpi = new ReceiptKpi(k.drafts(), k.oldDrafts(), k.accepted(), prices ? new Money(k.expectedBonus()).toString() : null,
+                k.expectedBonusDocs(), k.bonusGoodsMonth());
+        return new ReceiptPage(items, total, page, size, statuses, suppliers, warehouses, kpi);
     }
 
     @Transactional(readOnly = true)

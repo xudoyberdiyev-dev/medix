@@ -391,6 +391,61 @@ class ReceiptIT {
         return String.valueOf(doc);
     }
 
+    /** Ro'yxat (prototip `Receipts`): yorliqlar soni, YB/ombor/sana/qidiruv filtrlari, bonus ustunlari, kartalar, narx yashirinligi. */
+    @Test
+    void listHasTabsFiltersBonusColumnsAndCards() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 10);
+        long a = product("KR royxat", false);
+        Cookie admin = loginAs("ADMIN", null);
+        String kr1 = postedReceipt(admin, doc(p, sup, false, line(a, "L1", p.main(), 10, 2, "1000")));
+        send(post("/api/receipts/" + kr1 + "/post"), admin, "{}").andExpect(status().isOk());
+        String draft = doc(p, sup, false, line(a, "L2", p.main(), 1, 0, "500")).replace("F-77", "YX-ROYXAT-" + sup);
+        long kr2 = id(send(post("/api/receipts"), admin, draft).andExpect(status().isCreated()).andReturn());
+        String b = "" + p.branchId(), s = "" + sup;
+
+        String one = "$.items[?(@.id == " + kr1 + ")]";
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.statuses[0].count").value(2))
+                .andExpect(jsonPath("$.statuses[?(@.status == 'POSTED')].count").value(org.hamcrest.Matchers.contains(1)))
+                .andExpect(jsonPath("$.statuses[?(@.status == 'DRAFT')].count").value(org.hamcrest.Matchers.contains(1)))
+                .andExpect(jsonPath(one + ".bonusAmount").value(org.hamcrest.Matchers.contains("300.00")))
+                .andExpect(jsonPath(one + ".bonusQty").value(org.hamcrest.Matchers.contains(2)))
+                .andExpect(jsonPath(one + ".bonusConfirmed").value(org.hamcrest.Matchers.contains(false)))
+                .andExpect(jsonPath(one + ".paymentType").value(org.hamcrest.Matchers.contains("TRANSFER")))
+                .andExpect(jsonPath("$.suppliers[?(@.id == " + sup + ")].count").value(org.hamcrest.Matchers.contains(2)))
+                .andExpect(jsonPath("$.kpi.drafts").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.kpi.expectedBonusDocs").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.kpi.bonusGoodsMonth").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+        // Yorliq: faqat qoralamalar; sonlar holat filtrisiz qoladi
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).param("status", "DRAFT").cookie(admin))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(kr2))
+                .andExpect(jsonPath("$.statuses[0].count").value(2));
+        // Qidiruv — yuk xati raqami; ombor va sana filtri; saralash summa bo'yicha
+        mvc.perform(get("/api/receipts").param("branchId", b).param("q", "yx-royxat-" + sup).cookie(admin))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(kr2));
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).param("warehouseId", "" + p.warehouseId())
+                        .param("from", today().toString()).param("to", today().toString()).param("sort", "AMOUNT").param("desc", "true").cookie(admin))
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[0].id").value(Long.parseLong(kr1)));
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).param("from", today().plusDays(1).toString()).cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
+        // Ombor mudiri narxni ko'rmaydi — bonus summasi va kutilayotgan bonus ham yashirin
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        mvc.perform(get("/api/receipts").param("supplierId", s).cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(one + ".bonusAmount").value(org.hamcrest.Matchers.contains((Object) null)))
+                .andExpect(jsonPath("$.kpi.expectedBonus").doesNotExist());
+        // Tasdiqlangan bonus — kutilayotganlardan chiqadi
+        send(post("/api/receipts/" + kr1 + "/bonus"), admin, "").andExpect(status().isOk());
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).cookie(admin))
+                .andExpect(jsonPath(one + ".bonusConfirmed").value(org.hamcrest.Matchers.contains(true)));
+    }
+
     @Test
     void discountBecomesBonusBalanceAndBonusReceiptHasNoDebt() throws Exception {
         Place p = place();

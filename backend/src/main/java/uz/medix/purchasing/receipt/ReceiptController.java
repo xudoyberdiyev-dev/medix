@@ -5,6 +5,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,9 +24,12 @@ import uz.medix.purchasing.receipt.ReceiptModels.AcceptRequest;
 import uz.medix.purchasing.receipt.ReceiptModels.PostRequest;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptCancelRequest;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptDetail;
+import uz.medix.purchasing.receipt.ReceiptModels.ReceiptFilter;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptPage;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptRequest;
+import uz.medix.purchasing.receipt.ReceiptModels.ReceiptSort;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptStatus;
+import uz.medix.purchasing.receipt.ReceiptModels.ReceiptSummary;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
@@ -67,15 +73,22 @@ class ReceiptController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('receipt.view')")
-    @Operation(summary = "Kirimlar")
+    @Operation(summary = "Kirimlar", description = "Yorliqlar soni (holat filtrisiz), filtr variantlari va kartalar bilan.")
     ReceiptPage list(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) ReceiptStatus status,
-            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) List<Long> supplierId,
+            @RequestParam(required = false) List<Long> warehouseId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) ReceiptSort sort,
+            @RequestParam(defaultValue = "false") boolean desc,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             Authentication auth) {
-        return receipts.list(actor(), branchId, status, supplierId, Math.max(page, 0), Math.clamp(size, 1, 200), pricesVisible(auth));
+        ReceiptFilter f = new ReceiptFilter(branchId, status, supplierId, warehouseId, from, to, q, sort, desc);
+        return receipts.list(actor(), f, Math.max(page, 0), Math.clamp(size, 1, 200), pricesVisible(auth));
     }
 
     @GetMapping("/export")
@@ -84,14 +97,24 @@ class ReceiptController {
     void receiptsExport(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) ReceiptStatus status,
-            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) List<Long> supplierId,
+            @RequestParam(required = false) List<Long> warehouseId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) ReceiptSort sort,
+            @RequestParam(defaultValue = "false") boolean desc,
+            @RequestParam(required = false) List<Long> id,
             Authentication auth,
             HttpServletResponse response) throws IOException {
         boolean prices = pricesVisible(auth);
-        ReceiptPage p = receipts.list(actor(), branchId, status, supplierId, 0, ReceiptExcel.MAX_ROWS, prices);
+        ReceiptFilter f = new ReceiptFilter(branchId, status, supplierId, warehouseId, from, to, q, sort, desc);
+        ReceiptPage p = receipts.list(actor(), f, 0, ReceiptExcel.MAX_ROWS, prices);
+        // Tanlangan qatorlar (ro'yxatdagi belgilash → «Excel»)
+        List<ReceiptSummary> rows = id == null || id.isEmpty() ? p.items() : p.items().stream().filter(r -> id.contains(r.id())).toList();
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"kirimlar.xlsx\"");
-        ReceiptExcel.write(p.items(), p.total(), prices, response.getOutputStream());
+        ReceiptExcel.write(rows, id == null || id.isEmpty() ? p.total() : rows.size(), prices, response.getOutputStream());
     }
 
     @GetMapping("/catalog")

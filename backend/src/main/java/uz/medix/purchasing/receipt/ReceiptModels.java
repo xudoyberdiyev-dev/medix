@@ -98,6 +98,28 @@ final class ReceiptModels {
             @Schema(nullable = true) String batch,
             @Schema(nullable = true) String bonusBatch) {}
 
+    /** Ro'yxat saralashi (prototip `Receipts`: raqam, sana, summa, to'lov muddati). */
+    enum ReceiptSort { CREATED, NUMBER, DATE, AMOUNT, DUE }
+
+    /** Ro'yxat filtrlari: yorliq (holat), yetkazib beruvchilar, omborlar, sana, qidiruv (raqam / yuk xati / YB / kim nomiga). */
+    record ReceiptFilter(
+            Long branchId,
+            ReceiptStatus status,
+            List<Long> supplierIds,
+            List<Long> warehouseIds,
+            LocalDate from,
+            LocalDate to,
+            String q,
+            ReceiptSort sort,
+            boolean desc) {
+
+        ReceiptFilter {
+            supplierIds = supplierIds == null ? List.of() : List.copyOf(supplierIds);
+            warehouseIds = warehouseIds == null ? List.of() : List.copyOf(warehouseIds);
+            sort = sort == null ? ReceiptSort.CREATED : sort;
+        }
+    }
+
     record ReceiptSummary(
             long id,
             String number,
@@ -114,9 +136,43 @@ final class ReceiptModels {
             @Schema(nullable = true) LocalDate dueDate,
             boolean prepaid,
             String createdBy,
-            Instant createdAt) {}
+            Instant createdAt,
+            PaymentType paymentType,
+            @Schema(nullable = true) String owner,
+            boolean fromBonus,
+            @Schema(description = "Bonus tovar (bepul) — dona") long bonusQty,
+            @Schema(nullable = true, description = "Chegirma (bonus) summasi — faqat narx ko'rish huquqi bilan") String bonusAmount,
+            @Schema(nullable = true) LocalDate bonusDate,
+            @Schema(description = "BNS hujjati bor — bonus balansga tushgan") boolean bonusConfirmed,
+            @Schema(nullable = true) String cancelReason) {}
 
-    record ReceiptPage(List<ReceiptSummary> items, long total, int page, int size) {}
+    /** Yorliq soni (holat = null — «Hammasi»); holat filtrisiz, boshqa filtrlar bilan. */
+    record ReceiptStatusCount(@Schema(nullable = true) ReceiptStatus status, long count) {}
+
+    /** Filtr varianti soni bilan (yetkazib beruvchi, ombor). */
+    record ReceiptFacet(long id, String name, long count) {}
+
+    /**
+     * Ro'yxat ustidagi kartalar (filial doirasida, filtrlarsiz): qoralamalar (3 kundan eskilari), qabul qilingan — o'tkazilmagan,
+     * kutilayotgan bonuslar (o'tkazilgan, chegirmali, BNS hali yo'q), shu oy bonus tovar (dona).
+     */
+    record ReceiptKpi(
+            long drafts,
+            long oldDrafts,
+            long accepted,
+            @Schema(nullable = true) String expectedBonus,
+            long expectedBonusDocs,
+            long bonusGoodsMonth) {}
+
+    record ReceiptPage(
+            List<ReceiptSummary> items,
+            long total,
+            int page,
+            int size,
+            List<ReceiptStatusCount> statuses,
+            List<ReceiptFacet> suppliers,
+            List<ReceiptFacet> warehouses,
+            ReceiptKpi kpi) {}
 
     record ReceiptDetail(
             long id,
