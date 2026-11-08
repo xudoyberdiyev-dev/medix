@@ -69,7 +69,8 @@ class StockController {
             @Schema(nullable = true) String receiptNumber,
             @Schema(nullable = true) LocalDate receiptDate,
             @Schema(nullable = true) String supplier,
-            @Schema(description = "Partiya manbasi: KR, BQ, ...") String sourceType) {}
+            @Schema(description = "Partiya manbasi: KR, BQ, ...") String sourceType,
+            @Schema(nullable = true, description = "Tannarxda summa (miqdor × tannarx) — faqat special.cost") String costSum) {}
 
     record StockPage(List<StockRow> items, long total, int page, int size, @Schema(description = "Sahifadagi emas, filtr bo'yicha jami") long totalQty) {}
 
@@ -318,7 +319,8 @@ class StockController {
                             rs.getDate("produced_on") == null ? null : rs.getDate("produced_on").toLocalDate(),
                             rs.getObject("receipt_id", Long.class), rs.getString("receipt_number"),
                             rs.getDate("receipt_date") == null ? null : rs.getDate("receipt_date").toLocalDate(), rs.getString("supplier"),
-                            rs.getString("source_type"));
+                            rs.getString("source_type"),
+                            showCost ? new Money(rs.getBigDecimal("cost").multiply(java.math.BigDecimal.valueOf(rs.getInt("qty")))).toString() : null);
                 })
                 .list();
         return new StockPage(items, totals.total(), safePage, safeSize, totals.totalQty());
