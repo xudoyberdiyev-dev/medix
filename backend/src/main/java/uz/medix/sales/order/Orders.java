@@ -503,6 +503,8 @@ class Orders {
                 rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList());
         boolean draft = status == OrderStatus.DRAFT;
         boolean priceChanged = false;
+        Map<Long, Integer> picked = draft ? Map.of() : pickedByLine(id);
+        Map<Long, Integer> shipped = draft ? Map.of() : shippedByLine(id);
         List<OrderLine> lines = new ArrayList<>();
         Money vatTotal = Money.ZERO;
         for (LineRow r : rows) {
@@ -524,7 +526,8 @@ class Orders {
             lines.add(new OrderLine(r.id(), r.lineNo(), r.productId(), p.code(), p.name(), p.manufacturer(), r.qty(),
                     stored == null ? null : stored.toString(), current == null ? null : current.toString(),
                     amount == null ? null : amount.toString(), vat == null ? null : vat.toString(), r.priceType(), a == null ? 0 : a.qty(),
-                    a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked(), List.of()));
+                    a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked(), List.of(),
+                    picked.get(r.id()), shipped.get(r.id())));
         }
         Map<Long, List<OrderModels.ReservedBatch>> reserved = new HashMap<>();
         for (Allocation a : reservations.active(DOC_TYPE, id)) {
@@ -549,6 +552,38 @@ class Orders {
                 instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), documents(id),
                 holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines,
                 jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list()));
+    }
+
+    /**
+     * Qator bo'yicha yig'ilgan miqdor: terilgan − yig'ishga qaytarilgan (V45 dan qator bo'yicha; undan oldingilari — shu qatorda
+     * terilgan partiya bo'yicha). Yig'ish boshlanmagan qatorlar ro'yxatda yo'q.
+     */
+    private Map<Long, Integer> pickedByLine(long orderId) {
+        Map<Long, Integer> out = new HashMap<>();
+        jdbc.sql("""
+                SELECT p.line_id, (p.q - coalesce((SELECT sum(r.qty) FROM sales_order_pick_return r
+                                                   WHERE r.order_id = :o AND (r.line_id = p.line_id
+                                                         OR (r.line_id IS NULL AND r.batch_id IN (SELECT batch_id FROM sales_order_pick
+                                                                                                   WHERE order_id = :o AND line_id = p.line_id)))), 0))::int AS qty
+                FROM (SELECT line_id, sum(qty) AS q FROM sales_order_pick WHERE order_id = :o GROUP BY line_id) p""")
+                .param("o", orderId)
+                .query((rs, n) -> out.put(rs.getLong("line_id"), Math.max(0, rs.getInt("qty"))))
+                .list();
+        return out;
+    }
+
+    /** Qator bo'yicha jo'natilgan miqdor — o'tkazilgan (bekor qilinmagan) sotuv qatorlaridan. */
+    private Map<Long, Integer> shippedByLine(long orderId) {
+        Map<Long, Integer> out = new HashMap<>();
+        jdbc.sql("""
+                SELECT sl.order_line_id, sum(sl.qty)::int AS qty
+                FROM sale_line sl JOIN sale s ON s.id = sl.sale_id
+                WHERE s.order_id = :o AND s.status <> 'CANCELLED'
+                GROUP BY sl.order_line_id""")
+                .param("o", orderId)
+                .query((rs, n) -> out.put(rs.getLong("order_line_id"), rs.getInt("qty")))
+                .list();
+        return out;
     }
 
     /** Narx ichidagi QQS: summa × stavka / (100 + stavka), 2 xona HALF_UP; stavka yoʻq yoki 0 — QQS 0. */

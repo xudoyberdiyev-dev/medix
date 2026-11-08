@@ -615,11 +615,15 @@ class OrderIT {
         send(post("/api/orders/" + o1 + "/return-to-pick"), keeper, "{\"reason\":\"Partiya aralashgan\"}")
                 .andExpect(jsonPath("$.status").value("QUEUED"))
                 .andExpect(jsonPath("$.lines[0].reserved[0].qty").value(4))
+                // Qaytarilgan tovar yig'ilgandan ayiriladi
+                .andExpect(jsonPath("$.lines[0].picked").value(0))
                 .andExpect(jsonPath("$.pickMinutes").value(15));
         assertThat(qtyIn(shipping, prod)).isEqualTo(3);
         assertThat(qtyIn(p.main(), prod)).isEqualTo(17);
         send(post("/api/orders/" + o1 + "/pick/start"), picker, "").andExpect(status().isOk());
-        send(post("/api/orders/" + o1 + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
+        send(post("/api/orders/" + o1 + "/pick/finish"), picker, "{}")
+                .andExpect(jsonPath("$.status").value("MARKING"))
+                .andExpect(jsonPath("$.lines[0].picked").value(4));
         assertThat(qtyIn(shipping, prod)).isEqualTo(7);
         send(post("/api/orders/" + o1 + "/cancel"), keeper, "{\"reason\":\"Mijoz voz kechdi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
         assertThat(qtyIn(shipping, prod)).isEqualTo(3);

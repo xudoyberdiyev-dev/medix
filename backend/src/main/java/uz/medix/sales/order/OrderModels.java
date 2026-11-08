@@ -88,11 +88,13 @@ final class OrderModels {
             @Schema(nullable = true) Integer maxQty,
             boolean controlled,
             boolean marked,
-            @Schema(description = "FEFO zahira (Navbatda va keyin)") List<ReservedBatch> reserved) {
+            @Schema(description = "FEFO zahira (Navbatda va keyin)") List<ReservedBatch> reserved,
+            @Schema(nullable = true, description = "Yig'ilgan (yig'ishga qaytarilgani ayirilgan); yig'ish boshlanmagan — null") Integer picked,
+            @Schema(nullable = true, description = "Jo'natilgan (o'tkazilgan sotuv bo'yicha); sotuv yo'q — null") Integer shipped) {
 
         OrderLine withReserved(List<ReservedBatch> r) {
             return new OrderLine(id, lineNo, productId, productCode, productName, manufacturer, qty, price, currentPrice, amount, vatAmount, priceType,
-                    available, nearestExpiry, minQty, maxQty, controlled, marked, r);
+                    available, nearestExpiry, minQty, maxQty, controlled, marked, r, picked, shipped);
         }
     }
 
