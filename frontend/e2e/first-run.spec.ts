@@ -266,6 +266,9 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  // Bildirishnoma sarlavhadagi tugmalar ustida — sichqoncha ustida tursa yopilmaydi
+  await page.mouse.move(0, 0);
+  await expect(page.getByText("Qoralama saqlandi")).toBeHidden({ timeout: 15_000 });
 
   // Qabul: 48 ta keldi — «Kam keldi»
   await page.getByRole("button", { name: "Qabul qilish" }).click();
