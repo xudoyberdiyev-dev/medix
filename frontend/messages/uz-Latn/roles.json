@@ -63,7 +63,7 @@
   "matrix": {
     "stepOf": "{n}-qadam · 6 tadan",
     "t4": "Rollar va ruxsatlar",
-    "d4": "Har bir rol qaysi boʻlimni koʻradi va qaysi amalni bajaradi. Standart qiymatlar prototipdagi amaldagi qoidalardan olingan.",
+    "d4": "Har bir rol qaysi boʻlimni koʻradi va qaysi amalni bajaradi. Standart qiymatlar amaldagi qoidalardan olingan.",
     "std": "Standart",
     "inactive": "Nofaol",
     "cardMeta": "{p} ruxsat · {e} xodim",

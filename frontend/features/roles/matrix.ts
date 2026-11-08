@@ -40,6 +40,8 @@ export interface MatrixRole {
   copiedFrom?: string | null;
 }
 
+const KIND_ORDER = ["view", "create", "cancel", "approve", "special"];
+
 export type Grants = Record<string, string[]>;
 
 export interface MatrixState {
@@ -145,8 +147,12 @@ export function groupRows(
   },
 ) {
   const q = opts.query.trim().toLowerCase();
+  // Guruh ichida: sahifalar birinchi uchrash tartibida, sahifa ichida koʻrish → yaratish → bekor → tasdiq → maxsus
+  const pageOrder = new Map<string, number>();
+  for (const p of perms) if (!pageOrder.has(p.page ?? p.module)) pageOrder.set(p.page ?? p.module, pageOrder.size);
+  const rank = (p: MatrixPermission) => (pageOrder.get(p.page ?? p.module) ?? 0) * 10 + Math.max(0, KIND_ORDER.indexOf(p.kind));
   return MATRIX_GROUPS.map((g) => {
-    const all = perms.filter((p) => p.group === g);
+    const all = perms.filter((p) => p.group === g).sort((a, b) => rank(a) - rank(b) || a.key.localeCompare(b.key));
     const items = all.filter(
       (p) =>
         (!q || opts.name(p).toLowerCase().includes(q) || p.key.toLowerCase().includes(q)) &&
