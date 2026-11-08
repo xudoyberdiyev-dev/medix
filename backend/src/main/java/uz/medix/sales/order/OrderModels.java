@@ -220,7 +220,23 @@ final class OrderModels {
             boolean controlled,
             boolean marked) {}
 
-    record CatalogPage(List<CatalogRow> items, long total, int page, int size) {}
+    /** Katalog filtri varianti (prototip `ProductPicker`: Ishlab chiqaruvchi / Kategoriya / Davlat) — qidiruv natijasidagi soni bilan. */
+    record CatalogFacet(long id, String name, long count) {}
+
+    /** «Belgilar» filtri: markirovkali / nazoratdagi / retseptli mahsulotlar soni. */
+    record CatalogFlagCounts(long marked, long controlled, long prescription) {}
+
+    record CatalogFacets(List<CatalogFacet> manufacturers, List<CatalogFacet> categories, List<CatalogFacet> countries, CatalogFlagCounts flags) {}
+
+    /** «Belgilar» filtri qiymatlari (bir nechtasi — «yoki»). */
+    enum CatalogFlag { MARKED, CONTROLLED, PRESCRIPTION }
+
+    /** Katalog filtrlari (bo'sh ro'yxat — filtr yo'q). */
+    record CatalogFilter(List<Long> manufacturerIds, List<Long> categoryIds, List<Long> countryIds, List<CatalogFlag> flags) {
+        static final CatalogFilter NONE = new CatalogFilter(List.of(), List.of(), List.of(), List.of());
+    }
+
+    record CatalogPage(List<CatalogRow> items, long total, int page, int size, CatalogFacets facets) {}
 
     record TimeRequest(
             @NotNull(message = "{validation.required}") @Min(1) @Max(600) Integer pickMinutes,

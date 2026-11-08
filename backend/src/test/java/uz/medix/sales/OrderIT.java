@@ -266,6 +266,16 @@ class OrderIT {
                         .param("inStockOnly", "false").cookie(operator))
                 .andExpect(jsonPath("$.total").value(2))
                 .andExpect(jsonPath("$.items[*].productId", hasItem((int) empty)));
+        // Prototip `ProductPicker` filtrlari: variantlar soni bilan, «Belgilar» — nazoratdagi yo'q
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin")
+                        .param("inStockOnly", "false").param("flags", "CONTROLLED").cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.facets.flags.controlled").value(0))
+                .andExpect(jsonPath("$.facets.manufacturers").isArray());
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin")
+                        .param("inStockOnly", "false").param("manufacturerIds", "-1").cookie(operator))
+                .andExpect(jsonPath("$.total").value(0));
         // Qoralamada narx o'zgarsa — ogohlantirish
         setPrice(p, a, "2600");
         mvc.perform(get("/api/orders/" + doc).cookie(operator))

@@ -196,9 +196,18 @@ class OrderController {
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "true") boolean inStockOnly,
+            @RequestParam(required = false) List<Long> manufacturerIds,
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) List<Long> countryIds,
+            @RequestParam(required = false) List<OrderModels.CatalogFlag> flags,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return orders.catalog(actor(), warehouseId, customerId, q, inStockOnly, Math.max(page, 0), Math.clamp(size, 1, 200));
+        var filter = new OrderModels.CatalogFilter(nn(manufacturerIds), nn(categoryIds), nn(countryIds), nn(flags));
+        return orders.catalog(actor(), warehouseId, customerId, q, inStockOnly, filter, Math.max(page, 0), Math.clamp(size, 1, 200));
+    }
+
+    private static <T> List<T> nn(List<T> v) {
+        return v == null ? List.of() : v;
     }
 
     @GetMapping("/previous")

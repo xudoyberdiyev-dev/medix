@@ -691,7 +691,8 @@ class Orders {
      * narxi. Qidiruv — kod, shtrix-kod yoki nom (lotin/kirill). «Faqat bor mahsulotlar» standart yoqilgan.
      */
     @Transactional(readOnly = true)
-    OrderModels.CatalogPage catalog(Actor actor, long warehouseId, Long customerId, String q, boolean inStockOnly, int page, int size) {
+    OrderModels.CatalogPage catalog(Actor actor, long warehouseId, Long customerId, String q, boolean inStockOnly, OrderModels.CatalogFilter filter,
+            int page, int size) {
         Place place = place(actor, warehouseId);
         Terms t = customerId == null ? new Terms(null, null, null, null, null) : terms(customerId, place.branchId());
         LocalDate minExpiry = today().plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
@@ -724,6 +725,40 @@ class Orders {
                            WHERE s.warehouse_id = :w AND s.qty > coalesce(r.qty, 0) AND z.sellable AND z.active AND b.expiry_date >= :min
                            GROUP BY s.product_id) a ON a.product_id = p.id
                 """;
+        // Filtr variantlari — qidiruv va «Faqat bor» bo'yicha (filtrlarning o'zisiz), soni bilan
+        String base = from + where;
+        OrderModels.CatalogFacets facets = new OrderModels.CatalogFacets(
+                facet("manufacturer", "p.manufacturer_id", base, params),
+                facet("category", "p.category_id", base, params),
+                facet("country", "p.country_id", base, params),
+                jdbc.sql("SELECT count(*) FILTER (WHERE p.marked) AS marked, count(*) FILTER (WHERE p.controlled) AS controlled,"
+                                + " count(*) FILTER (WHERE p.prescription) AS prescription" + base)
+                        .params(params)
+                        .query(OrderModels.CatalogFlagCounts.class)
+                        .single());
+        if (!filter.manufacturerIds().isEmpty()) {
+            where.append(" AND p.manufacturer_id IN (:fm)");
+            params.put("fm", filter.manufacturerIds());
+        }
+        if (!filter.categoryIds().isEmpty()) {
+            where.append(" AND p.category_id IN (:fc)");
+            params.put("fc", filter.categoryIds());
+        }
+        if (!filter.countryIds().isEmpty()) {
+            where.append(" AND p.country_id IN (:fk)");
+            params.put("fk", filter.countryIds());
+        }
+        if (!filter.flags().isEmpty()) {
+            where.append(" AND (false");
+            for (OrderModels.CatalogFlag f : filter.flags()) {
+                where.append(switch (f) {
+                    case MARKED -> " OR p.marked";
+                    case CONTROLLED -> " OR p.controlled";
+                    case PRESCRIPTION -> " OR p.prescription";
+                });
+            }
+            where.append(")");
+        }
         long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
         record Row(long id, String code, String name, String manufacturer, Integer qty, Date nearest, Integer minQty, Integer maxQty,
                 boolean controlled, boolean marked) {}
@@ -738,7 +773,15 @@ class Orders {
         List<OrderModels.CatalogRow> items = rows.stream().map(r -> new OrderModels.CatalogRow(r.id(), r.code(), r.name(), r.manufacturer(),
                 r.qty() == null ? 0 : r.qty(), Optional.ofNullable(quotes.get(r.id())).map(x -> x.price().toString()).orElse(null),
                 localDate(r.nearest()), r.minQty(), r.maxQty(), r.controlled(), r.marked())).toList();
-        return new OrderModels.CatalogPage(items, total, page, size);
+        return new OrderModels.CatalogPage(items, total, page, size, facets);
+    }
+
+    private List<OrderModels.CatalogFacet> facet(String table, String column, String base, Map<String, Object> params) {
+        return jdbc.sql("SELECT d.id, d.name, count(*) AS count" + base.replaceFirst("(?s) WHERE p\\.active", " JOIN " + table + " d ON d.id = " + column
+                        + " WHERE p.active") + " GROUP BY d.id, d.name ORDER BY lower(d.name), d.id")
+                .params(params)
+                .query(OrderModels.CatalogFacet.class)
+                .list();
     }
 
     /** Mijozning oxirgi 5 ta buyurtmasi («Oldingi buyurtmani takrorlash»). */
