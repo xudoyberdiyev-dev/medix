@@ -31,6 +31,8 @@ export function SetupWizard() {
   const t = useTranslations("setup");
   const me = useMe();
   const status = useSetupStatus();
+  // Yakunlash bosilgach usta yakun ekranini koʻrsatadi (holat «completed» boʻlsa ham)
+  const [launching, setLaunching] = useState(false);
 
   if (status.error instanceof ApiError && status.error.isForbidden) {
     return (
@@ -62,7 +64,7 @@ export function SetupWizard() {
   }
 
   const s = status.data;
-  if (s.completed) {
+  if (s.completed && !launching) {
     return (
       <Centered>
         <Card flush>
@@ -72,14 +74,14 @@ export function SetupWizard() {
     );
   }
 
-  return <WizardSteps status={s} />;
+  return <WizardSteps status={s} onLaunching={setLaunching} />;
 }
 
 /**
  * Boshlangʻich qadam faqat birinchi yuklanishda aniqlanadi (birinchi tugallanmagan qadam). Keyin qadam faqat
  * foydalanuvchi tugmasi bilan oʻzgaradi — avtomatik saqlash holatni yangilaganda usta oʻzi keyingi qadamga sakramaydi.
  */
-function WizardSteps({ status: s }: { status: SetupStatus }) {
+function WizardSteps({ status: s, onLaunching }: { status: SetupStatus; onLaunching: (v: boolean) => void }) {
   const ts = useTranslations("setup");
   const [current, setStep] = useState(() => firstIncompleteStep(s));
   const go = (i: number) => setStep(Math.max(0, Math.min(i, SETUP_STEPS.length - 1)));
@@ -99,7 +101,7 @@ function WizardSteps({ status: s }: { status: SetupStatus }) {
   if (current === 4) return <StaffStep status={s} nav={nav} onBack={() => go(3)} onDone={() => go(5)} />;
   return (
     <WizardFrame {...nav} wide>
-      <FinishStep status={s} stepOf={ts("stepOf", { n: 6, total: 6 })} onGo={go} onBack={() => go(4)} />
+      <FinishStep status={s} stepOf={ts("stepOf", { n: 6, total: 6 })} onGo={go} onBack={() => go(4)} onLaunching={onLaunching} />
     </WizardFrame>
   );
   return null;

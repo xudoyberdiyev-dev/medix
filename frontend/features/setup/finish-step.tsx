@@ -43,9 +43,12 @@ export function FinishStep({
   stepOf,
   onGo,
   onBack,
+  onLaunching,
 }: {
   status: SetupStatus;
   stepOf: string;
+  /** Ishga tushirish boshlandi/bekor boʻldi — ota komponent «yakunlangan» ekraniga oʻtib ketmasin. */
+  onLaunching: (v: boolean) => void;
   onGo: (step: number) => void;
   onBack: () => void;
 }) {
@@ -231,14 +234,19 @@ export function FinishStep({
         primaryAction={{
           label: wrn.length ? t("anyway") : t("launch"),
           loading: complete.isPending,
-          onClick: () =>
+          onClick: () => {
+            onLaunching(true);
             complete.mutate(undefined, {
               onSuccess: () => {
                 setDlg(false);
                 setDone(target);
               },
-              onError: () => setDlg(false),
-            }),
+              onError: () => {
+                onLaunching(false);
+                setDlg(false);
+              },
+            });
+          },
         }}
         secondaryAction={{ label: t("cancel"), onClick: () => setDlg(false) }}
       >
