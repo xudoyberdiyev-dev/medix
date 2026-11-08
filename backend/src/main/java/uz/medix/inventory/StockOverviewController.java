@@ -364,7 +364,8 @@ class StockOverviewController {
                        count(DISTINCT bal.product_id) AS products, sum(bal.qty) AS qty, sum(bal.qty * bal.cost) AS value
                 FROM bal JOIN branch br ON br.id = bal.branch_id JOIN warehouse w ON w.id = bal.warehouse_id JOIN zone z ON z.id = bal.zone_id
                 GROUP BY GROUPING SETS ((bal.branch_id), (bal.branch_id, bal.warehouse_id), (bal.branch_id, bal.warehouse_id, bal.zone_id))
-                ORDER BY min(br.code), bal.branch_id, min(w.name) NULLS FIRST, bal.warehouse_id NULLS FIRST, min(z.name) NULLS FIRST""")
+                ORDER BY min(br.code), bal.branch_id, GROUPING(bal.warehouse_id) DESC, min(w.name), bal.warehouse_id,
+                         GROUPING(bal.zone_id) DESC, min(z.name), bal.zone_id""")
                 .params(params)
                 .query((rs, n) -> {
                     String level = rs.getString("level");

@@ -1,5 +1,5 @@
 /** Qoldiqlar ekrani (prototip `Stock`) — koʻrinish, filtrlar, saralash URL'da (havola orqali ochish, saqlangan koʻrinishlar). */
-export type StockView = "product" | "batch";
+export type StockView = "product" | "batch" | "wh";
 export type ZoneTypeCode = "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
 export type ExpiryBucket = "EXPIRED" | "D0_30" | "D31_60" | "D61_90" | "D90_PLUS";
 export type StockState = "HAS" | "ZERO" | "ALL_RESERVED";
@@ -88,7 +88,7 @@ export function parseOverview(p: URLSearchParams): OverviewFilters {
   const page = Number(p.get("page"));
   const size = Number(p.get("size"));
   return {
-    view: p.get("view") === "batch" ? "batch" : "product",
+    view: p.get("view") === "batch" ? "batch" : p.get("view") === "wh" ? "wh" : "product",
     q: (p.get("q") ?? "").trim(),
     warehouses: ids(p.get("wh")),
     zones: codes(p.get("zone"), ZONE_TYPES),

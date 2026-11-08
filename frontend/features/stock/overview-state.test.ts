@@ -54,3 +54,10 @@ describe("qoldiqlar ekrani URL holati", () => {
     expect(q.branchId).toBe(2);
   });
 });
+
+describe("ombor daraxti", () => {
+  it("view=wh oʻqiladi", () => {
+    expect(parseOverview(new URLSearchParams("view=wh")).view).toBe("wh");
+    expect(serializeOverview({ ...DEFAULT_OVERVIEW, view: "wh" })).toBe("view=wh");
+  });
+});

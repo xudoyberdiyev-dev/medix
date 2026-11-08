@@ -57,6 +57,7 @@ import {
   type StockFlag,
 } from "./overview-state";
 import { StockPage, stockExportHref } from "./stock-page";
+import { StockTree } from "./stock-tree";
 
 type ProductRow = components["schemas"]["ProductStockRow"];
 type StockRow = components["schemas"]["StockRow"];
@@ -493,10 +494,11 @@ export function StockOverview() {
           items={[
             { key: "product", label: t("ov.vProduct") },
             { key: "batch", label: t("ov.vBatch") },
+            { key: "wh", label: t("ov.vWh") },
           ]}
           value={f.view}
           onChange={(k) => {
-            const qs = serializeOverview({ ...DEFAULT_OVERVIEW, q: f.q, view: k === "batch" ? "batch" : "product" });
+            const qs = serializeOverview({ ...DEFAULT_OVERVIEW, q: f.q, view: k === "batch" || k === "wh" ? k : "product" });
             router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
           }}
         />
@@ -504,6 +506,11 @@ export function StockOverview() {
 
       {f.view === "batch" ? (
         <StockPage mode="stock" embedded />
+      ) : f.view === "wh" ? (
+        <StockTree
+          branchId={branchId}
+          onPickZone={(wh, zone) => apply({ ...DEFAULT_OVERVIEW, view: "product", warehouses: [wh], zones: [zone] })}
+        />
       ) : (
         <>
           <div className="mb-3 flex flex-wrap items-center gap-2">

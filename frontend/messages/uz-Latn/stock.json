@@ -135,7 +135,10 @@
       "qty": "Soni",
       "cost": "Tannarx",
       "doc": "Kirim hujjati",
-      "supplier": "Yetkazib beruvchi"
-    }
+      "supplier": "Yetkazib beruvchi",
+      "tree": "Filial / Ombor / Zona",
+      "products": "Mahsulotlar"
+    },
+    "vWh": "Ombor daraxti"
   }
 }
