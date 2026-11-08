@@ -610,7 +610,7 @@ class Orders {
 
     private OrderModels.OrderDocuments documents(long orderId) {
         return jdbc.sql("""
-                SELECT o.waybill_number, s.number AS sale, s.invoice_number, s.status AS sale_status, s.total AS sale_total,
+                SELECT o.waybill_number, s.id AS sale_id, s.number AS sale, s.invoice_number, s.status AS sale_status, s.total AS sale_total,
                        q.number AS qm, q.total AS qm_total, t.number AS trip, d.full_name AS driver, v.plate_number AS vehicle
                 FROM sales_order o
                 LEFT JOIN sale s ON s.order_id = o.id
@@ -626,7 +626,7 @@ class Orders {
                 .query((rs, n) -> new OrderModels.OrderDocuments(rs.getString("waybill_number"), rs.getString("sale"), rs.getString("invoice_number"),
                         rs.getString("sale_status"), rs.getBigDecimal("sale_total") == null ? null : new Money(rs.getBigDecimal("sale_total")).toString(),
                         rs.getString("qm"), rs.getBigDecimal("qm_total") == null ? null : new Money(rs.getBigDecimal("qm_total")).toString(),
-                        rs.getString("trip"), rs.getString("driver"), rs.getString("vehicle")))
+                        rs.getString("trip"), rs.getString("driver"), rs.getString("vehicle"), rs.getObject("sale_id", Long.class)))
                 .single();
     }
 

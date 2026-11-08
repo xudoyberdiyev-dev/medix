@@ -199,7 +199,8 @@ final class OrderModels {
             @Schema(nullable = true) String returnTotal,
             @Schema(nullable = true) String tripNumber,
             @Schema(nullable = true) String driver,
-            @Schema(nullable = true) String vehicle) {}
+            @Schema(nullable = true) String vehicle,
+            @Schema(nullable = true, description = "Sotuv hujjati (SV) id — to'lov holati uchun") Long saleId) {}
 
     /** Oldingi buyurtmalar (takrorlash uchun). */
     record PreviousOrder(long id, String number, LocalDate orderDate, int lines, String total,

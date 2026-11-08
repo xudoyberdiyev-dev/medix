@@ -41,6 +41,12 @@ final class PaymentModels {
     record OpenDocView(String docType, long docId, String docNumber, LocalDate date, @Schema(nullable = true) LocalDate dueDate, String open,
             @Schema(description = "Muddati o'tgan kunlar (0 — o'tmagan)") int overdueDays) {}
 
+    record DocPaymentLine(long paymentId, String number, LocalDate date, String account, String amount) {}
+
+    record DocPayment(String total, String settled, String open, @Schema(nullable = true) LocalDate dueDate,
+            @Schema(description = "Muddati o'tgan kunlar (0 — o'tmagan yoki yopilgan)") int overdueDays,
+            @Schema(description = "Shu hujjatga taqsimlangan o'tkazilgan MT lar") List<DocPaymentLine> payments) {}
+
     record OpenDocs(String debt, @Schema(description = "Taqsimlanmagan to'lovlar (avans)") String advance, List<OpenDocView> docs) {}
 
     record PaymentSummary(long id, String number, long branchId, long customerId, String customer, long accountId, String account,

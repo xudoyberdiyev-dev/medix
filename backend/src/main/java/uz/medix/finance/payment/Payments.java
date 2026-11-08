@@ -21,6 +21,8 @@ import uz.medix.finance.account.Accounts;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocation;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocationRequest;
 import uz.medix.finance.payment.PaymentModels.OpenDocView;
+import uz.medix.finance.payment.PaymentModels.DocPayment;
+import uz.medix.finance.payment.PaymentModels.DocPaymentLine;
 import uz.medix.finance.payment.PaymentModels.OpenDocs;
 import uz.medix.finance.payment.PaymentModels.PaymentDetail;
 import uz.medix.finance.payment.PaymentModels.PaymentRequest;
@@ -74,6 +76,39 @@ class Payments implements CustomerPayments {
     // ===== Ochiq qarzlar =====
 
     @Transactional(readOnly = true)
+    /** Mijoz hujjati (masalan, SV) bo'yicha to'lov holati: summa, yopilgan, ochiq qism, muddat va taqsimlangan MT lar. */
+    @Transactional(readOnly = true)
+    DocPayment docPayment(Actor actor, String docType, long docId) {
+        record Own(long branchId, java.math.BigDecimal total, LocalDate due) {}
+        Own own = jdbc.sql("""
+                SELECT min(branch_id) AS branch_id, coalesce(sum(amount), 0) AS total, min(due_date) AS due FROM party_ledger
+                WHERE doc_type = :t AND doc_id = :d AND applies_doc_type IS NULL AND side = 'CUSTOMER'""")
+                .param("t", docType)
+                .param("d", docId)
+                .query((rs, n) -> new Own(rs.getLong("branch_id"), rs.getBigDecimal("total"),
+                        rs.getDate("due") == null ? null : rs.getDate("due").toLocalDate()))
+                .single();
+        if (own.branchId() == 0 || !actor.canAccessBranch(own.branchId())) {
+            throw MedixException.notFound("error.notFound");
+        }
+        Money total = new Money(own.total());
+        Money open = parties.docOpen(docType, docId);
+        LocalDate today = today();
+        int overdue = open.isPositive() && own.due() != null && own.due().isBefore(today)
+                ? (int) java.time.temporal.ChronoUnit.DAYS.between(own.due(), today) : 0;
+        List<DocPaymentLine> lines = jdbc.sql("""
+                SELECT p.id, p.number, p.payment_date, a.name AS account, sum(al.amount) AS amount
+                FROM customer_payment_alloc al JOIN customer_payment p ON p.id = al.payment_id JOIN money_account a ON a.id = p.account_id
+                WHERE al.doc_type = :t AND al.doc_id = :d AND p.status = 'POSTED'
+                GROUP BY p.id, p.number, p.payment_date, a.name ORDER BY p.payment_date, p.id""")
+                .param("t", docType)
+                .param("d", docId)
+                .query((rs, n) -> new DocPaymentLine(rs.getLong("id"), rs.getString("number"), rs.getDate("payment_date").toLocalDate(),
+                        rs.getString("account"), new Money(rs.getBigDecimal("amount")).toString()))
+                .list();
+        return new DocPayment(total.toString(), total.minus(open).toString(), open.toString(), own.due(), overdue, lines);
+    }
+
     OpenDocs openDocs(Actor actor, long branchId, long customerId) {
         if (!actor.canAccessBranch(branchId)) {
             throw MedixException.notFound("error.notFound");
