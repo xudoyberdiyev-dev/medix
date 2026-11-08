@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
 import { Drawer } from "@/components/ui/drawer";
+import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
@@ -386,8 +387,33 @@ function Editor({
     setLocal(null);
   }
 
+  const printItems: RowMenuItem[] = [];
+  if (doc && !editable && doc.status !== "PENDING_APPROVAL" && doc.status !== "REJECTED" && doc.status !== "CANCELLED")
+    printItems.push({
+      key: "pick",
+      label: t("print.pick"),
+      icon: <Printer size={16} strokeWidth={1.5} aria-hidden />,
+      onSelect: () => window.open(`/print/picking?ids=${doc.id}`, "_blank", "noopener"),
+    });
+  if (doc?.documents.waybillNumber)
+    printItems.push({
+      key: "waybill",
+      label: t("docs.printWaybill"),
+      icon: <Printer size={16} strokeWidth={1.5} aria-hidden />,
+      onSelect: () => window.open(`/api/orders/${doc.id}/waybill/pdf`, "_blank", "noopener"),
+    });
+  if (doc?.documents.invoiceNumber && can(me.data, "orders.view"))
+    printItems.push({
+      key: "invoice",
+      label: t("docs.printInvoice"),
+      icon: <Printer size={16} strokeWidth={1.5} aria-hidden />,
+      onSelect: () => window.open(`/api/orders/${doc.id}/invoice/pdf`, "_blank", "noopener"),
+    });
   const actions = (
     <>
+      {frame === "page" && printItems.length ? (
+        <RowMenu items={printItems} label={t("print.menu")} trigger={{ icon: Printer, text: t("print.menu") }} />
+      ) : null}
       {cancellable ? (
         <Button
           variant="tertiary"

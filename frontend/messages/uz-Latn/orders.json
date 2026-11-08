@@ -737,5 +737,9 @@
       "undelivered": "Yetkazilmadi",
       "update": "Tahrirlandi"
     }
+  },
+  "print": {
+    "menu": "Chop etish",
+    "pick": "Terish varagʻi"
   }
 }
