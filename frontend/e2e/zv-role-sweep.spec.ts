@@ -44,7 +44,7 @@ for (const user of USERS) {
     await page.goto("/login");
     await field(page, "Login").fill(user.login);
     await field(page, "Parol").fill(user.password);
-    await page.getByRole("button", { name: "Tizimga kirish" }).click();
+    await page.getByRole("button", { name: "Kirish", exact: true }).click();
     await expect(page).toHaveURL(/\/$/);
 
     const nav = page.getByRole("navigation", { name: "Asosiy menyu" });

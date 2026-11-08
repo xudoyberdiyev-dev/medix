@@ -23,15 +23,22 @@ async function login(page: Page, login: string, password: string) {
   await page.goto("/login");
   await field(page, "Login").fill(login);
   await field(page, "Parol").fill(password);
-  await page.getByRole("button", { name: "Tizimga kirish" }).click();
+  await page.getByRole("button", { name: "Kirish", exact: true }).click();
 }
 
+/** Vaqtinchalik parol login sahifasidan xotirada — «Joriy parol» soʻralmaydi (prototip «Yangi parol oʻrnating»). */
 async function changePassword(page: Page, current: string, next: string) {
   await expect(page).toHaveURL(/\/password/);
-  await field(page, "Joriy parol").fill(current);
+  await expect(field(page, "Joriy parol")).toHaveCount(0);
+  await expect(page.getByText("Vaqtinchalik paroldan farq qiladi")).toBeVisible();
+  await field(page, "Yangi parol").fill(current);
+  await page.getByRole("button", { name: "Parolni saqlash" }).click();
+  await expect(page.getByText("Parol talablarga javob bermaydi")).toBeVisible();
   await field(page, "Yangi parol").fill(next);
   await field(page, "Yangi parolni takrorlang").fill(next);
   await page.getByRole("button", { name: "Parolni saqlash" }).click();
+  await expect(page.getByRole("heading", { name: "Parol saqlandi" })).toBeVisible();
+  await page.getByRole("button", { name: "Davom etish" }).click();
 }
 
 async function choose(page: Page, label: string, option: RegExp) {

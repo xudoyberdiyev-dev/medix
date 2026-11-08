@@ -37,8 +37,8 @@ const PAGES = [
 ];
 
 for (const [locale, loginLabel, passwordLabel, submit] of [
-  ["ru", "Логин", "Пароль", "Войти в систему"],
-  ["uz-Cyrl", "Логин", "Парол", "Тизимга кириш"],
+  ["ru", "Логин", "Пароль", "Войти"],
+  ["uz-Cyrl", "Логин", "Парол", "Кириш"],
 ] as const) {
   test(`asosiy sahifalar ${locale} tilida`, async ({ page, context, baseURL }) => {
     test.setTimeout(180_000);
@@ -53,7 +53,7 @@ for (const [locale, loginLabel, passwordLabel, submit] of [
     await page.goto("/login");
     await page.getByLabel(new RegExp(`^${loginLabel}\\s*\\*?$`)).fill(CEO_LOGIN);
     await page.getByLabel(new RegExp(`^${passwordLabel}\\s*\\*?$`)).fill(CEO_PASSWORD);
-    await page.getByRole("button", { name: submit }).click();
+    await page.getByRole("button", { name: submit, exact: true }).click();
     await expect(page).not.toHaveURL(/\/login/);
 
     for (const path of PAGES) {

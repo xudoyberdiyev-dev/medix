@@ -45,17 +45,17 @@ async function login(page: Page, login: string, password: string) {
   await page.goto("/login");
   await field(page, "Login").fill(login);
   await field(page, "Parol").fill(password);
-  await page.getByRole("button", { name: "Tizimga kirish" }).click();
+  await page.getByRole("button", { name: "Kirish", exact: true }).click();
 }
 
 /** Birinchi kirish: vaqtinchalik parol → doimiy parol → bosh sahifa. */
 async function firstLogin(page: Page, user: string) {
   await login(page, user, TEMP);
   await expect(page).toHaveURL(/\/password/);
-  await field(page, "Joriy parol").fill(TEMP);
   await field(page, "Yangi parol").fill(PASSWORD);
   await field(page, "Yangi parolni takrorlang").fill(PASSWORD);
   await page.getByRole("button", { name: "Parolni saqlash" }).click();
+  await page.getByRole("button", { name: "Davom etish" }).click();
   await expect(page).toHaveURL(/\/$/);
 }
 

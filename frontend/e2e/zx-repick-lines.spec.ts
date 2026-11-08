@@ -23,7 +23,7 @@ async function login(page: Page, login: string, password: string) {
   await page.goto("/login");
   await field(page, "Login").fill(login);
   await field(page, "Parol").fill(password);
-  await page.getByRole("button", { name: "Tizimga kirish" }).click();
+  await page.getByRole("button", { name: "Kirish", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
 }
 

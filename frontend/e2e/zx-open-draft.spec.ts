@@ -17,7 +17,7 @@ test("Operator: saqlanmagan buyurtma boshqa sahifadan qaytganda tiklanadi", asyn
   await page.goto("/login");
   await field(page, "Login").fill("operator.1");
   await field(page, "Parol").fill(OPERATOR_PASSWORD);
-  await page.getByRole("button", { name: "Tizimga kirish" }).click();
+  await page.getByRole("button", { name: "Kirish", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/orders");

@@ -255,6 +255,17 @@ class AuthIT {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.newPassword").isNotEmpty());
 
+        // Prototip talablari: kamida bitta raqam va bitta harf
+        for (String weak : new String[] {"faqatharflardan", "1234567890"}) {
+            mvc.perform(post("/api/auth/password")
+                            .with(csrf())
+                            .cookie(session)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"" + weak + "\"}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.newPassword").value("Parolda kamida bitta harf va bitta raqam boʻlishi kerak. Ularni qoʻshing."));
+        }
+
         mvc.perform(post("/api/auth/password")
                         .with(csrf())
                         .cookie(session)

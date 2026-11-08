@@ -87,6 +87,7 @@
 
   --animate-skeleton: skeleton 1600ms ease-in-out infinite;
   --animate-spin: spin 800ms linear infinite;
+  --animate-progress: progress 3000ms linear forwards;
 
   @keyframes skeleton {
     0%,
@@ -101,6 +102,15 @@
   @keyframes spin {
     to {
       transform: rotate(360deg);
+    }
+  }
+
+  @keyframes progress {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
     }
   }
 }
