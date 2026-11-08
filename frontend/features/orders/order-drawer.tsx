@@ -67,7 +67,7 @@ import {
   type OrderRequest,
   codesExportUrl,
 } from "./api";
-import { CatalogDialog } from "./catalog-dialog";
+import { CatalogView } from "./catalog-dialog";
 import { OrderCardAside, OrderCardBody, OrderStepper } from "./order-card";
 import { CustomerStateRow, RecentOrders, useCustomerCredit, type PreviousOrder } from "./customer-state";
 import { clearOpenDraft, draftFormFor, readOpenDraft, writeOpenDraft } from "./open-draft";
@@ -244,12 +244,14 @@ function Editor({
   useEffect(() => {
     if (frame !== "page" || dialog) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
-      if (document.querySelector("dialog[open], [role='listbox']")) return;
+      // Capture fazasi: ochiq roʻyxat tanlovi (Select) yoki oyna boʻlsa — Esc ularni yopadi, sahifani emas
+      if (e.key !== "Escape" || document.querySelector("dialog[open], [role='listbox']")) return;
+      // Standart amal toʻxtatiladi: aks holda shu Esc yangi ochilgan «Saqlamasdan yopish» oynasini darhol yopadi
+      e.preventDefault();
       requestCloseRef.current();
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [frame, dialog]);
   // Qoralama ochiq turibdi — sahifadan chiqib qaytganda shu holatda ochiladi (yopilganda roʻyxat sahifasi tozalaydi)
   const docId = doc?.id ?? null;
@@ -350,19 +352,21 @@ function Editor({
   }
   const openCatalogRef = useRef(openCatalog);
   const sendOrderRef = useRef(sendOrder);
+  const dialogRef = useRef(dialog);
   useEffect(() => {
     openCatalogRef.current = openCatalog;
     sendOrderRef.current = sendOrder;
+    dialogRef.current = dialog;
   });
   useEffect(() => {
     if (!editable) return;
     function onKey(e: KeyboardEvent) {
-      if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyK") {
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyK" && dialogRef.current === null) {
         e.preventDefault();
         openCatalogRef.current();
       }
       // Ctrl+Enter — saqlash va yuborish (prototip); ochiq oyna boʻlsa — yoʻq
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !document.querySelector("dialog[open]")) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && dialogRef.current === null && !document.querySelector("dialog[open]")) {
         e.preventDefault();
         sendOrderRef.current();
       }
@@ -461,31 +465,6 @@ function Editor({
 
   const dialogs = (
     <>
-      {dialog === "catalog" && warehouseId ? (
-        <CatalogDialog
-          warehouseId={Number(warehouseId)}
-          customerId={customer ? Number(customer) : null}
-          header={t("drawer.catalogHeader", {
-            number: doc?.number ?? t("drawer.new"),
-            customer: customerLabel || t("drawer.noCustomer"),
-            warehouse: activeWarehouses.find((w) => String(w.id) === warehouseId)?.name ?? "",
-            count: formatQuantity(lines.length),
-          })}
-          onClose={() => setDialog(null)}
-          onAdd={(picked) => {
-            setLines((ls) => {
-              const next = [...ls];
-              for (const p of picked) {
-                const i = next.findIndex((x) => x.productId === p.productId);
-                if (i >= 0) next[i] = { ...next[i], qty: String(Number(next[i].qty) + Number(p.qty)) };
-                else next.push(p);
-              }
-              return next;
-            });
-            setDialog(null);
-          }}
-        />
-      ) : null}
       {dialog === "discard" ? (
         <Modal
           open
@@ -855,6 +834,42 @@ function Editor({
     </>
   );
 
+  // «Mahsulot qoʻshish» (Alt+K) — hujjat oʻrnida toʻliq katalog sahifasi (prototip ProductPicker); hujjat holati saqlanadi
+  if (dialog === "catalog" && warehouseId)
+    return (
+      <CatalogView
+        warehouseId={Number(warehouseId)}
+        customerId={customer ? Number(customer) : null}
+        title={`${doc?.number ?? t("drawer.new")} · ${customerLabel || t("drawer.noCustomer")}`}
+        facts={[
+          { label: t("catalog.fCustomer"), value: customerLabel || "—" },
+          { label: t("catalog.fPriceType"), value: credit.data?.priceType ?? t("credit.basePrice") },
+          { label: t("catalog.fDebt"), value: credit.data ? formatMoney(credit.data.debt) : "—" },
+          {
+            label: t("catalog.fLimit"),
+            value: credit.data?.creditLimit
+              ? `${formatMoney(credit.data.creditLimit)}${credit.data.limitLeft ? ` (${formatMoney(credit.data.limitLeft)})` : ""}`
+              : t("credit.notSet"),
+          },
+          { label: t("catalog.fWarehouse"), value: activeWarehouses.find((w) => String(w.id) === warehouseId)?.name ?? "—" },
+          { label: t("catalog.fPay"), value: paymentType ? t(`paymentType.${paymentType as (typeof PAYMENT_VALUES)[number]}`) : "—" },
+          { label: t("catalog.fDate"), value: deliveryDate || "—" },
+        ]}
+        onClose={() => setDialog(null)}
+        onAdd={(picked) => {
+          setLines((ls) => {
+            const next = [...ls];
+            for (const p of picked) {
+              const i = next.findIndex((x) => x.productId === p.productId);
+              if (i >= 0) next[i] = { ...next[i], qty: String(Number(next[i].qty) + Number(p.qty)) };
+              else next.push(p);
+            }
+            return next;
+          });
+          setDialog(null);
+        }}
+      />
+    );
   if (frame === "page")
     return (
       <div className="flex flex-col gap-4">

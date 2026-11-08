@@ -574,7 +574,7 @@
     "add": "Qoʻshish va qaytish",
     "addCount": "Qoʻshish va qaytish · {count}",
     "search": "Qidirish",
-    "searchPlaceholder": "Kod, shtrix-kod yoki nom",
+    "searchPlaceholder": "Kod, nom, klassifikator yoki shtrix-kod",
     "inStock": "Faqat bor mahsulotlar",
     "emptyInStock": "Mos mahsulot yoʻq. «Faqat bor mahsulotlar»ni oʻchirib koʻring.",
     "empty": "Mos mahsulot yoʻq.",
@@ -585,12 +585,25 @@
     "col": {
       "code": "Kod",
       "product": "Mahsulot",
-      "available": "Mavjud",
-      "price": "Narx",
+      "available": "Mavjud qoldiq",
+      "price": "Narx (QQS bilan)",
       "nearestExpiry": "Eng yaqin muddat",
       "minMax": "Min / max",
-      "qty": "Miqdor"
-    }
+      "qty": "Miqdor",
+      "manufacturer": "Ishlab chiqaruvchi"
+    },
+    "back": "Hujjatga qaytish",
+    "marked": "Markirovkali",
+    "picked": "Tanlangan: {count} ta mahsulot",
+    "pickedSum": "summa {amount} soʻm",
+    "clear": "Tanlovni tozalash",
+    "fCustomer": "Mijoz",
+    "fPriceType": "Narx turi",
+    "fDebt": "Qarz",
+    "fLimit": "Limit (qolgan)",
+    "fWarehouse": "Ombor",
+    "fPay": "Toʻlov turi",
+    "fDate": "Yetkazish sanasi"
   },
   "returns": {
     "accepted": "Qaytgan tovar Karantinga qabul qilindi",
