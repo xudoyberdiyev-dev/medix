@@ -323,7 +323,7 @@ class ProductIT {
         long br = jdbc.sql("""
                 INSERT INTO branch (company_id, code, name, legal_name, tin)
                 SELECT id, :c, 'Mahsulot sinov ' || :c, 'MChJ', :t FROM company ON CONFLICT DO NOTHING RETURNING id""")
-                .param("c", "" + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)))
+                .param("c", "" + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)))
                 .param("t", String.valueOf(300_000_000L + rnd.nextLong(99_999_999L)))
                 .query(Long.class)
                 .single();
