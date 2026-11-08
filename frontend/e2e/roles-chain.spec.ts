@@ -346,7 +346,7 @@ test("CEO: Paracetamol uchun maksimal miqdor — 5", async ({ page }) => {
   await expect(page).toHaveURL(/\/products\/\d+$/);
   await page.getByRole("button", { name: "Tahrirlash" }).click();
   await field(page, "Maksimal miqdor").fill("5");
-  await page.getByRole("button", { name: "Mahsulotni saqlash" }).click();
+  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
   await expect(page.getByText("Mahsulot saqlandi").first()).toBeVisible();
 });
 

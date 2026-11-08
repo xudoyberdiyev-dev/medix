@@ -3300,9 +3300,29 @@ export interface paths {
         put?: never;
         /**
          * Mahsulot qo'shish
-         * @description 8 raqamli kod avtomatik beriladi.
+         * @description 8 raqamli kod: berilsa — shu (band bo'lsa 409), aks holda avtomatik.
          */
         post: operations["create_8"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Shakl tekshiruvi: dublikatlar
+         * @description Shu nom + ishlab chiqaruvchi, kod egasi (eski kodlar ham), shtrix-kod egalari.
+         */
+        get: operations["duplicates"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3358,6 +3378,23 @@ export interface paths {
         };
         /** Import shabloni (.xlsx) */
         get: operations["importTemplate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/new-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bo'sh kod taklifi (shakl: «Yangi kod yaratish») */
+        get: operations["newCode"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5479,40 +5516,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/products/new-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** x */
-        get: operations["newCode"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/products/duplicates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** x */
-        get: operations["duplicates"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5711,6 +5714,10 @@ export interface components {
             /** Format: int32 */
             count: number;
             danger: boolean;
+        };
+        BarcodeOwner: {
+            barcode: string;
+            product: components["schemas"]["Ref"];
         };
         BatchCard: {
             /** Format: int64 */
@@ -6627,6 +6634,11 @@ export interface components {
             id: number;
             phone?: string;
         };
+        DuplicateCheck: {
+            barcodes: components["schemas"]["BarcodeOwner"][];
+            codeOwner?: components["schemas"]["Ref"];
+            sameName?: components["schemas"]["Ref"];
+        };
         Employee: {
             /** @description Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3) */
             allBranches: boolean;
@@ -7431,6 +7443,9 @@ export interface components {
             expiry?: components["schemas"]["Badge"];
             orders?: components["schemas"]["Badge"];
             shipments?: components["schemas"]["Badge"];
+        };
+        NewCode: {
+            code: string;
         };
         NotificationItem: {
             body?: string;
@@ -8420,6 +8435,8 @@ export interface components {
             dosageForm?: "TABLET" | "CAPSULE" | "AMPOULE" | "VIAL" | "SYRUP" | "OINTMENT" | "PEN" | "POWDER" | "GEL";
             dose?: string;
             farmId?: string;
+            /** @description Ombor harakati bor — birlik, qadoqdagi soni, nazorat va markirovka qulflanadi */
+            hasMovements: boolean;
             /** Format: int64 */
             id: number;
             ikpu?: string;
@@ -8438,9 +8455,9 @@ export interface components {
             prescription: boolean;
             supplyEmployee?: components["schemas"]["Ref"];
             unit: components["schemas"]["Ref"];
-            vatRate: string;
+            /** @description QQSdan ozod (stavka 0) */
             vatExempt: boolean;
-            hasMovements: boolean;
+            vatRate: string;
         };
         ProductPage: {
             facets?: components["schemas"]["Facets"];
@@ -8458,6 +8475,8 @@ export interface components {
             /** Format: int64 */
             categoryId?: number;
             classifierName?: string;
+            /** @description Yangi mahsulot: berilsa shu kod (band bo'lsa 409), aks holda avtomatik; tahrirda — farq qilsa kod o'zgartiriladi (tarixga) */
+            code?: string;
             contractName?: string;
             controlled: boolean;
             /** Format: int64 */
@@ -8485,9 +8504,9 @@ export interface components {
             supplyEmployeeId?: number;
             /** Format: int64 */
             unitId: number;
-            vatRate: string;
-            code?: string;
+            /** @description QQSdan ozod — vatRate 0 bo'lishi shart (berilmasa — yo'q) */
             vatExempt?: boolean;
+            vatRate: string;
         };
         ProductRow: {
             active: boolean;
@@ -10465,18 +10484,6 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
-        };
-        NewCode: {
-            code: string;
-        };
-        BarcodeOwner: {
-            barcode: string;
-            product: components["schemas"]["Ref"];
-        };
-        DuplicateCheck: {
-            barcodes: components["schemas"]["BarcodeOwner"][];
-            codeOwner?: components["schemas"]["Ref"];
-            sameName?: components["schemas"]["Ref"];
         };
     };
     responses: never;
@@ -15320,6 +15327,32 @@ export interface operations {
             };
         };
     };
+    duplicates: {
+        parameters: {
+            query?: {
+                name?: string;
+                manufacturerId?: number;
+                code?: string;
+                barcodes?: string[];
+                excludeId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicateCheck"];
+                };
+            };
+        };
+    };
     export_1: {
         parameters: {
             query?: {
@@ -15398,6 +15431,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    newCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewCode"];
+                };
             };
         };
     };
@@ -18361,52 +18414,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
-                };
-            };
-        };
-    };
-    newCode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewCode"];
-                };
-            };
-        };
-    };
-    duplicates: {
-        parameters: {
-            query?: {
-                name?: string;
-                manufacturerId?: number;
-                code?: string;
-                barcodes?: string[];
-                excludeId?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DuplicateCheck"];
                 };
             };
         };
