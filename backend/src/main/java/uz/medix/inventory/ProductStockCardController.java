@@ -118,8 +118,7 @@ class ProductStockCardController {
                 JOIN branch br ON br.id = x.branch_id
                 LEFT JOIN (SELECT zone_id, batch_id, sum(qty) AS qty FROM stock_reservation WHERE status = 'ACTIVE'
                            GROUP BY zone_id, batch_id) r ON r.zone_id = x.zone_id AND r.batch_id = x.batch_id
-                WHERE x.product_id = :p AND x.qty > 0""" + scope + """
-                 ORDER BY br.name, br.id, w.name, w.id, b.expiry_date, b.number, z.id""")
+                WHERE x.product_id = :p AND x.qty > 0""" + scope + " ORDER BY br.name, br.id, w.name, w.id, b.expiry_date, b.number, z.id")
                 .params(params)
                 .query((rs, n) -> {
                     long qty = rs.getLong("qty");
@@ -148,8 +147,7 @@ class ProductStockCardController {
         List<BranchQty> byBranch = jdbc.sql("""
                 SELECT br.id AS branch_id, br.code, br.name, coalesce(sum(x.qty), 0) AS qty
                 FROM stock_balance x JOIN branch br ON br.id = x.branch_id
-                WHERE x.product_id = :p AND x.qty > 0""" + scope + """
-                 GROUP BY br.id, br.code, br.name ORDER BY qty DESC, br.name""")
+                WHERE x.product_id = :p AND x.qty > 0""" + scope + " GROUP BY br.id, br.code, br.name ORDER BY qty DESC, br.name")
                 .params(params)
                 .query(BranchQty.class)
                 .list();
@@ -162,9 +160,8 @@ class ProductStockCardController {
                              coalesce(sum(x.qty) FILTER (WHERE x.qty > 0), 0) AS qty_in,
                              coalesce(-sum(x.qty) FILTER (WHERE x.qty < 0), 0) AS qty_out
                       FROM stock_move x JOIN branch br ON br.id = x.branch_id JOIN warehouse w ON w.id = x.warehouse_id
-                      WHERE x.product_id = :p""" + scope + """
-                      GROUP BY x.doc_type, x.doc_id, x.doc_number, br.code, w.id, w.name) g
-                ORDER BY at DESC, first_id DESC LIMIT :limit""")
+                      WHERE x.product_id = :p""" + scope + " GROUP BY x.doc_type, x.doc_id, x.doc_number, br.code, w.id, w.name) g"
+                        + " ORDER BY at DESC, first_id DESC LIMIT :limit")
                 .params(params)
                 .param("limit", MAX_MOVES)
                 .query((rs, n) -> new MoveRow(rs.getTimestamp("at").toInstant(), rs.getString("doc_type"), rs.getLong("doc_id"),
