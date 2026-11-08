@@ -1,0 +1,11 @@
+# Railway: frontend xizmati (Root Directory: frontend). Yo'riqnoma: docs/RAILWAY.md
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+watchPatterns = ["/frontend/**"]
+
+[deploy]
+healthcheckPath = "/login"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
