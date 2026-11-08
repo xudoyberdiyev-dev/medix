@@ -293,4 +293,68 @@ class StockLedgerIT {
             assertThat(wb.getSheetAt(0).getRow(1).getCell(1).getStringCellValue()).isEqualTo("Alfa qoldiq " + tag);
         }
     }
+
+    @Test
+    void productViewAggregatesReservedClosedAndSummary() throws Exception {
+        Place p = place();
+        long prod = product("Jamlanma qoldiq sinov");
+        long b1 = batch(prod, "J-1", false);
+        LocalDate soon = LocalDate.now(java.time.ZoneId.of("Asia/Tashkent")).plusDays(10);
+        long b2 = tx.execute(s -> ledger.createBatch(prod, "J-2", null, soon, Money.of("1000.00"), false, "BQ", null));
+        tx.executeWithoutResult(s -> ledger.post(new DocRef("BQ", 21, "BQ-TST-000021"),
+                List.of(Move.in(p.mainZone(), b1, 5), Move.in(p.quarantineZone(), b2, 3))));
+        jdbc.sql("""
+                INSERT INTO stock_reservation (doc_type, doc_id, doc_line_id, doc_number, zone_id, batch_id, product_id, warehouse_id, qty)
+                SELECT 'BY', 1, 1, 'BY-TST-1', z.id, :b, :p, z.warehouse_id, 2 FROM zone z WHERE z.id = :z""")
+                .param("b", b1)
+                .param("p", prod)
+                .param("z", p.mainZone())
+                .update();
+        String br = String.valueOf(p.branchId());
+        Cookie admin = loginAs("ADMIN", null);
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).cookie(admin))
+                .andDo(r -> {
+                    if (r.getResponse().getStatus() >= 500) {
+                        throw new AssertionError("500: " + r.getResolvedException(), r.getResolvedException());
+                    }
+                })
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.totalQty").value(8))
+                .andExpect(jsonPath("$.items[0].total").value(8))
+                .andExpect(jsonPath("$.items[0].reserved").value(2))
+                .andExpect(jsonPath("$.items[0].available").value(3))
+                .andExpect(jsonPath("$.items[0].closed").value(3))
+                .andExpect(jsonPath("$.items[0].batches").value(2))
+                .andExpect(jsonPath("$.items[0].nearestDays").value(10))
+                .andExpect(jsonPath("$.items[0].costSum").value("65502.50"))
+                .andExpect(jsonPath("$.items[0].saleSum").value("0.00"));
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).param("zoneType", "QUARANTINE").cookie(admin))
+                .andExpect(jsonPath("$.items[0].total").value(3));
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).param("expiry", "D0_30", "EXPIRED")
+                        .cookie(admin))
+                .andExpect(jsonPath("$.items[0].total").value(3));
+        mvc.perform(get("/api/stock/products").param("q", "J-2").param("branchId", br).cookie(admin))
+                .andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).param("stock", "ALL_RESERVED").cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/stock/summary").param("branchId", br).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.products").value(1))
+                .andExpect(jsonPath("$.near").value(1))
+                .andExpect(jsonPath("$.quarantine").value(1))
+                .andExpect(jsonPath("$.expired").value(0))
+                .andExpect(jsonPath("$.value").value("65502.50"))
+                .andExpect(jsonPath("$.warehouses[0].count").value(2))
+                .andExpect(jsonPath("$.suppliers[0].id").value(0));
+
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").cookie(keeper))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].costSum").doesNotExist())
+                .andExpect(jsonPath("$.costSum").doesNotExist());
+        mvc.perform(get("/api/stock/summary").cookie(keeper)).andExpect(jsonPath("$.value").doesNotExist());
+        Cookie accountant = loginAs("ACCOUNTANT", null);
+        mvc.perform(get("/api/stock/products").cookie(accountant)).andExpect(status().isForbidden());
+    }
 }
