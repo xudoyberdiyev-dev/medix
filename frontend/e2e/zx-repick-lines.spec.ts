@@ -56,7 +56,7 @@ test("Operator: oddiy va markirovkali qatorli buyurtma", async ({ page }) => {
   await expect(page.getByText("Qoralama saqlandi").first()).toBeVisible();
   number =
     (await page
-      .getByRole("dialog")
+      .getByRole("main")
       .getByText(/^BY-[A-Z]{3}-\d{6}$/)
       .first()
       .textContent()) ?? "";

@@ -643,5 +643,9 @@
     "payAuto": "Standart — mijozning oxirgi buyurtmasidan · muddat {days} kun",
     "payAutoNoTerm": "Standart — mijozning oxirgi buyurtmasidan",
     "overdueValue": "{amount} · {days} kun"
+  },
+  "page": {
+    "parent": "Buyurtmalar",
+    "title": "Buyurtma"
   }
 }

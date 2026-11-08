@@ -39,14 +39,17 @@ test("Operator: saqlanmagan buyurtma boshqa sahifadan qaytganda tiklanadi", asyn
 
   await page.goto("/products");
   await expect(page.getByRole("heading", { name: "Mahsulotlar" })).toBeVisible();
+  // Buyurtma — alohida sahifa: roʻyxatga qaytganda ochiq qoralama sahifasiga yoʻnaltiriladi
   await page.goto("/orders");
-  const drawer = page.getByRole("dialog");
-  await expect(drawer.getByRole("cell", { name: /Paracetamol E2E/ })).toBeVisible();
-  await expect(drawer.getByText("Baraka Dorixona E2E").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/orders\/new$/);
+  const doc = page.getByRole("main");
+  await expect(doc.getByRole("cell", { name: /Paracetamol E2E/ })).toBeVisible();
+  await expect(doc.getByText("Baraka Dorixona E2E").first()).toBeVisible();
 
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Saqlamasdan yopish" }).click();
+  await expect(page).toHaveURL(/\/orders$/);
   await page.goto("/orders");
   await expect(page.getByRole("button", { name: "Buyurtma kiritish" })).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/orders$/);
 });

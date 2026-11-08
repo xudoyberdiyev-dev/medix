@@ -102,7 +102,7 @@ export function OperatorHome() {
         <div className="flex flex-wrap items-center gap-3">
           {can(me.data, "orders.create") ? (
             <Link
-              href="/orders?new=1"
+              href="/orders/new"
               className="inline-flex h-9 items-center gap-2 rounded-control bg-primary-button px-4 font-medium text-white hover:bg-primary-button-hover"
             >
               <Plus size={16} strokeWidth={1.5} aria-hidden /> {t("op.newOrder")}
@@ -165,7 +165,7 @@ function Recent({ rows }: { rows: RecentOrder[] }) {
         cols={cols}
         rows={rows}
         rowKey={(r) => String(r.id)}
-        rowHref={(r) => `/orders?open=${r.id}`}
+        rowHref={(r) => `/orders/${r.id}`}
         minWidth="580px"
         empty={<EmptyState icon={CircleCheck} title={t("op.noOrders")} description={t("op.noOrdersHint")} />}
       />
@@ -197,7 +197,7 @@ function Notes({ rows }: { rows: OperatorNote[] }) {
             return (
               <li key={`${n.kind}-${n.orderId}-${n.product ?? ""}`}>
                 <Link
-                  href={n.kind === "LOW_STOCK" ? `/stock?q=${encodeURIComponent(n.product ?? "")}` : `/orders?open=${n.orderId}`}
+                  href={n.kind === "LOW_STOCK" ? `/stock?q=${encodeURIComponent(n.product ?? "")}` : `/orders/${n.orderId}`}
                   className="flex min-h-11 items-center gap-3 py-2 text-body hover:bg-background"
                 >
                   <Icon size={16} strokeWidth={1.5} aria-hidden className={cn("shrink-0", tone)} />
@@ -305,7 +305,7 @@ function CustomerCard({ c }: { c: CustomerStatus }) {
         </div>
       </div>
       <Link
-        href={`/orders?new=1&customer=${c.id}&customerName=${encodeURIComponent(c.name)}`}
+        href={`/orders/new?customer=${c.id}&customerName=${encodeURIComponent(c.name)}`}
         className="mt-2 inline-flex items-center gap-1 text-body text-primary-button hover:underline"
       >
         {t("createOrder")} →

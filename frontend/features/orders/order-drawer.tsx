@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarDays,
   Check,
   CircleAlert,
   FileDown,
@@ -17,10 +18,12 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DocumentHeader } from "@/components/ui/document-header";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
@@ -68,16 +71,47 @@ import { OrderStatusBadge, day } from "./orders-page";
 
 const PAYMENT_VALUES = ["TRANSFER", "CASH", "ONLINE"] as const;
 
+type Frame = "drawer" | "page";
+
+/**
+ * Buyurtma hujjati toʻliq SAHIFA sifatida (prototip `OrderEntry` / `OrderCard`): `/orders/new`, `/orders/[id]`.
+ * Yopish — roʻyxatga qaytish; yangi buyurtma saqlanganda manzil `/orders/<id>` ga almashadi.
+ */
+export function OrderDocumentPage({ id, preset }: { id: number | null; preset?: { customerId: number; customerLabel: string } }) {
+  const router = useRouter();
+  return (
+    <OrderDrawer
+      frame="page"
+      id={id}
+      preset={preset}
+      onClose={() => (clearOpenDraft(), router.push("/orders"))}
+      onCreated={(newId) => router.replace(`/orders/${newId}`)}
+    />
+  );
+}
+
 /** preset — yangi buyurtmada oldindan tanlangan mijoz (masalan, bosh sahifadagi «Mijoz holati»dan). */
 export function OrderDrawer(props: {
   id: number | null;
   onClose: () => void;
   onCreated: (id: number) => void;
   preset?: { customerId: number; customerLabel: string };
+  frame?: Frame;
 }) {
   const t = useTranslations("orders");
   const tc = useTranslations("common");
   const doc = useOrder(props.id);
+  if (props.frame === "page" && props.id !== null && (doc.error || !doc.data))
+    return (
+      <div className="flex flex-col gap-4">
+        <DocumentHeader
+          parent={{ label: t("page.parent"), href: "/orders" }}
+          crumb={doc.error ? t("page.title") : tc("loading")}
+          title={t("page.title")}
+        />
+        {doc.error ? <ErrorState onRetry={() => doc.refetch()} /> : <Skeleton className="h-40 w-full" />}
+      </div>
+    );
   if (props.id !== null && doc.error)
     return (
       <Drawer open onClose={props.onClose} size="lg" kind={t("drawer.kind")} title="BY">
@@ -113,11 +147,13 @@ function Editor({
   onClose,
   onCreated,
   preset,
+  frame = "drawer",
 }: {
   doc: OrderDetail | null;
   onClose: () => void;
   onCreated: (id: number) => void;
   preset?: { customerId: number; customerLabel: string };
+  frame?: Frame;
 }) {
   const t = useTranslations("orders");
   const me = useMe();
@@ -180,6 +216,21 @@ function Editor({
     return () => window.removeEventListener("beforeunload", warn);
   }, [unsaved]);
   const requestClose = () => (unsaved ? setDialog("discard") : onClose());
+  // Sahifada Esc — roʻyxatga qaytish (ochiq oyna yoki roʻyxat tanlovi boʻlmasa; saqlanmagan boʻlsa soʻraydi)
+  const requestCloseRef = useRef(requestClose);
+  useEffect(() => {
+    requestCloseRef.current = requestClose;
+  });
+  useEffect(() => {
+    if (frame !== "page" || dialog) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (document.querySelector("dialog[open], [role='listbox']")) return;
+      requestCloseRef.current();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [frame, dialog]);
   // Qoralama ochiq turibdi — sahifadan chiqib qaytganda shu holatda ochiladi (yopilganda roʻyxat sahifasi tozalaydi)
   const docId = doc?.id ?? null;
   useEffect(() => {
@@ -287,13 +338,20 @@ function Editor({
   const actions = (
     <>
       {cancellable ? (
-        <Button variant="tertiary" icon={X} className="mr-auto" onClick={() => (cancel.reset(), setDialog("cancel"))}>
+        <Button
+          variant="tertiary"
+          icon={X}
+          className={frame === "drawer" ? "mr-auto" : undefined}
+          onClick={() => (cancel.reset(), setDialog("cancel"))}
+        >
           {t("drawer.cancelOrder")}
         </Button>
       ) : null}
-      <Button variant="secondary" onClick={requestClose}>
-        {t("drawer.back")}
-      </Button>
+      {frame === "drawer" ? (
+        <Button variant="secondary" onClick={requestClose}>
+          {t("drawer.back")}
+        </Button>
+      ) : null}
       {editable ? (
         <>
           <Button
@@ -372,17 +430,8 @@ function Editor({
     </>
   );
 
-  return (
-    <Drawer
-      open
-      onClose={dialog ? () => undefined : requestClose}
-      size="lg"
-      kind={doc ? t("drawer.kindBy", { name: doc.createdBy }) : t("drawer.kind")}
-      title={doc ? doc.number : t("drawer.new")}
-      subtitle={doc ? `${doc.customer}${doc.customerTin ? ` · ${doc.customerTin}` : ""}` : undefined}
-      status={doc ? <OrderStatusBadge status={doc.status} /> : undefined}
-      actions={actions}
-    >
+  const content = (
+    <>
       <div className="flex flex-col gap-4">
         <Decision doc={doc} />
         {doc && doc.status !== "DRAFT" ? <DocumentsRow doc={doc} /> : null}
@@ -718,6 +767,67 @@ function Editor({
           }
         />
       ) : null}
+    </>
+  );
+
+  if (frame === "page")
+    return (
+      <div className="flex flex-col gap-4">
+        <DocumentHeader
+          parent={{ label: t("page.parent"), href: "/orders" }}
+          crumb={doc ? doc.number : t("drawer.new")}
+          crumbMono={doc !== null}
+          title={doc ? t("page.title") : t("drawer.new")}
+          number={doc?.number}
+          status={<OrderStatusBadge status={doc?.status ?? "DRAFT"} />}
+          sub={
+            doc ? (
+              <>
+                <span>{doc.customer}</span>
+                <span className="text-text-disabled">·</span>
+                <span className="inline-flex items-center gap-1">
+                  {doc.deliveryType === "PICKUP" ? (
+                    <Store size={14} strokeWidth={1.5} aria-hidden />
+                  ) : (
+                    <Truck size={14} strokeWidth={1.5} aria-hidden />
+                  )}
+                  {doc.deliveryType === "PICKUP" ? t("list.pickup") : t("list.delivery")}
+                </span>
+                {doc.deliveryDate ? (
+                  <>
+                    <span className="text-text-disabled">·</span>
+                    <span className="inline-flex items-center gap-1 tabular-nums">
+                      <CalendarDays size={14} strokeWidth={1.5} aria-hidden />
+                      {day(doc.deliveryDate)}
+                    </span>
+                  </>
+                ) : null}
+                {doc.createdBy ? (
+                  <>
+                    <span className="text-text-disabled">·</span>
+                    <span>{doc.createdBy}</span>
+                  </>
+                ) : null}
+              </>
+            ) : undefined
+          }
+          actions={actions}
+        />
+        {content}
+      </div>
+    );
+  return (
+    <Drawer
+      open
+      onClose={dialog ? () => undefined : requestClose}
+      size="lg"
+      kind={doc ? t("drawer.kindBy", { name: doc.createdBy }) : t("drawer.kind")}
+      title={doc ? doc.number : t("drawer.new")}
+      subtitle={doc ? `${doc.customer}${doc.customerTin ? ` · ${doc.customerTin}` : ""}` : undefined}
+      status={doc ? <OrderStatusBadge status={doc.status} /> : undefined}
+      actions={actions}
+    >
+      {content}
     </Drawer>
   );
 }

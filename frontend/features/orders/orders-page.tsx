@@ -40,8 +40,7 @@ import { useHiddenColumns } from "@/lib/use-hidden-columns";
 import { SavedViews } from "@/components/ui/saved-views";
 import { ORDER_CREATE, useOrders, type OrderStatus, type OrderSummary } from "./api";
 import type { OrdersT } from "./i18n";
-import { OrderDrawer } from "./order-drawer";
-import { clearOpenDraft, readOpenDraft } from "./open-draft";
+import { readOpenDraft } from "./open-draft";
 import { shortName, stageHint } from "./stage-hint";
 import {
   DELIVERY_TYPES,
@@ -220,24 +219,23 @@ export function OrdersPage() {
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [now, setNow] = useState(() => Date.now());
-  // Bildirishnomadan oʻtish: ?open=<id> — buyurtma kartochkasi darhol ochiladi; ?new=1[&customer=<id>&customerName=…] — yangi buyurtma
-  const [editor, setEditor] = useState<{ id: number | null; preset?: { customerId: number; customerLabel: string } } | null>(() => {
-    const id = Number(params.get("open"));
-    if (Number.isInteger(id) && id > 0) return { id };
-    if (params.get("new") !== "1") return null;
-    const c = Number(params.get("customer"));
-    return {
-      id: null,
-      preset: Number.isInteger(c) && c > 0 ? { customerId: c, customerLabel: params.get("customerName") ?? "" } : undefined,
-    };
-  });
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
-  // Ochiq hujjat (SPEC 208): boshqa sahifaga oʻtib qaytganda buyurtma shu holatda ochiladi
+  // Buyurtma — alohida sahifa (prototip): `/orders/<id>`, `/orders/new`.
+  // Eski havolalar: ?open=<id> (bildirishnoma), ?new=1[&customer=<id>&customerName=…] (bosh sahifa) — sahifaga yoʻnaltiriladi.
+  // Ochiq hujjat (SPEC 208): boshqa sahifaga oʻtib qaytganda saqlanmagan buyurtma shu holatda ochiladi.
   useEffect(() => {
-    if (editor) return;
+    const id = Number(params.get("open"));
+    if (Number.isInteger(id) && id > 0) return router.replace(`/orders/${id}`);
+    if (params.get("new") === "1") {
+      const c = Number(params.get("customer"));
+      const qs =
+        Number.isInteger(c) && c > 0
+          ? `?${new URLSearchParams({ customer: String(c), customerName: params.get("customerName") ?? "" })}`
+          : "";
+      return router.replace(`/orders/new${qs}`);
+    }
     const d = readOpenDraft();
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- brauzer xotirasidan bir marta oʻqiladi
-    if (d) setEditor({ id: d.id });
+    if (d) router.replace(d.id ? `/orders/${d.id}` : "/orders/new");
     // eslint-disable-next-line react-hooks/exhaustive-deps -- faqat birinchi ochilishda
   }, []);
   // Yigʻish taymeri izohi daqiqada yangilanadi
@@ -245,22 +243,22 @@ export function OrdersPage() {
     const id = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(id);
   }, []);
-  const closeEditor = () => (clearOpenDraft(), setEditor(null));
+  const openOrder = (id: number | null) => router.push(id === null ? "/orders/new" : `/orders/${id}`);
   const allowed = canAny(me.data, ["orders.view", "approvals.view"]);
   const canCreate = can(me.data, ORDER_CREATE);
   // «N» — yangi buyurtma (prototip: kbd N), matn maydonida emas
   useEffect(() => {
-    if (!canCreate || editor) return;
+    if (!canCreate) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || (e.key !== "n" && e.key !== "N")) return;
       const el = e.target as HTMLElement | null;
       if (el && (["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) || el.isContentEditable)) return;
       e.preventDefault();
-      setEditor({ id: null });
+      router.push("/orders/new");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [canCreate, editor]);
+  }, [canCreate, router]);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const orders = useOrders(filters, branchId);
 
@@ -411,7 +409,7 @@ export function OrdersPage() {
             </a>
           ) : null}
           {canCreate ? (
-            <Button icon={Plus} onClick={() => setEditor({ id: null })}>
+            <Button icon={Plus} onClick={() => openOrder(null)}>
               {t("list.create")}
               <kbd className="ml-1 rounded-sm border border-white/40 px-1 text-[11px] leading-4 font-normal">N</kbd>
             </Button>
@@ -543,8 +541,7 @@ export function OrdersPage() {
           rows={rows}
           rowKey={(o) => String(o.id)}
           loading={orders.isPending}
-          activeKey={editor?.id != null ? String(editor.id) : undefined}
-          onRowClick={(o) => setEditor({ id: o.id })}
+          onRowClick={(o) => openOrder(o.id)}
           selectable
           selectedKeys={selected}
           onSelectionChange={setSelected}
@@ -600,7 +597,6 @@ export function OrdersPage() {
           }
         />
       )}
-      {editor ? <OrderDrawer id={editor.id} preset={editor.preset} onClose={closeEditor} onCreated={(id) => setEditor({ id })} /> : null}
     </>
   );
 }
