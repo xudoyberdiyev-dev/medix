@@ -81,6 +81,12 @@ export function useCreateBranch() {
   return useSetupMutation((body: BranchRequest) => unwrap(api.POST("/api/setup/branches", { body })));
 }
 
+export function useUpdateBranch() {
+  return useSetupMutation(({ id, body }: { id: number; body: BranchRequest }) =>
+    unwrap(api.PUT("/api/setup/branches/{id}", { params: { path: { id } }, body })),
+  );
+}
+
 export function useCreateWarehouse() {
   return useSetupMutation((body: WarehouseRequest) => unwrap(api.POST("/api/setup/warehouses", { body })));
 }

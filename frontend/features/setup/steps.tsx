@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Lock, Plus, ShoppingCart, UserPlus, Warehouse as WarehouseIcon } from "lucide-react";
+import { Lock, Plus, ShoppingCart, UserPlus, Warehouse as WarehouseIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -13,17 +13,7 @@ import { EmptyState, ErrorState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import {
-  useCreateBranch,
-  useCreateEmployee,
-  useCreateWarehouse,
-  useRoles,
-  type Branch,
-  type Employee,
-  type Role,
-  type SetupStatus,
-  type Warehouse,
-} from "./api";
+import { useCreateEmployee, useCreateWarehouse, useRoles, type Employee, type Role, type SetupStatus, type Warehouse } from "./api";
 import { describeError } from "./form-error";
 
 function FormGrid({ children, onSubmit }: { children: ReactNode; onSubmit: (e: FormEvent<HTMLFormElement>) => void }) {
@@ -31,92 +21,6 @@ function FormGrid({ children, onSubmit }: { children: ReactNode; onSubmit: (e: F
     <form onSubmit={onSubmit} noValidate className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {children}
     </form>
-  );
-}
-
-/* ---------- 2. Filiallar ---------- */
-
-const emptyBranch = { code: "", name: "", legalName: "", tin: "", address: "", phone: "" };
-
-export function BranchesStep({ status }: { status: SetupStatus }) {
-  const t = useTranslations("setup.branches");
-  const create = useCreateBranch();
-  const [form, setForm] = useState(emptyBranch);
-  const err = describeError(create.error);
-  const set = (k: keyof typeof emptyBranch) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
-
-  function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    create.mutate(form, {
-      onSuccess: (b) => {
-        toast({ tone: "success", title: t("added"), description: `${b.name} (${b.code})` });
-        setForm(emptyBranch);
-        create.reset();
-      },
-    });
-  }
-
-  const columns: TableColumn<Branch>[] = [
-    { key: "code", title: t("code"), mono: true, width: 80 },
-    { key: "name", title: t("branch") },
-    { key: "legalName", title: t("legalName") },
-    { key: "tin", title: t("tin"), mono: true },
-  ];
-
-  return (
-    <div className="flex flex-col gap-4">
-      <Table
-        caption={t("caption")}
-        columns={columns}
-        rows={status.branches}
-        rowKey={(b) => String(b.id)}
-        emptyState={<EmptyState icon={Building2} title={t("emptyTitle")} description={t("emptyDescription")} />}
-      />
-      <Card title={t("new")}>
-        <FormGrid onSubmit={submit}>
-          <TextField label={t("code")} value={form.code} onChange={set("code")} error={err.fields.code} hint={t("codeHint")} required />
-          <TextField
-            label={t("name")}
-            value={form.name}
-            onChange={set("name")}
-            error={err.fields.name}
-            placeholder={t("namePlaceholder")}
-            required
-          />
-          <TextField
-            label={t("legalName")}
-            value={form.legalName}
-            onChange={set("legalName")}
-            error={err.fields.legalName}
-            placeholder={t("legalNamePlaceholder")}
-            required
-          />
-          <TextField
-            label={t("tin")}
-            value={form.tin}
-            onChange={set("tin")}
-            error={err.fields.tin}
-            inputMode="numeric"
-            placeholder={t("tinPlaceholder")}
-            required
-          />
-          <TextField label={t("address")} value={form.address} onChange={set("address")} error={err.fields.address} />
-          <TextField
-            label={t("phone")}
-            value={form.phone}
-            onChange={set("phone")}
-            error={err.fields.phone}
-            placeholder="+998 71 000 00 00"
-          />
-          {err.message ? <Alert tone="danger" title={err.message} className="md:col-span-2" /> : null}
-          <div className="md:col-span-2">
-            <Button type="submit" variant="secondary" icon={Plus} loading={create.isPending}>
-              {t("add")}
-            </Button>
-          </div>
-        </FormGrid>
-      </Card>
-    </div>
   );
 }
 

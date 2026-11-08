@@ -3,7 +3,16 @@ import { firstIncompleteStep, logoProblem, logoUrl, type SetupStatus } from "./a
 import { canLeaveStep } from "./setup-wizard";
 
 const base: SetupStatus = { completed: false, branches: [], warehouses: [], employees: [], blockers: [] };
-const branch = { id: 1, code: "TSH", name: "Toshkent", legalName: "Medix TSH", tin: "301234567", active: true, vatPayer: true, bankAccounts: [] };
+const branch = {
+  id: 1,
+  code: "TSH",
+  name: "Toshkent",
+  legalName: "Medix TSH",
+  tin: "301234567",
+  active: true,
+  vatPayer: true,
+  bankAccounts: [],
+};
 const warehouse = { id: 7, branchId: 1, name: "Markaziy", active: true, zones: [] };
 
 describe("sozlash ustasi qadamlari", () => {

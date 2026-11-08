@@ -153,5 +153,24 @@
     "roles": "Har bir rol qaysi boʻlimni koʻradi va qaysi amalni bajaradi.",
     "employees": "Har bir xodimga rol va filial bering.",
     "finish": "Kiritilganlarni tekshiring va tizimni ishga tushiring."
+  },
+  "branchesStep": {
+    "err": "Davom etish uchun kamida bitta filial qoʻshing",
+    "add": "Filial qoʻshish",
+    "emptyTitle": "Hali filial qoʻshilmagan",
+    "emptyText": "Filial qoʻshilgandan keyin unga omborlar va xodimlar biriktiriladi.",
+    "first": "Birinchi filialni qoʻshish",
+    "count": "{n} ta filial",
+    "active": "Faol",
+    "inactive": "Nofaol",
+    "noWh": "Omborlar: hali yoʻq",
+    "wh": "Omborlar: {n} ta",
+    "edit": "Tahrirlash",
+    "banks": "{n} ta hisob",
+    "whatTitle": "Filial nima?",
+    "what1": "Oʻz STIR raqami",
+    "what2": "Oʻz omborlari va kassasi",
+    "what3": "Oʻz hisobotlari",
+    "tip": "Qisqa belgi hujjat raqamlarida ishlatiladi. Masalan, Toshkent filialining kirim hujjati: TSH-KR-000123."
   }
 }

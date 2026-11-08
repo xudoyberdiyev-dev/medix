@@ -15,7 +15,8 @@ import { formatQuantity } from "@/lib/format";
 import { firstIncompleteStep, useCompleteSetup, useSetupStatus, type SetupStatus } from "./api";
 import { describeError } from "./form-error";
 import { CompanyStep } from "./company-step";
-import { BranchesStep, EmployeesStep, RolesStep, WarehousesStep } from "./steps";
+import { BranchesStep } from "./branches-step";
+import { EmployeesStep, RolesStep, WarehousesStep } from "./steps";
 import { SETUP_STEPS, WizardFrame } from "./wizard-frame";
 
 export { SETUP_STEPS };
@@ -81,6 +82,7 @@ export function SetupWizard() {
   const nav = { step: current, reachable, onStep: go };
 
   if (current === 0) return <CompanyStep status={s} nav={nav} onDone={() => go(1)} />;
+  if (current === 1) return <BranchesStep status={s} nav={nav} onBack={() => go(0)} onDone={() => go(2)} />;
 
   return (
     <WizardFrame
@@ -89,7 +91,6 @@ export function SetupWizard() {
       onNext={current < SETUP_STEPS.length - 1 ? () => go(current + 1) : undefined}
       nextDisabled={!canLeaveStep(current, s)}
     >
-      {current === 1 ? <BranchesStep status={s} /> : null}
       {current === 2 ? <WarehousesStep status={s} /> : null}
       {current === 3 ? <RolesStep /> : null}
       {current === 4 ? <EmployeesStep status={s} /> : null}

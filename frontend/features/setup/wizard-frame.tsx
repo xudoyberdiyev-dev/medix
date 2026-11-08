@@ -28,6 +28,8 @@ export interface WizardFrameProps {
   onStep: (step: number) => void;
   /** Oʻng ustun (oldindan koʻrish, maslahat). */
   aside?: ReactNode;
+  /** Oʻng ustundagi maslahat (standart — umumiy «avtomatik saqlanadi»). */
+  tip?: string;
   /** Pastki panel: avtomatik saqlash holati. */
   status?: ReactNode;
   onBack?: () => void;
@@ -47,6 +49,7 @@ export function WizardFrame({
   reachable,
   onStep,
   aside,
+  tip,
   status,
   onBack,
   onNext,
@@ -141,7 +144,7 @@ export function WizardFrame({
         </section>
         <aside className="flex flex-col gap-[16px]">
           {aside}
-          <div className="rounded-modal bg-primary-soft p-[24px] text-body text-pretty text-text-primary">{t("tip")}</div>
+          <div className="rounded-modal bg-primary-soft p-[24px] text-body text-pretty text-text-primary">{tip ?? t("tip")}</div>
         </aside>
       </main>
 

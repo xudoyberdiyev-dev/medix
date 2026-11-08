@@ -63,13 +63,23 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await page.getByRole("radio", { name: /Oʻzbekcha \(lotin\)/ }).click();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
-  // 2. Filial
-  await field(page, "Kod").fill("TSH");
-  await field(page, "Nomi").fill("Toshkent");
+  // 2. Filial (prototip BranchPanel)
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.getByText("Davom etish uchun kamida bitta filial qoʻshing")).toBeVisible();
+  await page.getByRole("button", { name: "Birinchi filialni qoʻshish" }).click();
+  await page.getByRole("button", { name: "Filialni saqlash" }).click();
+  await expect(page.getByText("6 ta maydonni toʻgʻrilang")).toBeVisible();
+  await field(page, "Filial nomi").fill("Toshkent");
+  await expect(field(page, "Qisqa belgi")).toHaveValue("TSH");
   await field(page, "Yuridik nomi").fill("Medix TSH MChJ");
   await field(page, "STIR").fill("301234567");
-  await page.getByRole("button", { name: "Filial qoʻshish" }).click();
-  await expect(page.getByRole("cell", { name: "Toshkent", exact: true })).toBeVisible();
+  await choose(page, "Viloyat / shahar", /Toshkent shahri/);
+  await field(page, "Yuridik manzil").fill("Chilonzor tumani, 1-uy");
+  await choose(page, "Bank", /Kapitalbank/);
+  await field(page, "Hisob raqami").fill("20208000900100001010");
+  await page.getByRole("button", { name: "Filialni saqlash" }).click();
+  await expect(page.getByText("Medix TSH MChJ")).toBeVisible();
+  await expect(page.getByText("1 ta hisob")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 3. Ombor
