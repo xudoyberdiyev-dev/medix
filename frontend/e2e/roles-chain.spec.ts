@@ -192,7 +192,7 @@ test("CEO: Import ustasi — CSV dan mahsulotlar (xato qator oʻtkazib yuborilad
     "Import E2E Sitramon;Sitramon;Nobel E2E;Analgetiklar E2E;123;FRM-IMP-2;",
   ].join("\r\n");
   await page.getByTestId("import-file").setInputFiles({ name: "smartup.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") });
-  await expect(page.getByText("smartup.csv")).toBeVisible();
+  await expect(page.locator("section").getByText("smartup.csv")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
   // Sarlavha qatori avtomatik taxmin qilinadi (2-qator)
   await expect(page.getByRole("textbox", { name: "Sarlavha qatori" })).toHaveValue("2");
