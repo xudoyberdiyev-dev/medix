@@ -46,10 +46,12 @@ class ProductController {
 
     private final Products products;
     private final ProductExcel excel;
+    private final ProductImport wizard;
 
-    ProductController(Products products, ProductExcel excel) {
+    ProductController(Products products, ProductExcel excel, ProductImport wizard) {
         this.products = products;
         this.excel = excel;
+        this.wizard = wizard;
     }
 
     @GetMapping
@@ -127,6 +129,41 @@ class ProductController {
         try (var in = file.getInputStream()) {
             return excel.importFile(in, apply);
         }
+    }
+
+    @PostMapping(path = "/import/read", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Import ustasi: faylni o'qish",
+            description = ".xlsx yoki .csv — varaqlar va katakchalar (matn). Hech narsa yozilmaydi; sarlavha qatori va ustunlar brauzerda tanlanadi.")
+    ProductImport.ImportFile importRead(@RequestPart("file") MultipartFile file) throws IOException {
+        try (var in = file.getInputStream()) {
+            return wizard.read(file.getOriginalFilename(), file.getSize(), in);
+        }
+    }
+
+    @PostMapping("/import/check")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Import ustasi: qatorlarni tekshirish yoki yaratish",
+            description = "apply=false — har qator uchun holat va izohlar (hech narsa yozilmaydi); apply=true — OK va ogohlantirishli qatorlar "
+                    + "bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi.")
+    ProductImport.ImportCheckResult importCheck(@Valid @RequestBody ProductImport.ImportCheckRequest request,
+            @RequestParam(defaultValue = "false") boolean apply) {
+        return wizard.check(request, apply);
+    }
+
+    @GetMapping("/import/profile")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Import ustasi: saqlangan moslashtirish profili", description = "Profil bo'lmasa — 204.")
+    org.springframework.http.ResponseEntity<ProductImport.ImportProfile> importProfile() {
+        return wizard.profile(ProductImport.TYPE).map(org.springframework.http.ResponseEntity::ok)
+                .orElseGet(() -> org.springframework.http.ResponseEntity.noContent().build());
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/import/profile")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Import ustasi: moslashtirishni saqlash", description = "Keyingi safar avtomatik qo'llanadi.")
+    ProductImport.ImportProfile saveImportProfile(@Valid @RequestBody ProductImport.ImportProfileRequest request) {
+        return wizard.saveProfile(ProductImport.TYPE, request);
     }
 
     private static void xlsx(HttpServletResponse response, String filename) {

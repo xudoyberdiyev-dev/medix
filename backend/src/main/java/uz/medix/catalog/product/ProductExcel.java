@@ -64,7 +64,7 @@ class ProductExcel {
 
     // ===== Eksport =====
 
-    private static final java.util.Map<ProductModels.DosageForm, String> FORM_NAMES = java.util.Map.of(
+    static final java.util.Map<ProductModels.DosageForm, String> FORM_NAMES = java.util.Map.of(
             ProductModels.DosageForm.TABLET, "Tabletka", ProductModels.DosageForm.CAPSULE, "Kapsula",
             ProductModels.DosageForm.AMPOULE, "Ampula", ProductModels.DosageForm.VIAL, "Flakon", ProductModels.DosageForm.SYRUP, "Sirop",
             ProductModels.DosageForm.OINTMENT, "Malham", ProductModels.DosageForm.PEN, "Shprits-ruchka",
@@ -262,7 +262,7 @@ class ProductExcel {
     }
 
     /** Faol yozuvlar: nom (va qisqa nom) → id, katta-kichik harf farqsiz. */
-    private Map<String, Long> lookup(String table, boolean withShortName) {
+    Map<String, Long> lookup(String table, boolean withShortName) {
         Map<String, Long> m = new HashMap<>();
         jdbc.sql("SELECT id, name, short_name FROM " + table + " WHERE active").query((rs, n) -> {
             m.put(key(rs.getString("name")), rs.getLong("id"));
@@ -340,7 +340,7 @@ class ProductExcel {
     }
 
     /** Raqamli kataklar (kod, shtrix-kod) «4.78E12» bo'lib qolmasin. */
-    private static String cellText(Cell c, DataFormatter fmt) {
+    static String cellText(Cell c, DataFormatter fmt) {
         if (c.getCellType() == CellType.NUMERIC) {
             BigDecimal d = BigDecimal.valueOf(c.getNumericCellValue());
             return d.stripTrailingZeros().toPlainString();
@@ -362,15 +362,15 @@ class ProductExcel {
         }
     }
 
-    private static String key(String s) {
+    static String key(String s) {
         return s == null ? "" : s.strip().toLowerCase(Locale.ROOT).replaceAll("[ʻʼ'`‘’]", "");
     }
 
-    private static String blank(String s) {
+    static String blank(String s) {
         return s == null || s.isBlank() ? null : s.strip();
     }
 
-    private static boolean yes(String s) {
+    static boolean yes(String s) {
         String k = key(s);
         return k.equals("ha") || k.equals("1") || k.equals("true") || k.equals("+") || k.equals("да");
     }
