@@ -34,6 +34,7 @@ import uzLatn_shell from "@/messages/uz-Latn/shell.json";
 import uzLatn_stock from "@/messages/uz-Latn/stock.json";
 import uzLatn_supplierReturns from "@/messages/uz-Latn/supplierReturns.json";
 import uzLatn_ui from "@/messages/uz-Latn/ui.json";
+import uzLatn_warehousePanel from "@/messages/uz-Latn/warehousePanel.json";
 import uzLatn_warehouseTransfers from "@/messages/uz-Latn/warehouseTransfers.json";
 import uzLatn_writeOffs from "@/messages/uz-Latn/writeOffs.json";
 import uzLatn_zoneTransfers from "@/messages/uz-Latn/zoneTransfers.json";
@@ -72,6 +73,7 @@ import uzCyrl_shell from "@/messages/uz-Cyrl/shell.json";
 import uzCyrl_stock from "@/messages/uz-Cyrl/stock.json";
 import uzCyrl_supplierReturns from "@/messages/uz-Cyrl/supplierReturns.json";
 import uzCyrl_ui from "@/messages/uz-Cyrl/ui.json";
+import uzCyrl_warehousePanel from "@/messages/uz-Cyrl/warehousePanel.json";
 import uzCyrl_warehouseTransfers from "@/messages/uz-Cyrl/warehouseTransfers.json";
 import uzCyrl_writeOffs from "@/messages/uz-Cyrl/writeOffs.json";
 import uzCyrl_zoneTransfers from "@/messages/uz-Cyrl/zoneTransfers.json";
@@ -110,6 +112,7 @@ import ru_shell from "@/messages/ru/shell.json";
 import ru_stock from "@/messages/ru/stock.json";
 import ru_supplierReturns from "@/messages/ru/supplierReturns.json";
 import ru_ui from "@/messages/ru/ui.json";
+import ru_warehousePanel from "@/messages/ru/warehousePanel.json";
 import ru_warehouseTransfers from "@/messages/ru/warehouseTransfers.json";
 import ru_writeOffs from "@/messages/ru/writeOffs.json";
 import ru_zoneTransfers from "@/messages/ru/zoneTransfers.json";
@@ -150,6 +153,7 @@ export const uzLatn = {
   "stock": uzLatn_stock,
   "supplierReturns": uzLatn_supplierReturns,
   "ui": uzLatn_ui,
+  "warehousePanel": uzLatn_warehousePanel,
   "warehouseTransfers": uzLatn_warehouseTransfers,
   "writeOffs": uzLatn_writeOffs,
   "zoneTransfers": uzLatn_zoneTransfers,
@@ -191,6 +195,7 @@ export const uzCyrl = {
   "stock": uzCyrl_stock,
   "supplierReturns": uzCyrl_supplierReturns,
   "ui": uzCyrl_ui,
+  "warehousePanel": uzCyrl_warehousePanel,
   "warehouseTransfers": uzCyrl_warehouseTransfers,
   "writeOffs": uzCyrl_writeOffs,
   "zoneTransfers": uzCyrl_zoneTransfers,
@@ -232,6 +237,7 @@ export const ru = {
   "stock": ru_stock,
   "supplierReturns": ru_supplierReturns,
   "ui": ru_ui,
+  "warehousePanel": ru_warehousePanel,
   "warehouseTransfers": ru_warehouseTransfers,
   "writeOffs": ru_writeOffs,
   "zoneTransfers": ru_zoneTransfers,

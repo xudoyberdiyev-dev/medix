@@ -91,6 +91,16 @@ export function useCreateWarehouse() {
   return useSetupMutation((body: WarehouseRequest) => unwrap(api.POST("/api/setup/warehouses", { body })));
 }
 
+export function useUpdateWarehouse() {
+  return useSetupMutation(({ id, body }: { id: number; body: WarehouseRequest }) =>
+    unwrap(api.PUT("/api/setup/warehouses/{id}", { params: { path: { id } }, body })),
+  );
+}
+
+export function useDeleteWarehouse() {
+  return useSetupMutation((id: number) => unwrap(api.DELETE("/api/setup/warehouses/{id}", { params: { path: { id } } })));
+}
+
 export function useCreateEmployee() {
   return useSetupMutation((body: EmployeeRequest) => unwrap(api.POST("/api/setup/employees", { body })));
 }

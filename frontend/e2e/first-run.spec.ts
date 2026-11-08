@@ -82,12 +82,23 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await expect(page.getByText("1 ta hisob")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
-  // 3. Ombor
-  await choose(page, "Filial", /Toshkent/);
+  // 3. Ombor (prototip SetupWizard W3 + WarehousePanel)
+  await expect(page.getByRole("heading", { name: "Omborlar va zonalar" })).toBeVisible();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.getByText("Davom etish uchun kamida bitta ombor qoʻshing.")).toBeVisible();
+  await page.getByRole("button", { name: "Ombor qoʻshish" }).first().click();
+  await page.getByRole("button", { name: "Omborni saqlash" }).click();
+  await expect(page.getByText("1 ta maydonni toʻgʻrilang")).toBeVisible();
   await field(page, "Ombor nomi").fill("Markaziy ombor");
-  await page.getByText("Sovuq", { exact: true }).click();
-  await page.getByRole("button", { name: "Ombor qoʻshish" }).click();
-  await expect(page.getByRole("cell", { name: "Markaziy ombor", exact: true })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: /Filial manzili bilan bir xil/ })).toBeChecked();
+  await page.getByRole("radio", { name: /Sovuq saqlash/ }).check();
+  await page.getByRole("tab", { name: /Zonalar/ }).click();
+  await expect(field(page, "Zona nomi")).toHaveCount(5);
+  await page.getByRole("button", { name: "Omborni saqlash" }).click();
+  const whRow = page.getByRole("button", { name: /Markaziy ombor/ });
+  await expect(whRow).toBeVisible();
+  await expect(whRow.getByText("Chilonzor tumani, 1-uy")).toBeVisible();
+  await expect(page.getByText("1 ta ombor · 5 ta zona · 1 ta filialda")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 4. Rollar

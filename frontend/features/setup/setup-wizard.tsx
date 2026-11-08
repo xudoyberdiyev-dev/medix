@@ -16,7 +16,8 @@ import { firstIncompleteStep, useCompleteSetup, useSetupStatus, type SetupStatus
 import { describeError } from "./form-error";
 import { CompanyStep } from "./company-step";
 import { BranchesStep } from "./branches-step";
-import { EmployeesStep, RolesStep, WarehousesStep } from "./steps";
+import { EmployeesStep, RolesStep } from "./steps";
+import { WarehousesStep } from "./warehouses-step";
 import { SETUP_STEPS, WizardFrame } from "./wizard-frame";
 
 export { SETUP_STEPS };
@@ -25,7 +26,8 @@ export { SETUP_STEPS };
 export function canLeaveStep(step: number, s: SetupStatus): boolean {
   if (step === 0) return Boolean(s.company);
   if (step === 1) return s.branches.length > 0;
-  if (step === 2) return s.branches.every((b) => s.warehouses.some((w) => w.branchId === b.id));
+  // Prototip: kamida bitta ombor; omborsiz filial boʻlsa — «Baribir davom etish» oynasi (yakunda ham ogohlantiriladi)
+  if (step === 2) return s.warehouses.length > 0;
   return true;
 }
 
@@ -90,6 +92,7 @@ function WizardSteps({ status: s }: { status: SetupStatus }) {
 
   if (current === 0) return <CompanyStep status={s} nav={nav} onDone={() => go(1)} />;
   if (current === 1) return <BranchesStep status={s} nav={nav} onBack={() => go(0)} onDone={() => go(2)} />;
+  if (current === 2) return <WarehousesStep status={s} nav={nav} onBack={() => go(1)} onDone={() => go(3)} />;
 
   return (
     <WizardFrame
@@ -98,7 +101,6 @@ function WizardSteps({ status: s }: { status: SetupStatus }) {
       onNext={current < SETUP_STEPS.length - 1 ? () => go(current + 1) : undefined}
       nextDisabled={!canLeaveStep(current, s)}
     >
-      {current === 2 ? <WarehousesStep status={s} /> : null}
       {current === 3 ? <RolesStep /> : null}
       {current === 4 ? <EmployeesStep status={s} /> : null}
       {current === 5 ? <FinishStep status={s} /> : null}

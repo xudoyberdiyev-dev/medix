@@ -121,7 +121,8 @@ class SetupIT {
                 .andExpect(jsonPath("$.kind").value("NORMAL"))
                 .andExpect(jsonPath("$.zones", hasSize(5)))
                 .andExpect(jsonPath("$.zones[?(@.type == 'QUARANTINE')].sellable").value(false))
-                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].sellable").value(true));
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].sellable").value(true))
+                .andReturn();
 
         mvc.perform(json(post("/api/setup/warehouses"), ceo,
                         "{\"branchId\":" + branchId + ",\"name\":\"Boshqa\",\"extraZones\":[\"MAIN\"]}"))

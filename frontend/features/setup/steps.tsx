@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, Plus, ShoppingCart, UserPlus, Warehouse as WarehouseIcon } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -8,12 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/selection-controls";
 import { EmptyState, ErrorState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { useCreateEmployee, useCreateWarehouse, useRoles, type Employee, type Role, type SetupStatus, type Warehouse } from "./api";
+import { useCreateEmployee, useRoles, type Employee, type Role, type SetupStatus } from "./api";
 import { describeError } from "./form-error";
 
 function FormGrid({ children, onSubmit }: { children: ReactNode; onSubmit: (e: FormEvent<HTMLFormElement>) => void }) {
@@ -23,109 +22,6 @@ function FormGrid({ children, onSubmit }: { children: ReactNode; onSubmit: (e: F
     </form>
   );
 }
-
-/* ---------- 3. Omborlar va zonalar ---------- */
-
-export function WarehousesStep({ status }: { status: SetupStatus }) {
-  const t = useTranslations("setup.warehouses");
-  const to = useTranslations("organization");
-  const create = useCreateWarehouse();
-  const [branchId, setBranchId] = useState<string | null>(status.branches[0] ? String(status.branches[0].id) : null);
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [cold, setCold] = useState(false);
-  const [safe, setSafe] = useState(false);
-  const err = describeError(create.error);
-
-  function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const extraZones: ("COLD" | "SAFE")[] = [];
-    if (cold) extraZones.push("COLD");
-    if (safe) extraZones.push("SAFE");
-    create.mutate(
-      { branchId: Number(branchId), name, address, extraZones },
-      {
-        onSuccess: (w) => {
-          toast({ tone: "success", title: t("added"), description: t("addedDescription", { name: w.name, count: w.zones.length }) });
-          setName("");
-          setAddress("");
-          setCold(false);
-          setSafe(false);
-          create.reset();
-        },
-      },
-    );
-  }
-
-  const branchName = (id: number) => status.branches.find((b) => b.id === id)?.name ?? "";
-  const columns: TableColumn<Warehouse>[] = [
-    { key: "branch", title: t("branch"), render: (w) => branchName(w.branchId) },
-    { key: "name", title: t("warehouse") },
-    {
-      key: "zones",
-      title: t("zones"),
-      render: (w) => (
-        <span className="flex flex-wrap gap-1">
-          {w.zones.map((z) => (
-            <span key={z.id} title={z.sellable ? to("sellableOpen") : to("sellableClosed")}>
-              <Badge tone={z.sellable ? "success" : "neutral"} icon={z.sellable ? ShoppingCart : Lock}>
-                {to(`zone.${z.type}`)}
-              </Badge>
-            </span>
-          ))}
-        </span>
-      ),
-    },
-  ];
-
-  return (
-    <div className="flex flex-col gap-4">
-      <Table
-        caption={t("caption")}
-        columns={columns}
-        rows={status.warehouses}
-        rowKey={(w) => String(w.id)}
-        emptyState={<EmptyState icon={WarehouseIcon} title={t("emptyTitle")} description={t("emptyDescription")} />}
-      />
-      <Card title={t("new")}>
-        <FormGrid onSubmit={submit}>
-          <Select
-            label={t("branch")}
-            required
-            value={branchId}
-            onChange={setBranchId}
-            error={err.fields.branchId}
-            options={status.branches.map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
-          />
-          <TextField
-            label={t("name")}
-            value={name}
-            onChange={setName}
-            error={err.fields.name}
-            placeholder={t("namePlaceholder")}
-            required
-          />
-          <TextField label={t("address")} value={address} onChange={setAddress} error={err.fields.address} className="md:col-span-2" />
-          <div className="flex flex-col gap-1 md:col-span-2">
-            <p className="text-text-secondary">{t("alwaysCreated")}</p>
-            <div className="flex gap-6">
-              <Checkbox label={t("cold")} description={t("coldDescription")} checked={cold} onChange={setCold} />
-              <Checkbox label={t("safe")} description={t("safeDescription")} checked={safe} onChange={setSafe} />
-            </div>
-          </div>
-          {err.message ? <Alert tone="danger" title={err.message} className="md:col-span-2" /> : null}
-          <div className="md:col-span-2">
-            <Button type="submit" variant="secondary" icon={Plus} loading={create.isPending}>
-              {t("add")}
-            </Button>
-          </div>
-        </FormGrid>
-      </Card>
-    </div>
-  );
-}
-
-/* ---------- 4. Rollar ---------- */
 
 export function RolesStep() {
   const t = useTranslations("setup.roles");
