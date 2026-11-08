@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
  * Birinchi ishga tushirish (SPEC 2): CEO env hisobi bilan kiradi → parolni almashtiradi → sozlash ustasi
@@ -11,10 +11,12 @@ const CEO_LOGIN = process.env.E2E_CEO_LOGIN ?? "ceo";
 const CEO_INITIAL = process.env.E2E_CEO_PASSWORD ?? "Boshlangich-parol-2026";
 const CEO_PASSWORD = "Yangi-CEO-parol-2026";
 const OPERATOR_TEMP = "Vaqtincha-parol-1";
+/** Ustada operator uchun avtomatik yaratilgan bir martalik parol («Kirish maʼlumotlari» oynasidan). Testlar ketma-ket (workers: 1). */
+let operatorTemp = "";
 const OPERATOR_PASSWORD = "Operator-parol-2026";
 
 /** Maydon yorligʻi boʻyicha (aniq moslik; majburiy maydondagi «*» hisobga olinmaydi). */
-function field(page: Page, label: string) {
+function field(page: Page | Locator, label: string) {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return page.getByLabel(new RegExp(`^${escaped}\\s*\\*?$`));
 }
@@ -114,14 +116,32 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await page.getByRole("button", { name: "Saqlash va davom etish" }).click();
   await expect(page.getByText("Rollar va ruxsatlar saqlandi")).toBeVisible();
 
-  // 5. Xodim
-  await field(page, "F.I.Sh.").fill("Dilshod Aliyev");
-  await field(page, "Login").fill("operator.1");
-  await choose(page, "Rol", /^Operator$/);
-  await choose(page, "Filial", /Toshkent/);
-  await field(page, "Vaqtinchalik parol").fill(OPERATOR_TEMP);
-  await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
+  // 5. Xodimlar (prototip WizStaff): panel, login taklifi, bir martalik parol, kirish maʼlumotlari
+  await expect(page.getByText("Hozircha faqat siz")).toBeVisible();
+  await page.getByRole("button", { name: "Xodim qoʻshish" }).first().click();
+  const panel = page.getByRole("dialog", { name: "Yangi xodim" });
+  await panel.getByRole("button", { name: "Saqlash", exact: true }).click();
+  await expect(panel.getByText("Saqlash uchun 5 ta xatoni tuzating")).toBeVisible();
+  await field(panel, "Familiya").fill("Aliyev");
+  await field(panel, "Ism").fill("Dilshod");
+  await field(panel, "Telefon").fill("901234567");
+  await expect(field(panel, "Telefon")).toHaveValue("+998 90 123 45 67");
+  await panel.getByRole("combobox", { name: "Rol", exact: true }).click();
+  await page.getByRole("option", { name: /^Operator$/ }).click();
+  await panel.getByRole("combobox", { name: "Filial", exact: true }).click();
+  await page.getByRole("option", { name: /Toshkent/ }).click();
+  await expect(field(panel, "Login")).toHaveValue("d.aliyev");
+  await expect(panel.getByText("Login boʻsh")).toBeVisible();
+  await field(panel, "Login").fill("operator.1");
+  await panel.getByRole("button", { name: "Saqlash", exact: true }).click();
+  const creds = page.getByRole("dialog", { name: "Kirish maʼlumotlari" });
+  await expect(creds).toBeVisible();
+  await expect(creds.getByText("operator.1", { exact: true })).toBeVisible();
+  operatorTemp = ((await creds.locator(".font-mono").nth(1).textContent()) ?? "").trim();
+  expect(operatorTemp).toMatch(/^[A-Za-z0-9]{10}$/);
+  await creds.getByRole("button", { name: "Tayyor" }).click();
   await expect(page.getByRole("cell", { name: "operator.1", exact: true })).toBeVisible();
+  await expect(page.getByText("Kirmagan — parol bir martalik")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 6. Yakun
@@ -148,8 +168,8 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
 });
 
 test("Operator: vaqtinchalik parol bilan kirish va almashtirish; Sozlamalar yopiq", async ({ page }) => {
-  await login(page, "operator.1", OPERATOR_TEMP);
-  await changePassword(page, OPERATOR_TEMP, OPERATOR_PASSWORD);
+  await login(page, "operator.1", operatorTemp);
+  await changePassword(page, operatorTemp, OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("link", { name: "Sozlamalar" })).toHaveCount(0);
   await page.goto("/settings/employees");

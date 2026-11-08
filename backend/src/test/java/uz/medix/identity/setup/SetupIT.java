@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import jakarta.servlet.http.Cookie;
 import java.util.UUID;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,6 +38,7 @@ import uz.medix.TestcontainersConfig;
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 @Transactional
+@Order(1)
 class SetupIT {
 
     private static final String PASSWORD = "Sinov-parol-2026";

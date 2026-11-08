@@ -16,7 +16,7 @@ import { firstIncompleteStep, useCompleteSetup, useSetupStatus, type SetupStatus
 import { describeError } from "./form-error";
 import { CompanyStep } from "./company-step";
 import { BranchesStep } from "./branches-step";
-import { EmployeesStep } from "./steps";
+import { StaffManager } from "@/features/employees/staff-manager";
 import { RolesMatrix } from "@/features/roles/roles-matrix";
 import { WarehousesStep } from "./warehouses-step";
 import { SETUP_STEPS, WizardFrame } from "./wizard-frame";
@@ -100,6 +100,7 @@ function WizardSteps({ status: s }: { status: SetupStatus }) {
         <RolesMatrix mode="wizard" onSaved={() => go(4)} />
       </WizardFrame>
     );
+  if (current === 4) return <StaffStep status={s} nav={nav} onBack={() => go(3)} onDone={() => go(5)} />;
 
   return (
     <WizardFrame
@@ -108,8 +109,32 @@ function WizardSteps({ status: s }: { status: SetupStatus }) {
       onNext={current < SETUP_STEPS.length - 1 ? () => go(current + 1) : undefined}
       nextDisabled={!canLeaveStep(current, s)}
     >
-      {current === 4 ? <EmployeesStep status={s} /> : null}
       {current === 5 ? <FinishStep status={s} /> : null}
+    </WizardFrame>
+  );
+}
+
+function StaffStep({
+  status: s,
+  nav,
+  onBack,
+  onDone,
+}: {
+  status: SetupStatus;
+  nav: { step: number; reachable: (i: number) => boolean; onStep: (i: number) => void };
+  onBack: () => void;
+  onDone: () => void;
+}) {
+  const ts = useTranslations("setup");
+  return (
+    <WizardFrame {...nav} wide>
+      <StaffManager
+        branches={s.branches.map((b) => ({ id: b.id, name: b.name }))}
+        warehouses={s.warehouses.map((w) => ({ id: w.id, branchId: w.branchId, name: w.name }))}
+        stepOf={ts("stepOf", { n: 5, total: 6 })}
+        onBack={onBack}
+        onNext={onDone}
+      />
     </WizardFrame>
   );
 }

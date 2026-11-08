@@ -61,6 +61,8 @@ tasks.withType<JavaCompile> {
 tasks.withType<Test> {
     useJUnitPlatform()
     systemProperty("user.timezone", "Asia/Tashkent")
+    // SetupIT boʻsh bazani kutadi (kompaniya yoʻq) — @Order bilan birinchi ishlaydi; qolganlari topilish tartibida
+    systemProperty("junit.jupiter.testclass.order.default", "org.junit.jupiter.api.ClassOrderer\$OrderAnnotation")
     testLogging {
         events("failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
