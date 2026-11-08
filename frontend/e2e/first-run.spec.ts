@@ -318,7 +318,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
 
   // Qoralama
   await page.goto("/receipts");
-  await page.getByRole("button", { name: "Yangi kirim" }).click();
+  await page.getByRole("button", { name: "Yangi kirim" }).first().click();
   await choose(page, "Ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");

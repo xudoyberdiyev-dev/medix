@@ -8,17 +8,17 @@ const emp = (over: Partial<Employee>): Employee => ({
   fullName: "Sanjar Aliyev",
   lastName: "Aliyev",
   firstName: "Sanjar",
-  middleName: null,
+  middleName: undefined,
   phone: "+998 93 410 27 65",
-  position: null,
+  position: undefined,
   roleCode: "OPERATOR",
   roleName: "Operator",
   branchId: 1,
   status: "ACTIVE",
   mustChangePassword: true,
   allBranches: false,
-  lastLoginAt: null,
-  blockedReason: null,
+  lastLoginAt: undefined,
+  blockedReason: undefined,
   warehouseIds: [],
   cashAccountIds: [],
   ...over,
@@ -61,11 +61,17 @@ describe("staff", () => {
     expect(staffStatus(emp({ status: "BLOCKED" }))).toBe("blocked");
     expect(staffStatus(emp({}))).toBe("new");
     expect(staffStatus(emp({ lastLoginAt: "2026-11-08T10:00:00Z" }))).toBe("active");
-    expect(displayName(emp({ firstName: null, lastName: null, fullName: "Eski Ism" }))).toBe("Eski Ism");
+    expect(displayName(emp({ firstName: undefined, lastName: undefined, fullName: "Eski Ism" }))).toBe("Eski Ism");
   });
 
   it("xatolar va telefon takrori", () => {
-    const base = { id: null, scope: () => "own" as const, loginBusy: false, seats: { used: 1, limit: null }, employees: [emp({})] };
+    const base = {
+      id: null as number | null,
+      scope: () => "own" as const,
+      loginBusy: false,
+      seats: { used: 1, limit: null },
+      employees: [emp({})],
+    };
     expect(checkStaff({ ...base, form }).errors).toEqual([]);
     expect(checkStaff({ ...base, form: { ...form, last: " ", phone: "+998 90", branch: "" } }).errors).toEqual(["last", "phone", "branch"]);
     expect(checkStaff({ ...base, scope: () => "all", form: { ...form, branch: "" } }).errors).toEqual([]);

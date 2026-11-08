@@ -532,7 +532,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_12"];
+        put: operations["update_13"];
         post?: never;
         delete?: never;
         options?: never;
@@ -809,7 +809,7 @@ export interface paths {
         /** Kontragent kartasi */
         get: operations["get_7"];
         /** Kartani tahrirlash */
-        put: operations["update_11"];
+        put: operations["update_12"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1148,7 +1148,7 @@ export interface paths {
         };
         get?: never;
         /** Yozuvni tahrirlash */
-        put: operations["update_10"];
+        put: operations["update_11"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1222,6 +1222,60 @@ export interface paths {
         put?: never;
         /** Xodim qo'shish */
         post: operations["create_16"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/login-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Login taklifi va boʻshligi */
+        get: operations["loginCheck"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/seats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xodim oʻrinlari (bloklanmaganlar / litsenziya chegarasi) */
+        get: operations["seats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Xodimni tahrirlash
+         * @description Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.
+         */
+        put: operations["update_10"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6639,12 +6693,18 @@ export interface components {
         CreateEmployeeRequest: {
             /** Format: int64 */
             branchId?: number;
-            fullName: string;
+            cashAccountIds?: number[];
+            firstName?: string;
+            /** @description Boʻsh boʻlsa — «Ism Familiya» qismlardan */
+            fullName?: string;
+            lastName?: string;
             login: string;
+            middleName?: string;
             phone?: string;
             position?: string;
             roleCode: string;
             temporaryPassword: string;
+            warehouseIds?: number[];
         };
         CreateRequest: {
             /** @enum {string} */
@@ -6850,18 +6910,32 @@ export interface components {
         Employee: {
             /** @description Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3) */
             allBranches: boolean;
+            blockedReason?: string;
             /** Format: int64 */
             branchId?: number;
+            /** @description Kassir boʻlgan kassalar (special.till) */
+            cashAccountIds: number[];
+            firstName?: string;
             fullName: string;
             /** Format: int64 */
             id: number;
+            /**
+             * Format: date-time
+             * @description Oxirgi kirish; boʻsh — hali kirmagan («Yangi»)
+             */
+            lastLoginAt?: string;
+            /** @description Familiya (eski yozuvlarda boʻsh) */
+            lastName?: string;
             login: string;
+            middleName?: string;
             mustChangePassword: boolean;
             phone?: string;
             position?: string;
             roleCode: string;
             roleName: string;
             status: string;
+            /** @description Omborchi boʻlgan omborlar (special.whs) */
+            warehouseIds: number[];
         };
         EmployeeOption: {
             fullName: string;
@@ -7450,6 +7524,12 @@ export interface components {
         LoadRequest: {
             /** Format: int32 */
             places: number;
+        };
+        LoginCheck: {
+            /** @description Berilgan login boʻshmi; login berilmasa — null */
+            available?: boolean;
+            /** @description Ism va familiyadan taklif (boʻsh joyi bilan raqam qoʻshiladi) */
+            suggested: string;
         };
         LoginRequest: {
             login: string;
@@ -9664,6 +9744,18 @@ export interface components {
             field: string;
             value: string;
         };
+        Seats: {
+            /**
+             * Format: int32
+             * @description Litsenziya chegarasi; null — cheklanmagan
+             */
+            limit?: number;
+            /**
+             * Format: int64
+             * @description Bloklanmagan xodimlar
+             */
+            used: number;
+        };
         SetPinRequest: {
             currentPassword: string;
             pin: string;
@@ -10368,6 +10460,19 @@ export interface components {
             vatCertNo?: string;
             /** @description null — qoʻshimchalar oʻzgarmaydi */
             vatPayer?: boolean;
+        };
+        UpdateEmployeeRequest: {
+            /** Format: int64 */
+            branchId?: number;
+            cashAccountIds?: number[];
+            firstName: string;
+            lastName: string;
+            login: string;
+            middleName?: string;
+            phone?: string;
+            position?: string;
+            roleCode: string;
+            warehouseIds?: number[];
         };
         UpdateProfileRequest: {
             phone?: string;
@@ -11642,7 +11747,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -12104,7 +12209,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -12603,7 +12708,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -12731,6 +12836,77 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    loginCheck: {
+        parameters: {
+            query?: {
+                firstName?: string;
+                lastName?: string;
+                login?: string;
+                exceptId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginCheck"];
+                };
+            };
+        };
+    };
+    seats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seats"];
+                };
+            };
+        };
+    };
+    update_10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEmployeeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

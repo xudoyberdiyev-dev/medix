@@ -1181,7 +1181,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_12",
+        "operationId" : "update_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1944,7 +1944,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_11",
+        "operationId" : "update_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2744,7 +2744,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_10",
+        "operationId" : "update_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -2929,6 +2929,113 @@
           }
         },
         "summary" : "Xodim qo'shish",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/login-check" : {
+      "get" : {
+        "operationId" : "loginCheck",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "firstName",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "lastName",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "login",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "exceptId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LoginCheck"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Login taklifi va boʻshligi",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/seats" : {
+      "get" : {
+        "operationId" : "seats",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Seats"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xodim oʻrinlari (bloklanmaganlar / litsenziya chegarasi)",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/{id}" : {
+      "put" : {
+        "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
+        "operationId" : "update_10",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateEmployeeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Employee"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xodimni tahrirlash",
         "tags" : [ "employees" ]
       }
     },
@@ -15787,15 +15894,38 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "cashAccountIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "firstName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
           "fullName" : {
             "type" : "string",
+            "description" : "Boʻsh boʻlsa — «Ism Familiya» qismlardan",
             "maxLength" : 200,
+            "minLength" : 0
+          },
+          "lastName" : {
+            "type" : "string",
+            "maxLength" : 100,
             "minLength" : 0
           },
           "login" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[A-Za-z0-9._-]{3,64}$"
+          },
+          "middleName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
           },
           "phone" : {
             "type" : "string",
@@ -15815,9 +15945,16 @@
             "type" : "string",
             "maxLength" : 128,
             "minLength" : 8
+          },
+          "warehouseIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         },
-        "required" : [ "fullName", "login", "roleCode", "temporaryPassword" ]
+        "required" : [ "login", "roleCode", "temporaryPassword" ]
       },
       "CreateRequest" : {
         "type" : "object",
@@ -16363,9 +16500,23 @@
             "type" : "boolean",
             "description" : "Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3)"
           },
+          "blockedReason" : {
+            "type" : "string"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "cashAccountIds" : {
+            "type" : "array",
+            "description" : "Kassir boʻlgan kassalar (special.till)",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "firstName" : {
+            "type" : "string"
           },
           "fullName" : {
             "type" : "string"
@@ -16374,7 +16525,19 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "lastLoginAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Oxirgi kirish; boʻsh — hali kirmagan («Yangi»)"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Familiya (eski yozuvlarda boʻsh)"
+          },
           "login" : {
+            "type" : "string"
+          },
+          "middleName" : {
             "type" : "string"
           },
           "mustChangePassword" : {
@@ -16394,9 +16557,17 @@
           },
           "status" : {
             "type" : "string"
+          },
+          "warehouseIds" : {
+            "type" : "array",
+            "description" : "Omborchi boʻlgan omborlar (special.whs)",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         },
-        "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "roleCode", "roleName", "status" ]
+        "required" : [ "allBranches", "cashAccountIds", "fullName", "id", "login", "mustChangePassword", "roleCode", "roleName", "status", "warehouseIds" ]
       },
       "EmployeeOption" : {
         "type" : "object",
@@ -17933,6 +18104,20 @@
           }
         },
         "required" : [ "places" ]
+      },
+      "LoginCheck" : {
+        "type" : "object",
+        "properties" : {
+          "available" : {
+            "type" : "boolean",
+            "description" : "Berilgan login boʻshmi; login berilmasa — null"
+          },
+          "suggested" : {
+            "type" : "string",
+            "description" : "Ism va familiyadan taklif (boʻsh joyi bilan raqam qoʻshiladi)"
+          }
+        },
+        "required" : [ "suggested" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -23376,6 +23561,22 @@
         },
         "required" : [ "field", "value" ]
       },
+      "Seats" : {
+        "type" : "object",
+        "properties" : {
+          "limit" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Litsenziya chegarasi; null — cheklanmagan"
+          },
+          "used" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Bloklanmagan xodimlar"
+          }
+        },
+        "required" : [ "used" ]
+      },
       "SetPinRequest" : {
         "type" : "object",
         "properties" : {
@@ -25126,6 +25327,64 @@
           }
         },
         "required" : [ "legalName", "name", "tin" ]
+      },
+      "UpdateEmployeeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cashAccountIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "firstName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "lastName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "login" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[A-Za-z0-9._-]{3,64}$"
+          },
+          "middleName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "position" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "roleCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "warehouseIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "firstName", "lastName", "login", "roleCode" ]
       },
       "UpdateProfileRequest" : {
         "type" : "object",

@@ -233,12 +233,12 @@ export function StaffManager({
     }
     setDlg(null);
     const fm = f;
-    const branchId = scope(fm.role) === "all" || !fm.branch ? null : Number(fm.branch);
+    const branchId = scope(fm.role) === "all" || !fm.branch ? undefined : Number(fm.branch);
     const common = {
       login: fm.login,
       lastName: fm.last.trim(),
       firstName: fm.first.trim(),
-      middleName: fm.mid.trim() || null,
+      middleName: fm.mid.trim() || undefined,
       phone: fm.phone,
       roleCode: fm.role,
       branchId,
@@ -348,14 +348,14 @@ export function StaffManager({
   ];
 
   const rowItems = (e: Employee): RowMenuItem[] => [
-    { key: "edit", label: t("mEdit"), icon: <Icon icon={Pencil} size={16} />, onSelect: () => openEdit(e) },
-    { key: "pw", label: t("mPw"), icon: <Icon icon={KeyRound} size={16} />, onSelect: () => setDlg({ kind: "pw", emp: e }) },
+    { key: "edit", label: t("mEdit"), icon: <Icon icon={Pencil} />, onSelect: () => openEdit(e) },
+    { key: "pw", label: t("mPw"), icon: <Icon icon={KeyRound} />, onSelect: () => setDlg({ kind: "pw", emp: e }) },
     ...(e.status === "BLOCKED"
       ? [
           {
             key: "unblock",
             label: t("mUnblock"),
-            icon: <Icon icon={LockOpen} size={16} />,
+            icon: <Icon icon={LockOpen} />,
             onSelect: () =>
               unblock.mutate(e.id, { onSuccess: () => toast({ tone: "success", title: t("unblocked", { n: displayName(e) }) }) }),
           },
@@ -366,7 +366,7 @@ export function StaffManager({
             {
               key: "block",
               label: t("mBlock"),
-              icon: <Icon icon={Ban} size={16} />,
+              icon: <Icon icon={Ban} />,
               onSelect: () => {
                 setReason("");
                 setReasonTried(false);
@@ -410,7 +410,7 @@ export function StaffManager({
               warn ? "bg-warning-bg text-warning" : "bg-background text-text-secondary",
             )}
           >
-            <Icon icon={warn ? TriangleAlert : UsersRound} size={14} />
+            <Icon icon={warn ? TriangleAlert : UsersRound} className="size-3.5" />
             {limit !== null ? t("cnt", { n: seats.used, m: limit }) : t("cntFree", { n: seats.used })}
           </span>
           {atLimit ? <span className="text-table text-warning">{t("limitT", { m: limit ?? 0 })}</span> : null}
@@ -476,7 +476,7 @@ export function StaffManager({
               />
               {fRole.length || fBranch.length || fStatus.length ? (
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   size="sm"
                   onClick={() => {
                     setFRole([]);
@@ -497,7 +497,7 @@ export function StaffManager({
               loading={list.isLoading}
               onRowClick={openEdit}
               rowActions={(e) => <RowMenu items={rowItems(e)} label={t("rowMenu")} />}
-              emptyState={<EmptyState icon={UsersRound} title={t("noRows")} />}
+              emptyState={<EmptyState icon={UsersRound} title={t("noRows")} description={t("searchEmp")} />}
             />
           </>
         )}
@@ -601,7 +601,7 @@ export function StaffManager({
                 <div className="flex flex-col gap-1.5">
                   <span className="text-caption font-medium">{t("cBranch")}</span>
                   <span className="inline-flex h-[26px] items-center gap-1.5 self-start rounded-control bg-primary-soft px-2.5 text-table font-medium text-primary-button">
-                    <Icon icon={Building2} size={14} />
+                    <Icon icon={Building2} className="size-3.5" />
                     {t("scAll")}
                   </span>
                 </div>
@@ -641,7 +641,7 @@ export function StaffManager({
                               on ? "border-primary-button bg-primary-button" : "border-text-muted bg-surface",
                             )}
                           >
-                            {on ? <Icon icon={Check} size={12} /> : null}
+                            {on ? <Icon icon={Check} className="size-3" /> : null}
                           </span>
                           {w.name}
                         </button>
@@ -677,7 +677,7 @@ export function StaffManager({
                 </div>
                 {f.login && !loginBusy && !err("login") && loginQ.data?.available ? (
                   <span className="mt-1.5 flex items-center gap-1.5 text-caption text-success">
-                    <Icon icon={CircleCheck} size={14} />
+                    <Icon icon={CircleCheck} className="size-3.5" />
                     {t("loginFree")}
                   </span>
                 ) : null}
@@ -692,14 +692,14 @@ export function StaffManager({
                     <Button variant="secondary" size="sm" icon={showPw ? EyeOff : Eye} onClick={() => setShowPw(!showPw)}>
                       {showPw ? t("hide") : t("show")}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setPanel({ ...panel, pw: generatePassword() })}>
+                    <Button variant="tertiary" size="sm" onClick={() => setPanel({ ...panel, pw: generatePassword() })}>
                       {t("regen")}
                     </Button>
                   </div>
                 </div>
               ) : null}
               <div className="flex gap-2.5 rounded-control border border-border-subtle bg-background px-3.5 py-3">
-                <Icon icon={Info} size={16} className="mt-0.5 flex-none text-text-secondary" />
+                <Icon icon={Info} className="mt-0.5 flex-none text-text-secondary" />
                 <span className="text-table text-pretty text-text-secondary">{t("firstNote")}</span>
               </div>
             </section>
