@@ -33,7 +33,6 @@ export function SetupWizard() {
   const t = useTranslations("setup");
   const me = useMe();
   const status = useSetupStatus();
-  const [step, setStep] = useState<number | null>(null);
 
   if (status.error instanceof ApiError && status.error.isForbidden) {
     return (
@@ -75,7 +74,15 @@ export function SetupWizard() {
     );
   }
 
-  const current = step ?? firstIncompleteStep(s);
+  return <WizardSteps status={s} />;
+}
+
+/**
+ * Boshlangʻich qadam faqat birinchi yuklanishda aniqlanadi (birinchi tugallanmagan qadam). Keyin qadam faqat
+ * foydalanuvchi tugmasi bilan oʻzgaradi — avtomatik saqlash holatni yangilaganda usta oʻzi keyingi qadamga sakramaydi.
+ */
+function WizardSteps({ status: s }: { status: SetupStatus }) {
+  const [current, setStep] = useState(() => firstIncompleteStep(s));
   const go = (i: number) => setStep(Math.max(0, Math.min(i, SETUP_STEPS.length - 1)));
   // Qadamga faqat oldingilari bajarilgan boʻlsa oʻtiladi
   const reachable = (i: number) => Array.from({ length: i }, (_, k) => k).every((k) => canLeaveStep(k, s));
