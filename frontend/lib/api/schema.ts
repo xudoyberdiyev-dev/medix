@@ -532,7 +532,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_11"];
+        put: operations["update_12"];
         post?: never;
         delete?: never;
         options?: never;
@@ -792,7 +792,7 @@ export interface paths {
         /** Kontragent kartasi */
         get: operations["get_7"];
         /** Kartani tahrirlash */
-        put: operations["update_10"];
+        put: operations["update_11"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1131,7 +1131,7 @@ export interface paths {
         };
         get?: never;
         /** Yozuvni tahrirlash */
-        put: operations["update_9"];
+        put: operations["update_10"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2100,7 +2100,7 @@ export interface paths {
          * Qoralamani tahrirlash
          * @description Qatorlar to'liq almashtiriladi.
          */
-        put: operations["update_8"];
+        put: operations["update_9"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2459,7 +2459,7 @@ export interface paths {
          */
         get: operations["get_5"];
         /** Qoralamani tahrirlash */
-        put: operations["update_7"];
+        put: operations["update_8"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2535,7 +2535,7 @@ export interface paths {
          * Buyurtma tarixi
          * @description Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.
          */
-        get: operations["history_3"];
+        get: operations["history_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2846,7 +2846,7 @@ export interface paths {
         /** MT kartochkasi (taqsimot bilan) */
         get: operations["get_4"];
         /** Qoralamani o'zgartirish */
-        put: operations["update_6"];
+        put: operations["update_7"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3109,7 +3109,7 @@ export interface paths {
         /** NO hujjati */
         get: operations["get_3"];
         /** Qoralamani tahrirlash */
-        put: operations["update_5"];
+        put: operations["update_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3217,6 +3217,60 @@ export interface paths {
         };
         /** Narx turlari */
         get: operations["list_26"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/price-types/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Narx turlari jadvali (filial bo'yicha statistika bilan, nofaollari ham) */
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/price-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Narx turini tahrirlash (nom, muqobil nom, faollik)
+         * @description Bazaviy turni yoki mijozlarga biriktirilgan turni nofaol qilib bo'lmaydi. Ro'yxat tarkibi (SPEC 6) o'zgarmaydi.
+         */
+        put: operations["update_5"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/price-types/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Narx turi o'zgarishlari tarixi */
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8550,6 +8604,37 @@ export interface components {
             id: number;
             name: string;
         };
+        PriceTypeHistoryRow: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            newValue?: string;
+            oldValue?: string;
+        };
+        PriceTypeOverview: {
+            active: boolean;
+            altName?: string;
+            base: boolean;
+            batch: boolean;
+            code: string;
+            /** Format: int64 */
+            customers: number;
+            /** Format: int64 */
+            id: number;
+            /** Format: date */
+            lastChange?: string;
+            name: string;
+            /** Format: int64 */
+            priced: number;
+            /** Format: int64 */
+            total: number;
+        };
+        PriceTypeUpdate: {
+            active: boolean;
+            altName?: string;
+            name: string;
+        };
         ProductDetail: {
             active: boolean;
             barcodes: string[];
@@ -11381,7 +11466,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -11823,7 +11908,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -12322,7 +12407,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -13683,7 +13768,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -14183,7 +14268,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -14283,7 +14368,7 @@ export interface operations {
             };
         };
     };
-    history_3: {
+    history_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -14706,7 +14791,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -15146,7 +15231,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -15310,6 +15395,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PriceType"][];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query: {
+                branchId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceTypeOverview"][];
+                };
+            };
+        };
+    };
+    update_5: {
+        parameters: {
+            query: {
+                branchId: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PriceTypeUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceTypeOverview"];
+                };
+            };
+        };
+    };
+    history_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceTypeHistoryRow"][];
                 };
             };
         };

@@ -167,8 +167,17 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Narxlar kuchga kirdi")).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.reload();
+  await page.goto("/prices?tab=prices");
   await expect(page.getByRole("cell", { name: "2.500,00" })).toBeVisible();
+  // Narx turlari: bazaviy «Narx» — narxi bor mahsulot soni, tahrirlash va tarix
+  await page.goto("/prices");
+  await expect(page.getByRole("tab", { name: "Narx turlari", selected: true })).toBeVisible();
+  await page.getByRole("cell", { name: "Promo", exact: true }).click();
+  await page.getByRole("button", { name: "Tahrirlash" }).click();
+  await page.getByRole("textbox", { name: "Muqobil nomi" }).fill("Промо");
+  await page.getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText("«Promo» saqlandi")).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Промо" })).toBeVisible();
 });
 
 test("CEO: Ctrl+K — mahsulot (kirillda), sahifa va NO hujjati", async ({ page }) => {

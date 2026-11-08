@@ -30,6 +30,7 @@ import {
   type PriceChangeSummary,
   type PriceRow,
 } from "./api";
+import { PriceTypesTab } from "./price-types-tab";
 import { PriceChangeDrawer } from "./price-change-drawer";
 import { parsePriceFilters, priceExportQuery, priceSortFromKey, priceSortKey, serializePriceFilters, type PriceFilters } from "./url-state";
 
@@ -54,7 +55,8 @@ export function PricesPage() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const tab = params.get("tab") === "documents" ? "documents" : "prices";
+  const rawTab = params.get("tab");
+  const tab = rawTab === "documents" || rawTab === "prices" ? rawTab : "types";
   const me = useMe();
   const branches = useBranchList();
   const selected = useBranchStore((s) => s.branchId);
@@ -96,14 +98,22 @@ export function PricesPage() {
         <Tabs
           aria-label={t("title")}
           items={[
-            { key: "prices", label: t("tabCurrent") },
+            { key: "types", label: t("tabTypes") },
             { key: "documents", label: t("tabDocuments") },
+            { key: "prices", label: t("tabCurrent") },
           ]}
           value={tab}
-          onChange={(k) => router.replace(k === "documents" ? `${pathname}?tab=documents` : pathname, { scroll: false })}
+          onChange={(k) => router.replace(k === "types" ? pathname : `${pathname}?tab=${k}`, { scroll: false })}
         />
       </div>
-      {tab === "prices" ? (
+      {tab === "types" ? (
+        <PriceTypesTab
+          branchId={branchId}
+          canSet={canSet}
+          canEdit={can(me.data, "lookups.ptypes")}
+          onSetPrices={() => setEditor({ id: null })}
+        />
+      ) : tab === "prices" ? (
         <PricesTab branchId={branchId} canSet={canSet} onSetPrices={(lines) => setEditor({ id: null, preset: lines })} />
       ) : (
         <DocumentsTab branchId={branchId} onOpen={(id) => setEditor({ id })} />
