@@ -358,6 +358,8 @@ test("Operator: maksimaldan koʻp — buyurtma Filial rahbari tasdigʻiga ketadi
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  // Saqlangach /orders/<id> ga oʻtadi — oldingi (yashirin) sahifadagi tugmani bosmaslik uchun
+  await expect(page).toHaveURL(/\/orders\/\d+/);
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma tasdiqqa yuborildi")).toBeVisible();
 });
@@ -627,6 +629,8 @@ test("Operator: limitdan 20% dan koʻp oshgan buyurtma — Direktor tasdigʻiga"
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  // Saqlangach /orders/<id> ga oʻtadi — oldingi (yashirin) sahifadagi tugmani bosmaslik uchun
+  await expect(page).toHaveURL(/\/orders\/\d+/);
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma tasdiqqa yuborildi")).toBeVisible();
   await expect(page.getByText("Direktor tasdigʻi kerak").first()).toBeVisible();
