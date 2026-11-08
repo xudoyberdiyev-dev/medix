@@ -25,6 +25,7 @@ import uz.medix.purchasing.receipt.ReceiptModels.PostRequest;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptCancelRequest;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptDetail;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptFilter;
+import uz.medix.purchasing.receipt.ReceiptModels.ReceiptHistoryEvent;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptPage;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptRequest;
 import uz.medix.purchasing.receipt.ReceiptModels.ReceiptSort;
@@ -137,6 +138,14 @@ class ReceiptController {
     @Operation(summary = "Kirim hujjati")
     ReceiptDetail get(@PathVariable long id, Authentication auth) {
         return detail(id, auth);
+    }
+
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAuthority('receipt.view')")
+    @Operation(summary = "Kirim hujjati tarixi", description = "Audit jurnalidan: yaratildi, tahrirlandi, qabul qilindi, o'tkazildi, bonus, bekor qilindi.")
+    List<ReceiptHistoryEvent> history(@PathVariable long id, Authentication auth) {
+        detail(id, auth);
+        return receipts.history(id);
     }
 
     @PostMapping

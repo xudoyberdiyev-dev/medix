@@ -65,6 +65,8 @@ class ReceiptIT {
 
     @Autowired
     TransactionTemplate tx;
+    @Autowired
+    uz.medix.finance.PartyLedger parties;
 
     @Autowired
     uz.medix.purchasing.receipt.ReceiptReminders reminders;
@@ -269,6 +271,25 @@ class ReceiptIT {
         assertThat(stock(p.quarantine(), a)).isEqualTo(1);
         assertThat(stock(p.safe(), c)).isEqualTo(4);
         assertThat(debt(p.branchId(), sup)).isEqualTo("950005.00");
+
+        // Kirim sahifasi: hujjat bo'yicha ochiq qoldiq, «To'langan» belgisi va tarix (audit)
+        mvc.perform(get("/api/receipts/" + doc).cookie(manager)).andExpect(jsonPath("$.openAmount").value("950005.00"));
+        mvc.perform(get("/api/receipts/" + doc).cookie(keeper)).andExpect(jsonPath("$.openAmount").value(org.hamcrest.Matchers.nullValue()));
+        String krNo = jdbc.sql("SELECT number FROM receipt WHERE id = :d").param("d", doc).query(String.class).single();
+        mvc.perform(get("/api/receipts").param("q", krNo).cookie(manager))
+                .andExpect(jsonPath("$.items[?(@.id == " + doc + ")].paid").value(org.hamcrest.Matchers.contains(false)));
+        tx.executeWithoutResult(st -> parties.record(new uz.medix.finance.PartyLedger.DocRef("TY", 1, "TY-TST-000001"), p.branchId(), sup,
+                uz.medix.finance.PartyLedger.Side.SUPPLIER, new uz.medix.shared.money.Money(new java.math.BigDecimal("-950005.00")), null, null,
+                new uz.medix.finance.PartyLedger.DocRef("KR", doc, "KR")));
+        mvc.perform(get("/api/receipts/" + doc).cookie(manager)).andExpect(jsonPath("$.openAmount").value("0.00"));
+        mvc.perform(get("/api/receipts").param("q", krNo).cookie(manager))
+                .andExpect(jsonPath("$.items[?(@.id == " + doc + ")].paid").value(org.hamcrest.Matchers.contains(true)));
+        mvc.perform(get("/api/receipts/" + doc + "/history").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("receipt.create"))
+                .andExpect(jsonPath("$[-1].action").value("receipt.post"))
+                .andExpect(jsonPath("$[?(@.action == 'receipt.accept')]", hasSize(1)));
+        mvc.perform(get("/api/receipts/" + doc + "/history").cookie(loginAs("PICKER", p.branchId()))).andExpect(status().isForbidden());
 
         // «Mahsulot qo'shish» katalogi: shu YB mahsulotlari, ombordagi qoldiq, oxirgi narx (Ombor mudiriga narxsiz)
         mvc.perform(get("/api/receipts/catalog").param("warehouseId", "" + p.warehouseId()).param("supplierId", "" + sup)

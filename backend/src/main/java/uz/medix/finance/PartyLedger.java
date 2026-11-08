@@ -93,6 +93,18 @@ public class PartyLedger {
                 .single());
     }
 
+    /** Hujjat bo'yicha ochiq qoldiq: o'z yozuvlari + unga qo'llangan to'lovlar (musbat — hali to'lanmagan qism). */
+    @Transactional(readOnly = true)
+    public Money docOpen(String docType, long docId) {
+        return new Money(jdbc.sql("""
+                SELECT coalesce(sum(amount), 0) FROM party_ledger
+                WHERE (doc_type = :t AND doc_id = :d AND applies_doc_type IS NULL) OR (applies_doc_type = :t AND applies_doc_id = :d)""")
+                .param("t", docType)
+                .param("d", docId)
+                .query(java.math.BigDecimal.class)
+                .single());
+    }
+
     /** Kredit holati: qarz, muddati o'tgan qismi va eng eski muddati o'tgan qarz kunlari. */
     public record CreditState(Money debt, Money overdue, int overdueDays) {}
 

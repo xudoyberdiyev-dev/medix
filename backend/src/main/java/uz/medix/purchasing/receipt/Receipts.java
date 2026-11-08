@@ -166,6 +166,9 @@ class Receipts {
                        r.status, coalesce(t.lines, 0) AS lines, coalesce(t.qty, 0) AS qty, coalesce(t.bonus_qty, 0) AS bonus_qty, t.amount,
                        r.due_date, r.prepaid, r.debt_amount, e.full_name AS created_by, r.created_at, r.payment_type, ow.full_name AS owner,
                        r.from_bonus, r.discount_date, r.cancel_reason,
+                       (r.status = 'POSTED' AND coalesce(r.debt_amount, 0) > 0 AND (SELECT coalesce(sum(pl.amount), 0) FROM party_ledger pl
+                            WHERE (pl.doc_type = 'KR' AND pl.doc_id = r.id AND pl.applies_doc_type IS NULL)
+                               OR (pl.applies_doc_type = 'KR' AND pl.applies_doc_id = r.id)) <= 0) AS paid,
                        EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id) AS bonus_confirmed,""";
         List<ReceiptSummary> items = jdbc.sql(cols + BONUS_SQL + "AS bonus_amount" + from
                         + " JOIN warehouse w ON w.id = r.warehouse_id JOIN employee e ON e.id = r.created_by" + LINES_SQL + listWhere + order
@@ -184,7 +187,8 @@ class Receipts {
                             rs.getBoolean("prepaid"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
                             PaymentType.valueOf(rs.getString("payment_type")), rs.getString("owner"), rs.getBoolean("from_bonus"),
                             rs.getLong("bonus_qty"), prices && bonus != null ? new Money(bonus).toString() : null,
-                            localDate(rs.getDate("discount_date")), rs.getBoolean("bonus_confirmed"), rs.getString("cancel_reason"));
+                            localDate(rs.getDate("discount_date")), rs.getBoolean("bonus_confirmed"), rs.getString("cancel_reason"),
+                            rs.getBoolean("paid"));
                 })
                 .list();
         boolean manyBranches = actor.allBranches() && f.branchId() == null;
@@ -218,6 +222,20 @@ class Receipts {
         ReceiptKpi kpi = new ReceiptKpi(k.drafts(), k.oldDrafts(), k.accepted(), prices ? new Money(k.expectedBonus()).toString() : null,
                 k.expectedBonusDocs(), k.bonusGoodsMonth());
         return new ReceiptPage(items, total, page, size, statuses, suppliers, warehouses, kpi);
+    }
+
+    /** Hujjat tarixi — audit jurnalidan (eng eskisi birinchi). Kirish huquqi — {@link #find} bilan tekshiriladi. */
+    @Transactional(readOnly = true)
+    List<ReceiptModels.ReceiptHistoryEvent> history(long id) {
+        return jdbc.sql("""
+                SELECT a.occurred_at, e.full_name AS employee, a.action, a.reason
+                FROM audit_log a LEFT JOIN employee e ON e.id = a.employee_id
+                WHERE a.entity_type = 'receipt' AND a.entity_id = :id
+                ORDER BY a.occurred_at, a.id""")
+                .param("id", String.valueOf(id))
+                .query((rs, n) -> new ReceiptModels.ReceiptHistoryEvent(rs.getTimestamp("occurred_at").toInstant(), rs.getString("employee"),
+                        rs.getString("action"), rs.getString("reason")))
+                .list();
     }
 
     @Transactional(readOnly = true)
@@ -290,7 +308,9 @@ class Receipts {
                 h.discountValue() == null ? null : new Money(h.discountValue()).toString(), localDate(h.discountDate()), h.note(),
                 ReceiptStatus.valueOf(h.status()), h.resolution() == null ? null : Resolution.valueOf(h.resolution()), prices, anyPriced,
                 prices && priced && !rows.isEmpty() ? amount.toString() : null, prices && priced && accepted ? actual.toString() : null,
-                prices && h.debtAmount() != null ? new Money(h.debtAmount()).toString() : null, balance, bonusBalance,
+                prices && h.debtAmount() != null ? new Money(h.debtAmount()).toString() : null,
+                prices && h.debtAmount() != null && "POSTED".equals(h.status()) ? parties.docOpen(DOC_TYPE, id).toString() : null,
+                balance, bonusBalance,
                 bns.map(Bns::number).orElse(null), prices ? bns.map(b -> new Money(b.amount()).toString()).orElse(null) : null,
                 bns.map(b -> b.createdAt().toInstant()).orElse(null), qty, bonus, diff, h.createdBy(),
                 h.createdAt().toInstant(), h.acceptedBy(), instant(h.acceptedAt()), h.postedBy(), instant(h.postedAt()), h.cancelledBy(),

@@ -144,7 +144,11 @@ final class ReceiptModels {
             @Schema(nullable = true, description = "Chegirma (bonus) summasi — faqat narx ko'rish huquqi bilan") String bonusAmount,
             @Schema(nullable = true) LocalDate bonusDate,
             @Schema(description = "BNS hujjati bor — bonus balansga tushgan") boolean bonusConfirmed,
-            @Schema(nullable = true) String cancelReason) {}
+            @Schema(nullable = true) String cancelReason,
+            @Schema(description = "O'tkazilgan va qarzi to'liq to'langan (to'lov kuni kulrang)") boolean paid) {}
+
+    /** Hujjat tarixi (audit): kim, qachon, nima qildi. */
+    record ReceiptHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
 
     /** Yorliq soni (holat = null — «Hammasi»); holat filtrisiz, boshqa filtrlar bilan. */
     record ReceiptStatusCount(@Schema(nullable = true) ReceiptStatus status, long count) {}
@@ -203,6 +207,7 @@ final class ReceiptModels {
             @Schema(nullable = true, description = "Hujjat bo'yicha summa (narx × soni)") String amount,
             @Schema(nullable = true, description = "Haqiqiy soni bo'yicha summa (qabuldan keyin)") String actualAmount,
             @Schema(nullable = true, description = "Yozilgan qarz (o'tkazilgandan keyin)") String debtAmount,
+            @Schema(nullable = true, description = "Hujjat bo'yicha to'lanmagan qoldiq (yozilgan qarz − to'lovlar)") String openAmount,
             @Schema(nullable = true, description = "YB saldo shu filialda: musbat — qarz, manfiy — avans") String supplierBalance,
             @Schema(nullable = true, description = "YB bonus balansi shu filialda") String bonusBalance,
             @Schema(nullable = true, description = "Tasdiqlangan bonus (BNS) raqami") String bonusNumber,
