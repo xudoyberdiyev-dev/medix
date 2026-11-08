@@ -58,17 +58,30 @@ public class AuthService {
         var actor = new Actor(a.id(), a.branchId(), MedixPrincipal.allBranches(a.roleCode(), a.allBranches()));
         if (!encoder.matches(password, a.passwordHash())) {
             accounts.recordFailedLogin(a.id());
-            audit.record(AuditEntry.of("auth.loginFailed", "employee", a.id()), actor);
+            audit.record(AuditEntry.of("auth.loginFailed", "employee", a.id()).change(null, device()), actor);
             throw throttle.fail(login, now);
         }
         if (a.blocked()) {
-            audit.record(AuditEntry.of("auth.loginBlocked", "employee", a.id()), actor);
+            audit.record(AuditEntry.of("auth.loginBlocked", "employee", a.id()).change(null, device()), actor);
             throw MedixException.forbidden("auth.blocked");
         }
         throttle.reset(login);
         accounts.recordSuccessfulLogin(a.id(), now);
-        audit.record(AuditEntry.of("auth.login", "employee", a.id()), actor);
+        audit.record(AuditEntry.of("auth.login", "employee", a.id()).change(null, device()), actor);
         return authenticationFor(a);
+    }
+
+    /** Kirish qurilmasi (User-Agent, qisqartirilgan) — xodim kartasidagi «Kirishlar» uchun. */
+    private static java.util.Map<String, String> device() {
+        String ua = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()
+                        instanceof org.springframework.web.context.request.ServletRequestAttributes attrs
+                ? attrs.getRequest().getHeader("User-Agent")
+                : null;
+        if (ua == null || ua.isBlank()) {
+            return null;
+        }
+        String v = ua.strip();
+        return java.util.Map.of("device", v.length() > 160 ? v.substring(0, 160) : v);
     }
 
     /** Sessiyani yangilash uchun (masalan, rol o'zgargandan keyin) — bazadan qayta o'qiydi. */

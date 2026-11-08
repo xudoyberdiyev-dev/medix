@@ -118,6 +118,9 @@ public class Employees {
         if (e.id() == actor.employeeId()) {
             throw MedixException.badRequest("employee.cannotBlockSelf");
         }
+        if ("DIRECTOR".equals(e.roleCode())) {
+            checkNotLastDirector(id);
+        }
         jdbc.sql("UPDATE employee SET status = 'BLOCKED', blocked_reason = :r, updated_at = now(), version = version + 1 WHERE id = :id")
                 .param("r", reason.strip())
                 .param("id", id)
@@ -133,6 +136,12 @@ public class Employees {
     @Transactional
     public Employee unblock(Actor actor, long id) {
         Employee e = accessible(actor, id);
+        if ("BLOCKED".equals(e.status()) && limit > 0) {
+            jdbc.sql("SELECT pg_advisory_xact_lock(hashtext('employee.limit'))").query(Object.class).single();
+            if (seats().used() >= limit) {
+                throw MedixException.conflict("employee.limit", limit);
+            }
+        }
         jdbc.sql("UPDATE employee SET status = 'ACTIVE', blocked_reason = NULL, failed_login_count = 0, updated_at = now(), version = version + 1 WHERE id = :id")
                 .param("id", id)
                 .update();
@@ -174,6 +183,97 @@ public class Employees {
         jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
         audit.record(AuditEntry.of("employee.allBranches", "employee", id)
                 .change(Map.of("allBranches", e.allBranches()), Map.of("allBranches", enabled)));
+        return get(id);
+    }
+
+    /** Oxirgi faol Direktorni bloklash yoki rolini almashtirish mumkin emas (tizim egasiz qolmasin). */
+    private void checkNotLastDirector(long id) {
+        long others = jdbc.sql("""
+                SELECT count(*) FROM employee e JOIN role r ON r.id = e.role_id
+                WHERE r.code = 'DIRECTOR' AND e.status <> 'BLOCKED' AND e.id <> :id""")
+                .param("id", id)
+                .query(Long.class)
+                .single();
+        if (others == 0) {
+            throw MedixException.badRequest("employee.lastDirector");
+        }
+    }
+
+    public record LoginEvent(
+            OffsetDateTime at,
+            @Schema(description = "OK — kirdi, FAILED — notoʻgʻri parol, BLOCKED — bloklangan") String result,
+            @Schema(nullable = true) String device,
+            @Schema(nullable = true) String ip) {}
+
+    public record ActionEvent(
+            OffsetDateTime at,
+            String action,
+            String entityType,
+            @Schema(nullable = true) String entityId,
+            @Schema(nullable = true) String reason) {}
+
+    public record Journal(
+            List<LoginEvent> logins,
+            List<ActionEvent> actions,
+            @Schema(description = "Ochiq sessiyalar soni") int sessions,
+            boolean pinSet,
+            @Schema(nullable = true) OffsetDateTime pinSetAt) {}
+
+    /** Xodim kartasi (prototip AdminStaff): oxirgi 20 kirish, oxirgi 50 harakat, ochiq sessiyalar, PIN holati. */
+    @Transactional(readOnly = true)
+    public Journal journal(Actor actor, long id) {
+        Employee e = accessible(actor, id);
+        List<LoginEvent> logins = jdbc.sql("""
+                SELECT occurred_at, action, new_value ->> 'device' AS device, host(ip_address) AS ip FROM audit_log
+                WHERE entity_type = 'employee' AND entity_id = :id AND action IN ('auth.login', 'auth.loginFailed', 'auth.loginBlocked')
+                ORDER BY occurred_at DESC, id DESC LIMIT 20""")
+                .param("id", String.valueOf(id))
+                .query((rs, n) -> new LoginEvent(rs.getObject("occurred_at", OffsetDateTime.class),
+                        switch (rs.getString("action")) {
+                            case "auth.login" -> "OK";
+                            case "auth.loginBlocked" -> "BLOCKED";
+                            default -> "FAILED";
+                        },
+                        rs.getString("device"), rs.getString("ip")))
+                .list();
+        List<ActionEvent> actions = jdbc.sql("""
+                SELECT occurred_at, action, entity_type, entity_id, reason FROM audit_log
+                WHERE employee_id = :id AND action NOT IN ('auth.login', 'auth.loginFailed', 'auth.loginBlocked')
+                ORDER BY occurred_at DESC, id DESC LIMIT 50""")
+                .param("id", id)
+                .query((rs, n) -> new ActionEvent(rs.getObject("occurred_at", OffsetDateTime.class), rs.getString("action"),
+                        rs.getString("entity_type"), rs.getString("entity_id"), rs.getString("reason")))
+                .list();
+        int sessions = jdbc.sql("SELECT count(*) FROM spring_session WHERE principal_name = :login")
+                .param("login", e.login())
+                .query(Integer.class)
+                .single();
+        return jdbc.sql("SELECT pin_hash IS NOT NULL AS pin_set, pin_set_at FROM employee WHERE id = :id")
+                .param("id", id)
+                .query((rs, n) -> new Journal(logins, actions, sessions, rs.getBoolean("pin_set"),
+                        rs.getObject("pin_set_at", OffsetDateTime.class)))
+                .single();
+    }
+
+    /** Xodimning barcha ochiq sessiyalarini tugatadi; tugatilganlar sonini qaytaradi. */
+    @Transactional
+    public int endSessions(Actor actor, long id) {
+        Employee e = accessible(actor, id);
+        int n = jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
+        audit.record(AuditEntry.of("employee.endSessions", "employee", id).change(null, Map.of("sessions", n)));
+        return n;
+    }
+
+    /** PIN-kodni bekor qiladi — xodim keyingi kirishda yangisini oʻrnatadi. */
+    @Transactional
+    public Employee resetPin(Actor actor, long id) {
+        accessible(actor, id);
+        jdbc.sql("""
+                UPDATE employee SET pin_hash = NULL, pin_set_at = NULL, pin_failed_count = 0, pin_locked_until = NULL,
+                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("id", id)
+                .update();
+        audit.record(AuditEntry.of("employee.resetPin", "employee", id));
         return get(id);
     }
 
@@ -251,6 +351,9 @@ public class Employees {
         Long roleId = roleId(c.roleCode());
         if (id == actor.employeeId() && !before.roleCode().equals(c.roleCode())) {
             throw MedixException.badRequest("employee.cannotChangeOwnRole");
+        }
+        if ("DIRECTOR".equals(before.roleCode()) && !"DIRECTOR".equals(c.roleCode())) {
+            checkNotLastDirector(id);
         }
         checkBranch(c.branchId());
         String login = c.login().strip().toLowerCase(Locale.ROOT);

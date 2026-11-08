@@ -149,4 +149,26 @@ class EmployeeController {
     Employees.Employee allBranches(@PathVariable long id, @Valid @RequestBody AllBranchesRequest r) {
         return employees.setAllBranches(actor(), id, r.enabled());
     }
+
+    @GetMapping("/{id}/journal")
+    @Operation(summary = "Xodim kartasi: kirishlar, harakatlar, sessiyalar, PIN holati")
+    Employees.Journal journal(@PathVariable long id) {
+        return employees.journal(actor(), id);
+    }
+
+    record EndSessionsResult(int ended) {}
+
+    @PostMapping("/{id}/end-sessions")
+    @PreAuthorize("hasAuthority('staff.edit')")
+    @Operation(summary = "Ochiq sessiyalarni tugatish")
+    EndSessionsResult endSessions(@PathVariable long id) {
+        return new EndSessionsResult(employees.endSessions(actor(), id));
+    }
+
+    @PostMapping("/{id}/reset-pin")
+    @PreAuthorize("hasAuthority('staff.edit')")
+    @Operation(summary = "PIN-kodni bekor qilish (xodim yangisini oʻrnatadi)")
+    Employees.Employee resetPin(@PathVariable long id) {
+        return employees.resetPin(actor(), id);
+    }
 }
