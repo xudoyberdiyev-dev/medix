@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  ArrowUpRight,
-  BadgePercent,
-  Check,
-  CircleCheck,
-  ClipboardCheck,
-  PackagePlus,
-  Trash2,
-  Undo2,
-  Wallet,
-  X,
-} from "lucide-react";
+import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, PackagePlus, Trash2, Undo2, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
