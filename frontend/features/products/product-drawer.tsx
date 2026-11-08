@@ -18,6 +18,7 @@ import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { describeError } from "@/features/setup/form-error";
 import { formatDateTime } from "@/lib/format";
 import {
+  DOSAGE_FORMS,
   EMPTY_FORM,
   formFromProduct,
   toRequest,
@@ -27,6 +28,7 @@ import {
   useEmployeeOptions,
   useProduct,
   useSaveProduct,
+  type DosageForm,
   type ProductDetail,
   type ProductForm,
   type ProductFormError,
@@ -41,27 +43,32 @@ function options(list: Entry[] | undefined, selected: string | null) {
 
 export function ProductDrawer({
   productId,
+  copyFrom = null,
   canEdit,
   onClose,
   onCreated,
 }: {
   productId: number | null;
+  /** «Nusxa olish»: yangi mahsulot shu mahsulot maydonlari bilan (shtrix-kodsiz, nomga «(nusxa)»). */
+  copyFrom?: number | null;
   canEdit: boolean;
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
   const t = useTranslations("products.drawer");
   const tc = useTranslations("common");
-  const product = useProduct(productId);
+  const tl = useTranslations("products.list");
+  const loadId = productId ?? copyFrom;
+  const product = useProduct(loadId);
   const [tab, setTab] = useState("main");
-  if (productId !== null && product.error) {
+  if (loadId !== null && product.error) {
     return (
       <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("kind")}>
         <ErrorState onRetry={() => product.refetch()} />
       </Drawer>
     );
   }
-  if (productId !== null && !product.data) {
+  if (loadId !== null && !product.data) {
     return (
       <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={tc("loading")}>
         <div className="flex flex-col gap-4">
@@ -72,11 +79,13 @@ export function ProductDrawer({
       </Drawer>
     );
   }
-  const p = product.data ?? null;
+  const p = productId !== null ? (product.data ?? null) : null;
+  const copy = productId === null && copyFrom !== null && product.data ? product.data : null;
   return (
     <ProductEditor
-      key={p ? `${p.id}-${p.code}-${p.active}` : "new"}
+      key={p ? `${p.id}-${p.code}-${p.active}` : copy ? `copy-${copy.id}` : "new"}
       product={p}
+      initial={copy ? { ...formFromProduct(copy), name: copy.name + tl("copySuffix"), barcodes: "" } : undefined}
       canEdit={canEdit}
       tab={tab}
       onTab={setTab}
@@ -88,6 +97,7 @@ export function ProductDrawer({
 
 function ProductEditor({
   product,
+  initial,
   canEdit,
   tab,
   onTab,
@@ -95,6 +105,7 @@ function ProductEditor({
   onCreated,
 }: {
   product: ProductDetail | null;
+  initial?: ProductForm;
   canEdit: boolean;
   tab: string;
   onTab: (t: string) => void;
@@ -112,7 +123,7 @@ function ProductEditor({
   const countries = useDictionary("COUNTRY");
   const units = useDictionary("UNIT");
   const employees = useEmployeeOptions();
-  const [form, setForm] = useState<ProductForm>(product ? formFromProduct(product) : EMPTY_FORM);
+  const [form, setForm] = useState<ProductForm>(product ? formFromProduct(product) : (initial ?? EMPTY_FORM));
   const [localErrors, setLocalErrors] = useState<Record<string, ProductFormError>>({});
   const [codeOpen, setCodeOpen] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
@@ -278,6 +289,28 @@ function ProductEditor({
               options={options(categories.data, form.categoryId)}
             />
             <Select
+              label={tf("dosageForm")}
+              disabled={readOnly}
+              value={form.dosageForm}
+              onChange={(v) => set("dosageForm")((DOSAGE_FORMS as string[]).includes(v ?? "") ? (v as DosageForm) : null)}
+              options={DOSAGE_FORMS.map((f) => ({ value: f, label: tp(`dosageForm.${f}`) }))}
+            />
+            <TextField label={tf("dose")} value={form.dose} onChange={set("dose")} error={fieldError("dose")} maxLength={50} />
+            <TextField
+              label={tf("packQty")}
+              value={form.packQty}
+              onChange={set("packQty")}
+              error={fieldError("packQty")}
+              inputMode="numeric"
+            />
+            <TextField
+              label={tf("perPack")}
+              value={form.perPack}
+              onChange={set("perPack")}
+              error={fieldError("perPack")}
+              inputMode="numeric"
+            />
+            <Select
               label={tf("unit")}
               required
               disabled={readOnly}
@@ -337,6 +370,15 @@ function ProductEditor({
               error={fieldError("maxQty")}
               inputMode="numeric"
               hint={tf("maxQtyHint")}
+            />
+            <TextField
+              label={tf("note")}
+              value={form.note}
+              onChange={set("note")}
+              error={fieldError("note")}
+              maxLength={1000}
+              placeholder={tf("notePlaceholder")}
+              className="col-span-2"
             />
             <div className="col-span-2 flex flex-wrap gap-6 pt-2">
               <Checkbox

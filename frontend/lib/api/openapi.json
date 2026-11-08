@@ -7442,7 +7442,7 @@
     },
     "/api/products" : {
       "get" : {
-        "description" : "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.",
+        "description" : "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, IKPU, Farm ID, ishlab chiqaruvchi. Yorliqlar soni va filtr variantlari (soni bilan) bilan.",
         "operationId" : "list_8",
         "parameters" : [ {
           "in" : "query",
@@ -7469,12 +7469,65 @@
           }
         }, {
           "in" : "query",
+          "name" : "manufacturerIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "categoryIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "countryIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "supplyEmployeeIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
           "name" : "status",
           "required" : false,
           "schema" : {
             "type" : "string",
             "default" : "ACTIVE",
             "enum" : [ "ACTIVE", "INACTIVE", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "view",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ALL",
+            "enum" : [ "ALL", "ACTIVE", "CONTROLLED", "MARKED", "PRESCRIPTION", "INACTIVE" ]
           }
         }, {
           "in" : "query",
@@ -7491,13 +7544,30 @@
             "type" : "boolean"
           }
         }, {
+          "description" : "Qoldiq va narx filiali",
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "facets",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
           "in" : "query",
           "name" : "sort",
           "required" : false,
           "schema" : {
             "type" : "string",
             "default" : "NAME",
-            "enum" : [ "CODE", "NAME", "MANUFACTURER" ]
+            "enum" : [ "CODE", "NAME", "CONTRACT_NAME", "MANUFACTURER", "CATEGORY", "COUNTRY", "VAT", "MIN_QTY", "MAX_QTY", "STOCK", "PRICE" ]
           }
         }, {
           "in" : "query",
@@ -7573,7 +7643,7 @@
     },
     "/api/products/export" : {
       "get" : {
-        "description" : "Jadvaldagi filtrlar bilan; ko'pi bilan 50 000 qator.",
+        "description" : "Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.",
         "operationId" : "export_1",
         "parameters" : [ {
           "in" : "query",
@@ -7581,6 +7651,17 @@
           "required" : false,
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "ids",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         }, {
           "in" : "query",
@@ -7600,12 +7681,65 @@
           }
         }, {
           "in" : "query",
+          "name" : "manufacturerIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "categoryIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "countryIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "supplyEmployeeIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
           "name" : "status",
           "required" : false,
           "schema" : {
             "type" : "string",
             "default" : "ACTIVE",
             "enum" : [ "ACTIVE", "INACTIVE", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "view",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ALL",
+            "enum" : [ "ALL", "ACTIVE", "CONTROLLED", "MARKED", "PRESCRIPTION", "INACTIVE" ]
           }
         }, {
           "in" : "query",
@@ -7623,12 +7757,20 @@
           }
         }, {
           "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
           "name" : "sort",
           "required" : false,
           "schema" : {
             "type" : "string",
             "default" : "NAME",
-            "enum" : [ "CODE", "NAME", "MANUFACTURER" ]
+            "enum" : [ "CODE", "NAME", "CONTRACT_NAME", "MANUFACTURER", "CATEGORY", "COUNTRY", "VAT", "MIN_QTY", "MAX_QTY", "STOCK", "PRICE" ]
           }
         }, {
           "in" : "query",
@@ -15729,6 +15871,44 @@
         },
         "required" : [ "count", "id" ]
       },
+      "Facets" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "categories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "countries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "inactive" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "manufacturers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "supplyEmployees" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          }
+        },
+        "required" : [ "active", "categories", "countries", "inactive", "manufacturers", "supplyEmployees" ]
+      },
       "FilterOption" : {
         "type" : "object",
         "properties" : {
@@ -19724,6 +19904,13 @@
           "country" : {
             "$ref" : "#/components/schemas/Ref"
           },
+          "dosageForm" : {
+            "type" : "string",
+            "enum" : [ "TABLET", "CAPSULE", "AMPOULE", "VIAL", "SYRUP", "OINTMENT", "PEN", "POWDER", "GEL" ]
+          },
+          "dose" : {
+            "type" : "string"
+          },
           "farmId" : {
             "type" : "string"
           },
@@ -19751,6 +19938,17 @@
           "name" : {
             "type" : "string"
           },
+          "note" : {
+            "type" : "string"
+          },
+          "packQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "perPack" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "prescription" : {
             "type" : "boolean"
           },
@@ -19769,6 +19967,9 @@
       "ProductPage" : {
         "type" : "object",
         "properties" : {
+          "facets" : {
+            "$ref" : "#/components/schemas/Facets"
+          },
           "items" : {
             "type" : "array",
             "items" : {
@@ -19786,6 +19987,9 @@
           "total" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "views" : {
+            "$ref" : "#/components/schemas/ViewCounts"
           }
         },
         "required" : [ "items", "page", "size", "total" ]
@@ -19821,6 +20025,15 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "dosageForm" : {
+            "type" : "string",
+            "enum" : [ "TABLET", "CAPSULE", "AMPOULE", "VIAL", "SYRUP", "OINTMENT", "PEN", "POWDER", "GEL" ]
+          },
+          "dose" : {
+            "type" : "string",
+            "maxLength" : 50,
+            "minLength" : 0
+          },
           "farmId" : {
             "type" : "string",
             "maxLength" : 50,
@@ -19854,6 +20067,23 @@
             "maxLength" : 300,
             "minLength" : 0
           },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 1000,
+            "minLength" : 0
+          },
+          "packQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 100000,
+            "minimum" : 1
+          },
+          "perPack" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 100000,
+            "minimum" : 1
+          },
           "prescription" : {
             "type" : "boolean"
           },
@@ -19879,10 +20109,20 @@
           "active" : {
             "type" : "boolean"
           },
+          "barcode" : {
+            "type" : "string",
+            "description" : "Birinchi shtrix-kod"
+          },
           "category" : {
             "type" : "string"
           },
+          "classifierName" : {
+            "type" : "string"
+          },
           "code" : {
+            "type" : "string"
+          },
+          "contractName" : {
             "type" : "string"
           },
           "controlled" : {
@@ -19891,9 +20131,22 @@
           "country" : {
             "type" : "string"
           },
+          "dosageForm" : {
+            "type" : "string",
+            "enum" : [ "TABLET", "CAPSULE", "AMPOULE", "VIAL", "SYRUP", "OINTMENT", "PEN", "POWDER", "GEL" ]
+          },
+          "dose" : {
+            "type" : "string"
+          },
+          "farmId" : {
+            "type" : "string"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "ikpu" : {
+            "type" : "string"
           },
           "manufacturer" : {
             "type" : "string"
@@ -19915,8 +20168,26 @@
           "name" : {
             "type" : "string"
           },
+          "note" : {
+            "type" : "string"
+          },
+          "packQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "prescription" : {
             "type" : "boolean"
+          },
+          "price" : {
+            "type" : "string",
+            "description" : "Bazaviy narx (QQS bilan); berilmagan bo'lsa null"
+          },
+          "stock" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "supplyEmployee" : {
+            "type" : "string"
           },
           "unit" : {
             "type" : "string"
@@ -19925,7 +20196,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "active", "code", "controlled", "id", "marked", "name", "prescription", "unit", "vatRate" ]
+        "required" : [ "active", "code", "controlled", "id", "marked", "name", "prescription", "stock", "unit", "vatRate" ]
       },
       "ProductSalesRow" : {
         "type" : "object",
@@ -23512,6 +23783,36 @@
           }
         },
         "required" : [ "branchId", "model", "plateNumber" ]
+      },
+      "ViewCounts" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "all" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "controlled" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "inactive" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "marked" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "prescription" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "active", "all", "controlled", "inactive", "marked", "prescription" ]
       },
       "Warehouse" : {
         "type" : "object",

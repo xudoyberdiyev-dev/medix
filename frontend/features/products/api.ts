@@ -16,10 +16,10 @@ export const PRODUCT_CREATE = "products.create";
 
 const KEY = ["products"] as const;
 
-export function useProducts(filters: ProductFilters) {
+export function useProducts(filters: ProductFilters, branchId: number | null) {
   return useQuery({
-    queryKey: [...KEY, "list", filters],
-    queryFn: () => unwrap(api.GET("/api/products", { params: { query: toQuery(filters) } })),
+    queryKey: [...KEY, "list", filters, branchId],
+    queryFn: () => unwrap(api.GET("/api/products", { params: { query: toQuery(filters, branchId) } })),
     placeholderData: keepPreviousData,
   });
 }
@@ -65,6 +65,19 @@ export const useDeactivateProduct = () =>
     unwrap(api.POST("/api/products/{id}/deactivate", { params: { path: { id } }, body: { reason } })),
   );
 
+/** Bir nechta mahsulotni nofaol qilish (tanlanganlar) — har biri alohida, sabab bilan. */
+export function useBulkDeactivate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, reason }: { ids: number[]; reason: string }) => {
+      await ensureCsrf();
+      for (const id of ids) await unwrap(api.POST("/api/products/{id}/deactivate", { params: { path: { id } }, body: { reason } }));
+      return ids.length;
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: [...KEY] }),
+  });
+}
+
 export const useActivateProduct = () =>
   useProductMutation((id: number) => unwrap(api.POST("/api/products/{id}/activate", { params: { path: { id } } })));
 
@@ -87,7 +100,15 @@ export interface ProductForm {
   vatRate: string;
   minQty: string;
   maxQty: string;
+  dosageForm: DosageForm | null;
+  dose: string;
+  packQty: string;
+  perPack: string;
+  note: string;
 }
+
+export type DosageForm = NonNullable<ProductRequest["dosageForm"]>;
+export const DOSAGE_FORMS: DosageForm[] = ["TABLET", "CAPSULE", "AMPOULE", "VIAL", "SYRUP", "OINTMENT", "PEN", "POWDER", "GEL"];
 
 export const EMPTY_FORM: ProductForm = {
   name: "",
@@ -107,6 +128,11 @@ export const EMPTY_FORM: ProductForm = {
   vatRate: "12",
   minQty: "",
   maxQty: "",
+  dosageForm: null,
+  dose: "",
+  packQty: "",
+  perPack: "",
+  note: "",
 };
 
 export function formFromProduct(p: ProductDetail): ProductForm {
@@ -129,6 +155,11 @@ export function formFromProduct(p: ProductDetail): ProductForm {
     vatRate: p.vatRate.replace(/\.00$/, ""),
     minQty: p.minQty ? String(p.minQty) : "",
     maxQty: p.maxQty ? String(p.maxQty) : "",
+    dosageForm: p.dosageForm ?? null,
+    dose: p.dose ?? "",
+    packQty: p.packQty ? String(p.packQty) : "",
+    perPack: p.perPack ? String(p.perPack) : "",
+    note: p.note ?? "",
   };
 }
 
@@ -150,6 +181,8 @@ export function toRequest(f: ProductForm): { body?: ProductRequest; errors: Reco
   const minQty = qty(f.minQty, "minQty");
   const maxQty = qty(f.maxQty, "maxQty");
   if (minQty && maxQty && minQty > maxQty) errors.maxQty = "minMax";
+  const packQty = qty(f.packQty, "packQty");
+  const perPack = qty(f.perPack, "perPack");
   const vat = f.vatRate.trim().replace(",", ".");
   if (!/^\d{1,3}(\.\d{1,2})?$/.test(vat) || Number(vat) > 100) errors.vatRate = "vat";
   if (!f.unitId) errors.unitId = "unit";
@@ -179,6 +212,11 @@ export function toRequest(f: ProductForm): { body?: ProductRequest; errors: Reco
       vatRate: vat,
       minQty,
       maxQty,
+      dosageForm: f.dosageForm ?? undefined,
+      dose: text(f.dose),
+      packQty,
+      perPack,
+      note: text(f.note),
     },
   };
 }

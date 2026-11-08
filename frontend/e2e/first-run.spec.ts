@@ -121,7 +121,7 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
 
   // Mahsulot
   await page.goto("/products");
-  await page.getByRole("button", { name: "Mahsulot qoʻshish" }).click();
+  await page.getByRole("button", { name: "Mahsulot qoʻshish" }).first().click();
   await field(page, "Nomi").fill("Paracetamol E2E 500 mg");
   await choose(page, "Birlik", /^Dona/);
   await page.getByRole("button", { name: "Mahsulotni saqlash" }).click();

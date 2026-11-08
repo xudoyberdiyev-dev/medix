@@ -3274,7 +3274,7 @@ export interface paths {
         };
         /**
          * Mahsulotlar ro'yxati
-         * @description Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.
+         * @description Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, IKPU, Farm ID, ishlab chiqaruvchi. Yorliqlar soni va filtr variantlari (soni bilan) bilan.
          */
         get: operations["list_8"];
         put?: never;
@@ -3298,7 +3298,7 @@ export interface paths {
         };
         /**
          * Excel'ga eksport (.xlsx)
-         * @description Jadvaldagi filtrlar bilan; ko'pi bilan 50 000 qator.
+         * @description Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.
          */
         get: operations["export_1"];
         put?: never;
@@ -6633,6 +6633,16 @@ export interface components {
             id: number;
             name?: string;
         };
+        Facets: {
+            /** Format: int64 */
+            active: number;
+            categories: components["schemas"]["Facet"][];
+            countries: components["schemas"]["Facet"][];
+            /** Format: int64 */
+            inactive: number;
+            manufacturers: components["schemas"]["Facet"][];
+            supplyEmployees: components["schemas"]["Facet"][];
+        };
         FilterOption: {
             /** Format: int64 */
             count: number;
@@ -8255,6 +8265,9 @@ export interface components {
             contractName?: string;
             controlled: boolean;
             country?: components["schemas"]["Ref"];
+            /** @enum {string} */
+            dosageForm?: "TABLET" | "CAPSULE" | "AMPOULE" | "VIAL" | "SYRUP" | "OINTMENT" | "PEN" | "POWDER" | "GEL";
+            dose?: string;
             farmId?: string;
             /** Format: int64 */
             id: number;
@@ -8266,12 +8279,18 @@ export interface components {
             /** Format: int32 */
             minQty?: number;
             name: string;
+            note?: string;
+            /** Format: int32 */
+            packQty?: number;
+            /** Format: int32 */
+            perPack?: number;
             prescription: boolean;
             supplyEmployee?: components["schemas"]["Ref"];
             unit: components["schemas"]["Ref"];
             vatRate: string;
         };
         ProductPage: {
+            facets?: components["schemas"]["Facets"];
             items: components["schemas"]["ProductRow"][];
             /** Format: int32 */
             page: number;
@@ -8279,6 +8298,7 @@ export interface components {
             size: number;
             /** Format: int64 */
             total: number;
+            views?: components["schemas"]["ViewCounts"];
         };
         ProductRequest: {
             barcodes?: string[];
@@ -8289,6 +8309,9 @@ export interface components {
             controlled: boolean;
             /** Format: int64 */
             countryId?: number;
+            /** @enum {string} */
+            dosageForm?: "TABLET" | "CAPSULE" | "AMPOULE" | "VIAL" | "SYRUP" | "OINTMENT" | "PEN" | "POWDER" | "GEL";
+            dose?: string;
             farmId?: string;
             ikpu?: string;
             /** Format: int64 */
@@ -8299,6 +8322,11 @@ export interface components {
             /** Format: int32 */
             minQty?: number;
             name: string;
+            note?: string;
+            /** Format: int32 */
+            packQty?: number;
+            /** Format: int32 */
+            perPack?: number;
             prescription: boolean;
             /** Format: int64 */
             supplyEmployeeId?: number;
@@ -8308,12 +8336,21 @@ export interface components {
         };
         ProductRow: {
             active: boolean;
+            /** @description Birinchi shtrix-kod */
+            barcode?: string;
             category?: string;
+            classifierName?: string;
             code: string;
+            contractName?: string;
             controlled: boolean;
             country?: string;
+            /** @enum {string} */
+            dosageForm?: "TABLET" | "CAPSULE" | "AMPOULE" | "VIAL" | "SYRUP" | "OINTMENT" | "PEN" | "POWDER" | "GEL";
+            dose?: string;
+            farmId?: string;
             /** Format: int64 */
             id: number;
+            ikpu?: string;
             manufacturer?: string;
             marked: boolean;
             match?: components["schemas"]["SearchMatch"];
@@ -8322,7 +8359,15 @@ export interface components {
             /** Format: int32 */
             minQty?: number;
             name: string;
+            note?: string;
+            /** Format: int32 */
+            packQty?: number;
             prescription: boolean;
+            /** @description Bazaviy narx (QQS bilan); berilmagan bo'lsa null */
+            price?: string;
+            /** Format: int64 */
+            stock: number;
+            supplyEmployee?: string;
             unit: string;
             vatRate: string;
         };
@@ -9776,6 +9821,20 @@ export interface components {
             hasRefrigerator?: boolean;
             model: string;
             plateNumber: string;
+        };
+        ViewCounts: {
+            /** Format: int64 */
+            active: number;
+            /** Format: int64 */
+            all: number;
+            /** Format: int64 */
+            controlled: number;
+            /** Format: int64 */
+            inactive: number;
+            /** Format: int64 */
+            marked: number;
+            /** Format: int64 */
+            prescription: number;
         };
         Warehouse: {
             active: boolean;
@@ -14972,10 +15031,18 @@ export interface operations {
                 q?: string;
                 manufacturerId?: number;
                 categoryId?: number;
+                manufacturerIds?: number[];
+                categoryIds?: number[];
+                countryIds?: number[];
+                supplyEmployeeIds?: number[];
                 status?: "ACTIVE" | "INACTIVE" | "ALL";
+                view?: "ALL" | "ACTIVE" | "CONTROLLED" | "MARKED" | "PRESCRIPTION" | "INACTIVE";
                 controlled?: boolean;
                 marked?: boolean;
-                sort?: "CODE" | "NAME" | "MANUFACTURER";
+                /** @description Qoldiq va narx filiali */
+                branchId?: number;
+                facets?: boolean;
+                sort?: "CODE" | "NAME" | "CONTRACT_NAME" | "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "VAT" | "MIN_QTY" | "MAX_QTY" | "STOCK" | "PRICE";
                 desc?: boolean;
                 /** @description 0 dan boshlanadi */
                 page?: number;
@@ -15026,12 +15093,19 @@ export interface operations {
         parameters: {
             query?: {
                 q?: string;
+                ids?: number[];
                 manufacturerId?: number;
                 categoryId?: number;
+                manufacturerIds?: number[];
+                categoryIds?: number[];
+                countryIds?: number[];
+                supplyEmployeeIds?: number[];
                 status?: "ACTIVE" | "INACTIVE" | "ALL";
+                view?: "ALL" | "ACTIVE" | "CONTROLLED" | "MARKED" | "PRESCRIPTION" | "INACTIVE";
                 controlled?: boolean;
                 marked?: boolean;
-                sort?: "CODE" | "NAME" | "MANUFACTURER";
+                branchId?: number;
+                sort?: "CODE" | "NAME" | "CONTRACT_NAME" | "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "VAT" | "MIN_QTY" | "MAX_QTY" | "STOCK" | "PRICE";
                 desc?: boolean;
             };
             header?: never;

@@ -1,189 +1,445 @@
 "use client";
 
-import { CircleCheck, CirclePause, Columns3, FileDown, FileUp, FilterX, Pill, Plus, QrCode, ShieldAlert, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  CircleCheck,
+  CircleSlash,
+  Copy,
+  Download,
+  FilterX,
+  Lock,
+  Package,
+  Pencil,
+  Plus,
+  ScanBarcode,
+  Upload,
+} from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
-import { SavedViews } from "@/components/ui/saved-views";
-import { Checkbox } from "@/components/ui/selection-controls";
-import { EmptyState, ErrorState, NoResultsState } from "@/components/ui/system-states";
+import { ColumnsMenu, useColumnPrefs } from "@/components/ui/columns-menu";
+import { MultiFilter, type FilterOption } from "@/components/ui/multi-filter";
+import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
+import { EmptyState, ErrorState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
+import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useDictionary } from "@/features/dictionaries/api";
-import { formatQuantity } from "@/lib/format";
-import { searchMatchLabel } from "@/lib/search";
-import { PRODUCT_CREATE, useProducts, type ProductRow } from "./api";
+import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
+import { cn } from "@/lib/cn";
+import { formatMoney, formatQuantity } from "@/lib/format";
+import { useBranchStore } from "@/lib/stores/branch";
+import { PRODUCT_CREATE, useActivateProduct, useBulkDeactivate, useProducts, type ProductRow } from "./api";
 import { ImportDialog } from "./import-dialog";
 import { ProductDrawer } from "./product-drawer";
-import { DEFAULT_FILTERS, activeFilterCount, exportQuery, parseFilters, serializeFilters, type ProductFilters } from "./url-state";
+import {
+  DEFAULT_FILTERS,
+  PRODUCT_VIEWS,
+  activeFilterCount,
+  exportQuery,
+  parseFilters,
+  serializeFilters,
+  type ProductFilters,
+  type ProductSort,
+  type ProductStatusFilter,
+} from "./url-state";
 
-const COLUMN_STORAGE = "medix-products-columns";
+/** Prototip `Products` ustunlari (COLS0) tartibida. */
+const COLUMN_KEYS = [
+  "code",
+  "name",
+  "contractName",
+  "classifierName",
+  "manufacturer",
+  "country",
+  "category",
+  "dosageForm",
+  "dose",
+  "unit",
+  "packQty",
+  "barcode",
+  "ikpu",
+  "farmId",
+  "supplyEmployee",
+  "controlled",
+  "marked",
+  "prescription",
+  "vatRate",
+  "minQty",
+  "maxQty",
+  "stock",
+  "price",
+  "note",
+  "status",
+] as const;
+type ColumnKey = (typeof COLUMN_KEYS)[number];
 
-const STATUS_VALUES = ["ACTIVE", "INACTIVE", "ALL"] as const;
-const FLAG_VALUES = ["marked", "controlled"] as const;
+const WIDTH: Record<ColumnKey, number> = {
+  code: 104,
+  name: 250,
+  contractName: 260,
+  classifierName: 180,
+  manufacturer: 150,
+  country: 120,
+  category: 160,
+  dosageForm: 110,
+  dose: 100,
+  unit: 80,
+  packQty: 100,
+  barcode: 150,
+  ikpu: 170,
+  farmId: 130,
+  supplyEmployee: 160,
+  controlled: 110,
+  marked: 110,
+  prescription: 100,
+  vatRate: 80,
+  minQty: 104,
+  maxQty: 104,
+  stock: 100,
+  price: 120,
+  note: 220,
+  status: 110,
+};
+const RIGHT: ColumnKey[] = ["packQty", "minQty", "maxQty", "stock", "price"];
+const MONO: ColumnKey[] = ["code", "barcode", "ikpu", "farmId"];
+const SORT_OF: Partial<Record<ColumnKey, ProductSort>> = {
+  code: "CODE",
+  name: "NAME",
+  contractName: "CONTRACT_NAME",
+  manufacturer: "MANUFACTURER",
+  category: "CATEGORY",
+  country: "COUNTRY",
+  vatRate: "VAT",
+  minQty: "MIN_QTY",
+  maxQty: "MAX_QTY",
+  stock: "STOCK",
+  price: "PRICE",
+};
+const MATCH_KEY: Record<string, "code" | "barcode" | "contractName" | "classifierName" | "ikpu" | "farmId"> = {
+  CODE: "code",
+  BARCODE: "barcode",
+  CONTRACT_NAME: "contractName",
+  CLASSIFIER_NAME: "classifierName",
+  IKPU: "ikpu",
+  FARM_ID: "farmId",
+};
 
-function useHiddenColumns() {
-  const [hidden, setHidden] = useState<string[]>([]);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(COLUMN_STORAGE);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- brauzer xotirasidan bir marta oʻqiladi
-      if (raw) setHidden(JSON.parse(raw) as string[]);
-    } catch {
-      /* xotira yopiq — standart ustunlar */
-    }
-  }, []);
-  const update = (next: string[]) => {
-    setHidden(next);
-    try {
-      localStorage.setItem(COLUMN_STORAGE, JSON.stringify(next));
-    } catch {
-      /* saqlanmasa ham ishlaydi */
-    }
-  };
-  return [hidden, update] as const;
+type Facet = { id: number; name?: string; count: number };
+const facetOptions = (facets: Facet[] | undefined, selected: number[]): FilterOption<number>[] => {
+  const list = (facets ?? []).map((f) => ({ value: f.id, label: f.name ?? "—", count: f.count }));
+  for (const id of selected) if (!list.some((o) => o.value === id)) list.push({ value: id, label: `#${id}`, count: 0 });
+  return list;
+};
+
+const Dash = () => <span className="text-text-disabled">—</span>;
+
+/** Qidiruvdagi soʻz nomda boʻlsa — ajratib koʻrsatiladi (prototip). */
+function Highlight({ text, q }: { text: string; q: string }) {
+  const i = q ? text.toLowerCase().indexOf(q.toLowerCase()) : -1;
+  if (i < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, i)}
+      <mark className="rounded-[2px] bg-warning-bg text-inherit">{text.slice(i, i + q.length)}</mark>
+      {text.slice(i + q.length)}
+    </>
+  );
 }
 
+/**
+ * Mahsulotlar (prototip `Products`): «Mahsulotlar N», Import · «…» (Eksport) · «Mahsulot qoʻshish»; yorliqlar Hammasi / Faol /
+ * Nazoratdagi / Markirovkali / Retsept boʻyicha / Nofaol (soni bilan); qidiruv + Ishlab chiqaruvchi / Kategoriya / Davlat /
+ * Taʼminot masʼuli / Holat (bir nechta qiymat, soni bilan); «Ustunlar» (koʻrinish va tartib); 25 ustunli jadval, saralash,
+ * tanlash → Eksport / Nofaol qilish; qator menyusi Ochish / Tahrirlash / Nusxa olish / Nofaol (Faol) qilish. Filtrlar URL'da.
+ */
 export function ProductsPage() {
   const t = useTranslations("products.list");
   const tp = useTranslations("products");
-  const STATUS_OPTIONS = STATUS_VALUES.map((value) => ({ value, label: tp(`status.${value}`) }));
-  const FLAG_OPTIONS = FLAG_VALUES.map((value) => ({ value, label: tp(`flag.${value}`) }));
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const filters = parseFilters(new URLSearchParams(params.toString()));
   const me = useMe();
   const canEdit = can(me.data, PRODUCT_CREATE);
-  const products = useProducts(filters);
-  const manufacturers = useDictionary("MANUFACTURER");
-  const categories = useDictionary("CATEGORY");
-  const [hidden, setHidden] = useHiddenColumns();
-  const [columnsOpen, setColumnsOpen] = useState(false);
-  const [open, setOpen] = useState<number | "new" | null>(null);
+  const selectedBranch = useBranchStore((s) => s.branchId);
+  const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
+  const products = useProducts(filters, branchId);
+  const activate = useActivateProduct();
+  const bulkDeactivate = useBulkDeactivate();
+  const { cols, update: setCols, reset: resetCols } = useColumnPrefs("medix-products-cols", COLUMN_KEYS);
+  const [open, setOpen] = useState<{ id: number | null; copyFrom?: number } | null>(null);
   const [importing, setImporting] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [deact, setDeact] = useState<number[] | null>(null);
   const [search, setSearch] = useState(filters.q);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const data = products.data;
 
   const apply = (patch: Partial<ProductFilters>, resetPage = true) => {
     const next = { ...filters, ...patch, ...(resetPage && !("page" in patch) ? { page: 1 } : {}) };
     const qs = serializeFilters(next);
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
+  const clearFilters = () => apply({ manufacturers: [], categories: [], countries: [], supply: [], statuses: [] });
+  const clearAll = () => (setSearch(""), apply({ ...DEFAULT_FILTERS, size: filters.size }));
 
-  const onSearch = (v: string) => {
-    setSearch(v);
-    clearTimeout(debounce.current);
-    debounce.current = setTimeout(() => apply({ q: v }), 300);
-  };
-
-  const allColumns: TableColumn<ProductRow>[] = [
-    { key: "code", title: t("col.code"), mono: true, sortable: true, width: 110 },
-    {
-      key: "name",
-      title: t("col.name"),
-      sortable: true,
-      render: (p) => (
-        <span className="flex flex-col">
-          <span className="flex items-center gap-2">
-            <span>{p.name}</span>
-            {p.marked ? (
-              <span title={tp("flag.marked")}>
-                <QrCode size={16} strokeWidth={1.5} aria-label={tp("flag.marked")} className="text-text-secondary" />
+  const labels = Object.fromEntries(COLUMN_KEYS.map((k) => [k, t(`col.${k}`)])) as Record<ColumnKey, string>;
+  const q = filters.q.trim();
+  const cell = (p: ProductRow, k: ColumnKey) => {
+    switch (k) {
+      case "name": {
+        const mk = p.match ? MATCH_KEY[p.match.field] : undefined;
+        const sub = mk
+          ? `${t(`match.${mk}`)}: ${p.match?.value ?? ""}`
+          : [p.dosageForm ? tp(`dosageForm.${p.dosageForm}`) : "", p.dose ?? ""].filter(Boolean).join(" ") + ` · №${p.packQty ?? "—"}`;
+        return (
+          <span className="flex min-w-0 flex-col">
+            <span className="flex items-center gap-2">
+              <span className={cn("truncate font-medium", p.active ? "" : "text-text-disabled")}>
+                <Highlight text={p.name} q={mk ? "" : q} />
               </span>
-            ) : null}
-            {p.controlled ? (
-              <span title={tp("flag.controlled")}>
-                <ShieldAlert size={16} strokeWidth={1.5} aria-label={tp("flag.controlled")} className="text-warning" />
-              </span>
-            ) : null}
+              {p.active ? null : <Badge tone="neutral">{t("inactive")}</Badge>}
+            </span>
+            <span className="truncate text-caption text-text-secondary">{sub}</span>
           </span>
-          {p.match ? <span className="text-caption text-text-secondary">{searchMatchLabel(p.match)}</span> : null}
-        </span>
-      ),
-    },
-    { key: "manufacturer", title: t("col.manufacturer"), sortable: true },
-    { key: "category", title: t("col.category") },
-    { key: "country", title: t("col.country") },
-    { key: "unit", title: t("col.unit") },
-    { key: "vatRate", title: t("col.vatRate"), align: "right", render: (p) => `${p.vatRate.replace(/\.00$/, "")}%` },
-    {
-      key: "minMax",
-      title: t("col.minMax"),
-      align: "right",
-      render: (p) =>
-        p.minQty || p.maxQty ? `${p.minQty ? formatQuantity(p.minQty) : "—"} / ${p.maxQty ? formatQuantity(p.maxQty) : "—"}` : "",
-    },
-    {
-      key: "active",
-      title: t("col.active"),
-      render: (p) =>
-        p.active ? (
-          <Badge tone="success" icon={CircleCheck}>
-            {tp("status.ACTIVE")}
+        );
+      }
+      case "dosageForm":
+        return p.dosageForm ? tp(`dosageForm.${p.dosageForm}`) : <Dash />;
+      case "packQty":
+      case "minQty":
+      case "maxQty":
+        return p[k] ? formatQuantity(p[k]) : <Dash />;
+      case "stock":
+        return <span className={p.stock ? "" : "text-text-disabled"}>{formatQuantity(p.stock)}</span>;
+      case "price":
+        return p.price ? formatMoney(p.price) : <span className="text-text-disabled">{t("noPrice")}</span>;
+      case "controlled":
+        return p.controlled ? (
+          <Badge tone="danger" icon={Lock}>
+            {t("stCtrl")}
           </Badge>
         ) : (
-          <Badge tone="neutral" icon={CirclePause}>
-            {tp("status.INACTIVE")}
+          <Dash />
+        );
+      case "marked":
+        return p.marked ? (
+          <Badge tone="neutral" icon={ScanBarcode}>
+            {t("yes")}
           </Badge>
-        ),
-    },
-  ];
-  const ALWAYS = ["code", "name"];
-  const columns = allColumns.filter((c) => ALWAYS.includes(c.key) || !hidden.includes(c.key));
-
-  const chips: { key: string; label: string; clear: () => void }[] = [];
-  if (filters.manufacturerId) {
-    const name = manufacturers.data?.find((m) => m.id === filters.manufacturerId)?.name ?? "…";
-    chips.push({ key: "m", label: t("chipManufacturer", { name }), clear: () => apply({ manufacturerId: null }) });
-  }
-  if (filters.categoryId) {
-    const name = categories.data?.find((m) => m.id === filters.categoryId)?.name ?? "…";
-    chips.push({ key: "c", label: t("chipCategory", { name }), clear: () => apply({ categoryId: null }) });
-  }
-  if (filters.status !== "ACTIVE")
-    chips.push({
-      key: "s",
-      label: t("chipStatus", { status: STATUS_OPTIONS.find((s) => s.value === filters.status)?.label ?? "" }),
-      clear: () => apply({ status: "ACTIVE" }),
+        ) : (
+          <Dash />
+        );
+      case "prescription":
+        return p.prescription ? t("yes") : <Dash />;
+      case "vatRate":
+        return `${p.vatRate.replace(/\.00$/, "")}%`;
+      case "status":
+        return p.active ? (
+          <Badge tone="success" icon={CircleCheck}>
+            {t("active")}
+          </Badge>
+        ) : (
+          <Badge tone="neutral" icon={CircleSlash}>
+            {t("inactive")}
+          </Badge>
+        );
+      default: {
+        const v = p[k];
+        return v === null || v === undefined || v === "" ? <Dash /> : String(v);
+      }
+    }
+  };
+  const columns: TableColumn<ProductRow>[] = cols
+    .filter((c) => c.visible)
+    .map((c) => {
+      const k = c.key as ColumnKey;
+      return {
+        key: k,
+        title: labels[k],
+        width: WIDTH[k],
+        align: RIGHT.includes(k) ? "right" : "left",
+        mono: MONO.includes(k),
+        sortable: Boolean(SORT_OF[k]),
+        render: (p: ProductRow) => cell(p, k),
+      };
     });
-  if (filters.flag)
-    chips.push({ key: "f", label: FLAG_OPTIONS.find((o) => o.value === filters.flag)?.label ?? "", clear: () => apply({ flag: null }) });
+  const sortKey = (Object.entries(SORT_OF).find(([, s]) => s === filters.sort)?.[0] ?? "name") as ColumnKey;
 
-  const filtered = Boolean(filters.q) || activeFilterCount(filters) > 0;
-  const data = products.data;
+  const views = data?.views;
+  const viewCount: Record<string, number | undefined> = {
+    ALL: views?.all,
+    ACTIVE: views?.active,
+    CONTROLLED: views?.controlled,
+    MARKED: views?.marked,
+    PRESCRIPTION: views?.prescription,
+    INACTIVE: views?.inactive,
+  };
+  const facets = data?.facets;
+  const statusOptions: FilterOption<ProductStatusFilter>[] = [
+    { value: "ACTIVE", label: t("active"), count: facets?.active },
+    { value: "INACTIVE", label: t("inactive"), count: facets?.inactive },
+  ];
+  const hasFilters = activeFilterCount(filters) > 0;
+  const activeNames = [
+    q ? `${t("searchWord")} «${q}»` : "",
+    filters.manufacturers.length ? t("f.manufacturer") : "",
+    filters.categories.length ? t("f.category") : "",
+    filters.countries.length ? t("f.country") : "",
+    filters.supply.length ? t("f.supply") : "",
+    filters.statuses.length ? t("f.status") : "",
+  ].filter(Boolean);
+  const filtered = activeNames.length > 0 || filters.view !== "ALL";
+
+  const exportHref = (ids: number[] = []) => `/api/products/export?${exportQuery(filters, branchId, ids)}`;
+  const selIds = selected.map(Number);
+  const rowItems = (p: ProductRow): RowMenuItem[] => [
+    {
+      key: "open",
+      label: t("aOpen"),
+      icon: <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden />,
+      onSelect: () => setOpen({ id: p.id }),
+    },
+    ...(canEdit
+      ? [
+          {
+            key: "edit",
+            label: t("aEdit"),
+            icon: <Pencil size={16} strokeWidth={1.5} aria-hidden />,
+            onSelect: () => setOpen({ id: p.id }),
+          },
+          {
+            key: "copy",
+            label: t("aCopy"),
+            icon: <Copy size={16} strokeWidth={1.5} aria-hidden />,
+            onSelect: () => setOpen({ id: null, copyFrom: p.id }),
+          },
+          p.active
+            ? {
+                key: "deact",
+                label: t("aDeact"),
+                icon: <CircleSlash size={16} strokeWidth={1.5} className="text-danger" aria-hidden />,
+                onSelect: () => setDeact([p.id]),
+              }
+            : {
+                key: "act",
+                label: t("aAct"),
+                icon: <CircleCheck size={16} strokeWidth={1.5} aria-hidden />,
+                onSelect: () =>
+                  activate.mutate(p.id, { onSuccess: () => toast({ tone: "success", title: t("activated", { name: p.name }) }) }),
+              },
+        ]
+      : []),
+  ];
 
   return (
-    <>
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-page-title">{t("title")}</h1>
-          {data ? <span className="text-text-secondary">{t("count", { count: formatQuantity(data.total) })}</span> : null}
-        </div>
+    <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="flex items-baseline gap-2 text-page-title">
+          {t("title")}
+          {views ? <span className="text-body font-normal text-text-secondary tabular-nums">{formatQuantity(views.all)}</span> : null}
+        </h1>
         <div className="flex items-center gap-2">
-          <a
-            href={`/api/products/export?${exportQuery(filters)}`}
-            download
-            className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-4 font-medium hover:bg-background"
-          >
-            <FileDown size={16} strokeWidth={1.5} aria-hidden />
-            {t("export")}
-          </a>
           {canEdit ? (
-            <>
-              <Button variant="secondary" icon={FileUp} onClick={() => setImporting(true)}>
-                {t("import")}
-              </Button>
-              <Button icon={Plus} onClick={() => setOpen("new")}>
-                {t("add")}
-              </Button>
-            </>
+            <Button variant="secondary" icon={Upload} onClick={() => setImporting(true)}>
+              {t("import")}
+            </Button>
           ) : null}
+          <RowMenu
+            label={t("more")}
+            items={[
+              {
+                key: "export",
+                label: t("export"),
+                icon: <Download size={16} strokeWidth={1.5} aria-hidden />,
+                onSelect: () => window.location.assign(exportHref()),
+              },
+            ]}
+          />
+          {canEdit ? (
+            <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+              {t("add")}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+      <div className="flex flex-col gap-3">
+        <Tabs
+          aria-label={t("viewsLabel")}
+          items={PRODUCT_VIEWS.map((v) => ({ key: v, label: t(`views.${v}`), count: viewCount[v] }))}
+          value={filters.view}
+          onChange={(k) => (setSelected([]), apply({ view: k as ProductFilters["view"] }))}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="w-80">
+            <TextField
+              label={t("search")}
+              variant="search"
+              size="sm"
+              value={search}
+              onChange={(v) => {
+                setSearch(v);
+                clearTimeout(debounce.current);
+                debounce.current = setTimeout(() => apply({ q: v.trim() }), 300);
+              }}
+              placeholder={t("searchPlaceholder")}
+              className="[&>label]:sr-only"
+            />
+          </div>
+          <MultiFilter
+            label={t("f.manufacturer")}
+            searchable
+            options={facetOptions(facets?.manufacturers, filters.manufacturers)}
+            selected={filters.manufacturers}
+            onChange={(v) => apply({ manufacturers: v })}
+          />
+          <MultiFilter
+            label={t("f.category")}
+            searchable
+            options={facetOptions(facets?.categories, filters.categories)}
+            selected={filters.categories}
+            onChange={(v) => apply({ categories: v })}
+          />
+          <MultiFilter
+            label={t("f.country")}
+            searchable
+            options={facetOptions(facets?.countries, filters.countries)}
+            selected={filters.countries}
+            onChange={(v) => apply({ countries: v })}
+          />
+          <MultiFilter
+            label={t("f.supply")}
+            searchable
+            options={facetOptions(facets?.supplyEmployees, filters.supply)}
+            selected={filters.supply}
+            onChange={(v) => apply({ supply: v })}
+          />
+          <MultiFilter label={t("f.status")} options={statusOptions} selected={filters.statuses} onChange={(v) => apply({ statuses: v })} />
+          {hasFilters ? (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
+            >
+              {t("clearFilters")}
+            </button>
+          ) : null}
+          <div className="ml-auto">
+            <ColumnsMenu
+              label={t("columns")}
+              hint={t("colsHint")}
+              resetLabel={t("colsReset")}
+              columns={cols}
+              labels={labels}
+              onChange={setCols}
+              onReset={resetCols}
+            />
+          </div>
         </div>
       </div>
       {products.error ? (
@@ -195,145 +451,68 @@ export function ProductsPage() {
           rows={data?.items ?? []}
           rowKey={(p) => String(p.id)}
           loading={products.isPending}
-          activeKey={typeof open === "number" ? String(open) : undefined}
-          onRowClick={(p) => setOpen(p.id)}
-          sort={{
-            key: filters.sort === "CODE" ? "code" : filters.sort === "MANUFACTURER" ? "manufacturer" : "name",
-            dir: filters.desc ? "desc" : "asc",
-          }}
-          onSortChange={(s) =>
-            apply({ sort: s.key === "code" ? "CODE" : s.key === "manufacturer" ? "MANUFACTURER" : "NAME", desc: s.dir === "desc" })
-          }
-          toolbar={
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="w-80">
-                  <TextField
-                    label={t("search")}
-                    variant="search"
-                    size="sm"
-                    value={search}
-                    onChange={onSearch}
-                    placeholder={t("searchPlaceholder")}
-                    className="[&>label]:sr-only"
-                  />
-                </div>
-                <div className="w-56">
-                  <Select
-                    label={t("manufacturer")}
-                    size="sm"
-                    searchable
-                    value={filters.manufacturerId ? String(filters.manufacturerId) : null}
-                    onChange={(v) => apply({ manufacturerId: v ? Number(v) : null })}
-                    placeholder={t("manufacturer")}
-                    className="[&>span:first-child]:sr-only"
-                    options={(manufacturers.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))}
-                  />
-                </div>
-                <div className="w-48">
-                  <Select
-                    label={t("category")}
-                    size="sm"
-                    searchable
-                    value={filters.categoryId ? String(filters.categoryId) : null}
-                    onChange={(v) => apply({ categoryId: v ? Number(v) : null })}
-                    placeholder={t("category")}
-                    className="[&>span:first-child]:sr-only"
-                    options={(categories.data ?? []).map((m) => ({ value: String(m.id), label: m.name }))}
-                  />
-                </div>
-                <div className="w-40">
-                  <Select
-                    label={t("flag")}
-                    size="sm"
-                    value={filters.flag}
-                    onChange={(v) => apply({ flag: v === "marked" || v === "controlled" ? v : null })}
-                    placeholder={t("flag")}
-                    className="[&>span:first-child]:sr-only"
-                    options={FLAG_OPTIONS}
-                  />
-                </div>
-                <div className="w-36">
-                  <Select
-                    label={t("status")}
-                    size="sm"
-                    value={filters.status}
-                    onChange={(v) => apply({ status: v === "INACTIVE" || v === "ALL" ? v : "ACTIVE" })}
-                    className="[&>span:first-child]:sr-only"
-                    options={STATUS_OPTIONS}
-                  />
-                </div>
-                <div className="ml-auto">
-                  <SavedViews
-                    storageKey="medix-products-views"
-                    query={params.toString()}
-                    hidden={hidden}
-                    onApply={(v) => {
-                      setSearch(parseFilters(new URLSearchParams(v.query)).q);
-                      setHidden(v.hidden);
-                      router.replace(v.query ? `${pathname}?${v.query}` : pathname, { scroll: false });
-                    }}
-                  />
-                </div>
-                <div className="relative">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={Columns3}
-                    onClick={() => setColumnsOpen((o) => !o)}
-                    aria-expanded={columnsOpen}
-                  >
-                    {t("columns")}
-                  </Button>
-                  {columnsOpen ? (
-                    <div className="absolute right-0 z-30 mt-1 flex w-60 flex-col gap-2 rounded-control border border-border bg-surface p-3 shadow-overlay">
-                      {allColumns
-                        .filter((c) => !ALWAYS.includes(c.key))
-                        .map((c) => (
-                          <Checkbox
-                            key={c.key}
-                            label={c.title}
-                            checked={!hidden.includes(c.key)}
-                            onChange={(on) => setHidden(on ? hidden.filter((h) => h !== c.key) : [...hidden, c.key])}
-                          />
-                        ))}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-              {chips.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  {chips.map((c) => (
-                    <button
-                      key={c.key}
-                      type="button"
-                      onClick={c.clear}
-                      className="flex h-7 items-center gap-1 rounded-full border border-border bg-primary-soft px-3 text-caption hover:border-text-disabled"
-                    >
-                      {c.label}
-                      <X size={14} strokeWidth={1.5} aria-label={t("remove")} />
-                    </button>
-                  ))}
-                  <Button
-                    variant="tertiary"
-                    size="sm"
-                    icon={FilterX}
-                    onClick={() => (
-                      setSearch(""),
-                      apply({ ...DEFAULT_FILTERS, sort: filters.sort, desc: filters.desc, size: filters.size })
-                    )}
-                  >
-                    {t("clearFilters")}
-                  </Button>
-                </div>
+          activeKey={open?.id ? String(open.id) : undefined}
+          onRowClick={(p) => setOpen({ id: p.id })}
+          rowActions={(p) => <RowMenu label={t("actions")} items={rowItems(p)} />}
+          selectable
+          selectedKeys={selected}
+          onSelectionChange={setSelected}
+          bulkActions={
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{t("selected", { count: formatQuantity(selected.length) })}</span>
+              <Button variant="secondary" size="sm" icon={Download} onClick={() => window.location.assign(exportHref(selIds))}>
+                {t("export")}
+              </Button>
+              {canEdit ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={CircleSlash}
+                  onClick={() => {
+                    const ids = (data?.items ?? []).filter((p) => p.active && selIds.includes(p.id)).map((p) => p.id);
+                    if (ids.length) setDeact(ids);
+                  }}
+                >
+                  {t("aDeact")}
+                </Button>
               ) : null}
+              <Button variant="tertiary" size="sm" onClick={() => setSelected([])}>
+                {t("clearSel")}
+              </Button>
             </div>
           }
+          sort={{ key: sortKey, dir: filters.desc ? "desc" : "asc" }}
+          onSortChange={(s) => apply({ sort: SORT_OF[s.key as ColumnKey] ?? "NAME", desc: s.dir === "desc" })}
           emptyState={
             filtered ? (
-              <NoResultsState onClearFilters={() => (setSearch(""), apply({ ...DEFAULT_FILTERS }))} />
+              <EmptyState
+                icon={FilterX}
+                title={t("noResTitle")}
+                description={t("noResDescription", { filters: activeNames.join(", ") || t(`views.${filters.view}`) })}
+                action={
+                  <Button variant="secondary" icon={FilterX} onClick={clearAll}>
+                    {t("clearFilters")}
+                  </Button>
+                }
+              />
             ) : (
-              <EmptyState icon={Pill} title={t("emptyTitle")} description={t("emptyDescription")} />
+              <EmptyState
+                icon={Package}
+                title={t("emptyTitle")}
+                description={t("emptyDescription")}
+                action={
+                  canEdit ? (
+                    <div className="flex items-center gap-2">
+                      <Button variant="secondary" icon={Upload} onClick={() => setImporting(true)}>
+                        {t("importExcel")}
+                      </Button>
+                      <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+                        {t("add")}
+                      </Button>
+                    </div>
+                  ) : undefined
+                }
+              />
             )
           }
           pagination={
@@ -350,14 +529,37 @@ export function ProductsPage() {
         />
       )}
       {importing ? <ImportDialog onClose={() => setImporting(false)} /> : null}
-      {open !== null ? (
+      {open ? (
         <ProductDrawer
-          productId={open === "new" ? null : open}
+          productId={open.id}
+          copyFrom={open.copyFrom ?? null}
           canEdit={canEdit}
           onClose={() => setOpen(null)}
-          onCreated={(id) => setOpen(id)}
+          onCreated={(id) => setOpen({ id })}
         />
       ) : null}
-    </>
+      {deact ? (
+        <DeactivateDialog
+          title={deact.length === 1 ? t("dTitle") : t("dTitleN", { count: formatQuantity(deact.length) })}
+          consequence={`${t("dKeep")}. ${t("dNoNew")}.`}
+          actionLabel={t("dConfirm")}
+          pending={bulkDeactivate.isPending}
+          error={bulkDeactivate.error}
+          onConfirm={(reason) =>
+            bulkDeactivate.mutate(
+              { ids: deact, reason },
+              {
+                onSuccess: (n) => {
+                  toast({ tone: "success", title: t("deactivated", { count: formatQuantity(n) }) });
+                  setDeact(null);
+                  setSelected([]);
+                },
+              },
+            )
+          }
+          onClose={() => setDeact(null)}
+        />
+      ) : null}
+    </div>
   );
 }

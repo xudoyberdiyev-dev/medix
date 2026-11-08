@@ -90,7 +90,7 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
 
   // Markirovkali mahsulot: karta → narx (NO) → boshlangʻich qoldiq (BQ)
   await page.goto("/products");
-  await page.getByRole("button", { name: "Mahsulot qoʻshish" }).click();
+  await page.getByRole("button", { name: "Mahsulot qoʻshish" }).first().click();
   await field(page, "Nomi").fill(MARKED);
   await choose(page, "Birlik", /^Dona/);
   await field(page, "Shtrix-kodlar").fill(BARCODE);
