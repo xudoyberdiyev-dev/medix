@@ -221,7 +221,7 @@ function BlockDialog({ employee, onClose }: { employee: Employee; onClose: () =>
 }
 
 /** E3: Direktor Buxgalterga barcha filiallar doirasini beradi / oladi (audit; xodim qayta kiradi). */
-function AllBranchesDialog({ employee, onClose }: { employee: Employee; onClose: () => void }) {
+export function AllBranchesDialog({ employee, onClose }: { employee: Employee; onClose: () => void }) {
   const t = useTranslations("employees.allBranches");
   const set = useSetAllBranches();
   const enable = !employee.allBranches;

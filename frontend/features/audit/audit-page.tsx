@@ -24,6 +24,9 @@ export const AUDIT_ACTIONS = [
   "employee.block",
   "employee.unblock",
   "employee.resetPassword",
+  "employee.update",
+  "employee.endSessions",
+  "employee.resetPin",
   "company.create",
   "company.update",
   "branch.create",
@@ -33,7 +36,7 @@ export const AUDIT_ACTIONS = [
 ] as const;
 type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
-function isKnownAction(a: string): a is AuditAction {
+export function isKnownAction(a: string): a is AuditAction {
   return (AUDIT_ACTIONS as readonly string[]).includes(a);
 }
 

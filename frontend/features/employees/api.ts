@@ -15,7 +15,7 @@ export function useEmployees() {
   return useQuery({ queryKey: KEY, queryFn: () => unwrap(api.GET("/api/employees")) });
 }
 
-function useEmployeeMutation<T>(fn: (v: T) => Promise<Employee>) {
+function useEmployeeMutation<T, R = Employee>(fn: (v: T) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (v: T) => {
@@ -87,6 +87,22 @@ export const useSetAllBranches = () =>
   );
 
 /** Qidiruv: ism, login yoki rol boʻyicha (katta-kichik harf farqsiz). */
+export type EmployeeJournal = components["schemas"]["Journal"];
+
+/** Xodim kartasi (prototip AdminStaff): kirishlar, harakatlar, ochiq sessiyalar, PIN holati. */
+export function useEmployeeJournal(id: number) {
+  return useQuery({
+    queryKey: [...KEY, "journal", id],
+    queryFn: () => unwrap(api.GET("/api/employees/{id}/journal", { params: { path: { id } } })),
+  });
+}
+
+export const useEndSessions = () =>
+  useEmployeeMutation((id: number) => unwrap(api.POST("/api/employees/{id}/end-sessions", { params: { path: { id } } })));
+
+export const useResetPin = () =>
+  useEmployeeMutation((id: number) => unwrap(api.POST("/api/employees/{id}/reset-pin", { params: { path: { id } } })));
+
 export function filterEmployees(list: Employee[], query: string): Employee[] {
   const q = query.trim().toLocaleLowerCase("uz");
   if (!q) return list;

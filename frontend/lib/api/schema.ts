@@ -1322,6 +1322,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/employees/{id}/end-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ochiq sessiyalarni tugatish */
+        post: operations["endSessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}/journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xodim kartasi: kirishlar, harakatlar, sessiyalar, PIN holati */
+        get: operations["journal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/employees/{id}/reset-password": {
         parameters: {
             query?: never;
@@ -1333,6 +1367,23 @@ export interface paths {
         put?: never;
         /** Vaqtinchalik parol berish */
         post: operations["resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/employees/{id}/reset-pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** PIN-kodni bekor qilish (xodim yangisini oʻrnatadi) */
+        post: operations["resetPin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5870,6 +5921,14 @@ export interface components {
             /** Format: date-time */
             occurredAt: string;
         };
+        ActionEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            entityId?: string;
+            entityType: string;
+            reason?: string;
+        };
         AddOrdersRequest: {
             orderIds: number[];
         };
@@ -6954,6 +7013,10 @@ export interface components {
             roleCode: string;
             temporaryPassword: string;
         };
+        EndSessionsResult: {
+            /** Format: int32 */
+            ended: number;
+        };
         Entry: {
             active: boolean;
             /** Format: int64 */
@@ -7456,6 +7519,18 @@ export interface components {
             amount: string;
             item: string;
         };
+        Journal: {
+            actions: components["schemas"]["ActionEvent"][];
+            logins: components["schemas"]["LoginEvent"][];
+            pinSet: boolean;
+            /** Format: date-time */
+            pinSetAt?: string;
+            /**
+             * Format: int32
+             * @description Ochiq sessiyalar soni
+             */
+            sessions: number;
+        };
         KindTotals: {
             bank: string;
             cash: string;
@@ -7530,6 +7605,14 @@ export interface components {
             available?: boolean;
             /** @description Ism va familiyadan taklif (boʻsh joyi bilan raqam qoʻshiladi) */
             suggested: string;
+        };
+        LoginEvent: {
+            /** Format: date-time */
+            at: string;
+            device?: string;
+            ip?: string;
+            /** @description OK — kirdi, FAILED — notoʻgʻri parol, BLOCKED — bloklangan */
+            result: string;
         };
         LoginRequest: {
             login: string;
@@ -12968,6 +13051,50 @@ export interface operations {
             };
         };
     };
+    endSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndSessionsResult"];
+                };
+            };
+        };
+    };
+    journal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Journal"];
+                };
+            };
+        };
+    };
     resetPassword: {
         parameters: {
             query?: never;
@@ -12982,6 +13109,28 @@ export interface operations {
                 "application/json": components["schemas"]["ResetPasswordRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Employee"];
+                };
+            };
+        };
+    };
+    resetPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {

@@ -33,7 +33,10 @@ import { EmptyState, ErrorState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { Tabs } from "@/components/ui/tabs";
+import { can as canMe } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
+import { formatDateTime } from "@/lib/format";
 import { useRoleMatrix } from "@/features/roles/roles-matrix";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
@@ -50,6 +53,9 @@ import {
   type Employee,
 } from "./api";
 import {
+  inView,
+  STAFF_VIEWS,
+  type StaffView,
   checkStaff,
   cleanLogin,
   displayName,
@@ -76,6 +82,13 @@ const STATUS: Record<StaffStatus, { tone: "info" | "success" | "danger"; icon: t
   new: { tone: "info", icon: KeyRound },
   active: { tone: "success", icon: CircleCheck },
   blocked: { tone: "danger", icon: Ban },
+};
+
+const VIEW_LABEL: Record<StaffView, "vAll" | "vNever" | "vBlocked" | "vWeek"> = {
+  all: "vAll",
+  never: "vNever",
+  blocked: "vBlocked",
+  week: "vWeek",
 };
 
 const EMPTY: StaffForm = {
@@ -105,14 +118,20 @@ export function StaffManager({
   stepOf,
   onBack,
   onNext,
+  page = false,
+  onOpenEmp,
 }: {
   branches: StaffBranch[];
   warehouses: StaffWarehouse[];
   stepOf?: string;
   onBack?: () => void;
   onNext?: () => void;
+  /** «Sozlamalar → Xodimlar» sahifasi (prototip AdminStaff): koʻrinishlar, «Oxirgi kirish», qator bosilsa — karta. */
+  page?: boolean;
+  onOpenEmp?: (e: Employee) => void;
 }) {
   const t = useTranslations("staff");
+  const tc = useTranslations("staff.card");
   const me = useMe();
   const list = useEmployees();
   const seatsQ = useSeats();
@@ -135,6 +154,8 @@ export function StaffManager({
   const [fRole, setFRole] = useState<string[]>([]);
   const [fBranch, setFBranch] = useState<string[]>([]);
   const [fStatus, setFStatus] = useState<StaffStatus[]>([]);
+  const [view, setView] = useState<StaffView>("all");
+  const [weekAgo] = useState(() => Date.now() - 7 * 24 * 3600 * 1000);
   const [panel, setPanel] = useState<Panel | null>(null);
   const [showPw, setShowPw] = useState(false);
   const [dlg, setDlg] = useState<Dialog>(null);
@@ -302,8 +323,10 @@ export function StaffManager({
   });
 
   const ql = q.trim().toLocaleLowerCase("uz");
+  const ro = page && !canMe(me.data, "staff.edit");
   const rows = emps.filter(
     (e) =>
+      (!page || inView(e, view, weekAgo)) &&
       (!ql || `${displayName(e)} ${e.fullName} ${e.login}`.toLocaleLowerCase("uz").includes(ql)) &&
       (!fRole.length || fRole.includes(e.roleCode)) &&
       (!fBranch.length || fBranch.includes(e.branchId ? String(e.branchId) : "ALL")) &&
@@ -332,6 +355,21 @@ export function StaffManager({
     { key: "branch", title: t("cBranch"), width: 130, render: (e) => branchName(e.branchId) },
     { key: "login", title: t("cLogin"), width: 150, mono: true },
     { key: "phone", title: t("cPhone"), width: 160, render: (e) => e.phone ?? "—" },
+    ...(page
+      ? [
+          {
+            key: "ll",
+            title: tc("lastLogin"),
+            width: 150,
+            render: (e: Employee) =>
+              e.lastLoginAt ? (
+                <span className="font-mono">{formatDateTime(new Date(e.lastLoginAt))}</span>
+              ) : (
+                <span className="text-text-muted">{tc("never")}</span>
+              ),
+          },
+        ]
+      : []),
     {
       key: "status",
       title: t("cStatus"),
@@ -397,10 +435,13 @@ export function StaffManager({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-col">
             {stepOf ? <span className="text-caption font-medium text-primary-button">{stepOf}</span> : null}
-            <h1 className={cn("text-[26px] leading-[32px] font-semibold tracking-[-0.01em]", stepOf && "mt-[6px]")}>{t("t5")}</h1>
-            <p className="mt-[8px] max-w-[720px] text-body text-pretty text-text-secondary">{t("d5")}</p>
+            <h1 className={cn("text-[26px] leading-[32px] font-semibold tracking-[-0.01em]", stepOf && "mt-[6px]")}>
+              {page ? tc("pageT") : t("t5")}
+              {page ? <span className="ml-2 text-[18px] font-normal text-text-muted">{emps.length}</span> : null}
+            </h1>
+            <p className="mt-[8px] max-w-[720px] text-body text-pretty text-text-secondary">{page ? tc("pageSub") : t("d5")}</p>
           </div>
-          {addBtn}
+          {ro ? null : addBtn}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -444,6 +485,19 @@ export function StaffManager({
                 ))}
               </div>
             </section>
+
+            {page ? (
+              <Tabs
+                aria-label={tc("pageT")}
+                items={STAFF_VIEWS.map((k) => ({
+                  key: k,
+                  label: tc(VIEW_LABEL[k]),
+                  count: emps.filter((e) => inView(e, k, weekAgo)).length,
+                }))}
+                value={view}
+                onChange={(k) => setView(k as StaffView)}
+              />
+            ) : null}
 
             <div className="flex flex-wrap items-center gap-2">
               <div className="w-[260px] max-w-full">
@@ -495,8 +549,8 @@ export function StaffManager({
               rows={rows}
               rowKey={(e) => String(e.id)}
               loading={list.isLoading}
-              onRowClick={openEdit}
-              rowActions={(e) => <RowMenu items={rowItems(e)} label={t("rowMenu")} />}
+              onRowClick={onOpenEmp ?? openEdit}
+              rowActions={ro ? undefined : (e) => <RowMenu items={rowItems(e)} label={t("rowMenu")} />}
               emptyState={<EmptyState icon={UsersRound} title={t("noRows")} description={t("searchEmp")} />}
             />
           </>

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
  * Rollar boʻyicha toʻliq buyurtma zanjiri (egasi ustuvorligi 06.11 — №2): har qadamni oʻz roli bajaradi.
@@ -11,7 +11,8 @@ test.describe.configure({ mode: "serial" });
 const CEO_LOGIN = process.env.E2E_CEO_LOGIN ?? "ceo";
 const CEO_PASSWORD = "Yangi-CEO-parol-2026";
 const OPERATOR_PASSWORD = "Operator-parol-2026";
-const TEMP = "Vaqtincha-parol-2";
+/** Xodim qoʻshilganda «Kirish maʼlumotlari» oynasidagi bir martalik parollar (testlar ketma-ket, workers: 1). */
+const TEMP: Record<string, string> = {};
 const PASSWORD = "Rol-parol-2026";
 const CUSTOMER = "Baraka Dorixona E2E";
 const PLATE = "01 E 777 EE";
@@ -36,7 +37,7 @@ const mark = (serial: string) => `(01)0${BARCODE}(21)${serial}(17)291231(10)MK-0
 /** 1×1 PNG — yetkazish rasmi uchun. */
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
 
-function field(page: Page, label: string) {
+function field(page: Page | Locator, label: string) {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return page.getByLabel(new RegExp(`^${escaped}\\s*\\*?$`));
 }
@@ -50,7 +51,7 @@ async function login(page: Page, login: string, password: string) {
 
 /** Birinchi kirish: vaqtinchalik parol → doimiy parol → bosh sahifa. */
 async function firstLogin(page: Page, user: string) {
-  await login(page, user, TEMP);
+  await login(page, user, TEMP[user] ?? "");
   await expect(page).toHaveURL(/\/password/);
   await field(page, "Yangi parol").fill(PASSWORD);
   await field(page, "Yangi parolni takrorlang").fill(PASSWORD);
@@ -64,29 +65,45 @@ async function choose(page: Page, label: string, option: RegExp) {
   await page.getByRole("option", { name: option }).first().click();
 }
 
+async function pick(page: Page, scope: Locator, label: string, option: RegExp) {
+  await scope.getByRole("combobox", { name: label, exact: true }).click();
+  await page.getByRole("option", { name: option }).first().click();
+}
+
+/** Sozlamalar → Xodimlar (prototip AdminStaff/WizStaff paneli): xodim qoʻshadi, bir martalik parolni eslab qoladi. */
+async function addStaff(page: Page, s: { name: string; login: string; role: RegExp; phone: string; branch?: RegExp }) {
+  const [first, last] = s.name.split(" ");
+  await page.getByRole("button", { name: "Xodim qoʻshish" }).first().click();
+  const panel = page.getByRole("dialog", { name: "Yangi xodim" });
+  await field(panel, "Familiya").fill(last);
+  await field(panel, "Ism").fill(first);
+  await field(panel, "Telefon").fill(s.phone);
+  await pick(page, panel, "Rol", s.role);
+  if (s.branch) await pick(page, panel, "Filial", s.branch);
+  await field(panel, "Login").fill(s.login);
+  await panel.getByRole("button", { name: "Saqlash", exact: true }).click();
+  const creds = page.getByRole("dialog", { name: "Kirish maʼlumotlari" });
+  await expect(creds.getByText(s.login, { exact: true })).toBeVisible();
+  TEMP[s.login] = ((await creds.locator(".font-mono").nth(1).textContent()) ?? "").trim();
+  await creds.getByRole("button", { name: "Tayyor" }).click();
+  await expect(page.getByRole("cell", { name: s.login, exact: true })).toBeVisible();
+}
+
 test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", async ({ page }) => {
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/settings/employees");
-  for (const s of STAFF) {
-    await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
-    const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
-    await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill(s.name);
-    await dialog.getByLabel(/^Login\s*\*?$/).fill(s.login);
-    await choose(page, "Rol", s.role);
-    await choose(page, "Filial", /Toshkent/);
-    await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(TEMP);
-    await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
-    await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
-    await expect(page.getByRole("cell", { name: s.login, exact: true })).toBeVisible();
+  for (const [i, s] of STAFF.entries()) {
+    await addStaff(page, { ...s, phone: `9180000${String(i).padStart(2, "0")}`, branch: /Toshkent/ });
   }
-  // E3: Direktor Buxgalterga barcha filiallar doirasini beradi (audit bilan)
-  await page.getByRole("row").filter({ hasText: "accountant.1" }).getByRole("button", { name: "Amallar" }).click();
+  // E3: Direktor Buxgalterga barcha filiallar doirasini beradi (audit bilan) — xodim kartasida
+  await page.getByRole("cell", { name: "accountant.1", exact: true }).click();
+  await page.getByRole("button", { name: "Yana" }).click();
   await page.getByRole("menuitem", { name: "Barcha filiallarga ruxsat berish" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Barcha filiallarga ruxsat berish" }).click();
   await expect(page.getByText("Barcha filiallar ruxsati berildi").first()).toBeVisible();
-  await expect(page.getByRole("row").filter({ hasText: "accountant.1" })).toContainText("Barcha filiallar");
+  await expect(page.getByText("Barcha filiallar", { exact: true }).first()).toBeVisible();
 
   // Markirovkali mahsulot: karta → narx (NO) → boshlangʻich qoldiq (BQ)
   await page.goto("/products");
@@ -634,14 +651,7 @@ test("CEO: Direktor xodimi va mijozga kichik kredit limiti", async ({ page }) =>
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/settings/employees");
-  await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
-  const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
-  await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill("Dilshod Direktorov");
-  await dialog.getByLabel(/^Login\s*\*?$/).fill("director.1");
-  await choose(page, "Rol", /^Direktor$/);
-  await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(TEMP);
-  await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
-  await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
+  await addStaff(page, { name: "Dilshod Direktorov", login: "director.1", role: /^Direktor$/, phone: "918009900" });
 
   await page.goto("/customers");
   await page.getByRole("cell", { name: CUSTOMER }).first().click();

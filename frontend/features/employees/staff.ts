@@ -93,3 +93,14 @@ export function checkStaff(i: CheckInput): { errors: StaffErrorKey[]; dupPhone: 
     : null;
   return { errors, dupPhone };
 }
+
+export type StaffView = "all" | "never" | "blocked" | "week";
+export const STAFF_VIEWS: StaffView[] = ["all", "never", "blocked", "week"];
+
+/** Prototip AdminStaff koʻrinishlari: hammasi / hech kirmagan / bloklangan / 7 kunda kirmagan. */
+export function inView(e: Pick<Employee, "status" | "lastLoginAt">, v: StaffView, weekAgo: number): boolean {
+  if (v === "never") return !e.lastLoginAt;
+  if (v === "blocked") return e.status === "BLOCKED";
+  if (v === "week") return !(e.lastLoginAt && new Date(e.lastLoginAt).getTime() >= weekAgo);
+  return true;
+}

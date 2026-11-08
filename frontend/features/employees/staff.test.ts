@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Employee } from "./api";
-import { checkStaff, cleanLogin, displayName, formatPhone, generatePassword, staffStatus, type StaffForm } from "./staff";
+import { checkStaff, cleanLogin, displayName, formatPhone, generatePassword, inView, staffStatus, type StaffForm } from "./staff";
 
 const emp = (over: Partial<Employee>): Employee => ({
   id: 1,
@@ -79,5 +79,20 @@ describe("staff", () => {
     expect(checkStaff({ ...base, seats: { used: 40, limit: 40 }, form }).errors).toEqual(["limit"]);
     expect(checkStaff({ ...base, form: { ...form, phone: "+998 93 410 27 65" } }).dupPhone?.login).toBe("s.aliyev");
     expect(checkStaff({ ...base, id: 1, form: { ...form, phone: "+998 93 410 27 65" } }).dupPhone).toBeNull();
+  });
+});
+
+describe("inView (prototip AdminStaff koʻrinishlari)", () => {
+  const now = Date.parse("2026-11-09T00:00:00Z");
+  const week = now - 7 * 24 * 3600 * 1000;
+  const fresh = emp({ status: "ACTIVE", lastLoginAt: "2026-11-08T10:00:00Z" });
+  const old = emp({ status: "ACTIVE", lastLoginAt: "2026-10-20T10:00:00Z" });
+  const never = emp({ status: "ACTIVE", lastLoginAt: undefined });
+  const blocked = emp({ status: "BLOCKED", lastLoginAt: "2026-11-08T10:00:00Z" });
+  it("ajratadi", () => {
+    expect([fresh, old, never, blocked].filter((e) => inView(e, "never", week))).toEqual([never]);
+    expect([fresh, old, never, blocked].filter((e) => inView(e, "blocked", week))).toEqual([blocked]);
+    expect([fresh, old, never, blocked].filter((e) => inView(e, "week", week))).toEqual([old, never]);
+    expect([fresh, old, never, blocked].filter((e) => inView(e, "all", week))).toHaveLength(4);
   });
 });

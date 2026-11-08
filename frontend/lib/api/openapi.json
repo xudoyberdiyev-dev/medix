@@ -3117,6 +3117,62 @@
         "tags" : [ "employees" ]
       }
     },
+    "/api/employees/{id}/end-sessions" : {
+      "post" : {
+        "operationId" : "endSessions",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EndSessionsResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ochiq sessiyalarni tugatish",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/{id}/journal" : {
+      "get" : {
+        "operationId" : "journal",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Journal"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xodim kartasi: kirishlar, harakatlar, sessiyalar, PIN holati",
+        "tags" : [ "employees" ]
+      }
+    },
     "/api/employees/{id}/reset-password" : {
       "post" : {
         "operationId" : "resetPassword",
@@ -3152,6 +3208,34 @@
           }
         },
         "summary" : "Vaqtinchalik parol berish",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/{id}/reset-pin" : {
+      "post" : {
+        "operationId" : "resetPin",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Employee"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "PIN-kodni bekor qilish (xodim yangisini oʻrnatadi)",
         "tags" : [ "employees" ]
       }
     },
@@ -13650,6 +13734,28 @@
         },
         "required" : [ "balance", "credit", "date", "debit", "docId", "docNumber", "docType", "occurredAt" ]
       },
+      "ActionEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "entityId" : {
+            "type" : "string"
+          },
+          "entityType" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at", "entityType" ]
+      },
       "AddOrdersRequest" : {
         "type" : "object",
         "properties" : {
@@ -16627,6 +16733,16 @@
         },
         "required" : [ "fullName", "login", "roleCode", "temporaryPassword" ]
       },
+      "EndSessionsResult" : {
+        "type" : "object",
+        "properties" : {
+          "ended" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "ended" ]
+      },
       "Entry" : {
         "type" : "object",
         "properties" : {
@@ -17933,6 +18049,36 @@
         },
         "required" : [ "amount", "item" ]
       },
+      "Journal" : {
+        "type" : "object",
+        "properties" : {
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ActionEvent"
+            }
+          },
+          "logins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LoginEvent"
+            }
+          },
+          "pinSet" : {
+            "type" : "boolean"
+          },
+          "pinSetAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sessions" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Ochiq sessiyalar soni"
+          }
+        },
+        "required" : [ "actions", "logins", "pinSet", "sessions" ]
+      },
       "KindTotals" : {
         "type" : "object",
         "properties" : {
@@ -18118,6 +18264,26 @@
           }
         },
         "required" : [ "suggested" ]
+      },
+      "LoginEvent" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "device" : {
+            "type" : "string"
+          },
+          "ip" : {
+            "type" : "string"
+          },
+          "result" : {
+            "type" : "string",
+            "description" : "OK — kirdi, FAILED — notoʻgʻri parol, BLOCKED — bloklangan"
+          }
+        },
+        "required" : [ "at", "result" ]
       },
       "LoginRequest" : {
         "type" : "object",
