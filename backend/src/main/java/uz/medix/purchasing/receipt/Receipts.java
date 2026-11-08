@@ -90,13 +90,10 @@ class Receipts {
     // ===== O'qish =====
 
     /** Chegirma (bonus) summasi: SUM — qiymat, PERCENT — qarzdan (o'tkazilmagan bo'lsa qatorlar summasidan) foiz, HALF_UP. */
-    private static final String BONUS_SQL = """
-            CASE r.discount_kind WHEN 'SUM' THEN r.discount_value
-                 WHEN 'PERCENT' THEN round(coalesce(r.debt_amount, t.amount, 0) * r.discount_value / 100, 2) END""";
-    private static final String LINES_SQL = """
-             LEFT JOIN (SELECT receipt_id, count(*) AS lines, sum(qty + bonus_qty) AS qty, sum(bonus_qty) AS bonus_qty,
-                               sum(price * qty) AS amount
-                        FROM receipt_line GROUP BY receipt_id) t ON t.receipt_id = r.id""";
+    private static final String BONUS_SQL = " CASE r.discount_kind WHEN 'SUM' THEN r.discount_value"
+            + " WHEN 'PERCENT' THEN round(coalesce(r.debt_amount, t.amount, 0) * r.discount_value / 100, 2) END ";
+    private static final String LINES_SQL = " LEFT JOIN (SELECT receipt_id, count(*) AS lines, sum(qty + bonus_qty) AS qty,"
+            + " sum(bonus_qty) AS bonus_qty, sum(price * qty) AS amount FROM receipt_line GROUP BY receipt_id) t ON t.receipt_id = r.id";
 
     @Transactional(readOnly = true)
     ReceiptPage list(Actor actor, ReceiptFilter f, int page, int size, boolean prices) {
@@ -164,15 +161,15 @@ class Receipts {
             case AMOUNT -> " ORDER BY coalesce(r.debt_amount, t.amount, 0)" + dir + ", r.id" + dir;
             case DUE -> " ORDER BY r.due_date" + dir + " NULLS LAST, r.id" + dir;
         };
-        List<ReceiptSummary> items = jdbc.sql("""
+        String cols = """
                 SELECT r.id, r.number, r.branch_id, w.name AS warehouse, r.supplier_id, c.name AS supplier, r.receipt_date, r.invoice_number,
                        r.status, coalesce(t.lines, 0) AS lines, coalesce(t.qty, 0) AS qty, coalesce(t.bonus_qty, 0) AS bonus_qty, t.amount,
                        r.due_date, r.prepaid, r.debt_amount, e.full_name AS created_by, r.created_at, r.payment_type, ow.full_name AS owner,
                        r.from_bonus, r.discount_date, r.cancel_reason,
-                       EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id) AS bonus_confirmed, """ + BONUS_SQL + """
-                 AS bonus_amount""" + from + """
-                 JOIN warehouse w ON w.id = r.warehouse_id
-                 JOIN employee e ON e.id = r.created_by""" + LINES_SQL + listWhere + order + " LIMIT :l OFFSET :o")
+                       EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id) AS bonus_confirmed,""";
+        List<ReceiptSummary> items = jdbc.sql(cols + BONUS_SQL + "AS bonus_amount" + from
+                        + " JOIN warehouse w ON w.id = r.warehouse_id JOIN employee e ON e.id = r.created_by" + LINES_SQL + listWhere + order
+                        + " LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", size)
                 .param("o", (long) page * size)
@@ -205,15 +202,14 @@ class Receipts {
                 .list();
         LocalDate today = today();
         record KpiRow(long drafts, long oldDrafts, long accepted, BigDecimal expectedBonus, long expectedBonusDocs, long bonusGoodsMonth) {}
-        KpiRow k = jdbc.sql("""
-                SELECT count(*) FILTER (WHERE r.status = 'DRAFT') AS drafts,
-                       count(*) FILTER (WHERE r.status = 'DRAFT' AND r.receipt_date < :old) AS old_drafts,
-                       count(*) FILTER (WHERE r.status = 'ACCEPTED') AS accepted,
-                       coalesce(sum(""" + BONUS_SQL + """
-                ) FILTER (WHERE r.status = 'POSTED' AND sb.id IS NULL AND r.discount_kind IS NOT NULL), 0) AS expected_bonus,
-                       count(*) FILTER (WHERE r.status = 'POSTED' AND sb.id IS NULL AND r.discount_kind IS NOT NULL) AS expected_bonus_docs,
-                       coalesce(sum(t.bonus_qty) FILTER (WHERE r.status = 'POSTED' AND r.receipt_date >= :month), 0) AS bonus_goods_month
-                FROM receipt r LEFT JOIN supplier_bonus sb ON sb.receipt_id = r.id""" + LINES_SQL + scope)
+        String posted = " FILTER (WHERE r.status = 'POSTED' AND sb.id IS NULL AND r.discount_kind IS NOT NULL)";
+        KpiRow k = jdbc.sql("SELECT count(*) FILTER (WHERE r.status = 'DRAFT') AS drafts,"
+                        + " count(*) FILTER (WHERE r.status = 'DRAFT' AND r.receipt_date < :old) AS old_drafts,"
+                        + " count(*) FILTER (WHERE r.status = 'ACCEPTED') AS accepted,"
+                        + " coalesce(sum(" + BONUS_SQL + ")" + posted + ", 0) AS expected_bonus,"
+                        + " count(*)" + posted + " AS expected_bonus_docs,"
+                        + " coalesce(sum(t.bonus_qty) FILTER (WHERE r.status = 'POSTED' AND r.receipt_date >= :month), 0) AS bonus_goods_month"
+                        + " FROM receipt r LEFT JOIN supplier_bonus sb ON sb.receipt_id = r.id" + LINES_SQL + scope)
                 .params(params)
                 .param("old", today.minusDays(3))
                 .param("month", today.withDayOfMonth(1))

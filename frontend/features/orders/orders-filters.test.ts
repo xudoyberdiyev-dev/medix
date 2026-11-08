@@ -23,13 +23,3 @@ describe("buyurtmalar: hisobotdan oʻtish filtrlari", () => {
     expect(soldLabel({ from: "2026-11-01", to: "2026-11-05" }, t)).toBe("Sotuv: 01.11.2026 – 05.11.2026");
   });
 });
-
-describe("kirimlar eksporti", () => {
-  it("filtrlar bilan havola", async () => {
-    const { receiptsExportHref } = await import("@/features/receipts/receipts-page");
-    expect(receiptsExportHref({ branchId: null, status: null, supplierId: null })).toBe("/api/receipts/export");
-    expect(receiptsExportHref({ branchId: 2, status: "POSTED", supplierId: 9 })).toBe(
-      "/api/receipts/export?branchId=2&status=POSTED&supplierId=9",
-    );
-  });
-});

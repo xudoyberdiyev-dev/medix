@@ -409,7 +409,7 @@ test("Filial rahbari: kassirning katta chiqimini tasdiqlaydi", async ({ page }) 
 test("Xarid: birinchi kirish, kirim qoralamasini kiritadi (qabul qila olmaydi)", async ({ page }) => {
   await firstLogin(page, "buyer.1");
   await page.goto("/receipts");
-  await page.getByRole("button", { name: "Kirim qoʻshish" }).click();
+  await page.getByRole("button", { name: "Yangi kirim" }).click();
   await choose(page, "Ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");

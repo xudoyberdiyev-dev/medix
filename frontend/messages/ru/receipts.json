@@ -17,7 +17,7 @@
   "list": {
     "forbidden": "Эта страница закрыта для вашей роли.",
     "title": "Приход",
-    "add": "Добавить приход",
+    "add": "Новый приход",
     "caption": "Приходы",
     "status": "Статус",
     "allStatuses": "Все статусы",
@@ -34,10 +34,52 @@
       "invoice": "Накладная",
       "warehouse": "Склад",
       "qty": "Количество",
-      "amount": "Сумма",
+      "amount": "Сумма (с НДС)",
       "due": "Срок оплаты",
-      "status": "Статус"
-    }
+      "status": "Статус",
+      "bonus": "Бонус",
+      "bonusGoods": "Бонусный товар",
+      "payment": "Тип оплаты",
+      "owner": "На кого"
+    },
+    "countLabel": "Всего приходов",
+    "tabsLabel": "Виды приходов",
+    "tab": {
+      "ALL": "Все",
+      "DRAFT": "Черновики",
+      "ACCEPTED": "Приняты",
+      "POSTED": "Проведены",
+      "CANCELLED": "Отменены"
+    },
+    "search": "Поиск",
+    "searchPlaceholder": "Номер, накладная или поставщик",
+    "f": {
+      "supplier": "Поставщик",
+      "warehouse": "Склад",
+      "date": "Дата"
+    },
+    "dateInvalid": "Дата в формате ДД.ММ.ГГГГ.",
+    "clearFilters": "Сбросить фильтры",
+    "kpi": {
+      "drafts": "Черновики",
+      "oldDrafts": "{count} старше 3 дней",
+      "accepted": "Приняты, не проведены",
+      "waitPost": "Ожидают проведения",
+      "expectedBonus": "Ожидаемые бонусы",
+      "docs": "{count} док.",
+      "bonusGoods": "Бонусный товар за месяц",
+      "pcs": "{count} шт."
+    },
+    "age": "{days} дн.",
+    "noNumber": "Без номера",
+    "fromBonus": "С бонусного баланса",
+    "open": "Открыть",
+    "more": "Другие действия",
+    "print": "Печать",
+    "selected": "Выбрано: {count}",
+    "clearSelection": "Снять выбор",
+    "excel": "Excel",
+    "totalRow": "{count} док."
   },
   "drawer": {
     "kind": "Приход",

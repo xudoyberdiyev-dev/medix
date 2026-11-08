@@ -5,8 +5,11 @@ import { ensureCsrf } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { fromCents, toCents } from "@/features/cash/api";
+import { receiptQuery, type ReceiptFilters } from "./list-state";
 
 export type ReceiptSummary = components["schemas"]["ReceiptSummary"];
+export type ReceiptKpi = components["schemas"]["ReceiptKpi"];
+export type ReceiptFacet = components["schemas"]["ReceiptFacet"];
 export type ReceiptDetail = components["schemas"]["ReceiptDetail"];
 export type ReceiptLine = components["schemas"]["ReceiptLine"];
 export type ReceiptRequest = components["schemas"]["ReceiptRequest"];
@@ -84,13 +87,24 @@ export function useReceipts(
             query: {
               branchId: branchId ?? undefined,
               status: status ?? undefined,
-              supplierId: supplierId ?? undefined,
+              supplierId: supplierId != null ? [supplierId] : undefined,
               page: page - 1,
               size: 50,
             },
           },
         }),
       ),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+}
+
+/** Kirimlar roʻyxati sahifasi (prototip `Receipts`): yorliqlar soni, filtr variantlari, kartalar. */
+export function useReceiptList(f: ReceiptFilters, branchId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: ["receipts", "list", "page", branchId, f],
+    queryFn: () =>
+      unwrap(api.GET("/api/receipts", { params: { query: { ...receiptQuery(f, branchId), page: f.page - 1, size: f.size } } })),
     placeholderData: keepPreviousData,
     enabled,
   });

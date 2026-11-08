@@ -17,7 +17,7 @@
   "list": {
     "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
     "title": "Kirim",
-    "add": "Kirim qoʻshish",
+    "add": "Yangi kirim",
     "caption": "Kirimlar",
     "status": "Holat",
     "allStatuses": "Barcha holatlar",
@@ -34,10 +34,52 @@
       "invoice": "Yuk xati",
       "warehouse": "Ombor",
       "qty": "Miqdor",
-      "amount": "Summa",
+      "amount": "Summa (QQS bilan)",
       "due": "Toʻlov kuni",
-      "status": "Holat"
-    }
+      "status": "Holat",
+      "bonus": "Bonus",
+      "bonusGoods": "Bonus tovar",
+      "payment": "Toʻlov turi",
+      "owner": "Kim nomiga"
+    },
+    "countLabel": "Jami kirimlar",
+    "tabsLabel": "Kirim koʻrinishlari",
+    "tab": {
+      "ALL": "Hammasi",
+      "DRAFT": "Qoralamalar",
+      "ACCEPTED": "Qabul qilindi",
+      "POSTED": "Oʻtkazildi",
+      "CANCELLED": "Bekor qilingan"
+    },
+    "search": "Qidiruv",
+    "searchPlaceholder": "Raqam, nakladnoy yoki yetkazib beruvchi",
+    "f": {
+      "supplier": "Yetkazib beruvchi",
+      "warehouse": "Ombor",
+      "date": "Sana"
+    },
+    "dateInvalid": "Sana KK.OO.YYYY koʻrinishida boʻlsin.",
+    "clearFilters": "Filtrlarni tozalash",
+    "kpi": {
+      "drafts": "Qoralamalar",
+      "oldDrafts": "{count} tasi 3 kundan eski",
+      "accepted": "Qabul qilindi, oʻtkazilmagan",
+      "waitPost": "Oʻtkazish kutilmoqda",
+      "expectedBonus": "Kutilayotgan bonuslar",
+      "docs": "{count} ta hujjat",
+      "bonusGoods": "Shu oy bonus tovar",
+      "pcs": "{count} dona"
+    },
+    "age": "{days} kun",
+    "noNumber": "Raqamsiz",
+    "fromBonus": "Bonus balansdan",
+    "open": "Ochish",
+    "more": "Boshqa amallar",
+    "print": "Chop etish",
+    "selected": "{count} ta tanlandi",
+    "clearSelection": "Tanlovni bekor qilish",
+    "excel": "Excel",
+    "totalRow": "{count} ta hujjat"
   },
   "drawer": {
     "kind": "Kirim",

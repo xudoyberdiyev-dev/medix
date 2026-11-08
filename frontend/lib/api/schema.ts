@@ -8311,6 +8311,10 @@ export interface components {
             size: number;
             /** Format: int64 */
             total: number;
+            statuses: components["schemas"]["ReceiptStatusCount"][];
+            suppliers: components["schemas"]["ReceiptFacet"][];
+            warehouses: components["schemas"]["ReceiptFacet"][];
+            kpi: components["schemas"]["ReceiptKpi"];
         };
         ReceiptRequest: {
             /** Format: date */
@@ -8371,6 +8375,17 @@ export interface components {
             /** Format: int64 */
             totalQty: number;
             warehouse: string;
+            /** @enum {string} */
+            paymentType: "CASH" | "TRANSFER" | "ONLINE";
+            owner?: string;
+            fromBonus: boolean;
+            /** Format: int64 */
+            bonusQty: number;
+            bonusAmount?: string;
+            /** Format: date */
+            bonusDate?: string;
+            bonusConfirmed: boolean;
+            cancelReason?: string;
         };
         ReceiveLineRequest: {
             /** Format: int64 */
@@ -9660,6 +9675,32 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        ReceiptStatusCount: {
+            /** @enum {string} */
+            status?: "DRAFT" | "ACCEPTED" | "POSTED" | "CANCELLED";
+            /** Format: int64 */
+            count: number;
+        };
+        ReceiptFacet: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int64 */
+            count: number;
+        };
+        ReceiptKpi: {
+            /** Format: int64 */
+            drafts: number;
+            /** Format: int64 */
+            oldDrafts: number;
+            /** Format: int64 */
+            accepted: number;
+            expectedBonus?: string;
+            /** Format: int64 */
+            expectedBonusDocs: number;
+            /** Format: int64 */
+            bonusGoodsMonth: number;
         };
     };
     responses: never;
@@ -14689,7 +14730,13 @@ export interface operations {
             query?: {
                 branchId?: number;
                 status?: "DRAFT" | "ACCEPTED" | "POSTED" | "CANCELLED";
-                supplierId?: number;
+                supplierId?: number[];
+                warehouseId?: number[];
+                from?: string;
+                to?: string;
+                q?: string;
+                sort?: "CREATED" | "NUMBER" | "DATE" | "AMOUNT" | "DUE";
+                desc?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -14766,7 +14813,14 @@ export interface operations {
             query?: {
                 branchId?: number;
                 status?: "DRAFT" | "ACCEPTED" | "POSTED" | "CANCELLED";
-                supplierId?: number;
+                supplierId?: number[];
+                warehouseId?: number[];
+                from?: string;
+                to?: string;
+                q?: string;
+                sort?: "CREATED" | "NUMBER" | "DATE" | "AMOUNT" | "DUE";
+                desc?: boolean;
+                id?: number[];
             };
             header?: never;
             path?: never;
