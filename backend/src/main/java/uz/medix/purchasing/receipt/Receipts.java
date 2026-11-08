@@ -291,7 +291,8 @@ class Receipts {
                 }
             }
             diff |= l.hasDiff();
-            out.add(new ReceiptLine(l.id(), l.lineNo(), l.productId(), l.code(), l.name(), l.batchNumber(), localDate(l.producedOn()),
+            out.add(new ReceiptLine(l.id(), l.lineNo(), l.productId(), l.code(), l.name(), l.manufacturer(), l.controlled(), l.marked(),
+                    l.vatRate().stripTrailingZeros().toPlainString(), l.batchNumber(), localDate(l.producedOn()),
                     l.expiryDate().toLocalDate(), l.zoneId(), l.zone(), ZoneType.valueOf(l.zoneType()), l.qty(), l.bonusQty(),
                     prices && l.price() != null ? new Money(l.price()).toString() : null, l.receivedQty(), l.damagedQty(),
                     l.diffReason() == null ? null : DiffReason.valueOf(l.diffReason()), l.batch(), l.bonusBatch()));
@@ -317,7 +318,8 @@ class Receipts {
                 instant(h.cancelledAt()), h.cancelReason(), out));
     }
 
-    record LineRow(long id, int lineNo, long productId, String code, String name, boolean controlled, String batchNumber, Date producedOn,
+    record LineRow(long id, int lineNo, long productId, String code, String name, boolean controlled, boolean marked, String manufacturer,
+            BigDecimal vatRate, String batchNumber, Date producedOn,
             Date expiryDate, long zoneId, String zone, String zoneType, int qty, int bonusQty, BigDecimal price, Integer receivedQty,
             Integer damagedQty, String diffReason, Long batchId, String batch, Long bonusBatchId, String bonusBatch) {
 
@@ -328,10 +330,11 @@ class Receipts {
 
     private List<LineRow> lines(long receiptId) {
         return jdbc.sql("""
-                SELECT l.id, l.line_no, l.product_id, p.code, p.name, p.controlled, l.batch_number, l.produced_on, l.expiry_date, l.zone_id,
+                SELECT l.id, l.line_no, l.product_id, p.code, p.name, p.controlled, p.marked, m.name AS manufacturer, p.vat_rate, l.batch_number, l.produced_on, l.expiry_date, l.zone_id,
                        z.name AS zone, z.type AS zone_type, l.qty, l.bonus_qty, l.price, l.received_qty, l.damaged_qty, l.diff_reason,
                        l.batch_id, b.number AS batch, l.bonus_batch_id, bb.number AS bonus_batch
                 FROM receipt_line l JOIN product p ON p.id = l.product_id JOIN zone z ON z.id = l.zone_id
+                LEFT JOIN manufacturer m ON m.id = p.manufacturer_id
                 LEFT JOIN batch b ON b.id = l.batch_id LEFT JOIN batch bb ON bb.id = l.bonus_batch_id
                 WHERE l.receipt_id = :id ORDER BY l.line_no""")
                 .param("id", receiptId)
