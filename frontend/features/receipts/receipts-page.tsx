@@ -72,6 +72,7 @@ function KpiTile({
     <button
       type="button"
       onClick={onClick}
+      aria-label={`${label}: ${value}`}
       className="flex min-w-0 flex-col items-start gap-1 rounded-card border border-border bg-surface px-4 py-3.5 text-left transition-colors hover:border-primary/50"
     >
       <span className="text-[12.5px] text-text-secondary">{label}</span>
