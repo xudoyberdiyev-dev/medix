@@ -368,6 +368,26 @@ class StockLedgerIT {
                 .andExpect(jsonPath("$.costSum").doesNotExist());
         mvc.perform(get("/api/stock/summary").cookie(keeper)).andExpect(jsonPath("$.value").doesNotExist());
         mvc.perform(get("/api/stock/tree").cookie(keeper)).andExpect(jsonPath("$[0].value").doesNotExist());
+        mvc.perform(get("/api/stock/batch").param("batchId", String.valueOf(b1)).param("zoneId", String.valueOf(p.mainZone())).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.batchNumber").value("J-1"))
+                .andExpect(jsonPath("$.zoneType").value("MAIN"))
+                .andExpect(jsonPath("$.qty").value(5))
+                .andExpect(jsonPath("$.reserved").value(2))
+                .andExpect(jsonPath("$.available").value(3))
+                .andExpect(jsonPath("$.closed").value(0))
+                .andExpect(jsonPath("$.cost").exists())
+                .andExpect(jsonPath("$.moves.length()").value(1))
+                .andExpect(jsonPath("$.moves[0].docNumber").value("BQ-TST-000021"))
+                .andExpect(jsonPath("$.moves[0].qty").value(5))
+                .andExpect(jsonPath("$.moves[0].balance").value(5));
+        mvc.perform(get("/api/stock/batch").param("batchId", String.valueOf(b2)).param("zoneId", String.valueOf(p.quarantineZone())).cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.closed").value(3))
+                .andExpect(jsonPath("$.available").value(0))
+                .andExpect(jsonPath("$.cost").doesNotExist());
+        mvc.perform(get("/api/stock/batch").param("batchId", String.valueOf(b2)).param("zoneId", String.valueOf(p.mainZone())).cookie(admin))
+                .andExpect(status().isNotFound());
         Cookie accountant = loginAs("ACCOUNTANT", null);
         mvc.perform(get("/api/stock/products").cookie(accountant)).andExpect(status().isForbidden());
     }

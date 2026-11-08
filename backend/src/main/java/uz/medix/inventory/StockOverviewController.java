@@ -139,6 +139,35 @@ class StockOverviewController {
             @Schema(description = "Qabul qilingan, lekin yetishmagan va hal qilinmagan miqdor") boolean shortage,
             @Schema(nullable = true) OffsetDateTime sentAt) {}
 
+    record BatchMove(OffsetDateTime occurredAt, String docType, long docId, String docNumber, int qty,
+            @Schema(description = "Shu partiya × zona qoldig'i harakatdan keyin") long balance) {}
+
+    record BatchCard(
+            long productId,
+            String productName,
+            boolean marked,
+            long batchId,
+            String batchNumber,
+            boolean bonus,
+            long zoneId,
+            String zone,
+            ZoneType zoneType,
+            String warehouse,
+            String branch,
+            @Schema(nullable = true) LocalDate producedOn,
+            LocalDate expiryDate,
+            boolean expired,
+            long qty,
+            long reserved,
+            long available,
+            long closed,
+            @Schema(nullable = true, description = "Birlik tannarxi — faqat special.cost") String cost,
+            @Schema(nullable = true) Long receiptId,
+            @Schema(nullable = true) String receiptNumber,
+            @Schema(nullable = true) LocalDate receiptDate,
+            @Schema(nullable = true) String supplier,
+            List<BatchMove> moves) {}
+
     private final JdbcClient jdbc;
     private final CurrentActor currentActor;
     private final Clock clock;
@@ -386,6 +415,65 @@ class StockOverviewController {
                             showCost ? new Money(rs.getBigDecimal("value")).toString() : null);
                 })
                 .list();
+    }
+
+    @GetMapping("/batch")
+    @PreAuthorize("hasAuthority('stock.view')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Partiya kartasi (BatchPanel)", description = "Partiya × zona: muddat, taqsimot (mavjud / band / yopiq), tafsilotlar, "
+            + "kirim hujjati va shu zonadagi barcha harakatlar (qoldiq bilan). Filial doirasida.")
+    BatchCard batch(@RequestParam long batchId, @RequestParam long zoneId, Authentication auth) {
+        Actor actor = actor();
+        Map<String, Object> params = new HashMap<>();
+        params.put("today", Date.valueOf(today()));
+        params.put("bid", batchId);
+        params.put("zid", zoneId);
+        StringBuilder w = new StringBuilder(" WHERE s.batch_id = :bid AND s.zone_id = :zid");
+        scope(actor, null, w, params);
+        boolean showCost = showCost(auth);
+        List<BatchCard> found = jdbc.sql(cte(w) + """
+                SELECT bal.product_id, p.name AS product_name, p.marked, bal.batch_id, bal.batch_number, bal.bonus, bal.zone_id, z.name AS zone,
+                       bal.zone_type, w.name AS warehouse, br.name AS branch, b.produced_on, bal.expiry_date, bal.expired, bal.qty, bal.res,
+                       CASE WHEN bal.sellable AND NOT bal.expired THEN bal.qty - bal.res ELSE 0 END AS available,
+                       CASE WHEN bal.zone_type IN ('RECEIVING', 'QUARANTINE') OR bal.expired THEN bal.qty ELSE 0 END AS closed,
+                       bal.cost, rc.id AS receipt_id, bal.receipt_number, bal.receipt_date, cp.name AS supplier
+                FROM bal JOIN product p ON p.id = bal.product_id JOIN zone z ON z.id = bal.zone_id JOIN warehouse w ON w.id = bal.warehouse_id
+                JOIN branch br ON br.id = bal.branch_id JOIN batch b ON b.id = bal.batch_id
+                LEFT JOIN counterparty cp ON cp.id = bal.supplier_id
+                LEFT JOIN LATERAL (SELECT r.id FROM receipt_line l JOIN receipt r ON r.id = l.receipt_id
+                                   WHERE b.source_type = 'KR' AND l.id = b.source_id) rc ON true""")
+                .params(params)
+                .query((rs, n) -> {
+                    BigDecimal cost = rs.getBigDecimal("cost");
+                    Date produced = rs.getDate("produced_on");
+                    Date received = rs.getDate("receipt_date");
+                    long receipt = rs.getLong("receipt_id");
+                    boolean hasReceipt = !rs.wasNull();
+                    return new BatchCard(rs.getLong("product_id"), rs.getString("product_name"), rs.getBoolean("marked"), rs.getLong("batch_id"),
+                            rs.getString("batch_number"), rs.getBoolean("bonus"), rs.getLong("zone_id"), rs.getString("zone"),
+                            ZoneType.valueOf(rs.getString("zone_type")), rs.getString("warehouse"), rs.getString("branch"),
+                            produced == null ? null : produced.toLocalDate(), rs.getDate("expiry_date").toLocalDate(), rs.getBoolean("expired"),
+                            rs.getLong("qty"), rs.getLong("res"), rs.getLong("available"), rs.getLong("closed"),
+                            showCost && cost != null ? new Money(cost).toString() : null, hasReceipt ? receipt : null,
+                            rs.getString("receipt_number"), received == null ? null : received.toLocalDate(), rs.getString("supplier"), List.of());
+                })
+                .list();
+        if (found.isEmpty()) {
+            throw MedixException.notFound("stock.batchUnknown");
+        }
+        List<BatchMove> moves = jdbc.sql("""
+                SELECT occurred_at, doc_type, doc_id, doc_number, qty,
+                       sum(qty) OVER (ORDER BY occurred_at, id) AS balance
+                FROM stock_move WHERE batch_id = :bid AND zone_id = :zid ORDER BY occurred_at DESC, id DESC LIMIT 200""")
+                .param("bid", batchId)
+                .param("zid", zoneId)
+                .query((rs, n) -> new BatchMove(rs.getTimestamp("occurred_at").toInstant().atOffset(ZoneOffset.UTC), rs.getString("doc_type"),
+                        rs.getLong("doc_id"), rs.getString("doc_number"), rs.getInt("qty"), rs.getLong("balance")))
+                .list();
+        BatchCard c = found.getFirst();
+        return new BatchCard(c.productId(), c.productName(), c.marked(), c.batchId(), c.batchNumber(), c.bonus(), c.zoneId(), c.zone(), c.zoneType(),
+                c.warehouse(), c.branch(), c.producedOn(), c.expiryDate(), c.expired(), c.qty(), c.reserved(), c.available(), c.closed(), c.cost(),
+                c.receiptId(), c.receiptNumber(), c.receiptDate(), c.supplier(), moves);
     }
 
     @GetMapping("/transit")
