@@ -134,6 +134,25 @@ class ProductController {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
     }
 
+    @GetMapping("/new-code")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Bo'sh kod taklifi (shakl: «Yangi kod yaratish»)")
+    ProductModels.NewCode newCode() {
+        return new ProductModels.NewCode(products.suggestCode());
+    }
+
+    @GetMapping("/duplicates")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Shakl tekshiruvi: dublikatlar", description = "Shu nom + ishlab chiqaruvchi, kod egasi (eski kodlar ham), shtrix-kod egalari.")
+    ProductModels.DuplicateCheck duplicates(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long manufacturerId,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) List<String> barcodes,
+            @RequestParam(required = false) Long excludeId) {
+        return products.duplicates(name, manufacturerId, code, barcodes, excludeId);
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Mahsulot kartasi")
     ProductDetail get(@PathVariable long id) {
@@ -150,7 +169,7 @@ class ProductController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize(MANAGE)
-    @Operation(summary = "Mahsulot qo'shish", description = "8 raqamli kod avtomatik beriladi.")
+    @Operation(summary = "Mahsulot qo'shish", description = "8 raqamli kod: berilsa — shu (band bo'lsa 409), aks holda avtomatik.")
     ProductDetail create(@Valid @RequestBody ProductRequest r) {
         return products.create(r);
     }

@@ -264,4 +264,76 @@ class ProductIT {
                 .andExpect(jsonPath("$[0].fullName").exists())
                 .andExpect(jsonPath("$[0].login").doesNotExist());
     }
+
+    @Test
+    void formPresetCodeDuplicatesAndVatExempt() throws Exception {
+        Cookie admin = loginAs("ADMIN");
+        String tag = uniq();
+        long m = manufacturer("Gedeon " + tag);
+        String code = mvc.perform(get("/api/products/new-code").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(matchesPattern("^[1-9][0-9]{7}$")))
+                .andReturn().getResponse().getContentAsString().replaceAll(".*\"code\":\"(\\d{8})\".*", "$1");
+        String barcode = "479" + System.nanoTime() % 10_000_000_000L;
+        String withCode = body("Omeprazol " + tag, m, barcode).replace("\"vatRate\":\"12\"", "\"vatRate\":\"0\",\"vatExempt\":true,\"code\":\"" + code + "\"");
+        long id = id(mvc.perform(json(post("/api/products"), admin, withCode))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(code))
+                .andExpect(jsonPath("$.vatExempt").value(true))
+                .andExpect(jsonPath("$.hasMovements").value(false))
+                .andReturn());
+        // Band kod bilan yana — 409
+        mvc.perform(json(post("/api/products"), admin, body("Boshqa " + tag, null, null).replace("}", ",\"code\":\"" + code + "\"}")))
+                .andExpect(status().isConflict());
+        // Ozod, lekin stavka 12 — 400
+        mvc.perform(json(post("/api/products"), admin, body("Ozod " + tag, null, null).replace("}", ",\"vatExempt\":true}")))
+                .andExpect(status().isBadRequest());
+        // Dublikatlar: nom (registrsiz) + ishlab chiqaruvchi, kod, shtrix-kod; o'zi chiqarib tashlanadi
+        mvc.perform(get("/api/products/duplicates").cookie(admin).param("name", "OMEPRAZOL " + tag).param("manufacturerId", String.valueOf(m))
+                        .param("code", code).param("barcodes", barcode, "4780000000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sameName.id").value(id))
+                .andExpect(jsonPath("$.codeOwner.id").value(id))
+                .andExpect(jsonPath("$.barcodes", hasSize(1)))
+                .andExpect(jsonPath("$.barcodes[0].barcode").value(barcode));
+        mvc.perform(get("/api/products/duplicates").cookie(admin).param("name", "Omeprazol " + tag).param("manufacturerId", String.valueOf(m))
+                        .param("code", code).param("barcodes", barcode).param("excludeId", String.valueOf(id)))
+                .andExpect(jsonPath("$.sameName").doesNotExist())
+                .andExpect(jsonPath("$.codeOwner").doesNotExist())
+                .andExpect(jsonPath("$.barcodes", hasSize(0)));
+        // Operator — shakl tekshiruviga ruxsat yo'q
+        mvc.perform(get("/api/products/new-code").cookie(loginAs("OPERATOR"))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void editFormChangesCodeAndLocksAfterMovements() throws Exception {
+        Cookie admin = loginAs("ADMIN");
+        String tag = uniq();
+        long id = id(mvc.perform(json(post("/api/products"), admin, body("Qulf " + tag, null, null))).andExpect(status().isCreated()).andReturn());
+        String newCode = mvc.perform(get("/api/products/new-code").cookie(admin)).andReturn().getResponse().getContentAsString()
+                .replaceAll(".*\"code\":\"(\\d{8})\".*", "$1");
+        // Shaklda kod o'zgarsa — tarixga yoziladi
+        mvc.perform(json(put("/api/products/" + id), admin, body("Qulf " + tag, null, null).replace("}", ",\"code\":\"" + newCode + "\"}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(newCode))
+                .andExpect(jsonPath("$.codeHistory", hasSize(1)));
+        // Ombor harakati paydo bo'ladi
+        var loc = jdbc.sql("SELECT z.id AS zone, w.id AS wh, w.branch_id AS br FROM zone z JOIN warehouse w ON w.id = z.warehouse_id LIMIT 1")
+                .query((rs, n) -> new long[] {rs.getLong("zone"), rs.getLong("wh"), rs.getLong("br")})
+                .single();
+        long batch = jdbc.sql("""
+                INSERT INTO batch (product_id, number, expiry_date, cost, source_type) VALUES (:p, 'B1', :x, 1, 'TST') RETURNING id""")
+                .param("p", id).param("x", java.sql.Date.valueOf(java.time.LocalDate.now().plusYears(1))).query(Long.class).single();
+        jdbc.sql("""
+                INSERT INTO stock_move (branch_id, warehouse_id, zone_id, product_id, batch_id, qty, doc_type, doc_id, doc_number)
+                VALUES (:b, :w, :z, :p, :bt, 5, 'TST', 1, 'TST')""")
+                .param("b", loc[2]).param("w", loc[1]).param("z", loc[0]).param("p", id).param("bt", batch).update();
+        mvc.perform(get("/api/products/" + id).cookie(admin)).andExpect(jsonPath("$.hasMovements").value(true));
+        // Markirovkani o'chirish — 409; nom o'zgarishi — mumkin
+        mvc.perform(json(put("/api/products/" + id), admin, body("Qulf " + tag, null, null).replace("\"marked\":true", "\"marked\":false")))
+                .andExpect(status().isConflict());
+        mvc.perform(json(put("/api/products/" + id), admin, body("Qulf yangi " + tag, null, null)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Qulf yangi " + tag));
+    }
 }

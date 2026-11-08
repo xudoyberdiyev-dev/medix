@@ -217,7 +217,7 @@ class ProductExcel {
                 ProductRequest req = new ProductRequest(name, blank(r.get("Shartnomadagi nomi")), blank(r.get("Klassifikator nomi")),
                         manufacturer, category, country, unit, null, blank(r.get("IKPU")), blank(r.get("Farm ID")), barcodes,
                         yes(r.get("Nazoratdagi")), yes(r.get("Markirovkali")), yes(r.get("Retsept")), vat.isEmpty() ? "12" : vat,
-                        intOrNull(r.get("Min"), "Min"), intOrNull(r.get("Max"), "Max"), null, null, null, null, null);
+                        intOrNull(r.get("Min"), "Min"), intOrNull(r.get("Max"), "Max"), null, null, null, null, null, null, false);
                 checkFormats(req);
                 products.create(req, code.isEmpty() ? null : code);
                 created++;

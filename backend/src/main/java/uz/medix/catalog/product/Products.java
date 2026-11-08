@@ -42,6 +42,8 @@ import uz.medix.shared.text.SearchText;
 public class Products {
 
     private static final SecureRandom RANDOM = new SecureRandom();
+    /** Shakldan kod o'zgarganda tarixga yoziladigan sabab. */
+    static final String FORM_CODE_REASON = "Mahsulot shaklida oʻzgartirildi";
 
     private static final String ROW_SELECT = """
             SELECT p.id, p.code, p.name, p.contract_name, p.classifier_name, m.name AS manufacturer, c.name AS category,
@@ -244,13 +246,14 @@ public class Products {
                 String manufacturer, Long categoryId, String category, Long countryId, String country, long unitId, String unit,
                 Long supplyEmployeeId, String supplyEmployee, String ikpu, String farmId, boolean controlled, boolean marked,
                 boolean prescription, BigDecimal vatRate, Integer minQty, Integer maxQty, String dosageForm, String dose, Integer packQty,
-                Integer perPack, String note, boolean active) {}
+                Integer perPack, String note, boolean active, boolean vatExempt, boolean hasMovements) {}
         Optional<Base> base = jdbc.sql("""
                 SELECT p.id, p.code, p.name, p.contract_name, p.classifier_name, p.manufacturer_id, m.name AS manufacturer,
                        p.category_id, c.name AS category, p.country_id, co.name AS country, p.unit_id, u.name AS unit,
                        p.supply_employee_id, e.full_name AS supply_employee, p.ikpu, p.farm_id, p.controlled, p.marked,
                        p.prescription, p.vat_rate, p.min_qty, p.max_qty, p.dosage_form, p.dose, p.pack_qty, p.per_pack, p.note,
-                       p.active
+                       p.active, p.vat_exempt,
+                       EXISTS (SELECT 1 FROM stock_move sm WHERE sm.product_id = p.id) AS has_movements
                 FROM product p
                 JOIN unit u ON u.id = p.unit_id
                 LEFT JOIN manufacturer m ON m.id = p.manufacturer_id
@@ -278,7 +281,7 @@ public class Products {
                 new Ref(b.unitId(), b.unit()), ref(b.supplyEmployeeId(), b.supplyEmployee()), b.ikpu(), b.farmId(), barcodes(id),
                 b.controlled(), b.marked(), b.prescription(), vat(b.vatRate()), b.minQty(), b.maxQty(),
                 b.dosageForm() == null ? null : DosageForm.valueOf(b.dosageForm()), b.dose(), b.packQty(), b.perPack(), b.note(), b.active(),
-                history));
+                b.vatExempt(), b.hasMovements(), history));
     }
 
     @Transactional(readOnly = true)
@@ -305,6 +308,9 @@ public class Products {
     @Transactional
     ProductDetail create(ProductRequest r, String presetCode) {
         Normalized n = validate(r, null);
+        if (presetCode == null && r.code() != null && !r.code().isBlank()) {
+            presetCode = r.code().strip();
+        }
         if (presetCode != null && codeTaken(presetCode)) {
             throw MedixException.conflict("product.codeTaken", presetCode);
         }
@@ -312,9 +318,9 @@ public class Products {
         long id = jdbc.sql("""
                 INSERT INTO product (code, name, contract_name, classifier_name, manufacturer_id, category_id, country_id, unit_id,
                                      supply_employee_id, ikpu, farm_id, controlled, marked, prescription, vat_rate, min_qty, max_qty,
-                                     dosage_form, dose, pack_qty, per_pack, note)
+                                     dosage_form, dose, pack_qty, per_pack, note, vat_exempt)
                 VALUES (:code, :name, :contract, :classifier, :manufacturer, :category, :country, :unit, :supply, :ikpu, :farm,
-                        :controlled, :marked, :prescription, :vat, :min, :max, :form, :dose, :pack, :perPack, :note)
+                        :controlled, :marked, :prescription, :vat, :min, :max, :form, :dose, :pack, :perPack, :note, :vatExempt)
                 RETURNING id""")
                 .param("code", code)
                 .params(n.params())
@@ -331,13 +337,24 @@ public class Products {
     ProductDetail update(long id, ProductRequest r) {
         ProductDetail before = lock(id);
         Normalized n = validate(r, before);
+        if (before.hasMovements()
+                && (before.unit().id() != r.unitId()
+                        || !Objects.equals(before.perPack(), r.perPack())
+                        || before.controlled() != r.controlled()
+                        || before.marked() != r.marked())) {
+            throw MedixException.conflict("product.lockedByMovements");
+        }
+        if (r.code() != null && !r.code().isBlank() && !r.code().strip().equals(before.code())) {
+            changeCode(id, r.code().strip(), FORM_CODE_REASON);
+            before = find(id).orElseThrow();
+        }
         jdbc.sql("""
                 UPDATE product SET name = :name, contract_name = :contract, classifier_name = :classifier,
                        manufacturer_id = :manufacturer, category_id = :category, country_id = :country, unit_id = :unit,
                        supply_employee_id = :supply, ikpu = :ikpu, farm_id = :farm, controlled = :controlled, marked = :marked,
                        prescription = :prescription, vat_rate = :vat, min_qty = :min, max_qty = :max,
                        dosage_form = :form, dose = :dose, pack_qty = :pack, per_pack = :perPack, note = :note,
-                       updated_at = now(), version = version + 1
+                       vat_exempt = :vatExempt, updated_at = now(), version = version + 1
                 WHERE id = :id""")
                 .params(n.params())
                 .param("id", id)
@@ -432,6 +449,9 @@ public class Products {
         if (vat.compareTo(BigDecimal.ZERO) < 0 || vat.compareTo(BigDecimal.valueOf(100)) > 0) {
             throw MedixException.badRequest("validation.vatRate");
         }
+        if (r.vatExempt() && vat.signum() != 0) {
+            throw MedixException.badRequest("product.vatExemptRate");
+        }
         Set<String> barcodes = new LinkedHashSet<>();
         if (r.barcodes() != null) {
             for (String b : r.barcodes()) {
@@ -474,6 +494,7 @@ public class Products {
         p.put("pack", r.packQty());
         p.put("perPack", r.perPack());
         p.put("note", blankToNull(r.note()));
+        p.put("vatExempt", r.vatExempt());
         return new Normalized(p, barcodes);
     }
 
@@ -563,6 +584,59 @@ public class Products {
                 .update();
     }
 
+    /** Shakl uchun bo'sh kod taklifi (band qilinmaydi — saqlashda yana tekshiriladi). */
+    @Transactional(readOnly = true)
+    String suggestCode() {
+        return newCode();
+    }
+
+    /** Dublikatlar: shu nom + ishlab chiqaruvchi, kod egasi (yoki eski kod), shtrix-kod egalari. {@code excludeId} — tahrirdagi mahsulot. */
+    @Transactional(readOnly = true)
+    ProductModels.DuplicateCheck duplicates(String name, Long manufacturerId, String code, List<String> barcodes, Long excludeId) {
+        long ex = excludeId == null ? 0L : excludeId;
+        Ref sameName = null;
+        if (name != null && !name.isBlank() && manufacturerId != null) {
+            sameName = jdbc.sql("""
+                    SELECT id, name FROM product
+                    WHERE lower(name) = lower(:n) AND manufacturer_id = :m AND id <> :ex
+                    ORDER BY active DESC, id LIMIT 1""")
+                    .param("n", name.strip())
+                    .param("m", manufacturerId)
+                    .param("ex", ex)
+                    .query((rs, i) -> new Ref(rs.getLong("id"), rs.getString("name")))
+                    .optional()
+                    .orElse(null);
+        }
+        Ref codeOwner = null;
+        if (code != null && code.matches("^[1-9][0-9]{7}$")) {
+            codeOwner = jdbc.sql("""
+                    SELECT p.id, p.name FROM product p
+                    WHERE p.id <> :ex AND (p.code = :c
+                        OR EXISTS (SELECT 1 FROM product_code_history h WHERE h.product_id = p.id AND h.old_code = :c))
+                    LIMIT 1""")
+                    .param("c", code)
+                    .param("ex", ex)
+                    .query((rs, i) -> new Ref(rs.getLong("id"), rs.getString("name")))
+                    .optional()
+                    .orElse(null);
+        }
+        List<ProductModels.BarcodeOwner> owners = new ArrayList<>();
+        for (String b : barcodes == null ? List.<String>of() : barcodes) {
+            if (b == null || b.isBlank()) {
+                continue;
+            }
+            jdbc.sql("""
+                    SELECT p.id, p.name FROM product_barcode b JOIN product p ON p.id = b.product_id
+                    WHERE b.barcode = :b AND b.product_id <> :ex LIMIT 1""")
+                    .param("b", b.strip())
+                    .param("ex", ex)
+                    .query((rs, i) -> new ProductModels.BarcodeOwner(b.strip(), new Ref(rs.getLong("id"), rs.getString("name"))))
+                    .optional()
+                    .ifPresent(owners::add);
+        }
+        return new ProductModels.DuplicateCheck(sameName, codeOwner, owners);
+    }
+
     private String newCode() {
         for (int i = 0; i < 50; i++) {
             String code = String.valueOf(10_000_000 + RANDOM.nextInt(90_000_000));
@@ -640,6 +714,7 @@ public class Products {
         m.put("packQty", d.packQty());
         m.put("perPack", d.perPack());
         m.put("note", d.note());
+        m.put("vatExempt", d.vatExempt());
         return m;
     }
 }

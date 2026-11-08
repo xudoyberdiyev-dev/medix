@@ -86,6 +86,8 @@ final class ProductModels {
             @Schema(nullable = true) Integer perPack,
             @Schema(nullable = true) String note,
             boolean active,
+            @Schema(description = "QQSdan ozod (stavka 0)") boolean vatExempt,
+            @Schema(description = "Ombor harakati bor — birlik, qadoqdagi soni, nazorat va markirovka qulflanadi") boolean hasMovements,
             List<CodeChange> codeHistory) {}
 
     record ProductRequest(
@@ -110,7 +112,18 @@ final class ProductModels {
             @Schema(nullable = true) @Size(max = 50) String dose,
             @Schema(nullable = true) @Min(1) @Max(100_000) Integer packQty,
             @Schema(nullable = true) @Min(1) @Max(100_000) Integer perPack,
-            @Schema(nullable = true) @Size(max = 1000) String note) {}
+            @Schema(nullable = true) @Size(max = 1000) String note,
+            @Schema(nullable = true, description = "Yangi mahsulot: berilsa shu kod (band bo'lsa 409), aks holda avtomatik; tahrirda — farq qilsa kod o'zgartiriladi (tarixga)")
+            @Pattern(regexp = "^[1-9][0-9]{7}$", message = "{validation.productCode}") String code,
+            @Schema(description = "QQSdan ozod — vatRate 0 bo'lishi shart") boolean vatExempt) {}
+
+    /** Shakl uchun bo'sh kod taklifi. */
+    record NewCode(String code) {}
+
+    /** Shakl tekshiruvi: dublikatlar (nom + ishlab chiqaruvchi, kod, shtrix-kodlar). */
+    record DuplicateCheck(@Schema(nullable = true) Ref sameName, @Schema(nullable = true) Ref codeOwner, List<BarcodeOwner> barcodes) {}
+
+    record BarcodeOwner(String barcode, Ref product) {}
 
     /** Audit yozuvi (mahsulot bo'yicha): eski/yangi qiymat — JSON. */
     record HistoryRow(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String oldValue,
