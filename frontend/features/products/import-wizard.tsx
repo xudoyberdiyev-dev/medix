@@ -687,7 +687,7 @@ export function ProductImportWizard() {
                           <tr
                             key={v.row}
                             data-row={v.row}
-                            className={cn("border-b border-border align-middle", v.status === "ERROR" ? "bg-danger-bg/30" : "bg-surface")}
+                            className={cn("border-b border-border align-middle", v.status === "ERROR" ? "bg-danger-bg" : "bg-surface")}
                           >
                             <td
                               className={cn(
