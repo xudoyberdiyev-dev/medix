@@ -64,15 +64,24 @@ class ProductExcel {
 
     // ===== Eksport =====
 
+    private static final java.util.Map<ProductModels.DosageForm, String> FORM_NAMES = java.util.Map.of(
+            ProductModels.DosageForm.TABLET, "Tabletka", ProductModels.DosageForm.CAPSULE, "Kapsula",
+            ProductModels.DosageForm.AMPOULE, "Ampula", ProductModels.DosageForm.VIAL, "Flakon", ProductModels.DosageForm.SYRUP, "Sirop",
+            ProductModels.DosageForm.OINTMENT, "Malham", ProductModels.DosageForm.PEN, "Shprits-ruchka",
+            ProductModels.DosageForm.POWDER, "Kukun", ProductModels.DosageForm.GEL, "Gel");
+
     @Transactional(readOnly = true)
     void export(Filter filter, OutputStream out) throws IOException {
-        List<ProductRow> rows = products.search(new Filter(filter.q(), filter.manufacturerId(), filter.categoryId(), filter.status(),
-                filter.controlled(), filter.marked(), filter.sort(), filter.desc(), 0, MAX_EXPORT_ROWS)).items();
+        List<ProductRow> rows = products.search(new Filter(filter.q(), filter.ids(), filter.manufacturerIds(), filter.categoryIds(),
+                filter.countryIds(), filter.supplyEmployeeIds(), filter.status(), filter.view(), filter.controlled(), filter.marked(),
+                filter.branchId(), filter.sort(), filter.desc(), 0, MAX_EXPORT_ROWS)).items();
         try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
             Sheet sheet = wb.createSheet("Mahsulotlar");
             CellStyle header = headerStyle(wb);
-            String[] titles = {"Kod", "Nomi", "Ishlab chiqaruvchi", "Kategoriya", "Davlat", "Birlik", "QQS, %", "Min", "Max",
-                "Markirovkali", "Nazoratdagi", "Retsept", "Holat"};
+            // Prototip `Products` ustunlari tartibida
+            String[] titles = {"Kod", "Mahsulot nomi", "Shartnomadagi nomi", "Klassifikator nomi", "Ishlab chiqaruvchi", "Davlat",
+                "Kategoriya", "Dori shakli", "Doza", "Birlik", "Qadoqdagi soni", "Shtrix-kod", "IKPU", "Farm ID", "Taʼminot masʼuli",
+                "Nazoratdagi", "Markirovka", "Retsept", "QQS, %", "Min", "Max", "Qoldiq", "Sotuv narxi", "Izoh", "Holat"};
             Row h = sheet.createRow(0);
             for (int i = 0; i < titles.length; i++) {
                 Cell c = h.createCell(i);
@@ -85,19 +94,31 @@ class ProductExcel {
                 int i = 0;
                 row.createCell(i++).setCellValue(p.code());
                 row.createCell(i++).setCellValue(p.name());
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.contractName()).orElse(""));
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.classifierName()).orElse(""));
                 row.createCell(i++).setCellValue(Optional.ofNullable(p.manufacturer()).orElse(""));
-                row.createCell(i++).setCellValue(Optional.ofNullable(p.category()).orElse(""));
                 row.createCell(i++).setCellValue(Optional.ofNullable(p.country()).orElse(""));
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.category()).orElse(""));
+                row.createCell(i++).setCellValue(p.dosageForm() == null ? "" : FORM_NAMES.get(p.dosageForm()));
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.dose()).orElse(""));
                 row.createCell(i++).setCellValue(p.unit());
+                setInt(row.createCell(i++), p.packQty());
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.barcode()).orElse(""));
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.ikpu()).orElse(""));
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.farmId()).orElse(""));
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.supplyEmployee()).orElse(""));
+                row.createCell(i++).setCellValue(p.controlled() ? "ha" : "");
+                row.createCell(i++).setCellValue(p.marked() ? "ha" : "");
+                row.createCell(i++).setCellValue(p.prescription() ? "ha" : "");
                 row.createCell(i++).setCellValue(p.vatRate().replace(".00", ""));
                 setInt(row.createCell(i++), p.minQty());
                 setInt(row.createCell(i++), p.maxQty());
-                row.createCell(i++).setCellValue(p.marked() ? "ha" : "yoʻq");
-                row.createCell(i++).setCellValue(p.controlled() ? "ha" : "yoʻq");
-                row.createCell(i++).setCellValue(p.prescription() ? "ha" : "yoʻq");
+                row.createCell(i++).setCellValue(p.stock());
+                row.createCell(i++).setCellValue(p.price() == null ? "" : uz.medix.shared.money.Money.of(p.price()).format());
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.note()).orElse(""));
                 row.createCell(i).setCellValue(p.active() ? "Faol" : "Nofaol");
             }
-            int[] widths = {12, 50, 28, 22, 16, 10, 8, 8, 8, 13, 13, 10, 10};
+            int[] widths = {12, 44, 30, 30, 26, 14, 20, 14, 10, 8, 10, 16, 20, 14, 22, 11, 11, 9, 8, 8, 8, 10, 14, 30, 10};
             for (int i = 0; i < widths.length; i++) {
                 sheet.setColumnWidth(i, widths[i] * 256);
             }
@@ -196,7 +217,7 @@ class ProductExcel {
                 ProductRequest req = new ProductRequest(name, blank(r.get("Shartnomadagi nomi")), blank(r.get("Klassifikator nomi")),
                         manufacturer, category, country, unit, null, blank(r.get("IKPU")), blank(r.get("Farm ID")), barcodes,
                         yes(r.get("Nazoratdagi")), yes(r.get("Markirovkali")), yes(r.get("Retsept")), vat.isEmpty() ? "12" : vat,
-                        intOrNull(r.get("Min"), "Min"), intOrNull(r.get("Max"), "Max"));
+                        intOrNull(r.get("Min"), "Min"), intOrNull(r.get("Max"), "Max"), null, null, null, null, null);
                 checkFormats(req);
                 products.create(req, code.isEmpty() ? null : code);
                 created++;

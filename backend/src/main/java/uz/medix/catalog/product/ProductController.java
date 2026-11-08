@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +29,7 @@ import uz.medix.catalog.product.ProductModels.ProductDetail;
 import uz.medix.catalog.product.ProductModels.ProductRequest;
 import uz.medix.catalog.product.ProductModels.SortField;
 import uz.medix.catalog.product.ProductModels.Status;
+import uz.medix.catalog.product.ProductModels.View;
 import uz.medix.shared.error.MedixException;
 
 /**
@@ -51,36 +53,62 @@ class ProductController {
     }
 
     @GetMapping
-    @Operation(summary = "Mahsulotlar ro'yxati", description = "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, ishlab chiqaruvchi.")
+    @Operation(summary = "Mahsulotlar ro'yxati", description = "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, IKPU, Farm ID, "
+            + "ishlab chiqaruvchi. Yorliqlar soni va filtr variantlari (soni bilan) bilan.")
     ProductPage list(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Long manufacturerId,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) List<Long> manufacturerIds,
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) List<Long> countryIds,
+            @RequestParam(required = false) List<Long> supplyEmployeeIds,
             @RequestParam(defaultValue = "ACTIVE") Status status,
+            @RequestParam(defaultValue = "ALL") View view,
             @RequestParam(required = false) Boolean controlled,
             @RequestParam(required = false) Boolean marked,
+            @Parameter(description = "Qoldiq va narx filiali") @RequestParam(required = false) Long branchId,
+            @RequestParam(defaultValue = "false") boolean facets,
             @RequestParam(defaultValue = "NAME") SortField sort,
             @RequestParam(defaultValue = "false") boolean desc,
             @Parameter(description = "0 dan boshlanadi") @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         int safeSize = Math.clamp(size, 1, MAX_PAGE_SIZE);
-        return products.search(new Filter(q, manufacturerId, categoryId, status, controlled, marked, sort, desc, Math.max(page, 0), safeSize));
+        Filter f = new Filter(q, List.of(), merge(manufacturerIds, manufacturerId), merge(categoryIds, categoryId), countryIds,
+                supplyEmployeeIds, status, view, controlled, marked, branchId, sort, desc, Math.max(page, 0), safeSize);
+        return products.search(f, facets);
     }
 
     @GetMapping("/export")
-    @Operation(summary = "Excel'ga eksport (.xlsx)", description = "Jadvaldagi filtrlar bilan; ko'pi bilan 50 000 qator.")
+    @Operation(summary = "Excel'ga eksport (.xlsx)", description = "Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.")
     void export(
             @RequestParam(required = false) String q,
+            @RequestParam(required = false) List<Long> ids,
             @RequestParam(required = false) Long manufacturerId,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) List<Long> manufacturerIds,
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) List<Long> countryIds,
+            @RequestParam(required = false) List<Long> supplyEmployeeIds,
             @RequestParam(defaultValue = "ACTIVE") Status status,
+            @RequestParam(defaultValue = "ALL") View view,
             @RequestParam(required = false) Boolean controlled,
             @RequestParam(required = false) Boolean marked,
+            @RequestParam(required = false) Long branchId,
             @RequestParam(defaultValue = "NAME") SortField sort,
             @RequestParam(defaultValue = "false") boolean desc,
             HttpServletResponse response) throws IOException {
         xlsx(response, "mahsulotlar.xlsx");
-        excel.export(new Filter(q, manufacturerId, categoryId, status, controlled, marked, sort, desc, 0, 1), response.getOutputStream());
+        excel.export(new Filter(q, ids, merge(manufacturerIds, manufacturerId), merge(categoryIds, categoryId), countryIds, supplyEmployeeIds,
+                status, view, controlled, marked, branchId, sort, desc, 0, 1), response.getOutputStream());
+    }
+
+    private static List<Long> merge(List<Long> many, Long one) {
+        List<Long> out = new java.util.ArrayList<>(many == null ? List.of() : many);
+        if (one != null && !out.contains(one)) {
+            out.add(one);
+        }
+        return out;
     }
 
     @GetMapping("/import-template")
