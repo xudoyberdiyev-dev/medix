@@ -34,7 +34,7 @@ final class SetupRequests {
             @Schema(nullable = true) @Size(max = 500) String actualAddress,
             @Schema(nullable = true) @Size(max = 200) String directorName,
             @Schema(nullable = true) @Size(max = 200) String accountantName,
-            @Schema(nullable = true) @Size(max = 10) List<@Valid Organization.BankAccount> bankAccounts) {
+            @Valid @Schema(nullable = true) @Size(max = 10) List<Organization.BankAccount> bankAccounts) {
 
         Organization.BranchExtra extra() {
             return vatPayer == null
