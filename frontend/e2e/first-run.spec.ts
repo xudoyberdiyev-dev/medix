@@ -195,7 +195,13 @@ test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await expect(page.getByText("Qoldiq omborga kirdi")).toBeVisible();
   await page.keyboard.press("Escape");
 
+  // Qoldiqlar — mahsulot boʻyicha: jami va mavjud
   await page.goto("/stock");
+  await expect(page.getByRole("row", { name: /Paracetamol E2E/ })).toContainText("120");
+  await page.getByRole("row", { name: /Paracetamol E2E/ }).click();
+  await expect(page.getByText("Partiya × zona")).toBeVisible();
+  // Partiya boʻyicha koʻrinish
+  await page.goto("/stock?view=batch");
   const row = page.getByRole("row", { name: /Paracetamol E2E/ });
   await expect(row).toContainText("E2E-01");
   await expect(row).toContainText("120");
@@ -252,7 +258,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await expect(page.getByText("qarz 96.000,00 soʻm")).toBeVisible();
   await page.keyboard.press("Escape");
 
-  await page.goto("/stock");
+  await page.goto("/stock?view=batch");
   await field(page, "Qidirish").fill("Paracetamol E2E");
   await expect(page.getByRole("row", { name: /KR-E2E-B/ })).toContainText("5");
   await expect(page.getByRole("row", { name: /KR-E2E(?!-B)/ }).first()).toContainText("48");
