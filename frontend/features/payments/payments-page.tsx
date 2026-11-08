@@ -172,7 +172,13 @@ function SupplierPaymentsTab() {
   const scopeBranch = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const workBranch = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
   const [status, setStatus] = useState<string | null>(null);
-  const [editor, setEditor] = useState<{ id: number | null } | null>(null);
+  // Kirim kartochkasidan «Toʻlash»: ?tab=yt&new=1&supplier=&supplierName=&amount=
+  const params = useSearchParams();
+  const fromReceipt = params.get("new") === "1" && Number(params.get("supplier")) > 0;
+  const initial = fromReceipt
+    ? { supplierId: Number(params.get("supplier")), supplier: params.get("supplierName") ?? "", amount: params.get("amount") ?? "" }
+    : undefined;
+  const [editor, setEditor] = useState<{ id: number | null } | null>(fromReceipt && canCreate ? { id: null } : null);
   const list = useSupplierPayments(scopeBranch, (status as SupplierPaymentStatus | null) ?? null, true);
   const columns: TableColumn<SupplierPaymentSummary>[] = [
     { key: "number", title: t("col.number"), mono: true },
@@ -232,7 +238,13 @@ function SupplierPaymentsTab() {
         />
       )}
       {editor ? (
-        <SupplierPaymentDrawer id={editor.id} branchId={workBranch} onClose={() => setEditor(null)} onCreated={(id) => setEditor({ id })} />
+        <SupplierPaymentDrawer
+          id={editor.id}
+          branchId={workBranch}
+          initial={editor.id == null ? initial : undefined}
+          onClose={() => setEditor(null)}
+          onCreated={(id) => setEditor({ id })}
+        />
       ) : null}
     </>
   );

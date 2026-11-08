@@ -812,7 +812,15 @@ function ReceiptPayment({ doc }: { doc: ReceiptDetail }) {
         ) : null}
       </div>
       {!closed && can(me.data, "payments.yt") ? (
-        <Button variant="secondary" icon={ArrowUpRight} onClick={() => router.push("/payments?tab=yt")}>
+        <Button
+          variant="secondary"
+          icon={ArrowUpRight}
+          onClick={() =>
+            router.push(
+              `/payments?tab=yt&new=1&supplier=${doc.supplierId}&supplierName=${encodeURIComponent(doc.supplier)}&amount=${encodeURIComponent(left)}`,
+            )
+          }
+        >
           {t("pay")}
         </Button>
       ) : null}

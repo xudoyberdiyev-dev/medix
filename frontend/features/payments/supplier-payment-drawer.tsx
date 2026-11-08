@@ -53,6 +53,8 @@ export function SupplierPaymentStatusBadge({ status }: { status: SupplierPayment
 export function SupplierPaymentDrawer(props: {
   id: number | null;
   branchId: number | null;
+  /** Kirim kartochkasidan «Toʻlash»: YB va qolgan summa oldindan tanlanadi. */
+  initial?: { supplierId: number; supplier: string; amount: string };
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
@@ -78,6 +80,7 @@ export function SupplierPaymentDrawer(props: {
 function Editor(props: {
   doc: SupplierPaymentDetail | null;
   branchId: number | null;
+  initial?: { supplierId: number; supplier: string; amount: string };
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
@@ -90,12 +93,13 @@ function Editor(props: {
   const editable = status === "DRAFT" && can(me.data, PAYMENT_YT);
   const approver = status === "PENDING" && can(me.data, PAYMENT_YT_APPROVE);
   const direct = status === "DRAFT" && can(me.data, PAYMENT_YT_DIRECT);
-  const [supplier, setSupplier] = useState<string | null>(doc ? String(doc.supplierId) : null);
-  const [supplierLabel, setSupplierLabel] = useState(doc?.supplier ?? "");
+  const init = doc ? undefined : props.initial;
+  const [supplier, setSupplier] = useState<string | null>(doc ? String(doc.supplierId) : init ? String(init.supplierId) : null);
+  const [supplierLabel, setSupplierLabel] = useState(doc?.supplier ?? init?.supplier ?? "");
   const labels = useRef(new Map<string, string>());
   const [account, setAccount] = useState<string | null>(doc ? String(doc.accountId) : null);
   const [date, setDate] = useState(formatIsoDate(doc?.paymentDate ?? todayTashkent()));
-  const [amount, setAmount] = useState(doc?.amount ?? "");
+  const [amount, setAmount] = useState(doc?.amount ?? init?.amount ?? "");
   const [note, setNote] = useState(doc?.note ?? "");
   const [manual, setManual] = useState(false);
   const [alloc, setAlloc] = useState<Record<string, string>>({});
