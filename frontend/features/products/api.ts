@@ -220,3 +220,32 @@ export function toRequest(f: ProductForm): { body?: ProductRequest; errors: Reco
     },
   };
 }
+
+/** Kartochka: mahsulot tarixi (audit). */
+export function useProductHistory(id: number) {
+  return useQuery({
+    queryKey: [...KEY, "history", id],
+    queryFn: () => unwrap(api.GET("/api/products/{id}/history", { params: { path: { id } } })),
+  });
+}
+
+/** Kartochka: qoldiq (zona × partiya), filiallar boʻyicha, harakatlar. */
+export function useProductStockCard(id: number, branchId: number | null) {
+  return useQuery({
+    queryKey: ["stock", "product-card", id, branchId],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/stock/product-card/{productId}", {
+          params: { path: { productId: id }, query: { branchId: branchId ?? undefined } },
+        }),
+      ),
+  });
+}
+
+/** Kartochka «Narxlar»: bazaviy narx tarixi (filial boʻyicha). */
+export function usePriceHistory(productId: number, branchId: number | null) {
+  return useQuery({
+    queryKey: ["prices", "history", productId, branchId],
+    queryFn: () => unwrap(api.GET("/api/prices/history", { params: { query: { productId, branchId: branchId ?? undefined } } })),
+  });
+}

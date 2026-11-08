@@ -90,7 +90,7 @@ export function moveHref(docType: string, docId: number): string | null {
 
 const DOC_TYPES = ["KR", "BQ", "ZK", "OK", "HC", "QY", "IN", "FS", "BY", "QM", "SV"] as const;
 type DocType = (typeof DOC_TYPES)[number];
-const isDocType = (x: string): x is DocType => (DOC_TYPES as readonly string[]).includes(x);
+export const isDocType = (x: string): x is DocType => (DOC_TYPES as readonly string[]).includes(x);
 
 /**
  * Partiya yon paneli (prototip `BatchPanel`): holat, yaroqlilik (qolgan kun, oʻtgan ulush chizigʻi), taqsimot (mavjud / band / yopiq),

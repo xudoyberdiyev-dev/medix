@@ -5805,7 +5805,7 @@
     "/api/orders/{id}/history" : {
       "get" : {
         "description" : "Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.",
-        "operationId" : "history_1",
+        "operationId" : "history_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7440,6 +7440,51 @@
         "tags" : [ "pricing" ]
       }
     },
+    "/api/prices/history" : {
+      "get" : {
+        "description" : "branchId berilmasa — o'z filiali (yoki birinchi filial); priceTypeId — bazaviy.",
+        "operationId" : "history_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "productId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "priceTypeId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PriceHistory"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mahsulot narxi tarixi",
+        "tags" : [ "pricing" ]
+      }
+    },
     "/api/products" : {
       "get" : {
         "description" : "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, IKPU, Farm ID, ishlab chiqaruvchi. Yorliqlar soni va filtr variantlari (soni bilan) bilan.",
@@ -8013,6 +8058,38 @@
           }
         },
         "summary" : "Nofaol qilish",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/{id}/history" : {
+      "get" : {
+        "description" : "Yaratish, tahrir, kod va holat o'zgarishlari — yangilari birinchi.",
+        "operationId" : "history_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HistoryRow"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mahsulot tarixi (kartochka «Tarix»)",
         "tags" : [ "products" ]
       }
     },
@@ -10041,6 +10118,44 @@
           }
         },
         "summary" : "Excel'ga eksport (.xlsx)",
+        "tags" : [ "stock" ]
+      }
+    },
+    "/api/stock/product-card/{productId}" : {
+      "get" : {
+        "description" : "Filial doirasida; branchId — bitta filial.",
+        "operationId" : "card",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "productId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "description" : "Bitta filial",
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductStockCard"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mahsulot kartochkasi — qoldiq va harakatlar",
         "tags" : [ "stock" ]
       }
     },
@@ -13711,6 +13826,26 @@
         },
         "required" : [ "amount", "fromAccountId", "payeeBranchId", "payerBranchId", "toAccountId" ]
       },
+      "BranchQty" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "branchId", "code", "name", "qty" ]
+      },
       "BranchRef" : {
         "type" : "object",
         "properties" : {
@@ -16047,6 +16182,31 @@
         },
         "required" : [ "sale" ]
       },
+      "HistoryRow" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "newValue" : {
+            "type" : "string"
+          },
+          "oldValue" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
+      },
       "Hit" : {
         "type" : "object",
         "properties" : {
@@ -17483,6 +17643,45 @@
           }
         },
         "required" : [ "amount", "docId", "docNumber", "docType", "id", "moveDate", "occurredAt" ]
+      },
+      "MoveRow" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "balance" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shu harakatdan keyingi qoldiq (filial doirasida)"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docNumber" : {
+            "type" : "string"
+          },
+          "docType" : {
+            "type" : "string"
+          },
+          "in" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "out" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "warehouse" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at", "balance", "branch", "docId", "docNumber", "docType", "in", "out", "warehouse" ]
       },
       "NavBadgesView" : {
         "type" : "object",
@@ -19796,6 +19995,62 @@
         },
         "required" : [ "branchId", "createdAt", "createdBy", "effectiveFrom", "id", "lines", "number", "status" ]
       },
+      "PriceHistory" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceTypeName" : {
+            "type" : "string"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PriceHistoryRow"
+            }
+          }
+        },
+        "required" : [ "branchId", "priceTypeId", "priceTypeName", "rows" ]
+      },
+      "PriceHistoryRow" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "changePct" : {
+            "type" : "string",
+            "description" : "Oldingi narxga nisbatan, %, bir xona aniqlikda (masalan «5.3», «-2.0»)"
+          },
+          "current" : {
+            "type" : "boolean"
+          },
+          "effectiveFrom" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "future" : {
+            "type" : "boolean"
+          },
+          "priceChangeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceChangeNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "current", "effectiveFrom", "future", "priceChangeId", "priceChangeNumber" ]
+      },
       "PricePage" : {
         "type" : "object",
         "properties" : {
@@ -20298,6 +20553,54 @@
           }
         },
         "required" : [ "costVisible", "from", "groupBy", "mineOnly", "rows", "to", "total", "truncated" ]
+      },
+      "ProductStockCard" : {
+        "type" : "object",
+        "properties" : {
+          "available" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "avgCost" : {
+            "type" : "string",
+            "description" : "O'rtacha tortilgan tannarx — faqat special.cost bilan"
+          },
+          "batches" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "byBranch" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BranchQty"
+            }
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/StockLine"
+            }
+          },
+          "moves" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MoveRow"
+            }
+          },
+          "nearestExpiry" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "reserved" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "available", "batches", "byBranch", "lines", "moves", "reserved", "total" ]
       },
       "ProductStockPage" : {
         "type" : "object",
@@ -22259,6 +22562,59 @@
           }
         },
         "required" : [ "count", "total" ]
+      },
+      "StockLine" : {
+        "type" : "object",
+        "properties" : {
+          "available" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batch" : {
+            "type" : "string"
+          },
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cost" : {
+            "type" : "string",
+            "description" : "Faqat special.cost bilan"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "reserved" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sellable" : {
+            "type" : "boolean"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "zone" : {
+            "type" : "string"
+          },
+          "zoneType" : {
+            "type" : "string",
+            "description" : "RECEIVING, MAIN, QUARANTINE, SHIPPING, COLD, SAFE"
+          }
+        },
+        "required" : [ "available", "batch", "batchId", "branch", "branchId", "expiryDate", "qty", "reserved", "sellable", "warehouse", "zone", "zoneType" ]
       },
       "StockPage" : {
         "type" : "object",

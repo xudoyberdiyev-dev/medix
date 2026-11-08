@@ -303,7 +303,7 @@ export function ProductsPage() {
       key: "open",
       label: t("aOpen"),
       icon: <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden />,
-      onSelect: () => setOpen({ id: p.id }),
+      onSelect: () => router.push(`/products/${p.id}`),
     },
     ...(canEdit
       ? [
@@ -452,7 +452,7 @@ export function ProductsPage() {
           rowKey={(p) => String(p.id)}
           loading={products.isPending}
           activeKey={open?.id ? String(open.id) : undefined}
-          onRowClick={(p) => setOpen({ id: p.id })}
+          onRowClick={(p) => router.push(`/products/${p.id}`)}
           rowActions={(p) => <RowMenu label={t("actions")} items={rowItems(p)} />}
           selectable
           selectedKeys={selected}
@@ -535,7 +535,7 @@ export function ProductsPage() {
           copyFrom={open.copyFrom ?? null}
           canEdit={canEdit}
           onClose={() => setOpen(null)}
-          onCreated={(id) => setOpen({ id })}
+          onCreated={(id) => (setOpen(null), router.push(`/products/${id}`))}
         />
       ) : null}
       {deact ? (

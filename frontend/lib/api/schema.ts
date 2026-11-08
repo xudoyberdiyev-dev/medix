@@ -2535,7 +2535,7 @@ export interface paths {
          * Buyurtma tarixi
          * @description Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.
          */
-        get: operations["history_1"];
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3265,6 +3265,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/prices/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mahsulot narxi tarixi
+         * @description branchId berilmasa — o'z filiali (yoki birinchi filial); priceTypeId — bazaviy.
+         */
+        get: operations["history_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/products": {
         parameters: {
             query?: never;
@@ -3412,6 +3432,26 @@ export interface paths {
         put?: never;
         /** Nofaol qilish */
         post: operations["deactivate_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mahsulot tarixi (kartochka «Tarix»)
+         * @description Yaratish, tahrir, kod va holat o'zgarishlari — yangilari birinchi.
+         */
+        get: operations["history_1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4192,6 +4232,26 @@ export interface paths {
         };
         /** Excel'ga eksport (.xlsx) */
         get: operations["export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/product-card/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mahsulot kartochkasi — qoldiq va harakatlar
+         * @description Filial doirasida; branchId — bitta filial.
+         */
+        get: operations["card"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5843,6 +5903,14 @@ export interface components {
             /** Format: int64 */
             toAccountId: number;
         };
+        BranchQty: {
+            /** Format: int64 */
+            branchId: number;
+            code: string;
+            name: string;
+            /** Format: int64 */
+            qty: number;
+        };
         BranchRef: {
             code: string;
             /** Format: int64 */
@@ -6700,6 +6768,15 @@ export interface components {
         HandoverResult: {
             sale: string;
         };
+        HistoryRow: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            newValue?: string;
+            oldValue?: string;
+            reason?: string;
+        };
         Hit: {
             /** Format: int64 */
             id: number;
@@ -7294,6 +7371,25 @@ export interface components {
             note?: string;
             /** Format: date-time */
             occurredAt: string;
+        };
+        MoveRow: {
+            /** Format: date-time */
+            at: string;
+            /**
+             * Format: int64
+             * @description Shu harakatdan keyingi qoldiq (filial doirasida)
+             */
+            balance: number;
+            branch: string;
+            /** Format: int64 */
+            docId: number;
+            docNumber: string;
+            docType: string;
+            /** Format: int64 */
+            in: number;
+            /** Format: int64 */
+            out: number;
+            warehouse: string;
         };
         NavBadgesView: {
             /** @description Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida) */
@@ -8227,6 +8323,27 @@ export interface components {
             /** @enum {string} */
             status: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED";
         };
+        PriceHistory: {
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int64 */
+            priceTypeId: number;
+            priceTypeName: string;
+            rows: components["schemas"]["PriceHistoryRow"][];
+        };
+        PriceHistoryRow: {
+            amount: string;
+            /** @description Oldingi narxga nisbatan, %, bir xona aniqlikda (masalan «5.3», «-2.0») */
+            changePct?: string;
+            current: boolean;
+            /** Format: date */
+            effectiveFrom: string;
+            employee?: string;
+            future: boolean;
+            /** Format: int64 */
+            priceChangeId: number;
+            priceChangeNumber: string;
+        };
         PricePage: {
             items: components["schemas"]["PriceRow"][];
             /** Format: int32 */
@@ -8412,6 +8529,23 @@ export interface components {
             to: string;
             total: components["schemas"]["ProductSalesRow"];
             truncated: boolean;
+        };
+        ProductStockCard: {
+            /** Format: int64 */
+            available: number;
+            /** @description O'rtacha tortilgan tannarx — faqat special.cost bilan */
+            avgCost?: string;
+            /** Format: int64 */
+            batches: number;
+            byBranch: components["schemas"]["BranchQty"][];
+            lines: components["schemas"]["StockLine"][];
+            moves: components["schemas"]["MoveRow"][];
+            /** Format: date */
+            nearestExpiry?: string;
+            /** Format: int64 */
+            reserved: number;
+            /** Format: int64 */
+            total: number;
         };
         ProductStockPage: {
             /** Format: int64 */
@@ -9195,6 +9329,29 @@ export interface components {
              */
             status?: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
             total: string;
+        };
+        StockLine: {
+            /** Format: int64 */
+            available: number;
+            batch: string;
+            /** Format: int64 */
+            batchId: number;
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** @description Faqat special.cost bilan */
+            cost?: string;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int64 */
+            qty: number;
+            /** Format: int64 */
+            reserved: number;
+            sellable: boolean;
+            warehouse: string;
+            zone: string;
+            /** @description RECEIVING, MAIN, QUARANTINE, SHIPPING, COLD, SAFE */
+            zoneType: string;
         };
         StockPage: {
             items: components["schemas"]["StockRow"][];
@@ -13940,7 +14097,7 @@ export interface operations {
             };
         };
     };
-    history_1: {
+    history_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -15025,6 +15182,30 @@ export interface operations {
             };
         };
     };
+    history_2: {
+        parameters: {
+            query: {
+                productId: number;
+                branchId?: number;
+                priceTypeId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceHistory"];
+                };
+            };
+        };
+    };
     list_8: {
         parameters: {
             query?: {
@@ -15288,6 +15469,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductDetail"];
+                };
+            };
+        };
+    };
+    history_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryRow"][];
                 };
             };
         };
@@ -16407,6 +16610,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    card: {
+        parameters: {
+            query?: {
+                /** @description Bitta filial */
+                branchId?: number;
+            };
+            header?: never;
+            path: {
+                productId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductStockCard"];
+                };
             };
         };
     };
