@@ -31,6 +31,7 @@ import uzLatn_roles from "@/messages/uz-Latn/roles.json";
 import uzLatn_search from "@/messages/uz-Latn/search.json";
 import uzLatn_setup from "@/messages/uz-Latn/setup.json";
 import uzLatn_shell from "@/messages/uz-Latn/shell.json";
+import uzLatn_staff from "@/messages/uz-Latn/staff.json";
 import uzLatn_stock from "@/messages/uz-Latn/stock.json";
 import uzLatn_supplierReturns from "@/messages/uz-Latn/supplierReturns.json";
 import uzLatn_ui from "@/messages/uz-Latn/ui.json";
@@ -70,6 +71,7 @@ import uzCyrl_roles from "@/messages/uz-Cyrl/roles.json";
 import uzCyrl_search from "@/messages/uz-Cyrl/search.json";
 import uzCyrl_setup from "@/messages/uz-Cyrl/setup.json";
 import uzCyrl_shell from "@/messages/uz-Cyrl/shell.json";
+import uzCyrl_staff from "@/messages/uz-Cyrl/staff.json";
 import uzCyrl_stock from "@/messages/uz-Cyrl/stock.json";
 import uzCyrl_supplierReturns from "@/messages/uz-Cyrl/supplierReturns.json";
 import uzCyrl_ui from "@/messages/uz-Cyrl/ui.json";
@@ -109,6 +111,7 @@ import ru_roles from "@/messages/ru/roles.json";
 import ru_search from "@/messages/ru/search.json";
 import ru_setup from "@/messages/ru/setup.json";
 import ru_shell from "@/messages/ru/shell.json";
+import ru_staff from "@/messages/ru/staff.json";
 import ru_stock from "@/messages/ru/stock.json";
 import ru_supplierReturns from "@/messages/ru/supplierReturns.json";
 import ru_ui from "@/messages/ru/ui.json";
@@ -150,6 +153,7 @@ export const uzLatn = {
   "search": uzLatn_search,
   "setup": uzLatn_setup,
   "shell": uzLatn_shell,
+  "staff": uzLatn_staff,
   "stock": uzLatn_stock,
   "supplierReturns": uzLatn_supplierReturns,
   "ui": uzLatn_ui,
@@ -192,6 +196,7 @@ export const uzCyrl = {
   "search": uzCyrl_search,
   "setup": uzCyrl_setup,
   "shell": uzCyrl_shell,
+  "staff": uzCyrl_staff,
   "stock": uzCyrl_stock,
   "supplierReturns": uzCyrl_supplierReturns,
   "ui": uzCyrl_ui,
@@ -234,6 +239,7 @@ export const ru = {
   "search": ru_search,
   "setup": ru_setup,
   "shell": ru_shell,
+  "staff": ru_staff,
   "stock": ru_stock,
   "supplierReturns": ru_supplierReturns,
   "ui": ru_ui,

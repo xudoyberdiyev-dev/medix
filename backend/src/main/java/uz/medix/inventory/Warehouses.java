@@ -145,10 +145,6 @@ public class Warehouses {
     }
 
     /**
-     * Hali ishlatilmagan omborni oʻchiradi (sozlash ustasi). Harakati yoki hujjati bor ombor oʻchirilmaydi —
-     * u faqat nofaol qilinadi (SPEC 13).
-     */
-    /**
      * Xodimni filialdagi omborlarga omborchi (masʼul) qilib biriktiradi (prototip WizStaff «Omborlari»): berilgan omborlar
      * unga oʻtadi, avval unga biriktirilgan, roʻyxatda yoʻq omborlar boʻshatiladi. Boshqa filial ombori — xato.
      */
@@ -189,6 +185,10 @@ public class Warehouses {
         return jdbc.sql("SELECT id FROM warehouse WHERE keeper_id = :e ORDER BY id").param("e", employeeId).query(Long.class).list();
     }
 
+    /**
+     * Hali ishlatilmagan omborni oʻchiradi (sozlash ustasi). Harakati yoki hujjati bor ombor oʻchirilmaydi —
+     * u faqat nofaol qilinadi (SPEC 13).
+     */
     @Transactional
     public void delete(long id) {
         Warehouse before = lock(id);
