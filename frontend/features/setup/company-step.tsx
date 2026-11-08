@@ -74,18 +74,26 @@ export function CompanyStep({ status, nav, onDone }: { status: SetupStatus; nav:
   const busy = save.isPending || upload.isPending || remove.isPending;
   const logo = logoUrl(company);
 
-  async function persist(next: { name?: string; locale?: Locale } = {}): Promise<boolean> {
+  // Saqlashlar navbat bilan (fokusdan chiqish va til tanlash bir vaqtda boʻlishi mumkin)
+  const queue = useRef<Promise<boolean>>(Promise.resolve(true));
+  const lastSaved = useRef<{ name: string; locale: string } | null>(company ? { name: company.name, locale: company.defaultLocale } : null);
+
+  function persist(next: { name?: string; locale?: Locale } = {}): Promise<boolean> {
     const n = (next.name ?? name).trim();
     const l = next.locale ?? locale;
-    if (!n) return false;
-    if (company && company.name === n && company.defaultLocale === l) return true;
-    try {
-      await save.mutateAsync({ name: n, defaultLocale: l });
-      setSavedOnce(true);
-      return true;
-    } catch {
-      return false;
-    }
+    if (!n) return Promise.resolve(false);
+    queue.current = queue.current.then(async () => {
+      if (lastSaved.current && lastSaved.current.name === n && lastSaved.current.locale === l) return true;
+      try {
+        await save.mutateAsync({ name: n, defaultLocale: l });
+        lastSaved.current = { name: n, locale: l };
+        setSavedOnce(true);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    return queue.current;
   }
 
   function requireName(): boolean {

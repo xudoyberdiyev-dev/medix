@@ -30,11 +30,11 @@
     "description" : "Boshlang'ich qoldiq",
     "name" : "opening"
   }, {
-    "description" : "Narxlar",
-    "name" : "pricing"
-  }, {
     "description" : "Sozlash ustasi",
     "name" : "setup"
+  }, {
+    "description" : "Narxlar",
+    "name" : "pricing"
   }, {
     "description" : "Xarajat va kirim moddalari",
     "name" : "expense-items"
@@ -122,6 +122,9 @@
   }, {
     "description" : "Ombor ko'chirishi (OK)",
     "name" : "warehouse-transfer"
+  }, {
+    "description" : "Kompaniya",
+    "name" : "company"
   }, {
     "description" : "Reyslar",
     "name" : "trips"
@@ -1704,6 +1707,26 @@
         },
         "summary" : "Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar",
         "tags" : [ "cash-panel" ]
+      }
+    },
+    "/api/company/logo" : {
+      "get" : {
+        "operationId" : "logo",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kompaniya logotipi (PNG yoki SVG); yo'q bo'lsa — 404",
+        "tags" : [ "company" ]
       }
     },
     "/api/counterparties" : {
@@ -10106,6 +10129,58 @@
         "tags" : [ "setup" ]
       }
     },
+    "/api/setup/company/logo" : {
+      "delete" : {
+        "operationId" : "removeLogo",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Company"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Logotipni o'chirish",
+        "tags" : [ "setup" ]
+      },
+      "put" : {
+        "operationId" : "uploadLogo",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Company"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Logotip yuklash (PNG yoki SVG, 2 MB gacha)",
+        "tags" : [ "setup" ]
+      }
+    },
     "/api/setup/complete" : {
       "post" : {
         "operationId" : "complete",
@@ -13074,58 +13149,6 @@
         "summary" : "Rad etish",
         "tags" : [ "zone-transfer" ]
       }
-    },
-    "/api/setup/company/logo" : {
-      "put" : {
-        "operationId" : "uploadLogo",
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "type" : "object",
-                "properties" : {
-                  "file" : {
-                    "type" : "string",
-                    "format" : "binary"
-                  }
-                },
-                "required" : [ "file" ]
-              }
-            }
-          }
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Company"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "summary" : "Logotip yuklash (PNG yoki SVG, 2 MB gacha)",
-        "tags" : [ "setup" ]
-      },
-      "delete" : {
-        "operationId" : "removeLogo",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Company"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "summary" : "Logotipni o'chirish",
-        "tags" : [ "setup" ]
-      }
     }
   },
   "components" : {
@@ -13626,6 +13649,30 @@
         },
         "required" : [ "count", "danger" ]
       },
+      "BankAccount" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{20}$"
+          },
+          "bankName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "main" : {
+            "type" : "boolean"
+          },
+          "mfo" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{5}$"
+          }
+        },
+        "required" : [ "account", "bankName", "main", "mfo" ]
+      },
       "BarcodeOwner" : {
         "type" : "object",
         "properties" : {
@@ -13941,13 +13988,28 @@
       "Branch" : {
         "type" : "object",
         "properties" : {
+          "accountantName" : {
+            "type" : "string"
+          },
           "active" : {
             "type" : "boolean"
+          },
+          "actualAddress" : {
+            "type" : "string"
           },
           "address" : {
             "type" : "string"
           },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            }
+          },
           "code" : {
+            "type" : "string"
+          },
+          "directorName" : {
             "type" : "string"
           },
           "id" : {
@@ -13963,32 +14025,17 @@
           "phone" : {
             "type" : "string"
           },
-          "tin" : {
+          "region" : {
             "type" : "string"
           },
-          "vatPayer" : {
-            "type" : "boolean"
+          "tin" : {
+            "type" : "string"
           },
           "vatCertNo" : {
             "type" : "string"
           },
-          "region" : {
-            "type" : "string"
-          },
-          "actualAddress" : {
-            "type" : "string"
-          },
-          "directorName" : {
-            "type" : "string"
-          },
-          "accountantName" : {
-            "type" : "string"
-          },
-          "bankAccounts" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/BankAccount"
-            }
+          "vatPayer" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "active", "bankAccounts", "code", "id", "legalName", "name", "tin", "vatPayer" ]
@@ -14265,15 +14312,38 @@
       "BranchRequest" : {
         "type" : "object",
         "properties" : {
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
           "address" : {
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
           },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
+          },
           "code" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[A-Za-z]{3}$"
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
           },
           "legalName" : {
             "type" : "string",
@@ -14290,46 +14360,23 @@
             "maxLength" : 32,
             "minLength" : 0
           },
-          "tin" : {
-            "type" : "string",
-            "minLength" : 1,
-            "pattern" : "^[0-9]{9}$"
-          },
-          "vatPayer" : {
-            "type" : "boolean",
-            "description" : "null — qoʻshimchalar oʻzgarmaydi"
-          },
-          "vatCertNo" : {
-            "type" : "string",
-            "pattern" : "^[0-9]{6,20}$"
-          },
           "region" : {
             "type" : "string",
             "maxLength" : 100,
             "minLength" : 0
           },
-          "actualAddress" : {
+          "tin" : {
             "type" : "string",
-            "maxLength" : 500,
-            "minLength" : 0
+            "minLength" : 1,
+            "pattern" : "^[0-9]{9}$"
           },
-          "directorName" : {
+          "vatCertNo" : {
             "type" : "string",
-            "maxLength" : 200,
-            "minLength" : 0
+            "pattern" : "^[0-9]{6,20}$"
           },
-          "accountantName" : {
-            "type" : "string",
-            "maxLength" : 200,
-            "minLength" : 0
-          },
-          "bankAccounts" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/BankAccount"
-            },
-            "maxItems" : 10,
-            "minItems" : 0
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
           }
         },
         "required" : [ "code", "legalName", "name", "tin" ]
@@ -15218,7 +15265,14 @@
       "Company" : {
         "type" : "object",
         "properties" : {
+          "defaultLocale" : {
+            "type" : "string"
+          },
           "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "logoVersion" : {
             "type" : "integer",
             "format" : "int64"
           },
@@ -15228,13 +15282,6 @@
           "setupCompletedAt" : {
             "type" : "string",
             "format" : "date-time"
-          },
-          "defaultLocale" : {
-            "type" : "string"
-          },
-          "logoVersion" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         },
         "required" : [ "defaultLocale", "id", "name" ]
@@ -15242,14 +15289,14 @@
       "CompanyRequest" : {
         "type" : "object",
         "properties" : {
+          "defaultLocale" : {
+            "type" : "string",
+            "pattern" : "^(uz-Latn|uz-Cyrl|ru)$"
+          },
           "name" : {
             "type" : "string",
             "maxLength" : 200,
             "minLength" : 0
-          },
-          "defaultLocale" : {
-            "type" : "string",
-            "pattern" : "^(uz-Latn|uz-Cyrl|ru)$"
           }
         },
         "required" : [ "name" ]
@@ -15579,15 +15626,38 @@
       "CreateBranchRequest" : {
         "type" : "object",
         "properties" : {
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
           "address" : {
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
           },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
+          },
           "code" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[A-Za-z]{3}$"
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
           },
           "legalName" : {
             "type" : "string",
@@ -15604,46 +15674,23 @@
             "maxLength" : 32,
             "minLength" : 0
           },
-          "tin" : {
-            "type" : "string",
-            "minLength" : 1,
-            "pattern" : "^[0-9]{9}$"
-          },
-          "vatPayer" : {
-            "type" : "boolean",
-            "description" : "null — qoʻshimchalar oʻzgarmaydi"
-          },
-          "vatCertNo" : {
-            "type" : "string",
-            "pattern" : "^[0-9]{6,20}$"
-          },
           "region" : {
             "type" : "string",
             "maxLength" : 100,
             "minLength" : 0
           },
-          "actualAddress" : {
+          "tin" : {
             "type" : "string",
-            "maxLength" : 500,
-            "minLength" : 0
+            "minLength" : 1,
+            "pattern" : "^[0-9]{9}$"
           },
-          "directorName" : {
+          "vatCertNo" : {
             "type" : "string",
-            "maxLength" : 200,
-            "minLength" : 0
+            "pattern" : "^[0-9]{6,20}$"
           },
-          "accountantName" : {
-            "type" : "string",
-            "maxLength" : 200,
-            "minLength" : 0
-          },
-          "bankAccounts" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/BankAccount"
-            },
-            "maxItems" : 10,
-            "minItems" : 0
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
           }
         },
         "required" : [ "code", "legalName", "name", "tin" ]
@@ -18386,16 +18433,16 @@
           "expiry" : {
             "$ref" : "#/components/schemas/Badge"
           },
+          "logoVersion" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Logotip versiyasi (epoch ms) — /api/company/logo?v=…; null — logotip yoʻq"
+          },
           "orders" : {
             "$ref" : "#/components/schemas/Badge"
           },
           "shipments" : {
             "$ref" : "#/components/schemas/Badge"
-          },
-          "logoVersion" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Logotip versiyasi (epoch ms) — /api/company/logo?v=…; null — logotip yoʻq"
           }
         }
       },
@@ -24819,9 +24866,32 @@
       "UpdateBranchRequest" : {
         "type" : "object",
         "properties" : {
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
           "address" : {
             "type" : "string",
             "maxLength" : 500,
+            "minLength" : 0
+          },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
             "minLength" : 0
           },
           "legalName" : {
@@ -24839,46 +24909,23 @@
             "maxLength" : 32,
             "minLength" : 0
           },
-          "tin" : {
-            "type" : "string",
-            "minLength" : 1,
-            "pattern" : "^[0-9]{9}$"
-          },
-          "vatPayer" : {
-            "type" : "boolean",
-            "description" : "null — qoʻshimchalar oʻzgarmaydi"
-          },
-          "vatCertNo" : {
-            "type" : "string",
-            "pattern" : "^[0-9]{6,20}$"
-          },
           "region" : {
             "type" : "string",
             "maxLength" : 100,
             "minLength" : 0
           },
-          "actualAddress" : {
+          "tin" : {
             "type" : "string",
-            "maxLength" : 500,
-            "minLength" : 0
+            "minLength" : 1,
+            "pattern" : "^[0-9]{9}$"
           },
-          "directorName" : {
+          "vatCertNo" : {
             "type" : "string",
-            "maxLength" : 200,
-            "minLength" : 0
+            "pattern" : "^[0-9]{6,20}$"
           },
-          "accountantName" : {
-            "type" : "string",
-            "maxLength" : 200,
-            "minLength" : 0
-          },
-          "bankAccounts" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/BankAccount"
-            },
-            "maxItems" : 10,
-            "minItems" : 0
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
           }
         },
         "required" : [ "legalName", "name", "tin" ]
@@ -26079,30 +26126,6 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "from", "id", "lines", "needsApproval", "number", "qty", "status", "to", "warehouse", "warehouseId" ]
-      },
-      "BankAccount" : {
-        "type" : "object",
-        "properties" : {
-          "bankName" : {
-            "type" : "string",
-            "maxLength" : 200,
-            "minLength" : 0
-          },
-          "mfo" : {
-            "type" : "string",
-            "minLength" : 1,
-            "pattern" : "^[0-9]{5}$"
-          },
-          "account" : {
-            "type" : "string",
-            "minLength" : 1,
-            "pattern" : "^[0-9]{20}$"
-          },
-          "main" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "account", "bankName", "main", "mfo" ]
       }
     }
   }

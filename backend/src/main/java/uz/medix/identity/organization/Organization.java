@@ -92,6 +92,8 @@ public class Organization {
 
     @Transactional
     public Company saveCompany(String name, String defaultLocale) {
+        // Parallel birinchi saqlashlar (masalan, nom fokusdan chiqdi + til tanlandi) ikkinchi qatorni yaratmasin
+        jdbc.sql("SELECT pg_advisory_xact_lock(hashtext('medix.company'))").query((rs, n) -> 1).list();
         var existing = company();
         if (existing.isPresent()) {
             jdbc.sql("UPDATE company SET name = :n, default_locale = :l, updated_at = now(), version = version + 1 WHERE id = :id")

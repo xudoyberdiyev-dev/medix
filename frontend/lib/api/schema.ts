@@ -741,6 +741,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kompaniya logotipi (PNG yoki SVG); yo'q bo'lsa — 404 */
+        get: operations["logo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties": {
         parameters: {
             query?: never;
@@ -4267,6 +4284,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/setup/company/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Logotip yuklash (PNG yoki SVG, 2 MB gacha) */
+        put: operations["uploadLogo"];
+        post?: never;
+        /** Logotipni o'chirish */
+        delete: operations["removeLogo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/setup/complete": {
         parameters: {
             query?: never;
@@ -5634,24 +5669,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/setup/company/logo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Logotip yuklash (PNG yoki SVG, 2 MB gacha) */
-        put: operations["uploadLogo"];
-        post?: never;
-        /** Logotipni o'chirish */
-        delete: operations["removeLogo"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5851,6 +5868,12 @@ export interface components {
             count: number;
             danger: boolean;
         };
+        BankAccount: {
+            account: string;
+            bankName: string;
+            main: boolean;
+            mfo: string;
+        };
         BarcodeOwner: {
             barcode: string;
             product: components["schemas"]["Ref"];
@@ -5980,22 +6003,22 @@ export interface components {
             suppliers: number;
         };
         Branch: {
+            accountantName?: string;
             active: boolean;
+            actualAddress?: string;
             address?: string;
+            bankAccounts: components["schemas"]["BankAccount"][];
             code: string;
+            directorName?: string;
             /** Format: int64 */
             id: number;
             legalName: string;
             name: string;
             phone?: string;
-            tin: string;
-            vatPayer: boolean;
-            vatCertNo?: string;
             region?: string;
-            actualAddress?: string;
-            directorName?: string;
-            accountantName?: string;
-            bankAccounts: components["schemas"]["BankAccount"][];
+            tin: string;
+            vatCertNo?: string;
+            vatPayer: boolean;
         };
         BranchBalance: {
             amount: string;
@@ -6102,20 +6125,20 @@ export interface components {
             name: string;
         };
         BranchRequest: {
+            accountantName?: string;
+            actualAddress?: string;
             address?: string;
+            bankAccounts?: components["schemas"]["BankAccount"][];
             code: string;
+            directorName?: string;
             legalName: string;
             name: string;
             phone?: string;
+            region?: string;
             tin: string;
+            vatCertNo?: string;
             /** @description null — qoʻshimchalar oʻzgarmaydi */
             vatPayer?: boolean;
-            vatCertNo?: string;
-            region?: string;
-            actualAddress?: string;
-            directorName?: string;
-            accountantName?: string;
-            bankAccounts?: components["schemas"]["BankAccount"][];
         };
         BranchRow: {
             customerDebt: string;
@@ -6456,18 +6479,18 @@ export interface components {
             count: number;
         };
         Company: {
+            defaultLocale: string;
             /** Format: int64 */
             id: number;
+            /** Format: int64 */
+            logoVersion?: number;
             name: string;
             /** Format: date-time */
             setupCompletedAt?: string;
-            defaultLocale: string;
-            /** Format: int64 */
-            logoVersion?: number;
         };
         CompanyRequest: {
-            name: string;
             defaultLocale?: string;
+            name: string;
         };
         ConfirmRequest: {
             lineIds: number[];
@@ -6576,20 +6599,20 @@ export interface components {
             tin: string;
         };
         CreateBranchRequest: {
+            accountantName?: string;
+            actualAddress?: string;
             address?: string;
+            bankAccounts?: components["schemas"]["BankAccount"][];
             code: string;
+            directorName?: string;
             legalName: string;
             name: string;
             phone?: string;
+            region?: string;
             tin: string;
+            vatCertNo?: string;
             /** @description null — qoʻshimchalar oʻzgarmaydi */
             vatPayer?: boolean;
-            vatCertNo?: string;
-            region?: string;
-            actualAddress?: string;
-            directorName?: string;
-            accountantName?: string;
-            bankAccounts?: components["schemas"]["BankAccount"][];
         };
         CreateEmployeeRequest: {
             /** Format: int64 */
@@ -7669,13 +7692,13 @@ export interface components {
             /** @description Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida) */
             company?: string;
             expiry?: components["schemas"]["Badge"];
-            orders?: components["schemas"]["Badge"];
-            shipments?: components["schemas"]["Badge"];
             /**
              * Format: int64
              * @description Logotip versiyasi (epoch ms) — /api/company/logo?v=…; null — logotip yoʻq
              */
             logoVersion?: number;
+            orders?: components["schemas"]["Badge"];
+            shipments?: components["schemas"]["Badge"];
         };
         NewCode: {
             code: string;
@@ -10255,19 +10278,19 @@ export interface components {
             unit: string;
         };
         UpdateBranchRequest: {
+            accountantName?: string;
+            actualAddress?: string;
             address?: string;
+            bankAccounts?: components["schemas"]["BankAccount"][];
+            directorName?: string;
             legalName: string;
             name: string;
             phone?: string;
+            region?: string;
             tin: string;
+            vatCertNo?: string;
             /** @description null — qoʻshimchalar oʻzgarmaydi */
             vatPayer?: boolean;
-            vatCertNo?: string;
-            region?: string;
-            actualAddress?: string;
-            directorName?: string;
-            accountantName?: string;
-            bankAccounts?: components["schemas"]["BankAccount"][];
         };
         UpdateProfileRequest: {
             phone?: string;
@@ -10756,12 +10779,6 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
-        };
-        BankAccount: {
-            bankName: string;
-            mfo: string;
-            account: string;
-            main: boolean;
         };
     };
     responses: never;
@@ -11866,6 +11883,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Panel"];
+                };
+            };
+        };
+    };
+    logo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };
@@ -16989,6 +17026,53 @@ export interface operations {
             };
         };
     };
+    uploadLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Company"];
+                };
+            };
+        };
+    };
+    removeLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Company"];
+                };
+            };
+        };
+    };
     complete: {
         parameters: {
             query?: never;
@@ -18861,53 +18945,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
-                };
-            };
-        };
-    };
-    uploadLogo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "multipart/form-data": {
-                    /** Format: binary */
-                    file: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Company"];
-                };
-            };
-        };
-    };
-    removeLogo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Company"];
                 };
             };
         };
