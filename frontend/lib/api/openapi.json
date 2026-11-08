@@ -10258,6 +10258,63 @@
         "tags" : [ "setup" ]
       }
     },
+    "/api/setup/warehouses/{id}" : {
+      "delete" : {
+        "operationId" : "deleteWarehouse",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Ishlatilmagan omborni oʻchirish",
+        "tags" : [ "setup" ]
+      },
+      "put" : {
+        "operationId" : "updateWarehouse",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WarehouseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ombor kartasini saqlash (tur, masʼul, zonalar)",
+        "tags" : [ "setup" ]
+      }
+    },
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
@@ -25079,6 +25136,14 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "keeperId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "NORMAL", "COLD" ]
+          },
           "name" : {
             "type" : "string"
           },
@@ -25089,7 +25154,7 @@
             }
           }
         },
-        "required" : [ "active", "branchId", "id", "name", "zones" ]
+        "required" : [ "active", "branchId", "id", "kind", "name", "zones" ]
       },
       "WarehouseRef" : {
         "type" : "object",
@@ -25124,10 +25189,27 @@
             },
             "uniqueItems" : true
           },
+          "keeperId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Masʼul ombor mudiri (shu filial xodimi)"
+          },
+          "kind" : {
+            "type" : "string",
+            "description" : "Ombor turi; berilmasa — NORMAL",
+            "enum" : [ "NORMAL", "COLD" ]
+          },
           "name" : {
             "type" : "string",
             "maxLength" : 200,
             "minLength" : 0
+          },
+          "zoneNames" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Zona nomlari turi boʻyicha; berilmagani — standart nom"
           }
         },
         "required" : [ "branchId", "name" ]

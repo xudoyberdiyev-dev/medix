@@ -13,7 +13,7 @@ const branch = {
   vatPayer: true,
   bankAccounts: [],
 };
-const warehouse = { id: 7, branchId: 1, name: "Markaziy", active: true, zones: [] };
+const warehouse = { id: 7, branchId: 1, name: "Markaziy", active: true, zones: [], kind: "NORMAL" as const };
 
 describe("sozlash ustasi qadamlari", () => {
   it("birinchi bajarilmagan qadamdan davom etadi", () => {
@@ -32,8 +32,9 @@ describe("sozlash ustasi qadamlari", () => {
       warehouses: [warehouse],
     };
     expect(canLeaveStep(1, s)).toBe(true);
-    expect(canLeaveStep(2, s)).toBe(false);
-    expect(canLeaveStep(2, { ...s, warehouses: [warehouse, { ...warehouse, id: 8, branchId: 2 }] })).toBe(true);
+    // Prototip: kamida bitta ombor yetarli (omborsiz filial — «Baribir davom etish» oynasi)
+    expect(canLeaveStep(2, s)).toBe(true);
+    expect(canLeaveStep(2, { ...s, warehouses: [] })).toBe(false);
   });
 
   it("logotip: tur va hajm, versiyali URL", () => {

@@ -19,6 +19,7 @@ const warehouse = (id: number, branchId: number, types: Warehouse["zones"][numbe
   branchId,
   name: `Ombor ${id}`,
   active: true,
+  kind: "NORMAL",
   zones: types.map((type, i) => ({ id: id * 10 + i, type, name: type, sellable: type === "MAIN" })),
 });
 

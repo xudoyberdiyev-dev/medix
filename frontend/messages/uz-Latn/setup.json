@@ -84,7 +84,6 @@
     "ctrlTip": "Nazoratdagi mahsulotlar saqlanadi",
     "err": "Davom etish uchun kamida bitta ombor qoʻshing.",
     "missT": "Baʼzi filiallarda ombor yoʻq",
-    "miss": "{names} {count, plural, one {filialida} other {filiallarida}} hali ombor yoʻq. {count, plural, one {U} other {Ular}} omborsiz savdo qila olmaydi.",
     "and": " va ",
     "missGo": "Baribir davom etish",
     "zWhat": "Zona nima?",
@@ -104,7 +103,9 @@
       "cold": "Sovuq",
       "quar": "Karantin",
       "ship": "Joʻnatish"
-    }
+    },
+    "missOne": "{names} filialida hali ombor yoʻq. U omborsiz savdo qila olmaydi.",
+    "missMany": "{names} filiallarida hali ombor yoʻq. Ular omborsiz savdo qila olmaydi."
   },
   "roles": {
     "role": "Rol",

@@ -4353,6 +4353,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/setup/warehouses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ombor kartasini saqlash (tur, masʼul, zonalar) */
+        put: operations["updateWarehouse"];
+        post?: never;
+        /** Ishlatilmagan omborni oʻchirish */
+        delete: operations["deleteWarehouse"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stock": {
         parameters: {
             query?: never;
@@ -10352,6 +10370,10 @@ export interface components {
             branchId: number;
             /** Format: int64 */
             id: number;
+            /** Format: int64 */
+            keeperId?: number;
+            /** @enum {string} */
+            kind: "NORMAL" | "COLD";
             name: string;
             zones: components["schemas"]["Zone"][];
         };
@@ -10365,7 +10387,21 @@ export interface components {
             /** Format: int64 */
             branchId: number;
             extraZones?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
+            /**
+             * Format: int64
+             * @description Masʼul ombor mudiri (shu filial xodimi)
+             */
+            keeperId?: number;
+            /**
+             * @description Ombor turi; berilmasa — NORMAL
+             * @enum {string}
+             */
+            kind?: "NORMAL" | "COLD";
             name: string;
+            /** @description Zona nomlari turi boʻyicha; berilmagani — standart nom */
+            zoneNames?: {
+                [key: string]: string;
+            };
         };
         WarehouseTransferDetail: {
             /** Format: int64 */
@@ -17138,6 +17174,52 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Warehouse"];
                 };
+            };
+        };
+    };
+    updateWarehouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarehouseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    deleteWarehouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
