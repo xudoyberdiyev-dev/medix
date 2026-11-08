@@ -304,5 +304,29 @@
       "bonusConfirm": "Bonus tasdiqlandi",
       "cancel": "Bekor qilindi"
     }
+  },
+  "grid": {
+    "col": {
+      "product": "Mahsulot",
+      "batch": "Partiya",
+      "exp": "Yaroqlilik muddati",
+      "zone": "Zona",
+      "qty": "Soni",
+      "fact": "Fakt",
+      "diff": "Farq sababi",
+      "bonusQty": "Bonus",
+      "price": "Narx",
+      "sum": "Summa"
+    },
+    "controlled": "Nazoratdagi preparat — faqat Seyf zonasi",
+    "marked": "Markirovkali — skanerlanadi",
+    "fromBonus": "Bonus hisobidan",
+    "expired": "Muddati oʻtgan",
+    "days": "{days} kun",
+    "closedSale": "sotuvga yopiq",
+    "damaged": "shikast. {qty}",
+    "datePh": "kk.oo.yyyy",
+    "remove": "Qatorni oʻchirish",
+    "cell": "{col}, {n}-qator"
   }
 }

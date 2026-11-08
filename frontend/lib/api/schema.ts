@@ -8646,6 +8646,7 @@ export interface components {
             bonusBatch?: string;
             /** Format: int32 */
             bonusQty: number;
+            controlled: boolean;
             /** Format: int32 */
             damagedQty?: number;
             /** @enum {string} */
@@ -8656,6 +8657,9 @@ export interface components {
             id: number;
             /** Format: int32 */
             lineNo: number;
+            /** @description Ishlab chiqaruvchi (prototip: mahsulot ostida) */
+            manufacturer?: string;
+            marked: boolean;
             /** @description Faqat narxni ko'rish huquqi bilan */
             price?: string;
             /** Format: date */
@@ -8668,6 +8672,8 @@ export interface components {
             qty: number;
             /** Format: int32 */
             receivedQty?: number;
+            /** @description QQS stavkasi, % */
+            vatRate: string;
             zone: string;
             /** Format: int64 */
             zoneId: number;

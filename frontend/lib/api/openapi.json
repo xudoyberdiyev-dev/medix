@@ -20623,6 +20623,9 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "controlled" : {
+            "type" : "boolean"
+          },
           "damagedQty" : {
             "type" : "integer",
             "format" : "int32"
@@ -20642,6 +20645,13 @@
           "lineNo" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "manufacturer" : {
+            "type" : "string",
+            "description" : "Ishlab chiqaruvchi (prototip: mahsulot ostida)"
+          },
+          "marked" : {
+            "type" : "boolean"
           },
           "price" : {
             "type" : "string",
@@ -20669,6 +20679,10 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "vatRate" : {
+            "type" : "string",
+            "description" : "QQS stavkasi, %"
+          },
           "zone" : {
             "type" : "string"
           },
@@ -20681,7 +20695,7 @@
             "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
           }
         },
-        "required" : [ "batchNumber", "bonusQty", "expiryDate", "id", "lineNo", "productCode", "productId", "productName", "qty", "zone", "zoneId", "zoneType" ]
+        "required" : [ "batchNumber", "bonusQty", "controlled", "expiryDate", "id", "lineNo", "marked", "productCode", "productId", "productName", "qty", "vatRate", "zone", "zoneId", "zoneType" ]
       },
       "ReceiptLineRequest" : {
         "type" : "object",

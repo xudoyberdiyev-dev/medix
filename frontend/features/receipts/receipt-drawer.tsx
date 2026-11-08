@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, PackagePlus, Trash2, Undo2, Wallet, X } from "lucide-react";
+import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, PackagePlus, Undo2, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
@@ -49,6 +49,7 @@ import {
   type Resolution,
 } from "./api";
 import { ReceiptCatalogDialog } from "./receipt-catalog-dialog";
+import { ReceiptLinesGrid } from "./receipt-lines-grid";
 import { centsToMoney, expectedBonus, toCentsBig } from "./receipt-doc";
 import { ReceiptStatusBadge, day } from "./receipts-page";
 
@@ -565,82 +566,19 @@ function Editor({
           </Button>
         ) : null}
       </div>
-      <div className="overflow-x-auto rounded-card border border-border">
-        <table className="w-full text-table">
-          <thead className="bg-table-header text-left text-text-secondary">
-            <tr>
-              <th className="px-3 py-2 font-medium">{t("col.product")}</th>
-              <th className="px-3 py-2 font-medium">{t("col.batch")}</th>
-              <th className="px-3 py-2 font-medium">{t("col.expiry")}</th>
-              <th className="px-3 py-2 font-medium">{t("col.zone")}</th>
-              <th className="px-3 py-2 text-right font-medium">{t("col.qty")}</th>
-              <th className="px-3 py-2 text-right font-medium">{t("col.bonus")}</th>
-              {doc && doc.status !== "DRAFT" ? <th className="px-3 py-2 text-right font-medium">{t("col.received")}</th> : null}
-              {pricesVisible ? <th className="px-3 py-2 text-right font-medium">{t("col.price")}</th> : null}
-              {editable ? <th className="w-10" /> : null}
-            </tr>
-          </thead>
-          <tbody>
-            {lines.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="px-3 py-6 text-center text-text-secondary">
-                  {editable ? (warehouse ? t("emptyEditable") : t("chooseWarehouse")) : t("empty")}
-                </td>
-              </tr>
-            ) : (
-              lines.map((l, i) => {
-                const server = doc?.lines[i];
-                return (
-                  <tr key={`${l.productId}-${l.batchNumber}`} className="border-t border-border">
-                    <td className="px-3 py-2">
-                      <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
-                    </td>
-                    <td className="px-3 py-2 font-mono">{l.batchNumber}</td>
-                    <td className="px-3 py-2 tabular-nums">{l.expiryDate}</td>
-                    <td className="px-3 py-2">{zoneName(l.zoneId)}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{isInt(l.qty) ? formatQuantity(Number(l.qty)) : l.qty}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{l.bonusQty && l.bonusQty !== "0" ? `+${l.bonusQty}` : "—"}</td>
-                    {doc && doc.status !== "DRAFT" ? (
-                      <td className="px-3 py-2 text-right">
-                        {server?.receivedQty != null ? (
-                          <span className="flex flex-col items-end gap-1">
-                            <span className="tabular-nums">
-                              {formatQuantity(server.receivedQty)}
-                              {server.damagedQty ? t("damagedShort", { qty: formatQuantity(server.damagedQty) }) : ""}
-                            </span>
-                            {server.diffReason ? <Badge tone="warning">{tr(`diff.${server.diffReason}`)}</Badge> : null}
-                          </span>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                    ) : null}
-                    {pricesVisible ? (
-                      <td className="px-3 py-2 text-right tabular-nums">
-                        {parseMoneyInput(l.price) ? (
-                          formatMoney(parseMoneyInput(l.price)!)
-                        ) : (
-                          <span className="text-text-disabled">{t("notEntered")}</span>
-                        )}
-                      </td>
-                    ) : null}
-                    {editable ? (
-                      <td className="px-1">
-                        <Button
-                          variant="icon"
-                          icon={Trash2}
-                          aria-label={t("removeLine")}
-                          onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
-                        />
-                      </td>
-                    ) : null}
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      <ReceiptLinesGrid
+        lines={lines}
+        server={doc?.lines ?? []}
+        mode={editable ? "edit" : "read"}
+        pricesVisible={pricesVisible}
+        zones={zones}
+        zoneName={zoneName}
+        fromBonus={fromBonus}
+        emptyText={editable ? (warehouse ? t("emptyEditable") : t("chooseWarehouse")) : t("empty")}
+        onChange={(i, patch) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, ...patch } : x)))}
+        onRemove={(i) => setLines((ls) => ls.filter((_, j) => j !== i))}
+        onAdd={warehouse ? () => setCatalogOpen(true) : undefined}
+      />
     </div>
   );
   const dialogs = (
