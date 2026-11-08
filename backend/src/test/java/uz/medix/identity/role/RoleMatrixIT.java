@@ -165,6 +165,12 @@ class RoleMatrixIT {
                         .content(draft(code, name, "own", "nowhere", true, "")))
                 .andExpect(status().isBadRequest());
 
+        // Avvaldan bor standart to'plam o'zgarmaydi (Haydovchi — Jo'natish sahifasisiz)
+        mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                        .content(draft("DRIVER", "Haydovchi", "own", "driver", true, "\"trip.driver\"")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.grants.DRIVER", hasSize(1)));
+
         // Doira «o'z filiali» ga qaytsa — keyingi kirishda barcha filiallar yo'q
         mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
                         .content(draft(code, name, "own", "operator", true, "\"orders.view\"")))

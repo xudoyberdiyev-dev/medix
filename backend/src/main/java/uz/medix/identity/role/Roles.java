@@ -141,8 +141,10 @@ public class Roles {
             if ("DIRECTOR".equals(d.code())) {
                 continue;
             }
-            Set<String> keys = normalize(d.permissions() == null ? Set.of() : d.permissions(), meta);
             Role r = d.code() == null ? null : byCode.get(d.code());
+            Set<String> before = r == null ? Set.of() : new HashSet<>(jdbc.sql("SELECT permission_key FROM role_permission WHERE role_id = :r")
+                    .param("r", r.id()).query(String.class).list());
+            Set<String> keys = normalize(d.permissions() == null ? Set.of() : d.permissions(), before, meta);
             if (r == null) {
                 create(d, keys);
                 continue;
@@ -186,8 +188,11 @@ public class Roles {
         return s == null || s.isBlank() ? null : s.strip();
     }
 
-    /** Noma'lum va «faqat Direktor» kalitlari rad etiladi; amal kaliti sahifani ko'rishni ham yoqadi. */
-    static Set<String> normalize(Set<String> keys, Map<String, String[]> meta) {
+    /**
+     * Noma'lum va «faqat Direktor» kalitlari rad etiladi; YANGI yoqilgan amal kaliti sahifani ko'rishni ham yoqadi
+     * (avvaldan bor standart to'plamlarga tegilmaydi — masalan, Haydovchi «Reys: haydovchi» bilan, Jo'natish sahifasisiz).
+     */
+    static Set<String> normalize(Set<String> keys, Set<String> before, Map<String, String[]> meta) {
         Set<String> out = new TreeSet<>();
         for (String k : keys) {
             String[] m = meta.get(k);
@@ -198,7 +203,7 @@ public class Roles {
                 throw MedixException.conflict("role.directorOnly", k);
             }
             out.add(k);
-            if (!"view".equals(m[0]) && m[1] != null && meta.containsKey(m[1] + ".view")) {
+            if (!before.contains(k) && !"view".equals(m[0]) && m[1] != null && meta.containsKey(m[1] + ".view")) {
                 out.add(m[1] + ".view");
             }
         }
