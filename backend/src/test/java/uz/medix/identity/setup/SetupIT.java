@@ -115,9 +115,10 @@ class SetupIT {
         mvc.perform(get("/api/setup").cookie(ceo))
                 .andExpect(jsonPath("$.blockers[0]").value(containsString("Toshkent")));
 
-        mvc.perform(json(post("/api/setup/warehouses"), ceo,
+        MvcResult wh = mvc.perform(json(post("/api/setup/warehouses"), ceo,
                         "{\"branchId\":" + branchId + ",\"name\":\"Markaziy ombor\",\"extraZones\":[\"COLD\"]}"))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.kind").value("NORMAL"))
                 .andExpect(jsonPath("$.zones", hasSize(5)))
                 .andExpect(jsonPath("$.zones[?(@.type == 'QUARANTINE')].sellable").value(false))
                 .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].sellable").value(true));
@@ -126,6 +127,37 @@ class SetupIT {
                         "{\"branchId\":" + branchId + ",\"name\":\"Boshqa\",\"extraZones\":[\"MAIN\"]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("warehouse.extraZones"));
+
+        // Ombor kartasi (prototip WarehousePanel): tur, zona nomlari, ixtiyoriy zonalar almashadi, masʼul tekshiriladi
+        String whId = wh.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1");
+        String card = "{\"branchId\":" + branchId + ",\"name\":\"Markaziy ombor\",\"kind\":\"COLD\",\"extraZones\":[\"SAFE\"],"
+                + "\"zoneNames\":{\"MAIN\":\"Qabul\",\"RECEIVING\":\"Asosiy saqlash\"}}";
+        mvc.perform(json(put("/api/setup/warehouses/" + whId), ceo, card))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.kind").value("COLD"))
+                .andExpect(jsonPath("$.zones", hasSize(5)))
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')]").isEmpty())
+                .andExpect(jsonPath("$.zones[?(@.type == 'SAFE')].sellable").value(true))
+                .andExpect(jsonPath("$.zones[?(@.type == 'MAIN')].name").value("Qabul"))
+                .andExpect(jsonPath("$.zones[?(@.type == 'RECEIVING')].name").value("Asosiy saqlash"));
+        mvc.perform(json(put("/api/setup/warehouses/" + whId), ceo,
+                        "{\"branchId\":" + branchId + ",\"name\":\"Markaziy ombor\",\"zoneNames\":{\"MAIN\":\"Karantin\"}}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
+        mvc.perform(json(put("/api/setup/warehouses/" + whId), ceo,
+                        "{\"branchId\":" + branchId + ",\"name\":\"Markaziy ombor\",\"keeperId\":999999}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("warehouse.keeperInvalid"));
+        MvcResult spare = mvc.perform(json(post("/api/setup/warehouses"), ceo,
+                        "{\"branchId\":" + branchId + ",\"name\":\"Zaxira ombor\",\"zoneNames\":{\"MAIN\":\"Javonlar\"}}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.zones[?(@.type == 'MAIN')].name").value("Javonlar"))
+                .andReturn();
+        String spareId = spare.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1");
+        mvc.perform(delete("/api/setup/warehouses/" + spareId).with(csrf()).cookie(ceo))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/setup").cookie(ceo))
+                .andExpect(jsonPath("$.warehouses", hasSize(1)));
 
         mvc.perform(json(post("/api/setup/employees"), ceo,
                         "{\"login\":\"Operator.1\",\"fullName\":\"Dilshod Aliyev\",\"roleCode\":\"OPERATOR\",\"branchId\":"

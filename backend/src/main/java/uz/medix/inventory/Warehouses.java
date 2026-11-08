@@ -22,7 +22,14 @@ public class Warehouses {
     public record Zone(long id, ZoneType type, String name, boolean sellable) {}
 
     public record Warehouse(long id, long branchId, String name, @Schema(nullable = true) String address, boolean active,
-            List<Zone> zones) {}
+            List<Zone> zones, WarehouseKind kind, @Schema(nullable = true) Long keeperId) {}
+
+    /**
+     * Ombor kartasi (prototip WarehousePanel): nom, manzil, tur, masʼul, ixtiyoriy zonalar (Sovuq, Seyf) va zona nomlari.
+     * {@code zoneNames} da yoʻq zona — standart nomida qoladi (yangi) yoki oʻzgarmaydi (mavjud).
+     */
+    public record Spec(String name, String address, WarehouseKind kind, Long keeperId, Set<ZoneType> extraZones,
+            Map<ZoneType, String> zoneNames) {}
 
     private final JdbcClient jdbc;
     private final AuditLog audit;
@@ -66,6 +73,120 @@ public class Warehouses {
                 .change(null, Map.of("branchId", branchId, "name", created.name(), "zones",
                         created.zones().stream().map(z -> z.type().name()).toList())));
         return created;
+    }
+
+    /** Ombor kartasidan yaratish: tur, masʼul va zona nomlari bilan. */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public Warehouse create(long branchId, Spec spec) {
+        checkZoneNames(spec, EnumSet.copyOf(ZoneType.REQUIRED), spec.extraZones());
+        Warehouse created = create(branchId, spec.name(), spec.address(), spec.extraZones());
+        return configure(created.id(), spec);
+    }
+
+    /**
+     * Ombor kartasini saqlaydi: nom, manzil, tur, masʼul; ixtiyoriy zonalar qoʻshiladi yoki olib tashlanadi
+     * (harakati bor zona olib tashlanmaydi), zona nomlari yangilanadi. Majburiy zonalar doim qoladi.
+     */
+    @Transactional
+    public Warehouse configure(long id, Spec spec) {
+        Warehouse before = lock(id);
+        Set<ZoneType> extra = spec.extraZones() == null ? Set.of() : spec.extraZones();
+        if (extra.stream().anyMatch(ZoneType.REQUIRED::contains)) {
+            throw MedixException.badRequest("warehouse.extraZones");
+        }
+        checkZoneNames(spec, EnumSet.copyOf(ZoneType.REQUIRED), extra);
+        if (!before.name().equals(spec.name().strip()) || !java.util.Objects.equals(before.address(), blankToNull(spec.address()))) {
+            update(id, spec.name(), spec.address());
+        }
+        jdbc.sql("UPDATE warehouse SET kind = :k, keeper_id = :kp, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("k", (spec.kind() == null ? WarehouseKind.NORMAL : spec.kind()).name())
+                .param("kp", spec.keeperId())
+                .param("id", id)
+                .update();
+        for (Zone z : before.zones()) {
+            if (!ZoneType.REQUIRED.contains(z.type()) && !extra.contains(z.type())) {
+                removeZone(id, z);
+            }
+        }
+        for (ZoneType t : extra) {
+            if (before.zones().stream().noneMatch(z -> z.type() == t)) {
+                addZone(id, t);
+            }
+        }
+        Map<ZoneType, String> names = spec.zoneNames() == null ? Map.of() : spec.zoneNames();
+        // Avval vaqtinchalik nomlar — zonalar nomlarini almashtirganda UNIQUE (warehouse_id, name) toʻqnashmasin
+        List<Zone> current = find(id).zones();
+        List<Zone> renamed = current.stream()
+                .filter(z -> names.containsKey(z.type()) && !names.get(z.type()).strip().equals(z.name()))
+                .toList();
+        for (Zone z : renamed) {
+            jdbc.sql("UPDATE zone SET name = :n WHERE id = :id").param("n", "~" + z.id()).param("id", z.id()).update();
+        }
+        for (Zone z : renamed) {
+            String name = names.get(z.type()).strip();
+            jdbc.sql("UPDATE zone SET name = :n, updated_at = now(), version = version + 1 WHERE id = :id")
+                    .param("n", name)
+                    .param("id", z.id())
+                    .update();
+            audit.record(AuditEntry.of("zone.update", "zone", z.id())
+                    .change(Map.of("name", z.name()), Map.of("name", name)));
+        }
+        Warehouse after = find(id);
+        if (before.kind() != after.kind() || !java.util.Objects.equals(before.keeperId(), after.keeperId())) {
+            Map<String, Object> b = new java.util.HashMap<>();
+            b.put("kind", before.kind().name());
+            b.put("keeperId", before.keeperId());
+            Map<String, Object> a = new java.util.HashMap<>();
+            a.put("kind", after.kind().name());
+            a.put("keeperId", after.keeperId());
+            audit.record(AuditEntry.of("warehouse.update", "warehouse", id).change(b, a));
+        }
+        return after;
+    }
+
+    /**
+     * Hali ishlatilmagan omborni oʻchiradi (sozlash ustasi). Harakati yoki hujjati bor ombor oʻchirilmaydi —
+     * u faqat nofaol qilinadi (SPEC 13).
+     */
+    @Transactional
+    public void delete(long id) {
+        Warehouse before = lock(id);
+        try {
+            jdbc.sql("DELETE FROM zone WHERE warehouse_id = :id").param("id", id).update();
+            jdbc.sql("DELETE FROM warehouse WHERE id = :id").param("id", id).update();
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw MedixException.conflict("warehouse.inUse", before.name());
+        }
+        audit.record(AuditEntry.of("warehouse.delete", "warehouse", id)
+                .change(Map.of("branchId", before.branchId(), "name", before.name()), null));
+    }
+
+    private void removeZone(long warehouseId, Zone z) {
+        try {
+            jdbc.sql("DELETE FROM zone WHERE id = :id").param("id", z.id()).update();
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw MedixException.conflict("warehouse.zoneInUse", z.name());
+        }
+        audit.record(AuditEntry.of("zone.delete", "zone", z.id())
+                .change(Map.of("warehouseId", warehouseId, "type", z.type().name()), null));
+    }
+
+    private static void checkZoneNames(Spec spec, Set<ZoneType> required, Set<ZoneType> extra) {
+        Map<ZoneType, String> names = spec.zoneNames() == null ? Map.of() : spec.zoneNames();
+        Set<String> seen = new java.util.HashSet<>();
+        Set<ZoneType> all = EnumSet.copyOf(required);
+        if (extra != null) {
+            all.addAll(extra);
+        }
+        for (ZoneType t : all) {
+            String n = names.getOrDefault(t, t.defaultName());
+            if (n == null || n.isBlank() || n.strip().length() > 100) {
+                throw MedixException.badRequest("warehouse.zoneName");
+            }
+            if (!seen.add(n.strip().toLowerCase(java.util.Locale.ROOT))) {
+                throw MedixException.conflict("warehouse.zoneDuplicateName", n.strip());
+            }
+        }
     }
 
     @Transactional(readOnly = true)
@@ -241,10 +362,10 @@ public class Warehouses {
         return m;
     }
 
-    private record Row(long id, long branchId, String name, String address, boolean active) {}
+    private record Row(long id, long branchId, String name, String address, boolean active, String kind, Long keeperId) {}
 
     private Warehouse find(long id) {
-        Row w = jdbc.sql("SELECT id, branch_id, name, address, active FROM warehouse WHERE id = :id")
+        Row w = jdbc.sql("SELECT id, branch_id, name, address, active, kind, keeper_id FROM warehouse WHERE id = :id")
                 .param("id", id)
                 .query(Row.class)
                 .single();
@@ -255,7 +376,8 @@ public class Warehouses {
                         rs.getBoolean("sellable")))
                 .list()
                 .forEach(z -> zones.put(z.id(), z));
-        return new Warehouse(w.id(), w.branchId(), w.name(), w.address(), w.active(), List.copyOf(zones.values()));
+        return new Warehouse(w.id(), w.branchId(), w.name(), w.address(), w.active(), List.copyOf(zones.values()),
+                WarehouseKind.valueOf(w.kind()), w.keeperId());
     }
 
     private static String blankToNull(String s) {

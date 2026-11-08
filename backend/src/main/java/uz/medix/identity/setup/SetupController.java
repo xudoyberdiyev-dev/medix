@@ -79,6 +79,19 @@ class SetupController {
         return setup.createWarehouse(body);
     }
 
+    @PutMapping("/warehouses/{id}")
+    @Operation(summary = "Ombor kartasini saqlash (tur, masʼul, zonalar)")
+    Warehouses.Warehouse updateWarehouse(@PathVariable long id, @Valid @RequestBody SetupRequests.WarehouseRequest body) {
+        return setup.updateWarehouse(id, body);
+    }
+
+    @DeleteMapping("/warehouses/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Ishlatilmagan omborni oʻchirish")
+    void deleteWarehouse(@PathVariable long id) {
+        setup.deleteWarehouse(id);
+    }
+
     @PostMapping("/employees")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Xodim qo'shish (vaqtinchalik parol bilan)")

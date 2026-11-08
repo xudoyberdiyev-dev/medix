@@ -7,8 +7,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import uz.medix.identity.organization.Organization;
+import uz.medix.inventory.WarehouseKind;
 import uz.medix.inventory.ZoneType;
 
 /** Sozlash ustasi so'rovlari. */
@@ -47,7 +49,11 @@ final class SetupRequests {
             @NotNull(message = "{validation.required}") Long branchId,
             @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
             @Schema(nullable = true) @Size(max = 500) String address,
-            @Schema(nullable = true) Set<ZoneType> extraZones) {}
+            @Schema(nullable = true) Set<ZoneType> extraZones,
+            @Schema(nullable = true, description = "Ombor turi; berilmasa — NORMAL") WarehouseKind kind,
+            @Schema(nullable = true, description = "Masʼul ombor mudiri (shu filial xodimi)") Long keeperId,
+            @Schema(nullable = true, description = "Zona nomlari turi boʻyicha; berilmagani — standart nom")
+            Map<ZoneType, String> zoneNames) {}
 
     record EmployeeRequest(
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[A-Za-z0-9._-]{3,64}$", message = "{validation.login}") String login,

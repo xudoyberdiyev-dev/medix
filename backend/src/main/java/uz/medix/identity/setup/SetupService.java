@@ -92,7 +92,47 @@ class SetupService {
         if (!OPTIONAL_ZONES.containsAll(extra)) {
             throw MedixException.badRequest("warehouse.extraZones");
         }
-        return warehouses.create(r.branchId(), r.name(), r.address(), extra);
+        checkKeeper(r.keeperId(), r.branchId());
+        return warehouses.create(r.branchId(), spec(r, extra));
+    }
+
+    @Transactional
+    Warehouses.Warehouse updateWarehouse(long id, SetupRequests.WarehouseRequest r) {
+        ensureOpen();
+        Warehouses.Warehouse w = warehouses.findById(id).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (w.branchId() != r.branchId()) {
+            throw MedixException.badRequest("warehouse.branchFixed");
+        }
+        Set<ZoneType> extra = r.extraZones() == null ? Set.of() : r.extraZones();
+        if (!OPTIONAL_ZONES.containsAll(extra)) {
+            throw MedixException.badRequest("warehouse.extraZones");
+        }
+        checkKeeper(r.keeperId(), w.branchId());
+        return warehouses.configure(id, spec(r, extra));
+    }
+
+    @Transactional
+    void deleteWarehouse(long id) {
+        ensureOpen();
+        warehouses.findById(id).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        warehouses.delete(id);
+    }
+
+    private static Warehouses.Spec spec(SetupRequests.WarehouseRequest r, Set<ZoneType> extra) {
+        return new Warehouses.Spec(r.name(), r.address(), r.kind(), r.keeperId(), extra, r.zoneNames());
+    }
+
+    /** Masʼul — shu filialdagi faol xodim (sozlash ustasida xodimlar 5-qadamda qoʻshiladi, shuning uchun ixtiyoriy). */
+    private void checkKeeper(Long keeperId, long branchId) {
+        if (keeperId == null) {
+            return;
+        }
+        boolean ok = employees.list().stream()
+                .anyMatch(e -> e.id() == keeperId && "ACTIVE".equals(e.status())
+                        && (e.branchId() == null || e.branchId() == branchId));
+        if (!ok) {
+            throw MedixException.badRequest("warehouse.keeperInvalid");
+        }
     }
 
     @Transactional
