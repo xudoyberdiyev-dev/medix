@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Reys" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="DocumentHeader" print-items="{{ printItems }}" print-label="{{ L.ch_printMenu }}" parent-label="{{ L.j_title }}" on-parent="{{ back }}" title="{{ title }}" number="{{ number }}" badge="{{ badge }}" steps="{{ steps }}" autosave="{{ autosave }}" primary="{{ primary }}" secondary="{{ secondary }}" more="{{ more }}" more-label="{{ L.p_more }}" sub="{{ sub }}" hint-size="100%,96px"></dc-import>
+
+  <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+
+  <section style="display:grid;grid-template-columns:repeat({{ hdrCols }},minmax(0,1fr));gap:16px;padding:16px 20px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+    <label style="display:flex;flex-direction:column;gap:6px;min-width:0">
+      <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.j_fDate }} <span style="color:#B91C1C">*</span></span>
+      <input value="{{ tDate }}" onChange="{{ onDate }}" disabled="{{ hdrLocked }}" placeholder="dd.mm.yyyy" style="height:34px;padding:0 12px;border:1px solid {{ dateBorder }};border-radius:8px;font:inherit;font-size:14px;color:{{ hdrColor }};background:{{ hdrBg }};outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+      <sc-if value="{{ dateErr }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ L.j_req }}</span></sc-if>
+    </label>
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+      <dc-import name="Select" label="{{ L.j_fDriver }}" required="{{ true }}" options="{{ driverOpts }}" value="{{ tDriver }}" on-change="{{ onDriver }}" placeholder="{{ L.j_pick }}" error="{{ driverErr }}" locked="{{ hdrLocked }}" hint-size="100%,56px"></dc-import>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+      <dc-import name="Select" label="{{ L.j_fCar }}" required="{{ true }}" options="{{ carOpts }}" value="{{ tCar }}" on-change="{{ onCar }}" placeholder="{{ L.j_pick }}" error="{{ carErr }}" locked="{{ hdrLocked }}" hint-size="100%,56px"></dc-import>
+      <sc-if value="{{ hasCar }}"><span style="display:flex;align-items:center;gap:4px 6px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#5B6B6A"><span style="font-family:'JetBrains Mono',monospace;color:#172B2A;white-space:nowrap">{{ carNo }}</span>{{ carType }}<sc-if value="{{ carFridge }}"><span style="display:inline-flex;align-items:center;gap:3px;height:18px;padding:0 6px;border-radius:6px;background:#EFF6FF;color:#1D4ED8;font-size:11.5px;font-weight:500"><lucide-i name="snowflake" size="11"></lucide-i>{{ L.j_fridge }}</span></sc-if></span></sc-if>
+    </div>
+    <label style="display:flex;flex-direction:column;gap:6px;min-width:0">
+      <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.j_fExp }}</span>
+      <input value="{{ tExp }}" onChange="{{ onExp }}" disabled="{{ hdrLocked }}" placeholder="{{ L.j_fExpPh }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;color:{{ hdrColor }};background:{{ hdrBg }};outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+    </label>
+  </section>
+
+  <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:{{ workCols }};gap:16px;align-items:start">
+      <sc-if value="{{ showLeft }}">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);display:flex;flex-direction:column;min-width:0;position:{{ leftPos }};top:0">
+          <button onClick="{{ toggleLeft }}" style="display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;border:0;border-bottom:1px solid #E2E8F0;background:transparent;text-align:left;cursor:{{ leftCursor }};font:inherit;color:#172B2A">
+            <span style="font-size:14px;font-weight:600">{{ L.j_readyList }}</span>
+            <span style="height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11.5px;line-height:18px;font-weight:500">{{ availN }}</span>
+            <sc-if value="{{ narrow }}"><lucide-i name="{{ leftChevron }}" size="16" style="margin-left:auto;color:#5B6B6A"></lucide-i></sc-if>
+          </button>
+          <sc-if value="{{ leftBody }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:12px 16px;border-bottom:1px solid #EEF2F4">
+              <div style="display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;color:#647574"><lucide-i name="search" size="16"></lucide-i><input value="{{ q }}" onChange="{{ onQ }}" placeholder="{{ L.j_search }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:13px;color:#172B2A"></div>
+            </div>
+            <div style="max-height:{{ leftMaxH }};overflow-y:auto">
+              <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+                <div style="border-bottom:1px solid #EEF2F4">
+                  <button onClick="{{ g.toggle }}" style="display:flex;align-items:center;gap:6px;width:100%;height:36px;padding:0 16px;border:0;background:#F8FAFA;text-align:left;cursor:pointer;font-size:12px;font-weight:600;color:#5B6B6A"><lucide-i name="{{ g.chevron }}" size="14"></lucide-i>{{ g.label }}<span style="margin-left:auto;font-weight:500">{{ g.count }}</span></button>
+                  <sc-if value="{{ g.open }}">
+                    <sc-for list="{{ g.items }}" as="it">
+                      <div onClick="{{ it.toggle }}" style="display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:52px;padding:6px 16px;border-top:1px solid #EEF2F4;background:{{ it.bg }};cursor:pointer" style-hover="background:{{ it.hover }}">
+                        <span role="checkbox" aria-checked="{{ it.on }}" style="width:16px;height:16px;border-radius:4px;border:1px solid {{ it.cbBorder }};background:{{ it.cbBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ it.on }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span>
+                        <span style="display:flex;flex-direction:column;min-width:0">
+                          <span style="display:flex;align-items:center;gap:6px;min-width:0;font-size:13px;line-height:18px;font-weight:500"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.name }}</span><sc-for list="{{ it.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;flex:none;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="13"></lucide-i></span></sc-for></span>
+                          <span style="font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.addr }}</span>
+                        </span>
+                        <span style="display:flex;flex-direction:column;align-items:flex-end;font-size:12px;line-height:16px;white-space:nowrap"><span style="font-weight:500;color:#172B2A">{{ it.sum }}</span><span style="font-family:'JetBrains Mono',monospace;color:#647574">{{ it.no }}</span></span>
+                      </div>
+                    </sc-for>
+                  </sc-if>
+                </div>
+              </sc-for>
+              <sc-if value="{{ noAvail }}"><div style="padding:24px 16px;text-align:center;font-size:13px;color:#647574">{{ L.j_noAvail }}</div></sc-if>
+            </div>
+          </sc-if>
+        </section>
+      </sc-if>
+
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);display:flex;flex-direction:column;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;border-bottom:1px solid #E2E8F0;flex-wrap:wrap">
+          <span style="font-size:14px;font-weight:600">{{ L.j_composition }}</span>
+          <sc-if value="{{ canDrag }}"><span style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:12px;color:#647574"><lucide-i name="grip-vertical" size="14"></lucide-i>{{ L.j_dragHint }}</span></sc-if>
+        </div>
+        <sc-if value="{{ hasStops }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:8px;padding:12px">
+            <sc-for list="{{ stops }}" as="s" hint-placeholder-count="3">
+              <div draggable="{{ s.draggable }}" onDragStart="{{ s.dragStart }}" onDragOver="{{ s.dragOver }}" onDrop="{{ s.drop }}" onDragEnd="{{ dragEnd }}" style="display:flex;align-items:center;gap:12px;min-height:72px;padding:10px 12px 10px 6px;border:1px solid {{ s.border }};border-radius:10px;background:#FFFFFF;opacity:{{ s.op }};box-shadow:{{ s.shadow }};transition:box-shadow 120ms ease-out">
+                <span title="{{ L.j_dragHint }}" style="display:flex;color:{{ s.gripColor }};cursor:{{ s.gripCursor }};flex:none"><lucide-i name="grip-vertical" size="18"></lucide-i></span>
+                <span style="width:36px;height:36px;border-radius:50%;background:#0F766E;color:#FFFFFF;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ s.n }}</span>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                  <div style="display:flex;align-items:center;gap:6px;min-width:0"><span style="font-size:14px;line-height:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</span><sc-for list="{{ s.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;flex:none;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="14"></lucide-i></span></sc-for></div>
+                  <span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ s.addr }}</span>
+                  <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#647574"><span>{{ s.phone }}</span><span>·</span><button onClick="{{ s.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ s.no }}</button><sc-if value="{{ s.dateWarn }}"><span style="display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:6px;background:#FFFBEB;color:#B45309;font-weight:500"><lucide-i name="calendar-clock" size="12"></lucide-i>{{ s.dateText }}</span></sc-if></span>
+                </div>
+                <span style="flex:none;text-align:right;font-size:13px;line-height:18px;white-space:nowrap">{{ s.meta }}</span>
+                <sc-if value="{{ s.canRemove }}"><button onClick="{{ s.remove }}" aria-label="{{ L.j_remove }}" title="{{ L.j_remove }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#FEF2F2;color:#B91C1C"><lucide-i name="x" size="16"></lucide-i></button></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noStops }}"><dc-import name="EmptyState" icon="route" tone="{{ emptyTone }}" title="{{ L.j_noStops }}" text="{{ L.j_noStopsD }}" min-height="240" hint-size="100%,240px"></dc-import></sc-if>
+        <dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ L.j_tSum }}" total-value="{{ totSum }}" bottom="{{ -24 }}" hint-size="100%,52px"></dc-import>
+      </section>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isLoad }}" hint-placeholder-val="{{ false }}">
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 16px;border-bottom:1px solid #E2E8F0;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">{{ L.j_loadTitle }}</span><span style="display:flex;align-items:center;gap:4px;font-size:12px;line-height:16px;color:#5B6B6A"><lucide-i name="arrow-up-down" size="12"></lucide-i>{{ L.j_loadNote }}</span></div>
+        <span style="margin-left:auto;font-size:13px;font-weight:600;color:{{ loadProgColor }}">{{ loadProg }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding:12px">
+        <sc-for list="{{ loadStops }}" as="s" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:14px;min-height:72px;padding:12px 16px;border:1px solid {{ s.border }};border-radius:10px;background:{{ s.bg }};flex-wrap:wrap">
+            <button role="checkbox" aria-checked="{{ s.loaded }}" aria-label="{{ L.j_loaded }}" onClick="{{ s.toggleLoaded }}" style="width:44px;height:44px;flex:none;border-radius:10px;border:2px solid {{ s.cbBorder }};background:{{ s.cbBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 120ms ease-out"><sc-if value="{{ s.loaded }}"><lucide-i name="check" size="24"></lucide-i></sc-if></button>
+            <span style="width:36px;height:36px;border-radius:50%;background:#0F766E;color:#FFFFFF;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ s.n }}</span>
+            <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px">
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:600">{{ s.name }}</span><sc-for list="{{ s.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="14"></lucide-i></span></sc-for></div>
+              <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ s.addr }}</span>
+              <span style="font-size:12px;line-height:16px;color:#647574">{{ s.meta }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+              <span style="font-size:13px;font-weight:500;color:{{ s.loadColor }}">{{ s.loadLabel }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ L.j_tSum }}" total-value="{{ totSum }}" bottom="{{ -24 }}" hint-size="100%,52px"></dc-import>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{ isFinish }}" hint-placeholder-val="{{ false }}">
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 16px;border-bottom:1px solid #E2E8F0;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:600">{{ L.j_composition }}</span>
+        <sc-if value="{{ canFinish }}">
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+            <div style="width:120px;height:6px;border-radius:3px;background:#EEF2F4;overflow:hidden"><div style="height:100%;width:{{ finPct }}%;background:#0F766E;transition:width 200ms ease-out"></div></div>
+            <span style="font-size:13px;font-weight:600">{{ finProg }}</span>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding:12px">
+        <sc-for list="{{ finStops }}" as="s" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:12px;padding:14px 16px;border:1px solid {{ s.border }};border-radius:10px;background:#FFFFFF">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <span style="width:36px;height:36px;border-radius:50%;background:#0F766E;color:#FFFFFF;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ s.n }}</span>
+              <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px">
+                <div style="display:flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:600">{{ s.name }}</span><sc-for list="{{ s.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;color:{{ f.color }}"><lucide-i name="{{ f.icon }}" size="14"></lucide-i></span></sc-for></div>
+                <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ s.addr }}</span>
+                <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#647574"><button onClick="{{ s.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ s.no }}</button><span>·</span><span style="font-family:'JetBrains Mono',monospace">{{ s.saleNo }}</span><span>·</span><span>{{ s.meta }}</span></span>
+              </div>
+              <dc-import name="OrderStatus" status="{{ s.status }}" dict="{{ L }}" hint-size="110px,22px"></dc-import>
+            </div>
+            <sc-if value="{{ s.editable }}">
+              <div role="radiogroup" style="display:flex;height:40px;padding:3px;gap:3px;border-radius:10px;background:#F5F7F8;border:1px solid {{ s.segBorder }};max-width:520px">
+                <sc-for list="{{ s.segs }}" as="g"><button role="radio" aria-checked="{{ g.on }}" onClick="{{ g.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:8px;background:{{ g.bg }};color:{{ g.fg }};box-shadow:{{ g.sh }};font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out"><lucide-i name="{{ g.icon }}" size="16"></lucide-i>{{ g.label }}</button></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ s.hasResult }}"><span style="align-self:flex-start;display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px 0 6px;border-radius:6px;background:{{ s.resBg }};color:{{ s.resFg }};font-size:12px;font-weight:500"><lucide-i name="{{ s.resIcon }}" size="12"></lucide-i>{{ s.resText }}</span></sc-if>
+            <sc-if value="{{ s.isPart }}">
+              <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;font-size:13px">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 88px 150px 80px;gap:8px;align-items:center;height:34px;padding:0 12px;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span>{{ L.j_cProduct }}</span><span style="text-align:right">{{ L.j_cShipped }}</span><span style="text-align:center">{{ L.j_cDelivered }}</span><span style="text-align:right">{{ L.j_cReturned }}</span></div>
+                <sc-for list="{{ s.lines }}" as="l">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) 88px 150px 80px;gap:8px;align-items:center;min-height:48px;padding:4px 12px;border-bottom:1px solid #EEF2F4">
+                    <span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.name }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ l.batch }}</span></span>
+                    <span style="text-align:right">{{ l.shipped }}</span>
+                    <span style="display:flex;align-items:center;justify-content:center;gap:4px">
+                      <button onClick="{{ l.dec }}" aria-label="−" style="width:32px;height:32px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="minus" size="14"></lucide-i></button>
+                      <input value="{{ l.dq }}" onChange="{{ l.onInput }}" inputmode="numeric" style="width:58px;height:32px;padding:0 6px;border:1px solid #E2E8F0;border-radius:8px;text-align:center;font:inherit;font-size:13px;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                      <button onClick="{{ l.inc }}" aria-label="+" style="width:32px;height:32px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="plus" size="14"></lucide-i></button>
+                    </span>
+                    <span style="text-align:right;font-weight:{{ l.retWeight }};color:{{ l.retColor }}">{{ l.ret }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ s.needReason }}">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.j_reason }} <span style="color:#B91C1C">*</span></span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <sc-for list="{{ s.reasons }}" as="r"><button onClick="{{ r.pick }}" style="height:32px;padding:0 12px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }};color:{{ r.fg }};font-size:13px;font-weight:500;cursor:pointer">{{ r.label }}</button></sc-for>
+                </div>
+                <sc-if value="{{ s.errText }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ s.errText }}</span></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ s.editable }}">
+              <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                <button role="checkbox" aria-checked="{{ s.signed }}" onClick="{{ s.toggleSigned }}" style="display:flex;align-items:center;gap:8px;min-height:32px;padding:0;border:0;background:transparent;cursor:pointer;font-size:13px;color:#172B2A">
+                  <span style="width:20px;height:20px;flex:none;border-radius:4px;border:1px solid {{ s.sgBorder }};background:{{ s.sgBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ s.signed }}"><lucide-i name="check" size="14"></lucide-i></sc-if></span>{{ L.j_signed }}
+                </button>
+                <label style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px dashed #CBD5D3;border-radius:8px;font-size:13px;color:{{ s.photoColor }};cursor:pointer;max-width:260px" style-hover="background:#F8FAFA"><lucide-i name="{{ s.photoIcon }}" size="16"></lucide-i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.photoLabel }}</span><input type="file" accept="image/*" onChange="{{ s.onPhoto }}" style="display:none"></label>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ L.j_tSum }}" total-value="{{ totSum }}" bottom="{{ -24 }}" hint-size="100%,52px"></dc-import>
+    </section>
+  </sc-if>
+  <div style="height:40px"></div>
+
+  <sc-if value="{{ hasDlg }}">
+    <dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.j_cancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;tripNo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;RS-TSH-000045&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;preset&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number[]&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;operator&quot;,&quot;keeper&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;branch&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Bekzod Tursunov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onOpenOrder&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(id)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const TRIP_ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], planned: ['calendar', '#5B6B6A', '#EEF2F4'], transit: ['truck', '#1D4ED8', '#EFF6FF'], retwait: ['undo-2', '#B45309', '#FFFBEB'], done: ['check', '#15803D', '#F0FDF4'], cancelled: ['x', '#5B6B6A', '#EEF2F4'] };
+const CB = on => ({ bg: on ? '#0F766E' : '#FFFFFF', border: on ? '#0F766E' : '#647574' });
+const okDate = s => /^\d{2}\.\d{2}\.\d{4}$/.test(String(s || '').trim());
+class Component extends DCLogic {
+  state = { t: null, mode: 'edit', q: '', closed: {}, drag: null, over: null, tried: false, dlg: null, save: null, savedAt: null, loadTried: false, finTried: false, leftOpen: false, ready: !!window.MedixData };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.init(); } }, 60); else this.init();
+    this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); clearTimeout(this._sv); }
+  componentDidUpdate(pp) { const p = this.props; if (pp.tripNo !== p.tripNo || (p.demo && (!pp.demo || pp.demo.n !== p.demo.n)) || pp.preset !== p.preset) this.init(); }
+  planner() { return this.D.can(this.props.role, 'shipments.trip'); }
+  shipper() { return this.D.can(this.props.role, 'shipments.ship'); }
+  modeFor(t) { return ['transit', 'retwait', 'done', 'cancelled'].includes(t.status) ? 'view' : 'edit'; } // T9-4b: yuklash, boshlash va yakunlash — Haydovchi panelida
+  init() {
+    const D = this.D, p = this.props, d = p.demo || {}; if (!D) return;
+    let t = p.tripNo ? D.tripCopy(D.tripByNo(p.tripNo)) : null;
+    if (!t) t = { no: null, branch: p.branch && p.branch !== 'ALL' ? p.branch : 'TSH', date: D.TODAY, driver: d.driver || null, car: d.car || null, exp: '', status: 'draft', stops: (p.preset || []).map(oid => ({ oid })) };
+    let mode = this.modeFor(t);
+    if (d.k === 't_load') { mode = 'load'; t.stops.forEach((s, i) => { s.loaded = i === t.stops.length - 1; }); }
+    if (d.k === 't_partial') {
+      const s0 = t.stops[0], o = s0 && D.store.orders.find(x => x.id === s0.oid);
+      if (o) { const l = o.lines.find(x => D.prodById(x.pid).name === 'Paracetamol 500mg') || o.lines[0]; const q = D.shippedQty(o, l); s0.res = 'part'; s0.qty = { [l.id]: Math.max(0, q - 60) }; s0.reason = 'Shikastlangan'; s0.signed = true; }
+      if (t.stops[1]) { t.stops[1].res = 'ok'; t.stops[1].signed = true; }
+    }
+    this.setState({ t, mode, q: '', closed: {}, tried: false, dlg: null, save: null, loadTried: false, finTried: false, leftOpen: false, ready: true });
+  }
+  toast(x) { this.props.onToast && this.props.onToast(x); }
+  upd(fn, persist = true) {
+    const t = JSON.parse(JSON.stringify(this.state.t)); fn(t); this.setState({ t });
+    if (!persist) return;
+    if (t.status === 'draft' && !t.no && !t.stops.length) return;
+    clearTimeout(this._sv); this.setState({ save: 'saving' });
+    this._sv = setTimeout(() => { const r = this.D.saveTrip(this.state.t); this.setState(s => ({ t: { ...s.t, no: r.no }, save: 'saved', savedAt: this.D.nowStr().slice(11) })); }, 450);
+  }
+  stopData(s, i) {
+    const D = this.D, L = this.L, o = D.store.orders.find(x => x.id === s.oid); if (!o) return null;
+    const info = D.shipInfo(o);
+    const flags = [info.ctrl && { icon: 'shield-alert', color: '#B91C1C', tip: L.j_bCtrl }, info.short > 0 && { icon: 'triangle-alert', color: '#B45309', tip: fill(L.j_bShort, { n: fN(info.short) }) }].filter(Boolean);
+    return { s, i, o, info, c: info.c, flags, sum: o.sale ? o.sale.sum : info.sum };
+  }
+  validate(rows) {
+    const D = this.D, t = this.state.t, car = D.carByNo(t.car);
+    const busy = t.driver ? D.store.trips.find(x => x.no !== t.no && x.driver === t.driver && x.date === t.date && ['planned', 'transit'].includes(x.status)) : null;
+    return { busy, fields: !okDate(t.date) || !t.driver || !t.car, empty: !rows.length };
+  }
+  plan(rows) {
+    const v = this.validate(rows), L = this.L;
+    this.setState({ tried: true });
+    if (v.empty) return this.toast(L.j_emptyErr);
+    if (v.fields) return this.toast(L.j_fixErr);
+    clearTimeout(this._sv);
+    const r = this.D.planTrip(this.state.t, this.props.userName);
+    this.setState({ t: r, save: 'saved', savedAt: this.D.nowStr().slice(11), tried: false }); this.toast(fill(L.j_tPlanned, { n: r.no }));
+  }
+  renderVals() {
+    const L = this.L, D = this.D, p = this.props, s = this.state, narrow = !!p.narrow;
+    const back = () => p.onBack && p.onBack();
+    const empty = { L, back, banners: [], driverOpts: [], carOpts: [], groups: [], stops: [], loadStops: [], finStops: [], totItems: [], more: [], secondary: [], sub: [], steps: [], badge: {}, isEdit: true, dlg: {} };
+    if (!D || !s.t) return empty;
+    const t = s.t, st = t.status, planner = this.planner(), shipper = this.shipper();
+    const rows = t.stops.map((x, i) => this.stopData(x, i)).filter(Boolean);
+    const v = this.validate(rows);
+    const editable = planner && (st === 'draft' || st === 'planned') && s.mode === 'edit';
+    const drv = D.driverById(t.driver), car = D.carByNo(t.car);
+    // totals
+    const tot = rows.reduce((a, r) => ({ lines: a.lines + r.info.lines, qty: a.qty + r.info.qty, sum: a.sum + r.sum }), { lines: 0, qty: 0, sum: 0 });
+    const totItems = [{ label: L.j_tStops, value: String(rows.length) }, { label: L.j_tLines, value: fN(tot.lines) }, { label: L.j_tQty, value: fN(tot.qty) }];
+    // header
+    const S = TRIP_ST[st];
+    const stepsLb = [L.j_st_planned, L.j_st_transit, L.j_st_retwait, L.j_st_done];
+    const stIdx = { draft: -1, planned: 0, transit: 1, retwait: 2, done: 4 }[st];
+    const steps = st === 'cancelled' ? [{ label: L.j_st_planned, state: 'done' }, { label: L.j_st_cancelled, state: 'fail' }] : stepsLb.map((label, i) => ({ label, state: i < stIdx ? 'done' : i === stIdx ? 'cur' : 'next' }));
+    const isNew = !t.no;
+    let primary = null, secondary = [], more = [];
+    const print = { label: L.j_printRoute, icon: 'printer', pick: () => this.toast(L.j_tPrint) };
+    const cancel = { sep: true, label: L.j_cancelTrip, icon: 'circle-x', danger: true, pick: () => this.setState({ dlg: 'cancel' }) };
+    if (st === 'draft' && planner) primary = { label: L.j_plan, icon: 'calendar-check', pick: () => this.plan(rows) };
+    if (false && st === 'planned' && shipper && s.mode === 'edit') primary = { label: L.j_confirmShip, icon: 'truck', pick: () => this.setState({ mode: 'load', loadTried: false }) };
+    if (false && st === 'planned' && s.mode === 'load') {
+      primary = shipper ? { label: L.j_confirmShip, icon: 'truck', pick: () => { const miss = rows.filter(r => !r.s.loaded); if (miss.length) return this.setState({ loadTried: true }); this.setState({ dlg: 'ship' }); } } : null;
+      secondary = [{ label: L.j_backEdit, icon: 'arrow-left', pick: () => this.setState({ mode: 'edit' }) }];
+    }
+    if (false && st === 'transit' && planner) primary = { label: L.j_finish, icon: 'flag', pick: () => { const bad = rows.some(r => this.stopErr(r)); if (bad) return this.setState({ finTried: true }); this.setState({ dlg: 'finish' }); } };
+    if (!isNew) more.push(print);
+    if (planner && (st === 'planned' || (st === 'draft' && !isNew))) more.push(cancel);
+    const autosave = editable && (t.no || s.save) ? { state: s.save === 'saving' ? 'saving' : 'saved', time: s.savedAt || (t.plannedAt ? t.plannedAt.slice(11) : ''), savedLabel: L.j_saved, savingLabel: L.j_saving, errorLabel: L.j_saveErr } : null;
+    const sub = isNew ? [] : [{ text: t.date, icon: 'calendar' }, ...(drv ? [{ text: drv.name, icon: 'user' }] : []), ...(t.car ? [{ text: t.car, icon: 'truck' }] : [])];
+    // banners
+    const banners = [];
+    const stopName = r => `${fill(L.j_stopN, { n: r.i + 1 })} (${r.c.name})`;
+    if (st === 'done') { const ok = t.stops.filter(x => x.res === 'ok').length, pa = t.stops.filter(x => x.res === 'part').length, fa = t.stops.filter(x => x.res === 'fail').length; banners.push({ tone: 'success', icon: 'circle-check', title: fill(L.j_doneBanner, { at: (t.doneAt || '').replace(' ', ', '), who: t.doneBy || '' }), text: this.resSummary(ok, pa, fa) }); }
+    if (st === 'cancelled') banners.push({ tone: 'neutral', icon: 'circle-x', text: fill(L.j_cancBanner, { at: (t.cancelledAt || '').replace(' ', ', '), who: t.cancelledBy || '' }) });
+    if (st === 'planned' || st === 'transit' || st === 'retwait') banners.push({ tone: 'info', icon: 'smartphone', text: L.j_drvOwns });
+    if (st === 'transit') banners.push({ tone: 'info', icon: 'truck', text: fill(L.j_transitRO, { at: (t.shippedAt || '').replace(' ', ', '), who: t.shippedBy || '' }) });
+    if (st === 'planned' && s.mode === 'edit') banners.push({ tone: 'info', icon: 'calendar-check', text: planner ? L.j_plannedInfo : L.j_plannedRO });
+    if (editable && v.busy) banners.push({ tone: 'warning', icon: 'user-round-x', text: fill(L.j_busy, { d: t.date === D.TODAY ? L.j_todayLow : t.date, t: v.busy.no }) });
+    if (editable && s.tried && v.empty) banners.push({ tone: 'danger', icon: 'route', text: L.j_emptyErr });
+    const loadMiss = rows.filter(r => !r.s.loaded);
+    if (s.mode === 'load' && s.loadTried && loadMiss.length) banners.push({ tone: 'warning', icon: 'package-open', text: fill(L.j_loadMiss, { s: loadMiss.map(stopName).join(', ') }) });
+    const finMiss = rows.filter(r => this.stopErr(r));
+    if (s.mode === 'finish' && s.finTried && finMiss.length) banners.push({ tone: 'danger', icon: 'circle-alert', text: fill(L.j_finMiss, { s: finMiss.map(stopName).join(', ') }) });
+    // left list
+    const q = s.q.trim().toLowerCase(), inTrip = new Set(t.stops.map(x => x.oid));
+    const avail = D.shipReady(t.branch).filter(o => o.delivery !== 'pickup' && !D.tripOfOrder(o.id, t.no)).map(o => D.shipInfo(o))
+      .filter(i => !q || `${i.c.name} ${i.o.no} ${i.c.address}`.toLowerCase().includes(q));
+    const areaNames = [...D.AREA_ORDER, ...new Set(avail.map(i => i.area).filter(a => !D.AREA_ORDER.includes(a)))];
+    const groups = areaNames.map(a => { const list = avail.filter(i => i.area === a); if (!list.length) return null; const open = !s.closed[a];
+      return { label: a, count: `${list.filter(i => inTrip.has(i.o.id)).length} / ${list.length}`, open, chevron: open ? 'chevron-down' : 'chevron-right', toggle: () => this.setState(x => ({ closed: { ...x.closed, [a]: !x.closed[a] } })),
+        items: list.map(i => { const on = inTrip.has(i.o.id), cb = CB(on); return { name: i.c.name, addr: i.c.address, sum: fM(i.sum), no: i.o.no, on, cbBg: cb.bg, cbBorder: cb.border, bg: on ? '#F0FAF7' : '#FFFFFF', hover: on ? '#DDF5EE' : '#F8FAFA',
+          flags: [i.ctrl && { icon: 'shield-alert', color: '#B91C1C', tip: L.j_bCtrl }, i.o.delivDate !== t.date && { icon: 'calendar-clock', color: '#B45309', tip: fill(L.j_dateWarn, { d: i.o.delivDate }) }].filter(Boolean),
+          toggle: () => this.upd(x => { const k = x.stops.findIndex(y => y.oid === i.o.id); if (k >= 0) x.stops.splice(k, 1); else x.stops.push({ oid: i.o.id }); }) }; }) }; }).filter(Boolean);
+    // stops (edit)
+    const stops = rows.map((r, k) => {
+      const dragging = s.drag === k, over = s.over === k && s.drag != null && s.drag !== k;
+      return { n: k + 1, name: r.c.name, flags: r.flags, addr: r.c.address, phone: r.c.phone, no: r.o.no, meta: fill(L.j_stopMeta, { l: r.info.lines, s: fM(r.sum) }), open: () => p.onOpenOrder && p.onOpenOrder(r.o.id),
+        dateWarn: r.o.delivDate !== t.date, dateText: fill(L.j_dateWarn, { d: r.o.delivDate }),
+        draggable: editable ? 'true' : 'false', gripColor: editable ? '#647574' : '#E2E8F0', gripCursor: editable ? 'grab' : 'default', op: dragging ? 0.4 : 1,
+        border: over ? '#0D9488' : '#E2E8F0', shadow: over ? '0 0 0 3px rgba(13,148,136,0.15)' : 'none', canRemove: editable,
+        remove: () => this.upd(x => { x.stops.splice(k, 1); }),
+        dragStart: e => { if (!editable) return; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(k)); } catch (er) {} this.setState({ drag: k }); },
+        dragOver: e => { if (s.drag == null) return; e.preventDefault(); if (s.over !== k) this.setState({ over: k }); },
+        drop: e => { e.preventDefault(); const from = s.drag; this.setState({ drag: null, over: null }); if (from == null || from === k) return; this.upd(x => { const [m] = x.stops.splice(from, 1); x.stops.splice(k, 0, m); }); } };
+    });
+    // load
+    const setStop = (k, patch) => this.upd(x => Object.assign(x.stops[k], patch), st !== 'draft');
+    const loadStops = rows.slice().reverse().map(r => { const k = r.i, loaded = !!r.s.loaded, miss = s.loadTried && !loaded, cb = CB(loaded);
+      return { n: k + 1, name: r.c.name, flags: r.flags, addr: r.c.address, meta: `${r.o.no} · ${fill(L.j_meta, { l: r.info.lines, q: fN(r.info.qty), s: fM(r.sum) })}`, loaded, cbBg: loaded ? '#0F766E' : '#FFFFFF', cbBorder: miss && !loaded ? '#B45309' : cb.border,
+        loadLabel: loaded ? L.j_loaded : L.j_notLoaded, loadColor: loaded ? '#15803D' : '#5B6B6A', border: miss ? '#FDE68A' : loaded ? '#BBF7D0' : '#E2E8F0', bg: miss ? '#FFFBEB' : '#FFFFFF',
+        toggleLoaded: () => setStop(k, { loaded: !loaded }) }; });
+    const loadedN = rows.filter(r => r.s.loaded).length;
+    // finish / view
+    const canFinish = s.mode === 'finish';
+    const RES = [['ok', L.j_rOk, 'check', '#15803D'], ['part', L.j_rPart, 'split', '#B45309'], ['fail', L.j_rFail, 'x', '#B91C1C']];
+    const finStops = rows.map(r => {
+      const k = r.i, x = r.s, o = r.o, err = canFinish && s.finTried ? this.stopErr(r) : null;
+      const lines = o.lines.map(l => { const pr = D.prodById(l.pid) || {}, q = D.shippedQty(o, l), dq = x.qty && x.qty[l.id] != null ? x.qty[l.id] : q, ret = q - dq, bs = D.picksOf(o).filter(y => y.pid === l.pid).map(y => y.batch);
+        const setQ = n => setStop(k, { qty: { ...(x.qty || {}), [l.id]: Math.max(0, Math.min(q, n)) } });
+        return { name: pr.name, batch: [...new Set(bs)].join(', ') || '—', shipped: fN(q), dq: String(dq), ret: ret > 0 ? fN(ret) : '0', retColor: ret > 0 ? '#B45309' : '#647574', retWeight: ret > 0 ? 600 : 400,
+          dec: () => setQ(dq - 1), inc: () => setQ(dq + 1), onInput: e => setQ(parseInt(String(e.target.value).replace(/\D/g, ''), 10) || 0) }; }).filter(l => l.shipped !== '0');
+      const done = st === 'done', ret = o.ret, resText = !x.res ? '' : x.res === 'part' ? fill(L.j_resPart, { n: fN(ret ? ret.qty : 0) }) : x.res === 'fail' ? fill(L.j_resFail, { r: x.reason || '—' }) : L.j_resOk;
+      const resC = x.res === 'part' ? ['#B45309', '#FFFBEB', 'split'] : x.res === 'fail' ? ['#B91C1C', '#FEF2F2', 'x'] : ['#15803D', '#F0FDF4', 'check'];
+      const sg = CB(!!x.signed);
+      return { n: k + 1, name: r.c.name, flags: r.flags, addr: r.c.address, no: o.no, saleNo: o.sale ? o.sale.no : '—', meta: fill(L.j_stopMeta, { l: r.info.lines, s: fM(r.sum) }), status: o.status, open: () => p.onOpenOrder && p.onOpenOrder(o.id),
+        editable: canFinish, border: err ? '#FECACA' : x.res === 'ok' ? '#BBF7D0' : x.res === 'part' ? '#FDE68A' : x.res === 'fail' ? '#FECACA' : '#E2E8F0', segBorder: err && !x.res ? '#B91C1C' : '#EEF2F4',
+        segs: RES.map(([key, label, icon, color]) => { const on = x.res === key; return { label, icon, on, bg: on ? '#FFFFFF' : 'transparent', fg: on ? color : '#5B6B6A', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', pick: () => setStop(k, { res: key, reason: key === 'ok' ? '' : x.reason }) }; }),
+        isPart: canFinish && x.res === 'part', lines, needReason: canFinish && (x.res === 'part' || x.res === 'fail'),
+        reasons: D.RET_REASONS.map(rs => { const on = x.reason === rs; return { label: rs, bg: on ? '#DDF5EE' : '#FFFFFF', fg: on ? '#0F766E' : '#172B2A', border: on ? '#0D9488' : '#E2E8F0', pick: () => setStop(k, { reason: rs }) }; }),
+        errText: err && err !== 'res' ? (err === 'qty' ? L.j_partNone : L.j_reasonReq) : '',
+        signed: !!x.signed, sgBg: sg.bg, sgBorder: sg.border, toggleSigned: () => setStop(k, { signed: !x.signed }),
+        photoLabel: x.photo || L.j_photo, photoIcon: x.photo ? 'image' : 'camera', photoColor: x.photo ? '#0F766E' : '#5B6B6A', onPhoto: e => { const f = e.target.files && e.target.files[0]; if (f) setStop(k, { photo: f.name }); },
+        hasResult: !!x.res, resText, resFg: resC[0], resBg: resC[1], resIcon: resC[2] };
+    });
+    const marked = rows.filter(r => r.s.res).length;
+    // dialogs
+    let dlg = null;
+    if (s.dlg === 'ship') {
+      const custs = new Set(rows.map(r => r.o.cust)).size;
+      dlg = { title: L.j_shipCT, danger: false, confirm: L.j_confirmShip, items: [{ icon: 'package-minus', text: fill(L.j_sc1, { n: rows.length, q: fN(tot.qty) }) }, { icon: 'hand-coins', text: fill(L.j_sc2, { n: rows.length, c: custs, s: fM(tot.sum) }) }, { icon: 'truck', text: L.j_sc3 }],
+        run: () => { const r = D.shipTrip(t.no, p.userName); this.setState({ t: r, mode: this.modeFor(r), dlg: null }); this.toast(fill(L.j_tShipped, { n: rows.length })); } };
+    }
+    if (s.dlg === 'finish') {
+      const ok = rows.filter(r => r.s.res === 'ok').length, pa = rows.filter(r => r.s.res === 'part').length, fa = rows.filter(r => r.s.res === 'fail').length;
+      let rq = 0, rs = 0; rows.forEach(r => { const R = D.stopReturns(r.o, r.s); rq += R.qty; rs += R.sum; });
+      dlg = { title: L.j_finCT, danger: false, confirm: L.j_finish, items: [{ icon: 'check-check', color: '#15803D', text: this.resSummary(ok, pa, fa) }, ...(rq > 0 ? [{ icon: 'shield-half', color: '#B45309', text: fill(L.j_fc2, { n: fN(rq) }) }, { icon: 'hand-coins', text: fill(L.j_fc3, { s: fM(rs) }) }] : []), { icon: 'flag', text: L.j_fc4 }],
+        run: () => { const r = D.finishTrip(t.no, this.state.t.stops, p.userName); this.setState({ t: r, mode: 'view', dlg: null }); this.toast(L.j_tFinished); } };
+    }
+    if (s.dlg === 'cancel') dlg = { title: L.j_cancelCT, text: L.j_cancelCD, danger: true, confirm: L.j_cancelTrip, items: [], run: () => { const r = D.cancelTrip(t.no, p.userName); this.setState({ t: r, mode: 'view', dlg: null }); this.toast(L.j_tCancelled); } };
+    const hdrLocked = !editable;
+    return {
+      L, back, narrow, title: isNew ? L.j_newTripT : L.j_tripT, printItems: t.no && !isNew ? D.printItems('rs', t.no, L) : [], number: t.no || '', badge: { label: L['j_st_' + st], icon: S[0], fg: S[1], bg: S[2] }, steps, autosave, primary, secondary, more, sub, banners,
+      hdrCols: narrow ? 2 : 4, hdrLocked, hdrBg: hdrLocked ? '#F8FAFA' : '#FFFFFF', hdrColor: hdrLocked ? '#5B6B6A' : '#172B2A',
+      tDate: t.date || '', onDate: e => this.upd(x => { x.date = e.target.value; }), dateErr: s.tried && !okDate(t.date), dateBorder: s.tried && !okDate(t.date) ? '#B91C1C' : '#E2E8F0',
+      driverOpts: D.DRIVERS.filter(x => x.active !== false || x.id === this.state.t?.driver).map(d => ({ value: d.id, label: `${d.name} · ${d.phone}` })), tDriver: t.driver, onDriver: val => this.upd(x => { x.driver = val; }), driverErr: s.tried && !t.driver ? L.j_req : '',
+      carOpts: D.VEHICLES.filter(x => x.active !== false).map(c => ({ value: c.no, label: `${c.no} · ${c.type}${c.fridge ? ' · ' + L.j_fridge : ''}` })), tCar: t.car, onCar: val => this.upd(x => { x.car = val; }), carErr: s.tried && !t.car ? L.j_req : '',
+      hasCar: !!car, carNo: car ? car.no : '', carType: car ? car.type : '', carFridge: !!(car && car.fridge),
+      tExp: t.exp || '', onExp: e => this.upd(x => { x.exp = e.target.value; }),
+      isEdit: s.mode === 'edit', isLoad: s.mode === 'load', isFinish: s.mode === 'finish' || s.mode === 'view',
+      showLeft: editable, workCols: editable && !narrow ? '420px minmax(0,1fr)' : 'minmax(0,1fr)', leftPos: narrow ? 'relative' : 'sticky', leftCursor: narrow ? 'pointer' : 'default',
+      leftBody: !narrow || s.leftOpen, leftChevron: s.leftOpen ? 'chevron-up' : 'chevron-down', toggleLeft: () => narrow && this.setState(x => ({ leftOpen: !x.leftOpen })), leftMaxH: narrow ? '360px' : 'calc(100vh - 360px)',
+      q: s.q, onQ: e => this.setState({ q: e.target.value }), groups, availN: avail.length, noAvail: avail.length === 0,
+      canDrag: editable && rows.length > 1, hasStops: rows.length > 0, noStops: rows.length === 0, emptyTone: s.tried ? 'danger' : 'neutral', stops, dragEnd: () => this.setState({ drag: null, over: null }),
+      totItems, totSum: fM(tot.sum),
+      loadStops, loadProg: fill(L.j_loadProg, { a: loadedN, b: rows.length }), loadProgColor: loadedN === rows.length ? '#15803D' : '#172B2A',
+      canFinish, finStops, finProg: fill(L.j_finProg, { a: marked, b: rows.length }), finPct: rows.length ? Math.round(marked / rows.length * 100) : 0,
+      hasDlg: !!dlg, dlg: dlg || {}, closeDlg: () => this.setState({ dlg: null })
+    };
+  }
+  stopErr(r) {
+    const x = r.s; if (!x.res) return 'res';
+    if (x.res === 'fail' && !x.reason) return 'reason';
+    if (x.res === 'part') { if (!x.reason) return 'reason'; if (this.D.stopReturns(r.o, x).qty <= 0) return 'qty'; }
+    return null;
+  }
+  resSummary(ok, pa, fa) { const L = this.L; return fill(L.j_fc1, { a: ok }) + (pa ? fill(L.j_fcPart, { n: pa }) : '') + (fa ? fill(L.j_fcFail, { n: fa }) : ''); }
+}
+</script>
+</body>
+</html>

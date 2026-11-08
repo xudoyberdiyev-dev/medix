@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Kunni yopish" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="DocumentHeader" parent-label="{{ acctName }}" on-parent="{{ back }}" title="{{ L.kb_closeT }}" number="{{ date }}" badge="{{ badge }}" steps="{{ steps }}" primary="{{ primary }}" hint-size="100%,88px"></dc-import>
+  <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+  <sc-if value="{{ hasAdj }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF">
+      <span style="font-size:13px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ adjText }}</span>
+      <button onClick="{{ makeAdj }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59"><lucide-i name="file-plus" size="16"></lucide-i>{{ adjLabel }}</button>
+    </div>
+  </sc-if>
+  <div style="display:grid;grid-template-columns:{{ layoutCols }};gap:20px;align-items:start;min-width:0">
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid #EEF2F4">
+        <span style="font-size:14px;font-weight:600">{{ L.kb_count }}</span>
+        <div role="radiogroup" style="display:flex;gap:4px;padding:3px;background:#F5F7F8;border:1px solid #E2E8F0;border-radius:8px">
+          <sc-for list="{{ modes }}" as="m"><button role="radio" aria-checked="{{ m.on }}" onClick="{{ m.pick }}" style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:0;border-radius:6px;background:{{ m.bg }};box-shadow:{{ m.sh }};color:{{ m.fg }};font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap"><lucide-i name="{{ m.icon }}" size="14"></lucide-i>{{ m.label }}</button></sc-for>
+        </div>
+      </div>
+      <sc-if value="{{ isDen }}" hint-placeholder-val="{{ true }}">
+        <div style="overflow-x:auto">
+          <div style="min-width:420px">
+            <div style="display:grid;grid-template-columns:minmax(120px,1fr) 140px minmax(150px,1fr);height:36px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+              <span style="padding:0 16px">{{ L.kb_nominal }}</span><span style="padding:0 12px;text-align:right">{{ L.kb_qty }}</span><span style="padding:0 16px;text-align:right">{{ L.tl_hSum }}</span>
+            </div>
+            <sc-for list="{{ dens }}" as="r" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:minmax(120px,1fr) 140px minmax(150px,1fr);min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4">
+                <span style="padding:0 16px;font-weight:500">{{ r.label }}</span>
+                <span style="padding:0 12px"><input value="{{ r.count }}" onChange="{{ r.onCount }}" readOnly="{{ readOnly }}" inputmode="numeric" placeholder="0" aria-label="{{ r.label }}" style="width:100%;height:30px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:{{ inBg }};font:inherit;font-size:13px;text-align:right;color:#172B2A;outline:none;box-sizing:border-box" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></span>
+                <span style="padding:0 16px;text-align:right;color:{{ r.color }}">{{ r.sum }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isTotal }}">
+        <div style="padding:20px 16px;max-width:360px"><dc-import name="MoneyInput" label="{{ L.kb_countTotal }}" required="{{ true }}" value="{{ total }}" on-change="{{ onTotal }}" read-only="{{ readOnly }}" suffix="{{ L.tl_som }}" bold="{{ true }}" hint-size="100%,56px"></dc-import></div>
+      </sc-if>
+      <dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ L.kb_counted }}" total-value="{{ countedText }}" bottom="{{ -24 }}" hint-size="100%,52px"></dc-import>
+    </section>
+    <aside style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <dc-import name="SideSummary" kpis="{{ kpis }}" columns="{{ kpiCols }}" hint-size="100%,260px"></dc-import>
+      <sc-if value="{{ needExtra }}">
+        <section data-f="note" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+          <label style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.kb_diffNote }} <span style="color:#B91C1C">*</span></span>
+            <textarea value="{{ note }}" onChange="{{ onNote }}" readOnly="{{ readOnly }}" rows="2" style="padding:7px 12px;border:1px solid {{ noteBorder }};border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;line-height:20px;color:#172B2A;resize:vertical;outline:none"></textarea>
+          </label>
+          <sc-if value="{{ askPin }}">
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;line-height:16px;font-weight:500">{{ L.bh_pinWho }} <span style="color:#B91C1C">*</span></span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ apprOpts }}" as="a" hint-placeholder-count="2"><button onClick="{{ a.pick }}" aria-pressed="{{ a.on }}" style="height:32px;padding:0 12px;border:1px solid {{ a.bd }};border-radius:16px;background:{{ a.bg }};color:#172B2A;font:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="{{ a.icon }}" size="14" style="color:#0F766E"></lucide-i>{{ a.name }}</button></sc-for></div></div>
+            <label data-f="pin" style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.kb_pin }} <span style="color:#B91C1C">*</span></span>
+              <input type="password" value="{{ pin }}" onChange="{{ onPin }}" maxlength="4" inputmode="numeric" placeholder="••••" style="width:120px;height:34px;padding:0 12px;border:1px solid {{ pinBorder }};border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:16px;letter-spacing:0.3em;outline:none">
+              <sc-if value="{{ pinMsg }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ pinMsg }}</span></sc-if>
+              <sc-if value="{{ showDemo }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;line-height:16px;color:#647574">{{ L.bh_pinHint }}</span></sc-if>
+            </label>
+          </sc-if>
+        </section>
+      </sc-if>
+    </aside>
+  </div>
+  <sc-if value="{{ canSubmit }}"><dc-import name="StickyFormFooter" style="position:sticky;bottom:-24px;z-index:5;display:block;align-self:stretch" dirty="{{ false }}" cancel-label="{{ L.tl_back }}" save-label="{{ L.kb_closeBtn }}" max-width="{{ 1280 }}" on-cancel="{{ back }}" on-save="{{ submit }}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{ vsOpen }}"><dc-import name="ValidationSummary" title="{{ vsTitle }}" subtitle="{{ L.tl_vsSub }}" errors="{{ vsErrors }}" warnings="{{ vsWarnings }}" warn-title="{{ L.tl_vsWarn }}" close-label="{{ L.tl_close }}" on-close="{{ closeVs }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" items="{{ dlg.items }}" danger="{{ false }}" confirm-label="{{ L.kb_closeBtn }}" cancel-label="{{ L.tl_back }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:800},&quot;acct&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;K-TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;date&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;04.10.2026&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cashier&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;cashier&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Nigora Xasanova&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;preset&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{counts?,total?,note?}&quot;},&quot;docKey&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onDone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(r)=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const r2 = x => Math.round(x * 100) / 100;
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const fD = t => { const d = new Date(t); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '.' + d.getUTCFullYear(); };
+const NOM = [200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000];
+const pinMsg = (L, r, n) => r.err === 'locked' ? fill(L.bh_pinLocked, { n, m: r.min }) : r.err === 'wrong' ? fill(L.bh_pinWrong, { n: r.left }) : r.err === 'perm' ? L.bh_pinPerm : L.bh_pinPick;
+class Component extends DCLogic {
+  state = { mode: 'den', counts: {}, total: null, note: '', pin: '', tried: false, vs: null, dlg: null, done: null, adjNo: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.init(); }
+  componentDidUpdate(pp) { if (pp.docKey !== this.props.docKey) this.init(); }
+  init() { const p = this.props.preset || {}; this.setState({ mode: p.total != null ? 'total' : 'den', counts: p.counts || {}, total: p.total != null ? p.total : null, note: p.note || '', pin: '', tried: false, vs: null, dlg: null, done: null, adjNo: null }); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  counted() { const s = this.state; if (s.mode === 'total') return s.total; const has = NOM.some(n => +s.counts[n] > 0); return has ? NOM.reduce((a, n) => a + n * (+s.counts[n] || 0), 0) : null; }
+  check() {
+    const D = this.D, L = this.L, p = this.props, s = this.state, errs = [], e = (t, f) => errs.push({ text: t, f });
+    const sys = D.accBalance(p.acct, null, p.date), c = this.counted(), diff = c == null ? 0 : r2(c - sys), lc = D.lastClosed(p.acct);
+    if (lc && pD(lc.date) < pD(p.date) - 86400000) e(fill(L.kb_eCloseFirst, { d: fD(pD(lc.date) + 86400000) }), null);
+    if (c == null) e(L.kb_eCount, null);
+    if (c != null && Math.abs(diff) > 0.004) { if (!s.note.trim()) e(L.kb_eDiffNote, 'note'); if (!s.appr) e(L.bh_pinPick, 'pin'); else if (!/^\d{4}$/.test(s.pin || '')) e(L.kb_ePin, 'pin'); }
+    if (!D.can(p.role, 'cash.close')) e(L.kb_whoClose, null);
+    return { errs, sys, c, diff };
+  }
+  submit() { const c = this.check(), D = this.D, s = this.state; this.setState({ tried: true }); if (c.errs.length) return this.setState({ vs: c });
+    if (c.c != null && Math.abs(c.diff) > 0.004) { const a = D.accById(this.props.acct) || {}, r = D.pinCheck(s.appr, s.pin, 'cash.closeDiff', a.branch); if (!r.ok) return this.setState({ pin: '', pinMsg: pinMsg(this.L, r, s.appr) }); }
+    this.setState({ dlg: true, pinMsg: '' }); }
+  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  _rv() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, dens: [], modes: [], kpis: [], banners: [], totItems: [], vsErrors: [], vsWarnings: [], dlg: {}, steps: [] };
+    if (!D || !p.acct) return base;
+    const acct = D.accById(p.acct) || {}, closed = D.dayClosed(p.acct, p.date), rec = closed ? (D.store.closes || []).filter(x => x.acct === p.acct && x.date === p.date).pop() : null;
+    const c = this.check(), ro = closed, counted = closed && rec ? rec.counted : c.c, sys = closed && rec ? rec.system : c.sys, diff = counted == null ? 0 : r2(counted - sys);
+    const tone = counted == null ? null : Math.abs(diff) < 0.005 ? 'success' : diff < 0 ? 'danger' : 'warning';
+    const banners = [];
+    if (counted != null) banners.push(tone === 'success' ? { tone, icon: 'circle-check', text: L.kb_match } : { tone, icon: diff < 0 ? 'circle-minus' : 'circle-plus', text: fill(diff < 0 ? L.kb_short : L.kb_over, { s: fM(Math.abs(diff)) }) });
+    if (closed && rec) banners.unshift({ tone: 'success', icon: 'lock', title: fill(L.kb_closedB, { d: p.date }), text: fill(L.kb_closedBy, { who: rec.by, at: String(rec.at || '').replace(' ', ', '), pin: rec.pinBy ? ' · ' + fill(L.kb_pinBy, { who: rec.pinBy }) : '' }) });
+    const cnt = s.counts;
+    const dens = NOM.map(n => ({ label: fN(n), count: cnt[n] != null ? String(cnt[n]) : '', sum: +cnt[n] > 0 ? fM(n * cnt[n]) : '—', color: +cnt[n] > 0 ? '#172B2A' : '#647574', onCount: e => { const v = String(e.target.value).replace(/\D/g, '').slice(0, 5); this.setState(st => ({ counts: { ...st.counts, [n]: v === '' ? '' : +v } })); } }));
+    const mode = (k, icon) => ({ label: L['kb_m_' + k], icon, on: s.mode === k, bg: s.mode === k ? '#FFFFFF' : 'transparent', sh: s.mode === k ? '0 1px 2px rgba(18,60,58,0.10), 0 0 0 1px #0D9488' : 'none', fg: s.mode === k ? '#0F766E' : '#5B6B6A', pick: () => !ro && this.setState({ mode: k }) });
+    const kpis = [{ label: L.kb_sys, value: fM(sys), note: fill(L.kb_sysNote, { d: p.date }), size: '20px' }, { label: L.kb_counted, value: counted == null ? '—' : fM(counted), size: '20px' },
+      { label: L.kb_diff, value: counted == null ? '—' : (diff > 0 ? '+' : '') + fM(diff), color: tone === 'danger' ? '#B91C1C' : tone === 'warning' ? '#B45309' : tone === 'success' ? '#15803D' : '#172B2A', size: '20px' }];
+    const hasDiff = counted != null && Math.abs(diff) > 0.004;
+    const dlg = s.dlg ? { title: fill(L.kb_dCloseT, { a: acct.name, d: p.date }), items: [{ icon: 'calculator', text: fill(L.kb_dClose1, { a: fM(sys), b: fM(counted) }) }, ...(hasDiff ? [{ icon: 'triangle-alert', color: diff < 0 ? '#B91C1C' : '#B45309', text: fill(diff < 0 ? L.kb_short : L.kb_over, { s: fM(Math.abs(diff)) }) }, { icon: 'info', text: L.kb_dClose2 }] : []), { icon: 'lock', text: fill(L.kb_dClose3, { d: p.date }) }],
+      run: () => { const r = D.closeDay({ acct: p.acct, date: p.date, system: sys, counted, diff, note: s.note.trim(), by: p.userName, pinBy: hasDiff ? s.appr : '', mode: s.mode, counts: s.mode === 'den' ? s.counts : null }); if (hasDiff) D.pinSign('cash.closeDiff', s.appr, p.userName, p.acct + ' · ' + p.date, { type: 'kb', page: 'cash', branch: acct.branch, text: 'Kassa farq bilan yopildi' }); this.setState({ dlg: null, done: r }); this.toast(fill(L.kb_tClosed, { d: p.date })); p.onDone && p.onDone(r); } } : null;
+    const adjDone = closed && rec && rec.adjNo;
+    const makeAdj = () => {
+      if (!rec) return; const at = D.nowStr(), out = rec.diff < 0, who = p.userName;
+      const m = D.saveMop({ kind: 'ko', branch: acct.branch, date: p.date, dir: out ? 'out' : 'in', acct: p.acct, sum: Math.abs(rec.diff), item: out ? 'Boshqa' : 'Boshqa kirim', note: fill(out ? L.kb_adjNoteS : L.kb_adjNoteO, { d: p.date, n: rec.note }), baseNo: '', adj: true, status: 'draft', createdBy: who, createdAt: at, log: [{ kind: 'create', who, at }] });
+      const r = D.postMop(m, who); rec.adjNo = r.no; D.store.closes = D.store.closes.slice(); D.store.v++; this.toast(fill(L.tl_tPosted, { n: r.no })); this.forceUpdate();
+    };
+    return {
+      ...base, acctName: acct.name, date: p.date, back: () => p.onBack && p.onBack(), badge: closed ? { label: L.kb_dayClosed, icon: 'lock', fg: '#15803D', bg: '#F0FDF4' } : { label: L.kb_dayOpen, icon: 'lock-open', fg: '#1D4ED8', bg: '#EFF6FF' },
+      steps: [{ label: L.kb_dayOpen, state: closed ? 'done' : 'cur' }, { label: L.kb_dayClosed, state: closed ? 'cur' : 'next' }], primary: closed ? null : { label: L.kb_closeBtn, icon: 'lock', pick: () => this.submit() },
+      banners, hasAdj: !!(closed && rec && Math.abs(rec.diff) > 0.004 && !adjDone), adjText: fill(rec && rec.diff < 0 ? L.kb_adjTextS : L.kb_adjTextO, { s: fM(Math.abs(rec ? rec.diff : 0)) }), adjLabel: rec && rec.diff < 0 ? L.kb_adjBtnS : L.kb_adjBtnO, makeAdj,
+      layoutCols: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) 320px', kpiCols: narrow ? 3 : 1, modes: [mode('den', 'layers'), mode('total', 'sigma')], isDen: s.mode === 'den', isTotal: s.mode === 'total',
+      dens, readOnly: ro, inBg: ro ? '#F8FAFA' : '#FFFFFF', total: s.total, onTotal: n => this.setState({ total: n }),
+      totItems: [{ label: L.kb_sys + ':', value: fM(sys) }, { label: L.kb_diff + ':', value: counted == null ? '—' : (diff > 0 ? '+' : '') + fM(diff) }], countedText: counted == null ? '—' : fM(counted), kpis,
+      needExtra: hasDiff, askPin: hasDiff && !closed, note: closed && rec ? rec.note : s.note, onNote: e => this.setState({ note: e.target.value }), pin: s.pin, onPin: e => this.setState({ pin: String(e.target.value).replace(/\D/g, '').slice(0, 4) }),
+      noteBorder: s.tried && hasDiff && !s.note.trim() ? '#B91C1C' : '#E2E8F0', pinBorder: s.pinMsg || (s.tried && hasDiff && !/^\d{4}$/.test(s.pin || '')) ? '#B91C1C' : '#E2E8F0', pinMsg: s.pinMsg || '', apprOpts: hasDiff && !closed ? D.pinApprovers('cash.closeDiff', acct.branch).map(a => { const on = s.appr === a.name; return { name: a.name, on, icon: on ? 'check' : 'user', bd: on ? '#0F766E' : '#E2E8F0', bg: on ? '#DDF5EE' : '#FFFFFF', pick: () => this.setState({ appr: a.name, pinMsg: '' }) }; }) : [],
+      canSubmit: !closed, submit: () => this.submit(),
+      vsOpen: !!s.vs, vsTitle: s.vs ? fill(L.kb_vsClose, { n: s.vs.errs.length }) : '', closeVs: () => this.setState({ vs: null }), vsErrors: s.vs ? s.vs.errs.map(x => ({ text: x.text, go: () => this.setState({ vs: null }) })) : [],
+      dlgOpen: !!dlg, dlg: dlg || {}, closeDlg: () => this.setState({ dlg: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

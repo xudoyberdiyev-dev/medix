@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { CircleCheck, CircleX, Info, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Button } from "./button";
@@ -66,6 +67,7 @@ const icons: Record<ToastTone, { icon: LucideIcon; className: string }> = {
 };
 
 function ToastCard({ item }: { item: ToastItem }) {
+  const tr = useTranslations("ui");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const autoDismiss = item.tone !== "danger";
   const duration = item.duration ?? DEFAULT_TOAST_DURATION;
@@ -113,8 +115,8 @@ function ToastCard({ item }: { item: ToastItem }) {
         variant="icon"
         size="sm"
         icon={X}
-        aria-label="Yopish"
-        title="Yopish"
+        aria-label={tr("close")}
+        title={tr("close")}
         className="-mt-1.5 -mr-1"
         onClick={() => dismissToast(item.id)}
       />

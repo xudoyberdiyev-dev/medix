@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Boshlang'ich qoldiq" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ L.bq_title }}" subtitle="{{ L.bq_sub }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" hint-size="100%,52px"></dc-import>
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid #EEF2F4">
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="display:flex;align-items:center;gap:8px;font-size:15px;line-height:20px;font-weight:600"><lucide-i name="database" size="18" style="color:#0F766E"></lucide-i>{{ L.bq_matrixT }}</span>
+        <span style="font-size:12.5px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ matrixD }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:#5B6B6A">
+        <sc-for list="{{ legend }}" as="g"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:4px;background:{{ g.dot }}"></span>{{ g.label }}<span style="color:#647574">{{ g.n }}</span></span></sc-for>
+      </div>
+    </div>
+    <sc-if value="{{ roMatrix }}"><div style="padding:10px 16px 0"><dc-import name="StatusBanner" tone="neutral" icon="eye" text="{{ L.bq_roMatrix }}" hint-size="100%,40px"></dc-import></div></sc-if>
+    <div style="overflow-x:auto">
+      <div style="min-width:820px">
+        <div style="display:grid;grid-template-columns:170px repeat(4,minmax(150px,1fr));background:#F8FAFA;border-bottom:1px solid #E2E8F0">
+          <span style="padding:9px 16px;font-size:12px;font-weight:500;color:#5B6B6A">{{ L.bq_cBranch }}</span>
+          <sc-for list="{{ mHead }}" as="h"><span style="padding:9px 12px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#5B6B6A;min-width:0"><lucide-i name="{{ h.icon }}" size="14"></lucide-i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ h.label }}</span></span></sc-for>
+        </div>
+        <sc-for list="{{ mRows }}" as="r" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:170px repeat(4,minmax(150px,1fr));border-bottom:1px solid #EEF2F4;align-items:stretch">
+            <div style="padding:12px 16px;display:flex;flex-direction:column;gap:2px;min-width:0">
+              <span style="font-size:13.5px;font-weight:600">{{ r.name }}</span>
+              <span style="font-size:12px;line-height:16px;color:#647574">{{ r.sub }}</span>
+            </div>
+            <sc-for list="{{ r.cells }}" as="c">
+              <div style="padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0;border-left:1px solid #EEF2F4">
+                <sc-for list="{{ c.items }}" as="it">
+                  <button onClick="{{ it.pick }}" title="{{ it.tip }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:8px 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;text-align:left;cursor:pointer;font:inherit;color:#172B2A;min-width:0;box-sizing:border-box" style-hover="border-color:#647574;background:#F8FAFA">
+                    <sc-if value="{{ it.hasLabel }}"><span style="max-width:100%;font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.label }}</span></sc-if>
+                    <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:100%">
+                      <span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ it.bg }};color:{{ it.fg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ it.icon }}" size="12"></lucide-i>{{ it.st }}</span>
+                      <span style="font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap">{{ it.date }}</span>
+                    </span>
+                    <sc-if value="{{ it.hasNo }}"><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:16px;color:#647574">{{ it.no }}</span></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+  <sc-if value="{{ showList }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+      <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.bq_search }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" has-active="{{ false }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+      <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}"><dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="none" scroll-x="{{ true }}" min-width="{{ 1120 }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,300px"></dc-import></sc-if>
+      <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="database" tone="brand" title="{{ L.bq_emptyT }}" text="{{ L.bq_emptyD }}" primary="{{ hdrPrimary }}" min-height="280" hint-size="100%,280px"></dc-import></sc-if>
+      <sc-if value="{{ noRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.qz_noResT }}" text="{{ L.qz_noResD }}" min-height="220" hint-size="100%,220px"></dc-import></sc-if>
+    </div>
+  </sc-if>
+  <div style="height:48px"></div>
+  <sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ false }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.qt_back }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ isDoc }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="OpeningDoc" no="{{ doc.no }}" req="{{ doc.req }}" act="{{ doc.act }}" hl="{{ doc.hl }}" wiz="{{ doc.wiz }}" doc-key="{{ doc.key }}" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-back="{{ backToList }}" on-open="{{ openFn }}" on-toast="{{ toastFn }}" on-navigate="{{ navFn }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;accountant&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ALL&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,a)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const ST = { none: ['circle-dashed', '#5B6B6A', '#EEF2F4', '#647574'], draft: ['file-pen', '#B45309', '#FFFBEB', '#F59E0B'], posted: ['circle-check', '#15803D', '#F0FDF4', '#22C55E'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4', '#647574'] };
+const TICON = { goods: 'boxes', mt: 'hand-coins', yt: 'truck', cash: 'banknote' };
+const SHORT = w => String(w).replace(/ ombori$/, '').replace(/^Asosiy ombor$/, 'Asosiy');
+class Component extends DCLogic {
+  state = { view: 'list', tab: 'all', q: '', doc: null, empty: false, dlg: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    if (!this.D || !this.D.bqStatus) this._p = setInterval(() => { if (this.D && this.D.bqStatus) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._poll = setInterval(() => { const D = this.D; if (!D) return; if (D.store.navReq && D.store.navReq.page === 'opening') this.consume(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(rs) { const L = this.L; return fill(L.qz_who, { r: rs.map(r => L['r_' + r] || r).join(', ') }); }
+  my() { const b = this.props.branch; return b && b !== 'ALL' ? b : null; }
+  canList() { return this.D.can(this.props.role, 'opening.list'); }
+  consume() { const r = this.D.store.navReq; this.D.store.navReq = null; if (r && r.open) this.openNo(r.open, '', r.line); }
+  openNo(no, act, hl, wiz) { if (!this.canList()) return this.toast(this.who(this.D.BQ_ROLES.list)); this.setState({ view: 'doc', doc: { no, act: act || '', hl: hl || '', wiz: wiz || null, key: Date.now() }, dlg: null }); }
+  openNew(req, act) { const D = this.D, R = D.BQ_ROLES; if (!D.can(this.props.role, 'opening.create')) return this.toast(this.who(R.create)); if (req && req.type === 'goods' && !D.can(this.props.role, 'opening.goods')) return this.toast(this.L.bq_bAccGoods); this.setState({ view: 'doc', doc: { no: '', req: req || null, act: act || '', key: Date.now() }, dlg: null }); }
+  pickCell(type, br, wh) {
+    const D = this.D, L = this.L, st = D.bqStatus(type, br, wh);
+    if (!this.canList()) return this.toast(L.bq_roMatrix);
+    if (st.doc) return this.openNo(st.doc.no);
+    this.openNew({ type, branch: br, wh: wh || '' });
+  }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D || !D.bqStatus) return;
+    const base = { view: 'list', tab: 'all', q: '', doc: null, empty: false, dlg: null };
+    if (!d) { if (D.store.demoDirty) D.restoreBase(); this.setState(base); if (D.store.navReq && D.store.navReq.page === 'opening') this.consume(); return; }
+    D.payReset(); this.setState(base); const k = d.k, who = this.props.userName || D.DIRECTOR, at = D.nowStr();
+    const MRG = "Marg'ilon ombori";
+    const draft = (type, br, wh, lines, file) => D.saveBq({ branch: br, type, wh: wh || '', cutoff: D.BQ_CUT, source: 'smartup', file: file || '', note: '', status: 'draft', lines: lines || [], createdBy: who, createdAt: at, log: [{ kind: 'create', who, at }].concat(lines && lines.length ? [{ kind: 'import', who, at, n: lines.length, f: file }] : []) });
+    const fromSample = (type, br, wh, fixes) => { const S = D.bqSample(type, br, wh), g = S.sheets[0].grid, H = g[S.headerRow - 1], map = D.bqAutoMap(type, H);
+      const recs = g.slice(S.headerRow).map((r, i) => ({ i: i + 1, raw: Object.fromEntries(Object.entries(map).map(([f, ix]) => [f, r[ix]])) }));
+      let V = D.bqValidate(type, br, wh, recs); if (fixes) { V.forEach((v, i) => { if (v.msgs.some(m => m.c === 'qtyFrac')) recs[i].fix = { qty: '12' }; if (v.msgs.some(m => m.c === 'expMissing')) recs[i].fix = { exp: '31.12.2027' }; }); V = D.bqValidate(type, br, wh, recs); }
+      return { lines: D.bqLinesFrom(type, V), file: S.file }; };
+    const goodsDemo = { imp1: { step: 1 }, imp2: { step: 2 }, imp3: { step: 3 }, imp4: { step: 4 }, imp5: { step: 5, fixed: true }, autoMap: { step: 3, profile: true }, prodMatch: { step: 4, filter: 'warn', prod: true }, manyErr: { step: 4, filter: 'err' } };
+    if (k === 'empty') return this.setState({ empty: true });
+    if (goodsDemo[k]) { D.bqDemoClear('goods', 'FRG', MRG); if (k === 'autoMap') D.store.impProfiles = { goods: { name: fill(this.L.bq_profName, { t: String(this.L.bq_t_goods || '').toLowerCase() }), map: { name: 'Наименование', batch: 'Серия', exp: 'Срок годности', zone: 'Зона хранения', qty: 'Кол-во', cost: 'Себестоимость' } } };
+      const x = draft('goods', 'FRG', MRG); return this.openNo(x.no, '', '', { ...goodsDemo[k], n: Date.now() }); }
+    if (k === 'draftMade' || k === 'postDlg') { D.bqDemoClear('goods', 'FRG', MRG); const r = fromSample('goods', 'FRG', MRG, true), x = draft('goods', 'FRG', MRG, r.lines, r.file); return this.openNo(x.no, k === 'postDlg' ? 'post' : ''); }
+    if (k === 'second') return this.openNew({ type: 'goods', branch: 'TSH', wh: 'Asosiy ombor' }, 'dup');
+    if (k === 'cancelBlk') return this.openNo('BQ-TSH-000001', 'cancel');
+    if (k === 'debtBxr') { D.bqDemoClear('mt', 'BXR'); const r = fromSample('mt', 'BXR'), x = draft('mt', 'BXR', '', r.lines, r.file); return this.openNo(x.no, 'post'); }
+    if (k === 'cashFrg') { D.bqDemoClear('cash', 'FRG'); const r = fromSample('cash', 'FRG'), x = draft('cash', 'FRG', '', r.lines, r.file); return this.openNo(x.no, 'post'); }
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, narrow, role: p.role, branch: p.branch, userName: p.userName, isList: true, isDoc: false, mHead: [], mRows: [], legend: [], views: [], tRows: [], tColumns: [], fbFilters: [], fbLabels: {}, doc: {}, dlg: {}, toastFn: t => this.toast(t), showList: true };
+    if (!D || !D.bqStatus) return base;
+    const vals = { doc: s.doc || {}, navFn: (k, a) => p.onNavigate && p.onNavigate(k, a), backToList: () => this.setState({ view: 'list', doc: null }), openFn: (no, act) => no ? this.openNo(no, act) : this.openNew() };
+    if (s.view === 'doc' && s.doc) return { ...base, ...vals, isList: false, isDoc: true };
+    const my = this.my(), canList = this.canList(), R = D.BQ_ROLES, brs = D.BRANCHES.filter(b => !my || b.code === my);
+    const stOf = (t, b, w) => s.empty ? { st: 'none', doc: null } : D.bqStatus(t, b, w);
+    const cnt = { none: 0, draft: 0, posted: 0 };
+    const item = (t, b, w, withLabel) => { const r = stOf(t, b, w), S = ST[r.st]; cnt[r.st] = (cnt[r.st] || 0) + 1;
+      return { hasLabel: !!withLabel, label: withLabel ? SHORT(w) : '', st: L['bq_st_' + r.st], icon: S[0], fg: S[1], bg: S[2], date: r.st === 'posted' ? String(r.doc.postedAt || '').slice(0, 10) : '', no: r.doc ? r.doc.no : '', hasNo: !!r.doc && canList, tip: withLabel ? D.whName(b, w) : '', pick: () => this.pickCell(t, b, w) }; };
+    const mRows = brs.map(b => ({ name: b.name.replace(/ filiali$/, ''), sub: fill(L.bq_nWh, { a: b.wh.filter(w => stOf('goods', b.code, w).st === 'posted').length, b: b.wh.length }),
+      cells: D.BQ_TYPES.map(t => ({ items: t === 'goods' ? b.wh.map(w => item(t, b.code, w, true)) : [item(t, b.code, null, false)] })) }));
+    const legend = ['none', 'draft', 'posted'].map(k => ({ label: L['bq_st_' + k], dot: ST[k][3], n: String(cnt[k] || 0) }));
+    const all = s.empty ? [] : (D.store.bqs || []).filter(x => !my || x.branch === my).slice().sort((a, b) => (a.branch === b.branch ? 0 : D.BRANCHES.findIndex(z => z.code === a.branch) - D.BRANCHES.findIndex(z => z.code === b.branch)) || (a.no < b.no ? -1 : 1));
+    const VS = [['all', null], ['draft', 'draft'], ['posted', 'posted'], ['cancelled', 'cancelled']], cur = VS.find(v => v[0] === s.tab) || VS[0], q = s.q.trim().toLowerCase();
+    const place = x => x.type === 'goods' ? D.whName(x.branch, x.wh) : (D.BRANCHES.find(b => b.code === x.branch) || {}).name;
+    const rows = all.filter(x => (!cur[1] || x.status === cur[1]) && (!q || `${x.no} ${place(x)} ${x.file} ${L['bq_t_' + x.type]}`.toLowerCase().includes(q)));
+    const tColumns = [{ key: 'no', label: L.bq_cNo, width: '140px' }, { key: 't', label: L.bq_cType, width: '190px' }, { key: 'p', label: L.bq_cPlace, width: 'minmax(180px,1fr)' }, { key: 'c', label: L.bq_cCut, width: '110px' }, { key: 'l', label: L.bq_cLines, width: '84px', align: 'right' }, { key: 's', label: L.bq_cSum, width: '160px', align: 'right' }, { key: 'src', label: L.bq_cSrc, width: 'minmax(180px,1fr)' }, { key: 'st', label: L.bq_cStatus, width: '140px' }];
+    const tRows = rows.map(x => { const S = ST[x.status], sm = D.bqSum(x), col = x.status === 'cancelled' ? '#647574' : null, val = x.type === 'goods' ? sm.cost : x.type === 'cash' ? sm.sum : sm.left;
+      return { id: x.id, onOpen: () => this.openNo(x.no), onToggle: () => {}, cells: [{ type: 'mono', text: x.no, color: col }, { type: 'icontext', icon: TICON[x.type], text: L['bq_t_' + x.type], color: col }, { type: 'text', text: place(x), color: col }, { type: 'text', text: x.cutoff, color: col || '#5B6B6A' }, { type: 'text', text: x.lines.length ? fN(x.lines.length) : '—', color: col },
+        { type: 'text', text: x.lines.length ? fM(val) : '—', weight: 600, color: col }, { type: 'name', text: L['bq_src_' + x.source] || '—', sub: x.file || '', weight: 400, color: col }, { type: 'status', text: L['bq_st_' + x.status], icon: S[0], fg: S[1], bg: S[2] }],
+        actions: [{ label: L.qt_open, icon: 'arrow-up-right', pick: () => this.openNo(x.no) }] }; });
+    return {
+      ...base, ...vals, countLabel: canList ? fN(all.length) : '', hdrPrimary: canList && D.can(p.role, 'opening.create') ? { label: L.bq_new, icon: 'plus', pick: () => this.openNew() } : null,
+      matrixD: fill(L.bq_matrixD, { d: D.BQ_CUT }), legend, roMatrix: !canList,
+      mHead: D.BQ_TYPES.map(t => ({ label: L['bq_t_' + t], icon: TICON[t] })), mRows,
+      showList: canList, views: VS.map(([k, st]) => ({ label: L['bq_v_' + k], count: all.filter(x => !st || x.status === st).length, active: s.tab === k, pick: () => this.setState({ tab: k }) })),
+      q: s.q, setQ: v => this.setState({ q: v }), fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      showTable: rows.length > 0, listEmpty: all.length === 0, noRes: all.length > 0 && rows.length === 0, tColumns, tRows,
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

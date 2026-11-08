@@ -48,6 +48,11 @@ final class OrderModels {
 
     record OrderReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
+    /** «Yig'ishga qaytarish»: sabab va qatorlar (bo'sh yoki yo'q — butun buyurtma, SPEC 188). */
+    record ReturnToPickRequest(
+            @NotBlank(message = "{validation.required}") @Size(max = 300) String reason,
+            @Schema(nullable = true, description = "Qaytariladigan qatorlar; bo'sh — butun buyurtma") @Size(max = 500) List<Long> lineIds) {}
+
     /** «N ta muammo» paneli: qator (yoki sarlavha — null) va aniq matn. */
     record OrderIssue(IssueLevel level, String code, String message, @Schema(nullable = true) Integer lineNo) {}
 
@@ -75,6 +80,7 @@ final class OrderModels {
             @Schema(nullable = true, description = "Muzlatilgan yoki oxirgi saqlangan narx") String price,
             @Schema(nullable = true, description = "Hozirgi narx (qoralamada)") String currentPrice,
             @Schema(nullable = true) String amount,
+            @Schema(nullable = true, description = "Summa ichidagi QQS") String vatAmount,
             @Schema(nullable = true) String priceType,
             @Schema(description = "Sotuvga mavjud qoldiq") int available,
             @Schema(nullable = true) LocalDate nearestExpiry,
@@ -82,11 +88,13 @@ final class OrderModels {
             @Schema(nullable = true) Integer maxQty,
             boolean controlled,
             boolean marked,
-            @Schema(description = "FEFO zahira (Navbatda va keyin)") List<ReservedBatch> reserved) {
+            @Schema(description = "FEFO zahira (Navbatda va keyin)") List<ReservedBatch> reserved,
+            @Schema(nullable = true, description = "Yig'ilgan (yig'ishga qaytarilgani ayirilgan); yig'ish boshlanmagan — null") Integer picked,
+            @Schema(nullable = true, description = "Jo'natilgan (o'tkazilgan sotuv bo'yicha); sotuv yo'q — null") Integer shipped) {
 
         OrderLine withReserved(List<ReservedBatch> r) {
-            return new OrderLine(id, lineNo, productId, productCode, productName, manufacturer, qty, price, currentPrice, amount, priceType,
-                    available, nearestExpiry, minQty, maxQty, controlled, marked, r);
+            return new OrderLine(id, lineNo, productId, productCode, productName, manufacturer, qty, price, currentPrice, amount, vatAmount, priceType,
+                    available, nearestExpiry, minQty, maxQty, controlled, marked, r, picked, shipped);
         }
     }
 
@@ -110,13 +118,29 @@ final class OrderModels {
             String createdBy,
             Instant createdAt,
             Instant statusChangedAt,
-            @Schema(description = "«Hozir kimda» (SPEC 5.2)") String holder) {}
+            @Schema(description = "«Hozir kimda» (SPEC 5.2)") String holder,
+            @Schema(nullable = true, description = "Mijoz hududi") String region,
+            @Schema(nullable = true, description = "Yig'ishga berilgan vaqt, daqiqa (null — «Vaqt kutilmoqda»)") Integer pickMinutes,
+            @Schema(nullable = true) Instant pickStartedAt,
+            @Schema(nullable = true) Instant pickFinishedAt,
+            @Schema(nullable = true, description = "Ochiq (qoralama / tasdiqlashda) buyurtma mijozining kredit ogohlantirishi") CreditFlag credit) {}
+
+    /**
+     * Ro'yxatdagi ⚠ belgisi (prototip Orders: issue): mijoz bloklangan, limitdan oshgan summa (shu buyurtma bilan), muddati o'tgan qarz.
+     */
+    record CreditFlag(boolean blocked, @Schema(nullable = true) String overLimit, @Schema(nullable = true) String overdue, int overdueDays) {}
+
+    /** Filtr varianti: id, nomi va shu filial doirasidagi buyurtmalar soni. */
+    record FilterOption(long id, String name, long count) {}
+
+    record OrderFacets(List<FilterOption> customers, List<FilterOption> operators, List<FilterOption> regions) {}
 
     /** Holat yorlig'i: soni va summasi — boshqa filtrlar (holatdan tashqari) bo'yicha. */
     record StatusCount(@Schema(nullable = true, description = "null — «Hammasi»") OrderStatus status, long count, String total) {}
 
     record OrderPage(List<OrderSummary> items, long total, int page, int size,
-            @Schema(description = "Holat yorliqlari («Hammasi» + har holat): soni va summasi") List<StatusCount> statuses) {}
+            @Schema(description = "Holat yorliqlari («Hammasi» + har holat): soni va summasi") List<StatusCount> statuses,
+            @Schema(description = "Filtr variantlari: mijozlar, operatorlar, hududlar (soni bilan)") OrderFacets facets) {}
 
     record OrderDetail(
             long id,
@@ -137,6 +161,7 @@ final class OrderModels {
             @Schema(nullable = true) ApprovalLevel approvalLevel,
             List<String> approvalReasons,
             String total,
+            @Schema(description = "Jami ichidagi QQS (qatorlar bo'yicha, narx QQS bilan)") String vatTotal,
             @Schema(description = "Qoralamada narx o'zgargan qatorlar bor") boolean priceChanged,
             CustomerCredit credit,
             List<OrderIssue> issues,
@@ -159,7 +184,9 @@ final class OrderModels {
             @Schema(nullable = true, description = "Joylar soni (quti)") Integer places,
             OrderDocuments documents,
             @Schema(description = "«Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2)") String holder,
-            List<OrderLine> lines) {}
+            List<OrderLine> lines,
+            @Schema(description = "Qator bo'yicha «Yig'ishga qaytarish»dan keyin qayta yig'iladigan qatorlar; bo'sh — barcha qatorlar (SPEC 188)")
+            List<Long> repickLineIds) {}
 
     /** Buyurtmadan yozilgan hujjatlar (SPEC 7). */
     record OrderDocuments(
@@ -172,10 +199,12 @@ final class OrderModels {
             @Schema(nullable = true) String returnTotal,
             @Schema(nullable = true) String tripNumber,
             @Schema(nullable = true) String driver,
-            @Schema(nullable = true) String vehicle) {}
+            @Schema(nullable = true) String vehicle,
+            @Schema(nullable = true, description = "Sotuv hujjati (SV) id — to'lov holati uchun") Long saleId) {}
 
     /** Oldingi buyurtmalar (takrorlash uchun). */
-    record PreviousOrder(long id, String number, LocalDate orderDate, int lines, String total) {}
+    record PreviousOrder(long id, String number, LocalDate orderDate, int lines, String total,
+            @Schema(description = "Birinchi 3 ta mahsulot nomi (qator tartibida)") List<String> products) {}
 
     /** «Mahsulot qo'shish» katalog sahifasi qatori (SPEC 5.3): mavjud qoldiq, mijoz narxi (QQS bilan), eng yaqin muddat, min/max. */
     record CatalogRow(
@@ -191,7 +220,23 @@ final class OrderModels {
             boolean controlled,
             boolean marked) {}
 
-    record CatalogPage(List<CatalogRow> items, long total, int page, int size) {}
+    /** Katalog filtri varianti (prototip `ProductPicker`: Ishlab chiqaruvchi / Kategoriya / Davlat) — qidiruv natijasidagi soni bilan. */
+    record CatalogFacet(long id, String name, long count) {}
+
+    /** «Belgilar» filtri: markirovkali / nazoratdagi / retseptli mahsulotlar soni. */
+    record CatalogFlagCounts(long marked, long controlled, long prescription) {}
+
+    record CatalogFacets(List<CatalogFacet> manufacturers, List<CatalogFacet> categories, List<CatalogFacet> countries, CatalogFlagCounts flags) {}
+
+    /** «Belgilar» filtri qiymatlari (bir nechtasi — «yoki»). */
+    enum CatalogFlag { MARKED, CONTROLLED, PRESCRIPTION }
+
+    /** Katalog filtrlari (bo'sh ro'yxat — filtr yo'q). */
+    record CatalogFilter(List<Long> manufacturerIds, List<Long> categoryIds, List<Long> countryIds, List<CatalogFlag> flags) {
+        static final CatalogFilter NONE = new CatalogFilter(List.of(), List.of(), List.of(), List.of());
+    }
+
+    record CatalogPage(List<CatalogRow> items, long total, int page, int size, CatalogFacets facets) {}
 
     record TimeRequest(
             @NotNull(message = "{validation.required}") @Min(1) @Max(600) Integer pickMinutes,
@@ -204,6 +249,10 @@ final class OrderModels {
     record PickBatch(long batchId, String number, java.time.LocalDate expiryDate, boolean bonus, int free, int reserved) {}
 
     record PickFinishRequest(@Schema(nullable = true) List<@Valid PickLineConfirm> lines) {}
+
+    /** «Bugun yakunlanganlar» (Yig'uvchi, SPEC 5.4): o'zi bugun yig'ib bo'lgan buyurtmalar; vaqtida — berilgan daqiqa ichida. */
+    record PickDoneItem(long id, String number, String customer, OrderStatus status, int lines, long totalQty, Instant startedAt,
+            Instant finishedAt, @Schema(nullable = true) Integer minutes, boolean onTime) {}
 
     /** Yig'uvchi navbati kartasi (SPEC 5.4). */
     record PickQueueItem(
@@ -219,9 +268,47 @@ final class OrderModels {
             @Schema(nullable = true) Long pickerId,
             @Schema(nullable = true) Instant pickStartedAt,
             @Schema(nullable = true, description = "Berilgan vaqt tugash payti") Instant deadline,
-            Instant queuedAt) {}
+            Instant queuedAt,
+            @Schema(nullable = true, description = "Mijozning amaldagi shartnomasi (shu filial; SPEC 213)") String contract,
+            @Schema(nullable = true, description = "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa") String invoice) {}
+
+    /** Hisob-faktura (chop etish uchun, SPEC 300): summalar QQS bilan; tannarxsiz. */
+    record InvoiceDoc(
+            String invoiceNumber,
+            String saleNumber,
+            String orderNumber,
+            long branchId,
+            @Schema(description = "POSTED yoki CANCELLED") String status,
+            LocalDate saleDate,
+            @Schema(nullable = true) LocalDate dueDate,
+            String customer,
+            @Schema(nullable = true) String customerTin,
+            @Schema(nullable = true) String address,
+            PaymentType paymentType,
+            String warehouse,
+            @Schema(nullable = true, description = "Sotuv sanasida amaldagi shartnoma") String contract,
+            String total,
+            String vatTotal,
+            @Schema(description = "QQSsiz qiymat") String netTotal,
+            List<InvoiceLine> lines) {}
+
+    record InvoiceLine(
+            String productCode,
+            String productName,
+            @Schema(nullable = true) String manufacturer,
+            String batch,
+            LocalDate expiryDate,
+            int qty,
+            @Schema(description = "Narx QQS bilan") String price,
+            String amount,
+            @Schema(description = "QQS stavkasi, %") String vatRate,
+            String vatAmount,
+            @Schema(description = "QQSsiz qiymat") String netAmount) {}
 
     record CheckRequest(
             @NotNull(message = "{validation.required}") @Size(min = 1, max = MAX_LINES) List<Long> checkedLines,
             @NotNull(message = "{validation.required}") @Min(1) @Max(10_000) Integer places) {}
+
+    /** Buyurtma tarixi (audit): kim, qachon, nima qildi. */
+    record OrderHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
 }

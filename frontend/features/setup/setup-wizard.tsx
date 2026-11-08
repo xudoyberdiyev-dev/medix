@@ -2,6 +2,7 @@
 
 import { ArrowLeft, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,14 +17,8 @@ import { firstIncompleteStep, useCompleteSetup, useSetupStatus, type SetupStatus
 import { describeError } from "./form-error";
 import { BranchesStep, CompanyStep, EmployeesStep, RolesStep, WarehousesStep } from "./steps";
 
-export const SETUP_STEPS = [
-  { key: "company", label: "Kompaniya" },
-  { key: "branches", label: "Filiallar" },
-  { key: "warehouses", label: "Omborlar va zonalar" },
-  { key: "roles", label: "Rollar" },
-  { key: "employees", label: "Xodimlar" },
-  { key: "finish", label: "Yakun" },
-];
+/** Qadam nomlari — `setup.steps.<key>` lugʻatida. */
+export const SETUP_STEPS = ["company", "branches", "warehouses", "roles", "employees", "finish"] as const;
 
 /** Keyingi qadamga oʻtish mumkinmi (oldingi qadamlar bajarilgan). */
 export function canLeaveStep(step: number, s: SetupStatus): boolean {
@@ -34,6 +29,7 @@ export function canLeaveStep(step: number, s: SetupStatus): boolean {
 }
 
 export function SetupWizard() {
+  const t = useTranslations("setup");
   const me = useMe();
   const status = useSetupStatus();
   const [step, setStep] = useState<number | null>(null);
@@ -41,7 +37,7 @@ export function SetupWizard() {
   if (status.error instanceof ApiError && status.error.isForbidden) {
     return (
       <Card flush>
-        <ForbiddenState description="Sozlash ustasini faqat Direktor (CEO) bajaradi." />
+        <ForbiddenState description={t("forbidden")} />
       </Card>
     );
   }
@@ -65,11 +61,7 @@ export function SetupWizard() {
   if (s.completed) {
     return (
       <Card flush>
-        <EmptyState
-          icon={Lock}
-          title="Sozlash ustasi yakunlangan"
-          description="Filial, ombor va xodimlarni endi «Sozlamalar» boʻlimida oʻzgartirasiz."
-        />
+        <EmptyState icon={Lock} title={t("completedTitle")} description={t("completedDescription")} />
       </Card>
     );
   }
@@ -80,7 +72,7 @@ export function SetupWizard() {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <Stepper steps={SETUP_STEPS} current={current} onStepClick={setStep} />
+        <Stepper steps={SETUP_STEPS.map((key) => ({ key, label: t(`steps.${key}`) }))} current={current} onStepClick={setStep} />
       </Card>
 
       {current === 0 ? <CompanyStep status={s} onDone={next} /> : null}
@@ -93,10 +85,10 @@ export function SetupWizard() {
       {current > 0 && current < 5 ? (
         <div className="flex items-center justify-between">
           <Button variant="tertiary" icon={ArrowLeft} onClick={() => setStep(current - 1)}>
-            Ortga
+            {t("back")}
           </Button>
           <Button size="lg" disabled={!canLeaveStep(current, s)} onClick={next}>
-            Davom etish
+            {t("continue")}
           </Button>
         </div>
       ) : null}
@@ -105,6 +97,7 @@ export function SetupWizard() {
 }
 
 function FinishStep({ status }: { status: SetupStatus }) {
+  const t = useTranslations("setup.finish");
   const router = useRouter();
   const complete = useCompleteSetup();
   const err = describeError(complete.error);
@@ -113,9 +106,14 @@ function FinishStep({ status }: { status: SetupStatus }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-        <KpiCard label="Filiallar" value={formatQuantity(status.branches.length)} unit="ta" />
-        <KpiCard label="Omborlar" value={formatQuantity(status.warehouses.length)} unit="ta" note={`${formatQuantity(zones)} ta zona`} />
-        <KpiCard label="Xodimlar" value={formatQuantity(status.employees.length)} unit="ta" />
+        <KpiCard label={t("branches")} value={formatQuantity(status.branches.length)} unit={t("unit")} />
+        <KpiCard
+          label={t("warehouses")}
+          value={formatQuantity(status.warehouses.length)}
+          unit={t("unit")}
+          note={t("zones", { count: formatQuantity(zones) })}
+        />
+        <KpiCard label={t("employees")} value={formatQuantity(status.employees.length)} unit={t("unit")} />
       </div>
       {status.blockers.map((b) => (
         <Alert key={b} tone="warning" title={b} />
@@ -129,13 +127,13 @@ function FinishStep({ status }: { status: SetupStatus }) {
           onClick={() =>
             complete.mutate(undefined, {
               onSuccess: () => {
-                toast({ tone: "success", title: "Sozlash yakunlandi", description: "Tizim ishga tayyor." });
+                toast({ tone: "success", title: t("done"), description: t("doneDescription") });
                 router.replace("/");
               },
             })
           }
         >
-          Ustani yakunlash
+          {t("complete")}
         </Button>
       </div>
     </div>

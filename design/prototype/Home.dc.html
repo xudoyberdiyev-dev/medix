@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div ref="{{ rootRef }}" data-screen-label="Bosh sahifa" style="display:flex;flex-direction:column;gap:16px;min-height:100%;font-family:inherit;color:#172B2A">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ greet }}</h1>
+      <p style="margin:0;font-size:14px;line-height:20px;color:#5B6B6A">{{ sub }}</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <sc-for list="{{ hdrSecondary }}" as="b"><button onClick="{{ b.pick }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="{{ b.icon }}" size="16" style="color:#5B6B6A"></lucide-i>{{ b.label }}</button></sc-for>
+      <sc-if value="{{ hasPrimary }}"><button onClick="{{ primary.pick }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#115E59"><lucide-i name="{{ primary.icon }}" size="16"></lucide-i>{{ primary.label }}</button></sc-if>
+      <sc-if value="{{ showPeriod }}" hint-placeholder-val="{{ true }}">
+        <div role="tablist" style="display:flex;height:34px;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;gap:2px">
+          <sc-for list="{{ periods }}" as="p" hint-placeholder-count="3"><button role="tab" aria-selected="{{ p.on }}" onClick="{{ p.pick }}" style="height:28px;padding:0 12px;border:0;border-radius:6px;background:{{ p.bg }};color:{{ p.fg }};box-shadow:{{ p.sh }};font:inherit;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">{{ p.label }}</button></sc-for>
+        </div>
+        <sc-if value="{{ isCustom }}">
+          <div style="display:flex;align-items:center;gap:6px">
+            <input value="{{ cFrom }}" onChange="{{ onCFrom }}" aria-label="{{ L.bh_from }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="width:112px;height:34px;padding:0 10px;border:1px solid {{ cBd }};border-radius:8px;font:inherit;font-size:13px;outline:none;font-variant-numeric:tabular-nums">
+            <span style="color:#647574">–</span>
+            <input value="{{ cTo }}" onChange="{{ onCTo }}" aria-label="{{ L.bh_to }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="width:112px;height:34px;padding:0 10px;border:1px solid {{ cBd }};border-radius:8px;font:inherit;font-size:13px;outline:none;font-variant-numeric:tabular-nums">
+          </div>
+        </sc-if>
+      </sc-if>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:start">
+    <sc-for list="{{ blocks }}" as="b" hint-placeholder-count="4">
+      <div style="grid-column:{{ b.span }};min-width:0">
+        <sc-if value="{{ b.isKpis }}">
+          <div style="display:grid;grid-template-columns:repeat({{ b.cols }},minmax(0,1fr));gap:16px">
+            <sc-for list="{{ b.kpis }}" as="k"><button onClick="{{ k.pick }}" style="min-height:112px;padding:16px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit;color:inherit;text-align:left" style-hover="background:#F8FAFA">
+              <span style="font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">{{ k.label }}</span>
+              <span style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap"><span style="font-size:24px;line-height:30px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em">{{ k.value }}</span><span style="font-size:12px;color:#647574">{{ k.unit }}</span></span>
+              <span style="display:flex;align-items:center;gap:4px;font-size:12px;line-height:16px;color:{{ k.dFg }}"><lucide-i name="{{ k.dIcon }}" size="14"></lucide-i><span style="font-weight:500">{{ k.dText }}</span><span style="color:#647574">{{ k.dSub }}</span></span>
+              <span style="font-size:12px;line-height:16px;color:#647574">{{ k.note }}</span>
+            </button></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ b.isPt }}">
+          <div style="display:grid;grid-template-columns:repeat({{ b.cols }},minmax(0,1fr));gap:16px">
+            <sc-for list="{{ b.cards }}" as="k"><button onClick="{{ k.pick }}" style="padding:16px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;display:flex;flex-direction:column;gap:6px;cursor:pointer;font:inherit;color:inherit;text-align:left;min-width:0" style-hover="background:#F8FAFA">
+              <span style="font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">{{ k.label }}</span>
+              <span style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;min-width:0"><span style="font-size:22px;line-height:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em">{{ k.value }}</span><span style="font-size:12px;color:#647574">so'm</span></span>
+              <span style="font-size:12px;line-height:16px;color:#647574">{{ k.note }}</span>
+              <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;padding-top:8px;border-top:1px solid #EEF2F4">
+                <sc-for list="{{ k.rows }}" as="r" hint-placeholder-count="3"><span style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;line-height:18px"><span style="color:#5B6B6A">{{ r.label }}</span><span style="font-variant-numeric:tabular-nums;font-weight:500;color:{{ r.fg }};white-space:nowrap">{{ r.value }}</span></span></sc-for>
+              </div>
+            </button></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ b.isCard }}">
+          <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:20px">
+              <h2 style="margin:0;font-size:14px;line-height:20px;font-weight:600">{{ b.title }}</h2>
+              <sc-if value="{{ b.hasLink }}"><button onClick="{{ b.linkPick }}" style="border:0;background:transparent;padding:0;color:#0F766E;font:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px" style-hover="color:#0F766E">{{ b.linkLabel }}</button></sc-if>
+            </div>
+            <sc-if value="{{ b.hasTabs }}"><div role="tablist" style="display:flex;gap:2px;flex-wrap:wrap;margin:-4px -16px 0;padding:0 12px;border-bottom:1px solid #EEF2F4"><sc-for list="{{ b.tabs }}" as="t"><button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="height:36px;padding:0 10px;border:0;border-bottom:2px solid {{ t.line }};background:transparent;font:inherit;font-size:13px;font-weight:{{ t.w }};color:{{ t.fg }};cursor:pointer;white-space:nowrap">{{ t.label }}</button></sc-for></div></sc-if>
+            <sc-if value="{{ b.isRows }}">
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ b.rows }}" as="a"><button onClick="{{ a.pick }}" style="min-height:44px;display:flex;align-items:center;gap:10px;padding:6px 4px;border:0;border-top:1px solid #EEF2F4;background:{{ a.bg }};cursor:pointer;text-align:left;font:inherit;color:{{ a.tc }}" style-hover="background:#F8FAFA"><lucide-i name="{{ a.icon }}" size="16" style="color:{{ a.fg }};flex:none"></lucide-i><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;line-height:18px;text-wrap:pretty">{{ a.text }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ a.sub }}</span></span><span style="font-size:13px;line-height:18px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap">{{ a.val }}</span><lucide-i name="chevron-right" size="14" style="color:#647574;flex:none"></lucide-i></button></sc-for>
+                <sc-if value="{{ b.isEmpty }}"><div style="min-height:44px;display:flex;align-items:center;gap:10px;padding:6px 4px;border-top:1px solid #EEF2F4"><lucide-i name="circle-check" size="16" style="color:#15803D"></lucide-i><span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ b.emptyText }}</span></div></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isTable }}">
+              <sc-if value="{{ b.hasRows }}"><div style="margin:0 -16px"><dc-import name="DataTable" selectable="{{ false }}" columns="{{ b.dtCols }}" rows="{{ b.dtRows }}" foot="{{ b.dtFoot }}" scroll-x="{{ true }}" min-width="{{ b.dtMin }}" hint-size="100%,200px"></dc-import></div></sc-if>
+              <sc-if value="{{ b.hasNote }}"><span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ b.note }}</span></sc-if>
+              <sc-if value="{{ b.isEmptyT }}"><div style="display:flex;align-items:center;gap:10px;min-height:44px"><lucide-i name="{{ b.emptyIcon }}" size="16" style="color:{{ b.emptyFg }}"></lucide-i><span style="font-size:13px;color:#5B6B6A">{{ b.emptyText }}</span></div></sc-if>
+            </sc-if>
+            <sc-if value="{{ b.isChart }}">
+              <div style="display:flex;gap:16px;align-items:stretch;flex-wrap:wrap">
+                <div style="flex:1 1 360px;min-width:0;position:relative">
+                  <svg viewBox="{{ b.vb }}" preserveAspectRatio="none" style="width:100%;height:{{ b.h }};display:block;overflow:visible">
+                    <sc-for list="{{ b.gridY }}" as="g"><line x1="0" x2="{{ b.vw }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke="#EEF2F4" stroke-width="1"></line></sc-for>
+                    <sc-for list="{{ b.voids }}" as="v"><line x1="{{ v.x1 }}" x2="{{ v.x2 }}" y1="{{ v.y }}" y2="{{ v.y }}" stroke="#CBD5D3" stroke-width="1.5" stroke-dasharray="4 4"></line></sc-for>
+                    <sc-for list="{{ b.bars }}" as="r"><rect x="{{ r.x }}" y="{{ r.y }}" width="{{ r.w }}" height="{{ r.h }}" rx="2" fill="{{ r.fill }}" onMouseEnter="{{ r.enter }}" onMouseLeave="{{ r.leave }}" style="cursor:pointer"></rect></sc-for>
+                  </svg>
+                  <div style="display:grid;grid-template-columns:repeat({{ b.n }},minmax(0,1fr));margin-top:6px">
+                    <sc-for list="{{ b.xl }}" as="x"><span style="font-size:12px;line-height:16px;color:#647574;text-align:center;white-space:nowrap;overflow:hidden">{{ x.t }}</span></sc-for>
+                  </div>
+                  <sc-if value="{{ b.hasTip }}"><div style="position:absolute;top:0;left:{{ b.tipX }};transform:translateX(-50%);background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:8px 10px;display:flex;flex-direction:column;gap:2px;pointer-events:none;white-space:nowrap;z-index:2">
+                    <span style="font-size:12px;color:#5B6B6A">{{ b.tip.date }}</span><span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">{{ b.tip.sum }}</span><span style="font-size:12px;color:#647574">{{ b.tip.docs }}</span>
+                  </div></sc-if>
+                  <sc-if value="{{ b.hasVoid }}"><span style="display:block;margin-top:8px;font-size:12px;line-height:16px;color:#647574">{{ b.voidNote }}</span></sc-if>
+                  <sc-if value="{{ b.hasLegend }}"><div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap"><sc-for list="{{ b.legend }}" as="l"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#5B6B6A"><span style="width:10px;height:10px;border-radius:2px;background:{{ l.c }}"></span>{{ l.t }}</span></sc-for></div></sc-if>
+                </div>
+                <sc-if value="{{ b.hasSide }}"><div style="flex:0 0 180px;display:flex;flex-direction:column;gap:16px;padding-left:16px;border-left:1px solid #EEF2F4">
+                  <sc-for list="{{ b.side }}" as="s"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:500;color:#5B6B6A">{{ s.label }}</span><span style="font-size:20px;line-height:26px;font-weight:600;font-variant-numeric:tabular-nums">{{ s.value }}</span></div></sc-for>
+                </div></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isAging }}">
+              <div style="display:flex;height:16px;border-radius:4px;overflow:hidden;gap:2px">
+                <sc-for list="{{ b.segs }}" as="g"><button onClick="{{ g.pick }}" title="{{ g.label }}" style="flex:{{ g.flex }};min-width:{{ g.minW }};border:0;padding:0;background:{{ g.c }};cursor:pointer"></button></sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px">
+                <sc-for list="{{ b.segs }}" as="g"><button onClick="{{ g.pick }}" style="display:flex;flex-direction:column;gap:2px;border:0;background:transparent;padding:4px 0;text-align:left;cursor:pointer;font:inherit;color:inherit;min-height:44px" style-hover="background:#F8FAFA"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#5B6B6A"><span style="width:8px;height:8px;border-radius:2px;background:{{ g.c }}"></span>{{ g.label }}</span><span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">{{ g.val }}</span></button></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isStat }}">
+              <div style="display:grid;grid-template-columns:repeat({{ b.cols }},minmax(0,1fr));gap:8px">
+                <sc-for list="{{ b.cells }}" as="c"><div style="border:1px solid #E2E8F0;border-radius:8px;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:#FFFFFF">
+                  <button onClick="{{ c.pick }}" title="{{ c.label }}" style="flex:1;padding:10px 12px;border:0;background:#FFFFFF;display:flex;flex-direction:column;gap:2px;cursor:pointer;font:inherit;color:inherit;text-align:left" style-hover="background:#F8FAFA">
+                    <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A;min-width:0"><lucide-i name="{{ c.icon }}" size="14" style="color:{{ c.fg }};flex:none"></lucide-i><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.label }}</span></span>
+                    <span style="font-size:18px;line-height:24px;font-weight:600;font-variant-numeric:tabular-nums">{{ c.n }}</span>
+                    <span style="font-size:12px;line-height:16px;color:#5B6B6A;font-variant-numeric:tabular-nums">{{ c.sum }}</span>
+                  </button>
+                  <button onClick="{{ c.latePick }}" style="min-height:30px;padding:6px 12px;border:0;border-top:1px solid {{ c.lateBd }};background:{{ c.lateBg }};font:inherit;font-size:11.5px;line-height:15px;color:{{ c.lateFg }};font-weight:{{ c.lateW }};text-align:left;cursor:{{ c.lateCur }};text-wrap:pretty">{{ c.late }}</button>
+                </div></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isFlow }}">
+              <div style="display:grid;grid-template-columns:repeat({{ b.cols }},minmax(0,1fr));gap:8px">
+                <sc-for list="{{ b.cells }}" as="c"><button onClick="{{ c.pick }}" style="min-height:72px;padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;font:inherit;color:inherit" style-hover="background:#F8FAFA">
+                  <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#5B6B6A"><lucide-i name="{{ c.icon }}" size="14" style="color:{{ c.fg }}"></lucide-i>{{ c.label }}</span>
+                  <span style="font-size:20px;line-height:26px;font-weight:600;font-variant-numeric:tabular-nums">{{ c.n }}</span>
+                  <span style="font-size:12px;color:#647574;font-variant-numeric:tabular-nums">{{ c.sum }}</span>
+                </button></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.isHero }}">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:500;color:#5B6B6A">{{ b.heroLabel }}</span><span style="display:flex;align-items:baseline;gap:6px"><span style="font-size:24px;line-height:30px;font-weight:600;font-variant-numeric:tabular-nums">{{ b.heroValue }}</span><span style="font-size:12px;color:#647574">{{ b.heroUnit }}</span></span></div>
+                <sc-if value="{{ b.hasBadge }}"><span style="display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:{{ b.badge.bg }};color:{{ b.badge.fg }};font-size:12px;font-weight:500"><lucide-i name="{{ b.badge.icon }}" size="14"></lucide-i>{{ b.badge.label }}</span></sc-if>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat({{ b.statCols }},minmax(0,1fr));gap:12px">
+                <sc-for list="{{ b.stats }}" as="s"><button onClick="{{ s.pick }}" style="min-height:56px;padding:8px 10px;border:1px solid #EEF2F4;border-radius:8px;background:#F8FAFA;display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer;font:inherit;color:inherit" style-hover="background:#EEF2F4"><span style="font-size:12px;color:#5B6B6A">{{ s.label }}</span><span style="font-size:15px;line-height:20px;font-weight:600;font-variant-numeric:tabular-nums">{{ s.value }}</span><span style="font-size:12px;color:#647574">{{ s.sub }}</span></button></sc-for>
+              </div>
+              <sc-if value="{{ b.hasHeroBtn }}"><button onClick="{{ b.heroBtn.pick }}" style="align-self:flex-start;height:44px;padding:0 18px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:15px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px" style-hover="background:#115E59"><lucide-i name="{{ b.heroBtn.icon }}" size="18"></lucide-i>{{ b.heroBtn.label }}</button></sc-if>
+            </sc-if>
+            <sc-if value="{{ b.isSearch }}">
+              <input value="{{ b.q }}" onChange="{{ b.onQ }}" placeholder="{{ b.ph }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+              <sc-for list="{{ b.hits }}" as="h">
+                <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #EEF2F4;border-radius:8px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:600">{{ h.name }}</span><span style="display:flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;background:{{ h.stBg }};color:{{ h.stFg }};font-size:12px;font-weight:500">{{ h.st }}</span></div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;color:#5B6B6A"><span>{{ h.limLabel }}</span><span style="font-variant-numeric:tabular-nums">{{ h.limText }}</span></div>
+                  <div style="height:6px;border-radius:3px;background:#EEF2F4;overflow:hidden"><div style="height:100%;width:{{ h.pctW }};background:{{ h.pctC }}"></div></div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;color:#5B6B6A"><span>{{ h.overLabel }}</span><span style="font-variant-numeric:tabular-nums;color:{{ h.overFg }}">{{ h.over }}</span></div>
+                  <button onClick="{{ h.create }}" style="align-self:flex-start;border:0;background:transparent;padding:0;color:#0F766E;font:inherit;font-size:13px;cursor:pointer" style-hover="color:#0F766E">{{ h.createLabel }}</button>
+                </div>
+              </sc-for>
+              <sc-if value="{{ b.noHits }}"><span style="font-size:13px;color:#647574">{{ b.noHitsText }}</span></sc-if>
+            </sc-if>
+            <sc-if value="{{ b.isSetup }}">
+              <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ b.setupSub }}</p>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ b.items }}" as="s"><div style="min-height:48px;display:flex;align-items:center;gap:10px;border-top:1px solid #EEF2F4"><lucide-i name="{{ s.icon }}" size="18" style="color:{{ s.fg }}"></lucide-i><span style="flex:1;font-size:14px">{{ s.label }}</span><sc-if value="{{ s.done }}"><span style="font-size:13px;color:#15803D">{{ s.doneLabel }}</span></sc-if><sc-if value="{{ s.todo }}"><button onClick="{{ s.pick }}" style="border:0;background:transparent;padding:0;color:#0F766E;font:inherit;font-size:13px;font-weight:500;cursor:pointer">{{ s.startLabel }}</button></sc-if></div></sc-for>
+              </div>
+            </sc-if>
+          </section>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const fM = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fN = n => Number(n || 0).toLocaleString('de-DE');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const MONO = "'JetBrains Mono',monospace", SANS = 'inherit';
+const TONE = { danger: '#B91C1C', warning: '#B45309', info: '#1D4ED8', success: '#15803D', neutral: '#5B6B6A' };
+const AT_ICON = { apprDir: 'stamp', apprMine: 'stamp', debtA: 'hand-coins', expB: 'calendar-clock', supPayLate: 'clock-alert', supPayToday: 'calendar-clock', supPay3d: 'calendar-clock', supBonus: 'gift', rcAccepted: 'package-check', debt90: 'hand-coins', licExp: 'file-x', expOpen: 'circle-x', expiry: 'calendar-clock', transit: 'truck', invDue: 'clipboard-check', drvCash: 'truck', cashOpen: 'banknote' };
+const FLOW_ICON = { pending: 'stamp', queued: 'list-ordered', picking: 'scan-line', marking: 'scan-barcode', checking: 'clipboard-check', docs: 'file-text', loading: 'package-check', ready: 'package-check', shipped: 'truck', delivered: 'house' };
+class Component extends DCLogic {
+  state = { per: 'month', q: '', tip: null, tipB: null, w: 0, ptTab: 'sales', stF: 'all', cFrom: '01.10.2026', cTo: '04.10.2026' };
+  measure(el) { if (!el) return; if (this._el !== el) { this._el = el; if (window.ResizeObserver) { this._ro && this._ro.disconnect(); this._ro = new ResizeObserver(es => { const w = Math.round(es[0].contentRect.width); if (Math.abs(w - this.state.w) > 8) this.setState({ w }); }); this._ro.observe(el); } } const w = Math.round(el.getBoundingClientRect().width); if (w && Math.abs(w - this.state.w) > 8) this.setState({ w }); }
+  rootRef = el => this.measure(el);
+  componentDidMount() { if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.forceUpdate(); } }, 60); this._v = setInterval(() => { const D = window.MedixData; if (D && D.store.v !== this._sv) { this._sv = D.store.v; this.forceUpdate(); } }, 400); this.applyDemo(); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.applyDemo(); }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._v); this._ro && this._ro.disconnect(); }
+  applyDemo() { const d = this.props.demo; if (d && d.k === 'bhNoCompare') this.setState({ per: 'week' }); }
+  get L() { return this.props.dict || {}; }
+  open(href) { const p = this.props; if (p.onOpen) p.onOpen(href); else if (p.onNavigate) p.onNavigate(href.replace(/^#/, '').split('?')[0]); }
+  q(page, params) { const B = this.props.branch || 'ALL', o = Object.assign({}, params || {}, { branch: B }); return '#' + page + '?' + Object.keys(o).filter(k => o[k] != null && o[k] !== '').map(k => k + '=' + encodeURIComponent(o[k])).join('&'); }
+  waitText(m) { const L = this.L; return m < 60 ? fill(L.bh_wait_m, { n: m }) : m < 1440 ? fill(L.bh_wait_h, { n: Math.floor(m / 60) }) : fill(L.bh_wait_d, { n: Math.floor(m / 1440) }); }
+  delta(cur, prev, cmp, upGood) { const L = this.L; if (!cmp || !prev) return { dIcon: 'minus', dText: L.bh_noCmp, dSub: '', dFg: '#647574' }; const pct = (cur - prev) / Math.abs(prev) * 100, up = pct >= 0, good = up === upGood; return { dIcon: up ? 'trending-up' : 'trending-down', dText: (up ? '+' : '') + pct.toFixed(1).replace('.', ',') + '%', dSub: L.bh_vsPrev, dFg: good ? '#15803D' : '#B91C1C' }; }
+  noCmp() { return { dIcon: 'clock', dText: this.L.bh_now, dSub: '', dFg: '#647574' }; }
+  card(title, extra) { return Object.assign({ isCard: true, title, span: 'span 12' }, extra); }
+  link(label, href) { return { hasLink: true, linkLabel: label + ' →', linkPick: () => this.open(href) }; }
+  rows(list, emptyText) { return { isRows: true, rows: list.map(r => Object.assign({ bg: 'transparent', tc: 'inherit' }, r)), isEmpty: !list.length, emptyText }; }
+  table(heads, grid, trows, extra) { const dtCols = heads.map((x, i) => ({ key: 'c' + i, label: x[0], align: x[1] ? 'right' : 'left', width: (grid.replace(/repeat\((\d+),\s*(minmax\([^)]*\)|[^,)]+)\)/g, (m, n, t) => Array(+n).fill(t).join(' ')).match(/minmax\([^)]*\)|\S+/g) || [])[i] || 'minmax(0,1fr)' })), dtRows = trows.map((r, j) => ({ id: 'r' + j, onOpen: r.pick || (() => {}), cells: r.cells.map(c => ({ type: c.m ? 'mono' : 'text', text: c.t, color: c.fg || '#172B2A', weight: c.b ? 600 : 400 })) }));
+    const ex = extra || {}; if (ex.hasFoot) ex.dtFoot = { cells: (ex.foot || []).map(c => ({ text: c.text })) };
+    return Object.assign({ isTable: true, dtCols, dtRows, dtFoot: null, dtMin: parseInt((extra || {}).minW) || 0, hasRows: trows.length > 0, heads: heads.map(h => ({ label: h[0], align: h[1] ? 'right' : 'left' })), grid, minW: '0px', trows: trows.map(r => ({ cursor: r.pick ? 'pointer' : 'default', bg: '#FFFFFF', pick: r.pick || (() => {}), cells: r.cells.map(c => ({ text: c.t, align: c.r ? 'right' : 'left', w: c.b ? 600 : 400, fg: c.fg || '#172B2A', font: c.m ? MONO : SANS })) })), hasFoot: false, foot: [], hasNote: false, isEmptyT: false }, extra || {}); }
+  attRows(D, B, role, skip) { const L = this.L, d = this.props.demo; if (d && d.k === 'bhAllClear') return []; const out = [], brN = c => ((D.BRANCHES.find(b => b.code === c) || {}).name || c).replace(' filiali', ''), row = r => Object.assign({ bg: 'transparent', tc: '#172B2A', sub: '' }, r);
+    D.bhAttention(B, role).filter(a => !(skip || []).includes(a.key)).forEach(a => { const v = Object.assign({ n: fN(a.n), names: (a.names || []).join(', ') }, a.vars || {}); if (v.q != null) v.q = fN(v.q);
+      if (a.key === 'transit') { a.list.slice(0, 3).forEach(x => { const late = x.days > 3, same = x.from.branch === x.to.branch; out.push(row({ icon: 'truck', fg: late ? TONE.warning : TONE.info, bg: late ? '#FFFBEB' : 'transparent', text: fill(L.bh_at_trItem, { no: x.no, from: same ? x.from.wh : brN(x.from.branch), to: same ? x.to.wh : brN(x.to.branch) }), sub: fill(L.bh_at_trSub, { d: x.date, k: x.days }), val: fill(L.bh_at_pcs, { q: fN(x.qty) }), pick: () => this.open('#transfer?open=' + encodeURIComponent(x.no) + '&branch=' + B) })); });
+        if (a.list.length > 3) out.push(row({ icon: 'list', fg: TONE.neutral, tc: '#0D9488', text: fill(L.bh_at_trMore, { n: fN(a.list.length) }), val: L.bh_all + ' →', pick: () => this.open(a.href) })); return; }
+      const zero = !a.n, ap = a.key === 'apprDir' || a.key === 'apprMine';
+      out.push(row({ icon: AT_ICON[a.key] || 'circle-alert', fg: zero ? '#647574' : TONE[a.tone], tc: zero ? '#647574' : '#172B2A', text: fill(L['bh_at_' + a.key], v), sub: ap ? fill(L.bh_at_apprSub, v) : '', val: a.val != null ? fM(a.val) : fN(a.n), pick: zero ? () => {} : () => this.open(a.href) })); });
+    return out; }
+  chart(D, B, per) { const L = this.L, s = this.state, days = D.bhDaily(per, B), n = days.length, vw = 600, H = 160, max = Math.max(1, ...days.map(x => x.sum)), bw = vw / n, voids = [], bars = [];
+    days.forEach((x, i) => { if (x.none) { voids.push({ x1: i * bw + 4, x2: (i + 1) * bw - 4, y: H - 1 }); return; } const h = x.sum ? Math.max(2, x.sum / max * (H - 8)) : 0; bars.push({ x: i * bw + (bw - Math.min(bw * 0.6, 36)) / 2, y: H - h, w: Math.min(bw * 0.6, 36), h, fill: s.tip === i ? '#0F766E' : '#0D9488', enter: () => this.setState({ tip: i }), leave: () => this.setState({ tip: null }) }); });
+    const t = s.tip != null ? days[s.tip] : null;
+    return { isChart: true, vb: '0 0 ' + vw + ' ' + H, vw, h: H + 'px', n, gridY: [0, 0.25, 0.5, 0.75].map(f => ({ y: Math.round(H * f) + 0.5 })), bars, voids, xl: days.map((x, i) => ({ t: n > 12 && i % 3 && i !== n - 1 ? '' : x.date.slice(0, 5) })),
+      hasTip: !!t, tipX: t ? ((s.tip + 0.5) / n * 100) + '%' : '0', tip: t ? { date: t.date, sum: fM(t.sum) + ' so\'m', docs: fill(L.bh_docsN, { n: t.n }) } : {}, hasVoid: voids.length > 0, voidNote: L.bh_noData, hasLegend: false, legend: [] }; }
+  renderVals() {
+    const L = this.L, p = this.props, s = this.state, D = window.MedixData, narrow = s.w < 920;
+    const base = { rootRef: this.rootRef, greet: '', sub: '', periods: [], showPeriod: true, blocks: [], hdrSecondary: [], hasPrimary: false, primary: {} };
+    if (!D || !D.bhAttention) return base;
+    const role = p.role || 'director', B = p.branch || 'ALL', per = s.per, user = p.userName || '', demo = p.demo || {};
+    const h = D.nowStr ? +D.nowStr().slice(11, 13) : new Date().getHours(), emp = (D.store.emps || []).find(e => e.first + ' ' + e.last === user), gName = emp && emp.status === 'blocked' ? '' : (user.split(' ')[0] || ''); // 1.7.8: bloklangan xodim nomi bilan salomlashilmaydi
+    const greet = (h < 12 ? L.bh_greet_m : h < 18 ? L.bh_greet_d : L.bh_greet_e) + (gName ? ', ' + gName : '');
+    const brName = B === 'ALL' ? L.bh_allBr : (D.BRANCHES.find(b => b.code === B) || {}).name || B;
+    const okD = v => /^\d\d\.\d\d\.\d{4}$/.test(v || ''), perA = per === 'custom' ? (okD(s.cFrom) && okD(s.cTo) ? { from: s.cFrom, to: s.cTo } : 'month') : per;
+    const periods = [['day', L.bh_per_day], ['week', L.bh_per_week], ['month', L.bh_per_month], ['custom', L.bh_per_custom]].map(([k, label]) => { const on = per === k; return { label, on, bg: on ? '#FFFFFF' : 'transparent', fg: on ? '#172B2A' : '#5B6B6A', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', pick: () => this.setState({ per: k, tip: null }) }; });
+    const out = { ...base, greet, sub: D.TODAY + ' · ' + brName, periods, isCustom: per === 'custom', cFrom: s.cFrom, cTo: s.cTo, cBd: per === 'custom' && perA === 'month' ? '#B91C1C' : '#E2E8F0', onCFrom: e => this.setState({ cFrom: e.target.value }), onCTo: e => this.setState({ cTo: e.target.value }) };
+    const span = (w, nw) => 'span ' + (narrow ? (nw || 12) : w), canCost = D.can(role, 'special.cost'), rng = D.bhRange(per);
+    const blocks = [];
+    if (demo.k === 'bhEmpty') { const doneMap = { products: true, clients: true, prices: false, opening: false }; out.showPeriod = false;
+      blocks.push(this.card(L.bh_setupT, { span: span(8), isSetup: true, setupSub: L.bh_setupSub, items: D.bhSetup().map(x => { const done = doneMap[x.key]; return { label: L['bh_s_' + x.key], done, todo: !done, icon: done ? 'circle-check' : 'circle-dashed', fg: done ? '#15803D' : '#647574', doneLabel: L.bh_done + ' ✓', startLabel: L.bh_start + ' →', pick: () => this.open('#' + x.page) }; }) }));
+      return { ...out, blocks }; }
+    const kpiBlock = kpis => ({ isKpis: true, span: 'span 12', cols: narrow ? 2 : kpis.length, kpis });
+    const gp = D.grossProfit(per, B), gpPrev = rng.cmp ? D.grossProfit(per, B, true) : null, db = D.bhDebt(B), mo = D.bhMoney(B);
+    const kSales = { label: L.bh_k_sales, value: fM(gp.sales), unit: "so'm", ...this.delta(gp.sales, gpPrev && gpPrev.sales, rng.cmp, true), note: fill(L.bh_n_sales, { n: gp.n }), pick: () => this.open(this.q('reports', { r: 'sv', period: per })) };
+    const kGp = { label: L.bh_k_gp, value: fM(gp.gp), unit: "so'm", ...this.delta(gp.gp, gpPrev && gpPrev.gp, rng.cmp, true), note: fill(L.bh_n_gp, { m: gp.margin == null ? '—' : String(gp.margin).replace('.', ',') }), pick: () => this.open(this.q('reports', { r: 'gp', period: per })) };
+    const kDebt = { label: L.bh_k_debt, value: fM(db.total), unit: "so'm", ...this.noCmp(), note: fill(L.bh_n_debtOver, { v: fM(db.overdue) }), pick: () => this.open(this.q('cdebt')) };
+    const kMoney = { label: L.bh_k_money, value: fM(mo.total), unit: "so'm", ...this.noCmp(), note: fill(L.bh_n_money, { c: fM(mo.cash), b: fM(mo.bank) }), pick: () => this.open(this.q(D.can(role, 'cash.view') ? 'cash' : 'bank')) };
+    // T5: variant — rolning «Bosh sahifa turi» sozlamasidan (foydalanuvchi qo'shgan rol ham). Yig'uvchi/Markirovkachi/Ombor mudiri/Haydovchi — vaqtincha Ombor varianti (panellar T9)
+    const hk = D.rlHome(role), isDir = hk === 'director', isBr = hk === 'branch', isOp = hk === 'operator', isKeep = ['keeper', 'picker', 'marker', 'driver'].includes(hk), isCash = hk === 'cashier', isAcc = hk === 'accountant', isPur = hk === 'purchase';
+    const attCard = (skip, sp) => this.card(L.bh_attT, { span: sp || span(5), ...this.rows(this.attRows(D, B, role, skip), L.bh_attNone) });
+    // T10a: «Yalpi foyda» va «Marja» ustunlari olib tashlandi; Savdo — bhSalesPT (kartalar bilan bir manba)
+    const brTable = () => { const cols = narrow ? [[L.bh_c_branch], [L.bh_c_sales, 1], [L.bh_c_debt, 1], [L.bh_c_over, 1], [L.bh_c_money, 1]] : [[L.bh_c_branch], [L.bh_c_sales, 1], [L.bh_c_debt, 1], [L.bh_c_over, 1], [L.bh_c_stock, 1], [L.bh_c_money, 1]];
+      const row = (name, g, d, st, m, b) => { const c = [{ t: name, b }, { t: fM(g.total), r: 1, b }, { t: fM(d.total), r: 1, b }, { t: fM(d.overdue), r: 1, b, fg: d.overdue > 0 ? '#B91C1C' : '#172B2A' }]; if (!narrow) c.push({ t: fM(st), r: 1, b }); c.push({ t: fM(m.total), r: 1, b }); return c; };
+      const trows = D.BRANCHES.map(b => ({ cells: row(b.name, D.bhSalesPT(perA, b.code), D.bhDebt(b.code), D.bhStockValue(b.code), D.bhMoney(b.code)), pick: () => p.onBranch && p.onBranch(b.code) }));
+      const tot = row(L.bh_total, D.bhSalesPT(perA, 'ALL'), D.bhDebt('ALL'), D.bhStockValue('ALL'), D.bhMoney('ALL'), true);
+      const grid = narrow ? 'minmax(120px,1.2fr) repeat(4,minmax(0,1fr))' : 'minmax(160px,1.3fr) repeat(5,minmax(0,1fr))';
+      return this.card(L.bh_brT, { span: 'span 12', ...this.table(cols, grid, trows, { minW: narrow ? '640px' : '860px', hasFoot: true, foot: tot.map(c => ({ text: c.t, align: c.r ? 'right' : 'left' })), hasNote: true, note: fill(L.bh_grpDebt, { v: fM(D.bhDebt('ALL').group) }) }) }); };
+    const chartCard = () => { const r = D.bhRange(per), ords = (D.store.orders || []).filter(o => { const t = D.pDT(o.date + ' 00:00'); return t >= (per === 'day' ? r.to : r.from) && t <= r.to && (B === 'ALL' || o.branch === B) && !['draft', 'cancelled'].includes(o.status); }), sum = ords.reduce((a, o) => a + D.orderTotals(o).total, 0);
+      return this.card(L.bh_chartT, { span: span(7), ...this.chart(D, B, per), hasSide: true, side: [{ label: L.bh_ordersN, value: fN(ords.length) }, { label: L.bh_avgOrder, value: ords.length ? fM(sum / ords.length) : '—' }] }); };
+    const agingCard = () => { const C = ['#CBD5D3', '#F2C46D', '#E3893A', '#DC5A4E', '#B91C1C'], K = ['current', '1-30', '31-60', '61-90', '90plus'], tot = db.aging.reduce((a, v) => a + v, 0) || 1;
+      return this.card(L.bh_agingT, { span: 'span 12', isAging: true, segs: db.aging.map((v, i) => ({ label: L['bh_ag' + i], val: fM(v), c: C[i], flex: String(v / tot), minW: v > 0 ? '6px' : '0px', pick: () => this.open(this.q('cdebt', { aging: K[i] })) })) }); };
+    // T10b: «Eng ko'p sotilgan mahsulotlar» o'rniga — Operatorlar, Ta'minotchi xodim, Ta'minotchi korxona (hisobotlar bilan bir manba: opSales / supGoods)
+    const stCell = a => ({ t: a ? L.tb_active : L.tb_passive, fg: a ? '#15803D' : '#647574' });
+    const pr0 = D.perRange(perA), pF = D.fD(Math.max(pr0.from, pr0.dataFrom)), pT = D.fD(pr0.to); // T11a: Savdo kartasi kabi — kesish sanasidan keyin
+    const opCard = () => { const all = D.opSales(pF, pT, B), top = all.slice(0, 5), rq = x => this.q('reports', Object.assign({ r: 'op', from: pF, to: pT }, x || {}));
+      return this.card(L.tb_opT, { span: span(6), ...this.link(L.bh_all, rq()), ...this.table([[L.tb_c_emp], [L.tb_c_orders, 1], [L.tb_c_sales, 1], [L.tb_c_st]], 'minmax(120px,1.5fr) 88px minmax(116px,1fr) 64px', top.map(x => ({ cells: [{ t: x.who }, { t: fN(x.n), r: 1 }, { t: fM(x.net), r: 1 }, stCell(x.active)], pick: () => this.open(rq({ who: x.who })) })), { minW: '430px', isEmptyT: !top.length, emptyIcon: 'info', emptyFg: '#647574', emptyText: L.bh_noSales, hasNote: true, note: fill(L.tb_opNote, { f: pF, t: pT }) }) }); };
+    const supCard = (by, title, r) => { const all = D.supGoods(B, by), top = all.slice(0, 5), oth = all.reduce((a, x) => a + x.otherS, 0), rq = x => this.q('reports', Object.assign({ r }, x || {}));
+      return this.card(title, { span: span(6), ...this.link(L.bh_all, rq()), ...this.table([[by === 'owner' ? L.tb_c_emp : L.tb_c_sup], [L.tb_c_in, 1], [L.tb_c_sold, 1], [L.tb_c_left, 1], [L.tb_c_st]], 'minmax(92px,1.2fr) repeat(3,minmax(94px,1fr)) 52px', top.map(x => ({ cells: [{ t: x.who }, { t: fM(x.inS), r: 1 }, { t: fM(x.soldS), r: 1 }, { t: fM(x.leftS), r: 1, b: true }, stCell(x.active)], pick: () => this.open(rq({ who: x.who })) })), { minW: '470px', isEmptyT: !top.length, emptyIcon: 'info', emptyFg: '#647574', emptyText: L.tb_none, hasNote: true, note: oth ? fill(L.tb_otherNote, { v: fM(oth) }) : L.tb_costNote }) }); };
+    const topCards = () => { const td = db.top.slice(0, 5);
+      return [this.card(L.bh_topDebtT, { span: span(6), ...this.link(L.bh_all, this.q('cdebt')), ...this.table([[L.bh_c_client], [L.bh_c_branch], [L.bh_c_debtS, 1], [L.bh_c_late, 1]], 'minmax(140px,1.6fr) 64px minmax(124px,1fr) 104px', td.map(x => ({ cells: [{ t: x.name }, { t: x.branch, m: 1 }, { t: fM(x.debt), r: 1 }, { t: x.days > 0 ? fill(L.bh_daysOver, { n: x.days }) : '—', r: 1, fg: x.days > 90 ? '#B91C1C' : x.days > 0 ? '#B45309' : '#647574' }], pick: () => D.openDebt && D.openDebt({ kind: 'mt', party: x.id, branch: x.branch }) })), { minW: '460px', isEmptyT: !td.length, emptyIcon: 'circle-check', emptyFg: '#15803D', emptyText: L.bh_none }) }),
+        opCard(), ...(canCost ? [supCard('owner', L.tb_sgT, 'sg'), supCard('supplier', L.tb_scT, 'sc')] : [])]; };
+    const apprCard = () => { const all = D.bhApprovals(B).filter(x => x.level === 'price' ? D.can(role, 'prices.below') : D.canApprove(x.level, role)), ap = D.apprPage(B, role), onPage = x => x.type === 'order' ? ap.orders.some(o => o.no === x.no) : x.type === 'no' && ap.prices.some(n => n.no === x.no);
+      const tbl = (list, empty) => this.table([[L.bh_c_doc], [L.bh_c_type], [L.bh_c_who], [L.bh_c_sum, 1], [L.bh_c_wait, 1], ['']], narrow ? '150px minmax(0,1fr) minmax(0,1fr) 130px 100px 136px' : '160px minmax(0,1fr) minmax(0,1fr) 150px 104px 136px', list.map(x => ({ cells: [{ t: x.no, m: 1 }, { t: L['bh_t_' + x.type] || x.type }, { t: x.who || '—' }, { t: x.sum ? fM(x.sum) : '—', r: 1 }, { t: this.waitText(x.wait), r: 1, fg: x.wait > 240 ? '#B45309' : '#5B6B6A' }, { t: L.bh_review + ' →', r: 1, fg: '#0F766E' }], pick: () => this.open('#' + x.page + '?open=' + encodeURIComponent(x.no) + '&branch=' + B) })), { minW: '760px', isEmptyT: !list.length, emptyIcon: 'circle-check', emptyFg: '#15803D', emptyText: empty });
+      const main = all.filter(onPage), other = all.filter(x => !onPage(x)); // T10a3 (1.7.2): soni Tasdiqlash sahifasi bilan bir xil (apprPage); boshqa hujjatlar — alohida blok
+      const out = [this.card(fill(L.bh_apprTn, { n: fN(main.length) }), { span: 'span 12', ...this.link(L.bh_all, this.q('approvals')), ...tbl(main, L.bh_apprNone) })];
+      if (other.length) out.push(this.card(fill(L.bh_apprOtherT, { n: fN(other.length) }), { span: 'span 12', ...tbl(other, '') }));
+      return out; };
+    const ptCards = () => { const sP = D.bhSalesPT(perA, B), dP = D.bhDebtPT(B), yP = D.bhSupDebtPT(B), eP = D.bhExpPT(perA, B), rows = o => D.PT3.map(k => ({ label: L['oe_pay_' + k], value: fM(o[k]), fg: o[k] ? '#172B2A' : '#647574' }));
+      const pr = D.perRange(perA), perTxt = fill(L.bh_n_per, { f: D.fD ? D.fD(Math.max(pr.from, pr.dataFrom)) : '', t: D.fD ? D.fD(pr.to) : '' });
+      return { isPt: true, span: 'span 12', cols: narrow ? 2 : 4, cards: [
+        { label: L.bh_k_sales, value: fM(sP.total), note: perTxt, rows: rows(sP), pick: () => this.open(this.q('shipments')) },
+        { label: L.bh_k_debt, value: fM(dP.total), note: L.bh_n_today, rows: rows(dP), pick: () => this.open(this.q('cdebt')) },
+        { label: L.bh_k_sup, value: fM(yP.total), note: L.bh_n_today, rows: rows(yP), pick: () => this.open(this.q('sdebt')) },
+        { label: L.bh_k_exp, value: fM(eP.total), note: perTxt, rows: rows(eP), pick: () => this.open(this.q('cash')) }] }; };
+    const ptTable = () => { const tb = s.ptTab, fn = { sales: b => D.bhSalesPT(perA, b), debt: b => D.bhDebtPT(b), sup: b => D.bhSupDebtPT(b), exp: b => D.bhExpPT(perA, b) }[tb], cells = (name, o, bold) => [{ t: name, b: bold }, ...D.PT3.map(k => ({ t: fM(o[k]), r: 1, b: bold, fg: o[k] ? '#172B2A' : '#647574' })), { t: fM(o.total), r: 1, b: true }];
+      const brs = D.brCodes(B), trows = brs.map(c => ({ cells: cells((D.BRANCHES.find(x => x.code === c) || {}).name || c, fn(c)), pick: () => p.onBranch && p.onBranch(c) })), tot = cells(L.bh_total, fn(B), true);
+      const tabs = [['sales', L.bh_k_sales], ['debt', L.bh_k_debt], ['sup', L.bh_k_sup], ['exp', L.bh_k_exp]].map(([k, label]) => { const on = tb === k; return { label, on, line: on ? '#0F766E' : 'transparent', fg: on ? '#172B2A' : '#5B6B6A', w: on ? 600 : 500, pick: () => this.setState({ ptTab: k }) }; });
+      return this.card(L.bh_ptT, { span: 'span 12', hasTabs: true, tabs, ...this.table([[L.bh_c_branch], [L.oe_pay_cash, 1], [L.oe_pay_bank, 1], [L.oe_pay_online, 1], [L.bh_c_total, 1]], 'minmax(160px,1.4fr) repeat(4,minmax(0,1fr))', trows, { minW: '640px', hasFoot: true, foot: tot.map(c => ({ text: c.t, align: c.r ? 'right' : 'left' })) }) }); };
+    const statBlock = () => { const f = s.stF, lst = (D.store.orders || []).filter(o => (B === 'ALL' || o.branch === B) && (f !== 'today' || o.date === D.TODAY)), st = D.ordStats(lst, { statuses: D.ST_HOME, delivPer: D.perRange(perA) }), dd = D.CONFIG ? D.CONFIG.orderLateDays : 2;
+      const cells = st.map(x => { const dl = x.status === 'delivered', late = !dl && x.lateN > 0, lt = f === 'late';
+        return { label: L['b_st_' + x.status], icon: FLOW_ICON[x.status] || (dl ? 'check-check' : x.status === 'draft' ? 'file-pen' : 'package-x'), fg: x.status === 'undelivered' ? '#B91C1C' : '#0D9488', n: fN(lt ? (dl ? 0 : x.lateN) : x.n), sum: fM(lt ? (dl ? 0 : x.lateSum) : x.sum),
+          late: dl ? L.bh_delivPer : fill(L.bh_lateN, { d: dd, n: fN(x.lateN), s: fM(x.lateSum) }), lateFg: late ? '#B91C1C' : '#647574', lateW: late ? 500 : 400, lateBg: late ? '#FEF2F2' : '#FFFFFF', lateBd: late ? '#FECACA' : '#EEF2F4', lateCur: late ? 'pointer' : 'default',
+          pick: () => this.open(this.q('orders', { tab: x.status, date: f === 'today' ? D.TODAY : null, late: lt && !dl ? 1 : null })), latePick: () => { if (late) this.open(this.q('orders', { tab: x.status, late: 1 })); } }; });
+      const tabs = [['all', L.bh_stAll], ['today', L.bh_stToday], ['late', L.bh_stLate]].map(([k, label]) => { const on = f === k; return { label, on, line: on ? '#0F766E' : 'transparent', fg: on ? '#172B2A' : '#5B6B6A', w: on ? 600 : 500, pick: () => this.setState({ stF: k }) }; });
+      return this.card(L.bh_stT, { span: 'span 12', hasTabs: true, tabs, isStat: true, cols: narrow ? 3 : s.w >= 1320 ? 6 : 4, cells, ...this.link(L.bh_all, this.q('orders')) }); };
+    const flowCard = (op, title, day) => { const f = D.bhFlow(B, op, day); return this.card(title, { span: 'span 12', isFlow: true, cols: narrow ? 3 : 9, cells: f.map(c => ({ label: L['bh_st_' + c.status], icon: FLOW_ICON[c.status], fg: c.status === 'pending' && c.n ? '#B45309' : '#0D9488', n: fN(c.n), sum: fM(c.sum), pick: () => this.open(this.q('orders', { status: c.status, op: op || null, date: day || null })) })) }); };
+    if (isDir || isBr) {
+      if (isBr) blocks.push(...apprCard());
+      if (!isDir) blocks.push(kpiBlock(canCost ? [kSales, kGp, kDebt, kMoney] : [kSales, kDebt, kMoney]));
+      if (isDir) { blocks.push(ptCards(), ptTable(), chartCard(), attCard(), statBlock(), brTable(), ...topCards(), agingCard()); }
+      else {
+        blocks.push(flowCard(null, L.bh_flowT, D.TODAY)); // T10a3 (1.7.9): faqat bugungi buyurtmalar (sana = bugun); havola ham ?date= bilan
+        const trips = (D.store.trips || []).filter(t => t.branch === (B === 'ALL' ? 'TSH' : B) && (t.date === D.TODAY || ['planned', 'transit'].includes(t.status)));
+        blocks.push(this.card(L.bh_tripsT, { span: span(7), ...this.link(L.bh_all, this.q('shipments', { tab: 'trips' })), ...this.table([[L.bh_c_trip], [L.bh_c_driver], [L.bh_c_car], [L.bh_c_orders, 1], [L.bh_c_status]], '124px minmax(130px,1fr) minmax(108px,1fr) 100px 136px', trips.map(t => { const dr = D.driverById(t.driver) || {}, car = D.carByNo(t.car) || {};
+          return { cells: [{ t: t.no, m: 1 }, { t: dr.name || '—' }, { t: t.car, fg: '#172B2A' }, { t: fN(t.stops.length), r: 1 }, { t: L['bh_trip_' + t.status] || L['j_st_' + t.status] || L['b_st_' + t.status] || t.status }], pick: () => this.open('#shipments?open=' + t.no + '&branch=' + B) }; }), { minW: '620px', isEmptyT: !trips.length, emptyIcon: 'truck', emptyFg: '#647574', emptyText: L.bh_tripsNone }) }));
+        blocks.push(this.card(L.bh_moneyT, { span: span(5), ...this.table([[L.bh_c_acc], [L.bh_c_bal, 1], [L.bh_c_day]], 'minmax(170px,1.4fr) minmax(130px,1fr) 104px', mo.accs.map(a => ({ cells: [{ t: a.name }, { t: fM(a.bal), r: 1 }, { t: a.kind === 'cash' ? (a.closed ? fill(L.bh_closed, { t: a.last ? a.last.at.slice(11, 16) : '' }) : L.bh_open) : '—', fg: a.kind === 'cash' ? (a.closed ? '#15803D' : '#1D4ED8') : '#647574' }], pick: () => this.open('#' + (a.kind === 'cash' ? 'cash' : 'bank') + '?acct=' + a.id + '&branch=' + B) })), { minW: '420px' }) }));
+        blocks.push(attCard(['apprMine'], 'span 12'));
+      }
+    } else if (isOp) {
+      out.hasPrimary = true; out.primary = { label: L.bh_newOrder, icon: 'plus', pick: () => this.open('#orders?new=1') };
+      blocks.push(flowCard(user, L.bh_myOrdersT, D.TODAY));
+      const mine = (D.store.orders || []).filter(o => o.op === user).sort((a, b) => D.pDT(b.date + ' ' + b.time) - D.pDT(a.date + ' ' + a.time)).slice(0, 10);
+      blocks.push(this.card(L.bh_lastOrders, { span: span(7), ...this.link(L.bh_all, this.q('orders', { op: user })), ...this.table([[L.bh_c_doc], [L.bh_c_client], [L.bh_c_sum, 1], [L.bh_c_status]], '132px minmax(130px,1fr) 136px 164px', mine.map(o => ({ cells: [{ t: o.no || '—', m: 1 }, { t: (D.custById(o.cust) || {}).name }, { t: fM(D.orderTotals(o).total), r: 1 }, { t: L['b_st_' + (o.status === 'ready' ? 'loading' : o.status)] || L['bh_st_' + o.status] || o.status }], pick: () => this.open('#orders?open=' + o.no) })), { minW: '580px' }) }));
+      const notes = [];
+      (D.store.orders || []).filter(o => o.op === user).forEach(o => { const lg = D.orderLog(o), last = lg[lg.length - 1] || {};
+        if (o.status === 'rejected' || (o.status === 'draft' && last.kind === 'return')) notes.push({ icon: 'circle-x', fg: TONE.danger, text: fill(L.bh_rej, { no: o.no, r: last.reason || last.note || '—' }), sub: '', val: '', pick: () => this.open('#orders?open=' + o.no) });
+        if (o.status === 'pending') { const cr = D.creditCheck(o), lv = cr.level || 'branch'; notes.push({ icon: 'stamp', fg: TONE.warning, text: fill(L.bh_waitAt, { no: o.no, who: (lv === 'director' ? L.r_director : L.r_branch) + ': ' + D.approverName(o, lv) }), sub: this.waitText(D.waitMin(o)), val: fM(D.orderTotals(o).total), pick: () => this.open('#orders?open=' + o.no) }); } });
+      const low = {}; (D.store.orders || []).filter(o => o.op === user && o.status === 'draft' && o.date === D.TODAY).forEach(o => o.lines.forEach(l => { const a = D.availFor(l.pid, o.branch, o.wh || 'Asosiy ombor'), pr = D.prodById(l.pid) || {}; if (a.all < (l.qty || 0)) low[l.pid] = { icon: 'package-x', fg: a.all ? TONE.warning : TONE.danger, text: fill(L.bh_lowStock, { p: pr.name, a: fN(a.all), q: fN(l.qty) }), sub: '', val: '', pick: () => this.open('#stock?q=' + encodeURIComponent(pr.name)) }; }));
+      notes.push(...Object.values(low));
+      blocks.push(this.card(L.bh_noteT, { span: span(5), ...this.rows(notes.sort((a, b) => (a.fg === TONE.danger ? 0 : 1) - (b.fg === TONE.danger ? 0 : 1)), L.bh_noteNone) }));
+      const qq = s.q.trim(), tl = D.toLat ? D.toLat(qq).toLowerCase() : qq.toLowerCase(), opB = B === 'ALL' ? 'TSH' : B;
+      const hits = qq.length < 2 ? [] : D.CUSTOMERS.filter(c => (D.toLat ? D.toLat(c.name) : c.name).toLowerCase().includes(tl) || (c.stir || '').replace(/\D/g, '').includes(qq.replace(/\D/g, '') || '§')).slice(0, 3).map(c => { const ca = D.custAt(c.id, opB) || c, lg = D.ledger('mt', c.id, opB), lim = ca.limit || 0, pct = lim ? Math.round(lg.debt / lim * 100) : 0, lic = (ca.license && D.pD(ca.license.until) < D.pD(D.TODAY)) || ca.licBlock, bl = ca.blocked;
+        return { name: c.name, st: bl ? L.bh_custBlocked : lic ? L.bh_custLic : L.bh_custOk, stBg: bl || lic ? '#FEF2F2' : '#F0FDF4', stFg: bl || lic ? '#B91C1C' : '#15803D', limLabel: L.bh_custLimit, limText: fM(lg.debt) + ' / ' + fM(lim) + (lim ? ' · ' + pct + '%' : ''), pctW: Math.min(100, pct) + '%', pctC: pct > 100 ? '#B91C1C' : pct > 80 ? '#B45309' : '#0D9488', overLabel: L.bh_custOver, over: fM(lg.overdue || 0), overFg: lg.overdue > 0 ? '#B91C1C' : '#172B2A', createLabel: L.bh_createOrder + ' →', create: () => this.open('#orders?new=1&cust=' + c.id) }; });
+      blocks.push(this.card(L.bh_custT, { span: span(7), isSearch: true, q: s.q, onQ: e => this.setState({ q: e.target.value }), ph: L.bh_custPh, hits, noHits: qq.length >= 2 && !hits.length, noHitsText: L.bh_custNone }));
+    } else if (isPur) { // T9-4b (0-a): Xarid bosh sahifasi
+      out.showPeriod = false; const kb = B === 'ALL' ? 'TSH' : B, go = h => { const pg = String(h).replace(/^#/, '').split('?')[0]; return D.navCan(role, pg) ? () => this.open(h + (h.includes('?') ? '&' : '?') + 'branch=' + kb) : null; };
+      const rc = (D.store.receipts || []).filter(r => r.branch === kb), rD = rc.filter(r => r.status === 'draft' && !r.sent), rS = rc.filter(r => r.status === 'draft' && r.sent), rA = rc.filter(r => r.status === 'accepted');
+      blocks.push(this.card(L.bp_rcT, { span: span(6), ...this.rows([{ icon: 'file-pen', fg: TONE.neutral, text: L.bp_rcDraft, sub: '', val: fN(rD.length), pick: go('#receipt?status=draft') }, { icon: 'package-open', fg: TONE.info, text: L.bp_rcSent, sub: rS.map(r => r.no).join(', '), val: fN(rS.length), pick: go('#receipt?status=draft') }, { icon: 'stamp', fg: TONE.warning, text: L.bp_rcAcc, sub: rA.map(r => r.no).join(', '), val: fN(rA.length), pick: go('#receipt?status=accepted') }], '') }));
+      const si = D.supInvoices(kb).filter(x => x.left > 0), bk = k => si.filter(x => !x.prepaid && D.supDueBucket(x) === k), sm = a => a.reduce((t, x) => t + x.left, 0);
+      blocks.push(this.card(L.bp_debtT, { span: span(6), ...this.rows([{ icon: 'receipt-text', fg: TONE.neutral, text: L.bp_debtAll, sub: '', val: fM(sm(si)), pick: go('#sdebt') }, ...[['late', TONE.danger, 'clock-alert', L.bp_late], ['today', TONE.warning, 'calendar-clock', L.bp_today], ['3d', TONE.warning, 'calendar-clock', L.bp_3d]].map(([k, fg, icon, t]) => { const a = bk(k); return { icon, fg, text: t + ' · ' + fN(a.length), sub: '', val: fM(sm(a)), pick: go('#sdebt?due=' + k) }; })], '') }));
+      const sb = D.supBonusList(kb).filter(x => x.state === 'wait' && x.days != null && x.days <= 3);
+      blocks.push(this.card(L.bp_bonusT, { span: span(6), ...this.rows(sb.map(x => ({ icon: 'gift', fg: x.days < 0 ? TONE.danger : TONE.warning, text: x.party + ' · ' + x.no, sub: x.date || '', val: fM(x.sum), pick: go('#sdebt?tab=bonus') })), L.bp_bonusNone) }));
+      // T10b: o'z nomidagi tovar — Ta'minotchi xodim bloki bilan bir hisob (supGoods, o'tkazilgan kirimlar). Tannarx ruxsati bo'lmasa — dona
+      const og = D.supGoods(kb, 'owner').find(x => x.who === user), pcs = n => fill(L.tb_pcs, { n: fN(n) }), v = (q, sm) => canCost ? fM(sm) : pcs(q), sb2 = (q, sm) => canCost ? pcs(q) : '';
+      blocks.push(this.card(L.bp_ownT, { span: span(6), ...this.rows(og ? [{ icon: 'package-plus', fg: TONE.info, text: L.bp_brought, sub: fill(L.tb_rcN, { n: og.rcs.length }) + (canCost ? ' · ' + pcs(og.inQ) : ''), val: v(og.inQ, og.inS), pick: go('#receipt') }, { icon: 'shopping-cart', fg: TONE.success, text: L.bp_sold, sub: sb2(og.soldQ, og.soldS) + (og.last ? (canCost ? ' · ' : '') + fill(L.tb_lastSale, { d: og.last }) : ''), val: v(og.soldQ, og.soldS), pick: null }, { icon: 'boxes', fg: TONE.neutral, text: L.bp_left, sub: sb2(og.leftQ, og.leftS), val: v(og.leftQ, og.leftS), pick: go('#stock') }, ...(og.otherQ ? [{ icon: 'package-minus', fg: TONE.warning, text: L.tb_other, sub: L.tb_otherSub, val: v(og.otherQ, og.otherS), pick: null }] : []), { icon: og.active ? 'circle-check' : 'circle-pause', fg: og.active ? TONE.success : TONE.neutral, text: og.active ? L.tb_active : L.tb_passive, sub: L.tb_activeSub, val: '', pick: null }] : [], L.bp_ownNone) }));
+    } else if (isKeep) {
+      out.showPeriod = false; const kb = B === 'ALL' ? 'TSH' : B, guard = h => { const pg = String(h).replace(/^#/, '').split('?')[0]; return D.navCan(role, pg) ? () => this.open(h) : null; }, canStock = D.navCan(role, 'stock');
+      const os = (D.store.orders || []).filter(o => o.branch === kb), qW = os.filter(o => o.status === 'queued' && !o.tm), qT = os.filter(o => o.status === 'queued' && o.tm), qP = os.filter(o => o.status === 'picking'), qM = os.filter(o => o.status === 'marking'), oq = k => '#orders?tab=' + k + '&branch=' + kb;
+      const sp2 = 'span 6', mine = hk === 'picker' ? ['qTime', L.bh_q_time, qT] : hk === 'marker' ? ['marking', L.bh_q_mark, qM] : ['qWait', L.bh_q_wait, qW];
+      blocks.push(this.card(L.bh_qT, { span: 'span 12', isHero: true, heroLabel: mine[1], heroValue: fN(mine[2].length), heroUnit: '', hasBadge: false, statCols: narrow ? 2 : 4, stats: [[L.bh_q_wait, qW, 'qWait'], [L.bh_q_time, qT, 'qTime'], [L.bh_q_pick, qP, 'picking'], [L.bh_q_mark, qM, 'marking']].map(x => ({ label: x[0], value: fN(x[1].length), sub: '', pick: guard(oq(x[2])) })), hasHeroBtn: D.navCan(role, 'orders'), heroBtn: { label: L.bh_q_open, icon: 'clipboard-list', pick: guard(oq(mine[0])) } }));
+      const bs = D.batches().filter(b => b.branch === kb && b.qty > 0), zs = t => bs.filter(b => b.zoneType === t), pos = L2 => fill(L.bh_posQty, { p: L2.length, q: fN(L2.reduce((a, b) => a + b.qty, 0)) }), qm = zs('quar').filter(b => /^QM/.test(b.doc || '') || b.qm);
+      if (canStock) blocks.push(this.card(L.bh_zonesT, { span: sp2, ...this.rows([{ icon: 'package-open', fg: TONE.info, text: L.bh_z_recv, sub: '', val: pos(zs('recv')), pick: guard('#stock?zone=recv&branch=' + kb) }, { icon: 'shield-alert', fg: TONE.warning, text: L.bh_z_quar, sub: fill(L.bh_z_quarQm, { n: qm.length }), val: pos(zs('quar')), pick: guard('#stock?zone=quar&branch=' + kb) }, { icon: 'package-check', fg: TONE.success, text: L.bh_z_ship, sub: '', val: fill(L.bh_ordN, { n: D.shipReady(kb).length }), pick: guard('#shipments?branch=' + kb) }], '') }));
+      const kr = (D.store.receipts || []).filter(r => r.branch === kb && r.status === 'draft'), qmd = ((D.store.docs || {}).qm || []).filter(x => x.branch === kb && x.status === 'draft'), trIn = {}; D.transitList(null).forEach(x => { if (x.to && x.to.branch === kb) trIn[x.no] = 1; });
+      const tripsToday = (D.store.trips || []).filter(t => t.branch === kb && t.status === 'planned'), inv = D.bhInvDue(kb);
+      const tasks = [[kr.length, 'package-plus', L.bh_tk_recv, '#receipt?status=draft'], [qmd.length, 'package-minus', L.bh_tk_qm, '#creturns?status=draft'], [Object.keys(trIn).length, 'truck', L.bh_tk_tr, '#transfer?status=transit'], [tripsToday.length, 'route', L.bh_tk_trips, '#shipments?tab=trips'], [inv.length, 'clipboard-check', L.bh_tk_inv, '#inventory']].filter(x => x[0] && D.navCan(role, x[3].replace(/^#/, '').split('?')[0])).map(x => ({ icon: x[1], fg: TONE.info, text: fill(x[2], { n: x[0] }), sub: '', val: fN(x[0]), pick: guard(x[3] + (x[3].includes('?') ? '&' : '?') + 'branch=' + kb) }));
+      if (tasks.length || canStock) blocks.push(this.card(L.bh_tasksT, { span: sp2, ...this.rows(tasks, L.bh_tasksNone) }));
+      const e30 = D.bhExpiry(kb, 30), eW = D.bhExpiry(kb), eo = D.bhExpiredOpen(kb);
+      if (canStock) blocks.push(this.card(L.bh_expT, { span: sp2, ...this.rows([...(eo.length ? [{ icon: 'circle-x', fg: TONE.danger, text: L.bh_expOpen, sub: '', val: fill(L.bh_batchQty, { n: eo.length, q: fN(eo.reduce((a, b) => a + b.qty, 0)) }), pick: guard('#stock?exp=expired&branch=' + kb) }] : []), { icon: 'calendar-clock', fg: TONE.danger, text: L.bh_exp30, sub: '', val: fill(L.bh_batchQty, { n: e30.n, q: fN(e30.qty) }), pick: guard('#stock?exp=30&branch=' + kb) }, { icon: 'calendar-clock', fg: TONE.warning, text: L.bh_expW, sub: '', val: fill(L.bh_batchQty, { n: eW.n, q: fN(eW.qty) }), pick: guard('#expiry?branch=' + kb) }], '') }));
+      if (D.can(role, 'suppliers.create')) { const sd = D.bhSupDebt(kb), qy = ((D.store.docs || {}).qy || []).filter(x => x.branch === kb && x.status === 'draft');
+        blocks.push(this.card(L.bh_supT, { span: sp2, ...this.rows([{ icon: 'receipt-text', fg: TONE.neutral, text: L.bh_k_sup, sub: '', val: fM(sd.total), pick: guard('#sdebt?branch=' + kb) }, { icon: 'calendar-clock', fg: TONE.warning, text: L.bh_sup7, sub: '', val: fM(sd.due7), pick: guard('#sdebt?due=7&branch=' + kb) }, { icon: 'package-minus', fg: TONE.info, text: fill(L.bh_qyWait, { n: qy.length }), sub: '', val: fN(qy.length), pick: guard('#sreturns?status=draft&branch=' + kb) }], '') })); }
+    } else if (isCash) {
+      out.showPeriod = false; const cb = B === 'ALL' ? 'TSH' : B, R = D.CASH_RESP || {}, acct = Object.keys(R).find(k => R[k] === user) || 'K-' + cb, a = D.accById(acct) || {}, bal = D.accBalance(acct), mv = D.accMoves(acct).filter(m => m.status === 'posted' && m.date === D.TODAY), inS = mv.filter(m => m.dir === 'in').reduce((x, m) => x + m.sum, 0), outS = mv.filter(m => m.dir === 'out').reduce((x, m) => x + m.sum, 0), closed = D.dayClosed(acct, D.TODAY), lc = D.lastClosed(acct);
+      out.hasPrimary = true; out.primary = { label: L.bh_fromCust, icon: 'hand-coins', pick: () => this.open('#payments?new=mt&acct=' + acct) };
+      out.hdrSecondary = [{ label: L.bh_cashOut, icon: 'arrow-up-right', pick: () => this.open('#cash?new=ko&acct=' + acct) }, { label: L.bh_closeDay, icon: 'lock', pick: () => this.open('#cash?close=' + acct) }];
+      blocks.push(this.card(L.bh_myCashT + ' · ' + (a.name || acct), { span: 'span 12', isHero: true, heroLabel: L.bh_curBal, heroValue: fM(bal), heroUnit: "so'm", hasBadge: true, badge: closed ? { icon: 'circle-check', label: fill(L.bh_dayClosed, { t: lc ? lc.at.slice(11, 16) : '' }), bg: '#F0FDF4', fg: '#15803D' } : { icon: 'circle-dot', label: L.bh_dayOpen, bg: '#EFF6FF', fg: '#1D4ED8' }, statCols: narrow ? 3 : 3, stats: [{ label: L.bh_inToday, value: fM(inS), sub: '', pick: () => this.open('#cash?acct=' + acct + '&dir=in&date=today') }, { label: L.bh_outToday, value: fM(outS), sub: '', pick: () => this.open('#cash?acct=' + acct + '&dir=out&date=today') }, { label: L.bh_opsN, value: fN(mv.length), sub: '', pick: () => this.open('#cash?acct=' + acct + '&date=today') }], hasHeroBtn: false, heroBtn: {} }));
+      const dcl = D.drvCash ? D.drvCash(cb) : []; if (dcl.length) blocks.push(this.card(L.dc_title, { span: 'span 12', ...this.rows(dcl.map(x => ({ icon: 'truck', fg: TONE.warning, text: x.driver + ' · ' + x.trip, sub: x.ono + ' · ' + ((D.custById(x.cust) || {}).name || ''), val: fM(x.sum), pick: () => this.open('#cash') })), '') }));
+      const ko = (D.store.mops || []).filter(m => m.kind === 'ko' && ['pending', 'sent'].includes(m.status) && (m.by === user || m.sentBy === user));
+      blocks.push(this.card(L.bh_koWaitT, { span: span(5), ...this.rows(ko.map(m => ({ icon: 'clock', fg: TONE.warning, text: m.no + ' · ' + (m.party || m.item || ''), sub: this.waitText(D.bhWait(m.sentAt)), val: fM(m.sum), pick: () => this.open('#cash?open=' + m.no) })), L.bh_koNone) }));
+      const ops = mv.slice().sort((x, y) => (y.time || '').localeCompare(x.time || '')).slice(0, 10);
+      blocks.push(this.card(L.bh_opsT, { span: span(7), ...this.table([[L.bh_c_time], [L.bh_c_doc], [L.bh_c_party], [L.bh_c_dir], [L.bh_c_sum, 1]], '64px 140px minmax(0,1fr) 80px 130px', ops.map(m => ({ cells: [{ t: m.time || '—', m: 1 }, { t: m.no, m: 1 }, { t: m.party || m.item || '—' }, { t: m.dir === 'in' ? L.bh_in : L.bh_out, fg: m.dir === 'in' ? '#15803D' : '#B91C1C' }, { t: fM(m.sum), r: 1 }], pick: () => this.open('#cash?open=' + m.no) })), { minW: '520px', isEmptyT: !ops.length, emptyIcon: 'info', emptyFg: '#647574', emptyText: L.bh_opsNone }) }));
+    } else if (isAcc) {
+      const sd = D.bhSupDebt(B);
+      blocks.push(kpiBlock([{ label: L.bh_k_cash, value: fM(mo.cash), unit: "so'm", ...this.noCmp(), note: '', pick: () => this.open(this.q('cash')) }, { label: L.bh_k_bank, value: fM(mo.bank), unit: "so'm", ...this.noCmp(), note: '', pick: () => this.open(this.q('bank')) }, kDebt, { label: L.bh_k_sup, value: fM(sd.total), unit: "so'm", ...this.noCmp(), note: fill(L.bh_n_sup7, { v: fM(sd.due7) }), pick: () => this.open(this.q('sdebt')) }]));
+      const cal = D.bhCalendar(B, 14), vw = 600, H = 140, mid = H / 2, mx = Math.max(1, ...cal.map(x => Math.max(x.inc, x.out))), bw = vw / cal.length, bars = [];
+      cal.forEach((x, i) => { const hi = x.inc / mx * (mid - 6), ho = x.out / mx * (mid - 6); if (hi) bars.push({ x: i * bw + bw * 0.2, y: mid - hi, w: bw * 0.6, h: hi, fill: s.tip === i ? '#0F766E' : '#0D9488', enter: () => this.setState({ tip: i }), leave: () => this.setState({ tip: null }) }); if (ho) bars.push({ x: i * bw + bw * 0.2, y: mid + 1, w: bw * 0.6, h: ho, fill: '#E3893A', enter: () => this.setState({ tip: i }), leave: () => this.setState({ tip: null }) }); });
+      const t = s.tip != null ? cal[s.tip] : null;
+      blocks.push(this.card(L.bh_calT, { span: span(7), isChart: true, vb: '0 0 ' + vw + ' ' + H, vw, h: H + 'px', n: cal.length, gridY: [{ y: mid + 0.5 }], voids: [], bars, xl: cal.map((x, i) => ({ t: i % 2 ? '' : x.date.slice(0, 5) })), hasTip: !!t, tipX: t ? ((s.tip + 0.5) / cal.length * 100) + '%' : '0', tip: t ? { date: t.date, sum: L.bh_calIn + ': ' + fM(t.inc), docs: L.bh_calOut + ': ' + fM(t.out) } : {}, hasVoid: false, hasLegend: true, legend: [{ c: '#0D9488', t: L.bh_calIn }, { c: '#E3893A', t: L.bh_calOut }], hasSide: false, side: [] }));
+      const yt = (D.store.pays || []).filter(x => x.kind === 'yt' && x.status === 'pending' && (B === 'ALL' || x.branch === B)).length, rc = (D.store.recons || []).filter(x => ['sent', 'diff'].includes(x.status) && (B === 'ALL' || x.branch === B)).length, bo = D.bhBankOpen(B), co = D.bhCashOpenDays(B).length;
+      blocks.push(this.card(L.bh_workT, { span: span(5), ...this.rows([[yt, 'wallet', L.bh_w_yt, '#payments?kind=yt&status=pending'], [bo, 'landmark', L.bh_w_bank, '#bank?recon=open'], [rc, 'file-check-2', L.bh_w_recon, '#recon?status=sent'], [co, 'banknote', L.bh_w_cash, '#cash']].filter(x => x[0]).map(x => ({ icon: x[1], fg: TONE.warning, text: fill(x[2], { n: x[0] }), sub: '', val: fN(x[0]), pick: () => this.open(x[3] + (x[3].includes('?') ? '&' : '?') + 'branch=' + B) })), L.bh_tasksNone) }));
+      const brs = B === 'ALL' ? D.BRANCHES : D.BRANCHES.filter(b => b.code === B), tr = brs.map(b => { const m = D.bhMoney(b.code); return { cells: [{ t: b.name }, { t: fM(m.cash), r: 1 }, { t: fM(m.bank), r: 1 }, { t: fM(m.total), r: 1 }], pick: () => p.onBranch && p.onBranch(b.code) }; });
+      blocks.push(this.card(L.bh_moneyBrT, { span: 'span 12', ...this.table([[L.bh_c_branch], [L.bh_c_cash, 1], [L.bh_c_bank, 1], [L.bh_total, 1]], 'minmax(0,1.4fr) repeat(3,minmax(0,1fr))', tr, { minW: '560px', hasFoot: true, foot: [{ text: L.bh_total, align: 'left' }, { text: fM(mo.cash), align: 'right' }, { text: fM(mo.bank), align: 'right' }, { text: fM(mo.total), align: 'right' }] }) }));
+    }
+    return { ...out, blocks };
+  }
+}
+</script>
+</body>
+</html>

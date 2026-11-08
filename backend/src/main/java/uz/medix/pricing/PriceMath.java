@@ -5,7 +5,7 @@ import java.math.RoundingMode;
 import java.util.Optional;
 import uz.medix.shared.money.Money;
 
-/** Narx hisob-kitoblari (SPEC 6): ustama, yaxlitlash, o'zgarish foizi, narx tanlash tartibi. Sof funksiyalar. */
+/** Narx hisob-kitoblari (SPEC 6): ustama, o'zgarish foizi, narx tanlash tartibi. Sof funksiyalar. */
 public final class PriceMath {
 
     /** «20% dan ko'p o'zgarish — ogohlantirish». */
@@ -13,20 +13,13 @@ public final class PriceMath {
 
     private PriceMath() {}
 
-    /** Yaxlitlash qadami: 0 (yo'q), 100, 500, 1000 so'm. Eng yaqin karraliga (HALF_UP). */
-    public static Money round(Money price, int step) {
-        if (step <= 0) {
-            return price;
-        }
-        BigDecimal s = BigDecimal.valueOf(step);
-        BigDecimal rounded = price.amount().divide(s, 0, RoundingMode.HALF_UP).multiply(s);
-        return new Money(rounded.signum() == 0 ? s : rounded);
-    }
-
-    /** Asos narxga foiz ustama: {@code base × (1 + percent/100)}, keyin yaxlitlash. Foiz manfiy bo'lishi mumkin (chegirma). */
-    public static Money markup(Money base, BigDecimal percent, int roundingStep) {
+    /**
+     * Asos narxga foiz ustama: {@code base × (1 + percent/100)}. Foiz manfiy bo'lishi mumkin (chegirma).
+     * Egasi qarori (07.11.2026, E4): narx yaxlitlanmaydi — so'm va tiyinigacha aniq (faqat pul shkalasi, 2 xona HALF_UP).
+     */
+    public static Money markup(Money base, BigDecimal percent) {
         BigDecimal factor = BigDecimal.ONE.add(percent.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
-        return round(new Money(base.amount().multiply(factor)), roundingStep);
+        return new Money(base.amount().multiply(factor));
     }
 
     /** O'zgarish foizi (eski → yangi), 2 xona. Eski narx yo'q yoki 0 bo'lsa — bo'sh. */

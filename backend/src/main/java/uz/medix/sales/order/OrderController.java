@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import uz.medix.sales.order.OrderModels.DeliveryType;
 import uz.medix.sales.order.OrderModels.OrderDetail;
 import uz.medix.sales.order.OrderModels.OrderPage;
 import uz.medix.sales.order.OrderModels.OrderReasonRequest;
@@ -47,14 +48,18 @@ class OrderController {
     private final OrderSales sales;
     private final OrderWaybillPdf waybill;
     private final OrderPickSheetPdf pickSheet;
+    private final OrderInvoices invoices;
+    private final OrderInvoicePdf invoicePdf;
     private final CurrentActor currentActor;
 
     record ReturnAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0)
             Integer receivedQty) {}
 
     OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, OrderWaybillPdf waybill,
-            OrderPickSheetPdf pickSheet, CurrentActor currentActor) {
+            OrderPickSheetPdf pickSheet, OrderInvoices invoices, OrderInvoicePdf invoicePdf, CurrentActor currentActor) {
         this.pickSheet = pickSheet;
+        this.invoices = invoices;
+        this.invoicePdf = invoicePdf;
         this.sales = sales;
         this.waybill = waybill;
         this.issues = issues;
@@ -79,23 +84,80 @@ class OrderController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
     @Operation(summary = "Buyurtmalar", description = "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan "
-            + "(Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8).")
+            + "(Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi "
+            + "(lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).")
     OrderPage list(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) OrderStatus status,
-            @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) List<Long> customerId,
+            @RequestParam(required = false) List<Long> operatorId,
+            @RequestParam(required = false) List<OrderStatus> statuses,
+            @RequestParam(required = false) List<DeliveryType> deliveryType,
+            @RequestParam(required = false) List<PaymentType> paymentType,
+            @RequestParam(required = false) List<Long> regionId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderTo,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean mine,
+            @RequestParam(defaultValue = "CREATED") OrderSort sort,
+            @RequestParam(defaultValue = "true") boolean desc,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        if (soldFrom != null && soldTo != null && soldFrom.isAfter(soldTo)) {
+        return orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId), q, mine,
+                sort, desc, Math.max(page, 0), Math.clamp(size, 1, 200));
+    }
+
+    @GetMapping("/export")
+    @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
+    @Operation(summary = "Buyurtmalar .xlsx", description = "Ro'yxatdagi filtrlar bilan (holat ham), jami qatori bilan; ko'pi bilan "
+            + OrderExcel.MAX_ROWS + " qator.")
+    void exportOrders(
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) List<Long> customerId,
+            @RequestParam(required = false) List<Long> operatorId,
+            @RequestParam(required = false) List<OrderStatus> statuses,
+            @RequestParam(required = false) List<DeliveryType> deliveryType,
+            @RequestParam(required = false) List<PaymentType> paymentType,
+            @RequestParam(required = false) List<Long> regionId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate soldTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderTo,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "false") boolean mine,
+            @RequestParam(defaultValue = "CREATED") OrderSort sort,
+            @RequestParam(defaultValue = "true") boolean desc,
+            jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+        OrderPage data = orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId), q, mine,
+                sort, desc, 0, OrderExcel.MAX_ROWS);
+        OrderExcel.write(data.items(), response);
+    }
+
+    private static Orders.OrderFilter filter(List<Long> customerId, List<Long> operatorId, LocalDate soldFrom, LocalDate soldTo,
+            LocalDate orderFrom, LocalDate orderTo, List<OrderStatus> statuses, List<DeliveryType> deliveryType, List<PaymentType> paymentType,
+            List<Long> regionId) {
+        if ((soldFrom != null && soldTo != null && soldFrom.isAfter(soldTo)) || (orderFrom != null && orderTo != null && orderFrom.isAfter(orderTo))) {
             throw MedixException.badRequest("home.periodInvalid");
         }
-        return orders.list(actor(), branchId, status, new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo), q, mine,
-                Math.max(page, 0), Math.clamp(size, 1, 200));
+        return new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId);
+    }
+
+    @GetMapping("/{id}/invoice")
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Hisob-faktura", description = "O'tkazilgan sotuv qatorlari (partiya, QQS) — chop etish uchun; sotuv bo'lmasa 404.")
+    OrderModels.InvoiceDoc invoice(@PathVariable long id) {
+        return invoices.find(actor(), id).orElseThrow(() -> MedixException.notFound("error.notFound"));
+    }
+
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
+    @Operation(summary = "Buyurtma tarixi", description = "Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.")
+    List<OrderModels.OrderHistoryEvent> history(@PathVariable long id) {
+        detail(id);
+        return orders.history(id);
     }
 
     @GetMapping("/{id}")
@@ -103,6 +165,13 @@ class OrderController {
     @Operation(summary = "Buyurtma", description = "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.")
     OrderDetail get(@PathVariable long id) {
         return detail(id);
+    }
+
+    @GetMapping(value = "/{id}/invoice/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Hisob-faktura — PDF (chop etish)", description = "Sotuv bo'lmasa — 404.")
+    ResponseEntity<byte[]> invoicePdf(@PathVariable long id) {
+        return invoicePdf.render(actor(), id).response();
     }
 
     @GetMapping(value = "/{id}/waybill/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
@@ -127,9 +196,18 @@ class OrderController {
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "true") boolean inStockOnly,
+            @RequestParam(required = false) List<Long> manufacturerIds,
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) List<Long> countryIds,
+            @RequestParam(required = false) List<OrderModels.CatalogFlag> flags,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return orders.catalog(actor(), warehouseId, customerId, q, inStockOnly, Math.max(page, 0), Math.clamp(size, 1, 200));
+        var filter = new OrderModels.CatalogFilter(nn(manufacturerIds), nn(categoryIds), nn(countryIds), nn(flags));
+        return orders.catalog(actor(), warehouseId, customerId, q, inStockOnly, filter, Math.max(page, 0), Math.clamp(size, 1, 200));
+    }
+
+    private static <T> List<T> nn(List<T> v) {
+        return v == null ? List.of() : v;
     }
 
     @GetMapping("/previous")
@@ -137,6 +215,13 @@ class OrderController {
     @Operation(summary = "Mijozning oxirgi 5 ta buyurtmasi", description = "«Oldingi buyurtmani takrorlash» uchun.")
     List<PreviousOrder> previous(@RequestParam long customerId) {
         return orders.previous(actor(), customerId);
+    }
+
+    @GetMapping("/customer-credit")
+    @PreAuthorize("hasAuthority('orders.create')")
+    @Operation(summary = "Mijoz holati", description = "Buyurtma kiritishda mijoz qatori: narx turi, qarz, muddati o'tgan, limit, qolgan limit, blok, litsenziya.")
+    OrderModels.CustomerCredit customerCredit(@RequestParam long warehouseId, @RequestParam long customerId) {
+        return orders.customerCredit(actor(), warehouseId, customerId);
     }
 
     @GetMapping("/default-payment-type")
@@ -252,6 +337,13 @@ class OrderController {
         return picking.queue(actor());
     }
 
+    @GetMapping("/pick-done-today")
+    @PreAuthorize("hasAuthority('picking.do')")
+    @Operation(summary = "Bugun yakunlanganlar (Yig'uvchi)", description = "O'zi bugun yig'ib bo'lgan buyurtmalar, vaqtida / kechikkan.")
+    List<OrderModels.PickDoneItem> pickDoneToday() {
+        return picking.doneToday(actor());
+    }
+
     @PostMapping("/{id}/pick/start")
     @PreAuthorize("hasAuthority('picking.do')")
     @Operation(summary = "Yig'ishni boshlash", description = "Bir yig'uvchida bitta faol buyurtma.")
@@ -285,9 +377,10 @@ class OrderController {
 
     @PostMapping("/{id}/return-to-pick")
     @PreAuthorize("hasAuthority('orders.check')")
-    @Operation(summary = "Yig'ishga qaytarish", description = "Sabab bilan; tovar olingan joyiga qaytadi, zahira qayta qo'yiladi.")
-    OrderDetail returnToPick(@PathVariable long id, @Valid @RequestBody OrderReasonRequest r) {
-        picking.returnToPick(actor(), id, r.reason());
+    @Operation(summary = "Yig'ishga qaytarish", description = "Sabab bilan, tanlangan qatorlar (bo'sh — butun buyurtma); shu qatorlar tovari "
+            + "olingan joyiga qaytadi, zahira qayta qo'yiladi, kodlari bekor qilinadi; qayta yig'ish va markirovkada faqat shu qatorlar (SPEC 188).")
+    OrderDetail returnToPick(@PathVariable long id, @Valid @RequestBody OrderModels.ReturnToPickRequest r) {
+        picking.returnToPick(actor(), id, r.reason(), r.lineIds());
         return detail(id);
     }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { CircleCheck, Landmark, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -19,7 +20,7 @@ import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatMoney } from "@/lib/format";
-import { DOC_TITLE, fromCents, toCents, type Move } from "./api";
+import { fromCents, isDocTitleKey, toCents, type Move } from "./api";
 
 type Reconciliation = components["schemas"]["Reconciliation"];
 
@@ -34,6 +35,8 @@ export function reconDiff(bankInput: string, medix: string): string | null {
 
 /** Kassa → «Bank koʻchirmasi»: koʻchirma sanasidagi bank qoldigʻi MEDIX jurnali bilan solishtiriladi, bankda bor harakatlar belgilanadi. */
 export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean }) {
+  const t = useTranslations("cash.bank");
+  const tc = useTranslations("cash");
   const qc = useQueryClient();
   const banks = props.accounts.filter((a) => a.kind === "BANK");
   const [account, setAccount] = useState<string | null>(banks[0] ? String(banks[0].id) : null);
@@ -59,14 +62,7 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
     enabled: accountId != null,
   });
 
-  if (banks.length === 0)
-    return (
-      <EmptyState
-        icon={Landmark}
-        title="Bank hisobi yoʻq"
-        description="Bank hisobi Sozlamalarda qoʻshilgach, koʻchirma shu yerda solishtiriladi."
-      />
-    );
+  if (banks.length === 0) return <EmptyState icon={Landmark} title={t("noAccount.title")} description={t("noAccount.description")} />;
 
   const p = preview.data;
   const diff = p ? reconDiff(bankBalance, p.medixBalance) : null;
@@ -90,8 +86,8 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
       );
       toast({
         tone: "success",
-        title: "Solishtirish yozildi",
-        description: r.difference === "0.00" ? "Qoldiqlar mos" : `Farq: ${formatMoney(r.difference)} soʻm`,
+        title: t("saved"),
+        description: r.difference === "0.00" ? t("savedMatch") : t("diff", { amount: formatMoney(r.difference) }),
       });
       setSelected([]);
       setBankBalance("");
@@ -105,23 +101,28 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
   }
 
   const moveColumns: TableColumn<Move>[] = [
-    { key: "moveDate", title: "Sana", render: (m) => formatIsoDate(m.moveDate) },
-    { key: "docNumber", title: "Hujjat", mono: true, render: (m) => <span title={DOC_TITLE[m.docType] ?? m.docType}>{m.docNumber}</span> },
-    { key: "note", title: "Izoh", render: (m) => m.note ?? "" },
-    { key: "in", title: "Kirim", align: "right", render: (m) => (m.amount.startsWith("-") ? "" : money(m.amount)) },
-    { key: "out", title: "Chiqim", align: "right", render: (m) => (m.amount.startsWith("-") ? money(m.amount.slice(1)) : "") },
+    { key: "moveDate", title: tc("col.date"), render: (m) => formatIsoDate(m.moveDate) },
+    {
+      key: "docNumber",
+      title: tc("col.document"),
+      mono: true,
+      render: (m) => <span title={isDocTitleKey(m.docType) ? tc(`docType.${m.docType}`) : m.docType}>{m.docNumber}</span>,
+    },
+    { key: "note", title: tc("col.note"), render: (m) => m.note ?? "" },
+    { key: "in", title: tc("col.in"), align: "right", render: (m) => (m.amount.startsWith("-") ? "" : money(m.amount)) },
+    { key: "out", title: tc("col.out"), align: "right", render: (m) => (m.amount.startsWith("-") ? money(m.amount.slice(1)) : "") },
   ];
   const historyColumns: TableColumn<Reconciliation>[] = [
-    { key: "statementDate", title: "Koʻchirma sanasi", render: (r) => formatIsoDate(r.statementDate) },
-    { key: "bankBalance", title: "Bankda", align: "right", render: (r) => money(r.bankBalance) },
+    { key: "statementDate", title: t("statementDate"), render: (r) => formatIsoDate(r.statementDate) },
+    { key: "bankBalance", title: t("col.bank"), align: "right", render: (r) => money(r.bankBalance) },
     { key: "medixBalance", title: "MEDIX", align: "right", render: (r) => money(r.medixBalance) },
     {
       key: "difference",
-      title: "Farq",
+      title: tc("col.diff"),
       render: (r) =>
         r.difference === "0.00" ? (
           <Badge tone="success" icon={CircleCheck}>
-            Mos
+            {t("match")}
           </Badge>
         ) : (
           <Badge tone="warning" icon={TriangleAlert}>
@@ -129,9 +130,9 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
           </Badge>
         ),
     },
-    { key: "moves", title: "Harakatlar", align: "right" },
-    { key: "note", title: "Izoh", render: (r) => r.note ?? "" },
-    { key: "createdBy", title: "Kim", render: (r) => `${r.createdBy} · ${formatDateTime(new Date(r.createdAt))}` },
+    { key: "moves", title: t("col.moves"), align: "right" },
+    { key: "note", title: tc("col.note"), render: (r) => r.note ?? "" },
+    { key: "createdBy", title: t("col.who"), render: (r) => `${r.createdBy} · ${formatDateTime(new Date(r.createdAt))}` },
   ];
   const err = describeError(error);
 
@@ -140,7 +141,7 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
       <div className="flex flex-wrap items-end gap-4">
         <div className="w-72">
           <Select
-            label="Bank hisobi"
+            label={t("account")}
             value={account}
             onChange={(v) => {
               setAccount(v);
@@ -151,14 +152,14 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
         </div>
         <div className="w-40">
           <TextField
-            label="Koʻchirma sanasi"
+            label={t("statementDate")}
             value={date}
             onChange={(v) => {
               setDate(v);
               setSelected([]);
             }}
             placeholder="04.10.2026"
-            error={iso === null ? "Masalan: 04.10.2026" : undefined}
+            error={iso === null ? t("dateExample") : undefined}
           />
         </div>
       </div>
@@ -170,33 +171,41 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Card>
-              <div className="text-caption text-text-secondary">MEDIX qoldigʻi {formatIsoDate(p.date)} holatiga</div>
-              <div className="mt-1 font-mono text-subtitle tabular-nums">{formatMoney(p.medixBalance)} soʻm</div>
+              <div className="text-caption text-text-secondary">{t("medixBalance", { date: formatIsoDate(p.date) })}</div>
+              <div className="mt-1 font-mono text-subtitle tabular-nums">
+                {formatMoney(p.medixBalance)} {tc("currency")}
+              </div>
             </Card>
             <Card>
-              <div className="text-caption text-text-secondary">Oxirgi solishtirish</div>
+              <div className="text-caption text-text-secondary">{t("last")}</div>
               <div className="mt-1">
                 {p.lastDate ? (
                   <>
                     {formatIsoDate(p.lastDate)} ·{" "}
-                    <span className="font-mono tabular-nums">{formatMoney(p.lastBankBalance ?? "0")} soʻm</span>
+                    <span className="font-mono tabular-nums">
+                      {formatMoney(p.lastBankBalance ?? "0")} {tc("currency")}
+                    </span>
                   </>
                 ) : (
-                  <span className="text-text-secondary">Hali solishtirilmagan</span>
+                  <span className="text-text-secondary">{t("never")}</span>
                 )}
               </div>
             </Card>
             <Card>
-              <div className="text-caption text-text-secondary">Belgilanmagan harakatlar</div>
+              <div className="text-caption text-text-secondary">{t("unmatched")}</div>
               <div className="mt-1">
-                {p.unmatched.length} ta · <span className="font-mono tabular-nums">{formatMoney(p.unmatchedTotal)} soʻm</span>
+                {t.rich("unmatchedSummary", {
+                  count: p.unmatched.length,
+                  amount: formatMoney(p.unmatchedTotal),
+                  num: (chunks) => <span className="font-mono tabular-nums">{chunks}</span>,
+                })}
               </div>
             </Card>
           </div>
           <section>
-            <h2 className="mb-2 text-subtitle">Bank koʻchirmasida bor harakatlarni belgilang</h2>
+            <h2 className="mb-2 text-subtitle">{t("markTitle")}</h2>
             <Table
-              caption="Belgilanmagan harakatlar"
+              caption={t("unmatched")}
               density="compact"
               columns={moveColumns}
               rows={p.unmatched}
@@ -204,9 +213,7 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
               selectable={props.canEdit}
               selectedKeys={selected}
               onSelectionChange={setSelected}
-              emptyState={
-                <EmptyState icon={CircleCheck} title="Hammasi belgilangan" description="Bu sanagacha barcha harakatlar solishtirilgan." />
-              }
+              emptyState={<EmptyState icon={CircleCheck} title={t("allMatched.title")} description={t("allMatched.description")} />}
             />
           </section>
           {props.canEdit ? (
@@ -215,31 +222,31 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
                 {err.message ? <Alert tone="danger" title={err.message} /> : null}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <TextField
-                    label="Bankdagi qoldiq (koʻchirmadan)"
+                    label={t("bankBalance")}
                     variant="amount"
                     value={bankBalance}
                     onChange={setBankBalance}
-                    suffix="soʻm"
+                    suffix={tc("currency")}
                     required
                   />
                   <TextField
-                    label="Izoh"
+                    label={tc("col.note")}
                     value={note}
                     onChange={setNote}
                     maxLength={500}
-                    hint={diff && diff !== "0.00" ? "Farq bor — sababini yozing" : undefined}
+                    hint={diff && diff !== "0.00" ? t("diffHint") : undefined}
                   />
                 </div>
                 {diff === "0.00" ? (
-                  <Alert tone="success" title="Bank va MEDIX qoldigʻi mos." />
+                  <Alert tone="success" title={t("matchAlert")} />
                 ) : diff ? (
-                  <Alert tone="warning" title={`Farq: ${formatMoney(diff)} soʻm`}>
-                    Bankda hali oʻtmagan yoki MEDIXga kiritilmagan harakatni tekshiring. Farq bilan yozish uchun izoh majburiy.
+                  <Alert tone="warning" title={t("diff", { amount: formatMoney(diff) })}>
+                    {t("diffAlert")}
                   </Alert>
                 ) : null}
                 <div>
                   <Button loading={pending} disabled={diff === null} onClick={() => void save()}>
-                    Solishtirishni yozish
+                    {t("submit")}
                   </Button>
                 </div>
               </div>
@@ -248,18 +255,18 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
         </>
       )}
       <section>
-        <h2 className="mb-2 text-subtitle">Solishtirishlar tarixi</h2>
+        <h2 className="mb-2 text-subtitle">{t("history")}</h2>
         {history.error ? (
           <ErrorState onRetry={() => history.refetch()} />
         ) : (
           <Table
-            caption="Solishtirishlar tarixi"
+            caption={t("history")}
             density="compact"
             columns={historyColumns}
             rows={history.data ?? []}
             rowKey={(r) => String(r.id)}
             loading={history.isPending}
-            emptyState={<EmptyState icon={Landmark} title="Solishtirish yoʻq" description="Birinchi koʻchirmani yuqorida solishtiring." />}
+            emptyState={<EmptyState icon={Landmark} title={t("historyEmpty.title")} description={t("historyEmpty.description")} />}
           />
         )}
       </section>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countedTotal, fromCents, isOverApprovalLimit, toCents, usableAccount } from "./api";
+import { countedTotal, fromCents, isOverApprovalLimit, opsFilterFromParams, opsFilterHref, toCents, usableAccount } from "./api";
 
 describe("kassa: tiyinlarda hisob", () => {
   it("satr ↔ tiyin", () => {
@@ -64,5 +64,21 @@ describe("kassir paneli dinamikasi", () => {
     expect(dayMax(days)).toBe(20000n);
     expect(barPercent("50.00", 20000n)).toBe(25);
     expect(barPercent("1.00", 0n)).toBe(0);
+  });
+});
+
+describe("Xarajatlar hisobotidan KO/BO roʻyxatiga", () => {
+  it("URL filtri: modda va davr", () => {
+    const href = opsFilterHref({ expenseItemId: 12, item: "Yoqilgʻi", from: "2026-11-01", to: "2026-11-07" });
+    expect(href).toBe("/cash?tab=ops&expenseItemId=12&item=Yoqilg%CA%BBi&from=2026-11-01&to=2026-11-07");
+    const params = new URLSearchParams(href.split("?")[1]);
+    expect(opsFilterFromParams(params)).toEqual({ expenseItemId: 12, item: "Yoqilgʻi", from: "2026-11-01", to: "2026-11-07" });
+    expect(opsFilterFromParams(new URLSearchParams("expenseItemId=abc"))).toBeNull();
+    expect(opsFilterFromParams(new URLSearchParams("expenseItemId=3&from=01.11.2026"))).toEqual({
+      expenseItemId: 3,
+      item: "#3",
+      from: null,
+      to: null,
+    });
   });
 });

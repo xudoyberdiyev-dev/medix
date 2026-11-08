@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div data-screen-label="Yig'uvchi paneli" style="display:flex;flex-direction:column;gap:16px;min-width:0;color:#172B2A;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums">
+  <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+    <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.pp_title }}</h1>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ sub }}</p>
+  </div>
+  <section aria-label="{{ L.pp_myToday }}" style="display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:13px;line-height:18px;font-weight:600;color:#5B6B6A">{{ L.pp_myToday }}</span>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+      <sc-for list="{{ stats }}" as="k" hint-placeholder-count="4">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0">
+          <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span>
+          <span style="font-size:22px;line-height:28px;font-weight:600;color:{{ k.color }}">{{ k.value }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <sc-if value="{{ hasResult }}">
+    <div role="status" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:{{ result.bg }};border:1px solid {{ result.border }};color:{{ result.fg }}">
+      <lucide-i name="{{ result.icon }}" size="20" style="flex:none"></lucide-i>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:15px;line-height:20px;font-weight:600">{{ result.text }}</span><span style="font-size:12px;line-height:16px">{{ result.sub }}</span></div>
+      <button onClick="{{ closeResult }}" aria-label="{{ L.bk_back2 }}" style="flex:none;width:48px;height:48px;border:0;border-radius:8px;background:transparent;color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center"><lucide-i name="x" size="18"></lucide-i></button>
+    </div>
+  </sc-if>
+  <div role="tablist" style="display:flex;gap:2px;border-bottom:1px solid #E2E8F0;flex:none">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+      <button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="flex:0 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:4px 12px;text-align:center;line-height:18px;border:0;border-bottom:2px solid {{ t.line }};margin-bottom:-1px;background:transparent;font:inherit;font-size:14px;font-weight:{{ t.weight }};color:{{ t.color }};cursor:pointer">{{ t.label }}<sc-if value="{{ t.hasN }}"><span style="flex:none;min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:999px;background:{{ t.nBg }};color:{{ t.nFg }};font-size:12px;line-height:20px;font-weight:600;text-align:center">{{ t.n }}</span></sc-if></button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isQueue }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ queueEmpty }}"><div style="padding:48px 16px;text-align:center;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:8px"><lucide-i name="inbox" size="28" style="color:#647574"></lucide-i><span style="font-size:15px;font-weight:600">{{ L.pp_qEmptyT }}</span><span style="font-size:13px;color:#5B6B6A;max-width:360px;text-wrap:pretty">{{ L.pp_qEmptyD }}</span></div></sc-if>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px;align-items:start">
+      <sc-for list="{{ queue }}" as="q" hint-placeholder-count="3">
+        <article style="background:{{ q.bg }};border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:{{ q.fg }}">{{ q.no }}</span>
+              <span style="font-size:15px;line-height:20px;font-weight:600;color:{{ q.fg }};text-wrap:pretty">{{ q.cust }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none">
+              <sc-if value="{{ q.busy }}"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:#E2E8F0;color:#5B6B6A;font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="lock" size="12"></lucide-i>{{ q.busyText }}</span></sc-if>
+              <span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:{{ q.tmBg }};color:{{ q.tmFg }};font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="timer" size="12"></lucide-i>{{ q.tm }}</span>
+              <sc-if value="{{ q.mark }}"><span title="{{ L.pp_markTip }}" style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:#F5F3FF;color:#6D28D9;font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="scan-barcode" size="12"></lucide-i>{{ L.pp_mark }}</span></sc-if>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px 16px;font-size:13px;line-height:18px;color:{{ q.sub }}">
+            <sc-for list="{{ q.meta }}" as="m"><span style="display:flex;align-items:flex-start;gap:6px;min-width:0"><lucide-i name="{{ m.icon }}" size="14" style="flex:none;margin-top:2px;color:#647574"></lucide-i><span style="min-width:0;text-wrap:pretty">{{ m.text }}</span></span></sc-for>
+          </div>
+          <sc-if value="{{ q.hasNote }}"><div style="display:flex;gap:6px;font-size:13px;line-height:18px;color:#5B6B6A;background:#F8FAFA;border-radius:6px;padding:8px 10px"><lucide-i name="message-square-text" size="14" style="flex:none;margin-top:2px"></lucide-i><span style="text-wrap:pretty">{{ q.note }}</span></div></sc-if>
+          <sc-if value="{{ q.open }}">
+            <div style="display:flex;flex-direction:column;border-top:1px solid #EEF2F4">
+              <sc-for list="{{ q.lines }}" as="l">
+                <div style="display:flex;flex-direction:column;gap:4px;padding:10px 0;border-bottom:1px solid #EEF2F4">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px"><span style="min-width:0;font-size:13px;line-height:18px;font-weight:500"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ l.code }}</span> {{ l.name }}</span><span style="flex:none;font-size:14px;font-weight:600">{{ l.qty }}</span></div>
+                  <sc-for list="{{ l.plan }}" as="b"><span style="display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12px;line-height:16px;color:{{ b.color }}"><span style="font-family:'JetBrains Mono',monospace">{{ b.batch }}</span><span>{{ b.exp }}</span><span>{{ b.zone }}</span><span>{{ b.qty }}</span></span></sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button onClick="{{ q.toggle }}" aria-expanded="{{ q.open }}" style="flex:1 1 120px;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="{{ q.chev }}" size="16" style="color:#5B6B6A"></lucide-i>{{ q.toggleLabel }}</button>
+            <sc-if value="{{ q.canStart }}"><button onClick="{{ q.start }}" style="flex:1 1 160px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#115E59"><lucide-i name="play" size="16"></lucide-i>{{ L.q9_start }}</button></sc-if>
+            <sc-if value="{{ q.blocked }}"><span style="flex:1 1 160px;display:flex;align-items:center;gap:6px;font-size:13px;line-height:18px;color:#B45309"><lucide-i name="info" size="14" style="flex:none"></lucide-i>{{ L.pp_oneActive }}</span></sc-if>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isMine }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ noActive }}"><div style="padding:48px 16px;text-align:center;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:10px"><lucide-i name="package-open" size="28" style="color:#647574"></lucide-i><span style="font-size:15px;font-weight:600">{{ L.pp_noActiveT }}</span><span style="font-size:13px;color:#5B6B6A;max-width:360px;text-wrap:pretty">{{ L.pp_noActiveD }}</span><button onClick="{{ toQueue }}" style="min-height:48px;padding:0 18px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#115E59">{{ L.pp_toQueue }}</button></div></sc-if>
+    <sc-if value="{{ hasActive }}">
+      <section style="background:#FFFFFF;border:1px solid {{ a.border }};border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ a.no }}</span><span style="font-size:16px;line-height:22px;font-weight:600;text-wrap:pretty">{{ a.cust }}</span><span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ a.meta }}</span></div>
+          <button onClick="{{ a.openCard }}" style="min-height:48px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="arrow-up-right" size="14" style="color:#5B6B6A"></lucide-i>{{ L.pp_card }}</button>
+        </div>
+        <div role="timer" aria-live="off" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 12px;border-radius:12px;background:{{ a.tBg }}">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:clamp(48px,14vw,72px);line-height:1;font-weight:600;letter-spacing:-0.02em;color:{{ a.tFg }}">{{ a.timer }}</span>
+          <span style="font-size:14px;line-height:20px;font-weight:600;color:{{ a.tFg }}">{{ a.tLabel }}</span>
+          <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ a.tSub }}</span>
+        </div>
+        <sc-if value="{{ showDemo }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#647574"><lucide-i name="clock" size="13"></lucide-i><span>{{ a.clock }}</span><button onClick="{{ clk5 }}" style="min-height:48px;padding:0 10px;border:1px solid #E2E8F0;border-radius:6px;background:#FFFFFF;font:inherit;font-size:12px;color:#5B6B6A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA">{{ L.q9_clk5 }}</button><button onClick="{{ clk15 }}" style="min-height:48px;padding:0 10px;border:1px solid #E2E8F0;border-radius:6px;background:#FFFFFF;font:inherit;font-size:12px;color:#5B6B6A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA">{{ L.q9_clk15 }}</button></div></sc-if>
+        <sc-if value="{{ a.hasIssues }}"><div style="display:flex;flex-direction:column;gap:6px"><sc-for list="{{ a.issues }}" as="x"><div style="display:flex;gap:6px;font-size:13px;line-height:18px;color:#B91C1C;background:#FEF2F2;border-radius:6px;padding:8px 10px"><lucide-i name="triangle-alert" size="14" style="flex:none;margin-top:2px"></lucide-i><span style="text-wrap:pretty">{{ x.text }}</span></div></sc-for></div></sc-if>
+        <div style="display:flex;flex-direction:column;border-top:1px solid #EEF2F4">
+          <sc-for list="{{ a.lines }}" as="l">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #EEF2F4;opacity:{{ l.op }}">
+              <button role="checkbox" aria-checked="{{ l.got }}" aria-label="{{ L.pp_got }}" onClick="{{ l.toggle }}" style="flex:none;width:48px;height:48px;border:1px solid {{ l.cbBorder }};border-radius:10px;background:{{ l.cbBg }};color:#FFFFFF;cursor:pointer;display:flex;align-items:center;justify-content:center"><sc-if value="{{ l.got }}"><lucide-i name="check" size="22"></lucide-i></sc-if></button>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px"><span style="min-width:0;font-size:14px;line-height:19px;font-weight:500;text-decoration:{{ l.deco }}"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ l.code }}</span> {{ l.name }}</span><span style="flex:none;font-size:16px;font-weight:600">{{ l.qty }}</span></div>
+                <sc-for list="{{ l.plan }}" as="b"><span style="display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12px;line-height:16px;color:{{ b.color }}"><span style="font-family:'JetBrains Mono',monospace">{{ b.batch }}</span><span>{{ b.exp }}</span><span>{{ b.zone }}</span><span>{{ b.qty }}</span></span></sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:8px">
+          <button onClick="{{ a.print }}" style="min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="printer" size="16" style="color:#5B6B6A"></lucide-i>{{ L.pp_print }}</button>
+          <button onClick="{{ a.issue }}" style="min-height:48px;padding:0 14px;border:1px solid #FECACA;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#B91C1C;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#FEF2F2"><lucide-i name="triangle-alert" size="16"></lucide-i>{{ L.pp_issue }}</button>
+          <button onClick="{{ a.finish }}" style="min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#115E59"><lucide-i name="package-check" size="16"></lucide-i>{{ L.pp_finish }}</button>
+        </div>
+      </section>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ doneEmpty }}"><div style="padding:48px 16px;text-align:center;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;font-size:13px;color:#5B6B6A">{{ L.pp_doneEmpty }}</div></sc-if>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ done }}" as="r">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px 16px;align-items:start">
+          <sc-for list="{{ r.cells }}" as="c"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;line-height:16px;color:#647574">{{ c.label }}</span><span style="font-size:13px;line-height:18px;font-weight:{{ c.weight }};color:{{ c.color }};font-family:{{ c.font }};text-wrap:pretty">{{ c.text }}</span></div></sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ issueOpen }}">
+    <div onClick="{{ closeIssue }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:12px">
+      <div role="dialog" aria-modal="true" aria-label="{{ L.pp_issueT }}" onClick="{{ stop }}" style="width:480px;max-width:100%;max-height:calc(100vh - 24px);overflow-y:auto;box-sizing:border-box;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.pp_issueT }}</h2><p style="margin:0;font-size:13px;line-height:19px;color:#5B6B6A;text-wrap:pretty">{{ L.pp_issueD }}</p></div>
+        <div role="radiogroup" aria-label="{{ L.pp_issueF }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:8px">
+          <sc-for list="{{ reasons }}" as="r"><button role="radio" aria-checked="{{ r.on }}" onClick="{{ r.pick }}" style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }};font:inherit;font-size:14px;color:#172B2A;cursor:pointer;text-align:left"><span style="width:18px;height:18px;border-radius:50%;border:{{ r.ring }};box-sizing:border-box;flex:none"></span>{{ r.label }}</button></sc-for>
+        </div>
+        <textarea value="{{ issueNote }}" onChange="{{ onNote }}" placeholder="{{ L.pp_notePh }}" aria-label="{{ L.pp_noteF }}" rows="3" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;resize:vertical;outline:none" style-focus="border-color:#0F766E"></textarea>
+        <sc-if value="{{ issueErr }}"><span style="font-size:12px;color:#B91C1C">{{ L.pp_eReason }}</span></sc-if>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{ closeIssue }}" style="min-height:48px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.bk_back2 }}</button>
+          <button onClick="{{ sendIssue }}" style="min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#B91C1C;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#991B1B">{{ L.pp_send }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ finOpen }}"><dc-import name="PickConfirm" order-id="{{ finId }}" dict="{{ L }}" user-name="{{ me }}" narrow="{{ narrow }}" on-close="{{ finClose }}" on-done="{{ finDone }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;picker&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Ulug'bek Raximov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onOpen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(href)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pad = n => String(n).padStart(2, '0');
+const short = nm => { const p = String(nm || '').split(' '); return p.length > 1 ? p[0] + ' ' + p[1][0] + '.' : nm; };
+const clockTxt = ms => { const t = Math.floor(Math.abs(ms) / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60; return (h ? h + ':' + pad(m) : pad(m)) + ':' + pad(s); };
+class Component extends DCLogic {
+  state = { tab: 'queue', open: {}, got: {}, issueOpen: false, issueR: '', issueNote: '', issueTried: false, finOpen: false, result: null };
+  get L() { return this.props.dict || {}; }
+  get D() { return window.MedixData; }
+  componentDidMount() { this._t = setInterval(() => { if (this.state.tab === 'mine' && this.active()) this.forceUpdate(); else if (!this._rd && this.D) { this._rd = 1; this.forceUpdate(); } }, 1000); }
+  componentWillUnmount() { clearInterval(this._t); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  br() { const b = this.props.branch; return !b || b === 'ALL' ? 'TSH' : b; }
+  me() { return this.props.userName || ''; }
+  active() { const D = this.D; return D ? D.activePickOf(this.me(), this.br()) : null; }
+  start(o) { const D = this.D, L = this.L; if (this.active()) return this.toast(L.pp_oneActive); const n = D.startPick(o.id, this.me()); if (!n) return this.toast(L.pp_cantStart); this.toast(fill(L.q9_tStarted, { no: o.no })); this.setState({ tab: 'mine', result: null, got: {} }); }
+  sendIssue(o) { const D = this.D, L = this.L, s = this.state; if (!s.issueR) return this.setState({ issueTried: true });
+    D.pickIssue(o.id, this.me(), s.issueR, s.issueNote.trim(), L['pp_r_' + s.issueR]); this.setState({ issueOpen: false, issueR: '', issueNote: '', issueTried: false }); this.toast(L.pp_issueSent); }
+  finDone(n) { const L = this.L; if (!n) return this.setState({ finOpen: false }); const t = this.D.pickTimer(n), late = t.diff < 0;
+    this.setState({ finOpen: false, tab: 'queue', got: {}, result: { no: n.no, late, text: late ? fill(L.q9_resLate, { d: -t.diff }) : t.diff > 0 ? fill(L.pp_resOk, { d: t.diff }) : L.pp_resOnTime, sub: fill(L.pp_resSub, { no: n.no, s: t.spent }) } }); this.toast(fill(L.q9_tFinished, { no: n.no })); }
+  planRows(D, L, x) { if (x.locked) return [{ batch: L.w4_lockedRow, exp: x.plan.map(b => b.batch).join(', '), zone: "Jo'natish", qty: '', color: '#647574' }]; const rows = x.plan.map(b => ({ batch: b.batch, exp: fill(L.pp_exp, { e: b.exp }), zone: b.zoneLabel || b.zone, qty: x.plan.length > 1 ? fN(b.qty) : '', color: '#5B6B6A' }));
+    if (x.short > 0) rows.push({ batch: fill(L.q9_short, { n: fN(x.short) }), exp: '', zone: '', qty: '', color: '#B91C1C' }); return rows; }
+  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  _rv() {
+    const D = this.D, L = this.L, s = this.state, me = this.me(), br = this.br(), narrow = !!this.props.narrow;
+    const base = { L, me, narrow, sub: '', stats: [], tabs: [], isQueue: true, isMine: false, isDone: false, queue: [], queueEmpty: false, noActive: false, hasActive: false, a: {}, done: [], doneEmpty: false, hasResult: false, result: {}, issueOpen: false, finOpen: false, reasons: [], stop: e => e.stopPropagation() };
+    if (!D || !D.activePickOf) return base;
+    const brName = (D.BRANCHES.find(b => b.code === br) || {}).name || br, act = this.active(), today = D.pickDone(br, D.TODAY, me), custN = o => (D.custById(o.cust) || {}).name || '';
+    const late = today.filter(r => r.late).length, avg = today.length ? Math.round(today.reduce((a, r) => a + r.spent, 0) / today.length) : null;
+    const stats = [[L.pp_kDone, fN(today.length), '#172B2A'], [L.pp_kOnTime, fN(today.length - late), '#15803D'], [L.pp_kLate, fN(late), late ? '#B91C1C' : '#172B2A'], [L.pp_kAvg, avg == null ? '—' : fill(L.pp_minV, { n: avg }), '#172B2A']].map(([label, value, color]) => ({ label, value, color }));
+    const dk = o => (D.pD(o.delivDate) || 0) + (o.delivTime ? (+o.delivTime.slice(0, 2) * 60 + +o.delivTime.slice(3, 5)) * 60000 : 86399000);
+    const Q = D.store.orders.filter(o => o.branch === br && ((o.status === 'queued' && o.tm) || (o.status === 'picking' && D.pickerOf(o) !== me))).sort((a, b) => dk(a) - dk(b) || a.no.localeCompare(b.no));
+    const delivTxt = o => (o.delivery === 'pickup' ? L.b_delPickup : L.b_delDeliver) + ' · ' + o.delivDate + (o.delivTime ? ' ' + o.delivTime : '');
+    const queue = Q.map(o => { const busy = o.status === 'picking', c = D.custAt(o.cust, o.branch) || {}, open = !!s.open[o.id], prods = o.lines.map(l => D.prodById(l.pid) || {}), inv = (o.sale && o.sale.inv) || o.inv || '', ctr = c.contract || c.contractNo || '';
+      const meta = [{ icon: 'receipt-text', text: inv ? fill(L.pp_inv, { n: inv }) : L.pp_noInv }].concat(ctr ? [{ icon: 'file-signature', text: fill(L.pp_ctr, { n: ctr }) }] : [], [{ icon: 'list', text: fill(L.pp_lines, { n: o.lines.length, q: fN(o.lines.reduce((a, l) => a + (l.qty || 0), 0)) }) }, { icon: o.delivery === 'pickup' ? 'user' : 'truck', text: delivTxt(o) }]);
+      if (o.rw && !o.rw.done) meta.unshift({ icon: 'rotate-ccw', text: fill(L.w4_rwBadge, { n: o.rw.n }) });
+      const lines = open ? D.queueRes(o).map((x, k) => { const p = prods[k] || D.prodById(x.pid) || {}; return { code: p.code || '', name: p.name || '', qty: fN(x.qty), plan: this.planRows(D, L, x) }; }) : [];
+      return { id: o.id, no: o.no, cust: c.name || custN(o), busy, busyText: fill(L.pp_busy, { n: short(D.pickerOf(o)) }), bg: busy ? '#F5F7F8' : '#FFFFFF', fg: busy ? '#5B6B6A' : '#172B2A', sub: busy ? '#647574' : '#5B6B6A',
+        tm: o.tm ? fill(L.pp_tm, { n: o.tm.pickMin }) : L.q9_tmWait, tmBg: busy ? '#EEF2F4' : '#EFF6FF', tmFg: busy ? '#5B6B6A' : '#1D4ED8', mark: prods.some(p => p.mark), meta, hasNote: !!o.note, note: o.note || '', open, lines, chev: open ? 'chevron-up' : 'chevron-down', toggleLabel: open ? L.pp_hide : L.pp_details,
+        toggle: () => this.setState(x => ({ open: { ...x.open, [o.id]: !x.open[o.id] } })), canStart: !busy && !act && D.can(this.props.role, 'picking.do'), blocked: !busy && !!act, start: () => this.start(o) }; });
+    let a = {};
+    if (act) { const o = act, pk = o.pk || D.ensurePk(o), tm = o.tm || { pickMin: 0 }, el = D.nowMs() - D.pDT(pk.start), left = tm.pickMin * 60000 - el, over = left < 0, c = D.custAt(o.cust, o.branch) || {};
+      const res = D.queueRes(o);
+      a = { no: o.no, cust: c.name || custN(o), meta: fill(L.pp_lines, { n: o.lines.length, q: fN(o.lines.reduce((x, l) => x + (l.qty || 0), 0)) }) + ' · ' + delivTxt(o), border: over ? '#FECACA' : '#E2E8F0',
+        timer: (over ? '+' : '') + clockTxt(left), tLabel: over ? L.pp_overT : L.pp_leftT, tSub: fill(L.pp_tSub, { n: tm.pickMin, at: pk.start.slice(11) }), tBg: over ? '#FEF2F2' : '#F0FDFA', tFg: over ? '#B91C1C' : '#0F766E', clock: fill(L.q9_clk, { t: D.nowStr().slice(11) }),
+        hasIssues: !!(o.issues || []).length, issues: (o.issues || []).map(x => ({ text: fill(L.pp_issueLine, { r: L['pp_r_' + x.reason] || x.reason, n: x.note ? ' — ' + x.note : '', who: x.by, at: x.at.slice(11) }) })),
+        lines: res.map((x, k) => { const p = D.prodById(x.pid) || {}, key = o.no + ':' + k, got = !!x.locked || !!s.got[key]; return { code: p.code || '', name: p.name || '', qty: fN(x.qty), plan: this.planRows(D, L, x), got, op: got ? 0.6 : 1, deco: got ? 'line-through' : 'none', cbBorder: got ? '#0F766E' : '#CBD5D3', cbBg: got ? '#0F766E' : '#FFFFFF', toggle: x.locked ? () => {} : () => this.setState(st => ({ got: { ...st.got, [key]: !st.got[key] } })) }; }),
+        print: () => window.medixPrint && window.medixPrint('pick', o.no), issue: () => this.setState({ issueOpen: true, issueR: '', issueNote: '', issueTried: false }), finish: () => this.setState({ finOpen: true }), openCard: () => this.props.onOpen && this.props.onOpen('#orders?open=' + o.no) }; }
+    const done = today.map(r => { const o = r.o, t = r.late; return { id: o.id, cells: [{ label: L.b_cNo, text: o.no, font: "'JetBrains Mono',monospace", weight: 600, color: '#172B2A' }, { label: L.pp_cCust, text: custN(o), font: 'inherit', weight: 500, color: '#172B2A' }, { label: L.pp_cGiven, text: fill(L.pp_minV, { n: o.tm.pickMin }), font: 'inherit', weight: 400, color: '#172B2A' }, { label: L.pp_cSpent, text: fill(L.pp_minV, { n: r.spent }), font: 'inherit', weight: 400, color: '#172B2A' },
+      { label: L.pp_cRes, text: t ? fill(L.q9_resLate, { d: -r.diff }) : r.diff > 0 ? fill(L.pp_resOk, { d: r.diff }) : L.pp_resOnTime, font: 'inherit', weight: 600, color: t ? '#B91C1C' : '#15803D' }, { label: L.pp_cTime, text: r.start.slice(11) + ' – ' + r.end.slice(11), font: 'inherit', weight: 400, color: '#5B6B6A' }].concat(r.issues ? [{ label: L.pp_issueF, text: fill(L.pp_issN, { n: r.issues }), font: 'inherit', weight: 500, color: '#B91C1C' }] : []) }; });
+    const tabs = [['queue', L.pp_tQueue, queue.filter(q => !q.busy).length], ['mine', L.pp_tMine, act ? 1 : 0], ['done', L.pp_tDone, today.length]].map(([k, label, n]) => { const on = s.tab === k; return { label, on, line: on ? '#0D9488' : 'transparent', color: on ? '#172B2A' : '#5B6B6A', weight: on ? 600 : 500, hasN: n > 0, n, nBg: k === 'mine' ? '#0F766E' : on ? '#DDF5EE' : '#EEF2F4', nFg: k === 'mine' ? '#FFFFFF' : on ? '#0F766E' : '#5B6B6A', pick: () => this.setState({ tab: k }) }; });
+    const R = s.result, ri = s.issueR;
+    return { ...base, sub: fill(L.pp_sub, { who: me, br: brName }), stats, tabs, isQueue: s.tab === 'queue', isMine: s.tab === 'mine', isDone: s.tab === 'done', queue, queueEmpty: !queue.length, noActive: !act, hasActive: !!act, a, done, doneEmpty: !done.length,
+      hasResult: !!R, result: R ? { text: R.text, sub: R.sub, icon: R.late ? 'alarm-clock-off' : 'circle-check', bg: R.late ? '#FEF2F2' : '#F0FDF4', border: R.late ? '#FECACA' : '#BBF7D0', fg: R.late ? '#B91C1C' : '#15803D' } : {}, closeResult: () => this.setState({ result: null }),
+      toQueue: () => this.setState({ tab: 'queue' }), clk5: () => { D.clkAdd(5); this.forceUpdate(); }, clk15: () => { D.clkAdd(15); this.forceUpdate(); },
+      issueOpen: s.issueOpen && !!act, issueNote: s.issueNote, issueErr: s.issueTried && !ri, onNote: e => this.setState({ issueNote: e.target.value }), closeIssue: () => this.setState({ issueOpen: false }), sendIssue: () => act && this.sendIssue(act),
+      reasons: D.PICK_ISSUES.map(k => { const on = ri === k; return { label: L['pp_r_' + k], on, border: on ? '#0D9488' : '#E2E8F0', bg: on ? '#F0FDFA' : '#FFFFFF', ring: on ? '5px solid #0F766E' : '1.5px solid #647574', pick: () => this.setState({ issueR: k }) }; }),
+      finOpen: s.finOpen && !!act, finId: act ? act.id : 0, finClose: () => this.setState({ finOpen: false }), finDone: n => this.finDone(n) };
+  }
+}
+</script>
+</body>
+</html>

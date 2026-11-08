@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CircleCheck, CircleMinus, Download, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
@@ -42,6 +43,7 @@ const money = (v: string) => <span className="font-mono tabular-nums">{formatMon
 
 /** Taʼminotchi xodim («Kim nomiga») va korxona tovari, tannarxda: olib keldi / sotildi / boshqa / qoldi; Aktiv / Passiv. */
 export function SupplierGoodsReportPage() {
+  const t = useTranslations("reports");
   const me = useMe();
   const allowed = canSeeSupplierGoods(me.data?.permissions ?? []);
   const router = useRouter();
@@ -67,34 +69,35 @@ export function SupplierGoodsReportPage() {
   });
 
   if (me.data && !allowed) {
-    return <ForbiddenState description="Bu hisobot tannarxda — hisobot va tannarx koʻrish ruxsati kerak." />;
+    return <ForbiddenState description={t("supplierGoods.forbidden")} />;
   }
   const r = report.data;
+  const pageTitle = t("supplierGoods.title", { kind: t(`supplierGoods.kind.${kind}`) });
   const columns: TableColumn<Row>[] = [
-    { key: "name", sortable: true, title: kind === "STAFF" ? "Xodim (kim nomiga)" : "Taʼminotchi" },
+    { key: "name", sortable: true, title: kind === "STAFF" ? t("supplierGoods.staffName") : t("supplierGoods.supplier") },
     {
       key: "active",
       sortable: true,
-      title: "Holat",
+      title: t("supplierGoods.status"),
       render: (x) =>
         x.active ? (
           <Badge tone="success" icon={CircleCheck}>
-            Aktiv
+            {t("supplierGoods.active")}
           </Badge>
         ) : (
           <Badge tone="neutral" icon={CircleMinus}>
-            Passiv
+            {t("supplierGoods.passive")}
           </Badge>
         ),
     },
-    { key: "brought", sortable: true, title: "Olib keldi", align: "right", render: (x) => money(x.brought) },
-    { key: "sold", sortable: true, title: "Sotildi", align: "right", render: (x) => money(x.sold) },
-    { key: "other", sortable: true, title: "Boshqa", align: "right", render: (x) => money(x.other) },
-    { key: "left", sortable: true, title: "Qoldi", align: "right", render: (x) => money(x.left) },
+    { key: "brought", sortable: true, title: t("supplierGoods.brought"), align: "right", render: (x) => money(x.brought) },
+    { key: "sold", sortable: true, title: t("supplierGoods.sold"), align: "right", render: (x) => money(x.sold) },
+    { key: "other", sortable: true, title: t("supplierGoods.other"), align: "right", render: (x) => money(x.other) },
+    { key: "left", sortable: true, title: t("supplierGoods.left"), align: "right", render: (x) => money(x.left) },
   ];
   const totals: Record<string, React.ReactNode> | undefined = r
     ? {
-        name: "Jami",
+        name: t("total"),
         brought: money(r.total.brought),
         sold: money(r.total.sold),
         other: money(r.total.other),
@@ -105,16 +108,16 @@ export function SupplierGoodsReportPage() {
   return (
     <>
       <Link href="/reports" className="mb-2 inline-flex items-center gap-1 text-caption text-text-secondary hover:underline">
-        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> Hisobotlar
+        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> {t("back")}
       </Link>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-page-title">{KIND_LABELS[kind]} tovari</h1>
+        <h1 className="text-page-title">{pageTitle}</h1>
         <PeriodPicker state={period} />
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <Tabs
-          aria-label="Kim boʻyicha"
-          items={(Object.keys(KIND_LABELS) as SupplierKind[]).map((k) => ({ key: k, label: k === "STAFF" ? "Xodim" : "Korxona" }))}
+          aria-label={t("supplierGoods.byWhom")}
+          items={(Object.keys(KIND_LABELS) as SupplierKind[]).map((k) => ({ key: k, label: t(`supplierGoods.tab.${k}`) }))}
           value={kind}
           onChange={(k) => setKind(k as SupplierKind)}
         />
@@ -122,7 +125,7 @@ export function SupplierGoodsReportPage() {
           {r ? (
             <span>
               {r.from === r.to ? formatIsoDate(r.from) : `${formatIsoDate(r.from)} – ${formatIsoDate(r.to)}`}
-              {r.branchId == null ? " · barcha filiallar" : ""}
+              {r.branchId == null ? ` · ${t("allBranches")}` : ""}
             </span>
           ) : null}
           {from && to ? (
@@ -131,7 +134,7 @@ export function SupplierGoodsReportPage() {
               download
               className="inline-flex items-center gap-1 text-primary hover:underline"
             >
-              <Download size={16} strokeWidth={1.5} aria-hidden /> Excelʼga yuklab olish
+              <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
             </a>
           ) : null}
         </div>
@@ -140,7 +143,7 @@ export function SupplierGoodsReportPage() {
         <ErrorState onRetry={() => report.refetch()} />
       ) : (
         <Table
-          caption={`${KIND_LABELS[kind]} tovari`}
+          caption={pageTitle}
           density="compact"
           columns={columns}
           rows={table.rows}
@@ -155,19 +158,10 @@ export function SupplierGoodsReportPage() {
           }
           loading={report.isLoading}
           totals={r && r.rows.length > 0 ? totals : undefined}
-          emptyState={
-            <EmptyState
-              icon={Truck}
-              title="Davrda harakat va qoldiq yoʻq"
-              description="Boshqa davrni tanlang yoki filialni oʻzgartiring."
-            />
-          }
+          emptyState={<EmptyState icon={Truck} title={t("supplierGoods.emptyTitle")} description={t("emptyHint")} />}
         />
       )}
-      <p className="mt-2 text-caption text-text-secondary">
-        Tannarxda. Olib keldi — davrdagi kirim; Sotildi — sotuv − qaytarish; Boshqa — hisobdan oʻtkazish va h.k.; Qoldi — hozirgi qoldiq.
-        Aktiv — davrda kirim qilgan, Passiv — kirim yoʻq, qoldigʻi bor.
-      </p>
+      <p className="mt-2 text-caption text-text-secondary">{t("supplierGoods.note")}</p>
     </>
   );
 }

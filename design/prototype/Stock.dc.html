@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Qoldiqlar" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="PageHeader" title="{{ L.n_stock }}" count="{{ countLabel }}" info="{{ L.q_info }}" more="{{ hdrMore }}" more-label="{{ L.p_more }}" hint-size="100%,34px"></dc-import>
+  <div style="display:grid;grid-template-columns:repeat({{ kpiCols }},minmax(0,1fr));gap:12px">
+    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+      <button onClick="{{ k.pick }}" disabled="{{ k.static }}" aria-pressed="{{ k.active }}" style="display:flex;flex-direction:column;gap:4px;padding:16px;min-width:0;text-align:left;background:#FFFFFF;border:1px solid {{ k.border }};border-radius:10px;box-shadow:{{ k.ring }};cursor:{{ k.cursor }};font:inherit;color:inherit;transition:border-color 120ms ease-out" style-hover="border-color:{{ k.hover }}">
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A"><sc-if value="{{ k.hasIcon }}"><lucide-i name="{{ k.icon }}" size="14" style="color:{{ k.iconColor }}"></lucide-i></sc-if>{{ k.label }}</span>
+        <sc-if value="{{ k.loading }}"><span style="width:96px;height:20px;margin:4px 0;border-radius:6px;background:#EEF2F4"></span></sc-if>
+        <sc-if value="{{ k.ready }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:baseline;gap:6px;white-space:nowrap"><span style="font-size:clamp(18px,1.8vw,24px);line-height:28px;font-weight:600;letter-spacing:-0.02em;color:{{ k.color }}">{{ k.value }}</span><sc-if value="{{ k.hasUnit }}"><span style="font-size:13px;color:{{ k.color }}">{{ k.unit }}</span></sc-if></span></sc-if>
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ k.note }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <sc-if value="{{ hasSubBar }}">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <sc-if value="{{ isBatch }}"><span style="font-size:12px;line-height:16px;color:#647574">{{ L.q_fefo }}</span></sc-if>
+        <sc-if value="{{ hasZoneSel }}"><span style="display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 4px 0 10px;border:1px solid #0D9488;border-radius:8px;background:#DDF5EE;color:#0F766E;font-size:13px;font-weight:500">{{ zoneSelLabel }}<button onClick="{{ clearZoneSel }}" aria-label="{{ L.p_fRemove }}" style="width:22px;height:22px;border:0;border-radius:6px;background:transparent;color:#0F766E;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(13,148,136,0.15)"><lucide-i name="x" size="14"></lucide-i></button></span></sc-if>
+      </div>
+    </sc-if>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ searchPh }}" search-width="{{ searchW }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ clearAllLabel }}" more-label="{{ moreLabel }}" columns="{{ colDefs }}" on-columns="{{ setCols }}" on-columns-reset="{{ resetCols }}" columns-reset-label="{{ L.p_colsReset }}" columns-label="{{ L.p_columns }}" columns-hint="{{ L.p_colsHint }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+
+  <sc-if value="{{ showTransit }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow-x:auto">
+      <div style="min-width:860px;font-size:13px;line-height:18px">
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #EEF2F4"><lucide-i name="truck" size="16" style="color:#1D4ED8"></lucide-i><span style="font-size:14px;font-weight:600">{{ L.kc_qTransitT }}</span><span style="color:#647574">{{ trCount }}</span><span style="flex:1"></span><span style="font-size:12px;color:#5B6B6A">{{ L.kc_qTransitD }}</span></div>
+        <div style="display:grid;grid-template-columns:{{ trGrid }};height:36px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+          <span style="padding:0 16px">{{ L.q_cProduct }}</span><span style="padding:0 12px">{{ L.kc_cRoute }}</span><span style="padding:0 12px;text-align:right">{{ L.q_cQty }}</span><sc-if value="{{ canCost }}"><span style="padding:0 12px;text-align:right">{{ L.q_cValue }}</span></sc-if><span style="padding:0 12px">{{ L.kc_hDoc }}</span>
+        </div>
+        <sc-for list="{{ trRows }}" as="r">
+          <div style="display:grid;grid-template-columns:{{ trGrid }};min-height:52px;align-items:center;border-bottom:1px solid #EEF2F4">
+            <span style="padding:6px 16px;display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ r.batch }}</span></span>
+            <span style="padding:6px 12px;display:flex;flex-direction:column;min-width:0"><span>{{ r.route }}</span><sc-if value="{{ r.short }}"><span style="font-size:12px;color:#B45309">{{ L.kc_resolveT }}</span></sc-if></span>
+            <span style="padding:0 12px;text-align:right;font-weight:600;color:{{ r.qtyC }}">{{ r.qty }}</span>
+            <sc-if value="{{ canCost }}"><span style="padding:0 12px;text-align:right;color:#5B6B6A">{{ r.value }}</span></sc-if>
+            <span style="padding:0 12px"><button onClick="{{ r.open }}" style="display:flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ r.no }}<lucide-i name="arrow-up-right" size="14"></lucide-i></button></span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ trEmpty }}"><div style="padding:32px 16px;text-align:center;color:#5B6B6A">{{ L.kc_qTransitNone }}</div></sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ showMain }}" hint-placeholder-val="{{ true }}">
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+    <sc-if value="{{ showProduct }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ pColumns }}" rows="{{ pRows }}" selectable="{{ false }}" expandable="{{ true }}" on-sort="{{ onSortP }}" loading="{{ isLoading }}" scroll-x="{{ true }}" sticky-count="{{ pSticky }}" min-width="{{ pMinW }}" foot="{{ pFoot }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+      <sc-if value="{{ pPager }}"><dc-import name="Pagination" total="{{ pTotal }}" page="{{ pPage }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import></sc-if>
+    </sc-if>
+    <sc-if value="{{ showBatch }}" hint-placeholder-val="{{ false }}">
+      <dc-import name="DataTable" columns="{{ bColumns }}" rows="{{ bRows }}" selectable="{{ false }}" on-sort="{{ onSortB }}" loading="{{ isLoading }}" scroll-x="{{ true }}" sticky-count="{{ bSticky }}" min-width="{{ bMinW }}" foot="{{ bFoot }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+      <sc-if value="{{ bPager }}"><dc-import name="Pagination" total="{{ bTotal }}" page="{{ bPage }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import></sc-if>
+    </sc-if>
+    <sc-if value="{{ showWh }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:13px;line-height:18px">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 140px {{ whValCol }};height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A;border-radius:10px 10px 0 0">
+          <span style="padding:0 16px">{{ L.q_wTree }}</span><span style="padding:0 12px;text-align:right">{{ L.q_wProducts }}</span><span style="padding:0 12px;text-align:right">{{ L.q_wQty }}</span><sc-if value="{{ canCost }}"><span style="padding:0 16px 0 12px;text-align:right">{{ L.q_cValue }}</span></sc-if>
+        </div>
+        <sc-for list="{{ tree }}" as="n">
+          <div onClick="{{ n.pick }}" style="display:grid;grid-template-columns:minmax(0,1fr) 120px 140px {{ whValCol }};height:{{ n.h }}px;align-items:center;border-bottom:1px solid #EEF2F4;background:{{ n.bg }};cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA">
+            <span style="display:flex;align-items:center;gap:8px;min-width:0;padding-left:{{ n.indent }}px;padding-right:12px">
+              <sc-if value="{{ n.hasChev }}"><lucide-i name="{{ n.chev }}" size="16" style="color:#5B6B6A;flex:none"></lucide-i></sc-if>
+              <lucide-i name="{{ n.icon }}" size="16" style="color:{{ n.iconColor }};flex:none"></lucide-i>
+              <span style="font-weight:{{ n.weight }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.label }}</span>
+              <sc-if value="{{ n.isZone }}"><lucide-i name="arrow-up-right" size="14" style="color:#0F766E;flex:none"></lucide-i></sc-if>
+            </span>
+            <span style="padding:0 12px;text-align:right;color:#5B6B6A">{{ n.products }}</span>
+            <span style="padding:0 12px;text-align:right;font-weight:{{ n.weight }}">{{ n.qty }}</span>
+            <sc-if value="{{ canCost }}"><span style="padding:0 16px 0 12px;text-align:right">{{ n.value }}</span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showEmpty }}"><dc-import name="EmptyState" icon="boxes" title="{{ L.q_emptyT }}" text="{{ L.q_emptyD }}" secondary="{{ emptyAction }}" min-height="360" hint-size="100%,360px"></dc-import></sc-if>
+    <sc-if value="{{ showNoRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.p_noResT }}" text="{{ noResText }}" secondary="{{ noResAction }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+    <sc-if value="{{ showError }}"><dc-import name="EmptyState" icon="cloud-off" tone="danger" title="{{ L.stErrT }}" text="{{ L.stErrD }}" secondary="{{ retryAction }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+  </div>
+  </sc-if>
+  <div style="height:64px"></div>
+  <sc-if value="{{ panelOpen }}"><dc-import name="BatchPanel" batch="{{ panelBatch }}" dict="{{ L }}" can-cost="{{ canCost }}" width="{{ panelW }}" on-close="{{ closePanel }}" on-open-doc="{{ openDoc }}" on-toast="{{ toastFn }}" on-writeoff="{{ toWriteoff }}" on-sup-return="{{ toSupReturn }}" on-move="{{ toMove }}" on-marks="{{ toMarks }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;,&quot;operator&quot;,&quot;purchase&quot;,&quot;keeper&quot;,&quot;cashier&quot;,&quot;accountant&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ALL&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,arg)=&gt;void&quot;}}">
+const fN = n => (n < 0 ? '−' : '') + String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const pD = s => { const a = String(s || '').slice(0, 10).split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
+const C2L = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sh', ъ: '', ы: 'i', ь: '', э: 'e', ю: 'yu', я: 'ya', ў: "o'", қ: 'q', ғ: "g'", ҳ: 'h' };
+const toLat = s => String(s || '').toLowerCase().replace(/[‘’ʻʼ`]/g, "'").split('').map(ch => C2L[ch] != null ? C2L[ch] : ch).join('');
+const ZT = { recv: ['package-open', '#5B6B6A', '#F5F7F8'], store: ['archive', '#5B6B6A', '#F5F7F8'], cold: ['snowflake', '#1D4ED8', '#EFF6FF'], quar: ['shield-alert', '#B45309', '#FFFBEB'], ctrl: ['lock', '#B91C1C', '#FEF2F2'], ship: ['truck', '#5B6B6A', '#F5F7F8'] };
+const EB = [['0-30', 0, 30], ['31-60', 31, 60], ['61-90', 61, 90], ['90+', 91, Infinity]];
+const expHit = (b, k) => { if (b.days == null) return false; if (k === 'expired') return b.days < 0; const e = EB.find(x => x[0] === k); return !!e && b.days >= e[1] && b.days <= e[2]; };
+const UZ = { cCode: 'Kod', cName: 'Mahsulot', cMaker: 'Ishlab chiqaruvchi', cCat: 'Kategoriya', cCountry: 'Davlat', cUnit: 'Birlik', cTotal: 'Jami', cRes: 'Band', cAvail: 'Mavjud', cClosed: 'Yopiq', cShip: "Jo'natish zonasida", cBatches: 'Partiyalar', cNear: 'Eng yaqin yaroqlilik', cCostSum: 'Tannarx summasi', cSaleSum: 'Sotuv narxida summa', cSalePrice: 'Sotuv narxi', cLastIn: 'Oxirgi kirim', cSupply: "Ta'minot mas'uli", cFlags: 'Belgilar', cBranch: 'Filial', cWh: 'Ombor', cZone: 'Zona', cBatch: 'Partiya №', cMfg: 'Ishlab chiqarilgan', cExp: 'Yaroqlilik', cQty: 'Soni', cCost: 'Tannarx', cDoc: 'Kirim hujjati', cDocDate: 'Kirim sanasi', cSupplier: 'Yetkazib beruvchi',
+  fWh: 'Filial / Ombor', fZone: 'Zona', fExp: 'Muddat', fStock: 'Qoldiq', fMaker: 'Ishlab chiqaruvchi', fCat: 'Kategoriya', fCountry: 'Davlat', fSupply: "Ta'minot mas'uli", fSupplier: 'Yetkazib beruvchi', fFlags: 'Belgilar', more: "Ko'proq filtrlar", clearAll: 'Hammasini tozalash',
+  e030: '0–30 kun', e3160: '31–60 kun', e6190: '61–90 kun', e90: '90+ kun', eExp: "Muddati o'tgan", sHas: 'Qoldiq bor', sZero: "Qoldiq 0", sAllRes: "Mavjud yo'q, hammasi band", flMark: 'Markirovkali', flCtrl: 'Nazoratdagi', flRx: 'Retsept bilan', flBonus: 'Bonus partiya', flDmg: 'Shikastlangan',
+  hName: 'Nom', hCode: 'Kod', hCls: 'Klassifikator', hBc: 'Shtrix-kod', hBatch: 'Partiya', hDoc: 'Kirim', hSup: 'Yetkazib beruvchi', opening: "Boshlang'ich qoldiq", total: 'Jami', noSup: "— (boshlang'ich qoldiq)", noSupply: '— (belgilanmagan)',
+  search: 'Kod, nom, shtrix-kod, partiya, kirim raqami yoki yetkazib beruvchi', expDone: n => `${n} ta qator Excel faylga yuklandi`, vProduct: "Mahsulot bo'yicha", vBatch: "Partiya bo'yicha", vWh: 'Ombor daraxti', kidsHead: 'Partiya × zona', yes: 'Ha', closedTip: "Qabul, Karantin va muddati o'tgan" };
+const PCOLS = [['code', 104], ['name', 260], ['maker', 150], ['cat', 160], ['country', 120], ['unit', 84], ['total', 100, 'r'], ['res', 90, 'r'], ['avail', 100, 'r'], ['closed', 100, 'r'], ['ship', 120, 'r'], ['batches', 100, 'r'], ['near', 196], ['costSum', 160, 'r', 1], ['saleSum', 170, 'r'], ['lastIn', 116], ['supplyBy', 170], ['flags', 120]];
+const BCOLS = [['code', 104], ['name', 240], ['maker', 150], ['branch', 80], ['wh', 170], ['zone', 160], ['batch', 130], ['mfg', 130], ['exp', 190], ['qty', 90, 'r'], ['res', 80, 'r'], ['avail', 90, 'r'], ['cost', 110, 'r', 1], ['costSum', 150, 'r', 1], ['saleSum', 160, 'r'], ['doc', 160], ['docDate', 116], ['supplier', 200], ['flags', 110]];
+const PKEY = 'medix-stock-pcols-v1', BKEY = 'medix-stock-bcols-v1';
+const loadCols = (key, def) => { const ks = def.map(c => c[0]); try { const v = JSON.parse(localStorage.getItem(key) || 'null'); if (Array.isArray(v) && v.length) { const k2 = v.filter(c => ks.includes(c.key)); ks.forEach(k => { if (!k2.some(c => c.key === k)) k2.push({ key: k, visible: true }); }); return k2; } } catch (e) {} return ks.map(k => ({ key: k, visible: true })); };
+const saveCols = (key, c) => { try { localStorage.setItem(key, JSON.stringify(c)); } catch (e) {} };
+const F0 = { q: '', fWh: [], fZone: [], fExp: [], fStock: [], fMaker: [], fCat: [], fCountry: [], fSupply: [], fSupplier: [], fFlags: [], zoneSel: null, fTransit: false, page: 1 };
+const arr = v => v ? String(v).split(',').map(x => x.trim()).filter(Boolean) : [];
+const expMap = v => [...new Set(arr(v).flatMap(x => x === 'expired' || EB.some(e => e[0] === x) ? [x] : /^\d+$/.test(x) ? EB.filter(e => e[1] <= +x).map(e => e[0]) : []))];
+class Component extends DCLogic {
+  state = { ready: !!window.MedixData, view: 'product', ...F0, open: {}, tOpen: {}, sortP: { key: 'name', dir: 'asc' }, sortB: { key: 'exp', dir: 'asc' }, per: 25, pcols: loadCols(PKEY, PCOLS), bcols: loadCols(BKEY, BCOLS), panel: null, demo: 'normal' };
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'stock' || u.n === this._un) return; this._un = u.n; const P = u.params || {};
+    const v = ['product', 'batch', 'wh'].includes(P.view) ? { view: P.view } : {};
+    this.setState({ ...F0, ...v, open: {}, q: P.q || '', fExp: expMap(P.exp), fZone: arr(P.zone), fWh: arr(P.wh), fStock: arr(P.stock), fMaker: arr(P.maker), fCat: arr(P.cat), fCountry: arr(P.country), fSupply: arr(P.supply), fSupplier: arr(P.supplier), fFlags: arr(P.flags) }); }
+  componentDidMount() {
+    this._url = setInterval(() => this.applyUrl(), 250);
+    if (!window.MedixData) this._poll = setInterval(() => { if (window.MedixData) { clearInterval(this._poll); this.setState({ ready: true }); } }, 60);
+    if (this.props.demo) this.applyDemo(this.props.demo.k);
+    this._nr = setInterval(() => { const D = window.MedixData, r = D && D.store.navReq; if (r && r.page === 'stock') { D.store.navReq = null; if (r.panel) this.setState({ panel: r.panel }); } }, 300);
+  }
+  componentWillUnmount() { clearInterval(this._url); clearInterval(this._nr); clearInterval(this._poll); clearTimeout(this._rt); }
+  componentDidUpdate(pp) { if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n)) this.applyDemo(this.props.demo.k); }
+  applyDemo(k) {
+    clearTimeout(this._rt);
+    const base = { ...F0, view: 'product', open: {}, panel: null, demo: 'normal' };
+    if (k === 'nores') return this.setState({ ...base, q: 'insulin', fZone: ['quar'] });
+    if (k === 'loading') return this.setState({ ...base, demo: 'loading' });
+    this.setState({ ...base, demo: k === 'empty' || k === 'error' ? k : 'normal' });
+  }
+  renderVals() {
+    const s = this.state, p = this.props, L = p.dict || {}, D = window.MedixData, T = UZ;
+    if (!D) return { L, kpis: [], views: [], showProduct: false, showBatch: false, showWh: false };
+    const br = p.branch && p.branch !== 'ALL' ? p.branch : null, all = !br, canCost = D.can(p.role || 'director', 'special.cost');
+    const loading = s.demo === 'loading', err = s.demo === 'error';
+    const scope = s.demo === 'empty' ? [] : D.batches().filter(b => b.qty > 0 && (!br || b.branch === br));
+    const lkOf = b => { const n = D.ivLock ? D.ivLock(b.branch, b.wh, b.zone) : null; return n ? (L.iv_inInv || '').replace('{n}', n) : ''; };
+    const whKey = b => `${b.branch}|${b.wh}`, whLabel = b => all ? `${b.wh} · ${b.branch}` : b.wh;
+    const supOf = b => b.supplier || '—', supplyOf = pr => pr.supplyBy || '—';
+    const PC = new Map(), B0 = D.ptBase().code, bpOf = (pid, bc, bt) => { if (!bt) return null; const k = 'b|' + pid + '|' + bc + '|' + bt; if (!PC.has(k)) { const e = D.priceAt(pid, B0, bc, D.TODAY, bt); PC.set(k, e ? e.price : null); } return PC.get(k); }, priceOf = (pid, bc, bt) => { const x = bpOf(pid, bc, bt); if (x != null) return x; const k = pid + '|' + bc; if (!PC.has(k)) PC.set(k, D.basePrice(pid, bc) || 0); return PC.get(k); };
+    const saleOf = b => b.qty * priceOf(b.pid, b.branch, b.batch);
+    const q = toLat(s.q.trim());
+    const hitP = pr => { if (!q) return null; if (toLat(pr.name).includes(q)) return { k: 'name' }; if (toLat(pr.code).includes(q)) return { k: 'code', v: pr.code }; if (toLat(pr.classifier).includes(q)) return { k: 'cls', v: pr.classifier }; const bc = (pr.barcodes || []).find(x => toLat(x).includes(q)); return bc ? { k: 'bc', v: bc } : null; };
+    const hitB = b => { const h = hitP(b.p); if (!q || h) return h; if (toLat(b.batch).includes(q)) return { k: 'batch', v: b.batch }; if (b.doc && toLat(b.doc).includes(q)) return { k: 'doc', v: b.doc }; if (b.supplier && toLat(b.supplier).includes(q)) return { k: 'sup', v: b.supplier }; return null; };
+    const HL = { code: T.hCode, cls: T.hCls, bc: T.hBc, batch: T.hBatch, doc: T.hDoc, sup: T.hSup };
+    const flagHit = (b, f) => f === 'bonus' ? !!b.bonus : !!(b.p && b.p[f]);
+    const fitP = pr => (!s.fMaker.length || s.fMaker.includes(pr.maker)) && (!s.fCat.length || s.fCat.includes(pr.cat)) && (!s.fCountry.length || s.fCountry.includes(pr.country || '—')) && (!s.fSupply.length || s.fSupply.includes(supplyOf(pr)));
+    const fitB = b => fitP(b.p) && (!s.fWh.length || s.fWh.includes(whKey(b))) && (!s.fZone.length || s.fZone.includes(b.zoneType)) && (!s.fExp.length || s.fExp.some(k => expHit(b, k)))
+      && (!s.fSupplier.length || s.fSupplier.includes(supOf(b))) && (!s.fFlags.length || s.fFlags.some(f => flagHit(b, f))) && (!s.zoneSel || (whKey(b) === s.zoneSel.wh && b.zone === s.zoneSel.zone));
+    const hits = new Map(); const fb = scope.filter(b => { if (!fitB(b)) return false; if (q) { const h = hitB(b); if (!h) return false; hits.set(b.id, h); } return true; });
+    const sum = (a, f) => a.reduce((x, b) => x + (typeof f === 'function' ? f(b) : b[f] || 0), 0);
+    const W = D.CONFIG.expiryWarnDays, nearB = EB.filter(e => e[2] <= W).map(e => e[0]);
+    const badge = d => d == null ? null : d < 0 ? { label: L.k_expired, fg: '#B91C1C', bg: '#FEF2F2' } : d <= 30 ? { label: L.k_days(d), fg: '#B91C1C', bg: '#FEF2F2' } : d <= W ? { label: L.k_days(d), fg: '#B45309', bg: '#FFFBEB' } : { label: L.k_days(d), fg: '#5B6B6A', bg: '#EEF2F4' };
+    const z0 = n => n ? '#172B2A' : '#647574';
+    // KPI
+    const near = scope.filter(b => b.days >= 0 && b.days <= W).length, expd = scope.filter(b => b.days < 0).length, quar = scope.filter(b => b.zoneType === 'quar').length;
+    const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+    const kpiActive = { near: same(s.fExp, nearB) && !s.fZone.length, expired: same(s.fExp, ['expired']) && !s.fZone.length, quar: same(s.fZone, ['quar']) && !s.fExp.length, transit: !!s.fTransit };
+    const trl = s.demo === 'empty' || !D.transitList ? [] : D.transitList().filter(t => !br || t.from.branch === br || t.to.branch === br), trQty = trl.reduce((a, t) => a + t.qty, 0);
+    const kp = (key, label, value, unit, note, icon, color, iconColor, pick) => { const a = !!kpiActive[key]; return { label, value, unit, hasUnit: !!unit, note, icon, hasIcon: !!icon, iconColor, color, static: !pick, active: a, border: a ? '#0D9488' : '#E2E8F0', ring: a ? '0 0 0 1px #0D9488' : '0 1px 2px rgba(18,60,58,0.04)', hover: a ? '#0D9488' : pick ? '#CBD5D3' : '#E2E8F0', cursor: pick ? 'pointer' : 'default', loading, ready: !loading, pick: pick || (() => {}) }; };
+    const toggleK = (key, patch) => () => this.setState(kpiActive[key] ? { fExp: [], fZone: [], fTransit: false, page: 1 } : { fExp: [], fZone: [], fTransit: false, ...patch, page: 1 });
+    const kpis = [kp('prod', L.n_products, err ? '—' : fN(new Set(scope.map(b => b.pid)).size), '', L.q_kHasStock, null, '#172B2A'),
+      ...(canCost ? [kp('val', L.q_kValue, err ? '—' : fM(sum(scope, 'value')), '', L.som, null, '#172B2A')] : []),
+      kp('near', L.q_kNear, err ? '—' : String(near), L.q_batchUnit, L.q_kNearN, 'triangle-alert', '#B45309', '#B45309', toggleK('near', { fExp: nearB })),
+      kp('expired', L.k_expired, err ? '—' : String(expd), L.q_batchUnit, L.q_kExpN, 'circle-x', '#B91C1C', '#B91C1C', toggleK('expired', { fExp: ['expired'] })),
+      kp('quar', L.q_kQuar, err ? '—' : String(quar), L.q_batchUnit, L.q_kQuarN, 'shield-alert', '#B45309', '#B45309', toggleK('quar', { fZone: ['quar'] })),
+      kp('transit', L.kc_inTransit, err ? '—' : fN(trQty), L.kc_qUnit, (L.kc_qTransitN || '').replace('{n}', new Set(trl.map(t => t.no)).size), 'truck', '#1D4ED8', '#1D4ED8', () => this.setState(st => ({ fTransit: !st.fTransit, fExp: [], fZone: [], page: 1 })))];
+    // filter options (counts = partiyalar soni joriy filial doirasida)
+    const uniq = (list, key, label) => { const m = new Map(); list.forEach(b => { const k = key(b); if (!m.has(k)) m.set(k, { value: k, label: label(b), count: 0 }); m.get(k).count++; }); return [...m.values()].sort((a, b) => String(a.label).localeCompare(String(b.label), 'uz')); };
+    const set = k => v => this.setState({ [k]: v, page: 1 });
+    const zoneOpts = [['store', L.q_zStore], ['recv', L.q_zRecv], ['quar', L.q_zQuar], ['ship', L.q_zShip], ['cold', L.q_zCold], ['ctrl', L.q_zCtrl]].map(([v, label]) => ({ value: v, label, icon: ZT[v][0], iconColor: ZT[v][1], count: scope.filter(b => b.zoneType === v).length })).filter(o => o.count || s.fZone.includes(o.value));
+    const expOpts = [['0-30', T.e030], ['31-60', T.e3160], ['61-90', T.e6190], ['90+', T.e90], ['expired', T.eExp]].map(([v, label]) => ({ value: v, label, count: scope.filter(b => expHit(b, v)).length }));
+    const fbFilters = [
+      { label: T.fWh, options: uniq(scope, whKey, whLabel), selected: s.fWh, onChange: set('fWh') },
+      { label: T.fZone, options: zoneOpts, selected: s.fZone, onChange: set('fZone') },
+      { label: T.fExp, options: expOpts, selected: s.fExp, onChange: set('fExp') },
+      { label: T.fStock, options: [['has', T.sHas], ['zero', T.sZero], ['allres', T.sAllRes]].map(([value, label]) => ({ value, label })), selected: s.fStock, onChange: set('fStock') },
+      { more: true, label: T.fMaker, options: uniq(scope, b => b.p.maker, b => b.p.maker), selected: s.fMaker, onChange: set('fMaker') },
+      { more: true, label: T.fCat, options: uniq(scope, b => b.p.cat, b => b.p.cat), selected: s.fCat, onChange: set('fCat') },
+      { more: true, label: T.fCountry, options: uniq(scope, b => b.p.country || '—', b => b.p.country || '—'), selected: s.fCountry, onChange: set('fCountry') },
+      { more: true, label: T.fSupply, options: uniq(scope, b => supplyOf(b.p), b => b.p.supplyBy || T.noSupply), selected: s.fSupply, onChange: set('fSupply') },
+      { more: true, label: T.fSupplier, options: uniq(scope, supOf, b => b.supplier || T.noSup), selected: s.fSupplier, onChange: set('fSupplier') },
+      { more: true, label: T.fFlags, options: [['mark', T.flMark, 'scan-barcode', '#5B6B6A'], ['ctrl', T.flCtrl, 'lock', '#B91C1C'], ['rx', T.flRx, 'file-text', '#1D4ED8'], ['bonus', T.flBonus, 'gift', '#0F766E']].map(([v, label, icon, iconColor]) => ({ value: v, label, icon, iconColor, count: scope.filter(b => flagHit(b, v)).length })), selected: s.fFlags, onChange: set('fFlags') }];
+    const fKeys = ['fWh', 'fZone', 'fExp', 'fStock', 'fMaker', 'fCat', 'fCountry', 'fSupply', 'fSupplier', 'fFlags'];
+    const hasFilters = fKeys.some(k => s[k].length) || !!s.zoneSel;
+    const clearAll = { ...F0, q: s.q };
+    const flagsP = (pr, bonus) => [pr.mark && { icon: 'scan-barcode', color: '#5B6B6A', tip: T.flMark }, pr.ctrl && { icon: 'lock', color: '#B91C1C', tip: T.flCtrl }, pr.rx && { icon: 'file-text', color: '#1D4ED8', tip: T.flRx }, bonus && { icon: 'gift', color: '#0F766E', tip: T.flBonus }].filter(Boolean);
+    const flagsB = b => [b.bonus && { icon: 'gift', color: '#0F766E', tip: T.flBonus }, b.damaged && { icon: 'package-x', color: '#B91C1C', tip: T.flDmg }].filter(Boolean);
+    const nameCell = (pr, h) => { const nm = h && h.k === 'name', i = nm ? toLat(pr.name).indexOf(q) : -1, ok = i >= 0 && toLat(pr.name).length === pr.name.length;
+      return { type: 'name', pre: ok ? pr.name.slice(0, i) : pr.name, hit: ok ? pr.name.slice(i, i + q.length) : '', post: ok ? pr.name.slice(i + q.length) : '', hasHit: ok, sub: h && !nm ? `${HL[h.k]}: ${h.v}` : `${D.FORMS[pr.form] || pr.form || ''} ${pr.dose || ''}`.trim(), color: pr.active ? '#172B2A' : '#647574' }; };
+    const isKr = b => /^KR-/.test(b.doc || '');
+    const openDoc = no => p.onNavigate && p.onNavigate('receipt', 'open:' + no);
+    const CL = { code: T.cCode, name: T.cName, maker: T.cMaker, cat: T.cCat, country: T.cCountry, unit: T.cUnit, total: T.cTotal, res: T.cRes, avail: T.cAvail, closed: T.cClosed, ship: T.cShip, batches: T.cBatches, near: T.cNear, costSum: T.cCostSum, saleSum: T.cSaleSum, lastIn: T.cLastIn, supplyBy: T.cSupply, flags: T.cFlags, branch: T.cBranch, wh: T.cWh, zone: T.cZone, batch: T.cBatch, mfg: T.cMfg, exp: T.cExp, qty: T.cQty, cost: T.cCost, doc: T.cDoc, docDate: T.cDocDate, supplier: T.cSupplier };
+    const defsOf = (DEF, st) => st.filter(c => { const d = DEF.find(x => x[0] === c.key); return d && (!d[3] || canCost) && (c.key !== 'branch' || all); });
+    const colsOf = (DEF, st, sort) => defsOf(DEF, st).filter(c => c.visible).map(c => { const d = DEF.find(x => x[0] === c.key); return { key: c.key, label: CL[c.key], width: d[1] + 'px', align: d[2] === 'r' ? 'right' : 'left', sortable: c.key !== 'flags', sortDir: sort && sort.key === c.key ? sort.dir : null }; });
+    const cmp = (x, y) => (typeof x === 'number' && typeof y === 'number') ? x - y : String(x == null ? '' : x).localeCompare(String(y == null ? '' : y), 'uz');
+    const doSort = (rows, sort, val) => { if (!sort) return rows; const m = sort.dir === 'asc' ? 1 : -1; return [...rows].sort((a, b) => cmp(val(a, sort.key), val(b, sort.key)) * m); };
+    const sticky = cols => ['code', 'name'].filter((k, i) => cols[i] && cols[i].key === k).length;
+    const minW = (cols, extra) => extra + 44 + cols.reduce((a, c) => a + (parseInt(c.width, 10) || 0), 0);
+    const footOf = (cols, tot) => ({ cells: cols.map((c, i) => ({ text: tot[c.key] != null ? tot[c.key] : i === 0 ? T.total : '' })) });
+    // ---- product view
+    const groups = new Map();
+    fb.forEach(b => { if (!groups.has(b.pid)) groups.set(b.pid, []); groups.get(b.pid).push(b); });
+    const fs = s.fStock, wantZero = fs.includes('zero');
+    let prods = [...groups.entries()].map(([pid, bs]) => ({ pr: D.prodById(pid), bs }));
+    if (fs.length) prods = prods.filter(x => fs.includes('has') || (fs.includes('allres') && sum(x.bs, 'avail') === 0));
+    if (wantZero) { const anyB = new Set(scope.filter(b => !s.fWh.length || s.fWh.includes(whKey(b))).map(b => b.pid));
+      D.PRODUCTS.filter(pr => pr.active && !groups.has(pr.id) && !anyB.has(pr.id) && fitP(pr) && (!s.fFlags.length || s.fFlags.some(f => f !== 'bonus' && pr[f])) && (!q || hitP(pr))).forEach(pr => prods.push({ pr, bs: [], zero: true })); }
+    const agg = x => { const bs = x.bs, ship = sum(bs.filter(b => b.zoneType === 'ship'), 'qty'), dated = bs.filter(b => b.days != null), mn = dated.length ? dated.reduce((a, b) => b.days < a.days ? b : a) : null, kr = bs.filter(isKr), li = kr.length ? kr.reduce((a, b) => (pD(b.docDate) || 0) > (pD(a.docDate) || 0) ? b : a) : null;
+      return { ...x, total: sum(bs, 'qty'), res: sum(bs, 'reservedQty'), avail: sum(bs, 'avail'), ship, closed: sum(bs, 'closed') - ship, batches: new Set(bs.map(b => b.batch)).size, mn, costSum: sum(bs, 'value'), saleSum: sum(bs, saleOf), lastIn: li ? li.docDate : '', bonus: bs.some(b => b.bonus), hit: q ? (hitP(x.pr) || (bs.map(b => hits.get(b.id)).find(Boolean)) || null) : null }; };
+    const PR = prods.map(agg);
+    const pVal = (x, k) => ({ code: x.pr.code, name: x.pr.name, maker: x.pr.maker, cat: x.pr.cat, country: x.pr.country || '', unit: x.pr.unit, total: x.total, res: x.res, avail: x.avail, closed: x.closed, ship: x.ship, batches: x.batches, near: x.mn ? x.mn.days : 1e9, costSum: x.costSum, saleSum: x.saleSum, lastIn: pD(x.lastIn) || 0, supplyBy: x.pr.supplyBy || '' })[k];
+    const pSorted = doSort(PR, s.sortP, pVal);
+    const pColumns = colsOf(PCOLS, s.pcols, s.sortP);
+    const pPages = Math.max(1, Math.ceil(pSorted.length / s.per)), pPage = Math.min(s.page, pPages), pSlice = pSorted.slice((pPage - 1) * s.per, pPage * s.per);
+    const KH = [[T.cWh], [T.cZone], [T.cBatch], [T.cMfg], [T.cExp], [T.cQty, 'right'], [T.cRes, 'right'], [T.cAvail, 'right'], ...(canCost ? [[T.cCost, 'right']] : []), [T.cSalePrice || 'Sotuv narxi', 'right'], [T.cDoc], [T.cSupplier], [T.cFlags]].map(([label, align]) => ({ label, align }));
+    const kGrid = `minmax(170px,1.3fr) 160px 130px 120px 180px 90px 80px 90px${canCost ? ' 110px' : ''} 130px 150px minmax(170px,1fr) 80px`;
+    const zoneCell = b => lkOf(b) ? { type: 'status', text: b.zoneLabel + ' · ' + lkOf(b), icon: 'lock', fg: '#B45309', bg: '#FFFBEB' } : { type: 'status', text: b.zoneLabel, icon: ZT[b.zoneType][0], fg: ZT[b.zoneType][1], bg: ZT[b.zoneType][2] };
+    const expCell = b => { const kb = badge(b.days); return { type: 'text', text: b.exp || '—', badge: kb ? kb.label : '', badgeFg: kb && kb.fg, badgeBg: kb && kb.bg }; };
+    const docCell = b => isKr(b) ? { type: 'link', text: b.doc, pick: () => openDoc(b.doc) } : b.doc ? { type: 'mono', text: b.doc, color: '#5B6B6A' } : { type: 'text', text: T.opening, color: '#647574' };
+    const mergeKids = bs => { const m = new Map(); bs.forEach(b => { const k = [b.branch, b.wh, b.zone, b.batch, b.doc || '', b.bonus ? 1 : 0, b.damaged ? 1 : 0].join('|'); const x = m.get(k); if (!x) m.set(k, { ...b }); else { x.qty += b.qty; x.reservedQty += b.reservedQty; x.avail += b.avail; x.closed += b.closed; x.value += b.value; } }); return [...m.values()]; };
+    const kidsOf = bs => mergeKids(bs).sort((a, b) => (pD(a.exp) || 0) - (pD(b.exp) || 0) || a.zone.localeCompare(b.zone)).map(b => ({ id: b.id, onOpen: () => this.setState({ panel: b.id }),
+      cells: [{ type: 'text', text: whLabel(b) }, zoneCell(b), { type: 'mono', text: b.batch }, { type: 'text', text: b.mfg || '—', color: b.mfg ? '#172B2A' : '#647574' }, expCell(b), { type: 'text', text: fN(b.qty), weight: 500 }, { type: 'text', text: fN(b.reservedQty), color: b.reservedQty ? '#5B6B6A' : '#647574' }, { type: 'text', text: fN(b.avail), color: z0(b.avail), weight: 500 },
+        ...(canCost ? [{ type: 'text', text: fM(b.cost || 0), color: '#5B6B6A' }] : []), bpOf(b.pid, b.branch, b.batch) != null ? { type: 'icontext', icon: 'tag', text: fM(priceOf(b.pid, b.branch, b.batch)), color: '#0F766E' } : { type: 'text', text: fM(priceOf(b.pid, b.branch, b.batch)), color: '#5B6B6A' }, docCell(b), { type: 'text', text: b.supplier || '—', color: b.supplier ? '#172B2A' : '#647574' }, { type: 'flags', flags: flagsB(b) }] }));
+    const pCell = (x, k) => {
+      const n = (v, c) => ({ type: 'text', text: fN(v), color: c || z0(v) });
+      if (k === 'code') return { type: 'mono', text: x.pr.code };
+      if (k === 'name') return nameCell(x.pr, x.hit);
+      if (k === 'total') return { ...n(x.total), weight: 600 };
+      if (k === 'res') return n(x.res, x.res ? '#5B6B6A' : '#647574');
+      if (k === 'avail') return { ...n(x.avail), weight: 600 };
+      if (k === 'closed') return n(x.closed, x.closed ? '#B45309' : '#647574');
+      if (k === 'ship') return n(x.ship, x.ship ? '#5B6B6A' : '#647574');
+      if (k === 'batches') return n(x.batches, '#5B6B6A');
+      if (k === 'near') { if (!x.mn) return { type: 'text', text: '—', color: '#647574' }; const bd = badge(x.mn.days); return { type: 'name', pre: x.mn.exp, weight: 400, badge: bd.label, badgeFg: bd.fg, badgeBg: bd.bg }; }
+      if (k === 'costSum') return { type: 'text', text: fM(x.costSum), color: x.costSum ? '#172B2A' : '#647574' };
+      if (k === 'saleSum') return { type: 'text', text: fM(x.saleSum), color: x.saleSum ? '#172B2A' : '#647574' };
+      if (k === 'lastIn') return { type: 'text', text: x.lastIn || '—', color: x.lastIn ? '#172B2A' : '#647574' };
+      if (k === 'flags') return { type: 'flags', flags: flagsP(x.pr, x.bonus) };
+      const v = { maker: x.pr.maker, cat: x.pr.cat, country: x.pr.country, unit: x.pr.unit, supplyBy: x.pr.supplyBy }[k]; return { type: 'text', text: v || '—', color: v ? '#172B2A' : '#647574' };
+    };
+    const pRows = pSlice.map(x => { const op = !!s.open[x.pr.id] && x.bs.length > 0, tg = () => x.bs.length && this.setState(st => ({ open: { ...st.open, [x.pr.id]: !st.open[x.pr.id] } }));
+      return { id: x.pr.id, cells: pColumns.map(c => pCell(x, c.key)), expandable: x.bs.length > 0, expanded: op, onExpand: tg, onOpen: tg, sub: op ? { grid: kGrid, head: KH, rows: kidsOf(x.bs) } : null }; });
+    const pT = { total: sum(PR, 'total'), res: sum(PR, 'res'), avail: sum(PR, 'avail'), closed: sum(PR, 'closed'), ship: sum(PR, 'ship'), batches: sum(PR, 'batches'), costSum: sum(PR, 'costSum'), saleSum: sum(PR, 'saleSum') };
+    const pFoot = footOf(pColumns, { total: fN(pT.total), res: fN(pT.res), avail: fN(pT.avail), closed: fN(pT.closed), ship: fN(pT.ship), batches: fN(pT.batches), costSum: fM(pT.costSum), saleSum: fM(pT.saleSum) });
+    // ---- batch view
+    const bVal = (b, k) => ({ code: b.p.code, name: b.p.name, maker: b.p.maker, branch: b.branch, wh: b.wh, zone: b.zoneLabel, batch: b.batch, mfg: pD(b.mfg) || 0, exp: b.days == null ? 1e9 : b.days, qty: b.qty, res: b.reservedQty, avail: b.avail, cost: b.cost || 0, costSum: b.value, saleSum: saleOf(b), doc: b.doc || '', docDate: pD(b.docDate) || 0, supplier: b.supplier || '' })[k];
+    const fbB = fs.length && !fs.includes('has') ? fb.filter(b => fs.includes('allres') && b.avail === 0) : fb;
+    const bSorted = doSort(fbB, s.sortB, bVal);
+    const bColumns = colsOf(BCOLS, s.bcols, s.sortB);
+    const bPages = Math.max(1, Math.ceil(bSorted.length / s.per)), bPage = Math.min(s.page, bPages), bSlice = bSorted.slice((bPage - 1) * s.per, bPage * s.per);
+    const bCell = (b, k) => {
+      if (k === 'code') return { type: 'mono', text: b.p.code };
+      if (k === 'name') return nameCell(b.p, hits.get(b.id));
+      if (k === 'branch') return { type: 'mono', text: b.branch, color: '#5B6B6A' };
+      if (k === 'zone') return zoneCell(b);
+      if (k === 'batch') return { type: 'mono', text: b.batch };
+      if (k === 'exp') { const kb = badge(b.days); return { type: 'name', pre: b.exp || '—', weight: 400, badge: kb ? kb.label : '', badgeFg: kb && kb.fg, badgeBg: kb && kb.bg }; }
+      if (k === 'qty') return { type: 'text', text: fN(b.qty), weight: 500 };
+      if (k === 'res') return { type: 'text', text: fN(b.reservedQty), color: b.reservedQty ? '#5B6B6A' : '#647574' };
+      if (k === 'avail') return { type: 'text', text: fN(b.avail), color: z0(b.avail) };
+      if (k === 'cost') return { type: 'text', text: fM(b.cost || 0), color: '#5B6B6A' };
+      if (k === 'costSum') return { type: 'text', text: fM(b.value) };
+      if (k === 'saleSum') { const v = saleOf(b); return bpOf(b.pid, b.branch, b.batch) != null ? { type: 'icontext', icon: 'tag', text: fM(v), color: '#0F766E' } : { type: 'text', text: fM(v), color: v ? '#172B2A' : '#647574' }; }
+      if (k === 'doc') return isKr(b) ? { type: 'link', text: b.doc, pick: () => openDoc(b.doc) } : b.doc ? { type: 'mono', text: b.doc, color: '#5B6B6A' } : { type: 'text', text: T.opening, color: '#647574' };
+      if (k === 'flags') return { type: 'flags', flags: flagsP(b.p, false).concat(flagsB(b)) };
+      const v = { maker: b.p.maker, wh: b.wh, mfg: b.mfg, docDate: b.docDate, supplier: b.supplier }[k]; return { type: 'text', text: v || '—', color: v ? '#172B2A' : '#647574' };
+    };
+    const bRows = bSlice.map(b => ({ id: b.id, onOpen: () => this.setState({ panel: b.id }), cells: bColumns.map(c => bCell(b, c.key)) }));
+    const bT = { qty: sum(fbB, 'qty'), res: sum(fbB, 'reservedQty'), avail: sum(fbB, 'avail'), costSum: sum(fbB, 'value'), saleSum: sum(fbB, saleOf) };
+    const bFoot = footOf(bColumns, { qty: fN(bT.qty), res: fN(bT.res), avail: fN(bT.avail), costSum: fM(bT.costSum), saleSum: fM(bT.saleSum) });
+    // ---- warehouse tree
+    const tree = [];
+    const aggT = bs => ({ products: fN(new Set(bs.map(b => b.pid)).size), qty: fN(sum(bs, 'qty')), value: fM(sum(bs, 'value')) });
+    D.BRANCHES.filter(b => !br || b.code === br).forEach(B => {
+      const bb = fb.filter(b => b.branch === B.code), tOut = trl.filter(t => t.from.branch === B.code), tq = tOut.reduce((a, t) => a + t.qty, 0); if (!bb.length && !tq) return;
+      const bo = s.tOpen[B.code] !== false;
+      tree.push({ ...aggT(bb), qty: fN(sum(bb, 'qty') + tq), value: fM(sum(bb, 'value') + tOut.reduce((a, t) => a + t.qty * (t.cost || 0), 0)), label: B.name, icon: 'building-2', iconColor: '#5B6B6A', indent: 16, weight: 600, h: 44, bg: '#FFFFFF', hasChev: true, chev: bo ? 'chevron-down' : 'chevron-right', isZone: false, pick: () => this.setState(st => ({ tOpen: { ...st.tOpen, [B.code]: !bo } })) });
+      if (!bo) return;
+      B.wh.forEach(w => {
+        const wb = bb.filter(b => b.wh === w); if (!wb.length) return;
+        const wk = `${B.code}|${w}`, wo = s.tOpen[wk] !== false;
+        tree.push({ ...aggT(wb), label: w, icon: /Sovuq/.test(w) ? 'snowflake' : 'warehouse', iconColor: /Sovuq/.test(w) ? '#1D4ED8' : '#5B6B6A', indent: 40, weight: 500, h: 44, bg: '#FFFFFF', hasChev: true, chev: wo ? 'chevron-down' : 'chevron-right', isZone: false, pick: () => this.setState(st => ({ tOpen: { ...st.tOpen, [wk]: !wo } })) });
+        if (!wo) return;
+        D.zonesFor(B.code, w).forEach(z => { const zb = wb.filter(b => b.zone === z.key); if (!zb.length) return; const lk = D.ivLock && D.ivLock(B.code, w, z.key);
+          tree.push({ ...aggT(zb), label: lk ? z.label + ' · ' + (L.iv_inInv || '').replace('{n}', lk) : z.label, icon: lk ? 'lock' : ZT[z.type][0], iconColor: lk ? '#B45309' : ZT[z.type][1], indent: 88, weight: 400, h: 40, bg: '#F8FAFA', hasChev: false, isZone: true, pick: () => this.setState({ view: 'batch', zoneSel: { wh: wk, zone: z.key, label: `${w} · ${z.label}` }, page: 1 }) }); });
+      });
+      if (tq) tree.push({ products: fN(new Set(tOut.map(t => t.pid)).size), qty: fN(tq), value: fM(tOut.reduce((a, t) => a + t.qty * (t.cost || 0), 0)), label: L.kc_qTreeTransit, icon: 'truck', iconColor: '#1D4ED8', indent: 40, weight: 500, h: 44, bg: '#FFFFFF', hasChev: false, isZone: true, pick: () => this.setState({ fTransit: true }) });
+    });
+    // ---- states, export
+    const ok = !loading && !err && scope.length > 0;
+    const noRes = ok && (s.view === 'product' ? PR.length === 0 : s.view === 'batch' ? fbB.length === 0 : fb.length === 0);
+    const FN = { fWh: T.fWh, fZone: T.fZone, fExp: T.fExp, fStock: T.fStock, fMaker: T.fMaker, fCat: T.fCat, fCountry: T.fCountry, fSupply: T.fSupply, fSupplier: T.fSupplier, fFlags: T.fFlags };
+    const activeF = [s.q.trim() && `${L.p_searchWord} «${s.q.trim()}»`, ...fKeys.filter(k => s[k].length).map(k => FN[k])].filter(Boolean);
+    const xv = { p: (x, k) => k === 'near' ? (x.mn ? `${x.mn.exp} (${x.mn.days} kun)` : '') : k === 'flags' ? flagsP(x.pr, x.bonus).map(f => f.tip).join(', ') : k === 'code' ? String(x.pr.code) : ['costSum', 'saleSum'].includes(k) ? Math.round(pVal(x, k) * 100) / 100 : k === 'lastIn' ? x.lastIn : pVal(x, k),
+      b: (b, k) => k === 'exp' ? (b.exp ? `${b.exp}${b.days != null ? ` (${b.days} kun)` : ''}` : '') : k === 'flags' ? flagsP(b.p, false).concat(flagsB(b)).map(f => f.tip).join(', ') : k === 'code' ? String(b.p.code) : k === 'mfg' ? b.mfg || '' : k === 'docDate' ? b.docDate || '' : k === 'doc' ? b.doc || T.opening : ['cost', 'costSum', 'saleSum'].includes(k) ? Math.round(bVal(b, k) * 100) / 100 : bVal(b, k) };
+    const doExport = () => { if (s.view === 'wh') { p.onToast && p.onToast(L.p_exportToast); return; }
+      const isP = s.view === 'product', cols = isP ? pColumns : bColumns, list = isP ? pSorted : bSorted, f = isP ? xv.p : xv.b;
+      const tot = isP ? pT : bT, foot = cols.map((c, i) => tot[c.key] != null ? Math.round(tot[c.key] * 100) / 100 : i === 0 ? T.total : '');
+      D.xlsxDownload(`Qoldiqlar_${isP ? 'mahsulot' : 'partiya'}_${D.TODAY}.xlsx`, [cols.map(c => c.label)].concat(list.map(x => cols.map(c => f(x, c.key)))).concat([foot]), L.n_stock || 'Qoldiqlar');
+      p.onToast && p.onToast(T.expDone(list.length)); };
+    const pb = s.panel ? D.batches().find(b => b.id === s.panel) : null;
+    const trRows = trl.map(t => ({ name: (D.prodById(t.pid) || {}).name, batch: t.batch, route: `${D.whName(t.from.branch, t.from.wh)} → ${D.whName(t.to.branch, t.to.wh)}`, short: !!t.short, qty: fN(t.qty), qtyC: t.short ? '#B45309' : '#172B2A', value: fM(t.qty * (t.cost || 0)), no: t.no, open: () => p.onNavigate && p.onNavigate('transfer', { open: t.no }) }));
+    const isPV = s.view === 'product', isBV = s.view === 'batch';
+    const colSt = isPV ? s.pcols : s.bcols, colDEF = isPV ? PCOLS : BCOLS, colKey = isPV ? PKEY : BKEY, colSK = isPV ? 'pcols' : 'bcols';
+    return {
+      L, narrow: !!p.narrow, canCost, kpis, kpiCols: p.narrow ? 3 : kpis.length,
+      countLabel: ok ? fN(isPV ? PR.length : isBV ? fbB.length : new Set(fb.map(b => b.pid)).size) : '',
+      showTransit: !!s.fTransit, showMain: !s.fTransit, trRows, trCount: String(trRows.length), trEmpty: !trRows.length, trGrid: `minmax(200px,1.4fr) minmax(240px,1.6fr) 100px${canCost ? ' 150px' : ''} 170px`,
+      hdrMore: [{ label: L.p_export, icon: 'download', pick: doExport }, { label: L.p_print, icon: 'printer', pick: () => p.onToast && p.onToast(L.p_printToast) }],
+      views: [['product', T.vProduct, PR.length], ['batch', T.vBatch, fbB.length], ['wh', T.vWh, null]].map(([k, label, n]) => ({ label, count: ok && n != null ? fN(n) : null, active: s.view === k, pick: () => this.setState({ view: k, page: 1 }) })),
+      isBatch: isBV, hasSubBar: isBV || !!s.zoneSel, hasZoneSel: !!s.zoneSel, zoneSelLabel: s.zoneSel ? `${L.q_zone}: ${s.zoneSel.label}` : '', clearZoneSel: () => this.setState({ zoneSel: null }),
+      q: s.q, setQ: v => this.setState({ q: v, page: 1 }), searchPh: T.search, searchW: p.narrow ? 300 : 420, fbFilters, moreLabel: T.more, clearAllLabel: T.clearAll,
+      fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      hasFilters, clearFilters: () => this.setState(clearAll),
+      colDefs: s.view === 'wh' ? [] : defsOf(colDEF, colSt).map(c => ({ key: c.key, label: CL[c.key], visible: c.visible })),
+      setCols: cols => { const hid = colSt.filter(c => !cols.some(x => x.key === c.key)); const c = cols.map(x => ({ key: x.key, visible: x.visible })).concat(hid); saveCols(colKey, c); this.setState({ [colSK]: c }); },
+      resetCols: () => { try { localStorage.removeItem(colKey); } catch (e) {} this.setState({ [colSK]: colDEF.map(d => ({ key: d[0], visible: true })) }); },
+      isLoading: loading,
+      showProduct: (ok && !noRes && isPV) || (loading && isPV), pColumns, pRows, pSticky: sticky(pColumns), pMinW: minW(pColumns, 32), pFoot, pPager: ok && !noRes && isPV, pTotal: pSorted.length, pPage, per: s.per,
+      onSortP: k => this.setState(st => ({ sortP: !st.sortP || st.sortP.key !== k ? { key: k, dir: 'asc' } : st.sortP.dir === 'asc' ? { key: k, dir: 'desc' } : { key: 'name', dir: 'asc' }, page: 1 })),
+      showBatch: (ok && !noRes && isBV) || (loading && isBV), bColumns, bRows, bSticky: sticky(bColumns), bMinW: minW(bColumns, 0), bFoot, bPager: ok && !noRes && isBV, bTotal: bSorted.length, bPage,
+      onSortB: k => this.setState(st => ({ sortB: !st.sortB || st.sortB.key !== k ? { key: k, dir: 'asc' } : st.sortB.dir === 'asc' ? { key: k, dir: 'desc' } : { key: 'exp', dir: 'asc' }, page: 1 })),
+      setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 }),
+      showWh: ok && !noRes && s.view === 'wh', tree, whValCol: canCost ? '170px' : '',
+      showEmpty: !loading && !err && scope.length === 0, emptyAction: { label: L.k_new, icon: 'plus', pick: () => p.onNavigate && p.onNavigate('receipt', 'nav:new') },
+      showNoRes: noRes, noResText: L.p_noResD ? L.p_noResD(activeF.join(', ') || '—') : '', noResAction: { label: L.p_fClear, icon: 'filter-x', pick: () => this.setState({ ...F0 }) },
+      showError: err, retryAction: { label: L.retry, icon: 'rotate-ccw', pick: () => { this.setState({ demo: 'loading' }); this._rt = setTimeout(() => this.setState({ demo: 'normal' }), 1000); } },
+      panelOpen: !!pb, panelBatch: pb, panelW: p.narrow ? '60%' : '480px', closePanel: () => this.setState({ panel: null }), openDoc,
+      toMarks: b => p.onNavigate && p.onNavigate('marking', { bid: b.id }), toMove: b => p.onNavigate && p.onNavigate('transfer', { new: 'zk', bid: b.id }),
+      toWriteoff: b => { D.store.docReq = { kind: 'hc', bids: [b.id] }; p.onNavigate && p.onNavigate('writeoff'); }, toSupReturn: b => { D.store.docReq = { kind: 'qy', receiptNo: b.doc, bid: b.id }; p.onNavigate && p.onNavigate('sreturns'); }, toastFn: t => p.onToast && p.onToast(t)
+    };
+  }
+}
+</script>
+</body>
+</html>

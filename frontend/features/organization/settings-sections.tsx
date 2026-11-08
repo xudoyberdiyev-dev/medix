@@ -2,53 +2,20 @@
 
 import { Building2, CircleUser, ScrollText, Settings2, ShieldCheck, Users, Warehouse } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useMe } from "@/features/auth/session";
 
-/** Sozlamalar boʻlimlari (SPEC 4: Boshqaruv). Rolga qarab koʻrinadi — yakuniy ruxsat serverda. */
-export const SETTINGS_SECTIONS: { href: string; icon: typeof Users; title: string; description: string; anyOf?: string[] }[] = [
-  {
-    href: "/settings/branches",
-    icon: Building2,
-    title: "Filiallar",
-    description: "Kod, STIR, yuridik nom; nofaol qilish",
-    anyOf: ["branches.view"],
-  },
-  {
-    href: "/settings/warehouses",
-    icon: Warehouse,
-    title: "Omborlar va zonalar",
-    description: "Omborlar, Sovuq va Seyf zonalari",
-    anyOf: ["warehouses.view"],
-  },
-  {
-    href: "/settings/employees",
-    icon: Users,
-    title: "Xodimlar",
-    description: "Loginlar, rollar, bloklash, vaqtinchalik parol",
-    anyOf: ["staff.view"],
-  },
-  {
-    href: "/settings/roles",
-    icon: ShieldCheck,
-    title: "Rollar va ruxsatlar",
-    description: "11 rol, 132 ruxsat kaliti, rol nusxasi",
-    anyOf: ["roles.view"],
-  },
-  {
-    href: "/settings/audit",
-    icon: ScrollText,
-    title: "Audit jurnali",
-    description: "Kim, qachon, nima oʻzgartirdi",
-    anyOf: ["audit.view"],
-  },
-  { href: "/profile", icon: CircleUser, title: "Profil", description: "Telefon, parol, PIN" },
-  {
-    href: "/setup",
-    icon: Settings2,
-    title: "Sozlash ustasi",
-    description: "Birinchi ishga tushirish: kompaniya, filiallar, omborlar",
-    anyOf: ["company.edit"],
-  },
+type SectionKey = "branches" | "warehouses" | "employees" | "roles" | "audit" | "profile" | "setup";
+
+/** Sozlamalar boʻlimlari (SPEC 4: Boshqaruv). Rolga qarab koʻrinadi — yakuniy ruxsat serverda. Nomi va tavsifi — `organization.sections.<key>` lugʻatida. */
+export const SETTINGS_SECTIONS: { key: SectionKey; href: string; icon: typeof Users; anyOf?: string[] }[] = [
+  { key: "branches", href: "/settings/branches", icon: Building2, anyOf: ["branches.view"] },
+  { key: "warehouses", href: "/settings/warehouses", icon: Warehouse, anyOf: ["warehouses.view"] },
+  { key: "employees", href: "/settings/employees", icon: Users, anyOf: ["staff.view"] },
+  { key: "roles", href: "/settings/roles", icon: ShieldCheck, anyOf: ["roles.view"] },
+  { key: "audit", href: "/settings/audit", icon: ScrollText, anyOf: ["audit.view"] },
+  { key: "profile", href: "/profile", icon: CircleUser },
+  { key: "setup", href: "/setup", icon: Settings2, anyOf: ["company.edit"] },
 ];
 
 export function sectionsFor(permissions: string[] | undefined) {
@@ -58,9 +25,10 @@ export function sectionsFor(permissions: string[] | undefined) {
 
 export function SettingsSections() {
   const me = useMe();
+  const t = useTranslations("organization.sections");
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
-      {sectionsFor(me.data?.permissions).map(({ href, icon: Icon, title, description }) => (
+      {sectionsFor(me.data?.permissions).map(({ key, href, icon: Icon }) => (
         <Link
           key={href}
           href={href}
@@ -68,8 +36,8 @@ export function SettingsSections() {
         >
           <Icon size={20} strokeWidth={1.5} aria-hidden className="mt-0.5 shrink-0 text-primary" />
           <span>
-            <span className="block text-subtitle">{title}</span>
-            <span className="mt-1 block text-text-secondary">{description}</span>
+            <span className="block text-subtitle">{t(`${key}.title`)}</span>
+            <span className="mt-1 block text-text-secondary">{t(`${key}.description`)}</span>
           </span>
         </Link>
       ))}

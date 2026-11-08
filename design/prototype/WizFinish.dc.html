@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="height:100%;display:flex;flex-direction:column;min-height:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <sc-if value="{{ isDone }}">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px">
+      <div style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:32px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+        <span style="width:64px;height:64px;border-radius:50%;background:#F0FDF4;color:#15803D;display:flex;align-items:center;justify-content:center"><lucide-i name="circle-check" size="40"></lucide-i></span>
+        <h1 style="margin:8px 0 0;font-size:22px;line-height:28px;font-weight:600">{{ L.rl_okT }}</h1>
+        <p style="margin:0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ L.rl_okD }}</p>
+        <button onClick="{{ goHome }}" style="margin-top:12px;height:44px;padding:0 20px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px" style-hover="background:#115E59">{{ L.rl_goHome }}<lucide-i name="arrow-right" size="16"></lucide-i></button>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ notDone }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:0;overflow:auto;padding:32px 24px 24px">
+      <div style="max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:12px;line-height:16px;font-weight:500;color:#0F766E">{{ stepOf }}</span>
+          <h1 style="margin:6px 0 0;font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.01em">{{ L.rl_t6 }}</h1>
+          <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ L.rl_d6 }}</p>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+          <div style="padding:16px 20px;border-bottom:1px solid #EEF2F4;font-size:15px;line-height:22px;font-weight:600">{{ L.rl_rdT }}</div>
+          <sc-for list="{{ items }}" as="it" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid #EEF2F4">
+              <span style="width:32px;height:32px;flex:none;border-radius:8px;background:{{ it.bg }};color:{{ it.fg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ it.icon }}" size="16"></lucide-i></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+                <span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ it.label }}</span>
+                <span style="font-size:14px;line-height:20px;font-weight:500;text-wrap:pretty">{{ it.value }}</span>
+              </div>
+              <button onClick="{{ it.go }}" style="flex:none;padding:0;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ L.rl_edit }}</button>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasBlk }}">
+          <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+            <span style="display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;color:#B91C1C"><lucide-i name="circle-x" size="16"></lucide-i>{{ blkTitle }}</span>
+            <sc-for list="{{ blk }}" as="b">
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;line-height:18px">
+                <span style="flex:1;min-width:0;color:#172B2A">{{ b.text }}</span>
+                <button onClick="{{ b.go }}" style="flex:none;padding:0;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#B91C1C;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ L.rl_edit }}</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasWrn }}">
+          <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+            <span style="display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:600;color:#B45309"><lucide-i name="triangle-alert" size="16"></lucide-i>{{ wrnTitle }}</span>
+            <sc-for list="{{ wrn }}" as="b">
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;line-height:18px">
+                <span style="flex:1;min-width:0;color:#172B2A">{{ b.text }}</span>
+                <button onClick="{{ b.go }}" style="flex:none;padding:0;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#B45309;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ L.rl_edit }}</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+          <div style="padding:16px 20px;border-bottom:1px solid #EEF2F4;display:flex;flex-direction:column"><span style="font-size:15px;line-height:22px;font-weight:600">{{ L.rl_nextT }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ L.rl_nAfter }}</span></div>
+          <sc-for list="{{ nexts }}" as="n" hint-placeholder-count="4">
+            <button onClick="{{ n.go }}" style="width:100%;display:flex;align-items:center;gap:14px;padding:12px 20px;border:0;border-bottom:1px solid #EEF2F4;background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer" style-hover="background:#F8FAFA">
+              <span style="width:24px;height:24px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ n.n }}</span>
+              <span style="flex:1;min-width:0;font-size:14px;line-height:20px;color:#0F766E;font-weight:500">{{ n.label }}</span>
+              <lucide-i name="arrow-right" size="16" style="color:#647574"></lucide-i>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <footer style="height:72px;flex:none;background:#FFFFFF;border-top:1px solid #E2E8F0;padding:0 24px">
+      <div style="max-width:880px;height:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <button onClick="{{ back }}" style="display:flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="arrow-left" size="16" style="color:#5B6B6A"></lucide-i>{{ L.rl_back }}</button>
+        <button onClick="{{ launch }}" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 18px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#115E59" style-active="background:#134E4A"><lucide-i name="rocket" size="16"></lucide-i>{{ L.rl_launch }}</button>
+      </div>
+    </footer>
+  </sc-if>
+  <sc-if value="{{ vsOpen }}">
+    <dc-import name="ValidationSummary" title="{{ blkTitle }}" errors="{{ blk }}" warnings="{{ noWarns }}" close-label="{{ L.rl_pClose }}" on-close="{{ closeVs }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ dlgOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ L.rl_lnT }}" text="{{ lnText }}" items="{{ lnItems }}" danger="{{ false }}" confirm-label="{{ lnOk }}" cancel-label="{{ L.rl_cancel }}" on-confirm="{{ doLaunch }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const fill = (s, o) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => o[k] != null ? o[k] : '');
+const stirF = s => String(s || '').replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+class Component extends DCLogic {
+  state = { done: false, vs: false, dlg: false, target: 'home' };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.boot(); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  boot() { const k = this.props.demo && this.props.demo.k; this.setState({ done: false, vs: false, dlg: false }, () => { if (k === 'ykDone') this.finish(); }); }
+  calc() {
+    const L = this.L, D = this.D, p = this.props, brs = p.branches || [], whs = p.warehouses || [], emps = (D.store.emps || []).filter(e => e.status !== 'blocked');
+    const zones = whs.reduce((a, w) => a.concat(w.zones || []), []), zc = t => zones.filter(z => z.type === t).length;
+    const stir = (brs.find(b => b.stir) || {}).stir, blk = [], wrn = [], go = n => () => { this.setState({ vs: false }); p.onGo && p.onGo(n); };
+    if (!stir) blk.push({ text: L.rl_b_noStir, go: go(1) });
+    if (!brs.length) blk.push({ text: L.rl_b_noBr, go: go(2) });
+    brs.forEach(b => { const w = whs.filter(x => x.branchId === b.id); if (!w.length) blk.push({ text: fill(L.rl_b_noWh, { b: b.name }), go: go(3) });
+      w.forEach(x => { const t = (x.zones || []).map(z => z.type); if (!t.includes('ship')) blk.push({ text: fill(L.rl_b_noZone, { w: x.name, b: b.code, z: L.rl_zShip }), go: go(3) }); if (!t.includes('quar')) blk.push({ text: fill(L.rl_b_noZone, { w: x.name, b: b.code, z: L.rl_zQuar }), go: go(3) });
+        if (x.controlled && !t.includes('ctrl')) wrn.push({ text: fill(L.rl_w_noSafe, { w: x.name, b: b.code }), go: go(3) }); }); });
+    if (!emps.some(e => e.role === 'director')) blk.push({ text: L.rl_b_noDir, go: go(5) });
+    brs.forEach(b => { const COV = { operator: e => D.rlHome(e.role) === 'operator', keeper: e => D.can(e.role, 'special.whs') }, has = r => emps.some(e => COV[r](e) && e.branch === b.code); if (!has('operator')) wrn.push({ text: fill(L.rl_w_noOp, { b: b.name }), go: go(5) }); if (!has('keeper')) wrn.push({ text: fill(L.rl_w_noKeeper, { b: b.name }), go: go(5) }); });
+    D.ACCOUNTS.filter(a => a.kind === 'cash' && brs.some(b => b.code === a.branch)).forEach(a => { if (!emps.some(e => (e.cash || []).includes(a.id))) wrn.push({ text: fill(L.rl_w_noCashier, { k: a.name }), go: go(5) }); });
+    const roles = D.rlRoles().filter(r => r.active !== false), std = roles.filter(r => r.std).length, nw = roles.length - std, fresh = emps.filter(e => e.status === 'new').length;
+    return { brs, whs, zones, zc, stir, blk, wrn, roles, std, nw, emps, fresh };
+  }
+  finish() { const D = this.D, c = this.calc(); D.rlFinish(this.props.userName || D.DIRECTOR, { branches: c.brs.length, warehouses: c.whs.length, zones: c.zones.length, roles: c.roles.length, staff: c.emps.length, logins: c.fresh }); this.setState({ done: true, dlg: false }); }
+  renderVals() {
+    const L = this.L, D = this.D, p = this.props, s = this.state;
+    const base = { L, stepOf: fill(L.rl_stepOf, { n: 6 }), items: [], blk: [], wrn: [], nexts: [], noWarns: [], lnItems: [], isDone: s.done, notDone: !s.done };
+    if (!D || !D.store.emps) return base;
+    const c = this.calc(), go = n => () => p.onGo && p.onGo(n), ok = ['#F0FDF4', '#15803D'];
+    const items = [
+      { icon: 'building', label: L.rl_kCo, value: c.stir ? fill(L.rl_vCo, { n: p.companyName || 'Medix Group', s: stirF(c.stir) }) : fill(L.rl_vCoNoStir, { n: p.companyName || 'Medix Group' }), go: go(1), bad: !c.stir },
+      { icon: 'building-2', label: L.rl_kBr, value: String(c.brs.length), go: go(2), bad: !c.brs.length },
+      { icon: 'warehouse', label: L.rl_kWh, value: fill(L.rl_vWh, { w: c.whs.length, z: c.zones.length, c: c.zc('cold'), q: c.zc('quar'), s: c.zc('ctrl') }), go: go(3), bad: c.blk.some(b => b.go && false) },
+      { icon: 'shield-check', label: L.rl_kRl, value: fill(L.rl_vRl, { n: c.std }) + (c.nw ? fill(L.rl_vRlNew, { n: c.nw }) : ''), go: go(4) },
+      { icon: 'users-round', label: L.rl_kEmp, value: fill(L.rl_vEmp, { n: c.emps.length, m: D.EMP_LIMIT, k: c.fresh }), go: go(5) }
+    ].map(it => ({ ...it, bg: it.bad ? '#FEF2F2' : ok[0], fg: it.bad ? '#B91C1C' : ok[1] }));
+    const open = t => () => { this.setState({ target: t }); this.launch(); };
+    const nexts = [['products', L.rl_n1], ['clients', L.rl_n2], ['prices', L.rl_n3], ['opening', L.rl_n4]].map(([k, label], i) => ({ n: i + 1, label, go: open(k) }));
+    this.launch = () => { const c2 = this.calc(); if (c2.blk.length) return this.setState({ vs: true }); this.setState({ dlg: true }); };
+    return {
+      ...base, items, blk: c.blk, wrn: c.wrn, hasBlk: c.blk.length > 0, hasWrn: c.wrn.length > 0, nexts,
+      blkTitle: fill(L.rl_blkT, { n: c.blk.length }), wrnTitle: fill(L.rl_wrnT, { n: c.wrn.length }),
+      back: () => p.onBack && p.onBack(), launch: () => { this.setState({ target: 'home' }); this.launch(); },
+      vsOpen: s.vs, closeVs: () => this.setState({ vs: false }), dlgOpen: s.dlg, closeDlg: () => this.setState({ dlg: false }),
+      lnText: fill(L.rl_lnText, { b: c.brs.length, w: c.whs.length, z: c.zones.length, r: c.roles.length, e: c.emps.length, l: c.fresh }),
+      lnItems: c.wrn.length ? [{ icon: 'triangle-alert', color: '#B45309', text: fill(L.rl_wrnT, { n: c.wrn.length }) }] : [], lnOk: c.wrn.length ? L.rl_anyway : L.rl_launch,
+      doLaunch: () => this.finish(), goHome: () => p.onLaunch && p.onLaunch(s.target || 'home')
+    };
+  }
+}
+</script>
+</body>
+</html>

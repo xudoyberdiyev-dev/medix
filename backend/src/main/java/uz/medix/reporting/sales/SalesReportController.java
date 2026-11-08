@@ -42,10 +42,11 @@ class SalesReportController {
         return auth.getAuthorities().stream().anyMatch(a -> key.equals(a.getAuthority()));
     }
 
-    private SalesReport.SalesReportView build(Long branchId, LocalDate from, LocalDate to, SalesReport.GroupBy groupBy, Authentication auth) {
+    private SalesReport.SalesReportView build(Long branchId, LocalDate from, LocalDate to, SalesReport.GroupBy groupBy,
+            SalesReport.PaymentType paymentType, Long regionId, Authentication auth) {
         Actor actor = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
         boolean full = has(auth, "reports.all") || has(auth, "reports.view");
-        return report.report(actor, branchId, from, to, groupBy, full, has(auth, "prices.cost"));
+        return report.report(actor, branchId, from, to, groupBy, paymentType, regionId, full, has(auth, "prices.cost"));
     }
 
     @GetMapping("/api/reports/sales")
@@ -54,8 +55,9 @@ class SalesReportController {
     SalesReport.SalesReportView salesReport(@RequestParam(required = false) Long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) SalesReport.GroupBy groupBy, Authentication auth) {
-        return build(branchId, from, to, groupBy, auth);
+            @RequestParam(required = false) SalesReport.GroupBy groupBy, @RequestParam(required = false) SalesReport.PaymentType paymentType,
+            @RequestParam(required = false) Long regionId, Authentication auth) {
+        return build(branchId, from, to, groupBy, paymentType, regionId, auth);
     }
 
     @GetMapping("/api/reports/sales/export")
@@ -64,9 +66,10 @@ class SalesReportController {
     void salesReportExport(@RequestParam(required = false) Long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) SalesReport.GroupBy groupBy, Authentication auth, HttpServletResponse response)
+            @RequestParam(required = false) SalesReport.GroupBy groupBy, @RequestParam(required = false) SalesReport.PaymentType paymentType,
+            @RequestParam(required = false) Long regionId, Authentication auth, HttpServletResponse response)
             throws IOException {
-        SalesReport.SalesReportView r = build(branchId, from, to, groupBy, auth);
+        SalesReport.SalesReportView r = build(branchId, from, to, groupBy, paymentType, regionId, auth);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"savdo-hisoboti-" + r.from() + "-" + r.to() + ".xlsx\"");
         try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
@@ -86,6 +89,8 @@ class SalesReportController {
                 case OPERATOR -> "Operator";
                 case BRANCH -> "Filial";
                 case DAY -> "Sana";
+                case REGION -> "Hudud";
+                case PAYMENT_TYPE -> "Toʻlov turi";
             };
             List<String> titles = new ArrayList<>(List.of(first, "Buyurtmalar", "Sotuv", "Qaytarish", "Sof savdo (QQS bilan)"));
             if (r.costVisible()) {
@@ -120,7 +125,13 @@ class SalesReportController {
     /** Pul matn sifatida (1.250.000,00): float/double ishlatilmaydi (CLAUDE.md). */
     private static void write(Row x, SalesReport.SalesRow r, boolean cost, CellStyle text, CellStyle money) {
         Cell name = x.createCell(0);
-        name.setCellValue(r.name());
+        name.setCellValue(switch (r.name()) {
+            case "" -> "—";
+            case "CASH" -> "Naqd";
+            case "TRANSFER" -> "Perechisleniye";
+            case "ONLINE" -> "Online";
+            default -> r.name();
+        });
         if (text != null) {
             name.setCellStyle(text);
         }

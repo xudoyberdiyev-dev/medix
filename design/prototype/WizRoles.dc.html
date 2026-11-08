@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>@keyframes rl-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}</style></helmet>
+<div style="height:100%;display:flex;flex-direction:column;min-height:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="flex:1;min-height:0;overflow:auto;padding:32px 24px 24px;display:flex;flex-direction:column">
+    <div style="flex:1;display:flex;flex-direction:column;gap:20px;min-width:0;padding-bottom:24px">
+      <sc-if value="{{ wiz }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column">
+        <span style="font-size:12px;line-height:16px;font-weight:500;color:#0F766E">{{ stepOf }}</span>
+        <h1 style="margin:6px 0 0;font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.01em">{{ L.rl_t4 }}</h1>
+        <p style="margin:8px 0 0;max-width:720px;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ L.rl_d4 }}</p>
+      </div></sc-if>
+      <sc-if value="{{ pageMode }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:4px"><dc-import name="PageHeader" title="{{ L.n_roles }}" subtitle="{{ L.rl_d4 }}" hint-size="100%,52px"></dc-import><span style="font-size:13px;line-height:18px;color:#647574">{{ lastChange }}</span></div></sc-if>
+      <sc-if value="{{ hasErr }}"><dc-import name="StatusBanner" tone="danger" icon="circle-alert" text="{{ errText }}" hint-size="100%,44px"></dc-import></sc-if>
+      <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px">
+        <sc-for list="{{ cards }}" as="c" hint-placeholder-count="8">
+          <button onClick="{{ c.pick }}" style="flex:none;width:228px;height:84px;box-sizing:border-box;padding:12px 14px;border:1px solid {{ c.bd }};border-radius:12px;background:{{ c.bg }};text-align:left;display:flex;flex-direction:column;gap:2px;cursor:pointer;font:inherit;color:inherit;opacity:{{ c.op }};transition:border-color 120ms ease-out,background 600ms ease-out" style-hover="border-color:#0F766E">
+            <span style="display:flex;align-items:center;gap:6px;min-width:0">
+              <span style="font-size:14px;line-height:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+              <sc-if value="{{ c.std }}"><span style="flex:none;height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11px;line-height:18px;font-weight:500">{{ L.rl_std }}</span></sc-if>
+              <sc-if value="{{ c.off }}"><span style="flex:none;height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#647574;font-size:11px;line-height:18px;font-weight:500">{{ L.rl_inactive }}</span></sc-if>
+            </span>
+            <span style="font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.desc }}</span>
+            <span style="margin-top:auto;font-size:12px;line-height:16px;color:#647574">{{ c.meta }}</span>
+          </button>
+        </sc-for>
+        <button onClick="{{ openNew }}" style="flex:none;width:180px;height:84px;border:1px dashed #CBD5D3;border-radius:12px;background:transparent;color:#0F766E;display:flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="plus" size="16"></lucide-i>{{ L.rl_addRole }}</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px">
+          <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.rl_search }}" search-width="320" toggle="{{ changedToggle }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+        </div>
+        <button role="switch" aria-checked="{{ onlySpecial }}" onClick="{{ flipSpecial }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 4px;border:0;background:transparent;font:inherit;font-size:13px;color:#172B2A;cursor:pointer;white-space:nowrap"><span style="width:32px;height:18px;flex:none;box-sizing:border-box;padding:2px;border-radius:999px;background:{{ spBg }};display:flex;justify-content:{{ spJust }};transition:background 120ms ease-out"><span style="width:14px;height:14px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></span>{{ L.rl_onlySpecial }}</button>
+        <button onClick="{{ toggleAll }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA"><lucide-i name="{{ allIcon }}" size="16" style="color:#5B6B6A"></lucide-i>{{ allLabel }}</button>
+      </div>
+      <div ref="{{ mxRef }}" onScroll="{{ onMxScroll }}" style="height:min(560px, max(320px, calc(100vh - 360px)));overflow:auto;border:1px solid #E2E8F0;border-radius:12px;background:#FFFFFF">
+        <div style="min-width:{{ mxMin }}px">
+          <div style="display:grid;grid-template-columns:{{ cols }};position:sticky;top:0;z-index:3;background:#FFFFFF;border-bottom:1px solid #E2E8F0">
+            <div style="position:sticky;left:0;z-index:4;background:#FFFFFF;padding:10px 16px;display:flex;align-items:flex-end;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A;border-right:1px solid #EEF2F4">{{ L.rl_colAction }}</div>
+            <sc-for list="{{ heads }}" as="h" hint-placeholder-count="8">
+              <button onClick="{{ h.pick }}" style="padding:10px 8px;border:0;background:{{ h.bg }};font:inherit;color:inherit;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;cursor:pointer;text-align:center;transition:background 600ms ease-out">
+                <span style="font-size:13px;line-height:18px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ h.name }}</span>
+                <span style="font-size:12px;line-height:16px;color:#647574">{{ h.sub }}</span>
+                <sc-if value="{{ h.none }}"><span style="font-size:11.5px;line-height:16px;color:#B45309">{{ L.rl_noPerm }}</span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+          {{ body }}
+          <sc-if value="{{ noRows }}"><div style="padding:32px 16px;text-align:center;font-size:13px;color:#5B6B6A">{{ L.rl_noRows }}</div></sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;display:flow-root;padding-bottom:24px;margin-top:-24px;background:#FFFFFF"><dc-import name="StickyFormFooter" dirty="{{ dirty }}" dirty-label="{{ dirtyLabel }}" cancel-label="{{ L.rl_cancel }}" save-label="{{ saveLbl }}" max-width="4000" on-cancel="{{ cancel }}" on-save="{{ save }}" hint-size="100%,64px"></dc-import></div>
+
+  <sc-if value="{{ panelOpen }}">
+    <div style="position:fixed;inset:0;z-index:175">
+      <div onClick="{{ closePanel }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+      <div role="dialog" aria-modal="true" aria-label="{{ pTitle }}" style="position:absolute;top:0;right:0;bottom:0;width:{{ panelW }};max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 24px;border-bottom:1px solid #E2E8F0">
+          <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pTitle }}</h2>
+          <button onClick="{{ closePanel }}" aria-label="{{ L.rl_pClose }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="x" size="18"></lucide-i></button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column">
+            <label for="rl-name" style="font-size:13px;line-height:18px;font-weight:500">{{ L.rl_pName }} <span style="color:#B91C1C">*</span></label>
+            <input id="rl-name" value="{{ pf.name }}" onChange="{{ onName }}" readonly="{{ nameRo }}" style="margin-top:6px;width:100%;box-sizing:border-box;height:34px;padding:0 12px;border:1px solid {{ nameBd }};border-radius:8px;background:{{ nameBg }};font:inherit;font-size:14px;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+            <sc-if value="{{ nameErr }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ nameErr }}</div></sc-if>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <label for="rl-desc" style="font-size:13px;line-height:18px;font-weight:500">{{ L.rl_pDesc }}</label>
+            <input id="rl-desc" value="{{ pf.desc }}" onChange="{{ onDesc }}" readonly="{{ nameRo }}" style="margin-top:6px;width:100%;box-sizing:border-box;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:{{ nameBg }};font:inherit;font-size:14px;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          </div>
+          <sc-if value="{{ isNewPanel }}">
+            <dc-import name="Select" label="{{ L.rl_pFrom }}" options="{{ fromOpts }}" value="{{ pf.from }}" on-change="{{ onFrom }}" hint-size="100%,58px"></dc-import>
+          </sc-if>
+          <dc-import name="Select" label="{{ L.rl_pScope }}" options="{{ scopeOpts }}" value="{{ pf.scope }}" on-change="{{ onScope }}" locked="{{ scopeLocked }}" hint-size="100%,58px"></dc-import>
+          <dc-import name="Select" label="{{ L.rl_pHome }}" options="{{ homeOpts }}" value="{{ pfHome }}" on-change="{{ onHome }}" locked="{{ scopeLocked }}" hint-size="100%,58px"></dc-import>
+          <sc-if value="{{ isEditPanel }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:13px;line-height:18px;font-weight:500">{{ L.rl_pEmps }}</span>
+              <sc-if value="{{ pNoEmps }}"><span style="font-size:13px;color:#647574">{{ L.rl_pNoEmps }}</span></sc-if>
+              <sc-for list="{{ pEmps }}" as="e">
+                <div style="display:flex;align-items:center;gap:10px;height:36px">
+                  <span style="width:28px;height:28px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ e.ini }}</span>
+                  <span style="flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.name }}</span>
+                  <span style="font-size:12px;color:#647574">{{ e.br }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <div style="height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 24px;border-top:1px solid #E2E8F0">
+          <div style="display:flex">
+            <sc-if value="{{ canReset }}"><button onClick="{{ askReset }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="rotate-ccw" size="14" style="color:#5B6B6A"></lucide-i>{{ L.rl_pReset }}</button></sc-if>
+            <sc-if value="{{ canDeact }}"><button onClick="{{ deact }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#B91C1C;cursor:pointer" style-hover="background:#FEF2F2">{{ L.rl_pDeact }}</button></sc-if>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onClick="{{ closePanel }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.rl_cancel }}</button>
+            <button onClick="{{ savePanel }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.rl_pSave }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dlgOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.rl_cancel }}" on-confirm="{{ dlgOk }}" on-cancel="{{ dlgCancel }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ tipOpen }}">
+    <div role="tooltip" style="position:fixed;left:{{ tip.x }}px;top:{{ tip.y }}px;z-index:190;transform:translate(-50%,-100%);max-width:260px;padding:6px 10px;border-radius:6px;background:#172B2A;color:#FFFFFF;font-size:12px;line-height:16px;box-shadow:0 8px 24px rgba(18,60,58,0.12);pointer-events:none">{{ tip.text }}</div>
+  </sc-if>
+  <sc-if value="{{ toastOpen }}">
+    <div style="position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:180;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 16px 0 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);font-size:13px;white-space:nowrap">
+      <span style="width:20px;height:20px;border-radius:50%;background:{{ toastBg }};color:{{ toastFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ toastIcon }}" size="12"></lucide-i></span>{{ toastText }}
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const fill = (s, o) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => o[k] != null ? o[k] : '');
+const cp = o => JSON.parse(JSON.stringify(o));
+const PG = { qm: 'creturns', hc: 'writeoff', qy: 'sreturns', adv: 'cdebt' };
+class Component extends DCLogic {
+  state = { sel: 'branch', q: '', onlyChanged: false, onlySpecial: false, collapsed: {}, panel: null, dlg: null, err: null, tip: null, shake: null, hl: null, toast: null, base: null, draft: null };
+  mxRef = React.createRef();
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.init(); }
+  onMxScroll = e => { const y = e.currentTarget.scrollTop, hgt = e.currentTarget.clientHeight; if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = null; if (Math.abs(y - (this.state.sy || 0)) > 40 || hgt !== this.state.vh) this.setState({ sy: y, vh: hgt }); }); };
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.init(); }
+  componentWillUnmount() { ['_t1', '_t2', '_t3', '_t4'].forEach(k => clearTimeout(this[k])); this._raf && cancelAnimationFrame(this._raf); }
+  init() {
+    const D = this.D; if (!D || !D.store.rl) return;
+    const base = cp(D.store.rl), draft = cp(base), k = this.props.demo && this.props.demo.k;
+    const tg = (r, key, on) => { draft.perms[r] = D.rlToggle(draft.perms[r], key, on).perms; };
+    const st = { base, draft, sel: 'branch', panel: null, dlg: null, err: null, tip: null, shake: null, q: '', onlyChanged: false, onlySpecial: false, collapsed: {} };
+    if (k === 'rlChanged' || k === 'rlImpact') { tg('branch', 'cash.approve', false); tg('branch', 'hc.approve', false); }
+    if (k === 'rlChanged') { tg('operator', 'clients.terms', true); tg('keeper', 'qm.create', true); tg('accountant', 'cash.create', true); }
+    if (k === 'rlLocked') st.sel = 'director';
+    if (k === 'rlNewRole') st.panel = { mode: 'new', f: { name: 'Katta operator', desc: "Operator va mijoz shartlarini o'zgartirish", scope: 'own', from: 'operator' }, tried: false };
+    st.sy = 0; if (this.mxRef.current) this.mxRef.current.scrollTop = 0; this.setState(st, () => {
+      if (k === 'rlImpact') this.save();
+      if (k === 'rlLocked') this._t4 = setTimeout(() => this.lockedHit('director', 'cash.approve', null), 350);
+    });
+  }
+  body(rows, cols) {
+    const h = React.createElement, LOCK = h('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: '#647574', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('rect', { x: 5, y: 11, width: 14, height: 10, rx: 2 }), h('path', { d: 'M8 11V7a4 4 0 0 1 8 0v4' }));
+    const CHK = h('svg', { width: 12, height: 12, viewBox: '0 0 24 24', fill: 'none', stroke: '#FFFFFF', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M20 6 9 17l-5-5' }));
+    const y0 = this.state.sy || 0, vh = this.state.vh || 600, top = [], HEAD = 57; let acc = 0; rows.forEach(r => { top.push(acc); acc += parseInt(r.h, 10) + 1; });
+    const from = Math.max(0, top.findIndex((y, i) => y + parseInt(rows[i].h, 10) >= y0 - HEAD - 200)), toI = top.findIndex(y => y > y0 + vh + 200), to = toI < 0 ? rows.length : toI;
+    const vis = rows.slice(from, to), padT = from > 0 ? top[from] : 0, padB = acc - (to < rows.length ? top[to] : acc);
+    return h(React.Fragment, null, h('div', { key: 'pt', style: { height: padT } }), vis.map((r, k) => { const i = from + k; return h('div', { key: r.key || i, style: { display: 'grid', gridTemplateColumns: cols, height: r.h, background: r.bg, borderBottom: '1px solid #EEF2F4' } },
+      h('div', { onClick: r.toggle || undefined, style: { position: 'sticky', left: 0, zIndex: 2, background: r.bg, borderRight: '1px solid #EEF2F4', padding: r.pad, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, cursor: r.cur } },
+        r.toggle ? h('span', { style: { width: 16, flex: 'none', display: 'flex', justifyContent: 'center', color: '#5B6B6A', fontSize: 11, transform: 'rotate(' + r.rot + 'deg)' } }, '▾') : null,
+        h('span', { title: r.name, style: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: '17px', fontWeight: r.fw, color: '#172B2A', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' } }, r.name),
+        r.toggle ? h('span', { style: { flex: 'none', fontSize: 12, lineHeight: '16px', color: '#5B6B6A' } }, r.count) : h('span', { title: r.tip, 'aria-label': r.tip, style: { flex: 'none', width: 14, height: 14, boxSizing: 'border-box', border: '1.5px solid #647574', borderRadius: '50%', color: '#647574', fontSize: 9, fontWeight: 700, lineHeight: '11px', display: 'flex', justifyContent: 'center', cursor: 'help' } }, 'i')),
+      r.cells.map((c, j) => r.toggle ? h('span', { key: j, style: { background: c.bg } }) : h('button', { key: j, 'data-cell': c.key, onClick: c.click, title: c.tip || undefined, 'aria-label': c.aria, style: { position: 'relative', border: 0, padding: 0, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: c.cursor } },
+        c.lockD === 'flex' ? h('span', { style: { display: 'flex', animation: c.anim } }, LOCK) : h('span', { style: { width: 16, height: 16, boxSizing: 'border-box', borderRadius: 4, border: '1px solid ' + c.bd, background: c.fill, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, c.on ? CHK : null),
+        c.dotD === 'block' ? h('span', { style: { position: 'absolute', top: 6, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#0D9488' } }) : null))); }), h('div', { key: 'pb', style: { height: padB } }));
+  }
+  homeOf(id) { const r = id && this.roleOf(id); return (r && r.home) || (id && this.D.HOME_STD[id]) || 'operator'; }
+  roleName(r) { return r ? (r.std ? this.L['r_' + r.id] || r.id : r.name) : ''; }
+  roleOf(id) { return (this.state.draft ? this.state.draft.roles : []).find(r => r.id === id); }
+  emps(id) { return (this.D.store.emps || []).filter(e => e.role === id && e.status !== 'blocked'); }
+  pcount(id) { const P = this.D.PERMISSIONS; if (id === 'director') return Object.keys(this.D.rlDefault('director')).length; const m = this.state.draft.perms[id] || {}; return P.filter(p => m[p.key]).length; }
+  chg(id, key) { const s = this.state, a = s.base.perms[id] || {}, b = s.draft.perms[id] || {}; return !!a[key] !== !!b[key]; }
+  changes() {
+    const s = this.state, D = this.D, out = { n: 0, roles: [], rem: {} };
+    s.draft.roles.forEach(r => { const a = s.base.perms[r.id] || {}, b = s.draft.perms[r.id] || {}, d = D.rlDiff(a, b), br = s.base.roles.find(x => x.id === r.id);
+      let n = d.add.length + d.rem.length; if (!br) n++; else if (br.scope !== r.scope || (br.home || '') !== (r.home || '') || br.name !== r.name || br.desc !== r.desc || br.active !== r.active) n++;
+      if (n) { out.n += n; out.roles.push(r.id); } if (d.rem.length) out.rem[r.id] = d.rem; });
+    out.emps = out.roles.reduce((a, id) => a + this.emps(id).length, 0); return out;
+  }
+  toast(text, tone) { clearTimeout(this._t2); this.setState({ toast: { text, tone: tone || 'ok' } }); this._t2 = setTimeout(() => this.setState({ toast: null }), 2600); }
+  lockedHit(role, key, e) {
+    const L = this.L, text = role === 'director' ? L.rl_lockDir : L.rl_lockOnly; let x = 0, y = 0;
+    if (e && e.currentTarget) { const r = e.currentTarget.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top - 6; }
+    else { const el = this.mxRef.current; if (el) { el.scrollLeft = 0; const c = el.querySelector('[data-cell="' + role + '|' + key + '"]'); const r = (c || el).getBoundingClientRect(); x = r.left + (c ? r.width / 2 : 400); y = r.top - 6 + (c ? 0 : 80); } }
+    clearTimeout(this._t1); this.setState({ shake: role + '|' + key + '|' + Date.now(), tip: { x, y, text } });
+    this._t1 = setTimeout(() => this.setState({ tip: null, shake: null }), 1800);
+  }
+  click(role, key, e) {
+    const D = this.D, L = this.L; if (D.rlLock(role, key)) return this.lockedHit(role, key, e);
+    const s = this.state, cur = !!(s.draft.perms[role] || {})[key], p = D.PERM_BY[key], had = p.page && !!(s.draft.perms[role] || {})[p.page + '.view'];
+    const r = D.rlToggle(s.draft.perms[role] || {}, key, !cur), draft = cp(s.draft); draft.perms[role] = r.perms;
+    this.setState({ draft, sel: role, err: null });
+    if (r.off.length) this.toast(fill(L.rl_depOff, { n: r.off.length }), 'info');
+    else if (!cur && p.type !== 'view' && p.page && !had && r.perms[p.page + '.view']) this.toast(L.rl_depOn, 'info');
+  }
+  save() {
+    const s = this.state, L = this.L, D = this.D, c = this.changes(); if (!c.n) return this.props.onNext && this.props.onNext();
+    const ids = Object.keys(c.rem);
+    if (ids.length) { const seg = ids.map(id => fill(L.rl_remSeg, { r: this.roleName(this.roleOf(id)), n: c.rem[id].length, list: c.rem[id].map(k => L['rl_p_' + k.replace('.', '_')] || k).join(', ') })).join('. ');
+      const e = ids.reduce((a, id) => a + this.emps(id).length, 0);
+      return this.setState({ dlg: { kind: 'rem', title: L.rl_remT, text: seg + '. ' + fill(L.rl_remEmp, { e }), items: [], danger: true, confirm: L.rl_remOk } }); }
+    this.doSave();
+  }
+  doSave() {
+    const D = this.D, L = this.L, s = this.state, r = D.rlSave(s.draft.roles, s.draft.perms, this.props.userName || D.DIRECTOR);
+    if (r.err) return this.setState({ dlg: null, err: r.err === 'noDirector' ? L.rl_eNoDir : L.rl_saveErr });
+    this.setState({ dlg: null, err: null, base: cp(D.store.rl), draft: cp(D.store.rl) });
+    this.toast(L.rl_saved); this.props.onNext && this.props.onNext();
+  }
+  openPanel(id) { const r = this.roleOf(id); if (!r) return; this.setState({ sel: id, panel: { mode: 'edit', id, f: { name: this.roleName(r), desc: r.std ? this.L['rl_rd_' + r.id] || '' : r.desc || '', scope: r.scope, home: r.home || this.D.HOME_STD[r.id] || 'operator', from: '' }, tried: false } }); }
+  savePanel() {
+    const s = this.state, p = s.panel, L = this.L, D = this.D, f = p.f, draft = cp(s.draft);
+    if (p.mode === 'new') {
+      const nm = String(f.name || '').trim(), dup = draft.roles.some(r => this.roleName(r).toLowerCase() === nm.toLowerCase());
+      if (!nm || dup) return this.setState({ panel: { ...p, tried: true } });
+      const id = 'x' + Date.now(); let perms = {};
+      if (f.from) { const src = f.from === 'director' ? D.rlDefault('director') : (draft.perms[f.from] || {}); Object.keys(src).forEach(k => { if (src[k] && !(D.PERM_BY[k] && D.PERM_BY[k].lock === 'dir')) perms[k] = true; }); }
+      draft.roles.push({ id, std: false, name: nm, desc: String(f.desc || '').trim(), scope: f.scope || 'own', home: f.home || this.homeOf(f.from), active: true }); draft.perms[id] = perms;
+      clearTimeout(this._t3); this.setState({ draft, panel: null, sel: id, hl: id }); this._t3 = setTimeout(() => this.setState({ hl: null }), 1500);
+      return this.toast(fill(L.rl_roleAdded, { r: nm }));
+    }
+    const r = draft.roles.find(x => x.id === p.id); if (!r.std) { const nm = String(f.name || '').trim(); if (!nm || draft.roles.some(x => x.id !== r.id && this.roleName(x).toLowerCase() === nm.toLowerCase())) return this.setState({ panel: { ...p, tried: true } }); r.name = nm; r.desc = String(f.desc || '').trim(); }
+    r.scope = f.scope; if (f.home) r.home = f.home; this.setState({ draft, panel: null });
+  }
+  renderVals() {
+    return this.rv();
+  }
+  rv() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, stepOf: fill(L.rl_stepOf, { n: 4 }), cards: [], heads: [], rows: [], cols: '280px', mxMin: 0, mxRef: this.mxRef, narrow, q: '', setQ: () => {}, panelOpen: false, dlgOpen: false, dlg: {}, tipOpen: false, tip: {}, toastOpen: false, pf: {}, scopeOpts: [], fromOpts: [], pEmps: [], allLabel: '', allIcon: 'chevrons-down-up', body: null, noRows: false };
+    if (!D || !s.draft) return base;
+    const P = D.PERMISSIONS, roles = s.draft.roles, act = roles.filter(r => r.active !== false), sel = act.some(r => r.id === s.sel) ? s.sel : 'branch';
+    const fw = narrow ? 220 : 280, cw = 112, cols = `${fw}px repeat(${act.length}, minmax(${cw}px,1fr))`, ch = this.changes();
+    const bn = c => c ? c : L.rl_scAll;
+    const cards = roles.map(r => { const on = r.id === s.sel; return { name: this.roleName(r), desc: r.std ? L['rl_rd_' + r.id] : r.desc || '—', std: !!r.std, off: r.active === false, op: r.active === false ? 0.6 : 1,
+      meta: fill(L.rl_cardMeta, { p: this.pcount(r.id), e: this.emps(r.id).length }), bd: on ? '#0D9488' : '#E2E8F0', bg: s.hl === r.id || on ? '#DDF5EE' : '#FFFFFF', pick: () => this.openPanel(r.id) }; });
+    const heads = act.map(r => ({ name: this.roleName(r), sub: fill(L.rl_empN, { n: this.emps(r.id).length }), none: r.id !== 'director' && this.pcount(r.id) === 0, bg: s.hl === r.id ? '#DDF5EE' : r.id === sel ? '#F8FAFA' : '#FFFFFF', pick: () => this.setState({ sel: r.id }) }));
+    const q = D.toLat(s.q.trim().toLowerCase()), nm = k => L['rl_p_' + k.replace('.', '_')] || k;
+    const tipOf = x => { if (L['rl_tip_' + x.key.replace('.', '_')]) return L['rl_tip_' + x.key.replace('.', '_')]; const pg = PG[x.page] || x.page; return fill(L['rl_tip_' + x.type], { m: L['n_' + pg] || pg }); };
+    const rows = []; let shown = 0, allColl = true;
+    D.RL_MODS.forEach(mod => {
+      const list = P.filter(x => x.mod === mod), vis = list.filter(x => (!q || D.toLat(nm(x.key).toLowerCase()).includes(q)) && (!s.onlySpecial || x.type === 'special') && (!s.onlyChanged || act.some(r => this.chg(r.id, x.key))));
+      if (!vis.length) return; const coll = !!s.collapsed[mod] && !q; if (!coll) allColl = false; const m = sel === 'director' ? D.rlDefault('director') : (s.draft.perms[sel] || {});
+      rows.push({ key: 'g-' + mod, h: '40px', bg: '#F8FAFA', pad: '0 16px 0 10px', cur: 'pointer', gDisp: 'flex', pDisp: 'none', fw: 600, tip: '', name: L['rl_mod_' + mod], rot: coll ? -90 : 0, chev: '', count: `${list.filter(x => m[x.key]).length} / ${list.length}`,
+        cells: act.map(r => ({ key: r.id + '|' + mod, dis: true, bg: r.id === sel ? '#F1F5F5' : '#F8FAFA', cursor: 'default', lockD: 'none', boxD: 'none', chkD: 'none', dotD: 'none', anim: 'none', tip: '', aria: '', click: null })),
+        toggle: () => this.setState(st => ({ collapsed: { ...st.collapsed, [mod]: !st.collapsed[mod] } })) });
+      if (coll) return;
+      vis.forEach(x => { shown++;
+        rows.push({ key: x.key, h: '44px', bg: '#FFFFFF', pad: '0 12px 0 34px', cur: 'default', gDisp: 'none', pDisp: 'flex', fw: 400, chev: 'chevron-down', count: '', toggle: null, name: nm(x.key), tip: tipOf(x), cells: act.map(r => {
+          const lk = D.rlLock(r.id, x.key), on = r.id === 'director' ? !x.excl : !!(s.draft.perms[r.id] || {})[x.key], changed = !lk && this.chg(r.id, x.key), shk = s.shake && s.shake.startsWith(r.id + '|' + x.key + '|');
+          return { key: r.id + '|' + x.key, dis: false, lockD: lk ? 'flex' : 'none', boxD: lk ? 'none' : 'flex', chkD: on ? 'flex' : 'none', on, fill: on ? '#0F766E' : '#FFFFFF', bd: on ? '#0F766E' : '#CBD5D3', dotD: changed ? 'block' : 'none', anim: shk ? 'rl-shake 320ms ease-in-out' : 'none',
+            bg: changed ? '#DDF5EE' : s.hl === r.id ? '#DDF5EE' : r.id === sel ? '#F8FAFA' : '#FFFFFF', cursor: lk ? 'not-allowed' : 'pointer', tip: lk === 'dir' ? L.rl_lockDir : lk ? L.rl_lockOnly : '',
+            aria: `${nm(x.key)} · ${this.roleName(r)}`, click: e => this.click(r.id, x.key, e) }; }) });
+      });
+    });
+    const pn = s.panel, isNew = pn && pn.mode === 'new', pr = pn && !isNew ? this.roleOf(pn.id) : null, f = pn ? pn.f : {};
+    const nmT = String(f.name || '').trim(), nameErr = pn && pn.tried ? (!nmT ? L.rl_eNameReq : roles.some(r => (!pr || r.id !== pr.id) && this.roleName(r).toLowerCase() === nmT.toLowerCase()) ? L.rl_eNameDup : '') : '';
+    const setF = k => v => this.setState(st => ({ panel: { ...st.panel, f: { ...st.panel.f, [k]: v && v.target ? v.target.value : v } } }));
+    const pE = pr ? this.emps(pr.id) : [], dl = s.dlg;
+    const pgm = p.mode === 'page', lc = pgm ? (D.store.audit || []).filter(x => x.kind === 'perm').slice(-1)[0] : null;
+    return {
+      ...base, wiz: !pgm, pageMode: pgm, saveLbl: pgm ? L.bs_save : L.rl_saveNext, lastChange: lc ? fill(L.bs_lastChange, { t: String(lc.at).slice(0, 16), n: lc.who }) : L.bs_defaultVal, cards, heads, body: this.body(rows, cols), cols, onMxScroll: this.onMxScroll, mxMin: fw + act.length * cw, noRows: !shown && !rows.length,
+      hasErr: !!s.err, errText: s.err || '', q: s.q, setQ: v => this.setState({ q: v }),
+      changedToggle: { label: L.rl_onlyChanged, on: s.onlyChanged, onChange: v => this.setState({ onlyChanged: v }) },
+      onlySpecial: s.onlySpecial, flipSpecial: () => this.setState({ onlySpecial: !s.onlySpecial }), spBg: s.onlySpecial ? '#0F766E' : '#647574', spJust: s.onlySpecial ? 'flex-end' : 'flex-start',
+      allIcon: allColl ? 'chevrons-up-down' : 'chevrons-down-up', allLabel: allColl ? L.rl_expandAll : L.rl_collapseAll,
+      toggleAll: () => this.setState({ collapsed: allColl ? {} : Object.fromEntries(D.RL_MODS.map(m => [m, true])) }),
+      dirty: ch.n > 0, dirtyLabel: fill(L.rl_changes, { n: ch.n }) + (ch.roles.length ? fill(L.rl_impact, { r: ch.roles.length, e: ch.emps }) : ''),
+      cancel: () => this.setState({ draft: cp(s.base), err: null }), save: () => this.save(),
+      openNew: () => this.setState({ panel: { mode: 'new', f: { name: '', desc: '', scope: 'own', from: 'operator', home: this.homeOf('operator') }, tried: false } }),
+      panelOpen: !!pn, panelW: narrow ? '480px' : '440px', pTitle: isNew ? L.rl_pTitleNew : this.roleName(pr), isNewPanel: !!isNew, isEditPanel: !!pr, pf: f,
+      nameRo: !!(pr && pr.std), nameBg: pr && pr.std ? '#F8FAFA' : '#FFFFFF', nameBd: nameErr ? '#B91C1C' : '#E2E8F0', nameErr,
+      onName: setF('name'), onDesc: setF('desc'), onScope: setF('scope'), onFrom: v => { const fr = v && v.target ? v.target.value : v; this.setState(st => ({ panel: { ...st.panel, f: { ...st.panel.f, from: fr, home: this.homeOf(fr) } } })); }, onHome: setF('home'), pfHome: f.home || this.homeOf(f.from), homeOpts: D.HOME_KINDS.map(k => ({ value: k, label: L['rl_h_' + k] || k })), scopeLocked: !!(pr && pr.id === 'director'),
+      scopeOpts: [{ value: 'all', label: L.rl_scAll }, { value: 'own', label: L.rl_scOwn }],
+      fromOpts: [{ value: '', label: L.rl_fromNone }].concat(act.map(r => ({ value: r.id, label: this.roleName(r) }))),
+      pEmps: pE.map(e => ({ name: D.empName(e), ini: (e.first[0] || '') + (e.last[0] || ''), br: bn(e.branch) })), pNoEmps: !!pr && !pE.length,
+      canReset: !!(pr && pr.std && pr.id !== 'director'), canDeact: !!(pr && !pr.std && pr.active !== false),
+      askReset: () => { const def = D.rlDefault(pr.id), cur = s.draft.perms[pr.id] || {}, n = P.filter(x => !!def[x.key] !== !!cur[x.key]).length; if (!n) return this.toast(L.rl_resetNone, 'info');
+        this.setState({ dlg: { kind: 'reset', id: pr.id, title: L.rl_resetT, text: fill(L.rl_resetText, { n, e: pE.length }), items: [], danger: false, confirm: L.rl_pReset } }); },
+      deact: () => { if (pE.length) return this.toast(fill(L.rl_deactBlocked, { n: pE.length }), 'warn'); const d2 = cp(s.draft); d2.roles.find(x => x.id === pr.id).active = false; this.setState({ draft: d2, panel: null }); this.toast(fill(L.rl_deactDone, { r: this.roleName(pr) })); },
+      closePanel: () => this.setState({ panel: null }), savePanel: () => this.savePanel(),
+      dlgOpen: !!dl, dlg: dl || {}, dlgCancel: () => this.setState({ dlg: null }),
+      dlgOk: () => { if (dl.kind === 'rem') return this.doSave(); if (dl.kind === 'reset') { const d2 = cp(s.draft); d2.perms[dl.id] = D.rlDefault(dl.id); this.setState({ draft: d2, dlg: null }); } },
+      tipOpen: !!s.tip, tip: s.tip || {}, toastOpen: !!s.toast, toastText: s.toast ? s.toast.text : '',
+      toastIcon: s.toast && s.toast.tone === 'warn' ? 'triangle-alert' : s.toast && s.toast.tone === 'info' ? 'info' : 'check',
+      toastBg: s.toast && s.toast.tone === 'warn' ? '#FFFBEB' : s.toast && s.toast.tone === 'info' ? '#EFF6FF' : '#F0FDF4', toastFg: s.toast && s.toast.tone === 'warn' ? '#B45309' : s.toast && s.toast.tone === 'info' ? '#1D4ED8' : '#15803D'
+    };
+  }
+}
+</script>
+</body>
+</html>

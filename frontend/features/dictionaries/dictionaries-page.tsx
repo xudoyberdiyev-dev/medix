@@ -2,8 +2,10 @@
 
 import { BookOpen, CircleCheck, CirclePause, Lock, Pencil, Plus, Power, PowerOff, Truck } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/selection-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -18,13 +20,11 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useBranchList } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
-import { formatQuantity } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
 import {
   DICTIONARIES,
   EXPENSE_PERMISSION,
   VEHICLE_PERMISSION,
-  parseCapacity,
   useDictionary,
   useExpenseItems,
   useSaveEntry,
@@ -40,41 +40,57 @@ import {
   type Vehicle,
 } from "./api";
 
-const TABS = [
-  ...DICTIONARIES.map((d) => ({ key: d.kind.toLowerCase(), label: d.title })),
-  { key: "vehicles", label: "Mashinalar" },
-  { key: "expense-items", label: "Xarajat moddalari" },
-];
+const TAB_KEYS = [...DICTIONARIES.map((d) => d.kind.toLowerCase()), "vehicles", "expense-items"];
+
+type T = ReturnType<typeof useTranslations<"dictionaries">>;
+
+/** Maʼlumotnoma nomlari — `dictionaries.kinds.<tur>` va `dictionaries.shortName.<tur>` dan. */
+function useMetaText() {
+  const t = useTranslations("dictionaries");
+  return (meta: DictionaryMeta) => ({
+    title: t(`kinds.${meta.kind}.title`),
+    empty: t(`kinds.${meta.kind}.empty`),
+    add: t(`kinds.${meta.kind}.add`),
+    edit: t(`kinds.${meta.kind}.edit`),
+    new: t(`kinds.${meta.kind}.new`),
+    shortName:
+      meta.shortName && (meta.kind === "UNIT" || meta.kind === "COUNTRY")
+        ? { label: t(`shortName.${meta.kind}.label`), hint: t(`shortName.${meta.kind}.hint`), mono: meta.shortName.mono }
+        : undefined,
+  });
+}
 
 function ActiveBadge({ active }: { active: boolean }) {
+  const t = useTranslations("dictionaries");
   return active ? (
     <Badge tone="success" icon={CircleCheck}>
-      Faol
+      {t("active")}
     </Badge>
   ) : (
     <Badge tone="neutral" icon={CirclePause}>
-      Nofaol
+      {t("inactive")}
     </Badge>
   );
 }
 
-const toggleItem = (active: boolean, onSelect: () => void): RowMenuItem =>
+const toggleItem = (t: T, active: boolean, onSelect: () => void): RowMenuItem =>
   active
-    ? { key: "deactivate", label: "Nofaol qilish", icon: <PowerOff size={16} strokeWidth={1.5} aria-hidden />, onSelect }
-    : { key: "activate", label: "Faollashtirish", icon: <Power size={16} strokeWidth={1.5} aria-hidden />, onSelect };
+    ? { key: "deactivate", label: t("deactivate"), icon: <PowerOff size={16} strokeWidth={1.5} aria-hidden />, onSelect }
+    : { key: "activate", label: t("activate"), icon: <Power size={16} strokeWidth={1.5} aria-hidden />, onSelect };
 
-const editItem = (onSelect: () => void): RowMenuItem => ({
+const editItem = (t: T, onSelect: () => void): RowMenuItem => ({
   key: "edit",
-  label: "Tahrirlash",
+  label: t("edit"),
   icon: <Pencil size={16} strokeWidth={1.5} aria-hidden />,
   onSelect,
 });
 
 function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  const t = useTranslations("dictionaries");
   return (
     <div className="w-80">
       <TextField
-        label="Qidirish"
+        label={t("search")}
         variant="search"
         size="sm"
         value={value}
@@ -87,10 +103,17 @@ function SearchBox({ value, onChange, placeholder }: { value: string; onChange: 
 }
 
 export function DictionariesPage() {
+  const t = useTranslations("dictionaries");
+  const text = useMetaText();
+  const TABS = [
+    ...DICTIONARIES.map((d) => ({ key: d.kind.toLowerCase(), label: text(d).title })),
+    { key: "vehicles", label: t("vehicles") },
+    { key: "expense-items", label: t("expenseItems") },
+  ];
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const tab = TABS.some((t) => t.key === params.get("tab")) ? (params.get("tab") as string) : TABS[0].key;
+  const tab = TAB_KEYS.find((k) => k === params.get("tab")) ?? TAB_KEYS[0];
   const [creating, setCreating] = useState(false);
   const me = useMe();
   const dict = DICTIONARIES.find((d) => d.kind.toLowerCase() === tab);
@@ -98,12 +121,12 @@ export function DictionariesPage() {
     me.data,
     tab === "vehicles" ? VEHICLE_PERMISSION : tab === "expense-items" ? EXPENSE_PERMISSION : (dict?.permission ?? ""),
   );
-  const addLabel = dict ? `${dict.singular} qoʻshish` : tab === "vehicles" ? "Mashina qoʻshish" : "Modda qoʻshish";
+  const addLabel = dict ? text(dict).add : tab === "vehicles" ? t("addVehicle") : t("addExpense");
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Maʼlumotnomalar</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canEdit ? (
           <Button icon={Plus} onClick={() => setCreating(true)}>
             {addLabel}
@@ -112,7 +135,7 @@ export function DictionariesPage() {
       </div>
       <div className="mb-4">
         <Tabs
-          aria-label="Maʼlumotnomalar"
+          aria-label={t("title")}
           items={TABS}
           value={tab}
           onChange={(key) => (setCreating(false), router.replace(`${pathname}?tab=${key}`, { scroll: false }))}
@@ -134,40 +157,42 @@ interface TabProps {
 }
 
 function DictionaryTab({ meta, canEdit, creating, onCreated }: TabProps & { meta: DictionaryMeta }) {
+  const t = useTranslations("dictionaries");
+  const text = useMetaText()(meta);
   const list = useDictionary(meta.kind);
   const toggle = useToggleEntry(meta.kind);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Entry | null>(null);
   const rows = (list.data ?? []).filter((e) => matchesSearch(query, [e.name, e.shortName]));
   const columns: TableColumn<Entry>[] = [
-    { key: "name", title: "Nomi" },
-    ...(meta.shortName ? [{ key: "shortName", title: meta.shortName.label, mono: meta.shortName.mono }] : []),
-    { key: "active", title: "Holat", render: (e: Entry) => <ActiveBadge active={e.active} /> },
+    { key: "name", title: t("entry.name") },
+    ...(text.shortName ? [{ key: "shortName", title: text.shortName.label, mono: text.shortName.mono }] : []),
+    { key: "active", title: t("entry.status"), render: (e: Entry) => <ActiveBadge active={e.active} /> },
   ];
 
   if (list.error) return <ErrorState onRetry={() => list.refetch()} />;
   return (
     <>
       <Table
-        caption={meta.title}
+        caption={text.title}
         columns={columns}
         rows={rows}
         rowKey={(e) => String(e.id)}
         loading={list.isPending}
         onRowClick={canEdit ? setEditing : undefined}
-        toolbar={<SearchBox value={query} onChange={setQuery} placeholder="Nomi boʻyicha (lotin yoki kirill)" />}
+        toolbar={<SearchBox value={query} onChange={setQuery} placeholder={t("entry.searchPlaceholder")} />}
         rowActions={
           canEdit
             ? (e) => (
                 <RowMenu
                   items={[
-                    editItem(() => setEditing(e)),
-                    toggleItem(!e.active, () =>
+                    editItem(t, () => setEditing(e)),
+                    toggleItem(t, !e.active, () =>
                       toggle.mutate(
                         { id: e.id, active: !e.active },
                         {
                           onSuccess: () =>
-                            toast({ tone: "success", title: e.active ? "Nofaol qilindi" : "Faollashtirildi", description: e.name }),
+                            toast({ tone: "success", title: e.active ? t("deactivated") : t("activated"), description: e.name }),
                         },
                       ),
                     ),
@@ -180,7 +205,7 @@ function DictionaryTab({ meta, canEdit, creating, onCreated }: TabProps & { meta
           query ? (
             <NoResultsState onClearFilters={() => setQuery("")} />
           ) : (
-            <EmptyState icon={BookOpen} title="Hali yozuv yoʻq" description={meta.empty} />
+            <EmptyState icon={BookOpen} title={t("entry.emptyTitle")} description={text.empty} />
           )
         }
       />
@@ -190,6 +215,8 @@ function DictionaryTab({ meta, canEdit, creating, onCreated }: TabProps & { meta
 }
 
 function EntryDialog({ meta, entry, onClose }: { meta: DictionaryMeta; entry: Entry | null; onClose: () => void }) {
+  const t = useTranslations("dictionaries.entry");
+  const text = useMetaText()(meta);
   const save = useSaveEntry(meta.kind);
   const [name, setName] = useState(entry?.name ?? "");
   const [shortName, setShortName] = useState(entry?.shortName ?? "");
@@ -199,26 +226,26 @@ function EntryDialog({ meta, entry, onClose }: { meta: DictionaryMeta; entry: En
       open
       onClose={onClose}
       size="sm"
-      title={entry ? `${meta.singular}: tahrirlash` : `Yangi: ${meta.singular.toLocaleLowerCase("uz")}`}
+      title={entry ? text.edit : text.new}
       primaryAction={{
-        label: "Saqlash",
+        label: t("save"),
         loading: save.isPending,
         onClick: () =>
           save.mutate(
             { id: entry?.id, name, shortName },
-            { onSuccess: (e) => (toast({ tone: "success", title: entry ? "Saqlandi" : "Qoʻshildi", description: e.name }), onClose()) },
+            { onSuccess: (e) => (toast({ tone: "success", title: entry ? t("saved") : t("created"), description: e.name }), onClose()) },
           ),
       }}
     >
       <div className="flex flex-col gap-4">
-        <TextField label="Nomi" value={name} onChange={setName} error={err.fields.name} required autoFocus />
-        {meta.shortName ? (
+        <TextField label={t("name")} value={name} onChange={setName} error={err.fields.name} required autoFocus />
+        {text.shortName ? (
           <TextField
-            label={meta.shortName.label}
+            label={text.shortName.label}
             value={shortName}
             onChange={setShortName}
             error={err.fields.shortName}
-            hint={meta.shortName.hint}
+            hint={text.shortName.hint}
             maxLength={50}
           />
         ) : null}
@@ -229,6 +256,7 @@ function EntryDialog({ meta, entry, onClose }: { meta: DictionaryMeta; entry: En
 }
 
 function VehiclesTab({ canEdit, creating, onCreated }: TabProps) {
+  const t = useTranslations("dictionaries");
   const list = useVehicles();
   const branches = useBranchList();
   const toggle = useToggleVehicle();
@@ -238,43 +266,42 @@ function VehiclesTab({ canEdit, creating, onCreated }: TabProps) {
   const multiBranch = new Set((list.data ?? []).map((v) => v.branchId)).size > 1;
   const rows = (list.data ?? []).filter((v) => matchesSearch(query, [v.plateNumber, v.model, branchName(v.branchId)]));
   const columns: TableColumn<Vehicle>[] = [
-    { key: "plateNumber", title: "Davlat raqami", mono: true },
-    { key: "model", title: "Model" },
+    { key: "plateNumber", title: t("vehicle.plate"), mono: true },
+    { key: "model", title: t("vehicle.model") },
     {
-      key: "capacityBoxes",
-      title: "Sigʻimi",
-      align: "right",
-      render: (v) => (v.capacityBoxes ? `${formatQuantity(v.capacityBoxes)} joy` : "—"),
+      key: "hasRefrigerator",
+      title: t("vehicle.refrigerator"),
+      render: (v) => (v.hasRefrigerator ? t("vehicle.refrigeratorYes") : t("vehicle.refrigeratorNo")),
     },
-    ...(multiBranch ? [{ key: "branch", title: "Filial", render: (v: Vehicle) => branchName(v.branchId) }] : []),
-    { key: "active", title: "Holat", render: (v: Vehicle) => <ActiveBadge active={v.active} /> },
+    ...(multiBranch ? [{ key: "branch", title: t("vehicle.branch"), render: (v: Vehicle) => branchName(v.branchId) }] : []),
+    { key: "active", title: t("vehicle.status"), render: (v: Vehicle) => <ActiveBadge active={v.active} /> },
   ];
 
   if (list.error) return <ErrorState onRetry={() => list.refetch()} />;
   return (
     <>
       <Table
-        caption="Mashinalar"
+        caption={t("vehicles")}
         columns={columns}
         rows={rows}
         rowKey={(v) => String(v.id)}
         loading={list.isPending}
         onRowClick={canEdit ? setEditing : undefined}
-        toolbar={<SearchBox value={query} onChange={setQuery} placeholder="Raqam yoki model" />}
+        toolbar={<SearchBox value={query} onChange={setQuery} placeholder={t("vehicle.searchPlaceholder")} />}
         rowActions={
           canEdit
             ? (v) => (
                 <RowMenu
                   items={[
-                    editItem(() => setEditing(v)),
-                    toggleItem(!v.active, () =>
+                    editItem(t, () => setEditing(v)),
+                    toggleItem(t, !v.active, () =>
                       toggle.mutate(
                         { id: v.id, active: !v.active },
                         {
                           onSuccess: () =>
                             toast({
                               tone: "success",
-                              title: v.active ? "Mashina nofaol qilindi" : "Mashina faollashtirildi",
+                              title: v.active ? t("vehicle.deactivated") : t("vehicle.activated"),
                               description: v.plateNumber,
                             }),
                         },
@@ -289,7 +316,7 @@ function VehiclesTab({ canEdit, creating, onCreated }: TabProps) {
           query ? (
             <NoResultsState onClearFilters={() => setQuery("")} />
           ) : (
-            <EmptyState icon={Truck} title="Hali mashina qoʻshilmagan" description="Reys tuzishda mashina va uning sigʻimi tanlanadi." />
+            <EmptyState icon={Truck} title={t("vehicle.emptyTitle")} description={t("vehicle.emptyDescription")} />
           )
         }
       />
@@ -299,6 +326,7 @@ function VehiclesTab({ canEdit, creating, onCreated }: TabProps) {
 }
 
 function VehicleDialog({ vehicle, onClose }: { vehicle: Vehicle | null; onClose: () => void }) {
+  const t = useTranslations("dictionaries.vehicle");
   const me = useMe();
   const branches = useBranchList();
   const save = useSaveVehicle();
@@ -308,25 +336,18 @@ function VehicleDialog({ vehicle, onClose }: { vehicle: Vehicle | null; onClose:
   );
   const [plate, setPlate] = useState(vehicle?.plateNumber ?? "");
   const [model, setModel] = useState(vehicle?.model ?? "");
-  const [capacity, setCapacity] = useState(vehicle?.capacityBoxes ? String(vehicle.capacityBoxes) : "");
-  const [local, setLocal] = useState<{ branchId?: string; capacity?: string }>({});
+  const [refrigerator, setRefrigerator] = useState(vehicle?.hasRefrigerator ?? false);
+  const [local, setLocal] = useState<{ branchId?: string }>({});
   const err = describeError(save.error);
 
   function submit() {
-    const cap = parseCapacity(capacity);
-    const errors = {
-      branchId: branchId ? undefined : "Filial tanlanmagan. Mashina qaysi filialga tegishli ekanini tanlang.",
-      capacity: cap === null ? "Sigʻim — butun musbat son (joylar soni). Boʻsh qoldirish mumkin." : undefined,
-    };
+    const errors = { branchId: branchId ? undefined : t("branchError") };
     setLocal(errors);
-    if (errors.branchId || errors.capacity || !branchId || cap === null) return;
+    if (errors.branchId || !branchId) return;
     save.mutate(
-      { id: vehicle?.id, branchId: Number(branchId), plateNumber: plate, model, capacityBoxes: cap },
+      { id: vehicle?.id, branchId: Number(branchId), plateNumber: plate, model, hasRefrigerator: refrigerator },
       {
-        onSuccess: (v) => (
-          toast({ tone: "success", title: vehicle ? "Mashina saqlandi" : "Mashina qoʻshildi", description: v.plateNumber }),
-          onClose()
-        ),
+        onSuccess: (v) => (toast({ tone: "success", title: vehicle ? t("saved") : t("created"), description: v.plateNumber }), onClose()),
       },
     );
   }
@@ -335,12 +356,12 @@ function VehicleDialog({ vehicle, onClose }: { vehicle: Vehicle | null; onClose:
     <Modal
       open
       onClose={onClose}
-      title={vehicle ? `Mashina ${vehicle.plateNumber}` : "Yangi mashina"}
-      primaryAction={{ label: "Mashinani saqlash", loading: save.isPending, onClick: submit }}
+      title={vehicle ? t("titleEdit", { plate: vehicle.plateNumber }) : t("titleNew")}
+      primaryAction={{ label: t("save"), loading: save.isPending, onClick: submit }}
     >
       <div className="grid grid-cols-2 gap-4">
         <Select
-          label="Filial"
+          label={t("branch")}
           required
           value={branchId}
           onChange={setBranchId}
@@ -349,23 +370,25 @@ function VehicleDialog({ vehicle, onClose }: { vehicle: Vehicle | null; onClose:
           className="col-span-2"
         />
         <TextField
-          label="Davlat raqami"
+          label={t("plate")}
           value={plate}
           onChange={(v) => setPlate(v.toUpperCase())}
           error={err.fields.plateNumber}
-          hint="Masalan: 01 A 123 BC"
+          hint={t("plateHint")}
           required
           autoFocus
         />
-        <TextField label="Model" value={model} onChange={setModel} error={err.fields.model} placeholder="Damas" required />
         <TextField
-          label="Sigʻimi (joy)"
-          value={capacity}
-          onChange={setCapacity}
-          error={local.capacity ?? err.fields.capacityBoxes}
-          hint="Nechta quti sigʻadi — reysda tekshiriladi"
-          inputMode="numeric"
+          label={t("model")}
+          value={model}
+          onChange={setModel}
+          error={err.fields.model}
+          placeholder={t("modelPlaceholder")}
+          required
         />
+        <div className="col-span-2">
+          <Checkbox label={t("refrigeratorField")} description={t("refrigeratorHint")} checked={refrigerator} onChange={setRefrigerator} />
+        </div>
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
       </div>
     </Modal>
@@ -373,6 +396,7 @@ function VehicleDialog({ vehicle, onClose }: { vehicle: Vehicle | null; onClose:
 }
 
 function ExpenseTab({ canEdit, creating, onCreated }: TabProps) {
+  const t = useTranslations("dictionaries");
   const list = useExpenseItems();
   const toggle = useToggleExpenseItem();
   const [query, setQuery] = useState("");
@@ -381,48 +405,52 @@ function ExpenseTab({ canEdit, creating, onCreated }: TabProps) {
   const columns: TableColumn<ExpenseItem>[] = [
     {
       key: "name",
-      title: "Modda",
+      title: t("expense.item"),
       render: (e) => (
         <span className="flex items-center gap-2">
           {e.name}
           {e.system ? (
-            <span title="Standart modda — oʻzgartirilmaydi">
+            <span title={t("expense.systemHint")}>
               <Badge tone="neutral" icon={Lock}>
-                Standart
+                {t("expense.system")}
               </Badge>
             </span>
           ) : null}
         </span>
       ),
     },
-    { key: "direction", title: "Turi", render: (e) => (e.direction === "EXPENSE" ? "Chiqim" : "Kirim") },
-    { key: "active", title: "Holat", render: (e) => <ActiveBadge active={e.active} /> },
+    {
+      key: "direction",
+      title: t("expense.direction"),
+      render: (e) => (e.direction === "EXPENSE" ? t("expense.EXPENSE") : t("expense.INCOME")),
+    },
+    { key: "active", title: t("expense.status"), render: (e) => <ActiveBadge active={e.active} /> },
   ];
 
   if (list.error) return <ErrorState onRetry={() => list.refetch()} />;
   return (
     <>
       <Table
-        caption="Xarajat va kirim moddalari"
+        caption={t("expense.caption")}
         columns={columns}
         rows={rows}
         rowKey={(e) => String(e.id)}
         loading={list.isPending}
         onRowClick={canEdit ? (e) => !e.system && setEditing(e) : undefined}
-        toolbar={<SearchBox value={query} onChange={setQuery} placeholder="Modda nomi" />}
+        toolbar={<SearchBox value={query} onChange={setQuery} placeholder={t("expense.searchPlaceholder")} />}
         rowActions={
           canEdit
             ? (e) =>
                 e.system ? null : (
                   <RowMenu
                     items={[
-                      editItem(() => setEditing(e)),
-                      toggleItem(!e.active, () =>
+                      editItem(t, () => setEditing(e)),
+                      toggleItem(t, !e.active, () =>
                         toggle.mutate(
                           { id: e.id, active: !e.active },
                           {
                             onSuccess: () =>
-                              toast({ tone: "success", title: e.active ? "Nofaol qilindi" : "Faollashtirildi", description: e.name }),
+                              toast({ tone: "success", title: e.active ? t("deactivated") : t("activated"), description: e.name }),
                           },
                         ),
                       ),
@@ -435,7 +463,7 @@ function ExpenseTab({ canEdit, creating, onCreated }: TabProps) {
           query ? (
             <NoResultsState onClearFilters={() => setQuery("")} />
           ) : (
-            <EmptyState icon={BookOpen} title="Moddalar yoʻq" description="Kassa va bank operatsiyalari moddalari shu yerda." />
+            <EmptyState icon={BookOpen} title={t("expense.emptyTitle")} description={t("expense.emptyDescription")} />
           )
         }
       />
@@ -445,6 +473,7 @@ function ExpenseTab({ canEdit, creating, onCreated }: TabProps) {
 }
 
 function ExpenseDialog({ item, onClose }: { item: ExpenseItem | null; onClose: () => void }) {
+  const t = useTranslations("dictionaries.expense");
   const save = useSaveExpenseItem();
   const [name, setName] = useState(item?.name ?? "");
   const [direction, setDirection] = useState<string | null>(item?.direction ?? "EXPENSE");
@@ -454,35 +483,32 @@ function ExpenseDialog({ item, onClose }: { item: ExpenseItem | null; onClose: (
       open
       onClose={onClose}
       size="sm"
-      title={item ? "Moddani tahrirlash" : "Yangi modda"}
+      title={item ? t("titleEdit") : t("titleNew")}
       primaryAction={{
-        label: "Moddani saqlash",
+        label: t("save"),
         loading: save.isPending,
         onClick: () =>
           save.mutate(
             { id: item?.id, name, direction: direction === "INCOME" ? "INCOME" : "EXPENSE" },
             {
-              onSuccess: (e) => (
-                toast({ tone: "success", title: item ? "Modda saqlandi" : "Modda qoʻshildi", description: e.name }),
-                onClose()
-              ),
+              onSuccess: (e) => (toast({ tone: "success", title: item ? t("saved") : t("created"), description: e.name }), onClose()),
             },
           ),
       }}
     >
       <div className="flex flex-col gap-4">
         <Select
-          label="Turi"
+          label={t("direction")}
           required
           disabled={Boolean(item)}
           value={direction}
           onChange={setDirection}
           options={[
-            { value: "EXPENSE", label: "Chiqim" },
-            { value: "INCOME", label: "Kirim" },
+            { value: "EXPENSE", label: t("EXPENSE") },
+            { value: "INCOME", label: t("INCOME") },
           ]}
         />
-        <TextField label="Nomi" value={name} onChange={setName} error={err.fields.name} required autoFocus />
+        <TextField label={t("name")} value={name} onChange={setName} error={err.fields.name} required autoFocus />
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
       </div>
     </Modal>

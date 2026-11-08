@@ -5,7 +5,7 @@ import { WriteOffsPage } from "@/features/write-offs/write-offs-page";
 export default function Page() {
   return (
     <>
-      <TopBar title="Hisobdan chiqarish" />
+      <TopBar titleKey="writeOffs" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <WriteOffsPage />

@@ -1,6 +1,7 @@
 "use client";
 
 import { Calculator, Check, Printer, Trash2, TriangleAlert, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -47,16 +48,18 @@ export function PriceChangeDrawer(props: {
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const t = useTranslations("prices.drawer");
+  const tc = useTranslations("common");
   const doc = usePriceChange(props.id);
   if (props.id !== null && doc.error)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind="Narx oʻzgarishi" title="NO">
+      <Drawer open onClose={props.onClose} size="lg" kind={t("kind")} title="NO">
         <ErrorState onRetry={() => doc.refetch()} />
       </Drawer>
     );
   if (props.id !== null && !doc.data)
     return (
-      <Drawer open onClose={props.onClose} size="lg" kind="Narx oʻzgarishi" title="Yuklanmoqda…">
+      <Drawer open onClose={props.onClose} size="lg" kind={t("kind")} title={tc("loading")}>
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
@@ -93,6 +96,8 @@ function Editor({
   onClose: () => void;
   onCreated: (id: number) => void;
 }) {
+  const t = useTranslations("prices.drawer");
+  const tp = useTranslations("prices");
   const me = useMe();
   const types = usePriceTypes();
   const save = useSaveDraft();
@@ -124,21 +129,21 @@ function Editor({
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const [dialog, setDialog] = useState<"markup" | "approve" | "reject" | "cancel" | null>(null);
   const isDirector = can(me.data, PRICE_BELOW);
-  const typeName = (id: number) => types.data?.find((t) => t.id === id)?.name ?? "";
+  const typeName = (id: number) => types.data?.find((pt) => pt.id === id)?.name ?? "";
   const err = describeError(save.error ?? submit.error);
   const bigCount = lines.filter((l) => Math.abs(percentChange(l.oldPrice, parseMoneyInput(l.newPrice) ?? "") ?? 0) > 20).length;
 
   function body() {
     const iso = parseUzDate(date);
-    if (!iso) return (setLocal("Kuchga kirish sanasi KK.OO.YYYY koʻrinishida boʻlsin."), null);
-    if (lines.length === 0) return (setLocal("Hujjatda qator yoʻq. Kamida bitta mahsulot narxini kiriting."), null);
+    if (!iso) return (setLocal(t("errors.date")), null);
+    if (lines.length === 0) return (setLocal(t("errors.noLines")), null);
     const out = [];
     for (const l of lines) {
       const p = parseMoneyInput(l.newPrice);
-      if (!p || Number(p) <= 0) return (setLocal(`«${l.productName}» uchun narx notoʻgʻri. Musbat summa kiriting.`), null);
+      if (!p || Number(p) <= 0) return (setLocal(t("errors.price", { name: l.productName })), null);
       out.push({ productId: l.productId, priceTypeId: l.priceTypeId, newPrice: p, batchId: l.batchId ?? undefined });
     }
-    if (mode === "RECEIPT" && !receipt) return (setLocal("Kirimni tanlang — narx faqat uning partiyalariga qoʻyiladi."), null);
+    if (mode === "RECEIPT" && !receipt) return (setLocal(t("errors.receipt")), null);
     setLocal(null);
     return {
       branchId: doc?.branchId ?? branchId,
@@ -158,7 +163,7 @@ function Editor({
         onSuccess: (d) => {
           // Yangi hujjat: muharrir qayta ochilishi (onCreated) oʻtkazishdan keyin — aks holda natija xabari yoʻqoladi.
           if (then) return then(d.id);
-          toast({ tone: "success", title: "Qoralama saqlandi", description: d.number });
+          toast({ tone: "success", title: t("draftSaved"), description: d.number });
           if (!doc) onCreated(d.id);
         },
       },
@@ -166,11 +171,10 @@ function Editor({
   }
 
   function addLine() {
-    if (!adding.product || !adding.type || !adding.productLabel) return setLocal("Mahsulot va narx turini tanlang.");
+    if (!adding.product || !adding.type || !adding.productLabel) return setLocal(t("errors.productType"));
     const productId = Number(adding.product);
     const priceTypeId = Number(adding.type);
-    if (lines.some((l) => l.productId === productId && l.priceTypeId === priceTypeId && !l.batchId))
-      return setLocal("Bu mahsulot va narx turi allaqachon qoʻshilgan.");
+    if (lines.some((l) => l.productId === productId && l.priceTypeId === priceTypeId && !l.batchId)) return setLocal(t("errors.duplicate"));
     setLines((ls) => [
       ...ls,
       {
@@ -187,19 +191,19 @@ function Editor({
   }
 
   async function addBatches() {
-    if (!receipt || !batchType) return setLocal("Kirim va narx turini tanlang.");
+    if (!receipt || !batchType) return setLocal(t("errors.receiptType"));
     setLoadingBatches(true);
     try {
       const rb = await fetchReceiptBatches(Number(receipt));
       const have = new Set(lines.map(lineKey));
       const fresh = batchLines(rb, Number(batchType)).filter((l) => !have.has(lineKey(l)));
-      if (fresh.length === 0) setLocal("Bu kirim partiyalari shu narx turi bilan allaqachon qoʻshilgan.");
+      if (fresh.length === 0) setLocal(t("errors.batchesAdded"));
       else {
         setLines((ls) => [...ls, ...fresh]);
         setLocal(null);
       }
     } catch (e) {
-      setLocal(describeError(e).message ?? "Partiyalarni yuklab boʻlmadi. Qayta urinib koʻring.");
+      setLocal(describeError(e).message ?? t("errors.batchesLoad"));
     } finally {
       setLoadingBatches(false);
     }
@@ -207,7 +211,7 @@ function Editor({
 
   function switchMode(next: "PRODUCT" | "RECEIPT") {
     if (next === mode) return;
-    if (lines.length > 0) return setLocal("Rejimni almashtirish uchun avval qatorlarni olib tashlang.");
+    if (lines.length > 0) return setLocal(t("errors.switchMode"));
     setMode(next);
     setLocal(null);
   }
@@ -219,14 +223,14 @@ function Editor({
       open
       onClose={onClose}
       size="lg"
-      kind={doc ? `Narx oʻzgarishi · ${doc.createdBy}` : "Narx oʻzgarishi"}
-      title={doc ? doc.number : "Yangi NO"}
+      kind={doc ? t("kindBy", { name: doc.createdBy }) : t("kind")}
+      title={doc ? doc.number : t("newTitle")}
       status={doc ? <StatusBadge status={doc.status} /> : undefined}
       actions={
         <>
           {doc && canSet && (doc.status === "DRAFT" || doc.status === "PENDING_APPROVAL") ? (
             <Button variant="tertiary" icon={X} className="mr-auto" onClick={() => (cancel.reset(), setDialog("cancel"))}>
-              Hujjatni bekor qilish
+              {t("cancelDoc")}
             </Button>
           ) : null}
           {doc ? (
@@ -235,16 +239,16 @@ function Editor({
               icon={Printer}
               onClick={() => window.open(`/api/price-changes/${doc.id}/pdf`, "_blank", "noopener")}
             >
-              Chop etish
+              {t("print")}
             </Button>
           ) : null}
           <Button variant="secondary" onClick={onClose}>
-            Ortga
+            {t("back")}
           </Button>
           {editable ? (
             <>
               <Button variant="secondary" loading={save.isPending && !submit.isPending} onClick={() => saveDraft()}>
-                Qoralamani saqlash
+                {t("saveDraft")}
               </Button>
               <Button
                 icon={Check}
@@ -255,7 +259,7 @@ function Editor({
                       onSuccess: (d) => {
                         toast({
                           tone: "success",
-                          title: d.status === "APPROVED" ? "Narxlar kuchga kirdi" : "Direktor tasdigʻiga yuborildi",
+                          title: d.status === "APPROVED" ? t("applied") : t("sentToDirector"),
                           description: d.number,
                         });
                         if (!doc) onCreated(d.id);
@@ -267,17 +271,17 @@ function Editor({
                   )
                 }
               >
-                Oʻtkazish
+                {t("post")}
               </Button>
             </>
           ) : null}
           {doc?.status === "PENDING_APPROVAL" && isDirector ? (
             <>
               <Button variant="secondary" onClick={() => (reject.reset(), setDialog("reject"))}>
-                Rad etish
+                {t("reject")}
               </Button>
               <Button icon={Check} onClick={() => setDialog("approve")}>
-                Tasdiqlash
+                {t("approve")}
               </Button>
             </>
           ) : null}
@@ -285,39 +289,48 @@ function Editor({
       }
     >
       <div className="flex flex-col gap-4">
-        {doc?.decisionReason ? <Alert tone={doc.status === "REJECTED" ? "danger" : "info"} title={`Sabab: ${doc.decisionReason}`} /> : null}
+        {doc?.decisionReason ? (
+          <Alert tone={doc.status === "REJECTED" ? "danger" : "info"} title={t("reason", { reason: doc.decisionReason })} />
+        ) : null}
         <div className="grid grid-cols-2 gap-4">
-          <TextField label="Kuchga kirish sanasi" value={date} onChange={setDate} placeholder="KK.OO.YYYY" disabled={!editable} required />
-          <TextField label="Izoh" value={note} onChange={setNote} disabled={!editable} />
+          <TextField
+            label={t("effectiveFrom")}
+            value={date}
+            onChange={setDate}
+            placeholder={tp("datePlaceholder")}
+            disabled={!editable}
+            required
+          />
+          <TextField label={t("note")} value={note} onChange={setNote} disabled={!editable} />
         </div>
         {editable ? (
-          <div role="radiogroup" aria-label="Narx oʻrnatish rejimi" className="flex gap-6">
+          <div role="radiogroup" aria-label={t("modeGroup")} className="flex gap-6">
             <Radio
               name="pc-mode"
               value="PRODUCT"
-              label="Mahsulot boʻyicha"
-              description="Mahsulotning barcha partiyalariga"
+              label={t("modeProduct")}
+              description={t("modeProductHint")}
               checked={!batchMode}
               onChange={() => switchMode("PRODUCT")}
             />
             <Radio
               name="pc-mode"
               value="RECEIPT"
-              label="Kirim boʻyicha"
-              description="Faqat tanlangan oʻtkazilgan kirim partiyalariga"
+              label={t("modeReceipt")}
+              description={t("modeReceiptHint")}
               checked={batchMode}
               onChange={() => switchMode("RECEIPT")}
             />
           </div>
         ) : batchMode ? (
-          <Alert tone="info" title={`Kirim boʻyicha · ${receiptLabel ?? ""}`}>
-            Narxlar faqat shu kirim partiyalariga qoʻyilgan. Partiya narxi mahsulot narxidan ustun turadi.
+          <Alert tone="info" title={t("byReceipt", { number: receiptLabel ?? "" })}>
+            {t("byReceiptBody")}
           </Alert>
         ) : null}
         {editable && batchMode ? (
           <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-3 rounded-card border border-border p-3">
             <Select
-              label="Kirim"
+              label={t("receipt")}
               value={receipt}
               loadOptions={async (q) => {
                 const found = await searchPostedReceipts(doc?.branchId ?? branchId, q);
@@ -325,28 +338,28 @@ function Editor({
                 return found;
               }}
               onChange={(v) => {
-                if (lines.length > 0 && v !== receipt) return setLocal("Kirimni almashtirish uchun avval qatorlarni olib tashlang.");
+                if (lines.length > 0 && v !== receipt) return setLocal(t("errors.switchReceipt"));
                 setReceipt(v);
                 setReceiptLabel(v ? (receiptOptions.current.get(v) ?? null) : null);
               }}
-              placeholder="Raqam yoki taʼminotchi boʻyicha qidiring"
+              placeholder={t("receiptPlaceholder")}
               options={receipt && receiptLabel ? [{ value: receipt, label: receiptLabel }] : []}
             />
             <Select
-              label="Narx turi"
+              label={t("priceType")}
               value={batchType}
               onChange={setBatchType}
-              options={(types.data ?? []).map((t) => ({ value: String(t.id), label: t.name }))}
+              options={(types.data ?? []).map((pt) => ({ value: String(pt.id), label: pt.name }))}
             />
             <Button variant="secondary" loading={loadingBatches} onClick={addBatches}>
-              Partiyalarni qoʻshish
+              {t("addBatches")}
             </Button>
           </div>
         ) : null}
         {editable && !batchMode ? (
           <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-3 rounded-card border border-border p-3">
             <Select
-              label="Mahsulot"
+              label={t("product")}
               value={adding.product}
               loadOptions={async (q) => {
                 const found = await searchProducts(q);
@@ -354,40 +367,40 @@ function Editor({
                 return found;
               }}
               onChange={(v) => setAdding((a) => ({ ...a, product: v, productLabel: v ? seen.current.get(v) : undefined }))}
-              placeholder="Nom yoki kod boʻyicha qidiring"
+              placeholder={t("productPlaceholder")}
               options={[]}
               className="col-span-3"
             />
             <Select
-              label="Narx turi"
+              label={t("priceType")}
               value={adding.type}
               onChange={(v) => setAdding((a) => ({ ...a, type: v }))}
-              options={(types.data ?? []).map((t) => ({ value: String(t.id), label: t.name }))}
+              options={(types.data ?? []).map((pt) => ({ value: String(pt.id), label: pt.name }))}
             />
             <TextField
-              label="Yangi narx"
+              label={t("newPrice")}
               value={adding.price}
               onChange={(v) => setAdding((a) => ({ ...a, price: v }))}
-              suffix="soʻm"
+              suffix={tp("sum")}
               inputMode="decimal"
             />
             <Button variant="secondary" onClick={addLine}>
-              Qator qoʻshish
+              {t("addLine")}
             </Button>
           </div>
         ) : null}
         {local ? <Alert tone="danger" title={local} /> : null}
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
         {bigCount > 0 ? (
-          <Alert tone="warning" title={`${bigCount} ta qatorda narx 20% dan koʻp oʻzgaradi`}>
-            Tekshirib chiqing — xato kiritilgan boʻlishi mumkin.
+          <Alert tone="warning" title={t("bigChange", { count: bigCount })}>
+            {t("bigChangeHint")}
           </Alert>
         ) : null}
         <div className="flex items-center justify-between">
-          <h3 className="text-subtitle">Qatorlar · {lines.length}</h3>
+          <h3 className="text-subtitle">{t("lines", { count: lines.length })}</h3>
           {editable && lines.length > 0 ? (
             <Button variant="tertiary" icon={Calculator} onClick={() => setDialog("markup")}>
-              Ommaviy ustama
+              {t("markup")}
             </Button>
           ) : null}
         </div>
@@ -395,12 +408,12 @@ function Editor({
           <table className="w-full text-table">
             <thead className="bg-table-header text-left text-text-secondary">
               <tr>
-                <th className="px-3 py-2 font-medium">Mahsulot</th>
-                {batchMode ? <th className="px-3 py-2 font-medium">Partiya</th> : null}
-                <th className="px-3 py-2 font-medium">Narx turi</th>
-                <th className="px-3 py-2 text-right font-medium">Eski narx</th>
-                <th className="px-3 py-2 text-right font-medium">Yangi narx</th>
-                <th className="px-3 py-2 text-right font-medium">Oʻzgarish</th>
+                <th className="px-3 py-2 font-medium">{t("col.product")}</th>
+                {batchMode ? <th className="px-3 py-2 font-medium">{t("col.batch")}</th> : null}
+                <th className="px-3 py-2 font-medium">{t("col.priceType")}</th>
+                <th className="px-3 py-2 text-right font-medium">{t("col.oldPrice")}</th>
+                <th className="px-3 py-2 text-right font-medium">{t("col.newPrice")}</th>
+                <th className="px-3 py-2 text-right font-medium">{t("col.change")}</th>
                 {editable ? <th className="w-10" /> : null}
               </tr>
             </thead>
@@ -408,9 +421,7 @@ function Editor({
               {lines.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-3 py-6 text-center text-text-secondary">
-                    {batchMode
-                      ? "Qator yoʻq. Kirim va narx turini tanlab, «Partiyalarni qoʻshish» ni bosing."
-                      : "Qator yoʻq. Yuqorida mahsulot tanlab qoʻshing yoki «Amaldagi narxlar» jadvalidan belgilang."}
+                    {batchMode ? t("emptyBatch") : t("emptyProduct")}
                   </td>
                 </tr>
               ) : (
@@ -426,7 +437,7 @@ function Editor({
                           <span className="font-mono">{l.batchNumber ?? "—"}</span>
                           {l.expiryDate ? (
                             <span className="block text-caption text-text-secondary">
-                              {formatDate(new Date(`${l.expiryDate}T00:00:00+05:00`))} gacha
+                              {t("until", { date: formatDate(new Date(`${l.expiryDate}T00:00:00+05:00`)) })}
                             </span>
                           ) : null}
                         </td>
@@ -436,7 +447,7 @@ function Editor({
                       <td className="px-3 py-1 text-right">
                         {editable ? (
                           <TextField
-                            label="Yangi narx"
+                            label={t("newPrice")}
                             size="sm"
                             value={l.newPrice}
                             onChange={(v) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, newPrice: v } : x)))}
@@ -449,7 +460,7 @@ function Editor({
                       </td>
                       <td className="px-3 py-2 text-right">
                         {pct === null ? (
-                          <span className="text-text-disabled">yangi</span>
+                          <span className="text-text-disabled">{t("new")}</span>
                         ) : Math.abs(pct) > 20 ? (
                           <Badge tone="warning" icon={TriangleAlert}>
                             {pct > 0 ? "+" : ""}
@@ -467,7 +478,7 @@ function Editor({
                           <Button
                             variant="icon"
                             icon={Trash2}
-                            aria-label="Qatorni olib tashlash"
+                            aria-label={t("removeLine")}
                             onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
                           />
                         </td>
@@ -498,9 +509,9 @@ function Editor({
       {dialog === "approve" && doc ? <ApproveDialog id={doc.id} onClose={() => setDialog(null)} /> : null}
       {(dialog === "reject" || dialog === "cancel") && doc ? (
         <DeactivateDialog
-          title={dialog === "reject" ? `${doc.number}ni rad etasizmi?` : `${doc.number}ni bekor qilasizmi?`}
-          consequence="Narxlar oʻzgarmaydi. Hujjat tarixda qoladi va qayta oʻzgartirilmaydi."
-          actionLabel={dialog === "reject" ? "Hujjatni rad etish" : "Hujjatni bekor qilish"}
+          title={dialog === "reject" ? t("rejectTitle", { number: doc.number }) : t("cancelTitle", { number: doc.number })}
+          consequence={t("consequence")}
+          actionLabel={dialog === "reject" ? t("rejectAction") : t("cancelDoc")}
           pending={dialog === "reject" ? reject.isPending : cancel.isPending}
           error={dialog === "reject" ? reject.error : cancel.error}
           onClose={() => setDialog(null)}
@@ -509,7 +520,7 @@ function Editor({
               { id: doc.id, reason },
               {
                 onSuccess: () => (
-                  toast({ tone: "success", title: dialog === "reject" ? "Rad etildi" : "Bekor qilindi", description: doc.number }),
+                  toast({ tone: "success", title: dialog === "reject" ? t("rejected") : t("cancelled"), description: doc.number }),
                   setDialog(null)
                 ),
               },
@@ -532,15 +543,15 @@ function MarkupDialog({
   onClose: () => void;
   onApply: (prices: Record<string, string>) => void;
 }) {
+  const t = useTranslations("prices.markup");
   const [base, setBase] = useState<string | null>("BASE_PRICE");
   const [percent, setPercent] = useState("15");
-  const [rounding, setRounding] = useState<string | null>("100");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function run() {
     const pct = Number(percent.replace(",", "."));
-    if (!Number.isFinite(pct) || pct < -90 || pct > 1000) return setError("Foiz −90 … 1000 oraligʻida boʻlsin.");
+    if (!Number.isFinite(pct) || pct < -90 || pct > 1000) return setError(t("percentError"));
     setPending(true);
     setError(null);
     try {
@@ -555,7 +566,6 @@ function MarkupDialog({
           priceTypeId,
           base: (base ?? "BASE_PRICE") as MarkupBase,
           percent: pct,
-          rounding: Number(rounding ?? 0),
         });
         for (const m of out) {
           if (m.newPrice) result[`${m.productId}:${priceTypeId}`] = m.newPrice;
@@ -565,48 +575,32 @@ function MarkupDialog({
       onApply(result);
       toast({
         tone: missing ? "warning" : "success",
-        title: `${Object.keys(result).length} ta qatorga narx qoʻyildi`,
-        description: missing ? `${missing} ta mahsulotda asos narx yoʻq — ular oʻzgarmadi.` : undefined,
+        title: t("applied", { count: Object.keys(result).length }),
+        description: missing ? t("missing", { count: missing }) : undefined,
       });
     } catch (e) {
-      setError(describeError(e).message ?? "Hisoblab boʻlmadi.");
+      setError(describeError(e).message ?? t("failed"));
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      size="sm"
-      title="Ommaviy ustama"
-      primaryAction={{ label: "Narxlarni hisoblash", loading: pending, onClick: run }}
-    >
+    <Modal open onClose={onClose} size="sm" title={t("title")} primaryAction={{ label: t("compute"), loading: pending, onClick: run }}>
       <div className="flex flex-col gap-4">
         <Select
-          label="Asos"
+          label={t("base")}
           value={base}
           onChange={setBase}
           options={[
-            { value: "BASE_PRICE", label: "Bazaviy narx (Narx)" },
-            { value: "CURRENT_SAME_TYPE", label: "Shu turdagi amaldagi narx" },
-            { value: "AVG_RECEIPT", label: "Oʻrtacha kirim narxi", sub: "Qoldiqdagi partiyalar" },
-            { value: "LAST_RECEIPT", label: "Oxirgi kirim narxi" },
+            { value: "BASE_PRICE", label: t("BASE_PRICE") },
+            { value: "CURRENT_SAME_TYPE", label: t("CURRENT_SAME_TYPE") },
+            { value: "AVG_RECEIPT", label: t("AVG_RECEIPT"), sub: t("AVG_RECEIPT_HINT") },
+            { value: "LAST_RECEIPT", label: t("LAST_RECEIPT") },
           ]}
         />
-        <TextField label="Ustama" value={percent} onChange={setPercent} suffix="%" inputMode="decimal" hint="Manfiy — chegirma" />
-        <Select
-          label="Yaxlitlash"
-          value={rounding}
-          onChange={setRounding}
-          options={[
-            { value: "0", label: "Yaxlitlanmaydi" },
-            { value: "100", label: "100 soʻmgacha" },
-            { value: "500", label: "500 soʻmgacha" },
-            { value: "1000", label: "1 000 soʻmgacha" },
-          ]}
-        />
+        <TextField label={t("percent")} value={percent} onChange={setPercent} suffix="%" inputMode="decimal" hint={t("percentHint")} />
+        <p className="text-caption text-text-secondary">{t("exact")}</p>
         {error ? <Alert tone="danger" title={error} /> : null}
       </div>
     </Modal>
@@ -614,6 +608,7 @@ function MarkupDialog({
 }
 
 function ApproveDialog({ id, onClose }: { id: number; onClose: () => void }) {
+  const t = useTranslations("prices.approve");
   const approve = useApprove();
   const [pin, setPin] = useState("");
   const err = describeError(approve.error);
@@ -622,22 +617,22 @@ function ApproveDialog({ id, onClose }: { id: number; onClose: () => void }) {
       open
       onClose={onClose}
       size="sm"
-      title="Narx oʻzgarishini tasdiqlash"
+      title={t("title")}
       primaryAction={{
-        label: "PIN bilan tasdiqlash",
+        label: t("submit"),
         loading: approve.isPending,
         onClick: () =>
           approve.mutate(
             { id, pin },
             {
-              onSuccess: (d) => (toast({ tone: "success", title: "Tasdiqlandi — narxlar kuchga kirdi", description: d.number }), onClose()),
+              onSuccess: (d) => (toast({ tone: "success", title: t("done"), description: d.number }), onClose()),
             },
           ),
       }}
     >
-      <p className="mb-4 text-text-secondary">Tannarxdan past narxlar bor. Tasdiqlasangiz, narxlar kuchga kiradi.</p>
+      <p className="mb-4 text-text-secondary">{t("intro")}</p>
       <TextField
-        label="PIN"
+        label={t("pin")}
         variant="password"
         value={pin}
         onChange={setPin}

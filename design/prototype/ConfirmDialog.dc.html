@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div onClick="{{ cancel }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,system-ui,sans-serif;color:#172B2A">
+  <div role="alertdialog" aria-modal="true" onClick="{{ stop }}" style="width:440px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column">
+    <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;text-wrap:pretty">{{ title }}</h2>
+    <sc-if value="{{ hasText }}"><p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ text }}</p></sc-if>
+    <sc-if value="{{ hasItems }}">
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ rows }}" as="it">
+          <div style="display:flex;gap:10px;font-size:13px;line-height:18px;color:#172B2A"><lucide-i name="{{ it.icon }}" size="16" style="color:{{ it.color }};margin-top:1px"></lucide-i><span style="text-wrap:pretty">{{ it.text }}</span></div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ withReason }}">
+      <label for="cd-reason" style="margin-top:20px;font-size:12px;line-height:16px;font-weight:500">{{ reasonLabel }} <sc-if value="{{ reasonReq }}"><span style="color:#B91C1C">*</span></sc-if></label>
+      <textarea id="cd-reason" ref="{{ reasonRef }}" value="{{ reason }}" onChange="{{ onReason }}" rows="3" style="margin-top:6px;width:100%;padding:8px 12px;border:1px solid {{ reasonBorder }};border-radius:8px;font:inherit;font-size:14px;line-height:20px;color:#172B2A;resize:vertical;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></textarea>
+      <sc-if value="{{ hasReasonErr }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ reasonError }}</div></sc-if>
+    </sc-if>
+    <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:8px">
+      <button onClick="{{ cancel }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA">{{ cancelLabel }}</button>
+      <button onClick="{{ confirm }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:{{ confirmBg }};color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:{{ confirmHover }}">{{ confirmLabel }}</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:420},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Mahsulotni nofaol qilasizmi?&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;text&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;items&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{text,icon?,color?}[]&quot;},&quot;withReason&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;reasonLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Sabab&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;reason&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;reasonError&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;onReason&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(v)=&gt;void&quot;},&quot;danger&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;confirmLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Nofaol qilish&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cancelLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Bekor qilish&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onConfirm&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onCancel&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;}}">
+class Component extends DCLogic {
+  reasonRef = React.createRef();
+  componentDidMount() { this.onKey = e => { if (e.key === 'Escape') this.props.onCancel && this.props.onCancel(); }; window.addEventListener('keydown', this.onKey); if (this.props.withReason) setTimeout(() => this.reasonRef.current && this.reasonRef.current.focus(), 0); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate(pp) { if (this.props.reasonError && !pp.reasonError) this.reasonRef.current && this.reasonRef.current.focus(); }
+  renderVals() {
+    const p = this.props;
+    return {
+      hasText: !!p.text, hasItems: !!(p.items && p.items.length), rows: (p.items || []).map(i => ({ text: i.text, icon: i.icon || 'dot', color: i.color || '#5B6B6A' })),
+      withReason: !!p.withReason, reasonReq: !p.reasonOptional, reasonRef: this.reasonRef, reason: p.reason || '', onReason: e => p.onReason && p.onReason(e.target.value),
+      hasReasonErr: !!p.reasonError, reasonBorder: p.reasonError ? '#B91C1C' : '#E2E8F0',
+      confirmBg: p.danger ? '#B91C1C' : '#0F766E', confirmHover: p.danger ? '#B91C1C' : '#115E59',
+      cancel: () => p.onCancel && p.onCancel(), confirm: () => p.onConfirm && p.onConfirm(), stop: e => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>

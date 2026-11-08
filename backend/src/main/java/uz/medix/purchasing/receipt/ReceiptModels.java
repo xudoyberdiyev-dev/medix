@@ -83,6 +83,10 @@ final class ReceiptModels {
             long productId,
             String productCode,
             String productName,
+            @Schema(nullable = true, description = "Ishlab chiqaruvchi (prototip: mahsulot ostida)") String manufacturer,
+            boolean controlled,
+            boolean marked,
+            @Schema(description = "QQS stavkasi, %") String vatRate,
             String batchNumber,
             @Schema(nullable = true) LocalDate producedOn,
             LocalDate expiryDate,
@@ -97,6 +101,28 @@ final class ReceiptModels {
             @Schema(nullable = true) DiffReason diffReason,
             @Schema(nullable = true) String batch,
             @Schema(nullable = true) String bonusBatch) {}
+
+    /** Ro'yxat saralashi (prototip `Receipts`: raqam, sana, summa, to'lov muddati). */
+    enum ReceiptSort { CREATED, NUMBER, DATE, AMOUNT, DUE }
+
+    /** Ro'yxat filtrlari: yorliq (holat), yetkazib beruvchilar, omborlar, sana, qidiruv (raqam / yuk xati / YB / kim nomiga). */
+    record ReceiptFilter(
+            Long branchId,
+            ReceiptStatus status,
+            List<Long> supplierIds,
+            List<Long> warehouseIds,
+            LocalDate from,
+            LocalDate to,
+            String q,
+            ReceiptSort sort,
+            boolean desc) {
+
+        ReceiptFilter {
+            supplierIds = supplierIds == null ? List.of() : List.copyOf(supplierIds);
+            warehouseIds = warehouseIds == null ? List.of() : List.copyOf(warehouseIds);
+            sort = sort == null ? ReceiptSort.CREATED : sort;
+        }
+    }
 
     record ReceiptSummary(
             long id,
@@ -114,9 +140,47 @@ final class ReceiptModels {
             @Schema(nullable = true) LocalDate dueDate,
             boolean prepaid,
             String createdBy,
-            Instant createdAt) {}
+            Instant createdAt,
+            PaymentType paymentType,
+            @Schema(nullable = true) String owner,
+            boolean fromBonus,
+            @Schema(description = "Bonus tovar (bepul) — dona") long bonusQty,
+            @Schema(nullable = true, description = "Chegirma (bonus) summasi — faqat narx ko'rish huquqi bilan") String bonusAmount,
+            @Schema(nullable = true) LocalDate bonusDate,
+            @Schema(description = "BNS hujjati bor — bonus balansga tushgan") boolean bonusConfirmed,
+            @Schema(nullable = true) String cancelReason,
+            @Schema(description = "O'tkazilgan va qarzi to'liq to'langan (to'lov kuni kulrang)") boolean paid) {}
 
-    record ReceiptPage(List<ReceiptSummary> items, long total, int page, int size) {}
+    /** Hujjat tarixi (audit): kim, qachon, nima qildi. */
+    record ReceiptHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
+
+    /** Yorliq soni (holat = null — «Hammasi»); holat filtrisiz, boshqa filtrlar bilan. */
+    record ReceiptStatusCount(@Schema(nullable = true) ReceiptStatus status, long count) {}
+
+    /** Filtr varianti soni bilan (yetkazib beruvchi, ombor). */
+    record ReceiptFacet(long id, String name, long count) {}
+
+    /**
+     * Ro'yxat ustidagi kartalar (filial doirasida, filtrlarsiz): qoralamalar (3 kundan eskilari), qabul qilingan — o'tkazilmagan,
+     * kutilayotgan bonuslar (o'tkazilgan, chegirmali, BNS hali yo'q), shu oy bonus tovar (dona).
+     */
+    record ReceiptKpi(
+            long drafts,
+            long oldDrafts,
+            long accepted,
+            @Schema(nullable = true) String expectedBonus,
+            long expectedBonusDocs,
+            long bonusGoodsMonth) {}
+
+    record ReceiptPage(
+            List<ReceiptSummary> items,
+            long total,
+            int page,
+            int size,
+            List<ReceiptStatusCount> statuses,
+            List<ReceiptFacet> suppliers,
+            List<ReceiptFacet> warehouses,
+            ReceiptKpi kpi) {}
 
     record ReceiptDetail(
             long id,
@@ -143,9 +207,11 @@ final class ReceiptModels {
             ReceiptStatus status,
             @Schema(nullable = true) Resolution resolution,
             boolean pricesVisible,
+            @Schema(description = "Qatorlarda narx kiritilgan: narxni ko'rmaydigan xodim qoralamani tahrirlay olmaydi, faqat qabul qiladi") boolean hasPrices,
             @Schema(nullable = true, description = "Hujjat bo'yicha summa (narx × soni)") String amount,
             @Schema(nullable = true, description = "Haqiqiy soni bo'yicha summa (qabuldan keyin)") String actualAmount,
             @Schema(nullable = true, description = "Yozilgan qarz (o'tkazilgandan keyin)") String debtAmount,
+            @Schema(nullable = true, description = "Hujjat bo'yicha to'lanmagan qoldiq (yozilgan qarz − to'lovlar)") String openAmount,
             @Schema(nullable = true, description = "YB saldo shu filialda: musbat — qarz, manfiy — avans") String supplierBalance,
             @Schema(nullable = true, description = "YB bonus balansi shu filialda") String bonusBalance,
             @Schema(nullable = true, description = "Tasdiqlangan bonus (BNS) raqami") String bonusNumber,

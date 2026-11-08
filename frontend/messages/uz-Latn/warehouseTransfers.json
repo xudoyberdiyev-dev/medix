@@ -1,0 +1,127 @@
+{
+  "kind": "Ombor koʻchirishi",
+  "title": "Ombor koʻchirishlari",
+  "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
+  "create": "Koʻchirish tuzish",
+  "status": {
+    "DRAFT": "Qoralama",
+    "IN_TRANSIT": "Yoʻlda",
+    "RECEIVED": "Qabul qilindi",
+    "CANCELLED": "Bekor qilindi"
+  },
+  "filter": {
+    "status": "Holat",
+    "allStatuses": "Barcha holatlar"
+  },
+  "col": {
+    "number": "Raqam",
+    "date": "Sana",
+    "route": "Qayerdan → qayerga",
+    "lines": "Qatorlar",
+    "qty": "Miqdor",
+    "shortage": "Kamomad",
+    "createdBy": "Kiritdi",
+    "status": "Holat",
+    "code": "Kod",
+    "product": "Mahsulot",
+    "batch": "Partiya",
+    "expiry": "Yaroqlilik",
+    "sent": "Joʻnatildi",
+    "received": "Qabul qilindi",
+    "stock": "Qoldiq",
+    "reserved": "Zahirada",
+    "send": "Joʻnatish"
+  },
+  "routeArrow": "dan",
+  "empty": {
+    "title": "Hali ombor koʻchirishi yoʻq",
+    "description": "Tovarni filial ichida bir ombordan boshqasiga joʻnating: qoralama → joʻnatish → qabul."
+  },
+  "failed": "Bajarilmadi",
+  "retryHint": "Qayta urinib koʻring.",
+  "saveFailed": "Saqlanmadi. Qayta urinib koʻring.",
+  "view": {
+    "cancel": "Bekor qilish",
+    "send": "Joʻnatish",
+    "receive": "Qabul qilish",
+    "sentToast": "Joʻnatildi — tovar yoʻlda",
+    "draftTitle": "Qoralama",
+    "draftBody": "Tovar hali «{zone}» zonasida. Joʻnatilganda qoldiqdan chiqadi va «Yoʻlda» boʻladi.",
+    "transitTitle": "Yoʻlda",
+    "transitBody": "{who} joʻnatdi ({at}). «{target}» qabul qilishini kutmoqda.",
+    "from": "Qayerdan",
+    "to": "Qayerga",
+    "sentBy": "Joʻnatdi",
+    "receivedBy": "Qabul qildi",
+    "note": "Izoh",
+    "linesCaption": "Partiyalar",
+    "total": "Jami: {qty} dona",
+    "cancelTitle": "Qoralamani bekor qilish",
+    "cancelBody": "Hujjat bekor qilinadi, tovar joyida qoladi. Bu amalni qaytarib boʻlmaydi.",
+    "cancelled": "Bekor qilindi"
+  },
+  "receive": {
+    "title": "Qabul qilish: {number}",
+    "action": "Qabul qilish",
+    "errorTitle": "Qabul qilinmadi",
+    "zone": "Qaysi zonaga",
+    "hint": "Sanab chiqing. Boʻsh qoldirilgan qator — toʻliq keldi.",
+    "sentQty": "joʻnatildi {qty}",
+    "gotLabel": "{product} {batch} — kelgan soni",
+    "shortageTitle": "Kamomad: {qty} dona",
+    "shortageBody": "Izoh majburiy. Kamomad hujjatda qayd etiladi va hal qilish uchun xabar yuboriladi.",
+    "note": "Izoh",
+    "notePlaceholder": "Masalan: 2 quti shikastlangan, haydovchi bilan tekshirildi",
+    "pickZone": "Qabul zonasini tanlang.",
+    "noteRequired": "Kamomad bor — izoh yozing: nima boʻldi, kim bilan tekshirildi.",
+    "doneShortage": "Qabul qilindi, kamomad {qty} dona",
+    "doneFull": "Toʻliq qabul qilindi"
+  },
+  "lineError": {
+    "notInt": "{product} · {batch}: miqdor butun son boʻlishi kerak",
+    "overSent": "{product} · {batch}: joʻnatildi {sent}, kiritildi {got}"
+  },
+  "form": {
+    "title": "Yangi ombor koʻchirishi",
+    "save": "Qoralamani saqlash",
+    "errorTitle": "Saqlanmadi",
+    "fromWarehouse": "Qaysi ombordan",
+    "zone": "Zona",
+    "toWarehouse": "Qaysi omborga",
+    "noTargetsTitle": "Filialda boshqa ombor yoʻq",
+    "noTargetsBody": "Ombor koʻchirishi bitta filial ichida. Boshqa filialga — filiallararo savdo ({fs}).",
+    "stockCaption": "«{zone}» zonasidagi partiyalar",
+    "emptyZoneTitle": "Zonada tovar yoʻq",
+    "emptyZoneHint": "Boshqa zonani tanlang.",
+    "qtyLabel": "{product} {batch} — joʻnatish soni",
+    "note": "Izoh",
+    "notePlaceholder": "Masalan: Chilonzor omboriga toʻldirish",
+    "pickZones": "Manba zonani va qabul qiluvchi omborni tanlang.",
+    "noLines": "Kamida bitta partiyaga joʻnatish sonini kiriting.",
+    "saved": "Qoralama saqlandi"
+  },
+  "shortage": {
+    "titleOpen": "Kamomad: {qty} dona — hal qilinmagan",
+    "titleDone": "Kamomad: {qty} dona — hal qilindi",
+    "returned": "Manbaga qaytarildi",
+    "writtenOff": "Hisobdan chiqarish",
+    "writeOff": "Hisobdan chiqarish",
+    "return": "Manbaga qaytarish",
+    "returnAction": "Qaytarish",
+    "pendingToast": "Hisobdan chiqarish tasdiqqa yuborildi",
+    "note": "Izoh",
+    "notePlaceholder": "Masalan: mashinada qolgan, haydovchi topdi",
+    "kind": {
+      "WRITE_OFF": {
+        "title": "Kamomadni hisobdan chiqarish",
+        "hint": "Hisobdan chiqarish hujjati ({hc}, sabab «Kamomad») tuziladi. Tovar joʻnatishda chiqqan — qoldiq oʻzgarmaydi. 5.000.000,00 dan katta summa — Direktor tasdigʻi bilan.",
+        "done": "Hisobdan chiqarish hujjati tuzildi"
+      },
+      "RETURN": {
+        "title": "Topildi — manbaga qaytarish",
+        "hint": "Kamomad tovari manba zonaga qaytariladi (qoldiq oshadi).",
+        "done": "Tovar manba zonaga qaytarildi"
+      }
+    }
+  }
+}

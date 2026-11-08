@@ -2,6 +2,7 @@ package uz.medix.sales.order;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -23,6 +24,7 @@ final class MarkingModels {
             String customer,
             @Schema(description = "Markirovkali qatorlar soni") int lines,
             @Schema(description = "Skanerlanadigan kodlar soni") long totalQty,
+            @Schema(description = "Markirovkasiz (tasdiqlanadigan) qatorlar soni (E1)") int unmarkedLines,
             @Schema(nullable = true) Integer markMinutes,
             @Schema(nullable = true) String marker,
             @Schema(nullable = true) Long markerId,
@@ -41,6 +43,18 @@ final class MarkingModels {
             int qty,
             int scanned,
             List<MarkBatch> batches) {}
+
+    /** Markirovkasiz qator — Markirovkachi «Tasdiqlash» bilan o'tkazadi (E1). */
+    record UnmarkedLine(
+            long lineId,
+            int lineNo,
+            String productCode,
+            String productName,
+            String unit,
+            int qty,
+            boolean confirmed) {}
+
+    record ConfirmRequest(@NotEmpty(message = "{validation.required}") @Size(max = 1000) List<Long> lineIds) {}
 
     record MarkCode(
             long id,
@@ -68,13 +82,15 @@ final class MarkingModels {
             @Schema(nullable = true) Long markerId,
             @Schema(nullable = true) Instant markStartedAt,
             @Schema(nullable = true) Instant deadline,
-            List<MarkLine> lines,
+            @Schema(description = "Markirovkali qatorlar (skanerlanadi)") List<MarkLine> lines,
+            @Schema(description = "Markirovkasiz qatorlar (tasdiqlanadi, E1)") List<UnmarkedLine> unmarkedLines,
             @Schema(description = "Faol (olib tashlanmagan) kodlar") List<MarkCode> codes,
             @Schema(description = "Skanerlangan quti / kerak") int boxesScanned,
             int boxesNeeded,
             int unitsScanned,
             int unitsNeeded,
-            @Schema(description = "Barcha kodlar skanerlangan — yakunlash mumkin") boolean complete) {}
+            @Schema(description = "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan — yakunlash mumkin") boolean complete,
+            @Schema(description = "Buyurtmada markirovkali qator yo'q — «Markirovkasiz — tasdiqlash»") boolean unmarkedOnly) {}
 
     record ScanRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String code) {}
 

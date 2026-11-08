@@ -28,7 +28,13 @@ describe("ombor koʻchirishi — qabul", () => {
     expect(r.shortage).toBe(7);
   });
   it("joʻnatilgandan koʻp yoki butun boʻlmagan son — xato", () => {
-    expect(receiveLinesFrom([line(1, 10)], { 1: "11" }).error).toContain("joʻnatildi 10");
-    expect(receiveLinesFrom([line(1, 10)], { 1: "2,5" }).error).toContain("butun son");
+    expect(receiveLinesFrom([line(1, 10)], { 1: "11" }).error).toEqual({
+      code: "overSent",
+      product: "Paratsetamol",
+      batch: "P-1",
+      sent: 10,
+      got: 11,
+    });
+    expect(receiveLinesFrom([line(1, 10)], { 1: "2,5" }).error).toMatchObject({ code: "notInt" });
   });
 });

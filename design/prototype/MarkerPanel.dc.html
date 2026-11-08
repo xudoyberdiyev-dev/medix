@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div data-screen-label="Markirovkachi paneli" style="display:flex;flex-direction:column;gap:16px;min-width:0;color:#172B2A;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums">
+  <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+    <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.mp_title }}</h1>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ sub }}</p>
+  </div>
+  <section aria-label="{{ L.pp_myToday }}" style="display:flex;flex-direction:column;gap:8px">
+    <span style="font-size:13px;line-height:18px;font-weight:600;color:#5B6B6A">{{ L.pp_myToday }}</span>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+      <sc-for list="{{ stats }}" as="k" hint-placeholder-count="5">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0">
+          <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span>
+          <span style="font-size:22px;line-height:28px;font-weight:600;color:{{ k.color }}">{{ k.value }}</span>
+          <sc-if value="{{ k.hasNote }}"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.note }}</span></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <sc-if value="{{ hasResult }}">
+    <div role="status" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:{{ result.bg }};border:1px solid {{ result.border }};color:{{ result.fg }}">
+      <lucide-i name="{{ result.icon }}" size="20" style="flex:none"></lucide-i>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:15px;line-height:20px;font-weight:600">{{ result.text }}</span><span style="font-size:12px;line-height:16px">{{ result.sub }}</span></div>
+      <button onClick="{{ closeResult }}" aria-label="{{ L.bk_back2 }}" style="flex:none;width:48px;height:48px;border:0;border-radius:8px;background:transparent;color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center"><lucide-i name="x" size="18"></lucide-i></button>
+    </div>
+  </sc-if>
+  <div role="tablist" style="display:flex;gap:2px;box-shadow:inset 0 -1px 0 #E2E8F0;flex:none;flex-wrap:wrap">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+      <button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="flex:none;display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:4px 12px;white-space:nowrap;border:0;border-bottom:2px solid {{ t.line }};background:transparent;font:inherit;font-size:14px;font-weight:{{ t.weight }};color:{{ t.color }};cursor:pointer">{{ t.label }}<sc-if value="{{ t.hasN }}"><span style="flex:none;min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:999px;background:{{ t.nBg }};color:{{ t.nFg }};font-size:12px;line-height:20px;font-weight:600;text-align:center">{{ t.n }}</span></sc-if></button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isQueue }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ queueEmpty }}"><div style="padding:48px 16px;text-align:center;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:8px"><lucide-i name="inbox" size="28" style="color:#647574"></lucide-i><span style="font-size:15px;font-weight:600">{{ L.mp_qEmptyT }}</span><span style="font-size:13px;color:#5B6B6A;max-width:360px;text-wrap:pretty">{{ L.mp_qEmptyD }}</span></div></sc-if>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px;align-items:start">
+      <sc-for list="{{ queue }}" as="q" hint-placeholder-count="3">
+        <article style="background:{{ q.bg }};border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:{{ q.fg }}">{{ q.no }}</span>
+              <span style="font-size:15px;line-height:20px;font-weight:600;color:{{ q.fg }};text-wrap:pretty">{{ q.cust }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none">
+              <sc-if value="{{ q.busy }}"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:#E2E8F0;color:#5B6B6A;font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="lock" size="12"></lucide-i>{{ q.busyText }}</span></sc-if>
+              <span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:{{ q.tmBg }};color:{{ q.tmFg }};font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="timer" size="12"></lucide-i>{{ q.tm }}</span>
+              <sc-if value="{{ q.none }}"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="ban" size="12"></lucide-i>{{ L.mp_noneBadge }}</span></sc-if>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px 16px;font-size:13px;line-height:18px;color:{{ q.sub }}">
+            <sc-for list="{{ q.meta }}" as="m"><span style="display:flex;align-items:flex-start;gap:6px;min-width:0"><lucide-i name="{{ m.icon }}" size="14" style="flex:none;margin-top:2px;color:#647574"></lucide-i><span style="min-width:0;text-wrap:pretty;font-weight:{{ m.weight }}">{{ m.text }}</span></span></sc-for>
+          </div>
+          <sc-if value="{{ q.open }}">
+            <div style="display:flex;flex-direction:column;border-top:1px solid #EEF2F4">
+              <sc-for list="{{ q.lines }}" as="l">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px;padding:10px 0;border-bottom:1px solid #EEF2F4;color:{{ l.fg }}">
+                  <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:13px;line-height:18px;font-weight:500"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ l.code }}</span> {{ l.name }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A;font-family:'JetBrains Mono',monospace">{{ l.batches }}</span></div>
+                  <span style="flex:none;font-size:13px;font-weight:600;white-space:nowrap">{{ l.qty }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button onClick="{{ q.toggle }}" aria-expanded="{{ q.open }}" style="flex:1 1 120px;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="{{ q.chev }}" size="16" style="color:#5B6B6A"></lucide-i>{{ q.toggleLabel }}</button>
+            <sc-if value="{{ q.canStart }}"><button onClick="{{ q.start }}" style="flex:1 1 180px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#115E59"><lucide-i name="scan-barcode" size="16"></lucide-i>{{ L.mp_start }}</button></sc-if>
+            <sc-if value="{{ q.canNone }}"><button onClick="{{ q.confirmNone }}" style="flex:1 1 180px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#115E59"><lucide-i name="check" size="16"></lucide-i>{{ L.mp_noneBtn }}</button></sc-if>
+            <sc-if value="{{ q.blocked }}"><span style="flex:1 1 160px;display:flex;align-items:center;gap:6px;font-size:13px;line-height:18px;color:#B45309"><lucide-i name="info" size="14" style="flex:none"></lucide-i>{{ L.mp_oneActive }}</span></sc-if>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isMine }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ noActive }}"><div style="padding:48px 16px;text-align:center;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:10px"><lucide-i name="scan-barcode" size="28" style="color:#647574"></lucide-i><span style="font-size:15px;font-weight:600">{{ L.mp_noActiveT }}</span><span style="font-size:13px;color:#5B6B6A;max-width:360px;text-wrap:pretty">{{ L.mp_noActiveD }}</span><button onClick="{{ toQueue }}" style="min-height:48px;padding:0 18px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#115E59">{{ L.pp_toQueue }}</button></div></sc-if>
+    <sc-if value="{{ hasActive }}">
+      <section style="background:#FFFFFF;border:1px solid {{ a.border }};border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ a.no }}</span><span style="font-size:16px;line-height:22px;font-weight:600;text-wrap:pretty">{{ a.cust }}</span><span style="font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ a.meta }}</span></div>
+          <button onClick="{{ a.openCard }}" style="min-height:48px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="arrow-up-right" size="14" style="color:#5B6B6A"></lucide-i>{{ L.pp_card }}</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px">
+          <div role="timer" aria-live="off" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:16px 12px;border-radius:12px;background:{{ a.tBg }}">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:clamp(44px,13vw,64px);line-height:1;font-weight:600;letter-spacing:-0.02em;color:{{ a.tFg }}">{{ a.timer }}</span>
+            <span style="font-size:14px;line-height:20px;font-weight:600;color:{{ a.tFg }}">{{ a.tLabel }}</span>
+            <span style="font-size:12px;line-height:16px;color:#5B6B6A;text-align:center">{{ a.tSub }}</span>
+          </div>
+          <div aria-live="polite" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 12px;border-radius:12px;background:#F8FAFA;border:1px solid #EEF2F4">
+            <span style="font-size:13px;line-height:18px;font-weight:600;color:#5B6B6A">{{ L.mp_hit }}</span>
+            <span style="font-size:clamp(28px,8vw,40px);line-height:1.1;font-weight:600;color:#172B2A;text-align:center">{{ a.hitTxt }}</span>
+            <span style="font-size:13px;line-height:18px;color:#5B6B6A;text-align:center">{{ a.needTxt }}</span>
+            <div style="width:100%;max-width:280px;height:8px;border-radius:999px;background:#E2E8F0;overflow:hidden"><div style="height:100%;width:{{ a.pct }};background:{{ a.barColor }};border-radius:999px"></div></div>
+          </div>
+        </div>
+        <sc-if value="{{ showDemo }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;line-height:16px;color:#647574"><lucide-i name="clock" size="13"></lucide-i><span>{{ a.clock }}</span><button onClick="{{ clk5 }}" style="min-height:48px;padding:0 10px;border:1px solid #E2E8F0;border-radius:6px;background:#FFFFFF;font:inherit;font-size:12px;color:#5B6B6A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA">{{ L.q9_clk5 }}</button><button onClick="{{ clk15 }}" style="min-height:48px;padding:0 10px;border:1px solid #E2E8F0;border-radius:6px;background:#FFFFFF;font:inherit;font-size:12px;color:#5B6B6A;cursor:pointer;white-space:nowrap" style-hover="background:#F8FAFA">{{ L.q9_clk15 }}</button></div></sc-if>
+
+        <div style="display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;border:2px solid {{ a.scanBorder }};background:{{ a.scanBg }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <label for="mp-scan" style="display:flex;align-items:center;gap:6px;font-size:14px;line-height:20px;font-weight:600;color:{{ a.scanFg }}"><lucide-i name="{{ a.scanIcon }}" size="18"></lucide-i>{{ a.scanLabel }}</label>
+            <button onClick="{{ toggleManual }}" aria-pressed="{{ manual }}" style="min-height:48px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap" style-hover="background:#F8FAFA"><lucide-i name="keyboard" size="14" style="color:#5B6B6A"></lucide-i>{{ manualLabel }}</button>
+          </div>
+          <div style="display:flex;gap:8px;min-width:0">
+            <input id="mp-scan" ref="{{ scanRef }}" value="{{ scan }}" onChange="{{ onScan }}" onKeyDown="{{ onScanKey }}" onBlur="{{ onScanBlur }}" inputMode="{{ inMode }}" autoComplete="off" autoCapitalize="off" spellCheck="false" placeholder="{{ L.mp_scanPh }}" style="flex:1;min-width:0;height:52px;box-sizing:border-box;padding:0 14px;border:1px solid #CBD5D3;border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:15px;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.18)"></input>
+            <button onClick="{{ submitScan }}" aria-label="{{ L.mp_scanGo }}" style="flex:none;width:52px;height:52px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#115E59"><lucide-i name="corner-down-left" size="20"></lucide-i></button>
+          </div>
+          <span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ a.scanHint }}</span>
+          <sc-if value="{{ demoScan }}">
+            <div style="display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px dashed #CBD5D3">
+              <span style="font-size:12px;line-height:16px;font-weight:600;color:#6D28D9">{{ L.mp_demoT }}</span>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:6px">
+                <sc-for list="{{ demoBtns }}" as="d"><button onClick="{{ d.pick }}" style="min-height:48px;padding:0 10px;border:1px solid {{ d.border }};border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:{{ d.fg }};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center" style-hover="background:#F8FAFA"><lucide-i name="{{ d.icon }}" size="14" style="flex:none"></lucide-i>{{ d.label }}</button></sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+
+        <sc-if value="{{ a.hasIssues }}"><div style="display:flex;flex-direction:column;gap:6px"><sc-for list="{{ a.issues }}" as="x"><div style="display:flex;gap:6px;font-size:13px;line-height:18px;color:#B91C1C;background:#FEF2F2;border-radius:6px;padding:8px 10px"><lucide-i name="triangle-alert" size="14" style="flex:none;margin-top:2px"></lucide-i><span style="text-wrap:pretty">{{ x.text }}</span></div></sc-for></div></sc-if>
+
+        <div style="display:flex;flex-direction:column;border-top:1px solid #EEF2F4">
+          <sc-for list="{{ a.lines }}" as="l">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EEF2F4">
+              <div style="flex:none;width:40px;height:40px;border-radius:10px;background:{{ l.iconBg }};color:{{ l.iconFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ l.icon }}" size="20"></lucide-i></div>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:14px;line-height:19px;font-weight:500;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ l.code }}</span> {{ l.name }}</span>
+                <span style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:12px;line-height:16px;color:#5B6B6A"><span style="display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;background:{{ l.kBg }};color:{{ l.kFg }};font-weight:600">{{ l.kind }}</span><span style="font-family:'JetBrains Mono',monospace">{{ l.batches }}</span></span>
+                <sc-if value="{{ l.hasDev }}"><span style="font-size:12px;line-height:16px;color:#B45309;text-wrap:pretty">{{ l.dev }}</span></sc-if>
+                <div style="height:6px;border-radius:999px;background:#E2E8F0;overflow:hidden;max-width:320px"><div style="height:100%;width:{{ l.pct }};background:{{ l.bar }};border-radius:999px"></div></div>
+              </div>
+              <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:0">
+                <span style="font-size:22px;line-height:26px;font-weight:600;color:{{ l.cFg }};white-space:nowrap">{{ l.count }}</span>
+                <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ l.unitW }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ a.hasPlain }}">
+          <div style="display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:10px;background:#F5F7F8;border:1px solid #E2E8F0">
+            <span style="display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:18px;font-weight:600;color:#B45309"><lucide-i name="info" size="14" style="flex:none;margin-top:2px"></lucide-i><span style="text-wrap:pretty">{{ a.plainTxt }}</span></span>
+            <sc-for list="{{ a.plain }}" as="l"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;font-size:13px;line-height:18px;color:#647574"><span style="min-width:0;text-wrap:pretty"><span style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ l.code }}</span> {{ l.name }}</span><span style="white-space:nowrap">{{ l.qty }}</span></div></sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:13px;line-height:18px;font-weight:600">{{ a.codesT }}</span><sc-if value="{{ a.hasMore }}"><button onClick="{{ toggleAll }}" style="min-height:48px;padding:0 10px;border:0;border-radius:6px;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#0F766E;cursor:pointer">{{ a.moreLabel }}</button></sc-if></div>
+          <sc-if value="{{ a.noCodes }}"><span style="font-size:13px;line-height:18px;color:#647574">{{ L.mp_noCodes }}</span></sc-if>
+          <sc-for list="{{ a.codes }}" as="c">
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #EEF2F4;opacity:{{ c.op }}">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px;word-break:break-all;text-decoration:{{ c.deco }}">{{ c.code }}</span>
+                <span style="font-size:12px;line-height:16px;color:{{ c.subFg }};text-wrap:pretty">{{ c.sub }}</span>
+              </div>
+              <sc-if value="{{ c.canRm }}"><button onClick="{{ c.remove }}" aria-label="{{ L.mp_rm }}" title="{{ L.mp_rm }}" style="flex:none;width:48px;height:48px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#B91C1C;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#FEF2F2"><lucide-i name="trash-2" size="16"></lucide-i></button></sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ a.hasLeft }}">
+          <div role="alert" style="display:flex;gap:8px;padding:12px 14px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C">
+            <lucide-i name="circle-alert" size="18" style="flex:none;margin-top:1px"></lucide-i>
+            <span style="flex:1;min-width:0;font-size:14px;line-height:20px;font-weight:600;text-wrap:pretty">{{ a.leftTxt }}</span>
+            <button onClick="{{ closeLeft }}" aria-label="{{ L.bk_back2 }}" style="flex:none;width:48px;height:48px;border:0;border-radius:6px;background:transparent;color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center"><lucide-i name="x" size="16"></lucide-i></button>
+          </div>
+        </sc-if>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px">
+          <button onClick="{{ a.issue }}" style="min-height:48px;padding:0 14px;border:1px solid #FECACA;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#B91C1C;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#FEF2F2"><lucide-i name="triangle-alert" size="16"></lucide-i>{{ L.pp_issue }}</button>
+          <button onClick="{{ a.finish }}" style="min-height:48px;padding:0 16px;border:0;border-radius:8px;background:{{ a.finBg }};color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><lucide-i name="package-check" size="16"></lucide-i>{{ L.mp_finish }}</button>
+        </div>
+      </section>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ doneEmpty }}"><div style="padding:48px 16px;text-align:center;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;font-size:13px;color:#5B6B6A">{{ L.mp_doneEmpty }}</div></sc-if>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ done }}" as="r">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px 16px;align-items:start">
+          <sc-for list="{{ r.cells }}" as="c"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;line-height:16px;color:#647574">{{ c.label }}</span><span style="font-size:13px;line-height:18px;font-weight:{{ c.weight }};color:{{ c.color }};font-family:{{ c.font }};text-wrap:pretty">{{ c.text }}</span></div></sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isLog }}" hint-placeholder-val="{{ false }}">
+    <div role="tablist" aria-label="{{ L.mp_tLog }}" style="display:flex;gap:4px;padding:3px;border-radius:9px;background:#EEF2F4;align-self:flex-start;max-width:100%">
+      <sc-for list="{{ logViews }}" as="v"><button role="tab" aria-selected="{{ v.on }}" onClick="{{ v.pick }}" style="min-height:48px;padding:0 14px;border:0;border-radius:7px;background:{{ v.bg }};box-shadow:{{ v.shadow }};font:inherit;font-size:13px;font-weight:{{ v.weight }};color:#172B2A;cursor:pointer;white-space:nowrap">{{ v.label }}</button></sc-for>
+    </div>
+    <sc-if value="{{ isScanLog }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+        <label style="flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">{{ L.mp_lSearch }}<input value="{{ lq }}" onChange="{{ setLq }}" placeholder="{{ L.mp_lSearchPh }}" style="height:36px;box-sizing:border-box;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;color:#172B2A;outline:none" style-focus="border-color:#0F766E"></input></label>
+        <dc-import name="DateRangePicker" label="{{ L.pr_date }}" from="{{ lFrom }}" to="{{ lTo }}" today="{{ today }}" on-change="{{ setLDates }}" hint-size="220px,58px"></dc-import>
+        <div style="width:220px;max-width:100%"><dc-import name="Select" label="{{ L.mp_lProd }}" required="{{ false }}" options="{{ prodOpts }}" value="{{ lProd }}" on-change="{{ setLProd }}" hint-size="220px,58px"></dc-import></div>
+        <sc-if value="{{ canExport }}"><button onClick="{{ exportLog }}" style="height:48px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;flex:none" style-hover="background:#115E59"><lucide-i name="file-spreadsheet" size="16"></lucide-i>{{ L.hs_export }}</button></sc-if>
+      </section>
+      <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ logCount }}</span>
+      <sc-if value="{{ logEmpty }}"><div style="padding:40px 16px;text-align:center;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;font-size:13px;color:#5B6B6A">{{ L.mp_lEmpty }}</div></sc-if>
+      <sc-if value="{{ logWide }}">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;overflow-x:auto">
+          <div style="min-width:1180px">
+            <div style="display:grid;grid-template-columns:{{ lGrid }};height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+              <sc-for list="{{ lCols }}" as="c" hint-placeholder-count="8"><span style="padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c }}</span></sc-for>
+            </div>
+            <sc-for list="{{ logRows }}" as="r">
+              <div style="display:grid;grid-template-columns:{{ lGrid }};min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4;font-size:12.5px;line-height:17px">
+                <span style="padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:11.5px;word-break:break-all;text-decoration:{{ r.deco }}">{{ r.code }}</span>
+                <span style="padding:0 10px">{{ r.kind }}</span>
+                <span style="padding:0 10px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ r.name }}">{{ r.name }}</span>
+                <span style="padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px">{{ r.batch }}</span>
+                <button onClick="{{ r.open }}" style="min-height:48px;justify-self:start;border:0;background:transparent;padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ r.no }}</button>
+                <span style="padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.by }}</span>
+                <span style="padding:0 10px;white-space:nowrap;color:#5B6B6A">{{ r.at }}</span>
+                <span style="padding:6px 10px;font-weight:600;color:{{ r.stFg }};text-wrap:pretty">{{ r.st }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+      <sc-if value="{{ logNarrow }}">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ logRows }}" as="r">
+            <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><span style="font-size:14px;line-height:19px;font-weight:600;min-width:0;text-wrap:pretty">{{ r.name }}</span><span style="flex:none;font-size:12px;line-height:16px;font-weight:600;color:{{ r.stFg }}">{{ r.stShort }}</span></div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:16px;word-break:break-all;color:#172B2A;text-decoration:{{ r.deco }}">{{ r.code }}</span>
+              <div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;line-height:16px;color:#5B6B6A"><span>{{ r.kind }}</span><span style="font-family:'JetBrains Mono',monospace">{{ r.batch }}</span><button onClick="{{ r.open }}" style="border:0;background:transparent;padding:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:#0F766E;cursor:pointer;min-height:48px">{{ r.no }}</button><span>{{ r.by }}</span><span>{{ r.at }}</span></div>
+              <sc-if value="{{ r.hasRm }}"><span style="font-size:12px;line-height:16px;color:#B91C1C;text-wrap:pretty">{{ r.st }}</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasMoreLog }}"><button onClick="{{ moreLog }}" style="align-self:center;min-height:48px;padding:0 18px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#0F766E;cursor:pointer" style-hover="background:#F8FAFA">{{ moreLogLabel }}</button></sc-if>
+    </sc-if>
+    <sc-if value="{{ isRegistry }}">
+      <dc-import name="MarkingLog" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" on-toast="{{ toastFn }}" on-navigate="{{ navFn }}" narrow="{{ narrow }}" hint-size="100%,600px"></dc-import>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ issueOpen }}">
+    <div onClick="{{ closeIssue }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:12px">
+      <div role="dialog" aria-modal="true" aria-label="{{ L.pp_issueT }}" onClick="{{ stop }}" style="width:480px;max-width:100%;max-height:calc(100vh - 24px);overflow-y:auto;box-sizing:border-box;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.pp_issueT }}</h2><p style="margin:0;font-size:13px;line-height:19px;color:#5B6B6A;text-wrap:pretty">{{ L.pp_issueD }}</p></div>
+        <div role="radiogroup" aria-label="{{ L.pp_issueF }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:8px">
+          <sc-for list="{{ reasons }}" as="r"><button role="radio" aria-checked="{{ r.on }}" onClick="{{ r.pick }}" style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }};font:inherit;font-size:14px;color:#172B2A;cursor:pointer;text-align:left"><span style="width:18px;height:18px;border-radius:50%;border:{{ r.ring }};box-sizing:border-box;flex:none"></span>{{ r.label }}</button></sc-for>
+        </div>
+        <textarea value="{{ issueNote }}" onChange="{{ onNote }}" placeholder="{{ L.pp_notePh }}" aria-label="{{ L.pp_noteF }}" rows="3" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;resize:vertical;outline:none" style-focus="border-color:#0F766E"></textarea>
+        <sc-if value="{{ issueErr }}"><span style="font-size:12px;color:#B91C1C">{{ L.pp_eReason }}</span></sc-if>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{ closeIssue }}" style="min-height:48px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.bk_back2 }}</button>
+          <button onClick="{{ sendIssue }}" style="min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#B91C1C;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#991B1B">{{ L.pp_send }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ rmOpen }}">
+    <div onClick="{{ closeRm }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:12px">
+      <div role="dialog" aria-modal="true" aria-label="{{ L.mp_rmT }}" onClick="{{ stop }}" style="width:460px;max-width:100%;max-height:calc(100vh - 24px);overflow-y:auto;box-sizing:border-box;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:20px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.mp_rmT }}</h2><p style="margin:0;font-size:13px;line-height:19px;color:#5B6B6A;text-wrap:pretty">{{ L.mp_rmD }}</p></div>
+        <span style="padding:8px 10px;border-radius:8px;background:#F8FAFA;border:1px solid #E2E8F0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:17px;word-break:break-all">{{ rmCode }}</span>
+        <textarea value="{{ rmReason }}" onChange="{{ onRmReason }}" placeholder="{{ L.mp_rmPh }}" aria-label="{{ L.mp_rmF }}" rows="3" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid {{ rmBorder }};border-radius:8px;font:inherit;font-size:14px;resize:vertical;outline:none" style-focus="border-color:#0F766E"></textarea>
+        <sc-if value="{{ rmErr }}"><span style="font-size:12px;color:#B91C1C">{{ L.mp_rmE }}</span></sc-if>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{ closeRm }}" style="min-height:48px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.bk_back2 }}</button>
+          <button onClick="{{ doRm }}" style="min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#B91C1C;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#991B1B">{{ L.mp_rm }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ errOpen }}">
+    <div role="alertdialog" aria-modal="true" aria-label="{{ L.mp_errT }}" style="position:fixed;inset:0;z-index:300;background:#B91C1C;color:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;box-sizing:border-box;text-align:center">
+      <lucide-i name="octagon-x" size="72"></lucide-i>
+      <span style="font-size:clamp(26px,7vw,40px);line-height:1.15;font-weight:700;letter-spacing:-0.01em">{{ L.mp_errT }}</span>
+      <span style="font-size:clamp(18px,5vw,24px);line-height:1.35;font-weight:600;max-width:680px;text-wrap:pretty">{{ err.text }}</span>
+      <sc-if value="{{ err.hasCode }}"><span style="max-width:680px;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.18);font-family:'JetBrains Mono',monospace;font-size:13px;line-height:18px;word-break:break-all">{{ err.code }}</span></sc-if>
+      <span style="font-size:14px;line-height:20px">{{ L.mp_errD }}</span>
+      <button ref="{{ errRef }}" onClick="{{ closeErr }}" style="min-height:56px;min-width:220px;padding:0 24px;border:0;border-radius:10px;background:#FFFFFF;color:#B91C1C;font:inherit;font-size:17px;font-weight:700;cursor:pointer">{{ L.mp_errOk }}</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;marker&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Nodira Xolmatova&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;demoScan&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onOpen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(href)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(page, params)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pad = n => String(n).padStart(2, '0');
+const short = nm => { const p = String(nm || '').split(' '); return p.length > 1 ? p[0] + ' ' + p[1][0] + '.' : nm; };
+const clockTxt = ms => { const t = Math.floor(Math.abs(ms) / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60; return (h ? h + ':' + pad(m) : pad(m)) + ':' + pad(s); };
+const DEMO = [['ok', 'circle-check', '#15803D', '#BBF7D0'], ['prod', 'pill', '#B91C1C', '#FECACA'], ['batch', 'layers', '#B91C1C', '#FECACA'], ['dup', 'copy', '#B91C1C', '#FECACA'], ['kind', 'package', '#B91C1C', '#FECACA'], ['full', 'list-checks', '#B91C1C', '#FECACA']];
+class Component extends DCLogic {
+  state = { tab: 'queue', open: {}, scan: '', manual: false, err: null, flash: 0, left: null, issueOpen: false, issueR: '', issueNote: '', issueTried: false, rm: null, rmReason: '', rmTried: false, result: null, showAll: false, lq: '', lFrom: '', lTo: '', lProd: 'ALL', lView: 'scan', lN: 50 };
+  get L() { return this.props.dict || {}; }
+  get D() { return window.MedixData; }
+  componentDidMount() { this._t = setInterval(() => { const D = this.D; if (!D) return; if (this.state.tab === 'mine' && this.active()) { this.forceUpdate(); this.focusScan(); } else if (!this._rd || D.store.v !== this._v) { this._rd = 1; this._v = D.store.v; this.forceUpdate(); } }, 1000); }
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._bt); }
+  componentDidUpdate() { const ps = this._ps || {}, s = this.state; this._ps = s; if (s.err && !ps.err && this._errBtn) this._errBtn.focus(); if (ps.tab !== 'mine' && s.tab === 'mine') setTimeout(() => this.focusScan(), 60); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  br() { const b = this.props.branch; return !b || b === 'ALL' ? 'TSH' : b; }
+  me() { return this.props.userName || ''; }
+  active() { const D = this.D; return D && D.activeMarkOf ? D.activeMarkOf(this.me(), this.br()) : null; }
+  modal() { const s = this.state; return s.err || s.issueOpen || s.rm; }
+  focusScan() { const el = this._in; if (!el || this.state.tab !== 'mine' || this.modal() || document.activeElement === el) return; const a = document.activeElement; if (a && a !== document.body && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; try { el.focus({ preventScroll: true }); } catch (e) {} }
+  beep(ok) { try { const C = this._ac || (this._ac = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); const t = C.currentTime;
+    const tone = (f, at, d, type, v) => { const o = C.createOscillator(), g = C.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(v, t + at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + at + d); o.connect(g); g.connect(C.destination); o.start(t + at); o.stop(t + at + d + 0.03); };
+    if (ok) tone(1400, 0, 0.08, 'sine', 0.2); else { tone(240, 0, 0.22, 'square', 0.18); tone(170, 0.26, 0.34, 'square', 0.18); } } catch (e) {} }
+  kindW(k) { return k === 'box' ? this.L.mk_box : this.L.mk_unit; }
+  codesTxt(box, unit) { const L = this.L, a = []; if (box) a.push(fN(box) + ' ' + L.mk_box); if (unit) a.push(fN(unit) + ' ' + L.mk_unit); return a.join(', ') || '0'; }
+  errText(r) { const L = this.L; switch (r.err) {
+    case 'prod': return fill(L.mp_eProd, { n: r.name }); case 'batch': return fill(L.mp_eBatch, { need: r.need, got: r.got }); case 'dup': return fill(L.mp_eDup, { no: r.no });
+    case 'kind': return fill(L.mp_eKind, { need: this.kindW(r.need), got: this.kindW(r.got) }); case 'full': return fill(L.mp_eFull, { got: r.got, need: r.need, u: this.kindW(r.kind) });
+    case 'sold': return fill(L.w4_eSold, { n: r.name }); case 'notReg': return fill(L.w4_eNotReg, { n: r.name }); case 'state': return L.mp_eState; default: return L.mp_eFmt; } }
+  doScan(raw) { const D = this.D, act = this.active(), code = String(raw || '').trim(); if (!code || !act) return; const r = D.markScan(act.id, this.me(), code);
+    if (r.ok) { this.beep(true); this.setState({ scan: '', flash: Date.now(), left: null, lastOk: fill(this.L.mp_okLast, { n: r.name, got: r.got, need: r.need, u: this.kindW(r.kind) }) }); clearTimeout(this._ft); this._ft = setTimeout(() => this.forceUpdate(), 800); }
+    else { this.beep(false); this.setState({ scan: '', err: { text: this.errText(r), code: D.mkPretty(code) } }); } }
+  demo(k) { const D = this.D, act = this.active(); if (!act) return; const c = D.mkDemo(act.id, k); if (!c) return this.toast(this.L.mp_demoNone); this.setState({ scan: c }); setTimeout(() => this.doScan(c), 120); }
+  start(o) { const D = this.D, L = this.L; if (this.active()) return this.toast(L.mp_oneActive); const n = D.startMark(o.id, this.me()); if (!n) return this.toast(L.mp_cantStart); this.toast(fill(L.mp_tStarted, { no: o.no })); this.setState({ tab: 'mine', result: null, left: null, showAll: false }); }
+  confirmNone(o) { const D = this.D, L = this.L, n = D.markNone(o.id, this.me()); if (!n) return this.toast(L.mp_cantStart); this.toast(fill(L.q9_tMarked, { no: o.no })); this.setState({ result: { no: n.no, late: false, text: L.mp_resNone, sub: fill(L.mp_resNoneSub, { no: n.no }) } }); }
+  finish(o) { const D = this.D, L = this.L, r = D.finishMark(o.id, this.me()); if (!r) return;
+    if (r.err === 'left') { this.beep(false); const n = r.left.reduce((a, x) => a + x.n, 0); return this.setState({ left: fill(L.mp_left, { n: fN(n), list: r.left.map(x => x.name + ' — ' + fN(x.n) + ' ' + this.kindW(x.kind)).join(', ') }) }); }
+    const t = D.markTimer(r), late = t.diff < 0, c = D.mkCnt(r);
+    this.setState({ tab: 'queue', left: null, result: { no: r.no, late, text: late ? fill(L.q9_resLate, { d: -t.diff }) : t.diff > 0 ? fill(L.pp_resOk, { d: t.diff }) : L.pp_resOnTime, sub: fill(L.mp_resSub, { no: r.no, s: t.spent, c: this.codesTxt(c.box, c.unit) }) } }); this.toast(fill(L.q9_tMarked, { no: r.no })); }
+  sendIssue(o) { const D = this.D, L = this.L, s = this.state; if (!s.issueR) return this.setState({ issueTried: true });
+    D.markIssue(o.id, this.me(), s.issueR, s.issueNote.trim(), L['mp_r_' + s.issueR]); this.setState({ issueOpen: false, issueR: '', issueNote: '', issueTried: false }); this.toast(L.pp_issueSent); }
+  doRm(o) { const D = this.D, L = this.L, s = this.state, why = s.rmReason.trim(); if (!why) return this.setState({ rmTried: true }); D.markRemove(o.id, this.me(), s.rm, why); this.setState({ rm: null, rmReason: '', rmTried: false }); this.toast(L.mp_rmDone); }
+  logData() { const D = this.D, s = this.state, f = s.lFrom || D.TODAY, t = s.lTo || s.lFrom || D.TODAY, a = D.pD(f), b = D.pD(t), q = s.lq.trim().replace(/[\s()]/g, '').toLowerCase();
+    const all = D.markJournal(this.br()), rows = all.filter(r => { const d = D.pD(r.at.slice(0, 10)); return d >= a && d <= b && (s.lProd === 'ALL' || String(r.pid) === s.lProd) && (!q || (r.c + ' ' + r.no).toLowerCase().includes(q)); }); return { f, t, all, rows }; }
+  stTxt(r) { const L = this.L; return r.rm ? fill(L.mp_lRm, { r: r.rm.reason, who: short(r.rm.by), at: r.rm.at.slice(11) }) : L.mp_lOk; }
+  exportLog() { const D = this.D, L = this.L, { f, t, rows } = this.logData(), out = [[L.mp_cCode, L.mp_cKind, L.qt_gProduct || L.mp_lProd, L.qt_gBatch || L.mp_cBatch, L.b_cNo, L.mp_cWho, L.mp_cAt, L.mp_cSt]];
+    rows.forEach(r => out.push([D.mkPretty(r.c), this.kindW(r.kind), r.name, r.batch, r.no, r.by, r.at, this.stTxt(r)])); const ok = D.xlsxDownload('Kodlar_jurnali_' + f + (t !== f ? '_' + t : ''), out, L.mp_tLog); this.toast(ok ? L.pr_exported : L.p_exportToast); }
+  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  _rv() {
+    const D = this.D, L = this.L, s = this.state, p = this.props, me = this.me(), br = this.br(), narrow = !!p.narrow;
+    const base = { L, me, narrow, role: p.role, branch: br, sub: '', stats: [], tabs: [], isQueue: true, isMine: false, isDone: false, isLog: false, queue: [], queueEmpty: false, noActive: false, hasActive: false, a: { lines: [], plain: [], codes: [], issues: [] }, done: [], doneEmpty: false, hasResult: false, result: {}, issueOpen: false, rmOpen: false, errOpen: false, err: {}, reasons: [], demoBtns: [], logViews: [], logRows: [], lCols: [], prodOpts: [], stop: e => e.stopPropagation(), scanRef: el => { this._in = el; }, errRef: el => { this._errBtn = el; } };
+    if (!D || !D.activeMarkOf) return base;
+    const brName = (D.BRANCHES.find(b => b.code === br) || {}).name || br, act = this.active(), today = D.markDone(br, D.TODAY, me), custN = o => (D.custById(o.cust) || {}).name || '';
+    const my = D.markStats(br, D.TODAY, D.TODAY).find(g => g.name === me) || { n: 0, box: 0, unit: 0, onTime: 0, late: 0, errs: 0 };
+    const stats = [[L.mp_kDone, fN(my.n), '#172B2A'], [L.mp_kCodes, this.codesTxt(my.box, my.unit), '#172B2A'], [L.pp_kOnTime, fN(my.onTime), '#15803D'], [L.pp_kLate, fN(my.late), my.late ? '#B91C1C' : '#172B2A'], [L.mp_kErrs, fN(my.errs), my.errs ? '#B91C1C' : '#172B2A']].map(([label, value, color]) => ({ label, value, color, hasNote: false, note: '' }));
+    const dk = o => (D.pD(o.delivDate) || 0) + (o.delivTime ? (+o.delivTime.slice(0, 2) * 60 + +o.delivTime.slice(3, 5)) * 60000 : 86399000);
+    const delivTxt = o => (o.delivery === 'pickup' ? L.b_delPickup : L.b_delDeliver) + ' · ' + o.delivDate + (o.delivTime ? ' ' + o.delivTime : '');
+    const Q = D.store.orders.filter(o => o.branch === br && o.status === 'marking' && o.pk && !(o.mk && o.mk.by === me && !o.mk.end)).sort((a, b) => dk(a) - dk(b) || a.no.localeCompare(b.no));
+    const canScan = D.can(p.role, 'marking.scan');
+    const queue = Q.map(o => { const busy = !!(o.mk && o.mk.by), c = D.custAt(o.cust, o.branch) || {}, open = !!s.open[o.id], sm = D.mkSum(o), none = !sm.markLines, inv = (o.sale && o.sale.inv) || o.inv || '', ctr = c.contract || c.contractNo || '';
+      const meta = [{ icon: 'receipt-text', text: inv ? fill(L.pp_inv, { n: inv }) : L.pp_noInv, weight: 400 }].concat(ctr ? [{ icon: 'file-signature', text: fill(L.pp_ctr, { n: ctr }), weight: 400 }] : [],
+        [{ icon: 'list', text: fill(L.mp_linesMk, { n: sm.lines, m: sm.markLines }), weight: 400 }, { icon: 'scan-barcode', text: none ? L.mp_needNone : fill(L.mp_need, { t: this.codesTxt(sm.box, sm.unit) }), weight: 600 }, { icon: 'user-round', text: fill(L.mp_pickedBy, { who: D.pickerOf(o) || '—' }), weight: 400 }, { icon: o.delivery === 'pickup' ? 'user' : 'truck', text: delivTxt(o), weight: 400 }]);
+      if (o.rw && !o.rw.done) meta.unshift({ icon: 'rotate-ccw', text: fill(L.w4_rwBadge, { n: o.rw.n }) });
+      const lines = open ? D.mkLines(o).map(l => ({ code: l.p.code || '', name: l.p.name || '', batches: l.batches.join(', '), qty: fN(l.qty) + ' ' + (l.mark ? this.kindW(l.kind) : L.mp_plainW), fg: l.mark ? '#172B2A' : '#647574' })) : [];
+      return { id: o.id, no: o.no, cust: c.name || custN(o), busy, busyText: fill(L.pp_busy, { n: short(D.markerOf(o)) }), bg: busy ? '#F5F7F8' : '#FFFFFF', fg: busy ? '#5B6B6A' : '#172B2A', sub: busy ? '#647574' : '#5B6B6A', none,
+        tm: o.tm ? fill(L.mp_tm, { n: o.tm.markMin }) : L.q9_tmWait, tmBg: busy ? '#EEF2F4' : '#F5F3FF', tmFg: busy ? '#5B6B6A' : '#6D28D9', meta, open, lines, chev: open ? 'chevron-up' : 'chevron-down', toggleLabel: open ? L.pp_hide : L.pp_details,
+        toggle: () => this.setState(x => ({ open: { ...x.open, [o.id]: !x.open[o.id] } })), canStart: !busy && !none && !act && canScan, canNone: !busy && none && canScan, blocked: !busy && !none && !!act, start: () => this.start(o), confirmNone: () => this.confirmNone(o) }; });
+    let a = base.a;
+    if (act) { const o = act, mk = o.mk, tm = o.tm || { markMin: 0 }, el = D.nowMs() - D.pDT(mk.start), left = tm.markMin * 60000 - el, over = left < 0, c = D.custAt(o.cust, o.branch) || {}, sm = D.mkSum(o), ls = D.mkLines(o), fl = Date.now() - s.flash < 700;
+      const codes = (mk.codes || []).slice().reverse(), shown = s.showAll ? codes : codes.slice(0, 5);
+      a = { no: o.no, cust: c.name || custN(o), meta: fill(L.mp_linesMk, { n: sm.lines, m: sm.markLines }) + ' · ' + fill(L.mp_pickedBy, { who: D.pickerOf(o) || '—' }) + ' · ' + delivTxt(o), border: over ? '#FECACA' : '#E2E8F0',
+        timer: (over ? '+' : '') + clockTxt(left), tLabel: over ? L.pp_overT : L.pp_leftT, tSub: fill(L.pp_tSub, { n: tm.markMin, at: mk.start.slice(11) }), tBg: over ? '#FEF2F2' : '#F0FDFA', tFg: over ? '#B91C1C' : '#0F766E', clock: fill(L.q9_clk, { t: D.nowStr().slice(11) }),
+        hitTxt: this.codesTxt(sm.gBox, sm.gUnit), needTxt: fill(L.mp_of, { t: this.codesTxt(sm.box, sm.unit) }), pct: (sm.need ? Math.round(sm.got / sm.need * 100) : 0) + '%', barColor: sm.got >= sm.need ? '#15803D' : '#0D9488',
+        scanBorder: fl ? '#15803D' : '#99E2D5', scanBg: fl ? '#DCFCE7' : '#F0FDFA', scanFg: fl ? '#15803D' : '#0F766E', scanIcon: fl ? 'circle-check' : 'scan-line', scanLabel: fl ? L.mp_okT : L.mp_scanT, scanHint: s.lastOk && fl ? s.lastOk : s.manual ? L.mp_scanHintM : L.mp_scanHint,
+        hasLeft: !!s.left, leftTxt: s.left || '', hasIssues: (o.issues || []).some(x => x.stage === 'mark'), issues: (o.issues || []).filter(x => x.stage === 'mark').map(x => ({ text: fill(L.pp_issueLine, { r: L['mp_r_' + x.reason] || x.reason, n: x.note ? ' — ' + x.note : '', who: x.by, at: x.at.slice(11) }) })),
+        lines: ls.filter(l => l.mark).map(l => { const full = l.got >= l.need, box = l.kind === 'box'; return { code: l.p.code || '', name: l.p.name || '', kind: this.kindW(l.kind), kBg: box ? '#FEF3C7' : '#E0F2FE', kFg: box ? '#92400E' : '#075985', batches: (l.locked ? L.w4_lockedShort + ' · ' : '') + l.picks.map(x => x.batch + (l.picks.length > 1 ? ' · ' + x.got + '/' + x.qty : '')).join(', '),
+          hasDev: !!l.dev, dev: l.dev ? fill(L.mp_dev, { b: l.dev.to, r: l.dev.reason }) : '', count: fN(l.got) + ' / ' + fN(l.need), unitW: this.kindW(l.kind), cFg: full ? '#15803D' : '#172B2A', pct: Math.round(l.got / l.need * 100) + '%', bar: full ? '#15803D' : '#0D9488', icon: l.locked ? 'lock' : full ? 'check' : box ? 'package' : 'pill', iconBg: full ? '#DCFCE7' : '#F0FDFA', iconFg: full ? '#15803D' : '#0F766E' }; }),
+        hasPlain: sm.plain > 0, plainTxt: fill(L.mp_plainWarn, { n: sm.plain }), plain: ls.filter(l => !l.mark).map(l => ({ code: l.p.code || '', name: l.p.name || '', qty: fN(l.qty) })),
+        codesT: fill(L.mp_codesT, { n: codes.filter(x => !x.rm).length }), noCodes: !codes.length, hasMore: codes.length > 5, moreLabel: s.showAll ? L.pp_hide : fill(L.mp_showAll, { n: codes.length }),
+        codes: shown.map(x => { const pr = D.prodById(x.pid) || {}; return { code: D.mkPretty(x.c), sub: x.rm ? fill(L.mp_lRm, { r: x.rm.reason, who: short(x.rm.by), at: x.rm.at.slice(11) }) : pr.name + ' · ' + x.batch + ' · ' + x.at.slice(11), subFg: x.rm ? '#B91C1C' : '#5B6B6A', op: x.rm ? 0.75 : 1, deco: x.rm ? 'line-through' : 'none', canRm: !x.rm, remove: () => this.setState({ rm: x.c, rmReason: '', rmTried: false }) }; }),
+        finBg: sm.got >= sm.need ? '#0F766E' : '#5B8F8A', issue: () => this.setState({ issueOpen: true, issueR: '', issueNote: '', issueTried: false }), finish: () => this.finish(o), openCard: () => p.onOpen && p.onOpen('#orders?open=' + o.no) }; }
+    const done = today.map(r => { const o = r.o, t = r.late; return { id: o.id, cells: [{ label: L.b_cNo, text: o.no, font: "'JetBrains Mono',monospace", weight: 600, color: '#172B2A' }, { label: L.pp_cCust, text: custN(o), font: 'inherit', weight: 500, color: '#172B2A' },
+      { label: L.pp_cGiven, text: o.tm ? fill(L.pp_minV, { n: o.tm.markMin }) : '—', font: 'inherit', weight: 400, color: '#172B2A' }, { label: L.pp_cSpent, text: r.none ? '—' : fill(L.pp_minV, { n: r.spent }), font: 'inherit', weight: 400, color: '#172B2A' },
+      { label: L.pp_cRes, text: r.none ? L.mp_resNone : t ? fill(L.q9_resLate, { d: -r.diff }) : r.diff > 0 ? fill(L.pp_resOk, { d: r.diff }) : L.pp_resOnTime, font: 'inherit', weight: 600, color: t ? '#B91C1C' : '#15803D' },
+      { label: L.mp_cCodes, text: r.none ? L.mp_noneBadge : this.codesTxt(r.codes.box, r.codes.unit), font: 'inherit', weight: 500, color: '#172B2A' }, { label: L.mp_kErrs, text: fN(r.errs), font: 'inherit', weight: r.errs ? 600 : 400, color: r.errs ? '#B91C1C' : '#5B6B6A' },
+      { label: L.pp_cTime, text: r.start.slice(11) + ' – ' + r.end.slice(11), font: 'inherit', weight: 400, color: '#5B6B6A' }] }; });
+    const isLog = s.tab === 'log', scanLog = isLog && s.lView === 'scan', ld = scanLog ? this.logData() : { rows: [], all: [] };
+    const logRows = ld.rows.slice(0, s.lN).map(r => ({ code: D.mkPretty(r.c), kind: this.kindW(r.kind), name: r.name, batch: r.batch, no: r.no, by: r.by, at: r.at.slice(0, 5) + ' ' + r.at.slice(11), st: this.stTxt(r), stShort: r.rm ? L.mp_lRmS : L.mp_lOk, stFg: r.rm ? '#B91C1C' : '#15803D', deco: r.rm ? 'line-through' : 'none', hasRm: !!r.rm, open: () => p.onOpen && p.onOpen('#orders?open=' + r.no) }));
+    const pm = new Map(); ld.all.forEach(r => { if (!pm.has(r.pid)) pm.set(r.pid, r.name); });
+    const tabs = [['queue', L.pp_tQueue, queue.filter(q => !q.busy).length], ['mine', L.mp_tMine, act ? 1 : 0], ['done', L.pp_tDone, today.length], ['log', L.mp_tLog, 0]].map(([k, label, n]) => { const on = s.tab === k; return { label, on, line: on ? '#0D9488' : 'transparent', color: on ? '#172B2A' : '#5B6B6A', weight: on ? 600 : 500, hasN: n > 0, n, nBg: k === 'mine' ? '#0F766E' : on ? '#DDF5EE' : '#EEF2F4', nFg: k === 'mine' ? '#FFFFFF' : on ? '#0F766E' : '#5B6B6A', pick: () => this.setState({ tab: k }) }; });
+    const R = s.result, ri = s.issueR, E = s.err;
+    return { ...base, sub: fill(L.pp_sub, { who: me, br: brName }), stats, tabs, isQueue: s.tab === 'queue', isMine: s.tab === 'mine', isDone: s.tab === 'done', isLog, queue, queueEmpty: !queue.length, noActive: !act, hasActive: !!act, a, done, doneEmpty: !done.length,
+      hasResult: !!R, result: R ? { text: R.text, sub: R.sub, icon: R.late ? 'alarm-clock-off' : 'circle-check', bg: R.late ? '#FEF2F2' : '#F0FDF4', border: R.late ? '#FECACA' : '#BBF7D0', fg: R.late ? '#B91C1C' : '#15803D' } : {}, closeResult: () => this.setState({ result: null }),
+      toQueue: () => this.setState({ tab: 'queue' }), clk5: () => { D.clkAdd(5); this.forceUpdate(); }, clk15: () => { D.clkAdd(15); this.forceUpdate(); },
+      scan: s.scan, manual: s.manual, manualLabel: s.manual ? L.mp_scanner : L.mp_manual, inMode: s.manual ? 'text' : 'none', toggleManual: () => this.setState(x => ({ manual: !x.manual }), () => this._in && this._in.focus()),
+      onScan: e => this.setState({ scan: e.target.value }), onScanKey: e => { if (e.key === 'Enter') { e.preventDefault(); this.doScan(e.target.value); } }, submitScan: () => this.doScan(s.scan),
+      onScanBlur: () => { clearTimeout(this._bt); this._bt = setTimeout(() => this.focusScan(), 250); }, toggleAll: () => this.setState(x => ({ showAll: !x.showAll })), closeLeft: () => this.setState({ left: null }),
+      demoScan: p.demoScan !== false && (!D.demoUi || D.demoUi()), demoBtns: DEMO.map(([k, icon, fg, border]) => ({ label: L['mp_d_' + k], icon, fg, border, pick: () => this.demo(k) })),
+      errOpen: !!E, err: E ? { text: E.text, code: E.code, hasCode: !!E.code } : {}, closeErr: () => this.setState({ err: null }, () => setTimeout(() => this.focusScan(), 30)),
+      issueOpen: s.issueOpen && !!act, issueNote: s.issueNote, issueErr: s.issueTried && !ri, onNote: e => this.setState({ issueNote: e.target.value }), closeIssue: () => this.setState({ issueOpen: false }), sendIssue: () => act && this.sendIssue(act),
+      reasons: D.MK_ISSUES.map(k => { const on = ri === k; return { label: L['mp_r_' + k], on, border: on ? '#0D9488' : '#E2E8F0', bg: on ? '#F0FDFA' : '#FFFFFF', ring: on ? '5px solid #0F766E' : '1.5px solid #647574', pick: () => this.setState({ issueR: k }) }; }),
+      rmOpen: !!s.rm && !!act, rmCode: s.rm ? D.mkPretty(s.rm) : '', rmReason: s.rmReason, rmErr: s.rmTried && !s.rmReason.trim(), rmBorder: s.rmTried && !s.rmReason.trim() ? '#B91C1C' : '#E2E8F0', onRmReason: e => this.setState({ rmReason: e.target.value }), closeRm: () => this.setState({ rm: null }), doRm: () => act && this.doRm(act),
+      logViews: [['scan', L.mp_lvScan], ['reg', L.mp_lvReg]].map(([k, label]) => { const on = s.lView === k; return { label, on, bg: on ? '#FFFFFF' : 'transparent', shadow: on ? '0 1px 2px rgba(18,60,58,0.10)' : 'none', weight: on ? 600 : 500, pick: () => this.setState({ lView: k }) }; }),
+      isScanLog: scanLog, isRegistry: isLog && s.lView === 'reg', lq: s.lq, setLq: e => this.setState({ lq: e.target.value }), lFrom: ld.f || '', lTo: ld.t || '', today: D.TODAY, setLDates: v => this.setState({ lFrom: v.from || '', lTo: v.to || v.from || '' }),
+      prodOpts: [{ value: 'ALL', label: L.mp_lAll }].concat([...pm.entries()].sort((x, y) => String(x[1]).localeCompare(String(y[1]))).map(([v, label]) => ({ value: String(v), label }))), lProd: s.lProd, setLProd: v => this.setState({ lProd: v || 'ALL' }),
+      canExport: D.can(p.role, 'marking.export'), exportLog: () => this.exportLog(), logCount: fill(L.mp_lCount, { n: fN(ld.rows.length) }), hasMoreLog: ld.rows.length > s.lN, moreLog: () => this.setState(x => ({ lN: x.lN + 50 })), moreLogLabel: fill(L.mp_lMore, { n: fN(Math.min(50, ld.rows.length - s.lN)) }), logEmpty: scanLog && !ld.rows.length, logWide: scanLog && !narrow && ld.rows.length > 0, logNarrow: scanLog && narrow && ld.rows.length > 0, logRows,
+      lGrid: 'minmax(300px,2.2fr) 70px minmax(160px,1.3fr) 120px 140px minmax(120px,1fr) 110px minmax(150px,1.2fr)', lCols: [L.mp_cCode, L.mp_cKind, L.mp_lProd, L.mp_cBatch, L.b_cNo, L.mp_cWho, L.mp_cAt, L.mp_cSt],
+      toastFn: t => this.toast(t), navFn: (pg, x) => p.onNavigate && p.onNavigate(pg, x) };
+  }
+}
+</script>
+</body>
+</html>

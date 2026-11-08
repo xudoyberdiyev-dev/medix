@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="height:100%;display:flex;flex-direction:column;min-height:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="flex:1;min-height:0;overflow:auto;padding:32px 24px 24px;display:flex;flex-direction:column">
+    <div style="flex:1;display:flex;flex-direction:column;gap:20px;min-width:0;padding-bottom:24px">
+      <sc-if value="{{ wiz }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;line-height:16px;font-weight:500;color:#0F766E">{{ stepOf }}</span>
+      <div style="margin-top:-14px">
+        <dc-import name="PageHeader" title="{{ L.rl_t5 }}" subtitle="{{ L.rl_d5 }}" primary="{{ addBtn }}" hint-size="100%,56px"></dc-import>
+      </div></sc-if>
+      <sc-if value="{{ pageMode }}" hint-placeholder-val="{{ false }}"><dc-import name="PageHeader" title="{{ L.n_staff }}" count="{{ pgCount }}" subtitle="{{ L.bs_xdSub }}" primary="{{ addBtn }}" hint-size="100%,56px"></dc-import></sc-if>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:6px;background:{{ cntBg }};color:{{ cntFg }};font-size:13px;font-weight:500"><lucide-i name="{{ cntIcon }}" size="14"></lucide-i>{{ cntText }}</span>
+        <sc-if value="{{ atLimit }}"><span style="font-size:13px;color:#B45309">{{ limitText }}</span></sc-if>
+      </div>
+      <sc-if value="{{ isEmpty }}">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px">
+          <dc-import name="EmptyState" icon="users-round" title="{{ L.rl_emptyT }}" text="{{ L.rl_emptyD }}" min-height="320" primary="{{ addBtn }}" hint-size="100%,320px"></dc-import>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasList }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;line-height:18px;font-weight:600">{{ L.rl_covT }}</span>
+          <div style="display:grid;grid-template-columns:{{ covCols }};gap:12px">
+            <sc-for list="{{ cov }}" as="g" hint-placeholder-count="4">
+              <dc-import name="InfoGrid" title="{{ g.title }}" rows="{{ g.rows }}" stacked="{{ false }}" hint-size="100%,190px"></dc-import>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ pageMode }}"><dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import></sc-if>
+        <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.rl_searchEmp }}" filters="{{ filters }}" chip-labels="{{ chipLabels }}" has-active="{{ hasActive }}" on-clear-all="{{ clearAll }}" clear-all-label="{{ L.rl_clearAll }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+          <dc-import name="DataTable" columns="{{ columns }}" rows="{{ tRows }}" scroll-x="{{ narrow }}" min-width="{{ tMin }}" row-actions-label="{{ L.rl_rowMenu }}" hint-size="100%,420px"></dc-import>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  <sc-if value="{{ wiz }}" hint-placeholder-val="{{ true }}"><div style="flex:none;display:flow-root;padding-bottom:24px;margin-top:-24px;background:#FFFFFF"><dc-import name="StickyFormFooter" dirty="{{ false }}" dirty-label="" cancel-label="{{ L.rl_back }}" save-label="{{ L.rl_next }}" max-width="4000" on-cancel="{{ back }}" on-save="{{ next }}" hint-size="100%,64px"></dc-import></div></sc-if>
+
+  <sc-if value="{{ panelOpen }}">
+    <div style="position:fixed;inset:0;z-index:175">
+      <div onClick="{{ closePanel }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+      <div role="dialog" aria-modal="true" aria-label="{{ pTitle }}" style="position:absolute;top:0;right:0;bottom:0;width:{{ panelW }};max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 24px;border-bottom:1px solid #E2E8F0">
+          <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pTitle }}</h2>
+          <button onClick="{{ closePanel }}" aria-label="{{ L.rl_pClose }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="x" size="18"></lucide-i></button>
+        </div>
+        <div ref="{{ bodyRef }}" style="flex:1;overflow-y:auto;padding:0 24px">
+          <section style="padding:24px 0;border-bottom:1px solid #EEF2F4;display:flex;flex-direction:column;gap:16px">
+            <div style="font-size:13px;line-height:18px;font-weight:600">{{ L.rl_sPersonal }}</div>
+            <sc-for list="{{ personal }}" as="x" hint-placeholder-count="4">
+              <div data-f="{{ x.k }}" style="display:flex;flex-direction:column">
+                <label for="{{ x.id }}" style="font-size:13px;line-height:18px;font-weight:500">{{ x.label }}<sc-if value="{{ x.req }}"> <span style="color:#B91C1C">*</span></sc-if><sc-if value="{{ x.opt }}"> <span style="font-weight:400;color:#647574">({{ L.rl_opt }})</span></sc-if></label>
+                <input id="{{ x.id }}" value="{{ x.value }}" onChange="{{ x.on }}" placeholder="{{ x.ph }}" inputmode="{{ x.mode }}" style="margin-top:6px;width:{{ x.w }};max-width:100%;box-sizing:border-box;height:34px;padding:0 12px;border:1px solid {{ x.bd }};border-radius:8px;background:#FFFFFF;font-family:{{ x.font }};font-size:14px;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                <sc-if value="{{ x.err }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ x.err }}</div></sc-if>
+              </div>
+            </sc-for>
+          </section>
+          <section style="padding:24px 0;border-bottom:1px solid #EEF2F4;display:flex;flex-direction:column;gap:16px">
+            <div style="font-size:13px;line-height:18px;font-weight:600">{{ L.rl_sWork }}</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <dc-import name="Select" label="{{ L.rl_cRole }}" required="{{ true }}" options="{{ roleOpts }}" value="{{ pf.role }}" on-change="{{ onRole }}" error="{{ er.role }}" field-key="role" hint-size="100%,58px"></dc-import>
+              <sc-if value="{{ roleHint }}"><span style="font-size:12px;line-height:16px;color:#647574">{{ roleHint }}</span></sc-if>
+            </div>
+            <sc-if value="{{ brAll }}">
+              <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;line-height:16px;font-weight:500">{{ L.rl_cBranch }}</span><span style="align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:6px;background:#DDF5EE;color:#0F766E;font-size:13px;font-weight:500"><lucide-i name="building-2" size="14"></lucide-i>{{ L.rl_scAll }}</span></div>
+            </sc-if>
+            <sc-if value="{{ brOwn }}" hint-placeholder-val="{{ true }}">
+              <dc-import name="Select" label="{{ L.rl_cBranch }}" required="{{ true }}" options="{{ brOpts }}" value="{{ pf.branch }}" on-change="{{ onBranch }}" error="{{ er.branch }}" field-key="branch" hint-size="100%,58px"></dc-import>
+            </sc-if>
+            <sc-if value="{{ showWh }}">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.rl_fWh }}</span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <sc-for list="{{ whOpts }}" as="w"><button onClick="{{ w.pick }}" role="checkbox" aria-checked="{{ w.on }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid {{ w.bd }};border-radius:8px;background:{{ w.bg }};font:inherit;font-size:13px;color:#172B2A;cursor:pointer"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:4px;border:1px solid {{ w.cb }};background:{{ w.cbg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ w.on }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span>{{ w.name }}</button></sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ showCash }}">
+              <dc-import name="Select" label="{{ L.rl_fCash }}" options="{{ cashOpts }}" value="{{ pf.cash0 }}" on-change="{{ onCash }}" hint-size="100%,58px"></dc-import>
+            </sc-if>
+          </section>
+          <section style="padding:24px 0;display:flex;flex-direction:column;gap:16px">
+            <div style="font-size:13px;line-height:18px;font-weight:600">{{ L.rl_sAccess }}</div>
+            <div data-f="login" style="display:flex;flex-direction:column">
+              <label for="xd-login" style="font-size:13px;line-height:18px;font-weight:500">{{ L.rl_cLogin }} <span style="color:#B91C1C">*</span></label>
+              <input id="xd-login" value="{{ pf.login }}" onChange="{{ onLogin }}" autocomplete="off" spellcheck="false" style="margin-top:6px;width:240px;max-width:100%;box-sizing:border-box;height:34px;padding:0 12px;border:1px solid {{ loginBd }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:13px;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+              <sc-if value="{{ loginErr }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ loginErr }}</div></sc-if>
+              <sc-if value="{{ loginOk }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#15803D"><lucide-i name="circle-check" size="14"></lucide-i>{{ L.rl_loginFree }}</div></sc-if>
+            </div>
+            <sc-if value="{{ isNewEmp }}">
+              <div style="display:flex;flex-direction:column">
+                <span style="font-size:13px;line-height:18px;font-weight:500">{{ L.rl_fPw }}</span>
+                <div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="width:200px;box-sizing:border-box;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:32px;color:#172B2A;letter-spacing:0.04em">{{ pwView }}</span>
+                  <button onClick="{{ togglePw }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="{{ pwIcon }}" size="14" style="color:#5B6B6A"></lucide-i>{{ pwToggle }}</button>
+                  <button onClick="{{ regenPw }}" style="height:34px;padding:0 12px;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ L.rl_regen }}</button>
+                </div>
+              </div>
+            </sc-if>
+            <div style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:#F8FAFA;border:1px solid #EEF2F4">
+              <lucide-i name="info" size="16" style="color:#5B6B6A;flex:none;margin-top:2px"></lucide-i>
+              <span style="font-size:13px;line-height:19px;color:#5B6B6A;text-wrap:pretty">{{ L.rl_firstNote }}</span>
+            </div>
+          </section>
+        </div>
+        <div style="height:64px;flex:none;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 24px;border-top:1px solid #E2E8F0">
+          <button onClick="{{ closePanel }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">{{ L.rl_cancel }}</button>
+          <button onClick="{{ savePanel }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.rl_pSave }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ vsOpen }}">
+    <dc-import name="ValidationSummary" title="{{ vsTitle }}" errors="{{ vsErrors }}" warnings="{{ vsWarns }}" warn-title="{{ L.rl_warnT }}" close-label="{{ L.rl_pClose }}" on-close="{{ closeVs }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ dlgOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" with-reason="{{ dlg.withReason }}" reason-label="{{ L.rl_blockReason }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ onReason }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.rl_cancel }}" on-confirm="{{ dlgOk }}" on-cancel="{{ dlgCancel }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ credsOpen }}">
+    <div style="position:fixed;inset:0;z-index:185;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="dialog" aria-modal="true" aria-label="{{ L.rl_crT }}" style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="width:40px;height:40px;flex:none;border-radius:50%;background:#DDF5EE;color:#0F766E;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ cr.ini }}</span>
+          <div style="display:flex;flex-direction:column;min-width:0">
+            <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ L.rl_crT }}</h2>
+            <span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ cr.who }}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;border:1px solid #E2E8F0;border-radius:10px">
+          <sc-for list="{{ cr.lines }}" as="l">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #EEF2F4">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ l.label }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:16px;line-height:22px;color:#172B2A;word-break:break-all">{{ l.value }}</span>
+              </div>
+              <button onClick="{{ l.copy }}" style="flex:none;height:32px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="copy" size="14" style="color:#5B6B6A"></lucide-i>{{ L.rl_copy }}</button>
+            </div>
+          </sc-for>
+          <div style="padding:10px 14px;font-size:12px;line-height:16px;color:#647574">{{ L.rl_crUrl }}: {{ cr.url }}</div>
+        </div>
+        <dc-import name="StatusBanner" tone="warning" icon="triangle-alert" text="{{ L.rl_crWarn }}" hint-size="100%,44px"></dc-import>
+        <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ copyAll }}" style="height:36px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="clipboard-copy" size="16" style="color:#5B6B6A"></lucide-i>{{ L.rl_copyAll }}</button>
+          <button onClick="{{ closeCreds }}" style="height:36px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.rl_done }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ toastOpen }}">
+    <div style="position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:190;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 16px 0 12px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);font-size:13px;white-space:nowrap">
+      <span style="width:20px;height:20px;border-radius:50%;background:#F0FDF4;color:#15803D;display:flex;align-items:center;justify-content:center"><lucide-i name="check" size="12"></lucide-i></span>{{ toastText }}
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const fill = (s, o) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => o[k] != null ? o[k] : '');
+const PH_RE = /^\+998 \d{2} \d{3} \d{2} \d{2}$/;
+const fmtPh = v => { let d = String(v || '').replace(/\D/g, ''); if (d.startsWith('998')) d = d.slice(3); d = d.slice(0, 9); const p = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean); return '+998' + (p.length ? ' ' + p.join(' ') : ''); };
+const ST = { new: ['key-round', '#EFF6FF', '#1D4ED8'], active: ['circle-check', '#F0FDF4', '#15803D'], blocked: ['ban', '#FEF2F2', '#B91C1C'] };
+class Component extends DCLogic {
+  state = { q: '', view: 'all', fRole: [], fBranch: [], fStatus: [], panel: null, vs: null, dlg: null, reason: '', reasonTried: false, creds: null, showPw: false, toast: null, v: 0 };
+  bodyRef = React.createRef();
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.boot(); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  componentWillUnmount() { clearTimeout(this._t); }
+  bump() { this.setState(s => ({ v: s.v + 1 })); }
+  boot() {
+    const D = this.D; if (!D) return; const k = this.props.demo && this.props.demo.k;
+    if (k && k.startsWith('xd')) { D.restoreBase && D.restoreBase(true); D.store.demoDirty = true; }
+    this.setState({ panel: null, vs: null, dlg: null, creds: null, q: '', fRole: [], fBranch: [], fStatus: [] });
+    if (k === 'xdEmpty') { D.store.emps = D.store.emps.filter(e => e.role === 'director'); return this.bump(); }
+    if (k === 'xdLimit') { D.empSave({ last: 'Normatov', first: 'Otabek', mid: '', role: 'keeper', branch: 'BXR', phone: '+998 93 118 40 72', status: 'new', whs: ['Asosiy ombor'], cash: [], login: D.empLoginFor('Otabek', 'Normatov') });
+      D.empSave({ last: 'Yoqubova', first: 'Zarina', mid: '', role: 'keeper', branch: 'FRG', phone: '+998 93 226 51 09', status: 'new', whs: ['Asosiy ombor'], cash: [], login: D.empLoginFor('Zarina', 'Yoqubova') }); return this.bump(); }
+    if (k === 'xdCreds') { const e = D.store.emps.find(x => x.login === 's.aliyev'); return this.setState({ creds: { id: e.id, pw: D.empPw() } }); }
+    if (k === 'xdDupLogin') return this.setState({ panel: { id: null, f: { last: 'Aliyev', first: 'Sanjar', mid: '', phone: '+998 93 410 27 65', role: 'keeper', branch: 'TSH', whs: ['Asosiy ombor'], cash: [], login: 's.aliyev', loginTouched: true }, pw: D.empPw(), tried: true } });
+    this.bump();
+  }
+  toast(t) { clearTimeout(this._t); this.setState({ toast: t }); this._t = setTimeout(() => this.setState({ toast: null }), 2400); }
+  copy(text) { try { navigator.clipboard && navigator.clipboard.writeText(text); } catch (e) {} this.toast(this.L.rl_copied); }
+  roles() { return this.D.rlRoles().filter(r => r.active !== false); }
+  roleName(id) { const r = this.D.rlRoles().find(x => x.id === id); return r ? (r.std ? this.L['r_' + r.id] : r.name) : '—'; }
+  scope(id) { const r = this.D.rlRoles().find(x => x.id === id); return r ? r.scope : 'own'; }
+  seats() { return (this.D.store.emps || []).filter(e => e.status !== 'blocked').length; }
+  openNew() { const D = this.D; this.setState({ panel: { id: null, f: { last: '', first: '', mid: '', phone: '+998', role: '', branch: '', whs: [], cash: [], login: '', loginTouched: false }, pw: D.empPw(), tried: false }, showPw: false }); }
+  openEdit(e) { this.setState({ panel: { id: e.id, f: { ...JSON.parse(JSON.stringify(e)), loginTouched: true }, pw: null, tried: false } }); }
+  check(p) {
+    const D = this.D, L = this.L, f = p.f, er = {}, warns = [];
+    if (!String(f.last || '').trim()) er.last = L.rl_eLast; if (!String(f.first || '').trim()) er.first = L.rl_eFirst;
+    if (!PH_RE.test(f.phone || '')) er.phone = L.rl_ePhone; if (!f.role) er.role = L.rl_eRole; else if (this.scope(f.role) !== 'all' && !f.branch) er.branch = L.rl_eBranch;
+    if (!f.login) er.login = L.rl_eLoginReq; else if (D.empByLogin(f.login, p.id)) er.login = fill(L.rl_eLoginBusy, { l: f.login });
+    if (!p.id && this.seats() >= D.EMP_LIMIT) er.limit = fill(L.rl_eLimit, { m: D.EMP_LIMIT });
+    const same = (D.store.emps || []).find(e => e.id !== p.id && e.status !== 'blocked' && e.phone === f.phone);
+    if (same && PH_RE.test(f.phone || '')) warns.push(fill(L.rl_wDupPhone, { n: D.empName(same), l: same.login }));
+    return { er, warns };
+  }
+  focus(k) { const el = this.bodyRef.current && this.bodyRef.current.querySelector('[data-f="' + k + '"]'); this.setState({ vs: null }); if (el) { const i = el.querySelector('input,button'); i && i.focus({ preventScroll: true }); this.bodyRef.current.scrollTop = Math.max(0, el.offsetTop - 24); } }
+  savePanel(ack) {
+    const D = this.D, L = this.L, p = this.state.panel, c = this.check(p), keys = Object.keys(c.er);
+    if (keys.length) return this.setState({ panel: { ...p, tried: true }, vs: { errors: keys.map(k => ({ text: c.er[k], go: () => this.focus(k === 'limit' ? 'last' : k) })) } });
+    if (c.warns.length && !ack) return this.setState({ dlg: { kind: 'warn', title: L.rl_warnT, text: c.warns.join(' '), items: [], danger: false, confirm: L.rl_goOn } });
+    const f = p.f, e = { id: p.id || null, last: f.last.trim(), first: f.first.trim(), mid: String(f.mid || '').trim(), phone: f.phone, role: f.role, branch: this.scope(f.role) === 'all' ? null : f.branch, whs: D.can(f.role, 'special.whs') ? f.whs || [] : [], cash: D.can(f.role, 'special.till') ? f.cash || [] : [], login: f.login, status: p.id ? f.status : 'new' };
+    const saved = D.empSave(e); this.setState({ panel: null, dlg: null });
+    if (!p.id) this.setState({ creds: { id: saved.id, pw: p.pw } }); else this.toast(fill(L.rl_empUpd, { n: D.empName(saved) }));
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, stepOf: fill(L.rl_stepOf, { n: 5 }), cov: [], filters: [], columns: [], tRows: [], personal: [], roleOpts: [], brOpts: [], whOpts: [], cashOpts: [], er: {}, pf: {}, cr: { lines: [] }, dlg: {}, vsErrors: [], vsWarns: [], bodyRef: this.bodyRef };
+    if (!D || !D.store.emps) return base;
+    const emps = D.store.emps, seats = this.seats(), lim = D.EMP_LIMIT, br = c => c ? c : L.rl_scAll, bName = c => (D.BRANCHES.find(b => b.code === c) || {}).name || c;
+    const only = emps.length <= 1 && emps.every(e => e.role === 'director');
+    const cov = D.BRANCHES.map(b => { const COV = { branch: e => D.can(e.role, 'approvals.branch'), operator: e => D.rlHome(e.role) === 'operator', keeper: e => D.can(e.role, 'special.whs') }, has = r => emps.filter(e => COV[r](e) && e.branch === b.code && e.status !== 'blocked'), row = (r, lbl) => { const x = has(r); return { label: lbl, value: x.length ? x.map(e => D.empName(e)).join(', ') : fill(L.rl_covNo, { r: lbl }) }; };
+      const cash = D.ACCOUNTS.filter(a => a.kind === 'cash' && a.branch === b.code), ok = cash.filter(a => emps.some(e => e.status !== 'blocked' && (e.cash || []).includes(a.id)));
+      return { title: b.name, rows: [row('branch', L.r_branch), row('operator', L.r_operator), row('keeper', L.r_keeper), { label: L.rl_covCashL, value: ok.length === cash.length ? fill(L.rl_covCash, { a: ok.length, b: cash.length }) : fill(L.rl_covCashNo, { k: cash.filter(a => !ok.includes(a)).map(a => a.name.split(' · ')[1] || a.name).join(', ') }) }] }; });
+    const q = D.toLat(s.q.trim().toLowerCase());
+    const pgm = p.mode === 'page', wk0 = D.pDT('28.09.2026 00:00'), llOf = e => D.lastLogin(D.empName(e)), inView = (e, v) => v === 'never' ? !llOf(e) : v === 'blocked' ? e.status === 'blocked' : v === 'week' ? !(llOf(e) && llOf(e).t >= wk0) : true;
+    const scoped = emps.filter(e => !p.scopeBranch || e.branch === p.scopeBranch);
+    const list = scoped.filter(e => (!pgm || inView(e, s.view)) && (!q || D.toLat((D.empName(e) + ' ' + e.login).toLowerCase()).includes(q)) && (!s.fRole.length || s.fRole.includes(e.role)) && (!s.fBranch.length || s.fBranch.includes(e.branch || 'ALL')) && (!s.fStatus.length || s.fStatus.includes(e.status)));
+    const cnt = (k, v) => emps.filter(e => (k === 'branch' ? (e.branch || 'ALL') : e[k]) === v).length;
+    const filters = [
+      { label: L.rl_cRole, options: this.roles().map(r => ({ value: r.id, label: this.roleName(r.id), count: cnt('role', r.id) })), selected: s.fRole, onChange: v => this.setState({ fRole: v }) },
+      { label: L.rl_cBranch, options: [{ value: 'ALL', label: L.rl_scAll, count: cnt('branch', 'ALL') }].concat(D.BRANCHES.map(b => ({ value: b.code, label: b.name, count: cnt('branch', b.code) }))), selected: s.fBranch, onChange: v => this.setState({ fBranch: v }) },
+      { label: L.rl_cStatus, options: ['new', 'active', 'blocked'].map(k => ({ value: k, label: L['rl_st_' + k], count: cnt('status', k) })), selected: s.fStatus, onChange: v => this.setState({ fStatus: v }) }];
+    const columns = [{ key: 'name', label: L.rl_cName, width: 'minmax(220px,2fr)' }, { key: 'role', label: L.rl_cRole, width: 'minmax(140px,1fr)' }, { key: 'br', label: L.rl_cBranch, width: '130px' }, { key: 'login', label: L.rl_cLogin, width: '150px' }, { key: 'ph', label: L.rl_cPhone, width: '160px' }, { key: 'st', label: L.rl_cStatus, width: '230px' }];
+    if (pgm) columns.splice(5, 0, { key: 'll', label: L.bs_lastLogin, width: '150px' });
+    const tRows = list.map(e => { const S = ST[e.status] || ST.new, ll = pgm ? llOf(e) : null; return { id: e.id, selected: false, onToggle: () => {}, onOpen: () => p.onOpenEmp ? p.onOpenEmp(e.id) : this.openEdit(e),
+      cells: [{ type: 'person', text: D.empName(e), sub: e.mid ? e.last + ' ' + e.first + ' ' + e.mid : '', av: (e.first[0] || '') + (e.last[0] || '') }, { type: 'text', text: this.roleName(e.role) }, { type: 'text', text: br(e.branch) }, { type: 'mono', text: e.login }, { type: 'text', text: e.phone }, ...(pgm ? [ll ? { type: 'mono', text: ll.at.slice(0, 16) } : { type: 'text', text: L.bs_never, color: '#647574' }] : []), { type: 'status', text: L['rl_st_' + e.status], icon: S[0], bg: S[1], fg: S[2] }],
+      actions: p.readOnly ? [] : [{ label: L.rl_mEdit, icon: 'pencil', pick: () => this.openEdit(e) }, { label: L.rl_mPw, icon: 'key-round', pick: () => this.setState({ dlg: { kind: 'pw', id: e.id, title: L.rl_pwT, text: L.rl_pwText, items: [], danger: false, confirm: L.rl_pwOk } }) },
+        ...(e.role === 'director' || e.status === 'blocked' ? [] : [{ sep: true, label: L.rl_mBlock, icon: 'ban', danger: true, pick: () => this.setState({ reason: '', reasonTried: false, dlg: { kind: 'block', id: e.id, title: fill(L.rl_blockT, { n: D.empName(e) }), text: L.rl_blockText, items: [], withReason: true, danger: true, confirm: L.rl_blockOk } }) }])] }; });
+    const pn = s.panel, f = pn ? pn.f : {}, chk = pn && pn.tried ? this.check(pn) : { er: {}, warns: [] }, er = chk.er;
+    const setF = (k, fn) => v => this.setState(st => { const nf = { ...st.panel.f, [k]: fn ? fn(v && v.target ? v.target.value : v) : (v && v.target ? v.target.value : v) };
+      if ((k === 'first' || k === 'last') && !nf.loginTouched) nf.login = D.empLoginFor(nf.first, nf.last, st.panel.id);
+      if (k === 'role') { if (this.scope(nf.role) === 'all') nf.branch = null; nf.whs = []; nf.cash = []; } if (k === 'branch') { nf.whs = []; nf.cash = []; }
+      return { panel: { ...st.panel, f: nf } }; });
+    const inp = (k, label, x) => ({ k, id: 'xd-' + k, label, value: f[k] || '', on: setF(k, x && x.fmt), req: !(x && x.opt), opt: !!(x && x.opt), ph: (x && x.ph) || '', mode: (x && x.mode) || 'text', w: (x && x.w) || '100%', font: x && x.mono ? "'JetBrains Mono',monospace" : 'inherit', err: er[k] || '', bd: er[k] ? '#B91C1C' : '#E2E8F0' });
+    const busy = pn && f.login && D.empByLogin(f.login, pn.id), rr = f.role ? D.rlRoles().find(r => r.id === f.role) : null;
+    const brObj = D.BRANCHES.find(b => b.code === f.branch), cashL = D.ACCOUNTS.filter(a => a.kind === 'cash' && a.branch === f.branch);
+    const c = s.creds ? emps.find(e => e.id === s.creds.id) : null, dl = s.dlg;
+    return {
+      ...base, narrow, isEmpty: only, hasList: !only, addBtn: p.readOnly ? null : { label: L.rl_add, icon: 'plus', pick: () => this.openNew() }, wiz: !pgm, pageMode: pgm, pgCount: String(scoped.length),
+      views: pgm ? [['all', L.bs_vAll], ['never', L.bs_vNever], ['blocked', L.bs_vBlocked], ['week', L.bs_vWeek]].map(([k, l]) => ({ label: l, count: scoped.filter(e => inView(e, k)).length, active: s.view === k, tone: k === 'blocked' && scoped.some(e => e.status === 'blocked') ? 'warning' : null, pick: () => this.setState({ view: k }) })) : [],
+      cntText: fill(L.rl_cnt, { n: seats, m: lim }), atLimit: seats >= lim, limitText: fill(L.rl_limitT, { m: lim }),
+      cntBg: seats >= lim - 2 ? '#FFFBEB' : '#F5F7F8', cntFg: seats >= lim - 2 ? '#B45309' : '#5B6B6A', cntIcon: seats >= lim - 2 ? 'triangle-alert' : 'users-round',
+      cov, covCols: narrow ? 'repeat(2,minmax(0,1fr))' : 'repeat(4,minmax(0,1fr))', q: s.q, setQ: v => this.setState({ q: v }), filters,
+      chipLabels: { search: L.rl_search, reset: L.rl_clearAll, apply: L.rl_apply, remove: L.rl_clearAll, none: L.rl_noRows },
+      hasActive: !!(s.fRole.length || s.fBranch.length || s.fStatus.length), clearAll: () => this.setState({ fRole: [], fBranch: [], fStatus: [] }),
+      columns, tRows, tMin: narrow ? 1040 : 0, back: () => p.onBack && p.onBack(), next: () => p.onNext && p.onNext(),
+      panelOpen: !!pn, panelW: narrow ? '480px' : '440px', pTitle: pn && pn.id ? L.rl_editEmp : L.rl_newEmp, pf: f, er, isNewEmp: !!(pn && !pn.id),
+      personal: [inp('last', L.rl_fLast), inp('first', L.rl_fFirst), inp('mid', L.rl_fMid, { opt: true }), inp('phone', L.rl_fPhone, { fmt: fmtPh, ph: '+998 90 123 45 67', mode: 'tel', w: '220px', mono: true })],
+      roleOpts: this.roles().map(r => ({ value: r.id, label: this.roleName(r.id) })), onRole: setF('role'),
+      roleHint: rr ? fill(L.rl_roleHint, { n: rr.id === 'director' ? D.PERMISSIONS.length : Object.keys(D.permsOf(rr.id)).length, s: rr.scope === 'all' ? L.rl_scAll : L.rl_scOwn }) : '',
+      brAll: !!rr && rr.scope === 'all', brOwn: !rr || rr.scope !== 'all', brOpts: D.BRANCHES.map(b => ({ value: b.code, label: b.name })), onBranch: setF('branch'),
+      showWh: !!f.role && D.can(f.role, 'special.whs') && !!brObj, whOpts: brObj ? brObj.wh.map(w => { const on = (f.whs || []).includes(w); return { name: w, on, bd: on ? '#0D9488' : '#E2E8F0', bg: on ? '#DDF5EE' : '#FFFFFF', cb: on ? '#0F766E' : '#647574', cbg: on ? '#0F766E' : '#FFFFFF', pick: () => this.setState(st => ({ panel: { ...st.panel, f: { ...st.panel.f, whs: on ? st.panel.f.whs.filter(x => x !== w) : (st.panel.f.whs || []).concat([w]) } } })) }; }) : [],
+      showCash: !!f.role && D.can(f.role, 'special.till') && cashL.length > 0, cashOpts: cashL.map(a => ({ value: a.id, label: a.name })), onCash: v => this.setState(st => ({ panel: { ...st.panel, f: { ...st.panel.f, cash: v ? [v] : [], cash0: v } } })),
+      onLogin: e => { const v = e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ''); this.setState(st => ({ panel: { ...st.panel, f: { ...st.panel.f, login: v, loginTouched: true } } })); },
+      loginErr: busy ? fill(L.rl_eLoginBusy, { l: f.login }) : er.login || '', loginOk: !!(pn && f.login && !busy && !er.login), loginBd: busy || er.login ? '#B91C1C' : '#E2E8F0',
+      pwView: pn && pn.pw ? (s.showPw ? pn.pw : '••••••••••') : '', pwToggle: s.showPw ? L.rl_hide : L.rl_show, pwIcon: s.showPw ? 'eye-off' : 'eye', togglePw: () => this.setState({ showPw: !s.showPw }),
+      regenPw: () => this.setState(st => ({ panel: { ...st.panel, pw: D.empPw() } })), closePanel: () => this.setState({ panel: null }), savePanel: () => this.savePanel(false),
+      vsOpen: !!s.vs, vsTitle: s.vs ? fill(L.rl_vsT, { n: s.vs.errors.length }) : '', vsErrors: s.vs ? s.vs.errors : [], vsWarns: [], closeVs: () => this.setState({ vs: null }),
+      dlgOpen: !!dl, dlg: dl || {}, reason: s.reason, onReason: v => this.setState({ reason: v && v.target ? v.target.value : v }), reasonErr: s.reasonTried && !s.reason.trim() ? L.rl_blockReq : '',
+      dlgCancel: () => this.setState({ dlg: null }),
+      dlgOk: () => { if (dl.kind === 'warn') return this.savePanel(true);
+        if (dl.kind === 'pw') return this.setState({ dlg: null, creds: { id: dl.id, pw: D.empPw() } });
+        if (dl.kind === 'block') { if (!s.reason.trim()) return this.setState({ reasonTried: true }); const e = emps.find(x => x.id === dl.id); D.empSave({ ...e, status: 'blocked', blockReason: s.reason.trim() }); this.setState({ dlg: null }); return this.toast(fill(L.rl_blocked, { n: D.empName(e) })); } },
+      credsOpen: !!c, closeCreds: () => this.setState({ creds: null }),
+      cr: c ? { ini: (c.first[0] || '') + (c.last[0] || ''), who: [D.empName(c), this.roleName(c.role), c.branch ? bName(c.branch) : L.rl_scAll].join(' · '), url: D.LOGIN_URL,
+        lines: [{ label: L.rl_cLogin, value: c.login, copy: () => this.copy(c.login) }, { label: L.rl_fPw, value: s.creds.pw, copy: () => this.copy(s.creds.pw) }] } : { lines: [] },
+      copyAll: () => { if (!c) return; try { navigator.clipboard && navigator.clipboard.writeText(`${D.empName(c)}\n${L.rl_cLogin}: ${c.login}\n${L.rl_fPw}: ${s.creds.pw}\n${L.rl_crUrl}: ${D.LOGIN_URL}`); } catch (e) {} this.toast(L.rl_allCopied); },
+      toastOpen: !!s.toast, toastText: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

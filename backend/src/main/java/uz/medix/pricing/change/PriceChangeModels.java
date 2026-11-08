@@ -88,8 +88,7 @@ final class PriceChangeModels {
             @NotEmpty(message = "{priceChange.noLines}") @Size(max = 5000) List<Long> productIds,
             @NotNull(message = "{validation.required}") Long priceTypeId,
             @NotNull(message = "{validation.required}") BaseKind base,
-            @NotNull(message = "{validation.required}") @DecimalMin("-90") @DecimalMax("1000") BigDecimal percent,
-            @Schema(description = "0, 100, 500 yoki 1000") int rounding) {}
+            @NotNull(message = "{validation.required}") @DecimalMin("-90") @DecimalMax("1000") BigDecimal percent) {}
 
     record MarkupLine(long productId, String productCode, String productName,
             @Schema(nullable = true, description = "Kirim narxi asosida — faqat special.cost bilan") String basePrice,
@@ -100,6 +99,9 @@ final class PriceChangeModels {
             @Schema(description = "Narx turi id → narx") Map<String, String> prices) {}
 
     record PricePage(List<PriceRow> items, long total, int page, int size) {}
+
+    /** Narxlar jadvali saralash ustuni (SPEC 4 «Jadvallar standarti»). */
+    enum PriceSort { CODE, NAME, MANUFACTURER }
 
     /** «Kirim bo'yicha» rejimi: o'tkazilgan kirim partiyasi va uning amaldagi partiya narxlari. */
     record ReceiptBatch(

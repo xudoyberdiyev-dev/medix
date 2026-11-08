@@ -1,4 +1,5 @@
 import {
+  Building2,
   FileMinus,
   Undo2,
   ListChecks,
@@ -27,9 +28,15 @@ import {
   HandCoins,
   type LucideIcon,
 } from "lucide-react";
+import type navGroups from "@/messages/uz-Latn/navGroups.json";
+import type nav from "@/messages/uz-Latn/nav.json";
+
+export type NavKey = keyof typeof nav;
+export type NavGroupKey = keyof typeof navGroups;
 
 export interface NavItem {
-  key: string;
+  /** Lugʻat kaliti ham (`nav.<key>`); `label` — uz-Latn matni (lugʻat bilan bir xil, testda tekshiriladi). */
+  key: NavKey;
   label: string;
   href: string;
   icon: LucideIcon;
@@ -38,6 +45,8 @@ export interface NavItem {
 }
 
 export interface NavGroup {
+  /** Lugʻat kaliti (`navGroups.<key>`); sarlavhasiz guruhda yoʻq. */
+  key?: NavGroupKey;
   title?: string;
   items: NavItem[];
 }
@@ -46,6 +55,7 @@ export interface NavGroup {
 export const navigation: NavGroup[] = [
   { items: [{ key: "home", label: "Bosh sahifa", href: "/", icon: LayoutDashboard }] },
   {
+    key: "sales",
     title: "Savdo",
     items: [
       {
@@ -58,6 +68,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "warehouse",
     title: "Ombor",
     items: [
       { key: "warehouse", label: "Monitor", href: "/warehouse", icon: MonitorDot, anyOf: ["orders.queue"] },
@@ -80,6 +91,13 @@ export const navigation: NavGroup[] = [
         href: "/warehouse-transfers",
         icon: Warehouse,
         anyOf: ["transfer.view", "transfer.ok", "transfer.send", "transfer.receive"],
+      },
+      {
+        key: "branch-sales",
+        label: "Filiallararo savdo",
+        href: "/branch-sales",
+        icon: Building2,
+        anyOf: ["transfer.view", "transfer.fs", "transfer.send", "transfer.receive"],
       },
       {
         key: "inventory-counts",
@@ -107,6 +125,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "money",
     title: "Pul",
     items: [
       { key: "payments", label: "Toʻlovlar", href: "/payments", icon: Wallet, anyOf: ["payments.view"] },
@@ -117,6 +136,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "references",
     title: "Maʼlumotnomalar",
     items: [
       { key: "products", label: "Mahsulotlar", href: "/products", icon: Pill, anyOf: ["products.view"] },
@@ -127,7 +147,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
-    title: "Tahlil",
+    // Prototip: «Hisobotlar» — sarlavhasiz, yuqori darajadagi band
     items: [
       {
         key: "reports",
@@ -139,6 +159,7 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    key: "admin",
     title: "Boshqaruv",
     items: [
       {

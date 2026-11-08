@@ -2,6 +2,7 @@ package uz.medix.pricing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -12,10 +13,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.servlet.http.Cookie;
+import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -173,13 +178,13 @@ class PriceChangeIT {
                 .andExpect(jsonPath("$.items[0].code").exists())
                 .andExpect(jsonPath("$.items[0].prices['" + base + "']").doesNotExist());
 
-        // Ommaviy ustama: bazaviy narxdan +15%, 500 ga yaxlitlash → Promo
+        // Ommaviy ustama: bazaviy narxdan +15% → Promo (E4: yaxlitlashsiz, tiyinigacha)
         mvc.perform(json(post("/api/price-changes/markup"), purchaser,
                         "{\"branchId\":" + branch + ",\"productIds\":[" + p + "],\"priceTypeId\":" + promo
-                                + ",\"base\":\"BASE_PRICE\",\"percent\":15,\"rounding\":500}"))
+                                + ",\"base\":\"BASE_PRICE\",\"percent\":15}"))
                 .andExpect(jsonPath("$[0].basePrice").value("13000.00"))
                 .andExpect(jsonPath("$[0].oldPrice").value("9500.50"))
-                .andExpect(jsonPath("$[0].newPrice").value("15000.00"));
+                .andExpect(jsonPath("$[0].newPrice").value("14950.00"));
     }
 
     @Test
@@ -261,7 +266,7 @@ class PriceChangeIT {
         // Ommaviy ustama kirim narxidan (+10%): Xarid tannarxni ko'rmaydi — faqat natija
         for (String kind : new String[] {"AVG_RECEIPT", "LAST_RECEIPT"}) {
             mvc.perform(json(post("/api/price-changes/markup"), purchaser, "{\"branchId\":" + branch + ",\"productIds\":[" + p
-                            + "],\"priceTypeId\":" + base + ",\"base\":\"" + kind + "\",\"percent\":10,\"rounding\":100}"))
+                            + "],\"priceTypeId\":" + base + ",\"base\":\"" + kind + "\",\"percent\":10}"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].basePrice").doesNotExist())
                     .andExpect(jsonPath("$[0].newPrice").value("13200.00"));
@@ -390,5 +395,53 @@ class PriceChangeIT {
                         + line.replace("@ID", "" + p).replace("@PRICE", "999.99").replace("@B", "" + b[0]) + "]}")).andReturn());
         mvc.perform(post("/api/price-changes/" + low + "/submit").with(csrf()).cookie(purchaser))
                 .andExpect(jsonPath("$.status").value("PENDING_APPROVAL"));
+    }
+
+    @Test
+    void priceGridSortingAndExcelExport() throws Exception {
+        long branch = branch();
+        String tag = "nx" + UUID.randomUUID().toString().substring(0, 5);
+        long b = product("Beta " + tag);
+        long a = product("Alfa " + tag);
+        long base = type("BASE");
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        long doc = id(mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today()
+                        + "\",\"lines\":[{\"productId\":" + a + ",\"priceTypeId\":" + base + ",\"newPrice\":\"1250000\"}]}"))
+                .andExpect(status().isCreated())
+                .andReturn());
+        mvc.perform(post("/api/price-changes/" + doc + "/submit").with(csrf()).cookie(purchaser)).andExpect(status().isOk());
+
+        mvc.perform(get("/api/prices").param("branchId", "" + branch).param("q", tag).cookie(purchaser))
+                .andExpect(jsonPath("$.items[*].productId").value(contains((int) a, (int) b)));
+        mvc.perform(get("/api/prices").param("branchId", "" + branch).param("q", tag).param("sort", "NAME").param("desc", "true").cookie(purchaser))
+                .andExpect(jsonPath("$.items[*].productId").value(contains((int) b, (int) a)));
+        mvc.perform(get("/api/prices").param("branchId", "" + branch).param("q", tag).param("sort", "MANUFACTURER").cookie(purchaser))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/prices").param("branchId", "" + branch).param("q", tag).param("sort", "CODE").cookie(purchaser))
+                .andExpect(status().isOk());
+
+        MvcResult res = mvc.perform(get("/api/prices/export").param("branchId", "" + branch).param("q", tag).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andReturn();
+        String baseName = jdbc.sql("SELECT name FROM price_type WHERE id = :id").param("id", base).query(String.class).single();
+        try (XSSFWorkbook wb = new XSSFWorkbook(new ByteArrayInputStream(res.getResponse().getContentAsByteArray()))) {
+            Sheet sheet = wb.getSheetAt(0);
+            Row h = sheet.getRow(0);
+            int col = -1;
+            for (int i = 3; i < h.getLastCellNum(); i++) {
+                if (baseName.equals(h.getCell(i).getStringCellValue())) {
+                    col = i;
+                }
+            }
+            assertThat(col).isGreaterThanOrEqualTo(3);
+            assertThat(sheet.getRow(1).getCell(1).getStringCellValue()).isEqualTo("Alfa " + tag);
+            assertThat(sheet.getRow(1).getCell(col).getStringCellValue()).isEqualTo("1.250.000,00");
+            assertThat(sheet.getRow(2).getCell(col).getStringCellValue()).isEmpty();
+            assertThat(sheet.getRow(3).getCell(0).getStringCellValue()).isEqualTo("Jami");
+            assertThat(sheet.getRow(3).getCell(1).getNumericCellValue()).isEqualTo(2.0);
+        }
+        // Boshqa filial xodimi — topilmaydi
+        Cookie other = loginAs("PURCHASER", branch());
+        mvc.perform(get("/api/prices/export").param("branchId", "" + branch).cookie(other)).andExpect(status().isNotFound());
     }
 }

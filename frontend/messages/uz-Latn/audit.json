@@ -1,0 +1,48 @@
+{
+  "title": "Audit jurnali",
+  "forbidden": "Audit jurnalini Direktor va Bosh administrator koʻradi.",
+  "time": "Vaqt",
+  "employee": "Xodim",
+  "system": "Tizim",
+  "action": "Amal",
+  "entity": "Obyekt",
+  "reason": "Sabab",
+  "entityType": "Obyekt turi",
+  "all": "Hammasi",
+  "emptyTitle": "Yozuvlar yoʻq",
+  "emptyDescription": "Tizimdagi har bir muhim amal shu yerda koʻrinadi: kim, qachon, nima oʻzgardi.",
+  "entities": {
+    "employee": "Xodimlar",
+    "branch": "Filiallar",
+    "warehouse": "Omborlar",
+    "company": "Kompaniya"
+  },
+  "actions": {
+    "auth": {
+      "login": "Tizimga kirdi",
+      "loginFailed": "Notoʻgʻri parol bilan kirish urinishi",
+      "loginBlocked": "Bloklangan hisob bilan kirish urinishi",
+      "passwordChanged": "Parolni almashtirdi"
+    },
+    "employee": {
+      "create": "Xodim qoʻshildi",
+      "block": "Xodim bloklandi",
+      "unblock": "Xodim blokdan chiqarildi",
+      "resetPassword": "Vaqtinchalik parol berildi"
+    },
+    "company": {
+      "create": "Kompaniya yaratildi",
+      "update": "Kompaniya oʻzgartirildi"
+    },
+    "branch": {
+      "create": "Filial qoʻshildi",
+      "update": "Filial oʻzgartirildi"
+    },
+    "warehouse": {
+      "create": "Ombor qoʻshildi"
+    },
+    "setup": {
+      "complete": "Sozlash ustasi yakunlandi"
+    }
+  }
+}

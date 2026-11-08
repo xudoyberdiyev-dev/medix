@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Ombor mudiri paneli" style="display:flex;flex-direction:column;gap:16px;min-width:0;color:#172B2A;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.w4_title }}</h1>
+      <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ sub }}</p>
+    </div>
+    <sc-if value="{{ showDemo }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5B6B6A"><lucide-i name="clock" size="14"></lucide-i>{{ clock }}</span>
+      <button onClick="{{ clk5 }}" style="min-height:48px;min-width:56px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:600;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">+5</button>
+      <button onClick="{{ clk15 }}" style="min-height:48px;min-width:56px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:600;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">+15</button>
+    </div></sc-if>
+  </div>
+
+  <div role="tablist" style="display:flex;gap:2px;box-shadow:inset 0 -1px 0 #E2E8F0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+      <button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="flex:none;display:flex;align-items:center;gap:6px;min-height:48px;padding:4px 12px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:{{ t.weight }};color:{{ t.fg }};box-shadow:{{ t.line }};cursor:pointer;white-space:nowrap">
+        <lucide-i name="{{ t.icon }}" size="16"></lucide-i><span>{{ t.label }}</span>
+        <span style="min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#EEF2F4;color:#5B6B6A;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{ t.n }}</span>
+        <sc-if value="{{ t.hasLate }}"><span aria-label="{{ t.lateLabel }}" style="min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#B91C1C;color:#FFFFFF;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{ t.late }}</span></sc-if>
+      </button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isMon }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+      <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="3">
+        <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span>
+          <span style="font-size:24px;line-height:30px;font-weight:600;color:{{ k.fg }}">{{ k.value }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <button onClick="{{ toggleLate }}" aria-pressed="{{ onlyLate }}" style="min-height:48px;padding:0 14px;border:1px solid {{ lateBtn.border }};border-radius:8px;background:{{ lateBtn.bg }};color:{{ lateBtn.fg }};font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap"><lucide-i name="{{ lateBtn.icon }}" size="16"></lucide-i>{{ L.w4_onlyLate }}</button>
+    </div>
+    <sc-if value="{{ wide }}">
+      <div style="display:grid;grid-auto-flow:column;grid-auto-columns:minmax(200px,1fr);gap:10px;overflow-x:auto;padding-bottom:6px;align-items:start">
+        <sc-for list="{{ cols }}" as="col" hint-placeholder-count="7">
+          <section aria-label="{{ col.label }}" style="display:flex;flex-direction:column;gap:8px;background:#EEF2F4;border-radius:12px;padding:10px;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:28px">
+              <span style="font-size:13px;line-height:17px;font-weight:600;color:#172B2A">{{ col.label }}</span>
+              <span style="display:flex;gap:4px;flex:none"><span style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#FFFFFF;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{ col.n }}</span><sc-if value="{{ col.hasLate }}"><span style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#B91C1C;color:#FFFFFF;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{ col.late }}</span></sc-if></span>
+            </div>
+            <sc-if value="{{ col.empty }}"><span style="padding:14px 4px;text-align:center;font-size:12px;color:#647574">{{ L.w4_colEmpty }}</span></sc-if>
+            <sc-for list="{{ col.cards }}" as="k">
+              <button onClick="{{ k.pick }}" style="width:100%;text-align:left;display:flex;flex-direction:column;gap:5px;padding:10px 12px;border:1px solid {{ k.border }};border-radius:10px;background:#FFFFFF;font:inherit;color:#172B2A;cursor:pointer;min-height:48px" style-hover="border-color:#0F766E">
+                <span style="display:flex;align-items:center;justify-content:space-between;gap:6px"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">{{ k.no }}</span><sc-if value="{{ k.hasIss }}"><span aria-label="{{ k.issLabel }}" style="display:inline-flex;align-items:center;gap:3px;color:#B91C1C;font-size:12px;font-weight:600"><lucide-i name="triangle-alert" size="14"></lucide-i>{{ k.iss }}</span></sc-if></span>
+                <span style="font-size:13px;line-height:17px;font-weight:500;text-wrap:pretty">{{ k.cust }}</span>
+                <span style="display:flex;align-items:center;gap:5px;font-size:12px;line-height:16px;color:#5B6B6A;min-width:0"><lucide-i name="user-round" size="12" style="flex:none"></lucide-i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ k.who }}</span></span>
+                <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:{{ k.tBg }};color:{{ k.tFg }};font-size:12px;font-weight:600"><lucide-i name="{{ k.tIcon }}" size="12"></lucide-i>{{ k.timer }}</span><sc-if value="{{ k.hasRw }}"><span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;background:#FFFBEB;color:#B45309;font-size:12px;font-weight:600">{{ k.rw }}</span></sc-if></span>
+              </button>
+            </sc-for>
+          </section>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ narrow }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ colsN }}" as="col">
+          <section aria-label="{{ col.label }}" style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;padding:0 2px"><span style="font-size:14px;font-weight:600">{{ col.label }}</span><span style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#EEF2F4;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{ col.n }}</span><sc-if value="{{ col.hasLate }}"><span style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#B91C1C;color:#FFFFFF;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center">{{ col.late }}</span></sc-if></div>
+            <sc-for list="{{ col.cards }}" as="k">
+              <button onClick="{{ k.pick }}" style="width:100%;text-align:left;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 12px;border:1px solid {{ k.border }};border-radius:10px;background:#FFFFFF;font:inherit;color:#172B2A;cursor:pointer;min-height:48px">
+                <span style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">{{ k.no }}</span><span style="font-size:14px;line-height:18px;font-weight:500">{{ k.cust }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.who }}</span></span>
+                <span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:{{ k.tBg }};color:{{ k.tFg }};font-size:12px;font-weight:600;white-space:nowrap">{{ k.timer }}</span><sc-if value="{{ k.hasIss }}"><span style="display:inline-flex;align-items:center;gap:3px;color:#B91C1C;font-size:12px;font-weight:600"><lucide-i name="triangle-alert" size="14"></lucide-i>{{ k.iss }}</span></sc-if><sc-if value="{{ k.hasRw }}"><span style="font-size:12px;font-weight:600;color:#B45309">{{ k.rw }}</span></sc-if></span>
+              </button>
+            </sc-for>
+          </section>
+        </sc-for>
+        <sc-if value="{{ monEmpty }}"><div style="padding:32px 16px;text-align:center;color:#5B6B6A;font-size:14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px">{{ L.w4_colEmpty }}</div></sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasWh }}">
+      <span style="font-size:15px;font-weight:600;margin-top:4px">{{ L.w4_whT }}</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;align-items:start">
+        <sc-for list="{{ whCards }}" as="w">
+          <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;display:flex;flex-direction:column;min-width:0">
+            <span style="padding:12px 14px 6px;font-size:14px;font-weight:600">{{ w.title }}</span>
+            <sc-if value="{{ w.empty }}"><span style="padding:4px 14px 14px;font-size:13px;color:#647574">{{ w.emptyText }}</span></sc-if>
+            <sc-for list="{{ w.rows }}" as="r">
+              <button onClick="{{ r.pick }}" disabled="{{ r.off }}" style="display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 14px;border:0;border-top:1px solid #EEF2F4;background:transparent;font:inherit;text-align:left;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">
+                <lucide-i name="{{ r.icon }}" size="16" style="flex:none;color:{{ r.fg }}"></lucide-i>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:13px;line-height:18px;text-wrap:pretty">{{ r.text }}</span><sc-if value="{{ r.hasSub }}"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ r.sub }}</span></sc-if></span>
+                <span style="flex:none;font-size:13px;font-weight:600;white-space:nowrap">{{ r.val }}</span>
+              </button>
+            </sc-for>
+          </section>
+        </sc-for>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isRet }}" hint-placeholder-val="{{ false }}">
+    <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ L.w4_retHint }}</p>
+    <sc-if value="{{ retEmpty }}"><div style="padding:40px 16px;text-align:center;color:#5B6B6A;font-size:14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;text-wrap:pretty">{{ L.w4_retEmpty }}</div></sc-if>
+    <sc-for list="{{ rets }}" as="q">
+      <article style="background:#FFFFFF;border:1px solid {{ q.border }};border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ q.no }}</span><span style="font-size:15px;line-height:20px;font-weight:600">{{ q.cust }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ q.meta }}</span></div>
+          <span style="flex:none;display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:{{ q.bBg }};color:{{ q.bFg }};font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="{{ q.bIcon }}" size="12"></lucide-i>{{ q.badge }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;border-top:1px solid #EEF2F4">
+          <sc-for list="{{ q.lines }}" as="l">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #EEF2F4">
+              <span style="flex:1 1 200px;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:500">{{ l.name }}</span><span style="font-size:12px;color:#5B6B6A"><span style="font-family:'JetBrains Mono',monospace">{{ l.batch }}</span> · {{ l.reason }}</span></span>
+              <span style="font-size:13px;color:#5B6B6A;white-space:nowrap">{{ L.w4_retExp }}: <b style="color:#172B2A">{{ l.exp }}</b></span>
+              <sc-if value="{{ l.edit }}"><label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5B6B6A">{{ L.w4_retFact }}<input value="{{ l.val }}" onChange="{{ l.onVal }}" inputMode="numeric" aria-label="{{ L.w4_retFact }}" style="width:84px;height:48px;padding:0 10px;border:1px solid {{ l.border }};border-radius:8px;font-size:15px;text-align:right"></input></label></sc-if>
+              <sc-if value="{{ l.done }}"><span style="font-size:13px;font-weight:600;color:{{ l.factFg }};white-space:nowrap">{{ l.factText }}</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ q.pending }}">
+          <sc-if value="{{ q.hasDiff }}">
+            <span style="font-size:13px;font-weight:600;color:#B91C1C">{{ q.diffText }}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ q.reasons }}" as="r"><button onClick="{{ r.pick }}" aria-pressed="{{ r.on }}" style="min-height:48px;padding:0 12px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }};color:{{ r.fg }};font:inherit;font-size:14px;font-weight:500;cursor:pointer">{{ r.label }}</button></sc-for></div>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_retNote }}<textarea value="{{ q.note }}" onChange="{{ q.onNote }}" rows="2" style="padding:10px 12px;border:1px solid {{ q.noteBorder }};border-radius:8px;font:inherit;font-size:14px;resize:vertical;min-height:48px"></textarea></label>
+          </sc-if>
+          <sc-if value="{{ q.hasErr }}"><span role="alert" style="font-size:13px;color:#B91C1C">{{ q.err }}</span></sc-if>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onClick="{{ q.accept }}" style="flex:1 1 200px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><lucide-i name="package-check" size="16"></lucide-i>{{ L.w4_retAccept }}</button>
+            <button onClick="{{ q.openCard }}" style="flex:0 1 auto;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer">{{ L.w4_openCard }}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ q.accepted }}"><span style="font-size:12px;color:#5B6B6A">{{ q.accText }}</span></sc-if>
+      </article>
+    </sc-for>
+  </sc-if>
+
+  <sc-if value="{{ isList2 }}" hint-placeholder-val="{{ false }}">
+    <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ list2Hint }}</p>
+    <sc-if value="{{ list2Empty }}"><div style="padding:40px 16px;text-align:center;color:#5B6B6A;font-size:14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;text-wrap:pretty">{{ list2EmptyText }}</div></sc-if>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:12px">
+      <sc-for list="{{ list2 }}" as="q">
+        <article style="background:#FFFFFF;border:1px solid {{ q.border }};border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ q.no }}</span><span style="font-size:15px;line-height:20px;font-weight:600;text-wrap:pretty">{{ q.title }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ q.meta }}</span></div>
+            <span style="flex:none;display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;background:{{ q.tBg }};color:{{ q.tFg }};font-size:12px;font-weight:600;white-space:nowrap">{{ q.badge }}</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onClick="{{ q.pick }}" style="flex:1 1 180px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#115E59"><lucide-i name="{{ q.icon }}" size="16"></lucide-i>{{ q.btn }}</button>
+            <sc-if value="{{ q.hasAlt }}"><button onClick="{{ q.alt }}" style="flex:0 1 auto;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer">{{ q.altLabel }}</button></sc-if>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isTime }}" hint-placeholder-val="{{ false }}">
+    <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ L.w4_timeHint }}</p>
+    <sc-if value="{{ timeEmpty }}"><div style="padding:40px 16px;text-align:center;color:#5B6B6A;font-size:14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px">{{ L.w4_timeEmpty }}</div></sc-if>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:12px">
+      <sc-for list="{{ times }}" as="q">
+        <article style="background:#FFFFFF;border:1px solid {{ q.border }};border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ q.no }}</span><span style="font-size:15px;line-height:20px;font-weight:600">{{ q.cust }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ q.meta }}</span></div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none"><span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;background:{{ q.tBg }};color:{{ q.tFg }};font-size:12px;font-weight:600;white-space:nowrap">{{ q.timer }}</span><sc-if value="{{ q.hasRw }}"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:#FFFBEB;color:#B45309;font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="rotate-ccw" size="12"></lucide-i>{{ q.rw }}</span></sc-if></div>
+          </div>
+          <sc-for list="{{ q.fields }}" as="f">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:13px;font-weight:600;color:#5B6B6A">{{ f.label }}</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                <sc-for list="{{ f.presets }}" as="x"><button onClick="{{ x.pick }}" aria-pressed="{{ x.on }}" style="min-height:48px;min-width:56px;padding:0 10px;border:1px solid {{ x.border }};border-radius:8px;background:{{ x.bg }};color:{{ x.fg }};font:inherit;font-size:14px;font-weight:600;cursor:pointer">{{ x.label }}</button></sc-for>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5B6B6A"><input value="{{ f.val }}" onChange="{{ f.onChange }}" inputMode="numeric" aria-label="{{ f.aria }}" placeholder="{{ L.q9_custom }}" style="width:84px;height:48px;padding:0 10px;border:1px solid {{ f.border }};border-radius:8px;background:#FFFFFF;font-size:15px;text-align:right"></input>{{ L.q9_min }}</label>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ q.err }}"><span style="font-size:13px;color:#B91C1C">{{ L.q9_eReq }}</span></sc-if>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onClick="{{ q.save }}" style="flex:1 1 160px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#115E59"><lucide-i name="timer" size="16"></lucide-i>{{ L.q9_save }}</button>
+            <button onClick="{{ q.openCard }}" style="flex:0 1 auto;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer">{{ L.w4_openCard }}</button>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isChkList }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ chkEmpty }}"><div style="padding:40px 16px;text-align:center;color:#5B6B6A;font-size:14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px">{{ L.w4_chkEmpty }}</div></sc-if>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:12px">
+      <sc-for list="{{ chks }}" as="q">
+        <article style="background:{{ q.bg }};border:1px solid {{ q.border }};border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ q.no }}</span><span style="font-size:15px;line-height:20px;font-weight:600">{{ q.cust }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ q.meta }}</span></div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none"><span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;background:{{ q.tBg }};color:{{ q.tFg }};font-size:12px;font-weight:600;white-space:nowrap">{{ q.timer }}</span><sc-if value="{{ q.busy }}"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:#E2E8F0;color:#5B6B6A;font-size:12px;font-weight:600;white-space:nowrap"><lucide-i name="lock" size="12"></lucide-i>{{ q.busyText }}</span></sc-if><sc-if value="{{ q.hasIss }}"><span style="display:inline-flex;align-items:center;gap:3px;color:#B91C1C;font-size:12px;font-weight:600"><lucide-i name="triangle-alert" size="14"></lucide-i>{{ q.iss }}</span></sc-if></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <sc-if value="{{ q.canStart }}"><button onClick="{{ q.start }}" style="flex:1 1 180px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#115E59"><lucide-i name="clipboard-check" size="16"></lucide-i>{{ L.w4_chkStart }}</button></sc-if>
+            <sc-if value="{{ q.mine }}"><button onClick="{{ q.open }}" style="flex:1 1 180px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><lucide-i name="arrow-right" size="16"></lucide-i>{{ L.w4_continue }}</button></sc-if>
+            <sc-if value="{{ q.blocked }}"><span style="flex:1 1 180px;display:flex;align-items:center;gap:6px;font-size:13px;color:#B45309"><lucide-i name="info" size="14"></lucide-i>{{ L.w4_oneActive }}</span></sc-if>
+            <button onClick="{{ q.view }}" style="flex:0 1 auto;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer">{{ L.w4_openCard }}</button>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isChkOne }}" hint-placeholder-val="{{ false }}">
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:flex-start;gap:10px;min-width:0">
+          <button onClick="{{ backChk }}" aria-label="{{ L.w4_back }}" style="flex:none;width:48px;height:48px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;cursor:pointer;display:flex;align-items:center;justify-content:center"><lucide-i name="arrow-left" size="18"></lucide-i></button>
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ c.no }}</span><span style="font-size:17px;line-height:22px;font-weight:600">{{ c.cust }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ c.meta }}</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:6px;background:{{ c.tBg }};color:{{ c.tFg }};font-size:13px;font-weight:600">{{ c.timer }}</span>
+          <sc-if value="{{ c.busy }}"><span style="display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:6px;background:#E2E8F0;color:#5B6B6A;font-size:13px;font-weight:600"><lucide-i name="lock" size="13"></lucide-i>{{ c.busyText }}</span></sc-if>
+          <button onClick="{{ c.openCard }}" style="min-height:48px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer">{{ L.w4_openCard }}</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:10px;background:#F8FAFA;border:1px solid #EEF2F4">
+        <sc-for list="{{ c.res }}" as="r"><span style="display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:18px;color:{{ r.fg }}"><lucide-i name="{{ r.icon }}" size="14" style="flex:none;margin-top:2px"></lucide-i><span style="text-wrap:pretty">{{ r.text }}</span></span></sc-for>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:600">{{ c.leftTxt }}</span>
+        <sc-if value="{{ c.mine }}"><button onClick="{{ c.allOk }}" style="min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap"><lucide-i name="list-checks" size="16"></lucide-i>{{ L.w4_allOk }}</button></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;border-top:1px solid #EEF2F4">
+        <sc-for list="{{ c.rows }}" as="l">
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #EEF2F4">
+            <button role="checkbox" aria-checked="{{ l.ok }}" aria-label="{{ L.w4_cOk }}" onClick="{{ l.toggle }}" disabled="{{ l.ro }}" style="flex:none;width:48px;height:48px;border:1px solid {{ l.cbBorder }};border-radius:10px;background:{{ l.cbBg }};color:#FFFFFF;cursor:pointer;display:flex;align-items:center;justify-content:center"><sc-if value="{{ l.ok }}"><lucide-i name="check" size="22"></lucide-i></sc-if></button>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start"><span style="font-size:14px;line-height:19px;font-weight:500"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ l.code }}</span> {{ l.name }}</span><span style="font-size:16px;font-weight:600;white-space:nowrap">{{ l.qty }}</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;line-height:16px;color:#5B6B6A">
+                <span style="display:flex;align-items:center;gap:4px"><lucide-i name="layers" size="12"></lucide-i><span style="font-family:'JetBrains Mono',monospace">{{ l.batch }}</span></span>
+                <sc-if value="{{ l.dev }}"><span style="display:inline-flex;align-items:center;gap:3px;padding:0 6px;border-radius:4px;background:#FFFBEB;color:#B45309;font-weight:600"><lucide-i name="git-branch" size="12"></lucide-i>{{ L.w4_dev }}</span></sc-if>
+                <span style="display:flex;align-items:center;gap:4px"><lucide-i name="map-pin" size="12"></lucide-i>{{ l.zone }}</span>
+                <span style="display:flex;align-items:center;gap:4px;color:{{ l.mFg }};font-weight:{{ l.mW }}"><lucide-i name="scan-barcode" size="12"></lucide-i>{{ l.mark }}</span>
+                <sc-if value="{{ l.hasShort }}"><span style="color:#B91C1C;font-weight:600">{{ l.short }}</span></sc-if>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-width:320px">
+        <label for="w4-places" style="font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_places }} *</label>
+        <input id="w4-places" value="{{ c.places }}" onChange="{{ c.onPlaces }}" inputMode="numeric" disabled="{{ c.ro }}" style="height:48px;padding:0 12px;border:1px solid {{ c.plBorder }};border-radius:8px;background:#FFFFFF;font-size:16px"></input>
+        <sc-if value="{{ c.plErr }}"><span style="font-size:13px;color:#B91C1C">{{ L.w4_ePlaces }}</span></sc-if>
+      </div>
+      <sc-if value="{{ c.leftErr }}"><span role="alert" style="font-size:13px;color:#B91C1C">{{ c.leftTxt }}</span></sc-if>
+      <sc-if value="{{ c.mine }}">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ c.finish }}" style="flex:1 1 220px;min-height:52px;padding:0 16px;border:0;border-radius:8px;background:{{ c.finBg }};color:#FFFFFF;font:inherit;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><lucide-i name="check-check" size="18"></lucide-i>{{ L.w4_done }}</button>
+          <button onClick="{{ c.ret }}" style="flex:1 1 200px;min-height:52px;padding:0 16px;border:1px solid #FECACA;border-radius:8px;background:#FFFFFF;color:#B91C1C;font:inherit;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:#FEF2F2"><lucide-i name="rotate-ccw" size="18"></lucide-i>{{ L.w4_return }}</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ c.canStart }}"><button onClick="{{ c.start }}" style="min-height:52px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><lucide-i name="clipboard-check" size="18"></lucide-i>{{ L.w4_chkStart }}</button></sc-if>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{ isDocs }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ docsEmpty }}"><div style="padding:40px 16px;text-align:center;color:#5B6B6A;font-size:14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px">{{ L.w4_docsEmpty }}</div></sc-if>
+    <sc-if value="{{ hasDeliv }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;display:flex;flex-direction:column;min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid #EEF2F4">
+          <span style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><lucide-i name="truck" size="16"></lucide-i>{{ L.w4_deliv }}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:13px;color:#5B6B6A">{{ selTxt }}</span><button onClick="{{ openTrip }}" style="min-height:48px;padding:0 16px;border:0;border-radius:8px;background:{{ tripBtnBg }};color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="route" size="16"></lucide-i>{{ L.w4_mkTrip }}</button></div>
+        </div>
+        <sc-for list="{{ deliv }}" as="d">
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid #EEF2F4">
+            <button role="checkbox" aria-checked="{{ d.on }}" aria-label="{{ d.no }}" onClick="{{ d.toggle }}" style="flex:none;width:48px;height:48px;border:1px solid {{ d.cbBorder }};border-radius:10px;background:{{ d.cbBg }};color:#FFFFFF;cursor:pointer;display:flex;align-items:center;justify-content:center"><sc-if value="{{ d.on }}"><lucide-i name="check" size="20"></lucide-i></sc-if></button>
+            <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px 14px;align-items:center">
+              <span style="display:flex;flex-direction:column;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">{{ d.no }}</span><span style="font-size:14px;font-weight:500">{{ d.cust }}</span></span>
+              <span style="font-size:13px;color:#5B6B6A;text-wrap:pretty">{{ d.addr }}</span>
+              <span style="font-size:13px;color:#5B6B6A">{{ d.date }}</span>
+              <span style="display:flex;align-items:center;gap:8px;justify-content:space-between"><span style="font-size:14px;font-weight:600">{{ d.places }}</span><span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:6px;background:{{ d.tBg }};color:{{ d.tFg }};font-size:12px;font-weight:600;white-space:nowrap">{{ d.timer }}</span></span>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ tripOpen }}">
+          <div style="display:flex;flex-direction:column;gap:12px;padding:14px;background:#F8FAFA;border-radius:0 0 12px 12px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_car }}<select value="{{ tf.car }}" onChange="{{ tf.onCar }}" style="height:48px;padding:0 10px;border:1px solid {{ tf.carBorder }};border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A"><option value="">{{ L.w4_pick }}</option><sc-for list="{{ cars }}" as="o"><option value="{{ o.no }}">{{ o.label }}</option></sc-for></select></label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_driver }}<select value="{{ tf.driver }}" onChange="{{ tf.onDriver }}" style="height:48px;padding:0 10px;border:1px solid {{ tf.drvBorder }};border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A"><option value="">{{ L.w4_pick }}</option><sc-for list="{{ drivers }}" as="o"><option value="{{ o.id }}">{{ o.name }}</option></sc-for></select></label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_tripDate }}<input type="date" value="{{ tf.date }}" onChange="{{ tf.onDate }}" style="height:48px;padding:0 10px;border:1px solid {{ tf.dateBorder }};border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px"></input></label>
+            </div>
+            <sc-if value="{{ tf.capWarn }}"><div role="status" style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;background:#FFFBEB;border:1px solid #FDE68A;color:#92400E;font-size:13px;line-height:18px"><lucide-i name="triangle-alert" size="16" style="flex:none;margin-top:1px"></lucide-i><span>{{ tf.capText }}</span></div></sc-if>
+            <sc-if value="{{ tf.err }}"><span style="font-size:13px;color:#B91C1C">{{ L.w4_eTrip }}</span></sc-if>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ tf.create }}" style="flex:1 1 200px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer">{{ L.w4_create }}</button>
+              <button onClick="{{ tf.close }}" style="flex:0 1 auto;min-height:48px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer">{{ L.w4_cancel }}</button>
+            </div>
+          </div>
+        </sc-if>
+      </section>
+    </sc-if>
+    <sc-if value="{{ hasTrips }}">
+      <span style="font-size:15px;font-weight:600">{{ L.w4_trips }}</span>
+      <sc-for list="{{ trips }}" as="t">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">{{ t.no }}</span><span style="font-size:13px;color:#5B6B6A">{{ t.meta }}</span><span style="font-size:13px;color:#5B6B6A">{{ t.pl }}</span></div>
+            <sc-if value="{{ t.capWarn }}"><span style="display:inline-flex;align-items:flex-start;gap:6px;max-width:420px;padding:8px 10px;border-radius:8px;background:#FFFBEB;color:#92400E;font-size:12px;line-height:16px"><lucide-i name="triangle-alert" size="14" style="flex:none"></lucide-i>{{ t.capText }}</span></sc-if>
+          </div>
+          <sc-for list="{{ t.orders }}" as="o">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid #EEF2F4">
+              <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;font-weight:500">{{ o.cust }}</span><span style="font-size:12px;color:#5B6B6A"><span style="font-family:'JetBrains Mono',monospace">{{ o.no }}</span> · {{ L.w4_nak }} <span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ o.nak }}</span> · {{ o.places }}</span></span>
+              <span style="display:flex;gap:6px;flex-wrap:wrap"><button onClick="{{ o.printNak }}" style="min-height:48px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="printer" size="15"></lucide-i>{{ L.w4_nak }}</button><button onClick="{{ o.xlsx }}" style="min-height:48px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap"><lucide-i name="file-spreadsheet" size="15"></lucide-i>{{ L.w4_codesX }}</button></span>
+            </div>
+          </sc-for>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #EEF2F4;padding-top:10px">
+            <button onClick="{{ t.done }}" style="flex:1 1 200px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><lucide-i name="check-check" size="16"></lucide-i>{{ L.w4_docDone }}</button>
+            <button onClick="{{ t.waybill }}" style="flex:0 1 auto;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="printer" size="16"></lucide-i>{{ L.w4_waybill }}</button>
+            <button onClick="{{ t.undo }}" style="flex:0 1 auto;min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#B91C1C;cursor:pointer">{{ L.w4_undo }}</button>
+          </div>
+        </section>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ hasPickup }}">
+      <span style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><lucide-i name="user" size="16"></lucide-i>{{ L.w4_pickupW }}</span>
+      <sc-for list="{{ pickups }}" as="o">
+        <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <span style="display:flex;flex-direction:column;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600">{{ o.no }}</span><span style="font-size:14px;font-weight:500">{{ o.cust }}</span><span style="font-size:12px;color:#5B6B6A">{{ o.meta }}</span></span>
+          <span style="display:flex;gap:6px;flex-wrap:wrap">
+            <sc-if value="{{ o.noNak }}"><button onClick="{{ o.formalize }}" style="min-height:48px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer">{{ L.w4_formalize }}</button></sc-if>
+            <sc-if value="{{ o.hasNak }}"><button onClick="{{ o.printNak }}" style="min-height:48px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="printer" size="15"></lucide-i>{{ L.w4_nak }}</button><button onClick="{{ o.xlsx }}" style="min-height:48px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap"><lucide-i name="file-spreadsheet" size="15"></lucide-i>{{ L.w4_codesX }}</button><button onClick="{{ o.done }}" style="min-height:48px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="check-check" size="16"></lucide-i>{{ L.w4_docDone }}</button></sc-if>
+          </span>
+        </section>
+      </sc-for>
+    </sc-if>
+    <p style="margin:0;font-size:12px;line-height:16px;color:#5B6B6A;display:flex;align-items:center;gap:6px"><lucide-i name="info" size="13"></lucide-i>{{ L.w4_invLater }}</p>
+  </sc-if>
+
+  <sc-if value="{{ isIss }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ issEmpty }}"><div style="padding:40px 16px;text-align:center;color:#5B6B6A;font-size:14px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px">{{ L.w4_issEmpty }}</div></sc-if>
+    <sc-for list="{{ issues }}" as="x">
+      <article style="background:#FFFFFF;border:1px solid #FECACA;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+            <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;background:{{ x.sBg }};color:{{ x.sFg }};font-size:12px;font-weight:600">{{ x.stage }}</span><button onClick="{{ x.openCard }}" style="min-height:48px;padding:0 4px;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#0F766E;cursor:pointer">{{ x.no }}</button><span style="font-size:13px;color:#5B6B6A">{{ x.cust }}</span></span>
+            <span style="font-size:15px;line-height:20px;font-weight:600;color:#B91C1C">{{ x.reason }}</span>
+            <sc-if value="{{ x.hasNote }}"><span style="font-size:13px;line-height:18px;color:#172B2A;text-wrap:pretty">{{ x.note }}</span></sc-if>
+            <span style="font-size:12px;color:#5B6B6A">{{ x.meta }}</span>
+          </div>
+          <sc-if value="{{ x.closed }}"><button onClick="{{ x.open }}" style="min-height:48px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px"><lucide-i name="check" size="16"></lucide-i>{{ L.w4_resolve }}</button></sc-if>
+        </div>
+        <sc-if value="{{ x.editing }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_resNote }} *<textarea value="{{ x.val }}" onChange="{{ x.onVal }}" rows="2" style="padding:10px 12px;border:1px solid {{ x.border }};border-radius:8px;font:inherit;font-size:14px;resize:vertical;min-height:48px"></textarea></label>
+            <sc-if value="{{ x.err }}"><span style="font-size:13px;color:#B91C1C">{{ L.w4_eResNote }}</span></sc-if>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ x.save }}" style="flex:1 1 160px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer">{{ L.w4_resolve }}</button><button onClick="{{ x.cancel }}" style="flex:0 1 auto;min-height:48px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer">{{ L.w4_cancel }}</button></div>
+          </div>
+        </sc-if>
+      </article>
+    </sc-for>
+    <sc-if value="{{ hasResolved }}">
+      <span style="font-size:14px;font-weight:600;color:#5B6B6A">{{ L.w4_resolved }}</span>
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;display:flex;flex-direction:column">
+        <sc-for list="{{ resolved }}" as="x">
+          <div style="display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-bottom:1px solid #EEF2F4"><span style="font-size:13px;font-weight:500"><span style="font-family:'JetBrains Mono',monospace">{{ x.no }}</span> · {{ x.stage }} · {{ x.reason }}</span><span style="font-size:12px;color:#5B6B6A">{{ x.res }}</span></div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ retOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ retClose }}" style="position:fixed;inset:0;background:rgba(23,43,42,0.45);display:flex;align-items:center;justify-content:center;padding:12px;z-index:180">
+      <div role="dialog" aria-modal="true" aria-label="{{ L.w4_return }}" onClick="{{ stop }}" style="width:560px;max-width:100%;box-sizing:border-box;max-height:calc(100vh - 24px);overflow-y:auto;background:#FFFFFF;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 50px rgba(15,23,42,0.25)">
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:18px;font-weight:600">{{ L.w4_return }} · {{ c.no }}</span><span style="font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ L.w4_retD }}</span></div>
+        <span style="font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_retLines }} *</span>
+        <div style="display:flex;flex-direction:column;border:1px solid {{ ret.lnBorder }};border-radius:10px">
+          <sc-for list="{{ ret.lines }}" as="l">
+            <button role="checkbox" aria-checked="{{ l.on }}" onClick="{{ l.toggle }}" style="display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 12px;border:0;border-bottom:1px solid #EEF2F4;background:{{ l.bg }};font:inherit;text-align:left;cursor:pointer;color:#172B2A">
+              <span style="flex:none;width:24px;height:24px;border-radius:6px;border:1.5px solid {{ l.cbBorder }};background:{{ l.cbBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ l.on }}"><lucide-i name="check" size="16"></lucide-i></sc-if></span>
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:500">{{ l.name }}</span><span style="font-size:12px;color:#5B6B6A">{{ l.sub }}</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <span style="font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_retReason }} *</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{ ret.reasons }}" as="r"><button onClick="{{ r.pick }}" aria-pressed="{{ r.on }}" style="min-height:48px;padding:0 12px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }};color:{{ r.fg }};font:inherit;font-size:14px;font-weight:500;cursor:pointer">{{ r.label }}</button></sc-for>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5B6B6A">{{ L.w4_retNote }}<textarea value="{{ ret.note }}" onChange="{{ ret.onNote }}" rows="2" style="padding:10px 12px;border:1px solid {{ ret.noteBorder }};border-radius:8px;font:inherit;font-size:14px;resize:vertical;min-height:48px"></textarea></label>
+        <sc-if value="{{ ret.hasErr }}"><span role="alert" style="font-size:13px;color:#B91C1C">{{ ret.err }}</span></sc-if>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ ret.go }}" style="flex:1 1 180px;min-height:48px;padding:0 16px;border:0;border-radius:8px;background:#B91C1C;color:#FFFFFF;font:inherit;font-size:14px;font-weight:600;cursor:pointer">{{ L.w4_retGo }}</button>
+          <button onClick="{{ retClose }}" style="flex:0 1 auto;min-height:48px;padding:0 16px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer">{{ L.w4_cancel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;keeper&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Farrux Ismoilov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onOpen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const PRESETS = [15, 30, 60, 120];
+const TABS = [['mon', 'layout-dashboard', 'w4_tMon', null], ['time', 'timer', 'w4_tTime', 'orders.queue'], ['check', 'clipboard-check', 'w4_tChk', 'orders.check'], ['docs', 'file-text', 'w4_tDocs', 'orders.docs'], ['issues', 'triangle-alert', 'w4_tIss', 'orders.queue'],
+  ['recv', 'package-plus', 'w4_tRecv', 'receipt.accept'], ['trin', 'truck', 'w4_tTrIn', 'transfer.receive'], ['ret', 'undo-2', 'w4_tRet', 'stock.view']]; // T9-4a2: Ombor mudiri — kirim / ko'chirish qabuli, qaytgan tovar
+const WAIT = { recv: 120, trin: 240 };
+const toIso = d => { const a = String(d || '').split('.'); return a.length === 3 ? a[2] + '-' + a[1] + '-' + a[0] : ''; };
+const fromIso = d => { const a = String(d || '').split('-'); return a.length === 3 ? a[2] + '.' + a[1] + '.' + a[0] : ''; };
+const short = n => { const a = String(n || '').split(' '); return a.length > 1 ? a[1] + ' ' + a[0][0] + '.' : n; };
+class Component extends DCLogic {
+  state = { tab: 'mon', onlyLate: false, chkId: null, places: {}, plTried: false, ret: null, tv: {}, sel: {}, tf: null, iss: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  me() { return this.props.userName || 'Farrux Ismoilov'; }
+  br() { const b = this.props.branch; return b && b !== 'ALL' ? b : 'TSH'; }
+  componentDidMount() { this._t = setInterval(() => { this.applyUrl(); this.forceUpdate(); }, 1000); this.applyUrl(); }
+  componentWillUnmount() { clearInterval(this._t); }
+  applyUrl() { const D = this.D, u = D && D.store.urlF; if (!u || u.page !== 'home' || u.n === this._un) return; this._un = u.n; const t = u.params && u.params.tab; if (TABS.some(x => x[0] === t)) this.setState({ tab: t, chkId: null }); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  bump() { this.setState({ n: Date.now() }); }
+  openCard(no) { this.props.onOpen && this.props.onOpen('#orders?open=' + no); }
+  stLabel(k) { const L = this.L; return k === 'qWait' ? L.b_v_qWait : k === 'qTime' ? L.b_v_qTime : L['b_st_' + k] || k; }
+  dur(n) { const L = this.L; if (n >= 1440) return fill(L.w4_dDH, { d: Math.floor(n / 1440), h: Math.floor(n % 1440 / 60) }); if (n >= 60) return fill(L.w4_dHM, { h: Math.floor(n / 60), m: n % 60 }); return fill(L.w4_dM, { n }); }
+  tmr(si) { const L = this.L, late = si.left < 0; return { timer: late ? '+' + this.dur(-si.left) : fill(L.w4_leftD, { t: this.dur(si.left) }), tBg: late ? '#FEF2F2' : '#EFF6FF', tFg: late ? '#B91C1C' : '#1D4ED8', tIcon: late ? 'alarm-clock-off' : 'timer', late }; }
+  res(t, by, a, b, kind) { const L = this.L; if (!by) return null; const r = !t || t.diff == null ? '' : t.diff > 0 ? fill(L.w4_early, { n: t.diff }) : t.diff < 0 ? fill(L.w4_lateBy, { n: -t.diff }) : L.w4_onTime;
+    return { icon: kind === 'pk' ? 'scan-line' : 'scan-barcode', text: fill(kind === 'pk' ? L.w4_pickRes : L.w4_mkRes, { who: by, a: String(a || '').slice(11), b: String(b || '').slice(11), r }), fg: t && t.diff < 0 ? '#B91C1C' : '#172B2A' }; }
+  wait(at) { const D = this.D, t = D.pDT(String(at || '').replace(',', '')); return t == null ? 0 : Math.max(0, Math.round((D.pDT(D.nowStr()) - t) / 60000)); }
+  whCards(br, role) { const D = this.D, L = this.L, TONE = { danger: '#B91C1C', warning: '#B45309', info: '#1D4ED8', success: '#15803D', neutral: '#5B6B6A' };
+    const go = h => { const pg = String(h).replace(/^#/, '').split('?')[0]; return D.navCan(role, pg) ? () => this.props.onOpen && this.props.onOpen(h + (h.includes('?') ? '&' : '?') + 'branch=' + br) : null; };
+    const row = (icon, fg, text, val, h, sub) => { const pick = h ? go(h) : null; return { icon, fg, text, val, sub: sub || '', hasSub: !!sub, pick, off: !pick }; }, fM = n => fN(n) + " so'm";
+    const out = [], canStock = D.navCan(role, 'stock'), bs = D.batches().filter(b => b.branch === br && b.qty > 0), zs = t => bs.filter(b => b.zoneType === t), pos = a => fill(L.bh_posQty, { p: a.length, q: fN(a.reduce((x, b) => x + b.qty, 0)) });
+    if (canStock) { const qm = zs('quar').filter(b => /^QM/.test(b.doc || '') || b.qm); out.push({ title: L.bh_zonesT, rows: [row('package-open', TONE.info, L.bh_z_recv, pos(zs('recv')), '#stock?zone=recv'), row('shield-alert', TONE.warning, L.bh_z_quar, pos(zs('quar')), '#stock?zone=quar', fill(L.bh_z_quarQm, { n: qm.length })), row('package-check', TONE.success, L.bh_z_ship, fill(L.bh_ordN, { n: D.shipReady(br).length }), '#shipments')] }); }
+    const kr = (D.store.receipts || []).filter(r => r.branch === br && r.status === 'draft'), qmd = ((D.store.docs || {}).qm || []).filter(x => x.branch === br && x.status === 'draft'), tin = {}; D.transitList(null).forEach(x => { if (x.to && x.to.branch === br) tin[x.no] = 1; });
+    const trips = (D.store.trips || []).filter(t => t.branch === br && t.status === 'planned'), inv = D.bhInvDue(br);
+    const tasks = [[kr.length, 'package-plus', L.bh_tk_recv, '#receipt?status=draft'], [qmd.length, 'package-minus', L.bh_tk_qm, '#creturns?status=draft'], [Object.keys(tin).length, 'truck', L.bh_tk_tr, '#transfer?status=transit'], [trips.length, 'route', L.bh_tk_trips, '#shipments?tab=trips'], [inv.length, 'clipboard-check', L.bh_tk_inv, '#inventory']]
+      .filter(x => x[0] && D.navCan(role, x[3].replace(/^#/, '').split('?')[0])).map(x => row(x[1], TONE.info, fill(x[2], { n: x[0] }), fN(x[0]), x[3]));
+    out.push({ title: L.bh_tasksT, rows: tasks, empty: !tasks.length, emptyText: L.bh_tasksNone });
+    if (canStock) { const e30 = D.bhExpiry(br, 30), eW = D.bhExpiry(br), eo = D.bhExpiredOpen(br);
+      out.push({ title: L.bh_expT, rows: (eo.length ? [row('circle-x', TONE.danger, L.bh_expOpen, fill(L.bh_batchQty, { n: eo.length, q: fN(eo.reduce((a, b) => a + b.qty, 0)) }), '#stock?exp=expired')] : []).concat([row('calendar-clock', TONE.danger, L.bh_exp30, fill(L.bh_batchQty, { n: e30.n, q: fN(e30.qty) }), '#stock?exp=30'), row('calendar-clock', TONE.warning, L.bh_expW, fill(L.bh_batchQty, { n: eW.n, q: fN(eW.qty) }), '#expiry')]) }); }
+    if (D.can(role, 'suppliers.create')) { const sd = D.bhSupDebt(br), qy = ((D.store.docs || {}).qy || []).filter(x => x.branch === br && x.status === 'draft');
+      out.push({ title: L.bh_supT, rows: [row('receipt-text', TONE.neutral, L.bh_k_sup, fM(sd.total), '#sdebt'), row('calendar-clock', TONE.warning, L.bh_sup7, fM(sd.due7), '#sdebt?due=7'), row('package-minus', TONE.info, fill(L.bh_qyWait, { n: qy.length }), fN(qy.length), '#sreturns?status=draft')] }); }
+    return out.map(w => ({ empty: false, emptyText: '', ...w })); }
+  setTab(k) { this.setState({ tab: k, chkId: null, ret: null, tf: null, iss: null }); }
+  cardPick(o, st) { if (st === 'qWait') return this.setTab('time'); if (st === 'retwait' && o.ret && !o.ret.acc) return this.setTab('ret'); if (st === 'checking') return this.setState({ tab: 'check', chkId: o.id }); if (st === 'docs') return this.setTab('docs'); this.openCard(o.no); }
+  start(o) { const D = this.D; if (D.activeCheckOf(this.me(), o.branch)) return this.toast(this.L.w4_oneActive); const n = D.startCheck(o.id, this.me()); if (n) this.setState({ chkId: o.id, plTried: false }); }
+  finish(o) { const D = this.D, L = this.L, v = this.state.places[o.id], r = D.finishCheck(o.id, this.me(), v != null ? v : o.chk && o.chk.places);
+    if (r.err) return this.setState({ plTried: true }); this.setState({ chkId: null, plTried: false }); this.toast(fill(L.w4_tChecked, { no: o.no })); }
+  doReturn(o) { const D = this.D, L = this.L, r = this.state.ret, lis = Object.keys(r.lis).filter(k => r.lis[k]).map(Number);
+    if (!lis.length || !r.reason || (r.reason === 'other' && !r.note.trim())) return this.setState({ ret: { ...r, tried: true } });
+    const n = D.checkReturn(o.id, this.me(), lis, r.reason, r.note.trim()); if (!n) return; this.setState({ ret: null, chkId: null, tab: 'time' }); this.toast(fill(L.w4_tReturned, { no: o.no, n: lis.length })); }
+  xlsx(o) { const D = this.D, L = this.L, rows = D.dcCodes(o); if (!rows.length) return this.toast(L.w4_noCodes);
+    const out = [[L.w4_cCode, L.w4_cProd, L.w4_cBatch, L.mp_cKind || 'Tur', L.w4_cAt, L.w4_cWho]].concat(rows.map(r => [r.code, r.name, r.batch, r.kind === 'box' ? L.mk_box : L.mk_unit, r.at, r.by]));
+    D.xlsxDownload('Kodlar_' + o.no, out, o.no); this.toast(fill(L.w4_tXlsx, { n: rows.length })); }
+  print(form, no) { window.medixPrint && window.medixPrint(form, no); }
+  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  _rv() {
+    const D = this.D, L = this.L, s = this.state, p = this.props, me = this.me(), br = this.br(), narrow = !!p.narrow;
+    const base = { L, narrow, wide: !narrow, sub: '', clock: '', tabs: [], kpis: [], cols: [], colsN: [], times: [], chks: [], c: { res: [], rows: [] }, deliv: [], trips: [], pickups: [], issues: [], resolved: [], cars: [], drivers: [], tf: {}, ret: { lines: [], reasons: [] }, lateBtn: {}, stop: e => e.stopPropagation() };
+    if (!D || !D.monitorData) return base;
+    const custN = o => (D.custById(o.cust) || {}).name || '', md = D.monitorData(br), iss = D.openIssues(br), brName = (D.BRANCHES.find(b => b.code === br) || {}).name || br;
+    const cnt = k => ({ n: md[k].length, late: md[k].filter(x => x.late).length });
+    const all = D.STAGES.reduce((a, k) => a.concat(md[k]), []), allLate = all.filter(x => x.late).length;
+    const tc = { mon: { n: all.length, late: allLate }, time: cnt('qWait'), check: cnt('checking'), docs: cnt('docs'), issues: { n: iss.length, late: 0 } };
+    const role = p.role, okTab = t => { const x = TABS.find(y => y[0] === t); return !!x && (!x[3] || D.can(role, x[3])); }, tab = okTab(s.tab) ? s.tab : 'mon';
+    const sentAt = r => { const h = (r.history || []).filter(x => x.kind === 'send').pop(); return h ? h.time : r.date + ', 09:00'; };
+    const rcv = (D.store.receipts || []).filter(r => r.branch === br && r.status === 'draft' && r.sent), trIn = (D.store.transfers || []).filter(x => x.kind !== 'zk' && x.status === 'transit' && x.to && x.to.branch === br), rets = D.retList(br);
+    tc.recv = { n: rcv.length, late: rcv.filter(r => this.wait(sentAt(r)) > WAIT.recv).length }; tc.trin = { n: trIn.length, late: trIn.filter(x => this.wait(x.sentAt) > WAIT.trin).length }; const retP = rets.filter(o => !o.ret.acc); tc.ret = { n: retP.length, late: retP.filter(o => this.wait(o.ret.at) > 120).length };
+    const tabs = TABS.filter(x => !x[3] || D.can(role, x[3])).map(([k, icon, lk]) => { const on = tab === k, c = tc[k]; return { label: L[lk], icon, on, n: fN(c.n), late: fN(c.late), hasLate: c.late > 0, lateLabel: fill(L.w4_lateN, { n: c.late }), weight: on ? 600 : 500, fg: on ? '#0F766E' : '#5B6B6A', line: on ? 'inset 0 -2px 0 #0F766E' : 'none', pick: () => this.setTab(k) }; });
+    const out = { ...base, sub: fill(L.pp_sub, { who: me, br: brName }), clock: fill(L.w4_clock, { t: D.nowStr().slice(11) }), clk5: () => { D.clkAdd(5); this.forceUpdate(); }, clk15: () => { D.clkAdd(15); this.forceUpdate(); },
+      tabs, isMon: tab === 'mon', isTime: tab === 'time', isChkList: tab === 'check' && !s.chkId, isChkOne: false, isDocs: tab === 'docs', isIss: tab === 'issues', isList2: ['recv', 'trin'].includes(tab), isRet: tab === 'ret', rets: [], list2: [], retOpen: false, retClose: () => this.setState({ ret: null }) };
+    // Monitor
+    const card = x => { const o = x.o, si = x.si, st = si.stage, t = this.tmr(si), who = si.who === 'pickup' ? L.w4_pickupW : si.who || (['marking', 'checking'].includes(st) ? L.w4_nobody : '—');
+      return { no: o.no, cust: custN(o), who: st === 'loading' && si.trip ? who + ' · ' + si.trip : who, ...t, border: t.late ? '#FECACA' : '#E2E8F0', hasIss: x.issues > 0, iss: x.issues, issLabel: fill(L.w4_issN, { n: x.issues }), hasRw: D.rwOpen(o), rw: o.rw ? fill(L.w4_rwBadge, { n: o.rw.n }) : '', pick: () => this.cardPick(o, st) }; };
+    const cols = D.STAGES.map(k => { const list = md[k].filter(x => !s.onlyLate || x.late), c = cnt(k); return { key: k, label: this.stLabel(k), n: fN(c.n), late: fN(c.late), hasLate: c.late > 0, empty: !list.length, cards: list.map(card) }; });
+    Object.assign(out, { kpis: [{ label: L.w4_kActive, value: fN(all.length), fg: '#172B2A' }, { label: L.w4_kLate, value: fN(allLate), fg: allLate ? '#B91C1C' : '#172B2A' }, { label: L.w4_kIss, value: fN(iss.length), fg: iss.length ? '#B91C1C' : '#172B2A' }],
+      cols, colsN: cols.filter(c => !c.empty), monEmpty: cols.every(c => c.empty), onlyLate: s.onlyLate, toggleLate: () => this.setState(x => ({ onlyLate: !x.onlyLate })),
+      hasWh: tab === 'mon', whCards: tab === 'mon' ? this.whCards(br, role) : [],
+      lateBtn: s.onlyLate ? { border: '#B91C1C', bg: '#FEF2F2', fg: '#B91C1C', icon: 'square-check' } : { border: '#E2E8F0', bg: '#FFFFFF', fg: '#172B2A', icon: 'square' } });
+    if (out.isList2) { const late = m => m > 0, bdg = (m, lim) => ({ badge: m > lim ? '+' + this.dur(m - lim) : this.dur(m), tBg: m > lim ? '#FEF2F2' : '#EFF6FF', tFg: m > lim ? '#B91C1C' : '#1D4ED8', border: m > lim ? '#FECACA' : '#E2E8F0' }), open = h => () => p.onOpen && p.onOpen(h);
+      if (tab === 'recv') { out.list2Hint = L.w4_recvHint; out.list2EmptyText = L.w4_recvEmpty;
+        out.list2 = rcv.map(r => { const m = this.wait(sentAt(r)); return { no: r.no, title: r.supplier, meta: fill(L.w4_recvMeta, { n: r.lines.length, q: fN(r.lines.reduce((a, l) => a + (l.qty || 0), 0)), wh: r.wh, at: sentAt(r) }), ...bdg(m, WAIT.recv), icon: 'package-open', btn: L.w4_recvOpen, pick: open('#receipt?open=' + r.no), hasAlt: false }; }); }
+      if (tab === 'trin') { out.list2Hint = L.w4_trHint; out.list2EmptyText = L.w4_trEmpty;
+        out.list2 = trIn.map(x => { const m = this.wait(x.sentAt); return { no: x.no, title: x.from.wh + ' · ' + x.from.branch + ' → ' + x.to.wh, meta: fill(L.w4_trMeta, { n: x.lines.length, q: fN(x.lines.reduce((a, l) => a + (l.qty || 0), 0)), at: x.sentAt || '—', who: x.sentBy || x.createdBy || '' }), ...bdg(m, WAIT.trin), icon: 'package-check', btn: L.w4_trOpen, pick: open('#transfer?recv=' + x.no), hasAlt: true, altLabel: L.w4_openCard, alt: open('#transfer?open=' + x.no) }; }); }
+      out.list2Empty = !out.list2.length; }
+    if (tab === 'ret') { const rf = s.rf || {};
+      out.rets = rets.slice(0, 30).map(o => { const r = o.ret, acc = r.acc, f = rf[o.id] || { v: {}, reason: '', note: '', tried: false }, t = D.tripByNo(r.trip) || {}, dr = (D.driverById(t.driver) || {}).name || '—';
+        const val = k => f.v[k] != null ? f.v[k] : String(r.lines[k].qty), num = k => parseInt(val(k), 10), diffN = r.lines.reduce((a, l, k) => a + ((num(k) >= 0 ? num(k) : l.qty) - l.qty), 0), hasDiff = !acc && r.lines.some((l, k) => num(k) !== l.qty);
+        const upd = patch => this.setState(st => ({ rf: { ...(st.rf || {}), [o.id]: { ...f, ...patch } } }));
+        const errs = f.tried ? [hasDiff && !f.reason ? L.w4_eReason : '', hasDiff && f.reason === 'other' && !f.note.trim() ? L.w4_eNote : ''].filter(Boolean) : [];
+        return { no: o.no, cust: custN(o), meta: fill(L.w4_retMeta2, { t: r.trip || '—', d: dr, r: r.reason || '—', at: r.at }), pending: !acc, accepted: !!acc, border: !acc && this.wait(r.at) > 120 ? '#FECACA' : '#E2E8F0',
+          badge: acc ? L.w4_inQuar : L.w4_returning, bIcon: acc ? 'shield-alert' : 'undo-2', bBg: acc ? '#F0FDF4' : '#FFFBEB', bFg: acc ? '#15803D' : '#B45309',
+          lines: r.lines.map((l, k) => { const p0 = D.prodById(l.pid) || {}, fv = acc ? (acc.facts && acc.facts[k] != null ? acc.facts[k] : l.qty) : null; return { name: p0.name || '', batch: l.batch, reason: l.reason || r.reason || '', exp: fN(l.qty), edit: !acc, done: !!acc, val: val(k), border: num(k) !== l.qty ? '#B45309' : '#E2E8F0',
+            onVal: e => upd({ v: { ...f.v, [k]: String(e.target.value || '').replace(/\D/g, '').slice(0, 5) } }), factText: fill(L.w4_retGot, { n: fN(fv) }), factFg: fv !== l.qty ? '#B91C1C' : '#15803D' }; }),
+          hasDiff, diffText: fill(L.w4_retDiff, { n: (diffN > 0 ? '+' : '') + fN(diffN) }), note: f.note, onNote: e => upd({ note: e.target.value }), noteBorder: f.tried && hasDiff && f.reason === 'other' && !f.note.trim() ? '#B91C1C' : '#E2E8F0',
+          reasons: D.RET_DIFF.map(k => { const on = f.reason === k; return { label: L['w4_rd_' + k], on, border: on ? '#B91C1C' : '#E2E8F0', bg: on ? '#FEF2F2' : '#FFFFFF', fg: on ? '#B91C1C' : '#172B2A', pick: () => upd({ reason: k }) }; }),
+          hasErr: errs.length > 0, err: errs.join(' · '), openCard: () => this.openCard(o.no), accText: acc ? fill(L.w4_retAccBy, { who: acc.by, at: acc.at }) : '',
+          accept: () => { const facts = {}; r.lines.forEach((l, k) => { facts[k] = num(k) >= 0 ? num(k) : l.qty; }); const x = D.retAccept(o.id, me, facts, hasDiff ? f.reason : '', f.note); if (x.err) return upd({ tried: true }); this.setState(st => { const n = { ...(st.rf || {}) }; delete n[o.id]; return { rf: n }; }); this.toast(fill(L.w4_tRetAcc, { no: o.no })); } }; });
+      out.retEmpty = !out.rets.length; }
+    if (tab === 'time') { const canQ = D.can(p.role, 'orders.queue');
+      out.times = md.qWait.map(x => { const o = x.o, v = s.tv[o.id] || { p: '', m: '', tried: false }, t = this.tmr(x.si);
+        const set = (k, val) => this.setState(st => ({ tv: { ...st.tv, [o.id]: { ...(st.tv[o.id] || { p: '', m: '', tried: false }), [k]: val } } }));
+        const fld = (label, key) => { const val = v[key], bad = v.tried && !(parseInt(val, 10) > 0); return { label, val, aria: label, border: bad ? '#B91C1C' : '#E2E8F0', onChange: e => set(key, String(e.target.value || '').replace(/\D/g, '').slice(0, 4)),
+          presets: PRESETS.map(n => { const on = val === String(n); return { label: String(n), on, border: on ? '#0D9488' : '#E2E8F0', bg: on ? '#F0FDFA' : '#FFFFFF', fg: on ? '#0F766E' : '#172B2A', pick: () => set(key, String(n)) }; }) }; };
+        return { no: o.no, cust: custN(o), meta: fill(L.pp_lines, { n: o.lines.length, q: fN(o.lines.reduce((a, l) => a + (l.qty || 0), 0)) }), ...t, border: t.late ? '#FECACA' : '#E2E8F0', hasRw: D.rwOpen(o), rw: o.rw ? fill(L.w4_rwBadge, { n: o.rw.n }) : '',
+          fields: [fld(L.q9_tmPick, 'p'), fld(L.q9_tmMark, 'm')], err: v.tried && !(parseInt(v.p, 10) > 0 && parseInt(v.m, 10) > 0), openCard: () => this.openCard(o.no),
+          save: () => { const pm = parseInt(v.p, 10), mm = parseInt(v.m, 10); if (!canQ) return; if (!(pm > 0) || !(mm > 0)) return set('tried', true); if (D.setQueueTime(o.id, pm, mm, me)) { this.setState(st => { const tv = { ...st.tv }; delete tv[o.id]; return { tv }; }); this.toast(fill(L.q9_tSaved, { no: o.no })); } } }; });
+      out.timeEmpty = !out.times.length; }
+    const canChk = D.can(p.role, 'orders.check'), act = D.activeCheckOf(me, br);
+    if (tab === 'check' && !s.chkId) {
+      out.chks = md.checking.map(x => { const o = x.o, by = D.checkerOf(o), mine = by === me, busy = !!by && !mine, t = this.tmr(x.si);
+        return { no: o.no, cust: custN(o), meta: fill(L.pp_lines, { n: o.lines.length, q: fN(o.lines.reduce((a, l) => a + (l.qty || 0), 0)) }) + (o.att && o.att.length ? ' · ' + fill(L.w4_attN, { n: o.att.length + 1 }) : ''), ...t, bg: busy ? '#F5F7F8' : '#FFFFFF', border: t.late ? '#FECACA' : '#E2E8F0', busy, busyText: fill(L.w4_busy, { n: short(by) }),
+          hasIss: x.issues > 0, iss: x.issues, mine, canStart: !by && !act && canChk, blocked: !by && !!act, start: () => this.start(o), open: () => this.setState({ chkId: o.id }), view: () => this.setState({ chkId: o.id }) }; });
+      out.chkEmpty = !out.chks.length; }
+    if (tab === 'check' && s.chkId) { const o = D.orderById(s.chkId);
+      if (o && o.status === 'checking') { const by = D.checkerOf(o), mine = by === me && !o.chk.end, ls = D.chkLines(o), si = D.stageInfo(o), t = this.tmr(si), pk = o.pk || {}, mk = o.mk || {};
+        const left = ls.filter(l => !l.ok).length, plv = s.places[o.id] != null ? s.places[o.id] : o.chk && o.chk.places != null ? String(o.chk.places) : '', plBad = s.plTried && !(parseInt(plv, 10) > 0);
+        const res = [this.res(D.pickTimer(o), pk.by, pk.start, pk.end, 'pk'), mk.none ? { icon: 'scan-barcode', text: fill(L.w4_mkNoneRes, { who: mk.by, a: String(mk.end || '').slice(11) }), fg: '#172B2A' } : this.res(D.markTimer(o), mk.by, mk.start, mk.end, 'mk')].filter(Boolean)
+          .concat(o.att && o.att.length ? [{ icon: 'rotate-ccw', text: fill(L.w4_attN, { n: o.att.length + 1 }) + ' · ' + (o.rw ? o.rw.names.join(', ') : ''), fg: '#B45309' }] : [], (o.issues || []).filter(x => !x.res).map(x => ({ icon: 'triangle-alert', text: (L['pp_r_' + x.reason] || L['mp_r_' + x.reason] || x.reason) + (x.note ? ' — ' + x.note : '') + ' · ' + x.by, fg: '#B91C1C' })));
+        out.isChkOne = true;
+        out.c = { no: o.no, cust: custN(o), meta: (o.delivery === 'pickup' ? L.w4_pickupW : L.w4_deliv) + ' · ' + fill(L.pp_lines, { n: o.lines.length, q: fN(o.lines.reduce((a, l) => a + (l.qty || 0), 0)) }), ...t, busy: !!by && !mine, busyText: fill(L.w4_busy, { n: by }), mine, ro: !mine, res,
+          canStart: !by && !act && canChk, start: () => this.start(o), openCard: () => this.openCard(o.no),
+          leftTxt: left ? fill(L.w4_leftN, { n: left }) : L.w4_cOk + ' ✓', leftErr: s.plTried && left > 0, places: plv, plErr: plBad, plBorder: plBad ? '#B91C1C' : '#E2E8F0',
+          onPlaces: e => { const v = String(e.target.value || '').replace(/\D/g, '').slice(0, 4); this.setState(st => ({ places: { ...st.places, [o.id]: v } })); },
+          allOk: () => { ls.forEach(l => { if (!l.ok) D.checkSet(o.id, me, { li: l.li, on: true }); }); this.bump(); }, finBg: !left && parseInt(plv, 10) > 0 ? '#0F766E' : '#5B8F8A', finish: () => this.finish(o),
+          ret: () => this.setState({ ret: { lis: {}, reason: '', note: '', tried: false } }),
+          rows: ls.map(l => ({ code: l.p.code || '', name: l.p.name || '', qty: fN(l.qty), batch: l.picks.map(x => x.batch).join(', ') || '—', dev: !!l.dev, zone: l.zone, mark: l.mark ? fN(l.got) + ' / ' + fN(l.need) + (l.got >= l.need ? ' ✓' : '') : L.w4_noMark, mFg: l.mark ? (l.got >= l.need ? '#15803D' : '#B91C1C') : '#647574', mW: l.mark ? 600 : 400,
+            hasShort: l.short > 0, short: fill(L.w4_short, { o: fN(l.ordered), n: fN(l.short) }), ok: l.ok, ro: !mine, cbBorder: l.ok ? '#0F766E' : '#CBD5D3', cbBg: l.ok ? '#0F766E' : '#FFFFFF', toggle: () => { if (mine) D.checkSet(o.id, me, { li: l.li, on: !l.ok }); this.bump(); } })) };
+        if (s.ret) { const r = s.ret, errs = r.tried ? [!Object.values(r.lis).some(Boolean) ? L.w4_eLines : '', !r.reason ? L.w4_eReason : '', r.reason === 'other' && !r.note.trim() ? L.w4_eNote : ''].filter(Boolean) : [];
+          out.retOpen = true;
+          out.ret = { lnBorder: r.tried && !Object.values(r.lis).some(Boolean) ? '#B91C1C' : '#E2E8F0', note: r.note, noteBorder: r.tried && r.reason === 'other' && !r.note.trim() ? '#B91C1C' : '#E2E8F0', hasErr: errs.length > 0, err: errs.join(' · '),
+            onNote: e => this.setState({ ret: { ...r, note: e.target.value } }), go: () => this.doReturn(o),
+            lines: ls.map(l => { const on = !!r.lis[l.li]; return { on, name: l.p.name, sub: fN(l.qty) + ' · ' + (l.picks.map(x => x.batch).join(', ') || '—') + (l.short ? ' · ' + fill(L.w4_short, { o: fN(l.ordered), n: fN(l.short) }) : ''), bg: on ? '#FEF2F2' : '#FFFFFF', cbBorder: on ? '#B91C1C' : '#CBD5D3', cbBg: on ? '#B91C1C' : '#FFFFFF', toggle: () => this.setState({ ret: { ...r, lis: { ...r.lis, [l.li]: !on } } }) }; }),
+            reasons: D.CHK_REASONS.map(k => { const on = r.reason === k; return { label: L['w4_r_' + k], on, border: on ? '#B91C1C' : '#E2E8F0', bg: on ? '#FEF2F2' : '#FFFFFF', fg: on ? '#B91C1C' : '#172B2A', pick: () => this.setState({ ret: { ...r, reason: k } }) }; }) }; } }
+      else out.isChkList = true, out.chks = [], out.chkEmpty = false, setTimeout(() => this.state.chkId && this.setState({ chkId: null }), 0); }
+    if (tab === 'docs') { const canDocs = D.can(p.role, 'orders.docs'), docs = md.docs.map(x => x.o).concat([]), plc = o => D.placesOf(o);
+      const dl = md.docs.filter(x => x.o.delivery !== 'pickup' && !D.dcTripOf(x.o.id)), sel = dl.filter(x => s.sel[x.o.id]), selP = sel.reduce((a, x) => a + plc(x.o), 0);
+      out.deliv = dl.map(x => { const o = x.o, c = D.custAt(o.cust, o.branch) || {}, on = !!s.sel[o.id], t = this.tmr(x.si); return { no: o.no, cust: c.name || custN(o), addr: [c.region, c.address].filter(Boolean).join(', ') || '—', date: o.delivDate || '—', places: fill(L.w4_cap, { n: fN(plc(o)) }), ...t, on, cbBorder: on ? '#0F766E' : '#CBD5D3', cbBg: on ? '#0F766E' : '#FFFFFF', toggle: () => this.setState(st => ({ sel: { ...st.sel, [o.id]: !on } })) }; });
+      out.hasDeliv = dl.length > 0; out.selTxt = fill(L.w4_selN, { n: sel.length, p: fN(selP) }); out.tripBtnBg = sel.length ? '#0F766E' : '#5B8F8A';
+      out.openTrip = () => { if (!sel.length || !canDocs) return; this.setState({ tf: s.tf || { car: '', driver: '', date: toIso(D.TODAY), tried: false } }); };
+      const cars = D.fleetCars(br); out.cars = cars.map(c => ({ no: c.no, label: c.no + ' · ' + c.model + ' · ' + fill(L.w4_cap, { n: c.boxes }) }));
+      out.drivers = D.tripDrivers(br).map(d => ({ id: String(d.id), name: d.name }));
+      out.tripOpen = !!s.tf && sel.length > 0;
+      if (s.tf) { const f = s.tf, car = cars.find(c => c.no === f.car), over = car ? selP - car.boxes : 0, upd = patch => this.setState({ tf: { ...f, ...patch } });
+        out.tf = { car: f.car, driver: f.driver, date: f.date, onCar: e => upd({ car: e.target.value }), onDriver: e => upd({ driver: e.target.value }), onDate: e => upd({ date: e.target.value }),
+          carBorder: f.tried && !f.car ? '#B91C1C' : '#E2E8F0', drvBorder: f.tried && !f.driver ? '#B91C1C' : '#E2E8F0', dateBorder: f.tried && !f.date ? '#B91C1C' : '#E2E8F0', err: f.tried && (!f.car || !f.driver || !f.date),
+          capWarn: over > 0, capText: fill(L.w4_capWarn, { p: fN(selP), c: car ? car.boxes : 0, d: fN(over) }), close: () => this.setState({ tf: null }),
+          create: () => { if (!f.car || !f.driver || !f.date) return upd({ tried: true }); const t = D.docsTrip(sel.map(x => x.o.id), { car: f.car, driver: +f.driver, date: fromIso(f.date) }, me); if (!t) return; this.setState({ tf: null, sel: {} }); this.toast(fill(L.w4_tTrip, { t: t.no })); } }; }
+      const trips = (D.store.trips || []).filter(t => t.branch === br && t.status === 'draft' && t.src === 'docs');
+      out.trips = trips.map(t => { const os = t.stops.map(st => D.orderById(st.oid)).filter(Boolean), dr = D.driverById(t.driver) || {}, car = cars.find(c => c.no === t.car) || D.carByNo(t.car) || {}, pl = os.reduce((a, o) => a + plc(o), 0), cap = car.boxes || 0;
+        return { no: t.no, meta: fill(L.w4_tripMeta, { car: t.car + (car.model ? ' · ' + car.model : ''), drv: dr.name || '—', d: t.date }), pl: fill(L.w4_tripPl, { n: os.length, p: fN(pl) }) + (cap ? ' / ' + fill(L.w4_cap, { n: cap }) : ''), capWarn: cap > 0 && pl > cap, capText: fill(L.w4_capWarn, { p: fN(pl), c: cap, d: fN(pl - cap) }),
+          orders: os.map(o => ({ no: o.no, cust: custN(o), nak: (o.dc && o.dc.nak) || '—', places: fill(L.w4_cap, { n: fN(plc(o)) }), printNak: () => o.dc && this.print('nak', o.dc.nak), xlsx: () => this.xlsx(o) })),
+          waybill: () => this.print('trip', t.no), done: () => { if (D.docsDone(t.no, me)) this.toast(L.w4_tDoc); this.bump(); }, undo: () => { if (D.docsUndo(t.no, me)) this.toast(L.w4_tUndo); this.bump(); } }; });
+      out.hasTrips = trips.length > 0;
+      const pu = md.docs.filter(x => x.o.delivery === 'pickup');
+      out.pickups = pu.map(x => { const o = x.o, nak = o.dc && o.dc.nak; return { no: o.no, cust: custN(o), meta: fill(L.w4_cap, { n: fN(plc(o)) }) + ' · ' + (o.delivDate || '') + (nak ? ' · ' + L.w4_nak + ' ' + nak : ''), noNak: !nak, hasNak: !!nak,
+        formalize: () => { if (canDocs) D.docsPickup(o.id, me); this.bump(); }, printNak: () => this.print('nak', nak), xlsx: () => this.xlsx(o), done: () => { if (D.docsDone(o.id, me)) this.toast(L.w4_tDoc); this.bump(); } }; });
+      out.hasPickup = pu.length > 0; out.docsEmpty = !dl.length && !trips.length && !pu.length; }
+    if (tab === 'issues') { const stg = k => ({ stage: L['w4_stage_' + k] || L.w4_stage_pick, sBg: k === 'mark' ? '#F5F3FF' : k === 'load' || k === 'ret' ? '#FFFBEB' : '#EFF6FF', sFg: k === 'mark' ? '#6D28D9' : k === 'load' || k === 'ret' ? '#B45309' : '#1D4ED8' }), rL = r => L['pp_r_' + r] || L['mp_r_' + r] || L['w4_r_' + r] || r;
+      out.issues = iss.map(x => { const key = x.o.id + ':' + x.i, ed = s.iss && s.iss.key === key, f = ed ? s.iss : null, bad = f && f.tried && !f.val.trim();
+        return { ...stg(x.stage), no: x.o.no, cust: custN(x.o), reason: rL(x.x.reason), hasNote: !!x.x.note, note: x.x.note, meta: x.x.by + ' · ' + x.x.at, openCard: () => this.openCard(x.o.no), closed: !ed, editing: ed, open: () => this.setState({ iss: { key, val: '', tried: false } }),
+          val: f ? f.val : '', border: bad ? '#B91C1C' : '#E2E8F0', err: !!bad, onVal: e => this.setState({ iss: { ...s.iss, val: e.target.value } }), cancel: () => this.setState({ iss: null }),
+          save: () => { if (!f.val.trim()) return this.setState({ iss: { ...f, tried: true } }); if (D.issueResolve(x.o.id, x.i, me, f.val)) { this.setState({ iss: null }); this.toast(L.w4_tResolved); } } }; });
+      const done = []; D.store.orders.forEach(o => { if (o.branch !== br) return; (o.issues || []).forEach(x => { if (x.res) done.push({ o, x }); }); });
+      out.resolved = done.sort((a, b) => D.pDT(b.x.res.at) - D.pDT(a.x.res.at)).slice(0, 20).map(({ o, x }) => ({ no: o.no, stage: L['w4_stage_' + (x.stage || 'pick')] || L.w4_stage_pick, reason: rL(x.reason), res: fill(L.w4_resBy, { who: x.res.by, at: x.res.at, n: x.res.note }) }));
+      out.hasResolved = out.resolved.length > 0; out.issEmpty = !iss.length; }
+    return out;
+  }
+}
+</script>
+</body>
+</html>

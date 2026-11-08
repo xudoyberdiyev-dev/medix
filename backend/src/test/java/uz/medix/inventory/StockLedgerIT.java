@@ -262,4 +262,152 @@ class StockLedgerIT {
         mvc.perform(get("/api/stock").cookie(accountant)).andExpect(status().isForbidden());
         mvc.perform(get("/api/stock/export").cookie(accountant)).andExpect(status().isForbidden());
     }
+
+    @Test
+    void stockApiSorting() throws Exception {
+        Place p = place();
+        String tag = "srt" + java.util.UUID.randomUUID().toString().substring(0, 5);
+        long a = product("Alfa qoldiq " + tag);
+        long b = product("Beta qoldiq " + tag);
+        long ba = batch(a, "SA-1", false);
+        long bb = batch(b, "SB-1", false);
+        tx.executeWithoutResult(s -> ledger.post(new DocRef("BQ", 900_000 + ThreadLocalRandom.current().nextInt(99_999), "BQ-TST-" + tag), List.of(Move.in(p.mainZone(), ba, 7), Move.in(p.mainZone(), bb, 2))));
+        Cookie admin = loginAs("ADMIN", null);
+        String branch = String.valueOf(p.branchId());
+        mvc.perform(get("/api/stock").param("q", tag).param("branchId", branch).cookie(admin))
+                .andExpect(jsonPath("$.items[*].productId").value(org.hamcrest.Matchers.contains((int) a, (int) b)));
+        mvc.perform(get("/api/stock").param("q", tag).param("branchId", branch).param("sort", "NAME").param("desc", "true").cookie(admin))
+                .andExpect(jsonPath("$.items[*].productId").value(org.hamcrest.Matchers.contains((int) b, (int) a)));
+        mvc.perform(get("/api/stock").param("q", tag).param("branchId", branch).param("sort", "QTY").cookie(admin))
+                .andExpect(jsonPath("$.items[*].qty").value(org.hamcrest.Matchers.contains(2, 7)));
+        for (String sort : List.of("CODE", "EXPIRY", "WAREHOUSE")) {
+            mvc.perform(get("/api/stock").param("q", tag).param("branchId", branch).param("sort", sort).cookie(admin))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.total").value(2));
+        }
+        byte[] file = mvc.perform(get("/api/stock/export").param("q", tag).param("branchId", branch).param("sort", "QTY").param("desc", "true")
+                        .cookie(admin))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var wb = org.apache.poi.ss.usermodel.WorkbookFactory.create(new java.io.ByteArrayInputStream(file))) {
+            assertThat(wb.getSheetAt(0).getRow(1).getCell(1).getStringCellValue()).isEqualTo("Alfa qoldiq " + tag);
+        }
+    }
+
+    @Test
+    void productViewAggregatesReservedClosedAndSummary() throws Exception {
+        Place p = place();
+        long prod = product("Jamlanma qoldiq sinov");
+        long b1 = batch(prod, "J-1", false);
+        LocalDate soon = LocalDate.now(java.time.ZoneId.of("Asia/Tashkent")).plusDays(10);
+        long b2 = tx.execute(s -> ledger.createBatch(prod, "J-2", null, soon, Money.of("1000.00"), false, "BQ", null));
+        tx.executeWithoutResult(s -> ledger.post(new DocRef("BQ", 21, "BQ-TST-000021"),
+                List.of(Move.in(p.mainZone(), b1, 5), Move.in(p.quarantineZone(), b2, 3))));
+        jdbc.sql("""
+                INSERT INTO stock_reservation (doc_type, doc_id, doc_line_id, doc_number, zone_id, batch_id, product_id, warehouse_id, qty)
+                SELECT 'BY', 1, 1, 'BY-TST-1', z.id, :b, :p, z.warehouse_id, 2 FROM zone z WHERE z.id = :z""")
+                .param("b", b1)
+                .param("p", prod)
+                .param("z", p.mainZone())
+                .update();
+        String br = String.valueOf(p.branchId());
+        Cookie admin = loginAs("ADMIN", null);
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).cookie(admin))
+                .andDo(r -> {
+                    if (r.getResponse().getStatus() >= 500) {
+                        throw new AssertionError("500: " + r.getResolvedException(), r.getResolvedException());
+                    }
+                })
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.totalQty").value(8))
+                .andExpect(jsonPath("$.items[0].total").value(8))
+                .andExpect(jsonPath("$.items[0].reserved").value(2))
+                .andExpect(jsonPath("$.items[0].available").value(3))
+                .andExpect(jsonPath("$.items[0].closed").value(3))
+                .andExpect(jsonPath("$.items[0].batches").value(2))
+                .andExpect(jsonPath("$.items[0].nearestDays").value(10))
+                .andExpect(jsonPath("$.items[0].costSum").value("65502.50"))
+                .andExpect(jsonPath("$.items[0].saleSum").value("0.00"));
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).param("zoneType", "QUARANTINE").cookie(admin))
+                .andExpect(jsonPath("$.items[0].total").value(3));
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).param("expiry", "D0_30", "EXPIRED")
+                        .cookie(admin))
+                .andExpect(jsonPath("$.items[0].total").value(3));
+        mvc.perform(get("/api/stock/products").param("q", "J-2").param("branchId", br).cookie(admin))
+                .andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).param("stock", "ALL_RESERVED").cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/stock").param("q", "J-1").param("branchId", br).cookie(admin))
+                .andExpect(jsonPath("$.items[0].reserved").value(2))
+                .andExpect(jsonPath("$.items[0].sourceType").value("BQ"))
+                .andExpect(jsonPath("$.items[0].receiptNumber").doesNotExist());
+        mvc.perform(get("/api/stock/summary").param("branchId", br).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.products").value(1))
+                .andExpect(jsonPath("$.near").value(1))
+                .andExpect(jsonPath("$.quarantine").value(1))
+                .andExpect(jsonPath("$.expired").value(0))
+                .andExpect(jsonPath("$.value").value("65502.50"))
+                .andExpect(jsonPath("$.warehouses[0].count").value(2))
+                .andExpect(jsonPath("$.suppliers[0].id").value(0));
+
+        mvc.perform(get("/api/stock/tree").param("branchId", br).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[0].level").value("BRANCH"))
+                .andExpect(jsonPath("$[0].qty").value(8))
+                .andExpect(jsonPath("$[0].value").value("65502.50"))
+                .andExpect(jsonPath("$[1].level").value("WAREHOUSE"))
+                .andExpect(jsonPath("$[1].products").value(1))
+                .andExpect(jsonPath("$[2].level").value("ZONE"));
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").cookie(keeper))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].costSum").doesNotExist())
+                .andExpect(jsonPath("$.costSum").doesNotExist());
+        mvc.perform(get("/api/stock/summary").cookie(keeper)).andExpect(jsonPath("$.value").doesNotExist());
+        mvc.perform(get("/api/stock/tree").cookie(keeper)).andExpect(jsonPath("$[0].value").doesNotExist());
+        mvc.perform(get("/api/stock/batch").param("batchId", String.valueOf(b1)).param("zoneId", String.valueOf(p.mainZone())).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.batchNumber").value("J-1"))
+                .andExpect(jsonPath("$.zoneType").value("MAIN"))
+                .andExpect(jsonPath("$.qty").value(5))
+                .andExpect(jsonPath("$.reserved").value(2))
+                .andExpect(jsonPath("$.available").value(3))
+                .andExpect(jsonPath("$.closed").value(0))
+                .andExpect(jsonPath("$.cost").exists())
+                .andExpect(jsonPath("$.moves.length()").value(1))
+                .andExpect(jsonPath("$.moves[0].docNumber").value("BQ-TST-000021"))
+                .andExpect(jsonPath("$.moves[0].qty").value(5))
+                .andExpect(jsonPath("$.moves[0].balance").value(5));
+        mvc.perform(get("/api/stock/batch").param("batchId", String.valueOf(b2)).param("zoneId", String.valueOf(p.quarantineZone())).cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.closed").value(3))
+                .andExpect(jsonPath("$.available").value(0))
+                .andExpect(jsonPath("$.cost").doesNotExist());
+        mvc.perform(get("/api/stock/batch").param("batchId", String.valueOf(b2)).param("zoneId", String.valueOf(p.mainZone())).cookie(admin))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/stock/expiry-groups").param("branchId", br).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[0].group").value("EXPIRED"))
+                .andExpect(jsonPath("$[0].batches").value(0))
+                .andExpect(jsonPath("$[1].group").value("D30"))
+                .andExpect(jsonPath("$[1].batches").value(1))
+                .andExpect(jsonPath("$[1].qty").value(3))
+                .andExpect(jsonPath("$[1].value").value("3000.00"))
+                .andExpect(jsonPath("$[2].batches").value(0));
+        mvc.perform(get("/api/stock/expiry-groups").param("branchId", br).cookie(keeper)).andExpect(jsonPath("$[1].value").doesNotExist());
+        mvc.perform(get("/api/stock").param("branchId", br).param("q", "jamlanma qoldiq").param("expiringWithinDays", "30")
+                        .param("minDaysLeft", "0").cookie(admin))
+                .andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/api/stock").param("branchId", br).param("q", "jamlanma qoldiq").param("expiringWithinDays", "-1").cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/stock").param("branchId", br).param("q", "jamlanma qoldiq").param("expiringWithinDays", "90")
+                        .param("minDaysLeft", "31").cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
+        Cookie accountant = loginAs("ACCOUNTANT", null);
+        mvc.perform(get("/api/stock/products").cookie(accountant)).andExpect(status().isForbidden());
+    }
 }

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="DocumentHeader" parent-label="{{ L.iv_title }}" on-parent="{{ back }}" title="{{ title }}" number="{{ dNumber }}" badge="{{ dBadge }}" status="{{ dStatus }}" steps="{{ dSteps }}" sub="{{ dSub }}" autosave="{{ autosave }}" primary="{{ dPrimary }}" secondary="{{ dSecondary }}" more="{{ dMore }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
+  <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+  <dc-import name="SavedViews" tabs="{{ docTabs }}" hint-size="100%,38px"></dc-import>
+
+  <sc-if value="{{ tabDoc }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:grid;grid-template-columns:repeat({{ headCols }},minmax(0,1fr));gap:16px 20px;align-items:start">
+          <dc-import name="Select" label="{{ L.iv_hWh }}" required="{{ true }}" options="{{ whOpts }}" value="{{ whVal }}" on-change="{{ setWh }}" placeholder="{{ L.qt_choose }}" error="{{ whErr }}" hint-size="100%,56px"></dc-import>
+          <label style="display:flex;flex-direction:column;gap:6px;min-width:0">
+            <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.qt_hDate }}</span>
+            <input value="{{ dDate }}" onChange="{{ onDate }}" placeholder="kk.oo.yyyy" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+          </label>
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+            <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.iv_hMode }}</span>
+            <div style="display:flex;gap:2px;padding:2px;border-radius:8px;background:#EEF2F4">
+              <sc-for list="{{ modes }}" as="m"><button onClick="{{ m.pick }}" aria-pressed="{{ m.on }}" style="flex:1;height:30px;padding:0 8px;border:0;border-radius:6px;background:{{ m.bg }};box-shadow:{{ m.sh }};color:{{ m.fg }};font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap">{{ m.label }}</button></sc-for>
+            </div>
+          </div>
+        </div>
+        <sc-if value="{{ showZones }}">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.iv_hZones }}<sc-if value="{{ zonesReq }}"> <span style="color:#B91C1C">*</span></sc-if></span>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ zoneChips }}" as="z"><button onClick="{{ z.toggle }}" aria-pressed="{{ z.on }}" title="{{ z.tip }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid {{ z.border }};border-radius:16px;background:{{ z.bg }};color:{{ z.fg }};font-size:13px;font-weight:500;cursor:pointer"><lucide-i name="{{ z.icon }}" size="14"></lucide-i>{{ z.label }}<span style="color:#647574;font-weight:400">{{ z.n }}</span></button></sc-for>
+            </div>
+            <sc-if value="{{ zoneErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ zoneErr }}</span></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ showProducts }}">
+          <div style="display:grid;grid-template-columns:repeat({{ prodCols }},minmax(0,1fr));gap:16px 20px;align-items:start">
+            <dc-import name="Select" label="{{ L.iv_hAddProd }}" required="{{ true }}" options="{{ prodOpts }}" value="{{ none }}" on-change="{{ addProd }}" placeholder="{{ L.iv_pickProd }}" searchable="{{ true }}" search-ph="{{ L.qt_search }}" error="{{ prodErr }}" hint-size="100%,56px"></dc-import>
+            <dc-import name="Select" label="{{ L.iv_hCat }}" options="{{ catOpts }}" value="{{ none }}" on-change="{{ addCat }}" placeholder="{{ L.iv_pickCat }}" hint-size="100%,56px"></dc-import>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ prodChips }}" as="c"><span style="display:flex;align-items:center;gap:4px;height:30px;padding:0 4px 0 10px;border:1px solid #0D9488;border-radius:15px;background:#DDF5EE;color:#0F766E;font-size:13px;font-weight:500">{{ c.label }}<button onClick="{{ c.remove }}" aria-label="{{ L.p_fRemove }}" style="width:22px;height:22px;border:0;border-radius:11px;background:transparent;color:#0F766E;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(13,148,136,0.15)"><lucide-i name="x" size="14"></lucide-i></button></span></sc-for>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.iv_hComm }} <span style="color:#B91C1C">*</span> <span style="font-weight:400;color:#647574">· {{ L.iv_commHint }}</span></span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ staff }}" as="m"><button onClick="{{ m.toggle }}" aria-pressed="{{ m.on }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid {{ m.border }};border-radius:16px;background:{{ m.bg }};color:{{ m.fg }};font-size:13px;font-weight:500;cursor:pointer"><lucide-i name="{{ m.icon }}" size="14"></lucide-i>{{ m.name }}<sc-if value="{{ m.isChair }}"><span style="height:18px;padding:0 6px;border-radius:5px;background:#0F766E;color:#FFFFFF;font-size:11px;line-height:18px">{{ L.iv_chair }}</span></sc-if></button></sc-for>
+          </div>
+          <sc-if value="{{ hasChairPick }}">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:#5B6B6A">{{ L.iv_chairPick }}
+              <sc-for list="{{ chairOpts }}" as="c"><button onClick="{{ c.pick }}" style="height:26px;padding:0 8px;border:1px solid {{ c.border }};border-radius:6px;background:{{ c.bg }};color:{{ c.fg }};font-size:12.5px;cursor:pointer">{{ c.name }}</button></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ commErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ commErr }}</span></sc-if>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:16px;border-top:1px solid #EEF2F4">
+          <button onClick="{{ toggleBlind }}" role="switch" aria-checked="{{ blind }}" style="display:flex;align-items:center;gap:10px;padding:0;border:0;background:transparent;cursor:pointer;text-align:left">
+            <span style="width:36px;height:20px;flex:none;border-radius:10px;background:{{ blindBg }};position:relative"><span style="position:absolute;top:2px;left:{{ blindX }};width:16px;height:16px;border-radius:8px;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,0.2)"></span></span>
+            <span style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:500">{{ L.iv_blind }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ blindHint }}</span></span>
+          </button>
+          <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5B6B6A"><lucide-i name="list-checks" size="16"></lucide-i>{{ scopeNote }}</span>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ headRead }}"><dc-import name="InfoGrid" title="{{ L.qt_head }}" rows="{{ headRows }}" hint-size="100%,160px"></dc-import></sc-if>
+
+    <sc-if value="{{ hasLines }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #EEF2F4">
+          <dc-import name="SavedViews" tabs="{{ lineTabs }}" hint-size="420px,34px"></dc-import>
+          <sc-if value="{{ canNewBatch }}"><button onClick="{{ openNewB }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="plus" size="16" style="color:#0F766E"></lucide-i>{{ L.iv_newBatch }}</button></sc-if>
+        </div>
+        <sc-if value="{{ newBOpen }}">
+          <div style="padding:16px;border-bottom:1px solid #EEF2F4;background:#F8FAFA;display:flex;flex-direction:column;gap:12px">
+            <span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600"><lucide-i name="package-plus" size="16" style="color:#0F766E"></lucide-i>{{ L.iv_newBatchT }}<span style="font-weight:400;color:#5B6B6A">· {{ L.iv_newBatchD }}</span></span>
+            <div style="display:grid;grid-template-columns:repeat({{ nbCols }},minmax(0,1fr));gap:12px;align-items:start">
+              <dc-import name="Select" label="{{ L.qt_gProduct }}" required="{{ true }}" options="{{ nbProdOpts }}" value="{{ nb.pid }}" on-change="{{ nbProd }}" placeholder="{{ L.iv_pickProd }}" searchable="{{ true }}" search-ph="{{ L.qt_search }}" error="{{ nbErr.pid }}" hint-size="100%,56px"></dc-import>
+              <sc-for list="{{ nbInputs }}" as="f">
+                <label style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <span style="font-size:12px;line-height:16px;font-weight:500">{{ f.label }} <span style="color:#B91C1C">*</span></span>
+                  <input value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.ph }}" inputMode="{{ f.mode }}" style="height:34px;padding:0 10px;border:1px solid {{ f.border }};border-radius:8px;background:#FFFFFF;font-family:{{ f.font }};font-size:13px;color:#172B2A;outline:none;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+                  <sc-if value="{{ f.hint }}"><span style="font-size:12px;line-height:16px;color:{{ f.hintC }}">{{ f.hint }}</span></sc-if>
+                </label>
+              </sc-for>
+              <dc-import name="Select" label="{{ L.iv_cZone }}" required="{{ true }}" options="{{ nbZoneOpts }}" value="{{ nb.zone }}" on-change="{{ nbZone }}" placeholder="{{ L.qt_choose }}" error="{{ nbErr.zone }}" hint-size="100%,56px"></dc-import>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button onClick="{{ closeNewB }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ L.qt_back }}</button>
+              <button onClick="{{ saveNewB }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.iv_addLine }}</button>
+            </div>
+          </div>
+        </sc-if>
+        <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="{{ allState }}" on-toggle-all="{{ toggleAll }}" scroll-x="{{ true }}" min-width="{{ tMinW }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,300px"></dc-import>
+        <sc-if value="{{ noLines }}"><div style="padding:32px 16px;text-align:center;font-size:13px;color:#5B6B6A">{{ L.iv_noDiff }}</div></sc-if>
+        <sc-if value="{{ showTotals }}"><dc-import name="TotalsFooter" items="{{ totItems }}" total-label="{{ L.iv_tNet }}" total-value="{{ totNet }}" bottom="{{ -24 }}" hint-size="100%,52px"></dc-import></sc-if>
+      </section>
+    </sc-if>
+    <sc-if value="{{ hasSel }}"><div style="position:sticky;bottom:72px;z-index:6;display:flex;justify-content:center"><dc-import name="BulkBar" count-label="{{ selLabel }}" actions="{{ bulkActions }}" on-clear="{{ clearSel }}" clear-label="{{ L.cancelSel }}" hint-size="420px,44px"></dc-import></div></sc-if>
+  </sc-if>
+  <sc-if value="{{ tabHist }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:20px 24px"><dc-import name="HistoryTimeline" groups="{{ histGroups }}" empty-label="{{ L.qt_histEmpty }}" hint-size="100%,240px"></dc-import></div>
+  </sc-if>
+  <div style="height:48px"></div>
+
+  <sc-if value="{{ vsOpen }}"><dc-import name="ValidationSummary" title="{{ vsTitle }}" subtitle="{{ L.qt_vsSub }}" errors="{{ vsErrors }}" warnings="{{ vsWarnings }}" warn-title="{{ L.qt_vsWarn }}" close-label="{{ L.qt_close }}" on-close="{{ closeVs }}" hint-size="0px,0px"></dc-import></sc-if>
+  <sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" with-reason="{{ dlg.withReason }}" reason-label="{{ dlg.reasonLabel }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ onReason }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.qt_back }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;no&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;req&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;act&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;docKey&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;branch&quot;,&quot;keeper&quot;,&quot;director&quot;,&quot;admin&quot;,&quot;accountant&quot;],&quot;default&quot;:&quot;branch&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Bekzod Tursunov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onCount&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(no)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,a)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], count: ['scan-line', '#1D4ED8', '#EFF6FF'], check: ['clipboard-list', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
+const ZICON = { store: 'boxes', ctrl: 'lock-keyhole', cold: 'snowflake', quar: 'shield-alert', recv: 'package-open' };
+const ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2);
+const reD = /^\d{2}\.\d{2}\.\d{4}$/;
+class Component extends DCLogic {
+  state = { x: null, docTab: 'doc', lineTab: 'all', sel: {}, tried: false, vs: null, dlg: null, reason: '', reasonErr: '', save: null, savedAt: null, nb: null, nbTried: false };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.load(); } }, 60); else this.load();
+    this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; const x = this.state.x; if (x && x.no && x.status !== 'draft') { const y = D.ivByNo(x.no); if (y && JSON.stringify(y) !== JSON.stringify(x)) return this.setState({ x: D.ivCopy(y) }); } this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); clearTimeout(this._sv); }
+  componentDidUpdate(pp) { if (pp.docKey !== this.props.docKey) this.load(); }
+  my() { const b = this.props.branch; return b && b !== 'ALL' ? b : null; }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(rs) { const L = this.L; return fill(L.qz_who, { r: rs.map(r => L['r_' + r] || r).join(', ') }); }
+  load() {
+    const D = this.D, p = this.props; if (!D) return;
+    let x = p.no ? D.ivCopy(D.ivByNo(p.no)) : null;
+    if (!x) { const at = D.nowStr(); x = { no: null, id: null, branch: this.my() || 'TSH', wh: 'Asosiy ombor', date: D.TODAY, scope: { mode: 'zones', zones: [], pids: [] }, commission: [], chair: '', blind: true, status: 'draft', lines: [], note: '', createdBy: p.userName, createdAt: at, log: [{ kind: 'create', who: p.userName, at }], ...(p.req || {}) }; }
+    clearTimeout(this._sv);
+    this.setState({ x, docTab: 'doc', lineTab: p.act === 'diff' ? 'diff' : 'all', sel: {}, tried: false, vs: null, dlg: null, save: null, nb: null, nbTried: false }, () => { if (p.act === 'newBatch') this.openNb(); if (p.act === 'post') setTimeout(() => this.tryPost(), 60); });
+  }
+  persist(x) { if (x.status !== 'draft') return; clearTimeout(this._sv); this.setState({ save: 'saving' }); this._sv = setTimeout(() => { const r = this.D.saveIv(this.state.x); this.setState(s => ({ x: { ...s.x, no: r.no, id: r.id }, save: 'saved', savedAt: this.D.nowStr().slice(11) })); }, 400); }
+  upd(fn) { const x = JSON.parse(JSON.stringify(this.state.x)); fn(x); this.setState({ x }); this.persist(x); }
+  updLines(fn) { const D = this.D, x = D.ivCopy(this.state.x); fn(x); const r = D.saveIv(x); this.setState({ x: r }); return r; }
+  scopeN(x) { const D = this.D; return x.wh ? D.ivScope(x).length : 0; }
+  startErrs(x) {
+    const D = this.D, L = this.L, e = [];
+    if (!x.wh) e.push({ k: 'wh', text: L.iv_eWh });
+    if (x.scope.mode !== 'wh' && x.scope.mode === 'zones' && !x.scope.zones.length) e.push({ k: 'zones', text: L.iv_eZones });
+    if (x.scope.mode === 'products' && !x.scope.pids.length) e.push({ k: 'pids', text: L.iv_ePids });
+    if ((x.commission || []).length < 2) e.push({ k: 'comm', text: L.iv_eComm }); else if (!x.chair || !x.commission.includes(x.chair)) e.push({ k: 'comm', text: L.iv_eChair });
+    if (x.wh && !this.scopeN(x)) e.push({ k: 'scope', text: L.iv_eEmpty });
+    if (x.wh) { const zs = D.ivZones(x); zs.forEach(z => { const n = D.ivLock(x.branch, x.wh, z); if (n && n !== x.no) e.push({ k: 'zones', text: fill(L.iv_eBusy, { z: D.zoneType(x.branch, x.wh, z).label, n }) }); }); }
+    return e;
+  }
+  tryStart() {
+    const D = this.D, L = this.L, x = this.state.x, e = this.startErrs(x); clearTimeout(this._sv); this.setState({ tried: true });
+    if (e.length) return this.setState({ vs: { errs: e } });
+    const zs = D.ivZones(x).map(z => D.zoneType(x.branch, x.wh, z).label), n = this.scopeN(x), ord = D.ivWaitOrders(x).length;
+    this.setState({ dlg: { type: 'start', items: [{ icon: 'lock', color: '#B45309', text: fill(L.iv_cfLock, { z: zs.join(', ') }) }, ...(ord ? [{ icon: 'clock', text: fill(L.iv_cfOrders, { n: ord }) }] : []), { icon: 'camera', text: fill(L.iv_cfSnap, { n }) }, { icon: x.blind ? 'eye-off' : 'eye', text: x.blind ? L.iv_cfBlind : L.iv_cfOpen }] } });
+  }
+  whProd(br, wh, pid) { let q = 0, c = 0, r = 0, a = 0; this.D.batches().forEach(b => { if (b.pid === pid && b.branch === br && b.wh === wh && b.qty > 0) { q += b.qty; c += b.closed || 0; r += b.reservedQty || 0; a += b.avail || 0; } }); return { q, c, r, a }; }
+  tryPost() {
+    const D = this.D, L = this.L, x = this.state.x, R = D.IV_ROLES, need = D.ivNeedsDir(x) ? R.approveDir : R.approve;
+    const unc = x.lines.filter(l => l.counted == null); if (unc.length) return this.setState({ vs: { errs: unc.slice(0, 8).map(l => ({ text: fill(L.iv_eUnc, { p: (D.prodById(l.pid) || {}).name, b: l.batch }) })) } });
+    const nbBad = x.lines.filter(l => l.newBatch && (!l.batch || !reD.test(l.exp || ''))); if (nbBad.length) return this.setState({ vs: { errs: nbBad.map(l => ({ text: fill(L.iv_eNb, { p: (D.prodById(l.pid) || {}).name }) })) } });
+    if (!D.can(this.props.role, D.ivNeedsDir(x) ? 'inventory.director' : 'inventory.approve')) return this.toast(this.who(need));
+    const pids = [...new Set(x.lines.filter(l => D.ivDiff(l)).map(l => l.pid))], S = D.store, old = S.invs, x2 = D.ivCopy(x); x2.status = 'posted'; x2.postedAt = D.nowStr();
+    const before = pids.map(pid => this.whProd(x.branch, x.wh, pid)); S.invs = (old || []).filter(y => y.id !== x2.id).concat([x2]); let after; try { after = pids.map(pid => this.whProd(x.branch, x.wh, pid)); } finally { S.invs = old; }
+    const sm = D.ivSum(x), cost = D.can(this.props.role, 'special.cost'), items = pids.map((pid, i) => ({ icon: 'package', text: fill(L.iv_cfProd, { p: (D.prodById(pid) || {}).name, a: fN(before[i].q), b: fN(after[i].q), c: fN(before[i].a), d: fN(after[i].a) }) }));
+    if (!pids.length) items.push({ icon: 'circle-check', color: '#15803D', text: L.iv_cfNoDiff });
+    if (sm.shortQ) items.push({ icon: 'trending-down', color: '#B91C1C', text: fill(L.iv_cfShort, { q: fN(sm.shortQ), s: cost ? ' · ' + fM(sm.shortS) : '' }) });
+    if (sm.overQ) items.push({ icon: 'trending-up', color: '#1D4ED8', text: fill(L.iv_cfOver, { q: fN(sm.overQ), s: cost ? ' · ' + fM(sm.overS) : '' }) });
+    items.push({ icon: 'lock-open', text: L.iv_cfUnlock });
+    this.setState({ dlg: { type: 'post', items } });
+  }
+  openNb() { const x = this.state.x, D = this.D; this.setState({ nb: { pid: null, batch: '', exp: '', qty: '', cost: '', zone: D.ivZones(x)[0] || 'asosiy' }, nbTried: false }); }
+  lc(pid) { const D = this.D, br = this.state.x && this.state.x.branch, c = D.lastCost(pid, br) || D.lastCost(pid); return c ? c.cost : 0; }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, screenLabel: L.iv_title, banners: [], docTabs: [], dMore: [], dSecondary: [], dSub: [], whOpts: [], modes: [], zoneChips: [], prodOpts: [], catOpts: [], prodChips: [], staff: [], chairOpts: [], headRows: [], lineTabs: [], tColumns: [], tRows: [], totItems: [], histGroups: [], dlg: {}, nb: {}, nbErr: {}, nbInputs: [], nbProdOpts: [], nbZoneOpts: [], bulkActions: [], isDraft: true, tabDoc: true, headCols: 3 };
+    if (!D || !s.x || !D.ivSum) return base;
+    const x = s.x, st = x.status, R = D.IV_ROLES, role = p.role, user = p.userName, cost = D.can(role, 'special.cost'), back = () => p.onBack && p.onBack();
+    const canCreate = D.can(role, 'inventory.create'), canCount = D.can(role, 'inventory.count'), isDraft = st === 'draft' && canCreate;
+    const place = D.whName(x.branch, x.wh || '—'), zs = x.wh ? D.zonesFor(x.branch, x.wh) : [], sm = D.ivSum(x), needDir = D.ivNeedsDir(x), ctrlDiff = D.ivCtrlDiff(x);
+    const errs = s.tried && st === 'draft' ? this.startErrs(x) : [], er = k => (errs.find(e => e.k === k) || {}).text || '';
+    const deny = rs => () => this.toast(this.who(rs));
+    const zl = x.wh ? D.ivZones(x).map(z => D.zoneType(x.branch, x.wh, z).label) : [];
+    const scopeTxt = !x.wh ? '—' : (x.scope.mode === 'wh' ? L.iv_mWh : zl.join(', ')) + (x.scope.pids.length ? ' · ' + fill(L.iv_nProd, { n: x.scope.pids.length }) : '');
+    // header actions
+    let dPrimary = null; const dMore = [], dSecondary = [], banners = [];
+    if (st === 'draft') { dPrimary = { label: L.iv_start, icon: 'play', pick: canCreate ? () => this.tryStart() : deny(R.create) }; if (canCreate && x.id) dMore.push({ label: L.qt_delete, icon: 'trash-2', danger: true, pick: () => this.setState({ dlg: { type: 'delete', items: [] } }) }); }
+    if (st === 'count') {
+      dPrimary = { label: L.iv_openCount, icon: 'scan-line', pick: canCount ? () => p.onCount && p.onCount(x.no) : deny(R.count) };
+      banners.push({ tone: 'info', icon: 'lock', title: fill(L.iv_bCountT, { at: (x.startedAt || '').replace(' ', ', '), who: x.startedBy }), text: fill(L.iv_bCount, { z: zl.join(', '), d: fN(sm.done), n: fN(sm.n) }) });
+      dMore.push({ label: L.iv_cancelCount, icon: 'circle-x', danger: true, pick: canCreate ? () => this.setState({ dlg: { type: 'cancel', items: [] }, reason: '', reasonErr: '' }) : deny(R.create) });
+    }
+    if (st === 'check') {
+      dPrimary = { label: L.qt_post, icon: 'check', pick: () => this.tryPost() };
+      dSecondary.push({ label: L.iv_toCount, icon: 'scan-line', pick: canCount ? () => p.onCount && p.onCount(x.no) : deny(R.count) });
+      banners.push({ tone: needDir ? 'warning' : 'info', icon: needDir ? 'shield-alert' : 'info', text: needDir ? fill(L.iv_bDir, { s: cost ? fM(sm.shortS) : '' }) : L.iv_bBranch });
+      if (ctrlDiff) banners.unshift({ tone: 'danger', icon: 'shield-alert', title: L.iv_bCtrlT, text: L.iv_bCtrl });
+      dMore.push({ label: L.iv_cancelCount, icon: 'circle-x', danger: true, pick: canCreate ? () => this.setState({ dlg: { type: 'cancel', items: [] }, reason: '', reasonErr: '' }) : deny(R.create) });
+    }
+    if (st === 'posted') { banners.push({ tone: 'success', icon: 'circle-check', text: fill(L.iv_bPosted, { at: (x.postedAt || '').replace(' ', ', '), who: x.postedBy }) }); dMore.push({ label: L.qt_cancel, icon: 'circle-x', danger: true, pick: () => this.setState({ dlg: { type: 'noCancel', items: [] } }) }); }
+    if (st === 'cancelled') banners.push({ tone: 'neutral', icon: 'circle-x', title: fill(L.qt_cancB, { at: (x.cancelledAt || '').replace(' ', ', '), who: x.cancelledBy }), text: x.cancelReason || '' });
+    if (st === 'draft' && !canCreate) banners.push({ tone: 'neutral', icon: 'eye', text: this.who(R.create) });
+    dMore.unshift({ label: L.qt_print, icon: 'printer', pick: () => this.toast(L.iv_tPrint) });
+    // draft form
+    const brs = D.BRANCHES.filter(b => !this.my() || b.code === this.my() || D.allBr(role)), whOpts = []; brs.forEach(b => b.wh.forEach(w => whOpts.push({ value: b.code + '|' + w, label: D.whName(b.code, w) })));
+    const setWh = v => this.upd(y => { const [b, w] = v.split('|'); y.branch = b; y.wh = w; y.scope = { mode: y.scope.mode, zones: [], pids: [] }; });
+    const modes = [['wh', L.iv_mWh], ['zones', L.iv_mZones], ['products', L.iv_mProducts]].map(([k, label]) => { const on = x.scope.mode === k; return { label, on, bg: on ? '#FFFFFF' : 'transparent', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', fg: on ? '#172B2A' : '#5B6B6A', pick: () => this.upd(y => { y.scope.mode = k; if (k === 'wh') { y.scope.zones = []; y.scope.pids = []; } if (k === 'zones') y.scope.pids = []; }) }; });
+    const whBs = x.wh ? D.batches().filter(b => b.branch === x.branch && b.wh === x.wh && b.qty > 0 && b.zoneType !== 'ship') : [];
+    const zoneChips = zs.map(z => { const on = x.scope.zones.includes(z.key), lk = D.ivLock(x.branch, x.wh, z.key), n = whBs.filter(b => b.zone === z.key).length; return { label: z.label, n: String(n), on, icon: lk ? 'lock' : on ? 'check' : ZICON[z.type] || 'boxes', tip: lk ? fill(L.iv_lockedBy, { n: lk }) : '', bg: on ? '#DDF5EE' : '#FFFFFF', fg: lk ? '#B45309' : on ? '#0F766E' : '#5B6B6A', border: on ? '#0D9488' : '#E2E8F0', toggle: () => this.upd(y => { y.scope.zones = on ? y.scope.zones.filter(k => k !== z.key) : [...y.scope.zones, z.key]; }) }; });
+    const inZ = b => !x.scope.zones.length || x.scope.zones.includes(b.zone), pm = {}; whBs.filter(inZ).forEach(b => { pm[b.pid] = pm[b.pid] || { p: b.p, n: 0 }; pm[b.pid].n++; });
+    const prodOpts = Object.values(pm).filter(o => !x.scope.pids.includes(o.p.id)).map(o => ({ value: o.p.id, label: o.p.name, sub: fill(L.iv_nBatch, { n: o.n }) })).sort((a, b) => a.label.localeCompare(b.label));
+    const cats = [...new Set(Object.values(pm).map(o => o.p.cat))].sort(), catOpts = cats.map(c => ({ value: c, label: c }));
+    const prodChips = x.scope.pids.map(id => ({ label: (D.prodById(id) || {}).name, remove: () => this.upd(y => { y.scope.pids = y.scope.pids.filter(z => z !== id); }) }));
+    const staff = D.STAFF.map(n => { const on = (x.commission || []).includes(n); return { name: n, on, isChair: on && x.chair === n, icon: on ? 'check' : 'plus', bg: on ? '#DDF5EE' : '#FFFFFF', fg: on ? '#0F766E' : '#5B6B6A', border: on ? '#0D9488' : '#E2E8F0', toggle: () => this.upd(y => { y.commission = on ? y.commission.filter(z => z !== n) : [...(y.commission || []), n]; if (on && y.chair === n) y.chair = ''; if (!on && !y.chair) y.chair = n; }) }; });
+    const chairOpts = (x.commission || []).map(n => { const on = x.chair === n; return { name: n, bg: on ? '#0F766E' : '#FFFFFF', fg: on ? '#FFFFFF' : '#172B2A', border: on ? '#0F766E' : '#E2E8F0', pick: () => this.upd(y => { y.chair = n; }) }; });
+    const canOpen = D.can(role, 'inventory.openCount');
+    // read head
+    const headRows = [{ label: L.iv_hWh, value: place }, { label: L.iv_hScope, value: scopeTxt }, { label: L.qt_hDate, value: x.date }, { label: L.iv_hComm, value: (x.commission || []).map(n => n === x.chair ? n + ' (' + L.iv_chair + ')' : n).join(', ') || '—' }, { label: L.iv_hMode2, value: x.blind ? L.iv_blind : L.iv_openMode }, ...(x.startedAt ? [{ label: L.iv_hSnap, value: x.startedAt }] : [])];
+    // lines table
+    const showBook = st !== 'count' || !x.blind || canOpen;
+    const isCheck = st === 'check', isRes = isCheck || st === 'posted' || st === 'cancelled';
+    const diffOf = l => D.ivDiff(l);
+    const LT = isRes ? [['all', L.iv_vAll, () => true], ['diff', L.iv_vDiff, l => diffOf(l) !== 0], ['short', L.iv_vShort, l => diffOf(l) < 0], ['over', L.iv_vOver, l => diffOf(l) > 0]] : [['all', L.iv_vAll, () => true], ['todo', L.iv_vTodo, l => l.counted == null], ['done', L.iv_vDone, l => l.counted != null]];
+    const curT = LT.find(t => t[0] === s.lineTab) || LT[0], shown = x.lines.filter(curT[2]);
+    const lineTabs = LT.map(([k, label, f]) => ({ label, count: x.lines.filter(f).length, active: curT[0] === k, pick: () => this.setState({ lineTab: k, sel: {} }) }));
+    const tColumns = [{ key: 'p', label: L.qt_gProduct, width: 'minmax(220px,1.6fr)' }, { key: 'b', label: L.qt_gBatch, width: '130px' }, { key: 'e', label: L.qt_gExp, width: '110px' }, { key: 'z', label: L.iv_cZone, width: '140px' },
+      ...(showBook ? [{ key: 'bk', label: L.iv_cBook, width: '96px', align: 'right' }] : []), { key: 'c', label: L.iv_cCounted, width: '96px', align: 'right' }, ...(isRes ? [{ key: 'd', label: L.iv_cDiff, width: '150px' }] : []),
+      ...(isRes && cost ? [{ key: 'cost', label: L.qt_gCost, width: '110px', align: 'right' }, { key: 'ds', label: L.iv_cDiffSum, width: '130px', align: 'right' }] : []), { key: 'n', label: L.iv_cNote, width: 'minmax(160px,1fr)' }];
+    const tRows = shown.map(l => { const pr = D.prodById(l.pid) || {}, d = diffOf(l), exp = l.days != null && l.days < 0;
+      const stc = l.counted == null ? { type: 'status', text: L.iv_dTodo, icon: 'circle-dashed', fg: '#5B6B6A', bg: '#F8FAFA' } : d < 0 ? { type: 'status', text: fill(L.iv_dShort, { n: fN(-d) }), icon: 'circle-minus', fg: '#B91C1C', bg: '#FEF2F2' } : d > 0 ? { type: 'status', text: fill(L.iv_dOver, { n: fN(d) }), icon: 'circle-plus', fg: '#1D4ED8', bg: '#EFF6FF' } : { type: 'status', text: L.iv_dOk, icon: 'circle-check', fg: '#15803D', bg: '#F0FDF4' };
+      const subs = [pr.ctrl && L.qt_ctrl, pr.mark && fill(L.iv_codesN, { n: fN((l.codes || []).length) }), l.newBatch && L.iv_newBatchTag, l.notFound && L.iv_notFound, l.recount && L.iv_recountTag].filter(Boolean).join(' · ');
+      return { id: l.id, selected: !!s.sel[l.id], onToggle: isCheck ? () => this.setState(st2 => { const n = { ...st2.sel }; if (n[l.id]) delete n[l.id]; else n[l.id] = true; return { sel: n }; }) : () => {}, onOpen: () => {},
+        cells: [{ type: 'name', text: pr.name, sub: subs, weight: 500, badge: exp ? L.iv_toQuar : '', badgeFg: '#B91C1C', badgeBg: '#FEF2F2' }, { type: 'mono', text: l.batch || '—' }, { type: 'text', text: l.exp || '—', color: exp ? '#B91C1C' : '#5B6B6A' }, { type: 'text', text: l.zoneLabel || D.zoneType(x.branch, x.wh, l.zone).label, color: '#5B6B6A' },
+          ...(showBook ? [{ type: 'text', text: fN(l.book), color: '#5B6B6A' }] : []), { type: 'text', text: l.counted == null ? '—' : fN(l.counted), weight: 600, color: l.counted == null ? '#647574' : '#172B2A' }, ...(isRes ? [stc] : []),
+          ...(isRes && cost ? [{ type: 'text', text: fM(l.cost || 0), color: '#5B6B6A' }, { type: 'text', text: d ? fM(d * (l.cost || 0)) : '—', weight: d ? 600 : 400, color: d < 0 ? '#B91C1C' : d > 0 ? '#1D4ED8' : '#647574' }] : []), { type: 'text', text: l.note || '—', color: l.note ? '#172B2A' : '#647574' }],
+        actions: isCheck ? [{ label: L.iv_aNote, icon: 'message-square', pick: () => this.setState({ dlg: { type: 'note', id: l.id, items: [{ icon: 'package', text: `${pr.name} · ${l.batch}` }] }, reason: l.note || '', reasonErr: '' }) }, { label: L.iv_recount, icon: 'rotate-ccw', pick: () => this.recount([l.id]) }, ...(l.newBatch ? [{ label: L.iv_aRemove, icon: 'trash-2', danger: true, pick: () => this.updLines(y => { y.lines = y.lines.filter(z => z.id !== l.id); }) }] : [])] : [] }; });
+    const selIds = Object.keys(s.sel).filter(id => shown.some(l => l.id === id)), allState = !selIds.length ? 'none' : selIds.length === shown.length ? 'all' : 'some';
+    const totItems = [{ label: L.iv_tShort, value: fN(sm.shortQ) + (cost ? ' · ' + fM(sm.shortS) : '') }, { label: L.iv_tOver, value: fN(sm.overQ) + (cost ? ' · ' + fM(sm.overS) : '') }];
+    // new batch form
+    const nb = s.nb || {}, nbErr = {}, nbPm = {}; whBs.forEach(b => { nbPm[b.pid] = b.p; }); if (nb.pid != null && !nbPm[nb.pid]) nbPm[nb.pid] = D.prodById(nb.pid);
+    if (s.nbTried) { if (!nb.pid) nbErr.pid = L.qt_req; if (!nb.batch) nbErr.batch = L.qt_req; if (!reD.test(nb.exp || '')) nbErr.exp = L.iv_eDate; if (!(+nb.qty > 0)) nbErr.qty = L.qt_req; if (!nb.zone) nbErr.zone = L.qt_req; }
+    const setNb = k => e => { const v = e.target.value; this.setState(st2 => ({ nb: { ...st2.nb, [k]: v } })); };
+    const inp = (k, label, ph, mode, font, hint) => ({ label, value: nb[k] || '', onChange: setNb(k), ph, mode, font: font || 'inherit', border: nbErr[k] ? '#B91C1C' : '#E2E8F0', hint: nbErr[k] || hint || '', hintC: nbErr[k] ? '#B91C1C' : '#647574' });
+    const nbInputs = [inp('batch', L.qt_gBatch, 'PA-251001', 'text', "'JetBrains Mono',monospace"), inp('exp', L.qt_gExp, 'kk.oo.yyyy', 'numeric'), inp('qty', L.iv_cCounted, '0', 'numeric'), ...(cost ? [inp('cost', L.qt_gCost, '', 'decimal', null, nb.pid ? fill(L.iv_costHint, { s: fM(this.lc(nb.pid)) }) : '')] : [])];
+    const saveNewB = () => { this.setState({ nbTried: true }); const n2 = this.state.nb; if (!n2.pid || !n2.batch || !reD.test(n2.exp || '') || !(+n2.qty > 0) || !n2.zone) return;
+      const pD2 = sd => { const a = sd.split('.'); return Date.UTC(+a[2], +a[1] - 1, +a[0]); }, days = Math.round((pD2(n2.exp) - pD2(D.TODAY)) / 86400000), z = D.zoneType(x.branch, x.wh, n2.zone);
+      this.updLines(y => { y.lines.push({ id: 'nb' + Date.now(), bid: null, pid: n2.pid, batch: n2.batch.trim(), exp: n2.exp, days, zone: n2.zone, zoneLabel: z.label, zoneType: z.type, book: 0, cost: +String(n2.cost || '').replace(/\s/g, '').replace(',', '.') || this.lc(n2.pid), counted: +n2.qty, codes: [], note: L.iv_nbNote, newBatch: true, notFound: false }); });
+      this.setState({ nb: null, nbTried: false, lineTab: 'over' }); this.toast(L.iv_tNbAdded); };
+    // dialogs
+    let dlg = null; const dt = s.dlg && s.dlg.type;
+    if (dt === 'start') dlg = { title: L.iv_dStartT, items: s.dlg.items, confirm: L.iv_start, danger: false, run: () => { const r = D.ivStart(this.state.x.id ? this.state.x : D.saveIv(this.state.x), user); if (r.err) { this.setState({ dlg: null }); return this.toast(fill(L.iv_eBusy, { z: '', n: r.err })); } this.setState({ x: r, dlg: null, tried: false }); this.toast(fill(L.iv_tStarted, { n: r.no })); } };
+    if (dt === 'post') dlg = { title: fill(L.iv_dPostT, { n: x.no }), items: s.dlg.items, confirm: L.qt_post, danger: false, run: () => { const r = D.ivStep(x, 'posted', user); this.setState({ x: r, dlg: null }); this.toast(fill(L.iv_tPosted, { n: r.no })); } };
+    if (dt === 'cancel') dlg = { title: fill(L.qt_cancelT, { n: x.no }), items: [{ icon: 'lock-open', text: L.iv_dCancD }], withReason: true, reasonLabel: L.qt_reasonCancel, confirm: L.iv_cancelCount, danger: true, run: () => { const r0 = this.state.reason.trim(); if (!r0) return this.setState({ reasonErr: L.qt_req }); const r = D.ivStep(x, 'cancelled', user, { cancelReason: r0 }); this.setState({ x: r, dlg: null }); this.toast(fill(L.qt_tCancelled, { n: r.no })); } };
+    if (dt === 'noCancel') dlg = { title: L.iv_noCancelT, text: L.iv_noCancelD, items: [], confirm: L.qt_understood, danger: false, run: () => this.setState({ dlg: null }) };
+    if (dt === 'delete') dlg = { title: L.qt_deleteT, text: L.qt_deleteD, items: [], confirm: L.qt_delete, danger: true, run: () => { clearTimeout(this._sv); D.deleteIv(x.id); this.setState({ dlg: null }); this.toast(L.qt_tDeleted); back(); } };
+    if (dt === 'note') dlg = { title: L.iv_aNote, items: s.dlg.items, withReason: true, reasonLabel: L.iv_cNote, confirm: L.iv_saveNote, danger: false, run: () => { const id = s.dlg.id, v = this.state.reason.trim(); this.updLines(y => { const l = y.lines.find(z => z.id === id); if (l) l.note = v; }); this.setState({ dlg: null }); } };
+    // steps
+    const order = ['draft', 'count', 'check', 'posted'], ci = order.indexOf(st);
+    const dSteps = st === 'cancelled' ? null : order.map((k, i) => ({ label: L['iv_st_' + k], state: i < ci || (st === 'posted' && i === ci) ? 'done' : i === ci ? 'cur' : 'next' }));
+    const evs = (x.log || []).slice().reverse(), days = [...new Set(evs.map(e => String(e.at).slice(0, 10)))];
+    const histGroups = days.map(day => ({ label: day, items: evs.filter(e => String(e.at).slice(0, 10) === day).map(e => ({ kind: e.kind, initials: ini(e.who), name: e.who, action: L['iv_h_' + e.kind] || e.kind, time: String(e.at).slice(11), changes: e.reason ? [{ label: L.qt_reasonCancel, to: e.reason }] : [] })) }));
+    const S = ST[st];
+    return {
+      ...base, back, screenLabel: x.no || L.iv_title, title: x.no ? L.iv_doc : L.iv_newT, dNumber: x.no || '', dBadge: { label: L['iv_st_' + st], icon: S[0], fg: S[1], bg: S[2] }, dStatus: st === 'cancelled' ? 'cancelled' : st === 'posted' ? 'posted' : 'draft', dSteps,
+      dSub: [{ text: place, icon: 'warehouse' }, { text: scopeTxt, icon: 'layers' }], dPrimary, dSecondary, dMore, banners,
+      autosave: st === 'draft' && (x.no || s.save) ? { state: s.save === 'saving' ? 'saving' : 'saved', time: s.savedAt || '', savedLabel: L.qt_saved, savingLabel: L.qt_saving, errorLabel: L.qt_saveErr } : null,
+      docTabs: [['doc', L.qt_tabDoc], ['hist', L.qt_tabHist]].map(([k, label]) => ({ label, count: k === 'hist' ? (x.log || []).length : null, active: s.docTab === k, pick: () => this.setState({ docTab: k }) })), tabDoc: s.docTab === 'doc', tabHist: s.docTab === 'hist', histGroups,
+      isDraft, headRead: !isDraft, headCols: narrow ? 2 : 3, headRows, whOpts, whVal: x.wh ? x.branch + '|' + x.wh : null, setWh, whErr: er('wh'), dDate: x.date, onDate: e => { const v = e.target.value; this.upd(y => { y.date = v; }); },
+      modes, showZones: x.scope.mode !== 'wh' && !!x.wh, zonesReq: x.scope.mode === 'zones', zoneChips, zoneErr: er('zones'), showProducts: x.scope.mode === 'products' && !!x.wh, prodCols: narrow ? 1 : 2, prodOpts, catOpts, none: null, prodChips, prodErr: er('pids'),
+      addProd: v => this.upd(y => { if (!y.scope.pids.includes(v)) y.scope.pids.push(v); }), addCat: v => this.upd(y => { Object.values(pm).filter(o => o.p.cat === v).forEach(o => { if (!y.scope.pids.includes(o.p.id)) y.scope.pids.push(o.p.id); }); }),
+      staff, hasChairPick: (x.commission || []).length > 1, chairOpts, commErr: er('comm'),
+      blind: !!x.blind, blindBg: x.blind ? '#0D9488' : '#CBD5D3', blindX: x.blind ? '18px' : '2px', blindHint: x.blind ? L.iv_blindOn : L.iv_blindOff, toggleBlind: () => canOpen ? this.upd(y => { y.blind = !y.blind; }) : this.toast(this.who(R.openCount)),
+      scopeNote: x.wh ? fill(L.iv_scopeN, { n: fN(this.scopeN(x)) }) + (er('scope') ? ' · ' + er('scope') : '') : L.iv_pickWh,
+      hasLines: st !== 'draft', lineTabs, tColumns, tRows, noLines: st !== 'draft' && !tRows.length, allState, tMinW: cost && isRes ? 1500 : 1180,
+      toggleAll: () => isCheck && this.setState({ sel: allState === 'all' ? {} : Object.fromEntries(shown.map(l => [l.id, true])) }),
+      canNewBatch: isCheck && canCount, openNewB: () => this.openNb(), newBOpen: !!s.nb && isCheck, nb, nbErr, nbInputs, nbCols: narrow ? 3 : 6, closeNewB: () => this.setState({ nb: null }), saveNewB,
+      nbProdOpts: Object.values(nbPm).filter(Boolean).map(pp => ({ value: pp.id, label: pp.name })).sort((a, b) => a.label.localeCompare(b.label)), nbProd: v => this.setState(st2 => ({ nb: { ...st2.nb, pid: v, cost: cost ? String(this.lc(v)) : '' } })),
+      nbZoneOpts: D.ivZones(x).map(z => ({ value: z, label: D.zoneType(x.branch, x.wh, z).label })), nbZone: v => this.setState(st2 => ({ nb: { ...st2.nb, zone: v } })),
+      showTotals: isRes, totItems, totNet: cost ? fM(sm.net) : (sm.overQ - sm.shortQ > 0 ? '+' : '') + fN(sm.overQ - sm.shortQ),
+      hasSel: isCheck && selIds.length > 0, selLabel: fill(L.iv_nSel, { n: selIds.length }), bulkActions: [{ label: L.iv_recount, icon: 'rotate-ccw', pick: () => this.recount(selIds) }], clearSel: () => this.setState({ sel: {} }),
+      vsOpen: !!s.vs, vsTitle: s.vs ? fill(L.qt_vsTitle, { n: s.vs.errs.length }) : '', closeVs: () => this.setState({ vs: null }), vsErrors: s.vs ? s.vs.errs.map(e => ({ text: e.text, go: () => this.setState({ vs: null }) })) : [], vsWarnings: [],
+      dlgOpen: !!dlg, dlg: dlg || {}, closeDlg: () => this.setState({ dlg: null }), reason: s.reason, reasonErr: s.reasonErr, onReason: v => this.setState({ reason: v, reasonErr: '' })
+    };
+  }
+  recount(ids) {
+    const D = this.D, L = this.L, x = this.state.x; if (!R_COUNT(D, this.props.role)) return this.toast(this.who(D.IV_ROLES.count));
+    const c = D.ivCopy(x); c.lines.forEach(l => { if (ids.includes(l.id) && !l.newBatch) { l.counted = null; l.codes = []; l.recount = true; } });
+    const r = D.ivStep(c, 'count', this.props.userName, null, 'recount'); this.setState({ x: r, sel: {}, lineTab: 'all' }); this.toast(fill(L.iv_tRecount, { n: ids.length }));
+  }
+}
+const R_COUNT = (D, r) => D.can(r, 'inventory.count');
+</script>
+</body>
+</html>

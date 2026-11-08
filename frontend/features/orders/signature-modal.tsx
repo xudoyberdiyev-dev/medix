@@ -1,6 +1,7 @@
 "use client";
 
 import { Eraser } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { type PointerEvent, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -28,6 +29,7 @@ export function SignatureModal({
   onClose: () => void;
   onSave: (png: Blob) => void;
 }) {
+  const t = useTranslations("orders");
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const strokes = useRef<Array<Array<{ x: number; y: number }>>>([]);
   const drawing = useRef(false);
@@ -103,16 +105,16 @@ export function SignatureModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={`Mijoz imzosi: ${customer}`}
-      primaryAction={{ label: "Imzoni saqlash", onClick: save, loading: saving, disabled: !enough }}
+      title={t("signature.title", { customer })}
+      primaryAction={{ label: t("signature.save"), onClick: save, loading: saving, disabled: !enough }}
     >
       <div className="flex flex-col gap-2">
-        <div className="text-body text-text-secondary">Mijoz barmogʻi yoki stilus bilan ramka ichida imzo qoʻysin. Imzo ixtiyoriy.</div>
+        <div className="text-body text-text-secondary">{t("signature.hint")}</div>
         <canvas
           ref={canvas}
           width={WIDTH}
           height={HEIGHT}
-          aria-label="Imzo maydoni"
+          aria-label={t("signature.aria")}
           className="h-48 w-full touch-none rounded-control border border-dashed border-border bg-surface"
           onPointerDown={down}
           onPointerMove={move}
@@ -120,9 +122,9 @@ export function SignatureModal({
           onPointerCancel={up}
         />
         <div className="flex items-center justify-between">
-          <span className="text-caption text-text-secondary">{enough ? "Imzo tayyor" : "Imzo hali chizilmagan"}</span>
+          <span className="text-caption text-text-secondary">{enough ? t("signature.ready") : t("signature.empty")}</span>
           <Button variant="tertiary" icon={Eraser} onClick={clear}>
-            Tozalash
+            {t("signature.clear")}
           </Button>
         </div>
       </div>

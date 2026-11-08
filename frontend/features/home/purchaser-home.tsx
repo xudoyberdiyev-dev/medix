@@ -1,48 +1,60 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, ChevronRight, Gift, HandCoins, PackageCheck, PackageOpen } from "lucide-react";
+import {
+  Boxes,
+  CalendarClock,
+  ChevronRight,
+  CircleCheck,
+  CirclePause,
+  ClockAlert,
+  FilePen,
+  Gift,
+  type LucideIcon,
+  PackageMinus,
+  PackageOpen,
+  PackagePlus,
+  ReceiptText,
+  ShoppingCart,
+  Stamp,
+} from "lucide-react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
-import { Table, type TableColumn } from "@/components/ui/table";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { formatIsoDate } from "@/features/counterparties/api";
+import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
+import { useBranches } from "@/features/employees/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
-import { formatMoney } from "@/lib/format";
+import { cn } from "@/lib/cn";
+import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { type AttentionRow, CardTitle, nonZero } from "./director-home";
+import { type AttentionRow, nonZero, Panel } from "./director-home";
+import { firstName, greetKey, tashkentHour } from "./director-view";
 
 type PurchaserHomeView = components["schemas"]["PurchaserHomeView"];
-type Debtor = components["schemas"]["Debtor"];
-
-const money = (v: string) => <span className="font-mono tabular-nums">{formatMoney(v)}</span>;
 
 /** Xaridning «Diqqat talab qiladi» qatorlari: kechikkan / bugungi / 3 kunlik YB toʻlovlari, kutayotgan kirimlar, bonus; nol boʻlganlari yashiriladi. */
 export function purchaserAttentionRows(h: PurchaserHomeView): AttentionRow[] {
   const rows: AttentionRow[] = [
-    { key: "s0", label: "Taʼminotchiga toʻlov: kechikkan", value: h.due.overdue, href: "/debts/suppliers", money: true, danger: true },
-    { key: "s1", label: "Taʼminotchiga toʻlov: bugun", value: h.due.today, href: "/debts/suppliers", money: true },
-    { key: "s3", label: "Taʼminotchiga toʻlov: 3 kun ichida", value: h.due.next3Days, href: "/debts/suppliers", money: true },
+    { key: "s0", value: h.due.overdue, href: "/debts/suppliers", money: true, danger: true },
+    { key: "s1", value: h.due.today, href: "/debts/suppliers", money: true },
+    { key: "s3", value: h.due.next3Days, href: "/debts/suppliers", money: true },
     {
       key: "acc",
-      label: "Ombor qabulini kutayotgan kirimlar",
       value: String(h.receipts.toAccept),
       href: "/receipts?status=DRAFT",
       money: false,
     },
     {
       key: "post",
-      label: "Oʻtkazish kutayotgan kirimlar",
       value: String(h.receipts.toPost),
       href: "/receipts?status=ACCEPTED",
       money: false,
     },
     {
       key: "bo",
-      label: "Bonus olish sanasi oʻtgan chegirmalar",
       value: String(h.bonus.pendingOverdue),
       href: "/bonuses",
       money: false,
@@ -52,9 +64,11 @@ export function purchaserAttentionRows(h: PurchaserHomeView): AttentionRow[] {
   return rows.filter((r) => nonZero(r.value));
 }
 
-/** Xarid bosh sahifasi (SPEC 2, 8): kirimlar, YB qarzi va toʻlov kunlari, bonus, «Oʻz nomimdagi tovar». Tannarx koʻrsatilmaydi. */
+/** Xarid bosh sahifasi — prototip `Home.dc.html` («purchase» varianti; SPEC 2, 8): kirimlar, YB qarzi va toʻlov kunlari, bonus eslatmalari, «Oʻz nomimdagi tovar» (donada). */
 export function PurchaserHome() {
+  const t = useTranslations("home");
   const me = useMe();
+  const branches = useBranches();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const allowed = can(me.data, "receipt.create") && can(me.data, "sdebt.view");
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
@@ -65,140 +79,212 @@ export function PurchaserHome() {
     refetchInterval: 120_000,
   });
 
-  if (me.data && !allowed) return <ForbiddenState description="Xarid bosh sahifasi sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("purchaser.forbidden")} />;
   const h = home.data;
+  const name = firstName(me.data?.fullName);
+  const greet = t(`dir.${greetKey(tashkentHour())}`) + (name ? `, ${name}` : "");
+  const branchName = h ? (h.branchId == null ? t("dir.allBr") : ((branches.data ?? []).find((b) => b.id === h.branchId)?.name ?? "")) : "";
 
   return (
     <>
-      <h1 className="mb-4 text-page-title">Bosh sahifa</h1>
-      {home.error ? (
-        <ErrorState onRetry={() => home.refetch()} />
-      ) : !h ? (
-        <Skeleton className="h-40 w-full" />
-      ) : (
-        <div className="flex flex-col gap-6">
-          <p className="text-caption text-text-secondary">
-            {formatIsoDate(h.today)}
-            {h.branchId == null ? " · barcha filiallar" : ""}
-          </p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card>
-              <CardTitle icon={PackageCheck} title="Kutayotgan kirimlar" />
-              <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-body">
-                <dt>Ombor qabulida</dt>
-                <dd className="text-right font-mono tabular-nums">{h.receipts.toAccept}</dd>
-                <dt>Oʻtkazishda</dt>
-                <dd className="text-right font-mono tabular-nums">{h.receipts.toPost}</dd>
-              </dl>
-              <div className="mt-2 text-caption text-text-secondary">
-                Shundan siz kiritgan: {h.receipts.toAcceptMine} va {h.receipts.toPostMine}
-              </div>
-              <Link href="/receipts" className="mt-2 inline-block text-caption text-primary-button hover:underline">
-                Kirimlarni ochish
-              </Link>
-            </Card>
-            <Card>
-              <CardTitle icon={HandCoins} title="Taʼminotchilarga qarz" />
-              <div className="mt-1 font-mono text-subtitle tabular-nums">{formatMoney(h.supplierDebt.debt)}</div>
-              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 text-caption text-text-secondary">
-                <dt>Muddati oʻtgan</dt>
-                <dd className={`text-right font-mono tabular-nums ${nonZero(h.supplierDebt.overdue) ? "text-danger" : ""}`}>
-                  {formatMoney(h.supplierDebt.overdue)}
-                </dd>
-                <dt>Avans</dt>
-                <dd className="text-right font-mono tabular-nums">{formatMoney(h.supplierDebt.advance)}</dd>
-              </dl>
-              <Link href="/debts/suppliers" className="mt-2 inline-block text-caption text-primary-button hover:underline">
-                Qarzlarni ochish
-              </Link>
-            </Card>
-            <Card>
-              <CardTitle icon={Gift} title="Bonus balansi" />
-              <div className="mt-1 font-mono text-subtitle tabular-nums">{formatMoney(h.bonus.balance)}</div>
-              <div className="mt-2 text-caption text-text-secondary">Tasdiq kutayotgan chegirmalar: {h.bonus.pending}</div>
-              <Link href="/bonuses" className="mt-2 inline-block text-caption text-primary-button hover:underline">
-                Bonuslarni ochish
-              </Link>
-            </Card>
-            <Card>
-              <CardTitle icon={PackageOpen} title="Oʻz nomimdagi tovar" />
-              <div className="mt-1 font-mono text-subtitle tabular-nums">{h.ownGoods.leftQty} dona</div>
-              <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-3 text-caption text-text-secondary">
-                <dt>Mahsulot turlari</dt>
-                <dd className="text-right font-mono tabular-nums">{h.ownGoods.products}</dd>
-                <dt>Jami olib kelingan</dt>
-                <dd className="text-right font-mono tabular-nums">{h.ownGoods.broughtQty}</dd>
-                <dt>Muddati 90 kun ichida</dt>
-                <dd className={`text-right font-mono tabular-nums ${h.ownGoods.expiring90 > 0 ? "text-warning" : ""}`}>
-                  {h.ownGoods.expiring90} partiya
-                </dd>
-              </dl>
-            </Card>
-          </div>
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <PurchaserAttention home={h} />
-            <TopSuppliers rows={h.topSuppliers} />
-          </div>
-        </div>
-      )}
+      <div className="mb-4 min-w-0">
+        <h1 className="text-page-title">{greet}</h1>
+        <p className="mt-0.5 text-body text-text-secondary">
+          {formatIsoDate(h?.today ?? todayTashkent())}
+          {branchName ? ` · ${branchName}` : ""}
+        </p>
+      </div>
+      {home.error ? <ErrorState onRetry={() => home.refetch()} /> : !h ? <Skeleton className="h-40 w-full" /> : <Body h={h} />}
     </>
   );
 }
 
-function PurchaserAttention({ home }: { home: PurchaserHomeView }) {
-  const rows = purchaserAttentionRows(home);
+interface Row {
+  key: string;
+  icon: LucideIcon;
+  tone: string;
+  text: string;
+  sub?: string;
+  value: string;
+  href?: string;
+}
+
+/** Prototip «rows» kartasi: ikonka, matn (+ izoh), qiymat, ›. */
+function Rows({ title, rows, empty }: { title: string; rows: Row[]; empty?: { title: string; hint: string } }) {
   return (
-    <section>
-      <h2 className="mb-2 flex items-center gap-2 text-subtitle">
-        <AlertTriangle size={18} strokeWidth={1.5} aria-hidden /> Diqqat talab qiladi
-      </h2>
-      <Card flush>
-        {rows.length === 0 ? (
-          <EmptyState icon={AlertTriangle} title="Hammasi joyida" description="Yaqin toʻlov, kutayotgan kirim va bonus yoʻq." />
-        ) : (
-          <ul className="divide-y divide-border">
-            {rows.map((r) => (
+    <Panel title={title}>
+      {rows.length === 0 && empty ? (
+        <EmptyState icon={CircleCheck} title={empty.title} description={empty.hint} />
+      ) : (
+        <ul className="mx-4 mb-2 divide-y divide-border border-t border-border">
+          {rows.map((r) => {
+            const inner = (
+              <>
+                <r.icon size={16} strokeWidth={1.5} aria-hidden className={cn("shrink-0", r.tone)} />
+                <span className="min-w-0 flex-1">
+                  {r.text}
+                  {r.sub ? <span className="block text-caption text-text-secondary">{r.sub}</span> : null}
+                </span>
+                <span className="shrink-0 tabular-nums">{r.value}</span>
+                <ChevronRight size={16} strokeWidth={1.5} aria-hidden className="shrink-0 text-text-secondary" />
+              </>
+            );
+            return (
               <li key={r.key}>
-                <Link href={r.href} className="flex items-center justify-between gap-3 px-4 py-2.5 text-body hover:bg-background">
-                  <span className={r.danger ? "text-danger" : ""}>{r.label}</span>
-                  <span className="flex items-center gap-2">
-                    {r.money ? money(r.value) : <span className="font-mono tabular-nums">{r.value}</span>}
-                    <ChevronRight size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-                  </span>
-                </Link>
+                {r.href ? (
+                  <Link href={r.href} className="flex min-h-11 items-center gap-3 py-2 text-body hover:bg-background">
+                    {inner}
+                  </Link>
+                ) : (
+                  <div className="flex min-h-11 items-center gap-3 py-2 text-body">{inner}</div>
+                )}
               </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-    </section>
+            );
+          })}
+        </ul>
+      )}
+    </Panel>
   );
 }
 
-function TopSuppliers({ rows }: { rows: Debtor[] }) {
-  const columns: TableColumn<Debtor>[] = [
-    { key: "name", title: "Taʼminotchi", wrap: true },
-    { key: "debt", title: "Qarz", align: "right", render: (d) => money(d.debt) },
-    {
-      key: "overdue",
-      title: "Muddati oʻtgan",
-      align: "right",
-      render: (d) => <span className={nonZero(d.overdue) ? "text-danger" : ""}>{money(d.overdue)}</span>,
-    },
-  ];
+function Body({ h }: { h: PurchaserHomeView }) {
+  const t = useTranslations("home.pur");
+  const pcs = (n: number) => t("pcs", { n: formatQuantity(n) });
+  const r = h.receipts;
+  const d = h.due;
+  const o = h.ownMoves;
+  const g = h.ownGoods;
   return (
-    <section>
-      <h2 className="mb-2 text-subtitle">Eng katta qarzimiz (top 5)</h2>
-      <Table
-        caption="Taʼminotchilarga eng katta qarz"
-        density="compact"
-        columns={columns}
-        rows={rows}
-        rowKey={(d) => String(d.id)}
-        emptyState={
-          <EmptyState icon={HandCoins} title="Qarz yoʻq" description="Taʼminotchilarga ochiq qarz boʻlsa, shu yerda koʻrinadi." />
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <Rows
+        title={t("rcT")}
+        rows={[
+          {
+            key: "acc",
+            icon: PackageOpen,
+            tone: "text-info",
+            text: t("rcAcc"),
+            sub: r.toAcceptNumbers.join(", "),
+            value: String(r.toAccept),
+            href: "/receipts?status=DRAFT",
+          },
+          {
+            key: "post",
+            icon: Stamp,
+            tone: "text-warning",
+            text: t("rcPost"),
+            sub: r.toPostNumbers.join(", "),
+            value: String(r.toPost),
+            href: "/receipts?status=ACCEPTED",
+          },
+          {
+            key: "mine",
+            icon: FilePen,
+            tone: "text-text-secondary",
+            text: t("rcMine"),
+            value: String(r.toAcceptMine + r.toPostMine),
+            href: "/receipts",
+          },
+        ]}
+      />
+      <Rows
+        title={t("debtT")}
+        rows={[
+          {
+            key: "all",
+            icon: ReceiptText,
+            tone: "text-text-secondary",
+            text: t("debtAll"),
+            value: formatMoney(h.supplierDebt.debt),
+            href: "/debts/suppliers",
+          },
+          {
+            key: "late",
+            icon: ClockAlert,
+            tone: "text-danger",
+            text: `${t("late")} · ${d.overdueCount}`,
+            value: formatMoney(d.overdue),
+            href: "/debts/suppliers",
+          },
+          {
+            key: "today",
+            icon: CalendarClock,
+            tone: "text-warning",
+            text: `${t("today")} · ${d.todayCount}`,
+            value: formatMoney(d.today),
+            href: "/debts/suppliers",
+          },
+          {
+            key: "3d",
+            icon: CalendarClock,
+            tone: "text-warning",
+            text: `${t("d3")} · ${d.next3Count}`,
+            value: formatMoney(d.next3Days),
+            href: "/debts/suppliers",
+          },
+        ]}
+      />
+      <Rows
+        title={t("bonusT")}
+        empty={{ title: t("bonusNone"), hint: t("bonusNoneHint") }}
+        rows={h.bonusDue.map((b) => ({
+          key: String(b.receiptId),
+          icon: Gift,
+          tone: b.date < h.today ? "text-danger" : "text-warning",
+          text: `${b.supplier} · ${b.number}`,
+          sub: formatIsoDate(b.date),
+          value: formatMoney(b.amount),
+          href: "/bonuses",
+        }))}
+      />
+      <Rows
+        title={t("ownT")}
+        empty={{ title: t("ownNone"), hint: t("ownNoneHint") }}
+        rows={
+          o.receipts === 0
+            ? []
+            : [
+                {
+                  key: "in",
+                  icon: PackagePlus,
+                  tone: "text-info",
+                  text: t("brought"),
+                  sub: t("rcN", { n: o.receipts }),
+                  value: pcs(g.broughtQty),
+                  href: "/receipts",
+                },
+                {
+                  key: "sold",
+                  icon: ShoppingCart,
+                  tone: "text-success",
+                  text: t("sold"),
+                  sub: o.lastSale ? t("lastSale", { d: formatIsoDate(o.lastSale) }) : undefined,
+                  value: pcs(o.soldQty),
+                },
+                { key: "left", icon: Boxes, tone: "text-text-secondary", text: t("left"), value: pcs(g.leftQty), href: "/stock" },
+                ...(o.otherQty
+                  ? [
+                      {
+                        key: "other",
+                        icon: PackageMinus,
+                        tone: "text-warning",
+                        text: t("other"),
+                        sub: t("otherSub"),
+                        value: pcs(o.otherQty),
+                      },
+                    ]
+                  : []),
+                {
+                  key: "st",
+                  icon: o.active ? CircleCheck : CirclePause,
+                  tone: o.active ? "text-success" : "text-text-secondary",
+                  text: o.active ? t("active") : t("passive"),
+                  sub: t("activeSub"),
+                  value: "",
+                },
+              ]
         }
       />
-    </section>
+    </div>
   );
 }

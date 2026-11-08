@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "./button";
 
@@ -15,7 +15,16 @@ export interface RowMenuItem {
  * Jadval qatori menyusi («…»). Menyu `fixed` — jadvalning aylanadigan konteyneri uni kesmaydi.
  * Esc va tashqariga bosish yopadi.
  */
-export function RowMenu({ items, label = "Amallar" }: { items: RowMenuItem[]; label?: string }) {
+export function RowMenu({
+  items,
+  label = "Amallar",
+  trigger,
+}: {
+  items: RowMenuItem[];
+  label?: string;
+  /** Matnli tugma (masalan, sarlavhada «Chop etish»): ikonka va matn; berilmasa — «…». */
+  trigger?: { icon: LucideIcon; text: string };
+}) {
   const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
   const ref = useRef<HTMLSpanElement>(null);
 
@@ -39,10 +48,10 @@ export function RowMenu({ items, label = "Amallar" }: { items: RowMenuItem[]; la
   return (
     <span ref={ref} className="inline-flex">
       <Button
-        variant="icon"
-        size="sm"
-        icon={Ellipsis}
-        aria-label={label}
+        variant={trigger ? "secondary" : "icon"}
+        size={trigger ? undefined : "sm"}
+        icon={trigger ? trigger.icon : Ellipsis}
+        aria-label={trigger ? undefined : label}
         title={label}
         aria-haspopup="menu"
         aria-expanded={pos !== null}
@@ -50,7 +59,9 @@ export function RowMenu({ items, label = "Amallar" }: { items: RowMenuItem[]; la
           const r = e.currentTarget.getBoundingClientRect();
           setPos(pos ? null : { top: r.bottom + 4, right: window.innerWidth - r.right });
         }}
-      />
+      >
+        {trigger ? trigger.text : null}
+      </Button>
       {pos ? (
         <span
           role="menu"

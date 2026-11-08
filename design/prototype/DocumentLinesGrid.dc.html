@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div ref="{{ rootRef }}" style="font-family:Inter,system-ui,sans-serif;font-size:13px;line-height:18px;color:#172B2A;font-variant-numeric:tabular-nums">
+  <div ref="{{ scrollRef }}" style="overflow-x:auto;border-radius:10px 10px 0 0">
+    <div style="width:100%;min-width:{{ minW }}px">
+      <div style="display:grid;grid-template-columns:{{ grid }};height:38px;background:#F8FAFA;border-bottom:1px solid #E2E8F0">
+        <div style="position:sticky;left:0;z-index:2;background:#F8FAFA;display:flex;align-items:center;padding-left:14px;font-size:12px;font-weight:500;color:#5B6B6A">{{ lb.num }}</div>
+        <sc-for list="{{ head }}" as="h" hint-placeholder-count="8">
+          <div title="{{ h.label }}" style="position:{{ h.pos }};left:{{ h.left }};z-index:{{ h.z }};background:#F8FAFA;min-width:0;padding:0 10px;display:flex;align-items:center;justify-content:{{ h.justify }};gap:2px;font-size:12px;font-weight:500;color:#5B6B6A;white-space:nowrap"><span style="overflow:hidden;text-overflow:ellipsis">{{ h.label }}</span><sc-if value="{{ h.required }}"><span style="color:#B91C1C">*</span></sc-if></div>
+        </sc-for>
+        <div></div>
+      </div>
+      <sc-for list="{{ items }}" as="r" hint-placeholder-count="5">
+        <div>
+        <div title="{{ r.tip }}" onClick="{{ r.click }}" onMouseEnter="{{ r.enter }}" onMouseLeave="{{ leave }}" style="display:grid;grid-template-columns:{{ grid }};height:44px;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};transition:background 120ms ease-out">
+          <div style="position:sticky;left:0;z-index:2;background:{{ r.bg }};box-shadow:inset 3px 0 0 {{ r.stripe }};display:flex;align-items:center;padding-left:14px;font-size:12px;color:#647574">{{ r.n }}</div>
+          <sc-for list="{{ r.cells }}" as="c">
+            <div data-cell="{{ c.id }}" onClick="{{ c.activate }}" style="position:{{ c.pos }};left:{{ c.left }};z-index:{{ c.z }};background:{{ c.bg }};min-width:0;display:flex;align-items:center;justify-content:{{ c.justify }};padding:0 10px;box-shadow:{{ c.ring }};cursor:{{ c.cursor }};transition:box-shadow 120ms ease-out">
+              <sc-if value="{{ c.editing }}">
+                <input ref="{{ inputRef }}" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" onBlur="{{ onBlur }}" placeholder="{{ c.ph }}" inputmode="{{ c.inputMode }}" maxlength="{{ c.maxLen }}" style="width:100%;height:30px;padding:0 2px;border:0;outline:none;background:transparent;font-family:{{ c.font }};font-size:{{ c.size }};text-align:{{ c.textAlign }};color:#172B2A">
+              </sc-if>
+              <sc-if value="{{ c.isMark }}">
+                <button onClick="{{ c.markClick }}" title="{{ lb.scan }}" style="width:100%;display:flex;flex-direction:column;gap:4px;padding:4px 0;border:0;background:transparent;cursor:pointer;text-align:left">
+                  <span style="display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:500;color:{{ c.markColor }}"><sc-if value="{{ c.markDone }}"><lucide-i name="circle-check" size="14"></lucide-i></sc-if>{{ c.markLabel }}</span>
+                  <span style="display:block;width:100%;height:3px;border-radius:2px;background:#EEF2F4;overflow:hidden"><span style="display:block;height:100%;width:{{ c.markPct }}%;background:{{ c.markBar }}"></span></span>
+                </button>
+              </sc-if>
+              <sc-if value="{{ c.isView }}">
+                <div style="min-width:0;max-width:100%;display:flex;flex-direction:column;align-items:{{ c.alignItems }}">
+                  <span style="display:flex;align-items:center;gap:6px;max-width:100%">
+                    <sc-if value="{{ c.hasIcon }}"><lucide-i name="{{ c.icon }}" size="14" style="color:{{ c.iconColor }};flex:none"></lucide-i></sc-if>
+                    <span style="font-family:{{ c.font }};font-size:{{ c.size }};font-weight:{{ c.weight }};color:{{ c.color }};text-decoration:{{ c.deco }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.text }}</span>
+                    <sc-for list="{{ c.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;color:{{ f.color }};flex:none"><lucide-i name="{{ f.icon }}" size="14"></lucide-i></span></sc-for>
+                    <sc-if value="{{ c.hasBadge }}"><span style="flex:none;height:20px;padding:0 6px;border-radius:6px;background:{{ c.badge.bg }};color:{{ c.badge.fg }};font-family:Inter,system-ui,sans-serif;font-size:11.5px;line-height:20px;font-weight:500;white-space:nowrap">{{ c.badge.label }}</span></sc-if>
+                  </span>
+                  <sc-if value="{{ c.hasSub }}"><span style="max-width:100%;font-size:12px;line-height:16px;color:{{ c.subColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.sub }}<sc-if value="{{ c.hasAction }}"><sc-if value="{{ c.hasSubText }}"> · </sc-if><button onClick="{{ c.act }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:2px">{{ c.actionLabel }}</button></sc-if></span></sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <div style="display:flex;align-items:center;justify-content:center">
+            <sc-if value="{{ canAdd }}"><button onClick="{{ r.remove }}" aria-label="{{ lb.remove }}" title="{{ lb.remove }}" style="width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:#647574;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:{{ r.xOp }};transition:background 120ms ease-out" style-hover="background:#FEF2F2;color:#B91C1C" style-focus="opacity:1"><lucide-i name="x" size="14"></lucide-i></button></sc-if>
+          </div>
+        </div>
+        <sc-if value="{{ r.hasDetail }}">
+          <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;padding:8px 14px 10px 54px;background:#F8FAFA;border-bottom:1px solid #EEF2F4;font-size:12px;line-height:16px;color:#5B6B6A">
+            <sc-if value="{{ r.detail.hasTitle }}"><span style="font-weight:500;color:#172B2A">{{ r.detail.title }}</span></sc-if>
+            <sc-for list="{{ r.detail.items }}" as="d"><span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ d.text }}</span></sc-for>
+            <sc-if value="{{ r.detail.hasNote }}"><span style="color:#647574">{{ r.detail.note }}</span></sc-if>
+          </div>
+        </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ isEmpty }}"><div style="height:72px;display:flex;align-items:center;justify-content:center;padding:0 16px;font-size:13px;color:#647574;border-bottom:1px solid #EEF2F4">{{ lb.empty }}</div></sc-if>
+    </div>
+  </div>
+  <sc-if value="{{ canAdd }}">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 14px">
+      <label style="display:flex;align-items:center;gap:8px;width:320px;max-width:100%;height:34px;padding:0 10px;border:1px solid {{ scanBorder }};border-radius:8px;background:#FFFFFF;color:#647574;box-shadow:{{ scanRing }};transition:border-color 120ms ease-out">
+        <lucide-i name="scan-barcode" size="16"></lucide-i>
+        <input ref="{{ scanRef }}" value="{{ scanVal }}" onChange="{{ onScanVal }}" onKeyDown="{{ onScanKey }}" onFocus="{{ scanFocus }}" onBlur="{{ scanBlur }}" placeholder="{{ lb.scanPh }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:13px;color:#172B2A">
+      </label>
+      <button onClick="{{ onAdd }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 4px;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><lucide-i name="plus" size="16"></lucide-i>{{ lb.add }}</button>
+      <span style="font-size:12px;color:#647574">{{ lb.keys }}</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ popOpen }}">
+    <div onMouseDown="{{ prevent }}" style="position:fixed;top:{{ popTop }}px;left:{{ popLeft }}px;width:{{ popW }}px;max-height:300px;overflow-y:auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px;z-index:90">
+      <sc-if value="{{ hasPopToggle }}">
+        <div style="position:sticky;top:-4px;z-index:1;margin:-4px -4px 4px;padding:6px 8px;background:#F8FAFA;border-bottom:1px solid #EEF2F4;display:flex;align-items:center;gap:10px;border-radius:10px 10px 0 0">
+          <button onMouseDown="{{ prevent }}" onClick="{{ popT.toggle }}" role="switch" aria-checked="{{ popT.on }}" style="display:flex;align-items:center;gap:8px;padding:0;border:0;background:transparent;cursor:pointer;font-size:12.5px;font-weight:500;color:#172B2A;white-space:nowrap">
+            <span style="width:28px;height:16px;border-radius:8px;background:{{ popT.track }};display:flex;align-items:center;justify-content:{{ popT.justify }};padding:2px;transition:background 120ms ease-out"><span style="width:12px;height:12px;border-radius:6px;background:#FFFFFF"></span></span>{{ popT.label }}<span style="font-size:11px;color:#647574;font-weight:400">{{ popT.kbd }}</span>
+          </button>
+          <span style="flex:1"></span><span style="font-size:11.5px;color:#647574;white-space:nowrap">{{ popT.hint }}</span>
+        </div>
+      </sc-if>
+      <sc-for list="{{ popItems }}" as="o">
+        <button onMouseDown="{{ prevent }}" onClick="{{ o.pick }}" onMouseEnter="{{ o.hover }}" style="display:flex;align-items:center;gap:10px;width:100%;min-height:{{ o.h }}px;padding:4px 8px;border:0;border-radius:6px;background:{{ o.bg }};text-align:left;cursor:pointer">
+          <sc-if value="{{ o.hasIcon }}"><lucide-i name="{{ o.icon }}" size="14" style="color:{{ o.iconColor }};flex:none"></lucide-i></sc-if>
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column">
+            <span style="font-size:13px;line-height:18px;font-weight:500;color:#172B2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.label }}</span>
+            <sc-if value="{{ o.hasSub }}"><span style="font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.sub }}</span></sc-if>
+          </span>
+          <sc-for list="{{ o.flags }}" as="f"><span title="{{ f.tip }}" style="display:flex;color:{{ f.color }};flex:none"><lucide-i name="{{ f.icon }}" size="14"></lucide-i></span></sc-for>
+          <sc-if value="{{ o.hasNote }}"><span style="flex:none;font-size:12px;color:{{ o.noteColor }}">{{ o.note }}</span></sc-if><sc-if value="{{ o.hasNote2 }}"><span style="flex:none;min-width:84px;text-align:right;font-size:12px;color:#5B6B6A;font-variant-numeric:tabular-nums">{{ o.note2 }}</span></sc-if>
+          <sc-if value="{{ o.selected }}"><lucide-i name="check" size="14" style="color:#0F766E;flex:none"></lucide-i></sc-if>
+        </button>
+      </sc-for>
+      <sc-if value="{{ popEmpty }}"><div style="padding:10px 8px;font-size:13px;color:#647574">{{ lb.noOptions }}</div></sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:420},&quot;columns&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{key,label,width,align?,editor?,required?,sticky?}[]&quot;},&quot;rows&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{id,n,tone?,tip?,raw,cells}[]&quot;},&quot;options&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{[key]: {value,label,sub?,icon?,flags?,note?,search?}[]}&quot;},&quot;editable&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onEdit&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(rowId,key,value)=&gt;void&quot;},&quot;onAdd&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onRemove&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(rowId)=&gt;void&quot;},&quot;onMark&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(rowId)=&gt;void&quot;},&quot;onBarcode&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(code)=&gt;boolean&quot;},&quot;focusReq&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{rowId,key,n}&quot;},&quot;labels&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;}}">
+const C2L = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sh', ъ: '', ы: 'i', ь: '', э: 'e', ю: 'yu', я: 'ya', ў: "o'", қ: 'q', ғ: "g'", ҳ: 'h' };
+const toLat = s => String(s || '').toLowerCase().split('').map(ch => C2L[ch] != null ? C2L[ch] : ch).join('');
+const TONE = { danger: '#B91C1C', warning: '#B45309' };
+class Component extends DCLogic {
+  state = { act: null, draft: '', hi: 0, hover: null, pop: null, scan: '', scanF: false };
+  scanRef = React.createRef(); rootRef = React.createRef(); scrollRef = React.createRef(); inputRef = React.createRef();
+  cols() { return this.props.columns || []; }
+  editKeys() { return this.cols().filter(c => c.editor && c.editor !== 'mark').map(c => c.key); }
+  col(key) { return this.cols().find(c => c.key === key) || {}; }
+  row(id) { return (this.props.rows || []).find(r => r.id === id); }
+  isSel(key) { const e = this.col(key).editor; return e === 'select' || e === 'product'; }
+  activate(rowId, key) {
+    if (!this.props.editable) return;
+    const c = this.col(key), r = this.row(rowId); if (!c.editor || c.editor === 'mark' || !r || (r.lock && r.lock[key])) return;
+    const raw = r.raw ? r.raw[key] : '';
+    const opts = (this.props.options || {})[key + '|' + rowId] || (this.props.options || {})[key] || [], cur = opts.findIndex(o => o.value === raw);
+    this.setState({ act: { rowId, key }, draft: this.isSel(key) ? '' : (raw == null ? '' : String(raw).replace(/^(\d+)\.(\d+)$/, '$1,$2')), hi: Math.max(0, cur), pop: null });
+  }
+  filtered() {
+    const s = this.state; if (!s.act) return [];
+    const q = toLat(s.draft.trim()), opts = (this.props.options || {})[s.act.key + '|' + s.act.rowId] || (this.props.options || {})[s.act.key] || [];
+    return opts.filter(o => !q || toLat(o.search || o.label).includes(q));
+  }
+  commit() {
+    const s = this.state; if (!s.act) return;
+    const r = this.row(s.act.rowId); if (!r) return;
+    if (this.isSel(s.act.key)) return;
+    const raw = r.raw ? r.raw[s.act.key] : '', prev = raw == null ? '' : String(raw).replace(/^(\d+)\.(\d+)$/, '$1,$2');
+    if (s.draft !== prev) this.props.onEdit && this.props.onEdit(s.act.rowId, s.act.key, s.draft);
+  }
+  move(dir, enter) {
+    const s = this.state, keys = this.editKeys(), rows = (this.props.rows || []).map(r => r.id);
+    let ri = rows.indexOf(s.act.rowId), ki = keys.indexOf(s.act.key) + dir;
+    if (ki >= keys.length) { ki = 0; ri++; } else if (ki < 0) { ki = keys.length - 1; ri--; }
+    this._moving = true; setTimeout(() => { this._moving = false; }, 0);
+    if (ri >= rows.length) { this.setState({ act: null }); if (enter) this.props.onAdd && this.props.onAdd(); return; }
+    if (ri < 0) return this.setState({ act: null });
+    this.activate(rows[ri], keys[ki]);
+  }
+  pick(value) {
+    const s = this.state; if (!s.act) return;
+    this.props.onEdit && this.props.onEdit(s.act.rowId, s.act.key, value);
+  }
+  onKey(e) {
+    const s = this.state; if (!s.act) return;
+    const sel = this.isSel(s.act.key);
+    if (e.altKey && (e.code === 'KeyA' || e.key === 'a' || e.key === 'A') && this.props.popToggle && sel) { e.preventDefault(); this.props.popToggle.toggle(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); this._moving = true; setTimeout(() => { this._moving = false; }, 0); return this.setState({ act: null }); }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); const id = s.act.rowId; this._moving = true; setTimeout(() => { this._moving = false; }, 0); this.setState({ act: null }); return this.props.onRemove && this.props.onRemove(id); }
+    if (sel && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); const n = this.filtered().length; if (n) this.setState({ hi: (s.hi + (e.key === 'ArrowDown' ? 1 : -1) + n) % n }); return; }
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      if (sel) { const f = this.filtered(); if (e.key === 'Enter' && f[s.hi] && (s.draft || f.length)) this.pick(f[Math.min(s.hi, f.length - 1)].value); }
+      else this.commit();
+      if (e.key === 'Enter' && !e.shiftKey && this.props.quickKey === s.act.key) { this._moving = true; setTimeout(() => { this._moving = false; }, 0); this.setState({ act: null, pop: null }); return setTimeout(() => this.scanRef.current && this.scanRef.current.focus(), 0); }
+      this.move(e.shiftKey ? -1 : 1, e.key === 'Enter');
+    }
+  }
+  componentDidUpdate(pp, ps) {
+    ps = this._ps || {}; this._ps = this.state;
+    const p = this.props;
+    if (p.focusReq && (!pp.focusReq || pp.focusReq.n !== p.focusReq.n)) {
+      const f = p.focusReq; if (p.editable) this.activate(f.rowId, f.key); else this.reveal(f.rowId, f.key);
+    }
+    if (p.scanFocusReq && (!pp.scanFocusReq || pp.scanFocusReq !== p.scanFocusReq)) setTimeout(() => this.scanRef.current && this.scanRef.current.focus(), 0);
+    const a = this.state.act, b = ps.act;
+    if (a && (!b || a.rowId !== b.rowId || a.key !== b.key)) {
+      this.reveal(a.rowId, a.key);
+      setTimeout(() => {
+        this.inputRef.current && this.inputRef.current.focus({ preventScroll: true });
+        if (this.isSel(a.key)) { const el = this.cellEl(a.rowId, a.key); if (el) { const r = el.getBoundingClientRect(); const w = Math.max(r.width, this.col(a.key).editor === 'product' ? 380 : 240); this.setState({ pop: { top: Math.min(r.bottom + 4, window.innerHeight - 320), left: Math.max(8, Math.min(r.left, window.innerWidth - w - 8)), w } }); } }
+      }, 0);
+    }
+  }
+  cellEl(rowId, key) { return this.rootRef.current && this.rootRef.current.querySelector(`[data-cell="${rowId}|${key}"]`); }
+  reveal(rowId, key) {
+    const el = this.cellEl(rowId, key), sc = this.scrollRef.current; if (!el || !sc) return;
+    const stick = 44 + (this.cols()[0] && this.cols()[0].sticky ? el.parentElement.children[1].offsetWidth : 0);
+    if (!this.col(key).sticky) { if (el.offsetLeft - stick < sc.scrollLeft) sc.scrollLeft = el.offsetLeft - stick; else if (el.offsetLeft + el.offsetWidth > sc.scrollLeft + sc.clientWidth) sc.scrollLeft = el.offsetLeft + el.offsetWidth - sc.clientWidth; }
+    const m = el.closest('main'); if (m) { const r = el.getBoundingClientRect(), mr = m.getBoundingClientRect(); if (r.top < mr.top + 60 || r.bottom > mr.bottom - 80) m.scrollTo({ top: m.scrollTop + r.top - mr.top - mr.height / 2, behavior: 'smooth' }); }
+  }
+  renderVals() {
+    const p = this.props, s = this.state, cols = this.cols(), lb = { num: '№', add: "Qator qo'shish", scanPh: 'Shtrix-kod yoki nom…', remove: "Qatorni o'chirish", empty: "Qatorlar yo'q", noOptions: 'Hech narsa topilmadi', scan: 'Skanerlash', keys: '', ...(p.labels || {}) };
+    let left = 44; const lefts = cols.map(c => { const l = left; if (c.sticky) left += parseInt(c.width, 10) || 0; return l; });
+    const grid = `44px ${cols.map(c => c.width || '120px').join(' ')} 36px`;
+    const minW = 80 + cols.reduce((a, c) => a + (parseInt(String(c.width).replace('minmax(', ''), 10) || 120), 0);
+    const editable = !!p.editable, f = s.act && this.isSel(s.act.key) ? this.filtered() : [];
+    const curRaw = s.act ? ((this.row(s.act.rowId) || {}).raw || {})[s.act.key] : null;
+    return {
+      lb, grid, minW, editable, canAdd: editable && !p.fixed, scanRef: this.scanRef, rootRef: this.rootRef, scrollRef: this.scrollRef, inputRef: this.inputRef, draft: s.draft,
+      head: cols.map((c, i) => ({ label: c.label, required: !!c.required && editable, justify: c.align === 'right' ? 'flex-end' : 'flex-start', pos: c.sticky ? 'sticky' : 'static', left: c.sticky ? lefts[i] + 'px' : 'auto', z: c.sticky ? 2 : 0 })),
+      items: (p.rows || []).map(r => {
+        const hov = s.hover === r.id, bg = hov ? '#F8FAFA' : '#FFFFFF';
+        return { id: r.id, n: r.n, tip: r.tip || '', bg, click: () => p.onRowClick && p.onRowClick(r.id), hasDetail: !!r.detail, detail: r.detail ? { ...r.detail, hasTitle: !!r.detail.title, hasNote: !!r.detail.note, items: r.detail.items || [] } : { items: [] }, stripe: TONE[r.tone] || 'transparent', xOp: hov ? 1 : 0,
+          enter: () => s.hover !== r.id && this.setState({ hover: r.id }), remove: e => { e.stopPropagation(); p.onRemove && p.onRemove(r.id); },
+          cells: cols.map((c, i) => {
+            const v = (r.cells || {})[c.key] || {}, ed = !!(s.act && s.act.rowId === r.id && s.act.key === c.key), isMarkCol = c.editor === 'mark';
+            const right = c.align === 'right', mono = c.editor === 'mono' || v.mono;
+            return { id: `${r.id}|${c.key}`, editing: ed, isMark: !ed && isMarkCol && !!v.mark, isView: !ed && !(isMarkCol && v.mark),
+              activate: () => !ed && this.activate(r.id, c.key), pos: c.sticky ? 'sticky' : 'static', left: c.sticky ? lefts[i] + 'px' : 'auto', z: c.sticky ? 1 : 0,
+              bg: ed ? '#FFFFFF' : v.cellBg || bg, justify: right ? 'flex-end' : 'flex-start', alignItems: right ? 'flex-end' : 'flex-start',
+              ring: ed ? 'inset 0 0 0 2px #0D9488' : v.err ? `inset 0 0 0 1px ${TONE[v.err] || TONE.danger}` : 'none',
+              cursor: editable && c.editor && !isMarkCol && !(r.lock && r.lock[c.key]) ? 'text' : 'default',
+              ph: c.editor === 'date' ? 'kk.oo.yyyy' : c.editor === 'product' || c.editor === 'select' ? (lb.search || 'Qidirish…') : '', inputMode: c.editor === 'number' || c.editor === 'date' ? 'decimal' : 'text', maxLen: c.editor === 'date' ? 10 : 40,
+              font: mono ? "'JetBrains Mono',monospace" : 'inherit', size: mono ? '12.5px' : '13px', textAlign: right ? 'right' : 'left',
+              text: v.text == null || v.text === '' ? (v.placeholder || '—') : v.text, color: v.text == null || v.text === '' ? '#647574' : v.color || '#172B2A', weight: v.weight || 400, deco: v.deco || 'none',
+              hasIcon: !!v.icon, icon: v.icon, iconColor: v.iconColor || '#5B6B6A', flags: v.flags || [], hasBadge: !!v.badge, badge: v.badge || {},
+              hasSub: !!v.sub || !!v.action, hasSubText: !!v.sub, sub: v.sub || '', subColor: v.subColor || '#647574', hasAction: !!v.action, actionLabel: v.action ? v.action.label : '', act: e => { e.stopPropagation(); v.action && v.action.run(); },
+              markLabel: v.mark ? v.mark.label : '', markPct: v.mark ? v.mark.pct : 0, markDone: !!(v.mark && v.mark.done), markColor: v.mark && v.mark.done ? '#15803D' : v.mark && v.mark.tone ? TONE[v.mark.tone] : '#172B2A', markBar: v.mark && v.mark.done ? '#15803D' : '#0D9488',
+              markClick: e => { e.stopPropagation(); p.onMark && p.onMark(r.id); } };
+          }) };
+      }),
+      isEmpty: !(p.rows && p.rows.length), leave: () => this.setState({ hover: null }),
+      onDraft: e => this.setState({ draft: e.target.value, hi: 0 }), onKey: e => this.onKey(e),
+      onBlur: () => { if (this._moving) return; this.commit(); this.setState({ act: null, pop: null }); },
+      hasPopToggle: !!(this.props.popToggle && s.act && s.act.key === this.props.popToggle.key), popT: (() => { const t = this.props.popToggle || {}; return { ...t, track: t.on ? '#0F766E' : '#CBD5D3', justify: t.on ? 'flex-end' : 'flex-start' }; })(),
+      popOpen: !!(s.act && s.pop && this.isSel(s.act.key)), popTop: s.pop ? s.pop.top : 0, popLeft: s.pop ? s.pop.left : 0, popW: s.pop ? s.pop.w : 0, prevent: e => e.preventDefault(),
+      popItems: f.slice(0, 60).map((o, i) => ({ label: o.label, sub: o.sub, hasSub: !!o.sub, icon: o.icon, hasIcon: !!o.icon, iconColor: o.iconColor || '#5B6B6A', flags: o.flags || [], note: o.note, hasNote: !!o.note, noteColor: o.noteColor || '#B45309', note2: o.note2, hasNote2: !!o.note2, selected: o.value === curRaw, h: o.sub ? 44 : 32,
+        bg: i === s.hi ? '#DDF5EE' : 'transparent', hover: () => s.hi !== i && this.setState({ hi: i }),
+        pick: () => { this.pick(o.value); this.move(1, false); } })),
+      popEmpty: f.length === 0,
+      scanVal: s.scan, onScanVal: e => this.setState({ scan: e.target.value }), scanFocus: () => this.setState({ scanF: true }), scanBlur: () => this.setState({ scanF: false }),
+      scanBorder: s.scanF ? '#0D9488' : '#E2E8F0', scanRing: s.scanF ? '0 0 0 3px rgba(13,148,136,0.15)' : 'none',
+      onScanKey: e => { if (e.key === 'Enter') { e.preventDefault(); const v = s.scan.trim(); if (v) { const ok = p.onBarcode && p.onBarcode(v); if (ok !== false) this.setState({ scan: '' }); } } },
+      onAdd: () => p.onAdd && p.onAdd()
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Avansni hisobga olish" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="DocumentHeader" parent-label="{{ parentLabel }}" on-parent="{{ back }}" title="{{ L.qz_ahTitle }}" number="{{ number }}" badge="{{ badge }}" steps="{{ steps }}" secondary="{{ secondary }}" primary="{{ primary }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
+  <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,52px"></dc-import></sc-for>
+  <sc-if value="{{ showVs }}"><dc-import name="ValidationSummary" title="{{ L.qz_vsTitle }}" subtitle="{{ L.qz_vsSub }}" errors="{{ vsErrors }}" close-label="{{ L.qz_close }}" on-close="{{ closeVs }}" hint-size="100%,96px"></dc-import></sc-if>
+  <div style="display:grid;grid-template-columns:{{ cols }};gap:16px;align-items:start;min-width:0">
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px 20px"><dc-import name="InfoGrid" title="{{ L.qz_ahInfo }}" rows="{{ infoRows }}" stacked="{{ narrow }}" hint-size="100%,120px"></dc-import></div>
+      <sc-if value="{{ hasGrid }}" hint-placeholder-val="{{ true }}"><dc-import name="AllocationGrid" kind="{{ kind }}" rows="{{ gRows }}" editable="{{ editable }}" hints="{{ true }}" manual="{{ manual }}" on-auto="{{ onAuto }}" labels="{{ gLabels }}" hint-size="100%,220px"></dc-import></sc-if>
+      <sc-if value="{{ noGrid }}"><div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px"><dc-import name="EmptyState" icon="circle-check" tone="neutral" title="{{ L.qz_noOpenT }}" text="{{ L.qz_ahNoOpen }}" min-height="200" hint-size="100%,200px"></dc-import></div></sc-if>
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+        <span style="font-size:14px;font-weight:600">{{ L.qz_hist }}</span>
+        <dc-import name="HistoryTimeline" groups="{{ histGroups }}" empty-label="{{ L.qz_histEmpty }}" hint-size="100%,160px"></dc-import>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <dc-import name="SideSummary" kpis="{{ kpis }}" columns="{{ kpiCols }}" hint-size="100%,240px"></dc-import>
+      <div style="display:flex;gap:8px;padding:10px 12px;border-radius:8px;background:#F8FAFA;border:1px solid #E2E8F0;font-size:12px;line-height:16px;color:#5B6B6A"><lucide-i name="info" size="14" style="flex:none;margin-top:1px"></lucide-i><span style="text-wrap:pretty">{{ L.qz_ahNoCash }}</span></div>
+    </div>
+  </div>
+  <div style="height:32px"></div>
+  <sc-if value="{{ dlgOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ L.qz_ahCancelT }}" text="{{ dlgText }}" items="{{ dlgItems }}" with-reason="{{ true }}" reason-label="{{ L.qz_reason }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ setReason }}" danger="{{ true }}" confirm-label="{{ L.qz_ahCancel }}" cancel-label="{{ L.qz_keep }}" on-confirm="{{ doCancel }}" on-cancel="{{ closeDlg }}" hint-size="440px,300px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mt&quot;,&quot;yt&quot;],&quot;default&quot;:&quot;mt&quot;,&quot;tsType&quot;:&quot;'mt'|'yt'&quot;},&quot;party&quot;:{&quot;editor&quot;:null,&quot;default&quot;:13,&quot;tsType&quot;:&quot;number|string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;no&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;act&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;docKey&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;parentLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Farm Lux&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;accountant&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;accountant&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Jasur Ergashev&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,arg)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const r2 = x => Math.round(x * 100) / 100;
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const ini = n => String(n || '').split(' ').map(x => x[0] || '').join('').slice(0, 2).toUpperCase();
+const SB = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
+class Component extends DCLogic {
+  state = { d: null, manual: false, dlg: false, reason: '', reasonErr: '', showErr: false };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.init(); } }, 60); else this.init();
+    this._rs = () => this.forceUpdate(); window.addEventListener('resize', this._rs);
+    this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); window.removeEventListener('resize', this._rs); }
+  componentDidUpdate(pp) { if (pp.docKey !== this.props.docKey || pp.no !== this.props.no) this.init(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(roles) { const L = this.L; return fill(L.qz_who, { r: roles.map(r => L['r_' + r] || r).join(', ') }); }
+  init() {
+    const D = this.D, p = this.props; if (!D) return;
+    const K = p.kind === 'yt' ? 'yt' : 'mt', ex = p.no ? D.advByNo(p.no) : null;
+    if (ex) return this.setState({ d: D.advCopy(ex), manual: false, showErr: false, dlg: p.act === 'cancel', reason: '', reasonErr: '' });
+    const br = D.partyBranch(K, p.party, p.branch), Lg = D.ledger(K, p.party, br), al = D.autoAlloc(Lg.invoices.filter(x => x.left > 0), Lg.advance), at = D.nowStr(), who = p.userName || 'Jasur Ergashev';
+    this.setState({ d: { kind: K, branch: br, party: p.party, date: D.TODAY, auto: false, alloc: Object.keys(al).map(k => ({ no: k, sum: al[k] })), status: 'draft', note: '', createdBy: who, createdAt: at, log: [{ kind: 'create', who, at }] }, manual: false, showErr: false, dlg: false });
+  }
+  calc(d, Lg) {
+    const am = {}; (d.alloc || []).forEach(a => { am[a.no] = r2((am[a.no] || 0) + a.sum); });
+    const tot = r2(Object.values(am).reduce((a, b) => a + b, 0)), rowErr = {};
+    Lg.invoices.forEach(x => { if (am[x.no] > x.left + 0.005) rowErr[x.no] = true; });
+    const errs = []; const L = this.L;
+    if (!(tot > 0)) errs.push(L.qz_eEmpty);
+    if (tot > Lg.advance + 0.005) errs.push(fill(L.qz_eOver, { a: fM(tot), b: fM(Lg.advance) }));
+    if (Object.keys(rowErr).length) errs.push(fill(L.qz_eRow, { n: Object.keys(rowErr).join(', ') }));
+    return { am, tot, rowErr, errs };
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow, d = s.d;
+    const base = { L, narrow, kind: p.kind || 'mt', parentLabel: p.parentLabel || '', back: () => p.onBack && p.onBack(), number: '', badge: {}, steps: [], banners: [], secondary: [], primary: null, infoRows: [], gRows: [], gLabels: {}, kpis: [], histGroups: [], vsErrors: [], cols: narrow || window.innerWidth < 1100 ? 'minmax(0,1fr)' : 'minmax(0,1fr) 320px', kpiCols: narrow || window.innerWidth < 1100 ? 4 : 1, hasGrid: false, noGrid: false };
+    if (!D || !d) return base;
+    const K = d.kind, st = d.status, ed = st === 'draft', Lg = D.ledger(K, d.party, d.branch, d.id), c = this.calc(d, Lg);
+    const name = D.partyName(K, d.party), brName = (D.BRANCHES.find(b => b.code === d.branch) || {}).name || d.branch;
+    const upd = fn => this.setState(x => { const n = D.advCopy(x.d); fn(n); return { d: n }; });
+    const post = () => { if (!D.canR(p.role, 'ADV_ROLES', 'create')) return this.toast(this.who(D.ADV_ROLES.create)); if (c.errs.length) return this.setState({ showErr: true }); const n = D.postAdv(d, p.userName); this.setState({ d: n, showErr: false }); this.toast(fill(L.qz_tPosted, { n: n.no, s: fM(c.tot) })); };
+    const save = () => { if (!D.canR(p.role, 'ADV_ROLES', 'create')) return this.toast(this.who(D.ADV_ROLES.create)); const n = D.saveAdv(d); this.setState({ d: n }); this.toast(fill(L.qz_tSaved, { n: n.no })); };
+    const cancelRoles = d.auto ? D.ADV_ROLES.cancelAuto : D.ADV_ROLES.cancel;
+    const askCancel = () => D.canR(p.role, 'ADV_ROLES', d.auto ? 'cancelAuto' : 'cancel') ? this.setState({ dlg: true, reason: '', reasonErr: '' }) : this.toast(d.auto ? fill(L.qz_whoAuto, { r: cancelRoles.map(r => L['r_' + r]).join(', ') }) : this.who(cancelRoles));
+    const steps = st === 'cancelled' ? [{ label: L.tl_st_draft, state: 'done' }, { label: L.tl_st_posted, state: 'done' }, { label: L.tl_st_cancelled, state: 'fail' }] : [{ label: L.tl_st_draft, state: ed ? 'cur' : 'done' }, { label: L.tl_st_posted, state: st === 'posted' ? 'cur' : 'next' }];
+    const at = x => String(x || '').replace(' ', ', '), banners = [];
+    if (d.auto) banners.push({ tone: 'info', icon: 'wallet', title: fill(L.qz_bAutoT, { s: fM(D.advSum(d)), n: d.no }), text: fill(L.qz_bAutoD, { d: d.src }) });
+    if (st === 'posted' && !d.auto) banners.push({ tone: 'success', icon: 'circle-check', title: '', text: fill(L.tl_bPosted, { at: at(d.postedAt), who: d.postedBy }) });
+    if (st === 'cancelled') banners.push({ tone: 'neutral', icon: 'circle-x', title: fill(L.tl_bCancelled, { at: at(d.cancelledAt), who: d.cancelledBy }), text: d.cancelReason || '' });
+    const inv = Lg.invoices, visible = ed ? inv.filter(x => x.left > 0 || c.am[x.no] > 0) : inv.filter(x => c.am[x.no] > 0);
+    const gRows = visible.map(x => ({ no: x.no, arch: !!x.open, tip: x.open ? L.kb_archTip : '', date: x.date, ext: x.extNo, due: x.due, sum: x.sum, ret: x.ret, prior: x.paid, left: x.left, late: x.late, value: c.am[x.no] || null, err: c.rowErr[x.no] ? L.qz_eRowShort : '',
+      onOpen: x.oid != null ? () => { D.store.openReq = x.oid; p.onNavigate && p.onNavigate('orders'); } : x.rc ? () => p.onNavigate && p.onNavigate('receipt', 'open:' + x.no) : null,
+      onValue: n => { this.setState({ manual: true }); upd(z => { z.alloc = (z.alloc || []).filter(a => a.no !== x.no); if (n > 0) z.alloc.push({ no: x.no, sum: r2(n) }); }); } }));
+    const gLabels = { arch: L.kb_arch, title: K === 'mt' ? L.qz_gTitle : L.qz_gTitleYt, auto: L.tl_auto, manual: L.tl_manual, manualTip: L.tl_manualTip, paid: L.tl_paid, after: L.tl_after, days: L.tl_days,
+      c_no: K === 'mt' ? L.tl_c_no : L.tl_c_noYt, c_date: L.tl_c_date, c_ext: L.tl_c_ext, c_due: L.tl_c_due, c_sum: K === 'mt' ? L.tl_c_sum : L.tl_c_sumYt, c_ret: K === 'mt' ? L.tl_c_ret : L.tl_c_retYt, c_prior: L.tl_c_prior, c_left: L.tl_c_left, c_late: L.tl_c_late, c_val: L.qz_c_val };
+    const advLeft = r2(Lg.advance - c.tot), debtAfter = st === 'posted' ? D.ledger(K, d.party, d.branch).debt : r2(Lg.debt - (ed ? c.tot : 0));
+    const kpis = [{ label: L.qz_kAvail, value: fM(Lg.advance), color: '#1D4ED8', size: '20px' }, { label: L.qz_kAlloc, value: fM(c.tot), size: '20px', color: c.tot > Lg.advance + 0.005 ? '#B91C1C' : '#172B2A' },
+      { label: L.qz_kAdvLeft, value: fM(st === 'cancelled' ? Lg.advance : advLeft), size: '20px', color: advLeft < 0 ? '#B91C1C' : '#172B2A' }, { label: st === 'draft' ? L.qz_kDebtAfter : L.qz_c_debt, value: fM(debtAfter), size: '20px', pickTip: L.qz_openCard, pick: () => p.onBack && p.onBack() }];
+    const infoRows = [{ label: K === 'mt' ? L.qz_c_cust : L.qz_c_sup, value: name }, { label: L.stir || 'STIR', value: D.partyStir(K, d.party), mono: true }, { label: L.qz_c_br, value: brName }, { label: L.qz_c_date, value: d.date }, { label: L.qz_ahType, value: d.auto ? L.qz_ahAutoT : L.qz_ahManualT }, ...(d.src ? [{ label: L.qz_ahSrc, value: d.src, mono: true }] : [])];
+    const evs = d.log || [], days = [...new Set(evs.map(e => e.at.slice(0, 10)))].reverse();
+    const histGroups = days.map(day => ({ label: day, items: evs.filter(e => e.at.slice(0, 10) === day).reverse().map(e => ({ kind: e.kind === 'create' ? 'create' : 'status', initials: ini(e.who), name: e.who, action: L['qz_h_' + e.kind] || e.kind, time: e.at.slice(11), changes: e.reason ? [{ label: L.qz_reason, to: e.reason }] : e.src ? [{ label: L.qz_ahSrc, to: e.src }] : [] })) }));
+    const S = SB[st];
+    const now = D.ledger(K, d.party, d.branch);
+    return {
+      ...base, number: d.no || L.qz_new, badge: { label: L['tl_st_' + st], icon: S[0], fg: S[1], bg: S[2] }, steps, banners,
+      primary: ed ? { label: L.qz_post, icon: 'check', pick: post } : null,
+      secondary: ed ? [{ label: L.qz_saveDraft, icon: 'save', pick: save }] : st === 'posted' ? [{ label: L.qz_ahCancel, icon: 'circle-x', danger: true, pick: askCancel }] : [],
+      showVs: s.showErr && c.errs.length > 0, vsErrors: c.errs.map(t => ({ text: t, go: () => {} })), closeVs: () => this.setState({ showErr: false }),
+      infoRows, gRows, gLabels, editable: ed, manual: s.manual, hasGrid: gRows.length > 0, noGrid: gRows.length === 0,
+      onAuto: () => { const al = D.autoAlloc(Lg.invoices.filter(x => x.left > 0), Lg.advance); this.setState({ manual: false }); upd(z => { z.alloc = Object.keys(al).map(k => ({ no: k, sum: al[k] })); }); },
+      kpis, histGroups,
+      dlgOpen: s.dlg && st === 'posted', dlgText: fill(L.qz_ahCancelD, { n: d.no }), dlgItems: [{ icon: 'hand-coins', text: fill(L.qz_ahCancelDebt, { a: fM(now.debt), b: fM(r2(now.debt + D.advSum(d))) }) }, { icon: 'wallet', text: fill(L.qz_ahCancelAdv, { a: fM(now.advance), b: fM(r2(now.advance + D.advSum(d))) }) }, { icon: 'banknote', text: L.qz_ahNoCash }],
+      reason: s.reason, reasonErr: s.reasonErr, setReason: v => this.setState({ reason: v, reasonErr: '' }), closeDlg: () => this.setState({ dlg: false }),
+      doCancel: () => { if (!s.reason.trim()) return this.setState({ reasonErr: L.qz_reasonReq }); const n = D.cancelAdv(d.no, p.userName, s.reason.trim()); this.setState({ d: n, dlg: false }); this.toast(fill(L.qz_tCancelled, { n: n.no })); }
+    };
+  }
+}
+</script>
+</body>
+</html>

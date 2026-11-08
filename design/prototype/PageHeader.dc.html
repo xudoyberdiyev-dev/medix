@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:Inter,system-ui,sans-serif;color:#172B2A">
+  <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+    <div style="display:flex;align-items:baseline;gap:8px;min-width:0">
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em;color:#172B2A">{{ title }}</h1>
+      <sc-if value="{{ hasInfo }}"><span title="{{ info }}" aria-label="{{ info }}" style="display:flex;align-self:center;color:#647574;cursor:help"><lucide-i name="info" size="16"></lucide-i></span></sc-if>
+      <sc-if value="{{ hasCount }}"><span style="font-size:14px;line-height:20px;color:#647574;font-variant-numeric:tabular-nums">{{ count }}</span></sc-if>
+    </div>
+    <sc-if value="{{ hasSubtitle }}"><p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ subtitle }}</p></sc-if>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex:none">
+    <sc-for list="{{ secondary }}" as="b">
+      <button onClick="{{ b.pick }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;white-space:nowrap;flex:none;transition:background 120ms ease-out" style-hover="background:#F8FAFA" style-active="background:#EEF2F4"><lucide-i name="{{ b.icon }}" size="16" style="color:#5B6B6A"></lucide-i>{{ b.label }}</button>
+    </sc-for>
+    <sc-if value="{{ hasMore }}">
+      <div style="position:relative">
+        <button onClick="{{ toggleMore }}" aria-label="{{ moreLabel }}" title="{{ moreLabel }}" style="width:34px;height:34px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA" style-active="background:#EEF2F4"><lucide-i name="ellipsis" size="16"></lucide-i></button>
+        <sc-if value="{{ open }}">
+          <div onClick="{{ close }}" style="position:fixed;inset:0;z-index:40"></div>
+          <div style="position:absolute;top:40px;right:0;min-width:200px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px;z-index:41">
+            <sc-for list="{{ moreItems }}" as="m">
+              <sc-if value="{{ m.sep }}"><div style="height:1px;background:#EEF2F4;margin:4px 0"></div></sc-if>
+              <button onClick="{{ m.run }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;font-size:13px;color:{{ m.color }};cursor:pointer;text-align:left;white-space:nowrap" style-hover="background:{{ m.hover }}"><lucide-i name="{{ m.icon }}" size="16" style="color:{{ m.iconColor }}"></lucide-i>{{ m.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasPrimary }}">
+      <button onClick="{{ primary.pick }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px 0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A"><lucide-i name="{{ primary.icon }}" size="16"></lucide-i>{{ primary.label }}<sc-if value="{{ primary.kbd }}"><span style="margin-left:4px;height:18px;padding:0 5px;border-radius:4px;background:rgba(255,255,255,0.16);font-size:12px;line-height:18px;font-weight:500;font-family:'JetBrains Mono',monospace">{{ primary.kbd }}</span></sc-if></button>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:120},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Mahsulotlar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;count&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;40&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;subtitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;moreLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Boshqa amallar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;secondary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,pick}[]&quot;},&quot;more&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,pick,danger?,sep?}[]&quot;},&quot;primary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,icon,pick}&quot;}}">
+class Component extends DCLogic {
+  state = { open: false };
+  renderVals() {
+    const p = this.props, more = p.more || [];
+    return {
+      hasInfo: !!p.info, hasCount: p.count != null && p.count !== '', hasSubtitle: !!p.subtitle, secondary: p.secondary || [], hasPrimary: !!p.primary, primary: p.primary || {},
+      hasMore: more.length > 0, open: this.state.open, toggleMore: () => this.setState(s => ({ open: !s.open })), close: () => this.setState({ open: false }),
+      moreItems: more.map(m => ({ ...m, sep: !!m.sep, color: m.danger ? '#B91C1C' : '#172B2A', iconColor: m.danger ? '#B91C1C' : '#5B6B6A', hover: m.danger ? '#FEF2F2' : '#F8FAFA',
+        run: () => { this.setState({ open: false }); m.pick && m.pick(); } }))
+    };
+  }
+}
+</script>
+</body>
+</html>

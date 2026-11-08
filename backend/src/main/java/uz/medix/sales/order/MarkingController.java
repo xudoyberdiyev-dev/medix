@@ -96,9 +96,17 @@ class MarkingController {
         return marking.remove(actor(), id, markId, r.reason());
     }
 
+    @PostMapping("/orders/{id}/confirm")
+    @PreAuthorize("hasAuthority('marking.scan')")
+    @Operation(summary = "Markirovkasiz qatorlarni tasdiqlash",
+            description = "E1: markirovkasiz qatorlar skanerlanmaydi — Markirovkachi «Tasdiqlash» bilan o'tkazadi (bittalab yoki hammasi).")
+    MarkWork confirm(@PathVariable long id, @Valid @RequestBody MarkingModels.ConfirmRequest r) {
+        return marking.confirm(actor(), id, r.lineIds());
+    }
+
     @PostMapping("/orders/{id}/finish")
     @PreAuthorize("hasAuthority('marking.scan')")
-    @Operation(summary = "Markirovkani yakunlash", description = "Barcha kodlar skanerlangan bo'lsa → «Hisobdan o'tkazilmoqda».")
+    @Operation(summary = "Markirovkani yakunlash", description = "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».")
     MarkWork finish(@PathVariable long id) {
         marking.finish(actor(), id);
         return marking.get(actor(), id);

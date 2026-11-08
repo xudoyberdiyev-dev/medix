@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Inventarizatsiya" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ L.iv_title }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" hint-size="100%,34px"></dc-import>
+  <div style="display:grid;grid-template-columns:{{ kpiGrid }};gap:12px">
+    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="2">
+      <button onClick="{{ k.pick }}" aria-pressed="{{ k.active }}" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:#FFFFFF;border:1px solid {{ k.border }};border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);text-align:left;cursor:pointer;min-width:0;font:inherit;color:#172B2A" style-hover="border-color:#647574">
+        <span style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><span style="width:24px;height:24px;flex:none;border-radius:6px;background:{{ k.iconBg }};color:{{ k.iconFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ k.icon }}" size="14"></lucide-i></span>{{ k.label }}</span>
+        <span style="font-size:clamp(18px,1.6vw,24px);line-height:30px;font-weight:600;letter-spacing:-0.02em">{{ k.value }}</span>
+        <span style="font-size:12px;line-height:16px;color:#647574">{{ k.note }}</span>
+      </button>
+    </sc-for>
+    <div style="padding:12px 16px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);display:flex;flex-direction:column;gap:6px;min-width:0">
+      <span style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><span style="width:24px;height:24px;flex:none;border-radius:6px;background:#F8FAFA;color:#5B6B6A;display:flex;align-items:center;justify-content:center"><lucide-i name="calendar-check" size="14"></lucide-i></span>{{ L.iv_kLast }}</span>
+      <div style="display:grid;grid-template-columns:repeat({{ lastCols }},minmax(0,1fr));gap:4px 16px">
+        <sc-for list="{{ lastRows }}" as="w">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;font-size:13px;line-height:20px">
+            <span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#172B2A">{{ w.name }}</span>
+            <span style="display:flex;align-items:center;gap:4px;flex:none;color:{{ w.color }};font-weight:{{ w.weight }}"><sc-if value="{{ w.warn }}"><lucide-i name="triangle-alert" size="13"></lucide-i></sc-if>{{ w.date }}<span style="font-weight:400;color:#647574">· {{ w.days }}</span></span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <sc-for list="{{ lockBanners }}" as="b"><dc-import name="StatusBanner" tone="info" icon="lock" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.iv_search }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" has-active="{{ false }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}"><dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="none" scroll-x="{{ true }}" min-width="{{ tMinW }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,300px"></dc-import></sc-if>
+    <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="clipboard-check" tone="brand" title="{{ L.iv_emptyT }}" text="{{ L.iv_emptyD }}" primary="{{ hdrPrimary }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+    <sc-if value="{{ noRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.qz_noResT }}" text="{{ L.qz_noResD }}" min-height="240" hint-size="100%,240px"></dc-import></sc-if>
+  </div>
+  <div style="height:48px"></div>
+</div>
+</sc-if>
+<sc-if value="{{ isDoc }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="InventoryDoc" no="{{ doc.no }}" req="{{ doc.req }}" act="{{ doc.act }}" doc-key="{{ doc.key }}" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-back="{{ backToList }}" on-toast="{{ toastFn }}" on-count="{{ openCount }}" on-navigate="{{ navFn }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+<sc-if value="{{ isCount }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="InventoryCount" no="{{ cnt.no }}" preset="{{ cnt.preset }}" doc-key="{{ cnt.key }}" dict="{{ L }}" role="{{ role }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-back="{{ cntBack }}" on-toast="{{ toastFn }}" on-done="{{ cntDone }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;branch&quot;,&quot;keeper&quot;,&quot;director&quot;,&quot;admin&quot;,&quot;accountant&quot;],&quot;default&quot;:&quot;branch&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Bekzod Tursunov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,a)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : 0; };
+const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], count: ['scan-line', '#1D4ED8', '#EFF6FF'], check: ['clipboard-list', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
+class Component extends DCLogic {
+  state = { view: 'list', tab: 'all', q: '', doc: null, cnt: null, empty: false };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() {
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._url = setInterval(() => this.applyUrl(), 250);
+    this._poll = setInterval(() => { const D = this.D; if (!D) return; if (D.store.navReq && D.store.navReq.page === 'inventory') this.consume(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); clearInterval(this._url); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  // T10a3 (1.7.4): manzildagi filtr — ?status=draft|count|check|posted|cancelled, ?q=, ?open= (navReq orqali)
+  applyUrl() { const D = this.D, u = D && D.store.urlF; if (!u || u.page !== 'inventory' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.open) return; this.setState({ view: 'list', doc: null, cnt: null, tab: ['draft', 'count', 'check', 'posted', 'cancelled'].includes(P.status) ? P.status : 'all', q: P.q || '' }); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(rs) { const L = this.L; return fill(L.qz_who, { r: rs.map(r => L['r_' + r] || r).join(', ') }); }
+  my() { const b = this.props.branch; return b && b !== 'ALL' ? b : null; }
+  consume() { const r = this.D.store.navReq; this.D.store.navReq = null; if (r && r.open) this.openNo(r.open); }
+  openNo(no, act) { this.setState({ view: 'doc', doc: { no, act: act || '', key: Date.now() }, cnt: null }); }
+  openNew() { const R = this.D.IV_ROLES.create; if (!this.D.can(this.props.role, 'inventory.create')) return this.toast(this.who(R)); this.setState({ view: 'doc', doc: { no: '', req: null, key: Date.now() }, cnt: null }); }
+  openCount(no, preset) { const R = this.D.IV_ROLES.count; if (!this.D.can(this.props.role, 'inventory.count')) return this.toast(this.who(R)); this.setState({ view: 'count', cnt: { no, preset: preset || null, key: Date.now() } }); }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D) return;
+    const base = { view: 'list', tab: 'all', q: '', doc: null, cnt: null, empty: false };
+    if (!d) { if (D.store.demoDirty) D.restoreBase(); this.setState(base); if (D.store.navReq && D.store.navReq.page === 'inventory') this.consume(); return; }
+    D.payReset(); this.setState(base); const k = d.k, P = n => D.PRODUCTS.find(p => p.name === n).id;
+    const mk = (scope, extra) => { let x = D.saveIv({ branch: 'TSH', wh: 'Asosiy ombor', date: D.TODAY, scope, commission: [D.KEEPER, D.empNames('branch', 'TSH')[0]], chair: D.KEEPER, blind: true, status: 'draft', lines: [], note: '', createdBy: 'Bekzod Tursunov', createdAt: D.nowStr(), log: [{ kind: 'create', who: 'Bekzod Tursunov', at: D.nowStr() }], ...(extra || {}) }); return D.ivStart(x, 'Bekzod Tursunov'); };
+    const fillN = (x, n) => { const c = D.ivCopy(x); const ms = D.marks(); c.lines.slice(0, n).forEach(l => { const pr = D.prodById(l.pid) || {}; if (pr.mark) { l.codes = ms.filter(m => m.bid === l.bid).slice(0, l.book).map(m => m.code); l.counted = l.codes.length; } else l.counted = l.book; }); return D.saveIv(c); };
+    const g1 = () => { let x = mk({ mode: 'products', zones: ['asosiy'], pids: [P('Omeprazol 20mg'), P('Paracetamol 500mg')] }); x = fillN(x, x.lines.length); x.lines.forEach(l => { if (l.bid === 'O18') { l.counted = l.book - 5; l.codes = l.codes.slice(0, l.counted); } if (l.pid === P('Paracetamol 500mg')) l.counted = l.book + 3; }); x.lines.find(l => l.bid === 'O18').note = 'Qadoq ichida 5 dona yetishmadi'; return D.ivStep(x, 'check', 'Sardor Aliyev'); };
+    if (k === 'empty') return this.setState({ empty: true });
+    if (k === 'countProg' || k === 'blind' || k === 'finishUnc') { let x = mk({ mode: 'zones', zones: ['asosiy'], pids: [] }); const n = x.lines.length; x = fillN(x, k === 'blind' ? 0 : Math.round(n * (k === 'finishUnc' ? 0.88 : 37 / 52))); return this.openCount(x.no, k === 'finishUnc' ? { finish: true } : null); }
+    if (k === 'markScan' || k === 'dupCode') { const x = mk({ mode: 'products', zones: ['seyf'], pids: [P('Demidrol 1% 1ml'), P('Tramadol 50mg/ml 2ml')] }); return this.openCount(x.no, { scan: true, pre: k === 'dupCode' ? 2 : 3, dup: k === 'dupCode' }); }
+    if (k === 'result') { const x = g1(); return this.openNo(x.no, 'diff'); }
+    if (k === 'newBatch') { const x = D.ivCopy(g1()); x.lines.push({ id: 'nbDemo', bid: null, pid: P('Paracetamol 500mg'), batch: 'PA-251001', exp: '01.10.2028', days: 728, zone: 'asosiy', zoneLabel: 'Asosiy saqlash', zoneType: 'store', book: 0, cost: (D.lastCost(P('Paracetamol 500mg'), 'TSH') || {}).cost || 0, counted: 12, codes: [], note: "Tizimda yo'q partiya — javonda topildi", newBatch: true }); D.saveIv(x); return this.openNo(x.no, 'diff'); }
+    if (k === 'ctrlDiff') { let x = mk({ mode: 'products', zones: ['seyf'], pids: [P('Tramadol 50mg/ml 2ml')] }); x = fillN(x, x.lines.length); x.lines[0].counted -= 1; x.lines[0].codes = x.lines[0].codes.slice(0, -1); x.lines[0].note = '1 ampula topilmadi'; x = D.ivStep(x, 'check', 'Sardor Aliyev'); return this.openNo(x.no, 'diff'); }
+    if (k === 'lockBan') { mk({ mode: 'products', zones: ['asosiy'], pids: [P('Omeprazol 20mg'), P('Paracetamol 500mg')] }); D.store.trReq = { new: 'zk', bid: 'O18', qty: 10, toZone: 'karantin', act: 'try' }; D.store.demoHold = true; return this.props.onNavigate && this.props.onNavigate('transfer'); }
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, narrow, role: p.role, branch: p.branch, userName: p.userName, isList: true, isDoc: false, isCount: false, kpis: [], views: [], tRows: [], tColumns: [], fbFilters: [], fbLabels: {}, lastRows: [], lockBanners: [], doc: {}, cnt: {}, toastFn: t => this.toast(t), kpiGrid: '1fr' };
+    if (!D || !D.ivSum) return base;
+    const vals = { doc: s.doc || {}, cnt: s.cnt || {}, navFn: (k, a) => p.onNavigate && p.onNavigate(k, a), backToList: () => this.setState({ view: 'list', doc: null }), openCount: no => this.openCount(no), cntBack: () => this.openNo(s.cnt.no), cntDone: no => this.openNo(no, 'diff') };
+    if (s.view === 'doc' && s.doc) return { ...base, ...vals, isList: false, isDoc: true };
+    if (s.view === 'count' && s.cnt) return { ...base, ...vals, isList: false, isCount: true };
+    const my = this.my(), cost = D.can(p.role, 'special.cost'), all = s.empty ? [] : (D.store.invs || []).filter(x => !my || x.branch === my);
+    const VS = [['all', null], ['draft', ['draft']], ['count', ['count']], ['check', ['check']], ['posted', ['posted']], ['cancelled', ['cancelled']]], cur = VS.find(v => v[0] === s.tab) || VS[0];
+    const q = s.q.trim().toLowerCase(), scopeTxt = x => { const zl = D.ivZones(x).map(z => D.zoneType(x.branch, x.wh, z).label); return (x.scope.mode === 'wh' ? L.iv_mWh : zl.join(', ')) + (x.scope.pids.length ? ' · ' + fill(L.iv_nProd, { n: x.scope.pids.length }) : ''); };
+    const rows = all.filter(x => (!cur[1] || cur[1].includes(x.status)) && (!q || `${x.no} ${x.wh} ${(x.commission || []).join(' ')}`.toLowerCase().includes(q)));
+    const tColumns = [{ key: 'no', label: L.qt_cNo, width: '140px' }, { key: 'd', label: L.qt_cDate, width: '100px' }, { key: 'w', label: L.iv_hWh, width: 'minmax(160px,1fr)' }, { key: 's', label: L.iv_hScope, width: 'minmax(180px,1.2fr)' }, { key: 'c', label: L.iv_hComm, width: '180px' }, { key: 'l', label: L.qt_cLines, width: '84px', align: 'right' }, { key: 'f', label: L.iv_cDiffL, width: '190px' }, { key: 'st', label: L.qt_cStatus, width: '150px' }];
+    const tRows = rows.map(x => { const S = ST[x.status], sm = D.ivSum(x), has = x.status === 'check' || x.status === 'posted', col = x.status === 'cancelled' ? '#647574' : null;
+      return { id: x.id, onOpen: () => this.openNo(x.no), onToggle: () => {}, cells: [{ type: 'mono', text: x.no, color: col }, { type: 'text', text: x.date, color: col || '#5B6B6A' }, { type: 'text', text: D.whName(x.branch, x.wh), color: col }, { type: 'text', text: scopeTxt(x), color: col || '#5B6B6A' },
+        { type: 'name', text: (x.commission || []).length ? x.chair || x.commission[0] : '—', sub: (x.commission || []).length > 1 ? fill(L.iv_plusN, { n: x.commission.length - 1 }) : '', weight: 400, color: col }, { type: 'text', text: x.lines.length ? fN(x.lines.length) : '—', color: col },
+        has && (sm.shortQ || sm.overQ) ? { type: 'name', text: [sm.shortQ && '−' + fN(sm.shortQ), sm.overQ && '+' + fN(sm.overQ)].filter(Boolean).join(' / '), sub: cost ? [sm.shortQ && '−' + fM(sm.shortS), sm.overQ && '+' + fM(sm.overS)].filter(Boolean).join(' / ') : '', weight: 600, color: sm.shortQ ? '#B91C1C' : '#1D4ED8' } : { type: 'text', text: has ? L.iv_dOk : '—', color: has ? '#15803D' : '#647574' },
+        { type: 'status', text: L['iv_st_' + x.status], icon: S[0], fg: S[1], bg: S[2] }], actions: [{ label: L.qt_open, icon: 'arrow-up-right', pick: () => this.openNo(x.no) }, ...(x.status === 'count' ? [{ label: L.iv_openCount, icon: 'scan-line', pick: () => this.openCount(x.no) }] : [])] }; });
+    const kp = (label, icon, fg, bg, value, note, tab) => ({ label, icon, iconFg: fg, iconBg: bg, value, note, active: s.tab === tab, border: s.tab === tab ? '#0D9488' : '#E2E8F0', pick: () => this.setState({ tab: s.tab === tab ? 'all' : tab }) });
+    const nCount = all.filter(x => x.status === 'count').length, nCheck = all.filter(x => x.status === 'check').length;
+    const T = pD(D.TODAY), whs = []; D.BRANCHES.filter(b => !my || b.code === my).forEach(b => b.wh.forEach(w => whs.push([b.code, w])));
+    const lastRows = whs.map(([b, w]) => { const pst = (D.store.invs || []).filter(x => x.status === 'posted' && x.branch === b && x.wh === w && x.scope.mode === 'wh').map(x => String(x.postedAt).slice(0, 10)); const d = pst[0] || D.IV_LAST[b + '|' + w] || '—', days = d === '—' ? null : Math.round((T - pD(d)) / 86400000), warn = days == null || days > D.CONFIG.invRemindDays;
+      return { name: D.whName(b, w), date: d, days: days == null ? '—' : fill(L.iv_daysAgo, { n: days }), warn, color: warn ? '#B45309' : '#172B2A', weight: warn ? 600 : 400 }; });
+    const lockBanners = []; whs.forEach(([b, w]) => D.ivActive(b, w).forEach(x => lockBanners.push({ title: fill(L.iv_lockT, { n: x.no }), text: fill(L.iv_lockD, { w: D.whName(b, w), z: D.ivZones(x).map(z => D.zoneType(b, w, z).label).join(', ') }) })));
+    return {
+      ...base, ...vals, countLabel: fN(all.length), hdrPrimary: { label: L.iv_new, icon: 'plus', pick: () => this.openNew() },
+      kpis: [kp(L.iv_kProc, 'scan-line', '#1D4ED8', '#EFF6FF', fill(L.qz_nCnt, { n: nCount }), L.iv_kProcN, 'count'), kp(L.iv_kCheck, 'stamp', '#B45309', '#FFFBEB', fill(L.qz_nCnt, { n: nCheck }), L.iv_kCheckN, 'check')],
+      kpiGrid: narrow ? 'repeat(2,minmax(0,1fr))' : 'minmax(0,1fr) minmax(0,1fr) minmax(0,2.2fr)', lastRows, lastCols: narrow || whs.length < 4 ? 1 : 2, lockBanners,
+      views: VS.map(([k, sts]) => ({ label: L['iv_v_' + k], count: all.filter(x => !sts || sts.includes(x.status)).length, active: s.tab === k, pick: () => this.setState({ tab: k }) })),
+      q: s.q, setQ: v => this.setState({ q: v }), fbFilters: [], fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      showTable: rows.length > 0, listEmpty: all.length === 0, noRes: all.length > 0 && rows.length === 0, tColumns, tRows, tMinW: 1180
+    };
+  }
+}
+</script>
+</body>
+</html>

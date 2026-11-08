@@ -140,6 +140,7 @@ export const LIVE_INVALIDATES: Record<Exclude<LiveEvent, "notifications">, reado
     ["orders", "returns"],
     ["marking", "queue"],
     ["trips", "ready"],
+    ["nav-badges"],
   ],
   trips: [
     ["trips", "list"],

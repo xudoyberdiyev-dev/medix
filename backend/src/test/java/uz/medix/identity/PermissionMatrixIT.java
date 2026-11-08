@@ -41,5 +41,10 @@ class PermissionMatrixIT {
         assertThat(of("MARKER")).containsExactlyInAnyOrder("marking.export", "marking.scan", "marking.view", "orders.view");
         assertThat(of("PICKER")).containsExactlyInAnyOrder("orders.view", "picking.do");
         assertThat(of("DRIVER")).containsExactly("trip.driver");
+        // E5 (07.11): reys — faqat Ombor mudiri (Direktor/Admin — to'liq huquqli)
+        assertThat(of("WAREHOUSE_MANAGER")).contains("shipments.trip");
+        assertThat(of("DIRECTOR")).contains("shipments.trip");
+        assertThat(of("OPERATOR")).doesNotContain("shipments.trip");
+        assertThat(of("BRANCH_MANAGER")).doesNotContain("shipments.trip");
     }
 }

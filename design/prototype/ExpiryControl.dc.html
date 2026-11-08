@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Muddat nazorati" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.n_expiry }}</h1>
+    <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.m_threshold }} · <button onClick="{{ settings }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ L.m_settings }}</button></span>
+  </div>
+  <sc-if value="{{ hasBanner }}"><div style="display:flex;flex-direction:column;gap:6px"><dc-import name="StatusBanner" tone="danger" icon="circle-x" text="{{ bannerText }}" hint-size="100%,48px"></dc-import><sc-if value="{{ canWo }}"><button onClick="{{ woAll }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;margin-left:42px;padding:0;border:0;background:transparent;color:#B91C1C;font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:2px"><lucide-i name="package-minus" size="14"></lucide-i>{{ L.qt_woAll }}</button></sc-if></div></sc-if>
+  <div style="display:grid;grid-template-columns:repeat({{ segCols }},minmax(0,1fr));gap:12px">
+    <sc-for list="{{ segs }}" as="g" hint-placeholder-count="4">
+      <button onClick="{{ g.pick }}" aria-pressed="{{ g.on }}" style="display:flex;flex-direction:column;gap:6px;padding:16px;min-width:0;text-align:left;font:inherit;color:inherit;background:{{ g.bg }};border:1px solid {{ g.border }};border-radius:10px;box-shadow:{{ g.ring }};cursor:pointer;transition:border-color 120ms ease-out,background 120ms ease-out" style-hover="border-color:{{ g.hover }}">
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;font-weight:500;color:{{ g.fg }}"><lucide-i name="{{ g.icon }}" size="14"></lucide-i>{{ g.label }}</span>
+        <span style="display:flex;align-items:baseline;gap:6px"><span style="font-size:24px;line-height:28px;font-weight:600;letter-spacing:-0.02em;color:{{ g.numColor }}">{{ g.count }}</span><span style="font-size:13px;color:#5B6B6A">{{ L.q_batchUnit }}</span></span>
+        <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ g.qty }}<sc-if value="{{ canCost }}"> · {{ g.value }}</sc-if></span>
+      </button>
+    </sc-for>
+  </div>
+  <sc-if value="{{ hasBand }}"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button onClick="{{ clearBand }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid #0D9488;border-radius:16px;background:#DDF5EE;color:#0F766E;font:inherit;font-size:13px;font-weight:500;cursor:pointer"><lucide-i name="filter" size="14"></lucide-i>{{ bandText }}<lucide-i name="x" size="14"></lucide-i></button></div></sc-if>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ cols }}" rows="{{ rows }}" all-state="none" on-toggle-all="{{ noop }}" on-sort="{{ onSort }}" scroll-x="{{ narrow }}" min-width="{{ minW }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ showSafe }}"><dc-import name="EmptyState" icon="circle-check" tone="success" title="{{ L.m_safeT }}" text="{{ L.m_safeD }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+  </div>
+  <div style="height:64px"></div>
+  <sc-if value="{{ panelOpen }}"><dc-import name="BatchPanel" batch="{{ panelBatch }}" dict="{{ L }}" can-cost="{{ canCost }}" width="{{ panelW }}" on-close="{{ closePanel }}" on-open-doc="{{ openDoc }}" on-toast="{{ toastFn }}" on-writeoff="{{ toWriteoff }}" on-sup-return="{{ toSupReturn }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;,&quot;operator&quot;,&quot;purchase&quot;,&quot;keeper&quot;,&quot;cashier&quot;,&quot;accountant&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ALL&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,arg)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(n * 100) / 100).toFixed(2).split('.'); return fN(+a) + ',' + b; };
+const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
+const W = () => window.MedixData.CONFIG.expiryWarnDays; // F1: chegara CONFIG dan
+const GRP = [['expired', b => b.days < 0], ['d30', b => b.days >= 0 && b.days <= 30], ['d90', b => b.days > 30 && b.days <= W()], ['d180', b => b.days > W() && b.days <= 180]];
+const ZT = { recv: ['package-open', '#5B6B6A', '#F5F7F8'], store: ['archive', '#5B6B6A', '#F5F7F8'], cold: ['snowflake', '#1D4ED8', '#EFF6FF'], quar: ['shield-alert', '#B45309', '#FFFBEB'], ctrl: ['lock', '#B91C1C', '#FEF2F2'], ship: ['truck', '#5B6B6A', '#F5F7F8'] };
+class Component extends DCLogic {
+  state = { ready: !!window.MedixData, grp: null, band: null, sort: { key: 'exp', dir: 'asc' }, panel: null, safe: false };
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'expiry' || u.n === this._un) return; this._un = u.n; const P = u.params || {}, bd = (D.EXP_BANDS || []).find(x => x[0] === P.band); this.setState({ band: bd ? P.band : null, grp: null, panel: null }); } // T10a2: bosh sahifadan ?band=0-30|31-60|61-90
+  componentDidMount() { this._url = setInterval(() => this.applyUrl(), 250); if (!window.MedixData) this._poll = setInterval(() => { if (window.MedixData) { clearInterval(this._poll); this.setState({ ready: true }); } }, 60); if (this.props.demo) this.applyDemo(this.props.demo.k); }
+  componentWillUnmount() { clearInterval(this._poll); clearInterval(this._url); }
+  componentDidUpdate(pp) { if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n)) this.applyDemo(this.props.demo.k); }
+  applyDemo(k) { this.setState({ safe: k === 'safe', grp: k === 'fexpired' ? 'expired' : null, panel: null }); }
+  renderVals() {
+    const s = this.state, p = this.props, L = p.dict || {}, D = window.MedixData;
+    if (!D) return { L, segs: [], showTable: false };
+    const br = p.branch && p.branch !== 'ALL' ? p.branch : null, canCost = D.can(p.role || 'director', 'special.cost');
+    let scope = D.batches().filter(b => b.qty > 0 && (!br || b.branch === br) && b.days != null && b.days <= 180);
+    if (s.safe) scope = scope.filter(b => b.days > W());
+    const meta = { expired: [L.k_expired, 'circle-x', '#B91C1C', '#B91C1C'], d30: [L.m_g30, 'alarm-clock', '#B91C1C', '#B91C1C'], d90: [L.m_g90, 'triangle-alert', '#B45309', '#B45309'], d180: [L.m_g180, 'calendar-clock', '#5B6B6A', '#172B2A'] };
+    const segs = GRP.map(([k, f]) => { const bs = scope.filter(f), on = s.grp === k, m = meta[k];
+      return { label: m[0], icon: m[1], fg: m[2], numColor: bs.length ? m[3] : '#647574', count: String(bs.length), qty: `${fN(bs.reduce((a, b) => a + b.qty, 0))} ${L.m_units}`, value: `${fM(bs.reduce((a, b) => a + b.value, 0))} ${L.som}`,
+        on, bg: on ? '#DDF5EE' : '#FFFFFF', border: on ? '#0D9488' : '#E2E8F0', ring: on ? '0 0 0 1px #0D9488' : '0 1px 2px rgba(18,60,58,0.04)', hover: on ? '#0D9488' : '#CBD5D3', pick: () => this.setState({ grp: on ? null : k, band: null }) }; });
+    const expd = scope.filter(b => b.days < 0).length;
+    const g = GRP.find(x => x[0] === s.grp), bd0 = s.band && (D.EXP_BANDS || []).find(x => x[0] === s.band), bd = bd0 && bd0[1] <= W() ? [bd0[0], bd0[1], Math.min(bd0[2], W())] : null, list = scope.filter(b => bd ? b.days >= bd[1] && b.days <= bd[2] : g ? g[1](b) : b.days <= W());
+    const sk = s.sort, m = sk.dir === 'asc' ? 1 : -1;
+    const sorted = [...list].sort((a, b) => (sk.key === 'exp' ? pD(a.exp) - pD(b.exp) : sk.key === 'avail' ? a.avail - b.avail : a.p.name.localeCompare(b.p.name)) * m);
+    const sc = k => ({ sortable: true, sortDir: sk.key === k ? sk.dir : null });
+    const cols = [{ key: 'name', label: L.q_cProduct, width: 'minmax(200px,2fr)', ...sc('name') }, { key: 'batch', label: L.q_batch, width: '120px' }, { key: 'loc', label: L.m_cLoc, width: 'minmax(200px,1.5fr)' }, { key: 'exp', label: L.q_cExp, width: '110px', ...sc('exp') }, { key: 'left', label: L.m_cLeft, width: '140px' },
+      { key: 'avail', label: L.q_cAvail, width: '90px', align: 'right', ...sc('avail') }, { key: 'res', label: L.q_cRes, width: '80px', align: 'right' }, ...(canCost ? [{ key: 'val', label: L.q_cValue, width: '140px', align: 'right' }] : []), { key: 'tip', label: L.m_cTip, width: 'minmax(180px,1.2fr)' }];
+    const rows = sorted.map(b => {
+      const bd = b.days < 0 ? [L.k_expired, '#B91C1C', '#FEF2F2', 'circle-x'] : b.days <= 30 ? [L.k_days(b.days), '#B91C1C', '#FEF2F2', 'alarm-clock'] : b.days <= W() ? [L.k_days(b.days), '#B45309', '#FFFBEB', 'triangle-alert'] : [L.k_days(b.days), '#5B6B6A', '#F5F7F8', 'calendar'];
+      const tip = b.days < 0 ? L.m_tipExpired : b.reservedQty ? L.m_tipReserved(fN(b.reservedQty)) : b.days <= 30 ? L.m_tip30 : b.days <= W() ? L.m_tip90 : L.m_tipWatch;
+      const brn = (D.BRANCHES.find(x => x.code === b.branch) || {}).name || b.branch;
+      return { id: b.id, selected: false, onToggle: () => {}, onOpen: () => this.setState({ panel: b.id }), actions: b.days < 0 ? [{ label: L.qt_aWo, icon: 'package-minus', pick: () => { D.store.docReq = { kind: 'hc', bids: [b.id] }; p.onNavigate && p.onNavigate('writeoff'); } }, ...(b.doc ? [{ label: L.qt_aQy, icon: 'rotate-ccw', pick: () => { D.store.docReq = { kind: 'qy', receiptNo: b.doc, bid: b.id }; p.onNavigate && p.onNavigate('sreturns'); } }] : [])] : [],
+        cells: [{ type: 'name', pre: b.p.name, sub: `${b.p.maker} · ${D.FORMS[b.p.form] || b.p.form} ${b.p.dose}` }, { type: 'mono', text: b.batch }, { type: 'name', pre: `${brn.replace(' filiali', '')} · ${b.wh}`, weight: 400, sub: b.zoneLabel },
+          { type: 'text', text: b.exp }, { type: 'status', text: bd[0], fg: bd[1], bg: bd[2], icon: bd[3] }, { type: 'text', text: fN(b.avail), color: b.avail ? '#172B2A' : '#647574' }, { type: 'text', text: fN(b.reservedQty), color: b.reservedQty ? '#5B6B6A' : '#647574' },
+          ...(canCost ? [{ type: 'text', text: fM(b.value) }] : []), { type: 'text', text: tip, color: b.days < 0 ? '#B91C1C' : '#5B6B6A' }] };
+    });
+    const pb = s.panel ? D.batches().find(b => b.id === s.panel) : null;
+    const safeShown = !g && !bd && scope.filter(b => b.days <= W()).length === 0;
+    return {
+      L, narrow: !!p.narrow, canCost, segs, hasBand: !!bd, bandText: bd ? (L.m_band || 'Muddati {a}–{b} kun').replace('{a}', bd[1]).replace('{b}', bd[2]) + ' · ' + fN(list.length) + ' ' + (L.q_batchUnit || '') : '', clearBand: () => this.setState({ band: null }), segCols: p.narrow ? 2 : 4, hasBanner: expd > 0, canWo: D.can(p.role || 'director', 'hc.create'), woAll: () => { const e = scope.filter(b => b.days != null && b.days < 0 && b.qty > 0), w = (e.find(b => b.wh === 'Asosiy ombor') || e[0] || {}).wh; D.store.docReq = { kind: 'hc', wh: w || 'Asosiy ombor', expired: true }; p.onNavigate && p.onNavigate('writeoff'); }, bannerText: L.m_banner ? L.m_banner(expd) : '',
+      settings: () => p.onToast && p.onToast(L.q_tNext), showTable: !safeShown && rows.length > 0, showSafe: safeShown || rows.length === 0, cols, rows, minW: p.narrow ? 1200 : 0, noop: () => {},
+      onSort: k => this.setState(st => ({ sort: st.sort.key !== k ? { key: k, dir: 'asc' } : st.sort.dir === 'asc' ? { key: k, dir: 'desc' } : { key: 'exp', dir: 'asc' } })),
+      panelOpen: !!pb, panelBatch: pb, panelW: p.narrow ? '60%' : '480px', closePanel: () => this.setState({ panel: null }), openDoc: no => p.onNavigate && p.onNavigate('receipt', 'open:' + no), toWriteoff: b => { const D = window.MedixData; D.store.docReq = { kind: 'hc', bids: [b.id] }; p.onNavigate && p.onNavigate('writeoff'); }, toSupReturn: b => { const D = window.MedixData; D.store.docReq = { kind: 'qy', receiptNo: b.doc, bid: b.id }; p.onNavigate && p.onNavigate('sreturns'); }, toastFn: t => p.onToast && p.onToast(t)
+    };
+  }
+}
+</script>
+</body>
+</html>

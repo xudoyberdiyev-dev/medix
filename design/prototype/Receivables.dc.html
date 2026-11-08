@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="{{ title }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ title }}" subtitle="{{ asOf }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" secondary="{{ hdrSecondary }}" hint-size="100%,34px"></dc-import>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px">
+    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+      <button onClick="{{ k.pick }}" aria-pressed="{{ k.active }}" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:#FFFFFF;border:1px solid {{ k.border }};border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);text-align:left;cursor:pointer;min-width:0;font:inherit;color:#172B2A;transition:border-color 120ms ease-out" style-hover="border-color:#647574">
+        <span style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><span style="width:24px;height:24px;flex:none;border-radius:6px;background:{{ k.iconBg }};color:{{ k.iconFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ k.icon }}" size="14"></lucide-i></span>{{ k.label }}</span>
+        <span style="font-size:clamp(18px,1.6vw,24px);line-height:30px;font-weight:600;letter-spacing:-0.02em;color:{{ k.valColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ k.value }}</span>
+        <span style="font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ k.note }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:{{ topCols }};gap:12px;min-width:0">
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px 20px;display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px 16px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:600">{{ L.qz_agTitle }}</span>
+        <span style="display:flex;align-items:center;gap:12px;font-size:12px;line-height:16px;color:#647574"><span>{{ L.qz_agHint }}</span><sc-if value="{{ ageActive }}"><button onClick="{{ ageClear }}" style="display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="text-decoration:underline"><lucide-i name="x" size="12"></lucide-i>{{ L.clear }}</button></sc-if></span>
+      </div>
+      <div style="display:flex;height:16px;border-radius:5px;overflow:hidden;background:#EEF2F4;gap:2px">
+        <sc-for list="{{ ageSegs }}" as="g" hint-placeholder-count="5">
+          <button onClick="{{ g.pick }}" title="{{ g.tip }}" aria-label="{{ g.tip }}" style="flex:{{ g.flex }};min-width:{{ g.minW }}px;height:100%;padding:0;border:0;background:{{ g.color }};opacity:{{ g.op }};cursor:pointer;transition:opacity 120ms ease-out" style-hover="opacity:1"></button>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px 16px">
+        <sc-for list="{{ ageLegend }}" as="g" hint-placeholder-count="5">
+          <button onClick="{{ g.pick }}" style="display:flex;flex-direction:column;gap:2px;min-width:0;padding:6px 8px;margin:-6px -8px;border:0;border-radius:6px;background:{{ g.bg }};text-align:left;font:inherit;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA">
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A;white-space:nowrap"><span style="width:10px;height:10px;flex:none;border-radius:2px;background:{{ g.color }}"></span>{{ g.label }}</span>
+            <span style="font-size:14px;line-height:20px;font-weight:600;color:{{ g.valColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.sum }}</span>
+            <span style="font-size:12px;line-height:16px;color:#647574">{{ g.pct }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+    <sc-if value="{{ isYt }}" hint-placeholder-val="{{ false }}">
+      <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px 16px;flex-wrap:wrap"><span style="font-size:14px;font-weight:600">{{ L.qz_calTitle }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ L.qz_calSub }}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;align-items:end;height:132px">
+          <sc-for list="{{ calDays }}" as="d" hint-placeholder-count="14">
+            <button onClick="{{ d.pick }}" title="{{ d.tip }}" aria-pressed="{{ d.on }}" style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;min-width:0;padding:0;border:0;background:transparent;font:inherit;cursor:pointer">
+              <span style="font-size:10.5px;line-height:12px;color:{{ d.lblColor }};font-weight:500;white-space:nowrap">{{ d.short }}</span>
+              <span style="display:block;width:100%;max-width:28px;height:{{ d.h }}px;border-radius:3px 3px 0 0;background:{{ d.color }};transition:background 120ms ease-out"></span>
+              <span style="font-size:11px;line-height:14px;color:{{ d.dateColor }};font-weight:{{ d.dateW }};white-space:nowrap">{{ d.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ hasCalSel }}">
+          <div style="display:flex;flex-direction:column;border-top:1px solid #EEF2F4;padding-top:10px;gap:2px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;line-height:16px;color:#5B6B6A;padding-bottom:4px"><span style="font-weight:600;color:#172B2A">{{ calSelTitle }}</span><button onClick="{{ calClear }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="text-decoration:underline">{{ L.qz_calClose }}</button></div>
+            <sc-for list="{{ calRows }}" as="r">
+              <div style="display:grid;grid-template-columns:132px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:28px;font-size:13px">
+                <button onClick="{{ r.open }}" style="justify-self:start;padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ r.no }}</button>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.party }}</span><span style="font-weight:500">{{ r.left }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ calNone }}"><span style="font-size:13px;color:#647574">{{ L.qz_calNone }}</span></sc-if>
+          </div>
+        </sc-if>
+      </section>
+    </sc-if>
+  </div>
+  <sc-if value="{{ hasGroupNote }}"><div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-top:-4px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;font-size:13px;line-height:18px;color:#5B6B6A"><lucide-i name="building-2" size="14" style="color:#5B6B6A"></lucide-i>{{ groupNote }}</div></sc-if>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ searchPh }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" date-filter="{{ dateFilter }}" toggle="{{ groupToggle }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.qz_clearF }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" foot="{{ tFoot }}" sticky-first="{{ true }}" all-state="none" on-sort="{{ onSort }}" scroll-x="{{ true }}" min-width="{{ tMinWidth }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+      <dc-import name="Pagination" total="{{ total }}" page="{{ page }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="hand-coins" tone="brand" title="{{ emptyT }}" text="{{ emptyD }}" min-height="340" hint-size="100%,340px"></dc-import></sc-if>
+    <sc-if value="{{ noRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.qz_noResT }}" text="{{ L.qz_noResD }}" primary="{{ clearAction }}" min-height="300" hint-size="100%,300px"></dc-import></sc-if>
+  </div>
+  <div style="height:48px"></div>
+</div>
+</sc-if>
+<sc-if value="{{ isCard }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="DebtCard" kind="{{ card.kind }}" party="{{ card.party }}" branch="{{ card.branch }}" adv-open="{{ card.adv }}" adv-act="{{ card.act }}" card-key="{{ card.key }}" back-label="{{ title }}" dict="{{ L }}" role="{{ role }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-back="{{ backToList }}" on-toast="{{ toastFn }}" on-navigate="{{ navFn }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mt&quot;,&quot;yt&quot;],&quot;default&quot;:&quot;mt&quot;,&quot;tsType&quot;:&quot;'mt'|'yt'&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cashier&quot;,&quot;accountant&quot;,&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;accountant&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Jasur Ergashev&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,arg)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const r2 = x => Math.round(x * 100) / 100;
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const C2L = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 's', ч: 'ch', ш: 'sh', щ: 'sh', ъ: "'", ы: 'i', ь: '', э: 'e', ю: 'yu', я: 'ya', ў: "o'", қ: 'q', ғ: "g'", ҳ: 'h' };
+const toLat = s => String(s || '').toLowerCase().replace(/[ʻʼ‘’`]/g, "'").split('').map(ch => C2L[ch] != null ? C2L[ch] : ch).join('');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const fD = t => { const d = new Date(t); return ('0' + d.getUTCDate()).slice(-2) + '.' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '.' + d.getUTCFullYear(); };
+const DAY = 86400000;
+const ST = { ok: ['circle-check', '#15803D', '#F0FDF4'], overdue: ['clock-alert', '#B91C1C', '#FEF2F2'], limit: ['gauge', '#B45309', '#FFFBEB'], adv: ['wallet', '#1D4ED8', '#EFF6FF'] };
+const AGE = ['#A7B4B2', '#E3B341', '#D97706', '#C2410C', '#991B1B'];
+const mln = n => { const v = n / 1e6; return v >= 10 ? Math.round(v) + ' mln' : v >= 0.05 ? (Math.round(v * 10) / 10).toString().replace('.', ',') + ' mln' : n > 0 ? '<0,1' : ''; };
+const CLEAR = { fRegion: [], fStatus: [], fAge: [], date: { from: null, to: null }, q: '', calDay: null };
+class Component extends DCLogic {
+  state = { view: 'list', tab: 'all', ...CLEAR, card: null, empty: false, page: 1, per: 25 };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  get K() { return this.props.kind === 'yt' ? 'yt' : 'mt'; }
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'cdebt' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; const A = { current: 0, '1-30': 1, '31-60': 2, '61-90': 3, '90plus': 4 }; setTimeout(() => this.setState({ view: 'list', tab: 'all', ...CLEAR, fAge: P.aging in A ? [A[P.aging]] : [], page: 1, ...(pD(P.dueFrom) != null ? { date: { from: P.dueFrom, to: pD(P.dueTo) != null ? P.dueTo : P.dueFrom } } : {}) }), 0); if (P.open) { const D2 = this.D, c = D2.CUSTOMERS.find(x => String(x.id) === P.open || x.name === P.open || String(x.stir || '').replace(/\D/g, '') === P.open.replace(/\D/g, '')); if (c) setTimeout(() => this.openCard(c.id, P.branch && P.branch !== 'ALL' ? P.branch : D2.custBrs(c)[0]), 10); } }
+  componentDidMount() {
+    this._url = setInterval(() => this.applyUrl(), 250);
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._poll = setInterval(() => { const D = this.D; if (!D) return; if (D.store.debtReq && D.store.debtReq.kind === this.K) this.consumeReq(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(roles) { const L = this.L; return fill(L.qz_who, { r: roles.map(r => L['r_' + r] || r).join(', ') }); }
+  openCard(party, branch, x) { this.setState({ view: 'card', card: { kind: this.K, party, branch, adv: (x && x.adv) || '', act: (x && x.act) || '', key: Date.now() } }); }
+  consumeReq() { const D = this.D, r = D.store.debtReq; D.store.debtReq = null; if (r) this.openCard(r.party, r.branch, r); }
+  mtCash(who) { const D = this.D, L0 = D.custLedger(13), alloc = L0.invoices.filter(x => x.left > 0).map(x => ({ no: x.no, sum: x.left }));
+    const p0 = D.savePay({ kind: 'mt', branch: 'TSH', date: D.TODAY, party: 13, method: 'cash', acct: 'K-TSH', sum: 15000000, alloc, status: 'draft', payNo: '', bankDate: '', checkNo: '', note: '', createdBy: 'Nigora Xasanova', createdAt: '04.10.2026 15:10', log: [{ kind: 'create', who: 'Nigora Xasanova', at: '04.10.2026 15:10' }] });
+    D.postPay(p0, 'Nigora Xasanova'); }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D) return;
+    const base = { ...CLEAR, tab: 'all', empty: false, view: 'list', card: null };
+    if (!d) { if (D.store.demoDirty || !D.store.era) D.restoreBase(); this.setState(base); if (D.store.debtReq && D.store.debtReq.kind === this.K) this.consumeReq(); return; }
+    D.payReset(); const k = d.k, me = this.props.userName || 'Jasur Ergashev';
+    if (k === 'empty') return this.setState({ ...base, empty: true });
+    if (k === 'groupFs') { const A = { branch: 'TSH', wh: 'Asosiy ombor' }, SM = { branch: 'SMQ', wh: 'Asosiy ombor' }, b = D.batches().filter(x => x.p && x.p.name === 'Omeprazol 20mg' && x.branch === 'TSH' && x.wh === 'Asosiy ombor' && x.status === 'open' && x.avail >= 100).sort((a, c) => a.days - c.days)[0];
+      if (b && D.saveTr) { const at = D.nowStr(); let f = D.saveTr({ kind: 'fs', from: A, to: SM, date: D.TODAY, note: '', status: 'draft', vat: D.TR_VAT, lines: [{ id: 'l1', bid: b.id, pid: b.pid, batch: b.batch, exp: b.exp, fromZone: b.zone, cost: b.cost, qty: 100, toZone: 'asosiy', recv: null, reason: '' }], createdBy: 'Bekzod Tursunov', createdAt: at, log: [{ kind: 'create', who: 'Bekzod Tursunov', at }] });
+        f = D.trStep(f, 'transit', 'Sardor Aliyev'); f.lines[0].recv = 98; f.lines[0].reason = 'Shikastlangan'; D.trStep(f, 'diff', 'Samarqand ombor mudiri'); D.store.demoDirty = true; }
+      return this.setState({ ...base, hideGroup: false }); }
+    if (k === 'overdue') return this.setState({ ...base, tab: 'overdue' });
+    if (k === 'calendar') { const L = this.cal(); const f = L.find(x => x.sum > 0); return this.setState({ ...base, calDay: f ? f.date : null }); }
+    if (k === 'advCust') { this.mtCash(); this.setState(base); return this.openCard(13, 'TSH'); }
+    if (k === 'ahManual') { this.mtCash(); D.demoSale(13, 5000000, me, true); this.setState(base); return this.openCard(13, 'TSH', { adv: 'new' }); }
+    if (k === 'ahAuto' || k === 'ahCancel') { this.mtCash(); const r = D.demoSale(13, 5000000, 'Sardor Aliyev'); this.setState(base); return this.openCard(13, 'TSH', { adv: r.ah ? r.ah.no : '', act: k === 'ahCancel' ? 'cancel' : '' }); }
+    this.setState(base);
+  }
+  brs() { const b = this.props.branch; return !b || b === 'ALL' ? this.D.BRANCHES.map(x => x.code) : [b]; }
+  cal() {
+    const D = this.D, T = pD(D.TODAY), out = [];
+    const invs = []; this.brs().forEach(br => D.SUPPLIERS.forEach(sp => D.ledger('yt', sp.name, br).invoices.forEach(x => { if (x.left > 0) invs.push({ ...x, party: sp.name, br }); })));
+    for (let i = 0; i < 14; i++) { const t = T + i * DAY, date = fD(t), list = invs.filter(x => pD(x.due) === t); out.push({ date, t, list, sum: r2(list.reduce((a, x) => a + x.left, 0)) }); }
+    return out;
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow, K = this.K, yt = K === 'yt';
+    const title = yt ? L.qz_title_yt : L.qz_title_mt;
+    const base = { L, narrow, title, role: p.role, userName: p.userName, isList: true, isCard: false, isYt: yt, kpis: [], views: [], tRows: [], tColumns: [], fbFilters: [], fbLabels: {}, ageSegs: [], ageLegend: [], calDays: [], calRows: [], card: {}, toastFn: t => this.toast(t), kpiCols: narrow ? 2 : yt ? 4 : 5, topCols: 'minmax(0,1fr)' };
+    if (!D || !D.debtState) return base;
+    const nav = (k, a) => p.onNavigate && p.onNavigate(k, a);
+    const cardVals = { card: s.card || {}, backToList: () => this.setState({ view: 'list', card: null }), navFn: nav };
+    if (s.view === 'card' && s.card) return { ...base, ...cardVals, isList: false, isCard: true };
+    const allBr = !p.branch || p.branch === 'ALL', T = pD(D.TODAY);
+    let rows = [];
+    if (!s.empty) {
+      if (!yt) rows = allBr ? D.CUSTOMERS.flatMap(c => D.custBrs(c).map(b => D.debtState('mt', c.id, b))) : D.custsIn(p.branch).map(c => D.debtState('mt', c.id, p.branch));
+      else this.brs().forEach(br => D.SUPPLIERS.forEach(sp => { const x = D.debtState('yt', sp.name, br); if (!allBr || x.L.invoices.length || x.L.advance > 0) rows.push(x); }));
+      if (s.hideGroup === false && D.groupDebt) D.groupDebt(K, allBr ? null : p.branch).forEach(g => { const B = D.BRANCHES.find(b => b.code === g.party) || {}; rows.push({ kind: K, party: 'G:' + g.party, branch: g.branch, group: true, docs: g.docs, name: B.name || g.party, stir: '', region: '—', terms: 0, limit: 0, pct: 0, over: 0, status: 'ok', aging: [g.debt, 0, 0, 0, 0], L: { debt: g.debt, overdue: 0, advance: 0, last: null, invoices: [] } }); });
+    }
+    const brName = c => (D.BRANCHES.find(b => b.code === c) || {}).name || c;
+    const week = x => r2(x.L.invoices.filter(v => v.left > 0 && pD(v.due) >= T && pD(v.due) <= T + 7 * DAY).reduce((a, v) => a + v.left, 0));
+    const VS = yt ? [['all', null], ['overdue', x => x.L.overdue > 0], ['week', x => week(x) > 0], ['adv', x => x.L.advance > 0], ['hide', x => x.L.debt > 0 || x.L.advance > 0]]
+      : [['all', null], ['overdue', x => x.L.overdue > 0], ['limit', x => x.limit && x.L.debt > x.limit], ['adv', x => x.L.advance > 0], ['hide', x => x.L.debt > 0 || x.L.advance > 0]];
+    const cur = VS.find(v => v[0] === s.tab) || VS[0];
+    const q = toLat(s.q.trim()), from = pD(s.date.from), to = pD(s.date.to);
+    const fit = x => (!cur[1] || cur[1](x)) && (!q || toLat(`${x.name} ${x.stir} ${x.stir.replace(/ /g, '')} ${x.region}`).includes(q))
+      && (!s.fRegion.length || s.fRegion.includes(x.region)) && (!s.fStatus.length || s.fStatus.includes(x.status))
+      && (!s.fAge.length || s.fAge.some(i => x.aging[i] > 0))
+      && (!from || x.L.invoices.some(v => v.left > 0 && pD(v.due) >= from && pD(v.due) <= (to || from)))
+      && (!s.calDay || x.L.invoices.some(v => v.left > 0 && v.due === s.calDay));
+    rows.forEach(x => { if (x.kind === 'mt' && !x.group) { let o = 0; x.L.invoices.forEach(v => { if (v.left > 0 && v.late > o) o = v.late; }); x.oldest = o; const c = D.custById(x.party), T = c && c.bt && c.bt[x.branch]; x.op = (D.ktOf && (D.ktOf('mt', x.party) || {}).cTerms && (D.ktOf('mt', x.party).cTerms[x.branch] || {}).operator) || ''; } });
+    let shown = rows.filter(fit).sort((a, b) => (b.L.debt - a.L.debt) || (b.L.advance - a.L.advance) || a.name.localeCompare(b.name));
+    const sum = (arr, f) => r2(arr.reduce((a, x) => a + f(x), 0));
+    // KPI
+    const kr = allBr ? rows.filter(x => !x.group) : rows;
+    const tDebt = sum(kr, x => x.L.debt), tOd = sum(kr, x => x.L.overdue), nOd = kr.filter(x => x.L.overdue > 0).length, overs = kr.filter(x => x.limit && x.L.debt > x.limit), tAdv = sum(kr, x => x.L.advance), nAdv = kr.filter(x => x.L.advance > 0).length;
+    const kp = (label, icon, fg, bg, value, note, tab, valColor) => ({ label, icon, iconFg: fg, iconBg: bg, value, note, valColor: valColor || '#172B2A', active: s.tab === tab && !s.fStatus.length, border: s.tab === tab && tab !== 'all' ? '#0D9488' : '#E2E8F0', pick: () => this.setState({ ...CLEAR, tab }) });
+    const nP = n => fill(yt ? L.qz_nSup : L.qz_nParties, { n });
+    const wk = sum(rows, week), nWk = rows.reduce((a, x) => a + x.L.invoices.filter(v => v.left > 0 && pD(v.due) >= T && pD(v.due) <= T + 7 * DAY).length, 0);
+    const kpis = yt ? [
+      kp(L.qz_kOur, 'hand-coins', '#0F766E', '#DDF5EE', fM(tDebt), nP(rows.filter(x => x.L.debt > 0).length), 'all'),
+      kp(L.qz_kOverdue, 'clock-alert', '#B91C1C', '#FEF2F2', fM(tOd), nP(nOd), 'overdue', tOd > 0 ? '#B91C1C' : null),
+      kp(L.qz_kWeek, 'calendar-clock', '#B45309', '#FFFBEB', fM(wk), fill(L.qz_nWeek, { n: nWk }), 'week'),
+      kp(L.qz_kAdvYt, 'wallet', '#1D4ED8', '#EFF6FF', fM(tAdv), nP(nAdv), 'adv')]
+      : [kp(L.qz_kTotal, 'hand-coins', '#0F766E', '#DDF5EE', fM(tDebt), nP(kr.filter(x => x.L.debt > 0).length), 'all')].concat([1, 2, 3, 4].map(i => { const on = s.fAge.length === 1 && s.fAge[0] === i, n = kr.filter(x => x.aging[i] > 0).length, v = sum(kr, x => x.aging[i]);
+        return { label: L.qz_kOd + ' ' + ['', '1–30', '31–60', '61–90', '90+'][i], icon: 'clock-alert', iconFg: i >= 3 ? '#B91C1C' : '#B45309', iconBg: i >= 3 ? '#FEF2F2' : '#FFFBEB', value: fM(v), note: nP(n), valColor: v > 0 ? (i >= 3 ? '#B91C1C' : '#B45309') : '#172B2A', active: on, border: on ? '#0D9488' : '#E2E8F0', pick: () => this.setState({ ...CLEAR, tab: 'all', fAge: on ? [] : [i], page: 1 }) }; }));
+    // Aging
+    const ag = [0, 1, 2, 3, 4].map(i => sum(rows, x => x.aging[i])), agT = r2(ag.reduce((a, b) => a + b, 0));
+    const AGL = [L.qz_ag0, L.qz_ag1, L.qz_ag2, L.qz_ag3, L.qz_ag4];
+    const pickAge = i => this.setState(st => ({ fAge: st.fAge.length === 1 && st.fAge[0] === i ? [] : [i] }));
+    const pctOf = v => agT ? (Math.round(v / agT * 1000) / 10).toString().replace('.', ',') + '%' : '0%';
+    const ageSegs = ag.map((v, i) => ({ flex: v > 0 ? v / (agT || 1) * 1000 : 0, minW: v > 0 ? 4 : 0, color: AGE[i], op: !s.fAge.length || s.fAge.includes(i) ? 1 : 0.35, tip: `${AGL[i]}: ${fM(v)} · ${pctOf(v)}`, pick: () => pickAge(i) }));
+    const ageLegend = ag.map((v, i) => ({ label: AGL[i], color: AGE[i], sum: fM(v), pct: pctOf(v), valColor: v > 0 && i >= 3 ? '#B91C1C' : v > 0 ? '#172B2A' : '#647574', bg: s.fAge.includes(i) ? '#F0FDFA' : 'transparent', pick: () => pickAge(i) }));
+    // Calendar (yt)
+    let calDays = [], calRows = [], calSelTitle = '';
+    if (yt) {
+      const cl = this.cal(), mx = Math.max(1, ...cl.map(x => x.sum));
+      calDays = cl.map((x, i) => { const on = s.calDay === x.date; return { label: x.date.slice(0, 5), short: mln(x.sum), h: x.sum > 0 ? Math.max(4, Math.round(x.sum / mx * 84)) : 2, color: on ? '#0F766E' : x.sum > 0 ? (i === 0 ? '#B45309' : '#5EADA4') : '#E2E8F0', on, lblColor: on ? '#0F766E' : '#5B6B6A', dateColor: on ? '#0F766E' : i === 0 ? '#172B2A' : '#647574', dateW: on || i === 0 ? 600 : 400, tip: `${x.date}: ${fM(x.sum)}`, pick: () => this.setState(st => ({ calDay: st.calDay === x.date ? null : x.date })) }; });
+      const sel = cl.find(x => x.date === s.calDay);
+      if (sel) { calSelTitle = `${fill(L.qz_calDay, { d: sel.date })} · ${fM(sel.sum)}`; calRows = sel.list.map(x => ({ no: x.no, party: allBr ? `${x.party} · ${brName(x.br)}` : x.party, left: fM(x.left), open: () => nav('receipt', 'open:' + x.no) })); }
+    }
+    // Table
+    const W = yt ? [['name', 'minmax(220px,1.4fr)'], ...(allBr ? [['br', '150px']] : []), ['terms', '110px'], ['debt', '140px'], ['a0', '140px'], ['a1', '124px'], ['a2', '124px'], ['a3', '124px'], ['a4', '124px'], ['adv', '124px'], ['last', '136px'], ['st', '150px']]
+      : [['name', 'minmax(220px,1.4fr)'], ...(allBr ? [['br', '150px']] : []), ['debt', '140px'], ['od', '140px'], ['oldest', '120px'], ['a1', '124px'], ['a2', '124px'], ['a3', '124px'], ['a4', '124px'], ['limit', '128px'], ['used', '130px'], ['last', '150px'], ['op', '160px'], ['st', '150px']];
+    const LBL = { od: L.ys_cOver, oldest: L.qz_c_oldest, op: L.ys_fOp, name: yt ? L.qz_c_sup : L.qz_c_cust, br: L.qz_c_br, region: L.qz_c_region, terms: L.qz_c_terms, limit: L.qz_c_limit, used: L.qz_c_used, debt: L.qz_c_debt, a0: L.qz_ag0, a1: L.qz_ag1, a2: L.qz_ag2, a3: L.qz_ag3, a4: L.qz_ag4, adv: L.qz_c_adv, last: L.qz_c_last, st: L.qz_c_st };
+    const RIGHT = { od: 1, oldest: 1, limit: 1, debt: 1, a0: 1, a1: 1, a2: 1, a3: 1, a4: 1, adv: 1, last: 1 };
+    const SORTK = { name: x => x.name, debt: x => x.L.debt, od: x => x.L.overdue, oldest: x => x.oldest || 0, a1: x => x.aging[1], a2: x => x.aging[2], a3: x => x.aging[3], a4: x => x.aging[4], limit: x => x.limit, used: x => x.pct, last: x => x.L.last ? pD(x.L.last.date) : 0, adv: x => x.L.advance };
+    const tColumns = W.map(([k, w]) => ({ key: k, label: LBL[k], width: w, align: RIGHT[k] ? 'right' : undefined, ...(SORTK[k] ? { sortable: true, sortDir: s.sort && s.sort.key === k ? s.sort.dir : null } : {}) }));
+    const amt = (v, danger) => ({ type: 'text', text: v > 0 ? fM(v) : '—', color: v > 0 ? (danger ? '#B91C1C' : '#172B2A') : '#647574', weight: v > 0 && danger ? 600 : 400 });
+    if (s.sort && SORTK[s.sort.key]) { const g = SORTK[s.sort.key], m = s.sort.dir === 'desc' ? -1 : 1; shown = [...shown].sort((a, b) => { const x = g(a), y = g(b); return (typeof x === 'string' ? x.localeCompare(y) : (x || 0) - (y || 0)) * m; }); }
+    const pages = Math.max(1, Math.ceil(shown.length / s.per)), page = Math.min(s.page, pages), vis = shown.slice((page - 1) * s.per, page * s.per);
+    const tRows = vis.map(x => { const S = ST[x.status], id = x.kind + '|' + x.party + '|' + x.branch;
+      const cell = { name: x.group ? { type: 'name', text: x.name, sub: fill(L.kc_groupSub, { d: x.docs.join(', ') }), weight: 500, badge: L.kc_groupBadge, badgeFg: '#5B6B6A', badgeBg: '#EEF2F4' } : { type: 'name', text: x.name, sub: `${L.stir || 'STIR'} ${x.stir}`, weight: 500 }, br: { type: 'text', text: brName(x.branch), color: '#5B6B6A' }, region: { type: 'text', text: x.region, color: '#5B6B6A' }, terms: { type: 'text', text: fill(L.qz_termsV, { n: x.terms }), color: '#5B6B6A' },
+        limit: { type: 'text', text: fM(x.limit), color: '#5B6B6A', weight: 400 }, used: { type: 'bar', pct: x.pct, text: String(x.pct).replace('.', ',') + '%', barColor: x.pct > 100 ? '#B91C1C' : x.pct > 80 ? '#B45309' : '#0D9488', color: x.pct > 100 ? '#B91C1C' : '#172B2A' },
+        debt: { type: 'text', text: fM(x.L.debt), weight: 600, color: x.L.debt > 0 ? '#172B2A' : '#647574' }, a0: amt(x.aging[0]), a1: amt(x.aging[1], true), a2: amt(x.aging[2], true), a3: amt(x.aging[3], true), a4: amt(x.aging[4], true),
+        adv: { type: 'text', text: x.L.advance > 0 ? fM(x.L.advance) : '—', color: x.L.advance > 0 ? '#1D4ED8' : '#647574', weight: x.L.advance > 0 ? 600 : 400 },
+        last: x.L.last ? { type: 'name', text: fM(x.L.last.sum), sub: x.L.last.date, weight: 400 } : { type: 'text', text: '—', color: '#647574' },
+        st: { type: 'status', text: L['qz_st_' + x.status], icon: S[0], fg: S[1], bg: S[2] },
+        od: amt(x.L.overdue, true), oldest: x.oldest > 0 ? { type: 'text', text: fill(L.qz_days, { n: x.oldest }), color: x.oldest > 90 ? '#B91C1C' : '#B45309', weight: 600 } : { type: 'text', text: '—', color: '#647574' }, op: { type: 'text', text: x.op || '—', color: x.op ? '#5B6B6A' : '#647574' } };
+      if (x.group) { cell.limit = { type: 'text', text: '—', color: '#647574' }; cell.used = { type: 'text', text: '—', color: '#647574' }; cell.terms = { type: 'text', text: '—', color: '#647574' }; }
+      const openG = () => nav('transfer', { open: x.docs[x.docs.length - 1] });
+      return { id, onOpen: x.group ? openG : () => this.openCard(x.party, x.branch), onToggle: () => {}, cells: W.map(([k]) => cell[k]), actions: [x.group ? { label: L.kc_openDoc, icon: 'arrow-up-right', pick: openG } : { label: L.qz_openCard, icon: 'arrow-up-right', pick: () => this.openCard(x.party, x.branch) }].concat(x.group ? [] : [{ label: L.kt_oeCard, icon: 'contact', pick: () => D.openParty(K, x.party, x.branch) }]).concat(x.group || yt ? [] : [].concat(D.can(p.role, 'payments.create') ? [{ label: L.qz_payIn, icon: 'arrow-down-left', pick: () => { D.store.payReq = { kind: 'mt', party: x.party, branch: x.branch }; nav('payments'); } }] : [], D.can(p.role, 'recon.create') ? [{ label: L.qz_recon, icon: 'file-check-2', pick: () => { D.store.reconReq = { kind: 'mt', party: x.party, branch: x.branch }; nav('recon'); } }] : [])) /* T8 #2: amallar faqat matritsa bo'yicha */ }; });
+    const sk = allBr ? shown.filter(x => !x.group) : shown;
+    const tot = { name: fill(L.qz_total, { n: sk.length }), limit: fM(sum(sk, x => x.limit)), debt: fM(sum(sk, x => x.L.debt)), adv: fM(sum(sk, x => x.L.advance)) };
+    [0, 1, 2, 3, 4].forEach(i => { tot['a' + i] = fM(sum(sk, x => x.aging[i])); });
+    const gTot = allBr && D.groupDebt ? sum(D.groupDebt(K, null), g => g.debt) : 0;
+    const tFoot = shown.length ? { cells: W.map(([k]) => ({ text: tot[k] || '', color: k === 'adv' ? '#1D4ED8' : null })) } : null;
+    const uniq = (arr, f) => [...new Set(arr.map(f))];
+    const opt = (vals, lab, key) => vals.map(v => ({ value: v, label: lab(v), count: rows.filter(x => key(x) === v).length }));
+    const STS = yt ? ['ok', 'overdue', 'adv'] : ['ok', 'overdue', 'limit', 'adv'];
+    const fbFilters = [
+      ...(yt ? [] : [{ label: L.qz_fRegion, options: opt(uniq(rows, x => x.region).sort(), v => v, x => x.region), selected: s.fRegion, onChange: v => this.setState({ fRegion: v }) }]),
+      { label: L.qz_fStatus, options: opt(STS, v => L['qz_st_' + v], x => x.status), selected: s.fStatus, onChange: v => this.setState({ fStatus: v }) },
+      { label: L.qz_fAge, options: [0, 1, 2, 3, 4].map(i => ({ value: i, label: AGL[i], count: rows.filter(x => x.aging[i] > 0).length })), selected: s.fAge, onChange: v => this.setState({ fAge: v }) }];
+    const hasFilters = !!(s.fRegion.length || s.fStatus.length || s.fAge.length || s.date.from || s.calDay);
+    const clear = () => this.setState({ ...CLEAR, tab: 'all' });
+    const payKind = yt ? 'yt' : 'mt';
+    return {
+      ...base, ...cardVals, asOf: fill(L.qz_asOf, { d: D.TODAY }), countLabel: fN(rows.length), searchPh: yt ? L.qz_searchYt : L.qz_search,
+      hdrPrimary: { label: yt ? L.qz_newYt : L.qz_newMt, icon: 'plus', pick: () => { if (!D.canR(p.role, 'ADV_ROLES', 'pay')) return this.toast(this.who(D.ADV_ROLES.pay)); D.store.payReq = { kind: payKind }; nav('payments'); } },
+      hdrSecondary: [{ label: L.qz_recon, icon: 'file-check-2', pick: () => { if (!D.canR(p.role, 'ADV_ROLES', 'recon')) return this.toast(this.who(D.ADV_ROLES.recon)); D.store.reconReq = { kind: K }; nav('recon'); } }],
+      kpis, hasGroupNote: gTot > 0, groupNote: fill(L.iv_groupNote, { s: fM(gTot) }), kpiCols: narrow ? 2 : yt ? 4 : 5, topCols: yt && !narrow ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)',
+      ageSegs, ageLegend, ageActive: s.fAge.length > 0, ageClear: () => this.setState({ fAge: [] }),
+      calDays, calRows, hasCalSel: !!s.calDay, calSelTitle, calNone: !!s.calDay && !calRows.length, calClear: () => this.setState({ calDay: null }),
+      views: VS.map(([k, f]) => { const n = rows.filter(x => !f || f(x)).length; return { label: L['qz_v' + k[0].toUpperCase() + k.slice(1)], count: n, tone: k === 'overdue' && n ? 'danger' : null, active: s.tab === k, pick: () => this.setState({ tab: k }) }; }),
+      q: s.q, setQ: v => this.setState({ q: v }), fbFilters, fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      dateFilter: { label: L.qz_fDue, from: s.date.from, to: s.date.to, onChange: v => this.setState({ date: v }), labels: { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.k_drWeek, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext } },
+      hasFilters, clearFilters: clear, clearAction: { label: L.qz_clearF, icon: 'filter-x', pick: clear }, groupToggle: { label: L.kc_hideGroup, on: s.hideGroup !== false, onChange: v => this.setState({ hideGroup: !!v }) },
+      showTable: shown.length > 0, listEmpty: rows.length === 0, noRes: rows.length > 0 && shown.length === 0, emptyT: yt ? L.qz_emptyTYt : L.qz_emptyT, emptyD: yt ? L.qz_emptyDYt : L.qz_emptyD,
+      tColumns, tRows, tFoot, tMinWidth: yt ? (allBr ? 1980 : 1830) : (allBr ? 1960 : 1810), onSort: k => this.setState(x => ({ sort: !x.sort || x.sort.key !== k ? { key: k, dir: 'desc' } : x.sort.dir === 'desc' ? { key: k, dir: 'asc' } : null })), total: shown.length, page, per: s.per, setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 })
+    };
+  }
+}
+</script>
+</body>
+</html>

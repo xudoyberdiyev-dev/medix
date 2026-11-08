@@ -3,7 +3,6 @@ package uz.medix.identity.setup;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import uz.medix.identity.organization.Organization;
 import uz.medix.inventory.Warehouses;
 import uz.medix.inventory.ZoneType;
 import uz.medix.shared.error.MedixException;
+import uz.medix.shared.text.Texts;
 
 /**
  * Sozlash ustasi (SPEC 2): kompaniya → filiallar → omborlar va zonalar → rollar → xodimlar → yakun.
@@ -21,7 +21,6 @@ import uz.medix.shared.error.MedixException;
 @Service
 class SetupService {
 
-    private static final Locale UZ = Locale.forLanguageTag("uz-Latn");
     private static final Set<ZoneType> OPTIONAL_ZONES = EnumSet.of(ZoneType.COLD, ZoneType.SAFE);
 
     private final Organization organization;
@@ -120,7 +119,7 @@ class SetupService {
     }
 
     private String msg(String code, Object... args) {
-        return messages.getMessage(code, args, code, UZ);
+        return messages.getMessage(code, args, code, Texts.requestLocale());
     }
 
     private static Organization.BranchData toData(SetupRequests.BranchRequest r) {

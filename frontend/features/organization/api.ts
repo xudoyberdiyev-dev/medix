@@ -1,5 +1,6 @@
 "use client";
 
+import { toCyrillic } from "@/i18n/translit";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ensureCsrf } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
@@ -12,6 +13,24 @@ export type ZoneType = Zone["type"];
 export type CreateBranchRequest = components["schemas"]["CreateBranchRequest"];
 export type UpdateBranchRequest = components["schemas"]["UpdateBranchRequest"];
 
+/** Zona turi nomi joriy interfeys tilida (`<html lang>`; ro'yxat/oyna ichida, hook'siz ishlatish uchun). */
+export function zoneLabel(type: ZoneType): string {
+  const lang = typeof document === "undefined" ? "uz-Latn" : document.documentElement.lang;
+  if (lang === "ru") return ZONE_LABELS_RU[type];
+  if (lang === "uz-Cyrl") return toCyrillic(ZONE_LABELS[type]);
+  return ZONE_LABELS[type];
+}
+
+const ZONE_LABELS_RU: Record<ZoneType, string> = {
+  RECEIVING: "Приёмка",
+  MAIN: "Основное хранение",
+  QUARANTINE: "Карантин",
+  SHIPPING: "Отгрузка",
+  COLD: "Холод",
+  SAFE: "Сейф",
+};
+
+/** Asl (uz-Latn) nomlar — standart zona nomi bilan solishtirish uchun ham. */
 export const ZONE_LABELS: Record<ZoneType, string> = {
   RECEIVING: "Qabul",
   MAIN: "Asosiy saqlash",

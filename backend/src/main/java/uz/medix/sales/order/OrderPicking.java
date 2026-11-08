@@ -1,6 +1,7 @@
 package uz.medix.sales.order;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import uz.medix.inventory.StockReservations;
 import uz.medix.inventory.StockReservations.Allocation;
 import uz.medix.inventory.StockReservations.Free;
 import uz.medix.sales.order.OrderModels.OrderStatus;
+import uz.medix.sales.order.OrderModels.PickDoneItem;
 import uz.medix.sales.order.OrderModels.PickLineConfirm;
 import uz.medix.sales.order.OrderModels.PickQueueItem;
 import uz.medix.shared.audit.AuditEntry;
@@ -91,9 +93,16 @@ class OrderPicking {
         return jdbc.sql("""
                 SELECT o.id, o.number, c.name AS customer, o.status, o.branch_id, o.pick_minutes, pk.full_name AS picker, o.picker_id,
                        o.pick_started_at, o.queued_at,
-                       (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
-                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l WHERE l.order_id = o.id) AS total_qty,
-                       EXISTS (SELECT 1 FROM sales_order_line l JOIN product p ON p.id = l.product_id WHERE l.order_id = o.id AND p.marked) AS marked
+                       (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids)))
+                           AS lines,
+                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l
+                        WHERE l.order_id = o.id AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS total_qty,
+                       EXISTS (SELECT 1 FROM sales_order_line l JOIN product p ON p.id = l.product_id
+                               WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS marked,
+                       (SELECT k.number FROM counterparty_contract k
+                        WHERE k.counterparty_id = o.customer_id AND k.branch_id = o.branch_id AND (k.valid_until IS NULL OR k.valid_until >= CURRENT_DATE)
+                        ORDER BY k.signed_on DESC NULLS LAST, k.id DESC LIMIT 1) AS contract,
+                       (SELECT s.invoice_number FROM sale s WHERE s.order_id = o.id ORDER BY s.id DESC LIMIT 1) AS invoice
                 FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN employee pk ON pk.id = o.picker_id
                 WHERE (o.status = 'QUEUED' AND o.pick_minutes IS NOT NULL) OR o.status = 'PICKING'
                 ORDER BY o.status DESC, o.queued_at, o.id""")
@@ -106,12 +115,37 @@ class OrderPicking {
                     return new PickQueueItem(rs.getLong("id"), rs.getString("number"), rs.getString("customer"),
                             OrderStatus.valueOf(rs.getString("status")), rs.getInt("lines"), rs.getLong("total_qty"), rs.getBoolean("marked"),
                             minutes, rs.getString("picker"), (Long) rs.getObject("picker_id"), started,
-                            started == null || minutes == null ? null : started.plusSeconds(minutes * 60L), rs.getTimestamp("queued_at").toInstant());
+                            started == null || minutes == null ? null : started.plusSeconds(minutes * 60L), rs.getTimestamp("queued_at").toInstant(),
+                            rs.getString("contract"), rs.getString("invoice"));
                 })
                 .list()
                 .stream()
                 .filter(java.util.Objects::nonNull)
                 .toList();
+    }
+
+    /** «Bugun yakunlanganlar»: shu yig'uvchi bugun (Toshkent) yakunlagan buyurtmalar, oxirgisi birinchi. */
+    @Transactional(readOnly = true)
+    List<PickDoneItem> doneToday(Actor actor) {
+        return jdbc.sql("""
+                SELECT o.id, o.number, c.name AS customer, o.status, o.pick_minutes, o.pick_started_at, o.pick_finished_at,
+                       (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
+                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l WHERE l.order_id = o.id) AS total_qty
+                FROM sales_order o JOIN counterparty c ON c.id = o.customer_id
+                WHERE o.picker_id = :p AND o.pick_finished_at IS NOT NULL
+                  AND (o.pick_finished_at AT TIME ZONE 'Asia/Tashkent')::date = (now() AT TIME ZONE 'Asia/Tashkent')::date
+                ORDER BY o.pick_finished_at DESC, o.id DESC LIMIT 200""")
+                .param("p", actor.employeeId())
+                .query((rs, n) -> {
+                    Instant started = instant(rs.getTimestamp("pick_started_at"));
+                    Instant finished = instant(rs.getTimestamp("pick_finished_at"));
+                    Integer minutes = (Integer) rs.getObject("pick_minutes");
+                    boolean onTime = minutes == null || started == null || !finished.isAfter(started.plusSeconds(minutes * 60L));
+                    return new PickDoneItem(rs.getLong("id"), rs.getString("number"), rs.getString("customer"),
+                            OrderStatus.valueOf(rs.getString("status")), rs.getInt("lines"), rs.getLong("total_qty"), started, finished, minutes,
+                            onTime);
+                })
+                .list();
     }
 
     /** «Yig'ishni boshlash»: vaqt berilgan bo'lishi shart; bir yig'uvchida bitta faol buyurtma (SPEC 5.2). */
@@ -198,6 +232,11 @@ class OrderPicking {
                 .param("id", id)
                 .query(LineRow.class)
                 .list();
+        // Qator bo'yicha qaytarilgan bo'lsa — faqat shu qatorlar qayta yig'iladi; markirovkaga faqat ular sabab bo'ladi
+        Set<Long> repick = repickLines(id);
+        if (repick != null) {
+            lines = lines.stream().filter(l -> repick.contains(l.id())).toList();
+        }
         Map<Long, Long> override = new HashMap<>();
         if (confirms != null) {
             Set<Long> known = new HashSet<>(lines.stream().map(LineRow::id).toList());
@@ -273,8 +312,8 @@ class OrderPicking {
                     .update();
         }
         stock.post(new DocRef(Orders.DOC_TYPE, id, h.number()), moves);
-        boolean marked = lines.stream().anyMatch(LineRow::marked);
-        OrderStatus next = marked ? OrderStatus.MARKING : OrderStatus.CHECKING;
+        // E1 (07.11.2026): har bir buyurtma Markirovkachidan o'tadi — markirovkasiz qatorlar u yerda tasdiqlanadi
+        OrderStatus next = OrderStatus.MARKING;
         jdbc.sql("""
                 UPDATE sales_order SET status = :s, pick_finished_at = now(), fefo_deviation = :dev, status_changed_at = now(), updated_at = now(),
                        version = version + 1 WHERE id = :id""")
@@ -299,7 +338,8 @@ class OrderPicking {
             throw MedixException.badRequest("order.checkAllLines");
         }
         jdbc.sql("""
-                UPDATE sales_order SET status = 'DOCUMENTING', places = :p, checked_by = :by, checked_at = now(), status_changed_at = now(),
+                UPDATE sales_order SET status = 'DOCUMENTING', places = :p, checked_by = :by, checked_at = now(), repick_line_ids = NULL,
+                       status_changed_at = now(),
                        updated_at = now(), version = version + 1 WHERE id = :id""")
                 .param("p", places)
                 .param("by", actor.employeeId())
@@ -310,23 +350,39 @@ class OrderPicking {
     }
 
     /**
-     * «Yig'ishga qaytarish» (sabab bilan): tovar Jo'natish zonasidan olingan joyiga qaytadi, FEFO zahira qayta qo'yiladi,
-     * buyurtma «Navbatda»ga (berilgan vaqt saqlanadi). V1: butun buyurtma; qator bo'yicha qaytarish — keyin.
+     * «Yig'ishga qaytarish» (sabab bilan, SPEC 188): tanlangan qatorlar (bo'sh — butun buyurtma) tovari Jo'natish zonasidan olingan joyiga
+     * qaytadi, shu qatorlarga FEFO zahira qayta qo'yiladi va kodlari bekor qilinadi (tarixda qoladi); buyurtma «Navbatda»ga (berilgan vaqt
+     * saqlanadi). Qayta yig'ish va markirovkada faqat shu qatorlar ochiq; qolganlari Jo'natish zonasida, kodlari bilan qoladi.
      */
     @Transactional
-    void returnToPick(Actor actor, long id, String reason) {
+    void returnToPick(Actor actor, long id, String reason, List<Long> lineIds) {
         Head h = lock(id, actor);
         if (h.status() != OrderStatus.CHECKING && h.status() != OrderStatus.MARKING) {
             throw MedixException.conflict("order.badStatus", h.status().name());
         }
+        List<Long> all = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :id ORDER BY line_no").param("id", id).query(Long.class).list();
+        Set<Long> chosen = lineIds == null || lineIds.isEmpty() ? new HashSet<>(all) : new HashSet<>(lineIds);
+        if (!all.containsAll(chosen)) {
+            throw MedixException.badRequest("order.lineUnknown");
+        }
+        boolean whole = chosen.size() == all.size();
+        if (!whole && jdbc.sql("SELECT EXISTS (SELECT 1 FROM sales_order_pick_return WHERE order_id = :id AND line_id IS NULL)")
+                .param("id", id).query(Boolean.class).single()) {
+            // Eski (qatorsiz) qaytarish yozuvi bor — qator bo'yicha qoldiqni aniqlab bo'lmaydi
+            throw MedixException.conflict("order.repickWholeOnly");
+        }
         List<Move> moves = new ArrayList<>();
-        for (Orders.NetPick n : orders.netPicked(id)) {
+        for (Orders.LinePick n : orders.netPickedByLine(id)) {
+            if (!chosen.contains(n.lineId())) {
+                continue;
+            }
             moves.add(Move.out(n.shippingZone(), n.batchId(), n.qty()));
             moves.add(Move.in(n.storageZone(), n.batchId(), n.qty()));
             jdbc.sql("""
-                    INSERT INTO sales_order_pick_return (order_id, batch_id, from_zone_id, to_zone_id, qty, reason, created_by)
-                    VALUES (:o, :b, :f, :t, :q, :r, :by)""")
+                    INSERT INTO sales_order_pick_return (order_id, line_id, batch_id, from_zone_id, to_zone_id, qty, reason, created_by)
+                    VALUES (:o, :l, :b, :f, :t, :q, :r, :by)""")
                     .param("o", id)
+                    .param("l", n.lineId())
                     .param("b", n.batchId())
                     .param("f", n.shippingZone())
                     .param("t", n.storageZone())
@@ -335,17 +391,35 @@ class OrderPicking {
                     .param("by", actor.employeeId())
                     .update();
         }
-        stock.post(new DocRef(Orders.DOC_TYPE, id, h.number()), moves);
+        if (!moves.isEmpty()) {
+            stock.post(new DocRef(Orders.DOC_TYPE, id, h.number()), moves);
+        }
         // Kodlar bekor qilinadi (tarixda qoladi), qayta markirovkada yana urish mumkin (SPEC 5.2)
-        OrderMarking.releaseCodes(jdbc, id, actor.employeeId(), reason.strip());
+        OrderMarking.releaseCodes(jdbc, id, whole ? null : chosen, actor.employeeId(), reason.strip());
+        List<Long> repick = whole ? null : all.stream().filter(chosen::contains).toList();
+        String repickText = repick == null ? null : "{" + String.join(",", repick.stream().map(String::valueOf).toList()) + "}";
         jdbc.sql("""
                 UPDATE sales_order SET status = 'QUEUED', picker_id = NULL, pick_started_at = NULL, pick_finished_at = NULL, fefo_deviation = false,
-                       marker_id = NULL, mark_started_at = NULL, mark_finished_at = NULL, status_changed_at = now(), updated_at = now(), version = version + 1 WHERE id = :id""")
+                       marker_id = NULL, mark_started_at = NULL, mark_finished_at = NULL, repick_line_ids = CAST(:rp AS BIGINT[]),
+                       status_changed_at = now(),
+                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("rp", repickText, Types.VARCHAR)
                 .param("id", id)
                 .update();
-        orders.reserveAgain(id);
+        orders.reserveAgain(id, whole ? null : chosen);
+        Map<String, Object> after = new HashMap<>();
+        after.put("status", OrderStatus.QUEUED.name());
+        if (!whole) {
+            after.put("lines", repick);
+        }
         audit.record(AuditEntry.of("order.returnToPick", "sales_order", id)
-                .change(Map.of("status", h.status().name()), Map.of("status", OrderStatus.QUEUED.name())).withReason(reason.strip()));
+                .change(Map.of("status", h.status().name()), after).withReason(reason.strip()));
+    }
+
+    /** Qayta yig'iladigan qatorlar (null — barcha qatorlar). */
+    private Set<Long> repickLines(long id) {
+        List<Long> ids = jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list();
+        return ids.isEmpty() ? null : new HashSet<>(ids);
     }
 
     private static Instant instant(Timestamp t) {

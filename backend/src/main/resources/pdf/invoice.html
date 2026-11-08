@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${number}">HF</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<div class="head center">
+    <h1>Hisob-faktura <span class="mono" th:text="${number}">HF-TSH-000001</span></h1>
+    <div class="muted"><span th:text="${date}">06.11.2026</span> · sotuv <span class="mono" th:text="${saleNumber}">SV</span>
+        · buyurtma <span class="mono" th:text="${orderNumber}">BY</span></div>
+    <div class="b" th:if="${cancelled}">BEKOR QILINGAN</div>
+</div>
+<table class="parties">
+    <tr>
+        <td>
+            <div class="caption muted">Sotuvchi</div>
+            <div class="b" th:text="${sellerName}">MChJ</div>
+            <div class="caption" th:text="'STIR: ' + ${sellerTin}">STIR</div>
+            <div class="caption" th:text="${sellerContacts}">Manzil</div>
+            <div class="caption" th:text="'Ombor: ' + ${warehouse}">Ombor</div>
+        </td>
+        <td>
+            <div class="caption muted">Xaridor</div>
+            <div class="b" th:text="${customer}">Mijoz</div>
+            <div class="caption" th:text="'STIR: ' + ${customerTin}">STIR</div>
+            <div class="caption" th:text="${address}">Manzil</div>
+            <div class="caption" th:text="'Shartnoma: ' + ${contract}">Shartnoma</div>
+            <div class="caption" th:text="'Toʻlov: ' + ${payment} + ' · muddati ' + ${dueDate}">Toʻlov</div>
+        </td>
+    </tr>
+</table>
+<table>
+    <thead>
+    <tr>
+        <th class="num">№</th>
+        <th>Mahsulot</th>
+        <th>Partiya · muddati</th>
+        <th class="r">Miqdor</th>
+        <th class="r">Narx (QQS bilan)</th>
+        <th class="r">QQSsiz qiymat</th>
+        <th class="r">QQS</th>
+        <th class="r">Summa, soʻm</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l, it : ${lines}">
+        <td class="num" th:text="${it.count}">1</td>
+        <td><span class="mono muted" th:text="${l.code}">0001</span> <span th:text="${l.name}">Mahsulot</span>
+            <div class="caption muted" th:if="${l.manufacturer != null}" th:text="${l.manufacturer}">Ishlab chiqaruvchi</div></td>
+        <td class="caption" th:text="${l.batch}">B1</td>
+        <td class="r" th:text="${l.qty}">1</td>
+        <td class="r" th:text="${l.price}">0,00</td>
+        <td class="r" th:text="${l.net}">0,00</td>
+        <td class="r" th:text="${l.vat}">0,00</td>
+        <td class="r" th:text="${l.amount}">0,00</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr class="b">
+        <td colspan="3">Jami</td>
+        <td class="r" th:text="${totalQty}">0</td>
+        <td></td>
+        <td class="r" th:text="${net}">0,00</td>
+        <td class="r" th:text="${vat}">0,00</td>
+        <td class="r" th:text="${total}">0,00</td>
+    </tr>
+    </tfoot>
+</table>
+<table class="signs">
+    <tr>
+        <td>Rahbar<br/>____________________</td>
+        <td>Bosh hisobchi<br/>____________________</td>
+        <td>Qabul qildi (Xaridor, M.Oʻ.)<br/>____________________</td>
+    </tr>
+</table>
+</body>
+</html>

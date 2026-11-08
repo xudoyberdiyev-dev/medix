@@ -4,7 +4,7 @@ package uz.medix.shared.security;
  * Amalni bajarayotgan xodim — modullar identity'ga bog'lanmasdan foydalanadi.
  *
  * @param branchId    asosiy filial ({@code null} — biriktirilmagan)
- * @param allBranches barcha filiallar ma'lumotini ko'radi (Direktor, Bosh administrator, Buxgalter — SPEC 13)
+ * @param allBranches barcha filiallar ma'lumotini ko'radi (Direktor, Bosh administrator; Buxgalter — faqat Direktor bergan belgi bilan, E3)
  */
 public record Actor(long employeeId, Long branchId, boolean allBranches) {
 

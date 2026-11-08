@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Printer, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const amount = (v: string) => (v === "0.00" ? "" : <span className="tabular-nums
 
 /** Akt sverka: davr boshi + qarz oshdi − kamaydi = davr oxiri. Chop etish — server PDF (ikki tomon imzosi bilan). */
 export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyId: number; branchId: number | null }) {
+  const t = useTranslations("debts.act");
   const today = todayTashkent();
   const [from, setFrom] = useState(formatIsoDate(`${today.slice(0, 8)}01`));
   const [to, setTo] = useState(formatIsoDate(today));
@@ -39,32 +41,31 @@ export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyI
   });
 
   if (props.branchId == null) {
-    return (
-      <EmptyState
-        icon={ScrollText}
-        title="Filialni tanlang"
-        description="Akt sverka filial boʻyicha tuziladi — yuqorida filialni tanlang."
-      />
-    );
+    return <EmptyState icon={ScrollText} title={t("noBranch.title")} description={t("noBranch.description")} />;
   }
 
   const columns: TableColumn<ActLine>[] = [
-    { key: "date", title: "Sana", render: (l) => formatIsoDate(l.date) },
-    { key: "docNumber", title: "Hujjat", mono: true },
-    { key: "note", title: "Izoh", render: (l) => l.note ?? "" },
-    { key: "debit", title: props.side === "CUSTOMER" ? "Qarz oshdi" : "Qarzimiz oshdi", align: "right", render: (l) => amount(l.debit) },
-    { key: "credit", title: "Toʻlandi / kamaydi", align: "right", render: (l) => amount(l.credit) },
-    { key: "balance", title: "Qoldiq", align: "right", render: (l) => <span className="tabular-nums">{formatMoney(l.balance)}</span> },
+    { key: "date", title: t("col.date"), render: (l) => formatIsoDate(l.date) },
+    { key: "docNumber", title: t("col.document"), mono: true },
+    { key: "note", title: t("col.note"), render: (l) => l.note ?? "" },
+    { key: "debit", title: t(`debit.${props.side}`), align: "right", render: (l) => amount(l.debit) },
+    { key: "credit", title: t("credit"), align: "right", render: (l) => amount(l.credit) },
+    {
+      key: "balance",
+      title: t("col.balance"),
+      align: "right",
+      render: (l) => <span className="tabular-nums">{formatMoney(l.balance)}</span>,
+    },
   ];
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-4">
         <div className="w-40">
-          <TextField label="Dan" size="sm" value={from} onChange={setFrom} error={isoFrom === null ? "Sana notoʻgʻri" : undefined} />
+          <TextField label={t("from")} size="sm" value={from} onChange={setFrom} error={isoFrom === null ? t("badDate") : undefined} />
         </div>
         <div className="w-40">
-          <TextField label="Gacha" size="sm" value={to} onChange={setTo} error={isoTo === null ? "Sana notoʻgʻri" : undefined} />
+          <TextField label={t("to")} size="sm" value={to} onChange={setTo} error={isoTo === null ? t("badDate") : undefined} />
         </div>
         <Button
           variant="secondary"
@@ -73,33 +74,31 @@ export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyI
           disabled={!act.data}
           onClick={() => openActPdf(props, isoFrom ?? null, isoTo ?? null)}
         >
-          Chop etish
+          {t("print")}
         </Button>
       </div>
       {act.data ? (
         <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Sum label={`Davr boshi (${formatIsoDate(act.data.from)})`} value={act.data.opening} />
-          <Sum label="Qarz oshdi" value={act.data.debitTotal} />
-          <Sum label="Toʻlandi / kamaydi" value={act.data.creditTotal} />
-          <Sum label={`Davr oxiri (${formatIsoDate(act.data.to)})`} value={act.data.closing} strong />
+          <Sum label={t("opening", { date: formatIsoDate(act.data.from) })} value={act.data.opening} currency={t("currency")} />
+          <Sum label={t("debit.CUSTOMER")} value={act.data.debitTotal} currency={t("currency")} />
+          <Sum label={t("credit")} value={act.data.creditTotal} currency={t("currency")} />
+          <Sum label={t("closing", { date: formatIsoDate(act.data.to) })} value={act.data.closing} currency={t("currency")} strong />
         </dl>
       ) : null}
       {act.error ? (
         <ErrorState onRetry={() => act.refetch()} />
       ) : (
         <Table
-          caption={`Akt sverka: ${act.data?.name ?? ""} · ${act.data?.branch ?? ""}`}
+          caption={t("caption", { name: act.data?.name ?? "", branch: act.data?.branch ?? "" })}
           density="compact"
           columns={columns}
           rows={act.data?.lines ?? []}
           rowKey={(l) => `${l.docType}:${l.docId}:${l.occurredAt}:${l.balance}`}
           loading={enabled && act.isPending}
-          emptyState={<EmptyState icon={ScrollText} title="Bu davrda harakat yoʻq" description="Davrni oʻzgartiring." />}
+          emptyState={<EmptyState icon={ScrollText} title={t("empty.title")} description={t("empty.description")} />}
         />
       )}
-      <p className="text-caption text-text-secondary">
-        Musbat qoldiq — {props.side === "CUSTOMER" ? "mijoz qarzdor" : "kompaniya yetkazib beruvchiga qarzdor"}, manfiy — avans.
-      </p>
+      <p className="text-caption text-text-secondary">{t(`legend.${props.side}`)}</p>
     </div>
   );
 }
@@ -126,11 +125,13 @@ function openActPdf(
   window.open(actPdfUrl(props, from, to), "_blank", "noopener");
 }
 
-function Sum(props: { label: string; value: string; strong?: boolean }) {
+function Sum(props: { label: string; value: string; currency: string; strong?: boolean }) {
   return (
     <div>
       <dt className="text-caption text-text-secondary">{props.label}</dt>
-      <dd className={`font-mono tabular-nums ${props.strong ? "text-subtitle" : ""}`}>{formatMoney(props.value)} soʻm</dd>
+      <dd className={`font-mono tabular-nums ${props.strong ? "text-subtitle" : ""}`}>
+        {formatMoney(props.value)} {props.currency}
+      </dd>
     </div>
   );
 }

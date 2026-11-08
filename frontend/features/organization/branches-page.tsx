@@ -1,6 +1,7 @@
 "use client";
 
 import { Building2, CircleCheck, CirclePause, Pencil, Plus, Power, PowerOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -26,18 +27,20 @@ import {
 import { DeactivateDialog } from "./deactivate-dialog";
 
 export function BranchStatus({ active }: { active: boolean }) {
+  const t = useTranslations("organization");
   return active ? (
     <Badge tone="success" icon={CircleCheck}>
-      Faol
+      {t("active")}
     </Badge>
   ) : (
     <Badge tone="neutral" icon={CirclePause}>
-      Nofaol
+      {t("inactive")}
     </Badge>
   );
 }
 
 export function BranchesPage() {
+  const t = useTranslations("organization");
   const me = useMe();
   const branches = useBranchList();
   const activate = useActivateBranch();
@@ -46,15 +49,14 @@ export function BranchesPage() {
   const [editing, setEditing] = useState<Branch | "new" | null>(null);
   const [deactivating, setDeactivating] = useState<Branch | null>(null);
 
-  if (me.data && !can(me.data, "branches.view"))
-    return <ForbiddenState description="Filiallarni Direktor va Bosh administrator boshqaradi." />;
+  if (me.data && !can(me.data, "branches.view")) return <ForbiddenState description={t("branches.forbidden")} />;
 
   const rows = filterBranches(branches.data ?? [], query);
   const columns: TableColumn<Branch>[] = [
-    { key: "code", title: "Kod", mono: true, width: 80 },
+    { key: "code", title: t("code"), mono: true, width: 80 },
     {
       key: "name",
-      title: "Filial",
+      title: t("branch"),
       render: (b) => (
         <span className="flex flex-col">
           <span>{b.name}</span>
@@ -62,25 +64,25 @@ export function BranchesPage() {
         </span>
       ),
     },
-    { key: "tin", title: "STIR", mono: true },
-    { key: "phone", title: "Telefon" },
-    { key: "address", title: "Manzil" },
-    { key: "active", title: "Holat", render: (b) => <BranchStatus active={b.active} /> },
+    { key: "tin", title: t("tin"), mono: true },
+    { key: "phone", title: t("phone") },
+    { key: "address", title: t("address") },
+    { key: "active", title: t("status"), render: (b) => <BranchStatus active={b.active} /> },
   ];
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Filiallar</h1>
+        <h1 className="text-page-title">{t("branches.title")}</h1>
         <Button icon={Plus} onClick={() => setEditing("new")}>
-          Filial qoʻshish
+          {t("branches.add")}
         </Button>
       </div>
       {branches.error ? (
         <ErrorState onRetry={() => branches.refetch()} />
       ) : (
         <Table
-          caption="Filiallar"
+          caption={t("branches.title")}
           columns={columns}
           rows={rows}
           rowKey={(b) => String(b.id)}
@@ -89,12 +91,12 @@ export function BranchesPage() {
           toolbar={
             <div className="w-80">
               <TextField
-                label="Qidirish"
+                label={t("search")}
                 variant="search"
                 size="sm"
                 value={query}
                 onChange={setQuery}
-                placeholder="Nom, kod yoki STIR"
+                placeholder={t("branches.searchPlaceholder")}
                 className="[&>label]:sr-only"
               />
             </div>
@@ -104,26 +106,26 @@ export function BranchesPage() {
               items={[
                 {
                   key: "edit",
-                  label: "Tahrirlash",
+                  label: t("edit"),
                   icon: <Pencil size={16} strokeWidth={1.5} aria-hidden />,
                   onSelect: () => setEditing(b),
                 },
                 b.active
                   ? {
                       key: "deactivate",
-                      label: "Nofaol qilish",
+                      label: t("deactivate"),
                       icon: <PowerOff size={16} strokeWidth={1.5} aria-hidden />,
                       onSelect: () => (deactivate.reset(), setDeactivating(b)),
                     }
                   : {
                       key: "activate",
-                      label: "Faollashtirish",
+                      label: t("activate"),
                       icon: <Power size={16} strokeWidth={1.5} aria-hidden />,
                       onSelect: () =>
                         activate.mutate(b.id, {
-                          onSuccess: () => toast({ tone: "success", title: "Filial faollashtirildi", description: b.name }),
+                          onSuccess: () => toast({ tone: "success", title: t("branches.activated"), description: b.name }),
                           onError: (e) =>
-                            toast({ tone: "danger", title: "Filial faollashtirilmadi", description: describeError(e).message ?? "" }),
+                            toast({ tone: "danger", title: t("branches.activateFailed"), description: describeError(e).message ?? "" }),
                         }),
                     },
               ]}
@@ -133,11 +135,7 @@ export function BranchesPage() {
             query ? (
               <NoResultsState onClearFilters={() => setQuery("")} />
             ) : (
-              <EmptyState
-                icon={Building2}
-                title="Hali filial qoʻshilmagan"
-                description="Har filial — alohida yuridik shaxs: kod (masalan, TSH) va STIR kerak."
-              />
+              <EmptyState icon={Building2} title={t("branches.emptyTitle")} description={t("branches.emptyDescription")} />
             )
           }
         />
@@ -145,9 +143,9 @@ export function BranchesPage() {
       {editing ? <BranchDrawer branch={editing === "new" ? null : editing} onClose={() => setEditing(null)} /> : null}
       {deactivating ? (
         <DeactivateDialog
-          title={`${deactivating.name} filialini nofaol qilasizmi?`}
-          consequence="Filial roʻyxatlarda «Nofaol» boʻlib qoladi, unga yangi ombor qoʻshilmaydi. Maʼlumotlari va tarixi saqlanadi — keyin faollashtirish mumkin."
-          actionLabel="Filialni nofaol qilish"
+          title={t("branches.deactivateTitle", { name: deactivating.name })}
+          consequence={t("branches.deactivateConsequence")}
+          actionLabel={t("branches.deactivateAction")}
           pending={deactivate.isPending}
           error={deactivate.error}
           onClose={() => setDeactivating(null)}
@@ -156,7 +154,7 @@ export function BranchesPage() {
               { id: deactivating.id, reason },
               {
                 onSuccess: () => (
-                  toast({ tone: "success", title: "Filial nofaol qilindi", description: deactivating.name }),
+                  toast({ tone: "success", title: t("branches.deactivated"), description: deactivating.name }),
                   setDeactivating(null)
                 ),
               },
@@ -169,6 +167,7 @@ export function BranchesPage() {
 }
 
 function BranchDrawer({ branch, onClose }: { branch: Branch | null; onClose: () => void }) {
+  const t = useTranslations("organization");
   const create = useCreateBranch();
   const update = useUpdateBranch();
   const [form, setForm] = useState({
@@ -193,7 +192,7 @@ function BranchDrawer({ branch, onClose }: { branch: Branch | null; onClose: () 
       phone: form.phone || undefined,
     };
     const done = (b: Branch) => (
-      toast({ tone: "success", title: branch ? "Filial saqlandi" : "Filial qoʻshildi", description: b.name }),
+      toast({ tone: "success", title: branch ? t("branches.saved") : t("branches.added"), description: b.name }),
       onClose()
     );
     if (branch) update.mutate({ id: branch.id, body }, { onSuccess: done });
@@ -205,44 +204,52 @@ function BranchDrawer({ branch, onClose }: { branch: Branch | null; onClose: () 
       open
       onClose={onClose}
       size="lg"
-      kind="Filial"
-      title={branch ? branch.name : "Yangi filial"}
+      kind={t("branch")}
+      title={branch ? branch.name : t("branches.new")}
       subtitle={branch?.code}
       status={branch ? <BranchStatus active={branch.active} /> : undefined}
       actions={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Ortga
+            {t("back")}
           </Button>
           <Button loading={mutation.isPending} onClick={() => submit()}>
-            Filialni saqlash
+            {t("branches.save")}
           </Button>
         </>
       }
     >
       <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
         <TextField
-          label="Kod"
+          label={t("code")}
           value={form.code}
           onChange={(v) => set("code")(v.toUpperCase())}
           error={err.fields.code}
-          hint={branch ? "Kod hujjat raqamlarida ishlatiladi — oʻzgarmaydi" : "3 ta lotin harfi, masalan TSH"}
+          hint={branch ? t("branches.codeHintLocked") : t("branches.codeHintNew")}
           disabled={Boolean(branch)}
           maxLength={3}
           required
         />
-        <TextField label="STIR" value={form.tin} onChange={set("tin")} error={err.fields.tin} inputMode="numeric" maxLength={9} required />
-        <TextField label="Nomi" value={form.name} onChange={set("name")} error={err.fields.name} required className="col-span-2" />
         <TextField
-          label="Yuridik nomi"
+          label={t("tin")}
+          value={form.tin}
+          onChange={set("tin")}
+          error={err.fields.tin}
+          inputMode="numeric"
+          maxLength={9}
+          required
+        />
+        <TextField label={t("name")} value={form.name} onChange={set("name")} error={err.fields.name} required className="col-span-2" />
+        <TextField
+          label={t("legalName")}
           value={form.legalName}
           onChange={set("legalName")}
           error={err.fields.legalName}
           required
           className="col-span-2"
         />
-        <TextField label="Telefon" value={form.phone} onChange={set("phone")} error={err.fields.phone} />
-        <TextField label="Manzil" value={form.address} onChange={set("address")} error={err.fields.address} />
+        <TextField label={t("phone")} value={form.phone} onChange={set("phone")} error={err.fields.phone} />
+        <TextField label={t("address")} value={form.address} onChange={set("address")} error={err.fields.address} />
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
       </form>
     </Drawer>

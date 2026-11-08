@@ -33,6 +33,8 @@ spring:
 
 server:
   port: ${PORT:8080}
+  # Teskari proksi (Caddy) ortida: X-Forwarded-For/Proto ga ishonish — faqat ichki tarmoq proksilari (Tomcat RemoteIpValve)
+  forward-headers-strategy: ${MEDIX_FORWARD_HEADERS:none}
   shutdown: graceful
   servlet:
     session:

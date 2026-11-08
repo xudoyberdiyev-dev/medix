@@ -25,8 +25,8 @@ describe("zona koʻchirishi", () => {
   it("boʻsh qatorlar tashlanadi, miqdor boʻsh qoldiqdan oshmaydi", () => {
     const stock = [row(1, 5), row(2, 3)];
     expect(linesFrom(stock, { 1: "4", 2: " " })).toEqual({ lines: [{ batchId: 1, qty: 4 }], error: null });
-    expect(linesFrom(stock, { 2: "4" }).error).toContain("boʻsh 3");
-    expect(linesFrom(stock, { 1: "1,5" }).error).toContain("butun son");
-    expect(linesFrom(stock, { 1: "0" }).error).toContain("butun son");
+    expect(linesFrom(stock, { 2: "4" }).error).toEqual({ code: "overFree", product: "Paratsetamol", batch: "P-2", free: 3, got: 4 });
+    expect(linesFrom(stock, { 1: "1,5" }).error).toMatchObject({ code: "notPositiveInt" });
+    expect(linesFrom(stock, { 1: "0" }).error).toMatchObject({ code: "notPositiveInt" });
   });
 });

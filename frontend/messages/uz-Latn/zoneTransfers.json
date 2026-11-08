@@ -1,0 +1,87 @@
+{
+  "kind": "Zona koʻchirishi",
+  "title": "Zona koʻchirishlari",
+  "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
+  "create": "Koʻchirish",
+  "status": {
+    "PENDING": "Tasdiqda",
+    "POSTED": "Oʻtkazildi",
+    "REJECTED": "Rad etildi"
+  },
+  "filter": {
+    "status": "Holat",
+    "allStatuses": "Barcha holatlar"
+  },
+  "col": {
+    "number": "Raqam",
+    "date": "Sana",
+    "warehouse": "Ombor",
+    "route": "Qayerdan → qayerga",
+    "lines": "Qatorlar",
+    "qty": "Miqdor",
+    "createdBy": "Kiritdi",
+    "status": "Holat",
+    "code": "Kod",
+    "product": "Mahsulot",
+    "batch": "Partiya",
+    "expiry": "Yaroqlilik",
+    "count": "Soni",
+    "stock": "Qoldiq",
+    "reserved": "Zahirada",
+    "move": "Koʻchirish"
+  },
+  "routeArrow": "dan",
+  "empty": {
+    "title": "Hali zona koʻchirishi yoʻq",
+    "description": "Tovarni bitta ombor ichida bir zonadan boshqasiga oʻtkazing. Karantindan sotuvga — tasdiq bilan."
+  },
+  "failed": "Bajarilmadi",
+  "retryHint": "Qayta urinib koʻring.",
+  "saveFailed": "Saqlanmadi. Qayta urinib koʻring.",
+  "view": {
+    "reject": "Rad etish",
+    "approve": "Tasdiqlash va koʻchirish",
+    "approved": "Tasdiqlandi, tovar koʻchirildi",
+    "pendingTitle": "Tasdiq kutilmoqda",
+    "pendingBody": "Karantindan sotuvga ochiq zonaga koʻchirish. Tasdiqlanmaguncha tovar «{zone}» zonasida qoladi.",
+    "rejectedTitle": "Rad etildi: {reason}",
+    "rejectedBody": "{who} — tovar joyida qoldi.",
+    "warehouse": "Ombor",
+    "from": "Qayerdan",
+    "to": "Qayerga",
+    "note": "Izoh",
+    "linesCaption": "Koʻchirilgan partiyalar",
+    "total": "Jami: {qty} dona",
+    "rejectTitle": "Koʻchirishni rad etish",
+    "rejectReason": "Sabab",
+    "rejectPlaceholder": "Masalan: sifat sertifikati yoʻq",
+    "rejected": "Rad etildi"
+  },
+  "form": {
+    "title": "Yangi zona koʻchirishi",
+    "sendForApproval": "Tasdiqqa yuborish",
+    "move": "Koʻchirish",
+    "errorTitle": "Koʻchirilmadi",
+    "warehouse": "Ombor",
+    "from": "Qayerdan",
+    "to": "Qayerga",
+    "selfApproveTitle": "Karantindan sotuvga — siz tasdiqlaysiz",
+    "needApprovalTitle": "Karantindan sotuvga — tasdiq kerak",
+    "selfApproveBody": "Koʻchirish darhol oʻtkaziladi va hujjatda tasdiqlovchi sifatida siz koʻrsatilasiz.",
+    "needApprovalBody": "Hujjat Filial rahbari yoki Direktor tasdigʻiga yuboriladi. Tasdiqlanmaguncha tovar karantinda qoladi.",
+    "stockCaption": "«{zone}» zonasidagi partiyalar",
+    "emptyZoneTitle": "Zonada tovar yoʻq",
+    "emptyZoneHint": "Boshqa zonani tanlang.",
+    "qtyLabel": "{product} {batch} — koʻchirish soni",
+    "note": "Izoh",
+    "notePlaceholder": "Masalan: sifat tekshiruvidan oʻtdi",
+    "pickZones": "Qayerdan va qayerga zonalarini tanlang.",
+    "noLines": "Kamida bitta partiyaga koʻchirish sonini kiriting.",
+    "sent": "Tasdiqqa yuborildi",
+    "moved": "Tovar koʻchirildi"
+  },
+  "lineError": {
+    "notPositiveInt": "{product} · {batch}: miqdor musbat butun son boʻlishi kerak",
+    "overFree": "{product} · {batch}: boʻsh {free}, kiritildi {got}"
+  }
+}

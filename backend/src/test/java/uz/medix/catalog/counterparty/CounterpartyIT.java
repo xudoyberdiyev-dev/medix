@@ -1,5 +1,7 @@
 package uz.medix.catalog.counterparty;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,8 +11,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.servlet.http.Cookie;
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -197,5 +205,63 @@ class CounterpartyIT {
         mvc.perform(get("/api/price-types").cookie(manager))
                 .andExpect(jsonPath("$", hasSize(8)))
                 .andExpect(jsonPath("$[0].base").value(true));
+    }
+
+    @Test
+    void sortingAndExcelExport() throws Exception {
+        Cookie admin = loginAs("ADMIN", null);
+        String tag = "srt" + UUID.randomUUID().toString().substring(0, 5);
+        String[] tins = {tin(), tin(), tin()};
+        String[] names = {"Beta " + tag, "Alfa " + tag, "Gamma " + tag};
+        for (int i = 0; i < 3; i++) {
+            mvc.perform(json(post("/api/counterparties"), admin, "{\"tin\":\"" + tins[i] + "\",\"name\":\"" + names[i]
+                            + "\",\"customer\":" + (i < 2) + ",\"supplier\":" + (i > 0) + ",\"phone\":\"+998 90 000 00 0" + i + "\"}"))
+                    .andExpect(status().isCreated());
+        }
+        mvc.perform(get("/api/counterparties").param("q", tag).param("sort", "NAME").param("desc", "true").cookie(admin))
+                .andExpect(jsonPath("$.items[*].name").value(contains(names[2], names[0], names[1])));
+        mvc.perform(get("/api/counterparties").param("q", tag).cookie(admin))
+                .andExpect(jsonPath("$.items[*].name").value(contains(names[1], names[0], names[2])));
+        List<String> byTin = new ArrayList<>(List.of(tins));
+        byTin.sort(null);
+        mvc.perform(get("/api/counterparties").param("q", tag).param("sort", "TIN").cookie(admin))
+                .andExpect(jsonPath("$.items[*].tin").value(contains(byTin.toArray())));
+        mvc.perform(get("/api/counterparties").param("q", tag).param("sortByTin", "true").cookie(admin))
+                .andExpect(jsonPath("$.items[*].tin").value(contains(byTin.toArray())));
+        mvc.perform(get("/api/counterparties").param("q", tag).param("sort", "LICENSE").cookie(admin)).andExpect(status().isOk());
+        mvc.perform(get("/api/counterparties").param("q", tag).param("sort", "REGION").param("desc", "true").cookie(admin))
+                .andExpect(status().isOk());
+
+        // Operator: mijozlar (clients.contact bor) — telefon ustuni bilan; jami qatori
+        Cookie operator = loginAs("OPERATOR", null);
+        MvcResult res = mvc.perform(get("/api/counterparties/export").param("q", tag).param("role", "CUSTOMER").cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Disposition", org.hamcrest.Matchers.containsString("mijozlar.xlsx")))
+                .andReturn();
+        try (XSSFWorkbook wb = new XSSFWorkbook(new ByteArrayInputStream(res.getResponse().getContentAsByteArray()))) {
+            Sheet sheet = wb.getSheetAt(0);
+            assertThat(sheet.getRow(0).getCell(5).getStringCellValue()).isEqualTo("Telefon");
+            assertThat(sheet.getRow(1).getCell(1).getStringCellValue()).isEqualTo(names[1]);
+            assertThat(sheet.getRow(1).getCell(3).getStringCellValue()).isEqualTo("Mijoz, YB");
+            assertThat(sheet.getRow(2).getCell(1).getStringCellValue()).isEqualTo(names[0]);
+            assertThat(sheet.getRow(2).getCell(3).getStringCellValue()).isEqualTo("Mijoz");
+            Row total = sheet.getRow(3);
+            assertThat(total.getCell(0).getStringCellValue()).isEqualTo("Jami");
+            assertThat(total.getCell(1).getNumericCellValue()).isEqualTo(2.0);
+        }
+        // Kassir: ikkala tomon ko'rinadi, lekin kontakt ruxsati yo'q — telefon ustuni yo'q
+        Cookie cashier = loginAs("CASHIER", null);
+        MvcResult all = mvc.perform(get("/api/counterparties/export").param("q", tag).param("sort", "NAME").param("desc", "true").cookie(cashier))
+                .andExpect(status().isOk())
+                .andReturn();
+        try (XSSFWorkbook wb = new XSSFWorkbook(new ByteArrayInputStream(all.getResponse().getContentAsByteArray()))) {
+            Sheet sheet = wb.getSheetAt(0);
+            assertThat(sheet.getRow(0).getCell(5).getStringCellValue()).isEqualTo("Litsenziya muddati");
+            assertThat(sheet.getRow(1).getCell(1).getStringCellValue()).isEqualTo(names[2]);
+            assertThat(sheet.getRow(4).getCell(1).getNumericCellValue()).isEqualTo(3.0);
+        }
+        // Haydovchida kontragent ko'rish ruxsati yo'q
+        mvc.perform(get("/api/counterparties/export").cookie(loginAs("DRIVER", null))).andExpect(status().isForbidden());
     }
 }

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="{{ title }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <dc-import name="PageHeader" title="{{ title }}" count="{{ countLabel }}" secondary="{{ hdrSecondary }}" primary="{{ hdrPrimary }}" more-label="{{ L.p_more }}" hint-size="100%,34px"></dc-import>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ searchPh }}" more-label="{{ moreLabel }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" date-filter="{{ dateFilter }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.p_fClear }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ hasResultNote }}"><div style="padding:10px 16px;border-bottom:1px solid #EEF2F4;font-size:13px;color:#5B6B6A">{{ resultNote }}</div></sc-if>
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="{{ allState }}" on-toggle-all="{{ toggleAll }}" on-sort="{{ onSort }}" scroll-x="{{ true }}" min-width="{{ tMinW }}" sticky-first="{{ true }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,400px"></dc-import>
+      <sc-if value="{{ showPager }}"><dc-import name="Pagination" total="{{ total }}" page="{{ page }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import></sc-if>
+    </sc-if>
+    <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="{{ emptyIcon }}" tone="brand" title="{{ emptyT }}" text="{{ emptyD }}" primary="{{ hdrPrimary }}" secondary="{{ impAction }}" min-height="360" hint-size="100%,360px"></dc-import></sc-if>
+    <sc-if value="{{ noRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.kt_noResT }}" text="{{ noResText }}" secondary="{{ clearAction }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+  </div>
+  <sc-if value="{{ hasSel }}"><dc-import name="BulkBar" count-label="{{ selLabel }}" actions="{{ bulkActions }}" on-clear="{{ clearSel }}" clear-label="{{ L.p_clearSel }}" hint-size="0px,0px"></dc-import></sc-if>
+  <div style="height:64px"></div>
+</div>
+</sc-if>
+<sc-if value="{{ isCard }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="CounterpartyCard" card-key="{{ cv.key }}" kind="{{ kind }}" branch="{{ branch }}" tab="{{ cv.tab }}" terms-req="{{ cv.termsReq }}" act="{{ cv.act }}" nonce="{{ cv.n }}" dict="{{ L }}" role="{{ role }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-back="{{ backToList }}" on-edit="{{ editCard }}" on-toast="{{ toastFn }}" on-navigate="{{ navFn }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="CounterpartyForm" kind="{{ kind }}" mode="{{ fv.mode }}" card-key="{{ fv.key }}" prefill="{{ fv.prefill }}" form-branch="{{ fv.branch }}" nonce="{{ fv.n }}" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-cancel="{{ formCancel }}" on-saved="{{ formSaved }}" on-open-card="{{ openCardFn }}" on-dirty="{{ dirtyFn }}" on-toast="{{ toastFn }}" hint-size="100%,800px"></dc-import>
+</sc-if>
+<sc-if value="{{ isImport }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="ImportWizard" type="{{ impType }}" branch="{{ impBranch }}" wh="" cutoff="" place="{{ impPlace }}" type-label="{{ title }}" preset="{{ impPreset }}" dict="{{ L }}" narrow="{{ narrow }}" on-done="{{ impDone }}" on-cancel="{{ backToList }}" on-toast="{{ toastFn }}" hint-size="100%,720px"></dc-import>
+</sc-if>
+<sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" with-reason="{{ dlg.withReason }}" reason-label="{{ L.kt_dBlockReason }}" reason="{{ reason }}" reason-error="{{ reasonErr }}" on-reason="{{ onReason }}" danger="{{ true }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.kt_pnCancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mt&quot;,&quot;yt&quot;],&quot;default&quot;:&quot;mt&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;,&quot;operator&quot;,&quot;purchase&quot;,&quot;accountant&quot;,&quot;cashier&quot;,&quot;keeper&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ALL&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,a)=&gt;void&quot;},&quot;onDirty&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(b)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const ST = { active: ['circle-check', '#15803D', '#F0FDF4'], blocked: ['ban', '#B91C1C', '#FEF2F2'], inactive: ['circle-pause', '#5B6B6A', '#EEF2F4'] };
+const LS = { ok: ['shield-check', '#15803D', '#F0FDF4'], soon: ['clock-alert', '#B45309', '#FFFBEB'], expired: ['shield-x', '#B91C1C', '#FEF2F2'], none: ['shield-off', '#5B6B6A', '#EEF2F4'] };
+const csv = rows => '\ufeff' + rows.map(r => r.map(v => { const s = String(v == null ? '' : v); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(';')).join('\r\n');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+class Component extends DCLogic {
+  state = { view: 'list', tab: 'all', q: '', fDebt: [], fBuyer: [], fPay: [], fAmt: [], fBonus: [], fDKind: [], amt: [null, null], dk: 'last', fOp: [], fPrice: [], fOver: [], fCtrl: [], date: { from: null, to: null }, sort: null, fType: [], fRegion: [], fBranch: [], fLic: [], fStatus: [], fGroup: [], sel: {}, page: 1, per: 25, cv: null, fv: null, imp: null, empty: false, dlg: null, reason: '', reasonErr: '' };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  get mt() { return this.props.kind !== 'yt'; }
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== (this.mt ? 'clients' : 'suppliers') || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.new) return setTimeout(() => this.openForm('new'), 0); if (P.open) { D.store.navReq = { page: u.page, open: P.open }; return; } setTimeout(() => this.setState({ view: 'list', tab: 'all', fLic: P.lic ? [P.lic] : [], fDebt: P.due ? [P.due] : P.aging ? [P.aging] : [], page: 1 }), 0); }
+  componentDidMount() {
+    this._url = setInterval(() => this.applyUrl(), 250);
+    if (!this.D || !this.D.ktCards) this._p = setInterval(() => { if (this.D && this.D.ktCards) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._poll = setInterval(() => { const D = this.D; if (!D) return; const r = D.store.navReq; if (r && r.page === (this.mt ? 'clients' : 'suppliers')) this.consume(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 300);
+  }
+  componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(rs) { const L = this.L; return fill(L.kt_who, { r: rs.map(r => L['r_' + r] || r).join(', ') }); }
+  my() { const b = this.props.branch; return b && b !== 'ALL' ? b : null; }
+  consume() { const D = this.D, r = D.store.navReq; D.store.navReq = null; if (!r || !r.open) return; const k = D.ktByKey(r.open) ? r.open : ((D.ktCards(this.props.kind).find(c => c.sup === r.open || c.name === r.open || c.stir === String(r.open).replace(/\D/g, '')) || {}).key); if (k) this.openCard(k, r.tab || 'gen'); else this.toast(r.open); }
+  openCard(key, tab, extra) { this.setState({ view: 'card', cv: { key, tab: tab || 'gen', termsReq: null, act: '', n: Date.now(), ...(extra || {}) }, dlg: null }); const m = document.querySelector('main'); m && m.scrollTo({ top: 0 }); }
+  openForm(mode, key, prefill, branch) { const R = this.D.KT_R, need = this.mt ? R.createC : R.createS; if (mode === 'new' && !this.D.canR(this.props.role, 'KT_R', this.mt ? 'createC' : 'createS')) return this.toast(this.who(need)); this.setState({ view: 'form', fv: { mode, key: key || '', prefill: prefill || null, branch: branch || this.my() || 'TSH', n: Date.now() } }); }
+  openImport(preset, br) { const R = this.D.KT_R, need = this.mt ? R.createC : R.createS; if (!this.D.canR(this.props.role, 'KT_R', this.mt ? 'createC' : 'createS')) return this.toast(this.who(need)); this.setState({ view: 'import', imp: { branch: br || this.my() || 'TSH', preset: preset || { step: 1, n: Date.now() } } }); }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D || !D.ktCards) return;
+    const base = { view: 'list', tab: 'all', q: '', fDebt: [], fBuyer: [], fPay: [], fAmt: [], fBonus: [], fDKind: [], amt: [null, null], dk: 'last', fOp: [], fPrice: [], fOver: [], fCtrl: [], date: { from: null, to: null }, fType: [], fRegion: [], fBranch: [], fLic: [], fStatus: [], fGroup: [], sel: {}, page: 1, cv: null, fv: null, imp: null, empty: false, dlg: null };
+    if (!d) { if (D.store.demoDirty) D.restoreBase(); this.setState(base); if (D.store.navReq && D.store.navReq.page === (this.mt ? 'clients' : 'suppliers')) this.consume(); return; }
+    D.restoreBase(true); this.setState(base); const k = d.k, who = this.props.userName || D.DIRECTOR;
+    if (k === 'empty') return this.setState({ empty: true });
+    if (k === 'nores') return this.setState({ q: 'Zarafshon', fType: ['clinic'] });
+    if (k === 'card') return this.openCard('c2', 'gen');
+    if (k === 'licSoon') return this.openCard('c13', 'lic');
+    if (k === 'terms') return this.openCard('c2', 'terms', { termsReq: { br: 'BXR', prefill: { limit: 20000000, days: 15 } } });
+    if (k === 'block') return this.openCard('c18', 'gen', { act: 'block' });
+    if (k === 'limit') { const c = D.ktCopy(D.ktOf('mt', 2)); c.cTerms.TSH.limit = 80000000; D.ktSave(c, who, 'terms', [{ label: 'limit', br: 'TSH', from: 120000000, to: 80000000 }]); return this.openCard('c2', 'terms'); }
+    if (k === 'dup') return this.openForm('new', '', { stir: '302118447', name: 'Shifo Farm' }, 'SMQ');
+    if (k === 'sim') return this.openForm('new', '', { stir: '309 771 204', name: 'Shifo Farm Plus' }, 'TSH');
+    if (k === 'imp') return this.openImport({ step: 4, n: Date.now() }, 'SMQ');
+  }
+  rows() {
+    const D = this.D, mt = this.mt, my = this.my();
+    if (this.state.empty) return [];
+    return D.ktCards(this.props.kind).map(card => {
+      const T = D.ktTermsOf(card, this.props.kind), has = !my || !!T[my], pl = D.ktLic(card, 'pharm'), ps = D.ktLicState(pl), cl = D.ktLic(card, 'ctrl'), cs = D.ktLicState(cl);
+      const db = D.ktDebt(card, this.props.kind, my), last = mt ? null : D.ktLast(card, 'yt').order;
+      const si = mt ? null : D.ktSupInfo(card, my), bks = {}; if (!mt) D.supInvoices(my || 'ALL').forEach(x => { if (x.party === card.sup && !x.prepaid) { const k = D.supDueBucket(x); if (k) bks[k] = 1; } });
+      const ci = mt ? D.ktCustInfo(card, my) : null;
+      return { card, has, ps, ctrl: cs.st === 'ok' || cs.st === 'soon', db, last, si, bks, ci, buyers: Object.keys(T).map(b => T[b].buyer).filter(Boolean), brs: Object.keys(T), region: (card.region || '').split(',')[0].trim() };
+    }).filter(r => r.has || !(this.props.role === 'operator' && my)).sort((a, b) => (a.has === b.has ? 0 : a.has ? -1 : 1));
+  }
+  groupRows() {
+    const D = this.D, my = this.my(), kind = this.props.kind;
+    const g = D.groupDebt(kind, my || undefined), byP = {};
+    g.forEach(x => { byP[x.party] = (byP[x.party] || 0) + x.debt; });
+    return D.BRANCHES.filter(b => b.code !== my).map(b => ({ group: true, code: b.code, name: b.name, debt: Math.round((byP[b.code] || 0) * 100) / 100 }));
+  }
+  filtered(R) {
+    const s = this.state, D = this.D, mt = this.mt;
+    const V = { all: () => true, debt: r => r.db.debt > 0, ourDebt: r => r.db.debt > 0, licSoon: r => r.ps.st === 'soon', ctrl: r => r.ctrl, blocked: r => r.card.status === 'blocked', inactive: r => r.card.status === 'inactive' };
+    const dk = s.dk || 'last', from = pD(s.date && s.date.from), to = pD(s.date && s.date.to), amt = s.amt || [null, null];
+    const dOf = r => mt ? (dk === 'pay' ? (r.ci.lastPay ? r.ci.lastPay.date : null) : dk === 'created' ? r.ci.created : (r.ci.lastSale ? r.ci.lastSale.date : null)) : dk === 'next' ? (r.si && r.si.next ? r.si.next.date : null) : dk === 'created' ? (r.si ? r.si.created : null) : (r.last ? r.last.date : null);
+    const AG = { has: r => r.db.debt > 0, none: r => !(r.db.debt > 0), '1-30': r => r.ci.aging[1] > 0, '31-60': r => r.ci.aging[2] > 0, '61-90': r => r.ci.aging[3] > 0, '90plus': r => r.ci.aging[4] > 0 };
+    const common = r => (amt[0] == null || r.db.debt >= amt[0]) && (amt[1] == null || r.db.debt <= amt[1]) && (!from || (pD(dOf(r)) != null && pD(dOf(r)) >= from && pD(dOf(r)) <= (to || from)));
+    const mtOk = r => !mt || ((!s.fDebt.length || s.fDebt.some(k => AG[k] && AG[k](r))) && (!s.fOp.length || s.fOp.some(o => r.ci.operators.includes(o))) && (!s.fPrice.length || s.fPrice.some(p => r.ci.priceTypes.includes(p))) && (!s.fOver.length || r.ci.over) && (!s.fCtrl.length || r.ctrl));
+    const ytOk = r => mt || ((!s.fDebt.length || s.fDebt.some(k => k === 'has' ? r.db.debt > 0 : k === 'none' ? !(r.db.debt > 0) : !!r.bks[k])) && (!s.fBuyer.length || s.fBuyer.some(b => r.buyers.includes(b))) && (!s.fPay.length || s.fPay.includes(r.card.mainPay || 'bank')) && (!s.fBonus.length || (r.si && r.si.bonus > 0)));
+    return R.filter(r => (V[s.tab] || V.all)(r) && ytOk(r) && mtOk(r) && common(r)
+      && (!s.q.trim() || !!(r.hit = D.ktSearch(r.card, s.q)))
+      && (!s.fType.length || s.fType.includes(r.card.type)) && (!s.fRegion.length || s.fRegion.includes(r.region))
+      && (!s.fBranch.length || s.fBranch.some(b => r.brs.includes(b))) && (!s.fLic.length || s.fLic.includes(r.ps.st)) && (!s.fStatus.length || s.fStatus.includes(r.card.status)));
+  }
+  canBlock() { return this.D.canR(this.props.role, 'KT_R', this.mt ? 'blockC' : 'blockS'); }
+  askBulk(kind, keys) {
+    const D = this.D, L = this.L; if (!this.canBlock()) return this.toast(this.who(this.mt ? D.KT_R.blockC : D.KT_R.blockS));
+    const cards = keys.map(k => D.ktByKey(k)).filter(Boolean), imp = cards.reduce((a, c) => { const x = D.ktBlockImpact(c); a.cont += x.cont; a.pend += x.pend; return a; }, { cont: 0, pend: 0 });
+    if (kind === 'block') return this.setState({ reason: '', reasonErr: '', dlg: { title: fill(L.kt_dBlockBulkT, { n: cards.length }), withReason: true, confirm: L.kt_dBlockGo, items: [{ icon: 'ban', color: '#B91C1C', text: L.kt_dBlockNew }, { icon: 'truck', text: imp.cont ? fill(L.kt_dBlockCont, { n: imp.cont, nos: '' }).replace(/:\s*$/, '') : L.kt_dBlockCont0 }, ...(imp.pend ? [{ icon: 'clock', color: '#B45309', text: fill(L.kt_dBlockPend, { n: imp.pend }) }] : []), { icon: 'hand-coins', text: L.kt_dBlockDebt }],
+      run: () => { const r = this.state.reason.trim(); if (!r) return this.setState({ reasonErr: L.kt_eReason }); const who = this.props.userName; cards.forEach(c0 => { const c = D.ktCopy(c0); const was = c.status; c.status = 'blocked'; c.reason = r; c.statusAt = D.nowStr(); c.statusBy = who; D.ktSave(c, who, 'block', [{ label: 'status', from: was, to: 'blocked' }, { label: 'reason', to: r }]); }); this.setState({ dlg: null, sel: {} }); this.toast(fill(L.kt_tBulkBlock, { n: cards.length })); } } });
+    this.setState({ dlg: { title: fill(L.kt_dInactT, { n: cards.length === 1 ? cards[0].name : cards.length + ' ta kontragent' }), text: L.kt_dInactD, withReason: false, confirm: L.kt_dInactGo, items: [], run: () => { const who = this.props.userName; cards.forEach(c0 => { const c = D.ktCopy(c0), was = c.status; c.status = 'inactive'; c.statusAt = D.nowStr(); c.statusBy = who; D.ktSave(c, who, 'inactive', [{ label: 'status', from: was, to: 'inactive' }]); }); this.setState({ dlg: null, sel: {} }); this.toast(fill(L.kt_tBulkInact, { n: cards.length })); } } });
+  }
+  exportRows(rows) { const L = this.L, D = this.D, mt = this.mt;
+    const H = mt ? [L.kt_c_name, L.kt_c_stir, L.kt_c_type, L.kt_c_region, L.kt_c_branches, L.kt_c_lic, L.kt_c_debt, L.kt_c_limit, L.kt_c_status] : [L.kt_c_name, L.kt_c_stir, L.kt_c_lic, L.kt_c_branches, L.kt_c_ourDebt, L.kt_c_terms, L.kt_c_lastIn, L.kt_c_status];
+    const out = [H].concat(rows.map(r => mt ? [r.card.name, D.stirF(r.card.stir), L['kt_ty_' + r.card.type], r.card.region, r.brs.join(', '), r.ps.st, fM(r.db.debt), fM(r.db.limit), L['kt_st_' + r.card.status]] : [r.card.name, D.stirF(r.card.stir), r.ps.st, r.brs.join(', '), fM(r.db.debt), r.brs.map(b => b + ' ' + (r.card.sTerms[b].days || 0)).join(', '), r.last ? r.last.date : '', L['kt_st_' + r.card.status]]));
+    if (mt && D.xlsxDownload) { const lic = r => { const l = D.ktLic(r.card, 'pharm'); return fill(L['kt_ls_' + r.ps.st], { n: r.ps.days }) + (l ? ' (' + l.until + ')' : ''); }; D.xlsxDownload('mijozlar_' + D.TODAY, [[L.kt_c_name, L.kt_c_stir, L.kt_c_type, L.kt_c_region, L.kt_c_branches, L.kt_f_lic, L.kt_c_debt, L.ys_cOver, L.kt_c_limit, L.ys_cPrice, L.ys_fOp, L.ys_cLastSale, L.kt_c_status]].concat(rows.map(r => { const ci = D.ktCustInfo(r.card, this.my()); return [r.card.name, D.stirF(r.card.stir), L['kt_ty_' + r.card.type], r.card.region, r.brs.join(', '), lic(r), Math.round(r.db.debt * 100) / 100, ci.overdue ? Math.round(ci.overdue * 100) / 100 : 0, Math.round(r.db.limit * 100) / 100, ((D.store.ptypes || []).find(x => x.code === ci.price) || {}).name || ci.price, ci.operators.join(', '), ci.lastSale ? ci.lastSale.date + ' · ' + ci.lastSale.no : '', L['kt_st_' + r.card.status]]; })), 'Mijozlar'); return this.toast(fill(L.kt_tExp, { n: rows.length })); }
+    if (!mt && D.xlsxDownload) { const H2 = [L.kt_c_name, L.kt_c_stir, L.kt_f_lic, L.kt_c_branches, L.kt_c_ourDebt, L.ys_cNext, L.ys_cBonus, L.kt_lMainPay, L.kt_c_lastIn, L.kt_c_status]; D.xlsxDownload('yetkazib_beruvchilar_' + D.TODAY, [H2].concat(rows.map(r => { const si = D.ktSupInfo(r.card, this.my()); return [r.card.name, D.stirF(r.card.stir), fill(L['kt_ls_' + r.ps.st], { n: r.ps.days }) + (r.ps.st !== 'none' && D.ktLic(r.card, 'pharm') ? ' (' + D.ktLic(r.card, 'pharm').until + ')' : ''), r.brs.join(', '), Math.round(r.db.debt * 100) / 100, si.next ? si.next.date + ' · ' + fM(si.next.sum) : '', si.bonus, L['k7_pay_' + (r.card.mainPay || 'bank')], r.last ? r.last.date + ' · ' + r.last.no : '', L['kt_st_' + r.card.status]]; })), 'Yetkazib beruvchilar'); return this.toast(fill(L.kt_tExp, { n: rows.length })); }
+    try { const b = new Blob([csv(out)], { type: 'text/csv;charset=utf-8' }), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = (mt ? 'mijozlar' : 'yetkazib_beruvchilar') + '_' + D.TODAY + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1000); } catch (e) {}
+    this.toast(fill(L.kt_tExp, { n: rows.length })); }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, mt = this.mt, narrow = !!p.narrow;
+    const base = { L, kind: p.kind || 'mt', role: p.role, branch: p.branch, userName: p.userName, narrow, title: mt ? L.kt_tC : L.kt_tS, isList: true, isCard: false, isForm: false, isImport: false, views: [], fbFilters: [], fbLabels: {}, tColumns: [], tRows: [], bulkActions: [], cv: {}, fv: {}, dlg: {}, toastFn: t => this.toast(t), dirtyFn: v => p.onDirty && p.onDirty(v) };
+    if (!D || !D.ktCards) return base;
+    const navFn = (k, a) => p.onNavigate && p.onNavigate(k, a), backToList = () => { this.setState({ view: 'list', cv: null, fv: null, imp: null }); p.onDirty && p.onDirty(false); };
+    const common = { ...base, navFn, backToList, openCardFn: (key, tab, termsReq) => { p.onDirty && p.onDirty(false); this.openCard(key, tab, termsReq ? { termsReq } : null); },
+      editCard: key => this.openForm('edit', key), formCancel: () => { p.onDirty && p.onDirty(false); s.fv && s.fv.mode === 'edit' ? this.openCard(s.fv.key) : backToList(); }, formSaved: key => { p.onDirty && p.onDirty(false); this.openCard(key); },
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }), reason: s.reason, reasonErr: s.reasonErr, onReason: v => this.setState({ reason: v, reasonErr: '' }) };
+    if (s.view === 'card' && s.cv) return { ...common, isList: false, isCard: true, cv: s.cv };
+    if (s.view === 'form' && s.fv) return { ...common, isList: false, isForm: true, fv: s.fv };
+    if (s.view === 'import' && s.imp) { const bn = (D.BRANCHES.find(b => b.code === s.imp.branch) || {}).name;
+      return { ...common, isList: false, isImport: true, impType: mt ? 'cust' : 'sup', impBranch: s.imp.branch, impPlace: bn, impPreset: s.imp.preset,
+        impDone: res => { const r = D.ktImport(mt ? 'cust' : 'sup', s.imp.branch, res.lines, p.userName); backToList(); this.toast(fill(L.kt_imRes, { a: r.created, b: r.terms }) + (r.skipped ? ' · ' + fill(L.kt_imSkip, { n: r.skipped }) : '')); } }; }
+    const my = this.my(), R = this.rows(), F = this.filtered(R), showG = s.fGroup.length > 0 && !s.empty, G = showG ? this.groupRows() : [];
+    const VS = mt ? ['all', 'debt', 'licSoon', 'ctrl', 'blocked', 'inactive'] : ['all', 'ourDebt', 'licSoon', 'blocked', 'inactive'];
+    const cntV = k => this.filtered.call({ state: { ...s, tab: k, q: '', fType: [], fRegion: [], fBranch: [], fLic: [], fStatus: [] }, D, mt }, R).length;
+    const views = VS.map(k => ({ label: L['kt_v_' + k], count: cntV(k), active: s.tab === k, tone: k === 'licSoon' && cntV(k) ? 'warning' : null, pick: () => this.setState({ tab: k, page: 1, sel: {} }) }));
+    const uniq = a => [...new Set(a)].filter(Boolean);
+    const opt = (vals, lab) => vals.map(v => ({ value: v, label: lab ? lab(v) : v, count: R.filter(r => (r.card.type === v || r.region === v || r.brs.includes(v) || r.ps.st === v || r.card.status === v)).length }));
+    const set = k => v => this.setState({ [k]: v, page: 1, sel: {} });
+    const amtF = { kind: 'range', key: 'amt', more: true, label: mt ? L.ys_fAmtC : L.ys_fAmt, from: (s.amt || [])[0], to: (s.amt || [])[1], fromPh: L.ys_from, toPh: L.ys_to, onChange: (a, b) => this.setState({ amt: [a, b], page: 1 }), presets: [['< 10 mln', null, 10e6], ['10–50 mln', 10e6, 50e6], ['≥ 50 mln', 50e6, null]].map(([label, from, to]) => ({ label, from, to })) };
+    const stF = { label: L.kt_f_status, options: ['active', 'blocked', 'inactive'].map(k => ({ value: k, label: L['kt_st_' + k], count: R.filter(r => r.card.status === k).length })), selected: s.fStatus, onChange: set('fStatus') };
+    const brF = { label: L.kt_f_branch, options: D.BRANCHES.map(b => ({ value: b.code, label: b.name, count: R.filter(r => r.brs.includes(b.code)).length })), selected: s.fBranch, onChange: set('fBranch') };
+    const rgF = { more: true, label: L.kt_f_region, options: opt(uniq(R.map(r => r.region))), selected: s.fRegion, onChange: set('fRegion') };
+    const tyF = { more: true, label: L.kt_f_type, options: opt(uniq(R.map(r => r.card.type)), v => L['kt_ty_' + v]), selected: s.fType, onChange: set('fType') };
+    const lcF = { more: true, label: L.kt_f_lic, options: ['ok', 'soon', 'expired', 'none'].map(k => ({ value: k, label: fill(L['kt_ls_' + k], { n: '≤30' }), count: R.filter(r => r.ps.st === k).length })), selected: s.fLic, onChange: set('fLic') };
+    const AGC = { has: r => r.db.debt > 0, none: r => !(r.db.debt > 0), '1-30': r => r.ci.aging[1] > 0, '31-60': r => r.ci.aging[2] > 0, '61-90': r => r.ci.aging[3] > 0, '90plus': r => r.ci.aging[4] > 0 };
+    const fbFilters = mt ? [stF, { label: L.ys_fDebt, options: ['has', '1-30', '31-60', '61-90', '90plus', 'none'].map(k => ({ value: k, label: L['ys_a_' + k], count: R.filter(AGC[k]).length })), selected: s.fDebt, onChange: set('fDebt') }, brF,
+        { label: L.ys_fOp, options: uniq(R.flatMap(r => r.ci.operators)).sort().map(v => ({ value: v, label: v, count: R.filter(r => r.ci.operators.includes(v)).length })), selected: s.fOp, onChange: set('fOp') },
+        rgF, tyF, lcF, { more: true, label: L.ys_fPrice, options: (D.store.ptypes || []).filter(p => R.some(r => r.ci.priceTypes.includes(p.code))).map(p => ({ value: p.code, label: p.name, count: R.filter(r => r.ci.priceTypes.includes(p.code)).length })), selected: s.fPrice, onChange: set('fPrice') },
+        { more: true, label: L.ys_fOver, options: [{ value: 'y', label: L.ys_fOverY, count: R.filter(r => r.ci.over).length }], selected: s.fOver, onChange: set('fOver') },
+        { more: true, label: L.ys_fCtrl, options: [{ value: 'y', label: L.ys_fCtrlY, count: R.filter(r => r.ctrl).length }], selected: s.fCtrl, onChange: set('fCtrl') }, amtF,
+        { more: true, label: L.kt_f_group, options: [{ value: 'show', label: L.kt_f_groupShow, count: this.groupRows().length }], selected: s.fGroup, onChange: set('fGroup') }]
+      : [stF, { label: L.ys_fDebt, options: ['has', 'late', 'today', '3d', 'none'].map(k => ({ value: k, label: L['ys_d_' + k], count: R.filter(r => k === 'has' ? r.db.debt > 0 : k === 'none' ? !(r.db.debt > 0) : !!r.bks[k]).length })), selected: s.fDebt, onChange: set('fDebt') }, brF,
+        { label: L.ys_fBuyer, options: uniq(R.flatMap(r => r.buyers)).sort().map(v => ({ value: v, label: v, count: R.filter(r => r.buyers.includes(v)).length })), selected: s.fBuyer, onChange: set('fBuyer') },
+        rgF, tyF, lcF, { more: true, label: L.kt_lMainPay, options: ['cash', 'bank', 'online'].map(k => ({ value: k, label: L['k7_pay_' + k], count: R.filter(r => (r.card.mainPay || 'bank') === k).length })), selected: s.fPay, onChange: set('fPay') }, amtF,
+        { more: true, label: L.ys_fBonus, options: [{ value: 'y', label: L.ys_fBonusY, count: R.filter(r => r.si && r.si.bonus > 0).length }], selected: s.fBonus, onChange: set('fBonus') },
+        { more: true, label: L.kt_f_group, options: [{ value: 'show', label: L.kt_f_groupShow, count: this.groupRows().length }], selected: s.fGroup, onChange: set('fGroup') }];
+    const hasFilters = !!(s.q || s.fType.length || s.fRegion.length || s.fBranch.length || s.fLic.length || s.fStatus.length || s.fGroup.length || s.fDebt.length || s.fBuyer.length || s.fPay.length || s.fBonus.length || s.fOp.length || s.fPrice.length || s.fOver.length || s.fCtrl.length || (s.amt && (s.amt[0] != null || s.amt[1] != null)) || (s.date && s.date.from));
+    const CLR = { q: '', fType: [], fRegion: [], fBranch: [], fLic: [], fStatus: [], fGroup: [], fDebt: [], fBuyer: [], fPay: [], fAmt: [], fBonus: [], fDKind: [], amt: [null, null], dk: 'last', fOp: [], fPrice: [], fOver: [], fCtrl: [], date: { from: null, to: null }, page: 1 };
+    const SK = { od: r => r.ci ? r.ci.overdue : 0, ls: r => r.ci && r.ci.lastSale ? pD(r.ci.lastSale.date) : 0, m: r => r.db.limit, pr: r => r.ci ? r.ci.price : '', d: r => r.db.debt, nd: r => r.si && r.si.next ? pD(r.si.next.date) : 9e15, bb: r => r.si ? r.si.bonus : 0, li: r => r.last ? pD(r.last.date) : 0, pt: r => (r.card.sTerms[my || r.brs[0]] || {}).days || 0, n: r => r.card.name };
+    if (s.sort && SK[s.sort.key]) { const g = SK[s.sort.key], m = s.sort.dir === 'desc' ? -1 : 1; F.sort((a, b) => { const x = g(a), y = g(b); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * m; }); }
+    const sc = k => ({ sortable: true, sortDir: s.sort && s.sort.key === k ? s.sort.dir : null });
+    const per = s.per, total = F.length, pages = Math.max(1, Math.ceil(total / per)), page = Math.min(s.page, pages), slice = F.slice((page - 1) * per, page * per);
+    const selKeys = Object.keys(s.sel).filter(k => s.sel[k]), nSel = selKeys.length, inPage = slice.filter(r => s.sel[r.card.key]).length;
+    const grey = '#647574';
+    const tColumns = mt ? [{ key: 'n', label: L.kt_c_name, width: 'minmax(220px,1.5fr)', ...sc('n') }, { key: 's', label: L.kt_c_stir, width: '116px' }, { key: 't', label: L.kt_c_type, width: '112px' }, { key: 'r', label: L.kt_c_region, width: '120px' }, { key: 'b', label: L.kt_c_branches, width: '130px' }, { key: 'l', label: L.kt_c_lic, width: '170px' }, { key: 'd', label: my ? L.kt_c_debt : L.kt_c_debtAll, width: '150px', align: 'right', ...sc('d') }, { key: 'od', label: L.ys_cOver, width: '160px', align: 'right', ...sc('od') }, { key: 'm', label: L.kt_c_limit, width: '140px', align: 'right', ...sc('m') }, { key: 'pr', label: L.ys_cPrice, width: '150px', ...sc('pr') }, { key: 'ls', label: L.ys_cLastSale, width: '170px', ...sc('ls') }, { key: 'st', label: L.kt_c_status, width: '120px' }]
+      : [{ key: 'n', label: L.kt_c_name, width: 'minmax(220px,1.5fr)', ...sc('n') }, { key: 's', label: L.kt_c_stir, width: '116px' }, { key: 'l', label: L.kt_c_lic, width: '170px' }, { key: 'b', label: L.kt_c_branches, width: '130px' }, { key: 'd', label: L.kt_c_ourDebt, width: '150px', align: 'right', ...sc('d') }, { key: 'nd', label: L.ys_cNext, width: '190px', ...sc('nd') }, { key: 'bb', label: L.ys_cBonus, width: '130px', align: 'right', ...sc('bb') }, { key: 'pt', label: L.kt_c_terms, width: '120px', align: 'right', ...sc('pt') }, { key: 'li', label: L.kt_c_lastIn, width: '170px', ...sc('li') }, { key: 'st', label: L.kt_c_status, width: '120px' }];
+    const licChips = r => { const S = LS[r.ps.st]; return [{ label: fill(L['kt_ls_' + r.ps.st], { n: r.ps.days }), icon: S[0], fg: S[1], bg: S[2], tip: L.kt_lk_pharm }].concat(r.ctrl ? [{ label: '', icon: 'lock', fg: '#B91C1C', bg: '#FEF2F2', tip: L.kt_ctrlTip }] : []); };
+    const brChips = r => r.brs.map(b => { const t = D.ktTermsOf(r.card, p.kind)[b], off = t && t.active === false; return { label: b, tip: (D.BRANCHES.find(x => x.code === b) || {}).name + (off ? ' · ' + L.kt_st_inactive : ''), fg: off ? grey : b === my ? '#0F766E' : '#5B6B6A', bg: b === my ? '#DDF5EE' : '#F5F7F8' }; });
+    const tRows = slice.map(r => { const c = r.card, S = ST[c.status], col = r.has ? null : grey, dual = c.cust != null && !!c.sup;
+      const nameCell = { type: 'name', text: c.name, sub: r.has ? (c.legal || '') : L.kt_otherBr, weight: 500, color: col, badge: dual ? (mt ? L.kt_roleS : L.kt_roleC) : '', badgeFg: '#1D4ED8', badgeBg: '#EFF6FF' };
+      if (r.hit && r.hit.where !== 'all') { if (r.hit.where === 'name') { const nn = D.ktNorm(c.name), qq = D.ktNorm(s.q.trim()), i0 = nn.indexOf(qq); if (i0 >= 0) { nameCell.pre = c.name.slice(0, i0); nameCell.hit = c.name.slice(i0, i0 + qq.length); nameCell.post = c.name.slice(i0 + qq.length); } } else nameCell.sub = r.hit.label + ': ' + r.hit.value; }
+      const NB = { late: ['#B91C1C', '#FEF2F2', L.ys_d_late], today: ['#B45309', '#FFFBEB', L.ys_d_today], '3d': ['#B45309', '#FFFBEB', L.ys_d_3d] }, nx = r.si && r.si.next, nb = r.si && NB[r.si.bucket];
+      const ndCell = nx ? { type: 'chips', chips: [{ label: nx.date, fg: nb ? nb[0] : '#172B2A', bg: nb ? nb[1] : '#F5F7F8', tip: fM(nx.sum) + ' · ' + nx.no }].concat(nb ? [{ label: nx.days < 0 ? fill(L.pb_late, { n: -nx.days }) : nx.days === 0 ? L.pb_today : fill(L.pb_left, { n: nx.days }), fg: nb[0], bg: nb[1] }] : []) } : { type: 'text', text: '—', color: '#647574' };
+      const bbCell = { type: 'text', text: r.si && r.si.bonus > 0 ? fM(r.si.bonus) : '—', color: r.si && r.si.bonus > 0 ? '#15803D' : '#647574', weight: r.si && r.si.bonus > 0 ? 600 : 400 };
+      const st = { type: 'status', text: L['kt_st_' + c.status], icon: S[0], fg: r.has ? S[1] : grey, bg: S[2] };
+      const cells = mt ? [nameCell, { type: 'mono', text: D.stirF(c.stir), color: col }, { type: 'text', text: L['kt_ty_' + c.type], color: col || '#5B6B6A' }, { type: 'text', text: r.region, color: col || '#5B6B6A' }, { type: 'chips', chips: brChips(r) }, { type: 'chips', chips: licChips(r) },
+          { type: 'text', text: r.has ? fM(r.db.debt) : '—', weight: 600, color: col || (r.db.overdue > 0 ? '#B91C1C' : r.db.limit && r.db.debt > r.db.limit ? '#B45309' : '#172B2A') }, r.ci.overdue > 0 ? { type: 'name', text: fM(r.ci.overdue), sub: fill(L.pb_late, { n: r.ci.maxLate }), weight: 600, color: '#B91C1C' } : { type: 'text', text: '—', color: '#647574' }, { type: 'text', text: r.has ? fM(r.db.limit) : '—', color: col || '#5B6B6A' }, { type: 'text', text: ((D.store.ptypes || []).find(x => x.code === r.ci.price) || {}).name || r.ci.price, color: col || '#5B6B6A' }, r.ci.lastSale ? { type: 'link', text: r.ci.lastSale.date + ' · ' + r.ci.lastSale.no, pick: () => navFn('shipments', { open: r.ci.lastSale.no }) } : { type: 'text', text: '—', color: '#647574' }, st]
+        : [nameCell, { type: 'mono', text: D.stirF(c.stir), color: col }, { type: 'chips', chips: licChips(r) }, { type: 'chips', chips: brChips(r) }, { type: 'text', text: r.has ? fM(r.db.debt) : '—', weight: 600, color: col || (r.bks.late ? '#B91C1C' : '#172B2A') }, ndCell, bbCell, { type: 'text', text: (my ? (c.sTerms[my] ? [c.sTerms[my].days] : []) : r.brs.map(b => c.sTerms[b].days)).filter((v, i, a) => a.indexOf(v) === i).map(v => fill(L.kt_daysN, { n: v })).join(' / ') || '—', color: col || '#5B6B6A' },
+          { type: r.last ? 'link' : 'text', text: r.last ? `${r.last.date} · ${r.last.no}` : '—', color: r.last ? null : '#647574', pick: () => { if (r.last) navFn('receipt', 'open:' + r.last.no); } }, st];
+      return { id: c.key, selected: !!s.sel[c.key], onToggle: () => this.setState(st2 => ({ sel: { ...st2.sel, [c.key]: !st2.sel[c.key] } })), onOpen: () => this.openCard(c.key), cells,
+        actions: [{ label: L.qt_open, icon: 'arrow-up-right', pick: () => this.openCard(c.key) }, { label: L.kt_addTerms, icon: 'git-branch-plus', pick: () => this.openCard(c.key, 'terms', { termsReq: { br: my && !r.has ? my : '' } }) }, { label: c.status === 'blocked' ? L.kt_bActivate : L.kt_bBlock, icon: 'ban', danger: c.status !== 'blocked', sep: true, pick: () => this.openCard(c.key, 'gen', { act: c.status === 'blocked' ? 'activate' : 'block' }) }] }; });
+    G.forEach(g => tRows.push({ id: 'g' + g.code, onToggle: () => this.toast(L.kt_groupTip), onOpen: () => this.toast(L.kt_groupRo), cells: (mt ? [{ type: 'name', text: g.name, sub: L.kt_groupTip, weight: 500, color: '#5B6B6A', badge: L.kt_groupTag, badgeFg: '#5B6B6A', badgeBg: '#EEF2F4' }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'chips', chips: [{ label: g.code, fg: '#5B6B6A', bg: '#F5F7F8' }] }, { type: 'text', text: '—', color: grey }, { type: 'text', text: fM(g.debt), color: '#5B6B6A' }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'status', text: L.kt_groupTag, icon: 'building-2', fg: '#5B6B6A', bg: '#EEF2F4' }]
+      : [{ type: 'name', text: g.name, sub: L.kt_groupTip, weight: 500, color: '#5B6B6A', badge: L.kt_groupTag, badgeFg: '#5B6B6A', badgeBg: '#EEF2F4' }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'chips', chips: [{ label: g.code, fg: '#5B6B6A', bg: '#F5F7F8' }] }, { type: 'text', text: fM(g.debt), color: '#5B6B6A' }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'text', text: '—', color: grey }, { type: 'status', text: L.kt_groupTag, icon: 'building-2', fg: '#5B6B6A', bg: '#EEF2F4' }]), actions: [] }));
+    const R0 = D.KT_R, canNew = (mt ? R0.createC : R0.createS);
+    return {
+      ...common, countLabel: s.empty ? '0' : fN(R.length), hdrPrimary: { label: mt ? L.kt_addC : L.kt_addS, icon: 'plus', pick: () => this.openForm('new') }, hdrSecondary: [{ label: L.kt_imp, icon: 'upload', pick: () => this.openImport() }].concat([{ label: L.kt_exp, icon: 'file-spreadsheet', pick: () => this.exportRows(nSel ? R.filter(r => s.sel[r.card.key]) : F) }]),
+      views, q: s.q, searchPh: mt ? L.ys_searchPhC : L.ys_searchPh, moreLabel: L.ys_more, setQ: v => this.setState({ q: v, page: 1, sel: {} }), fbFilters, fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone }, hasFilters,
+      clearFilters: () => this.setState(CLR), clearAction: { label: L.p_fClear, icon: 'x', pick: () => this.setState({ ...CLR, tab: 'all' }) }, onSort: k => this.setState(x => ({ sort: !x.sort || x.sort.key !== k ? { key: k, dir: 'asc' } : x.sort.dir === 'asc' ? { key: k, dir: 'desc' } : null })),
+      resultNote: hasFilters ? fill(L.ys_result, { n: F.length, s: fM(F.reduce((a, r) => a + r.db.debt, 0)) }) : '', hasResultNote: hasFilters, dateFilter: { kinds: (mt ? ['last', 'pay', 'created'] : ['last', 'next', 'created']).map(k => ({ value: k, label: L[(mt ? 'ys_dc_' : 'ys_dk_') + k] })), kind: s.dk || 'last', onKind: v => this.setState({ dk: v, page: 1 }), label: L.ys_period, from: s.date.from, to: s.date.to, onChange: v => this.setState({ date: v, page: 1 }), labels: { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.ys_dr7, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext } },
+      showTable: tRows.length > 0, listEmpty: R.length === 0, noRes: R.length > 0 && tRows.length === 0, noResText: fill(L.kt_noResD, { q: s.q || '—' }), emptyIcon: mt ? 'users' : 'factory', emptyT: mt ? L.kt_emptyCT : L.kt_emptyST, emptyD: mt ? L.kt_emptyCD : L.kt_emptySD, impAction: { label: L.kt_imp, icon: 'upload', pick: () => this.openImport() },
+      tColumns, tRows, tMinW: mt ? 1860 : 1600, allState: inPage === 0 ? 'none' : inPage === slice.length ? 'all' : 'some',
+      toggleAll: () => this.setState(st2 => { const sel = { ...st2.sel }, on = inPage !== slice.length; slice.forEach(r => { sel[r.card.key] = on; }); return { sel }; }),
+      showPager: total > 25, total, page, per, setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 }),
+      hasSel: nSel > 0, selLabel: fill(L.kt_selN, { n: nSel }), clearSel: () => this.setState({ sel: {} }),
+      bulkActions: [{ label: L.kt_bBlock, icon: 'ban', danger: true, pick: () => this.askBulk('block', selKeys) }, { label: L.kt_bInactive, icon: 'circle-pause', pick: () => this.askBulk('inactive', selKeys) }, { label: L.kt_exp, icon: 'file-spreadsheet', pick: () => this.exportRows(R.filter(r => s.sel[r.card.key])) }]
+    };
+  }
+}
+</script>
+</body>
+</html>

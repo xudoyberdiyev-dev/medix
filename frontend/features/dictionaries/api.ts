@@ -103,7 +103,7 @@ export function useVehicles() {
 export const useSaveVehicle = () =>
   useInvalidating(
     VEHICLES,
-    ({ id, ...body }: { id?: number; branchId: number; plateNumber: string; model: string; capacityBoxes?: number }) =>
+    ({ id, ...body }: { id?: number; branchId: number; plateNumber: string; model: string; hasRefrigerator: boolean }) =>
       id ? unwrap(api.PUT("/api/vehicles/{id}", { params: { path: { id } }, body })) : unwrap(api.POST("/api/vehicles", { body })),
   );
 
@@ -133,12 +133,3 @@ export const useToggleExpenseItem = () =>
       ? unwrap(api.POST("/api/expense-items/{id}/activate", { params: { path: { id } } }))
       : unwrap(api.POST("/api/expense-items/{id}/deactivate", { params: { path: { id } } })),
   );
-
-/** Butun musbat son yoki boʻsh (ixtiyoriy maydon). `null` — notoʻgʻri kiritilgan. */
-export function parseCapacity(raw: string): number | undefined | null {
-  const t = raw.trim();
-  if (!t) return undefined;
-  if (!/^\d+$/.test(t)) return null;
-  const n = Number(t);
-  return n >= 1 && n <= 100000 ? n : null;
-}

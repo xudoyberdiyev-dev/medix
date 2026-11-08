@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div ref="{{ rootRef }}" data-screen-label="Kassir paneli" style="display:flex;flex-direction:column;gap:16px;min-height:100%;font-family:inherit;color:#172B2A">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ greet }}</h1>
+      <p style="margin:0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ sub }}</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <sc-for list="{{ actions2 }}" as="b" hint-placeholder-count="3"><button onClick="{{ b.pick }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap" style-hover="background:#F8FAFA"><lucide-i name="{{ b.icon }}" size="16" style="color:#5B6B6A"></lucide-i>{{ b.label }}</button></sc-for>
+      <button onClick="{{ primary.pick }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap" style-hover="background:#115E59"><lucide-i name="hand-coins" size="16"></lucide-i>{{ primary.label }}</button>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:10px 12px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:500;color:#5B6B6A">{{ T.fPer }}</span>
+      <div role="tablist" style="display:flex;height:32px;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;gap:2px">
+        <sc-for list="{{ periods }}" as="p" hint-placeholder-count="4"><button role="tab" aria-selected="{{ p.on }}" onClick="{{ p.pick }}" style="height:26px;padding:0 10px;border:0;border-radius:6px;background:{{ p.bg }};color:{{ p.fg }};box-shadow:{{ p.sh }};font:inherit;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">{{ p.label }}</button></sc-for>
+      </div>
+      <sc-if value="{{ isCustom }}">
+        <div style="display:flex;align-items:center;gap:6px">
+          <input value="{{ cFrom }}" onChange="{{ onCFrom }}" aria-label="{{ T.from }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="width:108px;height:32px;padding:0 10px;border:1px solid {{ cBd }};border-radius:8px;font:inherit;font-size:13px;outline:none;font-variant-numeric:tabular-nums">
+          <span style="color:#647574">–</span>
+          <input value="{{ cTo }}" onChange="{{ onCTo }}" aria-label="{{ T.to }}" placeholder="kk.oo.yyyy" maxlength="10" inputmode="numeric" style="width:108px;height:32px;padding:0 10px;border:1px solid {{ cBd }};border-radius:8px;font:inherit;font-size:13px;outline:none;font-variant-numeric:tabular-nums">
+        </div>
+      </sc-if>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;font-weight:500;color:#5B6B6A">{{ T.fAcct }}</span>
+      <select value="{{ acct }}" onChange="{{ onAcct }}" style="height:32px;padding:0 28px 0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;color:#172B2A;max-width:260px">
+        <sc-for list="{{ acctOpts }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+      </select>
+    </label>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:500;color:#5B6B6A">{{ T.fPt }}</span>
+      <div role="tablist" style="display:flex;height:32px;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;gap:2px">
+        <sc-for list="{{ pts }}" as="p" hint-placeholder-count="4"><button role="tab" aria-selected="{{ p.on }}" onClick="{{ p.pick }}" style="height:26px;padding:0 10px;border:0;border-radius:6px;background:{{ p.bg }};color:{{ p.fg }};box-shadow:{{ p.sh }};font:inherit;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">{{ p.label }}</button></sc-for>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;font-weight:500;color:#5B6B6A">{{ T.fBr }}</span>
+      <span title="{{ T.brLock }}" style="height:32px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;display:flex;align-items:center;gap:6px;font-size:13px;color:#172B2A"><lucide-i name="lock" size="13" style="color:#647574"></lucide-i>{{ brName }}</span>
+    </div>
+    <span style="margin-left:auto;font-size:12px;color:#647574;font-variant-numeric:tabular-nums">{{ perText }}</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;align-items:stretch">
+    <sc-for list="{{ cards }}" as="k" hint-placeholder-count="5">
+      <section style="padding:16px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <button onClick="{{ k.pick }}" style="border:0;background:transparent;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;text-align:left;font:inherit;color:inherit;cursor:pointer;min-width:0" style-hover="opacity:0.85">
+          <span style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><lucide-i name="{{ k.icon }}" size="14" style="color:{{ k.iconFg }}"></lucide-i>{{ k.label }}</span>
+          <span style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;min-width:0"><span style="font-size:22px;line-height:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:{{ k.valFg }}">{{ k.value }}</span><span style="font-size:12px;color:#647574">{{ k.unit }}</span></span>
+          <span style="font-size:12px;line-height:16px;color:#647574">{{ k.note }}</span>
+        </button>
+        <div style="display:flex;flex-direction:column;margin-top:4px;padding-top:6px;border-top:1px solid #EEF2F4">
+          <sc-for list="{{ k.rows }}" as="r" hint-placeholder-count="3"><button onClick="{{ r.pick }}" style="min-height:30px;padding:4px 4px 4px {{ r.pad }};margin:0 -4px;border:0;border-radius:6px;background:transparent;display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit;font-size:12.5px;line-height:17px;cursor:pointer;text-align:left;color:inherit" style-hover="background:#F8FAFA"><span style="display:flex;flex-direction:column;min-width:0"><span style="color:{{ r.lfg }};text-wrap:pretty">{{ r.label }}</span><sc-if value="{{ r.hasSub }}"><span style="font-size:11.5px;color:#647574">{{ r.sub }}</span></sc-if></span><span style="font-variant-numeric:tabular-nums;font-weight:500;color:{{ r.fg }};white-space:nowrap">{{ r.value }}</span></button></sc-for>
+          <sc-if value="{{ k.noRows }}"><span style="font-size:12.5px;line-height:30px;color:#647574">{{ k.noRowsText }}</span></sc-if>
+        </div>
+      </section>
+    </sc-for>
+  </div>
+
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:16px 0 0;display:flex;flex-direction:column;gap:12px;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;flex-wrap:wrap">
+      <h2 style="margin:0;font-size:14px;line-height:20px;font-weight:600">{{ T.accT }}</h2>
+      <span style="font-size:12px;color:#647574">{{ T.accFormula }}</span>
+    </div>
+    <div style="overflow-x:auto">
+      <div style="min-width:880px">
+        <div style="display:grid;grid-template-columns:{{ accGrid }};gap:12px;padding:8px 16px;background:#F8FAFA;border-top:1px solid #EEF2F4;border-bottom:1px solid #EEF2F4;font-size:12px;font-weight:500;color:#5B6B6A">
+          <sc-for list="{{ accHeads }}" as="h" hint-placeholder-count="8"><span style="text-align:{{ h.al }}">{{ h.t }}</span></sc-for>
+        </div>
+        <sc-for list="{{ accRows }}" as="r" hint-placeholder-count="5">
+          <button onClick="{{ r.pick }}" style="width:100%;display:grid;grid-template-columns:{{ accGrid }};gap:12px;align-items:center;padding:10px 16px;border:0;border-bottom:1px solid #EEF2F4;background:#FFFFFF;font:inherit;font-size:13px;color:#172B2A;text-align:left;cursor:pointer" style-hover="background:#F8FAFA">
+            <span style="display:flex;align-items:center;gap:8px;min-width:0"><lucide-i name="{{ r.icon }}" size="16" style="color:#5B6B6A;flex:none"></lucide-i><span style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.name }}</span><sc-if value="{{ r.mine }}"><span style="font-size:11.5px;color:#0F766E">{{ T.mine }}</span></sc-if></span></span>
+            <span style="color:#5B6B6A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.resp }}</span>
+            <span style="text-align:right;font-variant-numeric:tabular-nums">{{ r.start }}</span>
+            <span style="text-align:right;font-variant-numeric:tabular-nums;color:{{ r.inFg }}">{{ r.inS }}</span>
+            <span style="text-align:right;font-variant-numeric:tabular-nums;color:{{ r.outFg }}">{{ r.outS }}</span>
+            <span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ r.end }}</span>
+            <span style="color:#5B6B6A;font-variant-numeric:tabular-nums">{{ r.lastClose }}</span>
+            <span style="display:flex"><span style="display:flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;background:{{ r.stBg }};color:{{ r.stFg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ r.stIcon }}" size="12"></lucide-i>{{ r.st }}</span></span>
+          </button>
+        </sc-for>
+        <div style="display:grid;grid-template-columns:{{ accGrid }};gap:12px;padding:10px 16px;background:#F8FAFA;font-size:13px;font-weight:600;border-radius:0 0 10px 10px">
+          <span>{{ T.total }}</span><span></span>
+          <span style="text-align:right;font-variant-numeric:tabular-nums">{{ accTot.start }}</span>
+          <span style="text-align:right;font-variant-numeric:tabular-nums">{{ accTot.inS }}</span>
+          <span style="text-align:right;font-variant-numeric:tabular-nums">{{ accTot.outS }}</span>
+          <span style="text-align:right;font-variant-numeric:tabular-nums">{{ accTot.end }}</span>
+          <span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <h2 style="margin:0;font-size:14px;line-height:20px;font-weight:600">{{ T.dynT }}</h2>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#5B6B6A"><span style="width:10px;height:10px;border-radius:2px;background:#0D9488"></span>{{ T.in }}</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#5B6B6A"><span style="width:10px;height:10px;border-radius:2px;background:#E3893A"></span>{{ T.out }}</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <div style="min-width:620px;display:flex;flex-direction:column">
+        <div style="display:grid;grid-template-columns:96px minmax(0,1fr) minmax(0,1fr) 170px;gap:16px;padding:0 0 8px;border-bottom:1px solid #EEF2F4;font-size:12px;font-weight:500;color:#5B6B6A">
+          <span>{{ T.cDate }}</span><span>{{ T.in }}</span><span>{{ T.out }}</span><span style="text-align:right">{{ T.cDayEnd }}</span>
+        </div>
+        <sc-for list="{{ days }}" as="d" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:96px minmax(0,1fr) minmax(0,1fr) 170px;gap:16px;align-items:center;padding:8px 0;border-bottom:1px solid #EEF2F4;font-size:13px">
+            <span style="font-variant-numeric:tabular-nums;color:#5B6B6A">{{ d.date }}</span>
+            <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="flex:1;height:8px;border-radius:4px;background:#F1F5F5;overflow:hidden;min-width:40px"><span style="display:block;height:100%;width:{{ d.inW }};background:#0D9488;border-radius:4px"></span></span><span style="width:120px;text-align:right;font-variant-numeric:tabular-nums;color:{{ d.inFg }}">{{ d.inS }}</span></span>
+            <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="flex:1;height:8px;border-radius:4px;background:#F1F5F5;overflow:hidden;min-width:40px"><span style="display:block;height:100%;width:{{ d.outW }};background:#E3893A;border-radius:4px"></span></span><span style="width:120px;text-align:right;font-variant-numeric:tabular-nums;color:{{ d.outFg }}">{{ d.outS }}</span></span>
+            <span style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ d.end }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:16px 0 0;display:flex;flex-direction:column;gap:12px;min-width:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;flex-wrap:wrap">
+      <h2 style="margin:0;font-size:14px;line-height:20px;font-weight:600">{{ opsTitle }}</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <select value="{{ opKind }}" onChange="{{ onOpKind }}" aria-label="{{ T.opKind }}" style="height:32px;padding:0 28px 0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;color:#172B2A">
+          <sc-for list="{{ opKinds }}" as="o"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+        </select>
+        <input value="{{ q }}" onChange="{{ onQ }}" placeholder="{{ T.qPh }}" style="width:220px;height:32px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:13px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <div style="min-width:860px">
+        <div style="display:grid;grid-template-columns:{{ opGrid }};gap:12px;padding:8px 16px;background:#F8FAFA;border-top:1px solid #EEF2F4;border-bottom:1px solid #EEF2F4;font-size:12px;font-weight:500;color:#5B6B6A">
+          <sc-for list="{{ opHeads }}" as="h" hint-placeholder-count="8"><span style="text-align:{{ h.al }}">{{ h.t }}</span></sc-for>
+        </div>
+        <sc-for list="{{ ops }}" as="o" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:{{ opGrid }};gap:12px;align-items:center;padding:9px 16px;border-bottom:1px solid #EEF2F4;font-size:13px">
+            <span style="font-variant-numeric:tabular-nums;color:#5B6B6A;white-space:nowrap">{{ o.time }}</span>
+            <span><button onClick="{{ o.pick }}" style="border:0;background:transparent;padding:0;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer;text-align:left" style-hover="color:#0F766E;text-decoration:underline">{{ o.no }}</button></span>
+            <span style="display:flex;align-items:center;gap:6px;min-width:0"><lucide-i name="{{ o.icon }}" size="14" style="color:{{ o.dirFg }};flex:none"></lucide-i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.type }}</span></span>
+            <span style="color:#5B6B6A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.acct }}</span>
+            <span style="display:flex;flex-direction:column;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.party }}</span><sc-if value="{{ o.hasNote }}"><span style="font-size:11.5px;color:#647574;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.note }}</span></sc-if></span>
+            <span style="text-align:right;font-variant-numeric:tabular-nums;color:#15803D">{{ o.inS }}</span>
+            <span style="text-align:right;font-variant-numeric:tabular-nums;color:#B91C1C">{{ o.outS }}</span>
+            <span style="color:#5B6B6A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.by }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noOps }}"><div style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 16px;border-bottom:1px solid #EEF2F4"><lucide-i name="info" size="16" style="color:#647574"></lucide-i><span style="font-size:13px;color:#5B6B6A">{{ T.opsNone }}</span></div></sc-if>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 14px;flex-wrap:wrap">
+      <span style="font-size:12px;color:#647574">{{ opsCount }}</span>
+      <sc-if value="{{ hasMore }}"><button onClick="{{ toggleAll }}" style="border:0;background:transparent;padding:0;color:#0F766E;font:inherit;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E">{{ moreLabel }}</button></sc-if>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const fM = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fN = n => Number(n || 0).toLocaleString('de-DE');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const KD = { fPer: 'Davr', fAcct: 'Hisob', fPt: "To'lov turi", fBr: 'Filial', brLock: "Kassir faqat o'z filialini ko'radi", from: 'Dan', to: 'Gacha',
+  per_day: 'Bugun', per_week: 'Shu hafta', per_month: 'Shu oy', per_custom: 'Ixtiyoriy', all: 'Hammasi', allAcc: 'Barcha hisoblar', pt_cash: 'Naqd', pt_bank: 'Perechisleniye', pt_online: 'Online',
+  perText: 'Davr: {f} — {t}', sub: '{d} · {b} · Mening kassam: {k}', g_m: 'Xayrli tong', g_d: 'Xayrli kun', g_e: 'Xayrli kech',
+  aMt: "Mijozdan to'lov", aKo: 'Chiqim', aDrv: 'Haydovchidan pul qabul qilish', aClose: 'Kunni yopish',
+  kBal: 'Qoldiq pullar', kBalN: '{d} holatiga · joriy', kIn: 'Kirim pullar', kOut: 'Chiqim pullar', kExp: 'Xarajatlar', kWait: 'Kutilayotgan pullar', kWaitN: 'Haydovchida, mijozlar to\u2019lov kuni va qoralamalar', kDocs: '{n} ta hujjat',
+  rCash: 'Naqd (kassalar)', rTerm: 'Terminal (karta)', rBank: 'Bank', rMt: "Mijoz to'lovlari (MT)", rOther: 'Boshqa kirimlar', rIoIn: 'Hisoblar orasida kelgan', rYt: "YB ga to'lovlar (YT)", rExp: 'Xarajatlar', rIoOut: 'Hisoblar orasida ketgan / inkassatsiya',
+  wDrv: 'Haydovchidagi pul', wDrvNone: "Haydovchilarda pul yo'q", wDueT: "Mijozlar to'lov kuni · bugun", wDue3: "Mijozlar to'lov kuni · 3 kun ichida", wDueSub: '{n} ta mijoz · {i} ta hujjat', wDraft: "Tasdiqlanmagan to'lovlar (qoralama MT)", wDraftSub: '{n} ta hujjat',
+  accT: 'Hisoblar', accFormula: 'Davr boshi + kirim − chiqim = joriy qoldiq', hAcc: 'Hisob', hResp: "Mas'ul", hStart: 'Davr boshidagi qoldiq', hIn: 'Kirim', hOut: 'Chiqim', hCur: 'Joriy qoldiq', hEnd: 'Davr oxiridagi qoldiq', hClose: 'Oxirgi yopilish', hSt: 'Holat',
+  stClosed: 'Kun yopilgan', stOpen: 'Ochiq', stNa: '—', mine: 'Mening kassam', total: 'Jami',
+  dynT: 'Kunlik dinamika', in: 'Kirim', out: 'Chiqim', cDate: 'Sana', cDayEnd: "Kun oxiri qoldig'i",
+  opsT: 'Oxirgi operatsiyalar', opKind: 'Turi', qPh: 'Hujjat, kontragent, modda…', oTime: 'Vaqt', oDoc: 'Hujjat', oType: 'Turi', oAcct: 'Hisob', oParty: 'Kontragent / modda', oIn: 'Kirim', oOut: 'Chiqim', oBy: 'Kim',
+  opsNone: "Tanlangan filtr bo'yicha operatsiya yo'q", opsCount: '{s} / {n} ta operatsiya', more: 'Hammasi ({n}) →', less: 'Oxirgi 20 tasi',
+  t_mt: "Mijozdan to'lov", t_yt: "YB ga to'lov", t_ko_in: 'Kassa kirimi', t_ko_out: 'Kassa chiqimi', t_bo_in: 'Bank kirimi', t_bo_out: 'Bank chiqimi', t_io: "Ichki o'tkazma",
+  k_all: 'Hammasi', k_in: 'Faqat kirim', k_out: 'Faqat chiqim', k_mt: 'MT · mijozdan', k_yt: 'YT · YB ga', k_ko: 'KO · kassa', k_bo: 'BO · bank', k_io: "IO · ichki o'tkazma", noExp: "Bu davrda xarajat yo'q" };
+const ICON = { cash: 'banknote', term: 'credit-card', bank: 'landmark' };
+class Component extends DCLogic {
+  state = { per: 'day', cFrom: '01.10.2026', cTo: '04.10.2026', acct: 'ALL', pt: 'ALL', q: '', opKind: 'all', showAll: false };
+  rootRef = el => { this._el = el; };
+  componentDidMount() { if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.forceUpdate(); } }, 60); this._v = setInterval(() => { const D = window.MedixData; if (D && D.store.v !== this._sv) { this._sv = D.store.v; this.forceUpdate(); } }, 400); }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._v); }
+  get L() { return this.props.dict || {}; }
+  t(k) { return this.L['kd_' + k] || KD[k]; }
+  open(href) { const p = this.props; if (p.onOpen) p.onOpen(href); }
+  href(B, page, params) { const o = Object.assign({}, params || {}, { branch: B }); return '#' + page + '?' + Object.keys(o).filter(k => o[k] != null && o[k] !== '').map(k => k + '=' + encodeURIComponent(o[k])).join('&'); }
+  seg(list, cur, set) { return list.map(([k, label]) => { const on = cur === k; return { label, on, bg: on ? '#FFFFFF' : 'transparent', fg: on ? '#172B2A' : '#5B6B6A', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', pick: () => set(k) }; }); }
+  renderVals() {
+    const D = window.MedixData, p = this.props, s = this.state, T = new Proxy({}, { get: (_, k) => this.t(k) });
+    const base = { rootRef: this.rootRef, T, greet: '', sub: '', actions2: [], primary: { label: KD.aMt, pick: () => {} }, periods: [], pts: [], acctOpts: [], cards: [], accHeads: [], accRows: [], accTot: {}, days: [], ops: [], opHeads: [], opKinds: [], isCustom: false };
+    if (!D || !D.cashDash) return base;
+    const role = p.role || 'cashier', user = p.userName || '', emp = (D.store.emps || []).find(e => D.empName(e) === user);
+    const B = p.branch && p.branch !== 'ALL' ? p.branch : (emp && emp.branch) || 'TSH', brName = ((D.BRANCHES.find(b => b.code === B) || {}).name || B);
+    const till = D.tillAccts(role, user) || [], own = till.find(id => (D.accById(id) || {}).branch === B) || 'K-' + B, ownA = D.accById(own) || {};
+    const okD = v => /^\d\d\.\d\d\.\d{4}$/.test(v || '') && D.pD(v) != null, TODAY = D.TODAY;
+    let from = TODAY, to = TODAY, bad = false;
+    if (s.per === 'week') from = D.fD(D.bhRange('week').from); else if (s.per === 'month') from = D.fD(D.bhRange('month').from);
+    else if (s.per === 'custom') { if (okD(s.cFrom) && okD(s.cTo) && D.pD(s.cFrom) <= D.pD(s.cTo)) { from = s.cFrom; to = D.pD(s.cTo) > D.pD(TODAY) ? TODAY : s.cTo; } else bad = true; }
+    const accsBr = D.ACCOUNTS.filter(a => a.branch === B), selA = s.acct !== 'ALL' ? D.accById(s.acct) : null;
+    const r = D.cashDash(B, { from, to, acct: s.acct, pt: s.pt }), isNow = to === TODAY;
+    const h = +D.nowStr().slice(11, 13), gName = user.split(' ')[0] || '';
+    const pageOf = a => a && a.kind === 'cash' ? 'cash' : 'bank', perP = { from: r.from, to: r.to };
+    const cashAcct = selA && selA.kind === 'cash' ? selA.id : own;
+    const goAcct = (id, x) => this.open(this.href(B, pageOf(D.accById(id)), Object.assign({ acct: id }, perP, x || {})));
+    const payH = (kind, x) => this.href(B, 'payments', Object.assign({ kind, status: 'posted' }, perP, s.acct !== 'ALL' ? { acct: s.acct } : {}, s.pt !== 'ALL' ? { method: s.pt } : {}, x || {}));
+    const row = (label, v, pick, x) => Object.assign({ label, value: fM(v), fg: v ? '#172B2A' : '#647574', lfg: '#5B6B6A', pad: '4px', hasSub: false, sub: '', pick: pick || (() => {}) }, x || {});
+    const sumN = (list, f) => list.filter(f).length;
+    const nIn = sumN(r.ops, m => m.dir === 'in'), nOut = sumN(r.ops, m => m.dir === 'out'), nExp = sumN(r.ops, m => m.dir === 'out' && (m.kind === 'ko' || m.kind === 'bo'));
+    const balPick = k => () => { if (selA) return goAcct(selA.id); const a = accsBr.filter(x => x.kind === k); this.open(this.href(B, k === 'cash' ? 'cash' : 'bank', a.length === 1 ? { acct: a[0].id } : {})); };
+    const otherItems = Object.keys(r.inc.items).map(k => row(k, r.inc.items[k], () => goM(m => m.dir === 'in' && m.item === k && m.kind !== 'mt' && m.kind !== 'io', { dir: 'in', kind: 'ko,bo' }), { pad: '16px', lfg: '#647574' }));
+    const W = r.wait, accFor = f => { if (selA) return selA.id; const ids = [...new Set(r.ops.filter(f).map(m => m.acct))]; return ids.length === 1 ? ids[0] : null; };
+    const goM = (f, x) => { const id = accFor(f); if (id) return goAcct(id, x); this.open(this.href(B, 'cash')); };
+    const isExp = m => m.dir === 'out' && (m.kind === 'ko' || m.kind === 'bo');
+    const cards = [
+      { icon: 'wallet', iconFg: '#0F766E', label: T.kBal, value: fM(r.bal.total), unit: "so'm", valFg: '#172B2A', note: fill(T.kBalN, { d: TODAY }), pick: balPick(selA ? selA.kind : 'cash'),
+        rows: [['cash', T.rCash], ['term', T.rTerm], ['bank', T.rBank]].filter(([k]) => accsBr.some(a => a.kind === k && (!selA || selA.kind === k) && (s.pt === 'ALL' || D.PT_OF[k] === s.pt))).map(([k, l]) => row(l, r.bal[k], balPick(k))) },
+      { icon: 'arrow-down-left', iconFg: '#15803D', label: T.kIn, value: fM(r.inc.total), unit: "so'm", valFg: '#15803D', note: fill(T.kDocs, { n: fN(nIn) }), pick: () => this.open(payH('mt')),
+        rows: [row(T.rMt, r.inc.mt, () => this.open(payH('mt'))), row(T.rOther, r.inc.other, () => goM(m => m.dir === 'in' && (m.kind === 'ko' || m.kind === 'bo'), { dir: 'in', kind: 'ko,bo' })), ...otherItems, row(T.rIoIn, r.inc.io, () => goM(m => m.dir === 'in' && m.kind === 'io', { dir: 'in', kind: 'io' }))] },
+      { icon: 'arrow-up-right', iconFg: '#B91C1C', label: T.kOut, value: fM(r.out.total), unit: "so'm", valFg: '#B91C1C', note: fill(T.kDocs, { n: fN(nOut) }), pick: () => goM(m => m.dir === 'out', { dir: 'out' }),
+        rows: [row(T.rYt, r.out.yt, () => this.open(payH('yt'))), row(T.rExp, r.out.exp, () => goM(isExp, { dir: 'out', kind: 'ko,bo' })), row(T.rIoOut, r.out.io, () => goM(m => m.dir === 'out' && m.kind === 'io', { dir: 'out', kind: 'io' }))] },
+      { icon: 'receipt', iconFg: '#B45309', label: T.kExp, value: fM(r.exp.total), unit: "so'm", valFg: '#172B2A', note: fill(T.kDocs, { n: fN(nExp) }), pick: () => goM(isExp, { dir: 'out', kind: 'ko,bo' }),
+        rows: Object.keys(r.exp.items).map(k => row(k, r.exp.items[k], () => goM(m => isExp(m) && m.item === k, { dir: 'out', kind: 'ko,bo' }))) },
+      { icon: 'hourglass', iconFg: '#1D4ED8', label: T.kWait, value: fM(W.drvSum + W.dueT.sum + W.due3.sum + W.draftSum), unit: "so'm", valFg: '#172B2A', note: T.kWaitN, pick: () => this.open(this.href(B, 'cash')),
+        rows: [...(W.drv.length ? W.drv.map(x => row(x.driver + ' · ' + x.trip, x.sum, () => this.open(this.href(B, 'cash')), { lfg: '#172B2A', hasSub: true, sub: T.wDrv + ' · ' + x.ono })) : [row(T.wDrv, 0, () => this.open(this.href(B, 'cash')), { hasSub: true, sub: T.wDrvNone })]),
+          row(T.wDueT, W.dueT.sum, () => this.open(this.href(B, 'cdebt', { dueFrom: TODAY, dueTo: TODAY })), { hasSub: true, sub: fill(T.wDueSub, { n: W.dueT.n, i: W.dueT.inv }) }),
+          row(T.wDue3, W.due3.sum, () => this.open(this.href(B, 'cdebt', { dueFrom: D.fD(D.pD(TODAY) + 864e5), dueTo: D.fD(D.pD(TODAY) + 3 * 864e5) })), { hasSub: true, sub: fill(T.wDueSub, { n: W.due3.n, i: W.due3.inv }) }),
+          row(T.wDraft, W.draftSum, () => this.open(this.href(B, 'payments', { kind: 'mt', status: 'draft' })), { hasSub: true, sub: fill(T.wDraftSub, { n: W.drafts }) })] }];
+    cards.forEach(c => { c.noRows = !c.rows.length; c.noRowsText = T.noExp; });
+    // hisoblar jadvali
+    const accGrid = 'minmax(160px,1.6fr) minmax(96px,1fr) repeat(4,minmax(104px,1fr)) 100px 104px'; // T11b: 1280 px da siljitishsiz
+    const accHeads = [[T.hAcc], [T.hResp], [T.hStart, 1], [T.hIn, 1], [T.hOut, 1], [isNow ? T.hCur : T.hEnd, 1], [T.hClose], [T.hSt]].map(([t, rr]) => ({ t, al: rr ? 'right' : 'left' }));
+    const accRows = r.accs.map(a => { const cash = a.kind === 'cash', st = !cash ? [T.stNa, '#647574', '#F5F7F8', 'minus'] : a.closed ? [T.stClosed, '#15803D', '#F0FDF4', 'lock'] : [T.stOpen, '#1D4ED8', '#EFF6FF', 'lock-open'];
+      return { name: a.name.split(' · ').slice(1).join(' · ') || a.name, mine: a.id === own, icon: ICON[a.kind], resp: a.resp || '—', start: fM(a.start), inS: fM(a.inS), outS: fM(a.outS), end: fM(a.end), inFg: a.inS ? '#15803D' : '#647574', outFg: a.outS ? '#B91C1C' : '#647574',
+        lastClose: cash ? (a.lastClose ? a.lastClose.date + ' ' + String(a.lastClose.at || '').slice(11, 16) : '—') : '—', st: st[0], stFg: st[1], stBg: st[2], stIcon: st[3], pick: () => goAcct(a.id) }; });
+    const accTot = { start: fM(r.tot.start), inS: fM(r.tot.inS), outS: fM(r.tot.outS), end: fM(r.tot.end) };
+    // dinamika
+    const mx = Math.max(1, ...r.days.map(d => Math.max(d.inS, d.outS)));
+    const days = r.days.slice().reverse().map(d => ({ date: d.date, inS: fM(d.inS), outS: fM(d.outS), end: fM(d.end), inW: (d.inS / mx * 100).toFixed(1) + '%', outW: (d.outS / mx * 100).toFixed(1) + '%', inFg: d.inS ? '#15803D' : '#647574', outFg: d.outS ? '#B91C1C' : '#647574' }));
+    // operatsiyalar
+    const q = D.toLat ? D.toLat(s.q.trim().toLowerCase()) : s.q.trim().toLowerCase(), lat = x => D.toLat ? D.toLat(String(x || '').toLowerCase()) : String(x || '').toLowerCase();
+    const okK = m => s.opKind === 'all' || (s.opKind === 'in' ? m.dir === 'in' : s.opKind === 'out' ? m.dir === 'out' : m.kind === s.opKind);
+    const list = r.ops.filter(m => okK(m) && (!q || lat(`${m.no} ${m.party} ${m.item} ${m.note} ${m.acctName} ${m.by}`).includes(q)));
+    const shown = s.showAll ? list : list.slice(0, 20), single = r.from === r.to;
+    const typeOf = m => m.kind === 'mt' || m.kind === 'yt' || m.kind === 'io' ? T['t_' + m.kind] : T['t_' + m.kind + '_' + m.dir];
+    const openDoc = m => { if (m.kind === 'mt' || m.kind === 'yt') return this.open(this.href(B, 'payments', { open: m.no })); const x = D.mopById ? D.mopById(m.id) : null, pg = m.kind === 'ko' ? 'cash' : m.kind === 'bo' ? 'bank' : (x && (D.accById(x.from) || {}).kind === 'cash') ? 'cash' : pageOf(D.accById(m.acct)); this.open(this.href(B, pg, { open: m.no })); };
+    const ops = shown.map(m => ({ time: single ? m.time : m.date.slice(0, 5) + ' ' + m.time, no: m.no, pick: () => openDoc(m), type: typeOf(m), icon: m.dir === 'in' ? 'arrow-down-left' : 'arrow-up-right', dirFg: m.dir === 'in' ? '#15803D' : '#B91C1C', acct: m.acctName.split(' · ').slice(1).join(' · ') || m.acctName, party: m.party || m.item || '—', hasNote: !!m.note, note: m.note || '', inS: m.dir === 'in' ? fM(m.sum) : '', outS: m.dir === 'out' ? fM(m.sum) : '', by: m.by || '—' }));
+    const opGrid = '76px 124px 112px minmax(96px,1fr) minmax(130px,1.6fr) 104px 104px minmax(90px,1fr)';
+    const opHeads = [[T.oTime], [T.oDoc], [T.oType], [T.oAcct], [T.oParty], [T.oIn, 1], [T.oOut, 1], [T.oBy]].map(([t, rr]) => ({ t, al: rr ? 'right' : 'left' }));
+    const opKinds = ['all', 'in', 'out', 'mt', 'yt', 'ko', 'bo', 'io'].map(k => ({ value: k, label: T['k_' + k] }));
+    const tillOk = id => !till.length || till.includes(id);
+    return {
+      ...base, T, greet: (h < 12 ? T.g_m : h < 18 ? T.g_d : T.g_e) + (gName ? ', ' + gName : ''), sub: fill(T.sub, { d: TODAY, b: brName, k: ownA.name || own }),
+      primary: { label: T.aMt, pick: () => this.open(this.href(B, 'payments', { new: 'mt', acct: own })) },
+      actions2: [{ label: T.aKo, icon: 'arrow-up-right', pick: () => this.open(this.href(B, 'cash', { new: 'ko', acct: own })) }, { label: T.aDrv + (D.drvCash(B).length ? ' · ' + D.drvCash(B).length : ''), icon: 'truck', pick: () => this.open(this.href(B, 'cash')) }, { label: T.aClose, icon: 'lock', pick: () => tillOk(own) ? this.open(this.href(B, 'cash', { close: own })) : (p.onToast && p.onToast(this.L.kb_eTill)) }],
+      periods: this.seg([['day', T.per_day], ['week', T.per_week], ['month', T.per_month], ['custom', T.per_custom]], s.per, k => this.setState({ per: k, showAll: false })),
+      isCustom: s.per === 'custom', cFrom: s.cFrom, cTo: s.cTo, cBd: bad ? '#B91C1C' : '#E2E8F0', onCFrom: e => this.setState({ cFrom: e.target.value }), onCTo: e => this.setState({ cTo: e.target.value }),
+      acct: s.acct, onAcct: e => this.setState({ acct: e.target.value, showAll: false }), acctOpts: [{ value: 'ALL', label: T.allAcc }, ...accsBr.map(a => ({ value: a.id, label: (a.name.split(' · ').slice(1).join(' · ') || a.name) + (a.id === own ? ' · ' + T.mine.toLowerCase() : '') }))],
+      pts: this.seg([['ALL', T.all], ['cash', T.pt_cash], ['bank', T.pt_bank], ['online', T.pt_online]], s.pt, k => this.setState({ pt: k, showAll: false })),
+      brName, perText: fill(T.perText, { f: r.from, t: r.to }), cards, accGrid, accHeads, accRows, accTot, days,
+      opsTitle: T.opsT, opKind: s.opKind, onOpKind: e => this.setState({ opKind: e.target.value, showAll: false }), opKinds, q: s.q, onQ: e => this.setState({ q: e.target.value, showAll: false }),
+      opGrid, opHeads, ops, noOps: !ops.length, opsCount: fill(T.opsCount, { s: fN(shown.length), n: fN(list.length) }), hasMore: list.length > 20, moreLabel: s.showAll ? T.less : fill(T.more, { n: fN(list.length) }), toggleAll: () => this.setState({ showAll: !s.showAll })
+    };
+  }
+}
+</script>
+</body>
+</html>

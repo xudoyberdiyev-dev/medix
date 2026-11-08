@@ -61,7 +61,7 @@ export function Tabs({ items, value, onChange, ...aria }: TabsProps) {
             disabled={t.disabled}
             onClick={() => onChange(t.key)}
             className={cn(
-              "-mb-px inline-flex h-10 items-center gap-2 border-b-2 px-3 font-medium whitespace-nowrap transition-colors duration-150 ease-out",
+              "-mb-px inline-flex h-10 shrink-0 items-center gap-2 border-b-2 px-3 font-medium whitespace-nowrap transition-colors duration-150 ease-out",
               selected
                 ? "border-primary text-text-primary"
                 : "border-transparent text-text-secondary hover:border-border hover:text-text-primary",

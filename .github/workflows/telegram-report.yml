@@ -4,7 +4,7 @@ name: Telegram hisobot
 
 on:
   push:
-    branches: [develop, main]
+    branches: [develop]
     paths: ["reports/**.md"]
   workflow_dispatch:
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleCheck, Clock, FileMinus, Plus, ShieldAlert, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +15,8 @@ import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
   HC_CREATE,
-  HC_REASON_LABELS,
-  HC_STATUS_LABELS,
+  HC_REASONS,
+  HC_STATUSES,
   HC_VIEW_KEYS,
   useWriteOffs,
   type WriteOffReason,
@@ -25,6 +26,7 @@ import {
 import { WriteOffDrawer } from "./write-off-drawer";
 
 export function WriteOffStatusBadge({ status }: { status: WriteOffStatus }) {
+  const t = useTranslations("writeOffs");
   const map = {
     PENDING: { tone: "warning", icon: Clock },
     POSTED: { tone: "success", icon: CircleCheck },
@@ -32,13 +34,14 @@ export function WriteOffStatusBadge({ status }: { status: WriteOffStatus }) {
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {HC_STATUS_LABELS[status]}
+      {t(`status.${status}`)}
     </Badge>
   );
 }
 
 /** HC — hisobdan chiqarish: muddati oʻtgan, shikastlangan, kamomad. Tasdiq bilan; 5 000 000 dan katta — Direktor. */
 export function WriteOffsPage() {
+  const t = useTranslations("writeOffs");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const params = useSearchParams();
@@ -55,35 +58,35 @@ export function WriteOffsPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useWriteOffs(branchId, (status as WriteOffStatus | null) ?? null, (reason as WriteOffReason | null) ?? null, page);
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
   const showCost = (docs.data?.items ?? []).some((d) => d.totalCost != null);
   const columns: TableColumn<WriteOffSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "createdAt", title: "Sana", render: (d) => formatDateTime(new Date(d.createdAt)) },
-    { key: "warehouse", title: "Ombor · zona", render: (d) => `${d.warehouse} · ${d.zone.name}` },
-    { key: "reason", title: "Sabab", render: (d) => HC_REASON_LABELS[d.reason] },
-    { key: "qty", title: "Miqdor", align: "right", render: (d) => formatQuantity(d.qty) },
+    { key: "number", title: t("col.number"), mono: true },
+    { key: "createdAt", title: t("col.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
+    { key: "warehouse", title: t("col.warehouseZone"), render: (d) => `${d.warehouse} · ${d.zone.name}` },
+    { key: "reason", title: t("col.reason"), render: (d) => t(`reason.${d.reason}`) },
+    { key: "qty", title: t("col.qty"), align: "right", render: (d) => formatQuantity(d.qty) },
     ...(showCost
       ? [
           {
             key: "totalCost",
-            title: "Tannarx summasi",
+            title: t("col.totalCost"),
             align: "right" as const,
             render: (d: WriteOffSummary) => (d.totalCost != null ? formatMoney(d.totalCost) : "—"),
           },
         ]
       : []),
-    { key: "createdBy", title: "Kiritdi" },
+    { key: "createdBy", title: t("col.createdBy") },
     {
       key: "status",
-      title: "Holat",
+      title: t("col.status"),
       render: (d) => (
         <span className="flex items-center gap-2">
           <WriteOffStatusBadge status={d.status} />
           {d.needsDirector && d.status === "PENDING" ? (
             <Badge tone="danger" icon={ShieldAlert}>
-              Direktor
+              {t("director")}
             </Badge>
           ) : null}
         </span>
@@ -95,10 +98,10 @@ export function WriteOffsPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Hisobdan chiqarish</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setOpen({ id: null })}>
-            Hisobdan chiqarish
+            {t("create")}
           </Button>
         ) : null}
       </div>
@@ -106,7 +109,7 @@ export function WriteOffsPage() {
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (
         <Table
-          caption="Hisobdan chiqarish hujjatlari"
+          caption={t("caption")}
           columns={columns}
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
@@ -116,24 +119,24 @@ export function WriteOffsPage() {
             <div className="flex gap-3">
               <div className="w-56">
                 <Select
-                  label="Holat"
+                  label={t("filter.status")}
                   size="sm"
                   value={status}
                   onChange={(v) => (setStatus(v), setPage(1))}
-                  placeholder="Barcha holatlar"
+                  placeholder={t("filter.allStatuses")}
                   className="[&>span:first-child]:sr-only"
-                  options={Object.entries(HC_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                  options={HC_STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
                 />
               </div>
               <div className="w-56">
                 <Select
-                  label="Sabab"
+                  label={t("filter.reason")}
                   size="sm"
                   value={reason}
                   onChange={(v) => (setReason(v), setPage(1))}
-                  placeholder="Barcha sabablar"
+                  placeholder={t("filter.allReasons")}
                   className="[&>span:first-child]:sr-only"
-                  options={Object.entries(HC_REASON_LABELS).map(([value, label]) => ({ value, label }))}
+                  options={HC_REASONS.map((value) => ({ value, label: t(`reason.${value}`) }))}
                 />
               </div>
             </div>
@@ -144,12 +147,12 @@ export function WriteOffsPage() {
             ) : (
               <EmptyState
                 icon={FileMinus}
-                title="Hali hisobdan chiqarish yoʻq"
-                description="Muddati oʻtgan, shikastlangan yoki kam chiqqan tovarni dalolatnoma bilan hisobdan chiqaring."
+                title={t("empty.title")}
+                description={t("empty.description")}
                 action={
                   canCreate ? (
                     <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
-                      Hisobdan chiqarish
+                      {t("create")}
                     </Button>
                   ) : undefined
                 }

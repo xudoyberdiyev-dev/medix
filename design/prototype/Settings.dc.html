@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:20px;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <dc-import name="PageHeader" title="{{ L.n_settings }}" subtitle="{{ subText }}" hint-size="100%,52px"></dc-import>
+  <sc-if value="{{ narrow }}">
+    <div style="display:flex;gap:4px;border-bottom:1px solid #E2E8F0;overflow-x:auto;margin-top:-4px">
+      <sc-for list="{{ secs }}" as="x"><button onClick="{{ x.pick }}" style="flex:none;height:40px;padding:0 12px;border:0;border-bottom:2px solid {{ x.line }};margin-bottom:-1px;background:transparent;font:inherit;font-size:13px;font-weight:{{ x.w }};color:{{ x.fg }};cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px">{{ x.label }}<sc-if value="{{ x.dirty }}"><span style="width:6px;height:6px;border-radius:50%;background:#B45309"></span></sc-if></button></sc-for>
+    </div>
+  </sc-if>
+  <div style="display:grid;grid-template-columns:{{ grid }};gap:16px;align-items:start">
+    <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+      <nav style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0">
+        <sc-for list="{{ secs }}" as="x" hint-placeholder-count="7"><button onClick="{{ x.pick }}" style="display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;border:0;border-radius:8px;background:{{ x.bg }};font:inherit;font-size:13px;font-weight:{{ x.w }};color:#172B2A;cursor:pointer;text-align:left" style-hover="background:#F5F7F8"><lucide-i name="{{ x.icon }}" size="16" style="color:{{ x.ic }}"></lucide-i><span style="flex:1">{{ x.label }}</span><sc-if value="{{ x.dirty }}"><span style="width:6px;height:6px;border-radius:50%;background:#B45309"></span></sc-if></button></sc-for>
+      </nav>
+    </sc-if>
+    <div style="min-width:0;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+      <div style="padding:16px 24px;border-bottom:1px solid #E2E8F0;display:flex;flex-direction:column;gap:2px">
+        <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ sec.label }}</h2>
+        <sc-if value="{{ roNote }}"><span style="display:flex;align-items:center;gap:6px;font-size:13px;line-height:18px;color:#5B6B6A"><lucide-i name="eye" size="14"></lucide-i>{{ roText }}</span></sc-if>
+      </div>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};transition:background 120ms ease-out">
+          <div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:14px;line-height:20px;font-weight:500">{{ r.name }}</span>
+            <span style="font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ r.desc }}</span>
+            <span style="margin-top:4px;font-size:12px;line-height:16px;color:#647574">{{ r.meta }}</span>
+          </div>
+          <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div onClick="{{ r.roClick }}" style="display:flex;align-items:center;height:34px;width:{{ r.w }};border:1px solid {{ r.bd }};border-radius:8px;background:{{ r.fbg }};overflow:hidden">
+              <sc-if value="{{ r.locked }}"><lucide-i name="lock" size="14" style="margin-left:10px;color:#647574"></lucide-i></sc-if>
+              <input value="{{ r.value }}" onChange="{{ r.on }}" readOnly="{{ r.ro }}" inputmode="numeric" aria-label="{{ r.name }}" style="flex:1;min-width:0;height:100%;padding:0 10px;border:0;background:transparent;font-size:14px;text-align:right;color:{{ r.fg }};cursor:{{ r.cur }}">
+              <span style="flex:none;padding:0 10px;height:100%;display:flex;align-items:center;border-left:1px solid #EEF2F4;background:#F8FAFA;color:#5B6B6A;font-size:13px">{{ r.unit }}</span>
+            </div>
+            <sc-if value="{{ r.hasErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ r.err }}</span></sc-if>
+            <sc-if value="{{ r.hasRoMsg }}"><span style="font-size:12px;line-height:16px;color:#B45309">{{ r.roMsg }}</span></sc-if>
+          </div>
+        </div>
+      </sc-for>
+
+      <sc-if value="{{ isVat }}">
+        <div style="padding:16px 24px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #EEF2F4">
+          <span style="font-size:13px;line-height:18px;font-weight:600">{{ L.bs_vatHist }}</span>
+          <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:100px 150px minmax(0,1fr) 110px;gap:12px;padding:8px 12px;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span>{{ L.bs_vatRate }}</span><span>{{ L.bs_vatFrom }}</span><span>{{ L.bs_vatWho }}</span><span>{{ L.bs_status }}</span></div>
+            <sc-for list="{{ vatRows }}" as="v"><div style="display:grid;grid-template-columns:100px 150px minmax(0,1fr) 110px;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid #EEF2F4;font-size:13px"><span style="font-weight:500">{{ v.rate }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ v.from }}</span><span style="color:#5B6B6A">{{ v.who }}</span><span><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ v.bg }};color:{{ v.fg }};font-size:12px;line-height:22px;font-weight:500">{{ v.st }}</span></span></div></sc-for>
+          </div>
+          <sc-if value="{{ canVat }}">
+            <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:500">{{ L.bs_vatNewRate }}</span><div style="display:flex;align-items:center;height:34px;width:120px;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden"><input value="{{ vatRate }}" onChange="{{ onVatRate }}" inputmode="numeric" style="flex:1;min-width:0;height:100%;padding:0 10px;border:0;font-size:14px;text-align:right"><span style="padding:0 10px;color:#5B6B6A;font-size:13px">%</span></div></div>
+              <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:500">{{ L.bs_vatFrom }}</span><input value="{{ vatFrom }}" onChange="{{ onVatFrom }}" placeholder="01.01.2027" style="height:34px;width:140px;padding:0 10px;border:1px solid {{ vatBd }};border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px"></div>
+              <button onClick="{{ vatAdd }}" style="align-self:flex-end;height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="border-color:#647574"><lucide-i name="plus" size="15"></lucide-i>{{ L.bs_vatAdd }}</button>
+            </div>
+            <sc-if value="{{ vatHasErr }}"><span style="font-size:12px;line-height:16px;color:#B91C1C">{{ vatErr }}</span></sc-if>
+            <span style="font-size:12px;line-height:16px;color:#647574">{{ L.bs_vatHint }}</span>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isPrint }}">
+        <div style="padding:16px 24px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #EEF2F4">
+          <span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ L.ch_st_sub }}</span>
+          <span style="font-size:13px;line-height:18px;font-weight:600">{{ L.ch_st_signers }}</span>
+          <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:140px minmax(0,1fr) minmax(0,1fr);gap:12px;padding:8px 12px;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span>{{ L.bh_c_branch }}</span><span>{{ L.ch_st_head }}</span><span>{{ L.ch_st_acc }}</span></div>
+            <sc-for list="{{ prRows }}" as="b"><div style="display:grid;grid-template-columns:140px minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start;padding:8px 12px;border-bottom:1px solid #EEF2F4;font-size:13px">
+              <span style="font-weight:500;line-height:34px">{{ b.name }}</span>
+              <div style="display:flex;flex-direction:column;gap:2px"><dc-import name="Select" label="" options="{{ b.headOpts }}" value="{{ b.head }}" on-change="{{ b.setHead }}" disabled="{{ b.ro }}" hint-size="100%,34px"></dc-import><span style="font-size:12px;color:#647574">{{ b.headAuto }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><dc-import name="Select" label="" options="{{ b.accOpts }}" value="{{ b.acc }}" on-change="{{ b.setAcc }}" disabled="{{ b.ro }}" hint-size="100%,34px"></dc-import><span style="font-size:12px;color:#647574">{{ b.accAuto }}</span></div>
+            </div></sc-for>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:8px">
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1 1 280px"><span style="font-size:14px;font-weight:500">{{ L.ch_st_reprint }}</span><span style="font-size:13px;color:#5B6B6A">{{ L.ch_st_reprintD }}</span></div>
+            <div role="tablist" style="display:flex;height:34px;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;gap:2px"><sc-for list="{{ prReprint }}" as="o"><button role="tab" aria-selected="{{ o.on }}" onClick="{{ o.pick }}" style="height:28px;padding:0 12px;border:0;border-radius:6px;background:{{ o.bg }};color:{{ o.fg }};font:inherit;font-size:13px;font-weight:500;cursor:pointer">{{ o.label }}</button></sc-for></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+            <span style="font-size:14px;font-weight:500">{{ L.ch_st_nakDef }}</span>
+            <div role="tablist" style="display:flex;height:34px;padding:2px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;gap:2px"><sc-for list="{{ prNak }}" as="o"><button role="tab" aria-selected="{{ o.on }}" onClick="{{ o.pick }}" style="height:28px;padding:0 12px;border:0;border-radius:6px;background:{{ o.bg }};color:{{ o.fg }};font:inherit;font-size:13px;font-weight:500;cursor:pointer">{{ o.label }}</button></sc-for></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isDocs }}">
+        <div style="padding:16px 24px;display:flex;flex-direction:column;gap:12px">
+          <span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ docFmt }}</span>
+          <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:90px minmax(0,1fr) 180px 90px;gap:12px;padding:8px 12px;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span>{{ L.bs_docPrefix }}</span><span>{{ L.bs_docType }}</span><span>{{ L.bs_docLast }}</span><span style="text-align:right">{{ L.bs_docN }}</span></div>
+            <sc-for list="{{ docRows }}" as="d"><div style="display:grid;grid-template-columns:90px minmax(0,1fr) 180px 90px;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid #EEF2F4;font-size:13px"><span style="font-family:'JetBrains Mono',monospace;font-weight:500">{{ d.prefix }}</span><span style="color:#5B6B6A">{{ d.type }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ d.last }}</span><span style="text-align:right">{{ d.n }}</span></div></sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-if value="{{ dirty }}">
+    <dc-import name="StickyFormFooter" dirty="{{ true }}" dirty-label="{{ dirtyLabel }}" cancel-label="{{ L.bs_cancel }}" save-label="{{ L.bs_save }}" max-width="4000" on-cancel="{{ cancel }}" on-save="{{ save }}" hint-size="100%,64px"></dc-import>
+  </sc-if>
+  <sc-if value="{{ dlgOpen }}">
+    <dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ false }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.bs_cancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;},&quot;onDirty&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;function&quot;}}">
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '').trim()); if (!m) return null; const t = Date.UTC(+m[3], +m[2] - 1, +m[1]), d = new Date(t); return d.getUTCDate() === +m[1] && d.getUTCMonth() === +m[2] - 1 ? t : null; };
+// kind: [min, max, unitKey]
+const KIND = { day: [1, 365, 'bs_uDay'], pct: [0, 100, 'bs_uPct'], sum: [0.01, 1e12, 'bs_uSum'], len: [6, 64, 'bs_uChar'], min: [5, 480, 'bs_uMin'], tries: [1, 10, 'bs_uTry'], lock: [1, 120, 'bs_uMin'] };
+const SECS = [['wh', 'warehouse', 'dir', [['expiryWarnDays', 'day'], ['invRemindDays', 'day']]], ['sales', 'shopping-cart', 'dir', [['orderLateDays', 'day'], ['limitBranchPct', 'pct'], ['overdueDirDays', 'day'], ['priceWarnPct', 'pct']]],
+  ['money', 'wallet', 'dir', [['cashBranchApprove', 'sum'], ['hcDirApprove', 'sum'], ['ivDirApprove', 'sum']]], ['vat', 'percent', 'dir', []], ['print', 'printer', 'dir', []], ['docs', 'file-text', 'none', []], ['bq', 'archive', 'none', []],
+  ['sec', 'shield', 'sec', [['pwMin', 'len'], ['sessionMin', 'min'], ['pinTries', 'tries'], ['pinLockMin', 'lock']]]];
+const KEYS = {}; SECS.forEach(x => x[3].forEach(([k, kd]) => { KEYS[k] = { kind: kd, sec: x[0], who: x[2] }; }));
+class Component extends DCLogic {
+  state = { sec: 'wh', draft: {}, dlg: null, roMsg: null, vatRate: '', vatFrom: '', vatTried: false };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.runDemo(); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.runDemo(); }
+  componentWillUnmount() { this.props.onDirty && this.props.onDirty(false); clearTimeout(this._rt); }
+  runDemo() { const k = this.props.demo && this.props.demo.k; if (!k) return;
+    if (k === 'bsCfgChange') this.setState({ sec: 'wh', draft: { expiryWarnDays: '60' }, dlg: null }, () => { this.notify(); this.save(); });
+    if (k === 'bsVat') this.setState({ sec: 'vat', draft: {}, vatRate: '15', vatFrom: '01.01.2027', vatTried: false }); }
+  canSec(w) { const r = this.props.role; return w === 'dir' ? r === 'director' : w === 'sec' ? r === 'director' || r === 'admin' : false; }
+  num(k, v) { const kd = KEYS[k].kind, t = String(v).replace(/\s/g, ''); if (kd === 'sum') { const c = t.replace(/\./g, '').replace(',', '.'); return /^\d+(\.\d{1,2})?$/.test(c) ? +c : NaN; } return /^\d+$/.test(t) ? +t : NaN; }
+  fmt(k, n) { return KEYS[k].kind === 'sum' ? fN(n) + ',00' : String(n); }
+  err(k, v) { const L = this.L, kd = KIND[KEYS[k].kind], n = this.num(k, v); if (isNaN(n)) return L.bs_eNum; if (KEYS[k].kind === 'sum') return n > 0 ? '' : L.bs_eSum; return n < kd[0] || n > kd[1] ? fill(L.bs_eRange, { a: kd[0], b: kd[1] }) : ''; }
+  changes() { const D = this.D, L = this.L, d = this.state.draft; return Object.keys(d).filter(k => !this.err(k, d[k]) && this.num(k, d[k]) !== D.CONFIG[k]).map(k => { const u = L[KIND[KEYS[k].kind][2]]; return { key: k, to: this.num(k, d[k]), label: L['bs_cfg_' + k], section: L['bs_sec_' + KEYS[k].sec], fromText: this.fmt(k, D.CONFIG[k]) + ' ' + u, toText: this.fmt(k, this.num(k, d[k])) + ' ' + u }; }); }
+  notify() { const n = Object.keys(this.state.draft).length; this.props.onDirty && this.props.onDirty(n > 0); }
+  setVal(k, v) { this.setState(st => { const d = { ...st.draft, [k]: v }; if (!this.err(k, v) && this.num(k, v) === this.D.CONFIG[k]) delete d[k]; return { draft: d }; }, () => this.notify()); }
+  roClick(k) { clearTimeout(this._rt); this.setState({ roMsg: k }); this._rt = setTimeout(() => this.setState({ roMsg: null }), 2600); }
+  save() {
+    const D = this.D, L = this.L, d = this.state.draft; if (Object.keys(d).some(k => this.err(k, d[k]))) return; const ch = this.changes(); if (!ch.length) return this.setState({ draft: {} }, () => this.notify());
+    const items = []; ch.forEach(c => { items.push({ text: fill(L.bs_cfgLine, { l: c.label, a: c.fromText, b: c.toText }), icon: 'arrow-right', color: '#172B2A' });
+      if (c.key === 'expiryWarnDays') items.push({ text: fill(L.bs_cfgExp, { a: D.expiryWarn(null, D.CONFIG.expiryWarnDays), b: D.expiryWarn(null, c.to) }), icon: 'calendar-clock', color: '#B45309' }); });
+    this.setState({ dlg: { title: fill(L.bs_cfgSaveT, { n: ch.length }), text: fill(L.bs_cfgSaveText, { n: D.pendingOrders() }), items, confirm: L.bs_save,
+      run: () => { D.cfgSave(ch, this.props.userName || D.DIRECTOR); this.setState({ dlg: null, draft: {} }, () => this.notify()); this.props.onToast && this.props.onToast(fill(L.bs_cfgSaved, { n: ch.length })); } } });
+  }
+  vatAdd() { const D = this.D, L = this.L, s = this.state, r = +String(s.vatRate).replace(',', '.'), t = pD(s.vatFrom), today = D.pDT(D.TODAY + ' 00:00');
+    const e = isNaN(r) || s.vatRate === '' || r < 0 || r > 100 ? fill(L.bs_eRange, { a: 0, b: 100 }) : t == null ? L.bs_eDate : t <= today ? L.bs_eFuture : (D.store.vatHist || []).some(v => v.from === s.vatFrom) ? L.bs_eDupDate : '';
+    if (e) return this.setState({ vatTried: true });
+    D.vatAdd(r, s.vatFrom.trim(), this.props.userName || D.DIRECTOR); this.setState({ vatRate: '', vatFrom: '', vatTried: false }); this.props.onToast && this.props.onToast(fill(L.bs_vatAdded, { r, d: s.vatFrom.trim() })); }
+  vatErr() { const D = this.D, L = this.L, s = this.state; if (!s.vatTried) return ''; const r = +String(s.vatRate).replace(',', '.'), t = pD(s.vatFrom), today = D.pDT(D.TODAY + ' 00:00');
+    return isNaN(r) || s.vatRate === '' || r < 0 || r > 100 ? fill(L.bs_eRange, { a: 0, b: 100 }) : t == null ? L.bs_eDate : t <= today ? L.bs_eFuture : (D.store.vatHist || []).some(v => v.from === s.vatFrom) ? L.bs_eDupDate : ''; }
+  prVals(can) { const D = this.D, L = this.L, c = D.prCfg(), seg = (list, cur, set) => list.map(([k, label]) => ({ label, on: cur === k, bg: cur === k ? '#FFFFFF' : 'transparent', fg: cur === k ? '#172B2A' : '#5B6B6A', pick: () => { if (!can) return this.roClick('print'); set(k); this.props.onToast && this.props.onToast(L.ch_st_saved); } }));
+    const act = (D.store.emps || []).filter(e => e.status !== 'blocked'), nm = e => e.first + ' ' + e.last;
+    const setS = (br, role, val) => { const sg = Object.assign({}, c.signers); sg[br] = Object.assign({}, sg[br], { [role]: val || '' }); D.prCfgSet({ signers: sg }); D.auditAdd && D.auditAdd({ kind: 'change', act: 'change', who: this.props.userName, obj: 'CONFIG.print', objType: 'cfg', page: 'settings', branch: br, text: 'Imzo qo\'yuvchi: ' + role + ' → ' + (val || 'avtomatik') }); this.props.onToast && this.props.onToast(L.ch_st_saved); this.forceUpdate(); };
+    const opts = (br, roles) => [{ value: '', label: L.bs_auto || 'Avtomatik' }].concat(act.filter(e => roles.includes(e.role) && (!e.branch || e.branch === br)).map(e => ({ value: nm(e), label: nm(e) })));
+    const auto = (br, role) => { const n = D.empNames(role, br)[0]; return n ? fill(L.ch_st_auto, { n }) : L.ch_st_autoNone; };
+    return { prRows: D.BRANCHES.map(b => { const o = (c.signers || {})[b.code] || {}; return { name: b.name, ro: !can, head: o.branch || '', acc: o.accountant || '', headOpts: opts(b.code, ['branch', 'director']), accOpts: opts(b.code, ['accountant']), headAuto: auto(b.code, 'branch'), accAuto: auto(b.code, 'accountant'), setHead: v => setS(b.code, 'branch', v), setAcc: v => setS(b.code, 'accountant', v) }; }),
+      prReprint: seg([[true, L.ch_st_yes], [false, L.ch_st_no]], c.reprint !== false, k => D.prCfgSet({ reprint: k })), prNak: seg([['price', L.ch_vPrice], ['noprice', L.ch_vNoPrice]], c.nakVariant, k => D.prCfgSet({ nakVariant: k })) }; }
+  renderVals() {
+    const L = this.L, D = this.D, s = this.state, p = this.props, narrow = !!p.narrow;
+    if (!D || !D.store.cfg) return { L, secs: [], rows: [], sec: {}, vatRows: [], docRows: [], dlg: {} };
+    const cur = SECS.find(x => x[0] === s.sec), dirtyBy = k => Object.keys(s.draft).some(x => KEYS[x].sec === k);
+    const secs = SECS.map(([k, icon]) => { const on = k === s.sec; return { label: k === 'print' ? L.ch_st_title : L['bs_sec_' + k], icon, ic: on ? '#0F766E' : '#647574', bg: on ? '#DDF5EE' : 'transparent', w: on ? 600 : 500, line: on ? '#0D9488' : 'transparent', fg: on ? '#172B2A' : '#5B6B6A', dirty: dirtyBy(k), pick: () => this.setState({ sec: k }) }; });
+    const can = this.canSec(cur[2]), meta = k => { const m = D.cfgMeta(k); return m ? fill(L.bs_lastChangeD, { t: String(m.at).slice(0, 10), n: m.who }) : L.bs_defaultVal; };
+    const rowOf = (k) => { const has = k in s.draft, v = has ? s.draft[k] : this.fmt(k, D.CONFIG[k]), e = has ? this.err(k, v) : '', chg = has && !e; const ro = !can;
+      return { name: L['bs_cfg_' + k], desc: L['bs_cfgD_' + k], meta: meta(k), value: v, on: ev => this.setVal(k, ev.target.value), ro, locked: ro, cur: ro ? 'not-allowed' : 'text', fg: ro ? '#5B6B6A' : '#172B2A', fbg: ro ? '#F5F7F8' : '#FFFFFF', bd: e ? '#B91C1C' : chg ? '#0D9488' : '#E2E8F0', bg: chg ? '#DDF5EE' : '#FFFFFF',
+        w: KEYS[k].kind === 'sum' ? '220px' : '150px', unit: L[KIND[KEYS[k].kind][2]], hasErr: !!e, err: e, hasRoMsg: s.roMsg === k, roMsg: cur[2] === 'sec' ? L.bs_roSec : L.bs_roDir, roClick: () => ro && this.roClick(k) }; };
+    let rows = cur[3].map(([k]) => rowOf(k));
+    if (s.sec === 'vat') rows = [{ name: L.bs_cfg_vat, desc: L.bs_cfgD_vat, meta: meta('vat'), value: String(D.CONFIG.vat), on: () => {}, ro: true, locked: true, cur: 'default', fg: '#172B2A', fbg: '#F5F7F8', bd: '#E2E8F0', bg: '#FFFFFF', w: '150px', unit: '%', hasErr: false, hasRoMsg: false, roClick: () => {} }];
+    if (s.sec === 'bq') { const posted = (D.store.bqs || []).some(b => b.status === 'posted'); rows = [{ name: L.bs_cfg_bqCut, desc: posted ? L.bs_bqLocked : L.bs_cfgD_bqCut, meta: L.bs_defaultVal, value: D.BQ_CUT, on: () => {}, ro: true, locked: true, cur: 'not-allowed', fg: '#5B6B6A', fbg: '#F5F7F8', bd: '#E2E8F0', bg: '#FFFFFF', w: '180px', unit: L.bs_uDate, hasErr: false, hasRoMsg: s.roMsg === 'bq', roMsg: L.bs_bqLockedShort, roClick: () => this.roClick('bq') }]; }
+    const today = D.pDT(D.TODAY + ' 00:00'), vh = (D.store.vatHist || []).slice().sort((a, b) => D.pDT(a.from + ' 00:00') - D.pDT(b.from + ' 00:00')), act = vh.filter(v => D.pDT(v.from + ' 00:00') <= today).slice(-1)[0];
+    const vatRows = vh.slice().reverse().map(v => { const fut = D.pDT(v.from + ' 00:00') > today, on = v === act; return { rate: v.rate + '%', from: v.from, who: v.who, st: fut ? L.bs_vatFuture : on ? L.bs_vatActive : L.bs_vatPast, bg: fut ? '#EFF6FF' : on ? '#F0FDF4' : '#EEF2F4', fg: fut ? '#1D4ED8' : on ? '#15803D' : '#5B6B6A' }; });
+    const ch = Object.keys(s.draft).length, ve = this.vatErr();
+    return { L, narrow, wide: !narrow, grid: narrow ? 'minmax(0,1fr)' : '240px minmax(0,1fr)', subText: L.bs_cfgSub, secs, sec: { label: L['bs_sec_' + s.sec] }, rows,
+      roNote: cur[2] !== 'none' && !can, roText: cur[2] === 'sec' ? L.bs_roSec : L.bs_roDir,
+      ...this.prVals(can), isPrint: s.sec === 'print', isVat: s.sec === 'vat', vatRows, canVat: this.canSec('dir'), vatRate: s.vatRate, vatFrom: s.vatFrom, onVatRate: e => this.setState({ vatRate: e.target.value }), onVatFrom: e => this.setState({ vatFrom: e.target.value }), vatAdd: () => this.vatAdd(), vatHasErr: !!ve, vatErr: ve, vatBd: ve ? '#B91C1C' : '#E2E8F0',
+      isDocs: s.sec === 'docs', docFmt: L.bs_docFmt, docRows: D.docPrefixes().map(x => ({ prefix: x.prefix, type: L['bs_dt_' + x.prefix] || '—', last: x.last, n: String(x.n) })),
+      dirty: ch > 0, dirtyLabel: fill(L.bs_nChanges, { n: ch }), cancel: () => this.setState({ draft: {} }, () => this.notify()), save: () => this.save(),
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }) };
+  }
+}
+</script>
+</body>
+</html>

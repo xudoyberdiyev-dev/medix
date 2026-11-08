@@ -1,0 +1,114 @@
+{
+  "kinds": {
+    "MANUFACTURER": {
+      "title": "Ishlab chiqaruvchilar",
+      "empty": "Dori ishlab chiqaruvchi korxonalar",
+      "add": "Ishlab chiqaruvchi qoʻshish",
+      "edit": "Ishlab chiqaruvchi: tahrirlash",
+      "new": "Yangi: ishlab chiqaruvchi"
+    },
+    "CATEGORY": {
+      "title": "Kategoriyalar",
+      "empty": "Mahsulot guruhlari, masalan «Antibiotiklar»",
+      "add": "Kategoriya qoʻshish",
+      "edit": "Kategoriya: tahrirlash",
+      "new": "Yangi: kategoriya"
+    },
+    "UNIT": {
+      "title": "Birliklar",
+      "empty": "Oʻlchov birliklari",
+      "add": "Birlik qoʻshish",
+      "edit": "Birlik: tahrirlash",
+      "new": "Yangi: birlik"
+    },
+    "COUNTRY": {
+      "title": "Davlatlar",
+      "empty": "Ishlab chiqarilgan davlatlar",
+      "add": "Davlat qoʻshish",
+      "edit": "Davlat: tahrirlash",
+      "new": "Yangi: davlat"
+    },
+    "REGION": {
+      "title": "Hududlar",
+      "empty": "Mijozlar manzili va yetkazish hududlari",
+      "add": "Hudud qoʻshish",
+      "edit": "Hudud: tahrirlash",
+      "new": "Yangi: hudud"
+    }
+  },
+  "shortName": {
+    "UNIT": {
+      "label": "Qisqa yozuvi",
+      "hint": "Masalan: dona, qad."
+    },
+    "COUNTRY": {
+      "label": "Kod",
+      "hint": "2 ta lotin harfi, masalan UZ"
+    }
+  },
+  "title": "Maʼlumotnomalar",
+  "vehicles": "Mashinalar",
+  "expenseItems": "Xarajat moddalari",
+  "addVehicle": "Mashina qoʻshish",
+  "addExpense": "Modda qoʻshish",
+  "active": "Faol",
+  "inactive": "Nofaol",
+  "deactivate": "Nofaol qilish",
+  "activate": "Faollashtirish",
+  "edit": "Tahrirlash",
+  "search": "Qidirish",
+  "deactivated": "Nofaol qilindi",
+  "activated": "Faollashtirildi",
+  "entry": {
+    "name": "Nomi",
+    "status": "Holat",
+    "searchPlaceholder": "Nomi boʻyicha (lotin yoki kirill)",
+    "emptyTitle": "Hali yozuv yoʻq",
+    "save": "Saqlash",
+    "saved": "Saqlandi",
+    "created": "Qoʻshildi"
+  },
+  "vehicle": {
+    "plate": "Davlat raqami",
+    "model": "Model",
+    "branch": "Filial",
+    "status": "Holat",
+    "searchPlaceholder": "Raqam yoki model",
+    "deactivated": "Mashina nofaol qilindi",
+    "activated": "Mashina faollashtirildi",
+    "emptyTitle": "Hali mashina qoʻshilmagan",
+    "emptyDescription": "Reys tuzishda mashina va uning sigʻimi tanlanadi.",
+    "branchError": "Filial tanlanmagan. Mashina qaysi filialga tegishli ekanini tanlang.",
+    "saved": "Mashina saqlandi",
+    "created": "Mashina qoʻshildi",
+    "titleEdit": "Mashina {plate}",
+    "titleNew": "Yangi mashina",
+    "save": "Mashinani saqlash",
+    "plateHint": "Masalan: 01 A 123 BC",
+    "modelPlaceholder": "Damas",
+    "refrigerator": "Muzlatkich",
+    "refrigeratorYes": "Bor",
+    "refrigeratorNo": "Yoʻq",
+    "refrigeratorField": "Muzlatkichi bor",
+    "refrigeratorHint": "Faqat maʼlumot uchun — reysga taʼsir qilmaydi"
+  },
+  "expense": {
+    "item": "Modda",
+    "systemHint": "Standart modda — oʻzgartirilmaydi",
+    "system": "Standart",
+    "direction": "Turi",
+    "EXPENSE": "Chiqim",
+    "INCOME": "Kirim",
+    "status": "Holat",
+    "caption": "Xarajat va kirim moddalari",
+    "searchPlaceholder": "Modda nomi",
+    "emptyTitle": "Moddalar yoʻq",
+    "emptyDescription": "Kassa va bank operatsiyalari moddalari shu yerda.",
+    "titleEdit": "Moddani tahrirlash",
+    "titleNew": "Yangi modda",
+    "save": "Moddani saqlash",
+    "saved": "Modda saqlandi",
+    "created": "Modda qoʻshildi",
+    "name": "Nomi"
+  }
+}

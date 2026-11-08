@@ -1,0 +1,91 @@
+{
+  "side": {
+    "CUSTOMER": {
+      "title": "Mijozlar qarzi",
+      "party": "Mijoz",
+      "empty": "Sotuvdan keyin mijoz qarzi shu yerda koʻrinadi."
+    },
+    "SUPPLIER": {
+      "title": "Yetkazib beruvchilar qarzi",
+      "party": "Yetkazib beruvchi",
+      "empty": "Kirim oʻtkazilgach yetkazib beruvchi qarzi shu yerda koʻrinadi."
+    }
+  },
+  "forbidden": "«{title}» sahifasi sizning rolingiz uchun yopiq.",
+  "col": {
+    "debt": "Qarz",
+    "notDue": "Muddati kelmagan",
+    "advance": "Avans",
+    "overdue": "Kechikish",
+    "limit": "Limit",
+    "lastPayment": "Oxirgi toʻlov",
+    "document": "Hujjat",
+    "date": "Sana",
+    "dueDate": "Toʻlov kuni",
+    "branch": "Filial",
+    "open": "Qoldiq"
+  },
+  "days": "{count} kun",
+  "total": "Jami",
+  "search": "Qidirish",
+  "searchPlaceholder": "Nomi yoki STIR",
+  "overdueOnly": "Faqat muddati oʻtganlar",
+  "empty": {
+    "title": "Qarz yoʻq"
+  },
+  "advanceAmount": "avans {amount}",
+  "tin": "STIR {tin}",
+  "currency": "soʻm",
+  "overdueSum": "Muddati oʻtgan",
+  "drawer": {
+    "tabs": "Kontragent boʻlimlari",
+    "openDocs": "Ochiq hujjatlar",
+    "act": "Akt sverka",
+    "emptyTitle": "Ochiq hujjat yoʻq",
+    "emptyDescription": "Barcha hujjatlar yopilgan."
+  },
+  "act": {
+    "noBranch": {
+      "title": "Filialni tanlang",
+      "description": "Akt sverka filial boʻyicha tuziladi — yuqorida filialni tanlang."
+    },
+    "col": {
+      "date": "Sana",
+      "document": "Hujjat",
+      "note": "Izoh",
+      "balance": "Qoldiq"
+    },
+    "debit": {
+      "CUSTOMER": "Qarz oshdi",
+      "SUPPLIER": "Qarzimiz oshdi"
+    },
+    "credit": "Toʻlandi / kamaydi",
+    "from": "Dan",
+    "to": "Gacha",
+    "badDate": "Sana notoʻgʻri",
+    "print": "Chop etish",
+    "opening": "Davr boshi ({date})",
+    "closing": "Davr oxiri ({date})",
+    "currency": "soʻm",
+    "caption": "Akt sverka: {name} · {branch}",
+    "empty": {
+      "title": "Bu davrda harakat yoʻq",
+      "description": "Davrni oʻzgartiring."
+    },
+    "legend": {
+      "CUSTOMER": "Musbat qoldiq — mijoz qarzdor, manfiy — avans.",
+      "SUPPLIER": "Musbat qoldiq — kompaniya yetkazib beruvchiga qarzdor, manfiy — avans."
+    }
+  },
+  "offset": {
+    "done": "Avans hisobga olindi",
+    "doneDescription": "{number} · {amount} soʻm",
+    "button": "Avansni hisobga olish",
+    "title": "Avansni hisobga olish (AH)",
+    "submit": "Hisobga olish",
+    "summary": "Avans <num>{advance}</num> soʻm, ochiq qarz <num>{debt}</num> soʻm. Eng eski qarzlardan boshlab <num>{available}</num> soʻm yopiladi.",
+    "amount": "Summa (ixtiyoriy)",
+    "currency": "soʻm",
+    "amountHint": "Boʻsh qoldirilsa — butun avans hisobga olinadi"
+  }
+}

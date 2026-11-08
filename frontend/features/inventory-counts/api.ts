@@ -36,20 +36,20 @@ export const IN_STATUS_LABELS: Record<InventoryCountStatus, string> = {
 };
 
 /**
- * Kiritilgan miqdorlardan oʻzgargan qatorlar: manfiy boʻlmagan butun son, saqlangan qiymatdan farq qilsa. Xato boʻlsa — matn.
+ * Kiritilgan miqdorlardan oʻzgargan qatorlar: manfiy boʻlmagan butun son, saqlangan qiymatdan farq qilsa. Xato boʻlsa — qator
+ * (mahsulot, partiya); matn — `inventoryCounts.errors.qty`.
  */
 export function changedEntries(
   lines: InventoryCountLine[],
   draft: Record<number, string>,
-): { entries: InventoryCountEntry[]; error: string | null } {
+): { entries: InventoryCountEntry[]; error: { product: string; batch: string } | null } {
   const entries: InventoryCountEntry[] = [];
   for (const l of lines) {
     const raw = draft[l.id];
     if (raw === undefined) continue;
     const v = raw.trim();
     if (v === "") continue;
-    if (!/^\d+$/.test(v))
-      return { entries: [], error: `${l.productName} · ${l.batchNumber}: miqdor 0 yoki musbat butun son boʻlishi kerak` };
+    if (!/^\d+$/.test(v)) return { entries: [], error: { product: l.productName, batch: l.batchNumber } };
     const n = Number(v);
     if (n !== l.countedQty) entries.push({ lineId: l.id, countedQty: n });
   }

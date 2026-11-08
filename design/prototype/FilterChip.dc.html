@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;font-family:Inter,system-ui,sans-serif">
+  <sc-if value="{{ isActive }}">
+    <div style="display:flex;align-items:center;height:34px;border:1px solid #0D9488;border-radius:8px;background:#DDF5EE;color:#0F766E;font-size:13px">
+      <button onClick="{{ toggle }}" title="{{ summary }}" style="height:100%;max-width:280px;padding:0 4px 0 10px;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ label }}: {{ summary }}</button>
+      <button onClick="{{ clear }}" aria-label="{{ clearLabel }}" style="width:26px;height:100%;border:0;background:transparent;color:#0F766E;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:0 8px 8px 0" style-hover="background:rgba(13,148,136,0.15)"><lucide-i name="x" size="14"></lucide-i></button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ isIdle }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ toggle }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px dashed #CBD5D3;border-radius:8px;background:#FFFFFF;color:#5B6B6A;font-size:13px;cursor:pointer;white-space:nowrap;transition:background 120ms ease-out,color 120ms ease-out" style-hover="background:#F8FAFA;color:#172B2A"><lucide-i name="plus" size="14"></lucide-i>{{ label }}</button>
+  </sc-if>
+  <sc-if value="{{ open }}">
+    <div onClick="{{ toggle }}" style="position:fixed;inset:0;z-index:40"></div>
+    <div style="position:absolute;top:40px;left:0;width:260px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);z-index:41;display:flex;flex-direction:column">
+      <sc-if value="{{ searchable }}">
+        <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-bottom:1px solid #EEF2F4;color:#647574"><lucide-i name="search" size="16"></lucide-i><input value="{{ search }}" onChange="{{ onSearch }}" placeholder="{{ searchPh }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:13px;color:#172B2A"></div>
+      </sc-if>
+      <div style="max-height:240px;overflow-y:auto;padding:4px">
+        <sc-for list="{{ options }}" as="o">
+          <button role="checkbox" aria-checked="{{ o.checked }}" onClick="{{ o.toggle }}" style="display:flex;align-items:center;gap:10px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;font-size:13px;color:#172B2A;cursor:pointer;text-align:left" style-hover="background:#F8FAFA">
+            <span style="width:16px;height:16px;flex:none;border-radius:4px;border:1px solid {{ o.cbBorder }};background:{{ o.cbBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ o.checked }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span>
+            <sc-if value="{{ o.hasIcon }}"><lucide-i name="{{ o.icon }}" size="14" style="color:{{ o.iconColor }};flex:none"></lucide-i></sc-if><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.label }}</span>
+            <span style="font-size:12px;color:#647574;font-variant-numeric:tabular-nums">{{ o.count }}</span>
+          </button>
+        </sc-for>
+        <sc-if value="{{ noOptions }}"><div style="padding:12px 8px;font-size:13px;color:#647574">{{ emptyLabel }}</div></sc-if>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px;border-top:1px solid #EEF2F4">
+        <button onClick="{{ reset }}" style="height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;font-size:13px;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A">{{ resetLabel }}</button>
+        <button onClick="{{ apply }}" style="height:30px;padding:0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ applyLabel }}</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:360},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Ishlab chiqaruvchi&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;options&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{value,label,count}[]&quot;},&quot;selected&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string[]&quot;},&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(v:string[])=&gt;void&quot;},&quot;searchPh&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Qidirish…&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;resetLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Tozalash&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;applyLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Qo'llash&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;clearLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Filtrni olib tashlash&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;emptyLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Hech narsa topilmadi&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { open: false, draft: [], q: '' };
+  renderVals() {
+    const p = this.props, s = this.state, sel = p.selected || [], opts = p.options || [];
+    const q = s.q.trim().toLowerCase();
+    const shown = opts.filter(o => !q || o.label.toLowerCase().includes(q));
+    const names = opts.filter(o => sel.includes(o.value)).map(o => o.label);
+    const summary = names.length > 2 ? `${names.slice(0, 2).join(', ')} … +${names.length - 2}` : names.join(', ');
+    return {
+      label: p.label, isActive: sel.length > 0, isIdle: sel.length === 0, summary, open: s.open,
+      toggle: () => this.setState(st => ({ open: !st.open, draft: st.open ? st.draft : [...sel], q: '' })),
+      clear: () => p.onChange && p.onChange([]),
+      searchable: opts.length > 6, search: s.q, onSearch: e => this.setState({ q: e.target.value }), searchPh: p.searchPh,
+      options: shown.map(o => { const c = s.draft.includes(o.value); return { label: o.label, count: o.count, hasIcon: !!o.icon, icon: o.icon, iconColor: o.iconColor || '#5B6B6A', checked: c, cbBg: c ? '#0F766E' : '#FFFFFF', cbBorder: c ? '#0F766E' : '#647574',
+        toggle: () => this.setState(st => ({ draft: c ? st.draft.filter(v => v !== o.value) : [...st.draft, o.value] })) }; }),
+      noOptions: shown.length === 0, emptyLabel: p.emptyLabel,
+      reset: () => this.setState({ draft: [] }), apply: () => { this.setState({ open: false }); p.onChange && p.onChange(s.draft); },
+      resetLabel: p.resetLabel, applyLabel: p.applyLabel, clearLabel: p.clearLabel
+    };
+  }
+}
+</script>
+</body>
+</html>

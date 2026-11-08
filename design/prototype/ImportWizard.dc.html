@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div ref="{{ rootRef }}" data-screen-label="Import ustasi" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+      <span style="display:flex;align-items:center;gap:6px;font-size:12.5px;line-height:18px;color:#5B6B6A;min-width:0"><lucide-i name="database" size="14" style="color:#0F766E;flex:none"></lucide-i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ crumb }}</span></span>
+      <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.bq_w_title }}</h1>
+    </div>
+    <button onClick="{{ cancel }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="x" size="16"></lucide-i>{{ L.bq_w_close }}</button>
+  </div>
+  <div style="display:grid;grid-template-columns:{{ gridCols }};gap:20px;align-items:start;min-width:0">
+    <nav aria-label="{{ L.bq_w_title }}" style="position:{{ navPos }};top:0;display:flex;flex-direction:{{ navDir }};gap:4px;padding:8px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0;overflow-x:auto">
+      <sc-for list="{{ steps }}" as="t" hint-placeholder-count="5">
+        <button onClick="{{ t.go }}" aria-current="{{ t.cur }}" style="flex:{{ t.flex }};display:flex;align-items:center;gap:10px;padding:8px 10px;border:0;border-radius:8px;background:{{ t.rowBg }};text-align:left;cursor:{{ t.cursor }};min-width:0;font:inherit;color:#172B2A">
+          <span style="width:24px;height:24px;flex:none;border-radius:50%;box-sizing:border-box;border:{{ t.border }};background:{{ t.bg }};color:{{ t.numColor }};font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">
+            <sc-if value="{{ t.done }}"><lucide-i name="check" size="14" style="color:#FFFFFF"></lucide-i></sc-if>
+            <sc-if value="{{ t.showNum }}">{{ t.n }}</sc-if>
+          </span>
+          <span style="display:flex;flex-direction:column;min-width:0">
+            <span style="font-size:13px;line-height:18px;color:{{ t.nameColor }};font-weight:{{ t.nameWeight }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
+            <sc-if value="{{ t.hasSub }}"><span style="font-size:11.5px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.sub }}</span></sc-if>
+          </span>
+        </button>
+      </sc-for>
+    </nav>
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:12px;line-height:16px;font-weight:500;color:#0F766E">{{ stepOf }}</span>
+        <h2 style="margin:0;font-size:20px;line-height:26px;font-weight:600">{{ stepTitle }}</h2>
+        <p style="margin:0;max-width:720px;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ stepDesc }}</p>
+      </div>
+      <sc-if value="{{ errText }}"><dc-import name="StatusBanner" tone="danger" icon="circle-alert" text="{{ errText }}" hint-size="100%,40px"></dc-import></sc-if>
+
+      <sc-if value="{{ isS1 }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ noFile }}" hint-placeholder-val="{{ true }}">
+          <div onDragOver="{{ onDragOver }}" onDragLeave="{{ onDragLeave }}" onDrop="{{ onDrop }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;padding:24px;border:1.5px dashed {{ dropBorder }};border-radius:12px;background:{{ dropBg }};text-align:center">
+            <span style="width:44px;height:44px;border-radius:12px;background:#DDF5EE;color:#0F766E;display:flex;align-items:center;justify-content:center"><lucide-i name="upload" size="22"></lucide-i></span>
+            <span style="font-size:14px;line-height:20px">{{ L.bq_drop }} <button onClick="{{ browse }}" style="padding:0;border:0;background:transparent;font:inherit;color:#0F766E;font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer">{{ L.bq_pick }}</button></span>
+            <span style="font-size:12.5px;color:#647574">{{ L.bq_dropHint }}</span>
+            <input ref="{{ fileRef }}" type="file" accept=".xlsx,.csv" onChange="{{ onFile }}" style="display:none">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <sc-if value="{{ showDemo }}" hint-placeholder-val="{{ true }}"><button onClick="{{ loadSample }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #E2E8F0;border-radius:10px;background:#F8FAFA;cursor:pointer;text-align:left;font:inherit;color:#172B2A;min-width:0" style-hover="border-color:#0F766E;background:#FFFFFF">
+              <lucide-i name="file-spreadsheet" size="20" style="color:#15803D;flex:none"></lucide-i>
+              <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.bq_sample }} · {{ L.bq_sampleD }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sampleName }}</span></span>
+            </button></sc-if>
+            <button onClick="{{ dlTpl }}" style="display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;font:inherit;font-size:13px;color:#0F766E;font-weight:500;cursor:pointer" style-hover="text-decoration:underline"><lucide-i name="download" size="16"></lucide-i>{{ L.bq_tpl }}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasFile }}">
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #E2E8F0;border-radius:10px;background:#F8FAFA">
+            <span style="width:40px;height:40px;flex:none;border-radius:10px;background:#F0FDF4;color:#15803D;display:flex;align-items:center;justify-content:center"><lucide-i name="file-spreadsheet" size="20"></lucide-i></span>
+            <span style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ fileName }}</span><span style="font-size:12.5px;color:#5B6B6A">{{ fileMeta }}</span></span>
+            <button onClick="{{ removeFile }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="trash-2" size="14"></lucide-i>{{ L.bq_remove }}</button>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ isS2 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat({{ s2Cols }},minmax(0,1fr));gap:16px 20px;align-items:start;max-width:720px">
+          <dc-import name="Select" label="{{ L.bq_sheet }}" required="{{ true }}" options="{{ sheetOpts }}" value="{{ sheetVal }}" on-change="{{ setSheet }}" hint-size="100%,56px"></dc-import>
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+            <span style="font-size:12px;line-height:16px;font-weight:500">{{ L.bq_hdrRow }} <span style="color:#B91C1C">*</span></span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button onClick="{{ hdrDec }}" aria-label="−" style="width:34px;height:34px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#172B2A" style-hover="background:#F8FAFA"><lucide-i name="minus" size="16"></lucide-i></button>
+              <input value="{{ hdrStr }}" onChange="{{ onHdr }}" inputMode="numeric" style="width:64px;height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font:inherit;font-size:14px;text-align:center;color:#172B2A;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+              <button onClick="{{ hdrInc }}" aria-label="+" style="width:34px;height:34px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#172B2A" style-hover="background:#F8FAFA"><lucide-i name="plus" size="16"></lucide-i></button>
+            </div>
+            <span style="font-size:12px;line-height:16px;color:#647574">{{ L.bq_hdrHint }}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span style="font-size:13px;font-weight:600">{{ L.bq_preview }}</span><span style="font-size:12.5px;color:#5B6B6A">{{ dataN }}</span></div>
+          <div style="border:1px solid #E2E8F0;border-radius:8px;overflow-x:auto">
+            <div style="min-width:{{ pvMinW }}px">
+              <sc-for list="{{ pvRows }}" as="r">
+                <div style="display:grid;grid-template-columns:{{ pvGrid }};min-height:36px;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};align-items:center">
+                  <span style="padding:0 8px;font-size:11.5px;color:#647574;display:flex;align-items:center;gap:4px">{{ r.n }}<sc-if value="{{ r.isHdr }}"><span style="height:16px;padding:0 4px;border-radius:4px;background:#0F766E;color:#FFFFFF;font-size:10px;line-height:16px">{{ L.bq_hdrMark }}</span></sc-if></span>
+                  <sc-for list="{{ r.cells }}" as="c"><span title="{{ c }}" style="padding:0 10px;font-size:12.5px;font-weight:{{ r.weight }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:1px solid #EEF2F4">{{ c }}</span></sc-for>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isS3 }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ mapNote }}"><dc-import name="StatusBanner" tone="{{ mapTone }}" icon="{{ mapIcon }}" text="{{ mapNote }}" hint-size="100%,40px"></dc-import></sc-if>
+        <div style="border:1px solid #E2E8F0;border-radius:8px;overflow-x:auto">
+          <div style="min-width:720px">
+            <div style="display:grid;grid-template-columns:minmax(180px,0.9fr) 28px minmax(220px,1fr) minmax(200px,1fr);height:36px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+              <span style="padding:0 14px">{{ L.bq_fMedix }}</span><span></span><span style="padding:0 12px">{{ L.bq_fFile }}</span><span style="padding:0 12px">{{ L.bq_fSample }}</span>
+            </div>
+            <sc-for list="{{ mapRows }}" as="m">
+              <div style="display:grid;grid-template-columns:minmax(180px,0.9fr) 28px minmax(220px,1fr) minmax(200px,1fr);min-height:60px;align-items:center;border-bottom:1px solid #EEF2F4">
+                <span style="padding:0 14px;display:flex;align-items:center;gap:8px;min-width:0">
+                  <lucide-i name="{{ m.icon }}" size="16" style="color:{{ m.iconColor }};flex:none"></lucide-i>
+                  <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:13.5px;font-weight:500">{{ m.label }}<sc-if value="{{ m.req }}"> <span style="color:#B91C1C">*</span></sc-if></span><sc-if value="{{ m.opt }}"><span style="font-size:11.5px;color:#647574">{{ L.bq_optional }}</span></sc-if></span>
+                </span>
+                <lucide-i name="arrow-left" size="16" style="color:#647574"></lucide-i>
+                <div style="padding:8px 12px;min-width:0"><dc-import name="Select" options="{{ colOpts }}" value="{{ m.val }}" on-change="{{ m.set }}" error="{{ m.err }}" hint-size="100%,34px"></dc-import></div>
+                <span style="padding:0 12px;display:flex;flex-direction:column;min-width:0"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ m.sampleColor }}">{{ m.sample }}</span><sc-if value="{{ m.hasNorm }}"><span style="font-size:11.5px;color:#0F766E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">→ {{ m.norm }}</span></sc-if></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ autoMap }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="wand-sparkles" size="16" style="color:#0F766E"></lucide-i>{{ L.bq_auto }}</button>
+          <button onClick="{{ saveProf }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="bookmark-plus" size="16" style="color:#0F766E"></lucide-i>{{ L.bq_saveProf }}<span style="font-weight:400;color:#5B6B6A">· {{ profName }}</span></button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isS4 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat({{ kCols }},minmax(0,1fr));gap:10px">
+          <sc-for list="{{ kpis }}" as="k">
+            <button onClick="{{ k.pick }}" aria-pressed="{{ k.on }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid {{ k.border }};border-radius:10px;background:#FFFFFF;cursor:pointer;text-align:left;font:inherit;color:#172B2A;min-width:0" style-hover="border-color:#647574">
+              <span style="width:28px;height:28px;flex:none;border-radius:7px;background:{{ k.bg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ k.icon }}" size="16"></lucide-i></span>
+              <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span><span style="font-size:18px;line-height:24px;font-weight:600">{{ k.n }}</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:auto;max-height:560px">
+          <div style="min-width:{{ vMinW }}px">
+            <div style="display:grid;grid-template-columns:{{ vGrid }};height:38px;position:sticky;top:0;z-index:3;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+              <sc-for list="{{ vHead }}" as="h"><span style="display:flex;align-items:center;justify-content:{{ h.justify }};padding:0 10px;position:{{ h.pos }};left:0;z-index:{{ h.z }};background:#F8FAFA;box-shadow:{{ h.sh }};white-space:nowrap">{{ h.label }}</span></sc-for>
+            </div>
+            <sc-for list="{{ vRows }}" as="r">
+              <div style="display:grid;grid-template-columns:{{ vGrid }};min-height:48px;border-bottom:1px solid #EEF2F4;align-items:stretch;background:{{ r.bg }}">
+                <span style="position:sticky;left:0;z-index:2;display:flex;align-items:center;padding:0 10px;background:{{ r.bg }};box-shadow:8px 0 8px -8px rgba(18,60,58,0.18)"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:{{ r.stBg }};color:{{ r.stFg }};font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="{{ r.stIcon }}" size="12"></lucide-i>{{ r.stLabel }}</span></span>
+                <span style="display:flex;align-items:center;padding:0 10px;font-size:12px;color:#647574">{{ r.i }}</span>
+                <sc-for list="{{ r.cells }}" as="c">
+                  <div style="display:flex;flex-direction:column;justify-content:center;align-items:{{ c.align }};gap:3px;padding:6px 10px;min-width:0">
+                    <sc-if value="{{ c.isText }}"><span title="{{ c.text }}" style="max-width:100%;font-family:{{ c.font }};font-size:{{ c.size }};font-weight:{{ c.weight }};color:{{ c.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.text }}</span></sc-if>
+                    <sc-if value="{{ c.isInput }}"><input value="{{ c.value }}" onChange="{{ c.onChange }}" aria-label="{{ c.label }}" style="width:100%;height:30px;padding:0 8px;border:1px solid {{ c.border }};border-radius:6px;background:#FFFFFF;font-family:{{ c.font }};font-size:12.5px;color:#172B2A;outline:none;text-align:{{ c.talign }};box-sizing:border-box;min-width:0" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></sc-if>
+                    <sc-if value="{{ c.isMatch }}">
+                      <span style="display:flex;align-items:center;gap:6px;max-width:100%;min-width:0">
+                        <span title="{{ c.text }}" style="font-size:13px;font-weight:500;color:{{ c.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.text }}</span>
+                        <sc-if value="{{ c.hasPct }}"><span style="flex:none;height:18px;padding:0 6px;border-radius:6px;background:{{ c.pctBg }};color:{{ c.pctFg }};font-size:11px;line-height:18px;font-weight:600">{{ c.pct }}</span></sc-if>
+                      </span>
+                      <sc-if value="{{ c.canPick }}"><button onClick="{{ c.pick }}" style="padding:0;border:0;background:transparent;font:inherit;font-size:12px;color:#0F766E;font-weight:500;cursor:pointer" style-hover="text-decoration:underline">{{ c.pickLabel }}</button></sc-if>
+                    </sc-if>
+                    <sc-if value="{{ c.isMsgs }}">
+                      <sc-for list="{{ c.msgs }}" as="g"><span style="display:flex;align-items:flex-start;gap:4px;font-size:12px;line-height:16px;color:{{ g.color }};text-wrap:pretty"><lucide-i name="{{ g.icon }}" size="12" style="flex:none;margin-top:2px"></lucide-i>{{ g.text }}</span></sc-for>
+                      <sc-if value="{{ c.hasAct }}"><button onClick="{{ c.act }}" style="padding:0;border:0;background:transparent;font:inherit;font-size:12px;color:#0F766E;font-weight:500;cursor:pointer" style-hover="text-decoration:underline">{{ c.actLabel }}</button></sc-if>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+            <sc-if value="{{ vEmpty }}"><div style="padding:32px 16px;text-align:center;font-size:13px;color:#5B6B6A">{{ L.bq_noRows }}</div></sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isS5 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border:1px solid {{ resBorder }};border-radius:10px;background:{{ resBg }}">
+          <span style="width:40px;height:40px;flex:none;border-radius:10px;background:#FFFFFF;color:{{ resFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ resIcon }}" size="22"></lucide-i></span>
+          <span style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:17px;line-height:24px;font-weight:600;text-wrap:pretty">{{ resTitle }}</span><span style="font-size:13px;color:#5B6B6A">{{ w5Sub }}</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat({{ rCols }},minmax(0,1fr));gap:10px">
+          <sc-for list="{{ resKpis }}" as="k"><div style="display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid #E2E8F0;border-radius:10px;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ k.label }}</span><span style="font-size:17px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.value }}</span></div></sc-for>
+        </div>
+        <sc-if value="{{ hasErrRows }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid #FECACA;border-radius:10px;background:#FEF2F2">
+            <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:13px;font-weight:600;color:#B91C1C">{{ errRowsT }}</span><span style="font-size:12px;color:#5B6B6A">{{ L.bq_dlErrD }}</span></span>
+            <button onClick="{{ dlErr }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="download" size="16" style="color:#B91C1C"></lucide-i>{{ L.bq_dlErr }}</button>
+          </div>
+        </sc-if>
+      </sc-if>
+    </section>
+  </div>
+  <dc-import name="StickyFormFooter" style="position:sticky;bottom:-24px;z-index:5;display:block;align-self:stretch" dirty="{{ footDirty }}" dirty-label="{{ footNote }}" cancel-label="{{ backLabel }}" save-label="{{ nextLabel }}" max-width="{{ 1280 }}" on-cancel="{{ goBack }}" on-save="{{ goNext }}" hint-size="100%,64px"></dc-import>
+
+  <sc-if value="{{ pickOpen }}">
+    <div onClick="{{ closePick }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:520px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:17px;line-height:24px;font-weight:600">{{ pickTitle }}</span><span style="font-size:13px;color:#5B6B6A">{{ L.bq_pickFile }}: <span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ pick.name }}</span></span></div>
+        <sc-if value="{{ hasSim }}">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:12px;font-weight:500">{{ L.bq_pickSim }}</span>
+            <sc-for list="{{ sims }}" as="m"><button onClick="{{ m.pick }}" aria-pressed="{{ m.on }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;height:38px;padding:0 12px;border:1px solid {{ m.border }};border-radius:8px;background:{{ m.bg }};cursor:pointer;font:inherit;font-size:13px;color:#172B2A;text-align:left"><span style="display:flex;align-items:center;gap:8px;min-width:0"><lucide-i name="{{ m.icon }}" size="16" style="color:#0F766E;flex:none"></lucide-i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.name }}</span></span><span style="flex:none;height:18px;padding:0 6px;border-radius:6px;background:{{ m.pctBg }};color:{{ m.pctFg }};font-size:11px;line-height:18px;font-weight:600">{{ m.pct }}</span></button></sc-for>
+          </div>
+        </sc-if>
+        <dc-import name="Select" label="{{ L.bq_pickSearch }}" options="{{ pickOpts }}" value="{{ pick.val }}" on-change="{{ setPickVal }}" placeholder="{{ L.qt_choose }}" searchable="{{ true }}" search-ph="{{ L.qt_search }}" error="{{ pickErr }}" hint-size="100%,56px"></dc-import>
+        <sc-if value="{{ hasPickAll }}">
+          <button onClick="{{ togglePickAll }}" role="checkbox" aria-checked="{{ pick.all }}" style="display:flex;align-items:center;gap:8px;padding:0;border:0;background:transparent;cursor:pointer;font:inherit;font-size:13px;color:#172B2A;text-align:left">
+            <span style="width:16px;height:16px;flex:none;border:1px solid {{ paBorder }};border-radius:4px;background:{{ paBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ pick.all }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span>{{ pickAllLabel }}
+          </button>
+        </sc-if>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:4px">
+          <sc-if value="{{ canCreate }}"><button onClick="{{ openCreate }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="plus" size="16" style="color:#0F766E"></lucide-i>{{ L.bq_createP }}</button></sc-if>
+          <span style="flex:1"></span>
+          <button onClick="{{ closePick }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ L.qt_back }}</button>
+          <button onClick="{{ applyPick }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ L.bq_pickApply }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ createOpen }}"><dc-import name="ConfirmDialog" title="{{ L.bq_createT }}" text="{{ L.bq_createD }}" items="{{ createItems }}" danger="{{ false }}" confirm-label="{{ L.bq_createOpen }}" cancel-label="{{ L.qt_back }}" on-confirm="{{ doCreate }}" on-cancel="{{ closeCreate }}" hint-size="0px,0px"></dc-import></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;type&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;goods&quot;,&quot;mt&quot;,&quot;yt&quot;,&quot;cash&quot;],&quot;default&quot;:&quot;goods&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;FRG&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;wh&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Marg'ilon ombori&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cutoff&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;30.09.2026&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;place&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;preset&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{step,filter,prod,fixed,n}&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onDone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(res)=&gt;void&quot;},&quot;onCancel&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const COLS = { goods: [['name', 'minmax(170px,1fr)'], ['match', 'minmax(220px,1.2fr)'], ['batch', '130px'], ['exp', '120px'], ['zone', '130px'], ['qty', '90px'], ['cost', '120px'], ['msg', 'minmax(260px,1.4fr)']],
+  mt: [['party', 'minmax(170px,1fr)'], ['match', 'minmax(190px,1fr)'], ['doc', '130px'], ['date', '110px'], ['due', '110px'], ['sum', '130px'], ['paid', '120px'], ['left', '130px'], ['msg', 'minmax(240px,1.3fr)']],
+  cash: [['acct', 'minmax(220px,1.2fr)'], ['match', 'minmax(220px,1.2fr)'], ['sum', '150px'], ['msg', 'minmax(240px,1.3fr)']] };
+COLS.yt = COLS.mt;
+COLS.products = [['code', '110px'], ['name', 'minmax(180px,1fr)'], ['match', 'minmax(150px,0.8fr)'], ['maker', '140px'], ['barcode', '150px'], ['ikpu', '170px'], ['farmId', '130px'], ['msg', 'minmax(240px,1.3fr)']];
+COLS.prices = [['name', 'minmax(180px,1fr)'], ['match', 'minmax(220px,1.2fr)'], ['ptype', '130px'], ['price', '130px'], ['msg', 'minmax(260px,1.4fr)']];
+COLS.cust = [['stir', '120px'], ['cname', 'minmax(180px,1fr)'], ['match', 'minmax(200px,1fr)'], ['ctype', '110px'], ['region', '120px'], ['phone', '150px'], ['limit', '130px'], ['days', '90px'], ['msg', 'minmax(260px,1.4fr)']];
+COLS.sup = [['stir', '120px'], ['cname', 'minmax(180px,1fr)'], ['match', 'minmax(200px,1fr)'], ['region', '120px'], ['phone', '150px'], ['days', '90px'], ['lead', '90px'], ['msg', 'minmax(260px,1.4fr)']];
+const EDIT = { goods: ['batch', 'exp', 'zone', 'qty', 'cost'], mt: ['doc', 'date', 'due', 'sum', 'paid', 'left'], yt: ['doc', 'date', 'due', 'sum', 'paid', 'left'], cash: ['sum'], cust: ['stir', 'cname', 'limit', 'days'], products: ['code', 'name', 'barcode', 'ikpu', 'farmId'], prices: ['price'], sup: ['stir', 'cname', 'days', 'lead'] };
+const NUMF = ['qty', 'cost', 'sum', 'paid', 'left', 'price', 'limit', 'days', 'disc', 'lead'], DATEF = ['exp', 'date', 'due'];
+const STS = { ok: ['circle-check', '#15803D', '#F0FDF4'], warn: ['triangle-alert', '#B45309', '#FFFBEB'], err: ['octagon-x', '#B91C1C', '#FEF2F2'], merged: ['merge', '#5B6B6A', '#EEF2F4'] };
+const pct = c => c >= 90 ? ['#15803D', '#F0FDF4'] : c >= 60 ? ['#B45309', '#FFFBEB'] : ['#B91C1C', '#FEF2F2'];
+const csv = rows => '\ufeff' + rows.map(r => r.map(v => { const s = String(v == null ? '' : v); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(';')).join('\r\n');
+const download = (name, text) => { try { const b = new Blob([text], { type: 'text/csv;charset=utf-8' }), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1000); } catch (e) {} };
+class Component extends DCLogic {
+  state = { step: 1, max: 1, file: null, drag: false, sheet: 0, hdr: 1, map: {}, mapNote: null, profSaved: false, fix: {}, pick: {}, merged: {}, filter: 'all', err: '', pk: null, pkErr: '', create: null };
+  fileRef = React.createRef();
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  rootRef = React.createRef();
+  componentDidMount() { if (!this.D || !this.D.bqValidate) this._p = setInterval(() => { if (this.D && this.D.bqValidate) { clearInterval(this._p); this.init(); } }, 60); else this.init();
+    try { this._ro = new ResizeObserver(es => { const w = es[0].contentRect.width, c = w < 980; if (c !== this.state.compact) this.setState({ compact: c }); }); this.rootRef.current && this._ro.observe(this.rootRef.current); } catch (e) {} }
+  componentWillUnmount() { clearInterval(this._p); this._ro && this._ro.disconnect(); }
+  componentDidUpdate(pp) { const a = pp.preset, b = this.props.preset; if (b && (!a || a.n !== b.n)) this.init(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  init() {
+    const D = this.D, p = this.props, pr = p.preset || { step: 1 }, step = pr.step || 1;
+    let st = { step, max: step, file: null, sheet: 0, hdr: 1, map: {}, mapNote: null, profSaved: false, fix: {}, pick: {}, merged: {}, filter: pr.filter || 'all', err: '', pk: null, create: null };
+    if (step >= 2) { const f = D.bqSample(p.type, p.branch, p.wh); st = { ...st, file: f, hdr: f.headerRow }; }
+    if (step >= 3) { st = { ...st, ...this.mapFor(st.file, 0, st.hdr) }; }
+    this.setState(st, () => {
+      if (pr.fixed) { const V = this.validated(); const fix = {}; V.forEach(v => { if (v.msgs.some(m => m.c === 'qtyFrac')) fix[v.i] = { qty: '12' }; if (v.msgs.some(m => m.c === 'expMissing')) fix[v.i] = { exp: '31.12.2027' }; }); this.setState({ fix }); }
+      if (pr.prod) { const v = this.validated().find(z => z.msgs.some(m => m.c === 'lowConf')); if (v) this.openPick(v); }
+    });
+  }
+  headers(file, sheet, hdr) { const g = file ? (file.sheets[sheet] || file.sheets[0]).grid : []; return g[hdr - 1] || []; }
+  mapFor(file, sheet, hdr) { const D = this.D, p = this.props, L = this.L, H = this.headers(file, sheet, hdr), prof = (D.store.impProfiles || {})[p.type];
+    if (prof) { const m = {}; Object.entries(prof.map).forEach(([k, name]) => { const i = H.indexOf(name); if (i >= 0) m[k] = i; }); if (Object.keys(m).length) return { map: m, mapNote: { kind: 'profile', text: fill(L.bq_profApplied, { p: prof.name }) } }; }
+    const m = D.bqAutoMap(p.type, H), F = D.bqFields(p.type); return { map: m, mapNote: { kind: 'auto', text: fill(L.bq_autoDone, { a: Object.keys(m).length, b: F.length }) } }; }
+  grid() { const f = this.state.file; return f ? (f.sheets[this.state.sheet] || f.sheets[0]).grid : []; }
+  dataRows() { return this.grid().slice(this.state.hdr).filter(r => r.some(c => String(c || '').trim() !== '')); }
+  recs() { const s = this.state, map = s.map; return this.dataRows().map((r, k) => ({ i: k + 1, raw: Object.fromEntries(Object.entries(map).filter(([, ix]) => ix != null && ix >= 0).map(([f, ix]) => [f, r[ix]])), fix: s.fix[k + 1], pick: s.pick[k + 1] })); }
+  validated() { const D = this.D, p = this.props, s = this.state, key = JSON.stringify([s.file && s.file.file, s.sheet, s.hdr, s.map, s.fix, s.pick, s.merged]);
+    if (this._vk === key) return this._v;
+    const all = this.recs(), keep = all.filter(r => !s.merged[r.i]), V = D.bqValidate(p.type, p.branch, p.wh, keep), byI = {}; V.forEach(v => { byI[v.i] = v; });
+    const out = all.map(r => byI[r.i] || { i: r.i, v: Object.assign({}, r.raw, r.fix || {}), st: 'merged', msgs: [{ t: 'info', c: 'merged', p: { r: s.merged[r.i].t } }] });
+    this._vk = key; this._v = out; return out; }
+  loadSample() { const D = this.D, p = this.props, f = D.bqSample(p.type, p.branch, p.wh); this.setState({ file: f, sheet: 0, hdr: f.headerRow, err: '', fix: {}, pick: {}, merged: {} }); }
+  handleFile(file) { const L = this.L; if (!file) return; const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!['xlsx', 'csv'].includes(ext)) return this.setState({ err: L.bq_eType }); if (file.size > 10 * 1024 * 1024) return this.setState({ err: L.bq_eSize });
+    if (ext === 'xlsx') return this.setState({ err: L.bq_eXlsx });
+    const rd = new FileReader(); rd.onload = () => { const txt = String(rd.result || '').replace(/^\ufeff/, ''), lines = txt.split(/\r?\n/).filter(l => l.trim()), sep = (lines[0] || '').split(';').length >= (lines[0] || '').split(',').length ? ';' : ',';
+      const grid = lines.map(l => { const out = []; let cur = '', q = false; for (let i = 0; i < l.length; i++) { const ch = l[i]; if (q) { if (ch === '"' && l[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; } else if (ch === '"') q = true; else if (ch === sep) { out.push(cur); cur = ''; } else cur += ch; } out.push(cur); return out; });
+      this.setState({ file: { file: file.name, size: file.size, sheets: [{ name: 'CSV', grid }], headerRow: 1, real: true }, sheet: 0, hdr: 1, err: '', fix: {}, pick: {}, merged: {} }); this.toast(fill(L.bq_csvOk, { n: Math.max(0, grid.length - 1) })); };
+    rd.readAsText(file); }
+  openPick(v) { const p = this.props, name = String((((p.type === 'goods' || p.type === 'prices') || p.type === 'prices') ? v.v.name : p.type === 'cash' ? v.v.acct : v.v.party) || ''), cur = ((p.type === 'goods' || p.type === 'prices') || p.type === 'prices') ? v.pid : p.type === 'cash' ? v.acct : v.party;
+    this.setState({ pk: { i: v.i, name, val: cur != null ? cur : (v.near || null), all: true }, pkErr: '' }); }
+  applyPick() { const s = this.state, L = this.L, pk = s.pk; if (pk.val == null) return this.setState({ pkErr: L.bq_pickErr });
+    const p = this.props, f = ((p.type === 'goods' || p.type === 'prices') || p.type === 'prices') ? 'name' : p.type === 'cash' ? 'acct' : 'party', same = pk.all ? this.validated().filter(v => String(v.v[f] || '') === pk.name).map(v => v.i) : [pk.i];
+    const pick = { ...s.pick }; same.forEach(i => { pick[i] = pk.val; }); this.setState({ pick, pk: null }); }
+  doMerge(v) { const s = this.state, D = this.D, dup = v.msgs.find(m => m.c === 'dup'); if (!dup) return; const t = dup.p.r, tv = this.validated().find(z => z.i === t); if (!tv) return;
+    const prev = (s.fix[t] || {}).qty, fix = { ...s.fix, [t]: { ...(s.fix[t] || {}), qty: String((tv.qty || 0) + (v.qty || 0)) } }; this.setState({ fix, merged: { ...s.merged, [v.i]: { t, prev } } }); }
+  unMerge(i) { const s = this.state, m = s.merged[i]; if (!m) return; const fix = { ...s.fix }, f = { ...(fix[m.t] || {}) }; if (m.prev == null) delete f.qty; else f.qty = m.prev; fix[m.t] = f; const mg = { ...s.merged }; delete mg[i]; this.setState({ fix, merged: mg }); }
+  stepErr(n) { const L = this.L, D = this.D, s = this.state, p = this.props;
+    if (n === 1 && !s.file) return L.bq_eFile;
+    if (n === 2) { const g = this.grid(); if (!(s.hdr >= 1 && s.hdr <= g.length)) return fill(L.bq_eHdr, { n: g.length }); }
+    if (n === 3) { const miss = D.bqFields(p.type).filter(f => f.req && !(s.map[f.key] >= 0)).map(f => (L['bq_f_' + f.key] || L['kt_f_' + f.key] || L['nr_f_' + f.key])); if (miss.length) return fill(L.bq_eMap, { f: miss.join(', ') });
+      const used = {}, dups = []; Object.entries(s.map).forEach(([k, ix]) => { if (ix == null || ix < 0) return; if (used[ix]) dups.push((L['bq_f_' + k] || L['kt_f_' + k] || L['nr_f_' + k])); used[ix] = 1; }); if (dups.length) return fill(L.bq_eMapDup, { f: dups.join(', ') }); }
+    return ''; }
+  go(n) { if (n === this.state.step) return; if (n > this.state.max) return; this.setState({ step: n, err: '' }); }
+  next() { const s = this.state, L = this.L, D = this.D, p = this.props, e = this.stepErr(s.step); if (e) return this.setState({ err: e });
+    if (s.step === 5) { const V = this.validated(), ok = V.filter(v => v.st === 'ok' || v.st === 'warn'); if (!ok.length) return this.setState({ err: L.bq_eNone }); return p.onDone && p.onDone({ lines: D.bqLinesFrom(p.type, V.filter(v => v.st !== 'merged')), file: s.file.file }); }
+    const n = s.step + 1, extra = n === 3 && (s.max < 3 || !Object.keys(s.map).length) ? this.mapFor(s.file, s.sheet, s.hdr) : {};
+    this.setState({ step: n, max: Math.max(s.max, n), err: '', ...extra }); }
+  back() { const s = this.state; if (s.step === 1) return this.props.onCancel && this.props.onCancel(); this.setState({ step: s.step - 1, err: '' }); }
+  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  _rv() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow || !!s.compact || (typeof window !== 'undefined' && window.innerWidth <= 1100), type = p.type || 'goods';
+    const base = { L, steps: [], sheetOpts: [], pvRows: [], mapRows: [], colOpts: [], kpis: [], vHead: [], vRows: [], resKpis: [], sims: [], pickOpts: [], createItems: [], pick: {}, isS1: true, noFile: true, gridCols: '1fr' };
+    if (!D || !D.bqValidate) return base;
+    const isKt = type === 'cust' || type === 'sup', tLabel = p.typeLabel || L['bq_t_' + type], V = s.file && s.step >= 4 ? this.validated() : [], cnt = { ok: 0, warn: 0, err: 0, merged: 0 }; V.forEach(v => { cnt[v.st]++; });
+    const H = s.file ? this.headers(s.file, s.sheet, s.hdr) : [], F = D.bqFields(type), mappedReq = F.filter(f => f.req && s.map[f.key] >= 0).length, nReq = F.filter(f => f.req).length;
+    const subs = [s.file ? s.file.file : '', s.file && s.max >= 2 ? `${(s.file.sheets[s.sheet] || {}).name} · ${s.hdr}` : '', s.max >= 3 ? `${mappedReq}/${nReq}` : '', s.max >= 4 && V.length ? `${cnt.ok} · ${cnt.warn} · ${cnt.err}` : '', ''];
+    const steps = [1, 2, 3, 4, 5].map(n => { const done = n < s.step || (n <= s.max && n !== s.step), cur = n === s.step;
+      return { n, name: !narrow || cur ? L['bq_w' + n] : '', sub: subs[n - 1], hasSub: !narrow && !!subs[n - 1], done, showNum: !done, cur, flex: narrow ? '1 0 auto' : 'none', rowBg: cur ? '#F0FAF8' : 'transparent', cursor: n <= s.max ? 'pointer' : 'default',
+        border: done ? '0' : cur ? '2px solid #0D9488' : '1px solid #E2E8F0', bg: done ? '#0F766E' : '#FFFFFF', numColor: cur ? '#0D9488' : '#647574', nameColor: done || cur ? '#172B2A' : '#647574', nameWeight: cur ? 600 : 400, go: () => this.go(n) }; });
+    const g = this.grid(), dataN = this.dataRows().length;
+    // step 2 preview
+    const pvN = Math.max(...g.slice(0, 5).map(r => r.length), 1), pvRows = g.slice(0, 5).map((r, i) => ({ n: String(i + 1), isHdr: i + 1 === s.hdr, bg: i + 1 === s.hdr ? '#DDF5EE' : '#FFFFFF', weight: i + 1 === s.hdr ? 600 : 400, cells: Array.from({ length: pvN }, (_, j) => r[j] || '') }));
+    // step 3
+    const first = this.dataRows()[0] || [];
+    const colOpts = [{ value: -1, label: L.bq_notMapped }].concat(H.map((h, i) => ({ value: i, label: String(h || '').trim() || fill(L.bq_col, { n: i + 1 }), sub: String.fromCharCode(65 + (i % 26)) })));
+    const mapRows = F.map(f => { const ix = s.map[f.key], on = ix != null && ix >= 0, raw = on ? first[ix] : '', isN = NUMF.includes(f.key), isD = DATEF.includes(f.key);
+      const norm = on && raw !== '' ? (isN ? (isNaN(D.bqNum(raw)) ? '' : f.key === 'qty' ? fN(D.bqNum(raw)) : fM(D.bqNum(raw))) : isD ? (D.bqDate(raw) || '') : '') : '', bad = s.err && f.req && !on;
+      return { label: (L['bq_f_' + f.key] || L['kt_f_' + f.key] || L['nr_f_' + f.key]), req: f.req, opt: !f.req, val: on ? ix : -1, err: bad ? L.qt_req : '', icon: on ? 'circle-check' : f.req ? 'circle-alert' : 'circle-dashed', iconColor: on ? '#15803D' : f.req ? '#B91C1C' : '#647574',
+        sample: on ? (String(raw) || '—') : '—', sampleColor: on ? '#172B2A' : '#647574', hasNorm: !!norm && norm !== String(raw), norm, set: v => this.setState(st => { const m = { ...st.map }; if (v === -1) delete m[f.key]; else m[f.key] = v; return { map: m, mapNote: null, err: '' }; }) }; });
+    const profName = fill(L.bq_profName, { t: String(tLabel || '').toLowerCase() });
+    // step 4
+    const flt = s.filter, shown = V.filter(v => flt === 'all' || v.st === flt || (flt === 'ok' && v.st === 'merged'));
+    const cols = COLS[type], gridT = '128px 52px ' + cols.map(c => c[1]).join(' ');
+    const head = { name: L.bq_cFileName, match: (type === 'goods' || type === 'prices') ? L.bq_cCatalog : type === 'cash' ? L.bq_cSysAcct : L.bq_cSysParty, party: L.bq_cFileParty, acct: L.bq_cFileAcct, msg: L.bq_cMsg };
+    const vHead = [{ label: L.bq_cSt, pos: 'sticky', z: 4, sh: '8px 0 8px -8px rgba(18,60,58,0.18)', justify: 'flex-start' }, { label: L.bq_cRow, pos: 'static', z: 0, sh: 'none', justify: 'flex-start' }].concat(cols.map(([k]) => ({ label: head[k] || (L['bq_f_' + k] || L['kt_f_' + k] || L['nr_f_' + k]), pos: 'static', z: 0, sh: 'none', justify: NUMF.includes(k) ? 'flex-end' : 'flex-start' })));
+    const sameN = (f, name) => V.filter(v => String(v.v[f] || '') === name).length;
+    const vRows = shown.map(v => { const S = STS[v.st], editable = v.st === 'err' || v.st === 'warn', mono = "'JetBrains Mono',monospace";
+      const msgs = v.msgs.map(m => ({ text: m.c === 'merged' ? fill(L.bq_m_merged, m.p) : fill(L['bq_m_' + m.c] || L['kt_m_' + m.c] || L['nr_m_' + m.c], m.p), icon: m.t === 'err' ? 'octagon-x' : m.t === 'warn' ? 'triangle-alert' : 'merge', color: m.t === 'err' ? '#B91C1C' : m.t === 'warn' ? '#B45309' : '#5B6B6A' }));
+      const isDup = v.msgs.some(m => m.c === 'dup');
+      const cells = cols.map(([k]) => {
+        if (k === 'msg') return { isMsgs: true, msgs: msgs.length ? msgs : [{ text: '—', icon: 'minus', color: '#647574' }], hasAct: isDup || v.st === 'merged', actLabel: v.st === 'merged' ? L.bq_unmerge : L.bq_merge, act: () => v.st === 'merged' ? this.unMerge(v.i) : this.doMerge(v), align: 'flex-start' };
+        if (k === 'match') { let text = '—', c = null, color = '#647574';
+          if ((type === 'goods' || type === 'prices')) { const pr = v.pid ? D.prodById(v.pid) : null; if (pr) { text = pr.name; c = v.manual ? null : v.conf; color = '#172B2A'; } else if (v.st !== 'merged') { text = L.bq_m_notFound.split(' — ')[0]; color = '#B91C1C'; } }
+          else if (type === 'products') { return { isMatch: true, text: v.st === 'err' ? '—' : v.codeAuto ? L.bq_m_pNewAuto : fill(L.bq_m_pNew, { c: v.code }), color: v.st === 'err' ? '#647574' : '#15803D', hasPct: false, pct: '', pctFg: '', pctBg: '', canPick: false, pickLabel: '', pick: () => {}, align: 'flex-start' }; }
+          else if (isKt) { if (v.exist) { text = fill(L.kt_imExist, { n: v.existName }); color = '#1D4ED8'; } else if (v.st !== 'err') { text = L.kt_imNew; color = '#15803D'; } return { isMatch: true, text, color, hasPct: false, pct: '', pctFg: '', pctBg: '', canPick: false, pickLabel: '', pick: () => {}, align: 'flex-start' }; }
+          else if (type === 'cash') { const a = v.acct ? D.accById(v.acct) : null; if (a) { text = a.name; color = '#172B2A'; } else if (v.st !== 'merged') { text = L.bq_m_acctNotFound; color = '#B91C1C'; } }
+          else { if (v.party != null) { text = D.partyName(type, v.party); color = '#172B2A'; } else { text = L.bq_m_partyNotFound; color = '#B91C1C'; } }
+          const P = pct(c != null ? c : 0), isManual = (type === 'goods' || type === 'prices') ? v.manual : s.pick[v.i] != null;
+          return { isMatch: true, text, color, hasPct: c != null || isManual, pct: isManual ? L.bq_manual : c + '%', pctFg: isManual ? '#1D4ED8' : P[0], pctBg: isManual ? '#EFF6FF' : P[1], canPick: v.st !== 'merged' && (v.st !== 'ok' || isManual), pickLabel: ((type === 'goods' || type === 'prices') ? v.pid : type === 'cash' ? v.acct : v.party) != null ? L.bq_change : L.bq_choose, pick: () => this.openPick(v), align: 'flex-start' }; }
+        const raw = v.v[k] == null ? '' : String(v.v[k]), isN = NUMF.includes(k);
+        if (editable && EDIT[type].includes(k)) { const bad = v.msgs.some(m => m.t === 'err' && ((k === 'qty' && /^qty/.test(m.c)) || (k === 'exp' && /^exp/.test(m.c)) || (k === 'zone' && /zone/i.test(m.c)) || (k === 'cost' && m.c === 'costBad') || (k === 'batch' && m.c === 'batchMissing') || (k === 'doc' && m.c === 'docMissing') || (k === 'date' && /^date/.test(m.c)) || (k === 'due' && /^due/.test(m.c)) || (['sum', 'left'].includes(k) && m.c === 'sumBad') || (k === 'stir' && /^stir/.test(m.c)) || (k === 'cname' && m.c === 'nameMissing') || (k === 'limit' && m.c === 'limitBad')));
+          return { isInput: true, value: raw, label: (L['bq_f_' + k] || L['kt_f_' + k] || L['nr_f_' + k]), border: bad ? '#B91C1C' : '#E2E8F0', font: ['batch', 'doc', 'stir'].includes(k) ? mono : 'inherit', talign: isN ? 'right' : 'left', onChange: e => { const val = e.target.value; this.setState(st => ({ fix: { ...st.fix, [v.i]: { ...(st.fix[v.i] || {}), [k]: val } } })); }, align: 'stretch' }; }
+        const shownTxt = k === 'zone' && v.zone && (type === 'goods' || type === 'prices') ? (D.zoneType(p.branch, p.wh, v.zone).label + (raw && D.bqNorm ? '' : '')) : raw || '—';
+        return { isText: true, text: k === 'zone' ? (raw ? `${raw}${v.zone ? ' → ' + D.zoneType(p.branch, p.wh, v.zone).label : ''}` : (v.zone ? D.zoneType(p.branch, p.wh, v.zone).label : '—')) : shownTxt, font: ['batch', 'doc'].includes(k) ? mono : 'inherit', size: ['batch', 'doc'].includes(k) ? '12.5px' : '13px', weight: ['qty', 'left'].includes(k) ? 600 : 400, color: k === 'zone' && v.zone === 'karantin' ? '#B45309' : '#172B2A', align: isN ? 'flex-end' : 'flex-start' }; });
+      return { i: String(v.i), bg: v.st === 'err' ? '#FFFBFB' : '#FFFFFF', stIcon: S[0], stFg: S[1], stBg: S[2], stLabel: L['bq_s_' + v.st], cells }; });
+    const kp = (k, icon, fg, bg, n) => ({ label: L['bq_k_' + k], icon, fg, bg, n: fN(n), on: s.filter === k, border: s.filter === k ? '#0D9488' : '#E2E8F0', pick: () => this.setState({ filter: s.filter === k && k !== 'all' ? 'all' : k }) });
+    const kpis = [kp('all', 'list', '#5B6B6A', '#F5F7F8', V.length), kp('ok', 'circle-check', '#15803D', '#F0FDF4', cnt.ok + cnt.merged), kp('warn', 'triangle-alert', '#B45309', '#FFFBEB', cnt.warn), kp('err', 'octagon-x', '#B91C1C', '#FEF2F2', cnt.err)];
+    // step 5
+    const good = V.filter(v => v.st === 'ok' || v.st === 'warn'), lines = s.step === 5 ? D.bqLinesFrom(type, good) : [];
+    const isPr = type === 'prices', resKpis = isPr ? [{ label: L.nr_linesT, value: fN(lines.length) }, { label: L.bq_rWarn, value: fN(cnt.warn) }, { label: L.nr_dAvg ? L.nr_dAvg.replace(' {x}%', '') : '', value: (() => { const a = lines.filter(l => l.cur > 0); return a.length ? (Math.round(a.reduce((x, l) => x + (l.price - l.cur) / l.cur * 100, 0) / a.length * 10) / 10).toString().replace('.', ',') + '%' : '—'; })() }] : isKt ? [{ label: L.kt_imNew, value: fN(lines.filter(l => !l.exist).length) }, { label: L.kt_addTerms, value: fN(lines.filter(l => l.exist && V.find(v => v.i === l.row && !v.msgs.some(m => m.c === 'termsExist'))).length) }, { label: L.bq_rWarn, value: fN(cnt.warn) }] : (type === 'goods' || type === 'prices') ? [{ label: L.bq_rWarn, value: fN(cnt.warn) }, { label: L.bq_rQuar, value: fN(lines.filter(l => l.zone === 'karantin').length) }, { label: L.bq_rQty, value: fN(lines.reduce((a, l) => a + (l.qty || 0), 0)) }, { label: L.bq_rCost, value: fM(lines.reduce((a, l) => a + (l.qty || 0) * (l.cost || 0), 0)) }]
+      : type === 'cash' ? [{ label: L.bq_rWarn, value: fN(cnt.warn) }, { label: L.bq_rSum, value: fM(lines.reduce((a, l) => a + (l.sum || 0), 0)) }] : [{ label: L.bq_rWarn, value: fN(cnt.warn) }, { label: L.bq_rSum, value: fM(lines.reduce((a, l) => a + (l.left || 0), 0)) }];
+    if (cnt.merged) resKpis.splice(1, 0, { label: L.bq_rMerged, value: fN(cnt.merged) });
+    const errRows = V.filter(v => v.st === 'err');
+    const dlErr = () => { const hdrs = H.slice(), rows = this.dataRows(); const out = [hdrs.concat([L.bq_cMsg])].concat(errRows.map(v => (rows[v.i - 1] || []).map((c, j) => { const f = Object.keys(s.map).find(k => s.map[k] === j); return f && s.fix[v.i] && s.fix[v.i][f] != null ? s.fix[v.i][f] : c; }).concat([v.msgs.filter(m => m.t === 'err').map(m => fill(L['bq_m_' + m.c] || L['kt_m_' + m.c] || L['nr_m_' + m.c], m.p)).join('; ')])));
+      download(s.file.file.replace(/\.(xlsx|csv)$/i, '') + '_xatolar.csv', csv(out)); this.toast(fill(L.bq_tDl, { n: errRows.length })); };
+    // pick dialog
+    const pk = s.pk, pf = (type === 'goods' || type === 'prices') ? 'name' : type === 'cash' ? 'acct' : 'party';
+    const pickOpts = (type === 'goods' || type === 'prices') ? D.PRODUCTS.filter(x => x.active).map(x => ({ value: x.id, label: x.name, sub: x.maker, search: `${x.code} ${x.name} ${x.classifier}` })) : type === 'cash' ? D.accountsOf(p.branch).map(a => ({ value: a.id, label: a.name, sub: a.acc || '' })) : type === 'mt' ? D.custsIn(p.branch).map(c => ({ value: c.id, label: c.name, sub: 'STIR ' + c.stir })) : D.SUPPLIERS.map(x => ({ value: x.name, label: x.name, sub: 'STIR ' + x.stir }));
+    const sims = pk && (type === 'goods' || type === 'prices') ? D.bqSimilar(pk.name, 3).map(m => { const on = pk.val === m.pid, P = pct(m.conf); return { name: m.name, pct: m.conf + '%', pctFg: P[0], pctBg: P[1], on, icon: on ? 'circle-check' : 'circle', bg: on ? '#DDF5EE' : '#FFFFFF', border: on ? '#0D9488' : '#E2E8F0', pick: () => this.setState(st => ({ pk: { ...st.pk, val: m.pid }, pkErr: '' })) }; }) : [];
+    const nSame = pk ? sameN(pf, pk.name) : 0;
+    const crName = s.create ? s.create.name : '', crSims = s.create ? D.bqSimilar(crName, 3).filter(m => m.conf >= 40) : [];
+    const createItems = s.create ? [{ icon: 'pill', color: '#0F766E', text: crName }, { icon: 'search', text: L.bq_createDup }].concat(crSims.length ? crSims.map(m => ({ icon: 'copy', color: m.conf >= 60 ? '#B45309' : '#5B6B6A', text: `${m.name} · ${m.conf}%` })) : [{ icon: 'circle-check', color: '#15803D', text: L.bq_createNone }]) : [];
+    const S1 = s.step === 1, bn = (D.BRANCHES.find(b => b.code === p.branch) || {}).name || p.branch;
+    const stepDesc = [L.bq_w1D, L.bq_w2D, L.bq_w3D, L.bq_w4D, L.bq_w5D][s.step - 1];
+    const mn = s.mapNote;
+    return {
+      ...base, rootRef: this.rootRef, crumb: [tLabel, p.place || bn].concat(isKt || type === 'prices' ? [] : [fill(L.bq_hCut + ': {d}', { d: p.cutoff || D.BQ_CUT })]).join(' · '), cancel: () => p.onCancel && p.onCancel(),
+      gridCols: narrow ? 'minmax(0,1fr)' : '232px minmax(0,1fr)', navPos: narrow ? 'static' : 'sticky', navDir: narrow ? 'row' : 'column', steps,
+      stepOf: fill(L.bq_stepOf, { n: s.step }), stepTitle: L['bq_w' + s.step], stepDesc: s.step === 5 ? '' : isKt && s.step === 1 ? L.kt_imW1D : stepDesc, errText: s.err,
+      isS1: S1, isS2: s.step === 2, isS3: s.step === 3, isS4: s.step === 4, isS5: s.step === 5,
+      noFile: !s.file, hasFile: !!s.file, fileRef: this.fileRef, browse: () => this.fileRef.current && this.fileRef.current.click(), onFile: e => this.handleFile(e.target.files && e.target.files[0]),
+      dropBorder: s.drag ? '#0D9488' : '#CBD5D3', dropBg: s.drag ? '#F0FAF8' : '#FFFFFF', onDragOver: e => { e.preventDefault(); if (!this.state.drag) this.setState({ drag: true }); }, onDragLeave: () => this.setState({ drag: false }), onDrop: e => { e.preventDefault(); this.setState({ drag: false }); this.handleFile(e.dataTransfer.files && e.dataTransfer.files[0]); },
+      sampleName: D.bqSample(type, p.branch, p.wh).file, loadSample: () => this.loadSample(), dlTpl: () => { download(`MEDIX_shablon_${type}.csv`, csv([F.map(f => (L['bq_f_' + f.key] || L['kt_f_' + f.key] || L['nr_f_' + f.key]) + (f.req ? ' *' : ''))])); this.toast(L.bq_tTpl); },
+      fileName: s.file ? s.file.file : '', fileMeta: s.file ? `${(s.file.size / 1024).toFixed(1).replace('.', ',')} KB · ${fill(L.bq_sheetsN, { n: s.file.sheets.length })} · ${fill(L.bq_dataN, { n: dataN })}` : '', removeFile: () => this.setState({ file: null, max: 1, map: {}, fix: {}, pick: {}, merged: {} }),
+      s2Cols: narrow ? 1 : 2, sheetOpts: s.file ? s.file.sheets.map((sh, i) => ({ value: i, label: sh.name, sub: fill(L.bq_dataN, { n: Math.max(0, sh.grid.length - 1) }) })) : [], sheetVal: s.sheet, setSheet: v => this.setState({ sheet: v, hdr: 1, map: {}, max: 2 }),
+      hdrStr: String(s.hdr), onHdr: e => { const n = parseInt(e.target.value, 10); this.setState({ hdr: isNaN(n) ? 0 : n, map: {}, max: 2 }); }, hdrDec: () => this.setState(st => ({ hdr: Math.max(1, st.hdr - 1), map: {}, max: 2 })), hdrInc: () => this.setState(st => ({ hdr: Math.min(g.length, st.hdr + 1), map: {}, max: 2 })),
+      dataN: fill(L.bq_dataN, { n: dataN }), pvRows, pvGrid: '72px ' + Array.from({ length: pvN }, () => 'minmax(110px,1fr)').join(' '), pvMinW: 72 + pvN * 110,
+      mapNote: mn ? mn.text : '', mapTone: mn && mn.kind === 'saved' ? 'success' : 'info', mapIcon: mn && mn.kind === 'profile' ? 'bookmark-check' : mn && mn.kind === 'saved' ? 'circle-check' : 'wand-sparkles', mapRows, colOpts, profName,
+      autoMap: () => { const m = D.bqAutoMap(type, H); this.setState({ map: m, err: '', mapNote: { kind: 'auto', text: fill(L.bq_autoDone, { a: Object.keys(m).length, b: F.length }) } }); },
+      saveProf: () => { const e = this.stepErr(3); if (e) return this.setState({ err: e }); const m = {}; Object.entries(s.map).forEach(([k, ix]) => { if (ix >= 0) m[k] = H[ix]; }); D.store.impProfiles = { ...(D.store.impProfiles || {}), [type]: { name: profName, map: m } }; this.setState({ mapNote: { kind: 'saved', text: fill(L.bq_profSaved, { p: profName }) } }); },
+      kCols: narrow ? 2 : 4, kpis, vGrid: gridT, vMinW: 180 + cols.reduce((a, c) => a + (parseInt(String(c[1]).replace(/^minmax\((\d+).*/, '$1'), 10) || 120), 0), vHead, vRows, vEmpty: !vRows.length,
+      w5Sub: type === 'prices' ? L.nr_imW5 : isKt ? L.kt_imW1D : L.bq_w5D, resTitle: isKt ? fill(L.kt_imRes, { a: lines.filter(l => !l.exist).length, b: lines.filter(l => l.exist).length }) + (errRows.length ? ' · ' + fill(L.bq_resT, { a: good.length, b: errRows.length }).split(', ')[1] : '') : errRows.length ? fill(L.bq_resT, { a: good.length, b: errRows.length }) : fill(L.bq_resT0, { a: good.length }), resIcon: good.length ? 'circle-check' : 'circle-alert', resFg: good.length ? '#15803D' : '#B91C1C', resBg: good.length ? '#F0FDF4' : '#FEF2F2', resBorder: good.length ? '#BBF7D0' : '#FECACA',
+      rCols: narrow ? 2 : resKpis.length, resKpis, hasErrRows: errRows.length > 0, errRowsT: fill(L.bq_resT, { a: good.length, b: errRows.length }).split(', ')[1] || '', dlErr,
+      footDirty: !!s.err, footNote: s.err, backLabel: S1 ? L.bq_w_close : L.bq_back, nextLabel: s.step === 5 ? (type === 'prices' ? L.nr_imCreate : isKt ? L.kt_imCreate : L.bq_create) : L.bq_next, goBack: () => this.back(), goNext: () => this.next(),
+      pickOpen: !!pk, pick: pk || {}, pickTitle: (type === 'goods' || type === 'prices') ? L.bq_pickT : (type === 'cash' ? L.bq_f_acct : L.bq_f_party), hasSim: sims.length > 0, sims, pickOpts, setPickVal: v => this.setState(st => ({ pk: { ...st.pk, val: v }, pkErr: '' })), pickErr: s.pkErr,
+      hasPickAll: nSame > 1, pickAllLabel: fill(L.bq_pickAll, { n: nSame }), paBg: pk && pk.all ? '#0F766E' : '#FFFFFF', paBorder: pk && pk.all ? '#0F766E' : '#647574', togglePickAll: () => this.setState(st => ({ pk: { ...st.pk, all: !st.pk.all } })),
+      canCreate: (type === 'goods' || type === 'prices'), openCreate: () => this.setState(st => ({ create: { name: st.pk.name } })), closePick: () => this.setState({ pk: null }), applyPick: () => this.applyPick(), stop: e => e.stopPropagation(),
+      createOpen: !!s.create, createItems, closeCreate: () => this.setState({ create: null }), doCreate: () => { try { localStorage.setItem('medix-product-prefill', JSON.stringify({ name: crName, at: Date.now() })); window.open('Medix ERP.dc.html#products', '_blank'); } catch (e) {} this.toast(fill(L.bq_tCreate, { n: crName })); this.setState({ create: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

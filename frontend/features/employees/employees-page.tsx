@@ -1,6 +1,7 @@
 "use client";
 
-import { Ban, CircleCheck, KeyRound, LockOpen, UserPlus, Users } from "lucide-react";
+import { Ban, Building2, CircleCheck, KeyRound, LockOpen, UserPlus, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -25,29 +26,56 @@ import {
   useCreateEmployee,
   useEmployees,
   useResetPassword,
+  useSetAllBranches,
   useUnblockEmployee,
   type Employee,
 } from "./api";
 
-type Dialog = { kind: "block" | "reset"; employee: Employee } | null;
+type Dialog = { kind: "block" | "reset" | "allBranches"; employee: Employee } | null;
 
 export function EmployeesPage() {
+  const t = useTranslations("employees");
   const me = useMe();
   const canEdit = can(me.data, "staff.edit");
+  // E3: Buxgalterga barcha filiallar — faqat Direktor beradi
+  const isDirector = me.data?.role.code === "DIRECTOR";
   const employees = useEmployees();
   const unblock = useUnblockEmployee();
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
 
-  if (employees.error instanceof ApiError && employees.error.isForbidden)
-    return <ForbiddenState description="Xodimlarni Direktor va Bosh administrator boshqaradi." />;
+  if (employees.error instanceof ApiError && employees.error.isForbidden) return <ForbiddenState description={t("forbidden")} />;
 
   const rows = filterEmployees(employees.data ?? [], query);
+  const editItems = (e: Employee) => [
+    e.status === "BLOCKED"
+      ? {
+          key: "unblock",
+          label: t("unblock"),
+          icon: <LockOpen size={16} strokeWidth={1.5} aria-hidden />,
+          onSelect: () =>
+            unblock.mutate(e.id, {
+              onSuccess: () => toast({ tone: "success", title: t("unblocked"), description: e.fullName }),
+            }),
+        }
+      : {
+          key: "block",
+          label: t("block"),
+          icon: <Ban size={16} strokeWidth={1.5} aria-hidden />,
+          onSelect: () => setDialog({ kind: "block", employee: e }),
+        },
+    {
+      key: "reset",
+      label: t("resetPassword"),
+      icon: <KeyRound size={16} strokeWidth={1.5} aria-hidden />,
+      onSelect: () => setDialog({ kind: "reset", employee: e }),
+    },
+  ];
   const columns: TableColumn<Employee>[] = [
     {
       key: "fullName",
-      title: "Xodim",
+      title: t("employee"),
       render: (e) => (
         <span className="flex flex-col">
           <span>{e.fullName}</span>
@@ -55,23 +83,36 @@ export function EmployeesPage() {
         </span>
       ),
     },
-    { key: "login", title: "Login", mono: true },
-    { key: "roleName", title: "Rol" },
+    { key: "login", title: t("login"), mono: true },
+    {
+      key: "roleName",
+      title: t("role"),
+      render: (e) => (
+        <span className="flex flex-wrap items-center gap-2">
+          <span>{e.roleName}</span>
+          {e.allBranches ? (
+            <Badge tone="info" icon={Building2}>
+              {t("allBranches.badge")}
+            </Badge>
+          ) : null}
+        </span>
+      ),
+    },
     {
       key: "status",
-      title: "Holat",
+      title: t("status"),
       render: (e) =>
         e.status === "BLOCKED" ? (
           <Badge tone="danger" icon={Ban}>
-            Bloklangan
+            {t("blocked")}
           </Badge>
         ) : e.mustChangePassword ? (
           <Badge tone="warning" icon={KeyRound}>
-            Parol almashtirilmagan
+            {t("mustChangePassword")}
           </Badge>
         ) : (
           <Badge tone="success" icon={CircleCheck}>
-            Faol
+            {t("active")}
           </Badge>
         ),
     },
@@ -80,10 +121,10 @@ export function EmployeesPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Xodimlar</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canEdit ? (
           <Button icon={UserPlus} onClick={() => setCreating(true)}>
-            Xodim qoʻshish
+            {t("add")}
           </Button>
         ) : null}
       </div>
@@ -91,7 +132,7 @@ export function EmployeesPage() {
         <ErrorState onRetry={() => employees.refetch()} />
       ) : (
         <Table
-          caption="Xodimlar"
+          caption={t("title")}
           columns={columns}
           rows={rows}
           rowKey={(e) => String(e.id)}
@@ -99,42 +140,31 @@ export function EmployeesPage() {
           toolbar={
             <div className="w-80">
               <TextField
-                label="Qidirish"
+                label={t("search")}
                 variant="search"
                 size="sm"
                 value={query}
                 onChange={setQuery}
-                placeholder="Ism, login yoki rol"
+                placeholder={t("searchPlaceholder")}
                 className="[&>label]:sr-only"
               />
             </div>
           }
           rowActions={(e) =>
-            canEdit ? (
+            canEdit || (isDirector && e.roleCode === "ACCOUNTANT") ? (
               <RowMenu
                 items={[
-                  e.status === "BLOCKED"
-                    ? {
-                        key: "unblock",
-                        label: "Blokdan chiqarish",
-                        icon: <LockOpen size={16} strokeWidth={1.5} aria-hidden />,
-                        onSelect: () =>
-                          unblock.mutate(e.id, {
-                            onSuccess: () => toast({ tone: "success", title: "Xodim blokdan chiqarildi", description: e.fullName }),
-                          }),
-                      }
-                    : {
-                        key: "block",
-                        label: "Bloklash",
-                        icon: <Ban size={16} strokeWidth={1.5} aria-hidden />,
-                        onSelect: () => setDialog({ kind: "block", employee: e }),
-                      },
-                  {
-                    key: "reset",
-                    label: "Vaqtinchalik parol berish",
-                    icon: <KeyRound size={16} strokeWidth={1.5} aria-hidden />,
-                    onSelect: () => setDialog({ kind: "reset", employee: e }),
-                  },
+                  ...(isDirector && e.roleCode === "ACCOUNTANT"
+                    ? [
+                        {
+                          key: "allBranches",
+                          label: e.allBranches ? t("allBranches.revoke") : t("allBranches.grant"),
+                          icon: <Building2 size={16} strokeWidth={1.5} aria-hidden />,
+                          onSelect: () => setDialog({ kind: "allBranches", employee: e }),
+                        },
+                      ]
+                    : []),
+                  ...(canEdit ? editItems(e) : []),
                 ]}
               />
             ) : null
@@ -143,11 +173,7 @@ export function EmployeesPage() {
             query ? (
               <NoResultsState onClearFilters={() => setQuery("")} />
             ) : (
-              <EmptyState
-                icon={Users}
-                title="Hali xodim qoʻshilmagan"
-                description="Loginlarni siz yaratasiz; xodim birinchi kirishda parolni almashtiradi."
-              />
+              <EmptyState icon={Users} title={t("emptyTitle")} description={t("emptyDescription")} />
             )
           }
         />
@@ -155,11 +181,13 @@ export function EmployeesPage() {
       <CreateEmployeeDrawer open={creating} onClose={() => setCreating(false)} />
       {dialog?.kind === "block" ? <BlockDialog employee={dialog.employee} onClose={() => setDialog(null)} /> : null}
       {dialog?.kind === "reset" ? <ResetDialog employee={dialog.employee} onClose={() => setDialog(null)} /> : null}
+      {dialog?.kind === "allBranches" ? <AllBranchesDialog employee={dialog.employee} onClose={() => setDialog(null)} /> : null}
     </>
   );
 }
 
 function BlockDialog({ employee, onClose }: { employee: Employee; onClose: () => void }) {
+  const t = useTranslations("employees.blockDialog");
   const block = useBlockEmployee();
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string>();
@@ -170,29 +198,65 @@ function BlockDialog({ employee, onClose }: { employee: Employee; onClose: () =>
       onClose={onClose}
       tone="danger"
       size="sm"
-      title={`${employee.fullName}ni bloklaysizmi?`}
+      title={t("title", { name: employee.fullName })}
       primaryAction={{
-        label: "Xodimni bloklash",
+        label: t("action"),
         loading: block.isPending,
         onClick: () => {
-          if (!reason.trim()) return setError("Sabab kiritilmagan. Nega bloklanayotganini yozing.");
+          if (!reason.trim()) return setError(t("reasonRequired"));
           block.mutate(
             { id: employee.id, reason: reason.trim() },
-            { onSuccess: () => (toast({ tone: "success", title: "Xodim bloklandi", description: employee.fullName }), onClose()) },
+            { onSuccess: () => (toast({ tone: "success", title: t("done"), description: employee.fullName }), onClose()) },
           );
         },
       }}
     >
-      <p>Xodim tizimga kira olmaydi, ochiq sessiyalari darhol tugatiladi. Keyin blokdan chiqarish mumkin.</p>
+      <p>{t("consequence")}</p>
       <div className="mt-4">
-        <TextField label="Sabab" value={reason} onChange={setReason} error={error ?? err.fields.reason} required autoFocus />
+        <TextField label={t("reason")} value={reason} onChange={setReason} error={error ?? err.fields.reason} required autoFocus />
       </div>
       {err.message ? <Alert tone="danger" title={err.message} className="mt-4" /> : null}
     </Modal>
   );
 }
 
+/** E3: Direktor Buxgalterga barcha filiallar doirasini beradi / oladi (audit; xodim qayta kiradi). */
+function AllBranchesDialog({ employee, onClose }: { employee: Employee; onClose: () => void }) {
+  const t = useTranslations("employees.allBranches");
+  const set = useSetAllBranches();
+  const enable = !employee.allBranches;
+  const err = describeError(set.error);
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      size="sm"
+      tone={enable ? undefined : "danger"}
+      title={enable ? t("grantTitle", { name: employee.fullName }) : t("revokeTitle", { name: employee.fullName })}
+      primaryAction={{
+        label: enable ? t("grant") : t("revoke"),
+        loading: set.isPending,
+        onClick: () =>
+          set.mutate(
+            { id: employee.id, enabled: enable },
+            {
+              onSuccess: () => (
+                toast({ tone: "success", title: enable ? t("granted") : t("revoked"), description: employee.fullName }),
+                onClose()
+              ),
+            },
+          ),
+      }}
+    >
+      <p className="text-text-secondary">{enable ? t("grantHint") : t("revokeHint")}</p>
+      <p className="mt-2 text-text-secondary">{t("sessions")}</p>
+      {err.message ? <Alert tone="danger" title={err.message} className="mt-4" /> : null}
+    </Modal>
+  );
+}
+
 function ResetDialog({ employee, onClose }: { employee: Employee; onClose: () => void }) {
+  const t = useTranslations("employees");
   const reset = useResetPassword();
   const [password, setPassword] = useState("");
   const err = describeError(reset.error);
@@ -201,9 +265,9 @@ function ResetDialog({ employee, onClose }: { employee: Employee; onClose: () =>
       open
       onClose={onClose}
       size="sm"
-      title="Vaqtinchalik parol berish"
+      title={t("resetPassword")}
       primaryAction={{
-        label: "Parolni saqlash",
+        label: t("resetDialog.save"),
         loading: reset.isPending,
         onClick: () =>
           reset.mutate(
@@ -212,8 +276,8 @@ function ResetDialog({ employee, onClose }: { employee: Employee; onClose: () =>
               onSuccess: () => (
                 toast({
                   tone: "success",
-                  title: "Vaqtinchalik parol saqlandi",
-                  description: `${employee.fullName} keyingi kirishda parolni almashtiradi.`,
+                  title: t("resetDialog.done"),
+                  description: t("resetDialog.doneDescription", { name: employee.fullName }),
                 }),
                 onClose()
               ),
@@ -221,16 +285,14 @@ function ResetDialog({ employee, onClose }: { employee: Employee; onClose: () =>
           ),
       }}
     >
-      <p className="mb-4 text-text-secondary">
-        {employee.fullName} ({employee.login}) ning ochiq sessiyalari tugatiladi.
-      </p>
+      <p className="mb-4 text-text-secondary">{t("resetDialog.sessions", { name: employee.fullName, login: employee.login })}</p>
       <TextField
-        label="Vaqtinchalik parol"
+        label={t("temporaryPassword")}
         variant="password"
         value={password}
         onChange={setPassword}
         error={err.fields.temporaryPassword}
-        hint="Kamida 8 belgi"
+        hint={t("passwordHint")}
         autoComplete="new-password"
         required
         autoFocus
@@ -243,6 +305,7 @@ function ResetDialog({ employee, onClose }: { employee: Employee; onClose: () =>
 const emptyForm = { fullName: "", login: "", phone: "", position: "", temporaryPassword: "" };
 
 function CreateEmployeeDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations("employees");
   const create = useCreateEmployee();
   const roles = useRoles();
   const branches = useBranches();
@@ -266,7 +329,11 @@ function CreateEmployeeDrawer({ open, onClose }: { open: boolean; onClose: () =>
       { ...form, roleCode: roleCode ?? "", branchId: branchId ? Number(branchId) : undefined },
       {
         onSuccess: (emp) => (
-          toast({ tone: "success", title: "Xodim qoʻshildi", description: `${emp.fullName} — login: ${emp.login}` }),
+          toast({
+            tone: "success",
+            title: t("create.added"),
+            description: t("create.addedDescription", { name: emp.fullName, login: emp.login }),
+          }),
           close()
         ),
       },
@@ -278,31 +345,31 @@ function CreateEmployeeDrawer({ open, onClose }: { open: boolean; onClose: () =>
       open={open}
       onClose={close}
       size="lg"
-      kind="Xodim"
-      title="Yangi xodim"
+      kind={t("employee")}
+      title={t("create.new")}
       actions={
         <>
           <Button variant="secondary" onClick={close}>
-            Ortga
+            {t("create.back")}
           </Button>
           <Button loading={create.isPending} onClick={() => submit()}>
-            Xodimni saqlash
+            {t("create.save")}
           </Button>
         </>
       }
     >
       <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
         <TextField
-          label="F.I.Sh."
+          label={t("create.fullName")}
           value={form.fullName}
           onChange={set("fullName")}
           error={err.fields.fullName}
           required
           className="col-span-2"
         />
-        <TextField label="Login" value={form.login} onChange={set("login")} error={err.fields.login} required />
+        <TextField label={t("login")} value={form.login} onChange={set("login")} error={err.fields.login} required />
         <Select
-          label="Rol"
+          label={t("role")}
           required
           searchable
           value={roleCode}
@@ -311,22 +378,22 @@ function CreateEmployeeDrawer({ open, onClose }: { open: boolean; onClose: () =>
           options={(roles.data ?? []).map((r) => ({ value: r.code, label: r.name }))}
         />
         <Select
-          label="Filial"
+          label={t("create.branch")}
           value={branchId}
           onChange={setBranchId}
-          placeholder="Barcha filiallar"
-          hint="Direktor, Bosh administrator va Buxgalter barcha filiallarni koʻradi"
+          placeholder={t("create.allBranches")}
+          hint={t("create.branchHint")}
           options={(branches.data ?? []).map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
         />
-        <TextField label="Lavozim" value={form.position} onChange={set("position")} error={err.fields.position} />
-        <TextField label="Telefon" value={form.phone} onChange={set("phone")} error={err.fields.phone} />
+        <TextField label={t("create.position")} value={form.position} onChange={set("position")} error={err.fields.position} />
+        <TextField label={t("create.phone")} value={form.phone} onChange={set("phone")} error={err.fields.phone} />
         <TextField
-          label="Vaqtinchalik parol"
+          label={t("temporaryPassword")}
           variant="password"
           value={form.temporaryPassword}
           onChange={set("temporaryPassword")}
           error={err.fields.temporaryPassword}
-          hint="Kamida 8 belgi"
+          hint={t("passwordHint")}
           autoComplete="new-password"
           required
         />

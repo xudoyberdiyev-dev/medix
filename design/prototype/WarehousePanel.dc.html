@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:fixed;inset:0;z-index:175;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div onClick="{{ tryClose }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+  <div role="dialog" aria-modal="true" aria-label="{{ title }}" style="position:absolute;top:0;right:0;bottom:0;width:{{ panelW }};max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+    <div style="flex:none;border-bottom:1px solid #E2E8F0">
+      <div style="height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 24px">
+        <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</h2>
+        <button onClick="{{ tryClose }}" aria-label="{{ t.close }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 120ms ease-out,color 120ms ease-out" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="x" size="18"></lucide-i></button>
+      </div>
+      <div role="tablist" style="display:flex;gap:24px;padding:0 24px">
+        <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="2">
+          <button role="tab" aria-selected="{{ tb.active }}" onClick="{{ tb.pick }}" style="display:flex;align-items:center;gap:6px;height:40px;padding:0 2px;margin-bottom:-1px;border:0;border-bottom:2px solid {{ tb.line }};background:transparent;color:{{ tb.color }};font-size:13px;font-weight:{{ tb.weight }};cursor:pointer;white-space:nowrap;transition:color 120ms ease-out" style-hover="color:#172B2A">
+            {{ tb.label }}
+            <sc-if value="{{ tb.hasCount }}"><span style="height:18px;padding:0 6px;border-radius:6px;background:{{ tb.pillBg }};color:{{ tb.pillColor }};font-size:11.5px;line-height:18px;font-weight:500">{{ tb.count }}</span></sc-if>
+            <sc-if value="{{ tb.hasErr }}"><span style="width:6px;height:6px;border-radius:50%;background:#B91C1C"></span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    <div ref="{{ bodyRef }}" style="flex:1;overflow-y:auto;padding:0 24px 56px">
+      <sc-if value="{{ showSummary }}">
+        <div role="alert" style="margin-top:20px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA">
+          <lucide-i name="circle-alert" size="16" style="color:#B91C1C"></lucide-i>
+          <span style="flex:1;font-size:13px;line-height:18px;color:#B91C1C">{{ summary }}</span>
+          <button onClick="{{ goFirst }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer;white-space:nowrap">{{ t.goFirst }}</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isBasic }}" hint-placeholder-val="{{ true }}">
+      <div style="padding-top:24px;display:flex;flex-direction:column;gap:20px">
+        <div data-f="branch" style="display:flex;flex-direction:column;position:relative">
+          <span style="font-size:13px;line-height:18px;font-weight:500">{{ t.branch }} <span style="color:#B91C1C">*</span></span>
+          <button onClick="{{ toggleBranch }}" style="margin-top:6px;width:100%;height:34px;padding:0 10px 0 12px;border:1px solid {{ branchBorder }};border-radius:8px;background:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:14px;color:{{ branchColor }};text-align:left;cursor:pointer">
+            <lucide-i name="building-2" size="16" style="color:#647574"></lucide-i>
+            <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ branchLabel }}</span>
+            <sc-if value="{{ hasBranchCode }}"><span style="height:20px;padding:0 6px;border-radius:6px;background:#F5F7F8;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:20px;color:#5B6B6A">{{ branchCode }}</span></sc-if>
+            <lucide-i name="chevron-down" size="16" style="color:#647574"></lucide-i>
+          </button>
+          <sc-if value="{{ branchOpen }}">
+            <div style="position:absolute;top:60px;left:0;right:0;z-index:5;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px">
+              <sc-for list="{{ branchOpts }}" as="o"><button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 8px;border:0;border-radius:6px;background:{{ o.bg }};font-size:13px;color:#172B2A;cursor:pointer;text-align:left" style-hover="background:#F8FAFA"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5B6B6A;width:32px">{{ o.code }}</span><span style="flex:1">{{ o.name }}</span><sc-if value="{{ o.selected }}"><lucide-i name="check" size="16" style="color:#0F766E"></lucide-i></sc-if></button></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ er.branch }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.branch }}</div></sc-if>
+        </div>
+        <div data-f="name" style="display:flex;flex-direction:column">
+          <label for="wp-name" style="font-size:13px;line-height:18px;font-weight:500">{{ t.name }} <span style="color:#B91C1C">*</span></label>
+          <input id="wp-name" ref="{{ nameRef }}" value="{{ f.name }}" onChange="{{ onName }}" onFocus="{{ focusName }}" onBlur="{{ blur }}" placeholder="{{ t.namePh }}" style="margin-top:6px;width:100%;height:34px;padding:0 12px;border:1px solid {{ nameBorder }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ nameShadow }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+          <sc-if value="{{ er.name }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.name }}</div></sc-if>
+        </div>
+        <div data-f="address" style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;line-height:18px;font-weight:500">{{ t.address }}</span>
+          <button role="checkbox" aria-checked="{{ f.same }}" onClick="{{ toggleSame }}" style="display:flex;align-items:center;gap:10px;padding:0;border:0;background:transparent;font-size:13px;line-height:18px;color:#172B2A;cursor:pointer;text-align:left">
+            <span style="width:16px;height:16px;flex:none;border-radius:4px;border:1px solid {{ sameBorder }};background:{{ sameBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ f.same }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span>{{ t.same }}
+          </button>
+          <sc-if value="{{ showBranchAddr }}"><span style="padding-left:26px;font-size:12px;line-height:16px;color:#647574">{{ branchAddr }}</span></sc-if>
+          <sc-if value="{{ showAddr }}">
+            <input value="{{ f.address }}" onChange="{{ onAddr }}" onFocus="{{ focusAddr }}" onBlur="{{ blur }}" placeholder="{{ t.addrPh }}" style="width:100%;height:34px;padding:0 12px;border:1px solid {{ addrBorder }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ addrShadow }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+            <sc-if value="{{ er.address }}"><div style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.address }}</div></sc-if>
+          </sc-if>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:13px;line-height:18px;font-weight:500">{{ t.type }} <span style="color:#B91C1C">*</span></span>
+          <div role="radiogroup" style="margin-top:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+            <sc-for list="{{ typeCards }}" as="c" hint-placeholder-count="2">
+              <button role="radio" aria-checked="{{ c.selected }}" onClick="{{ c.pick }}" style="position:relative;min-height:76px;padding:12px 32px 12px 12px;border:1.5px solid {{ c.border }};border-radius:10px;background:{{ c.bg }};display:flex;align-items:flex-start;gap:10px;text-align:left;cursor:pointer;transition:background 120ms ease-out,border-color 120ms ease-out">
+                <span style="width:32px;height:32px;flex:none;border-radius:8px;background:{{ c.iconBg }};color:{{ c.iconFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ c.icon }}" size="16"></lucide-i></span>
+                <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                  <span style="font-size:14px;line-height:20px;font-weight:500">{{ c.label }}</span>
+                  <span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ c.help }}</span>
+                </span>
+                <sc-if value="{{ c.selected }}"><span style="position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:#0D9488;color:#FFFFFF;display:flex;align-items:center;justify-content:center"><lucide-i name="check" size="12"></lucide-i></span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+            <div style="display:flex;flex-direction:column"><span style="font-size:13px;line-height:18px;font-weight:500">{{ t.ctrl }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ t.ctrlHelp }}</span></div>
+            <button role="switch" aria-checked="{{ f.controlled }}" aria-label="{{ t.ctrl }}" onClick="{{ toggleCtrl }}" style="width:36px;height:20px;flex:none;padding:2px;border:0;border-radius:999px;background:{{ ctrlBg }};display:flex;justify-content:{{ ctrlJustify }};cursor:pointer;transition:background 120ms ease-out"><span style="width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></button>
+          </div>
+          <sc-if value="{{ f.controlled }}">
+            <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:#FFFBEB;border:1px solid #FDE68A"><lucide-i name="triangle-alert" size="16" style="color:#B45309;margin-top:1px"></lucide-i><span style="font-size:13px;line-height:18px;color:#B45309">{{ t.ctrlWarn }}</span></div>
+          </sc-if>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:13px;line-height:18px;font-weight:500">{{ t.keeper }}</span>
+          <div aria-disabled="true" style="margin-top:6px;height:34px;padding:0 10px 0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#F8FAFA;display:flex;align-items:center;gap:8px;font-size:14px;color:#647574;cursor:not-allowed">
+            <lucide-i name="user" size="16"></lucide-i><span style="flex:1">{{ t.keeperPh }}</span><lucide-i name="chevron-down" size="16"></lucide-i>
+          </div>
+          <div style="margin-top:6px;font-size:12px;line-height:16px;color:#647574">{{ t.keeperHelp }}</div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isZones }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top:20px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#F5F7F8;font-size:12px;line-height:16px;color:#5B6B6A"><lucide-i name="info" size="14" style="color:#647574"></lucide-i>{{ t.zInfo }}</div>
+        <div style="border:1px solid #E2E8F0;border-radius:10px">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 176px 92px 40px;align-items:center;height:32px;padding:0 4px 0 8px;background:#F8FAFA;border-bottom:1px solid #E2E8F0;border-radius:10px 10px 0 0;font-size:12px;font-weight:500;color:#5B6B6A">
+            <span style="padding-left:4px">{{ t.zName }}</span><span style="padding-left:4px">{{ t.zType }}</span><span style="text-align:center">{{ t.zOpen }}</span><span></span>
+          </div>
+          <sc-for list="{{ zones }}" as="z" hint-placeholder-count="2">
+            <div data-f="{{ z.key }}" style="background:{{ z.bg }};border-bottom:1px solid #EEF2F4;transition:background 600ms ease-out">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 176px 92px 40px;align-items:center;min-height:44px;padding:0 4px 0 8px">
+                <input ref="{{ z.ref }}" value="{{ z.name }}" onChange="{{ z.onName }}" onFocus="{{ z.focus }}" onBlur="{{ blur }}" placeholder="{{ t.zNamePh }}" aria-label="{{ t.zName }}" style="width:100%;height:32px;padding:0 6px;border:1px solid {{ z.border }};border-radius:6px;background:#FFFFFF;font-size:13px;color:#172B2A;outline:none;box-shadow:{{ z.shadow }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out" style-hover="border-color:#CBD5D3">
+                <div style="position:relative;padding-left:8px">
+                  <button onClick="{{ z.toggleType }}" style="width:100%;height:32px;padding:0 6px;border:1px solid #E2E8F0;border-radius:6px;background:#FFFFFF;display:flex;align-items:center;gap:6px;cursor:pointer;text-align:left">
+                    <span style="height:22px;padding:0 6px;border-radius:6px;background:{{ z.tBg }};color:{{ z.tFg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden"><lucide-i name="{{ z.tIcon }}" size="12"></lucide-i>{{ z.tLabel }}</span>
+                    <span style="flex:1"></span><lucide-i name="chevron-down" size="14" style="color:#647574"></lucide-i>
+                  </button>
+                  <sc-if value="{{ z.typeOpen }}">
+                    <div style="position:absolute;top:36px;left:8px;right:0;min-width:200px;z-index:6;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px">
+                      <sc-for list="{{ z.opts }}" as="o">
+                        <button onClick="{{ o.pick }}" title="{{ o.tip }}" aria-disabled="{{ o.disabled }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 6px;border:0;border-radius:6px;background:{{ o.bg }};cursor:{{ o.cursor }};opacity:{{ o.op }};text-align:left" style-hover="background:#F8FAFA">
+                          <span style="height:22px;padding:0 6px;border-radius:6px;background:{{ o.cBg }};color:{{ o.cFg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500"><lucide-i name="{{ o.icon }}" size="12"></lucide-i>{{ o.label }}</span>
+                          <span style="flex:1"></span><sc-if value="{{ o.selected }}"><lucide-i name="check" size="14" style="color:#0F766E"></lucide-i></sc-if><sc-if value="{{ o.disabled }}"><lucide-i name="lock" size="12" style="color:#647574"></lucide-i></sc-if>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="display:flex;justify-content:center">
+                  <button role="switch" aria-checked="{{ z.open }}" aria-label="{{ t.zOpen }}" onClick="{{ z.toggleOpen }}" style="width:36px;height:20px;padding:2px;border:0;border-radius:999px;background:{{ z.swBg }};display:flex;justify-content:{{ z.swJustify }};cursor:pointer;transition:background 120ms ease-out"><span style="width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></button>
+                </div>
+                <div style="display:flex;justify-content:center">
+                  <sc-if value="{{ z.canDelete }}"><button onClick="{{ z.remove }}" aria-label="{{ t.zDel }}" title="{{ t.zDel }}" style="width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#FEF2F2;color:#B91C1C"><lucide-i name="trash-2" size="16"></lucide-i></button></sc-if>
+                  <sc-if value="{{ z.isLast }}"><span title="{{ t.zLast }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#647574;cursor:help"><lucide-i name="lock" size="14"></lucide-i></span></sc-if>
+                </div>
+              </div>
+              <sc-if value="{{ z.err }}"><div style="padding:0 8px 8px 12px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ z.err }}</div></sc-if>
+              <sc-if value="{{ z.warn }}"><div style="padding:0 8px 8px 12px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B45309"><lucide-i name="triangle-alert" size="14"></lucide-i>{{ t.zWarn }}</div></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ addZone }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 8px;border:0;border-radius:8px;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#DDF5EE"><lucide-i name="plus" size="16"></lucide-i>{{ t.zAdd }}</button>
+          <div style="position:relative">
+            <button onClick="{{ togglePreset }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 8px 0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA"><lucide-i name="layers" size="16" style="color:#5B6B6A"></lucide-i>{{ t.zPreset }}<lucide-i name="chevron-down" size="14" style="color:#647574"></lucide-i></button>
+            <sc-if value="{{ presetOpen }}">
+              <div style="position:absolute;bottom:38px;left:0;width:360px;max-width:calc(90vw - 48px);z-index:6;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px">
+                <sc-for list="{{ presets }}" as="p">
+                  <button onClick="{{ p.pick }}" title="{{ p.tip }}" aria-disabled="{{ p.disabled }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;padding:10px;border:0;border-radius:6px;background:transparent;cursor:{{ p.cursor }};opacity:{{ p.op }};text-align:left" style-hover="background:#F8FAFA">
+                    <span style="font-size:13px;line-height:18px;font-weight:500;color:#172B2A">{{ p.label }}</span>
+                    <span style="display:flex;flex-wrap:wrap;gap:4px">
+                      <sc-for list="{{ p.chips }}" as="c"><span style="height:24px;padding:0 6px;border-radius:6px;background:{{ c.bg }};color:{{ c.fg }};display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500"><lucide-i name="{{ c.icon }}" size="12"></lucide-i>{{ c.name }}</span></sc-for>
+                    </span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+    <div style="height:72px;flex:none;border-top:1px solid #E2E8F0;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 24px;background:#FFFFFF">
+      <button onClick="{{ tryClose }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA">{{ t.cancel }}</button>
+      <button onClick="{{ save }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A">{{ t.save }}</button>
+    </div>
+  </div>
+  <sc-if value="{{ menuScrim }}"><div onClick="{{ closeMenus }}" style="position:absolute;inset:0;z-index:4"></div></sc-if>
+  <sc-if value="{{ confirmOpen }}">
+    <div style="position:absolute;inset:0;z-index:10;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="alertdialog" aria-modal="true" style="width:440px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px">
+        <h3 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ t.cTitle }}</h3>
+        <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ t.cText }}</p>
+        <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:8px">
+          <button ref="{{ stayRef }}" onClick="{{ stay }}" style="height:36px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ t.cStay }}</button>
+          <button onClick="{{ discard }}" style="height:36px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ t.cLeave }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const ZT = {
+  recv: { icon: 'package-open', fg: '#5B6B6A', bg: '#F5F7F8', open: false },
+  store: { icon: 'archive', fg: '#5B6B6A', bg: '#F5F7F8', open: true },
+  cold: { icon: 'snowflake', fg: '#1D4ED8', bg: '#EFF6FF', open: true },
+  quar: { icon: 'shield-alert', fg: '#B45309', bg: '#FFFBEB', open: false },
+  ctrl: { icon: 'lock', fg: '#B91C1C', bg: '#FEF2F2', open: true },
+  ship: { icon: 'truck', fg: '#5B6B6A', bg: '#F5F7F8', open: false }
+};
+const ZORDER = ['recv', 'store', 'cold', 'quar', 'ctrl', 'ship'];
+const T = {
+  uz: { newT: 'Yangi ombor', close: 'Yopish', goFirst: "Birinchi xatoga o'tish", summary: n => `${n} ta maydonni to'g'rilang`, tabBasic: "Asosiy ma'lumotlar", tabZones: 'Zonalar',
+    branch: 'Filial', branchPh: 'Filialni tanlang', name: 'Ombor nomi', namePh: 'masalan, Asosiy ombor', address: 'Manzil', same: 'Filial manzili bilan bir xil', addrPh: 'Ombor manzili',
+    type: 'Ombor turi', normal: 'Oddiy', normalH: 'Xona haroratida saqlanadigan dorilar uchun', coldT: 'Sovuq saqlash', coldH: '+2…+8 °C da saqlanadigan dorilar uchun',
+    ctrl: 'Nazoratdagi mahsulotlarni saqlashga ruxsat', ctrlHelp: 'Narkotik va psixotrop moddalar uchun maxsus ruxsat', ctrlWarn: 'Bunday mahsulotlar bilan faqat maxsus ruxsatga ega xodimlar ishlaydi.',
+    keeper: "Mas'ul ombor mudiri", keeperPh: 'Belgilanmagan', keeperHelp: "Xodimlar 5-qadamda qo'shiladi. Mas'ulni keyin belgilashingiz mumkin.",
+    zInfo: "Har bir omborda kamida bitta zona bo'ladi.", zName: 'Zona nomi', zNamePh: 'Zona nomi', zType: 'Turi', zOpen: 'Sotuvga ochiq', zDel: "Zonani o'chirish", zLast: "Oxirgi zonani o'chirib bo'lmaydi",
+    zWarn: 'Tekshirilmagan tovar buyurtmaga tushishi mumkin.', zAdd: "Zona qo'shish", zPreset: "Tayyor to'plamdan qo'shish", ctrlTip: "Avval «Asosiy ma'lumotlar» da nazoratdagi mahsulotga ruxsat bering",
+    types: { recv: 'Qabul', store: 'Saqlash', cold: 'Sovuq', quar: 'Karantin', ctrl: 'Nazoratdagi', ship: "Jo'natish" },
+    zn: { recv: 'Qabul', store: 'Asosiy saqlash', cold: 'Sovuq saqlash', quar: 'Karantin', ctrl: 'Seyf', ship: "Jo'natish" },
+    pStd: 'Standart ombor', pCold: 'Sovuq ombor', pCtrl: 'Nazoratdagi seyf',
+    cancel: 'Bekor qilish', save: 'Omborni saqlash', cTitle: "Saqlanmagan o'zgarishlar", cText: "O'zgarishlar saqlanmagan. Chiqib ketsangiz, ular yo'qoladi.", cStay: 'Davom etish', cLeave: 'Chiqish',
+    eBranch: 'Filialni tanlang', eName: 'Ombor nomini kiriting', eAddr: 'Ombor manzilini kiriting', eZName: 'Zona nomini kiriting', eZDup: 'Bu nom shu omborda band', eZCtrl: 'Bu zona uchun nazoratdagi mahsulotga ruxsat kerak' },
+  cy: { newT: 'Янги омбор', close: 'Ёпиш', goFirst: 'Биринчи хатога ўтиш', summary: n => `${n} та майдонни тўғриланг`, tabBasic: 'Асосий маълумотлар', tabZones: 'Зоналар',
+    branch: 'Филиал', branchPh: 'Филиални танланг', name: 'Омбор номи', namePh: 'масалан, Асосий омбор', address: 'Манзил', same: 'Филиал манзили билан бир хил', addrPh: 'Омбор манзили',
+    type: 'Омбор тури', normal: 'Оддий', normalH: 'Хона ҳароратида сақланадиган дорилар учун', coldT: 'Совуқ сақлаш', coldH: '+2…+8 °C да сақланадиган дорилар учун',
+    ctrl: 'Назоратдаги маҳсулотларни сақлашга рухсат', ctrlHelp: 'Наркотик ва психотроп моддалар учун махсус рухсат', ctrlWarn: 'Бундай маҳсулотлар билан фақат махсус рухсатга эга ходимлар ишлайди.',
+    keeper: 'Масъул омбор мудири', keeperPh: 'Белгиланмаган', keeperHelp: 'Ходимлар 5-қадамда қўшилади. Масъулни кейин белгилашингиз мумкин.',
+    zInfo: 'Ҳар бир омборда камида битта зона бўлади.', zName: 'Зона номи', zNamePh: 'Зона номи', zType: 'Тури', zOpen: 'Сотувга очиқ', zDel: 'Зонани ўчириш', zLast: 'Охирги зонани ўчириб бўлмайди',
+    zWarn: 'Текширилмаган товар буюртмага тушиши мумкин.', zAdd: 'Зона қўшиш', zPreset: 'Тайёр тўпламдан қўшиш', ctrlTip: 'Аввал «Асосий маълумотлар»да назоратдаги маҳсулотга рухсат беринг',
+    types: { recv: 'Қабул', store: 'Сақлаш', cold: 'Совуқ', quar: 'Карантин', ctrl: 'Назоратдаги', ship: 'Жўнатиш' },
+    zn: { recv: 'Қабул', store: 'Асосий сақлаш', cold: 'Совуқ сақлаш', quar: 'Карантин', ctrl: 'Сейф', ship: 'Жўнатиш' },
+    pStd: 'Стандарт омбор', pCold: 'Совуқ омбор', pCtrl: 'Назоратдаги сейф',
+    cancel: 'Бекор қилиш', save: 'Омборни сақлаш', cTitle: 'Сақланмаган ўзгаришлар', cText: 'Ўзгаришлар сақланмаган. Чиқиб кетсангиз, улар йўқолади.', cStay: 'Давом этиш', cLeave: 'Чиқиш',
+    eBranch: 'Филиални танланг', eName: 'Омбор номини киритинг', eAddr: 'Омбор манзилини киритинг', eZName: 'Зона номини киритинг', eZDup: 'Бу ном шу омборда банд', eZCtrl: 'Бу зона учун назоратдаги маҳсулотга рухсат керак' },
+  ru: { newT: 'Новый склад', close: 'Закрыть', goFirst: 'К первой ошибке', summary: n => `Исправьте поля: ${n}`, tabBasic: 'Основные данные', tabZones: 'Зоны',
+    branch: 'Филиал', branchPh: 'Выберите филиал', name: 'Название склада', namePh: 'например, Основной склад', address: 'Адрес', same: 'Совпадает с адресом филиала', addrPh: 'Адрес склада',
+    type: 'Тип склада', normal: 'Обычный', normalH: 'Для препаратов, хранящихся при комнатной температуре', coldT: 'Холодовое хранение', coldH: 'Для препаратов, хранящихся при +2…+8 °C',
+    ctrl: 'Разрешить хранение подконтрольных препаратов', ctrlHelp: 'Специальное разрешение для наркотических и психотропных веществ', ctrlWarn: 'С такими препаратами работают только сотрудники со специальным допуском.',
+    keeper: 'Ответственный заведующий складом', keeperPh: 'Не назначен', keeperHelp: 'Сотрудники добавляются на 5-м шаге. Ответственного можно назначить позже.',
+    zInfo: 'В каждом складе есть хотя бы одна зона.', zName: 'Название зоны', zNamePh: 'Название зоны', zType: 'Тип', zOpen: 'Для продажи', zDel: 'Удалить зону', zLast: 'Последнюю зону удалить нельзя',
+    zWarn: 'Непроверенный товар может попасть в заказ.', zAdd: 'Добавить зону', zPreset: 'Добавить из шаблона', ctrlTip: 'Сначала разрешите подконтрольные препараты в «Основных данных»',
+    types: { recv: 'Приёмка', store: 'Хранение', cold: 'Холод', quar: 'Карантин', ctrl: 'Подконтрольные', ship: 'Отгрузка' },
+    zn: { recv: 'Приёмка', store: 'Основное хранение', cold: 'Холодовое хранение', quar: 'Карантин', ctrl: 'Сейф', ship: 'Отгрузка' },
+    pStd: 'Стандартный склад', pCold: 'Холодовой склад', pCtrl: 'Сейф для подконтрольных',
+    cancel: 'Отмена', save: 'Сохранить склад', cTitle: 'Несохранённые изменения', cText: 'Изменения не сохранены. Если вы выйдете, они будут потеряны.', cStay: 'Продолжить', cLeave: 'Выйти',
+    eBranch: 'Выберите филиал', eName: 'Введите название склада', eAddr: 'Введите адрес склада', eZName: 'Введите название зоны', eZDup: 'Это название уже есть на складе', eZCtrl: 'Для этой зоны нужно разрешение на подконтрольные препараты' }
+};
+const PRESETS = { std: ['recv', 'store', 'quar', 'ship'], cold: ['recv', 'cold', 'quar', 'ship'], ctrl: ['ctrl'] };
+const RING = '0 0 0 3px rgba(13,148,136,0.15)', RING_E = '0 0 0 3px rgba(185,28,28,0.12)';
+let ZID = 0;
+const zid = () => 'z' + Date.now().toString(36) + (ZID++);
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const t = T[p.lang] || T.uz;
+    const init = p.initial ? JSON.parse(JSON.stringify(p.initial)) : { branchId: p.presetBranchId || '', name: '', same: true, address: '', type: 'normal', controlled: false, zones: [{ id: zid(), name: t.zn.store, type: 'store', open: true, auto: true }] };
+    this.state = { f: init, base: JSON.stringify(init), tab: p.startTab || 'basic', tried: !!p.showErrors, focus: null, menu: null, confirm: false, narrow: false, hl: {} };
+  }
+  bodyRef = React.createRef(); nameRef = React.createRef(); stayRef = React.createRef(); zRefs = {};
+  componentDidMount() {
+    this.onResize = () => { const n = window.innerWidth <= 1100; if (n !== this.state.narrow) this.setState({ narrow: n }); };
+    this.onResize(); window.addEventListener('resize', this.onResize);
+    this.onKey = e => { if (e.key !== 'Escape') return; e.stopPropagation(); if (this.state.menu) this.setState({ menu: null }); else if (this.state.confirm) this.setState({ confirm: false }); else this.tryClose(); };
+    window.addEventListener('keydown', this.onKey, true);
+    if (this.state.tab === 'basic') setTimeout(() => this.nameRef.current && this.nameRef.current.focus(), 50);
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey, true); clearTimeout(this._ht); }
+  componentDidUpdate(pp, ps) { ps = this._ps || {}; this._ps = this.state; if (this.state.confirm && !ps.confirm) setTimeout(() => this.stayRef.current && this.stayRef.current.focus(), 0); }
+  set(patch) { this.setState(s => ({ f: { ...s.f, ...patch } })); }
+  setZone(id, patch) { this.setState(s => ({ f: { ...s.f, zones: s.f.zones.map(z => z.id === id ? { ...z, ...patch, auto: false } : z) } })); }
+  errors() {
+    const f = this.state.f, t = T[this.props.lang] || T.uz, e = {};
+    if (!f.branchId) e.branch = t.eBranch;
+    if (!f.name.trim()) e.name = t.eName;
+    if (!f.same && !f.address.trim()) e.address = t.eAddr;
+    const seen = {};
+    f.zones.forEach(z => {
+      const n = z.name.trim().toLowerCase();
+      if (!n) e['z-' + z.id] = t.eZName;
+      else if (seen[n]) e['z-' + z.id] = t.eZDup;
+      else if (z.type === 'ctrl' && !f.controlled) e['z-' + z.id] = t.eZCtrl;
+      seen[n] = true;
+    });
+    return e;
+  }
+  goFirst() {
+    const keys = Object.keys(this.errors()); if (!keys.length) return;
+    const k = keys[0], tab = k.startsWith('z-') ? 'zones' : 'basic';
+    this.setState({ tab }, () => setTimeout(() => {
+      const box = this.bodyRef.current, el = box && box.querySelector(`[data-f="${k}"]`); if (!el) return;
+      box.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 24), behavior: 'smooth' });
+      const i = el.querySelector('input,button'); i && i.focus({ preventScroll: true });
+    }, 0));
+  }
+  save() {
+    if (Object.keys(this.errors()).length) { this.setState({ tried: true }); setTimeout(() => this.goFirst(), 0); return; }
+    const f = this.state.f;
+    this.props.onSave && this.props.onSave({ ...f, zones: f.zones.map(({ auto, ...z }) => z) });
+  }
+  tryClose() { if (JSON.stringify(this.state.f) !== this.state.base) this.setState({ confirm: true, menu: null }); else this.props.onClose && this.props.onClose(); }
+  flashZones(ids) { this.setState(s => ({ hl: { ...s.hl, ...Object.fromEntries(ids.map(i => [i, true])) } })); clearTimeout(this._ht); this._ht = setTimeout(() => this.setState({ hl: {} }), 1500); }
+  addPreset(k) {
+    const f = this.state.f, t = T[this.props.lang] || T.uz;
+    if (k === 'ctrl' && !f.controlled) return;
+    const have = new Set(f.zones.map(z => z.type));
+    const add = PRESETS[k].filter(ty => !have.has(ty)).map(ty => ({ id: zid(), name: t.zn[ty], type: ty, open: ZT[ty].open }));
+    let zones = f.zones;
+    if (k === 'std' && have.has('store')) zones = zones; // keep
+    this.setState({ f: { ...f, zones: [...zones, ...add].sort((a, b) => ZORDER.indexOf(a.type) - ZORDER.indexOf(b.type)) }, menu: null });
+    this.flashZones(add.map(z => z.id));
+  }
+
+  renderVals() {
+    const s = this.state, f = s.f, t = T[this.props.lang] || T.uz, br = (this.props.branches || []);
+    const all = this.errors(), er = s.tried ? all : {};
+    const nErr = Object.keys(all).length;
+    const zoneErr = Object.keys(all).some(k => k.startsWith('z-')), basicErr = Object.keys(all).some(k => !k.startsWith('z-'));
+    const b = br.find(x => x.id === f.branchId);
+    const fb = (k, err) => ({ border: err ? '#B91C1C' : s.focus === k ? '#0D9488' : '#E2E8F0', shadow: s.focus === k ? (err ? RING_E : RING) : 'none' });
+    const nm = fb('name', er.name), ad = fb('addr', er.address);
+    const tabs = [['basic', t.tabBasic, null, basicErr], ['zones', t.tabZones, f.zones.length, zoneErr]].map(([k, label, count, hasE]) => {
+      const a = s.tab === k;
+      return { label, active: a, hasCount: count != null, count, hasErr: s.tried && hasE, line: a ? '#0D9488' : 'transparent', color: a ? '#172B2A' : '#5B6B6A', weight: a ? 500 : 400,
+        pillBg: a ? '#DDF5EE' : '#EEF2F4', pillColor: a ? '#0F766E' : '#5B6B6A', pick: () => this.setState({ tab: k, menu: null }) };
+    });
+    const zones = f.zones.map(z => {
+      const ty = ZT[z.type], key = 'z-' + z.id, err = er[key] || '', fz = fb(key, !!err);
+      if (!this.zRefs[z.id]) this.zRefs[z.id] = React.createRef();
+      return { key, ref: this.zRefs[z.id], name: z.name, open: z.open, err, warn: z.open && (z.type === 'recv' || z.type === 'quar'),
+        bg: s.hl[z.id] ? '#DDF5EE' : '#FFFFFF', border: err ? '#B91C1C' : s.focus === key ? '#0D9488' : 'transparent', shadow: fz.shadow,
+        tIcon: ty.icon, tBg: ty.bg, tFg: ty.fg, tLabel: t.types[z.type],
+        swBg: z.open ? '#0F766E' : '#647574', swJustify: z.open ? 'flex-end' : 'flex-start',
+        canDelete: f.zones.length > 1, isLast: f.zones.length === 1,
+        onName: e => this.setZone(z.id, { name: e.target.value }), focus: () => this.setState({ focus: key }),
+        toggleOpen: () => this.setZone(z.id, { open: !z.open }),
+        remove: () => this.setState(st => ({ f: { ...st.f, zones: st.f.zones.filter(x => x.id !== z.id) } })),
+        typeOpen: s.menu === 'type-' + z.id, toggleType: () => this.setState(st => ({ menu: st.menu === 'type-' + z.id ? null : 'type-' + z.id })),
+        opts: ZORDER.map(k => {
+          const dis = k === 'ctrl' && !f.controlled;
+          return { icon: ZT[k].icon, label: t.types[k], cBg: ZT[k].bg, cFg: ZT[k].fg, selected: z.type === k, disabled: dis, tip: dis ? t.ctrlTip : '',
+            bg: z.type === k ? '#DDF5EE' : 'transparent', cursor: dis ? 'not-allowed' : 'pointer', op: dis ? 0.55 : 1,
+            pick: () => { if (dis) return; this.setZone(z.id, { type: k, open: ZT[k].open }); this.setState({ menu: null }); } };
+        }) };
+    });
+    const presets = [['std', t.pStd], ['cold', t.pCold], ['ctrl', t.pCtrl]].map(([k, label]) => {
+      const dis = k === 'ctrl' && !f.controlled;
+      return { label, disabled: dis, tip: dis ? t.ctrlTip : '', cursor: dis ? 'not-allowed' : 'pointer', op: dis ? 0.55 : 1, pick: () => this.addPreset(k),
+        chips: PRESETS[k].map(ty => ({ icon: ZT[ty].icon, bg: ZT[ty].bg, fg: ZT[ty].fg, name: t.zn[ty] })) };
+    });
+    const typeCards = [['normal', t.normal, t.normalH, 'warehouse', '#F5F7F8', '#5B6B6A'], ['cold', t.coldT, t.coldH, 'snowflake', '#EFF6FF', '#1D4ED8']].map(([k, label, help, icon, ibg, ifg]) => ({
+      label, help, icon, iconBg: ibg, iconFg: ifg, selected: f.type === k, border: f.type === k ? '#0D9488' : '#E2E8F0', bg: f.type === k ? '#DDF5EE' : '#FFFFFF',
+      pick: () => this.setState(st => {
+        let zones = st.f.zones;
+        if (zones.length === 1 && zones[0].auto) { const ty = k === 'cold' ? 'cold' : 'store'; zones = [{ ...zones[0], type: ty, name: t.zn[ty], open: true }]; }
+        return { f: { ...st.f, type: k, zones } };
+      }) }));
+    return {
+      t, f, er, tabs, isBasic: s.tab === 'basic', isZones: s.tab === 'zones',
+      title: this.props.editId ? (this.props.initial && this.props.initial.name) || t.newT : t.newT, panelW: s.narrow ? '90vw' : '640px',
+      bodyRef: this.bodyRef, nameRef: this.nameRef, stayRef: this.stayRef, blur: () => this.setState({ focus: null }),
+      showSummary: s.tried && nErr > 0, summary: t.summary(nErr), goFirst: () => this.goFirst(),
+      branchOpen: s.menu === 'branch', toggleBranch: () => this.setState(st => ({ menu: st.menu === 'branch' ? null : 'branch' })),
+      branchLabel: b ? b.name : t.branchPh, branchColor: b ? '#172B2A' : '#647574', hasBranchCode: !!b, branchCode: b ? b.code : '',
+      branchBorder: er.branch ? '#B91C1C' : s.menu === 'branch' ? '#0D9488' : '#E2E8F0',
+      branchOpts: br.map(x => ({ name: x.name, code: x.code, selected: x.id === f.branchId, bg: x.id === f.branchId ? '#DDF5EE' : 'transparent', pick: () => { this.set({ branchId: x.id }); this.setState({ menu: null }); } })),
+      onName: e => this.set({ name: e.target.value }), focusName: () => this.setState({ focus: 'name' }), nameBorder: nm.border, nameShadow: nm.shadow,
+      toggleSame: () => this.set({ same: !f.same }), sameBg: f.same ? '#0F766E' : '#FFFFFF', sameBorder: f.same ? '#0F766E' : '#647574',
+      showBranchAddr: f.same && !!(b && b.address), branchAddr: b ? b.address : '', showAddr: !f.same,
+      onAddr: e => this.set({ address: e.target.value }), focusAddr: () => this.setState({ focus: 'addr' }), addrBorder: ad.border, addrShadow: ad.shadow,
+      typeCards, toggleCtrl: () => this.set({ controlled: !f.controlled }), ctrlBg: f.controlled ? '#0F766E' : '#647574', ctrlJustify: f.controlled ? 'flex-end' : 'flex-start',
+      zones, presets, presetOpen: s.menu === 'preset', togglePreset: () => this.setState(st => ({ menu: st.menu === 'preset' ? null : 'preset' })),
+      addZone: () => { const id = zid(); this.setState(st => ({ f: { ...st.f, zones: [...st.f.zones, { id, name: '', type: 'store', open: true }] } }), () => { this.flashZones([id]); setTimeout(() => { const r = this.zRefs[id]; r && r.current && r.current.focus(); }, 0); }); },
+      menuScrim: !!s.menu, closeMenus: () => this.setState({ menu: null }),
+      tryClose: () => this.tryClose(), save: () => this.save(),
+      confirmOpen: s.confirm, stay: () => this.setState({ confirm: false }), discard: () => { this.setState({ confirm: false }); this.props.onClose && this.props.onClose(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

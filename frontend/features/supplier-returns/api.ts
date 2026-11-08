@@ -4,6 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { ensureCsrf } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { checkQty, type LineError } from "@/features/zone-transfers/api";
 
 export type SupplierReturnSummary = components["schemas"]["SupplierReturnSummary"];
 export type SupplierReturnDetail = components["schemas"]["SupplierReturnDetail"];
@@ -17,19 +18,9 @@ export const QY_CREATE = "qy.create";
 export const QY_APPROVE = "qy.approve";
 export const QY_VIEW_KEYS = ["qy.view", QY_CREATE, QY_APPROVE];
 
-export const QY_STATUS_LABELS: Record<SupplierReturnStatus, string> = {
-  PENDING: "Tasdiqda",
-  POSTED: "Oʻtkazildi",
-  REJECTED: "Rad etildi",
-};
-
-export const QY_REASON_LABELS: Record<SupplierReturnReason, string> = {
-  EXPIRING: "Muddati yaqin",
-  DAMAGED: "Shikastlangan",
-  QUALITY: "Sifatsiz (brak)",
-  SURPLUS: "Ortiqcha",
-  OTHER: "Boshqa",
-};
+/** Holat va sabablar tartibi; nomlari — lugʻatda `supplierReturns.status.*`, `supplierReturns.reason.*`. */
+export const QY_STATUSES = ["PENDING", "POSTED", "REJECTED"] as const satisfies readonly SupplierReturnStatus[];
+export const QY_REASONS = ["EXPIRING", "DAMAGED", "QUALITY", "SURPLUS", "OTHER"] as const satisfies readonly SupplierReturnReason[];
 
 /** Kirim partiyalari qaysi zonalarda turibdi — zona tanlash uchun (takrorlarsiz, birinchi uchragan tartibda). */
 export function zonesOf(stock: ReturnStockRow[]): ReturnStockRow["zone"][] {
@@ -38,19 +29,17 @@ export function zonesOf(stock: ReturnStockRow[]): ReturnStockRow["zone"][] {
   return [...seen.values()];
 }
 
-/** Kiritilgan miqdorlar (tanlangan zona qatorlari): musbat butun son, boʻsh miqdordan oshmaydi. Xato boʻlsa — matn. */
+/** Kiritilgan miqdorlar (tanlangan zona qatorlari): musbat butun son, boʻsh miqdordan oshmaydi. Xato boʻlsa — `LineError`. */
 export function returnLinesFrom(
   rows: ReturnStockRow[],
   qty: Record<number, string>,
-): { lines: SupplierReturnRequest["lines"]; error: string | null } {
+): { lines: SupplierReturnRequest["lines"]; error: LineError | null } {
   const lines: SupplierReturnRequest["lines"] = [];
   for (const row of rows) {
     const raw = (qty[row.batchId] ?? "").trim();
     if (raw === "") continue;
-    if (!/^\d+$/.test(raw) || Number(raw) <= 0)
-      return { lines: [], error: `${row.productName} · ${row.batchNumber}: miqdor musbat butun son boʻlishi kerak` };
-    const n = Number(raw);
-    if (n > row.free) return { lines: [], error: `${row.productName} · ${row.batchNumber}: boʻsh ${row.free}, kiritildi ${n}` };
+    const n = checkQty(row, raw);
+    if (typeof n !== "number") return { lines: [], error: n };
     lines.push({ batchId: row.batchId, qty: n });
   }
   return { lines, error: null };

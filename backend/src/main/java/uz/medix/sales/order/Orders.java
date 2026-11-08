@@ -32,7 +32,10 @@ import uz.medix.pricing.PriceBook;
 import uz.medix.pricing.PriceBook.Quote;
 import uz.medix.sales.order.OrderModels.ApprovalLevel;
 import uz.medix.sales.order.OrderModels.CustomerCredit;
+import uz.medix.sales.order.OrderModels.CreditFlag;
 import uz.medix.sales.order.OrderModels.DeliveryType;
+import uz.medix.sales.order.OrderModels.FilterOption;
+import uz.medix.sales.order.OrderModels.OrderFacets;
 import uz.medix.sales.order.OrderModels.IssueLevel;
 import uz.medix.sales.order.OrderModels.OrderDetail;
 import uz.medix.sales.order.OrderModels.OrderIssue;
@@ -52,6 +55,7 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.text.SearchText;
 import uz.medix.shared.text.Texts;
 
 /**
@@ -110,7 +114,7 @@ class Orders {
     record Terms(BigDecimal creditLimit, Integer paymentDays, Long priceTypeId, String priceType, Integer minShelfLifeDays) {}
 
     record Product(long id, String code, String name, String manufacturer, boolean active, boolean controlled, boolean marked,
-            Integer minQty, Integer maxQty) {}
+            Integer minQty, Integer maxQty, BigDecimal vatRate) {}
 
     /** Baholash natijasi: qator narxlari, jami, muammolar va tasdiq darajasi. */
     record Evaluation(Map<Long, Quote> quotes, Map<Long, Available> available, Map<Long, Product> products, Money total,
@@ -161,7 +165,7 @@ class Orders {
             return m;
         }
         jdbc.sql("""
-                SELECT p.id, p.code, p.name, mf.name AS manufacturer, p.active, p.controlled, p.marked, p.min_qty, p.max_qty
+                SELECT p.id, p.code, p.name, mf.name AS manufacturer, p.active, p.controlled, p.marked, p.min_qty, p.max_qty, p.vat_rate
                 FROM product p LEFT JOIN manufacturer mf ON mf.id = p.manufacturer_id WHERE p.id IN (:ids)""")
                 .param("ids", ids)
                 .query(Product.class)
@@ -291,12 +295,42 @@ class Orders {
 
     // ===== O'qish =====
 
-    /** Ro'yxat filtrlari (hisobotdan o'tish): mijoz, kiritgan xodim, sotuv/qaytarish davri. */
-    record OrderFilter(Long customerId, Long operatorId, LocalDate soldFrom, LocalDate soldTo) {}
+    /** Ro'yxat filtrlari: mijoz, kiritgan xodim, sotuv/qaytarish davri (hisobotdan o'tish), buyurtma sanasi (SPEC 120). */
+    record OrderFilter(List<Long> customerIds, List<Long> operatorIds, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom,
+            LocalDate orderTo, List<OrderStatus> statuses, List<DeliveryType> deliveryTypes, List<PaymentType> paymentTypes,
+            List<Long> regionIds) {
+        OrderFilter {
+            customerIds = customerIds == null ? List.of() : List.copyOf(customerIds);
+            operatorIds = operatorIds == null ? List.of() : List.copyOf(operatorIds);
+            statuses = statuses == null ? List.of() : List.copyOf(statuses);
+            deliveryTypes = deliveryTypes == null ? List.of() : List.copyOf(deliveryTypes);
+            paymentTypes = paymentTypes == null ? List.of() : List.copyOf(paymentTypes);
+            regionIds = regionIds == null ? List.of() : List.copyOf(regionIds);
+        }
+    }
+
+    /** Buyurtma tarixi — audit jurnalidan (eng eskisi birinchi). Kirish huquqi — {@code find} bilan tekshiriladi. */
+    @Transactional(readOnly = true)
+    List<OrderModels.OrderHistoryEvent> history(long id) {
+        return jdbc.sql("""
+                SELECT a.occurred_at, e.full_name AS employee, a.action, a.reason
+                FROM audit_log a LEFT JOIN employee e ON e.id = a.employee_id
+                WHERE a.entity_type = 'sales_order' AND a.entity_id = :id
+                ORDER BY a.occurred_at, a.id""")
+                .param("id", String.valueOf(id))
+                .query((rs, n) -> new OrderModels.OrderHistoryEvent(rs.getTimestamp("occurred_at").toInstant(), rs.getString("employee"),
+                        rs.getString("action"), rs.getString("reason")))
+                .list();
+    }
 
     @Transactional(readOnly = true)
     OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, int page, int size) {
-        Long customerId = filter.customerId();
+        return list(actor, branchId, status, filter, q, mine, OrderSort.CREATED, true, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    OrderPage list(Actor actor, Long branchId, OrderStatus status, OrderFilter filter, String q, boolean mine, OrderSort sort, boolean desc,
+            int page, int size) {
         StringBuilder where = new StringBuilder(" WHERE true");
         Map<String, Object> params = new HashMap<>();
         if (!actor.allBranches()) {
@@ -307,13 +341,32 @@ class Orders {
             where.append(" AND o.branch_id = :b");
             params.put("b", branchId);
         }
-        if (customerId != null) {
-            where.append(" AND o.customer_id = :c");
-            params.put("c", customerId);
+        // Filtr variantlari (prototip FilterBar: har variant soni bilan) — faqat filial doirasida, boshqa filtrlarsiz
+        String scope = where.toString();
+        Map<String, Object> scopeParams = new HashMap<>(params);
+        if (!filter.customerIds().isEmpty()) {
+            where.append(" AND o.customer_id IN (:c)");
+            params.put("c", filter.customerIds());
         }
-        if (filter.operatorId() != null) {
-            where.append(" AND o.created_by = :op");
-            params.put("op", filter.operatorId());
+        if (!filter.operatorIds().isEmpty()) {
+            where.append(" AND o.created_by IN (:op)");
+            params.put("op", filter.operatorIds());
+        }
+        if (!filter.statuses().isEmpty()) {
+            where.append(" AND o.status IN (:ss)");
+            params.put("ss", filter.statuses().stream().map(Enum::name).toList());
+        }
+        if (!filter.deliveryTypes().isEmpty()) {
+            where.append(" AND o.delivery_type IN (:dt)");
+            params.put("dt", filter.deliveryTypes().stream().map(Enum::name).toList());
+        }
+        if (!filter.paymentTypes().isEmpty()) {
+            where.append(" AND o.payment_type IN (:pt)");
+            params.put("pt", filter.paymentTypes().stream().map(Enum::name).toList());
+        }
+        if (!filter.regionIds().isEmpty()) {
+            where.append(" AND c.region_id IN (:rg)");
+            params.put("rg", filter.regionIds());
         }
         if (filter.soldFrom() != null || filter.soldTo() != null) {
             // Savdo hisoboti bilan bir xil: o'tkazilgan sotuv (sale_date) yoki qaytarish (return_date) shu davrda.
@@ -322,13 +375,29 @@ class Orders {
             params.put("sf", java.sql.Date.valueOf(filter.soldFrom() == null ? LocalDate.of(2000, 1, 1) : filter.soldFrom()));
             params.put("st", java.sql.Date.valueOf(filter.soldTo() == null ? LocalDate.of(2999, 12, 31) : filter.soldTo()));
         }
+        if (filter.orderFrom() != null) {
+            where.append(" AND o.order_date >= :of");
+            params.put("of", java.sql.Date.valueOf(filter.orderFrom()));
+        }
+        if (filter.orderTo() != null) {
+            where.append(" AND o.order_date <= :ot");
+            params.put("ot", java.sql.Date.valueOf(filter.orderTo()));
+        }
         if (mine) {
             where.append(" AND o.created_by = :me");
             params.put("me", actor.employeeId());
         }
-        if (q != null && !q.isBlank()) {
-            where.append(" AND (o.number ILIKE :q OR c.name ILIKE :q OR c.tin = :exact)");
-            params.put("q", "%" + q.strip().replace("%", "") + "%");
+        String nq = SearchText.normalize(q);
+        if (!nq.isEmpty()) {
+            // Raqam, STIR yoki mijoz nomi — lotin/kirill farqsiz, so'zlar istalgan tartibda (counterparty.search_text)
+            where.append(" AND (o.number ILIKE :q ESCAPE '\\' OR c.tin = :exact OR (true");
+            String[] parts = nq.split(" ");
+            for (int i = 0; i < parts.length && i < 8; i++) {
+                where.append(" AND c.search_text LIKE :w").append(i).append(" ESCAPE '\\'");
+                params.put("w" + i, "%" + SearchText.likeEscape(parts[i]) + "%");
+            }
+            where.append("))");
+            params.put("q", "%" + SearchText.likeEscape(q.strip()) + "%");
             params.put("exact", q.strip());
         }
         String from = " FROM sales_order o JOIN counterparty c ON c.id = o.customer_id JOIN warehouse w ON w.id = o.warehouse_id"
@@ -349,11 +418,12 @@ class Orders {
                 SELECT o.id, o.number, o.branch_id, w.name AS warehouse, o.customer_id, c.name AS customer, o.order_date, o.delivery_type,
                        o.delivery_date, o.payment_type, o.status, o.approval_level, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
                        o.total, e.full_name AS created_by, o.created_at, o.status_changed_at,
+                       (SELECT r.name FROM region r WHERE r.id = c.region_id) AS region, o.pick_minutes, o.pick_started_at, o.pick_finished_at,
                        (SELECT full_name FROM employee WHERE id = o.picker_id) AS picker,
                        (SELECT full_name FROM employee WHERE id = o.marker_id) AS marker,
                        (SELECT d.full_name FROM trip_stop ts JOIN trip t ON t.id = ts.trip_id JOIN employee d ON d.id = t.driver_id
                         WHERE ts.order_id = o.id AND ts.active AND t.status <> 'CANCELLED' ORDER BY ts.id DESC LIMIT 1) AS driver""" + from + where
-                        + " ORDER BY o.created_at DESC, o.id DESC LIMIT :l OFFSET :o")
+                        + (sort == null ? OrderSort.CREATED : sort).orderBy(desc) + " LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", size)
                 .param("o", (long) page * size)
@@ -365,9 +435,48 @@ class Orders {
                         new Money(rs.getBigDecimal("total")).toString(), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
                         rs.getTimestamp("status_changed_at").toInstant(),
                         holderText(OrderStatus.valueOf(rs.getString("status")), DeliveryType.valueOf(rs.getString("delivery_type")),
-                                rs.getString("created_by"), rs.getString("picker"), rs.getString("marker"), rs.getString("driver"))))
+                                rs.getString("created_by"), rs.getString("picker"), rs.getString("marker"), rs.getString("driver")),
+                        rs.getString("region"), (Integer) rs.getObject("pick_minutes"), instant(rs.getTimestamp("pick_started_at")),
+                        instant(rs.getTimestamp("pick_finished_at")), null))
                 .list();
-        return new OrderPage(items, total, page, size, statusTabs(statuses));
+        items = items.stream().map(this::withCreditFlag).toList();
+        String fromScope = from + scope;
+        List<FilterOption> customers = jdbc.sql("SELECT c.id, c.name, count(*) AS cnt" + fromScope
+                        + " GROUP BY c.id, c.name ORDER BY c.name LIMIT 300")
+                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
+        List<FilterOption> operators = jdbc.sql("SELECT e.id, e.full_name AS name, count(*) AS cnt" + fromScope
+                        + " GROUP BY e.id, e.full_name ORDER BY e.full_name LIMIT 300")
+                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
+        List<FilterOption> regions = jdbc.sql("SELECT r.id, r.name, count(*) AS cnt" + from + " JOIN region r ON r.id = c.region_id" + scope
+                        + " GROUP BY r.id, r.name ORDER BY r.name LIMIT 300")
+                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
+        return new OrderPage(items, total, page, size, statusTabs(statuses), new OrderFacets(customers, operators, regions));
+    }
+
+    /** Ochiq buyurtmalar uchun kredit ogohlantirishi (faqat qoralama va tasdiqlashda — sahifadagi qatorlar). */
+    private OrderSummary withCreditFlag(OrderSummary o) {
+        if (o.status() != OrderStatus.DRAFT && o.status() != OrderStatus.PENDING_APPROVAL) {
+            return o;
+        }
+        Customer c = customer(o.customerId());
+        Terms t = terms(o.customerId(), o.branchId());
+        CreditState cs = parties.creditState(o.branchId(), o.customerId(), Side.CUSTOMER, today());
+        String over = null;
+        if (t.creditLimit() != null) {
+            Money exposure = cs.debt().plus(Money.of(o.total()));
+            Money limit = new Money(t.creditLimit());
+            if (exposure.compareTo(limit) > 0) {
+                over = exposure.minus(limit).toString();
+            }
+        }
+        String overdue = cs.overdueDays() > 0 ? cs.overdue().toString() : null;
+        if (!c.blocked() && over == null && overdue == null) {
+            return o;
+        }
+        return new OrderSummary(o.id(), o.number(), o.branchId(), o.warehouse(), o.customerId(), o.customer(), o.orderDate(), o.deliveryType(),
+                o.deliveryDate(), o.paymentType(), o.status(), o.approvalLevel(), o.lines(), o.total(), o.createdBy(), o.createdAt(),
+                o.statusChangedAt(), o.holder(), o.region(), o.pickMinutes(), o.pickStartedAt(), o.pickFinishedAt(),
+                new CreditFlag(c.blocked(), over, overdue, cs.overdueDays()));
     }
 
     record LineRow(long id, int lineNo, long productId, int qty, BigDecimal price, Long priceTypeId, String priceType) {}
@@ -408,7 +517,10 @@ class Orders {
                 rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList());
         boolean draft = status == OrderStatus.DRAFT;
         boolean priceChanged = false;
+        Map<Long, Integer> picked = draft ? Map.of() : pickedByLine(id);
+        Map<Long, Integer> shipped = draft ? Map.of() : shippedByLine(id);
         List<OrderLine> lines = new ArrayList<>();
+        Money vatTotal = Money.ZERO;
         for (LineRow r : rows) {
             Product p = ev.products().get(r.productId());
             Quote q = ev.quotes().get(r.productId());
@@ -419,10 +531,17 @@ class Orders {
             }
             Money shown = draft ? current : stored;
             Available a = ev.available().get(r.productId());
+            Money amount = shown == null ? null : shown.times(r.qty());
+            // QQS narx ichida (SPEC 68): qator QQSi = summa × stavka / (100 + stavka), HALF_UP — sotuvdagi kabi
+            Money vat = amount == null ? null : includedVat(amount, p.vatRate());
+            if (vat != null) {
+                vatTotal = vatTotal.plus(vat);
+            }
             lines.add(new OrderLine(r.id(), r.lineNo(), r.productId(), p.code(), p.name(), p.manufacturer(), r.qty(),
                     stored == null ? null : stored.toString(), current == null ? null : current.toString(),
-                    shown == null ? null : shown.times(r.qty()).toString(), r.priceType(), a == null ? 0 : a.qty(),
-                    a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked(), List.of()));
+                    amount == null ? null : amount.toString(), vat == null ? null : vat.toString(), r.priceType(), a == null ? 0 : a.qty(),
+                    a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked(), List.of(),
+                    picked.get(r.id()), shipped.get(r.id())));
         }
         Map<Long, List<OrderModels.ReservedBatch>> reserved = new HashMap<>();
         for (Allocation a : reservations.active(DOC_TYPE, id)) {
@@ -440,16 +559,58 @@ class Orders {
         return Optional.of(new OrderDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.customerId(), h.customer(),
                 h.customerTin(), h.orderDate().toLocalDate(), DeliveryType.valueOf(h.deliveryType()), localDate(h.deliveryDate()), h.address(),
                 PaymentType.valueOf(h.paymentType()), h.note(), status,
-                h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, priceChanged, ev.credit(), issues,
+                h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, vatTotal.toString(), priceChanged,
+                ev.credit(), issues,
                 h.createdBy(), h.createdById(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
                 h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
                 instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), documents(id),
-                holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines));
+                holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines,
+                jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list()));
+    }
+
+    /**
+     * Qator bo'yicha yig'ilgan miqdor: terilgan − yig'ishga qaytarilgan (V45 dan qator bo'yicha; undan oldingilari — shu qatorda
+     * terilgan partiya bo'yicha). Yig'ish boshlanmagan qatorlar ro'yxatda yo'q.
+     */
+    private Map<Long, Integer> pickedByLine(long orderId) {
+        Map<Long, Integer> out = new HashMap<>();
+        jdbc.sql("""
+                SELECT p.line_id, (p.q - coalesce((SELECT sum(r.qty) FROM sales_order_pick_return r
+                                                   WHERE r.order_id = :o AND (r.line_id = p.line_id
+                                                         OR (r.line_id IS NULL AND r.batch_id IN (SELECT batch_id FROM sales_order_pick
+                                                                                                   WHERE order_id = :o AND line_id = p.line_id)))), 0))::int AS qty
+                FROM (SELECT line_id, sum(qty) AS q FROM sales_order_pick WHERE order_id = :o GROUP BY line_id) p""")
+                .param("o", orderId)
+                .query((rs, n) -> out.put(rs.getLong("line_id"), Math.max(0, rs.getInt("qty"))))
+                .list();
+        return out;
+    }
+
+    /** Qator bo'yicha jo'natilgan miqdor — o'tkazilgan (bekor qilinmagan) sotuv qatorlaridan. */
+    private Map<Long, Integer> shippedByLine(long orderId) {
+        Map<Long, Integer> out = new HashMap<>();
+        jdbc.sql("""
+                SELECT sl.order_line_id, sum(sl.qty)::int AS qty
+                FROM sale_line sl JOIN sale s ON s.id = sl.sale_id
+                WHERE s.order_id = :o AND s.status <> 'CANCELLED'
+                GROUP BY sl.order_line_id""")
+                .param("o", orderId)
+                .query((rs, n) -> out.put(rs.getLong("order_line_id"), rs.getInt("qty")))
+                .list();
+        return out;
+    }
+
+    /** Narx ichidagi QQS: summa × stavka / (100 + stavka), 2 xona HALF_UP; stavka yoʻq yoki 0 — QQS 0. */
+    static Money includedVat(Money amount, BigDecimal rate) {
+        if (rate == null || rate.signum() == 0) {
+            return Money.ZERO;
+        }
+        return new Money(amount.amount().multiply(rate).divide(BigDecimal.valueOf(100).add(rate), Money.SCALE, RoundingMode.HALF_UP));
     }
 
     private OrderModels.OrderDocuments documents(long orderId) {
         return jdbc.sql("""
-                SELECT o.waybill_number, s.number AS sale, s.invoice_number, s.status AS sale_status, s.total AS sale_total,
+                SELECT o.waybill_number, s.id AS sale_id, s.number AS sale, s.invoice_number, s.status AS sale_status, s.total AS sale_total,
                        q.number AS qm, q.total AS qm_total, t.number AS trip, d.full_name AS driver, v.plate_number AS vehicle
                 FROM sales_order o
                 LEFT JOIN sale s ON s.order_id = o.id
@@ -465,7 +626,7 @@ class Orders {
                 .query((rs, n) -> new OrderModels.OrderDocuments(rs.getString("waybill_number"), rs.getString("sale"), rs.getString("invoice_number"),
                         rs.getString("sale_status"), rs.getBigDecimal("sale_total") == null ? null : new Money(rs.getBigDecimal("sale_total")).toString(),
                         rs.getString("qm"), rs.getBigDecimal("qm_total") == null ? null : new Money(rs.getBigDecimal("qm_total")).toString(),
-                        rs.getString("trip"), rs.getString("driver"), rs.getString("vehicle")))
+                        rs.getString("trip"), rs.getString("driver"), rs.getString("vehicle"), rs.getObject("sale_id", Long.class)))
                 .single();
     }
 
@@ -530,7 +691,8 @@ class Orders {
      * narxi. Qidiruv — kod, shtrix-kod yoki nom (lotin/kirill). «Faqat bor mahsulotlar» standart yoqilgan.
      */
     @Transactional(readOnly = true)
-    OrderModels.CatalogPage catalog(Actor actor, long warehouseId, Long customerId, String q, boolean inStockOnly, int page, int size) {
+    OrderModels.CatalogPage catalog(Actor actor, long warehouseId, Long customerId, String q, boolean inStockOnly, OrderModels.CatalogFilter filter,
+            int page, int size) {
         Place place = place(actor, warehouseId);
         Terms t = customerId == null ? new Terms(null, null, null, null, null) : terms(customerId, place.branchId());
         LocalDate minExpiry = today().plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
@@ -563,6 +725,40 @@ class Orders {
                            WHERE s.warehouse_id = :w AND s.qty > coalesce(r.qty, 0) AND z.sellable AND z.active AND b.expiry_date >= :min
                            GROUP BY s.product_id) a ON a.product_id = p.id
                 """;
+        // Filtr variantlari — qidiruv va «Faqat bor» bo'yicha (filtrlarning o'zisiz), soni bilan
+        String base = from + where;
+        OrderModels.CatalogFacets facets = new OrderModels.CatalogFacets(
+                facet("manufacturer", "p.manufacturer_id", base, params),
+                facet("category", "p.category_id", base, params),
+                facet("country", "p.country_id", base, params),
+                jdbc.sql("SELECT count(*) FILTER (WHERE p.marked) AS marked, count(*) FILTER (WHERE p.controlled) AS controlled,"
+                                + " count(*) FILTER (WHERE p.prescription) AS prescription" + base)
+                        .params(params)
+                        .query(OrderModels.CatalogFlagCounts.class)
+                        .single());
+        if (!filter.manufacturerIds().isEmpty()) {
+            where.append(" AND p.manufacturer_id IN (:fm)");
+            params.put("fm", filter.manufacturerIds());
+        }
+        if (!filter.categoryIds().isEmpty()) {
+            where.append(" AND p.category_id IN (:fc)");
+            params.put("fc", filter.categoryIds());
+        }
+        if (!filter.countryIds().isEmpty()) {
+            where.append(" AND p.country_id IN (:fk)");
+            params.put("fk", filter.countryIds());
+        }
+        if (!filter.flags().isEmpty()) {
+            where.append(" AND (false");
+            for (OrderModels.CatalogFlag f : filter.flags()) {
+                where.append(switch (f) {
+                    case MARKED -> " OR p.marked";
+                    case CONTROLLED -> " OR p.controlled";
+                    case PRESCRIPTION -> " OR p.prescription";
+                });
+            }
+            where.append(")");
+        }
         long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
         record Row(long id, String code, String name, String manufacturer, Integer qty, Date nearest, Integer minQty, Integer maxQty,
                 boolean controlled, boolean marked) {}
@@ -577,24 +773,41 @@ class Orders {
         List<OrderModels.CatalogRow> items = rows.stream().map(r -> new OrderModels.CatalogRow(r.id(), r.code(), r.name(), r.manufacturer(),
                 r.qty() == null ? 0 : r.qty(), Optional.ofNullable(quotes.get(r.id())).map(x -> x.price().toString()).orElse(null),
                 localDate(r.nearest()), r.minQty(), r.maxQty(), r.controlled(), r.marked())).toList();
-        return new OrderModels.CatalogPage(items, total, page, size);
+        return new OrderModels.CatalogPage(items, total, page, size, facets);
+    }
+
+    private List<OrderModels.CatalogFacet> facet(String table, String column, String base, Map<String, Object> params) {
+        return jdbc.sql("SELECT d.id, d.name, count(*) AS count" + base.replaceFirst("(?s) WHERE p\\.active", " JOIN " + table + " d ON d.id = " + column
+                        + " WHERE p.active") + " GROUP BY d.id, d.name ORDER BY lower(d.name), d.id")
+                .params(params)
+                .query(OrderModels.CatalogFacet.class)
+                .list();
     }
 
     /** Mijozning oxirgi 5 ta buyurtmasi («Oldingi buyurtmani takrorlash»). */
     @Transactional(readOnly = true)
     List<PreviousOrder> previous(Actor actor, long customerId) {
         return jdbc.sql("""
-                SELECT o.id, o.number, o.order_date, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines, o.total, o.branch_id
+                SELECT o.id, o.number, o.order_date, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines, o.total, o.branch_id,
+                       ARRAY(SELECT p.name FROM sales_order_line l JOIN product p ON p.id = l.product_id
+                             WHERE l.order_id = o.id ORDER BY l.line_no LIMIT 3) AS products
                 FROM sales_order o WHERE o.customer_id = :c AND o.status NOT IN ('CANCELLED', 'REJECTED')
                 ORDER BY o.created_at DESC, o.id DESC LIMIT 20""")
                 .param("c", customerId)
                 .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id")) ? new PreviousOrder(rs.getLong("id"), rs.getString("number"),
-                        rs.getDate("order_date").toLocalDate(), rs.getInt("lines"), new Money(rs.getBigDecimal("total")).toString()) : null)
+                        rs.getDate("order_date").toLocalDate(), rs.getInt("lines"), new Money(rs.getBigDecimal("total")).toString(),
+                        List.of((String[]) rs.getArray("products").getArray())) : null)
                 .list()
                 .stream()
                 .filter(java.util.Objects::nonNull)
                 .limit(5)
                 .toList();
+    }
+
+    /** Mijoz holati (prototip «Buyurtma kiritish» — mijoz qatori): saqlanmagan buyurtmada ham — narx turi, qarz, limit, blok, litsenziya. */
+    @Transactional(readOnly = true)
+    OrderModels.CustomerCredit customerCredit(Actor actor, long warehouseId, long customerId) {
+        return evaluate(place(actor, warehouseId).branchId(), warehouseId, customerId, List.of()).credit();
     }
 
     /** To'lov turi standarti: mijozning oxirgi buyurtmasidan, bo'lmasa Perechisleniye (SPEC 5.3). */
@@ -879,14 +1092,34 @@ class Orders {
                 .list();
     }
 
+    /** Qator bo'yicha sof yig'ilgan (yig'ilgan − shu qatordan qaytarilgan): «Yig'ishga qaytarish» tanlangan qatorlar uchun (SPEC 188). */
+    record LinePick(long lineId, long storageZone, long shippingZone, long batchId, int qty) {}
+
+    List<LinePick> netPickedByLine(long orderId) {
+        return jdbc.sql("""
+                SELECT line_id, storage_zone, shipping_zone, batch_id, sum(qty) AS qty FROM (
+                    SELECT line_id, from_zone_id AS storage_zone, to_zone_id AS shipping_zone, batch_id, qty FROM sales_order_pick WHERE order_id = :id
+                    UNION ALL
+                    SELECT line_id, to_zone_id, from_zone_id, batch_id, -qty FROM sales_order_pick_return WHERE order_id = :id AND line_id IS NOT NULL) t
+                GROUP BY line_id, storage_zone, shipping_zone, batch_id HAVING sum(qty) > 0 ORDER BY line_id, storage_zone, batch_id""")
+                .param("id", orderId)
+                .query(LinePick.class)
+                .list();
+    }
+
     /** FEFO zahira (SPEC 6-7): «Navbatda»ga o'tishda — sotuvga ochiq zona va mijozning minimal yaroqlilik talabi bilan. */
     void reserveAgain(long orderId) {
+        reserveAgain(orderId, null);
+    }
+
+    /** Faqat tanlangan qatorlarga (null — barchasiga) zahira qayta qo'yiladi. */
+    void reserveAgain(long orderId, java.util.Set<Long> onlyLines) {
         Head h = jdbc.sql("SELECT id, number, branch_id, warehouse_id, customer_id, status, created_by FROM sales_order WHERE id = :id")
                 .param("id", orderId)
                 .query((rs, n) -> new Head(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getLong("warehouse_id"),
                         rs.getLong("customer_id"), OrderStatus.valueOf(rs.getString("status")), rs.getLong("created_by")))
                 .single();
-        List<LineRow> rows = lineRows(orderId);
+        List<LineRow> rows = lineRows(orderId).stream().filter(r -> onlyLines == null || onlyLines.contains(r.id())).toList();
         reserve(h, rows, evaluate(h.branchId(), h.warehouseId(), h.customerId(),
                 rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList()));
     }

@@ -40,6 +40,12 @@ export const useResetPassword = () =>
     unwrap(api.POST("/api/employees/{id}/reset-password", { params: { path: { id } }, body: { temporaryPassword } })),
   );
 
+/** E3: Buxgalterga barcha filiallar doirasi — faqat Direktor. */
+export const useSetAllBranches = () =>
+  useEmployeeMutation(({ id, enabled }: { id: number; enabled: boolean }) =>
+    unwrap(api.POST("/api/employees/{id}/all-branches", { params: { path: { id } }, body: { enabled } })),
+  );
+
 /** Qidiruv: ism, login yoki rol boʻyicha (katta-kichik harf farqsiz). */
 export function filterEmployees(list: Employee[], query: string): Employee[] {
   const q = query.trim().toLocaleLowerCase("uz");

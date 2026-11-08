@@ -5,7 +5,7 @@ import { CounterpartiesPage } from "@/features/counterparties/counterparties-pag
 export default function Page() {
   return (
     <>
-      <TopBar title="Yetkazib beruvchilar" />
+      <TopBar titleKey="suppliers" />
       <main className="flex-1 overflow-y-auto p-6">
         <Suspense>
           <CounterpartiesPage role="SUPPLIER" />

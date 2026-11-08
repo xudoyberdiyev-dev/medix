@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:13px;line-height:18px;font-variant-numeric:tabular-nums">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #EEF2F4">
+    <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:14px;font-weight:600">{{ title }}</span><span style="font-size:13px;color:#647574">{{ countLabel }}</span></span>
+    <sc-if value="{{ editable }}">
+      <span style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span title="{{ manualTip }}" style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:{{ manualBg }};color:{{ manualFg }};font-size:12px;font-weight:500"><lucide-i name="hand" size="14"></lucide-i>{{ manualLabel }}</span>
+        <button onClick="{{ onAuto }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#172B2A;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA" style-active="background:#EEF2F4"><lucide-i name="wand-sparkles" size="16" style="color:#0F766E"></lucide-i>{{ autoLabel }}</button>
+      </span>
+    </sc-if>
+  </div>
+  <div style="overflow-x:auto;min-width:0">
+    <div style="min-width:{{ minW }}px">
+      <div style="display:grid;grid-template-columns:{{ grid }};height:36px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0">
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="9">
+          <div style="padding:0 12px;min-width:0;height:100%;display:flex;align-items:center;justify-content:{{ c.justify }};font-size:12px;font-weight:500;color:#5B6B6A;position:{{ c.pos }};right:0;background:{{ c.bg }};box-shadow:{{ c.shadow }};z-index:{{ c.z }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ c.label }}">{{ c.label }}</span></div>
+        </sc-for>
+      </div>
+      <sc-for list="{{ items }}" as="r" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:{{ grid }};min-height:48px;align-items:center;border-bottom:1px solid #EEF2F4;background:{{ r.bg }}">
+          <div style="padding:6px 12px;min-width:0;display:flex;flex-direction:column;align-items:flex-start">
+            <sc-if value="{{ r.link }}"><button onClick="{{ r.onOpen }}" title="{{ r.tip }}" style="display:flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:{{ r.noColor }};cursor:pointer" style-hover="color:#0F766E;text-decoration:underline"><sc-if value="{{ r.arch }}"><lucide-i name="archive" size="13" style="color:#5B6B6A"></lucide-i></sc-if>{{ r.no }}</button></sc-if>
+            <sc-if value="{{ r.arch }}"><span style="display:inline-flex;margin-top:3px;height:18px;padding:0 6px;border-radius:6px;background:#EEF2F4;color:#5B6B6A;font-size:11px;line-height:18px;font-weight:500;white-space:nowrap">{{ archLabel }}</span></sc-if>
+            <sc-if value="{{ r.plain }}"><span title="{{ r.tip }}" style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#172B2A">{{ r.no }}</span></sc-if>
+          </div>
+          <div style="padding:0 12px;white-space:nowrap">{{ r.date }}</div>
+          <sc-if value="{{ isYt }}"><div style="padding:0 12px;min-width:0;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.ext }}</div></sc-if>
+          <div style="padding:0 12px;white-space:nowrap;color:{{ r.dueColor }}">{{ r.due }}</div>
+          <div style="padding:0 12px;text-align:right;white-space:nowrap">{{ r.sum }}</div>
+          <div style="padding:0 12px;text-align:right;white-space:nowrap;color:#5B6B6A">{{ r.ret }}</div>
+          <div style="padding:0 12px;text-align:right;white-space:nowrap;color:#5B6B6A">{{ r.prior }}</div>
+          <div style="padding:0 12px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap">
+            <span style="font-weight:600">{{ r.left }}</span>
+            <sc-if value="{{ r.closes }}"><span style="display:inline-flex;align-items:center;gap:4px;height:18px;padding:0 6px;border-radius:6px;background:#F0FDF4;color:#15803D;font-size:11.5px;font-weight:500"><lucide-i name="circle-check" size="12"></lucide-i>{{ paidLabel }}</span></sc-if>
+            <sc-if value="{{ r.partial }}"><span style="font-size:11.5px;color:#647574">{{ r.after }}</span></sc-if>
+          </div>
+          <div style="padding:0 12px">
+            <sc-if value="{{ r.isLate }}"><span style="display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:6px;background:#FEF2F2;color:#B91C1C;font-size:12px;font-weight:500;white-space:nowrap"><lucide-i name="clock-alert" size="12"></lucide-i>{{ r.lateLabel }}</span></sc-if>
+            <sc-if value="{{ r.notLate }}"><span style="color:#647574">—</span></sc-if>
+          </div>
+          <div style="padding:8px 12px;position:sticky;right:0;background:{{ r.stickyBg }};box-shadow:-8px 0 8px -8px rgba(18,60,58,0.16), inset 1px 0 0 #EEF2F4;z-index:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:4px">
+            <sc-if value="{{ editable }}"><dc-import name="MoneyInput" value="{{ r.value }}" on-change="{{ r.onValue }}" error="{{ r.err }}" compact="{{ true }}" bold="{{ r.has }}" placeholder="0,00" aria-label="{{ r.aria }}" hint-size="100%,30px"></dc-import></sc-if>
+            <sc-if value="{{ readOnly }}"><span style="text-align:right;font-weight:600;color:{{ r.valColor }};white-space:nowrap">{{ r.valText }}</span></sc-if>
+            <sc-if value="{{ r.hasErr }}"><span style="font-size:11.5px;line-height:14px;color:#B91C1C;text-align:right">{{ r.err }}</span></sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:320},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mt&quot;,&quot;yt&quot;],&quot;default&quot;:&quot;mt&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;rows&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{no,onOpen?,date,ext?,due,sum,ret,prior,left,late,value,onValue,err?}[]&quot;},&quot;editable&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;manual&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onAuto&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;labels&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, L = p.labels || {}, yt = p.kind === 'yt', rows = p.rows || [], ed = !!p.editable;
+    const W = yt ? [['no', 140], ['date', 96], ['ext', 120], ['due', 112], ['sum', 140], ['ret', 128], ['prior', 136], ['left', 140], ['late', 120], ['val', 176]]
+      : [['no', 140], ['date', 96], ['due', 112], ['sum', 140], ['ret', 128], ['prior', 136], ['left', 140], ['late', 120], ['val', 176]];
+    const RIGHT = { sum: 1, ret: 1, prior: 1, left: 1, val: 1 }, hints = p.hints !== false;
+    return {
+      title: L.title, countLabel: String(rows.length), editable: ed, readOnly: !ed, isYt: yt, autoLabel: L.auto, manualLabel: L.manual, manualTip: L.manualTip || '', paidLabel: L.paid, archLabel: L.arch || '',
+      onAuto: () => p.onAuto && p.onAuto(), manualBg: p.manual ? '#FFFBEB' : '#F5F7F8', manualFg: p.manual ? '#B45309' : '#647574',
+      grid: W.map(([k, w]) => k === 'no' ? `minmax(${w}px,1fr)` : w + 'px').join(' '), minW: W.reduce((a, x) => a + x[1], 0),
+      cols: W.map(([k]) => ({ label: L['c_' + k] || '', justify: RIGHT[k] ? 'flex-end' : 'flex-start', pos: k === 'val' ? 'sticky' : 'static', bg: '#F8FAFA', shadow: k === 'val' ? '-8px 0 8px -8px rgba(18,60,58,0.16), inset 1px 0 0 #E2E8F0' : 'none', z: k === 'val' ? 2 : 0 })),
+      items: rows.map(r => {
+        const v = r.value || 0, after = Math.round(((r.left || 0) - v) * 100) / 100, err = r.err || '';
+        return { no: r.no, arch: !!r.arch, noColor: r.arch ? '#172B2A' : '#0D9488', link: !!r.onOpen, plain: !r.onOpen, tip: r.tip || '', onOpen: () => r.onOpen && r.onOpen(), date: r.date, ext: r.ext || '—', due: r.due, dueColor: r.late > 0 ? '#B91C1C' : '#172B2A',
+          sum: fM(r.sum), ret: r.ret ? fM(-r.ret) : '0,00', prior: fM(r.prior || 0), left: fM(r.left),
+          closes: hints && v > 0 && after <= 0 && !err, partial: hints && v > 0 && after > 0 && !err, after: fill(L.after, { s: fM(after) }),
+          isLate: r.late > 0, notLate: !(r.late > 0), lateLabel: fill(L.days, { n: r.late }),
+          value: r.value == null || r.value === 0 ? null : r.value, onValue: n => r.onValue && r.onValue(n), err, hasErr: !!err, has: v > 0, aria: `${L.c_val || ''} · ${r.no}`,
+          valText: v > 0 ? fM(v) : '—', valColor: v > 0 ? '#172B2A' : '#647574', bg: err ? '#FEF2F2' : v > 0 ? '#F7FCFB' : '#FFFFFF', stickyBg: err ? '#FEF2F2' : v > 0 ? '#F7FCFB' : '#FFFFFF' };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

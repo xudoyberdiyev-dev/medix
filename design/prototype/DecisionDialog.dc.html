@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div onClick="{{ close }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-variant-numeric:tabular-nums">
+  <div role="alertdialog" aria-modal="true" onClick="{{ stop }}" style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column">
+    <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;text-wrap:pretty">{{ title }}</h2>
+    <sc-if value="{{ hasText }}"><p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ text }}</p></sc-if>
+    <sc-if value="{{ hasItems }}">
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ items }}" as="it">
+          <div style="display:flex;gap:10px;font-size:13px;line-height:18px"><lucide-i name="{{ it.icon }}" size="16" style="color:{{ it.color }};margin-top:1px;flex:none"></lucide-i><span style="text-wrap:pretty">{{ it.text }}</span></div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasPresets }}">
+      <span style="margin-top:20px;font-size:12px;line-height:16px;font-weight:500">{{ L.bk_dReason }} <span style="color:#B91C1C">*</span></span>
+      <div role="radiogroup" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ presets }}" as="r">
+          <button role="radio" aria-checked="{{ r.on }}" onClick="{{ r.pick }}" style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border:1px solid {{ r.border }};border-radius:8px;background:{{ r.bg }};font-size:14px;color:#172B2A;cursor:pointer;text-align:left;transition:border-color 120ms ease-out">
+            <span style="width:16px;height:16px;border-radius:50%;border:{{ r.ring }};flex:none;box-sizing:border-box"></span>{{ r.label }}
+          </button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ presetErr }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ L.bk_eReason }}</div></sc-if>
+    </sc-if>
+    <sc-if value="{{ hasField }}">
+      <label for="dd-text" style="margin-top:16px;font-size:12px;line-height:16px;font-weight:500">{{ fieldLabel }}<sc-if value="{{ fieldReq }}"> <span style="color:#B91C1C">*</span></sc-if></label>
+      <textarea id="dd-text" ref="{{ taRef }}" value="{{ txt }}" onChange="{{ onTxt }}" placeholder="{{ fieldPh }}" rows="3" style="margin-top:6px;width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid {{ taBorder }};border-radius:8px;font:inherit;font-size:14px;line-height:20px;color:#172B2A;resize:vertical;outline:none;transition:border-color 120ms ease-out" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></textarea>
+      <sc-if value="{{ txtErr }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ txtErrText }}</div></sc-if>
+    </sc-if>
+    <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:8px">
+      <button onClick="{{ close }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;color:#172B2A;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA">{{ L.bk_back2 }}</button>
+      <button onClick="{{ confirm }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:{{ btnBg }};color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:{{ btnHover }}">{{ btnLabel }}</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:600,&quot;height&quot;:520},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;approve&quot;,&quot;reject&quot;,&quot;return&quot;,&quot;cancel&quot;],&quot;default&quot;:&quot;approve&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;orderId&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5003,&quot;tsType&quot;:&quot;number&quot;},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onDone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(order,kind)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+class Component extends DCLogic {
+  state = { txt: '', preset: null, tried: false };
+  taRef = React.createRef();
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); setTimeout(() => this.taRef.current && this.props.kind !== 'reject' && this.taRef.current.focus(), 60); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  order() { const D = window.MedixData; return D && D.store.orders.find(o => o.id === this.props.orderId); }
+  confirm() {
+    const D = window.MedixData, L = this.L, k = this.props.kind, o = this.order(), s = this.state; if (!o) return;
+    const txt = s.txt.trim(), who = this.props.userName || 'Akmal Karimov';
+    let reason = '';
+    if (k === 'reject') { if (!s.preset || (s.preset === 'other' && !txt)) return this.setState({ tried: true }); reason = s.preset === 'other' ? txt : (L['bk_rs' + s.preset] + (txt ? '. ' + txt : '')); }
+    if ((k === 'cancel' || k === 'return') && !txt) return this.setState({ tried: true }); // T12a: qaytarishda sabab doim majburiy
+    const c = D.custById(o.cust), n = D.orderAct(o.id, k, who, { note: txt, reason: k === 'cancel' ? txt : reason });
+    if (!n) { this.props.onClose && this.props.onClose(); return; } // T12a: ma'lumot qatlami rad etdi (holat o'zgargan)
+    if (o.op && o.op !== who) {
+      if (k === 'approve') D.notify(o.op, 'success', 'circle-check', fill(L.bk_nApproved, { no: o.no, c: c ? c.name : '' }), o.id);
+      if (k === 'reject') D.notify(o.op, 'danger', 'octagon-x', fill(L.bk_nRejected, { no: o.no, r: reason }), o.id);
+      if (k === 'return') D.notify(o.op, 'warning', 'undo-2', fill(L.bk_nReturned, { no: o.no, r: txt || '—' }), o.id);
+    }
+    this.props.onDone && this.props.onDone(n, k);
+  }
+  renderVals() {
+    const L = this.L, D = window.MedixData, k = this.props.kind, s = this.state, o = this.order();
+    const base = { L, close: () => this.props.onClose && this.props.onClose(), stop: e => e.stopPropagation(), confirm: () => this.confirm(), taRef: this.taRef, txt: s.txt, onTxt: e => this.setState({ txt: e.target.value }) };
+    if (!D || !o) return { ...base, items: [], presets: [] };
+    const cr = D.creditCheck(o), t = cr.t, b = D.BRANCHES.find(x => x.code === o.branch) || D.BRANCHES[0];
+    const reserved = D.RESERVING.includes(o.status), picked = D.picksOf(o).reduce((a, x) => a + x.qty, 0);
+    let title = '', text = '', items = [], field = null, presets = null, btn = [L.bk_dConfirm, '#0F766E', '#115E59'];
+    if (k === 'approve') {
+      title = fill(L.bk_dApproveT, { no: o.no });
+      items = [{ icon: 'package-check', color: '#0F766E', text: fill(L.bk_dApprove1, { n: t.lines, q: fN(t.qty), wh: `${b.name.replace(' filiali', '')} · ${o.wh}` }) },
+        { icon: cr.over > 0 ? 'triangle-alert' : 'wallet', color: cr.over > 0 ? '#B45309' : '#5B6B6A', text: cr.over > 0 ? fill(L.bk_dApprove2, { d: fM(cr.debtAfter), o: fM(cr.over) }) : fill(L.bk_dApprove2ok, { d: fM(cr.debtAfter) }) }];
+      field = { label: L.bk_dComment, req: false, ph: '' };
+    } else if (k === 'reject') {
+      title = fill(L.bk_dRejectT, { no: o.no }); text = L.bk_dRejText;
+      presets = [['Overdue', L.bk_rsOverdue], ['Limit', L.bk_rsLimit], ['other', L.bk_rsOther]];
+      field = { label: s.preset === 'other' ? L.bk_dReason : L.bk_dComment, req: s.preset === 'other', ph: L.bk_dReasonPh };
+      btn = [L.bk_dRejectBtn, '#B91C1C', '#991B1B'];
+    } else if (k === 'return') {
+      title = fill(L.bk_dReturnT, { no: o.no });
+      if (o.status === 'pending') { text = L.bk_dReturnText; field = { label: L.bk_dOpNote, req: true, ph: L.bk_dOpNotePh }; }
+      else { items = [{ icon: 'package-open', color: '#B45309', text: fill(L.bk_dReturnConf, { q: fN(t.qty) }) }]; field = { label: L.bk_dComment, req: false, ph: '' }; }
+      btn = [L.bk_dReturnBtn, '#0F766E', '#115E59'];
+    } else if (k === 'cancel') {
+      title = fill(L.bk_dCancelT, { no: o.no }); text = L.bk_dCancelText;
+      if (reserved) items.push({ icon: 'package-open', color: '#5B6B6A', text: fill(L.bk_dCancelRel, { q: fN(t.qty) }) });
+      if (picked) items.push({ icon: 'undo-2', color: '#B45309', text: fill(L.bk_dCancelPicked, { q: fN(picked) }) });
+      field = { label: L.bk_dCancelReason, req: true, ph: L.bk_dReasonPh };
+      btn = [L.bk_dCancelBtn, '#B91C1C', '#991B1B'];
+    }
+    const txtErr = s.tried && field && field.req && !s.txt.trim();
+    return { ...base, title, text, hasText: !!text, items, hasItems: items.length > 0,
+      hasPresets: !!presets, presets: (presets || []).map(([key, label]) => { const on = s.preset === key; return { label, on, border: on ? '#0D9488' : '#E2E8F0', bg: on ? '#F0FDFA' : '#FFFFFF', ring: on ? '5px solid #0F766E' : '1.5px solid #647574', pick: () => this.setState({ preset: key }, () => key === 'other' && this.taRef.current && this.taRef.current.focus()) }; }),
+      presetErr: s.tried && presets && !s.preset,
+      hasField: !!field, fieldLabel: field ? field.label : '', fieldReq: !!(field && field.req), fieldPh: field ? field.ph : '',
+      taBorder: txtErr ? '#B91C1C' : '#E2E8F0', txtErr, txtErrText: k === 'reject' ? L.bk_eText : k === 'return' ? L.bk_eNote : L.bk_eText,
+      btnLabel: btn[0], btnBg: btn[1], btnHover: btn[2] };
+  }
+}
+</script>
+</body>
+</html>

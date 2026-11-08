@@ -248,6 +248,36 @@ class WarehouseTransferIT {
     }
 
     @Test
+    void stockTransitListsInTransitAndUnresolvedShortage() throws Exception {
+        Place p = place();
+        long b = stocked(p.main(), "OK yo'lda", 10);
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        long id = id(send(post("/api/warehouse-transfers"), manager, doc(p.main(), p.target(), b, 10)).andReturn());
+        String number = jdbc.sql("SELECT number FROM warehouse_transfer WHERE id = :id").param("id", id).query(String.class).single();
+        String row = "$[?(@.number == '" + number + "')]";
+        mvc.perform(get("/api/stock/transit").param("branchId", String.valueOf(p.branchId())).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(row).isEmpty());
+
+        send(post("/api/warehouse-transfers/" + id + "/send"), manager, "{}").andExpect(status().isOk());
+        mvc.perform(get("/api/stock/transit").param("branchId", String.valueOf(p.branchId())).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(row + ".qty").value(10))
+                .andExpect(jsonPath(row + ".kind").value("OK"))
+                .andExpect(jsonPath(row + ".shortage").value(false))
+                .andExpect(jsonPath(row + ".productName").value("OK yo'lda"));
+
+        send(post("/api/warehouse-transfers/" + id + "/receive"), manager,
+                "{\"toZoneId\":" + p.targetMain() + ",\"note\":\"2 quti yo'q\",\"lines\":[{\"lineId\":" + lineId(id)
+                        + ",\"receivedQty\":8}]}")
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/stock/transit").param("branchId", String.valueOf(p.branchId())).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(row + ".qty").value(2))
+                .andExpect(jsonPath(row + ".shortage").value(true));
+    }
+
+    @Test
     void reservedStockAndValidation() throws Exception {
         Place p = place();
         long b = stocked(p.main(), "OK zahira", 10);

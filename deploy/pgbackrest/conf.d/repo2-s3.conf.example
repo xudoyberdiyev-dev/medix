@@ -1,0 +1,16 @@
+# Boshqa joydagi nusxa (SPEC 14: «boshqa joyda nusxa»). Faylni `repo2-s3.conf` deb nusxalang va qiymatlarni to'ldiring.
+# S3-mos har qanday saqlash joyi: boshqa serverdagi MinIO, ma'lumotlar markazining obyekt xotirasi va h.k.
+# Kalitlar shu faylda turadi — u .gitignore'da, repoga tushmaydi. Faylga ruxsat: chmod 600.
+[global]
+repo2-type=s3
+repo2-path=/medix
+repo2-s3-bucket=medix-backup
+repo2-s3-endpoint=backup.example.uz
+repo2-s3-region=uz-central-1
+repo2-s3-uri-style=path
+repo2-s3-key=ALMASHTIRING
+repo2-s3-key-secret=ALMASHTIRING
+repo2-retention-full=8
+# Repo shifrlash (tavsiya): parolni saqlab qo'ying — usiz tiklab bo'lmaydi
+repo2-cipher-type=aes-256-cbc
+repo2-cipher-pass=ALMASHTIRING

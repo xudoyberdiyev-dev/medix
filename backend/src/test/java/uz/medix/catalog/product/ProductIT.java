@@ -151,6 +151,69 @@ class ProductIT {
     }
 
     @Test
+    void listColumnsViewsAndFacets() throws Exception {
+        Cookie purchaser = loginAs("PURCHASER");
+        String tag = uniq();
+        long m1 = manufacturer("Gedeon " + tag);
+        long m2 = manufacturer("KRKA " + tag);
+        String extra = ",\"dosageForm\":\"CAPSULE\",\"dose\":\"20 mg\",\"packQty\":30,\"perPack\":10,\"note\":\"Tender " + tag + "\"}";
+        long a = id(mvc.perform(json(post("/api/products"), purchaser, body("Omez " + tag, m1, null).replaceFirst("}$", extra)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.dosageForm").value("CAPSULE"))
+                .andExpect(jsonPath("$.perPack").value(10))
+                .andReturn());
+        long b = id(mvc.perform(json(post("/api/products"), purchaser, body("Nolpaza " + tag, m2, null).replace("\"controlled\":false", "\"controlled\":true")))
+                .andExpect(status().isCreated()).andReturn());
+        mvc.perform(json(post("/api/products/" + b + "/deactivate"), purchaser, "{\"reason\":\"Sinov\"}")).andExpect(status().isOk());
+
+        // Yorliqlar soni qidiruv bo'yicha; variantlar — yorliq bo'yicha, soni bilan
+        mvc.perform(get("/api/products").param("q", tag).param("status", "ALL").param("facets", "true").cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.views.all").value(2))
+                .andExpect(jsonPath("$.views.active").value(1))
+                .andExpect(jsonPath("$.views.controlled").value(1))
+                .andExpect(jsonPath("$.views.marked").value(2))
+                .andExpect(jsonPath("$.views.inactive").value(1))
+                .andExpect(jsonPath("$.facets.manufacturers", hasSize(2)))
+                .andExpect(jsonPath("$.facets.active").value(1))
+                .andExpect(jsonPath("$.facets.inactive").value(1));
+        // Bir nechta qiymatli filtr («yoki») va yorliq
+        mvc.perform(get("/api/products").param("q", tag).param("status", "ALL").param("manufacturerIds", m1 + "," + m2).cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(2));
+        mvc.perform(get("/api/products").param("q", tag).param("status", "ALL").param("view", "CONTROLLED").cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(b));
+        // Jadval ustunlari: dori shakli, doza, qadoq, izoh, qoldiq (0), narx (berilmagan — null)
+        mvc.perform(get("/api/products").param("q", tag).param("sort", "STOCK").param("desc", "true").cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(a))
+                .andExpect(jsonPath("$.items[0].dosageForm").value("CAPSULE"))
+                .andExpect(jsonPath("$.items[0].dose").value("20 mg"))
+                .andExpect(jsonPath("$.items[0].packQty").value(30))
+                .andExpect(jsonPath("$.items[0].note").value("Tender " + tag))
+                .andExpect(jsonPath("$.items[0].stock").value(0))
+                .andExpect(jsonPath("$.items[0].price").doesNotExist())
+                .andExpect(jsonPath("$.views").doesNotExist());
+        // Kartochka: tarix (yaratish, nofaol qilish), qoldiq (yo'q), narx tarixi (yo'q)
+        mvc.perform(get("/api/products/" + b + "/history").cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].action").value("product.deactivate"))
+                .andExpect(jsonPath("$[0].reason").value("Sinov"))
+                .andExpect(jsonPath("$[1].action").value("product.create"));
+        mvc.perform(get("/api/stock/product-card/" + a).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.lines", hasSize(0)))
+                .andExpect(jsonPath("$.moves", hasSize(0)));
+        mvc.perform(get("/api/stock/product-card/999999999").cookie(purchaser)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/prices/history").param("productId", String.valueOf(a)).cookie(loginAs("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows", hasSize(0)));
+    }
+
+    @Test
     void codeChangeIsHistoricalAndUnique() throws Exception {
         Cookie admin = loginAs("ADMIN");
         String tag = uniq();
@@ -200,5 +263,45 @@ class ProductIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].fullName").exists())
                 .andExpect(jsonPath("$[0].login").doesNotExist());
+    }
+
+    @Test
+    void formPresetCodeDuplicatesAndVatExempt() throws Exception {
+        Cookie admin = loginAs("ADMIN");
+        String tag = uniq();
+        long m = manufacturer("Gedeon " + tag);
+        String code = mvc.perform(get("/api/products/new-code").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(matchesPattern("^[1-9][0-9]{7}$")))
+                .andReturn().getResponse().getContentAsString().replaceAll(".*\"code\":\"(\\d{8})\".*", "$1");
+        String barcode = "479" + System.nanoTime() % 10_000_000_000L;
+        String withCode = body("Omeprazol " + tag, m, barcode).replace("\"vatRate\":\"12\"", "\"vatRate\":\"0\",\"vatExempt\":true,\"code\":\"" + code + "\"");
+        long id = id(mvc.perform(json(post("/api/products"), admin, withCode))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(code))
+                .andExpect(jsonPath("$.vatExempt").value(true))
+                .andExpect(jsonPath("$.hasMovements").value(false))
+                .andReturn());
+        // Band kod bilan yana — 409
+        mvc.perform(json(post("/api/products"), admin, body("Boshqa " + tag, null, null).replace("}", ",\"code\":\"" + code + "\"}")))
+                .andExpect(status().isConflict());
+        // Ozod, lekin stavka 12 — 400
+        mvc.perform(json(post("/api/products"), admin, body("Ozod " + tag, null, null).replace("}", ",\"vatExempt\":true}")))
+                .andExpect(status().isBadRequest());
+        // Dublikatlar: nom (registrsiz) + ishlab chiqaruvchi, kod, shtrix-kod; o'zi chiqarib tashlanadi
+        mvc.perform(get("/api/products/duplicates").cookie(admin).param("name", "OMEPRAZOL " + tag).param("manufacturerId", String.valueOf(m))
+                        .param("code", code).param("barcodes", barcode, "4780000000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sameName.id").value(id))
+                .andExpect(jsonPath("$.codeOwner.id").value(id))
+                .andExpect(jsonPath("$.barcodes", hasSize(1)))
+                .andExpect(jsonPath("$.barcodes[0].barcode").value(barcode));
+        mvc.perform(get("/api/products/duplicates").cookie(admin).param("name", "Omeprazol " + tag).param("manufacturerId", String.valueOf(m))
+                        .param("code", code).param("barcodes", barcode).param("excludeId", String.valueOf(id)))
+                .andExpect(jsonPath("$.sameName").doesNotExist())
+                .andExpect(jsonPath("$.codeOwner").doesNotExist())
+                .andExpect(jsonPath("$.barcodes", hasSize(0)));
+        // Operator — shakl tekshiruviga ruxsat yo'q
+        mvc.perform(get("/api/products/new-code").cookie(loginAs("OPERATOR"))).andExpect(status().isForbidden());
     }
 }

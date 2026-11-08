@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif">
+  <sc-if value="{{ hasLabel }}"><label style="font-size:12px;line-height:16px;font-weight:500;color:#172B2A;margin-bottom:6px">{{ label }}<sc-if value="{{ required }}"> <span style="color:#B91C1C">*</span></sc-if></label></sc-if>
+  <div style="display:flex;align-items:center;gap:8px;height:{{ h }}px;padding:0 10px 0 12px;border:1px solid {{ border }};border-radius:8px;background:{{ bg }};box-shadow:{{ ring }};transition:border-color 120ms ease-out" style-hover="border-color:{{ hoverBorder }}">
+    <input value="{{ text }}" onChange="{{ onInput }}" onFocus="{{ onFocus }}" onBlur="{{ onBlur }}" onKeyDown="{{ onKey }}" readOnly="{{ readOnly }}" placeholder="{{ placeholder }}" inputmode="decimal" aria-label="{{ ariaLabel }}" aria-invalid="{{ invalid }}" style="flex:1;min-width:0;width:100%;border:0;outline:none;background:transparent;font:inherit;font-size:{{ fs }};font-weight:{{ fw }};color:{{ color }};text-align:right;font-variant-numeric:tabular-nums">
+    <sc-if value="{{ hasSuffix }}"><span style="flex:none;font-size:13px;color:#647574">{{ suffix }}</span></sc-if>
+  </div>
+  <sc-if value="{{ hasError }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ error }}</div></sc-if>
+  <sc-if value="{{ hasHint }}"><div style="margin-top:6px;font-size:12px;line-height:16px;color:#5B6B6A">{{ hint }}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:90},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Summa&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;value&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:1250000.5,&quot;tsType&quot;:&quot;number|null&quot;},&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(n:number|null)=&gt;void&quot;},&quot;suffix&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;so'm&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;required&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;error&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;hint&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;readOnly&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;bold&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;placeholder&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;0,00&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const grp = s => s.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fmt2 = n => { if (n == null || isNaN(n)) return ''; const neg = n < 0, [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (neg ? '-' : '') + grp(a) + ',' + b; };
+function parse(raw) {
+  let s = String(raw || '').replace(/\s/g, '');
+  const neg = /^[-−]/.test(s); s = s.replace(/[-−]/g, '');
+  if (/\.$/.test(s) && s.indexOf(',') < 0) s = s.slice(0, -1) + ',';
+  const i = s.indexOf(','), ip = (i < 0 ? s : s.slice(0, i)).replace(/\D/g, '').replace(/^0+(?=\d)/, ''), dp = i < 0 ? null : s.slice(i + 1).replace(/\D/g, '').slice(0, 2);
+  const text = (neg ? '-' : '') + grp(ip) + (dp != null ? ',' + dp : '');
+  const num = !ip && !dp ? (neg ? -0 : null) : (neg ? -1 : 1) * parseFloat((ip || '0') + '.' + (dp || '0'));
+  return { text, num: num === -0 ? null : num };
+}
+class Component extends DCLogic {
+  state = { focus: false, text: '' };
+  renderVals() {
+    const p = this.props, s = this.state, err = !!p.error, ro = !!p.readOnly, compact = !!p.compact;
+    const text = s.focus ? s.text : fmt2(p.value);
+    return {
+      hasLabel: !!p.label, label: p.label, required: !!p.required, text, placeholder: p.placeholder || '0,00', readOnly: ro, ariaLabel: p.ariaLabel || p.label || '',
+      h: compact ? 30 : 34, fs: compact ? '13px' : '14px', fw: p.bold ? 600 : 500, color: ro ? '#5B6B6A' : '#172B2A', bg: ro ? '#F8FAFA' : '#FFFFFF', invalid: err,
+      border: err ? '#B91C1C' : s.focus ? '#0D9488' : '#E2E8F0', hoverBorder: err ? '#B91C1C' : ro ? '#E2E8F0' : '#CBD5D3', ring: s.focus && !ro ? (err ? '0 0 0 3px rgba(185,28,28,0.12)' : '0 0 0 3px rgba(13,148,136,0.15)') : 'none',
+      hasSuffix: !!p.suffix, suffix: p.suffix, hasError: err && !!p.error && p.error !== true && !compact, error: p.error, hasHint: !!p.hint && !(err && !compact), hint: p.hint,
+      onFocus: e => { if (ro) return; const t = p.value == null ? '' : fmt2(p.value).replace(/,00$/, ''); this.setState({ focus: true, text: t }); setTimeout(() => { try { e.target.select(); } catch (x) {} }, 0); },
+      onBlur: () => this.setState({ focus: false }),
+      onKey: e => { if (e.key === 'Enter') e.target.blur(); },
+      onInput: e => { if (ro) return; const r = parse(e.target.value); this.setState({ text: r.text }); p.onChange && p.onChange(r.num); }
+    };
+  }
+}
+</script>
+</body>
+</html>

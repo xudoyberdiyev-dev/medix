@@ -1,0 +1,204 @@
+{
+  "back": "Hisobotlar",
+  "allBranches": "barcha filiallar",
+  "export": "Excelʼga yuklab olish",
+  "total": "Jami",
+  "emptyHint": "Boshqa davrni tanlang yoki filialni oʻzgartiring.",
+  "orders": "Buyurtmalar",
+  "minutes": "{m} daq",
+  "hoursMinutes": "{h} soat {m} daq",
+  "catalog": {
+    "title": "Hisobotlar",
+    "forbidden": "Hisobotlar sizning rolingiz uchun yopiq.",
+    "emptyTitle": "Hisobot yoʻq",
+    "emptyDescription": "Rolingiz uchun ochiq hisobot hali yoʻq.",
+    "soon": "Tez orada",
+    "items": {
+      "sales": {
+        "title": "Savdo",
+        "description": "Sof savdo (sotuv − qaytarish) mijoz, operator, filial yoki kun boʻyicha; tannarx va yalpi foyda — ruxsat bilan."
+      },
+      "operators": {
+        "title": "Operatorlar savdosi",
+        "description": "Har operatorning sof savdosi va buyurtmalari tanlangan davrda."
+      },
+      "products": {
+        "title": "Mahsulotlar savdosi",
+        "description": "Dona va sof savdo mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha; mijoz filtri."
+      },
+      "gross-profit": {
+        "title": "Yalpi foyda",
+        "description": "Mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha tannarx, yalpi foyda (QQSsiz) va rentabellik."
+      },
+      "returns": {
+        "title": "Qaytarishlar",
+        "description": "QM hujjatlari sabab, mijoz, mahsulot yoki kun boʻyicha; qaytarish ulushi."
+      },
+      "expenses": {
+        "title": "Xarajatlar",
+        "description": "Oʻtkazilgan kassa va bank chiqimlari modda, filial, oy yoki kun boʻyicha; Naqd / Bank / Terminal."
+      },
+      "debts": {
+        "title": "Qarzlar",
+        "description": "Mijozlar va taʼminotchilar qarzi muddat guruhlari bilan."
+      },
+      "stock": {
+        "title": "Qoldiq",
+        "description": "Ombor va partiyalar boʻyicha qoldiq, .xlsx eksport."
+      },
+      "suppliers": {
+        "title": "Taʼminotchi xodim va korxona tovari",
+        "description": "Olib keldi / sotildi / boshqa / qoldi (tannarxda); Aktiv / Passiv."
+      },
+      "pickers": {
+        "title": "Yigʻuvchilar natijasi",
+        "description": "Yigʻilgan buyurtma, qator va dona; vaqtida / kechikkan."
+      },
+      "markers": {
+        "title": "Markirovkachilar natijasi",
+        "description": "Skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan."
+      }
+    }
+  },
+  "sales": {
+    "title": "Savdo hisoboti",
+    "forbidden": "Savdo hisoboti sizning rolingiz uchun yopiq.",
+    "groupBy": "Guruhlash",
+    "group": {
+      "CUSTOMER": "Mijoz",
+      "OPERATOR": "Operator",
+      "BRANCH": "Filial",
+      "DAY": "Kun",
+      "REGION": "Hudud",
+      "PAYMENT_TYPE": "Toʻlov turi"
+    },
+    "sales": "Sotuv",
+    "returns": "Qaytarish",
+    "net": "Sof savdo (QQS bilan)",
+    "cost": "Tannarx",
+    "profit": "Yalpi foyda (QQSsiz)",
+    "mineOnly": "faqat siz kiritgan buyurtmalar",
+    "emptyTitle": "Davrda savdo yoʻq",
+    "truncated": "Faqat birinchi 5000 qator koʻrsatildi — davrni qisqartiring.",
+    "note": "Sof savdo = sotuv − qaytarish; yetkazilmagan (bekor qilingan) sotuvlar kirmaydi.",
+    "payment": {
+      "CASH": "Naqd",
+      "TRANSFER": "Perechisleniye",
+      "ONLINE": "Online"
+    },
+    "paymentType": "Toʻlov turi",
+    "allPayments": "Barcha toʻlov turlari",
+    "region": "Hudud",
+    "allRegions": "Barcha hududlar",
+    "unspecified": "Koʻrsatilmagan"
+  },
+  "worker": {
+    "forbidden": "{title} sizning rolingiz uchun yopiq.",
+    "lines": "Qatorlar",
+    "givenMinutes": "Berilgan vaqt",
+    "actualMinutes": "Haqiqiy vaqt",
+    "avgMinutes": "Oʻrtacha / buyurtma",
+    "onTime": "Vaqtida",
+    "late": "Kechikkan",
+    "note": "Ish yakunlangan sana boʻyicha. «Vaqtida» va «Kechikkan» — faqat Ombor mudiri vaqt bergan buyurtmalar.",
+    "PICKERS": {
+      "title": "Yigʻuvchilar natijasi",
+      "person": "Yigʻuvchi",
+      "units": "Dona",
+      "extra": "FEFOʻdan chetlashish",
+      "empty": "Davrda yakunlangan yigʻish yoʻq"
+    },
+    "MARKERS": {
+      "title": "Markirovkachilar natijasi",
+      "person": "Markirovkachi",
+      "units": "Kodlar",
+      "extra": "Olib tashlangan kodlar",
+      "empty": "Davrda yakunlangan markirovka yoʻq"
+    }
+  },
+  "supplierGoods": {
+    "title": "{kind} tovari",
+    "kind": {
+      "STAFF": "Taʼminotchi xodim",
+      "COMPANY": "Taʼminotchi korxona"
+    },
+    "tab": {
+      "STAFF": "Xodim",
+      "COMPANY": "Korxona"
+    },
+    "forbidden": "Bu hisobot tannarxda — hisobot va tannarx koʻrish ruxsati kerak.",
+    "byWhom": "Kim boʻyicha",
+    "staffName": "Xodim (kim nomiga)",
+    "supplier": "Taʼminotchi",
+    "status": "Holat",
+    "active": "Aktiv",
+    "passive": "Passiv",
+    "brought": "Olib keldi",
+    "sold": "Sotildi",
+    "other": "Boshqa",
+    "left": "Qoldi",
+    "emptyTitle": "Davrda harakat va qoldiq yoʻq",
+    "note": "Tannarxda. Olib keldi — davrdagi kirim; Sotildi — sotuv − qaytarish; Boshqa — hisobdan oʻtkazish va h.k.; Qoldi — hozirgi qoldiq. Aktiv — davrda kirim qilgan, Passiv — kirim yoʻq, qoldigʻi bor."
+  },
+  "products": {
+    "title": "Mahsulotlar savdosi",
+    "forbidden": "Mahsulotlar savdosi sizning rolingiz uchun yopiq.",
+    "group": {
+      "PRODUCT": "Mahsulot",
+      "CATEGORY": "Kategoriya",
+      "MANUFACTURER": "Ishlab chiqaruvchi"
+    },
+    "unspecified": "Koʻrsatilmagan",
+    "qtySold": "Sotildi, dona",
+    "qtyReturned": "Qaytdi, dona",
+    "qtyNet": "Sof, dona",
+    "margin": "Rentabellik",
+    "customer": "Mijoz",
+    "customerChip": "Mijoz: {name}",
+    "note": "Sof savdo = sotuv − qaytarish (partiya qatorlari boʻyicha); yetkazilmagan (bekor qilingan) sotuvlar kirmaydi.",
+    "noteCost": "Sof savdo = sotuv − qaytarish; yetkazilmaganlar kirmaydi. Yalpi foyda = sof savdo QQSsiz − partiya tannarxi; rentabellik = yalpi foyda / sof savdo QQSsiz.",
+    "categoryChip": "Kategoriya: {name}",
+    "manufacturerChip": "Ishlab chiqaruvchi: {name}",
+    "drillHint": "Kategoriya yoki ishlab chiqaruvchi qatorini bosing — uning mahsulotlari ochiladi."
+  },
+  "expenses": {
+    "forbidden": "Xarajatlar hisoboti sizning rolingiz uchun yopiq.",
+    "title": {
+      "OUT": "Xarajatlar",
+      "IN": "Boshqa kirimlar"
+    },
+    "direction": "Yoʻnalish",
+    "group": {
+      "ITEM": "Modda",
+      "BRANCH": "Filial",
+      "MONTH": "Oy",
+      "DAY": "Kun"
+    },
+    "ops": "Operatsiyalar",
+    "cash": "Naqd",
+    "transfer": "Bank",
+    "online": "Terminal",
+    "empty": {
+      "OUT": "Davrda xarajat yoʻq",
+      "IN": "Davrda boshqa kirim yoʻq"
+    },
+    "note": "Faqat oʻtkazilgan kassa (KO) va bank (BO) operatsiyalari; tasdiq kutayotgan va bekor qilinganlar kirmaydi. Mijoz toʻlovlari — «Qarzlar» va Kassir panelida."
+  },
+  "returns": {
+    "title": "Qaytarishlar",
+    "forbidden": "Qaytarishlar hisoboti sizning rolingiz uchun yopiq.",
+    "group": {
+      "REASON": "Sabab",
+      "CUSTOMER": "Mijoz",
+      "PRODUCT": "Mahsulot",
+      "DAY": "Kun"
+    },
+    "documents": "QM hujjatlari",
+    "amount": "Qaytarish",
+    "rate": "Ulushi",
+    "totalRate": "Qaytarish ulushi: {rate}",
+    "productChip": "Mahsulot: {name}",
+    "emptyTitle": "Bu davrda qaytarish yoʻq",
+    "note": "Qaytarish = QM hujjatlari (qisman yetkazish va mijoz qaytargan tovar), QQS bilan. Ulushi = qaytarish / shu davrdagi sotuv (yetkazilmaganlar kirmaydi). Mijoz qatorini bosing — uning mahsulotlari, mahsulot qatorini — sabablari."
+  }
+}

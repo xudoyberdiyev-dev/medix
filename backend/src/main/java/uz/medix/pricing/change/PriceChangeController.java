@@ -2,7 +2,9 @@ package uz.medix.pricing.change;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.http.ContentDisposition;
@@ -28,6 +30,7 @@ import uz.medix.pricing.change.PriceChangeModels.PriceChangeDetail;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeRequest;
 import uz.medix.pricing.change.PriceChangeModels.PricePage;
+import uz.medix.pricing.change.PriceChangeModels.PriceSort;
 import uz.medix.pricing.change.PriceChangeModels.ReceiptBatches;
 import uz.medix.pricing.change.PriceChangeModels.ReasonRequest;
 import uz.medix.pricing.change.PriceChangeModels.Status;
@@ -49,11 +52,13 @@ class PriceChangeController {
     private final PriceChanges changes;
     private final PriceChangePdf pdf;
     private final CurrentActor currentActor;
+    private final PriceExcel excel;
 
-    PriceChangeController(PriceChanges changes, PriceChangePdf pdf, CurrentActor currentActor) {
+    PriceChangeController(PriceChanges changes, PriceChangePdf pdf, CurrentActor currentActor, PriceExcel excel) {
         this.changes = changes;
         this.pdf = pdf;
         this.currentActor = currentActor;
+        this.excel = excel;
     }
 
     private Actor actor() {
@@ -71,12 +76,35 @@ class PriceChangeController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Long manufacturerId,
             @RequestParam(required = false) LocalDate at,
+            @RequestParam(defaultValue = "NAME") PriceSort sort,
+            @RequestParam(defaultValue = "false") boolean desc,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         if (!actor().canAccessBranch(branchId)) {
             throw MedixException.notFound("error.notFound");
         }
-        return changes.prices(branchId, q, manufacturerId, at == null ? changes.today() : at, Math.max(page, 0), Math.clamp(size, 1, 200));
+        return changes.prices(branchId, q, manufacturerId, at == null ? changes.today() : at, sort, desc, Math.max(page, 0),
+                Math.clamp(size, 1, 200));
+    }
+
+    @GetMapping("/prices/export")
+    @Operation(summary = "Amaldagi narxlar — Excel'ga eksport (.xlsx)",
+            description = "Jadvaldagi filtr, sana va saralash bilan; har narx turi alohida ustun; ko'pi bilan 50 000 qator.")
+    void exportPrices(
+            @RequestParam long branchId,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Long manufacturerId,
+            @RequestParam(required = false) LocalDate at,
+            @RequestParam(defaultValue = "NAME") PriceSort sort,
+            @RequestParam(defaultValue = "false") boolean desc,
+            HttpServletResponse response) throws IOException {
+        if (!actor().canAccessBranch(branchId)) {
+            throw MedixException.notFound("error.notFound");
+        }
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"narxlar.xlsx\"");
+        excel.export(changes.prices(branchId, q, manufacturerId, at == null ? changes.today() : at, sort, desc, 0, PriceExcel.MAX_EXPORT_ROWS),
+                response.getOutputStream());
     }
 
     @GetMapping("/price-changes")

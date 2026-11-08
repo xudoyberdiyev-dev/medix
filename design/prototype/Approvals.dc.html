@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div data-screen-label="Tasdiqlash" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <dc-import name="PageHeader" title="{{ L.bk_aTitle }}" count="{{ countLabel }}" hint-size="100%,34px"></dc-import>
+    <p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A">{{ L.bk_aSub }}</p>
+  </div>
+  <sc-if value="{{ paHas }}">
+    <section style="background:#FFFFFF;border:1px solid #BFDBFE;border-radius:10px;display:flex;flex-direction:column">
+      <div style="display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-bottom:1px solid #EEF2F4"><span style="font-size:14px;font-weight:600">{{ L.nq_apT }} · {{ paCount }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ L.nq_apSub }}</span></div>
+      <sc-for list="{{ paRows }}" as="a"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #F1F5F4"><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:500;white-space:nowrap">{{ a.no }}</span><span style="flex:1;min-width:180px;display:flex;flex-direction:column"><span style="font-size:13px">{{ a.line }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ a.sent }}</span></span><span style="font-size:13px;font-weight:600;white-space:nowrap">{{ a.sum }}</span><button onClick="{{ a.open }}" style="height:32px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#F0FDFA">{{ L.nq_apOpen }}</button></div></sc-for>
+    </section>
+  </sc-if>
+  <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+
+  <sc-if value="{{ isEmpty }}">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:32px;text-align:center">
+      <span style="width:56px;height:56px;border-radius:50%;background:#F0FDF4;color:#15803D;display:flex;align-items:center;justify-content:center;margin-bottom:8px"><lucide-i name="check-check" size="26"></lucide-i></span>
+      <span style="font-size:16px;line-height:22px;font-weight:600">{{ emptyTitle }}</span>
+      <span style="font-size:12px;line-height:16px;color:#647574">{{ L.bk_emptyD }}</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasItems }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:{{ cols }};height:{{ boxH }};min-height:540px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow:hidden">
+      <sc-if value="{{ showList }}" hint-placeholder-val="{{ true }}">
+        <div role="listbox" aria-label="{{ L.bk_aTitle }}" style="overflow-y:auto;min-width:0;display:flex;flex-direction:column">
+          <sc-for list="{{ items }}" as="it" hint-placeholder-count="5">
+            <div style="max-height:{{ it.maxH }};opacity:{{ it.opa }};overflow:hidden;transition:max-height 200ms ease-out,opacity 200ms ease-out;flex:none">
+              <button role="option" aria-selected="{{ it.on }}" onClick="{{ it.pick }}" style="display:flex;flex-direction:column;gap:6px;width:100%;padding:12px 16px 12px 13px;border:0;border-left:3px solid {{ it.edge }};border-bottom:1px solid #EEF2F4;background:{{ it.bg }};text-align:left;cursor:pointer;font:inherit;color:inherit;transition:background 120ms ease-out" style-hover="background:{{ it.hover }}">
+                <span style="display:flex;align-items:baseline;gap:12px;width:100%">
+                  <span style="flex:1;min-width:0;font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.name }}</span>
+                  <span style="font-size:13px;line-height:18px;font-weight:600;white-space:nowrap">{{ it.sum }}</span>
+                </span>
+                <span style="display:flex;align-items:center;gap:8px;width:100%;font-size:12px;line-height:16px;color:#647574;min-width:0">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px">{{ it.no }}</span><span>·</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.op }}</span>
+                  <span style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:{{ it.waitColor }};font-weight:{{ it.waitWeight }}"><lucide-i name="{{ it.waitIcon }}" size="12"></lucide-i>{{ it.wait }}</span>
+                </span>
+                <span style="display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap">
+                  <sc-for list="{{ it.chips }}" as="ch"><span style="display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;background:{{ ch.bg }};color:{{ ch.fg }};font-size:12px;font-weight:500;white-space:nowrap">{{ ch.text }}</span></sc-for>
+                  <sc-if value="{{ it.hasStatus }}"><dc-import name="OrderStatus" status="{{ it.status }}" dict="{{ L }}" hint-size="100px,22px"></dc-import></sc-if>
+                  <sc-if value="{{ it.locked }}"><span title="{{ L.bk_needDir }}" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:16px;color:#5B6B6A"><lucide-i name="lock" size="12"></lucide-i>{{ L.bk_lockDir }}</span></sc-if>
+                </span>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showDivider }}" hint-placeholder-val="{{ true }}"><div style="background:#E2E8F0"></div></sc-if>
+
+      <sc-if value="{{ showDetail }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+          <sc-if value="{{ noSel }}"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;color:#647574">{{ L.bk_selectHint }}</div></sc-if>
+          <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+              <sc-if value="{{ narrow }}"><button onClick="{{ backList }}" style="align-self:flex-start;display:flex;align-items:center;gap:4px;height:28px;padding:0 8px 0 4px;border:0;border-radius:6px;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F0FDFA"><lucide-i name="arrow-left" size="16"></lucide-i>{{ L.bk_listBack }}</button></sc-if>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:16px;line-height:22px;font-weight:600">{{ d.name }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#5B6B6A">{{ d.stir }}</span><span style="font-size:12px;color:#647574">{{ d.region }}</span></div>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;line-height:18px;color:#5B6B6A"><span>{{ d.orderLine }}</span><button onClick="{{ openCard }}" style="display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ L.bk_openCard }}<lucide-i name="arrow-up-right" size="14"></lucide-i></button></div>
+              </div>
+
+              <section style="border:1px solid #FDE68A;background:#FFFFFF;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+                <span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#B45309"><lucide-i name="triangle-alert" size="16"></lucide-i>{{ L.bk_why }}<span style="margin-left:auto;font-size:12px;font-weight:500;color:#5B6B6A">{{ d.levelLabel }}</span></span>
+                <sc-for list="{{ d.why }}" as="w"><div style="display:flex;gap:8px;font-size:13px;line-height:20px"><lucide-i name="{{ w.icon }}" size="16" style="color:{{ w.color }};margin-top:2px;flex:none"></lucide-i><span style="text-wrap:pretty">{{ w.text }}</span></div></sc-for>
+              </section>
+
+              <section style="border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+                <span style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font-size:13px;font-weight:600">{{ L.bk_credit }}</span><button onClick="{{ openDebt }}" style="display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;font-size:13px;color:#0F766E;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ L.b_cpDebt }}: {{ debtText }}<lucide-i name="arrow-up-right" size="14"></lucide-i></button></span>
+                <div style="position:relative;height:12px;border-radius:6px;background:#EEF2F4;display:flex">
+                  <span style="display:block;height:100%;width:{{ bar.debt }}%;background:#5B6B6A;border-radius:6px 0 0 6px"></span>
+                  <span style="display:block;height:100%;width:{{ bar.order }}%;background:#0D9488"></span>
+                  <span style="display:block;height:100%;width:{{ bar.over }}%;background:repeating-linear-gradient(135deg,#B91C1C 0 4px,#FCA5A5 4px 7px);border-radius:0 6px 6px 0"></span>
+                  <span style="position:absolute;top:-5px;bottom:-5px;left:{{ bar.limit }}%;width:2px;margin-left:-1px;background:#172B2A"></span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;line-height:16px;color:#5B6B6A">
+                  <sc-for list="{{ legend }}" as="lg"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:{{ lg.c }}"></span>{{ lg.label }} <span style="color:#172B2A;font-weight:500">{{ lg.v }}</span></span></sc-for>
+                </div>
+                <span style="font-size:12px;line-height:16px;font-weight:500;color:{{ bar.noteColor }}">{{ bar.note }}</span>
+              </section>
+
+              <div style="display:grid;grid-template-columns:repeat({{ subCols }},minmax(0,1fr));gap:16px">
+                <section style="border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+                  <span style="font-size:13px;font-weight:600">{{ L.bk_aging }}</span>
+                  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #EEF2F4;border-radius:8px;overflow:hidden">
+                    <sc-for list="{{ aging }}" as="a"><div style="display:flex;flex-direction:column;gap:2px;padding:8px 10px;background:{{ a.bg }};border-right:1px solid #EEF2F4;min-width:0"><span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ a.label }}</span><span style="font-size:12.5px;line-height:18px;font-weight:600;color:{{ a.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ a.full }}">{{ a.v }}</span></div></sc-for>
+                  </div>
+                  <span style="font-size:13px;font-weight:600;margin-top:6px">{{ L.bk_disc }}</span>
+                  <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ discText }}</span>
+                  <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end;height:84px">
+                    <sc-for list="{{ delays }}" as="m"><div title="{{ m.tip }}" style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%"><span style="font-size:11px;line-height:12px;color:#5B6B6A">{{ m.d }}</span><span style="width:100%;max-width:28px;height:{{ m.h }}px;border-radius:3px 3px 0 0;background:{{ m.c }}"></span><span style="font-size:11px;line-height:12px;color:#647574">{{ m.m }}</span></div></sc-for>
+                  </div>
+                </section>
+                <section style="border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0">
+                  <span style="font-size:13px;font-weight:600;margin-bottom:6px">{{ L.bk_lastPays }}</span>
+                  <sc-for list="{{ pays }}" as="py"><div style="display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:8px;padding:6px 0;border-bottom:1px solid #EEF2F4;font-size:12.5px;line-height:18px"><span style="color:#5B6B6A">{{ py.date }}</span><span style="color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ py.method }}</span><span style="font-weight:500;white-space:nowrap">{{ py.sum }}</span></div></sc-for>
+                </section>
+              </div>
+
+              <sc-if value="{{ d.hasNote }}"><div style="background:#F8FAFA;border:1px solid #EEF2F4;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;line-height:16px;color:#647574">{{ L.bk_opNote }} · {{ d.op }}</span><span style="font-size:13px;line-height:20px;font-style:italic;text-wrap:pretty">«{{ d.note }}»</span></div></sc-if>
+
+              <section style="display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:13px;font-weight:600">{{ L.bk_lines }}</span>
+                <sc-for list="{{ d.lines }}" as="ln"><div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;line-height:18px;padding:4px 0;border-bottom:1px solid #EEF2F4"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ln.name }}</span><span style="color:#5B6B6A;white-space:nowrap">{{ ln.qty }}</span></div></sc-for>
+                <sc-if value="{{ d.hasMore }}"><span style="font-size:12px;line-height:16px;color:#647574">{{ d.moreText }}</span></sc-if>
+              </section>
+            </div>
+
+            <div style="flex:none;border-top:1px solid #E2E8F0;background:#FFFFFF;padding:12px 24px;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+              <sc-if value="{{ canAct }}">
+                <button onClick="{{ doReturn }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#F8FAFA"><lucide-i name="undo-2" size="16" style="color:#5B6B6A"></lucide-i>{{ L.bk_return }}</button>
+                <button onClick="{{ doReject }}" style="height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#B91C1C;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#FEF2F2;border-color:#FECACA"><lucide-i name="octagon-x" size="16"></lucide-i>{{ L.bk_reject }}</button>
+                <button onClick="{{ doApprove }}" style="height:34px;padding:0 14px 0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:#115E59"><lucide-i name="check" size="16"></lucide-i>{{ L.bk_approve }}</button>
+              </sc-if>
+              <sc-if value="{{ lockedAct }}">
+                <div style="flex:1;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:#EFF6FF;border:1px solid #BFDBFE;color:#1D4ED8;font-size:13px;line-height:18px"><lucide-i name="lock" size="16"></lucide-i><span style="flex:1">{{ lockedText }}</span><button onClick="{{ remind }}" style="padding:0;border:0;background:transparent;color:#1D4ED8;font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline">{{ L.bk_remind }}</button></div>
+              </sc-if>
+              <sc-if value="{{ decided }}"><div style="flex:1;display:flex;align-items:center;gap:8px;font-size:13px;color:#5B6B6A"><dc-import name="OrderStatus" status="{{ d.status }}" dict="{{ L }}" hint-size="100px,22px"></dc-import>{{ d.decidedText }}</div></sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasDlg }}">
+    <dc-import name="DecisionDialog" kind="{{ dlg }}" order-id="{{ selId }}" dict="{{ L }}" role="{{ role }}" user-name="{{ userName }}" on-close="{{ closeDlg }}" on-done="{{ onDone }}" hint-size="0px,0px"></dc-import>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;branch&quot;,&quot;director&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(key)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const mln = n => (Math.round(n / 1e5) / 10).toFixed(1).replace('.', ',') + ' mln';
+const waitText = (m, L) => { const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60; return d ? fill(L.bk_wD, { d, h }) : h ? fill(L.bk_wH, { h, m: mm }) : fill(L.bk_wM, { m: mm }); };
+const DEC = ['approve', 'reject', 'return'];
+class Component extends DCLogic {
+  state = { view: 'mine', sel: null, leaving: null, detail: false, dlg: null, empty: false, ready: !!window.MedixData };
+  get L() { return this.props.dict || {}; }
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'approvals' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; const o = P.open ? D.store.orders.find(x => x.no === P.open) : null; if (o) this.setState({ view: 'mine', sel: o.id, detail: true }); }
+  componentDidMount() {
+    this._url = setInterval(() => this.applyUrl(), 250); if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60); this.applyDemo(); }
+  componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearTimeout(this._lv); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.applyDemo(); }
+  applyDemo() { const d = this.props.demo; if (!d) return; this.setState({ empty: d.k === 'empty', view: d.k === 'branch' ? 'all' : 'mine', sel: null, detail: false, dlg: null }); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  decision(o) { const L = this.L; return [...window.MedixData.orderLog(o)].reverse().find(e => DEC.includes(e.kind) && e.at.slice(0, 10) === window.MedixData.nowStr().slice(0, 10) && (o.viaAppr || o.rej || o.returned || e.kind !== 'approve' || true)); }
+  lists() {
+    const D = window.MedixData, p = this.props, br = p.branch && p.branch !== 'ALL' ? p.branch : null, today = D.nowStr().slice(0, 10);
+    const inBr = o => !br || o.branch === br;
+    const pending = this.state.empty ? [] : D.store.orders.filter(o => o.status === 'pending' && inBr(o)).map(o => ({ o, cr: D.creditCheck(o), w: D.waitMin(o) })).sort((a, b) => b.w - a.w);
+    const mineIds = D.apprPage(p.branch, p.role).orders.map(o => o.id), mine = pending.filter(x => mineIds.includes(x.o.id)); // T10a3: apprPage — yagona manba
+    const decided = this.state.empty ? [] : D.store.orders.filter(o => inBr(o) && D.orderLog(o).some(e => DEC.includes(e.kind) && e.at.slice(0, 10) === today && D.orderLog(o).some(x => x.kind === 'send'))).map(o => ({ o, cr: D.creditCheck(o), w: 0, ev: [...D.orderLog(o)].reverse().find(e => DEC.includes(e.kind)) })).sort((a, b) => D.pDT(b.ev.at) - D.pDT(a.ev.at));
+    return { pending, mine, decided };
+  }
+  renderVals() { const v = this.rv0() || {}; return { ...v, ...this.priceAp(v.L || this.props.dict || {}) }; }
+  priceAp(L) { const D = window.MedixData, p = this.props; if (!D || !D.nrSum) return { paHas: false, paRows: [], paCount: '0' };
+    const br = p.branch && p.branch !== 'ALL' ? p.branch : null, fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return String(+a).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + b; }, fl = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+    const list = this.state.empty ? [] : D.apprPage(p.branch, p.role).prices; // T10a3: bosh sahifa bilan bir manba
+    const rows = list.map(x => ({ no: x.no, line: fl(L.nq_apRow, { t: D.ptName(x.type), b: (D.BRANCHES.find(b => b.code === x.branch) || {}).name || x.branch, n: (x.lines || []).length }), sent: fl(L.nq_apSent, { at: x.sentAt || x.createdAt, who: x.createdBy }), sum: fl(L.nq_apSum, { s: fM(D.nrSum(x)) }), open: () => { try { location.hash = '#prices?open=' + encodeURIComponent(x.no); } catch (e) {} } }));
+    return { paHas: rows.length > 0, paRows: rows, paCount: String(rows.length) }; }
+  rv0() {
+    const L = this.L, D = window.MedixData, p = this.props, s = this.state, narrow = !!p.narrow;
+    const base = { L, narrow, role: p.role, userName: p.userName, views: [], items: [], d: { why: [], lines: [] }, bar: {}, legend: [], aging: [], delays: [], pays: [] };
+    if (!D) return base;
+    const { pending, mine, decided } = this.lists();
+    const cur = s.view === 'mine' ? mine : s.view === 'all' ? pending : decided;
+    let list = cur.slice();
+    if (s.leaving && !list.some(x => x.o.id === s.leaving.id)) { const i = Math.min(s.leaving.idx, list.length); const o = D.store.orders.find(x => x.id === s.leaving.id); if (o) list.splice(i, 0, { o, cr: D.creditCheck(o), w: s.leaving.w, leaving: true }); }
+    const selId = s.sel != null && list.some(x => x.o.id === s.sel) ? s.sel : (list.find(x => !x.leaving) || {}).o ? list.find(x => !x.leaving).o.id : null;
+    const views = [['mine', L.bk_vMine, mine.length], ['all', L.bk_vAll, pending.length], ['today', L.bk_vToday, decided.length]].map(([k, label, n]) => ({ label, count: n, tone: k !== 'today' && n ? 'warning' : null, active: s.view === k, pick: () => this.setState({ view: k, sel: null, detail: false }) }));
+    const chipsOf = cr => cr.issues.map(i => i.k === 'limit' ? { text: fill(L.bk_chLimit, { p: Math.round(i.pct) }), fg: i.danger ? '#B91C1C' : '#B45309', bg: i.danger ? '#FEF2F2' : '#FFFBEB' }
+      : i.k === 'overdue' ? { text: fill(L.bk_chOverdue, { s: mln(i.sum), n: i.days }), fg: i.danger ? '#B91C1C' : '#B45309', bg: i.danger ? '#FEF2F2' : '#FFFBEB' } : i.k === 'maxQty' ? { text: fill(L.oe_chMax, { n: i.items.length }), fg: '#B45309', bg: '#FFFBEB' } : { text: L.bk_chBlocked, fg: '#B91C1C', bg: '#FEF2F2' });
+    const isToday = s.view === 'today';
+    const items = list.map((x, idx) => {
+      const o = x.o, c = D.custById(o.cust) || {}, on = o.id === selId && !x.leaving, lock = !isToday && !D.canApprove(x.cr.level || 'branch', p.role), long = x.w > 240;
+      return { name: c.name, sum: fM(x.cr.t.total), no: o.no, op: o.op, wait: isToday ? (x.ev ? x.ev.at.slice(11) : '') : waitText(x.w, L), waitIcon: isToday ? 'check' : 'clock', waitColor: !isToday && long ? '#B45309' : '#647574', waitWeight: !isToday && long ? 500 : 400,
+        chips: isToday ? [] : chipsOf(x.cr), hasStatus: isToday, status: o.status, locked: lock, on, edge: on ? '#0D9488' : 'transparent', bg: on ? '#DDF5EE' : '#FFFFFF', hover: on ? '#DDF5EE' : '#F8FAFA',
+        maxH: x.leaving ? '0px' : '200px', opa: x.leaving ? 0 : 1, pick: () => this.setState({ sel: o.id, detail: true }) };
+    });
+    const hasItems = list.length > 0;
+    const out = { ...base, views, items, hasItems, isEmpty: !hasItems, emptyTitle: isToday ? L.bk_noneToday : L.bk_emptyT, countLabel: fN(pending.length), selId,
+      cols: narrow ? 'minmax(0,1fr)' : '400px 1px minmax(0,1fr)', boxH: 'calc(100vh - 230px)', showList: !narrow || !s.detail, showDivider: !narrow, showDetail: !narrow || s.detail,
+      backList: () => this.setState({ detail: false }), subCols: narrow ? 1 : 2,
+      hasDlg: !!s.dlg, dlg: s.dlg, closeDlg: () => this.setState({ dlg: null }) };
+    const sel = list.find(x => x.o.id === selId);
+    if (!sel) return { ...out, noSel: true, hasSel: false };
+    const o = sel.o, cr = sel.cr, c = cr.c || D.custById(o.cust), t = cr.t, fin = D.custFin(c);
+    const why = [];
+    cr.issues.forEach(i => {
+      if (i.k === 'limit') why.push({ icon: 'gauge', color: i.danger ? '#B91C1C' : '#B45309', text: fill(L.bk_whyLimit, { l: fM(c.limit), d: fM(cr.debt), o: fM(t.total), x: fM(i.over), p: Math.round(i.pct) }) });
+      if (i.k === 'overdue') why.push({ icon: 'clock-alert', color: i.danger ? '#B91C1C' : '#B45309', text: fill(L.bk_whyOverdue, { s: fM(i.sum), n: i.days }) });
+      if (i.k === 'maxQty') i.items.forEach(m => why.push({ icon: 'package-plus', color: '#B45309', text: fill(L.oe_rMax, { p: m.name, q: fN(m.qty), m: fN(m.max) }) }));
+      if (i.k === 'blocked') why.push({ icon: 'lock', color: '#B91C1C', text: fill(L.bk_whyBlocked, { r: i.text }) });
+    });
+    if (!why.length) why.push({ icon: 'info', color: '#5B6B6A', text: L.bk_whyNone });
+    const cd = cr.debt, sum = cd + t.total, scale = Math.max(c.limit, sum) * 1.04, debtW = Math.min(cd, scale) / scale * 100;
+    const ordInLimit = Math.max(0, Math.min(t.total, c.limit - cd)), overW = Math.max(0, sum - Math.max(c.limit, cd)) / scale * 100;
+    const ordW = (cd >= c.limit ? 0 : ordInLimit) / scale * 100;
+    const bar = { debt: debtW.toFixed(2), order: ordW.toFixed(2), over: overW.toFixed(2), limit: (c.limit / scale * 100).toFixed(2),
+      note: sum > c.limit ? fill(L.b_cpOverBy, { s: fM(sum - c.limit) }) : fill(L.b_cpLeft, { s: fM(c.limit - sum) }), noteColor: sum > c.limit ? '#B91C1C' : '#5B6B6A' };
+    const openDebt = () => D.openDebt && D.openDebt({ kind: 'mt', party: c.id, branch: o.branch }), debtText = fM(cd);
+    const legend = [{ c: '#5B6B6A', label: L.bk_lgDebt, v: fM(cd) }, { c: '#0D9488', label: L.bk_lgOrder, v: fM(t.total) }, ...(sum > c.limit ? [{ c: '#B91C1C', label: L.bk_lgOver, v: fM(sum - c.limit) }] : []), { c: '#172B2A', label: L.bk_lgLimit, v: fM(c.limit) }];
+    const aging = [L.bk_ag0, L.bk_ag1, L.bk_ag2, L.bk_ag3].map((label, i) => { const v = fin.aging[i]; return { label, v: v ? mln(v) : '—', full: fM(v), color: i === 3 && v ? '#B91C1C' : v ? '#172B2A' : '#647574', bg: i === 3 && v ? '#FEF2F2' : '#FFFFFF' }; });
+    const maxD = Math.max(20, ...fin.delays.map(x => x.d));
+    const delays = fin.delays.map(x => ({ m: x.m, d: x.d, h: Math.max(3, Math.round(x.d / maxD * 52)), c: x.d > 15 ? '#B45309' : '#CBD5D3', tip: `${x.m}: ${x.d} ${L.b_days || 'kun'}` }));
+    const pays = fin.pays.map(x => ({ date: x.date, method: x.method, sum: fM(x.sum) }));
+    const canAct = !isToday && o.status === 'pending' && D.canApprove(cr.level || 'branch', p.role);
+    const ev = sel.ev, decTxt = ev ? `${ev.who} · ${ev.at.replace(' ', ', ')}${ev.reason ? ' · ' + ev.reason : ev.note ? ' · ' + ev.note : ''}` : '';
+    const lines = o.lines.slice(0, 5).map(l => { const pr = D.prodById(l.pid) || {}; return { name: pr.name, qty: fN(l.qty) + ' ' + (pr.unit || '') }; });
+    const order = list.filter(x => !x.leaving).map(x => x.o.id), idx = order.indexOf(o.id);
+    return { ...out, noSel: false, hasSel: true, why, openDebt, debtText,
+      d: { name: c.name, stir: c.stir, region: c.region, orderLine: fill(L.bk_dOrder, { no: o.no, n: t.lines, s: fM(t.total) }), levelLabel: fill(L.bk_needLevel, { l: cr.level === 'director' ? L.bk_lvDirector : L.bk_lvBranch }), why,
+        hasNote: !!o.mgrNote, note: o.mgrNote || '', op: o.op, lines, hasMore: o.lines.length > 5, moreText: fill(L.bk_more, { n: o.lines.length - 5 }), status: o.status, decidedText: decTxt },
+      bar, legend, aging, delays, pays, discText: fill(L.bk_discAvg, { n: fin.avgDelay }),
+      canAct, lockedAct: !isToday && o.status === 'pending' && !canAct, lockedText: L.bk_needDir + ' · ' + fill(L.kt_who, { r: D.whoCan((cr.level || 'branch') === 'director' ? 'approvals.director' : 'approvals.branch').map(r => L['r_' + r] || r).join(', ') }), decided: isToday,
+      openCard: () => { D.store.openReq = o.id; p.onNavigate && p.onNavigate('orders'); },
+      remind: () => this.toast(L.t_remind),
+      doApprove: () => this.setState({ dlg: 'approve' }), doReject: () => this.setState({ dlg: 'reject' }), doReturn: () => this.setState({ dlg: 'return' }),
+      onDone: (n, k) => {
+        const next = order[idx + 1] != null ? order[idx + 1] : order[idx - 1] != null ? order[idx - 1] : null;
+        this.setState({ dlg: null, leaving: { id: o.id, idx, w: sel.w }, sel: next });
+        this.toast(fill(L['t_' + { approve: 'approved', reject: 'rejected', return: 'returned' }[k]], { no: n.no }));
+        clearTimeout(this._lv); this._lv = setTimeout(() => this.setState({ leaving: null, detail: narrow ? false : this.state.detail }), 220);
+      } };
+  }
+}
+</script>
+</body>
+</html>

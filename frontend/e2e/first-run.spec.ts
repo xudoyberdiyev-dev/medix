@@ -45,8 +45,8 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
 
   await login(page, CEO_LOGIN, CEO_INITIAL);
   await changePassword(page, CEO_INITIAL, CEO_PASSWORD);
-  await expect(page).toHaveURL(/\/$/);
-  await page.getByRole("link", { name: "Sozlash ustasini ochish" }).click();
+  // Kompaniya sozlanmagan — Direktor avtomatik sozlash ustasiga o'tkaziladi (egasi talabi 08.11)
+  await expect(page).toHaveURL(/\/setup$/);
 
   // 1. Kompaniya
   await field(page, "Kompaniya (guruh) nomi").fill("Medix Group");
@@ -120,13 +120,38 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
 
   // Mahsulot
+  // Kategoriya — maʼlumotnomadan; ishlab chiqaruvchi — mahsulot shaklidan («Yangi ishlab chiqaruvchi»)
+  await page.goto("/dictionaries?tab=category");
+  await page.getByRole("button", { name: "Kategoriya qoʻshish" }).click();
+  await field(page, "Nomi").fill("Analgetiklar E2E");
+  await page.getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByRole("cell", { name: "Analgetiklar E2E" })).toBeVisible();
+
+  // Mahsulot shakli — toʻliq sahifa (prototip): majburiy maydonlar, xatolar bloki
   await page.goto("/products");
-  await page.getByRole("button", { name: "Mahsulot qoʻshish" }).click();
-  await field(page, "Nomi").fill("Paracetamol E2E 500 mg");
-  await choose(page, "Birlik", /^Dona/);
-  await page.getByRole("button", { name: "Mahsulotni saqlash" }).click();
-  await expect(page.getByText("Mahsulot qoʻshildi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Mahsulot qoʻshish" }).first().click();
+  await expect(page).toHaveURL(/\/products\/new$/);
+  await expect(page.getByLabel(/^Mahsulot kodi/)).toHaveValue(/^[1-9]\d{7}$/);
+  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
+  await expect(page.getByText("7 ta maydon toʻldirilmagan")).toBeVisible();
+  await field(page, "Mahsulot nomi").fill("Paracetamol E2E 500 mg");
+  await field(page, "Shartnomadagi nomi").fill("Парацетамол таблетки 500 мг №10");
+  await field(page, "Klassifikator nomi").fill("Paracetamol");
+  await page.getByRole("combobox", { name: "Ishlab chiqaruvchi", exact: true }).click();
+  await page.getByRole("button", { name: "Yangi ishlab chiqaruvchi" }).click();
+  await page.getByRole("dialog").getByLabel(/^Nomi/).fill("Nobel E2E");
+  await page.getByRole("button", { name: "Qoʻshish", exact: true }).click();
+  await expect(page.getByText("«Nobel E2E» maʼlumotnomaga qoʻshildi")).toBeVisible();
+  await choose(page, "Kategoriya", /Analgetiklar E2E/);
+  await field(page, "IKPU kodi").fill("03004001001000000");
+  await field(page, "Farm ID").fill("FRM-0000001");
+  await field(page, "Shtrix-kodlar").fill("123");
+  await field(page, "Shtrix-kodlar").press("Enter");
+  await expect(page.getByText(/Shtrix-kod 8 \(EAN-8\) yoki 13/)).toBeVisible();
+  await field(page, "Shtrix-kodlar").fill("");
+  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
+  await expect(page.getByText("Mahsulot saqlandi")).toBeVisible();
+  await expect(page).toHaveURL(/\/products\/\d+$/);
   await page.goto("/products?q=парацетамол");
   await expect(page.getByRole("cell", { name: "Paracetamol E2E 500 mg" })).toBeVisible();
 
@@ -142,8 +167,17 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Narxlar kuchga kirdi")).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.reload();
+  await page.goto("/prices?tab=prices");
   await expect(page.getByRole("cell", { name: "2.500,00" })).toBeVisible();
+  // Narx turlari: bazaviy «Narx» — narxi bor mahsulot soni, tahrirlash va tarix
+  await page.goto("/prices");
+  await expect(page.getByRole("tab", { name: "Narx turlari", selected: true })).toBeVisible();
+  await page.getByRole("cell", { name: "Promo", exact: true }).click();
+  await page.getByRole("button", { name: "Tahrirlash" }).click();
+  await page.getByRole("textbox", { name: "Muqobil nomi" }).fill("Промо");
+  await page.getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText("«Promo» saqlandi")).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Промо" })).toBeVisible();
 });
 
 test("CEO: Ctrl+K — mahsulot (kirillda), sahifa va NO hujjati", async ({ page }) => {
@@ -195,7 +229,13 @@ test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await expect(page.getByText("Qoldiq omborga kirdi")).toBeVisible();
   await page.keyboard.press("Escape");
 
+  // Qoldiqlar — mahsulot boʻyicha: jami va mavjud
   await page.goto("/stock");
+  await expect(page.getByRole("row", { name: /Paracetamol E2E/ })).toContainText("120");
+  await page.getByRole("row", { name: /Paracetamol E2E/ }).click();
+  await expect(page.getByText("Partiya × zona")).toBeVisible();
+  // Partiya boʻyicha koʻrinish
+  await page.goto("/stock?view=batch");
   const row = page.getByRole("row", { name: /Paracetamol E2E/ });
   await expect(row).toContainText("E2E-01");
   await expect(row).toContainText("120");
@@ -217,7 +257,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
 
   // Qoralama
   await page.goto("/receipts");
-  await page.getByRole("button", { name: "Kirim qoʻshish" }).click();
+  await page.getByRole("button", { name: "Yangi kirim" }).click();
   await choose(page, "Ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
@@ -235,6 +275,9 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  // Bildirishnoma sarlavhadagi tugmalar ustida — sichqoncha ustida tursa yopilmaydi
+  await page.mouse.move(0, 0);
+  await expect(page.getByText("Qoralama saqlandi")).toBeHidden({ timeout: 15_000 });
 
   // Qabul: 48 ta keldi — «Kam keldi»
   await page.getByRole("button", { name: "Qabul qilish" }).click();
@@ -252,7 +295,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await expect(page.getByText("qarz 96.000,00 soʻm")).toBeVisible();
   await page.keyboard.press("Escape");
 
-  await page.goto("/stock");
+  await page.goto("/stock?view=batch");
   await field(page, "Qidirish").fill("Paracetamol E2E");
   await expect(page.getByRole("row", { name: /KR-E2E-B/ })).toContainText("5");
   await expect(page.getByRole("row", { name: /KR-E2E(?!-B)/ }).first()).toContainText("48");
@@ -275,7 +318,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Shifo");
   await page.getByRole("option", { name: /Shifo Dorixona E2E/ }).click();
-  await choose(page, "Ombor", /Markaziy ombor/);
+  await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("E2E");
   await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
@@ -284,7 +327,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
   await expect(page.getByText("Muammo yoʻq — buyurtmani yuborish mumkin")).toBeVisible();
-  await expect(page.getByText("25.000,00 soʻm", { exact: true })).toBeVisible();
+  await expect(page.locator(`dl[aria-label="Jami"]`).getByText("25.000,00", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();
@@ -293,7 +336,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   // Vaqt berish → yigʻish → hisobdan oʻtkazish
   await field(page, "Yigʻish vaqti").fill("10");
   await page.getByRole("button", { name: "Vaqt berish" }).click();
-  await expect(page.getByText("Vaqt berildi")).toBeVisible();
+  await expect(page.getByRole("status").getByText("Vaqt berildi", { exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await page.goto("/picking");
   await page.getByRole("button", { name: "Yigʻishni boshlash" }).first().click();
@@ -301,6 +344,35 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.getByText("Olindi").first().click();
   await page.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(page.getByText("Yigʻish yakunlandi")).toBeVisible();
+
+  // E1 (07.11): markirovkasiz buyurtma ham Markirovkachidan «Tasdiqlash» bilan oʻtadi
+  await page.goto("/settings/employees");
+  await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
+  const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
+  await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill("Malika Markirovkachi");
+  await dialog.getByLabel(/^Login\s*\*?$/).fill("marker.0");
+  await choose(page, "Rol", /^Markirovkachi$/);
+  await choose(page, "Filial", /Toshkent/);
+  await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(OPERATOR_TEMP);
+  await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
+  await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
+  const marker = await page
+    .context()
+    .browser()!
+    .newPage({ baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000" });
+  await login(marker, "marker.0", OPERATOR_TEMP);
+  await changePassword(marker, OPERATOR_TEMP, OPERATOR_PASSWORD);
+  await expect(marker).toHaveURL(/\/$/);
+  await marker.goto("/marking");
+  await marker.getByRole("tab", { name: /Navbat/ }).click();
+  const card = marker.getByRole("listitem").filter({ hasText: "Shifo Dorixona E2E" }).first();
+  await expect(card).toContainText("Markirovkasiz — tasdiqlash");
+  await card.getByRole("button", { name: "Markirovkani boshlash" }).click();
+  await marker.getByRole("region", { name: "Markirovkasiz qatorlar" }).getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(marker.getByText("1 / 1 qator tasdiqlandi")).toBeVisible();
+  await marker.getByRole("button", { name: "Markirovkani yakunlash" }).click();
+  await expect(marker.getByText("Markirovka yakunlandi").first()).toBeVisible();
+  await marker.close();
 
   await page.goto("/orders");
   await page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first().click();
@@ -315,7 +387,8 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ }).click();
   await expect(tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByText(/^Hujjatlashtirilmoqda: \d+ ta · [\d.]+,\d\d soʻm$/)).toBeVisible();
+  // Prototip holat kartasi: nomi + soni + summasi
+  await expect(tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ })).toContainText(/[\d.]+,\d\d/);
   await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first()).toBeVisible();
   await tabs.getByRole("tab", { name: /^Qoralama/ }).click();
   await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" })).toHaveCount(0);
@@ -522,4 +595,81 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
   const row = page.getByRole("row", { name: /QY-/ }).first();
   await expect(row).toContainText("Oʻtkazildi");
   await expect(row).toContainText("Pharm Supply E2E");
+});
+
+test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx) → xaridor qabul qiladi", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  // Ikkinchi filial va uning ombori
+  await page.goto("/settings/branches");
+  await page.getByRole("button", { name: "Filial qoʻshish" }).first().click();
+  await field(page, "Kod").fill("SMQ");
+  await field(page, "STIR").fill("309876543");
+  await field(page, "Nomi").fill("E2E Samarqand");
+  await field(page, "Yuridik nomi").fill("E2E Samarqand MChJ");
+  await page.getByRole("button", { name: "Filialni saqlash" }).click();
+  await expect(page.getByText("E2E Samarqand").first()).toBeVisible();
+
+  await page.goto("/settings/warehouses");
+  await page.getByRole("button", { name: "Ombor qoʻshish" }).click();
+  // Roʻyxat filtrida ham «Filial» bor — ombor oynasi ichidagisi
+  await page.getByRole("dialog").getByRole("combobox", { name: "Filial", exact: true }).click();
+  await page.getByRole("option", { name: /E2E Samarqand/ }).click();
+  await field(page, "Nomi").fill("Samarqand ombori");
+  await page.getByRole("button", { name: "Omborni saqlash" }).click();
+  await expect(page.getByText("Samarqand ombori").first()).toBeVisible();
+
+  await page.goto("/branch-sales");
+  await page.getByRole("button", { name: "Savdo tuzish" }).first().click();
+  await choose(page, "Qaysi ombordan", /Markaziy ombor/);
+  await choose(page, "Zona", /Asosiy saqlash/);
+  await choose(page, "Xaridor ombori", /Samarqand ombori/);
+  await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("1");
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+
+  await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+  await expect(page.getByText(/HF-[A-Z]{3}-\d{6}/).first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await expect(page.getByText("Toʻliq qabul qilindi")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.goto("/branch-sales");
+  const row = page.getByRole("row", { name: /FS-/ }).first();
+  await expect(row).toContainText("Qabul qilindi");
+  await expect(row).toContainText("E2E Samarqand");
+});
+
+test("CEO: FS kamomadi — topildi, sotuvchiga qaytariladi (qarz kamayadi)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/branch-sales");
+  await page.getByRole("button", { name: "Savdo tuzish" }).first().click();
+  await choose(page, "Qaysi ombordan", /Markaziy ombor/);
+  await choose(page, "Zona", /Asosiy saqlash/);
+  await choose(page, "Xaridor ombori", /Samarqand ombori/);
+  await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("2");
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await page.getByLabel(/E2E-01 — kelgan soni/).fill("1");
+  await page.getByRole("dialog").last().getByLabel("Izoh").fill("1 quti yuklanmay qolgan");
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qabul qilish", exact: true }).click();
+  await expect(page.getByText("Qabul qilindi, kamomad 1 dona")).toBeVisible();
+  await expect(page.getByText(/Kamomad: 1 dona .*— hal qilinmagan/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Topildi — sotuvchiga qaytarish" }).click();
+  await page.getByRole("dialog").last().getByLabel("Izoh").fill("Markaziy omborda topildi");
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qaytarish", exact: true }).click();
+  await expect(page.getByText("Tovar sotuvchiga qaytarildi")).toBeVisible();
+  await expect(page.getByText(/Kamomad: 1 dona .*— hal qilindi/)).toBeVisible();
+  await expect(page.getByText(/Sotuvchiga qaytarildi · qarz -/)).toBeVisible();
 });

@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleCheck, TriangleAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -17,23 +18,16 @@ import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime } from "@/lib/format";
-import { STATUS_LABELS } from "./api";
 
 export type OrderIssueItem = components["schemas"]["OrderIssueItem"];
 export type IssueReason = OrderIssueItem["reason"];
 
-export const ISSUE_REASONS: { value: IssueReason; label: string }[] = [
-  { value: "NOT_FOUND", label: "Tovar joyida yoʻq" },
-  { value: "SHORTAGE", label: "Miqdor yetmaydi" },
-  { value: "DAMAGED", label: "Qadoq shikastlangan" },
-  { value: "WRONG_BATCH", label: "Partiya mos emas" },
-  { value: "EXPIRY", label: "Yaroqlilik muddati muammosi" },
-  { value: "CODE_UNREADABLE", label: "Kod oʻqilmaydi" },
-  { value: "OTHER", label: "Boshqa" },
-];
+/** Sabablar tartibi; nomlari — lugʻatda (`orders.issues.reason.*`). */
+export const ISSUE_REASONS: IssueReason[] = ["NOT_FOUND", "SHORTAGE", "DAMAGED", "WRONG_BATCH", "EXPIRY", "CODE_UNREADABLE", "OTHER"];
 
 /** «Muammo bor» tugmasi va oynasi (SPEC 5.2): sabab tanlanadi, xabar Ombor mudiriga ketadi, taymer toʻxtamaydi. */
 export function IssueButton({ orderId }: { orderId: number }) {
+  const t = useTranslations("orders");
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<IssueReason | null>(null);
   const [note, setNote] = useState("");
@@ -50,7 +44,7 @@ export function IssueButton({ orderId }: { orderId: number }) {
       await unwrap(
         api.POST("/api/orders/{id}/issues", { params: { path: { id: orderId } }, body: { reason, note: note.trim() || undefined } }),
       );
-      toast({ tone: "success", title: "Muammo yuborildi", description: "Ombor mudiriga xabar ketdi. Taymer davom etadi." });
+      toast({ tone: "success", title: t("issues.sent"), description: t("issues.sentHint") });
       setOpen(false);
       setReason(null);
       setNote("");
@@ -65,30 +59,30 @@ export function IssueButton({ orderId }: { orderId: number }) {
   return (
     <>
       <Button variant="secondary" icon={TriangleAlert} onClick={() => setOpen(true)}>
-        Muammo bor
+        {t("issues.button")}
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Muammo bor"
-        primaryAction={{ label: "Muammoni yuborish", onClick: () => void send(), loading: pending, disabled: !reason || needNote }}
+        title={t("issues.button")}
+        primaryAction={{ label: t("issues.send"), onClick: () => void send(), loading: pending, disabled: !reason || needNote }}
       >
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-caption text-text-secondary">Sabab</legend>
+          <legend className="mb-2 text-caption text-text-secondary">{t("issues.reasonLegend")}</legend>
           {ISSUE_REASONS.map((r) => (
             <Radio
-              key={r.value}
+              key={r}
               name="issue-reason"
-              label={r.label}
-              value={r.value}
-              checked={reason === r.value}
+              label={t(`issues.reason.${r}`)}
+              value={r}
+              checked={reason === r}
               onChange={(v) => setReason(v as IssueReason)}
             />
           ))}
         </fieldset>
         <div className="mt-3">
           <TextField
-            label={reason === "OTHER" ? "Izoh" : "Izoh (ixtiyoriy)"}
+            label={reason === "OTHER" ? t("issues.note") : t("issues.noteOptional")}
             value={note}
             onChange={setNote}
             maxLength={500}
@@ -103,6 +97,7 @@ export function IssueButton({ orderId }: { orderId: number }) {
 
 /** Ombor mudiri paneli → Muammolar: ochiq muammolar, «Hal qilindi» (izoh bilan). */
 export function IssuesList({ onOpenOrder }: { onOpenOrder: (id: number) => void }) {
+  const t = useTranslations("orders");
   const qc = useQueryClient();
   const issues = useQuery({
     queryKey: ["orders", "issues"],
@@ -143,11 +138,7 @@ export function IssuesList({ onOpenOrder }: { onOpenOrder: (id: number) => void 
     <>
       {issues.data.length === 0 ? (
         <Card>
-          <EmptyState
-            icon={CircleCheck}
-            title="Ochiq muammo yoʻq"
-            description="Yigʻuvchi yoki markirovkachi «Muammo bor» yuborsa, shu yerda koʻrinadi."
-          />
+          <EmptyState icon={CircleCheck} title={t("issues.emptyTitle")} description={t("issues.emptyHint")} />
         </Card>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -161,7 +152,7 @@ export function IssuesList({ onOpenOrder }: { onOpenOrder: (id: number) => void 
                   <button type="button" className="font-mono text-primary-button hover:underline" onClick={() => onOpenOrder(i.orderId)}>
                     {i.orderNumber}
                   </button>
-                  <span className="text-text-secondary">{STATUS_LABELS[i.stage]}</span>
+                  <span className="text-text-secondary">{t(`status.${i.stage}`)}</span>
                 </div>
                 <div className="mt-1">{i.customer}</div>
                 {i.note ? <div className="mt-1">{i.note}</div> : null}
@@ -178,7 +169,7 @@ export function IssuesList({ onOpenOrder }: { onOpenOrder: (id: number) => void 
                   setError(null);
                 }}
               >
-                Hal qilindi
+                {t("issues.resolved")}
               </Button>
             </li>
           ))}
@@ -187,13 +178,13 @@ export function IssuesList({ onOpenOrder }: { onOpenOrder: (id: number) => void 
       <Modal
         open={resolving !== null}
         onClose={() => setResolving(null)}
-        title="Muammo hal qilindi"
-        primaryAction={{ label: "Belgilash", onClick: () => void resolve(), loading: pending, disabled: !resolution.trim() }}
+        title={t("issues.resolveTitle")}
+        primaryAction={{ label: t("issues.mark"), onClick: () => void resolve(), loading: pending, disabled: !resolution.trim() }}
       >
         <p className="mb-3">
           {resolving?.orderNumber} · {resolving?.reasonLabel}
         </p>
-        <TextField label="Nima qilindi" value={resolution} onChange={setResolution} maxLength={500} error={err.fields.resolution} />
+        <TextField label={t("issues.whatDone")} value={resolution} onChange={setResolution} maxLength={500} error={err.fields.resolution} />
         {err.message ? <Alert tone="danger" title={err.message} className="mt-3" /> : null}
       </Modal>
     </>

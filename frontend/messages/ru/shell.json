@@ -1,0 +1,15 @@
+{
+  "mainMenu": "Главное меню",
+  "profile": "Профиль",
+  "logout": "Выйти",
+  "search": "Поиск",
+  "branch": "Филиал",
+  "allBranches": "Все филиалы",
+  "openMenu": "Открыть меню",
+  "closeMenu": "Закрыть меню",
+  "collapse": "Свернуть меню",
+  "expand": "Развернуть меню",
+  "userMenu": "Меню пользователя",
+  "language": "Язык",
+  "badge": "Ожидают: {count}"
+}

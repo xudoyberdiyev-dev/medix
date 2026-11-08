@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<aside style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-variant-numeric:tabular-nums">
+  <div style="display:grid;grid-template-columns:repeat({{ cols }},minmax(0,1fr));gap:12px">
+    <sc-for list="{{ items }}" as="k" hint-placeholder-count="4">
+      <div style="padding:14px 16px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);display:flex;flex-direction:column;gap:4px;min-width:0">
+        <span style="font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A">{{ k.label }}</span>
+        <sc-if value="{{ k.noPick }}"><span style="display:flex;align-items:center;gap:6px;font-size:{{ k.size }};line-height:28px;font-weight:600;letter-spacing:-0.02em;color:{{ k.color }};white-space:nowrap">{{ k.value }}<sc-if value="{{ k.warn }}"><lucide-i name="triangle-alert" size="16" style="color:#B45309"></lucide-i></sc-if></span></sc-if>
+        <sc-if value="{{ k.hasPick }}"><button onClick="{{ k.pick }}" title="{{ k.pickTip }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;font-family:inherit;font-size:{{ k.size }};line-height:28px;font-weight:600;letter-spacing:-0.02em;color:{{ k.color }};white-space:nowrap;cursor:pointer;text-decoration:underline;text-decoration-color:#CBD5D3;text-underline-offset:4px" style-hover="color:#0F766E;text-decoration-color:#0F766E">{{ k.value }}<lucide-i name="arrow-up-right" size="14" style="color:#0F766E"></lucide-i></button></sc-if>
+        <sc-if value="{{ k.hasNote }}"><span style="font-size:12px;line-height:16px;color:#647574">{{ k.note }}</span></sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <sc-if value="{{ hasBars }}">
+    <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
+      <div style="padding:14px 16px;border-bottom:1px solid #EEF2F4;font-size:14px;font-weight:600">{{ barsTitle }}</div>
+      <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{ barList }}" as="b">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;line-height:18px"><span>{{ b.name }}</span><span style="color:{{ b.qtyColor }};font-weight:500">{{ b.qty }}</span></div>
+            <div style="height:4px;border-radius:2px;background:#EEF2F4;overflow:hidden"><div style="height:100%;width:{{ b.pct }}%;background:#0D9488;border-radius:2px"></div></div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </sc-if>
+</aside>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:420},&quot;kpis&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label,value,note?,warn?}[]&quot;},&quot;columns&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:2,&quot;tsType&quot;:&quot;number&quot;},&quot;barsTitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Filiallar bo'yicha qoldiq&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;bars&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{name,qty,qtyColor,pct}[]&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, bars = p.bars || [];
+    return { cols: p.columns || 2, items: (p.kpis || []).map(k => ({ ...k, size: k.size || '22px', color: k.color || (k.warn ? '#B45309' : k.value === '—' ? '#647574' : '#172B2A'), warn: !!k.warn, hasNote: !!k.note, hasPick: !!k.pick, noPick: !k.pick, pickTip: k.pickTip || '' })),
+      hasBars: bars.length > 0, barList: bars };
+  }
+}
+</script>
+</body>
+</html>

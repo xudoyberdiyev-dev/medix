@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uz.medix.finance.payment.PaymentModels.PaymentCancelRequest;
+import uz.medix.finance.payment.PaymentModels.DocPayment;
 import uz.medix.finance.payment.PaymentModels.OpenDocs;
 import uz.medix.finance.payment.PaymentModels.PaymentDetail;
 import uz.medix.finance.payment.PaymentModels.PaymentRequest;
@@ -57,6 +58,13 @@ class PaymentController {
     @Operation(summary = "MT kartochkasi (taqsimot bilan)")
     PaymentDetail get(@PathVariable long id) {
         return payments.find(actor(), id);
+    }
+
+    @GetMapping("/doc")
+    @PreAuthorize("hasAnyAuthority('payments.view', 'orders.view')")
+    @Operation(summary = "Hujjat bo'yicha to'lov holati", description = "Buyurtma kartochkasidagi «To'lov» yorlig'i: SV summasi, to'langan, qoldi, muddat, MT lar.")
+    DocPayment doc(@RequestParam String docType, @RequestParam long docId) {
+        return payments.docPayment(actor(), docType, docId);
     }
 
     @GetMapping("/open-docs")

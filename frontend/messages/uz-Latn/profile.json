@@ -1,0 +1,48 @@
+{
+  "title": "Profil",
+  "info": {
+    "title": "Maʼlumotlarim",
+    "fullName": "F.I.Sh.",
+    "login": "Login",
+    "role": "Rol",
+    "branch": "Filial",
+    "allBranches": "Barcha filiallar",
+    "position": "Lavozim",
+    "lastLogin": "Oxirgi kirish",
+    "adminEdits": "Ism, rol va filialni administrator oʻzgartiradi.",
+    "phoneSaved": "Telefon raqami saqlandi",
+    "phone": "Telefon",
+    "savePhone": "Telefonni saqlash"
+  },
+  "pin": {
+    "title": "PIN",
+    "changed": "PIN almashtirildi",
+    "set": "PIN oʻrnatildi",
+    "isSet": "Oʻrnatilgan",
+    "notSet": "Oʻrnatilmagan",
+    "about": "PIN — rahbar tasdiqlari va kassa farqi uchun ikkinchi tasdiq. 5 marta xato kiritilsa, 15 daqiqaga qulflanadi.",
+    "lastChange": " Oxirgi oʻzgarish: {date}.",
+    "currentPassword": "Joriy parol",
+    "newPin": "Yangi PIN",
+    "pin": "PIN",
+    "pinHint": "4–6 raqam",
+    "repeat": "PIN takrori",
+    "change": "PIN ni almashtirish",
+    "setAction": "PIN oʻrnatish",
+    "errors": {
+      "format": "PIN 4–6 ta raqamdan iborat boʻlishi kerak.",
+      "easy": "PIN juda oson. 1111, 1234 kabi ketma-ketlik boʻlmasin.",
+      "mismatch": "PIN takrori mos kelmadi. Qaytadan kiriting."
+    }
+  },
+  "password": {
+    "title": "Parol",
+    "mismatch": "Parol takrori mos kelmadi. Qaytadan kiriting.",
+    "changed": "Parol almashtirildi",
+    "current": "Joriy parol",
+    "new": "Yangi parol",
+    "newHint": "Kamida 8 belgi",
+    "repeat": "Parol takrori",
+    "change": "Parolni almashtirish"
+  }
+}

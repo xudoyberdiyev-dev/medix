@@ -257,6 +257,14 @@ class CashIT {
                 .andExpect(jsonPath("$.accounts.length()").value(1))
                 .andExpect(jsonPath("$.accounts[0].income").value("600000.00"))
                 .andExpect(jsonPath("$.accounts[0].expense").value("300000.00"));
+        // To'lov turi filtri (SPEC 8): Terminal — faqat terminal hisoblari; Naqd — faqat kassalar
+        mvc.perform(get("/api/cash-panel").param("branchId", "" + b).param("kind", "TERMINAL").cookie(cashier))
+                .andExpect(jsonPath("$.balances.total").value("300000.00"))
+                .andExpect(jsonPath("$.balances.cash").value("0.00"))
+                .andExpect(jsonPath("$.accounts.length()").value(1));
+        mvc.perform(get("/api/cash-panel").param("branchId", "" + b).param("kind", "CASH").cookie(cashier))
+                .andExpect(jsonPath("$.balances.total").value("2500000.00"))
+                .andExpect(jsonPath("$.balances.terminal").value("0.00"));
         mvc.perform(get("/api/cash-panel").param("branchId", "" + b).param("from", today().toString()).param("to", today().minusDays(1).toString())
                         .cookie(cashier))
                 .andExpect(jsonPath("$.code").value("cash.periodInvalid"));

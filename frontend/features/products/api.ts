@@ -16,10 +16,10 @@ export const PRODUCT_CREATE = "products.create";
 
 const KEY = ["products"] as const;
 
-export function useProducts(filters: ProductFilters) {
+export function useProducts(filters: ProductFilters, branchId: number | null) {
   return useQuery({
-    queryKey: [...KEY, "list", filters],
-    queryFn: () => unwrap(api.GET("/api/products", { params: { query: toQuery(filters) } })),
+    queryKey: [...KEY, "list", filters, branchId],
+    queryFn: () => unwrap(api.GET("/api/products", { params: { query: toQuery(filters, branchId) } })),
     placeholderData: keepPreviousData,
   });
 }
@@ -65,117 +65,84 @@ export const useDeactivateProduct = () =>
     unwrap(api.POST("/api/products/{id}/deactivate", { params: { path: { id } }, body: { reason } })),
   );
 
+/** Bir nechta mahsulotni nofaol qilish (tanlanganlar) — har biri alohida, sabab bilan. */
+export function useBulkDeactivate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, reason }: { ids: number[]; reason: string }) => {
+      await ensureCsrf();
+      for (const id of ids) await unwrap(api.POST("/api/products/{id}/deactivate", { params: { path: { id } }, body: { reason } }));
+      return ids.length;
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: [...KEY] }),
+  });
+}
+
 export const useActivateProduct = () =>
   useProductMutation((id: number) => unwrap(api.POST("/api/products/{id}/activate", { params: { path: { id } } })));
 
-/** Shakl qiymatlari (hammasi satr — TextField uchun). */
-export interface ProductForm {
-  name: string;
-  contractName: string;
-  classifierName: string;
-  manufacturerId: string | null;
-  categoryId: string | null;
-  countryId: string | null;
-  unitId: string | null;
-  supplyEmployeeId: string | null;
-  ikpu: string;
-  farmId: string;
-  barcodes: string;
-  controlled: boolean;
-  marked: boolean;
-  prescription: boolean;
-  vatRate: string;
-  minQty: string;
-  maxQty: string;
+export type DosageForm = NonNullable<ProductRequest["dosageForm"]>;
+export const DOSAGE_FORMS: DosageForm[] = ["TABLET", "CAPSULE", "AMPOULE", "VIAL", "SYRUP", "OINTMENT", "PEN", "POWDER", "GEL"];
+
+/** Kartochka: mahsulot tarixi (audit). */
+export function useProductHistory(id: number) {
+  return useQuery({
+    queryKey: [...KEY, "history", id],
+    queryFn: () => unwrap(api.GET("/api/products/{id}/history", { params: { path: { id } } })),
+  });
 }
 
-export const EMPTY_FORM: ProductForm = {
-  name: "",
-  contractName: "",
-  classifierName: "",
-  manufacturerId: null,
-  categoryId: null,
-  countryId: null,
-  unitId: null,
-  supplyEmployeeId: null,
-  ikpu: "",
-  farmId: "",
-  barcodes: "",
-  controlled: false,
-  marked: false,
-  prescription: false,
-  vatRate: "12",
-  minQty: "",
-  maxQty: "",
-};
-
-export function formFromProduct(p: ProductDetail): ProductForm {
-  const id = (r?: { id: number } | null) => (r ? String(r.id) : null);
-  return {
-    name: p.name,
-    contractName: p.contractName ?? "",
-    classifierName: p.classifierName ?? "",
-    manufacturerId: id(p.manufacturer),
-    categoryId: id(p.category),
-    countryId: id(p.country),
-    unitId: String(p.unit.id),
-    supplyEmployeeId: id(p.supplyEmployee),
-    ikpu: p.ikpu ?? "",
-    farmId: p.farmId ?? "",
-    barcodes: p.barcodes.join("\n"),
-    controlled: p.controlled,
-    marked: p.marked,
-    prescription: p.prescription,
-    vatRate: p.vatRate.replace(/\.00$/, ""),
-    minQty: p.minQty ? String(p.minQty) : "",
-    maxQty: p.maxQty ? String(p.maxQty) : "",
-  };
+/** Kartochka: qoldiq (zona × partiya), filiallar boʻyicha, harakatlar. */
+export function useProductStockCard(id: number, branchId: number | null) {
+  return useQuery({
+    queryKey: ["stock", "product-card", id, branchId],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/stock/product-card/{productId}", {
+          params: { path: { productId: id }, query: { branchId: branchId ?? undefined } },
+        }),
+      ),
+  });
 }
 
-/** Shakl → API soʻrovi; mahalliy xatolar (raqamlar) — maydon boʻyicha. */
-export function toRequest(f: ProductForm): { body?: ProductRequest; errors: Record<string, string> } {
-  const errors: Record<string, string> = {};
-  const qty = (raw: string, key: string) => {
-    const t = raw.trim();
-    if (!t) return undefined;
-    if (!/^\d+$/.test(t) || Number(t) < 1) {
-      errors[key] = "Butun musbat son kiriting yoki boʻsh qoldiring.";
-      return undefined;
-    }
-    return Number(t);
-  };
-  const minQty = qty(f.minQty, "minQty");
-  const maxQty = qty(f.maxQty, "maxQty");
-  if (minQty && maxQty && minQty > maxQty) errors.maxQty = "Maksimal miqdor minimaldan kam boʻlmasligi kerak.";
-  const vat = f.vatRate.trim().replace(",", ".");
-  if (!/^\d{1,3}(\.\d{1,2})?$/.test(vat) || Number(vat) > 100) errors.vatRate = "QQS stavkasi 0–100 oraligʻida, masalan 12.";
-  if (!f.unitId) errors.unitId = "Birlik tanlanmagan. Roʻyxatdan tanlang.";
-  if (Object.keys(errors).length > 0) return { errors };
-  const num = (v: string | null) => (v ? Number(v) : undefined);
-  const text = (v: string) => v.trim() || undefined;
-  return {
-    errors,
-    body: {
-      name: f.name,
-      contractName: text(f.contractName),
-      classifierName: text(f.classifierName),
-      manufacturerId: num(f.manufacturerId),
-      categoryId: num(f.categoryId),
-      countryId: num(f.countryId),
-      unitId: Number(f.unitId),
-      supplyEmployeeId: num(f.supplyEmployeeId),
-      ikpu: text(f.ikpu),
-      farmId: text(f.farmId),
-      barcodes: f.barcodes
-        .split(/[\s,;]+/)
-        .map((b) => b.trim())
-        .filter(Boolean),
-      controlled: f.controlled,
-      marked: f.marked,
-      prescription: f.prescription,
-      vatRate: vat,
-      minQty,
-      maxQty,
-    },
-  };
+/** Kartochka «Narxlar»: bazaviy narx tarixi (filial boʻyicha). */
+export function usePriceHistory(productId: number, branchId: number | null) {
+  return useQuery({
+    queryKey: ["prices", "history", productId, branchId],
+    queryFn: () => unwrap(api.GET("/api/prices/history", { params: { query: { productId, branchId: branchId ?? undefined } } })),
+  });
+}
+
+/** Shakl: «Yangi kod yaratish» — boʻsh kod taklifi (har chaqiruvda yangi). */
+export async function fetchNewCode(): Promise<string> {
+  return (await unwrap(api.GET("/api/products/new-code"))).code;
+}
+
+export type DuplicateCheck = components["schemas"]["DuplicateCheck"];
+
+/** Shakl: dublikatlar (nom + ishlab chiqaruvchi, kod, shtrix-kodlar) — kiritish toʻxtagach. */
+export function useDuplicates(
+  q: { name: string; manufacturerId: string | null; code: string; barcodes: string[]; excludeId: number | null },
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...KEY, "duplicates", q],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/products/duplicates", {
+          params: {
+            query: {
+              name: q.name.trim() || undefined,
+              manufacturerId: q.manufacturerId ? Number(q.manufacturerId) : undefined,
+              code: q.code || undefined,
+              barcodes: q.barcodes.length ? q.barcodes : undefined,
+              excludeId: q.excludeId ?? undefined,
+            },
+          },
+        }),
+      ),
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 10_000,
+  });
 }

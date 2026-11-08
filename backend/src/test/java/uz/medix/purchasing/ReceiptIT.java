@@ -65,6 +65,8 @@ class ReceiptIT {
 
     @Autowired
     TransactionTemplate tx;
+    @Autowired
+    uz.medix.finance.PartyLedger parties;
 
     @Autowired
     uz.medix.purchasing.receipt.ReceiptReminders reminders;
@@ -218,6 +220,7 @@ class ReceiptIT {
         // Ombor mudiri narxni ko'rmaydi va narxli qoralamani tahrirlamaydi
         mvc.perform(get("/api/receipts/" + doc).cookie(keeper))
                 .andExpect(jsonPath("$.pricesVisible").value(false))
+                .andExpect(jsonPath("$.hasPrices").value(true))
                 .andExpect(jsonPath("$.lines[0].price").doesNotExist())
                 .andExpect(jsonPath("$.amount").doesNotExist())
                 .andExpect(jsonPath("$.supplierBalance").doesNotExist());
@@ -239,7 +242,11 @@ class ReceiptIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACCEPTED"))
                 .andExpect(jsonPath("$.hasDiff").value(true))
-                .andExpect(jsonPath("$.lines[0].bonusBatch").value("IB-1-B"));
+                .andExpect(jsonPath("$.lines[0].bonusBatch").value("IB-1-B"))
+                // Prototip `DocumentLinesGrid`: mahsulot belgilari va QQS stavkasi qatorda
+                .andExpect(jsonPath("$.lines[0].controlled").isBoolean())
+                .andExpect(jsonPath("$.lines[0].marked").isBoolean())
+                .andExpect(jsonPath("$.lines[0].vatRate").isString());
         // Bildirishnoma: o'tkazish kutmoqda — kirim muallifiga (Xarid)
         assertThat(jdbc.sql("""
                 SELECT count(*) FROM notification n JOIN receipt r ON r.created_by = n.employee_id
@@ -268,6 +275,25 @@ class ReceiptIT {
         assertThat(stock(p.quarantine(), a)).isEqualTo(1);
         assertThat(stock(p.safe(), c)).isEqualTo(4);
         assertThat(debt(p.branchId(), sup)).isEqualTo("950005.00");
+
+        // Kirim sahifasi: hujjat bo'yicha ochiq qoldiq, «To'langan» belgisi va tarix (audit)
+        mvc.perform(get("/api/receipts/" + doc).cookie(manager)).andExpect(jsonPath("$.openAmount").value("950005.00"));
+        mvc.perform(get("/api/receipts/" + doc).cookie(keeper)).andExpect(jsonPath("$.openAmount").value(org.hamcrest.Matchers.nullValue()));
+        String krNo = jdbc.sql("SELECT number FROM receipt WHERE id = :d").param("d", doc).query(String.class).single();
+        mvc.perform(get("/api/receipts").param("q", krNo).cookie(manager))
+                .andExpect(jsonPath("$.items[?(@.id == " + doc + ")].paid").value(org.hamcrest.Matchers.contains(false)));
+        tx.executeWithoutResult(st -> parties.record(new uz.medix.finance.PartyLedger.DocRef("TY", 1, "TY-TST-000001"), p.branchId(), sup,
+                uz.medix.finance.PartyLedger.Side.SUPPLIER, new uz.medix.shared.money.Money(new java.math.BigDecimal("-950005.00")), null, null,
+                new uz.medix.finance.PartyLedger.DocRef("KR", doc, "KR")));
+        mvc.perform(get("/api/receipts/" + doc).cookie(manager)).andExpect(jsonPath("$.openAmount").value("0.00"));
+        mvc.perform(get("/api/receipts").param("q", krNo).cookie(manager))
+                .andExpect(jsonPath("$.items[?(@.id == " + doc + ")].paid").value(org.hamcrest.Matchers.contains(true)));
+        mvc.perform(get("/api/receipts/" + doc + "/history").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("receipt.create"))
+                .andExpect(jsonPath("$[-1].action").value("receipt.post"))
+                .andExpect(jsonPath("$[?(@.action == 'receipt.accept')]", hasSize(1)));
+        mvc.perform(get("/api/receipts/" + doc + "/history").cookie(loginAs("PICKER", p.branchId()))).andExpect(status().isForbidden());
 
         // «Mahsulot qo'shish» katalogi: shu YB mahsulotlari, ombordagi qoldiq, oxirgi narx (Ombor mudiriga narxsiz)
         mvc.perform(get("/api/receipts/catalog").param("warehouseId", "" + p.warehouseId()).param("supplierId", "" + sup)
@@ -357,7 +383,7 @@ class ReceiptIT {
         // Boshqa filial xodimi ko'rmaydi; Buxgalter yarata olmaydi
         Cookie otherKeeper = loginAs("WAREHOUSE_MANAGER", other.branchId());
         mvc.perform(get("/api/receipts/" + doc).cookie(otherKeeper)).andExpect(status().isNotFound());
-        Cookie accountant = loginAs("ACCOUNTANT", null);
+        Cookie accountant = loginAs("ACCOUNTANT", p.branchId()); // E3: Buxgalter — o'z filiali
         send(post("/api/receipts"), accountant, doc(p, sup, false, line(a, "P-2", p.main(), 1, 0, "1"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/receipts").param("branchId", String.valueOf(p.branchId())).cookie(accountant))
                 .andExpect(status().isOk())
@@ -388,6 +414,61 @@ class ReceiptIT {
         }
         send(post("/api/receipts/" + doc + "/accept"), who, accept.append("]}").toString()).andExpect(status().isOk());
         return String.valueOf(doc);
+    }
+
+    /** Ro'yxat (prototip `Receipts`): yorliqlar soni, YB/ombor/sana/qidiruv filtrlari, bonus ustunlari, kartalar, narx yashirinligi. */
+    @Test
+    void listHasTabsFiltersBonusColumnsAndCards() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 10);
+        long a = product("KR royxat", false);
+        Cookie admin = loginAs("ADMIN", null);
+        String kr1 = postedReceipt(admin, doc(p, sup, false, line(a, "L1", p.main(), 10, 2, "1000")));
+        send(post("/api/receipts/" + kr1 + "/post"), admin, "{}").andExpect(status().isOk());
+        String draft = doc(p, sup, false, line(a, "L2", p.main(), 1, 0, "500")).replace("F-77", "YX-ROYXAT-" + sup);
+        long kr2 = id(send(post("/api/receipts"), admin, draft).andExpect(status().isCreated()).andReturn());
+        String b = "" + p.branchId(), s = "" + sup;
+
+        String one = "$.items[?(@.id == " + kr1 + ")]";
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.statuses[0].count").value(2))
+                .andExpect(jsonPath("$.statuses[?(@.status == 'POSTED')].count").value(org.hamcrest.Matchers.contains(1)))
+                .andExpect(jsonPath("$.statuses[?(@.status == 'DRAFT')].count").value(org.hamcrest.Matchers.contains(1)))
+                .andExpect(jsonPath(one + ".bonusAmount").value(org.hamcrest.Matchers.contains("300.00")))
+                .andExpect(jsonPath(one + ".bonusQty").value(org.hamcrest.Matchers.contains(2)))
+                .andExpect(jsonPath(one + ".bonusConfirmed").value(org.hamcrest.Matchers.contains(false)))
+                .andExpect(jsonPath(one + ".paymentType").value(org.hamcrest.Matchers.contains("TRANSFER")))
+                .andExpect(jsonPath("$.suppliers[?(@.id == " + sup + ")].count").value(org.hamcrest.Matchers.contains(2)))
+                .andExpect(jsonPath("$.kpi.drafts").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.kpi.expectedBonusDocs").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.kpi.bonusGoodsMonth").value(org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
+        // Yorliq: faqat qoralamalar; sonlar holat filtrisiz qoladi
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).param("status", "DRAFT").cookie(admin))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(kr2))
+                .andExpect(jsonPath("$.statuses[0].count").value(2));
+        // Qidiruv — yuk xati raqami; ombor va sana filtri; saralash summa bo'yicha
+        mvc.perform(get("/api/receipts").param("branchId", b).param("q", "yx-royxat-" + sup).cookie(admin))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(kr2));
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).param("warehouseId", "" + p.warehouseId())
+                        .param("from", today().toString()).param("to", today().toString()).param("sort", "AMOUNT").param("desc", "true").cookie(admin))
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[0].id").value(Long.parseLong(kr1)));
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).param("from", today().plusDays(1).toString()).cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
+        // Ombor mudiri narxni ko'rmaydi — bonus summasi va kutilayotgan bonus ham yashirin
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        mvc.perform(get("/api/receipts").param("supplierId", s).cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(one + ".bonusAmount").value(org.hamcrest.Matchers.contains((Object) null)))
+                .andExpect(jsonPath("$.kpi.expectedBonus").doesNotExist());
+        // Tasdiqlangan bonus — kutilayotganlardan chiqadi
+        send(post("/api/receipts/" + kr1 + "/bonus"), admin, "").andExpect(status().isOk());
+        mvc.perform(get("/api/receipts").param("branchId", b).param("supplierId", s).cookie(admin))
+                .andExpect(jsonPath(one + ".bonusConfirmed").value(org.hamcrest.Matchers.contains(true)));
     }
 
     @Test
@@ -499,5 +580,42 @@ class ReceiptIT {
         long notif = ((Number) JsonPath.read(json, "$.items[0].id")).longValue();
         send(post("/api/notifications/" + notif + "/read"), admin, "").andExpect(status().isOk());
         assertThat(jdbc.sql("SELECT employee_id FROM notification WHERE id = :id").param("id", notif).query(Long.class).single()).isEqualTo(ownerId);
+    }
+
+    @Test
+    void idleBonusBalanceRemindsEveryThirtyDays() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 15);
+        long a = product("KR bonus eslatma", false);
+        Cookie admin = loginAs("ADMIN", null);
+        loginAs("PURCHASER", p.branchId());
+        long ownerId = jdbc.sql("SELECT max(id) FROM employee WHERE role_id = (SELECT id FROM role WHERE code = 'PURCHASER')").query(Long.class).single();
+        String body = doc(p, sup, false, line(a, "BI-1", p.main(), 10, 0, "1000"))
+                .replace("\"prepaid\":false", "\"prepaid\":false,\"ownerId\":" + ownerId);
+        String kr = postedReceipt(admin, body);
+        send(post("/api/receipts/" + kr + "/post"), admin, "{}").andExpect(status().isOk());
+        send(post("/api/receipts/" + kr + "/bonus"), admin, "").andExpect(status().isOk());
+
+        String like = "bonus.idle:" + p.branchId() + ":" + sup + ":%";
+        java.util.function.Supplier<Integer> count = () -> jdbc.sql("SELECT count(*)::int FROM notification WHERE dedup_key LIKE :k")
+                .param("k", like).query(Integer.class).single();
+        java.util.function.Supplier<Integer> ownerCount = () -> jdbc.sql(
+                "SELECT count(*)::int FROM notification WHERE dedup_key LIKE :k AND employee_id = :e")
+                .param("k", like).param("e", ownerId).query(Integer.class).single();
+        reminders.run(today().plusDays(29));
+        assertThat(count.get()).isZero();
+        reminders.run(today().plusDays(30));
+        assertThat(ownerCount.get()).isEqualTo(1);
+        int afterFirst = count.get();
+        assertThat(afterFirst).isGreaterThanOrEqualTo(2); // Kim nomiga + Direktor/Admin
+        String title = jdbc.sql("SELECT title FROM notification WHERE dedup_key LIKE :k AND employee_id = :e")
+                .param("k", like).param("e", ownerId).query(String.class).single();
+        assertThat(title).startsWith("Bonus balansi 30 kundan beri ishlatilmagan:");
+        // Shu davrda qayta yozilmaydi; keyingi 30 kunda — yana
+        reminders.run(today().plusDays(31));
+        reminders.run(today().plusDays(45));
+        assertThat(count.get()).isEqualTo(afterFirst);
+        reminders.run(today().plusDays(60));
+        assertThat(ownerCount.get()).isEqualTo(2);
     }
 }

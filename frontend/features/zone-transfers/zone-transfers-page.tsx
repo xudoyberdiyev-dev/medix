@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRightLeft, CircleCheck, Clock, Plus, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -12,17 +13,11 @@ import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import {
-  TRANSFER_VIEW_KEYS,
-  TRANSFER_ZK,
-  ZK_STATUS_LABELS,
-  useZoneTransfers,
-  type ZoneTransferStatus,
-  type ZoneTransferSummary,
-} from "./api";
+import { TRANSFER_VIEW_KEYS, TRANSFER_ZK, ZK_STATUSES, useZoneTransfers, type ZoneTransferStatus, type ZoneTransferSummary } from "./api";
 import { ZoneTransferDrawer } from "./zone-transfer-drawer";
 
 export function ZoneTransferStatusBadge({ status }: { status: ZoneTransferStatus }) {
+  const t = useTranslations("zoneTransfers");
   const map = {
     PENDING: { tone: "warning", icon: Clock },
     POSTED: { tone: "success", icon: CircleCheck },
@@ -30,13 +25,14 @@ export function ZoneTransferStatusBadge({ status }: { status: ZoneTransferStatus
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {ZK_STATUS_LABELS[status]}
+      {t(`status.${status}`)}
     </Badge>
   );
 }
 
 /** ZK — zona koʻchirishlari (bitta ombor ichida). Karantindan sotuvga — tasdiq bilan. */
 export function ZoneTransfersPage() {
+  const t = useTranslations("zoneTransfers");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const params = useSearchParams();
@@ -52,36 +48,36 @@ export function ZoneTransfersPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useZoneTransfers(branchId, (status as ZoneTransferStatus | null) ?? null, page);
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
   const columns: TableColumn<ZoneTransferSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "createdAt", title: "Sana", render: (d) => formatDateTime(new Date(d.createdAt)) },
-    { key: "warehouse", title: "Ombor" },
+    { key: "number", title: t("col.number"), mono: true },
+    { key: "createdAt", title: t("col.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
+    { key: "warehouse", title: t("col.warehouse") },
     {
       key: "route",
-      title: "Qayerdan → qayerga",
+      title: t("col.route"),
       render: (d) => (
         <span className="flex items-center gap-1">
           {d.from.name}
-          <ArrowRightLeft size={14} strokeWidth={1.5} aria-label="dan" className="text-text-secondary" />
+          <ArrowRightLeft size={14} strokeWidth={1.5} aria-label={t("routeArrow")} className="text-text-secondary" />
           {d.to.name}
         </span>
       ),
     },
-    { key: "lines", title: "Qatorlar", align: "right", render: (d) => formatQuantity(d.lines) },
-    { key: "qty", title: "Miqdor", align: "right", render: (d) => formatQuantity(d.qty) },
-    { key: "createdBy", title: "Kiritdi" },
-    { key: "status", title: "Holat", render: (d) => <ZoneTransferStatusBadge status={d.status} /> },
+    { key: "lines", title: t("col.lines"), align: "right", render: (d) => formatQuantity(d.lines) },
+    { key: "qty", title: t("col.qty"), align: "right", render: (d) => formatQuantity(d.qty) },
+    { key: "createdBy", title: t("col.createdBy") },
+    { key: "status", title: t("col.status"), render: (d) => <ZoneTransferStatusBadge status={d.status} /> },
   ];
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Zona koʻchirishlari</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setOpen({ id: null })}>
-            Koʻchirish
+            {t("create")}
           </Button>
         ) : null}
       </div>
@@ -89,7 +85,7 @@ export function ZoneTransfersPage() {
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (
         <Table
-          caption="Zona koʻchirishlari"
+          caption={t("title")}
           columns={columns}
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
@@ -98,13 +94,13 @@ export function ZoneTransfersPage() {
           toolbar={
             <div className="w-56">
               <Select
-                label="Holat"
+                label={t("filter.status")}
                 size="sm"
                 value={status}
                 onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder="Barcha holatlar"
+                placeholder={t("filter.allStatuses")}
                 className="[&>span:first-child]:sr-only"
-                options={Object.entries(ZK_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                options={ZK_STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
               />
             </div>
           }
@@ -114,12 +110,12 @@ export function ZoneTransfersPage() {
             ) : (
               <EmptyState
                 icon={ArrowRightLeft}
-                title="Hali zona koʻchirishi yoʻq"
-                description="Tovarni bitta ombor ichida bir zonadan boshqasiga oʻtkazing. Karantindan sotuvga — tasdiq bilan."
+                title={t("empty.title")}
+                description={t("empty.description")}
                 action={
                   canCreate ? (
                     <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
-                      Koʻchirish
+                      {t("create")}
                     </Button>
                   ) : undefined
                 }

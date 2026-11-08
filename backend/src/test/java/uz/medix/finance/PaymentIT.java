@@ -196,6 +196,21 @@ class PaymentIT {
         mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
                 .andExpect(jsonPath("$.advance").value("1500.00"))
                 .andExpect(jsonPath("$.docs[0].open").value("500.00"));
+        mvc.perform(get("/api/payments/customer/doc").param("docType", "SV").param("docId", "9100001").cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value("5000.00"))
+                .andExpect(jsonPath("$.settled").value("5000.00"))
+                .andExpect(jsonPath("$.open").value("0.00"))
+                .andExpect(jsonPath("$.overdueDays").value(0))
+                .andExpect(jsonPath("$.payments.length()").value(1))
+                .andExpect(jsonPath("$.payments[0].amount").value("5000.00"));
+        mvc.perform(get("/api/payments/customer/doc").param("docType", "SV").param("docId", "9100002").cookie(manager))
+                .andExpect(jsonPath("$.total").value("4000.00"))
+                .andExpect(jsonPath("$.settled").value("3500.00"))
+                .andExpect(jsonPath("$.open").value("500.00"))
+                .andExpect(jsonPath("$.payments.length()").value(2));
+        mvc.perform(get("/api/payments/customer/doc").param("docType", "SV").param("docId", "9199999").cookie(cashier))
+                .andExpect(status().isNotFound());
 
         // Bekor qilish: faqat ruxsat bilan; qarz va kassa teskari
         send(post("/api/payments/customer/" + p2 + "/cancel"), cashier, "{\"reason\":\"Xato\"}").andExpect(status().isForbidden());

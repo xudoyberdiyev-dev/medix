@@ -1,13 +1,14 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
-import { ZONE_LABELS, type Zone } from "@/features/organization/api";
+import { zoneLabel, type Zone } from "@/features/organization/api";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { type CatalogInput, type CatalogPick, collectPicks, EMPTY_INPUT } from "./receipt-catalog";
@@ -39,6 +40,8 @@ export function ReceiptCatalogDialog({
   onClose: () => void;
   onAdd: (lines: CatalogPick[]) => void;
 }) {
+  const t = useTranslations("receipts.catalog");
+  const tr = useTranslations("receipts");
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [supplierOnly, setSupplierOnly] = useState(supplierId !== null);
@@ -57,6 +60,7 @@ export function ReceiptCatalogDialog({
     placeholderData: keepPreviousData,
   });
   const rows = catalog.data?.items ?? [];
+  const dp = tr("datePlaceholder");
   const { picks, errors } = collectPicks(rows, inputs, { zoneId: zone ? Number(zone) : null, pricesVisible, existing });
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -94,9 +98,9 @@ export function ReceiptCatalogDialog({
       open
       onClose={onClose}
       size="lg"
-      title="Mahsulot qoʻshish"
+      title={t("title")}
       primaryAction={{
-        label: picks.length ? `Qoʻshish va qaytish · ${picks.length}` : "Qoʻshish va qaytish",
+        label: picks.length ? t("addBackCount", { count: picks.length }) : t("addBack"),
         disabled: picks.length === 0 && !hasErrors,
         onClick: add,
       }}
@@ -106,7 +110,7 @@ export function ReceiptCatalogDialog({
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-64 flex-1">
             <TextField
-              label="Qidirish"
+              label={t("search")}
               variant="search"
               size="sm"
               value={search}
@@ -116,19 +120,19 @@ export function ReceiptCatalogDialog({
                 clearTimeout(debounce.current);
                 debounce.current = setTimeout(() => setQ(v.trim()), 250);
               }}
-              placeholder="Kod, shtrix-kod yoki nom"
+              placeholder={t("searchPlaceholder")}
               className="[&>label]:sr-only"
             />
           </div>
           <Select
-            label="Zona (hammasiga)"
+            label={t("zoneAll")}
             size="sm"
             value={zone}
             onChange={setZone}
-            options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: ZONE_LABELS[z.type] }))}
+            options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: zoneLabel(z.type) }))}
             className="w-56"
           />
-          {supplierId !== null ? <Checkbox label="Faqat shu YB mahsulotlari" checked={supplierOnly} onChange={setSupplierOnly} /> : null}
+          {supplierId !== null ? <Checkbox label={t("supplierOnly")} checked={supplierOnly} onChange={setSupplierOnly} /> : null}
         </div>
         {catalog.error ? (
           <ErrorState onRetry={() => catalog.refetch()} />
@@ -139,27 +143,28 @@ export function ReceiptCatalogDialog({
             <table className="w-full text-table">
               <thead className="sticky top-0 bg-table-header text-left text-text-secondary">
                 <tr>
-                  <th className="px-2 py-2 font-medium">Mahsulot</th>
-                  <th className="px-2 py-2 text-right font-medium">Qoldiq</th>
-                  <th className="px-2 py-2 font-medium">Oxirgi kirim</th>
-                  <th className="px-2 py-2 font-medium">Partiya</th>
-                  <th className="px-2 py-2 font-medium">Ishlab chiq.</th>
-                  <th className="px-2 py-2 font-medium">Yaroqlilik</th>
-                  <th className="px-2 py-2 text-right font-medium">Soni</th>
-                  <th className="px-2 py-2 text-right font-medium">Bonus</th>
-                  {pricesVisible ? <th className="px-2 py-2 text-right font-medium">Narx</th> : null}
+                  <th className="px-2 py-2 font-medium">{t("col.product")}</th>
+                  <th className="px-2 py-2 text-right font-medium">{t("col.stock")}</th>
+                  <th className="px-2 py-2 font-medium">{t("col.lastReceipt")}</th>
+                  <th className="px-2 py-2 font-medium">{t("col.batch")}</th>
+                  <th className="px-2 py-2 font-medium">{t("col.produced")}</th>
+                  <th className="px-2 py-2 font-medium">{t("col.expiry")}</th>
+                  <th className="px-2 py-2 text-right font-medium">{t("col.qty")}</th>
+                  <th className="px-2 py-2 text-right font-medium">{t("col.bonus")}</th>
+                  {pricesVisible ? <th className="px-2 py-2 text-right font-medium">{t("col.price")}</th> : null}
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-3 py-6 text-center text-text-secondary">
-                      {supplierOnly ? "Bu YB dan hali kirim yoʻq. «Faqat shu YB mahsulotlari»ni oʻchirib koʻring." : "Mos mahsulot yoʻq."}
+                      {supplierOnly ? t("emptySupplier") : t("empty")}
                     </td>
                   </tr>
                 ) : (
                   rows.map((r) => {
-                    const error = tried ? errors[r.productId] : undefined;
+                    const errorKey = tried ? errors[r.productId] : undefined;
+                    const error = errorKey ? t(`errors.${errorKey}`) : undefined;
                     return (
                       <tr key={r.productId} className="border-t border-border align-top">
                         <td className="px-2 py-2">
@@ -176,15 +181,15 @@ export function ReceiptCatalogDialog({
                           {r.lastDate ? day(r.lastDate) : "—"}
                           {pricesVisible && r.lastPrice ? <div className="tabular-nums">{formatMoney(r.lastPrice)}</div> : null}
                         </td>
-                        <td className="px-1 py-1">{cell(r, "batch", "partiya", "w-24")}</td>
-                        <td className="px-1 py-1">{cell(r, "produced", "ishlab chiqarilgan", "w-28", { placeholder: "KK.OO.YYYY" })}</td>
-                        <td className="px-1 py-1">{cell(r, "expiry", "yaroqlilik", "w-28", { placeholder: "KK.OO.YYYY" })}</td>
-                        <td className="px-1 py-1">{cell(r, "qty", "soni", "w-20 [&_input]:text-right", { numeric: true })}</td>
-                        <td className="px-1 py-1">{cell(r, "bonus", "aksiya bonusi", "w-16 [&_input]:text-right", { numeric: true })}</td>
+                        <td className="px-1 py-1">{cell(r, "batch", t("cell.batch"), "w-24")}</td>
+                        <td className="px-1 py-1">{cell(r, "produced", t("cell.produced"), "w-28", { placeholder: dp })}</td>
+                        <td className="px-1 py-1">{cell(r, "expiry", t("cell.expiry"), "w-28", { placeholder: dp })}</td>
+                        <td className="px-1 py-1">{cell(r, "qty", t("cell.qty"), "w-20 [&_input]:text-right", { numeric: true })}</td>
+                        <td className="px-1 py-1">{cell(r, "bonus", t("cell.bonus"), "w-16 [&_input]:text-right", { numeric: true })}</td>
                         {pricesVisible ? (
                           <td className="px-1 py-1">
-                            {cell(r, "price", "faktura narxi", "w-28 [&_input]:text-right", {
-                              placeholder: r.lastPrice ? formatMoney(r.lastPrice) : "soʻm",
+                            {cell(r, "price", t("cell.price"), "w-28 [&_input]:text-right", {
+                              placeholder: r.lastPrice ? formatMoney(r.lastPrice) : tr("sum"),
                             })}
                           </td>
                         ) : null}
@@ -196,10 +201,7 @@ export function ReceiptCatalogDialog({
             </table>
           </div>
         )}
-        <p className="text-caption text-text-secondary">
-          Toʻldirilgan qatorlar qoʻshiladi.{pricesVisible ? " Narx boʻsh boʻlsa — shu YB dan oxirgi narx." : ""} Ikkinchi partiya uchun
-          katalogni qayta oching.
-        </p>
+        <p className="text-caption text-text-secondary">{t("footer", { price: pricesVisible ? t("footerPrice") : "" })}</p>
       </div>
     </Modal>
   );

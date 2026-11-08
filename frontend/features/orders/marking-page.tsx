@@ -1,7 +1,8 @@
 "use client";
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CircleX, FileDown, Play, ScanLine, Tag, Timer, Trash2 } from "lucide-react";
+import { Check, CheckCircle2, CircleX, FileDown, ListChecks, Play, ScanLine, Tag, Timer, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -20,23 +21,31 @@ import { api, unwrap } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatQuantity } from "@/lib/format";
-import { GS, GS1_ERROR_TEXT, parseGs1 } from "@/lib/gs1";
+import { GS, parseGs1 } from "@/lib/gs1";
 import { codesExportUrl } from "./api";
 import { IssueButton } from "./issues";
 import { MyToday } from "./my-today";
 import { day } from "./orders-page";
 import { timerText } from "./picking-page";
+import type { OrdersT } from "./i18n";
 
 export type MarkWork = components["schemas"]["MarkWork"];
 export type MarkCode = components["schemas"]["MarkCode"];
+export type UnmarkedLine = components["schemas"]["UnmarkedLine"];
 
-const KIND: Record<MarkWork["lines"][number]["kind"], string> = { BOX: "quti", UNIT: "dona" };
+/** E1: markirovkasiz qatorlar tasdig'i — «1 / 2 qator tasdiqlandi». */
+export function confirmText(lines: Pick<UnmarkedLine, "confirmed">[], t: OrdersT): string {
+  const done = lines.filter((l) => l.confirmed).length;
+  return t("marking.confirmCounter", { done: formatQuantity(done), total: formatQuantity(lines.length) });
+}
 
 /** Hisoblagich: «10 / 10 quti · 25 / 25 dona» (SPEC 5.4). */
-export function counterText(w: Pick<MarkWork, "boxesScanned" | "boxesNeeded" | "unitsScanned" | "unitsNeeded">): string {
+export function counterText(w: Pick<MarkWork, "boxesScanned" | "boxesNeeded" | "unitsScanned" | "unitsNeeded">, t: OrdersT): string {
   const parts: string[] = [];
-  if (w.boxesNeeded > 0) parts.push(`${formatQuantity(w.boxesScanned)} / ${formatQuantity(w.boxesNeeded)} quti`);
-  if (w.unitsNeeded > 0) parts.push(`${formatQuantity(w.unitsScanned)} / ${formatQuantity(w.unitsNeeded)} dona`);
+  if (w.boxesNeeded > 0)
+    parts.push(t("marking.counterBoxes", { scanned: formatQuantity(w.boxesScanned), needed: formatQuantity(w.boxesNeeded) }));
+  if (w.unitsNeeded > 0)
+    parts.push(t("marking.counterUnits", { scanned: formatQuantity(w.unitsScanned), needed: formatQuantity(w.unitsNeeded) }));
   return parts.join(" · ");
 }
 
@@ -73,6 +82,7 @@ type Flash = { ok: true; title: string; detail: string } | { ok: false; title: s
 
 /** Markirovkachi paneli (SPEC 5.4): Navbat, Mening markirovkam, Bugun yakunlanganlar, Kodlar jurnali. */
 export function MarkingPage() {
+  const t = useTranslations("orders");
   const me = useMe();
   const allowed = can(me.data, "marking.scan");
   const [tab, setTab] = useState("mine");
@@ -92,25 +102,25 @@ export function MarkingPage() {
     refetchInterval: 15_000,
   });
 
-  if (me.data && !allowed) return <ForbiddenState description="Markirovka paneli faqat markirovkachilar uchun." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("marking.forbidden")} />;
   const waiting = (queue.data ?? []).filter((o) => !o.markerId).length;
 
   return (
     <>
-      <h1 className="mb-4 text-page-title">Markirovka</h1>
+      <h1 className="mb-4 text-page-title">{t("marking.title")}</h1>
       <div className="mb-4 max-w-xl">
         <MyToday kind="markers" />
       </div>
       <div className="mb-4">
         <Tabs
-          aria-label="Markirovka boʻlimlari"
+          aria-label={t("marking.tabsAria")}
           value={tab}
           onChange={setTab}
           items={[
-            { key: "mine", label: "Mening markirovkam" },
-            { key: "queue", label: "Navbat", count: waiting },
-            { key: "today", label: "Bugun yakunlanganlar" },
-            { key: "codes", label: "Kodlar jurnali" },
+            { key: "mine", label: t("marking.tabMine") },
+            { key: "queue", label: t("marking.tabQueue"), count: waiting },
+            { key: "today", label: t("marking.tabToday") },
+            { key: "codes", label: t("marking.tabCodes") },
           ]}
         />
       </div>
@@ -125,11 +135,11 @@ export function MarkingPage() {
           <Card>
             <EmptyState
               icon={Tag}
-              title="Faol markirovka yoʻq"
-              description="«Navbat» boʻlimidan buyurtma tanlab, «Markirovkani boshlash»ni bosing."
+              title={t("marking.emptyTitle")}
+              description={t("marking.emptyHint")}
               action={
                 <Button variant="secondary" onClick={() => setTab("queue")}>
-                  Navbatni ochish
+                  {t("marking.openQueue")}
                 </Button>
               }
             />
@@ -144,6 +154,7 @@ export function MarkingPage() {
 }
 
 function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
+  const t = useTranslations("orders");
   const qc = useQueryClient();
   const queue = useQuery({ queryKey: ["marking", "queue"], queryFn: () => unwrap(api.GET("/api/marking/queue")), refetchInterval: 15_000 });
   const [pending, setPending] = useState<number | null>(null);
@@ -174,11 +185,7 @@ function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
       {items.length === 0 ? (
         <Card>
-          <EmptyState
-            icon={Tag}
-            title="Navbat boʻsh"
-            description="Yigʻuvchi markirovkali buyurtmani yakunlaganda shu yerda paydo boʻladi."
-          />
+          <EmptyState icon={Tag} title={t("marking.queueEmpty")} description={t("marking.queueEmptyHint")} />
         </Card>
       ) : (
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -187,14 +194,28 @@ function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
               <div className="font-mono">{o.number}</div>
               <div className="mt-1">{o.customer}</div>
               <div className="mt-1 text-caption text-text-secondary">
-                {formatQuantity(o.lines)} xil · {formatQuantity(o.totalQty)} ta kod · vaqt {o.markMinutes ?? "—"} daqiqa
+                {o.lines === 0
+                  ? t("marking.queueMetaUnmarked", { lines: formatQuantity(o.unmarkedLines) })
+                  : t("marking.queueMeta", {
+                      lines: formatQuantity(o.lines),
+                      qty: formatQuantity(o.totalQty),
+                      minutes: o.markMinutes ?? "—",
+                    })}
+                {o.lines > 0 && o.unmarkedLines > 0 ? ` · ${t("marking.plusUnmarked", { lines: formatQuantity(o.unmarkedLines) })}` : null}
               </div>
+              {o.lines === 0 ? (
+                <div className="mt-2">
+                  <Badge tone="neutral" icon={ListChecks}>
+                    {t("marking.unmarkedOnly")}
+                  </Badge>
+                </div>
+              ) : null}
               <div className="mt-2">
                 {o.markerId ? (
-                  <Badge tone="warning">Band: {o.marker}</Badge>
+                  <Badge tone="warning">{t("marking.busy", { name: o.marker ?? "" })}</Badge>
                 ) : (
                   <Button size="sm" icon={Play} disabled={busy} loading={pending === o.id} onClick={() => void start(o.id)}>
-                    Markirovkani boshlash
+                    {t("marking.start")}
                   </Button>
                 )}
               </div>
@@ -207,19 +228,23 @@ function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
 }
 
 function ActiveMarking({ work }: { work: MarkWork }) {
+  const tr = useTranslations("orders");
   const qc = useQueryClient();
   const now = useNow();
   const input = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [flash, setFlash] = useState<Flash | null>(null);
-  const [scanning, setScanning] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<unknown>(null);
   const [removing, setRemoving] = useState<MarkCode | null>(null);
   const [reason, setReason] = useState("");
   const [removeError, setRemoveError] = useState<unknown>(null);
   const [removePending, setRemovePending] = useState(false);
-  const t = work.deadline ? timerText(new Date(work.deadline), now) : null;
+  const [confirming, setConfirming] = useState<number | "all" | null>(null);
+  const [confirmError, setConfirmError] = useState<unknown>(null);
+  const hasMarked = work.lines.length > 0;
+  const unconfirmed = work.unmarkedLines.filter((l) => !l.confirmed);
+  const t = work.deadline ? timerText(new Date(work.deadline), now, tr) : null;
 
   // Doimiy fokus: skaner klaviatura rejimida — maydon har doim tayyor turadi (oyna ochiq bo'lmasa).
   useEffect(() => {
@@ -244,23 +269,33 @@ function ActiveMarking({ work }: { work: MarkWork }) {
     beep(f.ok);
   }
 
-  async function scan(raw: string) {
-    if (!raw.trim() || scanning) return;
+  // Skaner kodlarni ketma-ket tez yuboradi: oldingi soʻrov tugamaguncha kelgan kod tashlab yuborilmaydi — navbatga qoʻyiladi.
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const [queued, setQueued] = useState(0);
+
+  function scan(raw: string) {
+    if (!raw.trim()) return;
+    setQueued((n) => n + 1);
+    queue.current = queue.current.then(() => scanOne(raw)).finally(() => setQueued((n) => n - 1));
+  }
+
+  async function scanOne(raw: string) {
     const parsed = parseGs1(raw);
     if (!parsed.ok) {
-      show({ ok: false, title: "Kod qabul qilinmadi", detail: GS1_ERROR_TEXT[parsed.error] });
+      show({
+        ok: false,
+        title: tr("marking.rejected"),
+        detail: tr(`gs1.${parsed.error.slice("marking.".length) as "format" | "gtinInvalid" | "kindInvalid" | "expiryInvalid"}`),
+      });
       return;
     }
-    setScanning(true);
     try {
       await ensureCsrf();
       const r = await unwrap(api.POST("/api/marking/orders/{id}/scan", { params: { path: { id: work.id } }, body: { code: raw } }));
       qc.setQueryData(["marking", "mine"], r.work);
-      show({ ok: true, title: "Qabul qilindi", detail: `${r.accepted.productName} · ${counterText(r.work)}` });
+      show({ ok: true, title: tr("marking.accepted"), detail: `${r.accepted.productName} · ${counterText(r.work, tr)}` });
     } catch (e) {
-      show({ ok: false, title: "Kod qabul qilinmadi", detail: e instanceof ApiError ? e.message : (describeError(e).message ?? "") });
-    } finally {
-      setScanning(false);
+      show({ ok: false, title: tr("marking.rejected"), detail: e instanceof ApiError ? e.message : (describeError(e).message ?? "") });
     }
   }
 
@@ -275,7 +310,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
       e.preventDefault();
       const raw = value;
       setValue("");
-      void scan(raw);
+      scan(raw);
     }
   }
 
@@ -285,7 +320,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
     try {
       await ensureCsrf();
       const w = await unwrap(api.POST("/api/marking/orders/{id}/finish", { params: { path: { id: work.id } } }));
-      toast({ tone: "success", title: "Markirovka yakunlandi", description: `${w.number} · hisobdan oʻtkazishga yuborildi` });
+      toast({ tone: "success", title: tr("marking.finished"), description: tr("marking.finishedHint", { number: w.number }) });
       qc.setQueryData(["marking", "mine"], null);
       await qc.invalidateQueries({ queryKey: ["marking"] });
       await qc.invalidateQueries({ queryKey: ["orders"] });
@@ -293,6 +328,21 @@ function ActiveMarking({ work }: { work: MarkWork }) {
       setFinishError(e);
     } finally {
       setFinishing(false);
+    }
+  }
+
+  /** E1: markirovkasiz qatorni (yoki hammasini) «Tasdiqlash». */
+  async function confirm(ids: number[], key: number | "all") {
+    setConfirming(key);
+    setConfirmError(null);
+    try {
+      await ensureCsrf();
+      const w = await unwrap(api.POST("/api/marking/orders/{id}/confirm", { params: { path: { id: work.id } }, body: { lineIds: ids } }));
+      qc.setQueryData(["marking", "mine"], w);
+    } catch (e) {
+      setConfirmError(e);
+    } finally {
+      setConfirming(null);
     }
   }
 
@@ -342,7 +392,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               <div className="font-mono text-subtitle">{work.number}</div>
               <div>{work.customer}</div>
               <div className="mt-1 text-subtitle tabular-nums" aria-live="polite">
-                {counterText(work)}
+                {counterText(work, tr)}
               </div>
             </div>
             {t ? (
@@ -352,21 +402,31 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               </div>
             ) : null}
           </div>
-          <label className="mt-4 block">
-            <span className="mb-1 flex items-center gap-2 text-caption text-text-secondary">
-              <ScanLine size={16} strokeWidth={1.5} aria-hidden /> Skanerlash maydoni — kodni skanerlang (Enter bilan tugaydi)
-            </span>
-            <input
-              ref={input}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={onKeyDown}
-              autoComplete="off"
-              spellCheck={false}
-              aria-label="Markirovka kodi"
-              className="h-12 w-full rounded-control border border-border bg-surface px-3 font-mono focus:border-primary focus:outline-none"
-            />
-          </label>
+          {work.unmarkedOnly ? (
+            <div className="mt-3">
+              <Badge tone="neutral" icon={ListChecks}>
+                {tr("marking.unmarkedOnly")}
+              </Badge>
+            </div>
+          ) : null}
+          {hasMarked ? (
+            <label className="mt-4 block">
+              <span className="mb-1 flex items-center gap-2 text-caption text-text-secondary">
+                <ScanLine size={16} strokeWidth={1.5} aria-hidden /> {tr("marking.scanField")}
+                {queued > 1 ? <span aria-live="polite">{tr("marking.checking", { count: queued })}</span> : null}
+              </span>
+              <input
+                ref={input}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onKeyDown={onKeyDown}
+                autoComplete="off"
+                spellCheck={false}
+                aria-label={tr("marking.codeAria")}
+                className="h-12 w-full rounded-control border border-border bg-surface px-3 font-mono focus:border-primary focus:outline-none"
+              />
+            </label>
+          ) : null}
           <ul className="mt-4 flex flex-col">
             {work.lines.map((l) => (
               <li key={l.lineId} className="border-t border-border py-3">
@@ -375,7 +435,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
                     <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
                   </div>
                   <div className={`text-subtitle tabular-nums ${l.scanned === l.qty ? "text-success" : ""}`}>
-                    {formatQuantity(l.scanned)} / {formatQuantity(l.qty)} {KIND[l.kind]}
+                    {formatQuantity(l.scanned)} / {formatQuantity(l.qty)} {tr(`kind.${l.kind}`)}
                   </div>
                 </div>
                 <div className="text-caption text-text-secondary">
@@ -386,19 +446,80 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               </li>
             ))}
           </ul>
+          {work.unmarkedLines.length > 0 ? (
+            <section aria-label={tr("marking.unmarkedTitle")} className="mt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-subtitle">{tr("marking.unmarkedTitle")}</h3>
+                <span className="text-caption text-text-secondary tabular-nums" aria-live="polite">
+                  {confirmText(work.unmarkedLines, tr)}
+                </span>
+              </div>
+              <p className="text-caption text-text-secondary">{tr("marking.unmarkedHint")}</p>
+              <ul className="mt-2 flex flex-col">
+                {work.unmarkedLines.map((l) => (
+                  <li key={l.lineId} className="flex items-center justify-between gap-3 border-t border-border py-3">
+                    <div>
+                      <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
+                      <div className="text-caption text-text-secondary tabular-nums">
+                        {formatQuantity(l.qty)} {l.unit}
+                      </div>
+                    </div>
+                    {l.confirmed ? (
+                      <Badge tone="success" icon={CheckCircle2}>
+                        {tr("marking.confirmed")}
+                      </Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon={Check}
+                        loading={confirming === l.lineId}
+                        disabled={confirming !== null}
+                        onClick={() => void confirm([l.lineId], l.lineId)}
+                      >
+                        {tr("marking.confirm")}
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {unconfirmed.length > 1 ? (
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={ListChecks}
+                    loading={confirming === "all"}
+                    disabled={confirming !== null}
+                    onClick={() =>
+                      void confirm(
+                        unconfirmed.map((l) => l.lineId),
+                        "all",
+                      )
+                    }
+                  >
+                    {tr("marking.confirmAll", { count: formatQuantity(unconfirmed.length) })}
+                  </Button>
+                </div>
+              ) : null}
+              {describeError(confirmError).message ? (
+                <Alert tone="danger" title={describeError(confirmError).message ?? ""} className="mt-2" />
+              ) : null}
+            </section>
+          ) : null}
           {finishErr.message ? <Alert tone="danger" title={finishErr.message} className="mt-3" /> : null}
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <IssueButton orderId={work.id} />
             <Button icon={CheckCircle2} disabled={!work.complete} loading={finishing} onClick={() => void finish()}>
-              Markirovkani yakunlash
+              {tr("marking.finish")}
             </Button>
           </div>
         </Card>
       </section>
       <section>
-        <h2 className="mb-3 text-subtitle">Skanerlangan kodlar</h2>
+        <h2 className="mb-3 text-subtitle">{tr("marking.scanned")}</h2>
         {work.codes.length === 0 ? (
-          <p className="text-text-secondary">Hali kod yoʻq.</p>
+          <p className="text-text-secondary">{tr("marking.noCodes")}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {work.codes.map((c) => (
@@ -406,20 +527,20 @@ function ActiveMarking({ work }: { work: MarkWork }) {
                 <div className="min-w-0">
                   <div className="truncate">{c.productName}</div>
                   <div className="truncate font-mono text-caption text-text-secondary">
-                    {c.serial} · {c.batch} · {KIND[c.kind]}
+                    {c.serial} · {c.batch} · {tr(`kind.${c.kind}`)}
                   </div>
                 </div>
                 <Button
                   size="sm"
                   variant="tertiary"
                   icon={Trash2}
-                  aria-label={`Kodni olib tashlash: ${c.serial}`}
+                  aria-label={tr("marking.removeAria", { serial: c.serial })}
                   onClick={() => {
                     setRemoving(c);
                     setRemoveError(null);
                   }}
                 >
-                  Olib tashlash
+                  {tr("marking.remove")}
                 </Button>
               </li>
             ))}
@@ -429,27 +550,19 @@ function ActiveMarking({ work }: { work: MarkWork }) {
       <Modal
         open={removing !== null}
         onClose={() => setRemoving(null)}
-        title="Kodni olib tashlash"
+        title={tr("marking.removeTitle")}
         tone="danger"
-        primaryAction={{ label: "Olib tashlash", onClick: () => void remove(), loading: removePending, disabled: !reason.trim() }}
+        primaryAction={{ label: tr("marking.remove"), onClick: () => void remove(), loading: removePending, disabled: !reason.trim() }}
       >
         <p className="mb-3">
-          {removing?.productName} · <span className="font-mono">{removing?.serial}</span> — kod buyurtmadan olib tashlanadi va tarixda
-          qoladi.
+          {removing?.productName} · <span className="font-mono">{removing?.serial}</span> {tr("marking.removeText")}
         </p>
-        <TextField label="Sabab" value={reason} onChange={setReason} maxLength={300} error={removeErr.fields.reason} />
+        <TextField label={tr("marking.reason")} value={reason} onChange={setReason} maxLength={300} error={removeErr.fields.reason} />
         {removeErr.message ? <Alert tone="danger" title={removeErr.message} className="mt-3" /> : null}
       </Modal>
     </div>
   );
 }
-
-const STATUS_LABEL: Record<MarkCode["status"], string> = {
-  ACTIVE: "Buyurtmada",
-  REMOVED: "Olib tashlangan",
-  RELEASED: "Boʻshatilgan",
-  SOLD: "Sotilgan",
-};
 
 const STATUS_TONE: Record<MarkCode["status"], "success" | "neutral" | "warning" | "info"> = {
   ACTIVE: "info",
@@ -459,6 +572,7 @@ const STATUS_TONE: Record<MarkCode["status"], "success" | "neutral" | "warning" 
 };
 
 function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
+  const t = useTranslations("orders");
   const me = useMe();
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -473,14 +587,14 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
       <div className="mb-4 flex items-end justify-between gap-4">
         <div className="w-full max-w-md">
           <TextField
-            label="Qidiruv"
+            label={t("marking.search")}
             variant="search"
             value={q}
             onChange={(v) => {
               setQ(v);
               setPage(1);
             }}
-            placeholder="GTIN, seriya, partiya yoki buyurtma raqami"
+            placeholder={t("marking.searchPlaceholder")}
           />
         </div>
         {can(me.data, "marking.export") ? (
@@ -490,7 +604,7 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
             className="inline-flex h-control-md shrink-0 items-center gap-2 rounded-control border border-border bg-surface px-4 font-medium hover:bg-background"
           >
             <FileDown size={16} strokeWidth={1.5} aria-hidden />
-            Excelʼga yuklash
+            {t("marking.excel")}
           </a>
         ) : null}
       </div>
@@ -502,8 +616,8 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
         <Card>
           <EmptyState
             icon={ScanLine}
-            title="Kod topilmadi"
-            description={today ? "Bugun hali kod skanerlanmagan." : "Qidiruvni oʻzgartirib koʻring."}
+            title={t("marking.notFound")}
+            description={today ? t("marking.notFoundToday") : t("marking.notFoundHint")}
           />
         </Card>
       ) : (
@@ -512,12 +626,12 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
             <table className="w-full text-left">
               <thead className="bg-table-header text-caption text-text-secondary">
                 <tr>
-                  <th className="px-3 py-2">Vaqt</th>
-                  <th className="px-3 py-2">Buyurtma</th>
-                  <th className="px-3 py-2">Mahsulot</th>
-                  <th className="px-3 py-2">Seriya · partiya</th>
-                  <th className="px-3 py-2">Holat</th>
-                  <th className="px-3 py-2">Kim</th>
+                  <th className="px-3 py-2">{t("marking.col.time")}</th>
+                  <th className="px-3 py-2">{t("marking.col.order")}</th>
+                  <th className="px-3 py-2">{t("marking.col.product")}</th>
+                  <th className="px-3 py-2">{t("marking.col.serial")}</th>
+                  <th className="px-3 py-2">{t("marking.col.status")}</th>
+                  <th className="px-3 py-2">{t("marking.col.who")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -527,10 +641,10 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
                     <td className="px-3 py-2 font-mono">{c.orderNumber}</td>
                     <td className="px-3 py-2">{c.productName}</td>
                     <td className="px-3 py-2 font-mono" title={c.code}>
-                      {c.serial} · {c.batch} · {KIND[c.kind]}
+                      {c.serial} · {c.batch} · {t(`kind.${c.kind}`)}
                     </td>
                     <td className="px-3 py-2">
-                      <Badge tone={STATUS_TONE[c.status]}>{STATUS_LABEL[c.status]}</Badge>
+                      <Badge tone={STATUS_TONE[c.status]}>{t(`marking.codeStatus.${c.status}`)}</Badge>
                       {c.closeReason ? <div className="text-caption text-text-secondary">{c.closeReason}</div> : null}
                     </td>
                     <td className="px-3 py-2">{c.scannedBy}</td>

@@ -14,3 +14,7 @@ backend/out/
 .env
 .env.*
 !.env.example
+
+# Deploy: pgBackRest kalitlari (namunasi — *.conf.example)
+deploy/pgbackrest/conf.d/*.conf
+__pycache__/

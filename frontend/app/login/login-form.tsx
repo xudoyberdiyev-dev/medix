@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -7,12 +8,20 @@ import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { safeNext, useLogin } from "@/features/auth/session";
 import { ApiError } from "@/lib/api/client";
-import { NETWORK_ERROR } from "@/lib/api/errors";
 
-const REQUIRED_LOGIN = "Login kiritilmagan. Administrator bergan loginni yozing.";
-const REQUIRED_PASSWORD = "Parol kiritilmagan. Parolni yozing.";
+export function LoginHeading() {
+  const t = useTranslations("login");
+  return (
+    <>
+      <h1 className="text-section-title">{t("title")}</h1>
+      <p className="mt-1 mb-8 text-text-secondary">{t("subtitle")}</p>
+    </>
+  );
+}
 
 export function LoginForm() {
+  const t = useTranslations("login");
+  const tc = useTranslations("common");
   const router = useRouter();
   const params = useSearchParams();
   const login = useLogin();
@@ -22,8 +31,8 @@ export function LoginForm() {
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const next = {
-      login: values.login.trim() ? undefined : REQUIRED_LOGIN,
-      password: values.password ? undefined : REQUIRED_PASSWORD,
+      login: values.login.trim() ? undefined : t("requiredLogin"),
+      password: values.password ? undefined : t("requiredPassword"),
     };
     setErrors(next);
     if (next.login || next.password) return;
@@ -39,35 +48,35 @@ export function LoginForm() {
   }
 
   const error = login.error;
-  const message = error instanceof ApiError ? error.message : error ? NETWORK_ERROR : null;
+  const message = error instanceof ApiError ? error.message : error ? tc("networkError") : null;
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       <TextField
-        label="Login"
+        label={t("login")}
         size="lg"
         name="login"
         autoComplete="username"
-        placeholder="Loginni kiriting"
+        placeholder={t("loginPlaceholder")}
         value={values.login}
         onChange={(v) => setValues((s) => ({ ...s, login: v }))}
         error={errors.login}
         autoFocus
       />
       <TextField
-        label="Parol"
+        label={t("password")}
         size="lg"
         variant="password"
         name="password"
         autoComplete="current-password"
-        placeholder="Parolni kiriting"
+        placeholder={t("passwordPlaceholder")}
         value={values.password}
         onChange={(v) => setValues((s) => ({ ...s, password: v }))}
         error={errors.password}
       />
       {message ? <Alert tone="danger" title={message} /> : null}
       <Button type="submit" size="lg" className="w-full" loading={login.isPending}>
-        Tizimga kirish
+        {t("submit")}
       </Button>
     </form>
   );

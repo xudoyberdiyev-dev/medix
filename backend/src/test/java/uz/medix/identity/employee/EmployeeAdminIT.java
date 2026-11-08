@@ -134,4 +134,49 @@ class EmployeeAdminIT {
         mvc.perform(get("/api/employees").cookie(operator)).andExpect(status().isForbidden());
         mvc.perform(get("/api/audit").cookie(operator)).andExpect(status().isForbidden());
     }
+
+    private static org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder allBranches(long id, Cookie c, boolean on) {
+        return post("/api/employees/" + id + "/all-branches").with(csrf()).cookie(c).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"enabled\":" + on + "}");
+    }
+
+    /** E3 (07.11.2026): Buxgalter standart holatda faqat o'z filiali; barcha filiallar — faqat Direktor bergan belgi bilan. */
+    @Test
+    void accountantSeesOwnBranchUnlessDirectorGrants() throws Exception {
+        String accLogin = uniq("acc");
+        long accId = employee(accLogin, "ACCOUNTANT");
+        String dirLogin = uniq("dir");
+        employee(dirLogin, "DIRECTOR");
+        String admLogin = uniq("adm");
+        employee(admLogin, "ADMIN");
+        String opLogin = uniq("op");
+        long opId = employee(opLogin, "OPERATOR");
+
+        Cookie acc = login(accLogin);
+        mvc.perform(get("/api/auth/me").cookie(acc)).andExpect(jsonPath("$.allBranches").value(false));
+
+        // Faqat Direktor beradi (Bosh administrator ham emas); faqat Buxgalterga
+        Cookie admin = login(admLogin);
+        mvc.perform(allBranches(accId, admin, true)).andExpect(status().isForbidden());
+        Cookie director = login(dirLogin);
+        mvc.perform(allBranches(opId, director, true))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("employee.allBranchesOnlyAccountant"));
+        mvc.perform(allBranches(accId, director, true)).andExpect(status().isOk()).andExpect(jsonPath("$.allBranches").value(true));
+        // Eski sessiya tugaydi; qayta kirganda — barcha filiallar
+        mvc.perform(get("/api/auth/me").cookie(acc)).andExpect(status().isUnauthorized());
+        acc = login(accLogin);
+        mvc.perform(get("/api/auth/me").cookie(acc)).andExpect(jsonPath("$.allBranches").value(true));
+        // Audit
+        mvc.perform(get("/api/audit").param("entityType", "employee").param("size", "100").cookie(director))
+                .andExpect(jsonPath("$.items[?(@.action == 'employee.allBranches')]").exists());
+        // Olib qo'yish
+        mvc.perform(allBranches(accId, director, false)).andExpect(jsonPath("$.allBranches").value(false));
+        acc = login(accLogin);
+        mvc.perform(get("/api/auth/me").cookie(acc)).andExpect(jsonPath("$.allBranches").value(false));
+        // Baza himoyasi: belgi faqat Buxgalterda saqlanadi
+        jdbc.sql("UPDATE employee SET all_branches = true WHERE id = :id").param("id", opId).update();
+        org.assertj.core.api.Assertions.assertThat(jdbc.sql("SELECT all_branches FROM employee WHERE id = :id").param("id", opId)
+                .query(Boolean.class).single()).isFalse();
+    }
 }

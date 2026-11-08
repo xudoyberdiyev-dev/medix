@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>@keyframes mx-ready{0%,100%{box-shadow:0 0 0 0 rgba(21,128,61,0.35)}50%{box-shadow:0 0 0 4px rgba(21,128,61,0)}}</style></helmet>
+<aside role="dialog" aria-label="{{ title }}" style="position:fixed;top:0;right:0;bottom:0;width:{{ width }};max-width:100vw;z-index:150;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-variant-numeric:tabular-nums">
+  <div style="padding:16px 20px 14px;border-bottom:1px solid #E2E8F0;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ title }}</h2>
+      <button onClick="{{ close }}" aria-label="{{ lb.close }}" style="width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="x" size="18"></lucide-i></button>
+    </div>
+    <dc-import name="Select" options="{{ lines }}" value="{{ lineValue }}" on-change="{{ onLine }}" placeholder="{{ lb.select }}" hint-size="100%,34px"></dc-import>
+    <span style="font-size:13px;line-height:18px;color:#5B6B6A">{{ subtitle }}</span>
+  </div>
+  <div style="padding:16px 20px;border-bottom:1px solid #EEF2F4">
+    <div style="height:96px;border:1.5px dashed {{ frame }};border-radius:10px;background:{{ frameBg }};display:flex;align-items:center;gap:14px;padding:0 18px;transition:border-color 120ms ease-out,background 120ms ease-out">
+      <span style="width:44px;height:44px;flex:none;border-radius:10px;background:#FFFFFF;border:1px solid #E2E8F0;color:{{ iconColor }};display:flex;align-items:center;justify-content:center"><lucide-i name="scan-line" size="22"></lucide-i></span>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13px;line-height:18px;color:#172B2A;text-wrap:pretty">{{ lb.readyText }}</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#15803D">{{ dot }}{{ lb.ready }}</span>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button onClick="{{ onTest }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="zap" size="14" style="color:#5B6B6A"></lucide-i>{{ lb.test }}</button>
+    </div>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:4px 12px">
+    <sc-for list="{{ items }}" as="it">
+      <div style="display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 8px;border-bottom:1px solid #EEF2F4;border-radius:6px;background:{{ it.bg }};transition:background 600ms ease-out">
+        <span style="width:24px;height:24px;flex:none;border-radius:50%;background:{{ it.softBg }};color:{{ it.color }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ it.icon }}" size="14"></lucide-i></span>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <span style="font-size:13px;line-height:18px;font-weight:500;color:{{ it.color }}">{{ it.label }}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:16px;color:#5B6B6A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.code }}<sc-if value="{{ it.hasDetail }}"><span style="font-family:Inter,system-ui,sans-serif;font-size:12px;color:#647574"> · {{ it.detail }}</span></sc-if></span>
+        </div>
+        <span style="font-size:12px;color:#647574">{{ it.time }}</span>
+      </div>
+    </sc-for>
+    <sc-if value="{{ noScans }}"><div style="padding:32px 8px;text-align:center;font-size:13px;color:#647574">{{ lb.empty }}</div></sc-if>
+  </div>
+  <div style="padding:16px 20px 20px;border-top:1px solid #E2E8F0;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <span style="font-size:28px;line-height:32px;font-weight:600;letter-spacing:-0.02em;color:{{ progColor }}">{{ done }}<span style="font-size:16px;color:#647574;font-weight:500"> / {{ need }}</span></span>
+      <sc-if value="{{ complete }}"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px 0 6px;border-radius:6px;background:#F0FDF4;color:#15803D;font-size:12px;font-weight:500"><lucide-i name="circle-check" size="12"></lucide-i>{{ lb.complete }}</span></sc-if>
+    </div>
+    <div style="height:6px;border-radius:3px;background:#EEF2F4;overflow:hidden"><div style="height:100%;width:{{ pct }}%;background:{{ barColor }};border-radius:3px;transition:width 120ms ease-out"></div></div>
+    <sc-if value="{{ manual }}">
+      <form onSubmit="{{ submitManual }}" style="display:flex;gap:8px">
+        <input ref="{{ manualRef }}" value="{{ manualVal }}" onChange="{{ onManualVal }}" placeholder="{{ lb.manualPh }}" style="flex:1;min-width:0;height:34px;padding:0 10px;border:1px solid #E2E8F0;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12.5px;outline:none" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)">
+        <button type="submit" style="height:34px;padding:0 12px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ lb.add }}</button>
+      </form>
+    </sc-if>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <button onClick="{{ onUndo }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ lb.undo }}</button>
+      <button onClick="{{ toggleManual }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#0F766E;text-decoration:underline">{{ lb.manual }}</button>
+    </div>
+  </div>
+</aside>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:800},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Markirovkani skanerlash&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;subtitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Demidrol 1% 1ml · Partiya 240915 · 80 / 120&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;lines&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{value,label}[]&quot;},&quot;lineValue&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;any&quot;},&quot;onLine&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(v)=&gt;void&quot;},&quot;done&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:80,&quot;tsType&quot;:&quot;number&quot;},&quot;need&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:120,&quot;tsType&quot;:&quot;number&quot;},&quot;scans&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{id,ok,icon,color,label,code,time,detail}[]&quot;},&quot;errN&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;onTest&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onUndo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;onManual&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(code)=&gt;void&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;},&quot;width&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;420px&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;labels&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;}}">
+class Component extends DCLogic {
+  state = { flash: false, fresh: null, manual: false, val: '' };
+  manualRef = React.createRef();
+  componentDidMount() { this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); clearTimeout(this._f); clearTimeout(this._n); }
+  componentDidUpdate(pp, ps) {
+    ps = this._ps || {}; this._ps = this.state;
+    const p = this.props;
+    if (p.errN && p.errN !== pp.errN) { clearTimeout(this._f); this.setState({ flash: true }); this._f = setTimeout(() => this.setState({ flash: false }), 600); }
+    const a = (p.scans || [])[0], b = (pp.scans || [])[0];
+    if (a && (!b || a.id !== b.id)) { clearTimeout(this._n); this.setState({ fresh: a.id }); this._n = setTimeout(() => this.setState({ fresh: null }), 700); }
+    if (this.state.manual && !ps.manual) setTimeout(() => this.manualRef.current && this.manualRef.current.focus(), 0);
+  }
+  renderVals() {
+    const p = this.props, s = this.state, lb = { close: 'Yopish', select: 'Qatorni tanlang', ready: 'Tayyor', readyText: 'Skanerni ishlating — kodlar avtomatik qabul qilinadi', test: 'Skanni sinash', undo: 'Oxirgi skanni bekor qilish', manual: "Qo'lda kod kiritish", manualPh: '01047800…', add: "Qo'shish", empty: "Hali skan yo'q", complete: "To'liq", ...(p.labels || {}) };
+    const done = p.done || 0, need = p.need || 0, f = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return {
+      lb, width: p.width || '420px', lines: p.lines || [], lineValue: p.lineValue, onLine: v => p.onLine && p.onLine(v),
+      frame: s.flash ? '#B91C1C' : '#CBD5D3', frameBg: s.flash ? '#FEF2F2' : '#F8FAFA', iconColor: s.flash ? '#B91C1C' : '#0F766E',
+      dot: React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', background: '#15803D', display: 'inline-block', animation: 'mx-ready 1.6s ease-in-out infinite' } }),
+      items: (p.scans || []).map(it => ({ ...it, hasDetail: !!it.detail, softBg: it.ok ? '#F0FDF4' : '#FEF2F2', bg: s.fresh === it.id ? '#DDF5EE' : 'transparent' })),
+      noScans: !(p.scans && p.scans.length), done: f(done), need: f(need), pct: need ? Math.min(100, Math.round(done / need * 100)) : 0,
+      complete: need > 0 && done >= need, progColor: done >= need && need ? '#15803D' : '#172B2A', barColor: done >= need && need ? '#15803D' : '#0D9488',
+      manual: s.manual, manualRef: this.manualRef, manualVal: s.val, onManualVal: e => this.setState({ val: e.target.value.trim() }), toggleManual: () => this.setState(st => ({ manual: !st.manual })),
+      submitManual: e => { e.preventDefault(); if (!s.val) return; p.onManual && p.onManual(s.val); this.setState({ val: '' }); },
+      onTest: () => p.onTest && p.onTest(), onUndo: () => p.onUndo && p.onUndo(), close: () => p.onClose && p.onClose()
+    };
+  }
+}
+</script>
+</body>
+</html>

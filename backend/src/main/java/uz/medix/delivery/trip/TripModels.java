@@ -25,7 +25,7 @@ final class TripModels {
     record ReadyOrder(long id, String number, long branchId, String customer, @Schema(nullable = true) String address, String delivery, int places,
             String total) {}
 
-    record VehicleOption(long id, String plateNumber, String model, @Schema(nullable = true) Integer capacityBoxes,
+    record VehicleOption(long id, String plateNumber, String model, @Schema(description = "Muzlatkichi bor (faqat ma'lumot)") boolean hasRefrigerator,
             @Schema(description = "Faol reysdagi joylar (Rejalashtirilgan / Yo'lda)") int busyPlaces) {}
 
     record DriverOption(long id, String fullName, @Schema(nullable = true) String phone, @Schema(nullable = true) String activeTrip) {}
@@ -41,10 +41,10 @@ final class TripModels {
             @Schema(description = "Mijoz imzosi olinganmi (ixtiyoriy)") boolean signed) {}
 
     record TripSummary(long id, String number, long branchId, LocalDate tripDate, TripStatus status, String vehicle,
-            @Schema(nullable = true) Integer capacityBoxes, String driver, int orders, int places, String total, Instant createdAt) {}
+            String driver, int orders, int places, String total, Instant createdAt) {}
 
     record TripDetail(long id, String number, long branchId, LocalDate tripDate, TripStatus status, long vehicleId, String vehicle,
-            @Schema(nullable = true) Integer capacityBoxes, long driverId, String driver, @Schema(nullable = true) String note, int places,
+            long driverId, String driver, @Schema(nullable = true) String note, int places,
             String total, String createdBy, Instant createdAt, @Schema(nullable = true) Instant startedAt,
             @Schema(nullable = true) String cancelReason, List<TripStop> stops) {}
 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>@keyframes mx-spin{to{transform:rotate(360deg)}}</style></helmet>
+<span role="status" aria-live="polite" style="display:inline-flex;align-items:center;gap:6px;height:24px;font-family:Inter,system-ui,sans-serif;font-size:12px;line-height:16px;color:#647574;white-space:nowrap;font-variant-numeric:tabular-nums">
+  <sc-if value="{{ isSaved }}" hint-placeholder-val="{{ true }}"><lucide-i name="check" size="14"></lucide-i>{{ savedText }}</sc-if>
+  <sc-if value="{{ isSaving }}">{{ spinner }}{{ savingLabel }}</sc-if>
+  <sc-if value="{{ isError }}"><lucide-i name="cloud-off" size="14" style="color:#B91C1C"></lucide-i><button onClick="{{ onRetry }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:12px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:2px">{{ errorLabel }}</button></sc-if>
+</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:280,&quot;height&quot;:40},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;saved&quot;,&quot;saving&quot;,&quot;error&quot;],&quot;default&quot;:&quot;saved&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;time&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;14:32&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;savedLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Saqlandi&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;savingLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Saqlanmoqda…&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;errorLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Saqlanmadi — qayta urinish&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onRetry&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;()=&gt;void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, st = p.state || 'saved';
+    return { isSaved: st === 'saved', isSaving: st === 'saving', isError: st === 'error',
+      savedText: `${p.savedLabel || 'Saqlandi'}${p.time ? ' · ' + p.time : ''}`, savingLabel: p.savingLabel || 'Saqlanmoqda…', errorLabel: p.errorLabel || 'Saqlanmadi — qayta urinish',
+      spinner: React.createElement('span', { 'aria-hidden': true, style: { width: 12, height: 12, borderRadius: '50%', border: '1.5px solid #CBD5D3', borderTopColor: '#5B6B6A', display: 'inline-block', animation: 'mx-spin 0.8s linear infinite' } }) };
+  }
+}
+</script>
+</body>
+</html>

@@ -42,9 +42,19 @@ class DirectorHome {
 
     record DebtCard(String debt, String overdue, String advance) {}
 
-    record BranchRow(long id, String name, String sales, String customerDebt, String supplierDebt, String expenses) {}
+    /**
+     * Filial qatori: jamlar va to'lov turi bo'yicha (prototip «To'lov turlari bo'yicha» jadvali), muddati o'tgan mijoz qarzi, qoldiq
+     * tannarxda (faqat prices.cost bilan), pul — filialning barcha faol kassa / bank / terminal hisoblari qoldig'i.
+     */
+    record BranchRow(long id, String name, String sales, String customerDebt, String supplierDebt, String expenses, ByPayment salesBy,
+            ByPayment customerDebtBy, ByPayment supplierDebtBy, ByPayment expensesBy, String overdue,
+            @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") String stockValue, String money) {}
 
-    record Debtor(long id, String name, String debt, String overdue, int maxOverdueDays) {}
+    /** branches — qarzi bor filiallar kodlari (vergul bilan). */
+    record Debtor(long id, String name, String debt, String overdue, int maxOverdueDays, String branches) {}
+
+    /** Savdo dinamikasi: kun bo'yicha sof savdo va sotuv hujjatlari soni. */
+    record SalesDay(LocalDate date, String amount, int docs) {}
 
     record CountAmount(int count, String amount) {}
 
@@ -53,7 +63,8 @@ class DirectorHome {
     record Attention(String overdue1to30, String overdue31to60, String overdue61to90, String overdue90plus, CountAmount directorOrders,
             CountAmount branchOrders, CountAmount cashApprovals, ExpiringBatches expiring, String supplierOverdue, String supplierToday, String supplierNext3Days,
             int receiptsToPost, String driverCash, int bonusDue, int zoneTransfersPending, int transfersInTransit,
-            int writeOffsPending, int transferShortagesOpen, int inventoryCheck, int inventoryCounting, int supplierReturnsPending) {}
+            int writeOffsPending, int transferShortagesOpen, int inventoryCheck, int inventoryCounting, int supplierReturnsPending,
+            int branchSalesToReceive, int branchSaleShortagesOpen) {}
 
     /**
      * Buyurtma holati katagi: soni va summasi — Hammasi / Bugungi (bugun kiritilgan) / Kechikkanlar (holatda 2 kundan
@@ -62,7 +73,7 @@ class DirectorHome {
     record StatusCell(String status, int count, String amount, int todayCount, String todayAmount, int staleCount, String staleAmount) {}
 
     /** Operator: sof savdo (QQS bilan) — o'zi kiritgan buyurtmalar bo'yicha. */
-    record OperatorRow(long id, String name, String sales) {}
+    record OperatorRow(long id, String name, String sales, int docs, @Schema(description = "Oxirgi 30 kunda sotuvi bor") boolean active) {}
 
     /** Ta'minotchi (xodim — «Kim nomiga» yoki korxona) hisobi, tannarxda (SPEC 6): davrda olib keldi / sotildi, hozir qoldi. */
     record SupplierStat(long id, String name, String brought, String sold, String left) {}
@@ -71,7 +82,9 @@ class DirectorHome {
     record SupplierBlock(List<SupplierStat> active, List<SupplierStat> passive) {}
 
     record Home(LocalDate from, LocalDate to, LocalDate today, @Schema(nullable = true) Long branchId, ByPayment sales, DebtCard customerDebt,
-            DebtCard supplierDebt, ByPayment expenses, List<BranchRow> branches, Attention attention, List<Debtor> topDebtors,
+            DebtCard supplierDebt, ByPayment expenses, ByPayment customerDebtBy, ByPayment supplierDebtBy, List<BranchRow> branches,
+            Attention attention, List<Debtor> topDebtors, List<SalesDay> daily, int salesDocs, String avgSale,
+            @Schema(description = "Filiallararo (guruh ichidagi) ochiq qarz — jamilarga kirmaydi") String groupDebt,
             int staleDays, List<StatusCell> orderStatuses, List<OperatorRow> operators,
             @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") SupplierBlock supplierStaff,
             @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") SupplierBlock supplierCompanies) {}
@@ -140,6 +153,15 @@ class DirectorHome {
         DebtSummaries.Summary customers = debts.summary(actor, Side.CUSTOMER, branchId, TOP);
         DebtSummaries.Summary suppliers = debts.summary(actor, Side.SUPPLIER, branchId, 0);
 
+        List<Amount> customerOpen = openByPayment("CUSTOMER", branchId);
+        List<Amount> supplierOpen = openByPayment("SUPPLIER", branchId);
+        Map<Long, BigDecimal> stock = canSeeCost ? perBranch("""
+                SELECT sb.branch_id AS id, sum(sb.qty * b.cost) AS amount FROM stock_balance sb JOIN batch b ON b.id = sb.batch_id
+                WHERE sb.qty > 0 AND (CAST(:b AS BIGINT) IS NULL OR sb.branch_id = :b) GROUP BY sb.branch_id""", branchId) : Map.of();
+        Map<Long, BigDecimal> money = perBranch("""
+                SELECT branch_id AS id, sum(balance) AS amount FROM money_account
+                WHERE active AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b) GROUP BY branch_id""", branchId);
+
         // Filiallar kesimi
         record Branch(long id, String name) {}
         List<Branch> branchList = jdbc.sql("""
@@ -149,15 +171,56 @@ class DirectorHome {
         for (Branch b : branchList) {
             DebtSummaries.Summary c = branchId == null ? debts.summary(actor, Side.CUSTOMER, b.id(), 0) : customers;
             DebtSummaries.Summary s = branchId == null ? debts.summary(actor, Side.SUPPLIER, b.id(), 0) : suppliers;
-            rows.add(new BranchRow(b.id(), b.name(), sum(sales, b.id()).toString(), c.debt(), s.debt(), sum(expenses, b.id()).toString()));
+            rows.add(new BranchRow(b.id(), b.name(), sum(sales, b.id()).toString(), c.debt(), s.debt(), sum(expenses, b.id()).toString(),
+                    byPayment(only(sales, b.id())), byPayment(only(customerOpen, b.id())), byPayment(only(supplierOpen, b.id())),
+                    byPayment(only(expenses, b.id())), c.overdue(), canSeeCost ? m(stock.get(b.id())).toString() : null,
+                    m(money.get(b.id())).toString()));
         }
+
+        // Savdo dinamikasi: kun bo'yicha sof savdo (Savdo kartasi bilan bir manba) va sotuv hujjatlari soni
+        Map<LocalDate, BigDecimal> dayAmount = new HashMap<>();
+        Map<LocalDate, Integer> dayDocs = new HashMap<>();
+        jdbc.sql("""
+                SELECT d, sum(amount) AS amount, sum(docs) AS docs FROM (
+                    SELECT s.sale_date AS d, s.total AS amount, 1 AS docs FROM sale s
+                    WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b)
+                    UNION ALL
+                    SELECT r.return_date, -r.total, 0 FROM sales_return r
+                    WHERE r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                ) x GROUP BY d""")
+                .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId)
+                .query((rs, n) -> {
+                    LocalDate d = rs.getDate("d").toLocalDate();
+                    dayAmount.put(d, rs.getBigDecimal("amount"));
+                    dayDocs.put(d, rs.getInt("docs"));
+                    return d;
+                })
+                .list();
+        List<SalesDay> daily = new ArrayList<>();
+        int salesDocs = 0;
+        for (LocalDate d = f; !d.isAfter(t); d = d.plusDays(1)) {
+            int docs = dayDocs.getOrDefault(d, 0);
+            salesDocs += docs;
+            daily.add(new SalesDay(d, m(dayAmount.get(d)).toString(), docs));
+        }
+        Money net = byPaymentTotal(sales);
+        String avgSale = salesDocs == 0 ? "0.00" : new Money(net.amount().divide(BigDecimal.valueOf(salesDocs), Money.SCALE, Money.ROUNDING)).toString();
+
+        // Filiallararo ochiq qarz (FS): juftlik bo'yicha qoldiq, faqat musbat
+        BigDecimal group = jdbc.sql("""
+                SELECT coalesce(sum(greatest(x.amt, 0)), 0) FROM (
+                    SELECT debtor_branch_id, creditor_branch_id, sum(amount) AS amt FROM branch_ledger
+                    WHERE CAST(:b AS BIGINT) IS NULL OR debtor_branch_id = :b GROUP BY 1, 2) x""")
+                .param("b", branchId).query(BigDecimal.class).single();
 
         Attention attention = attention(actor, branchId, today, customers);
         List<Debtor> top = customers.top().stream()
-                .map(x -> new Debtor(x.counterpartyId(), x.name(), x.debt(), x.overdue(), x.maxOverdueDays())).toList();
+                .map(x -> new Debtor(x.counterpartyId(), x.name(), x.debt(), x.overdue(), x.maxOverdueDays(), debtorBranches(x.counterpartyId(), branchId)))
+                .toList();
         return new Home(f, t, today, branchId, byPayment(sales), new DebtCard(customers.debt(), customers.overdue(), customers.advance()),
-                new DebtCard(suppliers.debt(), suppliers.overdue(), suppliers.advance()), byPayment(expenses), rows, attention, top,
-                STALE_DAYS, statuses(branchId, null, f, t, today), operators(branchId, f, t),
+                new DebtCard(suppliers.debt(), suppliers.overdue(), suppliers.advance()), byPayment(expenses), byPayment(customerOpen),
+                byPayment(supplierOpen), rows, attention, top, daily, salesDocs, avgSale, m(group).toString(),
+                STALE_DAYS, statuses(branchId, null, f, t, today), operators(branchId, f, t, today),
                 canSeeCost ? suppliers(branchId, f, t, "owner_id", "employee", "full_name") : null,
                 canSeeCost ? suppliers(branchId, f, t, "supplier_id", "counterparty", "name") : null);
     }
@@ -232,21 +295,27 @@ class DirectorHome {
         return new SupplierBlock(active, passive);
     }
 
-    private List<OperatorRow> operators(Long branchId, LocalDate f, LocalDate t) {
+    private List<OperatorRow> operators(Long branchId, LocalDate f, LocalDate t, LocalDate today) {
         // Savdo kartasi bilan bir manba: o'tkazilgan sotuv − qaytarishlar, buyurtmani kiritgan xodim bo'yicha
         return jdbc.sql("""
-                SELECT e.id, e.full_name AS name, sum(x.amount) AS amount FROM (
-                    SELECT o.created_by AS emp, s.total AS amount
+                SELECT e.id, e.full_name AS name, sum(x.amount) AS amount, sum(x.docs) AS docs,
+                       EXISTS (SELECT 1 FROM sale s2 JOIN sales_order o2 ON o2.id = s2.order_id
+                               WHERE o2.created_by = e.id AND s2.status = 'POSTED' AND s2.sale_date BETWEEN :d30 AND :d
+                                 AND (CAST(:b AS BIGINT) IS NULL OR s2.branch_id = :b)) AS active
+                FROM (
+                    SELECT o.created_by AS emp, s.total AS amount, 1 AS docs
                     FROM sale s JOIN sales_order o ON o.id = s.order_id
                     WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b)
                     UNION ALL
-                    SELECT o.created_by, -r.total
+                    SELECT o.created_by, -r.total, 0
                     FROM sales_return r JOIN sales_order o ON o.id = r.order_id
                     WHERE r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
                 ) x JOIN employee e ON e.id = x.emp
                 GROUP BY e.id, e.full_name ORDER BY amount DESC, e.full_name LIMIT :top""")
                 .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId).param("top", TOP)
-                .query((rs, n) -> new OperatorRow(rs.getLong("id"), rs.getString("name"), m(rs.getBigDecimal("amount")).toString()))
+                .param("d", Date.valueOf(today)).param("d30", Date.valueOf(today.minusDays(29)))
+                .query((rs, n) -> new OperatorRow(rs.getLong("id"), rs.getString("name"), m(rs.getBigDecimal("amount")).toString(),
+                        rs.getInt("docs"), rs.getBoolean("active")))
                 .list();
     }
 
@@ -299,6 +368,10 @@ class DirectorHome {
         int inTransit = jdbc.sql("""
                 SELECT count(*) FROM warehouse_transfer WHERE status = 'IN_TRANSIT' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
                 .param("b", branchId).query(Integer.class).single();
+        // Filiallararo savdo: xaridor filialga yo'lda (FS, transfer.receive) — filial tanlanganda shu filial xaridor bo'lganlari
+        int branchSalesToReceive = jdbc.sql("""
+                SELECT count(*) FROM branch_sale WHERE status = 'IN_TRANSIT' AND (CAST(:b AS BIGINT) IS NULL OR buyer_branch_id = :b)""")
+                .param("b", branchId).query(Integer.class).single();
         // Hisobdan chiqarish — tasdiq kutmoqda (HC, hc.approve / hc.director)
         int writeOffPending = jdbc.sql("""
                 SELECT count(*) FROM write_off WHERE status = 'PENDING' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
@@ -314,6 +387,14 @@ class DirectorHome {
                   AND NOT EXISTS (SELECT 1 FROM warehouse_transfer_resolution r LEFT JOIN write_off w ON w.id = r.write_off_id
                                   WHERE r.transfer_id = t.id AND (r.kind = 'RETURN' OR w.status <> 'REJECTED'))""")
                 .param("b", branchId).query(Integer.class).single();
+        // FS kamomadi: hal qilinmagan yoki oxirgi HC rad etilgan (xaridor yoki sotuvchi filial — ikkalasi ham hal qilishi mumkin)
+        int branchSaleShortagesOpen = jdbc.sql("""
+                SELECT count(*) FROM branch_sale t
+                WHERE t.status = 'RECEIVED' AND t.shortage_qty > 0
+                  AND (CAST(:b AS BIGINT) IS NULL OR t.buyer_branch_id = :b OR t.seller_branch_id = :b)
+                  AND NOT EXISTS (SELECT 1 FROM branch_sale_resolution r LEFT JOIN write_off w ON w.id = r.write_off_id
+                                  WHERE r.sale_id = t.id AND (r.kind = 'RETURN' OR w.status <> 'REJECTED'))""")
+                .param("b", branchId).query(Integer.class).single();
         // Inventarizatsiya: tekshiruvda (tasdiq kutmoqda) va sanoq ketmoqda — zona qulfi (T12-audit №23, qotib qolish nuqtasi)
         record InCounts(int check, int counting) {}
         InCounts inv = jdbc.sql("""
@@ -325,7 +406,61 @@ class DirectorHome {
                 new CountAmount(orders.count(), m(orders.amount()).toString()),
                 new CountAmount(branchOrders.count(), m(branchOrders.amount()).toString()), new CountAmount(cash.count(), m(cash.amount()).toString()),
                 expiring, due.overdue(), due.today(), due.next3Days(), receipts, m(driver).toString(), bonusDue, zonePending, inTransit,
-                writeOffPending, shortagesOpen, inv.check(), inv.counting(), supplierReturnPending);
+                writeOffPending, shortagesOpen, inv.check(), inv.counting(), supplierReturnPending, branchSalesToReceive,
+                branchSaleShortagesOpen);
+    }
+
+    /**
+     * Ochiq hujjatlar (qoldig'i > 0) to'lov turi bo'yicha: sotuv — buyurtmaning to'lov turi, kirim — kirimning to'lov turi; turi
+     * bo'lmagan hujjat (masalan, boshlang'ich qoldiq) — Perechisleniye. Avans (qo'llanmagan to'lov) kirmaydi — Debts.due bilan bir qoida.
+     */
+    private List<Amount> openByPayment(String side, Long branchId) {
+        return jdbc.sql("""
+                WITH own AS (SELECT branch_id, counterparty_id, doc_type, doc_id, sum(amount) AS amt
+                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                             GROUP BY branch_id, counterparty_id, doc_type, doc_id),
+                     app AS (SELECT branch_id, counterparty_id, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
+                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                             GROUP BY branch_id, counterparty_id, applies_doc_type, applies_doc_id),
+                     open AS (SELECT own.branch_id, own.doc_type, own.doc_id, own.amt + coalesce(app.amt, 0) AS open
+                              FROM own LEFT JOIN app ON app.branch_id = own.branch_id AND app.counterparty_id = own.counterparty_id
+                                                    AND app.t = own.doc_type AND app.i = own.doc_id)
+                SELECT o.branch_id, coalesce(so.payment_type, r.payment_type, 'TRANSFER') AS kind, sum(o.open) AS amount
+                FROM open o
+                LEFT JOIN sale s ON o.doc_type = 'SV' AND s.id = o.doc_id
+                LEFT JOIN sales_order so ON so.id = s.order_id
+                LEFT JOIN receipt r ON o.doc_type = 'KR' AND r.id = o.doc_id
+                WHERE o.open > 0
+                GROUP BY 1, 2""")
+                .param("side", side).param("b", branchId)
+                .query(Amount.class).list();
+    }
+
+    private Map<Long, BigDecimal> perBranch(String sql, Long branchId) {
+        Map<Long, BigDecimal> out = new HashMap<>();
+        jdbc.sql(sql).param("b", branchId).query((rs, n) -> out.put(rs.getLong("id"), rs.getBigDecimal("amount"))).list();
+        return out;
+    }
+
+    /** Qarzi bor filiallar kodlari (bosh sahifa «Eng katta qarzdorlar» — Filial ustuni). */
+    private String debtorBranches(long counterpartyId, Long branchId) {
+        return String.join(", ", jdbc.sql("""
+                SELECT b.code FROM party_ledger l JOIN branch b ON b.id = l.branch_id
+                WHERE l.side = 'CUSTOMER' AND l.counterparty_id = :c AND (CAST(:b AS BIGINT) IS NULL OR l.branch_id = :b)
+                GROUP BY b.code HAVING sum(l.amount) > 0 ORDER BY b.code""")
+                .param("c", counterpartyId).param("b", branchId).query(String.class).list());
+    }
+
+    private static List<Amount> only(List<Amount> list, long branchId) {
+        return list.stream().filter(a -> a.branchId() == branchId).toList();
+    }
+
+    private static Money byPaymentTotal(List<Amount> list) {
+        Money total = Money.ZERO;
+        for (Amount a : list) {
+            total = total.plus(m(a.amount()));
+        }
+        return total;
     }
 
     private static Money sum(List<Amount> list, long branchId) {

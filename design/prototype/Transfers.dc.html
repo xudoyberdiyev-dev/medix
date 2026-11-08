@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Ko'chirish" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+  <div style="position:relative">
+    <dc-import name="PageHeader" title="{{ L.kc_title }}" count="{{ countLabel }}" primary="{{ hdrPrimary }}" hint-size="100%,34px"></dc-import>
+    <sc-if value="{{ menuOpen }}">
+      <div onClick="{{ closeMenu }}" style="position:fixed;inset:0;z-index:40"></div>
+      <div role="menu" style="position:absolute;right:0;top:40px;z-index:41;width:360px;max-width:calc(100vw - 32px);background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px">
+        <sc-for list="{{ newMenu }}" as="m" hint-placeholder-count="3">
+          <button role="menuitem" onClick="{{ m.pick }}" style="display:flex;align-items:flex-start;gap:10px;width:100%;padding:10px;border:0;border-radius:8px;background:transparent;text-align:left;cursor:pointer;font:inherit;color:#172B2A" style-hover="background:#F8FAFA">
+            <span style="width:28px;height:28px;flex:none;border-radius:6px;background:#DDF5EE;color:#0F766E;display:flex;align-items:center;justify-content:center"><lucide-i name="{{ m.icon }}" size="16"></lucide-i></span>
+            <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:13px;font-weight:600">{{ m.label }}</span><span style="font-size:12px;line-height:16px;color:#5B6B6A;text-wrap:pretty">{{ m.desc }}</span></span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat({{ kpiCols }},minmax(0,1fr));gap:12px">
+    <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+      <button onClick="{{ k.pick }}" aria-pressed="{{ k.active }}" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:#FFFFFF;border:1px solid {{ k.border }};border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);text-align:left;cursor:pointer;min-width:0;font:inherit;color:#172B2A;transition:border-color 120ms ease-out" style-hover="border-color:#647574">
+        <span style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;font-weight:500;color:#5B6B6A"><span style="width:24px;height:24px;flex:none;border-radius:6px;background:{{ k.iconBg }};color:{{ k.iconFg }};display:flex;align-items:center;justify-content:center"><lucide-i name="{{ k.icon }}" size="14"></lucide-i></span>{{ k.label }}</span>
+        <span style="font-size:clamp(18px,1.6vw,24px);line-height:30px;font-weight:600;letter-spacing:-0.02em;color:{{ k.valColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ k.value }}</span>
+        <span style="font-size:12px;line-height:16px;color:#647574;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ k.note }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <sc-for list="{{ ivLocks }}" as="b"><dc-import name="StatusBanner" tone="warning" icon="lock" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
+  <sc-if value="{{ hasResolve }}">
+    <section style="background:#FFFFFF;border:1px solid #FDE68A;border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+      <span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#B45309"><lucide-i name="triangle-alert" size="16"></lucide-i>{{ L.kc_resolveT }}</span>
+      <sc-for list="{{ resolveRows }}" as="r">
+        <div style="display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;font-size:13px">
+          <button onClick="{{ r.open }}" style="padding:0;border:0;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ r.no }}</button>
+          <span style="min-width:0">{{ r.text }}</span>
+        </div>
+      </sc-for>
+    </section>
+  </sc-if>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <dc-import name="SavedViews" tabs="{{ views }}" hint-size="100%,38px"></dc-import>
+    <dc-import name="FilterBar" query="{{ q }}" on-query="{{ setQ }}" search-ph="{{ L.kc_search }}" clear-label="{{ L.clear }}" filters="{{ fbFilters }}" chip-labels="{{ fbLabels }}" date-filter="{{ dateFilter }}" has-active="{{ hasFilters }}" on-clear-all="{{ clearFilters }}" clear-all-label="{{ L.qz_clearF }}" narrow="{{ narrow }}" hint-size="100%,34px"></dc-import>
+  </div>
+  <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);margin-top:-4px;min-width:0">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="none" scroll-x="{{ true }}" min-width="{{ tMinWidth }}" sticky-first="{{ true }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,360px"></dc-import>
+      <dc-import name="Pagination" total="{{ total }}" page="{{ page }}" per-page="{{ per }}" on-page="{{ setPage }}" on-per="{{ setPer }}" per-label="{{ L.rowsPer }}" prev-label="{{ L.prevPage }}" next-label="{{ L.nextPage }}" hint-size="100%,52px"></dc-import>
+    </sc-if>
+    <sc-if value="{{ listEmpty }}"><dc-import name="EmptyState" icon="arrow-left-right" tone="brand" title="{{ L.kc_emptyT }}" text="{{ L.kc_emptyD }}" primary="{{ hdrPrimary }}" min-height="320" hint-size="100%,320px"></dc-import></sc-if>
+    <sc-if value="{{ noRes }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.qz_noResT }}" text="{{ L.qz_noResD }}" primary="{{ clearAction }}" min-height="280" hint-size="100%,280px"></dc-import></sc-if>
+  </div>
+  <div style="height:48px"></div>
+</div>
+</sc-if>
+<sc-if value="{{ isDoc }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="TransferDoc" kind="{{ doc.kind }}" no="{{ doc.no }}" req="{{ doc.req }}" act="{{ doc.act }}" doc-key="{{ doc.key }}" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-back="{{ backToList }}" on-toast="{{ toastFn }}" on-navigate="{{ navFn }}" on-receive="{{ openRecv }}" on-open="{{ openNo }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+<sc-if value="{{ isRecv }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="TransferReceive" no="{{ recv.no }}" preset="{{ recv.preset }}" doc-key="{{ recv.key }}" dict="{{ L }}" role="{{ role }}" branch="{{ branch }}" user-name="{{ userName }}" narrow="{{ narrow }}" on-back="{{ recvBack }}" on-toast="{{ toastFn }}" on-done="{{ recvDone }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;keeper&quot;,&quot;branch&quot;,&quot;purchase&quot;,&quot;director&quot;,&quot;admin&quot;,&quot;cashier&quot;,&quot;accountant&quot;],&quot;default&quot;:&quot;keeper&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Sardor Aliyev&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,arg)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const C2L = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 's', ч: 'ch', ш: 'sh', щ: 'sh', ъ: "'", ы: 'i', ь: '', э: 'e', ю: 'yu', я: 'ya', ў: "o'", қ: 'q', ғ: "g'", ҳ: 'h' };
+const toLat = s => String(s || '').toLowerCase().replace(/[ʻʼ‘’`]/g, "'").split('').map(ch => C2L[ch] != null ? C2L[ch] : ch).join('');
+const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], pending: ['clock', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], transit: ['truck', '#1D4ED8', '#EFF6FF'], received: ['circle-check', '#15803D', '#F0FDF4'], diff: ['triangle-alert', '#B45309', '#FFFBEB'], rejected: ['octagon-x', '#B91C1C', '#FEF2F2'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
+const KI = { zk: 'layers', ok: 'warehouse', fs: 'building-2' };
+const CLEAR = { fKind: [], fStatus: [], date: { from: null, to: null }, q: '', page: 1 };
+class Component extends DCLogic {
+  state = { view: 'list', tab: 'all', ...CLEAR, per: 25, doc: null, recv: null, menu: false, empty: false };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'transfer' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.open && this.D.trByNo(P.open)) { const r = this.D.store.trReq; if (r && r.open === P.open) this.D.store.trReq = null; return this.openNo(P.open); } /* T10a3: ?open= — hujjatning o'zi */ this.setState({ view: 'list', tab: 'all', fKind: [], date: { from: null, to: null }, q: P.open || '', page: 1, fStatus: P.status ? [P.status] : [] }); }
+  componentDidMount() {
+    this._url = setInterval(() => this.applyUrl(), 250);
+    if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._poll = setInterval(() => { const D = this.D; if (!D) return; if (D.store.trReq) this.consumeReq(); if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400);
+  }
+  componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  who(roles) { const L = this.L; return fill(L.qz_who, { r: roles.map(r => L['r_' + r] || r).join(', ') }); }
+  openNo(no, act) { const x = this.D.trByNo(no); if (x) this.setState({ view: 'doc', doc: { kind: x.kind, no: x.no, req: null, act: act || '', key: Date.now() }, recv: null, menu: false }); }
+  openNew(kind, req, act) { const R = this.D.TR_ROLES, need = kind === 'zk' ? R.zk : kind === 'ok' ? R.okCreate : R.fsCreate; if (!this.D.can(this.props.role, kind === 'zk' ? 'transfer.zk' : kind === 'ok' ? 'transfer.ok' : 'transfer.fs')) return this.toast(this.who(need)); this.setState({ view: 'doc', doc: { kind, no: '', req: req || null, act: act || '', key: Date.now() }, recv: null, menu: false }); }
+  openRecv(no, preset) { const R = this.D.TR_ROLES.receive; if (!this.D.can(this.props.role, 'transfer.receive')) return this.toast(this.who(R)); this.setState({ view: 'recv', recv: { no, preset: preset || null, key: Date.now() }, doc: null }); }
+  consumeReq() { const D = this.D, r = D.store.trReq; D.store.trReq = null; if (!r) return; if (r.open) return this.openNo(r.open); if (r.recv) return this.openRecv(r.recv); if (r.new) this.openNew(r.new, r, r.act); }
+  my() { const b = this.props.branch; return b && b !== 'ALL' ? b : null; }
+  L1(b, q, z) { return { id: 'l' + b.id + Math.random().toString(36).slice(2, 6), bid: b.id, pid: b.pid, batch: b.batch, exp: b.exp, fromZone: b.zone, cost: b.cost, qty: q, toZone: z, recv: null, reason: '' }; }
+  boot() {
+    const D = this.D, d = this.props.demo; if (!D) return;
+    const base = { ...CLEAR, tab: 'all', view: 'list', doc: null, recv: null, menu: false, empty: false };
+    if (!d) { if (D.store.demoDirty) D.restoreBase(); this.setState(base); if (D.store.trReq) this.consumeReq(); return; }
+    D.payReset(); const k = d.k, me = this.props.userName || 'Sardor Aliyev', bs = D.batches(), P = n => D.PRODUCTS.find(p => p.name === n);
+    const pick = (name, br, wh, f) => bs.filter(b => b.p && b.p.name === name && b.branch === br && b.wh === wh && (f ? f(b) : b.status === 'open' && b.avail > 0)).sort((a, b) => pD(a.exp) - pD(b.exp))[0];
+    const A = { branch: 'TSH', wh: 'Asosiy ombor' }, CH = { branch: 'TSH', wh: 'Chilonzor ombori' }, SM = { branch: 'SMQ', wh: 'Asosiy ombor' };
+    const mk = (kind, from, to, lines, x) => D.saveTr({ kind, from, to, date: D.TODAY, note: '', status: 'draft', vat: D.TR_VAT, lines, createdBy: me, createdAt: D.nowStr(), log: [{ kind: 'create', who: me, at: D.nowStr() }], ...(x || {}) });
+    const om = () => pick('Omeprazol 20mg', 'TSH', 'Asosiy ombor', b => b.status === 'open' && b.avail >= 100);
+    this.setState(base);
+    if (k === 'empty') return this.setState({ empty: true });
+    if (k === 'zkQuar') { const b = pick('Demidrol 1% 1ml', 'TSH', 'Asosiy ombor', x => x.zoneType === 'quar'); let z = mk('zk', A, A, [this.L1(b, 20, 'seyf')], { note: 'Sifat tekshiruvi natijasi: shikast yo\u2019q, sotuvga yaroqli' }); z = D.trStep(z, 'pending', 'Sardor Aliyev', null, 'sendAppr'); return this.openNo(z.no); }
+    if (k === 'okTransit' || k === 'okReceive' || k === 'reject') { let o = mk('ok', A, CH, [this.L1(om(), 50, 'asosiy')]); o = D.trStep(o, 'transit', 'Sardor Aliyev'); if (k === 'okReceive') return this.openRecv(o.no); return this.openNo(o.no, k === 'reject' ? 'reject' : ''); }
+    if (k === 'fsDraft') { const o = mk('fs', A, SM, [this.L1(om(), 100, 'asosiy')], { note: "Samarqand filiali buyurtmasi bo'yicha" }); return this.openNo(o.no); }
+    if (k === 'fsDiff') { let o = mk('fs', A, SM, [this.L1(om(), 100, 'asosiy')]); o = D.trStep(o, 'transit', 'Sardor Aliyev'); return this.openRecv(o.no, { 0: { recv: 98, reason: 'Shikastlangan' } }); }
+    if (k === 'resolve') { let o = mk('fs', A, SM, [this.L1(om(), 100, 'asosiy')]); o = D.trStep(o, 'transit', 'Sardor Aliyev'); o.lines[0].recv = 96; o.lines[0].reason = 'Kam keldi'; o = D.trStep(o, 'diff', 'Shahnoza Qodirova'); return this.openNo(o.no); }
+    const err = (kind, from, to, b, q, z) => { const o = mk(kind, from, to, b ? [this.L1(b, q, z)] : []); return this.openNo(o.no, 'try'); };
+    if (k === 'e700') return err('zk', A, A, pick('Demidrol 1% 1ml', 'TSH', 'Asosiy ombor', b => b.batch === 'DM-240512'), 700, 'karantin');
+    if (k === 'eCtrl') return err('fs', A, SM, pick('Tramadol 50mg/ml 2ml', 'TSH', 'Asosiy ombor'), 20, 'asosiy');
+    if (k === 'eExp') return err('ok', A, CH, pick('Ketorolak 30mg 1ml', 'TSH', 'Asosiy ombor', b => b.days < 0), 40, 'asosiy');
+  }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
+    const base = { L, narrow, role: p.role, branch: p.branch, userName: p.userName, isList: true, isDoc: false, isRecv: false, kpis: [], views: [], tRows: [], tColumns: [], fbFilters: [], fbLabels: {}, newMenu: [], resolveRows: [], doc: {}, recv: {}, toastFn: t => this.toast(t), kpiCols: narrow ? 2 : 4 };
+    if (!D || !D.trCheck) return base;
+    const nav = (k, a) => p.onNavigate && p.onNavigate(k, a);
+    const vals = { doc: s.doc || {}, recv: s.recv || {}, navFn: nav, backToList: () => this.setState({ view: 'list', doc: null }), openRecv: no => this.openRecv(no), openNo: no => this.openNo(no),
+      recvBack: () => this.openNo(s.recv.no), recvDone: no => this.openNo(no) };
+    if (s.view === 'doc' && s.doc) return { ...base, ...vals, isList: false, isDoc: true };
+    if (s.view === 'recv' && s.recv) return { ...base, ...vals, isList: false, isRecv: true };
+    const my = this.my(), canCost = D.can(p.role, 'special.cost');
+    const ro = D.canR(p.role, 'TR_ROLES', 'readOnly'), all = s.empty ? [] : (D.store.transfers || []).filter(x => (!my || x.from.branch === my || (x.to && x.to.branch === my)) && (!ro || x.kind === 'fs'));
+    const isOut = x => !my || x.from.branch === my, isIn = x => x.kind !== 'zk' && (!my || x.to.branch === my);
+    const qtyOf = x => x.lines.reduce((a, l) => a + (l.qty || 0), 0);
+    const transit = all.filter(x => x.status === 'transit'), incoming = transit.filter(x => my ? x.to.branch === my : true), drafts = all.filter(x => x.status === 'draft' || x.status === 'pending'), diffs = all.filter(x => x.status === 'diff');
+    const VS = [['all', null], ['out', isOut], ['in', isIn], ['transit', x => x.status === 'transit'], ['zk', x => x.kind === 'zk'], ['fs', x => x.kind === 'fs']];
+    const cur = VS.find(v => v[0] === s.tab) || VS[0];
+    const q = toLat(s.q.trim()), from = pD(s.date.from), to = pD(s.date.to);
+    const place = (e, z) => e ? D.whName(e.branch, e.wh) + (z ? ' · ' + z : '') : '—';
+    const fit = x => (!cur[1] || cur[1](x)) && (!q || toLat(`${x.no} ${x.inv || ''} ${place(x.from)} ${place(x.to)} ${x.lines.map(l => (D.prodById(l.pid) || {}).name).join(' ')}`).includes(q))
+      && (!s.fKind.length || s.fKind.includes(x.kind)) && (!s.fStatus.length || s.fStatus.includes(x.status)) && (!from || (pD(x.date) >= from && pD(x.date) <= (to || from)));
+    const rows = all.filter(fit).sort((a, b) => (b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0));
+    const total = rows.length, pages = Math.max(1, Math.ceil(total / s.per)), page = Math.min(s.page, pages), shown = rows.slice((page - 1) * s.per, page * s.per);
+    const showSum = canCost || D.canR(p.role, 'TR_ROLES', 'readOnly');
+    const tColumns = [{ key: 'no', label: L.kc_cNo, width: '150px' }, { key: 'k', label: L.kc_cKind, width: '170px' }, { key: 'd', label: L.kc_cDate, width: '100px' }, { key: 'r', label: L.kc_cRoute, width: 'minmax(260px,1.6fr)' }, { key: 'n', label: L.kc_cLines, width: '84px', align: 'right' }, { key: 'q', label: L.kc_cQty, width: '96px', align: 'right' },
+      ...(showSum ? [{ key: 's', label: L.kc_cSum, width: '140px', align: 'right' }] : []), { key: 'st', label: L.kc_cStatus, width: '200px' }, { key: 'by', label: L.kc_cBy, width: '140px' }];
+    const tRows = shown.map(x => { const S = ST[x.status], dead = x.status === 'cancelled' || x.status === 'rejected', col = dead ? '#647574' : null, sm = x.kind === 'fs' ? D.trSum(x) : null, zk = x.kind === 'zk';
+      const z0 = zk ? (D.zoneType(x.from.branch, x.from.wh, (x.lines[0] || {}).fromZone) || {}).label : '', z1 = zk ? (D.zoneType(x.from.branch, x.from.wh, (x.lines[0] || {}).toZone) || {}).label : '';
+      const dir = my && x.kind !== 'zk' ? (x.from.branch === my && x.to.branch === my ? '' : x.from.branch === my ? ' · ' + L.kc_out : ' · ' + L.kc_in) : '';
+      return { id: x.id, onOpen: () => this.openNo(x.no), onToggle: () => {},
+        cells: [{ type: 'mono', text: x.no, color: col }, { type: 'icontext', icon: KI[x.kind], text: L['kc_k_' + x.kind] + dir, color: col }, { type: 'text', text: x.date, color: col || '#5B6B6A' },
+          { type: 'name', text: zk ? `${place(x.from)}` : `${place(x.from)} → ${place(x.to)}`, sub: zk ? `${z0 || '—'} → ${z1 || '—'}` : (x.inv ? x.inv : ''), weight: 500, color: col },
+          { type: 'text', text: String(x.lines.length), color: col }, { type: 'text', text: fN(qtyOf(x)), color: col }, ...(showSum ? [{ type: 'text', text: sm ? fM(sm.total) : '—', color: col || (sm ? '#172B2A' : '#647574') }] : []),
+          { type: 'status', text: L['kc_st_' + x.status], icon: S[0], fg: S[1], bg: S[2] }, { type: 'text', text: x.createdBy, color: '#5B6B6A' }],
+        actions: [{ label: L.kc_open, icon: 'arrow-up-right', pick: () => this.openNo(x.no) }, ...(x.status === 'transit' && isIn(x) ? [{ label: L.kc_receive, icon: 'package-check', pick: () => this.openRecv(x.no) }] : [])] }; });
+    const sumCost = arr => arr.reduce((a, x) => a + D.trSum({ ...x, kind: 'ok' }).net, 0);
+    const kp = (label, icon, fg, bg, value, note, pick, active, valColor) => ({ label, icon, iconFg: fg, iconBg: bg, value, note, pick, active, valColor: valColor || '#172B2A', border: active ? '#0D9488' : '#E2E8F0' });
+    const kpis = [kp(L.kc_kTransit, 'truck', '#1D4ED8', '#EFF6FF', fill(L.qz_nCnt, { n: transit.length }), canCost ? fill(L.kc_kCost, { s: fM(sumCost(transit)) }) : fill(L.kc_kQty, { n: fN(transit.reduce((a, x) => a + qtyOf(x), 0)) }), () => this.setState({ ...CLEAR, tab: 'transit' }), s.tab === 'transit' && !s.fStatus.length),
+      kp(L.kc_kIncoming, 'package-check', '#0F766E', '#DDF5EE', fill(L.qz_nCnt, { n: incoming.length }), L.kc_kIncomingN, () => this.setState({ ...CLEAR, tab: 'in', fStatus: ['transit'] }), s.tab === 'in' && s.fStatus.length === 1 && s.fStatus[0] === 'transit'),
+      kp(L.kc_kDrafts, 'file-pen', '#5B6B6A', '#F8FAFA', fill(L.qz_nCnt, { n: drafts.length }), fill(L.kc_kPend, { n: drafts.filter(x => x.status === 'pending').length }), () => this.setState({ ...CLEAR, fStatus: ['draft', 'pending'] }), s.fStatus.includes('draft') && s.fStatus.includes('pending')),
+      kp(L.kc_kDiff, 'triangle-alert', '#B45309', '#FFFBEB', fill(L.qz_nCnt, { n: diffs.length }), L.kc_kDiffN, () => this.setState({ ...CLEAR, fStatus: ['diff'] }), s.fStatus.length === 1 && s.fStatus[0] === 'diff', diffs.length ? '#B45309' : null)];
+    const resolveRows = []; all.filter(x => !my || x.from.branch === my).forEach(x => D.trShort(x).filter(z => z.left > 0).forEach(z => resolveRows.push({ no: x.no, open: () => this.openNo(x.no), text: fill(L.kc_resolveRow, { p: (D.prodById(z.pid) || {}).name, b: z.batch, q: fN(z.left), r: z.reason || '—', to: place(x.to) }) })));
+    const opt = (vals, lab, key) => vals.map(v => ({ value: v, label: lab(v), count: all.filter(x => key(x) === v).length }));
+    const fbFilters = [{ label: L.kc_cKind, options: opt(['zk', 'ok', 'fs'], v => L['kc_k_' + v], x => x.kind), selected: s.fKind, onChange: v => this.setState({ fKind: v, page: 1 }) },
+      { label: L.kc_cStatus, options: opt(Object.keys(ST), v => L['kc_st_' + v], x => x.status).filter(o => o.count), selected: s.fStatus, onChange: v => this.setState({ fStatus: v, page: 1 }) }];
+    const hasFilters = !!(s.fKind.length || s.fStatus.length || s.date.from);
+    const clear = () => this.setState({ ...CLEAR, tab: 'all' });
+    return {
+      ...base, ...vals, countLabel: fN(all.length),
+      hdrPrimary: ro ? null : { label: L.kc_new, icon: 'plus', pick: () => this.setState(st => ({ menu: !st.menu })) }, menuOpen: s.menu, closeMenu: () => this.setState({ menu: false }),
+      newMenu: ['zk', 'ok', 'fs'].map(k => ({ icon: KI[k], label: L['kc_k_' + k], desc: L['kc_kd_' + k], pick: () => this.openNew(k) })),
+      kpis, hasResolve: resolveRows.length > 0, resolveRows, ivLocks: (() => { const o = []; if (D.ivActive) D.BRANCHES.filter(b => !my || b.code === my).forEach(b => b.wh.forEach(w => D.ivActive(b.code, w).forEach(x => o.push({ title: fill(L.iv_lockT, { n: x.no }), text: fill(L.iv_lockD, { w: D.whName(b.code, w), z: D.ivZones(x).map(z => D.zoneType(b.code, w, z).label).join(', ') }) })))); return o; })(),
+      views: VS.map(([k, f]) => { const n = all.filter(x => !f || f(x)).length; return { label: L['kc_v_' + k], count: n, tone: k === 'transit' && n ? 'info' : null, active: s.tab === k, pick: () => this.setState({ tab: k, page: 1 }) }; }),
+      q: s.q, setQ: v => this.setState({ q: v, page: 1 }), fbFilters, fbLabels: { search: L.p_fSearch, reset: L.p_fReset, apply: L.p_fApply, remove: L.p_fRemove, none: L.p_fNone },
+      dateFilter: { label: L.kc_cDate, from: s.date.from, to: s.date.to, onChange: v => this.setState({ date: v, page: 1 }), labels: { today: L.k_drToday, yesterday: L.k_drYesterday, week: L.k_drWeek, month: L.k_drMonth, lastMonth: L.k_drLastMonth, reset: L.p_fReset, apply: L.p_fApply, pick: L.k_drPick, remove: L.p_fRemove, prev: L.k_drPrev, next: L.k_drNext } },
+      hasFilters, clearFilters: clear, clearAction: { label: L.qz_clearF, icon: 'filter-x', pick: clear },
+      showTable: total > 0, listEmpty: all.length === 0, noRes: all.length > 0 && total === 0, tColumns, tRows, tMinWidth: showSum ? 1340 : 1200, total, page, per: s.per, setPage: n => this.setState({ page: n }), setPer: n => this.setState({ per: n, page: 1 })
+    };
+  }
+}
+</script>
+</body>
+</html>

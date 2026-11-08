@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="medix-data.js"></script></helmet>
+<div style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<sc-if value="{{ isGrid }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="Boshqa ma'lumotnomalar" style="display:flex;flex-direction:column;gap:16px">
+    <dc-import name="PageHeader" title="{{ L.nr_lkT }}" subtitle="{{ L.nr_lkSub }}" hint-size="100%,52px"></dc-import>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+      <sc-for list="{{ cards }}" as="c" hint-placeholder-count="7">
+        <button onClick="{{ c.open }}" style="display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.04);text-align:left;cursor:pointer;font:inherit;color:#172B2A;min-width:0" style-hover="border-color:#647574;box-shadow:0 4px 12px rgba(18,60,58,0.08)">
+          <span style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%"><span style="width:36px;height:36px;border-radius:9px;background:#DDF5EE;color:#0F766E;display:flex;align-items:center;justify-content:center"><lucide-i name="{{ c.icon }}" size="18"></lucide-i></span><lucide-i name="chevron-right" size="16" style="color:#647574"></lucide-i></span>
+          <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">{{ c.label }}</span><span style="font-size:13px;color:#5B6B6A">{{ c.count }}</span></span>
+          <span style="font-size:12px;line-height:16px;color:#647574">{{ c.last }}</span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="{{ kindLabel }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <nav style="display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px"><button onClick="{{ backGrid }}" style="padding:0;border:0;background:transparent;color:#0F766E;font-size:12px;cursor:pointer" style-hover="text-decoration:underline">{{ L.nr_back }}</button><span style="color:#647574">/</span><span style="color:#5B6B6A">{{ kindLabel }}</span></nav>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ kindLabel }} <span style="font-size:15px;font-weight:500;color:#647574">{{ countLabel }}</span></h1>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-if value="{{ isMakers }}"><button onClick="{{ openMerge }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;color:#172B2A;cursor:pointer" style-hover="background:#F8FAFA"><lucide-i name="merge" size="16" style="color:#0F766E"></lucide-i>{{ L.nr_merge }}</button></sc-if>
+          <button onClick="{{ addNew }}" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#115E59"><lucide-i name="plus" size="16"></lucide-i>{{ L.nr_add }}</button>
+        </div>
+      </div>
+    </div>
+    <sc-if value="{{ isFleet }}"><dc-import name="SavedViews" tabs="{{ fleetTabs }}" hint-size="100%,38px"></dc-import></sc-if>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="position:relative;flex:0 1 320px;min-width:200px"><lucide-i name="search" size="16" style="position:absolute;left:10px;top:9px;color:#647574"></lucide-i><input value="{{ q }}" onChange="{{ onQ }}" placeholder="{{ L.nr_lkSearch }}" style="width:100%;height:34px;padding:0 12px 0 34px;border:1px solid #E2E8F0;border-radius:8px;font:inherit;font-size:14px;outline:none;box-sizing:border-box" style-focus="border-color:#0F766E;box-shadow:0 0 0 3px rgba(13,148,136,0.15)"></div>
+      <button onClick="{{ toggleInact }}" role="switch" aria-checked="{{ showInact }}" style="display:flex;align-items:center;gap:8px;padding:0;border:0;background:transparent;font:inherit;font-size:13px;color:#172B2A;cursor:pointer"><span style="width:32px;height:18px;padding:2px;border-radius:999px;background:{{ swBg }};display:flex;justify-content:{{ swJ }};box-sizing:border-box"><span style="width:14px;height:14px;border-radius:50%;background:#FFFFFF"></span></span>{{ L.nr_showInactive }}</button>
+      <sc-if value="{{ isCats }}"><span style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#5B6B6A"><lucide-i name="grip-vertical" size="14"></lucide-i>{{ L.nr_drag }}</span></sc-if>
+    </div>
+    <sc-if value="{{ isCats }}">
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);overflow:hidden">
+        <div style="display:grid;grid-template-columns:32px minmax(0,1fr) 120px 110px;height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A"><span></span><span style="padding:0 8px">{{ L.nr_f_name }}</span><span style="padding:0 12px;text-align:right">{{ L.nr_f_prods }}</span><span style="padding:0 12px">{{ L.nr_f_status }}</span></div>
+        <sc-for list="{{ catRows }}" as="r">
+          <div draggable="true" onDragStart="{{ r.dragStart }}" onDragOver="{{ r.dragOver }}" onDrop="{{ r.drop }}" onClick="{{ r.open }}" style="display:grid;grid-template-columns:32px minmax(0,1fr) 120px 110px;min-height:44px;align-items:center;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};cursor:pointer;border-top:{{ r.bt }}" style-hover="background:#F8FAFA">
+            <span style="display:flex;justify-content:center;color:#647574;cursor:grab"><lucide-i name="grip-vertical" size="14"></lucide-i></span>
+            <span style="padding:0 8px 0 {{ r.pad }}px;display:flex;align-items:center;gap:8px;min-width:0"><lucide-i name="{{ r.icon }}" size="16" style="color:{{ r.iconColor }};flex:none"></lucide-i><span style="font-weight:{{ r.weight }};color:{{ r.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span></span>
+            <span style="padding:0 12px;text-align:right;color:#5B6B6A">{{ r.n }}</span>
+            <span style="padding:0 12px;display:flex"><span style="height:22px;padding:0 8px;border-radius:6px;background:{{ r.stBg }};color:{{ r.stFg }};font-size:12px;line-height:22px;font-weight:500">{{ r.st }}</span></span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isTable }}">
+      <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04);min-width:0">
+        <sc-if value="{{ hasRows }}"><dc-import name="DataTable" columns="{{ tColumns }}" rows="{{ tRows }}" all-state="none" scroll-x="{{ true }}" min-width="{{ 760 }}" sticky-first="{{ true }}" select-all-label="{{ L.selAll }}" row-actions-label="{{ L.rowActions }}" hint-size="100%,300px"></dc-import></sc-if>
+        <sc-if value="{{ noRows }}"><dc-import name="EmptyState" icon="search-x" tone="neutral" title="{{ L.nr_noResT }}" text="{{ L.nr_noResD }}" min-height="220" hint-size="100%,220px"></dc-import></sc-if>
+      </div>
+    </sc-if>
+    <div style="height:48px"></div>
+  </div>
+</sc-if>
+<sc-if value="{{ panelOpen }}"><dc-import name="LookupPanel" kind="{{ panel.kind }}" item="{{ panel.item }}" nonce="{{ panel.n }}" can-edit="{{ canEdit }}" ro-text="{{ roText }}" dict="{{ L }}" on-save="{{ savePanel }}" on-close="{{ closePanel }}" on-denied="{{ denied }}" hint-size="0px,0px"></dc-import></sc-if>
+<sc-if value="{{ dlgOpen }}"><dc-import name="ConfirmDialog" title="{{ dlg.title }}" text="{{ dlg.text }}" items="{{ dlg.items }}" danger="{{ dlg.danger }}" confirm-label="{{ dlg.confirm }}" cancel-label="{{ L.nr_pnCancel }}" on-confirm="{{ dlg.run }}" on-cancel="{{ closeDlg }}" hint-size="0px,0px"></dc-import></sc-if>
+<sc-if value="{{ mergeOpen }}">
+  <div onClick="{{ closeMerge }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+    <div role="dialog" aria-modal="true" onClick="{{ stop }}" style="width:500px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:17px;line-height:24px;font-weight:600">{{ L.nr_mgT }}</span><span style="font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ L.nr_mgD }}</span></div>
+      <dc-import name="Select" label="{{ L.nr_mgMain }}" options="{{ mkOpts }}" value="{{ mg.main }}" on-change="{{ setMain }}" placeholder="{{ L.kt_choose }}" hint-size="100%,56px"></dc-import>
+      <dc-import name="Select" label="{{ L.nr_mgDup }}" options="{{ mkOpts }}" value="{{ mg.dup }}" on-change="{{ setDup }}" placeholder="{{ L.kt_choose }}" error="{{ mgErr }}" hint-size="100%,56px"></dc-import>
+      <sc-if value="{{ mgNote }}"><div style="display:flex;gap:8px;padding:10px 12px;border-radius:8px;background:#EFF6FF;border:1px solid #BFDBFE"><lucide-i name="merge" size="16" style="color:#1D4ED8;flex:none;margin-top:1px"></lucide-i><span style="font-size:13px;color:#1D4ED8">{{ mgNote }}</span></div></sc-if>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button onClick="{{ closeMerge }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ L.nr_pnCancel }}</button>
+        <button onClick="{{ doMerge }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#B91C1C;color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#991B1B">{{ L.nr_mgGo }}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;director&quot;,&quot;admin&quot;,&quot;branch&quot;,&quot;purchase&quot;,&quot;operator&quot;,&quot;accountant&quot;,&quot;keeper&quot;,&quot;cashier&quot;],&quot;default&quot;:&quot;director&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Akmal Karimov&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;demo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{k,n}&quot;},&quot;narrow&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;},&quot;onNavigate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k,a)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+const ICON = { makers: 'factory', cats: 'folder-tree', countries: 'globe', units: 'ruler', ptypes: 'tag', regions: 'map-pin', fleet: 'truck', items: 'wallet' };
+class Component extends DCLogic {
+  state = { view: 'grid', kind: null, fleet: 'drivers', q: '', inact: false, panel: null, dlg: null, mg: null, mgErr: '', drag: null };
+  get D() { return window.MedixData; }
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { if (!this.D || !this.D.lkUse) this._p = setInterval(() => { if (this.D && this.D.lkUse) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
+    this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400); }
+  componentWillUnmount() { clearInterval(this._p); clearInterval(this._poll); }
+  componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
+  toast(t) { this.props.onToast && this.props.onToast(t); }
+  realKind() { return this.state.kind === 'fleet' ? this.state.fleet : this.state.kind; }
+  can(kind) { const k = kind === 'drivers' || kind === 'cars' ? 'fleet' : kind; return this.D.canR(this.props.role, 'LK_R', k); }
+  whoText(kind) { const L = this.L, k = kind === 'drivers' || kind === 'cars' ? 'fleet' : kind; return fill(L.nr_who, { r: (this.D.LK_R[k] || []).map(r => L['r_' + r] || r).join(', ') }); }
+  boot() { const D = this.D, d = this.props.demo; if (!D || !D.lkUse) return; const base = { view: 'grid', kind: null, q: '', inact: false, panel: null, dlg: null, mg: null };
+    if (!d) { if (D.store.demoDirty) D.restoreBase(); return this.setState(base); }
+    D.restoreBase(true); this.setState(base);
+    if (d.k === 'deact') { const it = D.store.lk.makers.find(m => m.name === 'KRKA'); this.setState({ view: 'list', kind: 'makers' }, () => this.askDeact('makers', it)); }
+    if (d.k === 'merge') { const a = D.store.lk.makers.find(m => m.name === 'KRKA'), b = D.store.lk.makers.find(m => m.note); if (!a || !b) return this.setState({ view: 'list', kind: 'makers' }); this.setState({ view: 'list', kind: 'makers', mg: { main: a.id, dup: b.id }, inact: true }); } }
+  usage(kind, it) { const D = this.D, L = this.L, u = D.lkUse(kind, it); return { n: u.n, text: u.n ? fill(L.nr_dDeactUsed, { n: u.n, w: L['nr_u_' + u.what] }) : L.nr_dDeact0 }; }
+  askDeact(kind, it) { const L = this.L, D = this.D; if (!this.can(kind)) return this.toast(this.whoText(kind)); const u = this.usage(kind, it), name = it.name || it.no;
+    this.setState({ dlg: { title: fill(L.nr_dDeactT, { n: name }), text: '', items: [{ icon: u.n ? 'link' : 'circle-check', color: u.n ? '#B45309' : '#15803D', text: u.text }], danger: true, confirm: L.nr_deact, run: () => { const c = { ...it, active: false }; D.lkSave(kind, c, this.props.userName, 'deact', [{ label: 'status', from: L.nr_st_active, to: L.nr_st_inactive }]); this.setState({ dlg: null }); this.toast(fill(L.nr_tDeact, { n: name })); } } }); }
+  activate(kind, it) { const L = this.L; if (!this.can(kind)) return this.toast(this.whoText(kind)); this.D.lkSave(kind, { ...it, active: true }, this.props.userName, 'act', []); this.toast(fill(L.nr_tAct, { n: it.name || it.no })); }
+  cols(kind) { const L = this.L, c = (k, w, al) => ({ key: k, label: L['nr_f_' + k], width: w, align: al });
+    return { makers: [c('name', 'minmax(200px,1.4fr)'), c('country', '160px'), c('prods', '120px', 'right'), c('status', '140px')], units: [c('name', 'minmax(160px,1fr)'), c('short', '120px'), c('frac', '120px'), c('prods', '120px', 'right'), c('status', '120px')], ptypes: [c('name', 'minmax(160px,1fr)'), c('desc', 'minmax(220px,1.6fr)'), c('custs', '120px', 'right'), c('status', '120px')],
+      regions: [c('name', 'minmax(200px,1.3fr)'), c('prov', '160px'), c('branch', '130px'), c('driver', '170px'), c('custs', '110px', 'right'), c('status', '120px')], drivers: [c('name', 'minmax(180px,1.2fr)'), c('phone', '170px'), c('lic', '150px'), c('branch', '130px'), c('trips', '90px', 'right'), c('status', '120px')],
+      cars: [c('no', '150px'), c('model', 'minmax(160px,1fr)'), c('fridge', '130px'), c('cap', '110px', 'right'), c('branch', '130px'), c('trips', '90px', 'right'), c('status', '120px')], items: [c('name', 'minmax(220px,1.5fr)'), c('dir', '120px'), c('mops', '130px', 'right'), c('status', '120px')] }[kind]; }
+  cell(kind, it, k) { const D = this.D, L = this.L, grey = it.active ? null : '#647574', bn = c => (D.BRANCHES.find(b => b.code === c) || {}).name || '—';
+    if (k === 'status') return it.active ? { type: 'status', text: L.nr_st_active, icon: 'circle-check', fg: '#15803D', bg: '#F0FDF4' } : { type: 'status', text: it.mergedInto ? fill(L.nr_mergedInto, { m: (D.store.lk.makers.find(m => m.id === it.mergedInto) || {}).name }) : L.nr_st_inactive, icon: 'circle-pause', fg: '#5B6B6A', bg: '#EEF2F4' };
+    if (['prods', 'custs', 'trips', 'mops'].includes(k)) return { type: 'text', text: fN(D.lkUse(kind, it).n), color: grey || '#5B6B6A' };
+    if (k === 'name') return { type: 'name', text: it.name, sub: it.note ? L.nr_dupNote : '', weight: 500, color: grey, badge: it.note ? L.nr_dupNote : '', badgeFg: '#B45309', badgeBg: '#FFFBEB' };
+    if (k === 'no' || k === 'lic' || k === 'phone') return { type: 'mono', text: it[k] || '—', color: grey };
+    if (k === 'frac') return { type: 'text', text: it.frac ? L.nr_yes : L.nr_no, color: grey };
+    if (k === 'fridge') return it.fridge ? { type: 'icontext', icon: 'snowflake', text: L.nr_yes, color: '#1D4ED8' } : { type: 'text', text: L.nr_no, color: grey || '#5B6B6A' };
+    if (k === 'branch') return { type: 'text', text: bn(it.branch), color: grey || '#5B6B6A' };
+    if (k === 'driver') { const d = D.store.lk.drivers.find(x => x.did === it.driver); return { type: 'text', text: d ? d.name : '—', color: grey || '#5B6B6A' }; }
+    if (k === 'dir') return { type: 'text', text: L['nr_dir_' + it.dir], color: it.dir === 'in' ? '#15803D' : '#B45309' };
+    if (k === 'cap') return { type: 'text', text: fN(it.cap) + ' kg', color: grey };
+    return { type: 'text', text: it[k] || '—', color: grey || '#5B6B6A' }; }
+  renderVals() {
+    const L = this.L, s = this.state, D = this.D, p = this.props;
+    const base = { L, cards: [], tColumns: [], tRows: [], catRows: [], fleetTabs: [], mkOpts: [], panel: {}, dlg: {}, mg: {}, isGrid: true, stop: e => e.stopPropagation() };
+    if (!D || !D.lkUse) return base; const lk = D.store.lk;
+    const lastOf = arr => arr.flatMap(x => (x.hist || []).map(h => h.at)).sort((a, b) => { const t = x => { const m = /^(\d{2})\.(\d{2})\.(\d{4}) ?(\d{2})?:?(\d{2})?/.exec(x) || []; return +(m[3] + m[2] + m[1] + (m[4] || '00') + (m[5] || '00')); }; return t(b) - t(a); })[0] || '';
+    const cards = D.LK_KINDS.map(k => { const arr = k === 'fleet' ? lk.drivers.concat(lk.cars) : lk[k]; return { icon: ICON[k], label: L['nr_k_' + k], count: k === 'fleet' ? `${lk.drivers.length} · ${lk.cars.length}` : fill(L.nr_lkN, { n: arr.length }), last: fill(L.nr_lkLast, { d: lastOf(arr) }), open: () => this.setState({ view: 'list', kind: k, q: '', inact: false }) }; });
+    const common = { ...base, cards, panelOpen: !!s.panel, panel: s.panel || {}, canEdit: s.panel ? this.can(s.panel.kind) : false, roText: s.panel ? this.whoText(s.panel.kind) : '', denied: () => this.toast(this.whoText(s.panel.kind)), closePanel: () => this.setState({ panel: null }),
+      savePanel: (it, ch) => { const kind = s.panel.kind; D.lkSave(kind, it, p.userName, it.id ? 'edit' : 'create', ch); this.setState({ panel: null }); this.toast(L.nr_tSaved); },
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }) };
+    if (s.view === 'grid') return common;
+    const kind = this.realKind(), q = D.toLat(s.q.trim().toLowerCase()), all = lk[kind] || [], vis = all.filter(x => (s.inact || x.active) && (!q || D.toLat(String(x.name || x.no || '').toLowerCase()).includes(q)));
+    const tRows = kind === 'cats' ? [] : vis.map(it => ({ id: it.id, onOpen: () => this.setState({ panel: { kind, item: it, n: Date.now() } }), onToggle: () => {}, cells: this.cols(kind).map(c => this.cell(kind, it, c.key)),
+      actions: [{ label: L.nr_pnEdit ? L.kt_edit || 'Tahrirlash' : '', icon: 'pencil', pick: () => this.setState({ panel: { kind, item: it, n: Date.now() } }) }, it.active ? { label: L.nr_deact, icon: 'circle-pause', danger: true, pick: () => this.askDeact(kind, it) } : { label: L.nr_act, icon: 'circle-play', pick: () => this.activate(kind, it) }] }));
+    const roots = lk.cats.filter(c => !c.parent).sort((a, b) => a.ord - b.ord), catRows = [];
+    if (kind === 'cats') roots.forEach(r => { const kids = lk.cats.filter(c => c.parent === r.id).sort((a, b) => a.ord - b.ord).filter(c => (s.inact || c.active) && (!q || D.toLat(c.name.toLowerCase()).includes(q))); if (!(s.inact || r.active)) return; if (q && !kids.length && !D.toLat(r.name.toLowerCase()).includes(q)) return;
+      [r].concat(kids).forEach(c => { const isK = !!c.parent, over = s.drag && s.drag.over === c.id;
+        catRows.push({ name: c.name, n: fN(D.lkUse('cats', c).n), pad: isK ? 36 : 8, icon: isK ? 'folder' : 'folder-tree', iconColor: isK ? '#5B6B6A' : '#0F766E', weight: isK ? 400 : 600, color: c.active ? '#172B2A' : '#647574', bg: isK ? '#FFFFFF' : '#F8FAFA', bt: over ? '2px solid #0D9488' : '0',
+          st: c.active ? L.nr_st_active : L.nr_st_inactive, stBg: c.active ? '#F0FDF4' : '#EEF2F4', stFg: c.active ? '#15803D' : '#5B6B6A', open: () => this.setState({ panel: { kind: 'cats', item: c, n: Date.now() } }),
+          dragStart: e => { e.dataTransfer.effectAllowed = 'move'; this._drag = c.id; }, dragOver: e => { e.preventDefault(); if (!s.drag || s.drag.over !== c.id) this.setState({ drag: { over: c.id } }); },
+          drop: e => { e.preventDefault(); const src = lk.cats.find(x => x.id === this._drag); this.setState({ drag: null }); if (!src || src.id === c.id || (src.parent || null) !== (c.parent || null)) return; if (!this.can('cats')) return this.toast(this.whoText('cats'));
+            const sib = lk.cats.filter(x => (x.parent || null) === (c.parent || null) && x.id !== src.id).sort((a, b) => a.ord - b.ord), at = sib.findIndex(x => x.id === c.id); sib.splice(at, 0, src); sib.forEach((x, i) => { if (x.ord !== i) D.lkSave('cats', { ...x, ord: i }, p.userName, x.id === src.id ? 'order' : null, x.id === src.id ? [{ label: 'name', to: String(i + 1) }] : []); }); } }); }); });
+    const mg = s.mg || {}, mkActive = lk.makers.filter(m => m.active), moved = mg.dup ? D.lkUse('makers', lk.makers.find(m => m.id === mg.dup) || {}).n : 0, mainN = (lk.makers.find(m => m.id === mg.main) || {}).name;
+    return { ...common, isGrid: false, isList: true, kindLabel: L['nr_k_' + s.kind], countLabel: fN(all.filter(x => x.active).length), isMakers: kind === 'makers', isCats: kind === 'cats', isTable: kind !== 'cats', isFleet: s.kind === 'fleet',
+      fleetTabs: ['drivers', 'cars'].map(k => ({ label: L['nr_k_' + k], count: lk[k].length, active: s.fleet === k, pick: () => this.setState({ fleet: k }) })), backGrid: () => this.setState({ view: 'grid', kind: null }),
+      q: s.q, onQ: e => this.setState({ q: e.target.value }), showInact: s.inact, toggleInact: () => this.setState({ inact: !s.inact }), swBg: s.inact ? '#0F766E' : '#CBD5D3', swJ: s.inact ? 'flex-end' : 'flex-start',
+      addNew: () => { if (!this.can(kind)) return this.toast(this.whoText(kind)); this.setState({ panel: { kind, item: null, n: Date.now() } }); },
+      tColumns: kind === 'cats' ? [] : this.cols(kind), tRows, hasRows: tRows.length > 0, noRows: kind !== 'cats' && !tRows.length, catRows,
+      openMerge: () => { if (!this.can('makers')) return this.toast(this.whoText('makers')); this.setState({ mg: { main: null, dup: null }, mgErr: '' }); }, mergeOpen: !!s.mg, mg, mgErr: s.mgErr, closeMerge: () => this.setState({ mg: null }),
+      mkOpts: mkActive.map(m => ({ value: m.id, label: m.name, sub: fN(D.lkUse('makers', m).n) + ' ' + L.nr_u_prod + (m.note ? ' · ' + L.nr_dupNote : '') })), setMain: v => this.setState({ mg: { ...mg, main: v }, mgErr: '' }), setDup: v => this.setState({ mg: { ...mg, dup: v }, mgErr: '' }),
+      mgNote: mg.main && mg.dup && mg.main !== mg.dup ? fill(L.nr_mgMoved, { n: moved, m: mainN }) : '',
+      doMerge: () => { if (!mg.main || !mg.dup || mg.main === mg.dup) return this.setState({ mgErr: L.nr_eMgSame }); const n = D.lkMerge(mg.main, mg.dup, p.userName); this.setState({ mg: null, inact: true }); this.toast(fill(L.nr_tMerged, { n, m: mainN })); } };
+  }
+}
+</script>
+</body>
+</html>

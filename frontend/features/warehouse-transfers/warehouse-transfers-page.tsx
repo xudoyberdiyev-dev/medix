@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, CircleCheck, FilePen, Plus, Truck, TriangleAlert, Warehouse, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,7 @@ import { useMe } from "@/features/auth/session";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
-  OK_STATUS_LABELS,
+  OK_STATUSES,
   OK_VIEW_KEYS,
   TRANSFER_OK,
   useWarehouseTransfers,
@@ -23,6 +24,7 @@ import {
 import { WarehouseTransferDrawer } from "./warehouse-transfer-drawer";
 
 export function WarehouseTransferStatusBadge({ status }: { status: WarehouseTransferStatus }) {
+  const t = useTranslations("warehouseTransfers");
   const map = {
     DRAFT: { tone: "neutral", icon: FilePen },
     IN_TRANSIT: { tone: "info", icon: Truck },
@@ -31,13 +33,14 @@ export function WarehouseTransferStatusBadge({ status }: { status: WarehouseTran
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
-      {OK_STATUS_LABELS[status]}
+      {t(`status.${status}`)}
     </Badge>
   );
 }
 
 /** OK — ombor koʻchirishlari (bitta filial ichida): Qoralama → Yoʻlda → Qabul qilindi. */
 export function WarehouseTransfersPage() {
+  const t = useTranslations("warehouseTransfers");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const params = useSearchParams();
@@ -53,28 +56,28 @@ export function WarehouseTransfersPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useWarehouseTransfers(branchId, (status as WarehouseTransferStatus | null) ?? null, page);
 
-  if (me.data && !allowed) return <ForbiddenState description="Bu sahifa sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
   const columns: TableColumn<WarehouseTransferSummary>[] = [
-    { key: "number", title: "Raqam", mono: true },
-    { key: "createdAt", title: "Sana", render: (d) => formatDateTime(new Date(d.createdAt)) },
+    { key: "number", title: t("col.number"), mono: true },
+    { key: "createdAt", title: t("col.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
     {
       key: "route",
-      title: "Qayerdan → qayerga",
+      title: t("col.route"),
       wrap: true,
       render: (d) => (
         <span className="flex items-center gap-1">
           {d.fromWarehouse.name} · {d.fromZone.name}
-          <ArrowRight size={14} strokeWidth={1.5} aria-label="dan" className="text-text-secondary" />
+          <ArrowRight size={14} strokeWidth={1.5} aria-label={t("routeArrow")} className="text-text-secondary" />
           {d.toWarehouse.name}
         </span>
       ),
     },
-    { key: "lines", title: "Qatorlar", align: "right", render: (d) => formatQuantity(d.lines) },
-    { key: "qty", title: "Miqdor", align: "right", render: (d) => formatQuantity(d.qty) },
+    { key: "lines", title: t("col.lines"), align: "right", render: (d) => formatQuantity(d.lines) },
+    { key: "qty", title: t("col.qty"), align: "right", render: (d) => formatQuantity(d.qty) },
     {
       key: "shortageQty",
-      title: "Kamomad",
+      title: t("col.shortage"),
       align: "right",
       render: (d) =>
         d.shortageQty > 0 ? (
@@ -85,17 +88,17 @@ export function WarehouseTransfersPage() {
           "—"
         ),
     },
-    { key: "createdBy", title: "Kiritdi" },
-    { key: "status", title: "Holat", render: (d) => <WarehouseTransferStatusBadge status={d.status} /> },
+    { key: "createdBy", title: t("col.createdBy") },
+    { key: "status", title: t("col.status"), render: (d) => <WarehouseTransferStatusBadge status={d.status} /> },
   ];
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">Ombor koʻchirishlari</h1>
+        <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setOpen({ id: null })}>
-            Koʻchirish tuzish
+            {t("create")}
           </Button>
         ) : null}
       </div>
@@ -103,7 +106,7 @@ export function WarehouseTransfersPage() {
         <ErrorState onRetry={() => docs.refetch()} />
       ) : (
         <Table
-          caption="Ombor koʻchirishlari"
+          caption={t("title")}
           columns={columns}
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
@@ -112,13 +115,13 @@ export function WarehouseTransfersPage() {
           toolbar={
             <div className="w-56">
               <Select
-                label="Holat"
+                label={t("filter.status")}
                 size="sm"
                 value={status}
                 onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder="Barcha holatlar"
+                placeholder={t("filter.allStatuses")}
                 className="[&>span:first-child]:sr-only"
-                options={Object.entries(OK_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                options={OK_STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
               />
             </div>
           }
@@ -128,12 +131,12 @@ export function WarehouseTransfersPage() {
             ) : (
               <EmptyState
                 icon={Warehouse}
-                title="Hali ombor koʻchirishi yoʻq"
-                description="Tovarni filial ichida bir ombordan boshqasiga joʻnating: qoralama → joʻnatish → qabul."
+                title={t("empty.title")}
+                description={t("empty.description")}
                 action={
                   canCreate ? (
                     <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
-                      Koʻchirish tuzish
+                      {t("create")}
                     </Button>
                   ) : undefined
                 }

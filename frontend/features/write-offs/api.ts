@@ -4,6 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { ensureCsrf } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { checkQty, type LineError } from "@/features/zone-transfers/api";
 
 export type WriteOffSummary = components["schemas"]["WriteOffSummary"];
 export type WriteOffDetail = components["schemas"]["WriteOffDetail"];
@@ -21,32 +22,21 @@ export const HC_VIEW_KEYS = ["hc.view", HC_CREATE, HC_APPROVE];
 /** T12 hcDirApprove — server bilan bir xil (tannarx summasi shundan KATTA boʻlsa — Direktor). */
 export const HC_DIRECTOR_LIMIT = "5000000.00";
 
-export const HC_STATUS_LABELS: Record<WriteOffStatus, string> = {
-  PENDING: "Tasdiqda",
-  POSTED: "Oʻtkazildi",
-  REJECTED: "Rad etildi",
-};
+/** Holat va sabablar tartibi (filtr uchun); nomlari — lugʻatda `writeOffs.status.*`, `writeOffs.reason.*`. */
+export const HC_STATUSES = ["PENDING", "POSTED", "REJECTED"] as const satisfies readonly WriteOffStatus[];
+export const HC_REASONS = ["EXPIRED", "DAMAGED", "SHORTAGE", "OTHER"] as const satisfies readonly WriteOffReason[];
 
-export const HC_REASON_LABELS: Record<WriteOffReason, string> = {
-  EXPIRED: "Muddati oʻtgan",
-  DAMAGED: "Shikastlangan",
-  SHORTAGE: "Kamomad",
-  OTHER: "Boshqa",
-};
-
-/** Kiritilgan miqdorlar: musbat butun son, boʻsh miqdordan oshmaydi. Xato boʻlsa — matn. */
+/** Kiritilgan miqdorlar: musbat butun son, boʻsh miqdordan oshmaydi. Xato boʻlsa — `LineError`. */
 export function linesFrom(
   stock: WriteOffStockRow[],
   qty: Record<number, string>,
-): { lines: WriteOffRequest["lines"]; error: string | null } {
+): { lines: WriteOffRequest["lines"]; error: LineError | null } {
   const lines: WriteOffRequest["lines"] = [];
   for (const row of stock) {
     const raw = (qty[row.batchId] ?? "").trim();
     if (raw === "") continue;
-    if (!/^\d+$/.test(raw) || Number(raw) <= 0)
-      return { lines: [], error: `${row.productName} · ${row.batchNumber}: miqdor musbat butun son boʻlishi kerak` };
-    const n = Number(raw);
-    if (n > row.free) return { lines: [], error: `${row.productName} · ${row.batchNumber}: boʻsh ${row.free}, kiritildi ${n}` };
+    const n = checkQty(row, raw);
+    if (typeof n !== "number") return { lines: [], error: n };
     lines.push({ batchId: row.batchId, qty: n });
   }
   return { lines, error: null };

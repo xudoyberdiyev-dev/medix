@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:fixed;inset:0;z-index:175;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+  <div onClick="{{ tryClose }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
+  <div role="dialog" aria-modal="true" aria-label="{{ title }}" style="position:absolute;top:0;right:0;bottom:0;width:{{ panelW }};max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
+    <div style="height:64px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 24px;border-bottom:1px solid #E2E8F0">
+      <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</h2>
+      <button onClick="{{ tryClose }}" aria-label="{{ t.close }}" style="width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:#5B6B6A;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 120ms ease-out,color 120ms ease-out" style-hover="background:#F5F7F8;color:#172B2A"><lucide-i name="x" size="18"></lucide-i></button>
+    </div>
+    <div ref="{{ bodyRef }}" style="flex:1;overflow-y:auto;padding:0 24px">
+      <sc-if value="{{ showSummary }}">
+        <div role="alert" style="margin-top:20px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA">
+          <lucide-i name="circle-alert" size="16" style="color:#B91C1C"></lucide-i>
+          <span style="flex:1;font-size:13px;line-height:18px;color:#B91C1C">{{ summary }}</span>
+          <button onClick="{{ goFirst }}" style="padding:0;border:0;background:transparent;color:#B91C1C;font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:2px;cursor:pointer;white-space:nowrap">{{ t.goFirst }}</button>
+        </div>
+      </sc-if>
+
+      <section style="padding:24px 0;border-bottom:1px solid #EEF2F4;display:flex;flex-direction:column;gap:16px">
+        <div><div style="font-size:13px;line-height:18px;font-weight:600">{{ t.s1 }}</div><div style="font-size:12px;line-height:16px;color:#647574">{{ t.s1d }}</div></div>
+        <div data-f="name" style="display:flex;flex-direction:column">
+          <label for="bp-name" style="font-size:13px;line-height:18px;font-weight:500">{{ t.name }} <span style="color:#B91C1C">*</span></label>
+          <input id="bp-name" ref="{{ nameRef }}" value="{{ f.name }}" onChange="{{ on.name }}" onFocus="{{ fo.name }}" onBlur="{{ blur }}" placeholder="{{ t.namePh }}" style="margin-top:6px;width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.name }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ sh.name }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+          <sc-if value="{{ er.name }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.name }}</div></sc-if>
+        </div>
+        <div data-f="code" style="display:flex;flex-direction:column">
+          <label for="bp-code" style="font-size:13px;line-height:18px;font-weight:500">{{ t.code }} <span style="color:#B91C1C">*</span></label>
+          <div style="margin-top:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <input id="bp-code" readOnly="{{ codeRo }}" value="{{ f.code }}" onChange="{{ on.code }}" onFocus="{{ fo.code }}" onBlur="{{ blur }}" maxlength="4" placeholder="TSH" style="width:120px;height:34px;padding:0 12px;border:1px solid {{ bd.code }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.04em;color:#172B2A;outline:none;box-shadow:{{ sh.code }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+            <span style="font-size:12px;line-height:16px;color:#5B6B6A">{{ t.docNo }}: <span style="font-family:'JetBrains Mono',monospace;color:#172B2A">{{ docSample }}</span></span>
+          </div>
+          <sc-if value="{{ er.code }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.code }}</div></sc-if>
+          <sc-if value="{{ codeHint }}"><div style="margin-top:6px;font-size:12px;line-height:16px;color:#647574">{{ codeHelp }}</div></sc-if>
+        </div>
+      </section>
+
+      <section style="padding:24px 0;border-bottom:1px solid #EEF2F4;display:flex;flex-direction:column;gap:16px">
+        <div><div style="font-size:13px;line-height:18px;font-weight:600">{{ t.s2 }}</div><div style="font-size:12px;line-height:16px;color:#647574">{{ t.s2d }}</div></div>
+        <div data-f="legal" style="display:flex;flex-direction:column">
+          <label for="bp-legal" style="font-size:13px;line-height:18px;font-weight:500">{{ t.legal }} <span style="color:#B91C1C">*</span></label>
+          <input id="bp-legal" value="{{ f.legal }}" onChange="{{ on.legal }}" onFocus="{{ fo.legal }}" onBlur="{{ blur }}" placeholder="{{ t.legalPh }}" style="margin-top:6px;width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.legal }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ sh.legal }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+          <sc-if value="{{ er.legal }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.legal }}</div></sc-if>
+        </div>
+        <div data-f="stir" style="display:flex;flex-direction:column">
+          <label for="bp-stir" style="font-size:13px;line-height:18px;font-weight:500">{{ t.stir }} <span style="color:#B91C1C">*</span></label>
+          <input id="bp-stir" value="{{ stirView }}" onChange="{{ on.stir }}" onFocus="{{ fo.stir }}" onBlur="{{ blur }}" inputmode="numeric" placeholder="___ ___ ___" style="margin-top:6px;width:200px;max-width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.stir }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:13px;color:#172B2A;outline:none;box-shadow:{{ sh.stir }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+          <sc-if value="{{ er.stir }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.stir }}</div></sc-if>
+        </div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+          <div style="display:flex;flex-direction:column"><span style="font-size:13px;line-height:18px;font-weight:500">{{ t.vat }}</span><span style="font-size:12px;line-height:16px;color:#647574">{{ t.vatHelp }}</span></div>
+          <button role="switch" aria-checked="{{ f.vat }}" aria-label="{{ t.vat }}" onClick="{{ toggleVat }}" style="width:36px;height:20px;flex:none;padding:2px;border:0;border-radius:999px;background:{{ vatBg }};display:flex;justify-content:{{ vatJustify }};cursor:pointer;transition:background 120ms ease-out"><span style="width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(18,60,58,0.2)"></span></button>
+        </div>
+        <sc-if value="{{ f.vat }}">
+          <div style="display:flex;flex-direction:column">
+            <label for="bp-vatno" style="font-size:13px;line-height:18px;font-weight:500">{{ t.vatNo }}</label>
+            <input id="bp-vatno" value="{{ f.vatNo }}" onChange="{{ on.vatNo }}" onFocus="{{ fo.vatNo }}" onBlur="{{ blur }}" placeholder="326030012345" style="margin-top:6px;width:240px;max-width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.vatNo }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:13px;color:#172B2A;outline:none;box-shadow:{{ sh.vatNo }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+          </div>
+        </sc-if>
+      </section>
+
+      <section style="padding:24px 0;border-bottom:1px solid #EEF2F4;display:flex;flex-direction:column;gap:16px">
+        <div><div style="font-size:13px;line-height:18px;font-weight:600">{{ t.s3 }}</div><div style="font-size:12px;line-height:16px;color:#647574">{{ t.s3d }}</div></div>
+        <div data-f="region" style="display:flex;flex-direction:column;position:relative">
+          <span style="font-size:13px;line-height:18px;font-weight:500">{{ t.region }} <span style="color:#B91C1C">*</span></span>
+          <button onClick="{{ openRegion }}" style="margin-top:6px;width:100%;height:34px;padding:0 10px 0 12px;border:1px solid {{ bd.region }};border-radius:8px;background:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:14px;color:{{ regionColor }};text-align:left;cursor:pointer;box-shadow:{{ sh.region }}">
+            <lucide-i name="map-pin" size="16" style="color:#647574"></lucide-i><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ regionLabel }}</span><lucide-i name="chevron-down" size="16" style="color:#647574"></lucide-i>
+          </button>
+          <sc-if value="{{ regionOpen }}">
+            <div style="position:absolute;top:60px;left:0;right:0;z-index:5;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px">
+              <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;border-bottom:1px solid #EEF2F4;margin-bottom:4px;color:#647574"><lucide-i name="search" size="16"></lucide-i><input ref="{{ selRef }}" value="{{ selQ }}" onChange="{{ onSelQ }}" placeholder="{{ t.search }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:13px;color:#172B2A"></div>
+              <div style="max-height:220px;overflow-y:auto">
+                <sc-for list="{{ regionOpts }}" as="o"><button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:{{ o.bg }};font-size:13px;color:#172B2A;cursor:pointer;text-align:left" style-hover="background:#F8FAFA"><span style="flex:1">{{ o.label }}</span><sc-if value="{{ o.selected }}"><lucide-i name="check" size="16" style="color:#0F766E"></lucide-i></sc-if></button></sc-for>
+                <sc-if value="{{ regionNone }}"><div style="padding:12px 8px;font-size:13px;color:#647574">{{ t.nothing }}</div></sc-if>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ er.region }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.region }}</div></sc-if>
+        </div>
+        <div data-f="address" style="display:flex;flex-direction:column">
+          <label for="bp-addr" style="font-size:13px;line-height:18px;font-weight:500">{{ t.address }} <span style="color:#B91C1C">*</span></label>
+          <input id="bp-addr" value="{{ f.address }}" onChange="{{ on.address }}" onFocus="{{ fo.address }}" onBlur="{{ blur }}" placeholder="{{ t.addressPh }}" style="margin-top:6px;width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.address }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ sh.address }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+          <sc-if value="{{ er.address }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.address }}</div></sc-if>
+        </div>
+        <button role="checkbox" aria-checked="{{ f.same }}" onClick="{{ toggleSame }}" style="display:flex;align-items:center;gap:10px;padding:0;border:0;background:transparent;font-size:13px;line-height:18px;color:#172B2A;cursor:pointer;text-align:left">
+          <span style="width:16px;height:16px;flex:none;border-radius:4px;border:1px solid {{ sameBorder }};background:{{ sameBg }};color:#FFFFFF;display:flex;align-items:center;justify-content:center"><sc-if value="{{ f.same }}"><lucide-i name="check" size="12"></lucide-i></sc-if></span>{{ t.same }}
+        </button>
+        <sc-if value="{{ showActual }}">
+          <div data-f="actual" style="display:flex;flex-direction:column">
+            <label for="bp-actual" style="font-size:13px;line-height:18px;font-weight:500">{{ t.actual }} <span style="color:#B91C1C">*</span></label>
+            <input id="bp-actual" value="{{ f.actual }}" onChange="{{ on.actual }}" onFocus="{{ fo.actual }}" onBlur="{{ blur }}" placeholder="{{ t.addressPh }}" style="margin-top:6px;width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.actual }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ sh.actual }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+            <sc-if value="{{ er.actual }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ er.actual }}</div></sc-if>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column">
+          <label for="bp-phone" style="font-size:13px;line-height:18px;font-weight:500">{{ t.phone }}</label>
+          <input id="bp-phone" value="{{ phoneView }}" onChange="{{ on.phone }}" onFocus="{{ fo.phone }}" onBlur="{{ blur }}" inputmode="tel" placeholder="+998 __ ___ __ __" style="margin-top:6px;width:240px;max-width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.phone }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:13px;color:#172B2A;outline:none;box-shadow:{{ sh.phone }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+        </div>
+      </section>
+
+      <section style="padding:24px 0;border-bottom:1px solid #EEF2F4;display:flex;flex-direction:column;gap:12px">
+        <div><div style="font-size:13px;line-height:18px;font-weight:600">{{ t.s4 }}</div><div style="font-size:12px;line-height:16px;color:#647574">{{ t.s4d }}</div></div>
+        <sc-for list="{{ banks }}" as="b" hint-placeholder-count="1">
+          <div style="position:relative;background:#F8FAFA;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px">
+              <button role="radio" aria-checked="{{ b.main }}" onClick="{{ b.setMain }}" style="display:flex;align-items:center;gap:8px;padding:0;border:0;background:transparent;font-size:13px;color:#172B2A;cursor:pointer">
+                <span style="width:16px;height:16px;border-radius:50%;border:{{ b.radioBorder }};background:#FFFFFF;box-sizing:border-box"></span>{{ t.mainAcc }}
+              </button>
+              <sc-if value="{{ b.removable }}"><button onClick="{{ b.remove }}" aria-label="{{ t.remove }}" title="{{ t.remove }}" style="width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#B91C1C;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#FEF2F2"><lucide-i name="trash-2" size="16"></lucide-i></button></sc-if>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:12px">
+              <div data-f="{{ b.bankKey }}" style="display:flex;flex-direction:column;position:relative;min-width:0">
+                <span style="font-size:13px;line-height:18px;font-weight:500">{{ t.bank }} <span style="color:#B91C1C">*</span></span>
+                <button onClick="{{ b.openBank }}" style="margin-top:6px;width:100%;height:34px;padding:0 10px 0 12px;border:1px solid {{ b.bankBorder }};border-radius:8px;background:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:14px;color:{{ b.bankColor }};text-align:left;cursor:pointer">
+                  <lucide-i name="landmark" size="16" style="color:#647574"></lucide-i><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.bankLabel }}</span><lucide-i name="chevron-down" size="16" style="color:#647574"></lucide-i>
+                </button>
+                <sc-if value="{{ b.open }}">
+                  <div style="position:absolute;top:60px;left:0;right:0;z-index:5;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:4px">
+                    <div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;border-bottom:1px solid #EEF2F4;margin-bottom:4px;color:#647574"><lucide-i name="search" size="16"></lucide-i><input ref="{{ selRef }}" value="{{ selQ }}" onChange="{{ onSelQ }}" placeholder="{{ t.search }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:13px;color:#172B2A"></div>
+                    <sc-for list="{{ bankOpts }}" as="o"><button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;font-size:13px;color:#172B2A;cursor:pointer;text-align:left" style-hover="background:#F8FAFA"><span style="flex:1">{{ o.label }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#647574">{{ o.mfo }}</span></button></sc-for>
+                    <sc-if value="{{ bankNone }}"><div style="padding:12px 8px;font-size:13px;color:#647574">{{ t.nothing }}</div></sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ b.bankErr }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ b.bankErr }}</div></sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column">
+                <span style="font-size:13px;line-height:18px;font-weight:500">{{ t.mfo }}</span>
+                <div aria-readonly="true" style="margin-top:6px;height:34px;padding:0 12px;border:1px solid #E2E8F0;border-radius:8px;background:#F5F7F8;display:flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:#5B6B6A">{{ b.mfo }}</div>
+              </div>
+            </div>
+            <div data-f="{{ b.accKey }}" style="display:flex;flex-direction:column">
+              <span style="font-size:13px;line-height:18px;font-weight:500">{{ t.acc }} <span style="color:#B91C1C">*</span></span>
+              <input value="{{ b.accView }}" onChange="{{ b.onAcc }}" onFocus="{{ b.focusAcc }}" onBlur="{{ blur }}" inputmode="numeric" placeholder="0000 0000 0000 0000 0000" style="margin-top:6px;width:100%;height:34px;padding:0 12px;border:1px solid {{ b.accBorder }};border-radius:8px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:13px;color:#172B2A;outline:none;box-shadow:{{ b.accShadow }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+              <sc-if value="{{ b.accErr }}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#B91C1C"><lucide-i name="circle-alert" size="14"></lucide-i>{{ b.accErr }}</div></sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display:flex"><button onClick="{{ addBank }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 8px;margin-left:-8px;border:0;border-radius:8px;background:transparent;color:#0F766E;font-size:13px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#DDF5EE"><lucide-i name="plus" size="16"></lucide-i>{{ t.addBank }}</button></div>
+      </section>
+
+      <section style="padding:24px 0 56px;display:flex;flex-direction:column;gap:16px">
+        <div><div style="font-size:13px;line-height:18px;font-weight:600">{{ t.s5 }}</div><div style="font-size:12px;line-height:16px;color:#647574">{{ t.s5d }}</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <div style="display:flex;flex-direction:column">
+            <label for="bp-dir" style="font-size:13px;line-height:18px;font-weight:500">{{ t.director }}</label>
+            <input id="bp-dir" value="{{ f.director }}" onChange="{{ on.director }}" onFocus="{{ fo.director }}" onBlur="{{ blur }}" style="margin-top:6px;width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.director }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ sh.director }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <label for="bp-acct" style="font-size:13px;line-height:18px;font-weight:500">{{ t.accountant }}</label>
+            <input id="bp-acct" value="{{ f.accountant }}" onChange="{{ on.accountant }}" onFocus="{{ fo.accountant }}" onBlur="{{ blur }}" style="margin-top:6px;width:100%;height:34px;padding:0 12px;border:1px solid {{ bd.accountant }};border-radius:8px;background:#FFFFFF;font-size:14px;color:#172B2A;outline:none;box-shadow:{{ sh.accountant }};transition:border-color 120ms ease-out,box-shadow 120ms ease-out">
+          </div>
+        </div>
+      </section>
+    </div>
+    <div style="height:72px;flex:none;border-top:1px solid #E2E8F0;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:0 24px;background:#FFFFFF">
+      <button onClick="{{ tryClose }}" style="height:34px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#F8FAFA">{{ t.cancel }}</button>
+      <button onClick="{{ save }}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:background 120ms ease-out" style-hover="background:#115E59" style-active="background:#134E4A">{{ t.save }}</button>
+    </div>
+  </div>
+  <sc-if value="{{ confirmOpen }}">
+    <div style="position:absolute;inset:0;z-index:10;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px">
+      <div role="alertdialog" aria-modal="true" style="width:440px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px">
+        <h3 style="margin:0;font-size:17px;line-height:24px;font-weight:600">{{ t.cTitle }}</h3>
+        <p style="margin:8px 0 0;font-size:14px;line-height:20px;color:#5B6B6A;text-wrap:pretty">{{ t.cText }}</p>
+        <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:8px">
+          <button ref="{{ stayRef }}" onClick="{{ stay }}" style="height:36px;padding:0 14px;border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#F8FAFA">{{ t.cStay }}</button>
+          <button onClick="{{ discard }}" style="height:36px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:#115E59">{{ t.cLeave }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const T = {
+  uz: { newT: 'Yangi filial', close: 'Yopish', goFirst: "Birinchi xatoga o'tish", summary: n => `${n} ta maydonni to'g'rilang`,
+    s1: "Asosiy ma'lumotlar", s1d: 'Filial tizimda shu nom va belgi bilan ko\'rinadi', name: 'Filial nomi', namePh: 'masalan, Toshkent filiali',
+    code: 'Qisqa belgi', docNo: 'Hujjat raqami', codeHelp: '2–4 ta lotin harfi. Nomdan avtomatik taklif qilinadi.',
+    s2: "Yuridik ma'lumotlar", s2d: 'Shartnoma va hisob-fakturalarda chiqadi', legal: 'Yuridik nomi', legalPh: 'masalan, "Medix Toshkent" MChJ', stir: 'STIR',
+    vat: "QQS to'lovchi", vatHelp: 'Hujjatlarda QQS alohida ko\'rsatiladi', vatNo: 'QQS guvohnomasi raqami',
+    s3: 'Manzil va aloqa', s3d: 'Yuridik manzil hujjatlarda ko\'rsatiladi', region: 'Viloyat / shahar', regionPh: 'Tanlang', search: 'Qidirish…', nothing: 'Hech narsa topilmadi',
+    address: 'Yuridik manzil', addressPh: "masalan, Chilonzor tumani, Bunyodkor ko'chasi, 12-uy", same: 'Haqiqiy manzil yuridik manzil bilan bir xil', actual: 'Haqiqiy manzil', phone: 'Telefon',
+    s4: 'Bank rekvizitlari', s4d: "To'lov hujjatlari shu hisoblar orqali yuritiladi", bank: 'Bank', bankPh: 'Bankni tanlang', mfo: 'MFO', acc: 'Hisob raqami', mainAcc: 'Asosiy hisob', remove: "O'chirish", addBank: "Yana hisob qo'shish",
+    s5: "Mas'ul shaxslar", s5d: 'Chop etiladigan hujjatlardagi imzo joylarida ko\'rinadi.', director: 'Rahbar F.I.Sh.', accountant: 'Bosh hisobchi F.I.Sh.',
+    cancel: 'Bekor qilish', save: 'Filialni saqlash', cTitle: 'Saqlanmagan o\'zgarishlar', cText: "O'zgarishlar saqlanmagan. Chiqib ketsangiz, ular yo'qoladi.", cStay: 'Davom etish', cLeave: 'Chiqish',
+    eName: 'Filial nomini kiriting', eCode: '2–4 ta lotin harfidan iborat belgi kiriting', eCodeBusy: n => `Bu belgi band: ${n}`, eLegal: 'Yuridik nomini kiriting',
+    eStir: "STIR 9 ta raqamdan iborat bo'lishi kerak", eStirDup: 'Bu STIR boshqa filialda ishlatilgan', eRegion: 'Viloyat yoki shaharni tanlang', eAddr: 'Yuridik manzilni kiriting', eActual: 'Haqiqiy manzilni kiriting',
+    eBank: 'Bankni tanlang', eAcc: "Hisob raqami 20 ta raqamdan iborat bo'lishi kerak" },
+  cy: { newT: 'Янги филиал', close: 'Ёпиш', goFirst: 'Биринчи хатога ўтиш', summary: n => `${n} та майдонни тўғриланг`,
+    s1: 'Асосий маълумотлар', s1d: 'Филиал тизимда шу ном ва белги билан кўринади', name: 'Филиал номи', namePh: 'масалан, Тошкент филиали',
+    code: 'Қисқа белги', docNo: 'Ҳужжат рақами', codeHelp: '2–4 та лотин ҳарфи. Номдан автоматик таклиф қилинади.',
+    s2: 'Юридик маълумотлар', s2d: 'Шартнома ва ҳисоб-фактураларда чиқади', legal: 'Юридик номи', legalPh: 'масалан, "Medix Toshkent" МЧЖ', stir: 'СТИР',
+    vat: 'ҚҚС тўловчи', vatHelp: 'Ҳужжатларда ҚҚС алоҳида кўрсатилади', vatNo: 'ҚҚС гувоҳномаси рақами',
+    s3: 'Манзил ва алоқа', s3d: 'Юридик манзил ҳужжатларда кўрсатилади', region: 'Вилоят / шаҳар', regionPh: 'Танланг', search: 'Қидириш…', nothing: 'Ҳеч нарса топилмади',
+    address: 'Юридик манзил', addressPh: 'масалан, Чилонзор тумани, Бунёдкор кўчаси, 12-уй', same: 'Ҳақиқий манзил юридик манзил билан бир хил', actual: 'Ҳақиқий манзил', phone: 'Телефон',
+    s4: 'Банк реквизитлари', s4d: 'Тўлов ҳужжатлари шу ҳисоблар орқали юритилади', bank: 'Банк', bankPh: 'Банкни танланг', mfo: 'МФО', acc: 'Ҳисоб рақами', mainAcc: 'Асосий ҳисоб', remove: 'Ўчириш', addBank: 'Яна ҳисоб қўшиш',
+    s5: 'Масъул шахслар', s5d: 'Чоп этиладиган ҳужжатлардаги имзо жойларида кўринади.', director: 'Раҳбар Ф.И.Ш.', accountant: 'Бош ҳисобчи Ф.И.Ш.',
+    cancel: 'Бекор қилиш', save: 'Филиални сақлаш', cTitle: 'Сақланмаган ўзгаришлар', cText: 'Ўзгаришлар сақланмаган. Чиқиб кетсангиз, улар йўқолади.', cStay: 'Давом этиш', cLeave: 'Чиқиш',
+    eName: 'Филиал номини киритинг', eCode: '2–4 та лотин ҳарфидан иборат белги киритинг', eCodeBusy: n => `Бу белги band: ${n}`.replace('band', 'банд'), eLegal: 'Юридик номини киритинг',
+    eStir: 'СТИР 9 та рақамдан иборат бўлиши керак', eStirDup: 'Бу СТИР бошқа филиалда ишлатилган', eRegion: 'Вилоят ёки шаҳарни танланг', eAddr: 'Юридик манзилни киритинг', eActual: 'Ҳақиқий манзилни киритинг',
+    eBank: 'Банкни танланг', eAcc: 'Ҳисоб рақами 20 та рақамдан иборат бўлиши керак' },
+  ru: { newT: 'Новый филиал', close: 'Закрыть', goFirst: 'К первой ошибке', summary: n => `Исправьте поля: ${n}`,
+    s1: 'Основные данные', s1d: 'Под этим названием и кодом филиал отображается в системе', name: 'Название филиала', namePh: 'например, Ташкентский филиал',
+    code: 'Краткий код', docNo: 'Номер документа', codeHelp: '2–4 латинские буквы. Предлагается автоматически по названию.',
+    s2: 'Юридические данные', s2d: 'Указываются в договорах и счетах-фактурах', legal: 'Юридическое название', legalPh: 'например, ООО «Medix Toshkent»', stir: 'ИНН',
+    vat: 'Плательщик НДС', vatHelp: 'НДС выделяется в документах отдельно', vatNo: 'Номер свидетельства НДС',
+    s3: 'Адрес и контакты', s3d: 'Юридический адрес указывается в документах', region: 'Область / город', regionPh: 'Выберите', search: 'Поиск…', nothing: 'Ничего не найдено',
+    address: 'Юридический адрес', addressPh: 'например, Чиланзарский район, ул. Бунёдкор, 12', same: 'Фактический адрес совпадает с юридическим', actual: 'Фактический адрес', phone: 'Телефон',
+    s4: 'Банковские реквизиты', s4d: 'Платёжные документы проводятся по этим счетам', bank: 'Банк', bankPh: 'Выберите банк', mfo: 'МФО', acc: 'Расчётный счёт', mainAcc: 'Основной счёт', remove: 'Удалить', addBank: 'Добавить ещё счёт',
+    s5: 'Ответственные лица', s5d: 'Отображаются в местах подписи в печатных документах.', director: 'Ф.И.О. руководителя', accountant: 'Ф.И.О. главного бухгалтера',
+    cancel: 'Отмена', save: 'Сохранить филиал', cTitle: 'Несохранённые изменения', cText: 'Изменения не сохранены. Если вы выйдете, они будут потеряны.', cStay: 'Продолжить', cLeave: 'Выйти',
+    eName: 'Введите название филиала', eCode: 'Введите код из 2–4 латинских букв', eCodeBusy: n => `Код занят: ${n}`, eLegal: 'Введите юридическое название',
+    eStir: 'ИНН должен состоять из 9 цифр', eStirDup: 'Этот ИНН уже используется в другом филиале', eRegion: 'Выберите область или город', eAddr: 'Введите юридический адрес', eActual: 'Введите фактический адрес',
+    eBank: 'Выберите банк', eAcc: 'Расчётный счёт должен состоять из 20 цифр' }
+};
+const REGIONS = ['Toshkent shahri', 'Toshkent viloyati', 'Samarqand viloyati', 'Buxoro viloyati', "Farg'ona viloyati", 'Andijon viloyati', 'Namangan viloyati', 'Qashqadaryo viloyati', 'Surxondaryo viloyati', 'Jizzax viloyati', 'Sirdaryo viloyati', 'Navoiy viloyati', 'Xorazm viloyati', "Qoraqalpog'iston Respublikasi"];
+const BANKS = [['Kapitalbank', '01158'], ['Hamkorbank', '00083'], ['Ipoteka bank', '00423'], ['Asakabank', '00873'], ['Agrobank', '00394'], ["O'zmilliybank", '00450']];
+const KNOWN = { toshkent: 'TSH', samarqand: 'SMQ', buxoro: 'BXR', "farg'ona": 'FRG', fargona: 'FRG' };
+const suggest = name => {
+  const w = (name.trim().split(/\s+/)[0] || '').toLowerCase();
+  if (KNOWN[w]) return KNOWN[w];
+  const l = w.replace(/[^a-z]/g, '').toUpperCase();
+  if (!l) return '';
+  return (l[0] + l.slice(1).replace(/[AEIOU]/g, '')).slice(0, 3);
+};
+const grp = (d, sizes) => { const out = []; let i = 0; for (const s of sizes) { if (i >= d.length) break; out.push(d.slice(i, i + s)); i += s; } return out.join(' '); };
+const EMPTY = { name: '', code: '', codeAuto: true, legal: '', stir: '', vat: true, vatNo: '', region: '', address: '', same: true, actual: '', phone: '', banks: [{ bank: '', acc: '', main: true }], director: '', accountant: '' };
+const RING = '0 0 0 3px rgba(13,148,136,0.15)', RING_E = '0 0 0 3px rgba(185,28,28,0.12)';
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const init = p.initial ? JSON.parse(JSON.stringify({ ...EMPTY, ...p.initial, codeAuto: false })) : JSON.parse(JSON.stringify(EMPTY));
+    this.state = { f: init, base: JSON.stringify(init), tried: !!p.showErrors, focus: null, sel: null, selQ: '', confirm: false, narrow: false };
+  }
+  bodyRef = React.createRef(); nameRef = React.createRef(); selRef = React.createRef(); stayRef = React.createRef();
+  componentDidMount() {
+    this.onResize = () => { const n = window.innerWidth <= 1100; if (n !== this.state.narrow) this.setState({ narrow: n }); };
+    this.onResize(); window.addEventListener('resize', this.onResize);
+    this.onKey = e => { if (e.key !== 'Escape') return; e.stopPropagation(); if (this.state.sel) this.setState({ sel: null }); else if (this.state.confirm) this.setState({ confirm: false }); else this.tryClose(); };
+    window.addEventListener('keydown', this.onKey, true);
+    if (this.props.showErrors) setTimeout(() => this.goFirst(), 80); else setTimeout(() => this.nameRef.current && this.nameRef.current.focus(), 50);
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey, true); }
+  componentDidUpdate(pp, ps) {
+    ps = this._ps || {}; this._ps = this.state;
+    if (this.state.sel && this.state.sel !== ps.sel) setTimeout(() => this.selRef.current && this.selRef.current.focus(), 0);
+    if (this.state.confirm && !ps.confirm) setTimeout(() => this.stayRef.current && this.stayRef.current.focus(), 0);
+  }
+  set(patch) { this.setState(s => ({ f: { ...s.f, ...patch } })); }
+  setBank(i, patch) { this.setState(s => ({ f: { ...s.f, banks: s.f.banks.map((b, j) => j === i ? { ...b, ...patch } : b) } })); }
+  errors() {
+    const f = this.state.f, t = T[this.props.lang] || T.uz, others = (this.props.existing || []).filter(b => b.id !== this.props.editId);
+    const e = {};
+    if (!f.name.trim()) e.name = t.eName;
+    const busy = others.find(b => b.code === f.code);
+    if (!/^[A-Z]{2,4}$/.test(f.code)) e.code = t.eCode; else if (busy) e.code = t.eCodeBusy(busy.name);
+    if (!f.legal.trim()) e.legal = t.eLegal;
+    if (f.stir.length !== 9) e.stir = t.eStir; else if (others.some(b => b.stir === f.stir)) e.stir = t.eStirDup;
+    if (!f.region) e.region = t.eRegion;
+    if (!f.address.trim()) e.address = t.eAddr;
+    if (!f.same && !f.actual.trim()) e.actual = t.eActual;
+    f.banks.forEach((b, i) => { if (!b.bank) e['bank' + i] = t.eBank; if (b.acc.length !== 20) e['acc' + i] = t.eAcc; });
+    return e;
+  }
+  goFirst() {
+    const keys = Object.keys(this.errors()); if (!keys.length) return;
+    const box = this.bodyRef.current, el = box && box.querySelector(`[data-f="${keys[0]}"]`);
+    if (!el) return;
+    box.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 24), behavior: 'smooth' });
+    const inp = el.querySelector('input,button'); inp && inp.focus({ preventScroll: true });
+  }
+  save() {
+    const e = this.errors();
+    if (Object.keys(e).length) { this.setState({ tried: true }); setTimeout(() => this.goFirst(), 0); return; }
+    const { codeAuto, ...data } = this.state.f;
+    this.props.onSave && this.props.onSave(data);
+  }
+  tryClose() { if (JSON.stringify(this.state.f) !== this.state.base) this.setState({ confirm: true, sel: null }); else this.props.onClose && this.props.onClose(); }
+
+  renderVals() {
+    const s = this.state, f = s.f, t = T[this.props.lang] || T.uz;
+    const all = this.errors();
+    const live = {};
+    if (all.code && f.code.length >= 2 && /^[A-Z]{2,4}$/.test(f.code)) live.code = all.code;
+    if (all.stir && f.stir.length === 9) live.stir = all.stir;
+    const er = s.tried ? all : live;
+    const keys = ['name', 'code', 'legal', 'stir', 'vatNo', 'region', 'address', 'actual', 'phone', 'director', 'accountant'];
+    const bd = {}, sh = {}, fo = {}, on = {};
+    keys.forEach(k => {
+      const isErr = !!er[k], isF = s.focus === k || (k === 'region' && s.sel === 'region');
+      bd[k] = isErr ? '#B91C1C' : isF ? '#0D9488' : '#E2E8F0';
+      sh[k] = isF ? (isErr ? RING_E : RING) : 'none';
+      fo[k] = () => this.setState({ focus: k });
+    });
+    on.name = e => { const v = e.target.value; this.set(f.codeAuto ? { name: v, code: suggest(v) } : { name: v }); };
+    on.code = e => this.props.codeLocked ? null : this.set({ code: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4), codeAuto: false });
+    on.legal = e => this.set({ legal: e.target.value });
+    on.stir = e => this.set({ stir: e.target.value.replace(/\D/g, '').slice(0, 9) });
+    on.vatNo = e => this.set({ vatNo: e.target.value.replace(/\D/g, '').slice(0, 12) });
+    on.address = e => this.set({ address: e.target.value });
+    on.actual = e => this.set({ actual: e.target.value });
+    on.phone = e => { let d = e.target.value.replace(/\D/g, ''); if (d.startsWith('998')) d = d.slice(3); this.set({ phone: d.slice(0, 9) }); };
+    on.director = e => this.set({ director: e.target.value });
+    on.accountant = e => this.set({ accountant: e.target.value });
+    const q = s.selQ.trim().toLowerCase();
+    const regionOpts = REGIONS.filter(r => !q || r.toLowerCase().includes(q)).map(r => ({ label: r, selected: f.region === r, bg: f.region === r ? '#DDF5EE' : 'transparent', pick: () => { this.set({ region: r }); this.setState({ sel: null, selQ: '' }); } }));
+    const curBank = s.sel && s.sel.startsWith('bank') ? +s.sel.slice(4) : -1;
+    const bankOpts = BANKS.filter(([n]) => !q || n.toLowerCase().includes(q)).map(([n, m]) => ({ label: n, mfo: m, pick: () => { this.setBank(curBank, { bank: n }); this.setState({ sel: null, selQ: '' }); } }));
+    const banks = f.banks.map((b, i) => {
+      const bk = BANKS.find(x => x[0] === b.bank), accK = 'acc' + i, isF = s.focus === accK;
+      return { main: b.main, removable: i > 0, bankKey: 'bank' + i, accKey: accK, open: s.sel === 'bank' + i,
+        radioBorder: b.main ? '5px solid #0D9488' : '1px solid #647574',
+        bankLabel: b.bank || t.bankPh, bankColor: b.bank ? '#172B2A' : '#647574', bankBorder: er['bank' + i] ? '#B91C1C' : s.sel === 'bank' + i ? '#0D9488' : '#E2E8F0',
+        bankErr: er['bank' + i] || '', mfo: bk ? bk[1] : '—', accView: grp(b.acc, [4, 4, 4, 4, 4]), accErr: er[accK] || '',
+        accBorder: er[accK] ? '#B91C1C' : isF ? '#0D9488' : '#E2E8F0', accShadow: isF ? (er[accK] ? RING_E : RING) : 'none',
+        onAcc: e => this.setBank(i, { acc: e.target.value.replace(/\D/g, '').slice(0, 20) }), focusAcc: () => this.setState({ focus: accK }),
+        openBank: () => this.setState(st => ({ sel: st.sel === 'bank' + i ? null : 'bank' + i, selQ: '' })),
+        setMain: () => this.setState(st => ({ f: { ...st.f, banks: st.f.banks.map((x, j) => ({ ...x, main: j === i })) } })),
+        remove: () => this.setState(st => { let nb = st.f.banks.filter((x, j) => j !== i); if (!nb.some(x => x.main)) nb = nb.map((x, j) => ({ ...x, main: j === 0 })); return { f: { ...st.f, banks: nb } }; }) };
+    });
+    const nErr = Object.keys(all).length;
+    const ph = f.phone;
+    return {
+      t, f, er, bd, sh, fo, on, blur: () => this.setState({ focus: null }),
+      title: this.props.editId && this.props.initial ? (this.props.initial.name || t.newT) : t.newT, panelW: s.narrow ? '90vw' : '640px',
+      bodyRef: this.bodyRef, nameRef: this.nameRef, selRef: this.selRef, stayRef: this.stayRef,
+      showSummary: s.tried && nErr > 0, summary: t.summary(nErr), goFirst: () => this.goFirst(),
+      docSample: `${f.code || 'XXX'}-KR-000123`, codeHint: !er.code, codeRo: !!this.props.codeLocked, codeHelp: this.props.codeLocked ? (this.props.codeLockText || t.codeHelp) : t.codeHelp,
+      stirView: grp(f.stir, [3, 3, 3]), phoneView: ph ? '+998 ' + grp(ph, [2, 3, 2, 2]) : '',
+      vatBg: f.vat ? '#0F766E' : '#647574', vatJustify: f.vat ? 'flex-end' : 'flex-start', toggleVat: () => this.set({ vat: !f.vat }),
+      regionOpen: s.sel === 'region', regionLabel: f.region || t.regionPh, regionColor: f.region ? '#172B2A' : '#647574', regionOpts, regionNone: regionOpts.length === 0,
+      openRegion: () => this.setState(st => ({ sel: st.sel === 'region' ? null : 'region', selQ: '' })),
+      selQ: s.selQ, onSelQ: e => this.setState({ selQ: e.target.value }), bankOpts, bankNone: bankOpts.length === 0,
+      toggleSame: () => this.set({ same: !f.same }), showActual: !f.same, sameBg: f.same ? '#0F766E' : '#FFFFFF', sameBorder: f.same ? '#0F766E' : '#647574',
+      banks, addBank: () => this.set({ banks: [...f.banks, { bank: '', acc: '', main: false }] }),
+      tryClose: () => this.tryClose(), save: () => this.save(),
+      confirmOpen: s.confirm, stay: () => this.setState({ confirm: false }), discard: () => { this.setState({ confirm: false }); this.props.onClose && this.props.onClose(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

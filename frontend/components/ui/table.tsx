@@ -1,7 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
-import type { KeyboardEvent, ReactNode } from "react";
+import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "./icon";
 import { Pagination, type PaginationProps } from "./pagination";
@@ -18,6 +19,8 @@ export interface TableColumn<T> {
   mono?: boolean;
   /** Uzun nom (mijoz, korxona) — satrga oʻraladi, jadval tor ustunda gorizontal aylanmaydi. */
   wrap?: boolean;
+  /** Gorizontal aylantirishda chapda qoladi (faqat boshidagi ustunlar; `width` majburiy). */
+  pinned?: boolean;
   render?: (row: T) => ReactNode;
 }
 
@@ -48,6 +51,9 @@ export interface TableProps<T> {
   /** Boʻsh, natija yoʻq, xato yoki ruxsat yoʻq holati — `rows` boʻsh boʻlganda koʻrsatiladi. */
   emptyState?: ReactNode;
   pagination?: PaginationProps;
+  /** Ochiladigan qatorlar (masalan, mahsulot → partiya × zona): shu qator ostida toʻliq kenglikdagi blok. */
+  expandedKeys?: string[];
+  renderExpanded?: (row: T) => ReactNode;
 }
 
 const SKELETON_ROWS = 8;
@@ -79,15 +85,33 @@ export function Table<T>({
   activeKey,
   rowActions,
   totals,
+  expandedKeys,
+  renderExpanded,
   loading = false,
   emptyState,
   pagination,
 }: TableProps<T>) {
+  const t = useTranslations("ui.table");
   const keys = rows.map(rowKey);
   const selectedOnPage = keys.filter((k) => selectedKeys.includes(k));
   const allSelected = keys.length > 0 && selectedOnPage.length === keys.length;
   const someSelected = selectedOnPage.length > 0 && !allSelected;
   const colCount = columns.length + (selectable ? 1 : 0) + (rowActions ? 1 : 0);
+  // Yopishqoq ustunlar: chap chegaralar (tanlash ustuni 44px)
+  const pinLeft: Record<string, number> = {};
+  let lastPinned: string | null = null;
+  {
+    let left = selectable ? 44 : 0;
+    for (const c of columns) {
+      if (!c.pinned) break;
+      pinLeft[c.key] = left;
+      lastPinned = c.key;
+      left += c.width ?? 0;
+    }
+  }
+  const anyPinned = lastPinned !== null;
+  const pinStyle = (key: string, width?: number): CSSProperties | undefined =>
+    key in pinLeft ? { left: pinLeft[key], width, minWidth: width } : width ? { width } : undefined;
 
   function toggleAll(checked: boolean) {
     if (!onSelectionChange) return;
@@ -151,13 +175,16 @@ export function Table<T>({
           <thead>
             <tr>
               {selectable ? (
-                <th scope="col" className="sticky top-0 z-10 w-11 border-b border-border bg-table-header pr-1 pl-4">
+                <th
+                  scope="col"
+                  className={cn("sticky top-0 z-10 w-11 border-b border-border bg-table-header pr-1 pl-4", anyPinned && "left-0 z-20")}
+                >
                   <Checkbox
                     checked={allSelected}
                     indeterminate={someSelected}
                     disabled={rows.length === 0}
                     onChange={toggleAll}
-                    aria-label="Sahifadagi barcha qatorlarni tanlash"
+                    aria-label={t("selectAll")}
                   />
                 </th>
               ) : null}
@@ -168,10 +195,12 @@ export function Table<T>({
                     key={col.key}
                     scope="col"
                     aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
-                    style={col.width ? { width: col.width } : undefined}
+                    style={pinStyle(col.key, col.width)}
                     className={cn(
                       "sticky top-0 z-10 h-10 border-b border-border bg-table-header px-3 text-caption font-medium whitespace-nowrap text-text-secondary",
                       col.align === "right" ? "text-right" : "text-left",
+                      col.key in pinLeft && "z-20",
+                      col.key === lastPinned && "border-r",
                     )}
                   >
                     {col.sortable && onSortChange ? (
@@ -219,61 +248,75 @@ export function Table<T>({
               : rows.map((row) => {
                   const key = rowKey(row);
                   const isSelected = selectedKeys.includes(key) || key === activeKey;
+                  const expanded = renderExpanded && expandedKeys?.includes(key);
                   return (
-                    <tr
-                      key={key}
-                      tabIndex={0}
-                      aria-selected={selectable ? selectedKeys.includes(key) : undefined}
-                      onClick={onRowClick ? () => onRowClick(row) : undefined}
-                      onKeyDown={(e) => onRowKeyDown(e, row, key)}
-                      className={cn(
-                        "group focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary",
-                        onRowClick && "cursor-pointer",
-                      )}
-                    >
-                      {selectable ? (
-                        <td
-                          className={cn(
-                            "w-11 border-b border-border pr-1 pl-4",
-                            isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Checkbox
-                            checked={selectedKeys.includes(key)}
-                            onChange={() => toggleRow(key)}
-                            aria-label="Qatorni tanlash"
-                            className="min-h-0"
-                          />
-                        </td>
+                    <Fragment key={key}>
+                      <tr
+                        aria-expanded={renderExpanded ? Boolean(expanded) : undefined}
+                        tabIndex={0}
+                        aria-selected={selectable ? selectedKeys.includes(key) : undefined}
+                        onClick={onRowClick ? () => onRowClick(row) : undefined}
+                        onKeyDown={(e) => onRowKeyDown(e, row, key)}
+                        className={cn(
+                          "group focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary",
+                          onRowClick && "cursor-pointer",
+                        )}
+                      >
+                        {selectable ? (
+                          <td
+                            className={cn(
+                              "w-11 border-b border-border pr-1 pl-4",
+                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                              anyPinned && "sticky left-0 z-[1]",
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedKeys.includes(key)}
+                              onChange={() => toggleRow(key)}
+                              aria-label={t("selectRow")}
+                              className="min-h-0"
+                            />
+                          </td>
+                        ) : null}
+                        {columns.map((col) => (
+                          <td
+                            key={col.key}
+                            style={col.key in pinLeft ? pinStyle(col.key, col.width) : undefined}
+                            className={cn(
+                              "border-b border-border px-3",
+                              col.key in pinLeft && "sticky z-[1]",
+                              col.key === lastPinned && "border-r",
+                              col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
+                              tdPad,
+                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                              col.align === "right" && "tabular text-right",
+                              col.mono && "font-mono text-mono",
+                            )}
+                          >
+                            {cellValue(row, col)}
+                          </td>
+                        ))}
+                        {rowActions ? (
+                          <td
+                            className={cn(
+                              "w-12 border-b border-border px-2 text-right",
+                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {rowActions(row)}
+                          </td>
+                        ) : null}
+                      </tr>
+                      {expanded ? (
+                        <tr>
+                          <td colSpan={colCount} className="border-b border-border bg-table-header p-0">
+                            {renderExpanded(row)}
+                          </td>
+                        </tr>
                       ) : null}
-                      {columns.map((col) => (
-                        <td
-                          key={col.key}
-                          className={cn(
-                            "border-b border-border px-3",
-                            col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
-                            tdPad,
-                            isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                            col.align === "right" && "tabular text-right",
-                            col.mono && "font-mono text-mono",
-                          )}
-                        >
-                          {cellValue(row, col)}
-                        </td>
-                      ))}
-                      {rowActions ? (
-                        <td
-                          className={cn(
-                            "w-12 border-b border-border px-2 text-right",
-                            isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {rowActions(row)}
-                        </td>
-                      ) : null}
-                    </tr>
+                    </Fragment>
                   );
                 })}
             {showEmpty ? (

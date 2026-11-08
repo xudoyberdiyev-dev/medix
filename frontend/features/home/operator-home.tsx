@@ -1,22 +1,28 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Banknote, ChevronRight, ClipboardList, Users } from "lucide-react";
+import { ChevronRight, CircleCheck, CircleX, PackageX, Plus, Search, Stamp } from "lucide-react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
-import { Table, type TableColumn } from "@/components/ui/table";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { formatIsoDate } from "@/features/counterparties/api";
+import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
+import { useBranches } from "@/features/employees/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
-import { type AttentionRow, CardTitle, nonZero, OrderStatuses, PaymentCard } from "./director-home";
+import { Flow } from "./branch-home";
+import { type AttentionRow, type MiniCol, MiniTable, Panel } from "./director-home";
+import { firstName, greetKey, share, tashkentHour, toCents, waitParts } from "./director-view";
 import { PeriodPicker, usePeriodState } from "./period-picker";
 
 type OperatorHomeView = components["schemas"]["OperatorHomeView"];
-type CustomerRow = components["schemas"]["CustomerRow"];
+type RecentOrder = components["schemas"]["RecentOrder"];
+type OperatorNote = components["schemas"]["OperatorNote"];
+type CustomerStatus = components["schemas"]["CustomerStatus"];
 
 export const REPORTS_OWN = "reports.own";
 
@@ -25,7 +31,7 @@ export function operatorAttentionRows(a: OperatorHomeView["attention"]): Attenti
   const rows: (AttentionRow & { count: number })[] = [
     {
       key: "rej",
-      label: `Soʻnggi ${a.rejectedDays} kunda rad etilgan buyurtmalar (${a.rejected.count})`,
+      values: { days: a.rejectedDays, count: a.rejected.count },
       value: a.rejected.amount,
       count: a.rejected.count,
       href: "/orders?status=REJECTED&mine=1",
@@ -34,7 +40,7 @@ export function operatorAttentionRows(a: OperatorHomeView["attention"]): Attenti
     },
     {
       key: "draft",
-      label: `Yuborilmagan qoralamalar (${a.drafts.count})`,
+      values: { count: a.drafts.count },
       value: a.drafts.amount,
       count: a.drafts.count,
       href: "/orders?status=DRAFT&mine=1",
@@ -42,7 +48,7 @@ export function operatorAttentionRows(a: OperatorHomeView["attention"]): Attenti
     },
     {
       key: "pend",
-      label: `Tasdiq kutayotgan buyurtmalar (${a.pendingApproval.count})`,
+      values: { count: a.pendingApproval.count },
       value: a.pendingApproval.amount,
       count: a.pendingApproval.count,
       href: "/orders?status=PENDING_APPROVAL&mine=1",
@@ -50,7 +56,7 @@ export function operatorAttentionRows(a: OperatorHomeView["attention"]): Attenti
     },
     {
       key: "stale",
-      label: `Bir holatda uzoq turgan buyurtmalar (${a.stale.count})`,
+      values: { count: a.stale.count },
       value: a.stale.amount,
       count: a.stale.count,
       href: "/orders?mine=1",
@@ -59,14 +65,16 @@ export function operatorAttentionRows(a: OperatorHomeView["attention"]): Attenti
   ];
   return rows
     .filter((r) => r.count > 0)
-    .map((r): AttentionRow => ({ key: r.key, label: r.label, value: r.value, href: r.href, money: r.money, danger: r.danger }));
+    .map((r): AttentionRow => ({ key: r.key, values: r.values, value: r.value, href: r.href, money: r.money, danger: r.danger }));
 }
 
-/** Operator bosh sahifasi (SPEC 2, 8): oʻzi kiritgan buyurtmalar boʻyicha savdo, holatlar, «Diqqat talab qiladi», eng katta mijozlar. */
+/** Operator bosh sahifasi — prototip `Home.dc.html` («operator» varianti; SPEC 2, 8): bugungi buyurtmalarim, oxirgi 10 ta, «Eʼtibor bering», «Mijoz holati». */
 export function OperatorHome() {
+  const t = useTranslations("home");
   const me = useMe();
+  const branches = useBranches();
   const allowed = can(me.data, REPORTS_OWN);
-  const period = usePeriodState();
+  const period = usePeriodState("month");
   const { from, to } = period.range;
   const home = useQuery({
     queryKey: ["home", "operator", from, to],
@@ -75,107 +83,233 @@ export function OperatorHome() {
     refetchInterval: 120_000,
   });
 
-  if (me.data && !allowed) return <ForbiddenState description="Bosh sahifa koʻrsatkichlari sizning rolingiz uchun yopiq." />;
+  if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
   const h = home.data;
+  const name = firstName(me.data?.fullName);
+  const greet = t(`dir.${greetKey(tashkentHour())}`) + (name ? `, ${name}` : "");
+  const branchName = (branches.data ?? []).find((b) => b.id === me.data?.branchId)?.name ?? "";
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-page-title">Bosh sahifa</h1>
-        <PeriodPicker state={period} />
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-page-title">{greet}</h1>
+          <p className="mt-0.5 text-body text-text-secondary">
+            {formatIsoDate(h?.today ?? todayTashkent())}
+            {branchName ? ` · ${branchName}` : ""}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {can(me.data, "orders.create") ? (
+            <Link
+              href="/orders/new"
+              className="inline-flex h-9 items-center gap-2 rounded-control bg-primary-button px-4 font-medium text-white hover:bg-primary-button-hover"
+            >
+              <Plus size={16} strokeWidth={1.5} aria-hidden /> {t("op.newOrder")}
+            </Link>
+          ) : null}
+          <PeriodPicker state={period} />
+        </div>
       </div>
       {home.error ? (
         <ErrorState onRetry={() => home.refetch()} />
       ) : !h ? (
         <Skeleton className="h-40 w-full" />
       ) : (
-        <div className="flex flex-col gap-6">
-          <p className="text-caption text-text-secondary">
-            {h.from === h.to ? formatIsoDate(h.from) : `${formatIsoDate(h.from)} – ${formatIsoDate(h.to)}`} · faqat siz kiritgan buyurtmalar
-          </p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <PaymentCard icon={Banknote} title="Mening savdom (sof)" note="Sotuv − qaytarish, QQS bilan" value={h.sales} />
-            <Card>
-              <CardTitle icon={ClipboardList} title="Kiritilgan buyurtmalar" />
-              <div className="mt-1 font-mono text-subtitle tabular-nums">{h.ordersCreated.count}</div>
-              <div className="font-mono text-caption tabular-nums text-text-secondary">{formatMoney(h.ordersCreated.amount)}</div>
-              <div className="mt-2 text-caption text-text-secondary">Davrdagi buyurtmalar (qoralama va bekor qilinganlarsiz)</div>
-              <Link href="/orders?mine=1" className="mt-2 inline-block text-caption text-primary-button hover:underline">
-                Buyurtmalarimni ochish
-              </Link>
-            </Card>
+        <div className="flex flex-col gap-4">
+          <Flow cells={h.orderStatuses} title={t("op.myOrdersT")} hrefSuffix="&mine=1" />
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+            <div className="flex min-w-0 flex-col gap-4 xl:col-span-7">
+              <Recent rows={h.recent} />
+              {can(me.data, "orders.create") ? <CustomerLookup /> : null}
+            </div>
+            <div className="min-w-0 xl:col-span-5">
+              <Notes rows={h.notes} />
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <OperatorAttention home={h} />
-            <TopCustomers rows={h.topCustomers} />
-          </div>
-          <OrderStatuses cells={h.orderStatuses} staleDays={h.staleDays} hrefSuffix="&mine=1" />
         </div>
       )}
     </>
   );
 }
 
-function OperatorAttention({ home }: { home: OperatorHomeView }) {
-  const rows = operatorAttentionRows(home.attention);
+const ORDER_STATUS = [
+  "DRAFT",
+  "PENDING_APPROVAL",
+  "QUEUED",
+  "PICKING",
+  "MARKING",
+  "CHECKING",
+  "DOCUMENTING",
+  "LOADING",
+  "IN_TRANSIT",
+  "DELIVERED",
+  "UNDELIVERED",
+  "REJECTED",
+  "CANCELLED",
+] as const;
+const isStatus = (s: string): s is (typeof ORDER_STATUS)[number] => (ORDER_STATUS as readonly string[]).includes(s);
+
+function Recent({ rows }: { rows: RecentOrder[] }) {
+  const t = useTranslations("home");
+  const cols: MiniCol<RecentOrder>[] = [
+    { key: "no", title: t("br.c.doc"), render: (r) => <span className="font-mono text-caption">{r.number}</span> },
+    { key: "cust", title: t("director.customer"), render: (r) => <span className="line-clamp-1">{r.customer}</span> },
+    { key: "sum", title: t("br.c.sum"), right: true, render: (r) => formatMoney(r.total) },
+    { key: "st", title: t("br.c.status"), render: (r) => (isStatus(r.status) ? t(`orderStatus.${r.status}`) : r.status) },
+  ];
   return (
-    <section>
-      <h2 className="mb-2 flex items-center gap-2 text-subtitle">
-        <AlertTriangle size={18} strokeWidth={1.5} aria-hidden /> Diqqat talab qiladi
-      </h2>
-      <Card flush>
-        {rows.length === 0 ? (
-          <EmptyState
-            icon={AlertTriangle}
-            title="Hammasi joyida"
-            description="Rad etilgan, yuborilmagan yoki kutib qolgan buyurtma yoʻq."
-          />
-        ) : (
-          <ul className="divide-y divide-border">
-            {rows.map((r) => (
-              <li key={r.key}>
-                <Link href={r.href} className="flex items-center justify-between gap-3 px-4 py-2.5 text-body hover:bg-background">
-                  <span className={r.danger ? "text-danger" : ""}>{r.label}</span>
-                  <span className="flex items-center gap-2">
-                    <span className="font-mono tabular-nums">{nonZero(r.value) ? formatMoney(r.value) : ""}</span>
-                    <ChevronRight size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-    </section>
+    <Panel title={t("op.lastOrders")} href="/orders?mine=1">
+      <MiniTable
+        caption={t("op.lastOrders")}
+        cols={cols}
+        rows={rows}
+        rowKey={(r) => String(r.id)}
+        rowHref={(r) => `/orders/${r.id}`}
+        minWidth="580px"
+        empty={<EmptyState icon={CircleCheck} title={t("op.noOrders")} description={t("op.noOrdersHint")} />}
+      />
+    </Panel>
   );
 }
 
-function TopCustomers({ rows }: { rows: CustomerRow[] }) {
-  const columns: TableColumn<CustomerRow>[] = [
-    { key: "name", title: "Mijoz", wrap: true },
-    { key: "orders", title: "Buyurtmalar", align: "right", render: (c) => <span className="font-mono tabular-nums">{c.orders}</span> },
-    {
-      key: "sales",
-      title: "Savdo (QQS bilan)",
-      align: "right",
-      render: (c) => <span className="font-mono tabular-nums">{formatMoney(c.sales)}</span>,
-    },
-  ];
+function Notes({ rows }: { rows: OperatorNote[] }) {
+  const t = useTranslations("home.op");
+  const tb = useTranslations("home.br");
+  // Prototip: avval qizil (rad etilgan, qoldiq yo'q), keyin boshqalar
+  const sorted = [...rows].sort((a, b) => rank(a) - rank(b));
   return (
-    <section>
-      <h2 className="mb-2 flex items-center gap-2 text-subtitle">
-        <Users size={18} strokeWidth={1.5} aria-hidden /> Eng katta mijozlarim (top 5)
-      </h2>
-      <Table
-        caption="Eng katta mijozlarim: sof savdo"
-        density="compact"
-        columns={columns}
-        rows={rows}
-        rowKey={(c) => String(c.id)}
-        emptyState={
-          <EmptyState icon={Users} title="Savdo yoʻq" description="Davrda buyurtmalaringiz sotilsa, mijozlar shu yerda koʻrinadi." />
-        }
-      />
-    </section>
+    <Panel title={t("noteT")}>
+      {sorted.length === 0 ? (
+        <EmptyState icon={CircleCheck} title={t("noteNone")} description={t("noteNoneHint")} />
+      ) : (
+        <ul className="mx-4 mb-2 divide-y divide-border border-t border-border">
+          {sorted.map((n) => {
+            const w = waitParts(n.waitMinutes);
+            const Icon = n.kind === "REJECTED" ? CircleX : n.kind === "PENDING" ? Stamp : PackageX;
+            const tone = n.kind === "REJECTED" || (n.kind === "LOW_STOCK" && n.available === 0) ? "text-danger" : "text-warning";
+            const text =
+              n.kind === "REJECTED"
+                ? t("rej", { no: n.number, r: n.reason ?? "—" })
+                : n.kind === "PENDING"
+                  ? t("waitAt", { no: n.number, who: `${n.level === "DIRECTOR" ? t("lvDirector") : t("lvBranch")}: ${n.approver ?? "—"}` })
+                  : t("lowStock", { p: n.product ?? "", a: n.available, q: n.requested });
+            return (
+              <li key={`${n.kind}-${n.orderId}-${n.product ?? ""}`}>
+                <Link
+                  href={n.kind === "LOW_STOCK" ? `/stock?q=${encodeURIComponent(n.product ?? "")}` : `/orders/${n.orderId}`}
+                  className="flex min-h-11 items-center gap-3 py-2 text-body hover:bg-background"
+                >
+                  <Icon size={16} strokeWidth={1.5} aria-hidden className={cn("shrink-0", tone)} />
+                  <span className="min-w-0 flex-1">
+                    {text}
+                    {n.kind === "PENDING" ? <span className="block text-caption text-text-secondary">{tb(w.key, { n: w.n })}</span> : null}
+                  </span>
+                  {n.amount ? <span className="shrink-0 tabular-nums">{formatMoney(n.amount)}</span> : null}
+                  <ChevronRight size={16} strokeWidth={1.5} aria-hidden className="shrink-0 text-text-secondary" />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
+function rank(n: OperatorNote): number {
+  return n.kind === "REJECTED" || (n.kind === "LOW_STOCK" && n.available === 0) ? 0 : 1;
+}
+
+/** «Mijoz holati» (prototip): nomi yoki STIR boʻyicha — holat, qarz / limit, muddati oʻtgan, «Buyurtma yaratish». */
+function CustomerLookup() {
+  const t = useTranslations("home.op");
+  const [q, setQ] = useState("");
+  const query = q.trim();
+  const res = useQuery({
+    queryKey: ["home", "operator", "customers", query],
+    queryFn: () => unwrap(api.GET("/api/home/operator/customers", { params: { query: { q: query } } })),
+    enabled: query.length >= 2,
+  });
+  return (
+    <Panel title={t("custT")}>
+      <div className="px-4 pb-4">
+        <label className="flex h-10 items-center gap-2 rounded-control border border-border px-3 focus-within:border-primary">
+          <Search size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+          <span className="sr-only">{t("custT")}</span>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t("custPh")}
+            className="min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-text-disabled"
+          />
+        </label>
+        {query.length >= 2 ? (
+          res.error ? (
+            <ErrorState onRetry={() => res.refetch()} />
+          ) : !res.data ? (
+            <Skeleton className="mt-3 h-16 w-full" />
+          ) : res.data.length === 0 ? (
+            <p className="mt-3 text-caption text-text-secondary">{t("custNone")}</p>
+          ) : (
+            <ul className="mt-3 flex flex-col gap-3">
+              {res.data.map((c) => (
+                <CustomerCard key={c.id} c={c} />
+              ))}
+            </ul>
+          )
+        ) : null}
+      </div>
+    </Panel>
+  );
+}
+
+function CustomerCard({ c }: { c: CustomerStatus }) {
+  const t = useTranslations("home.op");
+  const bad = c.blocked || c.licenseExpired;
+  const limit = c.limit ? toCents(c.limit) : 0n;
+  const pct = limit > 0n ? Math.round(share(c.debt, limit) * 100) : 0;
+  const over = limit > 0n && toCents(c.debt) > limit;
+  return (
+    <li className="rounded-control border border-border p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-medium">{c.name}</span>
+        <span
+          className={cn(
+            "rounded-full px-2 py-0.5 text-caption font-medium",
+            bad ? "bg-danger-bg text-danger" : "bg-success-bg text-success",
+          )}
+        >
+          {c.blocked ? t("custBlocked") : c.licenseExpired ? t("custLic") : t("custOk")}
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-1 gap-3 text-caption sm:grid-cols-2">
+        <div>
+          <div className="text-text-secondary">{t("custLimit")}</div>
+          <div className="tabular-nums">
+            {formatMoney(c.debt)} / {c.limit ? formatMoney(c.limit) : "—"}
+            {limit > 0n ? ` · ${pct}%` : ""}
+          </div>
+          {limit > 0n ? (
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-background">
+              <div
+                className={cn("h-full rounded-full", over ? "bg-danger" : pct > 80 ? "bg-warning" : "bg-primary")}
+                style={{ width: `${Math.min(100, pct)}%` }}
+              />
+            </div>
+          ) : null}
+        </div>
+        <div>
+          <div className="text-text-secondary">{t("custOver")}</div>
+          <div className={cn("tabular-nums", toCents(c.overdue) > 0n ? "text-danger" : "")}>{formatMoney(c.overdue)}</div>
+        </div>
+      </div>
+      <Link
+        href={`/orders/new?customer=${c.id}&customerName=${encodeURIComponent(c.name)}`}
+        className="mt-2 inline-flex items-center gap-1 text-body text-primary-button hover:underline"
+      >
+        {t("createOrder")} →
+      </Link>
+    </li>
   );
 }

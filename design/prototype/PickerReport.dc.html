@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div data-screen-label="Yig'uvchilar natijasi" style="display:flex;flex-direction:column;gap:16px;min-width:0;color:#172B2A;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums">
+  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px">
+    <button onClick="{{ toCatalog }}" style="border:0;background:transparent;padding:0;font:inherit;font-size:13px;color:#0F766E;cursor:pointer" style-hover="text-decoration:underline">{{ L.hs_title }}</button>
+    <lucide-i name="chevron-right" size="14" style="color:#647574"></lucide-i><span style="color:#5B6B6A">{{ L.pr_title }}</span>
+  </div>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:4px;min-width:0"><h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.pr_title }}</h1><p style="margin:0;font-size:13px;line-height:18px;color:#5B6B6A;text-wrap:pretty">{{ L.pr_sub }}</p></div>
+    <button onClick="{{ exportX }}" style="height:34px;padding:0 14px;border:0;border-radius:8px;background:#0F766E;color:#FFFFFF;font:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;flex:none" style-hover="background:#115E59"><lucide-i name="file-spreadsheet" size="16"></lucide-i>{{ L.hs_export }}</button>
+  </div>
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+    <dc-import name="DateRangePicker" label="{{ L.pr_date }}" from="{{ from }}" to="{{ to }}" today="{{ today }}" on-change="{{ setDates }}" hint-size="220px,58px"></dc-import>
+    <div style="width:200px"><dc-import name="Select" label="{{ L.hs_branch }}" required="{{ false }}" options="{{ brOpts }}" value="{{ brVal }}" on-change="{{ setBr }}" locked="{{ brLocked }}" hint-size="200px,58px"></dc-import></div>
+  </section>
+  <section style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;overflow-x:auto">
+    <div style="min-width:820px">
+      <div style="display:grid;grid-template-columns:{{ grid }};height:38px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7"><span style="padding:0 12px;text-align:{{ c.align }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</span></sc-for>
+      </div>
+      <sc-if value="{{ empty }}"><div style="padding:40px 16px;text-align:center;font-size:13px;color:#5B6B6A">{{ L.pr_empty }}</div></sc-if>
+      <sc-for list="{{ rows }}" as="r">
+        <div>
+          <button onClick="{{ r.toggle }}" aria-expanded="{{ r.open }}" style="width:100%;display:grid;grid-template-columns:{{ grid }};min-height:44px;align-items:center;border:0;border-bottom:1px solid #EEF2F4;background:{{ r.bg }};font:inherit;font-size:13px;color:#172B2A;cursor:pointer;text-align:left;padding:0" style-hover="background:#F8FAFA">
+            <span style="padding:0 12px;display:flex;align-items:center;gap:6px;font-weight:500;min-width:0"><lucide-i name="{{ r.chev }}" size="14" style="color:#647574;flex:none"></lucide-i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span></span>
+            <sc-for list="{{ r.cells }}" as="c"><span style="padding:0 12px;text-align:right;font-weight:{{ c.weight }};color:{{ c.color }}">{{ c.text }}</span></sc-for>
+          </button>
+          <sc-if value="{{ r.open }}">
+            <div style="background:#FBFCFC;border-bottom:1px solid #EEF2F4;padding:4px 0 8px">
+              <sc-for list="{{ r.sub }}" as="x">
+                <div style="display:grid;grid-template-columns:150px minmax(160px,1fr) 140px 140px 190px 120px;white-space:nowrap;min-height:36px;align-items:center;font-size:12.5px;padding-left:32px">
+                  <button onClick="{{ x.open }}" style="border:0;background:transparent;padding:0 12px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0F766E;cursor:pointer;text-align:left" style-hover="text-decoration:underline">{{ x.no }}</button>
+                  <span style="padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.cust }}</span>
+                  <span style="padding:0 12px;color:#5B6B6A">{{ x.given }}</span>
+                  <span style="padding:0 12px;color:#5B6B6A">{{ x.spent }}</span>
+                  <span style="padding:0 12px;font-weight:600;color:{{ x.color }}">{{ x.res }}</span>
+                  <span style="padding:0 12px;color:#5B6B6A">{{ x.time }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ hasTotal }}">
+        <div style="display:grid;grid-template-columns:{{ grid }};min-height:44px;align-items:center;background:#F8FAFA;font-size:13px;font-weight:600">
+          <span style="padding:0 12px 0 32px">{{ L.pr_total }}</span>
+          <sc-for list="{{ total }}" as="c"><span style="padding:0 12px;text-align:right;color:{{ c.color }}">{{ c.text }}</span></sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:700},&quot;dict&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;keeper&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TSH&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onOpen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(href)=&gt;void&quot;},&quot;onBranch&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(b)=&gt;void&quot;},&quot;onToast&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(t)=&gt;void&quot;}}">
+const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
+class Component extends DCLogic {
+  state = { from: '', to: '', open: {} };
+  get L() { return this.props.dict || {}; }
+  componentDidMount() { this._p = setInterval(() => { if (window.MedixData && !this._rd) { this._rd = 1; this.forceUpdate(); } }, 100); }
+  componentWillUnmount() { clearInterval(this._p); }
+  data() { const D = window.MedixData, s = this.state, f = s.from || D.TODAY, t = s.to || s.from || D.TODAY; return { f, t, G: D.pickStats(this.props.branch || 'ALL', f, t) }; }
+  exportX() { const D = window.MedixData, L = this.L, { f, t, G } = this.data(), rows = [[L.pr_cPicker, L.pr_cN, L.pr_cOn, L.pr_cLate, L.pr_cLateMin, L.pr_cAvg, L.pr_cIss]];
+    G.forEach(g => rows.push([g.name, g.n, g.onTime, g.late, g.lateMin, g.avg == null ? '' : g.avg, g.issues])); rows.push([]); rows.push([L.b_cNo, L.pp_cCust, L.pr_cPicker, L.pp_cGiven, L.pp_cSpent, L.pr_cDiff, L.pp_cTime]);
+    G.forEach(g => g.rows.forEach(r => rows.push([r.o.no, (D.custById(r.o.cust) || {}).name || '', g.name, r.o.tm.pickMin, r.spent, r.diff, r.start + ' – ' + r.end.slice(11)])));
+    const ok = D.xlsxDownload('Yiguvchilar_natijasi_' + f + (t !== f ? '_' + t : ''), rows, L.pr_title); this.props.onToast && this.props.onToast(ok ? L.pr_exported : L.p_exportToast); }
+  renderVals() {
+    const D = window.MedixData, L = this.L, s = this.state, p = this.props, grid = 'minmax(180px,1.4fr) repeat(6,minmax(96px,1fr))';
+    const cols = [[L.pr_cPicker, 'left'], [L.pr_cN, 'right'], [L.pr_cOn, 'right'], [L.pr_cLate, 'right'], [L.pr_cLateMin, 'right'], [L.pr_cAvg, 'right'], [L.pr_cIss, 'right']].map(([label, align]) => ({ label, align }));
+    const base = { L, grid, cols, rows: [], empty: false, hasTotal: false, total: [], from: '', to: '', today: '', brOpts: [], brVal: 'ALL', brLocked: true, setDates: () => {}, setBr: () => {}, exportX: () => {}, toCatalog: () => p.onOpen && p.onOpen('#reports') };
+    if (!D || !D.pickStats) return base;
+    const { f, t, G } = this.data(), mn = n => fill(L.pp_minV, { n }), cell = (text, color, weight) => ({ text, color: color || '#172B2A', weight: weight || 400 });
+    const rows = G.map(g => { const open = !!s.open[g.name]; return { name: g.name, open, chev: open ? 'chevron-down' : 'chevron-right', bg: open ? '#F8FAFA' : '#FFFFFF', toggle: () => this.setState(x => ({ open: { ...x.open, [g.name]: !x.open[g.name] } })),
+      cells: [cell(fN(g.n), null, 600), cell(fN(g.onTime), '#15803D'), cell(fN(g.late), g.late ? '#B91C1C' : null), cell(g.lateMin ? mn(g.lateMin) : '—', g.lateMin ? '#B91C1C' : '#647574'), cell(g.avg == null ? '—' : mn(g.avg)), cell(fN(g.issues), g.issues ? '#B91C1C' : null)],
+      sub: g.rows.map(r => ({ no: r.o.no, cust: (D.custById(r.o.cust) || {}).name || '', given: fill(L.pr_given, { n: r.o.tm.pickMin }), spent: fill(L.pr_spent, { n: r.spent }), res: r.late ? fill(L.q9_resLate, { d: -r.diff }) : r.diff > 0 ? fill(L.pp_resOk, { d: r.diff }) : L.pp_resOnTime, color: r.late ? '#B91C1C' : '#15803D', time: (f !== t ? r.start.slice(0, 5) + ' ' : '') + r.start.slice(11) + ' – ' + r.end.slice(11), open: () => p.onOpen && p.onOpen('#orders?open=' + r.o.no) })) }; });
+    const T = G.reduce((a, g) => ({ n: a.n + g.n, on: a.on + g.onTime, late: a.late + g.late, lm: a.lm + g.lateMin, sp: a.sp + g.spentSum, iss: a.iss + g.issues }), { n: 0, on: 0, late: 0, lm: 0, sp: 0, iss: 0 });
+    return { ...base, rows, empty: !rows.length, hasTotal: rows.length > 0, total: [cell(fN(T.n)), cell(fN(T.on), '#15803D'), cell(fN(T.late), T.late ? '#B91C1C' : null), cell(T.lm ? mn(T.lm) : '—', T.lm ? '#B91C1C' : null), cell(T.n ? mn(Math.round(T.sp / T.n)) : '—'), cell(fN(T.iss), T.iss ? '#B91C1C' : null)],
+      from: f, to: t, today: D.TODAY, setDates: v => this.setState({ from: v.from || '', to: v.to || v.from || '', open: {} }),
+      brOpts: [{ value: 'ALL', label: L.hs_allBr }].concat(D.BRANCHES.map(b => ({ value: b.code, label: b.name }))), brVal: p.branch || 'ALL', brLocked: !D.allBr(p.role), setBr: v => p.onBranch && p.onBranch(v), exportX: () => this.exportX() };
+  }
+}
+</script>
+</body>
+</html>

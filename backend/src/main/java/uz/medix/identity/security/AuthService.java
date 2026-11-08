@@ -50,7 +50,7 @@ public class AuthService {
             throw MedixException.unauthorized("auth.badCredentials");
         }
         var a = account.get();
-        var actor = new Actor(a.id(), a.branchId(), MedixPrincipal.ALL_BRANCH_ROLES.contains(a.roleCode()));
+        var actor = new Actor(a.id(), a.branchId(), MedixPrincipal.allBranches(a.roleCode(), a.allBranches()));
         if (!encoder.matches(password, a.passwordHash())) {
             accounts.recordFailedLogin(a.id());
             audit.record(AuditEntry.of("auth.loginFailed", "employee", a.id()), actor);
@@ -85,13 +85,13 @@ public class AuthService {
             throw MedixException.badRequest("auth.passwordSame");
         }
         accounts.changePassword(employeeId, encoder.encode(newPassword), clock.instant());
-        audit.record(AuditEntry.of("auth.passwordChanged", "employee", employeeId), new Actor(a.id(), a.branchId(), MedixPrincipal.ALL_BRANCH_ROLES.contains(a.roleCode())));
+        audit.record(AuditEntry.of("auth.passwordChanged", "employee", employeeId), new Actor(a.id(), a.branchId(), MedixPrincipal.allBranches(a.roleCode(), a.allBranches())));
     }
 
     private UsernamePasswordAuthenticationToken authenticationFor(EmployeeAccounts.Account a) {
         List<String> permissions = accounts.permissionsOf(a.roleId());
         var principal = new MedixPrincipal(a.id(), a.login(), a.fullName(), a.roleCode(), a.roleName(), a.branchId(),
-                a.mustChangePassword(), new HashSet<>(permissions));
+                a.mustChangePassword(), new HashSet<>(permissions), a.allBranches());
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_" + a.roleCode()));
         permissions.forEach(p -> authorities.add(new SimpleGrantedAuthority(p)));

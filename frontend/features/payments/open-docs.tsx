@@ -1,6 +1,7 @@
 "use client";
 
 import type { UseQueryResult } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
@@ -18,18 +19,22 @@ export function OpenDocsSection(props: {
   editable: boolean;
   amount: string;
 }) {
+  const t = useTranslations("payments.openDocs");
   const { open, manual, setManual, alloc, setAlloc, editable } = props;
   const docs = open.data?.docs ?? [];
   const preview = fifoPreview(docs, /^\d+(\.\d+)?$/.test(props.amount) ? props.amount : "0");
   const previewOf = new Map(preview.parts.map((p) => [p.key, p.amount]));
   return (
-    <section aria-label="Ochiq qarzlar">
+    <section aria-label={t("title")}>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-subtitle">Ochiq qarzlar</h2>
+        <h2 className="text-subtitle">{t("title")}</h2>
         {open.data ? (
           <span className="text-caption text-text-secondary">
-            Qarz: <span className="font-mono">{formatMoney(open.data.debt)}</span> soʻm · Avans:{" "}
-            <span className="font-mono">{formatMoney(open.data.advance)}</span> soʻm
+            {t.rich("summary", {
+              debt: formatMoney(open.data.debt),
+              advance: formatMoney(open.data.advance),
+              num: (chunks) => <span className="font-mono">{chunks}</span>,
+            })}
           </span>
         ) : null}
       </div>
@@ -38,18 +43,18 @@ export function OpenDocsSection(props: {
       ) : open.isPending ? (
         <Skeleton className="h-20 w-full" />
       ) : docs.length === 0 ? (
-        <p className="text-text-secondary">Ochiq qarz yoʻq — toʻlov toʻliq avans boʻladi.</p>
+        <p className="text-text-secondary">{t("empty")}</p>
       ) : (
         <>
-          <Checkbox label="Qoʻlda taqsimlash" checked={manual} onChange={(v) => setManual(v)} disabled={!editable} className="mb-2" />
+          <Checkbox label={t("manual")} checked={manual} onChange={(v) => setManual(v)} disabled={!editable} className="mb-2" />
           <table className="w-full text-left">
             <thead className="text-caption text-text-secondary">
               <tr>
-                <th className="py-1 font-normal">Hujjat</th>
-                <th className="py-1 font-normal">Sana</th>
-                <th className="py-1 font-normal">Muddati</th>
-                <th className="py-1 text-right font-normal">Ochiq qarz</th>
-                <th className="py-1 text-right font-normal">Toʻlovdan</th>
+                <th className="py-1 font-normal">{t("col.document")}</th>
+                <th className="py-1 font-normal">{t("col.date")}</th>
+                <th className="py-1 font-normal">{t("col.due")}</th>
+                <th className="py-1 text-right font-normal">{t("col.open")}</th>
+                <th className="py-1 text-right font-normal">{t("col.fromPayment")}</th>
               </tr>
             </thead>
             <tbody>
@@ -61,13 +66,13 @@ export function OpenDocsSection(props: {
                     <td className="py-2">{formatIsoDate(d.date)}</td>
                     <td className={d.overdueDays > 0 ? "py-2 text-danger" : "py-2"}>
                       {d.dueDate ? formatIsoDate(d.dueDate) : "—"}
-                      {d.overdueDays > 0 ? ` · ${d.overdueDays} kun oʻtgan` : ""}
+                      {d.overdueDays > 0 ? ` · ${t("overdueDays", { count: d.overdueDays })}` : ""}
                     </td>
                     <td className="py-2 text-right font-mono">{formatMoney(d.open)}</td>
                     <td className="py-2 text-right">
                       {manual ? (
                         <TextField
-                          label={`Toʻlovdan: ${d.docNumber}`}
+                          label={t("allocLabel", { number: d.docNumber })}
                           variant="amount"
                           value={alloc[key] ?? ""}
                           onChange={(v) => setAlloc((m) => ({ ...m, [key]: v }))}
@@ -84,8 +89,10 @@ export function OpenDocsSection(props: {
           </table>
           {!manual ? (
             <p className="mt-2 text-caption text-text-secondary">
-              Avtomatik: eng eski qarzdan boshlab. Ortigʻi avans boʻladi: <span className="font-mono">{formatMoney(preview.advance)}</span>{" "}
-              soʻm.
+              {t.rich("auto", {
+                advance: formatMoney(preview.advance),
+                num: (chunks) => <span className="font-mono">{chunks}</span>,
+              })}
             </p>
           ) : null}
         </>
