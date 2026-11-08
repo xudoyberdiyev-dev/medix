@@ -363,7 +363,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.getByRole("button", { name: "Nusxa olish" }).click();
   await expect(page).toHaveURL(/\/receipts\/new\?copy=\d+$/);
   await expect(page.getByText(/hujjatidan nusxa olindi/)).toBeVisible();
-  await expect(field(page, "Yuk xati raqami")).toHaveValue("");
+  await expect(field(page, "Yuk xati raqami").first()).toHaveValue("");
   await page.goBack();
   await page.mouse.move(0, 0);
   await expect(page.getByText(/hujjatidan nusxa olindi/)).toBeHidden({ timeout: 15_000 });
