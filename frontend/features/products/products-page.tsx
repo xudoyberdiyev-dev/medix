@@ -264,6 +264,8 @@ export function ProductsPage() {
         align: RIGHT.includes(k) ? "right" : "left",
         mono: MONO.includes(k),
         sortable: Boolean(SORT_OF[k]),
+        // Prototip: Kod va Nom gorizontal aylantirishda chapda qoladi
+        pinned: k === "code" || k === "name",
         render: (p: ProductRow) => cell(p, k),
       };
     });

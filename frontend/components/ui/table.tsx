@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
-import { Fragment, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "./icon";
 import { Pagination, type PaginationProps } from "./pagination";
@@ -19,6 +19,8 @@ export interface TableColumn<T> {
   mono?: boolean;
   /** Uzun nom (mijoz, korxona) — satrga oʻraladi, jadval tor ustunda gorizontal aylanmaydi. */
   wrap?: boolean;
+  /** Gorizontal aylantirishda chapda qoladi (faqat boshidagi ustunlar; `width` majburiy). */
+  pinned?: boolean;
   render?: (row: T) => ReactNode;
 }
 
@@ -95,6 +97,21 @@ export function Table<T>({
   const allSelected = keys.length > 0 && selectedOnPage.length === keys.length;
   const someSelected = selectedOnPage.length > 0 && !allSelected;
   const colCount = columns.length + (selectable ? 1 : 0) + (rowActions ? 1 : 0);
+  // Yopishqoq ustunlar: chap chegaralar (tanlash ustuni 44px)
+  const pinLeft: Record<string, number> = {};
+  let lastPinned: string | null = null;
+  {
+    let left = selectable ? 44 : 0;
+    for (const c of columns) {
+      if (!c.pinned) break;
+      pinLeft[c.key] = left;
+      lastPinned = c.key;
+      left += c.width ?? 0;
+    }
+  }
+  const anyPinned = lastPinned !== null;
+  const pinStyle = (key: string, width?: number): CSSProperties | undefined =>
+    key in pinLeft ? { left: pinLeft[key], width, minWidth: width } : width ? { width } : undefined;
 
   function toggleAll(checked: boolean) {
     if (!onSelectionChange) return;
@@ -158,7 +175,10 @@ export function Table<T>({
           <thead>
             <tr>
               {selectable ? (
-                <th scope="col" className="sticky top-0 z-10 w-11 border-b border-border bg-table-header pr-1 pl-4">
+                <th
+                  scope="col"
+                  className={cn("sticky top-0 z-10 w-11 border-b border-border bg-table-header pr-1 pl-4", anyPinned && "left-0 z-20")}
+                >
                   <Checkbox
                     checked={allSelected}
                     indeterminate={someSelected}
@@ -175,10 +195,12 @@ export function Table<T>({
                     key={col.key}
                     scope="col"
                     aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
-                    style={col.width ? { width: col.width } : undefined}
+                    style={pinStyle(col.key, col.width)}
                     className={cn(
                       "sticky top-0 z-10 h-10 border-b border-border bg-table-header px-3 text-caption font-medium whitespace-nowrap text-text-secondary",
                       col.align === "right" ? "text-right" : "text-left",
+                      col.key in pinLeft && "z-20",
+                      col.key === lastPinned && "border-r",
                     )}
                   >
                     {col.sortable && onSortChange ? (
@@ -245,6 +267,7 @@ export function Table<T>({
                             className={cn(
                               "w-11 border-b border-border pr-1 pl-4",
                               isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                              anyPinned && "sticky left-0 z-[1]",
                             )}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -259,8 +282,11 @@ export function Table<T>({
                         {columns.map((col) => (
                           <td
                             key={col.key}
+                            style={col.key in pinLeft ? pinStyle(col.key, col.width) : undefined}
                             className={cn(
                               "border-b border-border px-3",
+                              col.key in pinLeft && "sticky z-[1]",
+                              col.key === lastPinned && "border-r",
                               col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
                               tdPad,
                               isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
