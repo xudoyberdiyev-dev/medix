@@ -28,9 +28,11 @@ public class AuthService {
     private final PasswordEncoder encoder;
     private final Clock clock;
     private final AuditLog audit;
+    private final LoginThrottle throttle;
 
-    AuthService(EmployeeAccounts accounts, PasswordEncoder encoder, Clock clock, AuditLog audit) {
+    AuthService(EmployeeAccounts accounts, PasswordEncoder encoder, Clock clock, AuditLog audit, LoginThrottle throttle) {
         this.accounts = accounts;
+        this.throttle = throttle;
         this.encoder = encoder;
         this.clock = clock;
         this.audit = audit;
@@ -44,23 +46,27 @@ public class AuthService {
     /** Muvaffaqiyatsiz urinish ham hisoblanishi uchun xatoda ham commit qilinadi. */
     @Transactional(noRollbackFor = MedixException.class, propagation = Propagation.REQUIRED)
     public UsernamePasswordAuthenticationToken login(String rawLogin, String password) {
-        var account = accounts.findByLogin(normalizeLogin(rawLogin));
+        String login = normalizeLogin(rawLogin);
+        var now = clock.instant();
+        throttle.checkNotLocked(login, now);
+        var account = accounts.findByLogin(login);
         if (account.isEmpty()) {
             encoder.matches(password, dummyHash);
-            throw MedixException.unauthorized("auth.badCredentials");
+            throw throttle.fail(login, now);
         }
         var a = account.get();
         var actor = new Actor(a.id(), a.branchId(), MedixPrincipal.allBranches(a.roleCode(), a.allBranches()));
         if (!encoder.matches(password, a.passwordHash())) {
             accounts.recordFailedLogin(a.id());
             audit.record(AuditEntry.of("auth.loginFailed", "employee", a.id()), actor);
-            throw MedixException.unauthorized("auth.badCredentials");
+            throw throttle.fail(login, now);
         }
         if (a.blocked()) {
             audit.record(AuditEntry.of("auth.loginBlocked", "employee", a.id()), actor);
             throw MedixException.forbidden("auth.blocked");
         }
-        accounts.recordSuccessfulLogin(a.id(), clock.instant());
+        throttle.reset(login);
+        accounts.recordSuccessfulLogin(a.id(), now);
         audit.record(AuditEntry.of("auth.login", "employee", a.id()), actor);
         return authenticationFor(a);
     }

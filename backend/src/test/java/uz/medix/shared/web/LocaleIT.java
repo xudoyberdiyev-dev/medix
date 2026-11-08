@@ -25,26 +25,27 @@ class LocaleIT {
     @Autowired
     MockMvc mvc;
 
-    private static MockHttpServletRequestBuilder badLogin() {
+    /** Har chaqiruvda boshqa login — urinishlar hisoblagichi (login_throttle) matnga ta'sir qilmasin. */
+    private static MockHttpServletRequestBuilder badLogin(String login) {
         return post("/api/auth/login")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"login\":\"til-sinovi-yoq\",\"password\":\"Notogri-parol-1\"}");
+                .content("{\"login\":\"" + login + "\",\"password\":\"Notogri-parol-1\"}");
     }
 
     @Test
     void errorFollowsLocaleCookie() throws Exception {
-        mvc.perform(badLogin())
+        mvc.perform(badLogin("til-sinovi-1"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("auth.badCredentials"))
-                .andExpect(jsonPath("$.detail").value("Login yoki parol notoʻgʻri. Tekshirib, qayta kiriting."));
-        mvc.perform(badLogin().cookie(new Cookie("MEDIX_LOCALE", "uz-Cyrl")))
-                .andExpect(jsonPath("$.detail").value("Логин ёки парол нотўғри. Текшириб, қайта киритинг."));
-        mvc.perform(badLogin().cookie(new Cookie("MEDIX_LOCALE", "ru")))
-                .andExpect(jsonPath("$.detail").value("Неверный логин или пароль. Проверьте и введите снова."));
+                .andExpect(jsonPath("$.code").value("auth.badCredentialsLeft"))
+                .andExpect(jsonPath("$.detail").value("Login yoki parol notoʻgʻri. Qolgan urinishlar: 4."));
+        mvc.perform(badLogin("til-sinovi-2").cookie(new Cookie("MEDIX_LOCALE", "uz-Cyrl")))
+                .andExpect(jsonPath("$.detail").value("Логин ёки парол нотўғри. Қолган уринишлар: 4."));
+        mvc.perform(badLogin("til-sinovi-3").cookie(new Cookie("MEDIX_LOCALE", "ru")))
+                .andExpect(jsonPath("$.detail").value("Неверный логин или пароль. Осталось попыток: 4."));
         // Brauzer tili hisobga olinmaydi, qo'llanmaydigan til — asosiy til.
-        mvc.perform(badLogin().header("Accept-Language", "ru").cookie(new Cookie("MEDIX_LOCALE", "de")))
-                .andExpect(jsonPath("$.detail").value("Login yoki parol notoʻgʻri. Tekshirib, qayta kiriting."));
+        mvc.perform(badLogin("til-sinovi-4").header("Accept-Language", "ru").cookie(new Cookie("MEDIX_LOCALE", "de")))
+                .andExpect(jsonPath("$.detail").value("Login yoki parol notoʻgʻri. Qolgan urinishlar: 4."));
     }
 
     @Test
