@@ -364,7 +364,7 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
           <div className="grid grid-cols-2 gap-4">
             <div data-f="code" className="col-span-2 flex flex-col">
               <label htmlFor="pf-code" className="mb-1 font-medium text-text-secondary">
-                {t("fields.code")}{" "}
+                {t("fields.code")}
                 <span className="ml-0.5 text-danger" aria-hidden>
                   *
                 </span>
@@ -462,7 +462,6 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
                 inputMode="numeric"
                 error={errText("ikpu")}
                 placeholder="03004001001000000"
-                className="font-mono"
               />
             </div>
             <div data-f="farmId">
@@ -474,7 +473,6 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
                 error={errText("farmId")}
                 placeholder="FRM-0001234"
                 maxLength={50}
-                className="font-mono"
               />
             </div>
           </div>
