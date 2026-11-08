@@ -15011,7 +15011,8 @@
           "newPassword" : {
             "type" : "string",
             "maxLength" : 128,
-            "minLength" : 8
+            "minLength" : 8,
+            "pattern" : "^(?=.*\\p{L})(?=.*\\d).*$"
           }
         },
         "required" : [ "currentPassword", "newPassword" ]
