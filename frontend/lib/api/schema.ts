@@ -5479,6 +5479,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/products/new-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** x */
+        get: operations["newCode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** x */
+        get: operations["duplicates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8405,6 +8439,8 @@ export interface components {
             supplyEmployee?: components["schemas"]["Ref"];
             unit: components["schemas"]["Ref"];
             vatRate: string;
+            vatExempt: boolean;
+            hasMovements: boolean;
         };
         ProductPage: {
             facets?: components["schemas"]["Facets"];
@@ -8450,6 +8486,8 @@ export interface components {
             /** Format: int64 */
             unitId: number;
             vatRate: string;
+            code?: string;
+            vatExempt?: boolean;
         };
         ProductRow: {
             active: boolean;
@@ -10427,6 +10465,18 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        NewCode: {
+            code: string;
+        };
+        BarcodeOwner: {
+            barcode: string;
+            product: components["schemas"]["Ref"];
+        };
+        DuplicateCheck: {
+            barcodes: components["schemas"]["BarcodeOwner"][];
+            codeOwner?: components["schemas"]["Ref"];
+            sameName?: components["schemas"]["Ref"];
         };
     };
     responses: never;
@@ -18311,6 +18361,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    newCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewCode"];
+                };
+            };
+        };
+    };
+    duplicates: {
+        parameters: {
+            query?: {
+                name?: string;
+                manufacturerId?: number;
+                code?: string;
+                barcodes?: string[];
+                excludeId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicateCheck"];
                 };
             };
         };

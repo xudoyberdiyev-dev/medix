@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { Check, ChevronDown, Plus, Search, X } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Field, controlClass, hintId, type ControlSize } from "./field";
@@ -31,6 +31,8 @@ interface BaseProps {
   disabled?: boolean;
   size?: ControlSize;
   className?: string;
+  /** Roʻyxat ostidagi amal (masalan, «Yangi ishlab chiqaruvchi»). */
+  footer?: { label: string; onSelect: () => void };
 }
 
 export interface SingleSelectProps extends BaseProps {
@@ -338,6 +340,20 @@ export function Select(props: SelectProps) {
                 })
               )}
             </ul>
+            {props.footer ? (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setOpen(false);
+                  props.footer?.onSelect();
+                }}
+                className="mt-1 flex h-8 w-full items-center gap-2 rounded-control border-t border-border px-2 text-left font-medium text-primary-button hover:bg-table-header"
+              >
+                <Icon icon={Plus} />
+                {props.footer.label}
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>

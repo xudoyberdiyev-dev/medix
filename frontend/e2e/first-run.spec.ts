@@ -120,13 +120,38 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
 
   // Mahsulot
+  // Kategoriya — maʼlumotnomadan; ishlab chiqaruvchi — mahsulot shaklidan («Yangi ishlab chiqaruvchi»)
+  await page.goto("/dictionaries?tab=category");
+  await page.getByRole("button", { name: "Kategoriya qoʻshish" }).click();
+  await field(page, "Nomi").fill("Analgetiklar E2E");
+  await page.getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByRole("cell", { name: "Analgetiklar E2E" })).toBeVisible();
+
+  // Mahsulot shakli — toʻliq sahifa (prototip): majburiy maydonlar, xatolar bloki
   await page.goto("/products");
   await page.getByRole("button", { name: "Mahsulot qoʻshish" }).first().click();
-  await field(page, "Nomi").fill("Paracetamol E2E 500 mg");
-  await choose(page, "Birlik", /^Dona/);
-  await page.getByRole("button", { name: "Mahsulotni saqlash" }).click();
-  await expect(page.getByText("Mahsulot qoʻshildi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/products\/new$/);
+  await expect(page.getByLabel(/^Mahsulot kodi/)).toHaveValue(/^[1-9]\d{7}$/);
+  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
+  await expect(page.getByText("7 ta maydon toʻldirilmagan")).toBeVisible();
+  await field(page, "Mahsulot nomi").fill("Paracetamol E2E 500 mg");
+  await field(page, "Shartnomadagi nomi").fill("Парацетамол таблетки 500 мг №10");
+  await field(page, "Klassifikator nomi").fill("Paracetamol");
+  await page.getByRole("combobox", { name: "Ishlab chiqaruvchi", exact: true }).click();
+  await page.getByRole("button", { name: "Yangi ishlab chiqaruvchi" }).click();
+  await page.getByRole("dialog").getByLabel(/^Nomi/).fill("Nobel E2E");
+  await page.getByRole("button", { name: "Qoʻshish", exact: true }).click();
+  await expect(page.getByText("«Nobel E2E» maʼlumotnomaga qoʻshildi")).toBeVisible();
+  await choose(page, "Kategoriya", /Analgetiklar E2E/);
+  await field(page, "IKPU kodi").fill("03004001001000000");
+  await field(page, "Farm ID").fill("FRM-0000001");
+  await field(page, "Shtrix-kodlar").fill("123");
+  await field(page, "Shtrix-kodlar").press("Enter");
+  await expect(page.getByText(/Shtrix-kod 8 \(EAN-8\) yoki 13/)).toBeVisible();
+  await field(page, "Shtrix-kodlar").fill("");
+  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
+  await expect(page.getByText("Mahsulot saqlandi")).toBeVisible();
+  await expect(page).toHaveURL(/\/products\/\d+$/);
   await page.goto("/products?q=парацетамол");
   await expect(page.getByRole("cell", { name: "Paracetamol E2E 500 mg" })).toBeVisible();
 

@@ -50,7 +50,6 @@ import {
   useProductStockCard,
   type ProductDetail,
 } from "./api";
-import { ProductDrawer } from "./product-drawer";
 import { historyChanges, historyKind, type HistoryKind } from "./history";
 
 const TABS = ["general", "stock", "prices", "moves", "history"] as const;
@@ -120,7 +119,6 @@ function Card({
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const [tab, setTab] = useState<Tab>("general");
-  const [editing, setEditing] = useState<{ id: number | null; copyFrom?: number } | null>(null);
   const [deact, setDeact] = useState(false);
   const activate = useActivateProduct();
   const deactivate = useBulkDeactivate();
@@ -198,7 +196,7 @@ function Card({
                     key: "copy",
                     label: tl("aCopy"),
                     icon: <Copy size={16} strokeWidth={1.5} aria-hidden />,
-                    onSelect: () => setEditing({ id: null, copyFrom: p.id }),
+                    onSelect: () => router.push(`/products/new?copy=${p.id}`),
                   },
                   p.active
                     ? {
@@ -218,7 +216,7 @@ function Card({
                       },
                 ]}
               />
-              <Button icon={Pencil} onClick={() => setEditing({ id: p.id })}>
+              <Button icon={Pencil} onClick={() => router.push(`/products/${p.id}/edit`)}>
                 {tl("aEdit")}
               </Button>
             </>
@@ -332,16 +330,6 @@ function Card({
       {tab === "prices" ? <PricesTab t={t} productId={p.id} branchId={branchId} /> : null}
       {tab === "moves" ? <MovesTab t={t} card={stock} /> : null}
       {tab === "history" ? <HistoryTab t={t} id={p.id} /> : null}
-
-      {editing ? (
-        <ProductDrawer
-          productId={editing.id}
-          copyFrom={editing.copyFrom ?? null}
-          canEdit={canEdit}
-          onClose={() => setEditing(null)}
-          onCreated={(nid) => (setEditing(null), router.push(`/products/${nid}`))}
-        />
-      ) : null}
       {deact ? (
         <DeactivateDialog
           title={tl("dTitle")}

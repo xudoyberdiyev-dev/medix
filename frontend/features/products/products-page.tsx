@@ -35,7 +35,6 @@ import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { PRODUCT_CREATE, useActivateProduct, useBulkDeactivate, useProducts, type ProductRow } from "./api";
 import { ImportDialog } from "./import-dialog";
-import { ProductDrawer } from "./product-drawer";
 import {
   DEFAULT_FILTERS,
   PRODUCT_VIEWS,
@@ -172,7 +171,6 @@ export function ProductsPage() {
   const activate = useActivateProduct();
   const bulkDeactivate = useBulkDeactivate();
   const { cols, update: setCols, reset: resetCols } = useColumnPrefs("medix-products-cols", COLUMN_KEYS);
-  const [open, setOpen] = useState<{ id: number | null; copyFrom?: number } | null>(null);
   const [importing, setImporting] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [deact, setDeact] = useState<number[] | null>(null);
@@ -311,13 +309,13 @@ export function ProductsPage() {
             key: "edit",
             label: t("aEdit"),
             icon: <Pencil size={16} strokeWidth={1.5} aria-hidden />,
-            onSelect: () => setOpen({ id: p.id }),
+            onSelect: () => router.push(`/products/${p.id}/edit`),
           },
           {
             key: "copy",
             label: t("aCopy"),
             icon: <Copy size={16} strokeWidth={1.5} aria-hidden />,
-            onSelect: () => setOpen({ id: null, copyFrom: p.id }),
+            onSelect: () => router.push(`/products/new?copy=${p.id}`),
           },
           p.active
             ? {
@@ -362,7 +360,7 @@ export function ProductsPage() {
             ]}
           />
           {canEdit ? (
-            <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+            <Button icon={Plus} onClick={() => router.push("/products/new")}>
               {t("add")}
             </Button>
           ) : null}
@@ -451,7 +449,6 @@ export function ProductsPage() {
           rows={data?.items ?? []}
           rowKey={(p) => String(p.id)}
           loading={products.isPending}
-          activeKey={open?.id ? String(open.id) : undefined}
           onRowClick={(p) => router.push(`/products/${p.id}`)}
           rowActions={(p) => <RowMenu label={t("actions")} items={rowItems(p)} />}
           selectable
@@ -506,7 +503,7 @@ export function ProductsPage() {
                       <Button variant="secondary" icon={Upload} onClick={() => setImporting(true)}>
                         {t("importExcel")}
                       </Button>
-                      <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+                      <Button icon={Plus} onClick={() => router.push("/products/new")}>
                         {t("add")}
                       </Button>
                     </div>
@@ -529,15 +526,6 @@ export function ProductsPage() {
         />
       )}
       {importing ? <ImportDialog onClose={() => setImporting(false)} /> : null}
-      {open ? (
-        <ProductDrawer
-          productId={open.id}
-          copyFrom={open.copyFrom ?? null}
-          canEdit={canEdit}
-          onClose={() => setOpen(null)}
-          onCreated={(id) => (setOpen(null), router.push(`/products/${id}`))}
-        />
-      ) : null}
       {deact ? (
         <DeactivateDialog
           title={deact.length === 1 ? t("dTitle") : t("dTitleN", { count: formatQuantity(deact.length) })}

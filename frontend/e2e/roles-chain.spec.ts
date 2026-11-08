@@ -91,13 +91,18 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   // Markirovkali mahsulot: karta → narx (NO) → boshlangʻich qoldiq (BQ)
   await page.goto("/products");
   await page.getByRole("button", { name: "Mahsulot qoʻshish" }).first().click();
-  await field(page, "Nomi").fill(MARKED);
-  await choose(page, "Birlik", /^Dona/);
+  await field(page, "Mahsulot nomi").fill(MARKED);
+  await field(page, "Shartnomadagi nomi").fill("Амоксициллин капсулы 250 мг");
+  await field(page, "Klassifikator nomi").fill("Amoksitsillin");
+  await choose(page, "Ishlab chiqaruvchi", /Nobel E2E/);
+  await choose(page, "Kategoriya", /Analgetiklar E2E/);
+  await field(page, "IKPU kodi").fill("03004001001000001");
+  await field(page, "Farm ID").fill("FRM-0000002");
   await field(page, "Shtrix-kodlar").fill(BARCODE);
-  await page.getByText("Markirovkali", { exact: true }).click();
-  await page.getByRole("button", { name: "Mahsulotni saqlash" }).click();
-  await expect(page.getByText("Mahsulot qoʻshildi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await field(page, "Shtrix-kodlar").press("Enter");
+  await page.getByRole("switch", { name: "Markirovka majburiy" }).click();
+  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
+  await expect(page.getByText("Mahsulot saqlandi")).toBeVisible();
 
   await page.goto("/prices");
   await page.getByRole("button", { name: "Narx oʻrnatish" }).click();
