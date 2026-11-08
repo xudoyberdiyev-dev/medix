@@ -7648,6 +7648,11 @@ export interface components {
             expiry?: components["schemas"]["Badge"];
             orders?: components["schemas"]["Badge"];
             shipments?: components["schemas"]["Badge"];
+            /**
+             * Format: int64
+             * @description Logotip versiyasi (epoch ms) — /api/company/logo?v=…; null — logotip yoʻq
+             */
+            logoVersion?: number;
         };
         NewCode: {
             code: string;

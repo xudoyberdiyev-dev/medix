@@ -26,7 +26,11 @@ class NavBadges {
 
     record NavBadgesView(@Schema(nullable = true) Badge orders, @Schema(nullable = true) Badge shipments,
             @Schema(nullable = true) Badge expiry,
-            @Schema(nullable = true, description = "Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida)") String company) {}
+            @Schema(nullable = true, description = "Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida)") String company,
+            @Schema(nullable = true, description = "Logotip versiyasi (epoch ms) — /api/company/logo?v=…; null — logotip yoʻq")
+                    Long logoVersion) {}
+
+    private record CompanyHead(String name, Long logoVersion) {}
 
     private final JdbcClient jdbc;
     private final Clock clock;
@@ -40,9 +44,15 @@ class NavBadges {
     @Transactional(readOnly = true)
     NavBadgesView get(Actor actor, Set<String> authorities, Long branchId) {
         Long b = branchId != null && actor.canAccessBranch(branchId) ? branchId : actor.allBranches() ? null : actor.branchId();
-        String company = jdbc.sql("SELECT name FROM company ORDER BY id LIMIT 1").query(String.class).optional().orElse(null);
+        var head = jdbc.sql("""
+                        SELECT name, CASE WHEN logo IS NOT NULL THEN (extract(epoch FROM logo_updated_at) * 1000)::bigint END AS logo_version
+                        FROM company ORDER BY id LIMIT 1""")
+                .query((rs, n) -> new CompanyHead(rs.getString("name"), rs.getObject("logo_version", Long.class)))
+                .optional()
+                .orElse(new CompanyHead(null, null));
+        String company = head.name();
         if (b == null && !actor.allBranches()) {
-            return new NavBadgesView(null, null, null, company);
+            return new NavBadgesView(null, null, null, company, head.logoVersion());
         }
         long scope = b == null ? -1L : b;
         Badge orders = authorities.contains("orders.view") ? new Badge(count("""
@@ -65,7 +75,7 @@ class NavBadges {
                     .single();
             expiry = new Badge(e.near(), e.expired() > 0);
         }
-        return new NavBadgesView(orders, shipments, expiry, company);
+        return new NavBadgesView(orders, shipments, expiry, company, head.logoVersion());
     }
 
     private int count(String sql, long scope) {

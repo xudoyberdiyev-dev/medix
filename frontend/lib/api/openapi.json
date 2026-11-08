@@ -18294,6 +18294,11 @@
           },
           "shipments" : {
             "$ref" : "#/components/schemas/Badge"
+          },
+          "logoVersion" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Logotip versiyasi (epoch ms) — /api/company/logo?v=…; null — logotip yoʻq"
           }
         }
       },
