@@ -1,1 +1,1 @@
-▶️ MEDIX: 01:10 sessiya boshlandi — reja: UI moslash (prototip → haqiqiy): Direktor bosh sahifasi + yetishmagan backend
+▶️ MEDIX: 06:08 sessiya boshlandi — reja: UI moslash — Buyurtma kiritish 2-qism (toʻliq sahifa /orders/new, /orders/[id]), keyin OrderCard, ProductPicker
