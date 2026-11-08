@@ -318,9 +318,19 @@ class ProductIT {
                 .andExpect(jsonPath("$.code").value(newCode))
                 .andExpect(jsonPath("$.codeHistory", hasSize(1)));
         // Ombor harakati paydo bo'ladi
-        var loc = jdbc.sql("SELECT z.id AS zone, w.id AS wh, w.branch_id AS br FROM zone z JOIN warehouse w ON w.id = z.warehouse_id LIMIT 1")
-                .query((rs, n) -> new long[] {rs.getLong("zone"), rs.getLong("wh"), rs.getLong("br")})
+        jdbc.sql("INSERT INTO company (name) SELECT 'Medix Group' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
+        var rnd = java.util.concurrent.ThreadLocalRandom.current();
+        long br = jdbc.sql("""
+                INSERT INTO branch (company_id, code, name, legal_name, tin)
+                SELECT id, :c, 'Mahsulot sinov ' || :c, 'MChJ', :t FROM company ON CONFLICT DO NOTHING RETURNING id""")
+                .param("c", "" + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)))
+                .param("t", String.valueOf(300_000_000L + rnd.nextLong(99_999_999L)))
+                .query(Long.class)
                 .single();
+        long wh = jdbc.sql("INSERT INTO warehouse (branch_id, name) VALUES (:b, 'Asosiy') RETURNING id").param("b", br).query(Long.class).single();
+        long zone = jdbc.sql("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, 'MAIN', 'Asosiy zona') RETURNING id").param("w", wh)
+                .query(Long.class).single();
+        long[] loc = {zone, wh, br};
         long batch = jdbc.sql("""
                 INSERT INTO batch (product_id, number, expiry_date, cost, source_type) VALUES (:p, 'B1', :x, 1, 'TST') RETURNING id""")
                 .param("p", id).param("x", java.sql.Date.valueOf(java.time.LocalDate.now().plusYears(1))).query(Long.class).single();
