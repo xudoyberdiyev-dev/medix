@@ -338,6 +338,10 @@ class StockLedgerIT {
                 .andExpect(jsonPath("$.total").value(1));
         mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br).param("stock", "ALL_RESERVED").cookie(admin))
                 .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/stock").param("q", "J-1").param("branchId", br).cookie(admin))
+                .andExpect(jsonPath("$.items[0].reserved").value(2))
+                .andExpect(jsonPath("$.items[0].sourceType").value("BQ"))
+                .andExpect(jsonPath("$.items[0].receiptNumber").doesNotExist());
         mvc.perform(get("/api/stock/summary").param("branchId", br).cookie(admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.products").value(1))

@@ -62,7 +62,14 @@ class StockController {
             boolean sellable,
             int qty,
             @Schema(nullable = true, description = "Faqat special.cost ruxsati bilan") String cost,
-            boolean bonus) {}
+            boolean bonus,
+            @Schema(description = "Faol zahiralar (shu zona × partiya)") int reserved,
+            @Schema(nullable = true) LocalDate producedOn,
+            @Schema(nullable = true, description = "Kirim hujjati (partiya kirimdan bo'lsa)") Long receiptId,
+            @Schema(nullable = true) String receiptNumber,
+            @Schema(nullable = true) LocalDate receiptDate,
+            @Schema(nullable = true) String supplier,
+            @Schema(description = "Partiya manbasi: KR, BQ, ...") String sourceType) {}
 
     record StockPage(List<StockRow> items, long total, int page, int size, @Schema(description = "Sahifadagi emas, filtr bo'yicha jami") long totalQty) {}
 
@@ -229,7 +236,9 @@ class StockController {
         // Bo'sh joy bilan boshlanadi: matn bloki boshidagi bo'shliqlarni olib tashlaydi.
         String from = " FROM stock_balance s JOIN batch b ON b.id = s.batch_id JOIN product p ON p.id = s.product_id"
                 + " JOIN zone z ON z.id = s.zone_id JOIN warehouse w ON w.id = s.warehouse_id"
-                + " LEFT JOIN manufacturer m ON m.id = p.manufacturer_id";
+                + " LEFT JOIN manufacturer m ON m.id = p.manufacturer_id"
+                + " LEFT JOIN LATERAL (SELECT r.id, r.number, r.receipt_date, cp.name AS supplier FROM receipt_line l JOIN receipt r ON r.id = l.receipt_id"
+                + " JOIN counterparty cp ON cp.id = r.supplier_id WHERE b.source_type = 'KR' AND l.id = b.source_id) rc ON true";
         record Totals(long total, long totalQty) {}
         Totals totals = jdbc.sql("SELECT count(*) AS total, coalesce(sum(s.qty), 0) AS total_qty" + from + where)
                 .params(params)
@@ -237,7 +246,10 @@ class StockController {
                 .single();
         List<StockRow> items = jdbc.sql("""
                 SELECT p.id AS product_id, p.code, p.name, m.name AS manufacturer, b.id AS batch_id, b.number, b.expiry_date,
-                       w.id AS warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone, z.type, z.sellable, s.qty, b.cost, b.bonus
+                       w.id AS warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone, z.type, z.sellable, s.qty, b.cost, b.bonus,
+                       b.produced_on, b.source_type, rc.id AS receipt_id, rc.number AS receipt_number, rc.receipt_date, rc.supplier,
+                       coalesce((SELECT sum(sr.qty) FROM stock_reservation sr
+                                 WHERE sr.zone_id = s.zone_id AND sr.batch_id = s.batch_id AND sr.status = 'ACTIVE'), 0) AS reserved
                 """ + from + where + " ORDER BY " + orderBy
                         + ", s.zone_id, s.batch_id LIMIT :l OFFSET :o")
                 .params(params)
@@ -249,7 +261,11 @@ class StockController {
                             rs.getLong("batch_id"), rs.getString("number"), expiry, java.time.temporal.ChronoUnit.DAYS.between(today, expiry),
                             rs.getLong("warehouse_id"), rs.getString("warehouse"), rs.getLong("zone_id"), rs.getString("zone"),
                             ZoneType.valueOf(rs.getString("type")), rs.getBoolean("sellable"), rs.getInt("qty"),
-                            showCost ? new Money(rs.getBigDecimal("cost")).toString() : null, rs.getBoolean("bonus"));
+                            showCost ? new Money(rs.getBigDecimal("cost")).toString() : null, rs.getBoolean("bonus"), rs.getInt("reserved"),
+                            rs.getDate("produced_on") == null ? null : rs.getDate("produced_on").toLocalDate(),
+                            rs.getObject("receipt_id", Long.class), rs.getString("receipt_number"),
+                            rs.getDate("receipt_date") == null ? null : rs.getDate("receipt_date").toLocalDate(), rs.getString("supplier"),
+                            rs.getString("source_type"));
                 })
                 .list();
         return new StockPage(items, totals.total(), safePage, safeSize, totals.totalQty());
