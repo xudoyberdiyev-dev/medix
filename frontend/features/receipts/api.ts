@@ -118,6 +118,14 @@ export function useReceipt(id: number | null) {
   });
 }
 
+/** «Tarix» yorligʻi — audit jurnalidan. */
+export function useReceiptHistory(id: number) {
+  return useQuery({
+    queryKey: ["receipts", "history", id],
+    queryFn: () => unwrap(api.GET("/api/receipts/{id}/history", { params: { path: { id } } })),
+  });
+}
+
 function useReceiptMutation<T>(fn: (v: T) => Promise<ReceiptDetail>) {
   const qc = useQueryClient();
   return useMutation({

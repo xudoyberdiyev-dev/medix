@@ -8319,6 +8319,38 @@
         "tags" : [ "receipts" ]
       }
     },
+    "/api/receipts/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tahrirlandi, qabul qilindi, o'tkazildi, bonus, bekor qilindi.",
+        "operationId" : "history",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReceiptHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kirim hujjati tarixi",
+        "tags" : [ "receipts" ]
+      }
+    },
     "/api/receipts/{id}/post" : {
       "post" : {
         "description" : "Saqlash zonalariga, qarz va to'lov kuni yoziladi. Farq bo'lsa — qaror majburiy.",
@@ -19627,6 +19659,10 @@
           "number" : {
             "type" : "string"
           },
+          "openAmount" : {
+            "type" : "string",
+            "description" : "Hujjat bo'yicha to'lanmagan qoldiq (yozilgan qarz − to'lovlar)"
+          },
           "owner" : {
             "type" : "string"
           },
@@ -19708,6 +19744,25 @@
           }
         },
         "required" : [ "count", "id", "name" ]
+      },
+      "ReceiptHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
       },
       "ReceiptKpi" : {
         "type" : "object",
@@ -20051,6 +20106,10 @@
           "owner" : {
             "type" : "string"
           },
+          "paid" : {
+            "type" : "boolean",
+            "description" : "O'tkazilgan va qarzi to'liq to'langan (to'lov kuni kulrang)"
+          },
           "paymentType" : {
             "type" : "string",
             "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
@@ -20081,7 +20140,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "bonusConfirmed", "bonusQty", "branchId", "createdAt", "createdBy", "fromBonus", "id", "lines", "number", "paymentType", "prepaid", "receiptDate", "status", "supplier", "supplierId", "totalQty", "warehouse" ]
+        "required" : [ "bonusConfirmed", "bonusQty", "branchId", "createdAt", "createdBy", "fromBonus", "id", "lines", "number", "paid", "paymentType", "prepaid", "receiptDate", "status", "supplier", "supplierId", "totalQty", "warehouse" ]
       },
       "ReceiveLineRequest" : {
         "type" : "object",

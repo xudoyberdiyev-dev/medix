@@ -3561,6 +3561,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/receipts/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kirim hujjati tarixi
+         * @description Audit jurnalidan: yaratildi, tahrirlandi, qabul qilindi, o'tkazildi, bonus, bekor qilindi.
+         */
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/receipts/{id}/post": {
         parameters: {
             query?: never;
@@ -8226,6 +8246,8 @@ export interface components {
             lines: components["schemas"]["ReceiptLine"][];
             note?: string;
             number: string;
+            /** @description Hujjat bo'yicha to'lanmagan qoldiq (yozilgan qarz − to'lovlar) */
+            openAmount?: string;
             owner?: string;
             /** Format: int64 */
             ownerId?: number;
@@ -8261,6 +8283,13 @@ export interface components {
             /** Format: int64 */
             id: number;
             name: string;
+        };
+        ReceiptHistoryEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            reason?: string;
         };
         ReceiptKpi: {
             /** Format: int64 */
@@ -8407,6 +8436,8 @@ export interface components {
             lines: number;
             number: string;
             owner?: string;
+            /** @description O'tkazilgan va qarzi to'liq to'langan (to'lov kuni kulrang) */
+            paid: boolean;
             /** @enum {string} */
             paymentType: "CASH" | "TRANSFER" | "ONLINE";
             prepaid: boolean;
@@ -14963,6 +14994,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReceiptDetail"];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptHistoryEvent"][];
                 };
             };
         };

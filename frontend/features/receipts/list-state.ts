@@ -105,8 +105,13 @@ export function draftAgeDays(receiptDate: string, todayIso: string): number {
 }
 
 /** Toʻlov kuni rangi (prototip): oʻtkazilgan kirimda — muddati oʻtgan qizil, 3 kun ichida sariq; boshqalarida — oddiy. */
-export function dueTone(status: ReceiptStatus, dueDate: string | null, todayIso: string): "danger" | "warning" | "default" | "muted" {
-  if (!dueDate) return "muted";
+export function dueTone(
+  status: ReceiptStatus,
+  dueDate: string | null,
+  todayIso: string,
+  paid = false,
+): "danger" | "warning" | "default" | "muted" {
+  if (!dueDate || paid) return "muted";
   if (status === "CANCELLED") return "muted";
   if (status !== "POSTED") return "default";
   const days = Math.round((Date.parse(`${dueDate}T00:00:00Z`) - Date.parse(`${todayIso}T00:00:00Z`)) / 86400000);

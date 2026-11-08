@@ -30,7 +30,6 @@ import {
   type ReceiptFilters,
   type ReceiptSort,
 } from "./list-state";
-import { ReceiptDrawer } from "./receipt-drawer";
 
 export function ReceiptStatusBadge({ status, extra }: { status: ReceiptStatus; extra?: string }) {
   const t = useTranslations("receipts");
@@ -105,11 +104,13 @@ export function ReceiptsPage() {
   const [search, setSearch] = useState(filters.q);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [selected, setSelected] = useState<string[]>([]);
-  // Bildirishnomadan oʻtish: ?open=<id> — kirim darhol ochiladi
-  const [editor, setEditor] = useState<{ id: number | null } | null>(() => {
-    const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
-  });
+  // Hujjat — toʻliq sahifa: /receipts/new, /receipts/<id>; eski ?open=<id> (bildirishnomalar) yoʻnaltiriladi
+  const setEditor = (e: { id: number | null }) => router.push(e.id === null ? "/receipts/new" : `/receipts/${e.id}`);
+  const openParam = params.get("open");
+  useEffect(() => {
+    const id = Number(openParam);
+    if (Number.isInteger(id) && id > 0) router.replace(`/receipts/${id}`);
+  }, [openParam, router]);
   const allowed = can(me.data, "receipt.view");
   const canCreate = can(me.data, RECEIPT_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -212,7 +213,7 @@ export function ReceiptsPage() {
         ) : d.prepaid ? (
           <span className="text-success">{t("list.prepaid")}</span>
         ) : (
-          <span className={cn("tabular-nums", TONE_TEXT[dueTone(d.status, d.dueDate ?? null, today)])}>
+          <span className={cn("tabular-nums", TONE_TEXT[dueTone(d.status, d.dueDate ?? null, today, d.paid)])}>
             {d.dueDate ? day(d.dueDate) : "—"}
           </span>
         ),
@@ -431,7 +432,6 @@ export function ReceiptsPage() {
           }
         />
       )}
-      {editor ? <ReceiptDrawer id={editor.id} onClose={() => setEditor(null)} onCreated={(id) => setEditor({ id })} /> : null}
     </>
   );
 }

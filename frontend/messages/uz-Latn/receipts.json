@@ -182,7 +182,10 @@
     "cancelPosted": "Tovar qoldiqdan chiqariladi va qarz teskari yoziladi. Partiyadan sotilgan boʻlsa, bekor qilinmaydi.",
     "cancelAccepted": "Tovar Qabul zonasidan chiqariladi. Hujjat tarixda qoladi.",
     "cancelDraft": "Qoldiq va qarz oʻzgarmaydi. Hujjat tarixda qoladi.",
-    "cancelled": "Bekor qilindi"
+    "cancelled": "Bekor qilindi",
+    "pageTitle": "Kirim hujjati",
+    "tabDoc": "Hujjat",
+    "tabHistory": "Tarix"
   },
   "notes": {
     "cancelled": "Bekor qilindi: {reason}",
@@ -264,6 +267,38 @@
       "price": "Narx notoʻgʻri",
       "duplicate": "Bu partiya allaqachon qoʻshilgan",
       "zone": "Zonani tanlang"
+    }
+  },
+  "cards": {
+    "supplier": "Yetkazib beruvchi",
+    "docSum": "Hujjat summasi",
+    "debtSum": "Qarz summasi",
+    "due": "Toʻlov kuni",
+    "bonus": "Kutilayotgan bonus",
+    "bonusGoods": "Bonus tovar",
+    "pcs": "{count} dona",
+    "prepaid": "100% oldindan",
+    "fromBonus": "Bonus balansdan",
+    "dueManual": "Qoʻlda oʻzgartirilgan"
+  },
+  "payment": {
+    "title": "Toʻlov",
+    "paid": "Toʻlandi:",
+    "left": "Qoldi:",
+    "due": "Toʻlov kuni: {date}",
+    "closed": "Toʻlandi",
+    "pay": "Toʻlash"
+  },
+  "history": {
+    "empty": "Tarix hali yoʻq",
+    "emptyHint": "Hujjat bilan qilingan har bir amal shu yerda koʻrinadi.",
+    "action": {
+      "create": "Yaratildi",
+      "update": "Tahrirlandi",
+      "accept": "Qabul qilindi",
+      "post": "Oʻtkazildi",
+      "bonusConfirm": "Bonus tasdiqlandi",
+      "cancel": "Bekor qilindi"
     }
   }
 }
