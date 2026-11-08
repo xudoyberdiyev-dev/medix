@@ -1,10 +1,18 @@
 "use client";
 
 import { Check, ChevronDown, ChevronRight, TriangleAlert, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Fragment, useState, type ReactNode } from "react";
 import { HistoryTimeline } from "@/components/ui/history-timeline";
+import { Spinner } from "@/components/ui/spinner";
+import { ErrorState } from "@/components/ui/system-states";
 import { Tabs } from "@/components/ui/tabs";
+import { can } from "@/features/auth/can";
+import { useMe } from "@/features/auth/session";
+import { api, unwrap } from "@/lib/api/client";
+import { cn } from "@/lib/cn";
 import { formatDate, formatMoney, formatQuantity, formatTime } from "@/lib/format";
 import { useOrderHistory, type OrderDetail } from "./api";
 import { day } from "./orders-page";
@@ -232,6 +240,90 @@ function OrderHistory({ id }: { id: number }) {
   );
 }
 
+/** «Toʻlov» yorligʻi (prototip `OrderCard`): sotuv summasi, toʻlandi, qoldi, toʻlov muddati (kechikish), taqsimlangan MT lar. */
+function OrderPayment({ doc }: { doc: OrderDetail }) {
+  const t = useTranslations("orders.card");
+  const me = useMe();
+  const saleId = doc.documents.saleId ?? null;
+  const pay = useQuery({
+    queryKey: ["orders", "payment", saleId],
+    queryFn: () => unwrap(api.GET("/api/payments/customer/doc", { params: { query: { docType: "SV", docId: saleId ?? 0 } } })),
+    enabled: saleId !== null && doc.documents.saleStatus === "POSTED",
+  });
+  if (saleId === null || doc.documents.saleStatus !== "POSTED")
+    return (
+      <div className="rounded-card border border-border bg-surface p-5">
+        <p className="font-medium">{t("payEmptyT")}</p>
+        <p className="mt-1 text-text-secondary">{t("payEmpty")}</p>
+      </div>
+    );
+  if (pay.isPending)
+    return (
+      <div className="flex justify-center rounded-card border border-border bg-surface p-8">
+        <Spinner />
+      </div>
+    );
+  if (pay.error || !pay.data) return <ErrorState onRetry={() => pay.refetch()} />;
+  const p = pay.data;
+  const closed = p.open === "0.00" || p.open.startsWith("-");
+  const canOpen = can(me.data, "payments.view");
+  const kpis: { label: string; value: string; tone?: string; note?: string; noteTone?: string }[] = [
+    { label: t("paySale"), value: formatMoney(p.total) },
+    { label: t("payPaid"), value: formatMoney(p.settled), tone: "text-success" },
+    {
+      label: t("payLeft"),
+      value: formatMoney(closed ? "0.00" : p.open),
+      tone: closed ? "text-success" : undefined,
+      note: closed ? t("payClosed") : undefined,
+      noteTone: "text-success",
+    },
+    {
+      label: t("payDue"),
+      value: p.dueDate ? day(p.dueDate) : "—",
+      tone: p.overdueDays > 0 ? "text-danger" : undefined,
+      note: p.overdueDays > 0 ? t("payLate", { n: p.overdueDays }) : undefined,
+      noteTone: "text-danger",
+    },
+  ];
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {kpis.map((k) => (
+          <div key={k.label} className="flex flex-col gap-1 rounded-card border border-border bg-surface p-4">
+            <span className="text-caption text-text-secondary">{k.label}</span>
+            <span className={cn("text-[20px] leading-7 font-semibold tabular-nums", k.tone)}>{k.value}</span>
+            {k.note ? <span className={cn("text-caption", k.noteTone)}>{k.note}</span> : null}
+          </div>
+        ))}
+      </div>
+      <div className="rounded-card border border-border bg-surface">
+        <p className="border-b border-border px-4 py-3 font-semibold">{t("payList")}</p>
+        {p.payments.length === 0 ? (
+          <p className="px-4 py-6 text-center text-text-secondary">{t("payNone")}</p>
+        ) : (
+          p.payments.map((x) => (
+            <div
+              key={x.paymentId}
+              className="grid min-h-11 grid-cols-[140px_110px_minmax(0,1fr)_140px] items-center gap-3 border-b border-border px-4 text-[13px] last:border-b-0"
+            >
+              {canOpen ? (
+                <Link href={`/payments?open=${x.paymentId}`} className="font-mono text-mono text-primary hover:underline">
+                  {x.number}
+                </Link>
+              ) : (
+                <span className="font-mono text-mono">{x.number}</span>
+              )}
+              <span className="text-text-secondary tabular-nums">{day(x.date)}</span>
+              <span className="truncate">{x.account}</span>
+              <span className="text-right font-medium tabular-nums">{formatMoney(x.amount)}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: ReactNode }) {
   const t = useTranslations("orders");
   const [tab, setTab] = useState("order");
@@ -247,11 +339,14 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
         items={[
           { key: "order", label: t("card.tOrder") },
           { key: "ship", label: t("card.tShip") },
+          { key: "pay", label: t("card.tPay") },
           { key: "history", label: t("card.tHistory") },
         ]}
       />
       {tab === "history" ? (
         <OrderHistory id={doc.id} />
+      ) : tab === "pay" ? (
+        <OrderPayment doc={doc} />
       ) : tab === "ship" ? (
         (shipping ?? <p className="rounded-card border border-border bg-surface p-5 text-text-secondary">{t("card.shipEmpty")}</p>)
       ) : (

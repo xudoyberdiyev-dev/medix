@@ -6274,6 +6274,42 @@
         "tags" : [ "payments" ]
       }
     },
+    "/api/payments/customer/doc" : {
+      "get" : {
+        "description" : "Buyurtma kartochkasidagi «To'lov» yorlig'i: SV summasi, to'langan, qoldi, muddat, MT lar.",
+        "operationId" : "doc",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "docType",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "docId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DocPayment"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hujjat bo'yicha to'lov holati",
+        "tags" : [ "payments" ]
+      }
+    },
     "/api/payments/customer/open-docs" : {
       "get" : {
         "operationId" : "openDocs",
@@ -15186,6 +15222,60 @@
         },
         "required" : [ "count", "nominal" ]
       },
+      "DocPayment" : {
+        "type" : "object",
+        "properties" : {
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "open" : {
+            "type" : "string"
+          },
+          "overdueDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Muddati o'tgan kunlar (0 — o'tmagan yoki yopilgan)"
+          },
+          "payments" : {
+            "type" : "array",
+            "description" : "Shu hujjatga taqsimlangan o'tkazilgan MT lar",
+            "items" : {
+              "$ref" : "#/components/schemas/DocPaymentLine"
+            }
+          },
+          "settled" : {
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "open", "overdueDays", "payments", "settled", "total" ]
+      },
+      "DocPaymentLine" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "paymentId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "account", "amount", "date", "number", "paymentId" ]
+      },
       "DriverCash" : {
         "type" : "object",
         "properties" : {
@@ -18026,6 +18116,11 @@
           },
           "returnTotal" : {
             "type" : "string"
+          },
+          "saleId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Sotuv hujjati (SV) id — to'lov holati uchun"
           },
           "saleNumber" : {
             "type" : "string"

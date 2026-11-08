@@ -79,7 +79,9 @@ function CustomerPayments() {
   const scopeBranch = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const workBranch = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
   const [status, setStatus] = useState<string | null>(null);
-  const [editor, setEditor] = useState<{ id: number | null } | null>(null);
+  // Buyurtma kartochkasidan oʻtish: ?open=<MT id> — hujjat darhol ochiladi
+  const openId = Number(useSearchParams().get("open"));
+  const [editor, setEditor] = useState<{ id: number | null } | null>(Number.isInteger(openId) && openId > 0 ? { id: openId } : null);
   const list = usePayments(scopeBranch, (status as PaymentStatus | null) ?? null, allowed);
 
   const columns: TableColumn<PaymentSummary>[] = [

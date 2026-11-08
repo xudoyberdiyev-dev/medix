@@ -736,7 +736,18 @@
       "time": "Vaqt berildi",
       "undelivered": "Yetkazilmadi",
       "update": "Tahrirlandi"
-    }
+    },
+    "tPay": "Toʻlov",
+    "payEmptyT": "Sotuv hali rasmiylashtirilmagan",
+    "payEmpty": "Toʻlov holati buyurtma joʻnatilib, sotuv hujjati tuzilgandan keyin koʻrinadi.",
+    "paySale": "Sotuv summasi",
+    "payPaid": "Toʻlandi",
+    "payLeft": "Qoldi",
+    "payClosed": "Toʻliq yopilgan",
+    "payDue": "Toʻlov muddati",
+    "payLate": "{n} kun kechikdi",
+    "payList": "Toʻlovlar",
+    "payNone": "Hali toʻlov yoʻq"
   },
   "print": {
     "menu": "Chop etish",

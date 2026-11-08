@@ -2799,6 +2799,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/customer/doc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hujjat bo'yicha to'lov holati
+         * @description Buyurtma kartochkasidagi «To'lov» yorlig'i: SV summasi, to'langan, qoldi, muddat, MT lar.
+         */
+        get: operations["doc"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/customer/open-docs": {
         parameters: {
             query?: never;
@@ -6436,6 +6456,29 @@ export interface components {
             /** Format: int32 */
             nominal: number;
         };
+        DocPayment: {
+            /** Format: date */
+            dueDate?: string;
+            open: string;
+            /**
+             * Format: int32
+             * @description Muddati o'tgan kunlar (0 — o'tmagan yoki yopilgan)
+             */
+            overdueDays: number;
+            /** @description Shu hujjatga taqsimlangan o'tkazilgan MT lar */
+            payments: components["schemas"]["DocPaymentLine"][];
+            settled: string;
+            total: string;
+        };
+        DocPaymentLine: {
+            account: string;
+            amount: string;
+            /** Format: date */
+            date: string;
+            number: string;
+            /** Format: int64 */
+            paymentId: number;
+        };
         DriverCash: {
             amount: string;
             /** Format: date-time */
@@ -7586,6 +7629,11 @@ export interface components {
             invoiceNumber?: string;
             returnNumber?: string;
             returnTotal?: string;
+            /**
+             * Format: int64
+             * @description Sotuv hujjati (SV) id — to'lov holati uchun
+             */
+            saleId?: number;
             saleNumber?: string;
             /** @description POSTED yoki CANCELLED */
             saleStatus?: string;
@@ -14152,6 +14200,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentDetail"];
+                };
+            };
+        };
+    };
+    doc: {
+        parameters: {
+            query: {
+                docType: string;
+                docId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocPayment"];
                 };
             };
         };
