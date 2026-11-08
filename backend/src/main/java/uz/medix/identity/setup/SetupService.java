@@ -138,8 +138,8 @@ class SetupService {
     @Transactional
     Employees.Employee createEmployee(SetupRequests.EmployeeRequest r) {
         ensureOpen();
-        return employees.create(new Employees.NewEmployee(r.login(), r.fullName(), r.phone(), r.position(), r.roleCode(),
-                r.branchId(), r.temporaryPassword()));
+        return employees.create(new Employees.NewEmployee(r.login(), r.fullName(), null, null, null, r.phone(), r.position(),
+                r.roleCode(), r.branchId(), r.temporaryPassword(), List.of(), List.of()));
     }
 
     @Transactional

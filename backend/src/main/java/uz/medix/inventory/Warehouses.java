@@ -148,6 +148,47 @@ public class Warehouses {
      * Hali ishlatilmagan omborni oʻchiradi (sozlash ustasi). Harakati yoki hujjati bor ombor oʻchirilmaydi —
      * u faqat nofaol qilinadi (SPEC 13).
      */
+    /**
+     * Xodimni filialdagi omborlarga omborchi (masʼul) qilib biriktiradi (prototip WizStaff «Omborlari»): berilgan omborlar
+     * unga oʻtadi, avval unga biriktirilgan, roʻyxatda yoʻq omborlar boʻshatiladi. Boshqa filial ombori — xato.
+     */
+    @Transactional
+    public void assignKeeper(long employeeId, Long branchId, java.util.Collection<Long> warehouseIds) {
+        Set<Long> ids = warehouseIds == null ? Set.of() : new java.util.TreeSet<>(warehouseIds);
+        if (!ids.isEmpty()) {
+            long ok = jdbc.sql("SELECT count(*) FROM warehouse WHERE id IN (:ids) AND branch_id = :b")
+                    .param("ids", ids)
+                    .param("b", branchId == null ? -1L : branchId)
+                    .query(Long.class)
+                    .single();
+            if (ok != ids.size()) {
+                throw MedixException.badRequest("employee.warehouseInvalid");
+            }
+        }
+        List<Long> before = keeperWarehouses(employeeId);
+        jdbc.sql("UPDATE warehouse SET keeper_id = NULL, updated_at = now(), version = version + 1 WHERE keeper_id = :e"
+                        + (ids.isEmpty() ? "" : " AND id NOT IN (:ids)"))
+                .param("e", employeeId)
+                .param("ids", ids.isEmpty() ? List.of(-1L) : ids)
+                .update();
+        if (!ids.isEmpty()) {
+            jdbc.sql("UPDATE warehouse SET keeper_id = :e, updated_at = now(), version = version + 1 WHERE id IN (:ids) AND keeper_id IS DISTINCT FROM :e")
+                    .param("e", employeeId)
+                    .param("ids", ids)
+                    .update();
+        }
+        if (!new java.util.TreeSet<>(before).equals(ids)) {
+            audit.record(AuditEntry.of("warehouse.keeper", "employee", employeeId)
+                    .change(Map.of("warehouseIds", before), Map.of("warehouseIds", List.copyOf(ids))));
+        }
+    }
+
+    /** Xodim omborchi boʻlgan omborlar. */
+    @Transactional(readOnly = true)
+    public List<Long> keeperWarehouses(long employeeId) {
+        return jdbc.sql("SELECT id FROM warehouse WHERE keeper_id = :e ORDER BY id").param("e", employeeId).query(Long.class).list();
+    }
+
     @Transactional
     public void delete(long id) {
         Warehouse before = lock(id);
