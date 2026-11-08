@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.TestcontainersConfig;
 
@@ -147,7 +148,7 @@ class SetupIT {
                 .andExpect(jsonPath("$.code").value("setup.completed"));
     }
 
-    private MockHttpServletRequestBuilder logo(Cookie session, byte[] bytes) {
+    private MockMultipartHttpServletRequestBuilder logo(Cookie session, byte[] bytes) {
         return multipart(HttpMethod.PUT, "/api/setup/company/logo")
                 .file(new MockMultipartFile("file", "logo", "application/octet-stream", bytes))
                 .with(csrf())

@@ -1,11 +1,14 @@
 package uz.medix.identity.setup;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import java.util.Set;
+import uz.medix.identity.organization.Organization;
 import uz.medix.inventory.ZoneType;
 
 /** Sozlash ustasi so'rovlari. */
@@ -24,7 +27,21 @@ final class SetupRequests {
             @NotBlank(message = "{validation.required}") @Size(max = 300) String legalName,
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[0-9]{9}$", message = "{validation.tin}") String tin,
             @Schema(nullable = true) @Size(max = 500) String address,
-            @Schema(nullable = true) @Size(max = 32) String phone) {}
+            @Schema(nullable = true) @Size(max = 32) String phone,
+            @Schema(nullable = true, description = "null — qoʻshimchalar oʻzgarmaydi") Boolean vatPayer,
+            @Schema(nullable = true) @Pattern(regexp = "^[0-9]{6,20}$", message = "{validation.vatCertNo}") String vatCertNo,
+            @Schema(nullable = true) @Size(max = 100) String region,
+            @Schema(nullable = true) @Size(max = 500) String actualAddress,
+            @Schema(nullable = true) @Size(max = 200) String directorName,
+            @Schema(nullable = true) @Size(max = 200) String accountantName,
+            @Schema(nullable = true) @Size(max = 10) List<@Valid Organization.BankAccount> bankAccounts) {
+
+        Organization.BranchExtra extra() {
+            return vatPayer == null
+                    ? null
+                    : new Organization.BranchExtra(vatPayer, vatCertNo, region, actualAddress, directorName, accountantName, bankAccounts);
+        }
+    }
 
     record WarehouseRequest(
             @NotNull(message = "{validation.required}") Long branchId,

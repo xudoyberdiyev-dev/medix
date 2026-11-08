@@ -5989,6 +5989,13 @@ export interface components {
             name: string;
             phone?: string;
             tin: string;
+            vatPayer: boolean;
+            vatCertNo?: string;
+            region?: string;
+            actualAddress?: string;
+            directorName?: string;
+            accountantName?: string;
+            bankAccounts: components["schemas"]["BankAccount"][];
         };
         BranchBalance: {
             amount: string;
@@ -6101,6 +6108,14 @@ export interface components {
             name: string;
             phone?: string;
             tin: string;
+            /** @description null — qoʻshimchalar oʻzgarmaydi */
+            vatPayer?: boolean;
+            vatCertNo?: string;
+            region?: string;
+            actualAddress?: string;
+            directorName?: string;
+            accountantName?: string;
+            bankAccounts?: components["schemas"]["BankAccount"][];
         };
         BranchRow: {
             customerDebt: string;
@@ -6567,6 +6582,14 @@ export interface components {
             name: string;
             phone?: string;
             tin: string;
+            /** @description null — qoʻshimchalar oʻzgarmaydi */
+            vatPayer?: boolean;
+            vatCertNo?: string;
+            region?: string;
+            actualAddress?: string;
+            directorName?: string;
+            accountantName?: string;
+            bankAccounts?: components["schemas"]["BankAccount"][];
         };
         CreateEmployeeRequest: {
             /** Format: int64 */
@@ -10237,6 +10260,14 @@ export interface components {
             name: string;
             phone?: string;
             tin: string;
+            /** @description null — qoʻshimchalar oʻzgarmaydi */
+            vatPayer?: boolean;
+            vatCertNo?: string;
+            region?: string;
+            actualAddress?: string;
+            directorName?: string;
+            accountantName?: string;
+            bankAccounts?: components["schemas"]["BankAccount"][];
         };
         UpdateProfileRequest: {
             phone?: string;
@@ -10725,6 +10756,12 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        BankAccount: {
+            bankName: string;
+            mfo: string;
+            account: string;
+            main: boolean;
         };
     };
     responses: never;

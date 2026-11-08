@@ -1,6 +1,9 @@
 package uz.medix.identity.organization;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
@@ -30,9 +33,35 @@ public class Organization {
     public record Logo(byte[] content, String contentType) {}
 
     public record Branch(long id, String code, String name, String legalName, String tin, @Schema(nullable = true) String address,
-            @Schema(nullable = true) String phone, boolean active) {}
+            @Schema(nullable = true) String phone, boolean active, boolean vatPayer, @Schema(nullable = true) String vatCertNo,
+            @Schema(nullable = true) String region, @Schema(nullable = true) String actualAddress,
+            @Schema(nullable = true) String directorName, @Schema(nullable = true) String accountantName,
+            List<BankAccount> bankAccounts) {}
 
-    public record BranchData(String code, String name, String legalName, String tin, String address, String phone) {}
+    /** Filial bank hisobi (prototip BranchPanel «Bank rekvizitlari»). */
+    public record BankAccount(
+            @NotBlank(message = "{validation.required}") @Size(max = 200) String bankName,
+            @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[0-9]{5}$", message = "{validation.mfo}") String mfo,
+            @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[0-9]{20}$", message = "{validation.bankAccount}") String account,
+            boolean main) {}
+
+    /** Filial kartasi qoʻshimchalari; {@code null} — tahrirlashda oʻzgarmaydi. */
+    public record BranchExtra(boolean vatPayer, String vatCertNo, String region, String actualAddress, String directorName,
+            String accountantName, List<BankAccount> bankAccounts) {}
+
+    public record BranchData(String code, String name, String legalName, String tin, String address, String phone, BranchExtra extra) {
+        public BranchData(String code, String name, String legalName, String tin, String address, String phone) {
+            this(code, name, legalName, tin, address, phone, null);
+        }
+    }
+
+    private record BranchRow(long id, String code, String name, String legalName, String tin, String address, String phone,
+            boolean active, boolean vatPayer, String vatCertNo, String region, String actualAddress, String directorName,
+            String accountantName) {}
+
+    private static final String BRANCH_COLUMNS = """
+            id, code, name, legal_name, tin, address, phone, active, vat_payer, vat_cert_no, region, actual_address, director_name,
+            accountant_name""";
 
     private final JdbcClient jdbc;
     private final AuditLog audit;
@@ -128,17 +157,80 @@ public class Organization {
 
     @Transactional(readOnly = true)
     public List<Branch> branches() {
-        return jdbc.sql("SELECT id, code, name, legal_name, tin, address, phone, active FROM branch ORDER BY id")
-                .query(Branch.class)
-                .list();
+        return withAccounts(jdbc.sql("SELECT " + BRANCH_COLUMNS + " FROM branch ORDER BY id").query(BranchRow.class).list());
     }
 
     @Transactional(readOnly = true)
     public Optional<Branch> branch(long id) {
-        return jdbc.sql("SELECT id, code, name, legal_name, tin, address, phone, active FROM branch WHERE id = :id")
-                .param("id", id)
-                .query(Branch.class)
-                .optional();
+        return withAccounts(jdbc.sql("SELECT " + BRANCH_COLUMNS + " FROM branch WHERE id = :id")
+                        .param("id", id)
+                        .query(BranchRow.class)
+                        .list())
+                .stream()
+                .findFirst();
+    }
+
+    private List<Branch> withAccounts(List<BranchRow> rows) {
+        if (rows.isEmpty()) {
+            return List.of();
+        }
+        record Acc(long branchId, String bankName, String mfo, String account, boolean isMain) {}
+        Map<Long, List<BankAccount>> accounts = new HashMap<>();
+        jdbc.sql("""
+                        SELECT branch_id, bank_name, mfo, account, is_main FROM branch_bank_account
+                        WHERE branch_id IN (:ids) ORDER BY branch_id, sort_order, id""")
+                .param("ids", rows.stream().map(BranchRow::id).toList())
+                .query(Acc.class)
+                .list()
+                .forEach(a -> accounts.computeIfAbsent(a.branchId(), k -> new java.util.ArrayList<>())
+                        .add(new BankAccount(a.bankName(), a.mfo(), a.account(), a.isMain())));
+        return rows.stream()
+                .map(r -> new Branch(r.id(), r.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone(), r.active(),
+                        r.vatPayer(), r.vatCertNo(), r.region(), r.actualAddress(), r.directorName(), r.accountantName(),
+                        List.copyOf(accounts.getOrDefault(r.id(), List.of()))))
+                .toList();
+    }
+
+    /** Qoʻshimchalarni yozadi: hisoblar toʻliq almashtiriladi; asosiy belgilanmagan boʻlsa — birinchisi asosiy. */
+    private void saveExtra(long branchId, BranchExtra x) {
+        if (x == null) {
+            return;
+        }
+        jdbc.sql("""
+                UPDATE branch SET vat_payer = :vp, vat_cert_no = :vc, region = :rg, actual_address = :aa, director_name = :dn,
+                       accountant_name = :an
+                WHERE id = :id""")
+                .param("vp", x.vatPayer())
+                .param("vc", x.vatPayer() ? blankToNull(x.vatCertNo()) : null)
+                .param("rg", blankToNull(x.region()))
+                .param("aa", blankToNull(x.actualAddress()))
+                .param("dn", blankToNull(x.directorName()))
+                .param("an", blankToNull(x.accountantName()))
+                .param("id", branchId)
+                .update();
+        jdbc.sql("DELETE FROM branch_bank_account WHERE branch_id = :id").param("id", branchId).update();
+        List<BankAccount> list = x.bankAccounts() == null ? List.of() : x.bankAccounts();
+        boolean anyMain = list.stream().anyMatch(BankAccount::main);
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        int i = 0;
+        boolean mainTaken = false;
+        for (BankAccount a : list) {
+            if (!seen.add(a.account())) {
+                throw MedixException.badRequest("branch.bankAccountDuplicate", a.account());
+            }
+            boolean main = !mainTaken && (anyMain ? a.main() : i == 0);
+            mainTaken |= main;
+            jdbc.sql("""
+                    INSERT INTO branch_bank_account (branch_id, bank_name, mfo, account, is_main, sort_order)
+                    VALUES (:b, :n, :m, :a, :main, :o)""")
+                    .param("b", branchId)
+                    .param("n", a.bankName().strip())
+                    .param("m", a.mfo())
+                    .param("a", a.account())
+                    .param("main", main)
+                    .param("o", i++)
+                    .update();
+        }
     }
 
     @Transactional
@@ -153,6 +245,7 @@ public class Organization {
                     .params(params(d))
                     .query(Long.class)
                     .single();
+            saveExtra(id, d.extra());
             audit.record(AuditEntry.of("branch.create", "branch", id).change(null, snapshot(d)));
             return branch(id).orElseThrow();
         } catch (DuplicateKeyException e) {
@@ -172,6 +265,7 @@ public class Organization {
                     .params(params(d))
                     .param("id", id)
                     .update();
+            saveExtra(id, d.extra());
         } catch (DuplicateKeyException e) {
             throw MedixException.conflict("branch.duplicate", d.code(), d.tin());
         }
@@ -187,12 +281,13 @@ public class Organization {
      */
     @Transactional
     public Branch setActive(long id, boolean active, String reason) {
-        Branch before = jdbc.sql("SELECT id, code, name, legal_name, tin, address, phone, active FROM branch WHERE id = :id FOR UPDATE")
+        boolean wasActive = jdbc.sql("SELECT active FROM branch WHERE id = :id FOR UPDATE")
                 .param("id", id)
-                .query(Branch.class)
+                .query(Boolean.class)
                 .optional()
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
-        if (before.active() == active) {
+        Branch before = branch(id).orElseThrow();
+        if (wasActive == active) {
             return before;
         }
         if (!active) {
@@ -246,6 +341,16 @@ public class Organization {
         m.put("tin", d.tin());
         m.put("address", d.address());
         m.put("phone", d.phone());
+        if (d.extra() != null) {
+            var x = d.extra();
+            m.put("vatPayer", x.vatPayer());
+            m.put("vatCertNo", x.vatCertNo());
+            m.put("region", x.region());
+            m.put("actualAddress", x.actualAddress());
+            m.put("directorName", x.directorName());
+            m.put("accountantName", x.accountantName());
+            m.put("bankAccounts", x.bankAccounts() == null ? 0 : x.bankAccounts().size());
+        }
         return m;
     }
 

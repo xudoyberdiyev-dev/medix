@@ -13965,9 +13965,33 @@
           },
           "tin" : {
             "type" : "string"
+          },
+          "vatPayer" : {
+            "type" : "boolean"
+          },
+          "vatCertNo" : {
+            "type" : "string"
+          },
+          "region" : {
+            "type" : "string"
+          },
+          "actualAddress" : {
+            "type" : "string"
+          },
+          "directorName" : {
+            "type" : "string"
+          },
+          "accountantName" : {
+            "type" : "string"
+          },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            }
           }
         },
-        "required" : [ "active", "code", "id", "legalName", "name", "tin" ]
+        "required" : [ "active", "bankAccounts", "code", "id", "legalName", "name", "tin", "vatPayer" ]
       },
       "BranchBalance" : {
         "type" : "object",
@@ -14270,6 +14294,42 @@
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[0-9]{9}$"
+          },
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
+          },
+          "vatCertNo" : {
+            "type" : "string",
+            "pattern" : "^[0-9]{6,20}$"
+          },
+          "region" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
           }
         },
         "required" : [ "code", "legalName", "name", "tin" ]
@@ -15548,6 +15608,42 @@
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[0-9]{9}$"
+          },
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
+          },
+          "vatCertNo" : {
+            "type" : "string",
+            "pattern" : "^[0-9]{6,20}$"
+          },
+          "region" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
           }
         },
         "required" : [ "code", "legalName", "name", "tin" ]
@@ -24747,6 +24843,42 @@
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[0-9]{9}$"
+          },
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
+          },
+          "vatCertNo" : {
+            "type" : "string",
+            "pattern" : "^[0-9]{6,20}$"
+          },
+          "region" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
           }
         },
         "required" : [ "legalName", "name", "tin" ]
@@ -25947,6 +26079,30 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "from", "id", "lines", "needsApproval", "number", "qty", "status", "to", "warehouse", "warehouseId" ]
+      },
+      "BankAccount" : {
+        "type" : "object",
+        "properties" : {
+          "bankName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "mfo" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{5}$"
+          },
+          "account" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{20}$"
+          },
+          "main" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "account", "bankName", "main", "mfo" ]
       }
     }
   }

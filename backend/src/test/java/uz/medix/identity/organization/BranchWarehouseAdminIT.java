@@ -147,6 +147,59 @@ class BranchWarehouseAdminIT {
     }
 
     @Test
+    void branchCardDetailsAndBankAccounts() throws Exception {
+        Cookie admin = loginAs("ADMIN", null);
+        String code = code();
+        String body = "{\"code\":\"" + code + "\",\"name\":\"Buxoro\",\"legalName\":\"Medix BXR MChJ\",\"tin\":\"" + tin()
+                + "\",\"address\":\"Buxoro sh., Navoiy koʻch., 1\",\"vatPayer\":true,\"vatCertNo\":\"326030012345\","
+                + "\"region\":\"Buxoro viloyati\",\"directorName\":\"Karimov Akmal\",\"accountantName\":\"Yusupova Malika\","
+                + "\"bankAccounts\":[{\"bankName\":\"Kapitalbank\",\"mfo\":\"01158\",\"account\":\"20208000900100001010\",\"main\":false},"
+                + "{\"bankName\":\"Hamkorbank\",\"mfo\":\"00083\",\"account\":\"20208000900100001011\",\"main\":false}]}";
+        MvcResult created = mvc.perform(json(post("/api/branches"), admin, body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.vatPayer").value(true))
+                .andExpect(jsonPath("$.vatCertNo").value("326030012345"))
+                .andExpect(jsonPath("$.region").value("Buxoro viloyati"))
+                .andExpect(jsonPath("$.bankAccounts.length()").value(2))
+                // asosiy belgilanmagan — birinchisi asosiy
+                .andExpect(jsonPath("$.bankAccounts[0].main").value(true))
+                .andExpect(jsonPath("$.bankAccounts[1].main").value(false))
+                .andReturn();
+        long id = id(created);
+
+        // Eski mijoz (qoʻshimchasiz) tahrirlasa — qoʻshimchalar saqlanib qoladi
+        mvc.perform(json(put("/api/branches/" + id), admin,
+                        "{\"name\":\"Buxoro filiali\",\"legalName\":\"Medix BXR MChJ\",\"tin\":\"" + tin() + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.region").value("Buxoro viloyati"))
+                .andExpect(jsonPath("$.bankAccounts.length()").value(2));
+
+        // QQS toʻlovchi emas — guvohnoma tozalanadi; hisoblar almashtiriladi
+        mvc.perform(json(put("/api/branches/" + id), admin,
+                        "{\"name\":\"Buxoro filiali\",\"legalName\":\"Medix BXR MChJ\",\"tin\":\"" + tin() + "\",\"vatPayer\":false,"
+                                + "\"vatCertNo\":\"326030012345\",\"bankAccounts\":[{\"bankName\":\"Agrobank\",\"mfo\":\"00394\","
+                                + "\"account\":\"20208000900100001012\",\"main\":true}]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.vatPayer").value(false))
+                .andExpect(jsonPath("$.vatCertNo").doesNotExist())
+                .andExpect(jsonPath("$.region").doesNotExist())
+                .andExpect(jsonPath("$.bankAccounts.length()").value(1))
+                .andExpect(jsonPath("$.bankAccounts[0].bankName").value("Agrobank"));
+
+        // Notoʻgʻri MFO / hisob, takror hisob
+        mvc.perform(json(put("/api/branches/" + id), admin,
+                        "{\"name\":\"B\",\"legalName\":\"M\",\"tin\":\"" + tin() + "\",\"vatPayer\":true,\"bankAccounts\":"
+                                + "[{\"bankName\":\"X\",\"mfo\":\"1\",\"account\":\"123\",\"main\":true}]}"))
+                .andExpect(status().isBadRequest());
+        String dup = "{\"bankName\":\"X\",\"mfo\":\"00083\",\"account\":\"20208000900100009999\",\"main\":false}";
+        mvc.perform(json(put("/api/branches/" + id), admin,
+                        "{\"name\":\"B\",\"legalName\":\"M\",\"tin\":\"" + tin() + "\",\"vatPayer\":true,\"bankAccounts\":[" + dup + "," + dup
+                                + "]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("branch.bankAccountDuplicate"));
+    }
+
+    @Test
     void lastActiveBranchCannotBeDeactivated() throws Exception {
         Cookie admin = loginAs("ADMIN", null);
         long id = branch(admin);

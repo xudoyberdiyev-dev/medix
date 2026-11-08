@@ -141,6 +141,6 @@ class SetupService {
     }
 
     private static Organization.BranchData toData(SetupRequests.BranchRequest r) {
-        return new Organization.BranchData(r.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone());
+        return new Organization.BranchData(r.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone(), r.extra());
     }
 }

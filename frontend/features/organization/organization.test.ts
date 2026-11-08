@@ -8,6 +8,8 @@ const branch = (id: number, over: Partial<Branch> = {}): Branch => ({
   name: "Toshkent",
   legalName: "Medix TSH MChJ",
   tin: "301234567",
+  vatPayer: true,
+  bankAccounts: [],
   active: true,
   ...over,
 });
