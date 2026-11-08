@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
-import type { KeyboardEvent, ReactNode } from "react";
+import { Fragment, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "./icon";
 import { Pagination, type PaginationProps } from "./pagination";
@@ -49,6 +49,9 @@ export interface TableProps<T> {
   /** Boʻsh, natija yoʻq, xato yoki ruxsat yoʻq holati — `rows` boʻsh boʻlganda koʻrsatiladi. */
   emptyState?: ReactNode;
   pagination?: PaginationProps;
+  /** Ochiladigan qatorlar (masalan, mahsulot → partiya × zona): shu qator ostida toʻliq kenglikdagi blok. */
+  expandedKeys?: string[];
+  renderExpanded?: (row: T) => ReactNode;
 }
 
 const SKELETON_ROWS = 8;
@@ -80,6 +83,8 @@ export function Table<T>({
   activeKey,
   rowActions,
   totals,
+  expandedKeys,
+  renderExpanded,
   loading = false,
   emptyState,
   pagination,
@@ -221,61 +226,71 @@ export function Table<T>({
               : rows.map((row) => {
                   const key = rowKey(row);
                   const isSelected = selectedKeys.includes(key) || key === activeKey;
+                  const expanded = renderExpanded && expandedKeys?.includes(key);
                   return (
-                    <tr
-                      key={key}
-                      tabIndex={0}
-                      aria-selected={selectable ? selectedKeys.includes(key) : undefined}
-                      onClick={onRowClick ? () => onRowClick(row) : undefined}
-                      onKeyDown={(e) => onRowKeyDown(e, row, key)}
-                      className={cn(
-                        "group focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary",
-                        onRowClick && "cursor-pointer",
-                      )}
-                    >
-                      {selectable ? (
-                        <td
-                          className={cn(
-                            "w-11 border-b border-border pr-1 pl-4",
-                            isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Checkbox
-                            checked={selectedKeys.includes(key)}
-                            onChange={() => toggleRow(key)}
-                            aria-label={t("selectRow")}
-                            className="min-h-0"
-                          />
-                        </td>
+                    <Fragment key={key}>
+                      <tr
+                        aria-expanded={renderExpanded ? Boolean(expanded) : undefined}
+                        tabIndex={0}
+                        aria-selected={selectable ? selectedKeys.includes(key) : undefined}
+                        onClick={onRowClick ? () => onRowClick(row) : undefined}
+                        onKeyDown={(e) => onRowKeyDown(e, row, key)}
+                        className={cn(
+                          "group focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary",
+                          onRowClick && "cursor-pointer",
+                        )}
+                      >
+                        {selectable ? (
+                          <td
+                            className={cn(
+                              "w-11 border-b border-border pr-1 pl-4",
+                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedKeys.includes(key)}
+                              onChange={() => toggleRow(key)}
+                              aria-label={t("selectRow")}
+                              className="min-h-0"
+                            />
+                          </td>
+                        ) : null}
+                        {columns.map((col) => (
+                          <td
+                            key={col.key}
+                            className={cn(
+                              "border-b border-border px-3",
+                              col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
+                              tdPad,
+                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                              col.align === "right" && "tabular text-right",
+                              col.mono && "font-mono text-mono",
+                            )}
+                          >
+                            {cellValue(row, col)}
+                          </td>
+                        ))}
+                        {rowActions ? (
+                          <td
+                            className={cn(
+                              "w-12 border-b border-border px-2 text-right",
+                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {rowActions(row)}
+                          </td>
+                        ) : null}
+                      </tr>
+                      {expanded ? (
+                        <tr>
+                          <td colSpan={colCount} className="border-b border-border bg-table-header p-0">
+                            {renderExpanded(row)}
+                          </td>
+                        </tr>
                       ) : null}
-                      {columns.map((col) => (
-                        <td
-                          key={col.key}
-                          className={cn(
-                            "border-b border-border px-3",
-                            col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
-                            tdPad,
-                            isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                            col.align === "right" && "tabular text-right",
-                            col.mono && "font-mono text-mono",
-                          )}
-                        >
-                          {cellValue(row, col)}
-                        </td>
-                      ))}
-                      {rowActions ? (
-                        <td
-                          className={cn(
-                            "w-12 border-b border-border px-2 text-right",
-                            isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                          )}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {rowActions(row)}
-                        </td>
-                      ) : null}
-                    </tr>
+                    </Fragment>
                   );
                 })}
             {showEmpty ? (

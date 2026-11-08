@@ -77,7 +77,13 @@ export function stockExportHref(f: {
 }
 
 /** Qoldiqlar (mode="stock") va Muddat nazorati (mode="expiry") — bitta jadval, turli filtr. */
-export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
+export function StockPage({
+  mode,
+  embedded,
+}: {
+  mode: "stock" | "expiry";
+  /** Qoldiqlar ekranidagi «Partiya boʻyicha» koʻrinishi — sarlavha va kartalarsiz. */ embedded?: boolean;
+}) {
   const t = useTranslations("stock");
   const me = useMe();
   const warehouses = useWarehouses();
@@ -88,7 +94,8 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
   const { q, warehouseId, sellableOnly, days, sort, desc, page, size } = f;
   const [search, setSearch] = useState(q);
   const apply = (patch: Partial<StockFilters>) => {
-    const qs = serializeStockFilters({ ...f, page: 1, ...patch });
+    const view = params.get("view");
+    const qs = [view ? `view=${view}` : "", serializeStockFilters({ ...f, page: 1, ...patch })].filter(Boolean).join("&");
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -180,8 +187,8 @@ export function StockPage({ mode }: { mode: "stock" | "expiry" }) {
   });
   return (
     <>
-      <h1 className="mb-4 text-page-title">{mode === "stock" ? t("titleStock") : t("titleExpiry")}</h1>
-      {stock.data ? (
+      {embedded ? null : <h1 className="mb-4 text-page-title">{mode === "stock" ? t("titleStock") : t("titleExpiry")}</h1>}
+      {stock.data && !embedded ? (
         <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
           <KpiCard
             label={mode === "stock" ? t("kpiRowsStock") : t("kpiRowsExpiry")}

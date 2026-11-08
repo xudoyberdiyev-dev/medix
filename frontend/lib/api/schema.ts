@@ -4140,6 +4140,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stock/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qoldiqlar — mahsulot bo'yicha
+         * @description Partiya filtrlari (ombor, zona, muddat, yetkazib beruvchi, bonus) jamlanadigan qatorlarni tanlaydi; mahsulot filtrlari — mahsulotni. stock=ZERO — qoldig'i yo'q faol mahsulotlar.
+         */
+        get: operations["products"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stock/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qoldiqlar — kartalar va filtr variantlari
+         * @description Filial doirasida (boshqa filtrlarsiz).
+         */
+        get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/supplier-bonuses": {
         parameters: {
             query?: never;
@@ -5974,6 +6014,11 @@ export interface components {
             oldCode: string;
             reason?: string;
         };
+        CodeCount: {
+            code: string;
+            /** Format: int64 */
+            count: number;
+        };
         Company: {
             /** Format: int64 */
             id: number;
@@ -6368,6 +6413,16 @@ export interface components {
             d61to90: number;
             /** Format: int32 */
             expired: number;
+        };
+        Facet: {
+            /** Format: int64 */
+            count: number;
+            /**
+             * Format: int64
+             * @description 0 — belgilanmagan (masalan, boshlang'ich qoldiq: yetkazib beruvchi yo'q)
+             */
+            id: number;
+            name?: string;
         };
         FilterOption: {
             /** Format: int64 */
@@ -8099,6 +8154,68 @@ export interface components {
             total: components["schemas"]["ProductSalesRow"];
             truncated: boolean;
         };
+        ProductStockPage: {
+            /** Format: int64 */
+            availableQty: number;
+            costSum?: string;
+            items: components["schemas"]["ProductStockRow"][];
+            /** Format: int32 */
+            page: number;
+            saleSum: string;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+            /**
+             * Format: int64
+             * @description Filtr bo'yicha jami (sahifadagi emas)
+             */
+            totalQty: number;
+        };
+        ProductStockRow: {
+            /** Format: int32 */
+            available: number;
+            /** Format: int32 */
+            batches: number;
+            /** @description Qoldiqda bonus partiya bor */
+            bonus: boolean;
+            category?: string;
+            /**
+             * Format: int32
+             * @description Qabul, Karantin va muddati o'tgan
+             */
+            closed: number;
+            code: string;
+            controlled: boolean;
+            /** @description Faqat special.cost ruxsati bilan */
+            costSum?: string;
+            country?: string;
+            /** Format: date */
+            lastIn?: string;
+            manufacturer?: string;
+            marked: boolean;
+            name: string;
+            /**
+             * Format: int64
+             * @description Eng yaqin yaroqlilikka qolgan kun (manfiy — o'tgan)
+             */
+            nearestDays?: number;
+            /** Format: date */
+            nearestExpiry?: string;
+            prescription: boolean;
+            /** Format: int64 */
+            productId: number;
+            /** Format: int32 */
+            reserved: number;
+            /** @description Bazaviy narx turida (partiya narxi, bo'lmasa mahsulot narxi), QQS bilan */
+            saleSum: string;
+            /** Format: int32 */
+            shipping: number;
+            supplyBy?: string;
+            /** Format: int32 */
+            total: number;
+            unit: string;
+        };
         Profile: {
             branchName?: string;
             fullName: string;
@@ -8843,13 +8960,31 @@ export interface components {
             /** Format: date */
             expiryDate: string;
             manufacturer?: string;
+            /** Format: date */
+            producedOn?: string;
             productCode: string;
             /** Format: int64 */
             productId: number;
             productName: string;
             /** Format: int32 */
             qty: number;
+            /** Format: date */
+            receiptDate?: string;
+            /**
+             * Format: int64
+             * @description Kirim hujjati (partiya kirimdan bo'lsa)
+             */
+            receiptId?: number;
+            receiptNumber?: string;
+            /**
+             * Format: int32
+             * @description Faol zahiralar (shu zona × partiya)
+             */
+            reserved: number;
             sellable: boolean;
+            /** @description Partiya manbasi: KR, BQ, ... */
+            sourceType: string;
+            supplier?: string;
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
@@ -8858,6 +8993,43 @@ export interface components {
             zoneId: number;
             /** @enum {string} */
             zoneType: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
+        };
+        StockSummary: {
+            categories: components["schemas"]["Facet"][];
+            countries: components["schemas"]["Facet"][];
+            /** Format: int64 */
+            expired: number;
+            expiry: components["schemas"]["CodeCount"][];
+            manufacturers: components["schemas"]["Facet"][];
+            /**
+             * Format: int64
+             * @description 0–90 kun ichida tugaydigan partiyalar
+             */
+            near: number;
+            /**
+             * Format: int64
+             * @description Qoldig'i bor mahsulotlar
+             */
+            products: number;
+            /**
+             * Format: int64
+             * @description Karantindagi partiyalar
+             */
+            quarantine: number;
+            suppliers: components["schemas"]["Facet"][];
+            supplyBy: components["schemas"]["Facet"][];
+            /** Format: int64 */
+            transitDocs: number;
+            /**
+             * Format: int64
+             * @description Yo'lda (ombor ko'chirishi jo'natilgan, qabul qilinmagan) — dona
+             */
+            transitQty: number;
+            /** @description Tannarxda qoldiq — faqat special.cost */
+            value?: string;
+            /** @description Variantlar soni — partiya × zona qatorlari, filial doirasida */
+            warehouses: components["schemas"]["Facet"][];
+            zoneTypes: components["schemas"]["CodeCount"][];
         };
         SupplierBlock: {
             active: components["schemas"]["SupplierStat"][];
@@ -15813,6 +15985,68 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    products: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                warehouseId?: number[];
+                zoneType?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
+                expiry?: ("EXPIRED" | "D0_30" | "D31_60" | "D61_90" | "D90_PLUS")[];
+                stock?: ("HAS" | "ZERO" | "ALL_RESERVED")[];
+                manufacturerId?: number[];
+                categoryId?: number[];
+                /** @description 0 — davlati belgilanmagan */
+                countryId?: number[];
+                /** @description 0 — ta'minot mas'uli belgilanmagan */
+                supplyEmployeeId?: number[];
+                /** @description 0 — yetkazib beruvchisiz (boshlang'ich qoldiq va b.) */
+                supplierId?: number[];
+                flag?: ("MARKED" | "CONTROLLED" | "PRESCRIPTION" | "BONUS")[];
+                q?: string;
+                sort?: "NAME" | "CODE" | "TOTAL" | "AVAILABLE" | "RESERVED" | "BATCHES" | "NEAREST_EXPIRY" | "COST_SUM" | "SALE_SUM" | "LAST_IN";
+                desc?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductStockPage"];
+                };
+            };
+        };
+    };
+    summary: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockSummary"];
+                };
             };
         };
     };

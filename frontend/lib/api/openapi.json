@@ -9735,6 +9735,218 @@
         "tags" : [ "stock" ]
       }
     },
+    "/api/stock/products" : {
+      "get" : {
+        "description" : "Partiya filtrlari (ombor, zona, muddat, yetkazib beruvchi, bonus) jamlanadigan qatorlarni tanlaydi; mahsulot filtrlari — mahsulotni. stock=ZERO — qoldig'i yo'q faol mahsulotlar.",
+        "operationId" : "products",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "zoneType",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "expiry",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "EXPIRED", "D0_30", "D31_60", "D61_90", "D90_PLUS" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "stock",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "HAS", "ZERO", "ALL_RESERVED" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "manufacturerId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "categoryId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "description" : "0 — davlati belgilanmagan",
+          "in" : "query",
+          "name" : "countryId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "description" : "0 — ta'minot mas'uli belgilanmagan",
+          "in" : "query",
+          "name" : "supplyEmployeeId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "description" : "0 — yetkazib beruvchisiz (boshlang'ich qoldiq va b.)",
+          "in" : "query",
+          "name" : "supplierId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "flag",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "MARKED", "CONTROLLED", "PRESCRIPTION", "BONUS" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "NAME", "CODE", "TOTAL", "AVAILABLE", "RESERVED", "BATCHES", "NEAREST_EXPIRY", "COST_SUM", "SALE_SUM", "LAST_IN" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "desc",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductStockPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoldiqlar — mahsulot bo'yicha",
+        "tags" : [ "stock" ]
+      }
+    },
+    "/api/stock/summary" : {
+      "get" : {
+        "description" : "Filial doirasida (boshqa filtrlarsiz).",
+        "operationId" : "summary",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StockSummary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoldiqlar — kartalar va filtr variantlari",
+        "tags" : [ "stock" ]
+      }
+    },
     "/api/supplier-bonuses" : {
       "get" : {
         "operationId" : "list_23",
@@ -13857,6 +14069,19 @@
         },
         "required" : [ "changedAt", "newCode", "oldCode" ]
       },
+      "CodeCount" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "code", "count" ]
+      },
       "Company" : {
         "type" : "object",
         "properties" : {
@@ -14990,6 +15215,24 @@
           }
         },
         "required" : [ "d0to30", "d31to60", "d61to90", "expired" ]
+      },
+      "Facet" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "0 — belgilanmagan (masalan, boshlang'ich qoldiq: yetkazib beruvchi yo'q)"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "id" ]
       },
       "FilterOption" : {
         "type" : "object",
@@ -19285,6 +19528,135 @@
         },
         "required" : [ "costVisible", "from", "groupBy", "mineOnly", "rows", "to", "total", "truncated" ]
       },
+      "ProductStockPage" : {
+        "type" : "object",
+        "properties" : {
+          "availableQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "costSum" : {
+            "type" : "string"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductStockRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "saleSum" : {
+            "type" : "string"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Filtr bo'yicha jami (sahifadagi emas)"
+          }
+        },
+        "required" : [ "availableQty", "items", "page", "saleSum", "size", "total", "totalQty" ]
+      },
+      "ProductStockRow" : {
+        "type" : "object",
+        "properties" : {
+          "available" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "batches" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "bonus" : {
+            "type" : "boolean",
+            "description" : "Qoldiqda bonus partiya bor"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "closed" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Qabul, Karantin va muddati o'tgan"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "controlled" : {
+            "type" : "boolean"
+          },
+          "costSum" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "country" : {
+            "type" : "string"
+          },
+          "lastIn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "nearestDays" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Eng yaqin yaroqlilikka qolgan kun (manfiy — o'tgan)"
+          },
+          "nearestExpiry" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "prescription" : {
+            "type" : "boolean"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "reserved" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "saleSum" : {
+            "type" : "string",
+            "description" : "Bazaviy narx turida (partiya narxi, bo'lmasa mahsulot narxi), QQS bilan"
+          },
+          "shipping" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "supplyBy" : {
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "available", "batches", "bonus", "closed", "code", "controlled", "marked", "name", "prescription", "productId", "reserved", "saleSum", "shipping", "total", "unit" ]
+      },
       "Profile" : {
         "type" : "object",
         "properties" : {
@@ -21161,6 +21533,10 @@
           "manufacturer" : {
             "type" : "string"
           },
+          "producedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "productCode" : {
             "type" : "string"
           },
@@ -21175,8 +21551,32 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "receiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Kirim hujjati (partiya kirimdan bo'lsa)"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          },
+          "reserved" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faol zahiralar (shu zona × partiya)"
+          },
           "sellable" : {
             "type" : "boolean"
+          },
+          "sourceType" : {
+            "type" : "string",
+            "description" : "Partiya manbasi: KR, BQ, ..."
+          },
+          "supplier" : {
+            "type" : "string"
           },
           "warehouse" : {
             "type" : "string"
@@ -21197,7 +21597,94 @@
             "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
           }
         },
-        "required" : [ "batchId", "batchNumber", "bonus", "daysLeft", "expiryDate", "productCode", "productId", "productName", "qty", "sellable", "warehouse", "warehouseId", "zone", "zoneId", "zoneType" ]
+        "required" : [ "batchId", "batchNumber", "bonus", "daysLeft", "expiryDate", "productCode", "productId", "productName", "qty", "reserved", "sellable", "sourceType", "warehouse", "warehouseId", "zone", "zoneId", "zoneType" ]
+      },
+      "StockSummary" : {
+        "type" : "object",
+        "properties" : {
+          "categories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "countries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "expired" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expiry" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CodeCount"
+            }
+          },
+          "manufacturers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "near" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "0–90 kun ichida tugaydigan partiyalar"
+          },
+          "products" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Qoldig'i bor mahsulotlar"
+          },
+          "quarantine" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Karantindagi partiyalar"
+          },
+          "suppliers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "supplyBy" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "transitDocs" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "transitQty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Yo'lda (ombor ko'chirishi jo'natilgan, qabul qilinmagan) — dona"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Tannarxda qoldiq — faqat special.cost"
+          },
+          "warehouses" : {
+            "type" : "array",
+            "description" : "Variantlar soni — partiya × zona qatorlari, filial doirasida",
+            "items" : {
+              "$ref" : "#/components/schemas/Facet"
+            }
+          },
+          "zoneTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CodeCount"
+            }
+          }
+        },
+        "required" : [ "categories", "countries", "expired", "expiry", "manufacturers", "near", "products", "quarantine", "suppliers", "supplyBy", "transitDocs", "transitQty", "warehouses", "zoneTypes" ]
       },
       "SupplierBlock" : {
         "type" : "object",
