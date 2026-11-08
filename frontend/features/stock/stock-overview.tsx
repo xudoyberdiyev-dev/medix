@@ -139,8 +139,17 @@ function KpiTile({
         {I ? <I size={14} strokeWidth={1.5} className={color} aria-hidden /> : null}
         {label}
       </span>
-      <span className="flex items-baseline gap-1.5 whitespace-nowrap">
-        <span className={cn("tabular text-kpi", color)}>{value}</span>
+      <span className="flex max-w-full min-w-0 items-baseline gap-1.5 whitespace-nowrap">
+        <span
+          title={value}
+          className={cn(
+            "tabular truncate leading-7 font-semibold",
+            value.length > 12 ? "text-[clamp(15px,1.15vw,22px)]" : "text-[clamp(18px,1.6vw,24px)]",
+            color,
+          )}
+        >
+          {value}
+        </span>
         {unit ? <span className="text-caption text-text-secondary">{unit}</span> : null}
       </span>
       <span className="text-caption text-text-secondary">{note}</span>
@@ -319,10 +328,12 @@ export function StockOverview() {
       key: "name",
       title: t("ov.c.name"),
       sortable: true,
-      wrap: true,
+      width: 260,
       render: (r) => (
         <span className="flex flex-col">
-          <span className="font-medium">{r.name}</span>
+          <span className="block max-w-[260px] truncate font-medium" title={r.name}>
+            {r.name}
+          </span>
           <span className="text-caption text-text-secondary">{[r.manufacturer, r.unit].filter(Boolean).join(" · ")}</span>
         </span>
       ),
