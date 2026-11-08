@@ -179,6 +179,37 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   await expect(page.getByText("Kassirlar saqlandi").first()).toBeVisible();
 });
 
+test("CEO: Import ustasi — CSV dan mahsulotlar (xato qator oʻtkazib yuboriladi)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/products");
+  await page.getByRole("button", { name: "Import" }).first().click();
+  await expect(page).toHaveURL(/\/products\/import$/);
+  const csv = [
+    "SMARTUP eksport",
+    "Наименование;МНН;Производитель;Группа;ИКПУ;Farm ID;Штрих-код",
+    "Import E2E Ibuprofen 200;Ibuprofen;Nobel E2E;Analgetiklar E2E;03004001001000002;FRM-IMP-1;",
+    "Import E2E Sitramon;Sitramon;Nobel E2E;Analgetiklar E2E;123;FRM-IMP-2;",
+  ].join("\r\n");
+  await page.getByTestId("import-file").setInputFiles({ name: "smartup.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") });
+  await expect(page.getByText("smartup.csv")).toBeVisible();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  // Sarlavha qatori avtomatik taxmin qilinadi (2-qator)
+  await expect(page.getByRole("textbox", { name: "Sarlavha qatori" })).toHaveValue("2");
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.getByText("Nom boʻyicha avtomatik moslashtirildi: 7 / 21 maydon")).toBeVisible();
+  await page.getByRole("button", { name: "Moslashtirishni saqlash" }).click();
+  await expect(page.getByText(/profili saqlandi/)).toBeVisible();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.locator("tr[data-row='2']")).toContainText("IKPU 17 ta raqam boʻlishi kerak");
+  await expect(page.locator("tr[data-row='1']")).toContainText("Yangi · kod avtomatik");
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.getByText("1 ta mahsulot yaratiladi, 1 ta xato qator oʻtkazib yuboriladi")).toBeVisible();
+  await page.getByRole("button", { name: "1 ta mahsulotni yaratish" }).click();
+  await expect(page.getByText("1 ta mahsulot yaratildi, 1 ta qator oʻtkazib yuborildi").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/products$/);
+});
+
 test("Operator: naqd toʻlovli buyurtma kiritadi va navbatga yuboradi", async ({ page }) => {
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);

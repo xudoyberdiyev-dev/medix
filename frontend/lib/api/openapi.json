@@ -7953,6 +7953,129 @@
         "tags" : [ "products" ]
       }
     },
+    "/api/products/import/check" : {
+      "post" : {
+        "description" : "apply=false — har qator uchun holat va izohlar (hech narsa yozilmaydi); apply=true — OK va ogohlantirishli qatorlar bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi.",
+        "operationId" : "importCheck",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "apply",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ImportCheckRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportCheckResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import ustasi: qatorlarni tekshirish yoki yaratish",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/import/profile" : {
+      "get" : {
+        "description" : "Profil bo'lmasa — 204.",
+        "operationId" : "importProfile",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportProfile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import ustasi: saqlangan moslashtirish profili",
+        "tags" : [ "products" ]
+      },
+      "put" : {
+        "description" : "Keyingi safar avtomatik qo'llanadi.",
+        "operationId" : "saveImportProfile",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ImportProfileRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportProfile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import ustasi: moslashtirishni saqlash",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/import/read" : {
+      "post" : {
+        "description" : ".xlsx yoki .csv — varaqlar va katakchalar (matn). Hech narsa yozilmaydi; sarlavha qatori va ustunlar brauzerda tanlanadi.",
+        "operationId" : "importRead",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportFile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import ustasi: faylni o'qish",
+        "tags" : [ "products" ]
+      }
+    },
     "/api/products/new-code" : {
       "get" : {
         "operationId" : "newCode",
@@ -16485,6 +16608,134 @@
         },
         "required" : [ "driver", "id", "number", "orders", "status", "vehicle" ]
       },
+      "ImportCheckRequest" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRowInput"
+            },
+            "maxItems" : 20000,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "rows" ]
+      },
+      "ImportCheckResult" : {
+        "type" : "object",
+        "properties" : {
+          "applied" : {
+            "type" : "boolean"
+          },
+          "created" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "error" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "newCategories" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "newManufacturers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "ok" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRowCheck"
+            }
+          },
+          "warn" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "applied", "created", "error", "newCategories", "newManufacturers", "ok", "rows", "warn" ]
+      },
+      "ImportFile" : {
+        "type" : "object",
+        "properties" : {
+          "fileName" : {
+            "type" : "string"
+          },
+          "sheets" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportSheet"
+            }
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "fileName", "sheets", "size" ]
+      },
+      "ImportMessage" : {
+        "type" : "object",
+        "description" : "Izoh: `key` — frontend tarjima kaliti (bq_m_*), `params` — o'rniga qo'yiladigan qiymatlar",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "params" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "tone" : {
+            "type" : "string",
+            "enum" : [ "ERROR", "WARN" ]
+          }
+        },
+        "required" : [ "key", "params", "tone" ]
+      },
+      "ImportProfile" : {
+        "type" : "object",
+        "properties" : {
+          "mapping" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "mapping", "name" ]
+      },
+      "ImportProfileRequest" : {
+        "type" : "object",
+        "properties" : {
+          "mapping" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 1
+          }
+        },
+        "required" : [ "mapping", "name" ]
+      },
       "ImportResult" : {
         "type" : "object",
         "properties" : {
@@ -16520,6 +16771,35 @@
         },
         "required" : [ "applied", "created", "createdCategories", "createdManufacturers", "errors", "rows" ]
       },
+      "ImportRowCheck" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "codeAuto" : {
+            "type" : "boolean"
+          },
+          "createdCode" : {
+            "type" : "string"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportMessage"
+            }
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "OK", "WARN", "ERROR" ]
+          }
+        },
+        "required" : [ "codeAuto", "messages", "row", "status" ]
+      },
       "ImportRowError" : {
         "type" : "object",
         "properties" : {
@@ -16532,6 +16812,40 @@
           }
         },
         "required" : [ "message", "row" ]
+      },
+      "ImportRowInput" : {
+        "type" : "object",
+        "properties" : {
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "values" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "row", "values" ]
+      },
+      "ImportSheet" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          }
+        },
+        "required" : [ "name", "rows" ]
       },
       "InventoryBatchHit" : {
         "type" : "object",

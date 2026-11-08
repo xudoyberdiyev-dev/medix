@@ -3386,6 +3386,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/products/import/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import ustasi: qatorlarni tekshirish yoki yaratish
+         * @description apply=false — har qator uchun holat va izohlar (hech narsa yozilmaydi); apply=true — OK va ogohlantirishli qatorlar bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi.
+         */
+        post: operations["importCheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/import/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Import ustasi: saqlangan moslashtirish profili
+         * @description Profil bo'lmasa — 204.
+         */
+        get: operations["importProfile"];
+        /**
+         * Import ustasi: moslashtirishni saqlash
+         * @description Keyingi safar avtomatik qo'llanadi.
+         */
+        put: operations["saveImportProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/import/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import ustasi: faylni o'qish
+         * @description .xlsx yoki .csv — varaqlar va katakchalar (matn). Hech narsa yozilmaydi; sarlavha qatori va ustunlar brauzerda tanlanadi.
+         */
+        post: operations["importRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/products/new-code": {
         parameters: {
             query?: never;
@@ -6884,6 +6948,50 @@ export interface components {
             status: string;
             vehicle: string;
         };
+        ImportCheckRequest: {
+            rows: components["schemas"]["ImportRowInput"][];
+        };
+        ImportCheckResult: {
+            applied: boolean;
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            error: number;
+            newCategories: string[];
+            newManufacturers: string[];
+            /** Format: int32 */
+            ok: number;
+            rows: components["schemas"]["ImportRowCheck"][];
+            /** Format: int32 */
+            warn: number;
+        };
+        ImportFile: {
+            fileName: string;
+            sheets: components["schemas"]["ImportSheet"][];
+            /** Format: int64 */
+            size: number;
+        };
+        /** @description Izoh: `key` — frontend tarjima kaliti (bq_m_*), `params` — o'rniga qo'yiladigan qiymatlar */
+        ImportMessage: {
+            key: string;
+            params: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            tone: "ERROR" | "WARN";
+        };
+        ImportProfile: {
+            mapping: {
+                [key: string]: string;
+            };
+            name: string;
+        };
+        ImportProfileRequest: {
+            mapping: {
+                [key: string]: string;
+            };
+            name: string;
+        };
         ImportResult: {
             applied: boolean;
             /** Format: int32 */
@@ -6894,10 +7002,31 @@ export interface components {
             /** Format: int32 */
             rows: number;
         };
+        ImportRowCheck: {
+            code?: string;
+            codeAuto: boolean;
+            createdCode?: string;
+            messages: components["schemas"]["ImportMessage"][];
+            /** Format: int32 */
+            row: number;
+            /** @enum {string} */
+            status: "OK" | "WARN" | "ERROR";
+        };
         ImportRowError: {
             message: string;
             /** Format: int32 */
             row: number;
+        };
+        ImportRowInput: {
+            /** Format: int32 */
+            row: number;
+            values: {
+                [key: string]: string;
+            };
+        };
+        ImportSheet: {
+            name: string;
+            rows: string[][];
         };
         InventoryBatchHit: {
             /** Format: int64 */
@@ -15431,6 +15560,103 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    importCheck: {
+        parameters: {
+            query?: {
+                apply?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportCheckResult"];
+                };
+            };
+        };
+    };
+    importProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProfile"];
+                };
+            };
+        };
+    };
+    saveImportProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProfile"];
+                };
+            };
+        };
+    };
+    importRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportFile"];
+                };
             };
         };
     };

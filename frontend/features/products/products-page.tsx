@@ -34,7 +34,6 @@ import { cn } from "@/lib/cn";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { PRODUCT_CREATE, useActivateProduct, useBulkDeactivate, useProducts, type ProductRow } from "./api";
-import { ImportDialog } from "./import-dialog";
 import {
   DEFAULT_FILTERS,
   PRODUCT_VIEWS,
@@ -171,7 +170,6 @@ export function ProductsPage() {
   const activate = useActivateProduct();
   const bulkDeactivate = useBulkDeactivate();
   const { cols, update: setCols, reset: resetCols } = useColumnPrefs("medix-products-cols", COLUMN_KEYS);
-  const [importing, setImporting] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [deact, setDeact] = useState<number[] | null>(null);
   const [search, setSearch] = useState(filters.q);
@@ -346,7 +344,7 @@ export function ProductsPage() {
         </h1>
         <div className="flex items-center gap-2">
           {canEdit ? (
-            <Button variant="secondary" icon={Upload} onClick={() => setImporting(true)}>
+            <Button variant="secondary" icon={Upload} onClick={() => router.push("/products/import")}>
               {t("import")}
             </Button>
           ) : null}
@@ -502,7 +500,7 @@ export function ProductsPage() {
                 action={
                   canEdit ? (
                     <div className="flex items-center gap-2">
-                      <Button variant="secondary" icon={Upload} onClick={() => setImporting(true)}>
+                      <Button variant="secondary" icon={Upload} onClick={() => router.push("/products/import")}>
                         {t("importExcel")}
                       </Button>
                       <Button icon={Plus} onClick={() => router.push("/products/new")}>
@@ -527,7 +525,6 @@ export function ProductsPage() {
           }
         />
       )}
-      {importing ? <ImportDialog onClose={() => setImporting(false)} /> : null}
       {deact ? (
         <DeactivateDialog
           title={deact.length === 1 ? t("dTitle") : t("dTitleN", { count: formatQuantity(deact.length) })}
