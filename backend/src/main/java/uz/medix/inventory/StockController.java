@@ -92,17 +92,64 @@ class StockController {
             @RequestParam(required = false) Long warehouseId,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean sellableOnly,
-            @RequestParam(required = false) Integer expiringWithinDays,
+            @Parameter(description = "-1 — faqat muddati o'tganlar") @RequestParam(required = false) Integer expiringWithinDays,
+            @Parameter(description = "Muddat guruhi: yaroqlilikka kamida shuncha kun qolgan (0 — o'tganlarsiz)") @RequestParam(required = false)
+                    Integer minDaysLeft,
             @Parameter(description = "Berilmasa: nom (muddat nazoratida — yaroqlilik)") @RequestParam(required = false) StockSort sort,
             @RequestParam(defaultValue = "false") boolean desc,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             Authentication auth) {
-        return query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, orderBy(sort, desc, expiringWithinDays != null),
+        return query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, minDaysLeft, orderBy(sort, desc, expiringWithinDays != null),
                 Math.max(page, 0), Math.clamp(size, 1, 200), auth);
     }
 
     /** Qoldiqlar .xlsx — jadvaldagi filtrlar bilan, ko'pi bilan {@value #MAX_EXPORT_ROWS} qator. Tannarx faqat special.cost bilan. */
+    record ExpiryGroup(@Schema(description = "EXPIRED, D30 (0–30), D90 (31–90), D180 (91–180)") String group, long batches, long qty,
+            @Schema(nullable = true, description = "Tannarxda — faqat special.cost") String value) {}
+
+    @GetMapping("/expiry-groups")
+    @PreAuthorize("hasAnyAuthority('stock.view', 'expiry.view')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Muddat nazorati — guruhlar", description = "Prototip «ExpiryControl» kartalari: partiya × zona soni, miqdor, tannarxda summa.")
+    List<ExpiryGroup> expiryGroups(@RequestParam(required = false) Long branchId, Authentication auth) {
+        Actor actor = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
+        boolean showCost = auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
+        LocalDate today = LocalDate.now(clock.withZone(TASHKENT));
+        StringBuilder where = new StringBuilder(" WHERE s.qty > 0 AND b.expiry_date <= :d180");
+        Map<String, Object> params = new HashMap<>();
+        params.put("today", Date.valueOf(today));
+        params.put("d30", Date.valueOf(today.plusDays(30)));
+        params.put("d90", Date.valueOf(today.plusDays(90)));
+        params.put("d180", Date.valueOf(today.plusDays(180)));
+        if (!actor.allBranches()) {
+            where.append(" AND s.branch_id = :own");
+            params.put("own", actor.branchId() == null ? -1L : actor.branchId());
+        }
+        if (branchId != null) {
+            where.append(" AND s.branch_id = :branch");
+            params.put("branch", branchId);
+        }
+        record Agg(String g, long batches, long qty, java.math.BigDecimal value) {}
+        Map<String, Agg> found = new HashMap<>();
+        jdbc.sql("""
+                SELECT g, count(*) AS batches, sum(qty) AS qty, sum(qty * cost) AS value FROM (
+                    SELECT CASE WHEN b.expiry_date < :today THEN 'EXPIRED' WHEN b.expiry_date <= :d30 THEN 'D30'
+                                WHEN b.expiry_date <= :d90 THEN 'D90' ELSE 'D180' END AS g, s.qty, b.cost
+                    FROM stock_balance s JOIN batch b ON b.id = s.batch_id""" + where + ") x GROUP BY g")
+                .params(params)
+                .query(Agg.class)
+                .list()
+                .forEach(a -> found.put(a.g(), a));
+        return java.util.stream.Stream.of("EXPIRED", "D30", "D90", "D180")
+                .map(g -> {
+                    Agg a = found.get(g);
+                    String value = showCost ? new Money(a == null || a.value() == null ? java.math.BigDecimal.ZERO : a.value()).toString() : null;
+                    return new ExpiryGroup(g, a == null ? 0 : a.batches(), a == null ? 0 : a.qty(), value);
+                })
+                .toList();
+    }
+
     @GetMapping("/export")
     @PreAuthorize("hasAnyAuthority('stock.view', 'expiry.view')")
     @Transactional(readOnly = true)
@@ -113,11 +160,12 @@ class StockController {
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean sellableOnly,
             @RequestParam(required = false) Integer expiringWithinDays,
+            @RequestParam(required = false) Integer minDaysLeft,
             @RequestParam(required = false) StockSort sort,
             @RequestParam(defaultValue = "false") boolean desc,
             Authentication auth,
             HttpServletResponse response) throws IOException {
-        StockPage data = query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, orderBy(sort, desc, expiringWithinDays != null), 0,
+        StockPage data = query(branchId, warehouseId, q, sellableOnly, expiringWithinDays, minDaysLeft, orderBy(sort, desc, expiringWithinDays != null), 0,
                 MAX_EXPORT_ROWS, auth);
         boolean showCost = auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -196,7 +244,8 @@ class StockController {
         };
     }
 
-    private StockPage query(Long branchId, Long warehouseId, String q, boolean sellableOnly, Integer expiringWithinDays, String orderBy,
+    private StockPage query(Long branchId, Long warehouseId, String q, boolean sellableOnly, Integer expiringWithinDays, Integer minDaysLeft,
+            String orderBy,
             int safePage, int safeSize, Authentication auth) {
         Actor actor = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
         boolean showCost = auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
@@ -220,7 +269,11 @@ class StockController {
         }
         if (expiringWithinDays != null) {
             where.append(" AND b.expiry_date <= :limit");
-            params.put("limit", Date.valueOf(today.plusDays(Math.max(0, expiringWithinDays))));
+            params.put("limit", Date.valueOf(today.plusDays(Math.max(-1, expiringWithinDays))));
+        }
+        if (minDaysLeft != null) {
+            where.append(" AND b.expiry_date >= :minExp");
+            params.put("minExp", Date.valueOf(today.plusDays(Math.max(0, minDaysLeft))));
         }
         String nq = SearchText.normalize(q);
         if (!nq.isEmpty()) {

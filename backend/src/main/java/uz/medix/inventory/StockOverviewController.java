@@ -418,7 +418,7 @@ class StockOverviewController {
     }
 
     @GetMapping("/batch")
-    @PreAuthorize("hasAuthority('stock.view')")
+    @PreAuthorize("hasAnyAuthority('stock.view', 'expiry.view')")
     @Transactional(readOnly = true)
     @Operation(summary = "Partiya kartasi (BatchPanel)", description = "Partiya × zona: muddat, taqsimot (mavjud / band / yopiq), tafsilotlar, "
             + "kirim hujjati va shu zonadagi barcha harakatlar (qoldiq bilan). Filial doirasida.")

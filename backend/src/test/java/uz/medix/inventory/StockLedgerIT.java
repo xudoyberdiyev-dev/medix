@@ -388,6 +388,25 @@ class StockLedgerIT {
                 .andExpect(jsonPath("$.cost").doesNotExist());
         mvc.perform(get("/api/stock/batch").param("batchId", String.valueOf(b2)).param("zoneId", String.valueOf(p.mainZone())).cookie(admin))
                 .andExpect(status().isNotFound());
+        mvc.perform(get("/api/stock/expiry-groups").param("branchId", br).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[0].group").value("EXPIRED"))
+                .andExpect(jsonPath("$[0].batches").value(0))
+                .andExpect(jsonPath("$[1].group").value("D30"))
+                .andExpect(jsonPath("$[1].batches").value(1))
+                .andExpect(jsonPath("$[1].qty").value(3))
+                .andExpect(jsonPath("$[1].value").value("3000.00"))
+                .andExpect(jsonPath("$[2].batches").value(0));
+        mvc.perform(get("/api/stock/expiry-groups").param("branchId", br).cookie(keeper)).andExpect(jsonPath("$[1].value").doesNotExist());
+        mvc.perform(get("/api/stock").param("branchId", br).param("q", "jamlanma qoldiq").param("expiringWithinDays", "30")
+                        .param("minDaysLeft", "0").cookie(admin))
+                .andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/api/stock").param("branchId", br).param("q", "jamlanma qoldiq").param("expiringWithinDays", "-1").cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/stock").param("branchId", br).param("q", "jamlanma qoldiq").param("expiringWithinDays", "90")
+                        .param("minDaysLeft", "31").cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
         Cookie accountant = loginAs("ACCOUNTANT", null);
         mvc.perform(get("/api/stock/products").cookie(accountant)).andExpect(status().isForbidden());
     }
