@@ -45,8 +45,8 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
 
   await login(page, CEO_LOGIN, CEO_INITIAL);
   await changePassword(page, CEO_INITIAL, CEO_PASSWORD);
-  await expect(page).toHaveURL(/\/$/);
-  await page.getByRole("link", { name: "Sozlash ustasini ochish" }).click();
+  // Kompaniya sozlanmagan — Direktor avtomatik sozlash ustasiga o'tkaziladi (egasi talabi 08.11)
+  await expect(page).toHaveURL(/\/setup$/);
 
   // 1. Kompaniya
   await field(page, "Kompaniya (guruh) nomi").fill("Medix Group");
