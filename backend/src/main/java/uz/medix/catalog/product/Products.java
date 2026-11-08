@@ -449,7 +449,7 @@ public class Products {
         if (vat.compareTo(BigDecimal.ZERO) < 0 || vat.compareTo(BigDecimal.valueOf(100)) > 0) {
             throw MedixException.badRequest("validation.vatRate");
         }
-        if (r.vatExempt() && vat.signum() != 0) {
+        if (Boolean.TRUE.equals(r.vatExempt()) && vat.signum() != 0) {
             throw MedixException.badRequest("product.vatExemptRate");
         }
         Set<String> barcodes = new LinkedHashSet<>();
@@ -494,7 +494,7 @@ public class Products {
         p.put("pack", r.packQty());
         p.put("perPack", r.perPack());
         p.put("note", blankToNull(r.note()));
-        p.put("vatExempt", r.vatExempt());
+        p.put("vatExempt", Boolean.TRUE.equals(r.vatExempt()));
         return new Normalized(p, barcodes);
     }
 

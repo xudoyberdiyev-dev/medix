@@ -115,7 +115,7 @@ final class ProductModels {
             @Schema(nullable = true) @Size(max = 1000) String note,
             @Schema(nullable = true, description = "Yangi mahsulot: berilsa shu kod (band bo'lsa 409), aks holda avtomatik; tahrirda — farq qilsa kod o'zgartiriladi (tarixga)")
             @Pattern(regexp = "^[1-9][0-9]{7}$", message = "{validation.productCode}") String code,
-            @Schema(description = "QQSdan ozod — vatRate 0 bo'lishi shart") boolean vatExempt) {}
+            @Schema(nullable = true, description = "QQSdan ozod — vatRate 0 bo'lishi shart (berilmasa — yo'q)") Boolean vatExempt) {}
 
     /** Shakl uchun bo'sh kod taklifi. */
     record NewCode(String code) {}
