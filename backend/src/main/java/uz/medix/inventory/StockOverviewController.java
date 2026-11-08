@@ -6,9 +6,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,7 +99,7 @@ class StockOverviewController {
             @Schema(description = "0–90 kun ichida tugaydigan partiyalar") long near,
             long expired,
             @Schema(description = "Karantindagi partiyalar") long quarantine,
-            @Schema(description = "Yo'lda (ombor ko'chirishi jo'natilgan, qabul qilinmagan) — dona") long transitQty,
+            @Schema(description = "Yo'lda (OK va FS jo'natilgan, qabul qilinmagan + hal qilinmagan kamomad) — dona") long transitQty,
             long transitDocs,
             @Schema(description = "Variantlar soni — partiya × zona qatorlari, filial doirasida") List<Facet> warehouses,
             List<Facet> manufacturers,
@@ -119,6 +122,22 @@ class StockOverviewController {
             @Schema(description = "Turli mahsulotlar soni") long products,
             long qty,
             @Schema(nullable = true, description = "Tannarxda — faqat special.cost") String value) {}
+
+    record TransitRow(
+            @Schema(description = "OK — ombor ko'chirishi, FS — filiallararo savdo") String kind,
+            long docId,
+            String number,
+            String fromBranch,
+            String fromWarehouse,
+            String toBranch,
+            String toWarehouse,
+            long productId,
+            String productName,
+            String batchNumber,
+            @Schema(description = "Yo'ldagi (yoki kamomad bo'lsa — hal qilinmagan) miqdor") long qty,
+            @Schema(nullable = true, description = "Tannarxda — faqat special.cost") String value,
+            @Schema(description = "Qabul qilingan, lekin yetishmagan va hal qilinmagan miqdor") boolean shortage,
+            @Schema(nullable = true) OffsetDateTime sentAt) {}
 
     private final JdbcClient jdbc;
     private final CurrentActor currentActor;
@@ -304,19 +323,9 @@ class StockOverviewController {
                 .param("warn", EXPIRY_WARN_DAYS)
                 .query(Kpi.class)
                 .single();
-        StringBuilder tw = new StringBuilder(" WHERE t.status = 'IN_TRANSIT'");
-        if (params.containsKey("own")) {
-            tw.append(" AND t.branch_id = :own");
-        }
-        if (params.containsKey("branch")) {
-            tw.append(" AND t.branch_id = :branch");
-        }
-        record Transit(long qty, long docs) {}
-        Transit tr = jdbc.sql("SELECT coalesce(sum(l.qty), 0) AS qty, count(DISTINCT t.id) AS docs FROM warehouse_transfer t"
-                        + " JOIN warehouse_transfer_line l ON l.transfer_id = t.id" + tw)
-                .params(params)
-                .query(Transit.class)
-                .single();
+        List<TransitRow> transit = transitRows(actor, branchId, false);
+        long transitQty = transit.stream().mapToLong(TransitRow::qty).sum();
+        long transitDocs = transit.stream().map(r -> r.kind() + r.number()).distinct().count();
         boolean all = !params.containsKey("own") && !params.containsKey("branch");
         String whName = all ? "w.name || ' · ' || br.code" : "w.name";
         List<Facet> warehouses = facets(cte, "bal.warehouse_id", whName,
@@ -343,7 +352,7 @@ class StockOverviewController {
                 .query(CodeCount.class)
                 .list();
         return new StockSummary(k.products(), showCost(auth) ? new Money(k.value()).toString() : null, k.near(), k.expired(), k.quarantine(),
-                tr.qty(), tr.docs(), warehouses, manufacturers, categories, countries, supplyBy, suppliers, zones, exp);
+                transitQty, transitDocs, warehouses, manufacturers, categories, countries, supplyBy, suppliers, zones, exp);
     }
 
     @GetMapping("/tree")
@@ -377,6 +386,73 @@ class StockOverviewController {
                             showCost ? new Money(rs.getBigDecimal("value")).toString() : null);
                 })
                 .list();
+    }
+
+    @GetMapping("/transit")
+    @PreAuthorize("hasAuthority('stock.view')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Yo'ldagi tovar", description = "Jo'natilgan, qabul qilinmagan OK va FS qatorlari hamda qabulda yetishmagan, hal qilinmagan "
+            + "miqdorlar (prototip «Yo'lda»). Filial doirasi: jo'natuvchi yoki qabul qiluvchi filial.")
+    List<TransitRow> transit(@RequestParam(required = false) Long branchId, Authentication auth) {
+        return transitRows(actor(), branchId, showCost(auth));
+    }
+
+    private List<TransitRow> transitRows(Actor actor, Long branchId, boolean showCost) {
+        Map<String, Object> params = new HashMap<>();
+        List<Long> scope = new ArrayList<>();
+        if (!actor.allBranches()) {
+            scope.add(actor.branchId() == null ? -1L : actor.branchId());
+        }
+        if (branchId != null) {
+            scope.add(branchId);
+        }
+        String okScope = "";
+        String fsScope = "";
+        for (int i = 0; i < scope.size(); i++) {
+            params.put("b" + i, scope.get(i));
+            okScope += " AND t.branch_id = :b" + i;
+            fsScope += " AND (t.seller_branch_id = :b" + i + " OR t.buyer_branch_id = :b" + i + ")";
+        }
+        String cols = """
+                t.id AS doc_id, t.number, fb.code AS from_branch, fw.name AS from_wh, tb.code AS to_branch, tw.name AS to_wh,
+                l.product_id, p.name AS product_name, b.number AS batch_number, b.cost, t.sent_at, t.status, l.line_no,
+                CASE WHEN t.status = 'IN_TRANSIT' THEN l.qty ELSE l.qty - coalesce(l.received_qty, 0) END AS qty""";
+        String joins = """
+                JOIN batch b ON b.id = l.batch_id JOIN product p ON p.id = l.product_id
+                JOIN warehouse fw ON fw.id = t.from_warehouse_id JOIN branch fb ON fb.id = fw.branch_id
+                JOIN warehouse tw ON tw.id = t.to_warehouse_id JOIN branch tb ON tb.id = tw.branch_id""";
+        String sql = "SELECT 'OK' AS kind, " + cols + ", t.shortage_qty - coalesce((SELECT sum(r.qty) FROM warehouse_transfer_resolution r"
+                + " WHERE r.transfer_id = t.id), 0) AS left_qty FROM warehouse_transfer t JOIN warehouse_transfer_line l ON l.transfer_id = t.id "
+                + joins + " WHERE (t.status = 'IN_TRANSIT' OR (t.status = 'RECEIVED' AND t.shortage_qty > 0))" + okScope
+                + " UNION ALL SELECT 'FS' AS kind, " + cols + ", t.shortage_qty - coalesce((SELECT sum(r.qty) FROM branch_sale_resolution r"
+                + " WHERE r.sale_id = t.id), 0) AS left_qty FROM branch_sale t JOIN branch_sale_line l ON l.sale_id = t.id "
+                + joins + " WHERE (t.status = 'IN_TRANSIT' OR (t.status = 'RECEIVED' AND t.shortage_qty > 0))" + fsScope
+                + " ORDER BY sent_at DESC NULLS LAST, number, line_no";
+        // Kamomad hujjat bo'yicha hal qilinadi — hal qilinmagan qoldiq qatorlarga tartib bo'yicha taqsimlanadi
+        Map<String, Long> left = new HashMap<>();
+        List<TransitRow> out = new ArrayList<>();
+        jdbc.sql(sql).params(params).query(rs -> {
+            boolean shortage = "RECEIVED".equals(rs.getString("status"));
+            long qty = rs.getLong("qty");
+            if (shortage) {
+                String key = rs.getString("kind") + rs.getLong("doc_id");
+                long docLeft = Math.max(0, rs.getLong("left_qty"));
+                long rest = left.getOrDefault(key, docLeft);
+                qty = Math.min(qty, rest);
+                left.put(key, rest - qty);
+            }
+            if (qty <= 0) {
+                return;
+            }
+            BigDecimal cost = rs.getBigDecimal("cost");
+            Timestamp sent = rs.getTimestamp("sent_at");
+            out.add(new TransitRow(rs.getString("kind"), rs.getLong("doc_id"), rs.getString("number"), rs.getString("from_branch"),
+                    rs.getString("from_wh"), rs.getString("to_branch"), rs.getString("to_wh"), rs.getLong("product_id"),
+                    rs.getString("product_name"), rs.getString("batch_number"), qty,
+                    showCost && cost != null ? new Money(cost.multiply(BigDecimal.valueOf(qty))).toString() : null, shortage,
+                    sent == null ? null : sent.toInstant().atOffset(ZoneOffset.UTC)));
+        });
+        return out;
     }
 
     private List<Facet> facets(String cte, String idExpr, String nameExpr, String joins, Map<String, Object> params) {
