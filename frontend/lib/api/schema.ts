@@ -3423,7 +3423,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kirimlar */
+        /**
+         * Kirimlar
+         * @description Yorliqlar soni (holat filtrisiz), filtr variantlari va kartalar bilan.
+         */
         get: operations["list_7"];
         put?: never;
         /**
@@ -8252,6 +8255,26 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
         };
+        ReceiptFacet: {
+            /** Format: int64 */
+            count: number;
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
+        ReceiptKpi: {
+            /** Format: int64 */
+            accepted: number;
+            /** Format: int64 */
+            bonusGoodsMonth: number;
+            /** Format: int64 */
+            drafts: number;
+            expectedBonus?: string;
+            /** Format: int64 */
+            expectedBonusDocs: number;
+            /** Format: int64 */
+            oldDrafts: number;
+        };
         ReceiptLine: {
             batch?: string;
             batchNumber: string;
@@ -8305,16 +8328,16 @@ export interface components {
         };
         ReceiptPage: {
             items: components["schemas"]["ReceiptSummary"][];
+            kpi: components["schemas"]["ReceiptKpi"];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
             size: number;
-            /** Format: int64 */
-            total: number;
             statuses: components["schemas"]["ReceiptStatusCount"][];
             suppliers: components["schemas"]["ReceiptFacet"][];
+            /** Format: int64 */
+            total: number;
             warehouses: components["schemas"]["ReceiptFacet"][];
-            kpi: components["schemas"]["ReceiptKpi"];
         };
         ReceiptRequest: {
             /** Format: date */
@@ -8349,21 +8372,43 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
         };
+        ReceiptStatusCount: {
+            /** Format: int64 */
+            count: number;
+            /** @enum {string} */
+            status?: "DRAFT" | "ACCEPTED" | "POSTED" | "CANCELLED";
+        };
         ReceiptSummary: {
             amount?: string;
+            /** @description Chegirma (bonus) summasi — faqat narx ko'rish huquqi bilan */
+            bonusAmount?: string;
+            /** @description BNS hujjati bor — bonus balansga tushgan */
+            bonusConfirmed: boolean;
+            /** Format: date */
+            bonusDate?: string;
+            /**
+             * Format: int64
+             * @description Bonus tovar (bepul) — dona
+             */
+            bonusQty: number;
             /** Format: int64 */
             branchId: number;
+            cancelReason?: string;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
             /** Format: date */
             dueDate?: string;
+            fromBonus: boolean;
             /** Format: int64 */
             id: number;
             invoiceNumber?: string;
             /** Format: int32 */
             lines: number;
             number: string;
+            owner?: string;
+            /** @enum {string} */
+            paymentType: "CASH" | "TRANSFER" | "ONLINE";
             prepaid: boolean;
             /** Format: date */
             receiptDate: string;
@@ -8375,17 +8420,6 @@ export interface components {
             /** Format: int64 */
             totalQty: number;
             warehouse: string;
-            /** @enum {string} */
-            paymentType: "CASH" | "TRANSFER" | "ONLINE";
-            owner?: string;
-            fromBonus: boolean;
-            /** Format: int64 */
-            bonusQty: number;
-            bonusAmount?: string;
-            /** Format: date */
-            bonusDate?: string;
-            bonusConfirmed: boolean;
-            cancelReason?: string;
         };
         ReceiveLineRequest: {
             /** Format: int64 */
@@ -9675,32 +9709,6 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
-        };
-        ReceiptStatusCount: {
-            /** @enum {string} */
-            status?: "DRAFT" | "ACCEPTED" | "POSTED" | "CANCELLED";
-            /** Format: int64 */
-            count: number;
-        };
-        ReceiptFacet: {
-            /** Format: int64 */
-            id: number;
-            name: string;
-            /** Format: int64 */
-            count: number;
-        };
-        ReceiptKpi: {
-            /** Format: int64 */
-            drafts: number;
-            /** Format: int64 */
-            oldDrafts: number;
-            /** Format: int64 */
-            accepted: number;
-            expectedBonus?: string;
-            /** Format: int64 */
-            expectedBonusDocs: number;
-            /** Format: int64 */
-            bonusGoodsMonth: number;
         };
     };
     responses: never;
