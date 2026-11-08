@@ -1,3 +1,4 @@
+import { addStaff } from "./staff-helper";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
@@ -161,7 +162,8 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await expect(page.getByText("Markaziy ombor")).toBeVisible();
   await page.goto("/settings/employees");
   await expect(page.getByRole("cell", { name: "operator.1", exact: true })).toBeVisible();
-  await expect(page.getByText("Parol almashtirilmagan")).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: "operator.1" })).toContainText("Kirmagan — parol bir martalik");
+  await expect(page.getByRole("tab", { name: /Kirmagan/ })).toBeVisible();
 
   // Profil: PIN oʻrnatish
   await page.goto("/profile");
@@ -413,15 +415,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
 
   // E1 (07.11): markirovkasiz buyurtma ham Markirovkachidan «Tasdiqlash» bilan oʻtadi
   await page.goto("/settings/employees");
-  await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
-  const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
-  await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill("Malika Markirovkachi");
-  await dialog.getByLabel(/^Login\s*\*?$/).fill("marker.0");
-  await choose(page, "Rol", /^Markirovkachi$/);
-  await choose(page, "Filial", /Toshkent/);
-  await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(OPERATOR_TEMP);
-  await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
-  await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
+  await addStaff(page, { name: "Malika Markirovkachi", login: "marker.0", role: /^Markirovkachi$/, password: OPERATOR_TEMP });
   const marker = await page
     .context()
     .browser()!

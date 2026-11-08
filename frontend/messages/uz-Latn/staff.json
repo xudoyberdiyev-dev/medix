@@ -96,5 +96,14 @@
   "next": "Keyingi qadam",
   "noRows": "Mos xodim topilmadi",
   "saveErr": "Saqlanmadi",
-  "loadErr": "Xodimlar yuklanmadi"
+  "loadErr": "Xodimlar yuklanmadi",
+  "xdSub": "Har xodimda bitta rol va bitta filial. Hech kim oʻchirilmaydi — faqat bloklanadi.",
+  "lastLogin": "Oxirgi kirish",
+  "never": "Hech qachon",
+  "v": {
+    "all": "Hammasi",
+    "never": "Kirmagan",
+    "blocked": "Bloklangan",
+    "week": "Bu hafta kirmagan"
+  }
 }

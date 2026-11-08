@@ -1,3 +1,4 @@
+import { addStaff } from "./staff-helper";
 import { expect, test, type Page } from "@playwright/test";
 
 /**
@@ -70,16 +71,7 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
 
   await page.goto("/settings/employees");
   for (const s of STAFF) {
-    await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
-    const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
-    await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill(s.name);
-    await dialog.getByLabel(/^Login\s*\*?$/).fill(s.login);
-    await choose(page, "Rol", s.role);
-    await choose(page, "Filial", /Toshkent/);
-    await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(TEMP);
-    await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
-    await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
-    await expect(page.getByRole("cell", { name: s.login, exact: true })).toBeVisible();
+    await addStaff(page, { ...s, password: TEMP });
   }
   // E3: Direktor Buxgalterga barcha filiallar doirasini beradi (audit bilan)
   await page.getByRole("row").filter({ hasText: "accountant.1" }).getByRole("button", { name: "Amallar" }).click();
@@ -634,14 +626,7 @@ test("CEO: Direktor xodimi va mijozga kichik kredit limiti", async ({ page }) =>
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/settings/employees");
-  await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
-  const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
-  await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill("Dilshod Direktorov");
-  await dialog.getByLabel(/^Login\s*\*?$/).fill("director.1");
-  await choose(page, "Rol", /^Direktor$/);
-  await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(TEMP);
-  await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
-  await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
+  await addStaff(page, { name: "Dilshod Direktorov", login: "director.1", role: /^Direktor$/, password: TEMP });
 
   await page.goto("/customers");
   await page.getByRole("cell", { name: CUSTOMER }).first().click();

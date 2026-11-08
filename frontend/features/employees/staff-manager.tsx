@@ -29,14 +29,16 @@ import { Modal } from "@/components/ui/modal";
 import { MultiFilter } from "@/components/ui/multi-filter";
 import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
-import { EmptyState, ErrorState } from "@/components/ui/system-states";
+import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { useCan } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useRoleMatrix } from "@/features/roles/roles-matrix";
 import { describeError } from "@/features/setup/form-error";
-import { api, unwrap } from "@/lib/api/client";
+import { ApiError, api, unwrap } from "@/lib/api/client";
+import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import {
   useBlockEmployee,
@@ -45,6 +47,7 @@ import {
   useLoginCheck,
   useResetPassword,
   useSeats,
+  useSetAllBranches,
   useUnblockEmployee,
   useUpdateEmployee,
   type Employee,
@@ -112,8 +115,14 @@ export function StaffManager({
   onBack?: () => void;
   onNext?: () => void;
 }) {
+  const page = !stepOf;
+  const te = useTranslations("employees");
+  const allowed = useCan();
+  const readOnly = !allowed("staff.edit");
+
   const t = useTranslations("staff");
   const me = useMe();
+  const isDirector = me.data?.role.code === "DIRECTOR";
   const list = useEmployees();
   const seatsQ = useSeats();
   const matrix = useRoleMatrix();
@@ -121,6 +130,10 @@ export function StaffManager({
   const update = useUpdateEmployee();
   const block = useBlockEmployee();
   const unblock = useUnblockEmployee();
+  const setAll = useSetAllBranches();
+  const [view, setView] = useState<"all" | "never" | "blocked" | "week">("all");
+  const [e3, setE3] = useState<Employee | null>(null);
+  const [weekAgo] = useState(() => Date.now() - 7 * 24 * 3600 * 1000);
   const reset = useResetPassword();
   const cashes = useQueries({
     queries: branches.map((b) => ({
@@ -301,15 +314,24 @@ export function StaffManager({
     };
   });
 
+  const inView = (e: Employee, v: typeof view) =>
+    v === "never"
+      ? !e.lastLoginAt
+      : v === "blocked"
+        ? e.status === "BLOCKED"
+        : v === "week"
+          ? !(e.lastLoginAt && new Date(e.lastLoginAt).getTime() >= weekAgo)
+          : true;
   const ql = q.trim().toLocaleLowerCase("uz");
   const rows = emps.filter(
     (e) =>
       (!ql || `${displayName(e)} ${e.fullName} ${e.login}`.toLocaleLowerCase("uz").includes(ql)) &&
       (!fRole.length || fRole.includes(e.roleCode)) &&
       (!fBranch.length || fBranch.includes(e.branchId ? String(e.branchId) : "ALL")) &&
-      (!fStatus.length || fStatus.includes(staffStatus(e))),
+      (!fStatus.length || fStatus.includes(staffStatus(e))) &&
+      (!page || inView(e, view)),
   );
-  const only = emps.length <= 1 && emps.every((e) => e.roleCode === "DIRECTOR");
+  const only = !page && emps.length <= 1 && emps.every((e) => e.roleCode === "DIRECTOR");
   const cntBy = (pred: (e: Employee) => boolean) => emps.filter(pred).length;
 
   const columns: TableColumn<Employee>[] = [
@@ -328,10 +350,38 @@ export function StaffManager({
         </span>
       ),
     },
-    { key: "role", title: t("cRole"), render: (e) => roleOf(e.roleCode)?.name ?? e.roleName },
+    {
+      key: "role",
+      title: t("cRole"),
+      render: (e) => (
+        <span className="flex flex-wrap items-center gap-1.5">
+          {roleOf(e.roleCode)?.name ?? e.roleName}
+          {e.allBranches ? (
+            <Badge tone="primary" icon={Building2}>
+              {te("allBranches.badge")}
+            </Badge>
+          ) : null}
+        </span>
+      ),
+    },
     { key: "branch", title: t("cBranch"), width: 130, render: (e) => branchName(e.branchId) },
     { key: "login", title: t("cLogin"), width: 150, mono: true },
     { key: "phone", title: t("cPhone"), width: 160, render: (e) => e.phone ?? "—" },
+    ...(page
+      ? [
+          {
+            key: "lastLogin",
+            title: t("lastLogin"),
+            width: 150,
+            render: (e: Employee) =>
+              e.lastLoginAt ? (
+                <span className="font-mono">{formatDateTime(new Date(e.lastLoginAt))}</span>
+              ) : (
+                <span className="text-text-muted">{t("never")}</span>
+              ),
+          },
+        ]
+      : []),
     {
       key: "status",
       title: t("cStatus"),
@@ -363,6 +413,16 @@ export function StaffManager({
       : e.roleCode === "DIRECTOR" || e.id === me.data?.id
         ? []
         : [
+            ...(isDirector && e.roleCode === "ACCOUNTANT"
+              ? [
+                  {
+                    key: "e3",
+                    label: e.allBranches ? te("allBranches.revoke") : te("allBranches.grant"),
+                    icon: <Icon icon={Building2} />,
+                    onSelect: () => setE3(e),
+                  },
+                ]
+              : []),
             {
               key: "block",
               label: t("mBlock"),
@@ -385,11 +445,12 @@ export function StaffManager({
   const warn = limit !== null && seats.used >= limit - 2;
   const atLimit = limit !== null && seats.used >= limit;
 
-  const addBtn = (
+  const addBtn = readOnly ? null : (
     <Button icon={Plus} onClick={openNew}>
       {t("add")}
     </Button>
   );
+  const views = (["all", "never", "blocked", "week"] as const).map((k) => ({ k, n: emps.filter((e) => inView(e, k)).length }));
 
   return (
     <div className={cn("flex min-h-0 flex-col", stepOf && "min-h-[calc(100dvh-64px)]")}>
@@ -397,8 +458,15 @@ export function StaffManager({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-col">
             {stepOf ? <span className="text-caption font-medium text-primary-button">{stepOf}</span> : null}
-            <h1 className={cn("text-[26px] leading-[32px] font-semibold tracking-[-0.01em]", stepOf && "mt-[6px]")}>{t("t5")}</h1>
-            <p className="mt-[8px] max-w-[720px] text-body text-pretty text-text-secondary">{t("d5")}</p>
+            {page ? (
+              <h1 className="flex items-baseline gap-2 text-page-title">
+                {t("t5")}
+                <span className="text-body font-normal text-text-secondary">{emps.length}</span>
+              </h1>
+            ) : (
+              <h1 className="mt-[6px] text-[26px] leading-[32px] font-semibold tracking-[-0.01em]">{t("t5")}</h1>
+            )}
+            <p className="mt-[8px] max-w-[720px] text-body text-pretty text-text-secondary">{page ? t("xdSub") : t("d5")}</p>
           </div>
           {addBtn}
         </div>
@@ -416,7 +484,11 @@ export function StaffManager({
           {atLimit ? <span className="text-table text-warning">{t("limitT", { m: limit ?? 0 })}</span> : null}
         </div>
 
-        {list.error ? (
+        {list.error instanceof ApiError && list.error.isForbidden ? (
+          <div className="rounded-card border border-border bg-surface">
+            <ForbiddenState description={te("forbidden")} />
+          </div>
+        ) : list.error ? (
           <div className="rounded-card border border-border bg-surface">
             <ErrorState description={t("loadErr")} onRetry={() => list.refetch()} />
           </div>
@@ -445,6 +517,27 @@ export function StaffManager({
               </div>
             </section>
 
+            {page ? (
+              <div role="tablist" aria-label={t("t5")} className="flex flex-wrap gap-1 border-b border-border">
+                {views.map((v) => (
+                  <button
+                    key={v.k}
+                    type="button"
+                    role="tab"
+                    aria-selected={view === v.k}
+                    onClick={() => setView(v.k)}
+                    className={cn(
+                      "-mb-px flex h-[38px] items-center gap-1.5 border-b-2 px-3 text-table",
+                      view === v.k ? "border-primary-button font-medium text-text-primary" : "border-transparent text-text-secondary",
+                      v.k === "blocked" && v.n > 0 && view !== v.k && "text-warning",
+                    )}
+                  >
+                    {t(`v.${v.k}`)}
+                    <span className="rounded-full bg-background px-1.5 text-caption text-text-secondary">{v.n}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2">
               <div className="w-[260px] max-w-full">
                 <TextField label={t("searchEmp")} variant="search" size="sm" value={q} onChange={setQ} placeholder={t("searchEmp")} />
@@ -495,8 +588,8 @@ export function StaffManager({
               rows={rows}
               rowKey={(e) => String(e.id)}
               loading={list.isLoading}
-              onRowClick={openEdit}
-              rowActions={(e) => <RowMenu items={rowItems(e)} label={t("rowMenu")} />}
+              onRowClick={readOnly ? undefined : openEdit}
+              rowActions={readOnly ? undefined : (e) => <RowMenu items={rowItems(e)} label={t("rowMenu")} />}
               emptyState={<EmptyState icon={UsersRound} title={t("noRows")} description={t("searchEmp")} />}
             />
           </>
@@ -785,6 +878,44 @@ export function StaffManager({
             error={reasonTried && !reason.trim() ? t("blockReq") : undefined}
           />
         </div>
+      </Modal>
+
+      <Modal
+        open={!!e3}
+        onClose={() => setE3(null)}
+        title={
+          e3
+            ? e3.allBranches
+              ? te("allBranches.revokeTitle", { name: e3.fullName })
+              : te("allBranches.grantTitle", { name: e3.fullName })
+            : ""
+        }
+        size="sm"
+        primaryAction={{
+          label: e3?.allBranches ? te("allBranches.revoke") : te("allBranches.grant"),
+          loading: setAll.isPending,
+          onClick: () => {
+            if (!e3) return;
+            const enable = !e3.allBranches;
+            setAll.mutate(
+              { id: e3.id, enabled: enable },
+              {
+                onSuccess: () => {
+                  setE3(null);
+                  toast({
+                    tone: "success",
+                    title: enable ? te("allBranches.granted") : te("allBranches.revoked"),
+                    description: e3.fullName,
+                  });
+                },
+              },
+            );
+          },
+        }}
+        secondaryAction={{ label: t("cancel"), onClick: () => setE3(null) }}
+      >
+        <p className="text-text-secondary">{e3?.allBranches ? te("allBranches.revokeHint") : te("allBranches.grantHint")}</p>
+        <p className="mt-2 text-text-secondary">{te("allBranches.sessions")}</p>
       </Modal>
 
       <Modal
