@@ -30,6 +30,8 @@ const vendor = {
     if (v) return route.fulfill({ path: path.join(root, "vendor", v), contentType: "text/javascript" });
     return route.fulfill({ status: 200, body: "", contentType: "text/css" });
   });
+  // INIT_LS='{"kalit":"qiymat"}' — sahifa yuklanishidan oldin localStorage (masalan, usta qadami: {"medix-wizard-v1":"{\"step\":4}"})
+  if (process.env.INIT_LS) await p.addInitScript((kv) => { for (const [k, v] of Object.entries(JSON.parse(kv))) localStorage.setItem(k, v); }, process.env.INIT_LS);
   const errs = [];
   p.on("pageerror", (e) => errs.push(e.message));
   await p.goto(`http://localhost:${port}/${encodeURIComponent(screen)}.dc.html`);

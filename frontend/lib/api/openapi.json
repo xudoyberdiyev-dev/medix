@@ -9909,6 +9909,34 @@
         },
         "summary" : "Ruxsatlar matritsasi",
         "tags" : [ "roles" ]
+      },
+      "put" : {
+        "description" : "Rollar (nom, tavsif, doira, bosh sahifa, faollik), ruxsatlar va yangi rollar — bitta tranzaksiyada. Direktor roli o'zgarmaydi. Xodimning keyingi kirishida kuchga kiradi.",
+        "operationId" : "save",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SaveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Matrix"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Matritsani saqlash",
+        "tags" : [ "roles" ]
       }
     },
     "/api/roles/{code}/copy" : {
@@ -17752,6 +17780,19 @@
         },
         "required" : [ "bank", "cash", "terminal", "total" ]
       },
+      "LastChange" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "by" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at" ]
+      },
       "License" : {
         "type" : "object",
         "properties" : {
@@ -18250,6 +18291,16 @@
       "Matrix" : {
         "type" : "object",
         "properties" : {
+          "defaults" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "description" : "Standart rol kodi → standart ruxsatlar («Standartga qaytarish»)"
+          },
           "grants" : {
             "type" : "object",
             "additionalProperties" : {
@@ -18259,6 +18310,10 @@
               }
             },
             "description" : "Rol kodi → ruxsat kalitlari"
+          },
+          "lastChange" : {
+            "$ref" : "#/components/schemas/LastChange",
+            "description" : "Oxirgi o'zgarish"
           },
           "permissions" : {
             "type" : "array",
@@ -18273,7 +18328,7 @@
             }
           }
         },
-        "required" : [ "grants", "permissions", "roles" ]
+        "required" : [ "defaults", "grants", "permissions", "roles" ]
       },
       "MeResponse" : {
         "type" : "object",
@@ -20379,14 +20434,32 @@
           "description" : {
             "type" : "string"
           },
+          "group" : {
+            "type" : "string",
+            "description" : "Matritsa guruhi",
+            "enum" : [ "sales", "wh", "money", "ref", "rep", "admin", "special" ]
+          },
           "key" : {
             "type" : "string"
           },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "view", "create", "cancel", "approve", "special" ]
+          },
+          "lock" : {
+            "type" : "string",
+            "description" : "dir — faqat Direktorda; excl — Direktorga avtomatik berilmaydi",
+            "enum" : [ "dir", "excl" ]
+          },
           "module" : {
             "type" : "string"
+          },
+          "page" : {
+            "type" : "string",
+            "description" : "Bog'liq sahifa: amal uchun <page>.view kerak"
           }
         },
-        "required" : [ "description", "key", "module" ]
+        "required" : [ "description", "group", "key", "kind", "module" ]
       },
       "PermissionsRequest" : {
         "type" : "object",
@@ -23040,13 +23113,24 @@
       "Role" : {
         "type" : "object",
         "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
           "code" : {
+            "type" : "string"
+          },
+          "description" : {
             "type" : "string"
           },
           "employeeCount" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Biriktirilgan xodimlar soni"
+            "description" : "Biriktirilgan faol xodimlar soni"
+          },
+          "home" : {
+            "type" : "string",
+            "description" : "Bosh sahifa turi",
+            "enum" : [ "director", "branch", "operator", "purchase", "keeper", "cashier", "accountant", "picker", "marker", "driver" ]
           },
           "id" : {
             "type" : "integer",
@@ -23055,12 +23139,51 @@
           "name" : {
             "type" : "string"
           },
+          "scope" : {
+            "type" : "string",
+            "description" : "all — barcha filiallar, own — o'z filiali",
+            "enum" : [ "all", "own" ]
+          },
           "system" : {
             "type" : "boolean",
             "description" : "Standart rol: o'chirilmaydi"
           }
         },
-        "required" : [ "code", "employeeCount", "id", "name", "system" ]
+        "required" : [ "active", "code", "employeeCount", "home", "id", "name", "scope", "system" ]
+      },
+      "RoleDraft" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "copiedFrom" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "home" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "scope" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "home", "name", "permissions", "scope" ]
       },
       "RoleRef" : {
         "type" : "object",
@@ -23068,11 +23191,16 @@
           "code" : {
             "type" : "string"
           },
+          "home" : {
+            "type" : "string",
+            "description" : "Bosh sahifa turi (Rollar matritsasidan)",
+            "enum" : [ "director", "branch", "operator", "purchase", "keeper", "cashier", "accountant", "picker", "marker", "driver" ]
+          },
           "name" : {
             "type" : "string"
           }
         },
-        "required" : [ "code", "name" ]
+        "required" : [ "code", "home", "name" ]
       },
       "SaleLine" : {
         "type" : "object",
@@ -23199,6 +23327,18 @@
           }
         },
         "required" : [ "key", "name", "net", "orders", "returns", "sales" ]
+      },
+      "SaveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleDraft"
+            }
+          }
+        },
+        "required" : [ "roles" ]
       },
       "ScanRequest" : {
         "type" : "object",

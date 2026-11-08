@@ -37,6 +37,8 @@ export interface WizardFrameProps {
   nextLabel?: string;
   nextDisabled?: boolean;
   nextLoading?: boolean;
+  /** Keng rejim (prototip 4–5-qadamlar): yon ustun va umumiy pastki panelsiz — tarkib oʻzi chizadi. */
+  wide?: boolean;
   children: ReactNode;
 }
 
@@ -57,6 +59,7 @@ export function WizardFrame({
   nextDisabled,
   nextLoading,
   children,
+  wide,
 }: WizardFrameProps) {
   const t = useTranslations("setup");
   const me = useMe();
@@ -135,41 +138,47 @@ export function WizardFrame({
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1088px] grid-cols-1 gap-[40px] px-[24px] pt-[40px] pb-[120px] lg:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="min-w-0">
-          <p className="text-table text-primary-button">{t("stepOf", { n: step + 1, total: SETUP_STEPS.length })}</p>
-          <h1 className="mt-[6px] text-[26px] leading-[32px] font-semibold tracking-[-0.01em]">{t(`titles.${key}`)}</h1>
-          <p className="mt-[8px] max-w-[560px] text-body text-pretty text-text-secondary">{t(`descriptions.${key}`)}</p>
-          <div className="mt-[24px]">{children}</div>
-        </section>
-        <aside className="flex flex-col gap-[16px]">
-          {aside}
-          <div className="rounded-modal bg-primary-soft p-[24px] text-body text-pretty text-text-primary">{tip ?? t("tip")}</div>
-        </aside>
-      </main>
+      {wide ? (
+        children
+      ) : (
+        <>
+          <main className="mx-auto grid max-w-[1088px] grid-cols-1 gap-[40px] px-[24px] pt-[40px] pb-[120px] lg:grid-cols-[minmax(0,1fr)_320px]">
+            <section className="min-w-0">
+              <p className="text-table text-primary-button">{t("stepOf", { n: step + 1, total: SETUP_STEPS.length })}</p>
+              <h1 className="mt-[6px] text-[26px] leading-[32px] font-semibold tracking-[-0.01em]">{t(`titles.${key}`)}</h1>
+              <p className="mt-[8px] max-w-[560px] text-body text-pretty text-text-secondary">{t(`descriptions.${key}`)}</p>
+              <div className="mt-[24px]">{children}</div>
+            </section>
+            <aside className="flex flex-col gap-[16px]">
+              {aside}
+              <div className="rounded-modal bg-primary-soft p-[24px] text-body text-pretty text-text-primary">{tip ?? t("tip")}</div>
+            </aside>
+          </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface">
-        <div className="relative mx-auto flex h-[72px] max-w-[1088px] items-center justify-between gap-[16px] px-[24px]">
-          <div>
-            {onBack ? (
-              <Button variant="secondary" size="lg" onClick={onBack}>
-                {t("back")}
-              </Button>
-            ) : null}
-          </div>
-          <div
-            className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 text-caption whitespace-nowrap text-text-secondary md:block"
-            aria-live="polite"
-          >
-            {status}
-          </div>
-          {onNext ? (
-            <Button size="lg" onClick={onNext} disabled={nextDisabled} loading={nextLoading}>
-              {nextLabel ?? t("next")}
-            </Button>
-          ) : null}
-        </div>
-      </footer>
+          <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface">
+            <div className="relative mx-auto flex h-[72px] max-w-[1088px] items-center justify-between gap-[16px] px-[24px]">
+              <div>
+                {onBack ? (
+                  <Button variant="secondary" size="lg" onClick={onBack}>
+                    {t("back")}
+                  </Button>
+                ) : null}
+              </div>
+              <div
+                className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 text-caption whitespace-nowrap text-text-secondary md:block"
+                aria-live="polite"
+              >
+                {status}
+              </div>
+              {onNext ? (
+                <Button size="lg" onClick={onNext} disabled={nextDisabled} loading={nextLoading}>
+                  {nextLabel ?? t("next")}
+                </Button>
+              ) : null}
+            </div>
+          </footer>
+        </>
+      )}
 
       <Modal
         open={leaving}

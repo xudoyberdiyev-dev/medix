@@ -88,6 +88,7 @@
   --animate-skeleton: skeleton 1600ms ease-in-out infinite;
   --animate-spin: spin 800ms linear infinite;
   --animate-progress: progress 3000ms linear forwards;
+  --animate-shake: shake 320ms ease-in-out;
 
   @keyframes skeleton {
     0%,
@@ -96,6 +97,25 @@
     }
     50% {
       opacity: 0.5;
+    }
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20% {
+      transform: translateX(-4px);
+    }
+    40% {
+      transform: translateX(4px);
+    }
+    60% {
+      transform: translateX(-3px);
+    }
+    80% {
+      transform: translateX(3px);
     }
   }
 

@@ -4,15 +4,14 @@ import { UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import { EmptyState, ErrorState } from "@/components/ui/system-states";
+import { EmptyState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { useCreateEmployee, useRoles, type Employee, type Role, type SetupStatus } from "./api";
+import { useCreateEmployee, useRoles, type Employee, type SetupStatus } from "./api";
 import { describeError } from "./form-error";
 
 function FormGrid({ children, onSubmit }: { children: ReactNode; onSubmit: (e: FormEvent<HTMLFormElement>) => void }) {
@@ -20,42 +19,6 @@ function FormGrid({ children, onSubmit }: { children: ReactNode; onSubmit: (e: F
     <form onSubmit={onSubmit} noValidate className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {children}
     </form>
-  );
-}
-
-export function RolesStep() {
-  const t = useTranslations("setup.roles");
-  const roles = useRoles();
-  const columns: TableColumn<Role>[] = [
-    { key: "name", title: t("role") },
-    { key: "code", title: t("code"), mono: true },
-    {
-      key: "system",
-      title: t("type"),
-      render: (r) => (r.system ? <Badge tone="info">{t("standard")}</Badge> : <Badge>{t("copy")}</Badge>),
-    },
-    { key: "employeeCount", title: t("employees"), align: "right" },
-  ];
-  return (
-    <div className="flex flex-col gap-4">
-      <Alert tone="info" title={t("readyTitle")}>
-        {t("readyDescription")}
-      </Alert>
-      {roles.error ? (
-        <Card flush>
-          <ErrorState onRetry={() => roles.refetch()} />
-        </Card>
-      ) : (
-        <Table
-          caption={t("caption")}
-          columns={columns}
-          rows={roles.data ?? []}
-          rowKey={(r) => r.code}
-          loading={roles.isPending}
-          density="compact"
-        />
-      )}
-    </div>
   );
 }
 

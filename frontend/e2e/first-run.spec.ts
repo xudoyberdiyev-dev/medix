@@ -101,9 +101,18 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await expect(page.getByText("1 ta ombor · 5 ta zona · 1 ta filialda")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
-  // 4. Rollar
-  await expect(page.getByText("11 ta standart rol tayyor")).toBeVisible();
-  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  // 4. Rollar va ruxsatlar — matritsa (prototip WizRoles): yangi rol Operatordan nusxa, amal yoqilsa koʻrish ham
+  const matrix = page.getByTestId("roles-matrix");
+  await expect(matrix).toBeVisible();
+  await page.getByRole("button", { name: "Rol qoʻshish" }).click();
+  await field(page, "Nomi").fill("Katta operator");
+  await page.getByRole("dialog").getByRole("button", { name: "Saqlash", exact: true }).click();
+  await expect(page.getByText("«Katta operator» roli qoʻshildi")).toBeVisible();
+  await matrix.getByRole("button", { name: "Inventarizatsiya: yaratish · Katta operator" }).click();
+  await expect(page.getByText("Shu boʻlimning «koʻrish» ruxsati ham yoqildi")).toBeVisible();
+  await expect(page.getByText(/ta oʻzgarish/)).toBeVisible();
+  await page.getByRole("button", { name: "Saqlash va davom etish" }).click();
+  await expect(page.getByText("Rollar va ruxsatlar saqlandi")).toBeVisible();
 
   // 5. Xodim
   await field(page, "F.I.Sh.").fill("Dilshod Aliyev");

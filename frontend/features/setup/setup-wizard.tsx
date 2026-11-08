@@ -16,7 +16,8 @@ import { firstIncompleteStep, useCompleteSetup, useSetupStatus, type SetupStatus
 import { describeError } from "./form-error";
 import { CompanyStep } from "./company-step";
 import { BranchesStep } from "./branches-step";
-import { EmployeesStep, RolesStep } from "./steps";
+import { EmployeesStep } from "./steps";
+import { RolesMatrix } from "@/features/roles/roles-matrix";
 import { WarehousesStep } from "./warehouses-step";
 import { SETUP_STEPS, WizardFrame } from "./wizard-frame";
 
@@ -93,6 +94,12 @@ function WizardSteps({ status: s }: { status: SetupStatus }) {
   if (current === 0) return <CompanyStep status={s} nav={nav} onDone={() => go(1)} />;
   if (current === 1) return <BranchesStep status={s} nav={nav} onBack={() => go(0)} onDone={() => go(2)} />;
   if (current === 2) return <WarehousesStep status={s} nav={nav} onBack={() => go(1)} onDone={() => go(3)} />;
+  if (current === 3)
+    return (
+      <WizardFrame {...nav} wide>
+        <RolesMatrix mode="wizard" onSaved={() => go(4)} />
+      </WizardFrame>
+    );
 
   return (
     <WizardFrame
@@ -101,7 +108,6 @@ function WizardSteps({ status: s }: { status: SetupStatus }) {
       onNext={current < SETUP_STEPS.length - 1 ? () => go(current + 1) : undefined}
       nextDisabled={!canLeaveStep(current, s)}
     >
-      {current === 3 ? <RolesStep /> : null}
       {current === 4 ? <EmployeesStep status={s} /> : null}
       {current === 5 ? <FinishStep status={s} /> : null}
     </WizardFrame>

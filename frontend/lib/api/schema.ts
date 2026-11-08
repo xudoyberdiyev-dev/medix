@@ -4154,7 +4154,11 @@ export interface paths {
          * @description Barcha rollar, 132 ruxsat kaliti va rol → kalitlar.
          */
         get: operations["matrix"];
-        put?: never;
+        /**
+         * Matritsani saqlash
+         * @description Rollar (nom, tavsif, doira, bosh sahifa, faollik), ruxsatlar va yangi rollar — bitta tranzaksiyada. Direktor roli o'zgarmaydi. Xodimning keyingi kirishida kuchga kiradi.
+         */
+        put: operations["save"];
         post?: never;
         delete?: never;
         options?: never;
@@ -7384,6 +7388,11 @@ export interface components {
             terminal: string;
             total: string;
         };
+        LastChange: {
+            /** Format: date-time */
+            at: string;
+            by?: string;
+        };
         License: {
             controlledAllowed: boolean;
             /** Format: int64 */
@@ -7596,10 +7605,16 @@ export interface components {
             productIds: number[];
         };
         Matrix: {
+            /** @description Standart rol kodi → standart ruxsatlar («Standartga qaytarish») */
+            defaults: {
+                [key: string]: string[];
+            };
             /** @description Rol kodi → ruxsat kalitlari */
             grants: {
                 [key: string]: string[];
             };
+            /** @description Oxirgi o'zgarish */
+            lastChange?: components["schemas"]["LastChange"];
             permissions: components["schemas"]["Permission"][];
             roles: components["schemas"]["Role"][];
         };
@@ -8467,8 +8482,22 @@ export interface components {
         };
         Permission: {
             description: string;
+            /**
+             * @description Matritsa guruhi
+             * @enum {string}
+             */
+            group: "sales" | "wh" | "money" | "ref" | "rep" | "admin" | "special";
             key: string;
+            /** @enum {string} */
+            kind: "view" | "create" | "cancel" | "approve" | "special";
+            /**
+             * @description dir — faqat Direktorda; excl — Direktorga avtomatik berilmaydi
+             * @enum {string}
+             */
+            lock?: "dir" | "excl";
             module: string;
+            /** @description Bog'liq sahifa: amal uchun <page>.view kerak */
+            page?: string;
         };
         PermissionsRequest: {
             permissions: string[];
@@ -9528,20 +9557,47 @@ export interface components {
             truncated: boolean;
         };
         Role: {
+            active: boolean;
             code: string;
+            description?: string;
             /**
              * Format: int64
-             * @description Biriktirilgan xodimlar soni
+             * @description Biriktirilgan faol xodimlar soni
              */
             employeeCount: number;
+            /**
+             * @description Bosh sahifa turi
+             * @enum {string}
+             */
+            home: "director" | "branch" | "operator" | "purchase" | "keeper" | "cashier" | "accountant" | "picker" | "marker" | "driver";
             /** Format: int64 */
             id: number;
             name: string;
+            /**
+             * @description all — barcha filiallar, own — o'z filiali
+             * @enum {string}
+             */
+            scope: "all" | "own";
             /** @description Standart rol: o'chirilmaydi */
             system: boolean;
         };
+        RoleDraft: {
+            active: boolean;
+            code?: string;
+            copiedFrom?: string;
+            description?: string;
+            home: string;
+            name: string;
+            permissions: string[];
+            scope: string;
+        };
         RoleRef: {
             code: string;
+            /**
+             * @description Bosh sahifa turi (Rollar matritsasidan)
+             * @enum {string}
+             */
+            home: "director" | "branch" | "operator" | "purchase" | "keeper" | "cashier" | "accountant" | "picker" | "marker" | "driver";
             name: string;
         };
         SaleLine: {
@@ -9592,6 +9648,9 @@ export interface components {
             profit?: string;
             returns: string;
             sales: string;
+        };
+        SaveRequest: {
+            roles: components["schemas"]["RoleDraft"][];
         };
         ScanRequest: {
             code: string;
@@ -16882,6 +16941,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Matrix"];
+                };
+            };
+        };
+    };
+    save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

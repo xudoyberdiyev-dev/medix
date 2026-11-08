@@ -20,29 +20,30 @@ import { SetupBanner } from "@/features/setup/setup-banner";
 export function HomeContent() {
   const t = useTranslations("home");
   const me = useMe();
-  const role = me.data?.role.code;
-  if (role === "CASHIER") return <CashierPanel />;
+  // Bosh sahifa turi rol sozlamasidan (Rollar matritsasi → «Bosh sahifa»); nusxa rollar ham shunga ergashadi
+  const home = me.data?.role.home;
+  if (home === "cashier") return <CashierPanel />;
   // Prototip: ombor rollari uchun bosh sahifa — oʻz paneli
-  if (role === "WAREHOUSE_MANAGER") return <MonitorPage />;
-  if (role === "PICKER") return <PickingPage />;
-  if (role === "MARKER") return <MarkingPage />;
-  if (role === "DRIVER") return <DriverPage />;
-  if (role === "OPERATOR" || role === "PURCHASER")
+  if (home === "keeper") return <MonitorPage />;
+  if (home === "picker") return <PickingPage />;
+  if (home === "marker") return <MarkingPage />;
+  if (home === "driver") return <DriverPage />;
+  if (home === "operator" || home === "purchase")
     return (
       <>
         <div className="mb-6 empty:hidden">
           <SetupBanner />
         </div>
-        {role === "OPERATOR" ? <OperatorHome /> : <PurchaserHome />}
+        {home === "operator" ? <OperatorHome /> : <PurchaserHome />}
       </>
     );
-  if (role === "DIRECTOR" || role === "ADMIN" || role === "ACCOUNTANT" || role === "BRANCH_MANAGER")
+  if (home === "director" || home === "accountant" || home === "branch")
     return (
       <>
         <div className="mb-6 empty:hidden">
           <SetupBanner />
         </div>
-        {role === "BRANCH_MANAGER" ? <BranchHome /> : role === "ACCOUNTANT" ? <AccountantHome /> : <DirectorHome />}
+        {home === "branch" ? <BranchHome /> : home === "accountant" ? <AccountantHome /> : <DirectorHome />}
       </>
     );
   return (
