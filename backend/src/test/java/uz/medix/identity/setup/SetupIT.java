@@ -3,9 +3,13 @@ package uz.medix.identity.setup;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -16,7 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -139,6 +145,56 @@ class SetupIT {
         mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Boshqa nom\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("setup.completed"));
+    }
+
+    private MockHttpServletRequestBuilder logo(Cookie session, byte[] bytes) {
+        return multipart(HttpMethod.PUT, "/api/setup/company/logo")
+                .file(new MockMultipartFile("file", "logo", "application/octet-stream", bytes))
+                .with(csrf())
+                .cookie(session);
+    }
+
+    @Test
+    void companyLocaleAndLogo() throws Exception {
+        Cookie ceo = loginAs("DIRECTOR");
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\",\"defaultLocale\":\"ru\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultLocale").value("ru"))
+                .andExpect(jsonPath("$.logoVersion").doesNotExist());
+        // Til berilmasa — oʻzgarmaydi
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\"}"))
+                .andExpect(jsonPath("$.defaultLocale").value("ru"));
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\",\"defaultLocale\":\"de\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.defaultLocale").value("Tilni roʻyxatdan tanlang."));
+
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 13};
+        mvc.perform(logo(ceo, png)).andExpect(status().isOk()).andExpect(jsonPath("$.logoVersion").isNumber());
+        mvc.perform(get("/api/company/logo").cookie(ceo))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/png"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(content().bytes(png));
+
+        // Skriptli SVG, boshqa tur va 2 MB dan katta — rad etiladi
+        mvc.perform(logo(ceo, "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>".getBytes()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("setup.logoType"));
+        mvc.perform(logo(ceo, "GIF89a".getBytes())).andExpect(jsonPath("$.code").value("setup.logoType"));
+        byte[] big = new byte[2 * 1024 * 1024 + 1];
+        System.arraycopy(png, 0, big, 0, png.length);
+        mvc.perform(logo(ceo, big)).andExpect(jsonPath("$.code").value("setup.logoTooBig"));
+
+        byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 8 8\"><rect width=\"8\" height=\"8\"/></svg>".getBytes();
+        mvc.perform(logo(ceo, svg)).andExpect(status().isOk());
+        mvc.perform(get("/api/company/logo").cookie(ceo))
+                .andExpect(header().string("Content-Type", "image/svg+xml"))
+                .andExpect(header().string("Content-Security-Policy", containsString("sandbox")));
+
+        mvc.perform(delete("/api/setup/company/logo").with(csrf()).cookie(ceo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.logoVersion").doesNotExist());
+        mvc.perform(get("/api/company/logo").cookie(ceo)).andExpect(status().isNotFound());
     }
 
     @Test

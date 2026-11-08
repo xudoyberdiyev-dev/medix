@@ -19,7 +19,15 @@ import uz.medix.shared.error.MedixException;
 @Service
 public class Organization {
 
-    public record Company(long id, String name, @Schema(nullable = true) Instant setupCompletedAt) {}
+    /**
+     * @param defaultLocale tizimning asosiy tili (uz-Latn, uz-Cyrl, ru)
+     * @param logoVersion logotip yuklangan vaqt (epoch ms) — URL keshini yangilash uchun; null — logotip yoʻq
+     */
+    public record Company(long id, String name, @Schema(nullable = true) Instant setupCompletedAt, String defaultLocale,
+            @Schema(nullable = true) Long logoVersion) {}
+
+    /** Logotip fayli (PNG yoki SVG). */
+    public record Logo(byte[] content, String contentType) {}
 
     public record Branch(long id, String code, String name, String legalName, String tin, @Schema(nullable = true) String address,
             @Schema(nullable = true) String phone, boolean active) {}
@@ -38,30 +46,74 @@ public class Organization {
 
     @Transactional(readOnly = true)
     public Optional<Company> company() {
-        return jdbc.sql("SELECT id, name, setup_completed_at FROM company")
+        return jdbc.sql("SELECT id, name, setup_completed_at, default_locale, logo_updated_at, logo IS NOT NULL AS has_logo FROM company")
                 .query((rs, n) -> new Company(rs.getLong("id"), rs.getString("name"),
-                        Optional.ofNullable(rs.getTimestamp("setup_completed_at")).map(java.sql.Timestamp::toInstant).orElse(null)))
+                        Optional.ofNullable(rs.getTimestamp("setup_completed_at")).map(java.sql.Timestamp::toInstant).orElse(null),
+                        rs.getString("default_locale"),
+                        rs.getBoolean("has_logo")
+                                ? Optional.ofNullable(rs.getTimestamp("logo_updated_at")).map(java.sql.Timestamp::getTime).orElse(0L)
+                                : null))
                 .optional();
     }
 
     @Transactional
     public Company saveCompany(String name) {
+        return saveCompany(name, company().map(Company::defaultLocale).orElse("uz-Latn"));
+    }
+
+    @Transactional
+    public Company saveCompany(String name, String defaultLocale) {
         var existing = company();
         if (existing.isPresent()) {
-            jdbc.sql("UPDATE company SET name = :n, updated_at = now(), version = version + 1 WHERE id = :id")
+            jdbc.sql("UPDATE company SET name = :n, default_locale = :l, updated_at = now(), version = version + 1 WHERE id = :id")
                     .param("n", name.strip())
+                    .param("l", defaultLocale)
                     .param("id", existing.get().id())
                     .update();
             audit.record(AuditEntry.of("company.update", "company", existing.get().id())
-                    .change(Map.of("name", existing.get().name()), Map.of("name", name.strip())));
+                    .change(Map.of("name", existing.get().name(), "defaultLocale", existing.get().defaultLocale()),
+                            Map.of("name", name.strip(), "defaultLocale", defaultLocale)));
         } else {
-            long id = jdbc.sql("INSERT INTO company (name) VALUES (:n) RETURNING id")
+            long id = jdbc.sql("INSERT INTO company (name, default_locale) VALUES (:n, :l) RETURNING id")
                     .param("n", name.strip())
+                    .param("l", defaultLocale)
                     .query(Long.class)
                     .single();
-            audit.record(AuditEntry.of("company.create", "company", id).change(null, Map.of("name", name.strip())));
+            audit.record(AuditEntry.of("company.create", "company", id)
+                    .change(null, Map.of("name", name.strip(), "defaultLocale", defaultLocale)));
         }
         return company().orElseThrow();
+    }
+
+    /** Logotipni saqlaydi; {@code content == null} — oʻchiradi. Kompaniya avval yaratilgan boʻlishi shart. */
+    @Transactional
+    public Company saveLogo(byte[] content, String contentType) {
+        var c = company().orElseThrow(() -> MedixException.badRequest("setup.companyMissing"));
+        if (content == null) {
+            jdbc.sql("""
+                    UPDATE company SET logo = NULL, logo_type = NULL, logo_updated_at = NULL, updated_at = now(), version = version + 1
+                    WHERE id = :id""")
+                    .param("id", c.id())
+                    .update();
+        } else {
+            jdbc.sql("""
+                    UPDATE company SET logo = :b, logo_type = :t, logo_updated_at = :at, updated_at = now(), version = version + 1
+                    WHERE id = :id""")
+                    .param("b", content)
+                    .param("t", contentType)
+                    .param("at", java.sql.Timestamp.from(clock.instant()))
+                    .param("id", c.id())
+                    .update();
+        }
+        audit.record(AuditEntry.of(content == null ? "company.logoRemove" : "company.logoUpload", "company", c.id()));
+        return company().orElseThrow();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Logo> logo() {
+        return jdbc.sql("SELECT logo, logo_type FROM company WHERE logo IS NOT NULL")
+                .query((rs, n) -> new Logo(rs.getBytes("logo"), rs.getString("logo_type")))
+                .optional();
     }
 
     @Transactional

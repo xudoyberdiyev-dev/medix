@@ -8,6 +8,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.identity.employee.Employees;
+import uz.medix.identity.organization.CompanyLogos;
 import uz.medix.identity.organization.Organization;
 import uz.medix.inventory.Warehouses;
 import uz.medix.inventory.ZoneType;
@@ -51,7 +52,24 @@ class SetupService {
     @Transactional
     Organization.Company saveCompany(SetupRequests.CompanyRequest r) {
         ensureOpen();
-        return organization.saveCompany(r.name());
+        return r.defaultLocale() == null ? organization.saveCompany(r.name()) : organization.saveCompany(r.name(), r.defaultLocale());
+    }
+
+    /** Logotip: PNG yoki xavfsiz SVG, 2 MB gacha (prototip SetupWizard 1-qadam). */
+    @Transactional
+    Organization.Company saveLogo(byte[] content) {
+        ensureOpen();
+        if (content.length > CompanyLogos.MAX_BYTES) {
+            throw MedixException.badRequest("setup.logoTooBig");
+        }
+        String type = CompanyLogos.detect(content).orElseThrow(() -> MedixException.badRequest("setup.logoType"));
+        return organization.saveLogo(content, type);
+    }
+
+    @Transactional
+    Organization.Company removeLogo() {
+        ensureOpen();
+        return organization.saveLogo(null, null);
     }
 
     @Transactional
