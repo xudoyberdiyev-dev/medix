@@ -45,7 +45,7 @@ test("Operator: oddiy va markirovkali qatorli buyurtma", async ({ page }) => {
   await page.goto("/orders");
   await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
   await choose(page, "Mijoz", new RegExp(CUSTOMER), "Shifo");
-  await choose(page, "Ombor", /Markaziy ombor/);
+  await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await choose(page, "Mahsulot", /Paracetamol E2E/, "Paracetamol");
   await field(page, "Miqdor").first().fill("1");
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();

@@ -183,7 +183,7 @@ test("Operator: naqd toʻlovli buyurtma kiritadi va navbatga yuboradi", async ({
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
-  await choose(page, "Ombor", /Markaziy ombor/);
+  await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await choose(page, "Toʻlov turi", /^Naqd/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("E2E");
@@ -350,7 +350,7 @@ test("Operator: maksimaldan koʻp — buyurtma Filial rahbari tasdigʻiga ketadi
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
-  await choose(page, "Ombor", /Markaziy ombor/);
+  await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Paracetamol");
   await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
@@ -619,7 +619,7 @@ test("Operator: limitdan 20% dan koʻp oshgan buyurtma — Direktor tasdigʻiga"
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
-  await choose(page, "Ombor", /Markaziy ombor/);
+  await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Paracetamol");
   await page.getByRole("option", { name: /Paracetamol E2E/ }).click();

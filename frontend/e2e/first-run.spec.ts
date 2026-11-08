@@ -275,7 +275,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Shifo");
   await page.getByRole("option", { name: /Shifo Dorixona E2E/ }).click();
-  await choose(page, "Ombor", /Markaziy ombor/);
+  await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("E2E");
   await page.getByRole("option", { name: /Paracetamol E2E/ }).click();

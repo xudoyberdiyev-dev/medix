@@ -3,15 +3,18 @@
 import {
   CalendarDays,
   Check,
+  ChevronDown,
+  ChevronUp,
   CircleAlert,
   FileDown,
   Info,
   ListPlus,
+  Lock,
+  Plus,
   Printer,
   RotateCcw,
   Send,
   Store,
-  Trash2,
   TriangleAlert,
   Truck,
   X,
@@ -137,6 +140,11 @@ interface DraftLine {
 
 const isInt = (s: string) => /^\d+$/.test(s.trim());
 
+/** Toshkent boʻyicha bugun (+ kun), ISO `YYYY-MM-DD`. */
+function tashkentDay(plusDays: number): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tashkent" }).format(new Date(Date.now() + plusDays * 86_400_000));
+}
+
 /** Yopishda ogohlantirish: tahrirlanadigan hujjatda saqlanmagan qatorlar bor (yangi qoralama — qator qoʻshilgan boʻlsa). */
 export function hasUnsavedChanges(s: { editable: boolean; isNew: boolean; dirty: boolean; lineCount: number }): boolean {
   return s.editable && (s.isNew ? s.lineCount > 0 : s.dirty);
@@ -173,10 +181,15 @@ function Editor({
   );
   const [customerLabel, setCustomerLabel] = useState(restored?.customerLabel ?? doc?.customer ?? preset?.customerLabel ?? "");
   const [deliveryType, setDeliveryType] = useState<string | null>(restored ? restored.deliveryType : (doc?.deliveryType ?? "DELIVERY"));
-  const [deliveryDate, setDeliveryDate] = useState(restored?.deliveryDate ?? formatIsoDate(doc?.deliveryDate));
+  // Yangi buyurtmada yetkazish sanasi — ertaga (prototip), Toshkent vaqti
+  const [deliveryDate, setDeliveryDate] = useState(
+    () => restored?.deliveryDate ?? (doc ? formatIsoDate(doc.deliveryDate) : formatIsoDate(tashkentDay(1))),
+  );
   const [address, setAddress] = useState(restored?.address ?? doc?.address ?? "");
   const [paymentType, setPaymentType] = useState<string | null>(restored ? restored.paymentType : (doc?.paymentType ?? "TRANSFER"));
   const [note, setNote] = useState(restored?.note ?? doc?.note ?? "");
+  // Buyurtma sanasi — server qoʻyadi (yaratilgan kun, Toshkent vaqti); yangi buyurtmada bugun
+  const [orderDate] = useState(() => formatIsoDate(doc?.orderDate ?? tashkentDay(0)));
   const [lines, setLines] = useState<DraftLine[]>(
     restored
       ? restored.lines
@@ -192,6 +205,12 @@ function Editor({
   const err = describeError(save.error ?? submit.error ?? approve.error ?? back.error);
 
   const activeWarehouses = (warehouses.data ?? []).filter((w) => w.active || String(w.id) === warehouseId);
+  // Yagona faol ombor — yangi buyurtmada avtomatik tanlanadi (prototip)
+  const onlyWarehouse = editable && !doc && activeWarehouses.length === 1 ? String(activeWarehouses[0].id) : null;
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- omborlar yuklangach bir marta
+    if (onlyWarehouse && warehouseId === null) setWarehouseId(onlyWarehouse);
+  }, [onlyWarehouse, warehouseId]);
   const isApprover = canApprove(doc?.approvalLevel ?? null, can(me.data, APPROVE_BRANCH), can(me.data, APPROVE_DIRECTOR));
   const own = doc ? doc.createdById === me.data?.id : true;
   const cancellable =
@@ -308,9 +327,31 @@ function Editor({
     if (!warehouseId) return toast({ tone: "warning", title: t("drawer.errWarehouse") });
     setDialog("catalog");
   }
+  // «Yuborish»: avval saqlanadi, keyin navbat yoki tasdiqqa yuboriladi
+  function sendOrder() {
+    if (save.isPending || submit.isPending) return;
+    void saveDraft().then((d) => {
+      if (!d) return;
+      void submit.mutateAsync(d.id).then(
+        (s) => {
+          toast({
+            tone: "success",
+            title: s.status === "QUEUED" ? t("drawer.sentQueue") : t("drawer.sentApproval"),
+            description: t("drawer.numberTotal", { number: s.number, amount: formatMoney(s.total) }),
+          });
+          if (!doc) onCreated(s.id);
+        },
+        () => {
+          if (!doc) onCreated(d.id);
+        },
+      );
+    });
+  }
   const openCatalogRef = useRef(openCatalog);
+  const sendOrderRef = useRef(sendOrder);
   useEffect(() => {
     openCatalogRef.current = openCatalog;
+    sendOrderRef.current = sendOrder;
   });
   useEffect(() => {
     if (!editable) return;
@@ -318,6 +359,11 @@ function Editor({
       if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyK") {
         e.preventDefault();
         openCatalogRef.current();
+      }
+      // Ctrl+Enter — saqlash va yuborish (prototip); ochiq oyna boʻlsa — yoʻq
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !document.querySelector("dialog[open]")) {
+        e.preventDefault();
+        sendOrderRef.current();
       }
     }
     window.addEventListener("keydown", onKey);
@@ -367,29 +413,11 @@ function Editor({
           >
             {t("drawer.saveDraft")}
           </Button>
-          <Button
-            icon={Send}
-            loading={submit.isPending}
-            onClick={() =>
-              void saveDraft().then((d) => {
-                if (!d) return;
-                void submit.mutateAsync(d.id).then(
-                  (s) => {
-                    toast({
-                      tone: "success",
-                      title: s.status === "QUEUED" ? t("drawer.sentQueue") : t("drawer.sentApproval"),
-                      description: t("drawer.numberTotal", { number: s.number, amount: formatMoney(s.total) }),
-                    });
-                    if (!doc) onCreated(s.id);
-                  },
-                  () => {
-                    if (!doc) onCreated(d.id);
-                  },
-                );
-              })
-            }
-          >
+          <Button icon={Send} loading={submit.isPending} aria-keyshortcuts="Control+Enter" onClick={sendOrder}>
             {t("drawer.submit")}
+            {frame === "page" ? (
+              <kbd className="ml-1 rounded-sm bg-white/15 px-1.5 font-mono text-[11px] leading-4 font-normal">Ctrl+Enter</kbd>
+            ) : null}
           </Button>
         </>
       ) : null}
@@ -434,8 +462,9 @@ function Editor({
     <>
       <div className="flex flex-col gap-4">
         <Decision doc={doc} />
+        {doc && doc.status === "DRAFT" ? <IssuesPanel issues={doc.issues} dirty={dirty} /> : null}
         {doc && doc.status !== "DRAFT" ? <DocumentsRow doc={doc} /> : null}
-        <div className="grid grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 items-start gap-x-5 gap-y-4 rounded-card border border-border bg-surface px-6 py-5 shadow-sm md:grid-cols-3">
           <Select
             label={t("drawer.customer")}
             value={customer}
@@ -453,23 +482,26 @@ function Editor({
                   () => undefined,
                 );
             }}
-            placeholder={customerLabel || t("drawer.customerPlaceholder")}
+            placeholder={customerLabel || t("entry.customerPh")}
             options={customer && customerLabel ? [{ value: customer, label: customerLabel }] : []}
             disabled={!editable}
             required
-            className="col-span-2"
           />
+          <TextField label={t("entry.orderDate")} value={orderDate} onChange={() => undefined} disabled />
           <Select
-            label={t("drawer.warehouse")}
+            label={t("entry.warehouse")}
             value={warehouseId}
             onChange={setWarehouseId}
             options={activeWarehouses.map((w) => ({ value: String(w.id), label: w.name }))}
             disabled={!editable}
             required
           />
-          <div className="flex min-w-0 flex-col">
-            <span id="by-delivery" className="mb-1.5 text-caption font-medium">
-              {t("drawer.deliveryType")} <span className="text-danger">*</span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <span id="by-delivery" className="font-medium text-text-secondary">
+              {t("entry.deliveryType")}
+              <span className="ml-0.5 text-danger" aria-hidden>
+                *
+              </span>
             </span>
             <div
               role="radiogroup"
@@ -495,7 +527,7 @@ function Editor({
                       on ? "bg-surface font-medium text-text-primary ring-1 ring-border" : "text-text-secondary hover:text-text-primary"
                     } disabled:cursor-default`}
                   >
-                    <o.icon size={14} strokeWidth={1.5} aria-hidden className="hidden shrink-0 2xl:block" />
+                    <o.icon size={14} strokeWidth={1.5} aria-hidden className="hidden shrink-0 xl:block" />
                     <span className="truncate">{o.label}</span>
                   </button>
                 );
@@ -515,24 +547,43 @@ function Editor({
             onChange={setPaymentType}
             options={PAYMENT_VALUES.map((v) => ({ value: v, label: t(`paymentType.${v}`) }))}
             disabled={!editable}
+            required
             hint={
-              editable && customer && credit.data
-                ? credit.data.paymentDays
-                  ? t("customer.payAuto", { days: credit.data.paymentDays })
-                  : t("customer.payAutoNoTerm")
-                : undefined
+              !editable
+                ? undefined
+                : customer && credit.data
+                  ? credit.data.paymentDays
+                    ? t("customer.payAuto", { days: credit.data.paymentDays })
+                    : t("customer.payAutoNoTerm")
+                  : customer
+                    ? undefined
+                    : t("entry.payNone")
             }
           />
-          <TextField
-            label={t("drawer.address")}
-            value={address}
-            onChange={setAddress}
-            disabled={!editable || deliveryType === "PICKUP"}
-            hint={!doc ? t("drawer.addressHint") : undefined}
-            className="col-span-2"
-          />
-          <TextField label={t("drawer.note")} value={note} onChange={setNote} disabled={!editable} />
-        </div>
+          {deliveryType !== "PICKUP" ? (
+            <TextField
+              label={t("drawer.address")}
+              value={address}
+              onChange={setAddress}
+              disabled={!editable}
+              hint={!doc ? t("drawer.addressHint") : undefined}
+              className="md:col-span-3"
+            />
+          ) : null}
+          <div className="flex min-w-0 flex-col gap-1 md:col-span-3">
+            <label htmlFor="by-note" className="font-medium text-text-secondary">
+              {t("drawer.note")}
+            </label>
+            <textarea
+              id="by-note"
+              rows={1}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              disabled={!editable}
+              className="min-h-control-md resize-y rounded-control border border-border bg-surface px-3 py-2 text-body outline-none hover:border-text-disabled focus:border-primary focus:ring-3 focus:ring-primary/15 disabled:bg-background disabled:text-text-secondary"
+            />
+          </div>
+        </section>
 
         {editable && customer && warehouseId && credit.data ? (
           <CustomerStateRow name={customerLabel} credit={credit.data} orderTotal={doc && !dirty ? doc.total : "0"} />
@@ -545,166 +596,194 @@ function Editor({
         {doc?.status === "QUEUED" && can(me.data, "orders.queue") ? <TimeForm doc={doc} /> : null}
         {doc?.status === "CHECKING" && can(me.data, "orders.check") ? <CheckForm doc={doc} /> : null}
 
-        {editable ? (
-          <div className="grid grid-cols-[1fr_9rem_auto] items-end gap-3 rounded-card border border-border p-3">
-            <Select
-              label={t("drawer.product")}
-              value={adding.product}
-              loadOptions={async (q) => {
-                const found = await searchProducts(q);
-                found.forEach((o) => seen.current.set(o.value, { code: o.sub, name: o.label }));
-                return found;
-              }}
-              onChange={(v) => setAdding((a) => ({ ...a, product: v }))}
-              placeholder={t("drawer.productPlaceholder")}
-              options={[]}
-            />
-            <TextField
-              label={t("drawer.qty")}
-              value={adding.qty}
-              onChange={(v) => setAdding((a) => ({ ...a, qty: v }))}
-              inputMode="numeric"
-              suffix={t("unit.pcs")}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLine())}
-            />
-            <Button variant="secondary" onClick={addLine}>
-              {t("drawer.addLine")}
-            </Button>
-          </div>
-        ) : null}
-
         {local ? <Alert tone="danger" title={local} /> : null}
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
-        {doc && doc.status === "DRAFT" ? <IssuesPanel issues={doc.issues} dirty={dirty} /> : null}
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-subtitle">
-            {t("drawer.lines", { count: formatQuantity(lines.length) })}
-            {doc && !dirty ? (
-              <span className="ml-3 text-body font-normal text-text-secondary">{t("sum", { amount: formatMoney(doc.total) })}</span>
-            ) : null}
-          </h3>
-          <span className="flex flex-wrap items-center gap-4">
-            {dirty ? <span className="text-caption text-text-secondary">{t("drawer.recalcHint")}</span> : null}
-            {doc && !dirty && doc.status === "DRAFT" && issueCounts.errors > 0 ? (
-              <span className="flex items-center gap-1 text-caption text-danger">
-                <CircleAlert size={14} strokeWidth={1.5} aria-hidden />
-                {t("customer.errNote", { count: issueCounts.errors })}
-              </span>
-            ) : null}
-            {doc && !dirty && doc.status === "DRAFT" && issueCounts.warnings > 0 ? (
-              <span className="flex items-center gap-1 text-caption text-warning">
-                <TriangleAlert size={14} strokeWidth={1.5} aria-hidden />
-                {t("customer.warnNote", { count: issueCounts.warnings })}
-              </span>
-            ) : null}
-            {editable ? (
-              <Button variant="secondary" size="sm" icon={ListPlus} aria-keyshortcuts="Alt+K" onClick={openCatalog}>
-                {t("customer.pick")}
-                <span className="ml-1 text-caption font-normal text-text-secondary">Alt+K</span>
-              </Button>
-            ) : null}
-          </span>
-        </div>
-        <div className="overflow-x-auto rounded-card border border-border">
-          <table className="w-full text-table">
-            <thead className="bg-table-header text-left text-text-secondary">
-              <tr>
-                <th className="px-3 py-2 font-medium">{t("drawer.col.product")}</th>
-                <th className="px-3 py-2 text-right font-medium">{t("drawer.col.available")}</th>
-                <th className="px-3 py-2 font-medium">{t("drawer.col.nearestExpiry")}</th>
-                <th className="px-3 py-2 text-right font-medium">{t("drawer.col.qty")}</th>
-                <th className="px-3 py-2 text-right font-medium">{t("drawer.col.price")}</th>
-                <th className="px-3 py-2 text-right font-medium">{t("drawer.col.amount")}</th>
-                {editable ? <th className="w-10" /> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {lines.length === 0 ? (
+        <section aria-label={t("entry.lines")} className="rounded-card border border-border bg-surface shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3.5">
+            <h3 className="flex items-baseline gap-2">
+              <span className="font-semibold">{t("entry.lines")}</span>
+              <span className="text-[13px] text-text-secondary tabular-nums">{formatQuantity(lines.length)}</span>
+            </h3>
+            <span className="flex flex-wrap items-center gap-4">
+              {dirty ? <span className="text-caption text-text-secondary">{t("drawer.recalcHint")}</span> : null}
+              {doc && !dirty && doc.status === "DRAFT" && issueCounts.errors > 0 ? (
+                <span className="flex items-center gap-1 text-caption text-danger">
+                  <CircleAlert size={14} strokeWidth={1.5} aria-hidden />
+                  {t("customer.errNote", { count: issueCounts.errors })}
+                </span>
+              ) : null}
+              {doc && !dirty && doc.status === "DRAFT" && issueCounts.warnings > 0 ? (
+                <span className="flex items-center gap-1 text-caption text-warning">
+                  <TriangleAlert size={14} strokeWidth={1.5} aria-hidden />
+                  {t("customer.warnNote", { count: issueCounts.warnings })}
+                </span>
+              ) : null}
+              {editable ? (
+                <Button size="sm" icon={ListPlus} aria-keyshortcuts="Alt+K" onClick={openCatalog}>
+                  {t("customer.pick")}
+                  <span className="ml-1 text-[11px] font-normal opacity-80">Alt+K</span>
+                </Button>
+              ) : null}
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-table">
+              <thead className="bg-table-header text-left text-caption text-text-secondary">
                 <tr>
-                  <td colSpan={7} className="px-3 py-6 text-center text-text-secondary">
-                    {editable ? t("drawer.noLinesEdit") : t("drawer.noLines")}
-                  </td>
+                  <th className="w-10 px-3 py-2.5 font-medium">{t("entry.colNo")}</th>
+                  <th className="px-3 py-2.5 font-medium">
+                    {t("drawer.col.product")}
+                    {editable ? <span className="ml-0.5 text-danger">*</span> : null}
+                  </th>
+                  <th className="px-3 py-2.5 text-right font-medium">{t("entry.colAvail")}</th>
+                  <th className="px-3 py-2.5 text-right font-medium">
+                    {t("drawer.col.qty")}
+                    {editable ? <span className="ml-0.5 text-danger">*</span> : null}
+                  </th>
+                  <th className="px-3 py-2.5 text-right font-medium">{t("drawer.col.price")}</th>
+                  <th className="px-3 py-2.5 text-right font-medium">{t("entry.colSum")}</th>
+                  {editable ? <th className="w-10" /> : null}
                 </tr>
-              ) : (
-                lines.map((l, i) => {
-                  const s = serverLine(l.productId);
-                  const qty = Number(l.qty);
-                  const over = s && isInt(l.qty) && qty > s.available;
-                  const price = s ? (doc?.status === "DRAFT" ? s.currentPrice : s.price) : null;
-                  return (
-                    <tr key={l.productId} className="border-t border-border">
-                      <td className="px-3 py-2">
-                        <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
-                        {s?.controlled ? (
-                          <Badge tone="warning" className="ml-2">
-                            {t("drawer.controlled")}
-                          </Badge>
-                        ) : null}
-                        {s && s.reserved.length > 0 ? (
-                          <span className="mt-1 block text-caption text-text-secondary">
-                            {t("drawer.reserve")}{" "}
-                            {s.reserved.map((r) => `${r.batch} × ${formatQuantity(r.qty)} · ${day(r.expiryDate)} · ${r.zone}`).join("; ")}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums">{s ? formatQuantity(s.available) : "—"}</td>
-                      <td className="px-3 py-2 tabular-nums">{s?.nearestExpiry ? day(s.nearestExpiry) : "—"}</td>
-                      <td className="px-3 py-1 text-right">
-                        {editable ? (
-                          <TextField
-                            label={t("drawer.qty")}
-                            size="sm"
-                            value={l.qty}
-                            onChange={(v) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, qty: v } : x)))}
-                            inputMode="numeric"
-                            error={over ? t("drawer.availableErr", { qty: formatQuantity(s.available) }) : undefined}
-                            className="ml-auto w-28 [&>label]:sr-only [&_input]:text-right"
-                          />
-                        ) : (
-                          <span className="tabular-nums">{formatQuantity(qty)}</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums">
-                        {price ? formatMoney(price) : <span className="text-text-disabled">{s ? t("drawer.noPrice") : "—"}</span>}
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums">{s?.amount && !dirty ? formatMoney(s.amount) : "—"}</td>
-                      {editable ? (
-                        <td className="px-1">
-                          <Button
-                            variant="icon"
-                            icon={Trash2}
-                            aria-label={t("drawer.removeLine")}
-                            onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
-                          />
+              </thead>
+              <tbody>
+                {lines.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-3 py-7 text-center text-text-secondary">
+                      {editable ? t("entry.noLines") : t("drawer.noLines")}
+                    </td>
+                  </tr>
+                ) : (
+                  lines.map((l, i) => {
+                    const s = serverLine(l.productId);
+                    const qty = Number(l.qty);
+                    const over = s && isInt(l.qty) && qty > s.available;
+                    const price = s ? (doc?.status === "DRAFT" ? s.currentPrice : s.price) : null;
+                    return (
+                      <tr key={l.productId} className="group border-t border-border hover:bg-background">
+                        <td className="px-3 py-2 text-text-secondary tabular-nums">{i + 1}</td>
+                        <td className="px-3 py-2">
+                          <span className="font-medium">{l.productName}</span>
+                          <span className="ml-2 font-mono text-caption text-text-secondary">{l.productCode}</span>
+                          {s?.controlled ? (
+                            <Badge tone="warning" className="ml-2">
+                              {t("drawer.controlled")}
+                            </Badge>
+                          ) : null}
+                          {s && s.reserved.length > 0 ? (
+                            <span className="mt-1 block text-caption text-text-secondary">
+                              {t("drawer.reserve")}{" "}
+                              {s.reserved.map((r) => `${r.batch} × ${formatQuantity(r.qty)} · ${day(r.expiryDate)} · ${r.zone}`).join("; ")}
+                            </span>
+                          ) : null}
                         </td>
-                      ) : null}
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-          {lines.length > 0 ? (
-            <dl
-              aria-label={t("customer.totals")}
-              className="sticky bottom-0 flex flex-wrap items-center justify-end gap-x-6 gap-y-1 border-t border-border bg-table-header px-3 py-2.5"
-            >
-              <div className="flex gap-1.5">
-                <dt className="text-text-secondary">{t("customer.tLines")}</dt>
-                <dd className="tabular-nums">{formatQuantity(lines.length)}</dd>
-              </div>
-              <div className="flex gap-1.5">
-                <dt className="text-text-secondary">{t("customer.tQty")}</dt>
-                <dd className="tabular-nums">{formatQuantity(totalQty)}</dd>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <dt className="font-medium">{t("customer.tTotal")}</dt>
-                <dd className="text-subtitle tabular-nums">{doc && !dirty ? formatMoney(doc.total) : "—"}</dd>
-              </div>
-            </dl>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {s ? formatQuantity(s.available) : "—"}
+                          {s?.nearestExpiry ? (
+                            <span className="block text-caption text-text-secondary">{t("entry.expiry", { d: day(s.nearestExpiry) })}</span>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-1 text-right">
+                          {editable ? (
+                            <TextField
+                              label={`${t("drawer.qty")}, ${i + 1}`}
+                              size="sm"
+                              value={l.qty}
+                              onChange={(v) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, qty: v } : x)))}
+                              inputMode="numeric"
+                              error={over ? t("entry.eQty", { n: formatQuantity(s.available) }) : undefined}
+                              className="ml-auto w-28 [&>:first-child]:sr-only [&_input]:text-right"
+                            />
+                          ) : (
+                            <span className="tabular-nums">{formatQuantity(qty)}</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {price ? (
+                            <span className="inline-flex items-center gap-1.5" title={t("entry.priceLock")}>
+                              {formatMoney(price)}
+                              {editable ? <Lock size={13} strokeWidth={1.5} aria-hidden className="text-text-secondary" /> : null}
+                            </span>
+                          ) : (
+                            <span className="text-text-disabled">{s ? t("drawer.noPrice") : "—"}</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-right font-medium tabular-nums">
+                          {s?.amount && !dirty ? formatMoney(s.amount) : "—"}
+                        </td>
+                        {editable ? (
+                          <td className="px-1">
+                            <Button
+                              variant="icon"
+                              icon={X}
+                              aria-label={t("drawer.removeLine")}
+                              onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
+                            />
+                          </td>
+                        ) : null}
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          {editable ? (
+            <div className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
+              <Select
+                label={t("drawer.product")}
+                value={adding.product}
+                loadOptions={async (q) => {
+                  const found = await searchProducts(q);
+                  found.forEach((o) => seen.current.set(o.value, { code: o.sub, name: o.label }));
+                  return found;
+                }}
+                onChange={(v) => setAdding((a) => ({ ...a, product: v }))}
+                placeholder={t("entry.quickPh")}
+                options={[]}
+                size="sm"
+                className="w-80 max-w-full [&>:first-child]:sr-only"
+              />
+              <TextField
+                label={t("drawer.qty")}
+                size="sm"
+                value={adding.qty}
+                onChange={(v) => setAdding((a) => ({ ...a, qty: v }))}
+                inputMode="numeric"
+                suffix={t("unit.pcs")}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addLine())}
+                className="w-32 [&>:first-child]:sr-only [&_input]:text-right"
+              />
+              <Button variant="tertiary" size="sm" icon={Plus} onClick={addLine}>
+                {t("drawer.addLine")}
+              </Button>
+              <span className="text-caption text-text-secondary">{t("entry.keys")}</span>
+            </div>
           ) : null}
-        </div>
+          <dl
+            aria-label={t("customer.totals")}
+            className="sticky bottom-0 flex flex-wrap items-center justify-end gap-x-7 gap-y-1 rounded-b-card border-t border-border bg-table-header px-4 py-3.5"
+          >
+            <div className="flex gap-1.5">
+              <dt className="text-text-secondary">{t("entry.tLines")}</dt>
+              <dd className="tabular-nums">{formatQuantity(lines.length)}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-text-secondary">{t("entry.tQty")}</dt>
+              <dd className="tabular-nums">{formatQuantity(totalQty)}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-text-secondary">{t("entry.tVat")}</dt>
+              <dd className="tabular-nums">{doc && !dirty ? formatMoney(doc.vatTotal) : lines.length ? "—" : formatMoney("0")}</dd>
+            </div>
+            <div className="flex items-baseline gap-2 border-l border-border pl-6">
+              <dt className="text-text-secondary">{t("entry.tTotal")}</dt>
+              <dd className="text-[18px] leading-6 font-semibold tabular-nums">
+                {doc && !dirty ? formatMoney(doc.total) : lines.length ? "—" : formatMoney("0")}
+              </dd>
+            </div>
+          </dl>
+        </section>
       </div>
       {dialog === "catalog" && warehouseId ? (
         <CatalogDialog
@@ -975,33 +1054,58 @@ function CreditRow({ doc }: { doc: OrderDetail }) {
 /** «N ta muammo» paneli: xato — yuborilmaydi, tasdiq — tasdiqqa ketadi, ogohlantirish — faqat maʼlumot. */
 function IssuesPanel({ issues, dirty }: { issues: OrderIssue[]; dirty: boolean }) {
   const t = useTranslations("orders");
+  const [open, setOpen] = useState(true);
   if (issues.length === 0 && !dirty) return <Alert tone="success" title={t("issuesPanel.none")} />;
   if (issues.length === 0) return null;
   const errors = issues.filter((i) => i.level === "ERROR").length;
+  const Head = errors ? CircleAlert : TriangleAlert;
+  const tone = errors ? "text-danger" : "text-warning";
+  // Prototip «Muammolar»: yigʻiladigan blok — sarlavha rangi eng ogʻir daraja boʻyicha
   return (
-    <div className="rounded-card border border-border">
-      <div className="border-b border-border px-3 py-2 font-medium">
-        {errors ? t("issuesPanel.countBlocking", { count: issues.length, errors }) : t("issuesPanel.count", { count: issues.length })}
-        {dirty ? <span className="ml-2 text-caption font-normal text-text-secondary">{t("issuesPanel.stale")}</span> : null}
-      </div>
-      <ul>
-        {issues.map((i) => (
-          <li
-            key={`${i.code}-${i.lineNo ?? "h"}-${i.message}`}
-            className="flex items-start gap-2 border-b border-border px-3 py-2 last:border-b-0"
-          >
-            {i.level === "ERROR" ? (
-              <CircleAlert size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-danger" aria-label={t("issuesPanel.error")} />
-            ) : i.level === "APPROVAL" ? (
-              <TriangleAlert size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-warning" aria-label={t("issuesPanel.approval")} />
-            ) : (
-              <Info size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-info" aria-label={t("issuesPanel.warning")} />
-            )}
-            <span>{i.message}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <section className={`rounded-card border bg-surface shadow-sm ${errors ? "border-danger/30" : "border-warning/30"}`}>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className={`flex min-h-11 w-full items-center gap-2.5 rounded-card px-3.5 py-2 text-left ${errors ? "bg-danger-bg" : "bg-warning-bg"}`}
+      >
+        <Head size={16} strokeWidth={1.5} aria-hidden className={`shrink-0 ${tone}`} />
+        <span className={`font-semibold whitespace-nowrap ${tone}`}>{t("entry.probTitle")}</span>
+        <span className="min-w-0 flex-1 truncate text-caption text-text-secondary">
+          {errors ? t("issuesPanel.countBlocking", { count: issues.length, errors }) : t("issuesPanel.count", { count: issues.length })}
+          {dirty ? ` ${t("issuesPanel.stale")}` : ""}
+        </span>
+        {open ? (
+          <ChevronUp size={16} strokeWidth={1.5} aria-hidden className="shrink-0 text-text-secondary" />
+        ) : (
+          <ChevronDown size={16} strokeWidth={1.5} aria-hidden className="shrink-0 text-text-secondary" />
+        )}
+      </button>
+      {open ? (
+        <ul className="flex flex-col gap-0.5 border-t border-border px-1.5 pt-1 pb-2">
+          {issues.map((i) => (
+            <li
+              key={`${i.code}-${i.lineNo ?? "h"}-${i.message}`}
+              className="flex items-start gap-2 rounded-control px-2 py-1.5 text-[13px] leading-[18px]"
+            >
+              {i.level === "ERROR" ? (
+                <CircleAlert size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-danger" aria-label={t("issuesPanel.error")} />
+              ) : i.level === "APPROVAL" ? (
+                <TriangleAlert
+                  size={14}
+                  strokeWidth={1.5}
+                  className="mt-0.5 shrink-0 text-warning"
+                  aria-label={t("issuesPanel.approval")}
+                />
+              ) : (
+                <Info size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-info" aria-label={t("issuesPanel.warning")} />
+              )}
+              <span className="min-w-0 flex-1">{i.message}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }
 

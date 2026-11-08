@@ -137,7 +137,7 @@
     "approve": "Tasdiqlash",
     "customer": "Mijoz",
     "customerPlaceholder": "Nom, STIR yoki telefon",
-    "warehouse": "Ombor",
+    "warehouse": "Joʻnatiladigan ombor",
     "deliveryType": "Yetkazish turi",
     "deliveryDate": "Yetkazish sanasi",
     "datePlaceholder": "KK.OO.YYYY",
@@ -647,5 +647,32 @@
   "page": {
     "parent": "Buyurtmalar",
     "title": "Buyurtma"
+  },
+  "entry": {
+    "orderDate": "Buyurtma sanasi",
+    "warehouse": "Joʻnatiladigan ombor",
+    "deliveryType": "Yetkazish usuli",
+    "customerPh": "Nomi, STIR yoki telefon…",
+    "payNone": "Mijoz tanlanmagan",
+    "addrPickup": "Oʻzi olib ketadi — manzil kerak emas",
+    "lines": "Qatorlar",
+    "colNo": "№",
+    "colAvail": "Mavjud",
+    "colSum": "Summa (QQS bilan)",
+    "quickPh": "Mahsulot nomi yoki shtrix-kod…",
+    "keys": "Enter — qoʻshish va miqdorga oʻtish · Ctrl+Enter — saqlash",
+    "noLines": "Qatorlar yoʻq. Mahsulot nomini yozib Enter bosing",
+    "priceLock": "Narx «Narxlar» boʻlimidan olinadi",
+    "eQty": "Mavjud: {n}. Qoldiq minusga tushmaydi",
+    "expiry": "Muddat: {d}",
+    "tLines": "Qatorlar",
+    "tQty": "Jami miqdor",
+    "tVat": "QQS",
+    "tTotal": "Jami",
+    "recalc": "Saqlangach hisoblanadi",
+    "probTitle": "Muammolar",
+    "probSub": "{errors} ta xato · {warnings} ta ogohlantirish",
+    "probOk": "Muammo yoʻq",
+    "linesPh": "Mahsulot"
   }
 }

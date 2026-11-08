@@ -17277,6 +17277,10 @@
           "total" : {
             "type" : "string"
           },
+          "vatTotal" : {
+            "type" : "string",
+            "description" : "Jami ichidagi QQS (qatorlar bo'yicha, narx QQS bilan)"
+          },
           "warehouse" : {
             "type" : "string"
           },
@@ -17285,7 +17289,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "documents", "fefoDeviation", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "warehouse", "warehouseId" ]
+        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "documents", "fefoDeviation", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "vatTotal", "warehouse", "warehouseId" ]
       },
       "OrderDocuments" : {
         "type" : "object",
@@ -17489,6 +17493,10 @@
             "items" : {
               "$ref" : "#/components/schemas/ReservedBatch"
             }
+          },
+          "vatAmount" : {
+            "type" : "string",
+            "description" : "Summa ichidagi QQS"
           }
         },
         "required" : [ "available", "controlled", "id", "lineNo", "marked", "productCode", "productId", "productName", "qty", "reserved" ]

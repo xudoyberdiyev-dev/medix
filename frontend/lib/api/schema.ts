@@ -7333,6 +7333,8 @@ export interface components {
             /** Format: date-time */
             submittedAt?: string;
             total: string;
+            /** @description Jami ichidagi QQS (qatorlar bo'yicha, narx QQS bilan) */
+            vatTotal: string;
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
@@ -7417,6 +7419,8 @@ export interface components {
             qty: number;
             /** @description FEFO zahira (Navbatda va keyin) */
             reserved: components["schemas"]["ReservedBatch"][];
+            /** @description Summa ichidagi QQS */
+            vatAmount?: string;
         };
         OrderLineRequest: {
             /** Format: int64 */

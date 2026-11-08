@@ -25,7 +25,7 @@ test("Operator: saqlanmagan buyurtma boshqa sahifadan qaytganda tiklanadi", asyn
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
-  await page.getByRole("combobox", { name: "Ombor", exact: true }).click();
+  await page.getByRole("combobox", { name: "Joʻnatiladigan ombor", exact: true }).click();
   await page
     .getByRole("option", { name: /Markaziy ombor/ })
     .first()
