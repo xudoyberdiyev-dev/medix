@@ -4180,6 +4180,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stock/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ombor daraxti
+         * @description Filial → ombor → zona: mahsulotlar soni, miqdor, tannarxda summa (qoldiq > 0).
+         */
+        get: operations["tree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/supplier-bonuses": {
         parameters: {
             query?: never;
@@ -9353,6 +9373,30 @@ export interface components {
              * @description Bo'sh bo'lsa — bugun
              */
             transferDate?: string;
+        };
+        TreeNode: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** @description BRANCH, WAREHOUSE yoki ZONE */
+            level: string;
+            /**
+             * Format: int64
+             * @description Turli mahsulotlar soni
+             */
+            products: number;
+            /** Format: int64 */
+            qty: number;
+            /** @description Tannarxda — faqat special.cost */
+            value?: string;
+            warehouse?: string;
+            /** Format: int64 */
+            warehouseId?: number;
+            zone?: string;
+            /** Format: int64 */
+            zoneId?: number;
+            /** @enum {string} */
+            zoneType?: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
         TripDetail: {
             /** Format: int64 */
@@ -16046,6 +16090,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StockSummary"];
+                };
+            };
+        };
+    };
+    tree: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"][];
                 };
             };
         };

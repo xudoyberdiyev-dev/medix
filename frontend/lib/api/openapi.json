@@ -9947,6 +9947,38 @@
         "tags" : [ "stock" ]
       }
     },
+    "/api/stock/tree" : {
+      "get" : {
+        "description" : "Filial → ombor → zona: mahsulotlar soni, miqdor, tannarxda summa (qoldiq > 0).",
+        "operationId" : "tree",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TreeNode"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ombor daraxti",
+        "tags" : [ "stock" ]
+      }
+    },
     "/api/supplier-bonuses" : {
       "get" : {
         "operationId" : "list_23",
@@ -22489,6 +22521,54 @@
           }
         },
         "required" : [ "amount", "branchId", "fromAccountId", "toAccountId" ]
+      },
+      "TreeNode" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "level" : {
+            "type" : "string",
+            "description" : "BRANCH, WAREHOUSE yoki ZONE"
+          },
+          "products" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Turli mahsulotlar soni"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Tannarxda — faqat special.cost"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zone" : {
+            "type" : "string"
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zoneType" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "branch", "branchId", "level", "products", "qty" ]
       },
       "TripDetail" : {
         "type" : "object",
