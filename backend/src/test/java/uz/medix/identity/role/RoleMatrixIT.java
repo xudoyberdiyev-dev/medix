@@ -113,4 +113,64 @@ class RoleMatrixIT {
         Cookie manager = login(employee("BRANCH_MANAGER"));
         mvc.perform(get("/api/roles/matrix").cookie(manager)).andExpect(status().isForbidden());
     }
+
+    private String draft(String code, String name, String scope, String home, boolean active, String perms) {
+        return "{\"roles\":[{\"code\":" + (code == null ? "null" : "\"" + code + "\"") + ",\"name\":\"" + name
+                + "\",\"description\":\"Sinov\",\"scope\":\"" + scope + "\",\"home\":\"" + home + "\",\"active\":" + active
+                + ",\"permissions\":[" + perms + "],\"copiedFrom\":\"OPERATOR\"}]}";
+    }
+
+    @Test
+    void matrixSaveCreatesRoleWithScopeHomeAndDependencies() throws Exception {
+        Cookie admin = login(employee("ADMIN"));
+        mvc.perform(get("/api/roles/matrix").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.permissions[?(@.key == 'orders.create')].group", hasItem("sales")))
+                .andExpect(jsonPath("$.permissions[?(@.key == 'orders.create')].page", hasItem("orders")))
+                .andExpect(jsonPath("$.permissions[?(@.key == 'approvals.director')].lock", hasItem("dir")))
+                .andExpect(jsonPath("$.roles[?(@.code == 'DIRECTOR')].scope", hasItem("all")))
+                .andExpect(jsonPath("$.roles[?(@.code == 'WAREHOUSE_MANAGER')].home", hasItem("keeper")))
+                .andExpect(jsonPath("$.defaults.DRIVER", hasSize(1)));
+
+        String name = "Narxchi " + UUID.randomUUID().toString().substring(0, 4);
+        mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                        .content(draft(null, name, "all", "purchase", true, "\"prices.create\"")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.roles[?(@.name == '" + name + "')].scope", hasItem("all")))
+                .andExpect(jsonPath("$.lastChange.at").exists());
+        String code = jdbc.sql("SELECT code FROM role WHERE name = :n").param("n", name).query(String.class).single();
+        // Amal yoqilsa — sahifani ko'rish ham avtomatik
+        mvc.perform(get("/api/roles/matrix").cookie(admin))
+                .andExpect(jsonPath("$.grants." + code, hasSize(2)))
+                .andExpect(jsonPath("$.grants." + code, hasItem("prices.view")));
+
+        Cookie custom = login(employee(code));
+        mvc.perform(get("/api/auth/me").cookie(custom))
+                .andExpect(jsonPath("$.role.home").value("purchase"))
+                .andExpect(jsonPath("$.allBranches").value(true));
+
+        mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                        .content(draft(code, name, "own", "purchase", true, "\"approvals.director\"")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("role.directorOnly"));
+        mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                        .content(draft(code, name, "own", "purchase", false, "")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("role.hasEmployees"));
+        mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                        .content(draft(null, "Operator", "own", "operator", true, "")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("role.nameTaken"));
+        mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                        .content(draft(code, name, "own", "nowhere", true, "")))
+                .andExpect(status().isBadRequest());
+
+        // Doira «o'z filiali» ga qaytsa — keyingi kirishda barcha filiallar yo'q
+        mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
+                        .content(draft(code, name, "own", "operator", true, "\"orders.view\"")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/auth/me").cookie(login(employee(code))))
+                .andExpect(jsonPath("$.role.home").value("operator"))
+                .andExpect(jsonPath("$.allBranches").value(false));
+    }
 }

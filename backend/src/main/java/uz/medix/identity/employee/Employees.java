@@ -143,7 +143,7 @@ public class Employees {
 
     @Transactional
     public Employee create(NewEmployee n) {
-        Long roleId = jdbc.sql("SELECT id FROM role WHERE code = :c")
+        Long roleId = jdbc.sql("SELECT id FROM role WHERE code = :c AND active")
                 .param("c", n.roleCode())
                 .query(Long.class)
                 .optional()

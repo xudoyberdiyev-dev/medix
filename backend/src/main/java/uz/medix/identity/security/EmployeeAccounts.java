@@ -37,7 +37,7 @@ class EmployeeAccounts {
     Optional<Account> findByLogin(String login) {
         return jdbc.sql("""
                 SELECT e.id, e.login, e.full_name, e.password_hash, e.status, e.must_change_password, e.branch_id,
-                       r.id AS role_id, r.code AS role_code, r.name AS role_name, e.all_branches
+                       r.id AS role_id, r.code AS role_code, r.name AS role_name, (e.all_branches OR r.scope = 'all') AS all_branches
                 FROM employee e JOIN role r ON r.id = e.role_id
                 WHERE e.login = :login""")
                 .param("login", login)
@@ -48,7 +48,7 @@ class EmployeeAccounts {
     Optional<Account> findById(long id) {
         return jdbc.sql("""
                 SELECT e.id, e.login, e.full_name, e.password_hash, e.status, e.must_change_password, e.branch_id,
-                       r.id AS role_id, r.code AS role_code, r.name AS role_name, e.all_branches
+                       r.id AS role_id, r.code AS role_code, r.name AS role_name, (e.all_branches OR r.scope = 'all') AS all_branches
                 FROM employee e JOIN role r ON r.id = e.role_id
                 WHERE e.id = :id""")
                 .param("id", id)

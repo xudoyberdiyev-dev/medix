@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import uz.medix.identity.role.Roles;
 import uz.medix.identity.security.AuthService;
 import uz.medix.identity.security.MedixPrincipal;
 
@@ -31,9 +32,11 @@ class AuthController {
     private final AuthService auth;
     private final SecurityContextRepository contextRepository;
     private final SessionAuthenticationStrategy sessionStrategy;
+    private final Roles roles;
 
-    AuthController(AuthService auth, SecurityContextRepository contextRepository, SessionAuthenticationStrategy sessionStrategy) {
+    AuthController(AuthService auth, SecurityContextRepository contextRepository, SessionAuthenticationStrategy sessionStrategy, Roles roles) {
         this.auth = auth;
+        this.roles = roles;
         this.contextRepository = contextRepository;
         this.sessionStrategy = sessionStrategy;
     }
@@ -49,13 +52,14 @@ class AuthController {
     MeResponse login(@Valid @RequestBody LoginRequest body, HttpServletRequest request, HttpServletResponse response) {
         UsernamePasswordAuthenticationToken authentication = auth.login(body.login(), body.password());
         establish(authentication, request, response);
-        return MeResponse.of((MedixPrincipal) authentication.getPrincipal());
+        MedixPrincipal p = (MedixPrincipal) authentication.getPrincipal();
+        return MeResponse.of(p, roles.home(p.roleCode()));
     }
 
     @GetMapping("/me")
     @Operation(summary = "Joriy foydalanuvchi")
     MeResponse me(@Parameter(hidden = true) @AuthenticationPrincipal MedixPrincipal principal) {
-        return MeResponse.of(principal);
+        return MeResponse.of(principal, roles.home(principal.roleCode()));
     }
 
     @PostMapping("/password")

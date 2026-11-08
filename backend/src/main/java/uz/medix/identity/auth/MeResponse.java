@@ -15,10 +15,12 @@ record MeResponse(
         @Schema(description = "Barcha filiallar ma'lumotini ko'radi") boolean allBranches,
         List<String> permissions) {
 
-    record RoleRef(String code, String name) {}
+    record RoleRef(String code, String name,
+            @Schema(description = "Bosh sahifa turi (Rollar matritsasidan)", allowableValues = {"director", "branch", "operator", "purchase",
+                    "keeper", "cashier", "accountant", "picker", "marker", "driver"}) String home) {}
 
-    static MeResponse of(MedixPrincipal p) {
-        return new MeResponse(p.id(), p.login(), p.fullName(), new RoleRef(p.roleCode(), p.roleName()), p.branchId(),
+    static MeResponse of(MedixPrincipal p, String home) {
+        return new MeResponse(p.id(), p.login(), p.fullName(), new RoleRef(p.roleCode(), p.roleName(), home), p.branchId(),
                 p.mustChangePassword(), p.allBranches(), p.permissions().stream().sorted().toList());
     }
 }
