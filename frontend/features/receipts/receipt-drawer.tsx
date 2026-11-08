@@ -403,7 +403,8 @@ function Editor({
   const content = (
     <div className="flex flex-col gap-4">
       <StatusNotes doc={doc} />
-      <div className="grid grid-cols-3 gap-4">
+      {frame === "page" && !editable && doc ? <HeaderInfo doc={doc} /> : null}
+      <div className={cn("grid grid-cols-3 gap-4", frame === "page" && !editable && doc && "hidden")}>
         <Select
           label={t("field.warehouse")}
           value={warehouseId}
@@ -760,6 +761,49 @@ function Editor({
       {content}
       {dialogs}
     </Drawer>
+  );
+}
+
+/** Oʻqish rejimidagi sarlavha (prototip `InfoGrid` «Hujjat maʼlumotlari»): ikki ustunli taʼrif roʻyxati. */
+function HeaderInfo({ doc }: { doc: ReceiptDetail }) {
+  const t = useTranslations("receipts.drawer");
+  const tcp = useTranslations("counterparties");
+  const at = (who?: string, when?: string) => (who ? `${who}${when ? ` · ${formatDateTime(new Date(when))}` : ""}` : null);
+  const rows: { label: string; value: string | null; mono?: boolean }[] = [
+    { label: t("field.warehouse"), value: doc.warehouse },
+    { label: t("field.date"), value: day(doc.receiptDate) },
+    { label: t("field.supplier"), value: doc.supplier },
+    { label: t("field.invoiceNumber"), value: doc.invoiceNumber ?? null, mono: true },
+    { label: t("field.invoiceDate"), value: doc.invoiceDate ? day(doc.invoiceDate) : null },
+    { label: t("field.paymentType"), value: tcp(`paymentType.${doc.paymentType}`) },
+    {
+      label: t("field.due"),
+      value: doc.fromBonus ? t("field.fromBonus") : doc.prepaid ? t("field.prepaid") : doc.dueDate ? day(doc.dueDate) : null,
+    },
+    { label: t("field.owner"), value: doc.owner ?? null },
+    {
+      label: t("field.discount"),
+      value: doc.discountKind
+        ? `${doc.discountKind === "PERCENT" ? `${doc.discountValue ?? ""} %` : formatMoney(doc.discountValue ?? "0")}${doc.discountDate ? ` · ${day(doc.discountDate)}` : ""}`
+        : null,
+    },
+    { label: t("field.note"), value: doc.note ?? null },
+    { label: t("info.created"), value: at(doc.createdBy, doc.createdAt) },
+    { label: t("info.accepted"), value: at(doc.acceptedBy, doc.acceptedAt) },
+    { label: t("info.posted"), value: at(doc.postedBy, doc.postedAt) },
+  ];
+  return (
+    <section className="rounded-card border border-border bg-surface">
+      <h3 className="border-b border-border px-5 py-3.5 font-semibold">{t("info.title")}</h3>
+      <dl className="grid gap-x-6 px-5 py-1 sm:grid-cols-2 xl:grid-cols-3">
+        {rows.map((r) => (
+          <div key={r.label} className="flex flex-col gap-0.5 border-b border-border py-2.5">
+            <dt className="text-caption text-text-secondary">{r.label}</dt>
+            <dd className={r.mono && r.value ? "font-mono text-[13px]" : "[overflow-wrap:anywhere]"}>{r.value ?? "—"}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 

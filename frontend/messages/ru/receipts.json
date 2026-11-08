@@ -185,7 +185,13 @@
     "cancelled": "Отменено",
     "pageTitle": "Документ прихода",
     "tabDoc": "Документ",
-    "tabHistory": "История"
+    "tabHistory": "История",
+    "info": {
+      "title": "Данные документа",
+      "created": "Создал",
+      "accepted": "Принял",
+      "posted": "Провёл"
+    }
   },
   "notes": {
     "cancelled": "Отменён: {reason}",

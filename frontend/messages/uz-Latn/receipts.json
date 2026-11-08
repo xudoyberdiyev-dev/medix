@@ -185,7 +185,13 @@
     "cancelled": "Bekor qilindi",
     "pageTitle": "Kirim hujjati",
     "tabDoc": "Hujjat",
-    "tabHistory": "Tarix"
+    "tabHistory": "Tarix",
+    "info": {
+      "title": "Hujjat maʼlumotlari",
+      "created": "Yaratdi",
+      "accepted": "Qabul qildi",
+      "posted": "Oʻtkazdi"
+    }
   },
   "notes": {
     "cancelled": "Bekor qilindi: {reason}",

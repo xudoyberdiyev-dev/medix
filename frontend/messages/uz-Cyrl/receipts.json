@@ -185,7 +185,13 @@
     "cancelled": "Бекор қилинди",
     "pageTitle": "Кирим ҳужжати",
     "tabDoc": "Ҳужжат",
-    "tabHistory": "Тарих"
+    "tabHistory": "Тарих",
+    "info": {
+      "title": "Ҳужжат маълумотлари",
+      "created": "Яратди",
+      "accepted": "Қабул қилди",
+      "posted": "Ўтказди"
+    }
   },
   "notes": {
     "cancelled": "Бекор қилинди: {reason}",
