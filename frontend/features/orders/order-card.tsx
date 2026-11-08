@@ -1,13 +1,13 @@
 "use client";
 
-import { Check, ChevronDown, ChevronRight, TriangleAlert, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, ScanLine, TriangleAlert, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Fragment, useState, type ReactNode } from "react";
 import { HistoryTimeline } from "@/components/ui/history-timeline";
 import { Spinner } from "@/components/ui/spinner";
-import { ErrorState } from "@/components/ui/system-states";
+import { EmptyState, ErrorState } from "@/components/ui/system-states";
 import { Tabs } from "@/components/ui/tabs";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
@@ -15,6 +15,7 @@ import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { formatDate, formatMoney, formatQuantity, formatTime } from "@/lib/format";
 import { useOrderHistory, type OrderDetail } from "./api";
+import { pickPhase, pickRows } from "./order-pick";
 import { day } from "./orders-page";
 
 type Status = OrderDetail["status"];
@@ -241,6 +242,70 @@ function OrderHistory({ id }: { id: number }) {
 }
 
 /** «Toʻlov» yorligʻi (prototip `OrderCard`): sotuv summasi, toʻlandi, qoldi, toʻlov muddati (kechikish), taqsimlangan MT lar. */
+/** «Terish» yorligʻi (prototip `OrderCard`): kim va qachon yigʻdi, partiyalar (FEFO zahira yoki yigʻilgan), markirovka holati. */
+function OrderPicking({ doc }: { doc: OrderDetail }) {
+  const t = useTranslations("orders.card.pick");
+  const rows = pickRows(doc);
+  const phase = pickPhase(doc);
+  if (rows.length === 0)
+    return (
+      <div className="rounded-card border border-border bg-surface">
+        <EmptyState icon={ScanLine} title={t("emptyTitle")} description={phase === "reserved" ? t("emptyQueued") : t("emptyNotYet")} />
+      </div>
+    );
+  const at = (iso: string) => `${formatDate(new Date(iso))} ${formatTime(new Date(iso))}`;
+  const meta =
+    phase === "done" && doc.pickStartedAt && doc.pickFinishedAt
+      ? t("metaDone", { who: doc.picker ?? "—", from: at(doc.pickStartedAt), to: formatTime(new Date(doc.pickFinishedAt)) })
+      : phase === "running" && doc.pickStartedAt
+        ? t("metaRunning", { who: doc.picker ?? "—", from: at(doc.pickStartedAt) })
+        : t("metaReserved");
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <p className="flex flex-wrap items-center gap-2 text-caption text-text-secondary">
+        <span>{meta}</span>
+        {doc.fefoDeviation ? (
+          <span className="flex items-center gap-1 text-warning">
+            <TriangleAlert size={14} strokeWidth={1.5} aria-hidden />
+            {t("fefo")}
+          </span>
+        ) : null}
+      </p>
+      <div className="overflow-x-auto rounded-card border border-border bg-surface">
+        <table className="w-full min-w-[720px] text-table">
+          <thead className="bg-table-header text-left text-caption text-text-secondary">
+            <tr>
+              <th className="px-3 py-2.5 font-medium">{t("cProduct")}</th>
+              <th className="px-3 py-2.5 font-medium">{t("cBatch")}</th>
+              <th className="px-3 py-2.5 font-medium">{t("cExp")}</th>
+              <th className="px-3 py-2.5 font-medium">{t("cZone")}</th>
+              <th className="px-3 py-2.5 text-right font-medium">{t("cQty")}</th>
+              <th className="px-3 py-2.5 font-medium">{t("cMark")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.key} className="border-t border-border">
+                <td className="px-3 py-3 font-medium">{r.product}</td>
+                <td className="px-3 py-3 font-mono text-[12.5px]">{r.batch}</td>
+                <td className="px-3 py-3 tabular-nums">{day(r.expiryDate)}</td>
+                <td className="px-3 py-3 text-text-secondary">{r.zone}</td>
+                <td className="px-3 py-3 text-right font-medium tabular-nums">{formatQuantity(r.qty)}</td>
+                <td className={cn("px-3 py-3", r.mark === "done" ? "text-success" : "text-text-secondary")}>
+                  <span className="flex items-center gap-1">
+                    {r.mark === "done" ? <Check size={14} strokeWidth={1.5} aria-hidden /> : null}
+                    {r.mark === "none" ? "—" : t(r.mark === "done" ? "markDone" : "markWait")}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function OrderPayment({ doc }: { doc: OrderDetail }) {
   const t = useTranslations("orders.card");
   const me = useMe();
@@ -338,6 +403,7 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
         onChange={setTab}
         items={[
           { key: "order", label: t("card.tOrder") },
+          { key: "pick", label: t("card.tPick") },
           { key: "ship", label: t("card.tShip") },
           { key: "pay", label: t("card.tPay") },
           { key: "history", label: t("card.tHistory") },
@@ -347,6 +413,8 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
         <OrderHistory id={doc.id} />
       ) : tab === "pay" ? (
         <OrderPayment doc={doc} />
+      ) : tab === "pick" ? (
+        <OrderPicking doc={doc} />
       ) : tab === "ship" ? (
         (shipping ?? <p className="rounded-card border border-border bg-surface p-5 text-text-secondary">{t("card.shipEmpty")}</p>)
       ) : (

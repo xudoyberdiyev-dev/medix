@@ -747,7 +747,25 @@
     "payDue": "Toʻlov muddati",
     "payLate": "{n} kun kechikdi",
     "payList": "Toʻlovlar",
-    "payNone": "Hali toʻlov yoʻq"
+    "payNone": "Hali toʻlov yoʻq",
+    "tPick": "Terish",
+    "pick": {
+      "emptyTitle": "Terish hali boshlanmagan",
+      "emptyQueued": "Buyurtma navbatda — yigʻuvchi olganda partiyalar shu yerda koʻrinadi.",
+      "emptyNotYet": "Buyurtma tasdiqlanib navbatga tushgach, FEFO boʻyicha partiyalar zahiralanadi.",
+      "metaDone": "Yigʻdi: {who} · {from} – {to}",
+      "metaRunning": "Yigʻmoqda: {who} · {from} dan",
+      "metaReserved": "FEFO zahira — yigʻuvchi hali olmagan",
+      "fefo": "FEFO dan chetlanish bor",
+      "cProduct": "Mahsulot",
+      "cBatch": "Partiya",
+      "cExp": "Yaroqlilik muddati",
+      "cZone": "Zona",
+      "cQty": "Soni",
+      "cMark": "Markirovka",
+      "markDone": "Skanerlandi",
+      "markWait": "Kutilmoqda"
+    }
   },
   "print": {
     "menu": "Chop etish",
