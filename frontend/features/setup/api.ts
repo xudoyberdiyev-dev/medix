@@ -35,8 +35,46 @@ function useSetupMutation<TBody, TResult>(fn: (body: TBody) => Promise<TResult>)
   });
 }
 
+export type CompanyRequest = components["schemas"]["CompanyRequest"];
+export type Company = components["schemas"]["Company"];
+
 export function useSaveCompany() {
-  return useSetupMutation((body: { name: string }) => unwrap(api.PUT("/api/setup/company", { body })));
+  return useSetupMutation((body: CompanyRequest) => unwrap(api.PUT("/api/setup/company", { body })));
+}
+
+/** Logotip: PNG yoki SVG, 2 MB gacha (server ham tekshiradi). */
+export function useUploadLogo() {
+  return useSetupMutation((file: File) =>
+    unwrap(
+      api.PUT("/api/setup/company/logo", {
+        body: { file: file as unknown as string },
+        bodySerializer: () => {
+          const fd = new FormData();
+          fd.append("file", file);
+          return fd;
+        },
+      }),
+    ),
+  );
+}
+
+export function useRemoveLogo() {
+  return useSetupMutation<void, Company>(() => unwrap(api.DELETE("/api/setup/company/logo")));
+}
+
+/** Logotip URL — versiya bilan (kesh yangilanishi uchun); null — logotip yoʻq. */
+export function logoUrl(company: Pick<Company, "logoVersion"> | null | undefined): string | null {
+  return company?.logoVersion != null ? `/api/company/logo?v=${company.logoVersion}` : null;
+}
+
+export const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+
+/** Brauzerdagi tekshiruv (server baribir mazmun boʻyicha tekshiradi). */
+export function logoProblem(file: { name: string; type: string; size: number }): "badType" | "tooBig" | null {
+  const ok = file.type === "image/png" || file.type === "image/svg+xml" || /\.(png|svg)$/i.test(file.name);
+  if (!ok) return "badType";
+  if (file.size > LOGO_MAX_BYTES) return "tooBig";
+  return null;
 }
 
 export function useCreateBranch() {

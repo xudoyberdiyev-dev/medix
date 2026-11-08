@@ -13074,6 +13074,58 @@
         "summary" : "Rad etish",
         "tags" : [ "zone-transfer" ]
       }
+    },
+    "/api/setup/company/logo" : {
+      "put" : {
+        "operationId" : "uploadLogo",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Company"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Logotip yuklash (PNG yoki SVG, 2 MB gacha)",
+        "tags" : [ "setup" ]
+      },
+      "delete" : {
+        "operationId" : "removeLogo",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Company"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Logotipni o'chirish",
+        "tags" : [ "setup" ]
+      }
     }
   },
   "components" : {
@@ -15115,9 +15167,16 @@
           "setupCompletedAt" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "defaultLocale" : {
+            "type" : "string"
+          },
+          "logoVersion" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
-        "required" : [ "id", "name" ]
+        "required" : [ "defaultLocale", "id", "name" ]
       },
       "CompanyRequest" : {
         "type" : "object",
@@ -15126,6 +15185,10 @@
             "type" : "string",
             "maxLength" : 200,
             "minLength" : 0
+          },
+          "defaultLocale" : {
+            "type" : "string",
+            "pattern" : "^(uz-Latn|uz-Cyrl|ru)$"
           }
         },
         "required" : [ "name" ]

@@ -18,7 +18,6 @@ import {
   useCreateEmployee,
   useCreateWarehouse,
   useRoles,
-  useSaveCompany,
   type Branch,
   type Employee,
   type Role,
@@ -32,40 +31,6 @@ function FormGrid({ children, onSubmit }: { children: ReactNode; onSubmit: (e: F
     <form onSubmit={onSubmit} noValidate className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {children}
     </form>
-  );
-}
-
-/* ---------- 1. Kompaniya ---------- */
-
-export function CompanyStep({ status, onDone }: { status: SetupStatus; onDone: () => void }) {
-  const t = useTranslations("setup.company");
-  const save = useSaveCompany();
-  const [name, setName] = useState(status.company?.name ?? "");
-  const [error, setError] = useState<string>();
-  const err = describeError(save.error);
-
-  function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!name.trim()) {
-      setError(t("required"));
-      return;
-    }
-    setError(undefined);
-    save.mutate({ name: name.trim() }, { onSuccess: onDone });
-  }
-
-  return (
-    <Card title={t("title")}>
-      <form onSubmit={submit} noValidate className="flex max-w-xl flex-col gap-4">
-        <TextField label={t("name")} size="lg" value={name} onChange={setName} error={error ?? err.fields.name} required autoFocus />
-        {err.message ? <Alert tone="danger" title={err.message} /> : null}
-        <div>
-          <Button type="submit" size="lg" loading={save.isPending}>
-            {t("save")}
-          </Button>
-        </div>
-      </form>
-    </Card>
   );
 }
 

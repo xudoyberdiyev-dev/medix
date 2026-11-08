@@ -56,8 +56,12 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await expect(page).toHaveURL(/\/setup$/);
 
   // 1. Kompaniya
-  await field(page, "Kompaniya (guruh) nomi").fill("Medix Group");
-  await page.getByRole("button", { name: "Saqlash va davom etish" }).click();
+  await expect(page.getByRole("heading", { name: "Kompaniya maʼlumotlari" })).toBeVisible();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.getByText("Kompaniya nomini kiriting")).toBeVisible();
+  await field(page, "Kompaniya nomi").fill("Medix Group");
+  await page.getByRole("radio", { name: /Oʻzbekcha \(lotin\)/ }).click();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 2. Filial
   await field(page, "Kod").fill("TSH");
@@ -66,7 +70,7 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await field(page, "STIR").fill("301234567");
   await page.getByRole("button", { name: "Filial qoʻshish" }).click();
   await expect(page.getByRole("cell", { name: "Toshkent", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Davom etish" }).click();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 3. Ombor
   await choose(page, "Filial", /Toshkent/);
@@ -74,11 +78,11 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await page.getByText("Sovuq", { exact: true }).click();
   await page.getByRole("button", { name: "Ombor qoʻshish" }).click();
   await expect(page.getByRole("cell", { name: "Markaziy ombor", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Davom etish" }).click();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 4. Rollar
   await expect(page.getByText("11 ta standart rol tayyor")).toBeVisible();
-  await page.getByRole("button", { name: "Davom etish" }).click();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 5. Xodim
   await field(page, "F.I.Sh.").fill("Dilshod Aliyev");
@@ -88,7 +92,7 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await field(page, "Vaqtinchalik parol").fill(OPERATOR_TEMP);
   await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
   await expect(page.getByRole("cell", { name: "operator.1", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Davom etish" }).click();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
   // 6. Yakun
   await page.getByRole("button", { name: "Ustani yakunlash" }).click();

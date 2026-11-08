@@ -5634,6 +5634,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/setup/company/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Logotip yuklash (PNG yoki SVG, 2 MB gacha) */
+        put: operations["uploadLogo"];
+        post?: never;
+        /** Logotipni o'chirish */
+        delete: operations["removeLogo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -6428,9 +6446,13 @@ export interface components {
             name: string;
             /** Format: date-time */
             setupCompletedAt?: string;
+            defaultLocale: string;
+            /** Format: int64 */
+            logoVersion?: number;
         };
         CompanyRequest: {
             name: string;
+            defaultLocale?: string;
         };
         ConfirmRequest: {
             lineIds: number[];
@@ -18797,6 +18819,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    uploadLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Company"];
+                };
+            };
+        };
+    };
+    removeLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Company"];
                 };
             };
         };
