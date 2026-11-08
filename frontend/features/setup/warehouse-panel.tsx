@@ -305,7 +305,7 @@ function WarehousePanelInner({ open, warehouse, presetBranchId, branches, employ
                           }
                           error={zoneErr}
                         />
-                        <div className="flex flex-col gap-[6px]">
+                        <div className="flex w-[132px] flex-col gap-[6px]">
                           <span className="text-label font-medium">{t("zType")}</span>
                           <ZoneChip type={z.type} name={t(`types.${z.type}`)} />
                         </div>

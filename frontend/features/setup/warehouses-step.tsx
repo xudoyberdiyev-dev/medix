@@ -61,8 +61,8 @@ export function WarehousesStep({ status, nav, onBack, onDone }: { status: SetupS
       aside={
         <div className="rounded-modal border border-border bg-surface p-[16px]">
           <p className="text-table font-semibold">{t("zWhat")}</p>
-          <div className="mt-[12px] flex flex-col items-center justify-center gap-[12px] rounded-modal border border-divider p-[12px] py-[24px]">
-            <div className="flex flex-wrap items-center justify-center gap-[4px]">
+          <div className="mt-[12px] flex flex-col items-center justify-center gap-[12px] rounded-modal border border-border p-[12px] py-[24px]">
+            <div className="flex items-center justify-center gap-[4px] whitespace-nowrap">
               <ZoneChip type="RECEIVING" name={zt("recv")} />
               <Icon icon={ArrowRight} size="sm" className="text-text-secondary" />
               <ZoneChip type="MAIN" name={zt("store")} />
@@ -99,7 +99,7 @@ export function WarehousesStep({ status, nav, onBack, onDone }: { status: SetupS
           const add = () => setPanel({ warehouse: null, branchId: b.id });
           return (
             <section key={b.id} aria-label={b.name} className="rounded-modal border border-border bg-surface shadow-card">
-              <div className="flex min-h-[56px] flex-wrap items-center gap-[8px] border-b border-divider py-[8px] pr-[12px] pl-[20px]">
+              <div className="flex min-h-[56px] flex-wrap items-center gap-[8px] border-b border-border py-[8px] pr-[12px] pl-[20px]">
                 <span className="text-section font-semibold">{b.name}</span>
                 <span className="rounded-[6px] bg-table-header px-[6px] font-mono text-caption leading-[20px] text-text-secondary">
                   {b.code}
@@ -137,7 +137,7 @@ export function WarehousesStep({ status, nav, onBack, onDone }: { status: SetupS
                     }}
                     className={cn(
                       "flex min-h-[64px] cursor-pointer flex-wrap items-center gap-x-[16px] gap-y-[8px] py-[12px] pr-[12px] pl-[20px] transition-colors hover:bg-background",
-                      i > 0 && "border-t border-divider",
+                      i > 0 && "border-t border-border",
                       i === list.length - 1 && "rounded-b-modal",
                     )}
                   >
@@ -158,7 +158,7 @@ export function WarehousesStep({ status, nav, onBack, onDone }: { status: SetupS
                         <ZoneChip key={z.id} type={z.type} name={z.name} />
                       ))}
                       {w.zones.length > 4 ? (
-                        <span className="h-[24px] rounded-[6px] bg-divider px-[6px] text-caption leading-[24px] font-medium text-text-secondary">
+                        <span className="h-[24px] rounded-[6px] bg-table-header px-[6px] text-caption leading-[24px] font-medium text-text-secondary">
                           +{w.zones.length - 4}
                         </span>
                       ) : null}
