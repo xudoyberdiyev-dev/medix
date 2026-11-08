@@ -603,7 +603,19 @@
     "fLimit": "Limit (qolgan)",
     "fWarehouse": "Ombor",
     "fPay": "Toʻlov turi",
-    "fDate": "Yetkazish sanasi"
+    "fDate": "Yetkazish sanasi",
+    "f": {
+      "manufacturer": "Ishlab chiqaruvchi",
+      "category": "Kategoriya",
+      "country": "Davlat",
+      "flags": "Belgilar"
+    },
+    "flag": {
+      "MARKED": "Markirovkali",
+      "CONTROLLED": "Nazoratdagi",
+      "PRESCRIPTION": "Retseptli"
+    },
+    "clearFilters": "Filtrlarni tozalash"
   },
   "returns": {
     "accepted": "Qaytgan tovar Karantinga qabul qilindi",

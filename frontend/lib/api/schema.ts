@@ -6089,7 +6089,29 @@ export interface components {
              */
             cashierId?: number;
         };
+        CatalogFacet: {
+            /** Format: int64 */
+            count: number;
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
+        CatalogFacets: {
+            categories: components["schemas"]["CatalogFacet"][];
+            countries: components["schemas"]["CatalogFacet"][];
+            flags: components["schemas"]["CatalogFlagCounts"];
+            manufacturers: components["schemas"]["CatalogFacet"][];
+        };
+        CatalogFlagCounts: {
+            /** Format: int64 */
+            controlled: number;
+            /** Format: int64 */
+            marked: number;
+            /** Format: int64 */
+            prescription: number;
+        };
         CatalogPage: {
+            facets: components["schemas"]["CatalogFacets"];
             items: components["schemas"]["CatalogRow"][];
             /** Format: int32 */
             page: number;
@@ -13434,6 +13456,10 @@ export interface operations {
                 customerId?: number;
                 q?: string;
                 inStockOnly?: boolean;
+                manufacturerIds?: number[];
+                categoryIds?: number[];
+                countryIds?: number[];
+                flags?: ("MARKED" | "CONTROLLED" | "PRESCRIPTION")[];
                 page?: number;
                 size?: number;
             };

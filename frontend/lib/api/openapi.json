@@ -5055,6 +5055,50 @@
           }
         }, {
           "in" : "query",
+          "name" : "manufacturerIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "categoryIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "countryIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "flags",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "MARKED", "CONTROLLED", "PRESCRIPTION" ]
+            }
+          }
+        }, {
+          "in" : "query",
           "name" : "page",
           "required" : false,
           "schema" : {
@@ -14155,9 +14199,74 @@
           }
         }
       },
+      "CatalogFacet" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "id", "name" ]
+      },
+      "CatalogFacets" : {
+        "type" : "object",
+        "properties" : {
+          "categories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CatalogFacet"
+            }
+          },
+          "countries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CatalogFacet"
+            }
+          },
+          "flags" : {
+            "$ref" : "#/components/schemas/CatalogFlagCounts"
+          },
+          "manufacturers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CatalogFacet"
+            }
+          }
+        },
+        "required" : [ "categories", "countries", "flags", "manufacturers" ]
+      },
+      "CatalogFlagCounts" : {
+        "type" : "object",
+        "properties" : {
+          "controlled" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "marked" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "prescription" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "controlled", "marked", "prescription" ]
+      },
       "CatalogPage" : {
         "type" : "object",
         "properties" : {
+          "facets" : {
+            "$ref" : "#/components/schemas/CatalogFacets"
+          },
           "items" : {
             "type" : "array",
             "items" : {
@@ -14177,7 +14286,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "items", "page", "size", "total" ]
+        "required" : [ "facets", "items", "page", "size", "total" ]
       },
       "CatalogRow" : {
         "type" : "object",

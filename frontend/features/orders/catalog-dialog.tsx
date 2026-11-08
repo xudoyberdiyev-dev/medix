@@ -5,6 +5,7 @@ import { ArrowLeft, Check, Lock, ScanBarcode, ToggleLeft, ToggleRight } from "lu
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { MultiFilter, type FilterOption } from "@/components/ui/multi-filter";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { api, unwrap } from "@/lib/api/client";
@@ -14,6 +15,16 @@ import { cents, fromCents } from "./order-card";
 import { day } from "./orders-page";
 
 type CatalogRow = components["schemas"]["CatalogRow"];
+type CatalogFacet = components["schemas"]["CatalogFacet"];
+type Flag = "MARKED" | "CONTROLLED" | "PRESCRIPTION";
+const FLAGS: Flag[] = ["MARKED", "CONTROLLED", "PRESCRIPTION"];
+
+/** Variantlar: qidiruv natijasidagilar + tanlangan, lekin hozir roʻyxatda yoʻqlari (nomi eslab qolingan). */
+function facetOptions(facets: CatalogFacet[] | undefined, selected: number[], names: ReadonlyMap<number, string>): FilterOption<number>[] {
+  const out: FilterOption<number>[] = (facets ?? []).map((f) => ({ value: f.id, label: f.name, count: f.count }));
+  for (const id of selected) if (!out.some((o) => o.value === id)) out.push({ value: id, label: names.get(id) ?? String(id), count: 0 });
+  return out;
+}
 
 export interface PickedLine {
   productId: number;
@@ -47,20 +58,49 @@ export function CatalogView({
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [inStockOnly, setInStockOnly] = useState(true);
+  const [fMaker, setFMaker] = useState<number[]>([]);
+  const [fCat, setFCat] = useState<number[]>([]);
+  const [fCountry, setFCountry] = useState<number[]>([]);
+  const [fFlags, setFFlags] = useState<Flag[]>([]);
+  const [names, setNames] = useState<ReadonlyMap<number, string>>(new Map());
   const [qty, setQty] = useState<Record<number, string>>({});
   const [known, setKnown] = useState<Record<number, CatalogRow>>({});
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const catalog = useQuery({
-    queryKey: ["orders", "catalog", warehouseId, customerId, q, inStockOnly],
+    queryKey: ["orders", "catalog", warehouseId, customerId, q, inStockOnly, fMaker, fCat, fCountry, fFlags],
     queryFn: () =>
       unwrap(
         api.GET("/api/orders/catalog", {
-          params: { query: { warehouseId, customerId: customerId ?? undefined, q: q || undefined, inStockOnly, size: 100 } },
+          params: {
+            query: {
+              warehouseId,
+              customerId: customerId ?? undefined,
+              q: q || undefined,
+              inStockOnly,
+              manufacturerIds: fMaker.length ? fMaker : undefined,
+              categoryIds: fCat.length ? fCat : undefined,
+              countryIds: fCountry.length ? fCountry : undefined,
+              flags: fFlags.length ? fFlags : undefined,
+              size: 100,
+            },
+          },
         }),
       ),
     placeholderData: keepPreviousData,
   });
   const rows = catalog.data?.items ?? [];
+  const facets = catalog.data?.facets;
+  const hasFilters = fMaker.length + fCat.length + fCountry.length + fFlags.length > 0 || search.trim() !== "";
+  const remember = (list: CatalogFacet[] | undefined) =>
+    setNames((m) => new Map([...m, ...(list ?? []).map((f) => [f.id, f.name] as const)]));
+  const clearFilters = () => {
+    setFMaker([]);
+    setFCat([]);
+    setFCountry([]);
+    setFFlags([]);
+    setSearch("");
+    setQ("");
+  };
   // Tanlov qidiruv oʻzgarsa ham saqlanadi — tanlangan qatorlar maʼlumoti eslab qolinadi
   const picked = Object.entries(qty)
     .filter(([, v]) => /^\d+$/.test(v) && Number(v) > 0)
@@ -125,6 +165,41 @@ export function CatalogView({
           placeholder={t("catalog.searchPlaceholder")}
           className="w-80 max-w-full [&>:first-child]:sr-only"
         />
+        <MultiFilter
+          label={t("catalog.f.manufacturer")}
+          searchable
+          options={facetOptions(facets?.manufacturers, fMaker, names)}
+          selected={fMaker}
+          onChange={(v) => (remember(facets?.manufacturers), setFMaker(v))}
+        />
+        <MultiFilter
+          label={t("catalog.f.category")}
+          searchable
+          options={facetOptions(facets?.categories, fCat, names)}
+          selected={fCat}
+          onChange={(v) => (remember(facets?.categories), setFCat(v))}
+        />
+        <MultiFilter
+          label={t("catalog.f.country")}
+          options={facetOptions(facets?.countries, fCountry, names)}
+          selected={fCountry}
+          onChange={(v) => (remember(facets?.countries), setFCountry(v))}
+        />
+        <MultiFilter
+          label={t("catalog.f.flags")}
+          options={FLAGS.map((f) => ({
+            value: f,
+            label: t(`catalog.flag.${f}`),
+            count: facets ? facets.flags[f === "MARKED" ? "marked" : f === "CONTROLLED" ? "controlled" : "prescription"] : undefined,
+          }))}
+          selected={fFlags}
+          onChange={setFFlags}
+        />
+        {hasFilters ? (
+          <Button variant="tertiary" size="sm" onClick={clearFilters}>
+            {t("catalog.clearFilters")}
+          </Button>
+        ) : null}
         <span className="flex-1" />
         <button
           type="button"
