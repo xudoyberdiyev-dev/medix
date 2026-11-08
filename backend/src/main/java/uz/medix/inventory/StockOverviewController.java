@@ -107,6 +107,19 @@ class StockOverviewController {
             List<CodeCount> zoneTypes,
             List<CodeCount> expiry) {}
 
+    record TreeNode(
+            @Schema(description = "BRANCH, WAREHOUSE yoki ZONE") String level,
+            long branchId,
+            String branch,
+            @Schema(nullable = true) Long warehouseId,
+            @Schema(nullable = true) String warehouse,
+            @Schema(nullable = true) Long zoneId,
+            @Schema(nullable = true) String zone,
+            @Schema(nullable = true) ZoneType zoneType,
+            @Schema(description = "Turli mahsulotlar soni") long products,
+            long qty,
+            @Schema(nullable = true, description = "Tannarxda — faqat special.cost") String value) {}
+
     private final JdbcClient jdbc;
     private final CurrentActor currentActor;
     private final Clock clock;
@@ -331,6 +344,38 @@ class StockOverviewController {
                 .list();
         return new StockSummary(k.products(), showCost(auth) ? new Money(k.value()).toString() : null, k.near(), k.expired(), k.quarantine(),
                 tr.qty(), tr.docs(), warehouses, manufacturers, categories, countries, supplyBy, suppliers, zones, exp);
+    }
+
+    @GetMapping("/tree")
+    @PreAuthorize("hasAuthority('stock.view')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Ombor daraxti", description = "Filial → ombor → zona: mahsulotlar soni, miqdor, tannarxda summa (qoldiq > 0).")
+    List<TreeNode> tree(@RequestParam(required = false) Long branchId, Authentication auth) {
+        Actor actor = actor();
+        boolean showCost = showCost(auth);
+        Map<String, Object> params = new HashMap<>();
+        params.put("today", Date.valueOf(today()));
+        StringBuilder w = new StringBuilder(" WHERE s.qty > 0");
+        scope(actor, branchId, w, params);
+        return jdbc.sql(cte(w) + """
+                SELECT CASE WHEN GROUPING(bal.zone_id) = 0 THEN 'ZONE' WHEN GROUPING(bal.warehouse_id) = 0 THEN 'WAREHOUSE' ELSE 'BRANCH' END AS level,
+                       bal.branch_id, min(br.code || ' · ' || br.name) AS branch, bal.warehouse_id, min(w.name) AS warehouse,
+                       bal.zone_id, min(z.name) AS zone, min(z.type) AS zone_type,
+                       count(DISTINCT bal.product_id) AS products, sum(bal.qty) AS qty, sum(bal.qty * bal.cost) AS value
+                FROM bal JOIN branch br ON br.id = bal.branch_id JOIN warehouse w ON w.id = bal.warehouse_id JOIN zone z ON z.id = bal.zone_id
+                GROUP BY GROUPING SETS ((bal.branch_id), (bal.branch_id, bal.warehouse_id), (bal.branch_id, bal.warehouse_id, bal.zone_id))
+                ORDER BY min(br.code), bal.branch_id, min(w.name) NULLS FIRST, bal.warehouse_id NULLS FIRST, min(z.name) NULLS FIRST""")
+                .params(params)
+                .query((rs, n) -> {
+                    String level = rs.getString("level");
+                    boolean wh = !"BRANCH".equals(level);
+                    boolean zn = "ZONE".equals(level);
+                    return new TreeNode(level, rs.getLong("branch_id"), rs.getString("branch"), wh ? rs.getLong("warehouse_id") : null,
+                            wh ? rs.getString("warehouse") : null, zn ? rs.getLong("zone_id") : null, zn ? rs.getString("zone") : null,
+                            zn ? ZoneType.valueOf(rs.getString("zone_type")) : null, rs.getLong("products"), rs.getLong("qty"),
+                            showCost ? new Money(rs.getBigDecimal("value")).toString() : null);
+                })
+                .list();
     }
 
     private List<Facet> facets(String cte, String idExpr, String nameExpr, String joins, Map<String, Object> params) {

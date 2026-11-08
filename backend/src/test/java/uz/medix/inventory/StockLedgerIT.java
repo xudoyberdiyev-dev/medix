@@ -352,12 +352,22 @@ class StockLedgerIT {
                 .andExpect(jsonPath("$.warehouses[0].count").value(2))
                 .andExpect(jsonPath("$.suppliers[0].id").value(0));
 
+        mvc.perform(get("/api/stock/tree").param("branchId", br).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[0].level").value("BRANCH"))
+                .andExpect(jsonPath("$[0].qty").value(8))
+                .andExpect(jsonPath("$[0].value").value("65502.50"))
+                .andExpect(jsonPath("$[1].level").value("WAREHOUSE"))
+                .andExpect(jsonPath("$[1].products").value(1))
+                .andExpect(jsonPath("$[2].level").value("ZONE"));
         Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
         mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").cookie(keeper))
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.items[0].costSum").doesNotExist())
                 .andExpect(jsonPath("$.costSum").doesNotExist());
         mvc.perform(get("/api/stock/summary").cookie(keeper)).andExpect(jsonPath("$.value").doesNotExist());
+        mvc.perform(get("/api/stock/tree").cookie(keeper)).andExpect(jsonPath("$[0].value").doesNotExist());
         Cookie accountant = loginAs("ACCOUNTANT", null);
         mvc.perform(get("/api/stock/products").cookie(accountant)).andExpect(status().isForbidden());
     }
