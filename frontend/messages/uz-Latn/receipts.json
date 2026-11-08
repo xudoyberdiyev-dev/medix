@@ -191,7 +191,9 @@
       "created": "Yaratdi",
       "accepted": "Qabul qildi",
       "posted": "Oʻtkazdi"
-    }
+    },
+    "copy": "Nusxa olish",
+    "copied": "{no} hujjatidan nusxa olindi — yuk xati raqami va sanasini kiriting"
   },
   "notes": {
     "cancelled": "Bekor qilindi: {reason}",

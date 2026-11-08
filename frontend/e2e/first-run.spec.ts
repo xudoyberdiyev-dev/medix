@@ -359,6 +359,15 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.mouse.move(0, 0);
   await expect(page.getByText("Qoralama saqlandi")).toBeHidden({ timeout: 15_000 });
 
+  // «Nusxa olish» (prototip Receipts): yangi qoralama shu hujjatdan — saqlamay qaytamiz
+  await page.getByRole("button", { name: "Nusxa olish" }).click();
+  await expect(page).toHaveURL(/\/receipts\/new\?copy=\d+$/);
+  await expect(page.getByText(/hujjatidan nusxa olindi/)).toBeVisible();
+  await expect(field(page, "Yuk xati raqami")).toHaveValue("");
+  await page.goBack();
+  await page.mouse.move(0, 0);
+  await expect(page.getByText(/hujjatidan nusxa olindi/)).toBeHidden({ timeout: 15_000 });
+
   // Qabul: 48 ta keldi — «Kam keldi»
   await page.getByRole("button", { name: "Qabul qilish" }).click();
   const accept = page.getByRole("dialog", { name: "Tovarni qabul qilish" });
