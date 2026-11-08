@@ -674,5 +674,28 @@
     "probSub": "{errors} ta xato · {warnings} ta ogohlantirish",
     "probOk": "Muammo yoʻq",
     "linesPh": "Mahsulot"
+  },
+  "card": {
+    "steps": "Buyurtma bosqichlari",
+    "tabs": "Buyurtma boʻlimlari",
+    "tOrder": "Buyurtma",
+    "tShip": "Joʻnatish",
+    "shipEmpty": "Joʻnatish terish tugagach rasmiylashtiriladi",
+    "iGeneral": "Asosiy",
+    "iDelivery": "Yetkazish",
+    "iTerms": "Shartlar",
+    "number": "Raqam",
+    "operator": "Operator",
+    "payTerm": "{pay} · Muddatli · {days} kun",
+    "cOrdered": "Buyurtma",
+    "cPicked": "Yigʻilgan",
+    "cShipped": "Joʻnatilgan",
+    "cSum": "Summa",
+    "short": "{n} dona yetishmadi",
+    "tin": "STIR",
+    "credit": "Kredit",
+    "debtNow": "Joriy qarz",
+    "withOrder": "Shu buyurtma bilan",
+    "overLimit": "Limitdan {amount} oshadi"
   }
 }

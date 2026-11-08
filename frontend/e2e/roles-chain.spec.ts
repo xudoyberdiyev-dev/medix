@@ -197,7 +197,7 @@ test("Operator: naqd toʻlovli buyurtma kiritadi va navbatga yuboradi", async ({
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
-  await expect(page.getByText("20.000,00 soʻm", { exact: true })).toBeVisible();
+  await expect(page.locator(`dl[aria-label="Jami"]`).getByText("20.000,00", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();
   // Operatorda vaqt berish yoʻq — bu Ombor mudiri ishi

@@ -7408,6 +7408,11 @@ export interface components {
             minQty?: number;
             /** Format: date */
             nearestExpiry?: string;
+            /**
+             * Format: int32
+             * @description Yig'ilgan (yig'ishga qaytarilgani ayirilgan); yig'ish boshlanmagan — null
+             */
+            picked?: number;
             /** @description Muzlatilgan yoki oxirgi saqlangan narx */
             price?: string;
             priceType?: string;
@@ -7419,6 +7424,11 @@ export interface components {
             qty: number;
             /** @description FEFO zahira (Navbatda va keyin) */
             reserved: components["schemas"]["ReservedBatch"][];
+            /**
+             * Format: int32
+             * @description Jo'natilgan (o'tkazilgan sotuv bo'yicha); sotuv yo'q — null
+             */
+            shipped?: number;
             /** @description Summa ichidagi QQS */
             vatAmount?: string;
         };

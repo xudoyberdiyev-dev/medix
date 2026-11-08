@@ -68,6 +68,7 @@ import {
   codesExportUrl,
 } from "./api";
 import { CatalogDialog } from "./catalog-dialog";
+import { OrderCardAside, OrderCardBody, OrderStepper } from "./order-card";
 import { CustomerStateRow, RecentOrders, useCustomerCredit, type PreviousOrder } from "./customer-state";
 import { clearOpenDraft, draftFormFor, readOpenDraft, writeOpenDraft } from "./open-draft";
 import { OrderStatusBadge, day } from "./orders-page";
@@ -458,6 +459,72 @@ function Editor({
     </>
   );
 
+  const dialogs = (
+    <>
+      {dialog === "catalog" && warehouseId ? (
+        <CatalogDialog
+          warehouseId={Number(warehouseId)}
+          customerId={customer ? Number(customer) : null}
+          header={t("drawer.catalogHeader", {
+            number: doc?.number ?? t("drawer.new"),
+            customer: customerLabel || t("drawer.noCustomer"),
+            warehouse: activeWarehouses.find((w) => String(w.id) === warehouseId)?.name ?? "",
+            count: formatQuantity(lines.length),
+          })}
+          onClose={() => setDialog(null)}
+          onAdd={(picked) => {
+            setLines((ls) => {
+              const next = [...ls];
+              for (const p of picked) {
+                const i = next.findIndex((x) => x.productId === p.productId);
+                if (i >= 0) next[i] = { ...next[i], qty: String(Number(next[i].qty) + Number(p.qty)) };
+                else next.push(p);
+              }
+              return next;
+            });
+            setDialog(null);
+          }}
+        />
+      ) : null}
+      {dialog === "discard" ? (
+        <Modal
+          open
+          size="sm"
+          tone="danger"
+          title={t("drawer.discardTitle")}
+          onClose={() => setDialog(null)}
+          primaryAction={{ label: t("drawer.discardAction"), onClick: onClose }}
+          secondaryAction={{ label: t("drawer.discardKeep"), onClick: () => setDialog(null) }}
+        >
+          <p>{t(doc ? "drawer.discardChanged" : "drawer.discardNew")}</p>
+        </Modal>
+      ) : null}
+      {(dialog === "reject" || dialog === "cancel") && doc ? (
+        <DeactivateDialog
+          title={dialog === "reject" ? t("drawer.rejectTitle", { number: doc.number }) : t("drawer.cancelTitle", { number: doc.number })}
+          consequence={dialog === "reject" ? t("drawer.rejectConsequence") : t("drawer.cancelConsequence")}
+          actionLabel={dialog === "reject" ? t("drawer.rejectAction") : t("drawer.cancelOrder")}
+          pending={dialog === "reject" ? reject.isPending : cancel.isPending}
+          error={dialog === "reject" ? reject.error : cancel.error}
+          onClose={() => setDialog(null)}
+          onConfirm={(reason) =>
+            void (dialog === "reject" ? reject : cancel).mutateAsync({ id: doc.id, reason }).then(
+              () => (
+                toast({
+                  tone: "success",
+                  title: dialog === "reject" ? t("drawer.rejected") : t("drawer.cancelled"),
+                  description: doc.number,
+                }),
+                setDialog(null)
+              ),
+              () => undefined,
+            )
+          }
+        />
+      ) : null}
+    </>
+  );
+
   const content = (
     <>
       <div className="flex flex-col gap-4">
@@ -785,67 +852,6 @@ function Editor({
           </dl>
         </section>
       </div>
-      {dialog === "catalog" && warehouseId ? (
-        <CatalogDialog
-          warehouseId={Number(warehouseId)}
-          customerId={customer ? Number(customer) : null}
-          header={t("drawer.catalogHeader", {
-            number: doc?.number ?? t("drawer.new"),
-            customer: customerLabel || t("drawer.noCustomer"),
-            warehouse: activeWarehouses.find((w) => String(w.id) === warehouseId)?.name ?? "",
-            count: formatQuantity(lines.length),
-          })}
-          onClose={() => setDialog(null)}
-          onAdd={(picked) => {
-            setLines((ls) => {
-              const next = [...ls];
-              for (const p of picked) {
-                const i = next.findIndex((x) => x.productId === p.productId);
-                if (i >= 0) next[i] = { ...next[i], qty: String(Number(next[i].qty) + Number(p.qty)) };
-                else next.push(p);
-              }
-              return next;
-            });
-            setDialog(null);
-          }}
-        />
-      ) : null}
-      {dialog === "discard" ? (
-        <Modal
-          open
-          size="sm"
-          tone="danger"
-          title={t("drawer.discardTitle")}
-          onClose={() => setDialog(null)}
-          primaryAction={{ label: t("drawer.discardAction"), onClick: onClose }}
-          secondaryAction={{ label: t("drawer.discardKeep"), onClick: () => setDialog(null) }}
-        >
-          <p>{t(doc ? "drawer.discardChanged" : "drawer.discardNew")}</p>
-        </Modal>
-      ) : null}
-      {(dialog === "reject" || dialog === "cancel") && doc ? (
-        <DeactivateDialog
-          title={dialog === "reject" ? t("drawer.rejectTitle", { number: doc.number }) : t("drawer.cancelTitle", { number: doc.number })}
-          consequence={dialog === "reject" ? t("drawer.rejectConsequence") : t("drawer.cancelConsequence")}
-          actionLabel={dialog === "reject" ? t("drawer.rejectAction") : t("drawer.cancelOrder")}
-          pending={dialog === "reject" ? reject.isPending : cancel.isPending}
-          error={dialog === "reject" ? reject.error : cancel.error}
-          onClose={() => setDialog(null)}
-          onConfirm={(reason) =>
-            void (dialog === "reject" ? reject : cancel).mutateAsync({ id: doc.id, reason }).then(
-              () => (
-                toast({
-                  tone: "success",
-                  title: dialog === "reject" ? t("drawer.rejected") : t("drawer.cancelled"),
-                  description: doc.number,
-                }),
-                setDialog(null)
-              ),
-              () => undefined,
-            )
-          }
-        />
-      ) : null}
     </>
   );
 
@@ -892,7 +898,22 @@ function Editor({
           }
           actions={actions}
         />
-        {content}
+        {doc && !editable ? (
+          <>
+            <OrderStepper doc={doc} />
+            <Decision doc={doc} />
+            {doc.status === "QUEUED" && can(me.data, "orders.queue") ? <TimeForm doc={doc} /> : null}
+            {doc.status === "CHECKING" && can(me.data, "orders.check") ? <CheckForm doc={doc} /> : null}
+            {err.message ? <Alert tone="danger" title={err.message} /> : null}
+            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <OrderCardBody doc={doc} shipping={<DocumentsRow doc={doc} />} />
+              <OrderCardAside doc={doc} />
+            </div>
+          </>
+        ) : (
+          content
+        )}
+        {dialogs}
       </div>
     );
   return (
@@ -907,6 +928,7 @@ function Editor({
       actions={actions}
     >
       {content}
+      {dialogs}
     </Drawer>
   );
 }

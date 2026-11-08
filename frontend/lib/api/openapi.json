@@ -17466,6 +17466,11 @@
             "type" : "string",
             "format" : "date"
           },
+          "picked" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yig'ilgan (yig'ishga qaytarilgani ayirilgan); yig'ish boshlanmagan — null"
+          },
           "price" : {
             "type" : "string",
             "description" : "Muzlatilgan yoki oxirgi saqlangan narx"
@@ -17493,6 +17498,11 @@
             "items" : {
               "$ref" : "#/components/schemas/ReservedBatch"
             }
+          },
+          "shipped" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Jo'natilgan (o'tkazilgan sotuv bo'yicha); sotuv yo'q — null"
           },
           "vatAmount" : {
             "type" : "string",
