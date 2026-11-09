@@ -2,11 +2,15 @@ package uz.medix.sales.order;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -34,7 +38,14 @@ final class OrderModels {
 
     record OrderLineRequest(
             @NotNull(message = "{validation.required}") Long productId,
-            @NotNull(message = "{validation.required}") @Min(1) @Max(MAX_QTY) Integer qty) {}
+            @NotNull(message = "{validation.required}") @Min(1) @Max(MAX_QTY) Integer qty,
+            @Schema(nullable = true, description = "Chegirma, % (0–99.99); null — mijozning standart chegirmasi")
+            @DecimalMin("0") @DecimalMax("99.99") @Digits(integer = 2, fraction = 2) BigDecimal discountPct) {
+
+        OrderLineRequest(Long productId, Integer qty) {
+            this(productId, qty, null);
+        }
+    }
 
     record OrderRequest(
             @NotNull(message = "{validation.required}") Long warehouseId,
@@ -78,7 +89,9 @@ final class OrderModels {
             @Schema(nullable = true) String manufacturer,
             int qty,
             @Schema(nullable = true, description = "Muzlatilgan yoki oxirgi saqlangan narx") String price,
-            @Schema(nullable = true, description = "Hozirgi narx (qoralamada)") String currentPrice,
+            @Schema(nullable = true, description = "Hozirgi narx (qoralamada), chegirmadan keyin") String currentPrice,
+            @Schema(description = "Chegirma, %") String discountPct,
+            @Schema(nullable = true, description = "Narx turidagi narx (chegirmasiz)") String listPrice,
             @Schema(nullable = true) String amount,
             @Schema(nullable = true, description = "Summa ichidagi QQS") String vatAmount,
             @Schema(nullable = true) String priceType,
@@ -93,7 +106,7 @@ final class OrderModels {
             @Schema(nullable = true, description = "Jo'natilgan (o'tkazilgan sotuv bo'yicha); sotuv yo'q — null") Integer shipped) {
 
         OrderLine withReserved(List<ReservedBatch> r) {
-            return new OrderLine(id, lineNo, productId, productCode, productName, manufacturer, qty, price, currentPrice, amount, vatAmount, priceType,
+            return new OrderLine(id, lineNo, productId, productCode, productName, manufacturer, qty, price, currentPrice, discountPct, listPrice, amount, vatAmount, priceType,
                     available, nearestExpiry, minQty, maxQty, controlled, marked, r, picked, shipped);
         }
     }
@@ -161,6 +174,8 @@ final class OrderModels {
             @Schema(nullable = true) ApprovalLevel approvalLevel,
             List<String> approvalReasons,
             String total,
+            @Schema(description = "Summa (chegirmasiz)") String grossTotal,
+            @Schema(description = "Chegirma summasi") String discountTotal,
             @Schema(description = "Jami ichidagi QQS (qatorlar bo'yicha, narx QQS bilan)") String vatTotal,
             @Schema(description = "Qoralamada narx o'zgargan qatorlar bor") boolean priceChanged,
             CustomerCredit credit,

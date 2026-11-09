@@ -326,6 +326,81 @@ class OrderIT {
         mvc.perform(get("/api/orders/" + doc + "/history").cookie(foreign)).andExpect(status().isNotFound());
     }
 
+    private static String discounted(Place p, long customer, long product, int qty, String pct) {
+        return "{\"warehouseId\":" + p.warehouseId() + ",\"customerId\":" + customer
+                + ",\"deliveryType\":\"DELIVERY\",\"paymentType\":\"TRANSFER\",\"lines\":[{\"productId\":" + product + ",\"qty\":" + qty
+                + (pct == null ? "" : ",\"discountPct\":" + pct) + "}]}";
+    }
+
+    /** E7/E8: qator chegirmasi %, 5% dan katta — Filial rahbari tasdig'i, narx chegirmali muzlatiladi, standart chegirma, ruxsat. */
+    @Test
+    void discountUpToFivePercentSelfAboveNeedsBranchApproval() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        long a = product(p, "BY Chegirma", "1000", 50, null, null);
+
+        long doc = id(send(post("/api/orders"), operator, discounted(p, c, a, 10, "5"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.total").value("9500.00"))
+                .andExpect(jsonPath("$.grossTotal").value("10000.00"))
+                .andExpect(jsonPath("$.discountTotal").value("500.00"))
+                .andExpect(jsonPath("$.lines[0].discountPct").value("5.00"))
+                .andExpect(jsonPath("$.lines[0].listPrice").value("1000.00"))
+                .andExpect(jsonPath("$.lines[0].currentPrice").value("950.00"))
+                .andExpect(jsonPath("$.issues.length()").value(0))
+                .andReturn());
+        // 7,5% — tasdiqqa ketadi (Filial rahbari)
+        send(put("/api/orders/" + doc), operator, discounted(p, c, a, 10, "7.5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value("9250.00"))
+                .andExpect(jsonPath("$.issues[*].code", hasItem("order.discountOver")));
+        send(post("/api/orders/" + doc + "/submit"), operator, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING_APPROVAL"))
+                .andExpect(jsonPath("$.approvalLevel").value("BRANCH"))
+                .andExpect(jsonPath("$.total").value("9250.00"))
+                .andExpect(jsonPath("$.lines[0].price").value("925.00"));
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        send(post("/api/orders/" + doc + "/approve"), manager, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("QUEUED"));
+        // Muzlatilgan: narx turi o'zgarsa ham chegirmali narx va chegirmasiz summa saqlanadi
+        setPrice(p, a, "2000");
+        mvc.perform(get("/api/orders/" + doc).cookie(operator))
+                .andExpect(jsonPath("$.total").value("9250.00"))
+                .andExpect(jsonPath("$.grossTotal").value("10000.00"))
+                .andExpect(jsonPath("$.discountTotal").value("750.00"))
+                .andExpect(jsonPath("$.lines[0].price").value("925.00"))
+                .andExpect(jsonPath("$.lines[0].listPrice").value("1000.00"))
+                .andExpect(jsonPath("$.lines[0].discountPct").value("7.50"));
+
+        // E8: mijozning standart chegirmasi qatorga avtomatik qo'yiladi; 2000 × (100 − 3,3) / 100 = 1934,00
+        long c2 = customer(p.branchId(), null);
+        jdbc.sql("UPDATE counterparty_branch_terms SET discount_pct = 3.3 WHERE counterparty_id = :c").param("c", c2).update();
+        send(post("/api/orders"), operator, discounted(p, c2, a, 1, null))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.lines[0].discountPct").value("3.30"))
+                .andExpect(jsonPath("$.lines[0].currentPrice").value("1934.00"))
+                .andExpect(jsonPath("$.total").value("1934.00"));
+        // Noto'g'ri qiymat — 400
+        send(post("/api/orders"), operator, discounted(p, c, a, 1, "100")).andExpect(status().isBadRequest());
+
+        // orders.discount ruxsatisiz — qo'lda chegirma taqiqlanadi, standart chegirma esa qo'yiladi
+        String code = "NODISC" + ThreadLocalRandom.current().nextInt(1_000_000);
+        long role = jdbc.sql("INSERT INTO role (code, name) VALUES (:c, :c) RETURNING id").param("c", code).query(Long.class).single();
+        jdbc.sql("INSERT INTO role_permission (role_id, permission_key) VALUES (:r, 'orders.create'), (:r, 'orders.view')")
+                .param("r", role)
+                .update();
+        Cookie limited = loginAs(code, p.branchId());
+        send(post("/api/orders"), limited, discounted(p, c, a, 1, "2"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("order.discountForbidden"));
+        send(post("/api/orders"), limited, discounted(p, c2, a, 1, null))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.lines[0].discountPct").value("3.30"));
+    }
+
     @Test
     void creditLimitAndOverdueRequireApprovalLevels() throws Exception {
         Place p = place();

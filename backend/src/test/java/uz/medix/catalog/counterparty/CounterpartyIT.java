@@ -184,10 +184,14 @@ class CounterpartyIT {
         Cookie manager = loginAs("BRANCH_MANAGER", own);
         mvc.perform(json(put("/api/counterparties/" + id + "/terms/" + own), manager,
                         "{\"creditLimit\":\"15000000\",\"paymentDays\":30,\"priceTypeId\":" + priceType
-                                + ",\"minShelfLifeDays\":180,\"supplierPaymentDays\":45,\"defaultPaymentType\":\"TRANSFER\"}"))
+                                + ",\"minShelfLifeDays\":180,\"supplierPaymentDays\":45,\"defaultPaymentType\":\"TRANSFER\",\"discountPct\":2.5,"
+                                + "\"supplierDeliveryDays\":3}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.terms", hasSize(1)))
                 .andExpect(jsonPath("$.terms[0].creditLimit").value("15000000.00"))
+                // E8: standart chegirma va yetkazish muddati
+                .andExpect(jsonPath("$.terms[0].discountPct").value("2.50"))
+                .andExpect(jsonPath("$.terms[0].supplierDeliveryDays").value(3))
                 .andExpect(jsonPath("$.terms[0].priceType.name").value("Promo"))
                 .andExpect(jsonPath("$.contracts", hasSize(1)));
         // Boshqa filial shartlari — yopiq

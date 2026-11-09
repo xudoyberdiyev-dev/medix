@@ -146,7 +146,7 @@ class Counterparties {
         List<Terms> terms = jdbc.sql("""
                 SELECT t.branch_id, t.credit_limit, t.payment_days, t.price_type_id, pt.name AS price_type, t.min_shelf_life_days,
                        t.operator_employee_id, op.full_name AS operator, t.supplier_payment_days, t.default_payment_type,
-                       t.supply_employee_id, se.full_name AS supply_employee
+                       t.supply_employee_id, se.full_name AS supply_employee, t.discount_pct, t.supplier_delivery_days
                 FROM counterparty_branch_terms t
                 LEFT JOIN price_type pt ON pt.id = t.price_type_id
                 LEFT JOIN employee op ON op.id = t.operator_employee_id
@@ -159,7 +159,10 @@ class Counterparties {
                         (Integer) rs.getObject("min_shelf_life_days"), ref(rs, "operator_employee_id", "operator"),
                         (Integer) rs.getObject("supplier_payment_days"),
                         Optional.ofNullable(rs.getString("default_payment_type")).map(PaymentType::valueOf).orElse(null),
-                        ref(rs, "supply_employee_id", "supply_employee")))
+                        ref(rs, "supply_employee_id", "supply_employee"),
+                        Optional.ofNullable(rs.getBigDecimal("discount_pct")).map(v -> v.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString())
+                                .orElse(null),
+                        (Integer) rs.getObject("supplier_delivery_days")))
                 .list()
                 .stream()
                 .filter(t -> actor.canAccessBranch(t.branchId()))
@@ -351,9 +354,11 @@ class Counterparties {
         p.put("sdays", r.supplierPaymentDays());
         p.put("ptype", r.defaultPaymentType() == null ? null : r.defaultPaymentType().name());
         p.put("supply", r.supplyEmployeeId());
+        p.put("disc", r.discountPct());
+        p.put("ddays", r.supplierDeliveryDays());
         Map<String, Object> before = jdbc.sql("""
                 SELECT credit_limit, payment_days, price_type_id, min_shelf_life_days, operator_employee_id, supplier_payment_days,
-                       default_payment_type, supply_employee_id
+                       default_payment_type, supply_employee_id, discount_pct, supplier_delivery_days
                 FROM counterparty_branch_terms WHERE counterparty_id = :cp AND branch_id = :branch FOR UPDATE""")
                 .param("cp", counterpartyId)
                 .param("branch", branchId)
@@ -370,39 +375,44 @@ class Counterparties {
                 p.put("price", before.get("price_type_id"));
                 p.put("shelf", before.get("min_shelf_life_days"));
                 p.put("operator", before.get("operator_employee_id"));
+                p.put("disc", before.get("discount_pct"));
             }
             if (!supplierSide) {
                 p.put("sdays", before.get("supplier_payment_days"));
                 p.put("ptype", before.get("default_payment_type"));
                 p.put("supply", before.get("supply_employee_id"));
+                p.put("ddays", before.get("supplier_delivery_days"));
             }
         } else {
             if (!customerSide) {
-                for (String k : List.of("limit", "days", "price", "shelf", "operator")) {
+                for (String k : List.of("limit", "days", "price", "shelf", "operator", "disc")) {
                     p.put(k, null);
                 }
             }
             if (!supplierSide) {
-                for (String k : List.of("sdays", "ptype", "supply")) {
+                for (String k : List.of("sdays", "ptype", "supply", "ddays")) {
                     p.put(k, null);
                 }
             }
         }
         jdbc.sql("""
                 INSERT INTO counterparty_branch_terms (counterparty_id, branch_id, credit_limit, payment_days, price_type_id,
-                       min_shelf_life_days, operator_employee_id, supplier_payment_days, default_payment_type, supply_employee_id)
-                VALUES (:cp, :branch, :limit, :days, :price, :shelf, :operator, :sdays, :ptype, :supply)
+                       min_shelf_life_days, operator_employee_id, supplier_payment_days, default_payment_type, supply_employee_id,
+                       discount_pct, supplier_delivery_days)
+                VALUES (:cp, :branch, :limit, :days, :price, :shelf, :operator, :sdays, :ptype, :supply, :disc, :ddays)
                 ON CONFLICT (counterparty_id, branch_id) DO UPDATE SET credit_limit = excluded.credit_limit,
                        payment_days = excluded.payment_days, price_type_id = excluded.price_type_id,
                        min_shelf_life_days = excluded.min_shelf_life_days, operator_employee_id = excluded.operator_employee_id,
                        supplier_payment_days = excluded.supplier_payment_days, default_payment_type = excluded.default_payment_type,
-                       supply_employee_id = excluded.supply_employee_id, updated_at = now(),
+                       supply_employee_id = excluded.supply_employee_id, discount_pct = excluded.discount_pct,
+                       supplier_delivery_days = excluded.supplier_delivery_days, updated_at = now(),
                        version = counterparty_branch_terms.version + 1""")
                 .params(p)
                 .update();
         Map<String, Object> after = new HashMap<>(p);
         after.remove("cp");
         after.put("limit", p.get("limit") == null ? null : p.get("limit").toString());
+        after.put("disc", p.get("disc") == null ? null : p.get("disc").toString());
         audit.record(AuditEntry.of("counterparty.terms", "counterparty", counterpartyId).change(before, after));
     }
 
