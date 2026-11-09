@@ -78,9 +78,15 @@ class BranchWarehouseAdminIT {
         return b.with(csrf()).cookie(session).contentType(MediaType.APPLICATION_JSON).content(body);
     }
 
-    private static String code() {
+    /** Bazada hali yo'q tasodifiy 3 harfli filial kodi (boshqa testlar ham filial yaratadi — to'qnashuv 409 bermasin). */
+    private String code() {
         var rnd = java.util.concurrent.ThreadLocalRandom.current();
-        return "" + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26));
+        while (true) {
+            String c = "" + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26));
+            if (!jdbc.sql("SELECT EXISTS (SELECT 1 FROM branch WHERE code = :c)").param("c", c).query(Boolean.class).single()) {
+                return c;
+            }
+        }
     }
 
     private static String tin() {
