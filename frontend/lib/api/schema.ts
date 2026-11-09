@@ -741,6 +741,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cash/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kassalar roʻyxati (kartalar)
+         * @description Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.
+         */
+        get: operations["overview_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company/logo": {
         parameters: {
             query?: never;
@@ -5268,6 +5288,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/{id}/cash/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Haydovchidan pulni reys bo'yicha qabul qilish
+         * @description Sanalgan summa to'xtashlar bo'yicha taqsimlanadi, har ulush — MT. Farq bo'lsa izoh majburiy.
+         */
+        post: operations["acceptTripCash"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/{id}/finish": {
         parameters: {
             query?: never;
@@ -6695,6 +6735,27 @@ export interface components {
         CashAcceptResult: {
             payment: string;
         };
+        CashCard: {
+            balance: string;
+            /** Format: int64 */
+            branchId: number;
+            branchName: string;
+            /** @description Mas'ul (biriktirilgan kassir) */
+            cashierName?: string;
+            code: string;
+            /** Format: int64 */
+            id: number;
+            /**
+             * Format: date
+             * @description Oxirgi yopilgan kun
+             */
+            lastClosed?: string;
+            name: string;
+            /** @description Bugungi kirim (Asia/Tashkent) */
+            todayIn: string;
+            /** @description Bugungi chiqim, musbat son */
+            todayOut: string;
+        };
         CashOp: {
             account: string;
             /** Format: int64 */
@@ -6752,6 +6813,15 @@ export interface components {
             opDate?: string;
             /** @description Kimdan / kimga (ixtiyoriy) */
             party?: string;
+        };
+        CashOverview: {
+            cards: components["schemas"]["CashCard"][];
+            /**
+             * Format: date
+             * @description Bugun (Asia/Tashkent)
+             */
+            today: string;
+            total: string;
         };
         CashierOption: {
             cashName?: string;
@@ -11086,6 +11156,20 @@ export interface components {
             /** @enum {string} */
             zoneType?: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
+        TripCashAcceptRequest: {
+            /** Format: int64 */
+            accountId: number;
+            /** @description Farq bo'lsa majburiy */
+            note?: string;
+            /** @description Kassir sanagan summa */
+            received: string;
+        };
+        TripCashAccepted: {
+            diff: string;
+            expected: string;
+            payments: string[];
+            received: string;
+        };
         TripDetail: {
             /** Format: int64 */
             branchId: number;
@@ -12828,6 +12912,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Panel"];
+                };
+            };
+        };
+    };
+    overview_3: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOverview"];
                 };
             };
         };
@@ -19327,6 +19433,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
+    acceptTripCash: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripCashAcceptRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripCashAccepted"];
                 };
             };
         };

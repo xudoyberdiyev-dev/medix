@@ -1709,6 +1709,35 @@
         "tags" : [ "cash-panel" ]
       }
     },
+    "/api/cash/overview" : {
+      "get" : {
+        "description" : "Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.",
+        "operationId" : "overview_3",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kassalar roʻyxati (kartalar)",
+        "tags" : [ "cash" ]
+      }
+    },
     "/api/company/logo" : {
       "get" : {
         "operationId" : "logo",
@@ -12335,6 +12364,45 @@
         "tags" : [ "trips" ]
       }
     },
+    "/api/trips/{id}/cash/accept" : {
+      "post" : {
+        "description" : "Sanalgan summa to'xtashlar bo'yicha taqsimlanadi, har ulush — MT. Farq bo'lsa izoh majburiy.",
+        "operationId" : "acceptTripCash",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TripCashAcceptRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripCashAccepted"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Haydovchidan pulni reys bo'yicha qabul qilish",
+        "tags" : [ "trips" ]
+      }
+    },
     "/api/trips/{id}/finish" : {
       "post" : {
         "description" : "Qaytgan tovar yoki naqd pul bo'lsa — «Qaytish kutilmoqda».",
@@ -15695,6 +15763,49 @@
         },
         "required" : [ "payment" ]
       },
+      "CashCard" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "cashierName" : {
+            "type" : "string",
+            "description" : "Mas'ul (biriktirilgan kassir)"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lastClosed" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Oxirgi yopilgan kun"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "todayIn" : {
+            "type" : "string",
+            "description" : "Bugungi kirim (Asia/Tashkent)"
+          },
+          "todayOut" : {
+            "type" : "string",
+            "description" : "Bugungi chiqim, musbat son"
+          }
+        },
+        "required" : [ "balance", "branchId", "branchName", "code", "id", "name", "todayIn", "todayOut" ]
+      },
       "CashOp" : {
         "type" : "object",
         "properties" : {
@@ -15828,6 +15939,26 @@
           }
         },
         "required" : [ "accountId", "amount", "branchId", "direction", "itemId" ]
+      },
+      "CashOverview" : {
+        "type" : "object",
+        "properties" : {
+          "cards" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CashCard"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bugun (Asia/Tashkent)"
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cards", "today", "total" ]
       },
       "CashierOption" : {
         "type" : "object",
@@ -26739,6 +26870,47 @@
           }
         },
         "required" : [ "branch", "branchId", "level", "products", "qty" ]
+      },
+      "TripCashAcceptRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "description" : "Farq bo'lsa majburiy",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "received" : {
+            "type" : "string",
+            "description" : "Kassir sanagan summa"
+          }
+        },
+        "required" : [ "accountId", "received" ]
+      },
+      "TripCashAccepted" : {
+        "type" : "object",
+        "properties" : {
+          "diff" : {
+            "type" : "string"
+          },
+          "expected" : {
+            "type" : "string"
+          },
+          "payments" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "received" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "diff", "expected", "payments", "received" ]
       },
       "TripDetail" : {
         "type" : "object",
