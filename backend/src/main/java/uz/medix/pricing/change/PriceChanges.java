@@ -460,11 +460,22 @@ class PriceChanges {
     @Transactional
     void cancel(Actor actor, long id, String reason) {
         Head h = lock(id, actor);
-        if (h.status() != Status.DRAFT && h.status() != Status.PENDING_APPROVAL) {
+        boolean future = h.status() == Status.APPROVED;
+        if (future && !h.effectiveFrom().isAfter(today())) {
+            // Kuchga kirgan narx bekor qilinmaydi — yangi NO bilan o'zgartiriladi (prototip bnLocked).
+            throw MedixException.conflict("priceChange.alreadyEffective");
+        }
+        if (!future && h.status() != Status.DRAFT && h.status() != Status.PENDING_APPROVAL) {
             throw MedixException.conflict("priceChange.badStatus", h.status().name());
         }
         setStatus(id, Status.CANCELLED, actor.employeeId(), reason.strip());
-        audit.record(AuditEntry.of("priceChange.cancel", "price_change", id).withReason(reason.strip()));
+        if (future) {
+            // Hali kuchga kirmagan narx qatorlari olib tashlanadi (baza triggeri faqat shuni ruxsat etadi).
+            jdbc.sql("DELETE FROM price WHERE price_change_id = :id").param("id", id).update();
+            jdbc.sql("DELETE FROM batch_price WHERE price_change_id = :id").param("id", id).update();
+        }
+        audit.record(AuditEntry.of(future ? "priceChange.cancelApproved" : "priceChange.cancel", "price_change", id)
+                .withReason(reason.strip()));
     }
 
     /** Ommaviy ustama (SPEC 6): asos narxga foiz (yaxlitlashsiz, E4). Hech narsa yozilmaydi — natija NO qatorlariga qo'yiladi. */

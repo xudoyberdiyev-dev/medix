@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -259,6 +260,52 @@ class PriceChangeIT {
         Cookie operator = loginAs("OPERATOR", branch);
         mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(operator))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void approvedFutureChangeCanBeCancelledButEffectiveCannot() throws Exception {
+        long branch = branch();
+        long p = product("Kelajak NO bekor sinov");
+        long base = type("BASE");
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        String later = LocalDate.parse(today()).plusDays(5).toString();
+        long[] docs = new long[2];
+        String[][] rows = {{today(), "5000"}, {later, "5500"}};
+        for (int i = 0; i < 2; i++) {
+            docs[i] = id(mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + rows[i][0]
+                            + "\",\"lines\":[{\"productId\":" + p + ",\"priceTypeId\":" + base + ",\"newPrice\":\"" + rows[i][1] + "\"}]}"))
+                    .andExpect(status().isCreated())
+                    .andReturn());
+            mvc.perform(post("/api/price-changes/" + docs[i] + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+        }
+        String row = "$.items[?(@.productId == " + p + ")]";
+        mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(purchaser))
+                .andExpect(jsonPath(row + ".nextPrice").value(contains("5500.00")));
+
+        // Kuchga kirgan — bekor qilinmaydi (API ham, baza ham)
+        mvc.perform(json(post("/api/price-changes/" + docs[0] + "/cancel"), purchaser, "{\"reason\":\"Xato\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("priceChange.alreadyEffective"));
+        assertThatThrownBy(() -> jdbc.sql("UPDATE price_change SET status = 'CANCELLED' WHERE id = :id").param("id", docs[0]).update())
+                .hasMessageContaining("yakunlangan");
+
+        // Kelajak — operator bekor qila olmaydi, xarid bekor qiladi; narx qatorlari olib tashlanadi
+        Cookie operator = loginAs("OPERATOR", branch);
+        mvc.perform(json(post("/api/price-changes/" + docs[1] + "/cancel"), operator, "{\"reason\":\"Xato\"}")).andExpect(status().isForbidden());
+        mvc.perform(json(post("/api/price-changes/" + docs[1] + "/cancel"), purchaser, "{\"reason\":\"Taʼminotchi narxni qaytardi\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.decisionReason").value("Taʼminotchi narxni qaytardi"));
+        assertThat(jdbc.sql("SELECT count(*) FROM price WHERE price_change_id = :id").param("id", docs[1]).query(Integer.class).single()).isZero();
+        assertThat(jdbc.sql("SELECT count(*) FROM price WHERE price_change_id = :id").param("id", docs[0]).query(Integer.class).single()).isOne();
+        mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(purchaser))
+                .andExpect(jsonPath(row + ".currentPrice").value(contains("5000.00")))
+                .andExpect(jsonPath(row + ".nextPrice").value(not(contains("5500.00"))));
+
+        // Kuchdagi narx qatori bazada ham o'chirilmaydi; bekor qilingan NO qayta o'zgarmaydi
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM price WHERE price_change_id = :id").param("id", docs[0]).update())
+                .hasMessageContaining("faqat qo'shiladigan");
+        mvc.perform(json(post("/api/price-changes/" + docs[1] + "/cancel"), purchaser, "{\"reason\":\"Yana\"}")).andExpect(status().isConflict());
     }
 
     @Test

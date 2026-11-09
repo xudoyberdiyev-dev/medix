@@ -3291,7 +3291,7 @@ export interface paths {
         put?: never;
         /**
          * Bekor qilish
-         * @description Faqat qoralama yoki tasdiq kutayotgan hujjat.
+         * @description Qoralama, tasdiq kutayotgan yoki tasdiqlangan, lekin hali kuchga kirmagan hujjat.
          */
         post: operations["cancel_3"];
         delete?: never;

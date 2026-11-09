@@ -211,6 +211,11 @@ function DocumentView({ d, branchName, back }: { d: PriceChangeDetail; branchNam
             <Button variant="secondary" icon={Printer} onClick={() => window.open(`/api/price-changes/${d.id}/pdf`, "_blank", "noopener")}>
               {t("print")}
             </Button>
+            {d.status === "APPROVED" && canSet && isFuture(d.effectiveFrom, todayTashkent()) ? (
+              <Button variant="secondary" className="text-danger" icon={Ban} onClick={() => (cancel.reset(), setDialog("cancel"))}>
+                {t("cancel")}
+              </Button>
+            ) : null}
             {d.status === "PENDING_APPROVAL" && canSet && !canBelow ? (
               <Button variant="secondary" icon={X} onClick={() => (cancel.reset(), setDialog("cancel"))}>
                 {t("cancel")}

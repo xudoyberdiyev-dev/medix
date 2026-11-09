@@ -310,7 +310,7 @@
     "bnPending": "Tannarxdan past narx — Direktor tasdigʻi kutilmoqda · yuborildi {at} · {who}",
     "bnLock": "Faqat Direktor tasdiqlaydi (Direktor)",
     "bnPosted": "Tasdiqlangan: {at} · {who} · {date} dan kuchda",
-    "bnFuture": "Hali kuchga kirmagan — {date} dan amal qiladi",
+    "bnFuture": "Hali kuchga kirmagan — {date} gacha bekor qilish mumkin",
     "bnRejected": "Rad etildi: {at} · {who} · sabab: {reason}",
     "bnCancelled": "Bekor qilindi: {at} · {who} · sabab: {reason}",
     "rejectTitle": "{number} ni rad etasizmi?",

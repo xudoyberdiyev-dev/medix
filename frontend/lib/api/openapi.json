@@ -7476,7 +7476,7 @@
     },
     "/api/price-changes/{id}/cancel" : {
       "post" : {
-        "description" : "Faqat qoralama yoki tasdiq kutayotgan hujjat.",
+        "description" : "Qoralama, tasdiq kutayotgan yoki tasdiqlangan, lekin hali kuchga kirmagan hujjat.",
         "operationId" : "cancel_3",
         "parameters" : [ {
           "in" : "path",

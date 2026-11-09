@@ -197,7 +197,7 @@ class PriceChangeController {
 
     @PostMapping("/price-changes/{id}/cancel")
     @PreAuthorize(SET_PRICES)
-    @Operation(summary = "Bekor qilish", description = "Faqat qoralama yoki tasdiq kutayotgan hujjat.")
+    @Operation(summary = "Bekor qilish", description = "Qoralama, tasdiq kutayotgan yoki tasdiqlangan, lekin hali kuchga kirmagan hujjat.")
     PriceChangeDetail cancel(@PathVariable long id, @Valid @RequestBody ReasonRequest r) {
         changes.cancel(actor(), id, r.reason());
         return detail(id);
