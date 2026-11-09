@@ -799,6 +799,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/counterparties/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)
+         * @description To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.
+         */
+        get: operations["overview_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties/price-type-customers": {
         parameters: {
             query?: never;
@@ -6772,6 +6792,8 @@ export interface components {
             email?: string;
             /** Format: int64 */
             id: number;
+            /** @enum {string} */
+            kind?: "PHARMACY" | "CLINIC" | "HOSPITAL" | "DISTRIBUTOR" | "MAKER";
             legalName?: string;
             licenses: components["schemas"]["License"][];
             name: string;
@@ -6783,6 +6805,12 @@ export interface components {
             terms: components["schemas"]["Terms"][];
             tin: string;
             vatCode?: string;
+        };
+        CounterpartyOverviewPage: {
+            branches: components["schemas"]["OverviewBranch"][];
+            items: components["schemas"]["OverviewRow"][];
+            /** Format: date */
+            today: string;
         };
         CounterpartyPage: {
             items: components["schemas"]["CounterpartyRow"][];
@@ -6801,6 +6829,8 @@ export interface components {
             contactPerson?: string;
             customer: boolean;
             email?: string;
+            /** @enum {string} */
+            kind?: "PHARMACY" | "CLINIC" | "HOSPITAL" | "DISTRIBUTOR" | "MAKER";
             legalName?: string;
             name: string;
             note?: string;
@@ -8540,6 +8570,70 @@ export interface components {
             statusChangedAt: string;
             total: string;
             warehouse: string;
+        };
+        OverviewBranch: {
+            code: string;
+            name: string;
+        };
+        OverviewRow: {
+            /** @description Muddati o'tgan qarz guruhlari: 1-30, 31-60, 61-90, 90plus */
+            agingBuckets: string[];
+            /** @description Sharti bor filiallar kodlari */
+            branches: string[];
+            /** @description YB: ta'minotchilar */
+            buyers: string[];
+            contactPerson?: string;
+            /** @description Nazoratdagi mahsulotlarga amaldagi ruxsat */
+            controlledAllowed: boolean;
+            /** Format: date */
+            createdOn: string;
+            /** @description Kredit limiti (filial tanlanmagan — filiallar yig'indisi) */
+            creditLimit?: string;
+            customer: boolean;
+            /** @description Qarz (mijoz — bizga, YB — bizning qarzimiz), so'm */
+            debt: string;
+            /** Format: int64 */
+            id: number;
+            /** @description Tanlangan (yoki xodimning) filialida sharti bor; filial tanlanmagan — true */
+            inScope: boolean;
+            /** @enum {string} */
+            kind?: "PHARMACY" | "CLINIC" | "HOSPITAL" | "DISTRIBUTOR" | "MAKER";
+            /** Format: date */
+            lastPaymentDate?: string;
+            /** Format: date */
+            lastReceiptDate?: string;
+            /** Format: int64 */
+            lastReceiptId?: number;
+            lastReceiptNumber?: string;
+            /** Format: date */
+            lastSaleDate?: string;
+            /** Format: int64 */
+            lastSaleOrderId?: number;
+            lastSaleNumber?: string;
+            legalName?: string;
+            /**
+             * Format: date
+             * @description Eng uzoq amal qiladigan litsenziya muddati
+             */
+            licenseValidUntil?: string;
+            /** @enum {string} */
+            mainPayment?: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: int32 */
+            maxOverdueDays: number;
+            name: string;
+            operators: string[];
+            overdue: string;
+            /** @description YB: to'lov muddati (kun), filiallar bo'yicha */
+            paymentDays: number[];
+            /** @description Faqat clients.contact / suppliers.contact bilan */
+            phone?: string;
+            /** @description Narx turlari (NULL shart — bazaviy) */
+            priceTypes: string[];
+            region?: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "BLOCKED" | "INACTIVE";
+            supplier: boolean;
+            tin: string;
         };
         OwnGoods: {
             /** Format: int64 */
@@ -12472,6 +12566,8 @@ export interface operations {
                 regionId?: number;
                 sort?: "NAME" | "TIN" | "REGION" | "LICENSE";
                 desc?: boolean;
+                /** @description Faqat shu kontragentlar (jadvalda tanlanganlar) */
+                ids?: number[];
             };
             header?: never;
             path?: never;
@@ -12485,6 +12581,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    overview_1: {
+        parameters: {
+            query?: {
+                role?: "CUSTOMER" | "SUPPLIER" | "ALL";
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyOverviewPage"];
+                };
             };
         };
     };

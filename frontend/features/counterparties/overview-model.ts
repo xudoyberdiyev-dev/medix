@@ -105,9 +105,41 @@ export function licenseOf(validUntil: string | null | undefined, today: string):
 export const overLimit = (r: OverviewLike) => r.creditLimit != null && cents(r.debt) > cents(r.creditLimit);
 
 const NORM: Record<string, string> = {
-  а: "a", б: "b", в: "v", г: "g", ғ: "g", д: "d", е: "e", ё: "yo", ж: "j", з: "z", и: "i", й: "y", к: "k", қ: "q", л: "l",
-  м: "m", н: "n", о: "o", ў: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "x", ҳ: "h", ц: "s", ч: "ch", ш: "sh",
-  ъ: "", ь: "", э: "e", ю: "yu", я: "ya",
+  а: "a",
+  б: "b",
+  в: "v",
+  г: "g",
+  ғ: "g",
+  д: "d",
+  е: "e",
+  ё: "yo",
+  ж: "j",
+  з: "z",
+  и: "i",
+  й: "y",
+  к: "k",
+  қ: "q",
+  л: "l",
+  м: "m",
+  н: "n",
+  о: "o",
+  ў: "o",
+  п: "p",
+  р: "r",
+  с: "s",
+  т: "t",
+  у: "u",
+  ф: "f",
+  х: "x",
+  ҳ: "h",
+  ц: "s",
+  ч: "ch",
+  ш: "sh",
+  ъ: "",
+  ь: "",
+  э: "e",
+  ю: "yu",
+  я: "ya",
 };
 
 /** Qidiruv uchun: kichik harf, kirill → lotin, apostrof va bo'shliqlar olib tashlanadi. */
@@ -194,11 +226,7 @@ export function activeFilterCount(f: OverviewFilters): number {
 }
 
 /** Saralash; boshqa filialdagilar (inScope = false) doim oxirida (prototip). */
-export function sortRows<T extends OverviewLike & { paymentDays?: number[] }>(
-  rows: T[],
-  key: SortKey | null,
-  desc: boolean,
-): T[] {
+export function sortRows<T extends OverviewLike & { paymentDays?: number[] }>(rows: T[], key: SortKey | null, desc: boolean): T[] {
   const val = (r: T): bigint | string | number => {
     switch (key) {
       case "debt":

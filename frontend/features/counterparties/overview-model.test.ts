@@ -80,11 +80,7 @@ describe("kontragentlar roʻyxati modeli", () => {
   });
 
   it("saralash: boshqa filialdagilar oxirida, qarz BigInt boʻyicha", () => {
-    const rows = [
-      row({ id: 1, debt: "9.00" }),
-      row({ id: 2, debt: "10.00", inScope: false }),
-      row({ id: 3, debt: "100.00" }),
-    ];
+    const rows = [row({ id: 1, debt: "9.00" }), row({ id: 2, debt: "10.00", inScope: false }), row({ id: 3, debt: "100.00" })];
     expect(sortRows(rows, "debt", true).map((r) => r.id)).toEqual([3, 1, 2]);
     expect(sortRows(rows, "debt", false).map((r) => r.id)).toEqual([1, 3, 2]);
   });

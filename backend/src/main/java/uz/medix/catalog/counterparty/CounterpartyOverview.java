@@ -61,7 +61,7 @@ class CounterpartyOverview {
             List<String> operators,
             @Schema(nullable = true) LocalDate lastSaleDate,
             @Schema(nullable = true) String lastSaleNumber,
-            @Schema(nullable = true) Long lastSaleId,
+            @Schema(nullable = true, description = "Oxirgi sotuv buyurtmasi (karta havolasi)") Long lastSaleOrderId,
             @Schema(description = "YB: to'lov muddati (kun), filiallar bo'yicha") List<Integer> paymentDays,
             @Schema(description = "YB: ta'minotchilar") List<String> buyers,
             @Schema(nullable = true) PaymentType mainPayment,
@@ -113,14 +113,14 @@ class CounterpartyOverview {
                         WHERE t.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR t.branch_id = :b)) AS buyers,
                        (SELECT string_agg(DISTINCT t.supplier_payment_days::text, '|') %1$s AND t.supplier_payment_days IS NOT NULL) AS pay_days,
                        (SELECT t.default_payment_type %1$s AND t.default_payment_type IS NOT NULL ORDER BY t.branch_id LIMIT 1) AS main_pay,
-                       ls.id AS sale_id, ls.number AS sale_no, ls.sale_date,
+                       ls.order_id AS sale_order_id, ls.number AS sale_no, ls.sale_date,
                        lr.id AS receipt_id, lr.number AS receipt_no, lr.receipt_date,
                        (SELECT max((p.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) FROM party_ledger p
                         WHERE p.counterparty_id = c.id AND p.side = :side AND p.doc_type = :pd
                           AND (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)) AS last_pay
                 FROM counterparty c
                 LEFT JOIN region r ON r.id = c.region_id
-                LEFT JOIN LATERAL (SELECT s.id, s.number, s.sale_date FROM sale s
+                LEFT JOIN LATERAL (SELECT s.order_id, s.number, s.sale_date FROM sale s
                                    WHERE :customers AND s.customer_id = c.id AND s.status = 'POSTED'
                                      AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b)
                                    ORDER BY s.sale_date DESC, s.id DESC LIMIT 1) ls ON true
@@ -155,7 +155,7 @@ class CounterpartyOverview {
                 rs.getBoolean("ctrl"), status, d == null ? Money.ZERO.toString() : d.debt(), d == null ? Money.ZERO.toString() : d.overdue(),
                 d == null ? 0 : d.maxOverdueDays(), aging, limit == null ? null : new Money(limit).toString(),
                 split(rs.getString("price_types"), "\\|"), split(rs.getString("operators"), "\\|"), date(rs, "sale_date"),
-                rs.getString("sale_no"), rs.getObject("sale_id", Long.class),
+                rs.getString("sale_no"), rs.getObject("sale_order_id", Long.class),
                 split(rs.getString("pay_days"), "\\|").stream().map(Integer::valueOf).sorted().toList(), split(rs.getString("buyers"), "\\|"),
                 pay == null ? null : PaymentType.valueOf(pay), date(rs, "receipt_date"), rs.getString("receipt_no"),
                 rs.getObject("receipt_id", Long.class), date(rs, "last_pay"), date(rs, "created_on"));

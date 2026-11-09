@@ -1906,6 +1906,18 @@
             "type" : "boolean",
             "default" : false
           }
+        }, {
+          "description" : "Faqat shu kontragentlar (jadvalda tanlanganlar)",
+          "in" : "query",
+          "name" : "ids",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1913,6 +1925,44 @@
           }
         },
         "summary" : "Excel'ga eksport (.xlsx)",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/overview" : {
+      "get" : {
+        "description" : "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.",
+        "operationId" : "overview_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "CUSTOMER",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyOverviewPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)",
         "tags" : [ "counterparties" ]
       }
     },
@@ -15991,6 +16041,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "PHARMACY", "CLINIC", "HOSPITAL", "DISTRIBUTOR", "MAKER" ]
+          },
           "legalName" : {
             "type" : "string"
           },
@@ -16030,6 +16084,28 @@
           }
         },
         "required" : [ "active", "blocked", "contracts", "customer", "id", "licenses", "name", "supplier", "terms", "tin" ]
+      },
+      "CounterpartyOverviewPage" : {
+        "type" : "object",
+        "properties" : {
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OverviewBranch"
+            }
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OverviewRow"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "branches", "items", "today" ]
       },
       "CounterpartyPage" : {
         "type" : "object",
@@ -16089,6 +16165,10 @@
             "maxLength" : 200,
             "minLength" : 0,
             "pattern" : "^$|^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "PHARMACY", "CLINIC", "HOSPITAL", "DISTRIBUTOR", "MAKER" ]
           },
           "legalName" : {
             "type" : "string",
@@ -20510,6 +20590,165 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "holder", "id", "lines", "number", "orderDate", "paymentType", "status", "statusChangedAt", "total", "warehouse" ]
+      },
+      "OverviewBranch" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "name" ]
+      },
+      "OverviewRow" : {
+        "type" : "object",
+        "properties" : {
+          "agingBuckets" : {
+            "type" : "array",
+            "description" : "Muddati o'tgan qarz guruhlari: 1-30, 31-60, 61-90, 90plus",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "branches" : {
+            "type" : "array",
+            "description" : "Sharti bor filiallar kodlari",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "buyers" : {
+            "type" : "array",
+            "description" : "YB: ta'minotchilar",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "contactPerson" : {
+            "type" : "string"
+          },
+          "controlledAllowed" : {
+            "type" : "boolean",
+            "description" : "Nazoratdagi mahsulotlarga amaldagi ruxsat"
+          },
+          "createdOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "creditLimit" : {
+            "type" : "string",
+            "description" : "Kredit limiti (filial tanlanmagan — filiallar yig'indisi)"
+          },
+          "customer" : {
+            "type" : "boolean"
+          },
+          "debt" : {
+            "type" : "string",
+            "description" : "Qarz (mijoz — bizga, YB — bizning qarzimiz), so'm"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "inScope" : {
+            "type" : "boolean",
+            "description" : "Tanlangan (yoki xodimning) filialida sharti bor; filial tanlanmagan — true"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "PHARMACY", "CLINIC", "HOSPITAL", "DISTRIBUTOR", "MAKER" ]
+          },
+          "lastPaymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastReceiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastReceiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lastReceiptNumber" : {
+            "type" : "string"
+          },
+          "lastSaleDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastSaleOrderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lastSaleNumber" : {
+            "type" : "string"
+          },
+          "legalName" : {
+            "type" : "string"
+          },
+          "licenseValidUntil" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Eng uzoq amal qiladigan litsenziya muddati"
+          },
+          "mainPayment" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "maxOverdueDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "operators" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "paymentDays" : {
+            "type" : "array",
+            "description" : "YB: to'lov muddati (kun), filiallar bo'yicha",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "Faqat clients.contact / suppliers.contact bilan"
+          },
+          "priceTypes" : {
+            "type" : "array",
+            "description" : "Narx turlari (NULL shart — bazaviy)",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "region" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "BLOCKED", "INACTIVE" ]
+          },
+          "supplier" : {
+            "type" : "boolean"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "agingBuckets", "branches", "buyers", "controlledAllowed", "createdOn", "customer", "debt", "id", "inScope", "maxOverdueDays", "name", "operators", "overdue", "paymentDays", "priceTypes", "status", "supplier", "tin" ]
       },
       "OwnGoods" : {
         "type" : "object",

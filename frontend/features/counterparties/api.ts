@@ -12,6 +12,8 @@ export type License = components["schemas"]["License"];
 export type Contract = components["schemas"]["Contract"];
 export type Terms = components["schemas"]["Terms"];
 export type TermsRequest = components["schemas"]["TermsRequest"];
+export type OverviewRow = components["schemas"]["OverviewRow"];
+export type CounterpartyOverviewPage = components["schemas"]["CounterpartyOverviewPage"];
 export type CounterpartyRole = "CUSTOMER" | "SUPPLIER";
 export type CounterpartyStatus = "ACTIVE" | "BLOCKED" | "INACTIVE" | "ALL";
 
@@ -70,6 +72,15 @@ export function useCounterparties(f: CounterpartyQuery) {
           },
         }),
       ),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** «Mijozlar» / «Yetkazib beruvchilar» roʻyxati (prototip Counterparties) — toʻliq, filtrlar brauzerda. */
+export function useCounterpartyOverview(role: CounterpartyRole, branchId: number | null) {
+  return useQuery({
+    queryKey: [...KEY, "list", "overview", role, branchId],
+    queryFn: () => unwrap(api.GET("/api/counterparties/overview", { params: { query: { role, branchId: branchId ?? undefined } } })),
     placeholderData: keepPreviousData,
   });
 }
