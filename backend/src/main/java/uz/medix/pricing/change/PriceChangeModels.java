@@ -57,9 +57,21 @@ final class PriceChangeModels {
 
     record PriceChangeSummary(long id, String number, long branchId, Status status, LocalDate effectiveFrom, int lines,
             String createdBy, Instant createdAt, @Schema(nullable = true) Instant decidedAt,
-            @Schema(nullable = true, description = "«Kirim bo'yicha» — kirim raqami") String receiptNumber) {}
+            @Schema(nullable = true, description = "«Kirim bo'yicha» — kirim raqami") String receiptNumber,
+            @Schema(nullable = true) Long receiptId,
+            @Schema(nullable = true) String note,
+            String branchName,
+            @Schema(description = "Hujjat qatorlaridagi narx turlari (tartib bo'yicha)") List<String> priceTypes) {}
 
-    record PriceChangePage(List<PriceChangeSummary> items, long total, int page, int size) {}
+    /** «Narx o'zgarishlari» filtri varianti: id, nom va hujjatlar soni (prototip Prices → chFilters). */
+    record ChangeFacet(long id, String name, long count) {}
+
+    record ChangeStatusCount(Status status, long count) {}
+
+    record PriceChangePage(List<PriceChangeSummary> items, long total, int page, int size,
+            @Schema(description = "Ruxsat doirasidagi barcha NO hujjatlari (filtrsiz)") long totalAll,
+            @Schema(description = "Holat bo'yicha soni — holatdan boshqa filtrlar bilan") List<ChangeStatusCount> statusCounts,
+            List<ChangeFacet> priceTypes, List<ChangeFacet> branches) {}
 
     record PriceChangeDetail(
             long id,

@@ -188,6 +188,52 @@ class PriceChangeIT {
     }
 
     @Test
+    void changesListFiltersAndCounts() throws Exception {
+        long branch = branch();
+        long p1 = product("Ketonal royxat sinov");
+        long p2 = product("Analgin royxat sinov");
+        long base = type("BASE");
+        long promo = type("PROMO");
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        long doc1 = id(mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today()
+                        + "\",\"note\":\"Kuzgi aksiya\",\"lines\":[{\"productId\":" + p1 + ",\"priceTypeId\":" + base + ",\"newPrice\":\"5000\"}]}"))
+                .andExpect(status().isCreated())
+                .andReturn());
+        mvc.perform(post("/api/price-changes/" + doc1 + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+        mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today()
+                        + "\",\"lines\":[{\"productId\":" + p2 + ",\"priceTypeId\":" + promo + ",\"newPrice\":\"3000\"}]}"))
+                .andExpect(status().isCreated());
+        String b = String.valueOf(branch);
+        String baseName = jdbc.sql("SELECT name FROM price_type WHERE id = :id").param("id", base).query(String.class).single();
+
+        mvc.perform(get("/api/price-changes").param("branchId", b).cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.totalAll").value(2))
+                .andExpect(jsonPath("$.statusCounts[?(@.status == 'APPROVED')].count").value(contains(1)))
+                .andExpect(jsonPath("$.statusCounts[?(@.status == 'DRAFT')].count").value(contains(1)))
+                .andExpect(jsonPath("$.priceTypes", hasSize(2)))
+                .andExpect(jsonPath("$.branches", hasSize(1)));
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("status", "APPROVED").cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.statusCounts[?(@.status == 'DRAFT')].count").value(contains(1)))
+                .andExpect(jsonPath("$.items[0].note").value("Kuzgi aksiya"))
+                .andExpect(jsonPath("$.items[0].branchName").value(matchesPattern("^Filial [A-Z]{3}$")))
+                .andExpect(jsonPath("$.items[0].priceTypes", contains(baseName)));
+        // Qidiruv: mahsulot nomi (kirillda ham), izoh, raqam
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("q", "кетонал").cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(doc1));
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("q", "aksiya").cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("priceTypeIds", String.valueOf(promo)).cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].status").value("DRAFT"));
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("from", LocalDate.parse(today()).plusDays(1).toString()).cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.totalAll").value(2));
+    }
+
+    @Test
     void validationsAndCancel() throws Exception {
         long branch = branch();
         long other = branch();

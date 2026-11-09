@@ -112,9 +112,15 @@ class PriceChangeController {
     PriceChangePage list(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) Status status,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) List<Long> priceTypeIds,
+            @RequestParam(required = false) List<Long> branchIds,
+            @RequestParam(required = false) LocalDate from,
+            @RequestParam(required = false) LocalDate to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return changes.list(actor(), branchId, status, Math.max(page, 0), Math.clamp(size, 1, 200));
+        return changes.list(actor(), new PriceChanges.ListFilter(branchId, status, q, priceTypeIds, branchIds, from, to),
+                Math.max(page, 0), Math.clamp(size, 1, 200));
     }
 
     @GetMapping("/price-changes/{id}")
