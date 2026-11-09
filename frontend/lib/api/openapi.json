@@ -1916,6 +1916,87 @@
         "tags" : [ "counterparties" ]
       }
     },
+    "/api/counterparties/price-type-customers" : {
+      "get" : {
+        "description" : "Faol mijozlar va shu filialdagi joriy narx turi; avval shu turga biriktirilganlar. Qidiruv: nom, STIR.",
+        "operationId" : "priceTypeCustomers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "priceTypeId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 200
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PriceTypeCustomers"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Narx turiga biriktirish — mijozlar ro'yxati",
+        "tags" : [ "counterparties" ]
+      },
+      "put" : {
+        "description" : "attach — shu filial shartidagi narx turi shu turga; detach — shu turda bo'lsa bazaviyga qaytadi. Auditda.",
+        "operationId" : "attachPriceType",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PriceTypeAttachRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PriceTypeAttachResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijozlarni narx turiga biriktirish",
+        "tags" : [ "counterparties" ]
+      }
+    },
     "/api/counterparties/{id}" : {
       "get" : {
         "operationId" : "get_7",
@@ -21612,6 +21693,94 @@
           }
         },
         "required" : [ "base", "batch", "code", "id", "name" ]
+      },
+      "PriceTypeAttachRequest" : {
+        "type" : "object",
+        "properties" : {
+          "attach" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 5000,
+            "minItems" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "detach" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 5000,
+            "minItems" : 0
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "attach", "branchId", "detach", "priceTypeId" ]
+      },
+      "PriceTypeAttachResult" : {
+        "type" : "object",
+        "properties" : {
+          "changed" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Narx turi o'zgargan mijozlar soni"
+          }
+        },
+        "required" : [ "changed" ]
+      },
+      "PriceTypeCustomer" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "priceType" : {
+            "type" : "string",
+            "description" : "Joriy narx turi nomi; NULL — bazaviy"
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name", "tin" ]
+      },
+      "PriceTypeCustomers" : {
+        "type" : "object",
+        "properties" : {
+          "attached" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shu filialda shu narx turiga biriktirilgan mijozlar soni"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PriceTypeCustomer"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "attached", "items", "total" ]
       },
       "PriceTypeHistoryRow" : {
         "type" : "object",

@@ -114,3 +114,17 @@ describe("isBelowCost (NO hujjati)", () => {
     expect(isBelowCost({ newPrice: "100.00", cost: undefined })).toBe(false);
   });
 });
+
+describe("attachDiff (Biriktirish)", () => {
+  it("faqat oʻzgarganlar: yangi belgi → attach, olib tashlangan → detach", async () => {
+    const { attachDiff } = await import("./attach-customers-dialog");
+    const m = new Map([
+      [3, { on: true, was: false }],
+      [1, { on: true, was: false }],
+      [2, { on: false, was: true }],
+      [4, { on: true, was: true }],
+      [5, { on: false, was: false }],
+    ]);
+    expect(attachDiff(m)).toEqual({ attach: [1, 3], detach: [2] });
+  });
+});

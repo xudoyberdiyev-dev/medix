@@ -23,6 +23,7 @@ import { useBranchStore } from "@/lib/stores/branch";
 import { PRICE_CREATE, usePrices, type DraftLine, type PriceChangeStatus, type PriceRow } from "./api";
 import { PriceChangesTab } from "./price-changes-tab";
 import { PriceTypesTab } from "./price-types-tab";
+import { CLIENT_TERMS } from "./attach-customers-dialog";
 import { PriceChangeDrawer } from "./price-change-drawer";
 import { parsePriceFilters, priceExportQuery, priceSortFromKey, priceSortKey, serializePriceFilters, type PriceFilters } from "./url-state";
 
@@ -108,7 +109,14 @@ export function PricesPage() {
         />
       </div>
       {tab === "types" ? (
-        <PriceTypesTab branchId={branchId} canSet={canSet} canEdit={can(me.data, "lookups.ptypes")} onSetPrices={(id) => openSet(id)} />
+        <PriceTypesTab
+          branchId={branchId}
+          canSet={canSet}
+          canEdit={can(me.data, "lookups.ptypes")}
+          canAttach={can(me.data, CLIENT_TERMS)}
+          branchName={active.find((b) => b.id === branchId)?.name ?? ""}
+          onSetPrices={(id) => openSet(id)}
+        />
       ) : tab === "prices" ? (
         <PricesTab branchId={branchId} canSet={canSet} onSetPrices={(lines) => setEditor({ id: null, preset: lines })} />
       ) : (

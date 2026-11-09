@@ -194,7 +194,8 @@
     "deactD": "Nofaol narx turi yangi narx oʻrnatishda va mijoz shartlarida tanlanmaydi. Mavjud narxlar saqlanadi. Mijozlarga biriktirilgan turni nofaol qilib boʻlmaydi.",
     "histT": "Tarix: {n}",
     "hUpdate": "Tahrirlandi",
-    "close": "Yopish"
+    "close": "Yopish",
+    "aAttach": "Biriktirish"
   },
   "set": {
     "crumb": "Narxlar",
@@ -316,5 +317,19 @@
     "cancelTitle": "{number} ni bekor qilasizmi?",
     "consequence": "Narxlar kuchga kirmaydi.",
     "caption": "{number} qatorlari"
+  },
+  "attach": {
+    "title": "Biriktirish: {t} · {b}",
+    "sub": "Belgilangan mijozlarning shu filial shartidagi narx turi «{t}» ga oʻzgaradi. Belgi olib tashlansa — bazaviy turga qaytadi.",
+    "search": "Mijoz nomi yoki STIR",
+    "tin": "STIR {tin}",
+    "now": "hozir: {t}",
+    "base": "Bazaviy",
+    "count": "{n} ta belgilangan",
+    "save": "Saqlash",
+    "done": "{n} ta mijoz sharti oʻzgardi",
+    "empty": "Faol mijoz yoʻq. Avval Mijozlar boʻlimida mijoz qoʻshing.",
+    "noResults": "Hech narsa topilmadi. Qidiruv soʻzini oʻzgartiring.",
+    "more": "{total} tadan {n} tasi koʻrsatildi — qidiruvdan foydalaning"
   }
 }

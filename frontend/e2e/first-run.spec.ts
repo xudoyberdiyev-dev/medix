@@ -268,6 +268,12 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await page.getByRole("button", { name: "Saqlash" }).click();
   await expect(page.getByText("«Promo» saqlandi")).toBeVisible();
   await expect(page.getByRole("cell", { name: "Промо" })).toBeVisible();
+  // «Biriktirish» — mijozlar shartidagi narx turi (hali mijoz yoʻq — boʻsh holat)
+  await page.getByRole("button", { name: "Biriktirish" }).click();
+  const att = page.getByRole("dialog", { name: /Biriktirish: Promo/ });
+  await expect(att.getByText(/Faol mijoz yoʻq|STIR/).first()).toBeVisible();
+  await att.getByRole("button", { name: "Ortga" }).click();
+  await expect(att).toBeHidden();
 });
 
 test("CEO: Ctrl+K — mahsulot (kirillda), sahifa va NO hujjati", async ({ page }) => {

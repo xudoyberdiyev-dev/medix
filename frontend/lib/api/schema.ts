@@ -799,6 +799,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/counterparties/price-type-customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Narx turiga biriktirish — mijozlar ro'yxati
+         * @description Faol mijozlar va shu filialdagi joriy narx turi; avval shu turga biriktirilganlar. Qidiruv: nom, STIR.
+         */
+        get: operations["priceTypeCustomers"];
+        /**
+         * Mijozlarni narx turiga biriktirish
+         * @description attach — shu filial shartidagi narx turi shu turga; detach — shu turda bo'lsa bazaviyga qaytadi. Auditda.
+         */
+        put: operations["attachPriceType"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties/{id}": {
         parameters: {
             query?: never;
@@ -8977,6 +9001,41 @@ export interface components {
             id: number;
             name: string;
         };
+        PriceTypeAttachRequest: {
+            attach: number[];
+            /** Format: int64 */
+            branchId: number;
+            detach: number[];
+            /** Format: int64 */
+            priceTypeId: number;
+        };
+        PriceTypeAttachResult: {
+            /**
+             * Format: int32
+             * @description Narx turi o'zgargan mijozlar soni
+             */
+            changed: number;
+        };
+        PriceTypeCustomer: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @description Joriy narx turi nomi; NULL — bazaviy */
+            priceType?: string;
+            /** Format: int64 */
+            priceTypeId?: number;
+            tin: string;
+        };
+        PriceTypeCustomers: {
+            /**
+             * Format: int64
+             * @description Shu filialda shu narx turiga biriktirilgan mijozlar soni
+             */
+            attached: number;
+            items: components["schemas"]["PriceTypeCustomer"][];
+            /** Format: int64 */
+            total: number;
+        };
         PriceTypeHistoryRow: {
             action: string;
             /** Format: date-time */
@@ -12357,6 +12416,55 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    priceTypeCustomers: {
+        parameters: {
+            query: {
+                branchId: number;
+                priceTypeId: number;
+                q?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceTypeCustomers"];
+                };
+            };
+        };
+    };
+    attachPriceType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PriceTypeAttachRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceTypeAttachResult"];
+                };
             };
         };
     };
