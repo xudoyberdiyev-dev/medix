@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,9 @@ import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyDetail;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeAttachRequest;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeAttachResult;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeCustomers;
 import uz.medix.catalog.counterparty.CounterpartyModels.ReasonRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.Role;
 import uz.medix.catalog.counterparty.CounterpartyModels.SortField;
@@ -105,6 +109,29 @@ class CounterpartyController {
 
     private static SortField sort(SortField sort, boolean sortByTin) {
         return sort != null ? sort : sortByTin ? SortField.TIN : SortField.NAME;
+    }
+
+    @GetMapping("/price-type-customers")
+    @PreAuthorize("hasAuthority('clients.terms')")
+    @Operation(summary = "Narx turiga biriktirish — mijozlar ro'yxati",
+            description = "Faol mijozlar va shu filialdagi joriy narx turi; avval shu turga biriktirilganlar. Qidiruv: nom, STIR.")
+    PriceTypeCustomers priceTypeCustomers(@RequestParam long branchId, @RequestParam long priceTypeId,
+            @RequestParam(required = false) String q, @RequestParam(defaultValue = "200") int limit) {
+        if (!actor().canAccessBranch(branchId)) {
+            throw MedixException.notFound("error.notFound");
+        }
+        return counterparties.priceTypeCustomers(branchId, priceTypeId, q, Math.clamp(limit, 1, 500));
+    }
+
+    @PutMapping("/price-type-customers")
+    @PreAuthorize("hasAuthority('clients.terms')")
+    @Operation(summary = "Mijozlarni narx turiga biriktirish",
+            description = "attach — shu filial shartidagi narx turi shu turga; detach — shu turda bo'lsa bazaviyga qaytadi. Auditda.")
+    PriceTypeAttachResult attachPriceType(@Valid @RequestBody PriceTypeAttachRequest r) {
+        if (!actor().canAccessBranch(r.branchId())) {
+            throw MedixException.notFound("error.notFound");
+        }
+        return new PriceTypeAttachResult(counterparties.attachPriceType(r));
     }
 
     @GetMapping("/export")

@@ -126,4 +126,18 @@ final class CounterpartyModels {
             @Schema(nullable = true) @Min(0) @Max(365) Integer supplierPaymentDays,
             @Schema(nullable = true) PaymentType defaultPaymentType,
             @Schema(nullable = true) Long supplyEmployeeId) {}
+
+    /** «Mijozlarga biriktirish» (prototip Prices → Narx turlari): mijoz va shu filialdagi joriy narx turi (NULL — bazaviy). */
+    record PriceTypeCustomer(long id, String name, String tin, @Schema(nullable = true) Long priceTypeId,
+            @Schema(nullable = true, description = "Joriy narx turi nomi; NULL — bazaviy") String priceType) {}
+
+    record PriceTypeCustomers(List<PriceTypeCustomer> items, long total,
+            @Schema(description = "Shu filialda shu narx turiga biriktirilgan mijozlar soni") long attached) {}
+
+    record PriceTypeAttachRequest(@NotNull(message = "{validation.required}") Long branchId,
+            @NotNull(message = "{validation.required}") Long priceTypeId,
+            @NotNull @Size(max = 5000) List<Long> attach,
+            @NotNull @Size(max = 5000) List<Long> detach) {}
+
+    record PriceTypeAttachResult(@Schema(description = "Narx turi o'zgargan mijozlar soni") int changed) {}
 }

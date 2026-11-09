@@ -25,6 +25,9 @@ import uz.medix.catalog.counterparty.CounterpartyModels.License;
 import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
 import uz.medix.catalog.counterparty.CounterpartyModels.PaymentType;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeAttachRequest;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeCustomer;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeCustomers;
 import uz.medix.catalog.counterparty.CounterpartyModels.Ref;
 import uz.medix.catalog.counterparty.CounterpartyModels.Role;
 import uz.medix.catalog.counterparty.CounterpartyModels.SortField;
@@ -390,6 +393,104 @@ class Counterparties {
         after.remove("cp");
         after.put("limit", p.get("limit") == null ? null : p.get("limit").toString());
         audit.record(AuditEntry.of("counterparty.terms", "counterparty", counterpartyId).change(before, after));
+    }
+
+    /**
+     * «Mijozlarga biriktirish» ro'yxati: faol mijozlar (qidiruv — nom/STIR, lotin-kirill farqsiz), shu filialdagi joriy narx turi bilan;
+     * avval shu turga biriktirilganlar, keyin nom bo'yicha.
+     */
+    @Transactional(readOnly = true)
+    PriceTypeCustomers priceTypeCustomers(long branchId, long priceTypeId, String q, int limit) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("b", branchId);
+        params.put("t", priceTypeId);
+        StringBuilder where = new StringBuilder(" WHERE c.is_customer AND c.active");
+        String nq = SearchText.normalize(q);
+        if (!nq.isEmpty()) {
+            String[] parts = nq.split(" ");
+            where.append(" AND (c.tin = :exact OR (true");
+            for (int i = 0; i < parts.length && i < 8; i++) {
+                where.append(" AND c.search_text LIKE :w").append(i).append(" ESCAPE '\\'");
+                params.put("w" + i, "%" + SearchText.likeEscape(parts[i]) + "%");
+            }
+            where.append("))");
+            params.put("exact", q.strip());
+        }
+        String from = " FROM counterparty c LEFT JOIN counterparty_branch_terms bt ON bt.counterparty_id = c.id AND bt.branch_id = :b"
+                + " LEFT JOIN price_type pt ON pt.id = bt.price_type_id";
+        long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
+        long attached = jdbc.sql("SELECT count(*) FROM counterparty_branch_terms WHERE branch_id = :b AND price_type_id = :t")
+                .param("b", branchId).param("t", priceTypeId).query(Long.class).single();
+        params.put("lim", limit);
+        List<PriceTypeCustomer> items = jdbc.sql("SELECT c.id, c.name, c.tin, bt.price_type_id, pt.name AS price_type" + from + where
+                        + " ORDER BY (bt.price_type_id = :t) IS TRUE DESC, lower(c.name), c.id LIMIT :lim")
+                .params(params)
+                .query((rs, n) -> new PriceTypeCustomer(rs.getLong("id"), rs.getString("name"), rs.getString("tin"),
+                        rs.getObject("price_type_id", Long.class), rs.getString("price_type")))
+                .list();
+        return new PriceTypeCustomers(items, total, attached);
+    }
+
+    /**
+     * Mijozlarni narx turiga biriktirish (shu filial sharti): {@code attach} — narx turi shu turga o'zgaradi (shart yo'q bo'lsa —
+     * yaratiladi); {@code detach} — faqat hozir shu turda bo'lsa, bazaviyga qaytadi (NULL). Har o'zgarish auditda.
+     */
+    @Transactional
+    int attachPriceType(PriceTypeAttachRequest r) {
+        if (!branchExists(r.branchId())) {
+            throw MedixException.badRequest("employee.branchUnknown");
+        }
+        checkRef("price_type", r.priceTypeId());
+        int changed = 0;
+        List<Long> attach = r.attach().stream().distinct().sorted().toList();
+        List<Long> detach = r.detach().stream().filter(id -> !attach.contains(id)).distinct().sorted().toList();
+        for (long id : attach) {
+            if (setCustomerPriceType(id, r.branchId(), r.priceTypeId(), null)) {
+                changed++;
+            }
+        }
+        for (long id : detach) {
+            if (setCustomerPriceType(id, r.branchId(), null, r.priceTypeId())) {
+                changed++;
+            }
+        }
+        return changed;
+    }
+
+    /** {@code onlyIf} berilsa — joriy tur shu bo'lsagina o'zgaradi. O'zgargan bo'lsa true. */
+    private boolean setCustomerPriceType(long counterpartyId, long branchId, Long priceTypeId, Long onlyIf) {
+        Boolean customer = jdbc.sql("SELECT is_customer AND active FROM counterparty WHERE id = :id FOR UPDATE")
+                .param("id", counterpartyId).query(Boolean.class).optional().orElse(null);
+        if (customer == null || !customer) {
+            throw MedixException.badRequest("counterparty.notCustomer");
+        }
+        Optional<Long> current = jdbc.sql("""
+                SELECT price_type_id FROM counterparty_branch_terms WHERE counterparty_id = :cp AND branch_id = :b FOR UPDATE""")
+                .param("cp", counterpartyId).param("b", branchId)
+                .query((rs, n) -> Optional.ofNullable(rs.getObject("price_type_id", Long.class)))
+                .optional()
+                .orElse(null);
+        Long before = current == null ? null : current.orElse(null);
+        if (onlyIf != null && !onlyIf.equals(before)) {
+            return false;
+        }
+        if (Objects.equals(before, priceTypeId)) {
+            return false;
+        }
+        jdbc.sql("""
+                INSERT INTO counterparty_branch_terms (counterparty_id, branch_id, price_type_id) VALUES (:cp, :b, :t)
+                ON CONFLICT (counterparty_id, branch_id) DO UPDATE SET price_type_id = excluded.price_type_id, updated_at = now(),
+                       version = counterparty_branch_terms.version + 1""")
+                .param("cp", counterpartyId).param("b", branchId).param("t", priceTypeId)
+                .update();
+        Map<String, Object> was = new HashMap<>();
+        was.put("branch", branchId);
+        was.put("price", before);
+        Map<String, Object> now = new HashMap<>();
+        now.put("branch", branchId);
+        now.put("price", priceTypeId);
+        audit.record(AuditEntry.of("counterparty.terms", "counterparty", counterpartyId).change(was, now));
+        return true;
     }
 
     /** Litsenziya amal qiladimi (Toshkent sanasi bo'yicha) — buyurtma tekshiruvida ishlatiladi (6-bosqich). */
