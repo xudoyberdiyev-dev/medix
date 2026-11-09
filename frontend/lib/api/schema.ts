@@ -84,7 +84,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** AH ni bekor qilish (teskari yozuvlar) */
-        post: operations["cancel_10"];
+        post: operations["cancel_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -136,7 +136,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi) */
-        get: operations["list_30"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -227,10 +227,10 @@ export interface paths {
             cookie?: never;
         };
         /** Hisob boʻyicha solishtirishlar tarixi */
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         /** Solishtirishni yozish (farq boʻlsa — izoh majburiy) */
-        post: operations["create_23"];
+        post: operations["create_24"];
         delete?: never;
         options?: never;
         head?: never;
@@ -285,13 +285,13 @@ export interface paths {
          * Filiallararo to'lovlar
          * @description Filial to'lovchi yoki oluvchi bo'lganlari.
          */
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         /**
          * Filialga to'lov
          * @description Darhol o'tkaziladi: to'lovchi hisobidan chiqim, oluvchi hisobiga kirim, filiallararo qarz kamayadi. Qarzdan oshmaydi.
          */
-        post: operations["create_22"];
+        post: operations["create_23"];
         delete?: never;
         options?: never;
         head?: never;
@@ -331,7 +331,7 @@ export interface paths {
          * Filiallararo to'lovni bekor qilish
          * @description Teskari: pul qaytadi, qarz tiklanadi.
          */
-        post: operations["cancel_9"];
+        post: operations["cancel_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -349,13 +349,13 @@ export interface paths {
          * FS hujjatlari
          * @description branchId — sotuvchi yoki xaridor filial.
          */
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         /**
          * Filiallararo savdo (qoralama)
          * @description Tovar joʻnatilguncha joyida qoladi.
          */
-        post: operations["create_21"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -430,7 +430,7 @@ export interface paths {
             cookie?: never;
         };
         /** FS hujjati */
-        get: operations["get_22"];
+        get: operations["get_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -452,7 +452,7 @@ export interface paths {
          * Bekor qilish
          * @description Faqat qoralama.
          */
-        post: operations["cancel_8"];
+        post: operations["cancel_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -530,7 +530,7 @@ export interface paths {
          * FS kamomadi
          * @description Ochiqmi, summa (special.cost) va hal qilish tarixi.
          */
-        get: operations["get_23"];
+        get: operations["get_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -567,10 +567,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ko'rish mumkin bo'lgan filiallar */
-        get: operations["list_20"];
+        get: operations["list_21"];
         put?: never;
         /** Filial qo'shish */
-        post: operations["create_20"];
+        post: operations["create_21"];
         delete?: never;
         options?: never;
         head?: never;
@@ -589,7 +589,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_13"];
+        put: operations["update_14"];
         post?: never;
         delete?: never;
         options?: never;
@@ -789,7 +789,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_21"];
+        get: operations["get_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -846,10 +846,10 @@ export interface paths {
          * Kontragentlar
          * @description Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).
          */
-        get: operations["list_19"];
+        get: operations["list_20"];
         put?: never;
         /** Kontragent qo'shish */
-        post: operations["create_19"];
+        post: operations["create_20"];
         delete?: never;
         options?: never;
         head?: never;
@@ -928,9 +928,9 @@ export interface paths {
             cookie?: never;
         };
         /** Kontragent kartasi */
-        get: operations["get_7"];
+        get: operations["get_8"];
         /** Kartani tahrirlash */
-        put: operations["update_12"];
+        put: operations["update_13"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1341,10 +1341,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ma'lumotnoma yozuvlari (faollari birinchi) */
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         /** Yozuv qo'shish */
-        post: operations["create_18"];
+        post: operations["create_19"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1360,7 +1360,7 @@ export interface paths {
         };
         get?: never;
         /** Yozuvni tahrirlash */
-        put: operations["update_11"];
+        put: operations["update_12"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1413,7 +1413,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_29"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1430,10 +1430,10 @@ export interface paths {
             cookie?: never;
         };
         /** Xodimlar ro'yxati */
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         /** Xodim qo'shish */
-        post: operations["create_17"];
+        post: operations["create_18"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1486,7 +1486,7 @@ export interface paths {
          * Xodimni tahrirlash
          * @description Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.
          */
-        put: operations["update_10"];
+        put: operations["update_11"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1627,10 +1627,10 @@ export interface paths {
             cookie?: never;
         };
         /** Moddalar */
-        get: operations["list_16"];
+        get: operations["list_17"];
         put?: never;
         /** Modda qo'shish */
-        post: operations["create_16"];
+        post: operations["create_17"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1696,7 +1696,7 @@ export interface paths {
             cookie?: never;
         };
         /** Buxgalter bosh sahifasi: kassa/bank, qarzlar, to'lov taqvimi (14 kun), ish ro'yxati, pul filiallar bo'yicha */
-        get: operations["get_20"];
+        get: operations["get_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1713,7 +1713,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filial rahbari bosh sahifasi: tasdiqlarim, ko'rsatkichlar, bugungi reyslar, pul hisoblari */
-        get: operations["get_19"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1730,7 +1730,7 @@ export interface paths {
             cookie?: never;
         };
         /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
-        get: operations["get_18"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1801,13 +1801,13 @@ export interface paths {
          * Inventarizatsiyalar
          * @description Kamomad / ortiqcha tannarxi — faqat prices.cost.
          */
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         /**
          * Inventarizatsiya yaratish
          * @description Qoralama. Bitta omborda bitta faol inventarizatsiya.
          */
-        post: operations["create_15"];
+        post: operations["create_16"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1842,7 +1842,7 @@ export interface paths {
          * Inventarizatsiya hujjati
          * @description Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.
          */
-        get: operations["get_17"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1904,7 +1904,7 @@ export interface paths {
          * Bekor qilish
          * @description Qoldiq o'zgarmaydi, qulf yechiladi.
          */
-        post: operations["cancel_7"];
+        post: operations["cancel_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2073,7 +2073,7 @@ export interface paths {
          * Buyurtma markirovkasi
          * @description Qatorlar, partiyalar, hisoblagichlar va faol kodlar.
          */
-        get: operations["get_16"];
+        get: operations["get_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2210,10 +2210,10 @@ export interface paths {
             cookie?: never;
         };
         /** Filial hisoblari (qoldiq bilan) */
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
         /** Yangi hisob (kassa, Terminal yoki bank) */
-        post: operations["create_14"];
+        post: operations["create_15"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2343,7 +2343,7 @@ export interface paths {
          * Sidebar nishonlari
          * @description Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.
          */
-        get: operations["get_15"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2360,7 +2360,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_28"];
+        get: operations["list_29"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2428,13 +2428,13 @@ export interface paths {
             cookie?: never;
         };
         /** BQ hujjatlari */
-        get: operations["list_13"];
+        get: operations["list_14"];
         put?: never;
         /**
          * BQ qoralamasi
          * @description Raqam darhol beriladi (BQ-TSH-000001). Qoralama qoldiqqa ta'sir qilmaydi.
          */
-        post: operations["create_13"];
+        post: operations["create_14"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2466,12 +2466,12 @@ export interface paths {
             cookie?: never;
         };
         /** BQ hujjati */
-        get: operations["get_6"];
+        get: operations["get_7"];
         /**
          * Qoralamani tahrirlash
          * @description Qatorlar to'liq almashtiriladi.
          */
-        put: operations["update_9"];
+        put: operations["update_10"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2492,7 +2492,7 @@ export interface paths {
          * Bekor qilish
          * @description Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.
          */
-        post: operations["cancel_6"];
+        post: operations["cancel_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2531,6 +2531,82 @@ export interface paths {
         /**
          * O'tkazish
          * @description Partiyalar yaratiladi va qoldiqqa kirim yoziladi (bitta tranzaksiya).
+         */
+        post: operations["post_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-finance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * BQ (pul turlari) ro'yxati
+         * @description Oxirgi 500 ta.
+         */
+        get: operations["list_13"];
+        put?: never;
+        /** Qoralama */
+        post: operations["create_13"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-finance/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BQ (pul turlari) hujjati */
+        get: operations["get_6"];
+        /** Qoralamani saqlash */
+        put: operations["update_9"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-finance/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Qoralamani bekor qilish */
+        post: operations["cancel_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-finance/{id}/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * O'tkazish
+         * @description Qarz jurnali yoki kassa/bank jurnaliga yoziladi; filial va tur bo'yicha bitta.
          */
         post: operations["post_2"];
         delete?: never;
@@ -3644,7 +3720,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari */
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4353,7 +4429,7 @@ export interface paths {
             cookie?: never;
         };
         /** Akt sverka varagʻi (sarlavha + qarz jurnalidan qatorlar) */
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4659,7 +4735,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4912,7 +4988,7 @@ export interface paths {
          * Qoldiqlar (zona × partiya)
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5086,7 +5162,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5164,7 +5240,7 @@ export interface paths {
             cookie?: never;
         };
         /** QY hujjati */
-        get: operations["get_13"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5465,7 +5541,7 @@ export interface paths {
             cookie?: never;
         };
         /** Reys */
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5846,7 +5922,7 @@ export interface paths {
             cookie?: never;
         };
         /** OK hujjati */
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5926,7 +6002,7 @@ export interface paths {
          * OK kamomadi
          * @description Ochiqmi va hal qilish tarixi.
          */
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6113,7 +6189,7 @@ export interface paths {
             cookie?: never;
         };
         /** HC hujjati */
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6231,7 +6307,7 @@ export interface paths {
             cookie?: never;
         };
         /** ZK hujjati */
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6972,6 +7048,9 @@ export interface components {
             date: string;
             incoming: string;
             outgoing: string;
+        };
+        CancelRequest: {
+            reason: string;
         };
         CashAcceptRequest: {
             /** Format: int64 */
@@ -8771,6 +8850,67 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        OpeningFinanceDetail: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: date */
+            cutoffDate: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "CUSTOMER_DEBT" | "SUPPLIER_DEBT" | "MONEY";
+            lines: components["schemas"]["Line"][];
+            note?: string;
+            number: string;
+            /** Format: date-time */
+            postedAt?: string;
+            postedBy?: string;
+            /** @enum {string} */
+            status: "DRAFT" | "POSTED" | "CANCELLED";
+            total: string;
+            /** Format: int64 */
+            version: number;
+        };
+        OpeningFinanceRequest: {
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date */
+            cutoffDate: string;
+            /** @enum {string} */
+            kind: "CUSTOMER_DEBT" | "SUPPLIER_DEBT" | "MONEY";
+            lines: components["schemas"]["LineRequest"][];
+            note?: string;
+        };
+        OpeningFinanceSummary: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: date */
+            cutoffDate: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "CUSTOMER_DEBT" | "SUPPLIER_DEBT" | "MONEY";
+            /** Format: int32 */
+            lines: number;
+            number: string;
+            /** Format: date-time */
+            postedAt?: string;
+            /** @enum {string} */
+            status: "DRAFT" | "POSTED" | "CANCELLED";
+            total: string;
         };
         OpeningImportError: {
             message: string;
@@ -12487,7 +12627,7 @@ export interface operations {
             };
         };
     };
-    cancel_10: {
+    cancel_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -12557,7 +12697,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_31: {
         parameters: {
             query?: {
                 entityType?: string;
@@ -12668,7 +12808,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query: {
                 accountId: number;
@@ -12690,7 +12830,7 @@ export interface operations {
             };
         };
     };
-    create_23: {
+    create_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -12759,7 +12899,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -12781,7 +12921,7 @@ export interface operations {
             };
         };
     };
-    create_22: {
+    create_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -12828,7 +12968,7 @@ export interface operations {
             };
         };
     };
-    cancel_9: {
+    cancel_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -12854,7 +12994,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -12879,7 +13019,7 @@ export interface operations {
             };
         };
     };
-    create_21: {
+    create_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -12967,7 +13107,7 @@ export interface operations {
             };
         };
     };
-    get_22: {
+    get_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -12989,7 +13129,7 @@ export interface operations {
             };
         };
     };
-    cancel_8: {
+    cancel_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -13081,7 +13221,7 @@ export interface operations {
             };
         };
     };
-    get_23: {
+    get_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -13129,7 +13269,7 @@ export interface operations {
             };
         };
     };
-    list_20: {
+    list_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -13149,7 +13289,7 @@ export interface operations {
             };
         };
     };
-    create_20: {
+    create_21: {
         parameters: {
             query?: never;
             header?: never;
@@ -13173,7 +13313,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -13486,7 +13626,7 @@ export interface operations {
             };
         };
     };
-    get_21: {
+    get_22: {
         parameters: {
             query: {
                 branchId: number;
@@ -13555,7 +13695,7 @@ export interface operations {
             };
         };
     };
-    list_19: {
+    list_20: {
         parameters: {
             query?: {
                 q?: string;
@@ -13586,7 +13726,7 @@ export interface operations {
             };
         };
     };
-    create_19: {
+    create_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -13709,7 +13849,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -13731,7 +13871,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -14301,7 +14441,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -14323,7 +14463,7 @@ export interface operations {
             };
         };
     };
-    create_18: {
+    create_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -14349,7 +14489,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -14422,7 +14562,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_30: {
         parameters: {
             query?: never;
             header?: never;
@@ -14442,7 +14582,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -14462,7 +14602,7 @@ export interface operations {
             };
         };
     };
-    create_17: {
+    create_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -14531,7 +14671,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -14723,7 +14863,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -14743,7 +14883,7 @@ export interface operations {
             };
         };
     };
-    create_16: {
+    create_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -14837,7 +14977,7 @@ export interface operations {
             };
         };
     };
-    get_20: {
+    get_21: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -14859,7 +14999,7 @@ export interface operations {
             };
         };
     };
-    get_19: {
+    get_20: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -14883,7 +15023,7 @@ export interface operations {
             };
         };
     };
-    get_18: {
+    get_19: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -14974,7 +15114,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -15000,7 +15140,7 @@ export interface operations {
             };
         };
     };
-    create_15: {
+    create_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -15046,7 +15186,7 @@ export interface operations {
             };
         };
     };
-    get_17: {
+    get_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -15114,7 +15254,7 @@ export interface operations {
             };
         };
     };
-    cancel_7: {
+    cancel_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -15324,7 +15464,7 @@ export interface operations {
             };
         };
     };
-    get_16: {
+    get_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -15489,7 +15629,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query: {
                 branchId: number;
@@ -15511,7 +15651,7 @@ export interface operations {
             };
         };
     };
-    create_14: {
+    create_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -15700,7 +15840,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_16: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -15722,7 +15862,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_29: {
         parameters: {
             query?: never;
             header?: never;
@@ -15800,7 +15940,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_14: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -15825,7 +15965,7 @@ export interface operations {
             };
         };
     };
-    create_13: {
+    create_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -15867,7 +16007,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -15889,7 +16029,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -15915,7 +16055,7 @@ export interface operations {
             };
         };
     };
-    cancel_6: {
+    cancel_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -15972,7 +16112,7 @@ export interface operations {
             };
         };
     };
-    post_2: {
+    post_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -15990,6 +16130,148 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OpeningDetail"];
+                };
+            };
+        };
+    };
+    list_13: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningFinanceSummary"][];
+                };
+            };
+        };
+    };
+    create_13: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningFinanceRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningFinanceDetail"];
+                };
+            };
+        };
+    };
+    get_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningFinanceDetail"];
+                };
+            };
+        };
+    };
+    update_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningFinanceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningFinanceDetail"];
+                };
+            };
+        };
+    };
+    cancel_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningFinanceDetail"];
+                };
+            };
+        };
+    };
+    post_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningFinanceDetail"];
                 };
             };
         };
@@ -17573,7 +17855,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query?: never;
             header?: never;
@@ -18641,7 +18923,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -19077,7 +19359,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query?: never;
             header?: never;
@@ -19470,7 +19752,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -19707,7 +19989,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query: {
                 branchId: number;
@@ -19827,7 +20109,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -20188,7 +20470,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -20730,7 +21012,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -20822,7 +21104,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -21114,7 +21396,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -21278,7 +21560,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
