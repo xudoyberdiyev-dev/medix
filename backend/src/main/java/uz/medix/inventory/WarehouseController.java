@@ -64,6 +64,8 @@ class WarehouseController {
     record AddZoneRequest(@NotNull(message = "{validation.required}") ZoneType type,
             @Schema(nullable = true) @Size(max = 100) String name) {}
 
+    record ZoneSellableRequest(@NotNull(message = "{validation.required}") Boolean sellable) {}
+
     record RenameZoneRequest(@NotBlank(message = "{validation.required}") @Size(max = 100) String name) {}
 
     record DeactivateRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
@@ -152,7 +154,7 @@ class WarehouseController {
     @PostMapping("/{id}/zones")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize(MANAGE)
-    @Operation(summary = "Zona qo'shish (Sovuq yoki Seyf)")
+    @Operation(summary = "Zona qo'shish (Asosiy saqlash, Sovuq yoki Seyf; bir turdagi bir nechta — nomi bilan farqlanadi)")
     Warehouses.Warehouse addZone(@PathVariable long id, @Valid @RequestBody AddZoneRequest r) {
         scoped(id);
         return warehouses.addZone(id, r.type(), r.name());
@@ -164,6 +166,14 @@ class WarehouseController {
     Warehouses.Warehouse renameZone(@PathVariable long id, @PathVariable long zoneId, @Valid @RequestBody RenameZoneRequest r) {
         scoped(id);
         return warehouses.renameZone(id, zoneId, r.name());
+    }
+
+    @PutMapping("/{id}/zones/{zoneId}/sellable")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Zona «Sotuvga ochiq» almashtirgichi", description = "Qabul, Karantin, Joʻnatish zonalari doim sotuvga yopiq.")
+    Warehouses.Warehouse setZoneSellable(@PathVariable long id, @PathVariable long zoneId, @Valid @RequestBody ZoneSellableRequest r) {
+        scoped(id);
+        return warehouses.setZoneSellable(id, zoneId, r.sellable());
     }
 
     @PostMapping("/{id}/zones/{zoneId}/close")

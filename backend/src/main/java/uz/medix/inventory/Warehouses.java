@@ -116,8 +116,16 @@ public class Warehouses {
         Map<ZoneType, String> names = spec.zoneNames() == null ? Map.of() : spec.zoneNames();
         // Avval vaqtinchalik nomlar — zonalar nomlarini almashtirganda UNIQUE (warehouse_id, name) toʻqnashmasin
         List<Zone> current = find(id).zones();
+        // Bir turdagi bir nechta zona boʻlsa (E12) — kartadagi nom shu turning birinchi zonasiga
+        Set<Long> firstOfType = new java.util.HashSet<>();
+        Set<ZoneType> seenTypes = EnumSet.noneOf(ZoneType.class);
+        current.stream().sorted(java.util.Comparator.comparingLong(Zone::id)).forEach(z -> {
+            if (seenTypes.add(z.type())) {
+                firstOfType.add(z.id());
+            }
+        });
         List<Zone> renamed = current.stream()
-                .filter(z -> names.containsKey(z.type()) && !names.get(z.type()).strip().equals(z.name()))
+                .filter(z -> firstOfType.contains(z.id()) && names.containsKey(z.type()) && !names.get(z.type()).strip().equals(z.name()))
                 .toList();
         for (Zone z : renamed) {
             jdbc.sql("UPDATE zone SET name = :n WHERE id = :id").param("n", "~" + z.id()).param("id", z.id()).update();
@@ -331,16 +339,8 @@ public class Warehouses {
     public Warehouse addZone(long id, ZoneType type, String name) {
         Warehouse w = lock(id);
         String zoneName = name == null || name.isBlank() ? type.defaultName() : name.strip();
-        if (ZoneType.REQUIRED.contains(type)) {
+        if (ZoneType.SINGLE.contains(type)) {
             throw MedixException.badRequest("warehouse.extraZones");
-        }
-        boolean exists = jdbc.sql("SELECT EXISTS (SELECT 1 FROM zone WHERE warehouse_id = :w AND type = :t)")
-                .param("w", id)
-                .param("t", type.name())
-                .query(Boolean.class)
-                .single();
-        if (exists) {
-            throw MedixException.conflict("warehouse.zoneExists", type.defaultName());
         }
         if (w.zones().stream().anyMatch(z -> z.name().equalsIgnoreCase(zoneName))) {
             throw MedixException.conflict("warehouse.zoneDuplicateName", zoneName);
@@ -388,7 +388,8 @@ public class Warehouses {
             return w;
         }
         if (!active) {
-            if (ZoneType.REQUIRED.contains(zone.type())) {
+            boolean lastOfType = w.zones().stream().noneMatch(z -> z.id() != zoneId && z.type() == zone.type() && z.active());
+            if (ZoneType.REQUIRED.contains(zone.type()) && lastOfType) {
                 throw MedixException.conflict("warehouse.zoneRequired", zone.name());
             }
             long stock = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_balance WHERE zone_id = :z")
@@ -405,6 +406,27 @@ public class Warehouses {
                 .update();
         audit.record(AuditEntry.of(active ? "zone.reopen" : "zone.close", "zone", zoneId)
                 .change(Map.of("active", !active), Map.of("active", active)));
+        return find(warehouseId);
+    }
+
+    /** Zona darajasida «Sotuvga ochiq» (E12): Qabul / Karantin / Joʻnatish doim yopiq. */
+    @Transactional
+    public Warehouse setZoneSellable(long warehouseId, long zoneId, boolean sellable) {
+        Warehouse w = lock(warehouseId);
+        Zone zone = w.zones().stream().filter(z -> z.id() == zoneId).findFirst()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (zone.sellable() == sellable) {
+            return w;
+        }
+        if (sellable && !zone.type().sellable()) {
+            throw MedixException.conflict("warehouse.zoneNotSellable", zone.name());
+        }
+        jdbc.sql("UPDATE zone SET sellable = :s, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("s", sellable)
+                .param("id", zoneId)
+                .update();
+        audit.record(AuditEntry.of("zone.sellable", "zone", zoneId)
+                .change(Map.of("sellable", !sellable), Map.of("sellable", sellable)));
         return find(warehouseId);
     }
 
