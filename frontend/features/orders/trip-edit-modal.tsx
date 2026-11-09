@@ -16,7 +16,7 @@ import { ensureCsrf } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney, formatQuantity } from "@/lib/format";
-import { placesText, type ReadyOrder } from "./shipments-page";
+import { placesText, type ReadyOrder } from "./shipments-model";
 
 /**
  * Rejalashtirilgan reys tarkibi: buyurtma qoʻshish (Joʻnatishga tayyor, shu filial) va olib tashlash (haydovchi hali

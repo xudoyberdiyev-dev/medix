@@ -5277,6 +5277,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/handed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Topshirilgan sotuvlar
+         * @description So'nggi 30 kun: o'zi olib ketdi yoki reys bilan (prototip «Topshirilgan»).
+         */
+        get: operations["handed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/mine": {
         parameters: {
             query?: never;
@@ -7764,6 +7784,25 @@ export interface components {
             kind: "WRITE_OFF" | "RETURN";
             note: string;
         };
+        HandedSale: {
+            /** Format: date-time */
+            at: string;
+            by: string;
+            customer: string;
+            /** Format: int64 */
+            customerId: number;
+            /** Format: int64 */
+            id: number;
+            /** @description PICKUP — o'zi olib ketdi, TRIP — reys bilan */
+            method: string;
+            number: string;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            region?: string;
+            total: string;
+            tripNumber?: string;
+        };
         HandoverResult: {
             sale: string;
         };
@@ -10135,13 +10174,41 @@ export interface components {
             address?: string;
             /** Format: int64 */
             branchId: number;
+            /** @description Nazoratdagi preparat bor */
+            controlled: boolean;
             customer: string;
             delivery: string;
+            /** Format: date */
+            deliveryDate?: string;
             /** Format: int64 */
             id: number;
+            /**
+             * Format: int32
+             * @description Qatorlar soni
+             */
+            lines: number;
             number: string;
+            /** @description Mijoz telefoni */
+            phone?: string;
             /** Format: int32 */
             places: number;
+            /**
+             * Format: int32
+             * @description Jami miqdor (dona)
+             */
+            qty: number;
+            /**
+             * Format: date-time
+             * @description Terish tugab «Hujjatlashtirilmoqda»ga o'tgan vaqt
+             */
+            readyAt: string;
+            /** @description Mijoz hududi */
+            region?: string;
+            /**
+             * Format: int32
+             * @description Yetishmagan miqdor (buyurtma − yig'ilgan)
+             */
+            shortQty: number;
             total: string;
         };
         ReasonRequest: {
@@ -11621,20 +11688,37 @@ export interface components {
             branchId: number;
             /** Format: date-time */
             createdAt: string;
+            /**
+             * Format: int32
+             * @description Yetkazilgan (to'liq yoki qisman) bekatlar
+             */
+            delivered: number;
             driver: string;
+            driverPhone?: string;
             /** Format: int64 */
             id: number;
+            /**
+             * Format: int32
+             * @description Natijasi belgilangan bekatlar
+             */
+            marked: number;
             number: string;
             /** Format: int32 */
             orders: number;
             /** Format: int32 */
             places: number;
+            /** @description Davlat raqami */
+            plateNumber: string;
+            /** @description Muzlatkichi bor (faqat ma'lumot) */
+            refrigerator: boolean;
             /** @enum {string} */
             status: "PLANNED" | "IN_TRANSIT" | "RETURN_WAIT" | "DONE" | "CANCELLED";
             total: string;
             /** Format: date */
             tripDate: string;
             vehicle: string;
+            /** @description Mashina modeli */
+            vehicleModel?: string;
         };
         UnmarkedLine: {
             confirmed: boolean;
@@ -19832,6 +19916,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CashAcceptResult"];
+                };
+            };
+        };
+    };
+    handed: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandedSale"][];
                 };
             };
         };

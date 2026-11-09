@@ -6,7 +6,7 @@ import { confirmText, counterText } from "./marking-page";
 import { statusTabs, tabSummary } from "./orders-page";
 import { groupByStage, sinceText, type MonitorCard } from "./monitor-page";
 import { timerText } from "./picking-page";
-import { placesText } from "./shipments-page";
+import { placesText } from "./shipments-model";
 
 const t = createTranslator({ locale: "uz-Latn", messages: uzLatn, namespace: "orders" });
 

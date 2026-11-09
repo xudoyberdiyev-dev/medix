@@ -322,13 +322,18 @@ test("Ombor mudiri: hisobdan oʻtkazadi va reys tuzadi", async ({ page }) => {
   await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
   await page.keyboard.press("Escape");
 
+  // Joʻnatish: buyurtma «Tayyor» — yetkazish, hudud boʻyicha jadvalda
   await page.goto("/shipments");
+  await expect(page.getByRole("region", { name: "Yetkazish" })).toContainText(CUSTOMER);
+  // Reys — faqat Ombor mudiri paneli «Hujjatlashtirish» yorligʻida (prototip)
+  await page.goto("/warehouse?tab=docs");
   const ready = page.getByRole("region", { name: "Joʻnatishga tayyor" });
   await ready.getByRole("listitem").filter({ hasText: CUSTOMER }).getByText("Reysga").click();
   await choose(page, "Mashina", /01 E 777 EE/);
   await choose(page, "Haydovchi", /Hasan Haydovchiyev/);
   await page.getByRole("button", { name: "Reysni rejalashtirish" }).click();
   await expect(page.getByText(/^Reys RS-.* rejalashtirildi$/).first()).toBeVisible();
+  await page.goto("/shipments?tab=trips");
   await expect(page.getByRole("region", { name: "Faol reyslar" })).toContainText("Hasan Haydovchiyev");
 });
 
@@ -599,7 +604,7 @@ async function warehouseChain(page: Page) {
   await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
   await page.keyboard.press("Escape");
 
-  await page.goto("/shipments");
+  await page.goto("/warehouse?tab=docs");
   await page
     .getByRole("region", { name: "Joʻnatishga tayyor" })
     .getByRole("listitem")

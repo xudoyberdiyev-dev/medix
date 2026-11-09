@@ -520,6 +520,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   // Joʻnatish: buyurtma reysga tayyor
   await page.goto("/shipments");
   await expect(page.getByRole("region", { name: "Joʻnatishga tayyor" })).toContainText("Shifo Dorixona E2E");
+  await page.goto("/warehouse?tab=docs");
   await expect(page.getByRole("button", { name: "Reysni rejalashtirish" })).toBeDisabled();
 });
 

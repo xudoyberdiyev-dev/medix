@@ -26,6 +26,7 @@ import { useBranchSales, type BranchSaleSummary } from "@/features/branch-sales/
 import { BranchSaleDrawer } from "@/features/branch-sales/branch-sale-drawer";
 import type { OrderStatus } from "./api";
 import type { OrdersT } from "./i18n";
+import { DocsTab } from "./docs-tab";
 import { IssuesList } from "./issues";
 import { ReturnsList } from "./returns";
 import { OrderDrawer } from "./order-drawer";
@@ -64,7 +65,7 @@ function useNow(): Date {
   return now;
 }
 
-export type KeeperTab = "monitor" | "time" | "check" | "issues" | "receipts" | "transfers" | "returns";
+export type KeeperTab = "monitor" | "time" | "check" | "docs" | "issues" | "receipts" | "transfers" | "returns";
 
 /** Ombor mudiri paneli yorliqlari (SPEC 3): ruxsat boʻyicha; «Hujjatlashtirish» — Joʻnatish sahifasiga havola. */
 export function keeperTabs(
@@ -78,6 +79,9 @@ export function keeperTabs(
     /** «Hisobdan oʻtkazish» — orders.check bilan; soni — «Tekshiruvda» buyurtmalar. */
     check?: boolean;
     checkCount?: number;
+    /** «Hujjatlashtirish» (prototip SupervisorPanel `docs`) — shipments.trip bilan; soni — joʻnatishga tayyor buyurtmalar. */
+    docs?: boolean;
+    docsCount?: number;
   },
   t: OrdersT,
 ): TabItem[] {
@@ -85,6 +89,7 @@ export function keeperTabs(
     { key: "monitor", label: t("monitor.tab.monitor") },
     { key: "time", label: t("monitor.tab.time"), count: opts.waitingTime },
     ...(opts.check ? [{ key: "check", label: t("monitor.tab.check"), count: opts.checkCount }] : []),
+    ...(opts.docs ? [{ key: "docs", label: t("monitor.tab.docs"), count: opts.docsCount }] : []),
     { key: "issues", label: t("monitor.tab.issues") },
     ...(opts.receipts ? [{ key: "receipts", label: t("monitor.tab.receipts"), count: opts.receiptCount }] : []),
     ...(opts.transfers ? [{ key: "transfers", label: t("monitor.tab.transfers"), count: opts.transferCount }] : []),
@@ -117,6 +122,7 @@ export function MonitorPage() {
   const fsToReceive = incomingBranchSales(fsTransit.data?.items ?? [], buyerBranch);
   const [branchSale, setBranchSale] = useState<number | null>(null);
   const rawTab = useSearchParams().get("tab");
+  const canDocs = can(me.data, "shipments.trip");
   const board = useQuery({
     queryKey: ["orders", "monitor", branchId],
     queryFn: () => unwrap(api.GET("/api/orders/monitor", { params: { query: { branchId: branchId ?? undefined } } })),
@@ -136,6 +142,8 @@ export function MonitorPage() {
       transferCount: canTransfers && transit.data ? transit.data.total + fsToReceive.length : undefined,
       check: canReturns,
       checkCount: board.data?.cards.filter((c) => c.status === "CHECKING").length,
+      docs: canDocs,
+      docsCount: board.data?.cards.filter((c) => c.status === "DOCUMENTING").length,
     },
     t,
   );
@@ -248,6 +256,7 @@ export function MonitorPage() {
           )}
         </>
       ) : null}
+      {board.data && tab === "docs" ? <DocsTab branchId={branchId} /> : null}
       {board.data && tab === "issues" ? <IssuesList onOpenOrder={setOpen} /> : null}
       {board.data && tab === "receipts" ? <ReceiptQueue query={drafts} onOpen={setReceipt} /> : null}
       {board.data && tab === "transfers" ? (

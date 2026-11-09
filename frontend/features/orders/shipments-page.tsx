@@ -1,62 +1,99 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, CalendarClock, ListPlus, PackageCheck, Printer, Truck } from "lucide-react";
+import {
+  ArrowUpRight,
+  Ban,
+  CalendarDays,
+  CalendarX,
+  Clock,
+  HandHelping,
+  Info,
+  ListPlus,
+  MapPin,
+  PackageCheck,
+  Printer,
+  Receipt,
+  Route,
+  ShieldAlert,
+  Snowflake,
+  TriangleAlert,
+  Truck,
+  User,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
-import { Select } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/selection-controls";
+import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
+import { Table, type TableColumn } from "@/components/ui/table";
+import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
-import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
+import { formatIsoDate } from "@/features/counterparties/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
-import type { components } from "@/lib/api/schema";
-import { formatMoney, formatQuantity } from "@/lib/format";
+import { cn } from "@/lib/cn";
+import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { useLiveConnected } from "@/lib/live";
-import { TripEditModal } from "./trip-edit-modal";
+import {
+  agoText,
+  deliveryDateState,
+  groupByRegion,
+  minutesSince,
+  TRIP_STATUS,
+  tripProgress,
+  type HandedSale,
+  type ReadyOrder,
+  type TripSummary,
+} from "./shipments-model";
 import type { OrdersT } from "./i18n";
+import { TripEditModal } from "./trip-edit-modal";
 
-export type ReadyOrder = components["schemas"]["ReadyOrder"];
-export type TripSummary = components["schemas"]["TripSummary"];
-export type TripStatus = TripSummary["status"];
+export { placesText, TRIP_STATUS, type ReadyOrder, type TripStatus, type TripSummary } from "./shipments-model";
 
-/** Reys holati koʻrinishi; nomi — lugʻatda (`orders.shipments.tripStatus.*`). */
-export const TRIP_STATUS: Record<TripStatus, { tone: "info" | "warning" | "success" | "neutral"; icon: typeof Truck }> = {
-  PLANNED: { tone: "info", icon: CalendarClock },
-  IN_TRANSIT: { tone: "info", icon: Truck },
-  RETURN_WAIT: { tone: "warning", icon: Truck },
-  DONE: { tone: "success", icon: PackageCheck },
-  CANCELLED: { tone: "neutral", icon: Ban },
-};
+type ShipTab = "ready" | "trips" | "done";
 
-/** Tanlangan buyurtmalar joylari (E6, 07.11: mashina sigʻimi yoʻq — faqat maʼlumot). */
-export function placesText(selected: number, t: OrdersT): string {
-  return t("shipments.places", { n: formatQuantity(selected) });
+function todayIso(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tashkent" }).format(new Date());
 }
 
-function todayUz(): string {
-  const p = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tashkent" }).format(new Date());
-  return formatIsoDate(p);
+/** Olib ketishni kutayotgan (nakladnoy berilgan, «Yuklanmoqda») buyurtma — kartada koʻrsatish uchun. */
+interface PickupCard {
+  id: number;
+  number: string;
+  customer: string;
+  total: string;
+  ready?: ReadyOrder;
+  waybill?: boolean;
 }
 
-/** Hujjatlashtirish (SPEC 5.2 №7): reys tuzish — mashina, haydovchi (sigʻimsiz, E6); nakladnoy; «Oʻzi olib ketadi». */
+/**
+ * Joʻnatish (prototip Shipping): yorliqlar Tayyor / Reyslar / Topshirilgan. «Tayyor» — «Mijoz oʻzi olib ketadi»
+ * kartalari (topshirish) va «Yetkazish» hudud boʻyicha jadval; reys bu yerda tuzilmaydi — Ombor mudiri paneli
+ * «Hujjatlashtirish» (E5, prototip T9-4a2).
+ */
 export function ShipmentsPage() {
   const tr = useTranslations("orders");
   const live = useLiveConnected();
   const me = useMe();
   const qc = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
+  const rawTab = useSearchParams().get("tab");
+  const tab: ShipTab = rawTab === "trips" || rawTab === "done" ? rawTab : "ready";
+  const setTab = (k: string) => router.replace(k === "ready" ? pathname : `${pathname}?tab=${k}`, { scroll: false });
   const allowed = can(me.data, "shipments.view");
   const canTrip = can(me.data, "shipments.trip");
+  const canShip = can(me.data, "shipments.ship");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const scopeBranch = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const ready = useQuery({
@@ -66,25 +103,15 @@ export function ShipmentsPage() {
     refetchInterval: live ? 60_000 : 20_000,
   });
   const trips = useQuery({
-    queryKey: ["trips", "list", scopeBranch],
-    queryFn: () => unwrap(api.GET("/api/trips", { params: { query: { branchId: scopeBranch ?? undefined, active: true } } })),
+    queryKey: ["trips", "list", "all", scopeBranch],
+    queryFn: () => unwrap(api.GET("/api/trips", { params: { query: { branchId: scopeBranch ?? undefined, active: false } } })),
     enabled: allowed,
   });
-  const [picked, setPicked] = useState<number[]>([]);
-  const deliveries = useMemo(() => (ready.data ?? []).filter((o) => o.delivery === "DELIVERY"), [ready.data]);
-  const pickups = useMemo(() => (ready.data ?? []).filter((o) => o.delivery === "PICKUP"), [ready.data]);
-  const tripBranch = deliveries.find((o) => picked.includes(o.id))?.branchId ?? scopeBranch ?? me.data?.branchId ?? null;
-  const [vehicle, setVehicle] = useState<string | null>(null);
-  const [driver, setDriver] = useState<string | null>(null);
-  const [date, setDate] = useState(todayUz);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-  const [cancelling, setCancelling] = useState<TripSummary | null>(null);
-  const [editing, setEditing] = useState<number | null>(null);
-  const [reason, setReason] = useState("");
-  const [cancelError, setCancelError] = useState<unknown>(null);
-  const [cancelPending, setCancelPending] = useState(false);
-  const [pickupPending, setPickupPending] = useState<number | null>(null);
+  const handed = useQuery({
+    queryKey: ["trips", "handed", scopeBranch],
+    queryFn: () => unwrap(api.GET("/api/trips/handed", { params: { query: { branchId: scopeBranch ?? undefined } } })),
+    enabled: allowed,
+  });
   const waiting = useQuery({
     queryKey: ["orders", "list", "pickup-loading", scopeBranch],
     queryFn: () =>
@@ -92,81 +119,48 @@ export function ShipmentsPage() {
     enabled: allowed,
     select: (p) => p.items.filter((o) => o.deliveryType === "PICKUP"),
   });
-  const [handoverPending, setHandoverPending] = useState<number | null>(null);
-  const options = useQuery({
-    queryKey: ["trips", "options", tripBranch],
-    queryFn: () => unwrap(api.GET("/api/trips/options", { params: { query: { branchId: tripBranch ?? 0 } } })),
-    enabled: canTrip && tripBranch !== null,
-  });
+  const [error, setError] = useState<unknown>(null);
+  const [cancelling, setCancelling] = useState<TripSummary | null>(null);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [reason, setReason] = useState("");
+  const [cancelError, setCancelError] = useState<unknown>(null);
+  const [cancelPending, setCancelPending] = useState(false);
+  const [pending, setPending] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const deliveries = useMemo(() => (ready.data ?? []).filter((o) => o.delivery === "DELIVERY"), [ready.data]);
+  const pickups: PickupCard[] = useMemo(
+    () => [
+      ...(waiting.data ?? []).map((o) => ({ id: o.id, number: o.number, customer: o.customer, total: o.total, waybill: true })),
+      ...(ready.data ?? [])
+        .filter((o) => o.delivery === "PICKUP")
+        .map((o) => ({ id: o.id, number: o.number, customer: o.customer, total: o.total, ready: o })),
+    ],
+    [ready.data, waiting.data],
+  );
 
   if (me.data && !allowed) return <ForbiddenState description={tr("shipments.forbidden")} />;
 
-  const places = deliveries.filter((o) => picked.includes(o.id)).reduce((s, o) => s + o.places, 0);
-  const isoDate = parseUzDate(date);
-
-  async function createTrip() {
-    setError(null);
-    if (!isoDate) {
-      setError(new Error("date"));
-      return;
-    }
-    setPending(true);
-    try {
-      await ensureCsrf();
-      const t = await unwrap(
-        api.POST("/api/trips", {
-          body: { vehicleId: Number(vehicle), driverId: Number(driver), tripDate: isoDate, orderIds: picked },
-        }),
-      );
-      toast({
-        tone: "success",
-        title: tr("shipments.tripPlanned", { number: t.number }),
-        description: tr("shipments.tripPlannedHint", { count: t.stops.length }),
-      });
-      setPicked([]);
-      setVehicle(null);
-      setDriver(null);
-      await qc.invalidateQueries({ queryKey: ["trips"] });
-      await qc.invalidateQueries({ queryKey: ["orders"] });
-    } catch (e) {
-      setError(e);
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function pickup(id: number) {
-    setPickupPending(id);
-    setError(null);
-    try {
-      await ensureCsrf();
-      const r = await unwrap(api.POST("/api/trips/pickup", { body: { orderId: id } }));
-      toast({
-        tone: "success",
-        title: tr("shipments.waybillReady"),
-        description: tr("shipments.waybillReadyHint", { number: r.waybillNumber }),
-      });
-      await qc.invalidateQueries({ queryKey: ["trips"] });
-      await qc.invalidateQueries({ queryKey: ["orders"] });
-    } catch (e) {
-      setError(e);
-    } finally {
-      setPickupPending(null);
-    }
-  }
+  const readyCount = deliveries.length + pickups.length;
+  const activeTrips = (trips.data ?? []).filter((t) => ["PLANNED", "IN_TRANSIT", "RETURN_WAIT"].includes(t.status)).length;
+  const today = todayIso();
 
   async function handover(id: number) {
-    setHandoverPending(id);
+    setPending(id);
     setError(null);
     try {
       await ensureCsrf();
       const r = await unwrap(api.POST("/api/trips/pickup/{orderId}/handover", { params: { path: { orderId: id } } }));
       toast({ tone: "success", title: tr("shipments.pickedUp"), description: tr("shipments.pickedUpHint", { sale: r.sale }) });
       await qc.invalidateQueries({ queryKey: ["orders"] });
+      await qc.invalidateQueries({ queryKey: ["trips"] });
     } catch (e) {
       setError(e);
     } finally {
-      setHandoverPending(null);
+      setPending(null);
     }
   }
 
@@ -188,215 +182,340 @@ export function ShipmentsPage() {
     }
   }
 
-  const err = error instanceof Error && error.message === "date" ? { message: tr("shipments.dateError") } : describeError(error);
+  const openOrder = (id: number) => router.push(`/orders/${id}`);
+  const printSheet = (id: number) => window.open(`/api/trips/${id}/sheet/pdf`, "_blank", "noopener");
+
+  const dColumns: TableColumn<ReadyOrder>[] = [
+    { key: "number", title: tr("shipments.cNo"), mono: true, width: 124 },
+    {
+      key: "customer",
+      title: tr("shipments.cCust"),
+      render: (o) => (
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate font-medium">{o.customer}</span>
+          {o.phone ? <span className="text-caption text-text-secondary">{o.phone}</span> : null}
+        </span>
+      ),
+    },
+    {
+      key: "address",
+      title: tr("shipments.cAddr"),
+      wrap: true,
+      render: (o) => <span className="text-text-secondary">{o.address ?? tr("shipments.noAddress")}</span>,
+    },
+    {
+      key: "deliveryDate",
+      title: tr("shipments.cDelDate"),
+      width: 128,
+      render: (o) => {
+        const st = deliveryDateState(o.deliveryDate, today);
+        if (st === "today")
+          return (
+            <Badge tone="info" icon={CalendarDays}>
+              {tr("shipments.today")}
+            </Badge>
+          );
+        if (st === "late")
+          return (
+            <Badge tone="danger" icon={CalendarX}>
+              {formatIsoDate(o.deliveryDate ?? "")}
+            </Badge>
+          );
+        return st === "later" ? formatIsoDate(o.deliveryDate ?? "") : "—";
+      },
+    },
+    { key: "lines", title: tr("shipments.cLines"), align: "right", width: 72, render: (o) => formatQuantity(o.lines) },
+    { key: "total", title: tr("shipments.cSum"), align: "right", width: 132, render: (o) => formatMoney(o.total) },
+    { key: "flags", title: tr("shipments.cFlags"), width: 96, render: (o) => <Flags o={o} tr={tr} /> },
+  ];
+
+  const tColumns: TableColumn<TripSummary>[] = [
+    { key: "number", title: tr("shipments.cNo"), mono: true, width: 128 },
+    { key: "tripDate", title: tr("shipments.cDate"), width: 100, render: (t) => formatIsoDate(t.tripDate) },
+    {
+      key: "driver",
+      title: tr("shipments.cDriver"),
+      render: (t) => (
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate font-medium">{t.driver}</span>
+          {t.driverPhone ? <span className="text-caption text-text-secondary">{t.driverPhone}</span> : null}
+        </span>
+      ),
+    },
+    {
+      key: "vehicle",
+      title: tr("shipments.cCar"),
+      render: (t) => (
+        <span className="flex min-w-0 flex-col">
+          <span className="flex items-center gap-1.5">
+            {t.plateNumber}
+            {t.refrigerator ? (
+              <Snowflake size={14} strokeWidth={1.5} className="text-info" aria-label={tr("shipments.fridge")}>
+                <title>{tr("shipments.fridge")}</title>
+              </Snowflake>
+            ) : null}
+          </span>
+          {t.vehicleModel ? <span className="text-caption text-text-secondary">{t.vehicleModel}</span> : null}
+        </span>
+      ),
+    },
+    { key: "orders", title: tr("shipments.cStops"), align: "right", width: 80, render: (t) => formatQuantity(t.orders) },
+    { key: "total", title: tr("shipments.cSum"), align: "right", width: 132, render: (t) => formatMoney(t.total) },
+    {
+      key: "status",
+      title: tr("shipments.cStatus"),
+      width: 170,
+      render: (t) => {
+        const st = TRIP_STATUS[t.status];
+        return (
+          <Badge tone={st.tone} icon={st.icon}>
+            {tr(`shipments.tripStatus.${t.status}`)}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "progress",
+      title: tr("shipments.cProg"),
+      width: 150,
+      render: (t) => <span className={cn(t.status === "DONE" ? "text-success" : "text-text-secondary")}>{tripProgress(t, tr)}</span>,
+    },
+  ];
+
+  const sColumns: TableColumn<HandedSale>[] = [
+    { key: "number", title: tr("shipments.cSaleNo"), mono: true, width: 136 },
+    {
+      key: "orderNumber",
+      title: tr("shipments.cOrder"),
+      width: 128,
+      render: (s) => <span className="font-mono text-text-secondary">{s.orderNumber}</span>,
+    },
+    {
+      key: "customer",
+      title: tr("shipments.cCust"),
+      render: (s) => (
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate font-medium">{s.customer}</span>
+          {s.region ? <span className="text-caption text-text-secondary">{s.region}</span> : null}
+        </span>
+      ),
+    },
+    {
+      key: "method",
+      title: tr("shipments.cMethod"),
+      width: 170,
+      render: (s) => (
+        <span className="flex items-center gap-1.5">
+          {s.method === "PICKUP" ? (
+            <User size={14} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+          ) : (
+            <Truck size={14} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+          )}
+          {s.method === "PICKUP" ? tr("shipments.mPickup") : tr("shipments.mTrip", { t: s.tripNumber ?? "—" })}
+        </span>
+      ),
+    },
+    { key: "at", title: tr("shipments.cTime"), width: 140, render: (s) => formatDateTime(new Date(s.at)) },
+    { key: "total", title: tr("shipments.cSum"), align: "right", width: 132, render: (s) => formatMoney(s.total) },
+    { key: "by", title: tr("shipments.cBy"), width: 150, render: (s) => <span className="text-text-secondary">{s.by}</span> },
+  ];
+
+  const err = describeError(error);
   const cancelErr = describeError(cancelError);
   return (
     <>
-      <h1 className="mb-4 text-page-title">{tr("shipments.title")}</h1>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="flex items-baseline gap-2 text-page-title">
+          {tr("shipments.title")}
+          {ready.data ? <span className="tabular text-body text-text-secondary">{formatQuantity(readyCount)}</span> : null}
+        </h1>
+        {canTrip ? (
+          <Link
+            href="/warehouse?tab=docs"
+            className="inline-flex h-control-md items-center gap-2 rounded-control border border-border bg-surface px-3 hover:border-primary"
+          >
+            <Route size={16} strokeWidth={1.5} aria-hidden /> {tr("shipments.goDocs")}
+          </Link>
+        ) : null}
+      </div>
+      <div className="mb-4">
+        <Tabs
+          aria-label={tr("shipments.title")}
+          value={tab}
+          onChange={setTab}
+          items={[
+            { key: "ready", label: tr("shipments.vReady"), count: ready.data ? readyCount : undefined },
+            { key: "trips", label: tr("shipments.vTrips"), count: trips.data ? activeTrips : undefined },
+            { key: "done", label: tr("shipments.vDone"), count: handed.data?.length },
+          ]}
+        />
+      </div>
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
-      {ready.error ? (
-        <ErrorState onRetry={() => ready.refetch()} />
-      ) : ready.isPending ? (
-        <Skeleton className="h-40 w-full" />
-      ) : (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[3fr_2fr]">
-          <section aria-label={tr("shipments.readyAria")}>
-            <h2 className="mb-3 text-subtitle">{tr("shipments.readyTitle")}</h2>
-            {deliveries.length === 0 ? (
-              <Card>
-                <EmptyState icon={Truck} title={tr("shipments.emptyTitle")} description={tr("shipments.emptyHint")} />
-              </Card>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {deliveries.map((o) => (
-                  <li key={o.id} className="flex items-start gap-3 rounded-card border border-border bg-surface p-3">
-                    {canTrip ? (
-                      <Checkbox
-                        label={tr("shipments.toTrip")}
-                        checked={picked.includes(o.id)}
-                        disabled={tripBranch !== null && picked.length > 0 && o.branchId !== tripBranch}
-                        onChange={(on) => setPicked((p) => (on ? [...p, o.id] : p.filter((x) => x !== o.id)))}
-                      />
-                    ) : null}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-mono">{o.number}</span>
-                        <span className="tabular-nums">{tr("sum", { amount: formatMoney(o.total) })}</span>
-                      </div>
-                      <div>{o.customer}</div>
-                      <div className="text-caption text-text-secondary">
-                        {o.address ?? tr("shipments.noAddress")} · {tr("shipments.places", { n: formatQuantity(o.places) })}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {pickups.length > 0 ? (
-              <>
-                <h2 className="mt-6 mb-3 text-subtitle">{tr("shipments.pickup")}</h2>
-                <ul className="flex flex-col gap-2">
-                  {pickups.map((o) => (
-                    <li
-                      key={o.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-3"
-                    >
-                      <div>
-                        <span className="font-mono">{o.number}</span> · {o.customer} ·{" "}
-                        {tr("shipments.places", { n: formatQuantity(o.places) })}
-                      </div>
-                      {canTrip ? (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          icon={PackageCheck}
-                          loading={pickupPending === o.id}
-                          onClick={() => void pickup(o.id)}
-                        >
-                          {tr("shipments.giveWaybill")}
-                        </Button>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </>
+
+      {tab === "ready" ? (
+        ready.error ? (
+          <ErrorState onRetry={() => ready.refetch()} />
+        ) : ready.isPending ? (
+          <Skeleton className="h-40 w-full" />
+        ) : (
+          <section aria-label={tr("shipments.readyAria")} className="flex flex-col gap-4">
+            <p className="flex items-start gap-1.5 text-caption text-text-secondary">
+              <Info size={14} strokeWidth={1.5} aria-hidden className="mt-0.5 flex-none" />
+              {tr("shipments.tripInDocs")}
+            </p>
+            {readyCount === 0 ? (
+              <div className="rounded-card border border-border bg-surface">
+                <EmptyState icon={PackageCheck} title={tr("shipments.readyEmptyTitle")} description={tr("shipments.readyEmptyHint")} />
+              </div>
             ) : null}
-            {(waiting.data ?? []).length > 0 ? (
-              <>
-                <h2 className="mt-6 mb-3 text-subtitle">{tr("shipments.waiting")}</h2>
-                <ul className="flex flex-col gap-2">
-                  {(waiting.data ?? []).map((o) => (
-                    <li
-                      key={o.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-3"
-                    >
-                      <div>
-                        <span className="font-mono">{o.number}</span> · {o.customer} · {tr("sum", { amount: formatMoney(o.total) })}
-                      </div>
-                      {can(me.data, "shipments.ship") ? (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          icon={PackageCheck}
-                          loading={handoverPending === o.id}
-                          onClick={() => void handover(o.id)}
-                        >
-                          {tr("shipments.handover")}
-                        </Button>
-                      ) : null}
-                    </li>
-                  ))}
+            {pickups.length > 0 ? (
+              <section aria-label={tr("shipments.gPickup")} className="flex flex-col gap-3">
+                <GroupTitle icon={User} title={tr("shipments.gPickup")} count={pickups.length} />
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {pickups.map((c) => {
+                    const r = c.ready;
+                    const wait = r ? minutesSince(r.readyAt, now) : null;
+                    return (
+                      <li key={c.id} className="flex min-w-0 flex-col gap-2.5 rounded-card border border-border bg-surface p-4">
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span className="truncate text-body font-semibold">{c.customer}</span>
+                          <button
+                            type="button"
+                            onClick={() => openOrder(c.id)}
+                            className="self-start font-mono text-caption text-primary hover:underline"
+                          >
+                            {c.number}
+                          </button>
+                        </div>
+                        <div className="text-caption text-text-primary">
+                          {r
+                            ? tr("shipments.meta", { l: formatQuantity(r.lines), q: formatQuantity(r.qty), s: formatMoney(r.total) })
+                            : formatMoney(c.total)}
+                        </div>
+                        {r && (r.controlled || r.shortQty > 0) ? <FlagBadges o={r} tr={tr} /> : null}
+                        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-1.5">
+                          <span
+                            className={cn(
+                              "flex items-center gap-1 text-caption",
+                              wait !== null && wait > 120 ? "text-warning" : "text-text-secondary",
+                            )}
+                          >
+                            <Clock size={12} strokeWidth={1.5} aria-hidden />
+                            {wait !== null ? tr("shipments.picked", { t: agoText(wait, tr) }) : c.waybill ? tr("shipments.waiting") : ""}
+                          </span>
+                          {c.waybill && canShip ? (
+                            <Button size="sm" icon={HandHelping} loading={pending === c.id} onClick={() => void handover(c.id)}>
+                              {tr("shipments.hand")}
+                            </Button>
+                          ) : !c.waybill ? (
+                            <span className="text-caption text-text-secondary">{tr("shipments.waitWaybill")}</span>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
-              </>
+              </section>
+            ) : null}
+            {deliveries.length > 0 ? (
+              <section aria-label={tr("shipments.gDeliver")} className="flex flex-col gap-3">
+                <GroupTitle icon={Truck} title={tr("shipments.gDeliver")} count={deliveries.length} />
+                {groupByRegion(deliveries).map((g) => (
+                  <div key={g.region ?? "-"} className="rounded-card border border-border bg-surface">
+                    <div className="flex min-h-10 items-center gap-2 border-b border-border px-3.5">
+                      <MapPin size={14} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+                      <span className="text-caption font-semibold">{g.region ?? tr("shipments.noRegion")}</span>
+                      <CountPill n={g.orders.length} />
+                      <span className="ml-auto text-caption text-text-secondary tabular-nums">{formatMoney(g.total)}</span>
+                    </div>
+                    <Table
+                      caption={tr("shipments.deliverCaption", { area: g.region ?? tr("shipments.noRegion") })}
+                      columns={dColumns}
+                      rows={g.orders}
+                      rowKey={(o) => String(o.id)}
+                      onRowClick={(o) => openOrder(o.id)}
+                      rowActions={(o) => (
+                        <RowMenu
+                          items={[
+                            {
+                              key: "open",
+                              label: tr("shipments.openOrder"),
+                              icon: <ArrowUpRight size={16} strokeWidth={1.5} />,
+                              onSelect: () => openOrder(o.id),
+                            },
+                          ]}
+                        />
+                      )}
+                    />
+                  </div>
+                ))}
+              </section>
             ) : null}
           </section>
-          {canTrip ? (
-            <section aria-label={tr("shipments.build")}>
-              <Card>
-                <h2 className="mb-3 text-subtitle">{tr("shipments.build")}</h2>
-                <div className="flex flex-col gap-3">
-                  <Select
-                    label={tr("shipments.vehicle")}
-                    value={vehicle}
-                    onChange={setVehicle}
-                    options={(options.data?.vehicles ?? []).map((x) => ({
-                      value: String(x.id),
-                      label: `${x.plateNumber} · ${x.model}`,
-                      meta: x.hasRefrigerator ? tr("shipments.refrigerator") : undefined,
-                    }))}
-                  />
-                  <Select
-                    label={tr("shipments.driver")}
-                    value={driver}
-                    onChange={setDriver}
-                    options={(options.data?.drivers ?? []).map((d) => ({
-                      value: String(d.id),
-                      label: d.fullName,
-                      sub: d.phone ?? undefined,
-                      meta: d.activeTrip ? tr("shipments.busy", { trip: d.activeTrip }) : undefined,
-                      metaWarning: Boolean(d.activeTrip),
-                      disabled: Boolean(d.activeTrip),
-                    }))}
-                  />
-                  <TextField label={tr("shipments.tripDate")} value={date} onChange={setDate} placeholder={tr("drawer.datePlaceholder")} />
-                  <div className="text-subtitle tabular-nums" aria-live="polite">
-                    {tr("shipments.selected", { count: formatQuantity(picked.length), places: placesText(places, tr) })}
-                  </div>
-                  <Button
-                    icon={Truck}
-                    disabled={picked.length === 0 || !vehicle || !driver}
-                    loading={pending}
-                    onClick={() => void createTrip()}
-                  >
-                    {tr("shipments.plan")}
-                  </Button>
-                </div>
-              </Card>
-            </section>
-          ) : null}
-        </div>
-      )}
-      <section aria-label={tr("shipments.active")} className="mt-8">
-        <h2 className="mb-3 text-subtitle">{tr("shipments.active")}</h2>
-        {trips.error ? (
+        )
+      ) : null}
+
+      {tab === "trips" ? (
+        trips.error ? (
           <ErrorState onRetry={() => trips.refetch()} />
-        ) : trips.isPending ? (
-          <Skeleton className="h-24 w-full" />
-        ) : trips.data.length === 0 ? (
-          <p className="text-text-secondary">{tr("shipments.noActive")}</p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {trips.data.map((t) => {
-              const st = TRIP_STATUS[t.status];
-              return (
-                <li
-                  key={t.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-3"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono">{t.number}</span>
-                      <Badge tone={st.tone} icon={st.icon}>
-                        {tr(`shipments.tripStatus.${t.status}`)}
-                      </Badge>
-                    </div>
-                    <div className="text-caption text-text-secondary">
-                      {tr("shipments.tripMeta", {
-                        date: formatIsoDate(t.tripDate),
-                        vehicle: t.vehicle,
-                        driver: t.driver,
-                        orders: formatQuantity(t.orders),
-                        places: formatQuantity(t.places),
-                        amount: formatMoney(t.total),
-                      })}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      icon={Printer}
-                      onClick={() => window.open(`/api/trips/${t.id}/sheet/pdf`, "_blank", "noopener")}
-                    >
-                      {tr("shipments.printSheet")}
-                    </Button>
-                    {canTrip && t.status === "PLANNED" ? (
-                      <Button size="sm" variant="secondary" icon={ListPlus} onClick={() => setEditing(t.id)}>
-                        {tr("shipments.editTrip")}
-                      </Button>
-                    ) : null}
-                    {canTrip && t.status === "PLANNED" ? (
-                      <Button size="sm" variant="tertiary" icon={Ban} onClick={() => setCancelling(t)}>
-                        {tr("shipments.cancelTrip")}
-                      </Button>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+          <section aria-label={tr("shipments.tripsCaption")}>
+            <Table
+              caption={tr("shipments.tripsCaption")}
+              columns={tColumns}
+              rows={trips.data ?? []}
+              rowKey={(t) => String(t.id)}
+              loading={trips.isPending}
+              onRowClick={(t) => printSheet(t.id)}
+              rowActions={(t) => {
+                const items: RowMenuItem[] = [
+                  {
+                    key: "sheet",
+                    label: tr("shipments.printSheet"),
+                    icon: <Printer size={16} strokeWidth={1.5} />,
+                    onSelect: () => printSheet(t.id),
+                  },
+                ];
+                if (canTrip && t.status === "PLANNED") {
+                  items.push(
+                    {
+                      key: "edit",
+                      label: tr("shipments.editTrip"),
+                      icon: <ListPlus size={16} strokeWidth={1.5} />,
+                      onSelect: () => setEditing(t.id),
+                    },
+                    {
+                      key: "cancel",
+                      label: tr("shipments.cancelTrip"),
+                      icon: <Ban size={16} strokeWidth={1.5} />,
+                      onSelect: () => setCancelling(t),
+                    },
+                  );
+                }
+                return <RowMenu items={items} />;
+              }}
+              emptyState={<EmptyState icon={Route} title={tr("shipments.tripsEmptyT")} description={tr("shipments.tripsEmptyD")} />}
+            />
+          </section>
+        )
+      ) : null}
+
+      {tab === "done" ? (
+        handed.error ? (
+          <ErrorState onRetry={() => handed.refetch()} />
+        ) : (
+          <Table
+            caption={tr("shipments.doneCaption")}
+            columns={sColumns}
+            rows={handed.data ?? []}
+            rowKey={(s) => String(s.id)}
+            loading={handed.isPending}
+            onRowClick={(s) => openOrder(s.orderId)}
+            emptyState={<EmptyState icon={Receipt} title={tr("shipments.doneEmptyT")} description={tr("shipments.doneEmptyD")} />}
+          />
+        )
+      ) : null}
+
       <TripEditModal tripId={editing} ready={ready.data ?? []} onClose={() => setEditing(null)} />
       <Modal
         open={cancelling !== null}
@@ -415,5 +534,64 @@ export function ShipmentsPage() {
         {cancelErr.message ? <Alert tone="danger" title={cancelErr.message} className="mt-3" /> : null}
       </Modal>
     </>
+  );
+}
+
+type Tr = OrdersT;
+
+function CountPill({ n }: { n: number }) {
+  return (
+    <span className="inline-flex h-[18px] items-center rounded-[6px] bg-table-header px-1.5 text-[11.5px] font-medium text-text-secondary">
+      {formatQuantity(n)}
+    </span>
+  );
+}
+
+function GroupTitle({ icon: Icon, title, count }: { icon: typeof Truck; title: string; count: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+      <h2 className="text-body font-semibold">{title}</h2>
+      <CountPill n={count} />
+    </div>
+  );
+}
+
+function FlagBadges({ o, tr }: { o: ReadyOrder; tr: Tr }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {o.controlled ? (
+        <Badge tone="danger" icon={ShieldAlert}>
+          {tr("shipments.bCtrl")}
+        </Badge>
+      ) : null}
+      {o.shortQty > 0 ? (
+        <Badge tone="warning" icon={TriangleAlert}>
+          {tr("shipments.bShort", { n: formatQuantity(o.shortQty) })}
+        </Badge>
+      ) : null}
+    </div>
+  );
+}
+
+function Flags({ o, tr }: { o: ReadyOrder; tr: Tr }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      {o.controlled ? (
+        <ShieldAlert size={16} strokeWidth={1.5} className="text-danger" aria-label={tr("shipments.bCtrl")}>
+          <title>{tr("shipments.bCtrl")}</title>
+        </ShieldAlert>
+      ) : null}
+      {o.shortQty > 0 ? (
+        <TriangleAlert
+          size={16}
+          strokeWidth={1.5}
+          className="text-warning"
+          aria-label={tr("shipments.bShort", { n: formatQuantity(o.shortQty) })}
+        >
+          <title>{tr("shipments.bShort", { n: formatQuantity(o.shortQty) })}</title>
+        </TriangleAlert>
+      ) : null}
+    </span>
   );
 }

@@ -12404,6 +12404,38 @@
         "tags" : [ "trips" ]
       }
     },
+    "/api/trips/handed" : {
+      "get" : {
+        "description" : "So'nggi 30 kun: o'zi olib ketdi yoki reys bilan (prototip «Topshirilgan»).",
+        "operationId" : "handed",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/HandedSale"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Topshirilgan sotuvlar",
+        "tags" : [ "trips" ]
+      }
+    },
     "/api/trips/mine" : {
       "get" : {
         "description" : "Faol reys bo'lmasa — 204.",
@@ -18450,6 +18482,53 @@
         },
         "required" : [ "kind", "note" ]
       },
+      "HandedSale" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "by" : {
+            "type" : "string"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "method" : {
+            "type" : "string",
+            "description" : "PICKUP — o'zi olib ketdi, TRIP — reys bilan"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "region" : {
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "string"
+          },
+          "tripNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at", "by", "customer", "customerId", "id", "method", "number", "orderId", "orderNumber", "total" ]
+      },
       "HandoverResult" : {
         "type" : "object",
         "properties" : {
@@ -24309,28 +24388,64 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "controlled" : {
+            "type" : "boolean",
+            "description" : "Nazoratdagi preparat bor"
+          },
           "customer" : {
             "type" : "string"
           },
           "delivery" : {
             "type" : "string"
           },
+          "deliveryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
           },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Qatorlar soni"
+          },
           "number" : {
             "type" : "string"
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "Mijoz telefoni"
           },
           "places" : {
             "type" : "integer",
             "format" : "int32"
           },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Jami miqdor (dona)"
+          },
+          "readyAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Terish tugab «Hujjatlashtirilmoqda»ga o'tgan vaqt"
+          },
+          "region" : {
+            "type" : "string",
+            "description" : "Mijoz hududi"
+          },
+          "shortQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yetishmagan miqdor (buyurtma − yig'ilgan)"
+          },
           "total" : {
             "type" : "string"
           }
         },
-        "required" : [ "branchId", "customer", "delivery", "id", "number", "places", "total" ]
+        "required" : [ "branchId", "controlled", "customer", "delivery", "id", "lines", "number", "places", "qty", "readyAt", "shortQty", "total" ]
       },
       "ReasonRequest" : {
         "type" : "object",
@@ -27963,12 +28078,25 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "delivered" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yetkazilgan (to'liq yoki qisman) bekatlar"
+          },
           "driver" : {
+            "type" : "string"
+          },
+          "driverPhone" : {
             "type" : "string"
           },
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "marked" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Natijasi belgilangan bekatlar"
           },
           "number" : {
             "type" : "string"
@@ -27980,6 +28108,14 @@
           "places" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "plateNumber" : {
+            "type" : "string",
+            "description" : "Davlat raqami"
+          },
+          "refrigerator" : {
+            "type" : "boolean",
+            "description" : "Muzlatkichi bor (faqat ma'lumot)"
           },
           "status" : {
             "type" : "string",
@@ -27994,9 +28130,13 @@
           },
           "vehicle" : {
             "type" : "string"
+          },
+          "vehicleModel" : {
+            "type" : "string",
+            "description" : "Mashina modeli"
           }
         },
-        "required" : [ "branchId", "createdAt", "driver", "id", "number", "orders", "places", "status", "total", "tripDate", "vehicle" ]
+        "required" : [ "branchId", "createdAt", "delivered", "driver", "id", "marked", "number", "orders", "places", "plateNumber", "refrigerator", "status", "total", "tripDate", "vehicle" ]
       },
       "UnmarkedLine" : {
         "type" : "object",
