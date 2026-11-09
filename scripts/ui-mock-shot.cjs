@@ -57,6 +57,8 @@ const defaults = {
     }
     await p.waitForTimeout(700);
   }
+  // EVAL='<js ifoda>' — skrinshotdan oldin sahifada bajarib natijani chiqaradi (masalan, oʻlchamlarni tekshirish)
+  if (process.env.EVAL) console.log(JSON.stringify(await p.evaluate(process.env.EVAL)));
   await p.screenshot({ path: out, fullPage: process.env.FULL === "1" });
   if (misses.size) console.error("Mock yo'q (bo'sh [] qaytdi):", [...misses].join(", "));
   if (errs.length) console.error("Sahifa xatolari:", errs.slice(0, 3));
