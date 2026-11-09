@@ -272,7 +272,7 @@ function BranchDrawer({ branch, onClose }: { branch: Branch | null; onClose: () 
           error={err.fields.code}
           hint={branch ? t("branches.codeHintLocked") : t("branches.codeHintNew")}
           disabled={Boolean(branch)}
-          maxLength={3}
+          maxLength={4}
           required
         />
         <TextField

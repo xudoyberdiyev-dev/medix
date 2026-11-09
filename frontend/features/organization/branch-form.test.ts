@@ -36,6 +36,12 @@ describe("filial kartasi", () => {
     expect(validateBranch({ ...ok, sameAddress: false, banks: [] }, true)).toEqual({ actualAddress: "eActual" });
     // Tahrirlashda kod tekshirilmaydi (oʻzgarmaydi)
     expect(validateBranch({ ...ok, code: "", banks: [] }, false)).toEqual({});
+    // E11: kod 2–4 harf
+    const ok2 = { ...ok, banks: [emptyBank(true)] };
+    expect(validateBranch({ ...ok2, code: "TS" }, true)).toEqual({});
+    expect(validateBranch({ ...ok2, code: "TSHK" }, true)).toEqual({});
+    expect(validateBranch({ ...ok2, code: "T" }, true)).toEqual({ code: "eCode" });
+    expect(validateBranch({ ...ok2, code: "TSHKX" }, true)).toEqual({ code: "eCode" });
   });
 
   it("soʻrov tanasi: boʻsh bank qatori tashlanadi, QQS toʻlovchi boʻlmasa guvohnoma yuborilmaydi", () => {

@@ -12,6 +12,10 @@ class DocumentNumberTest {
         assertThat(new DocumentNumber(DocumentPrefix.BY, "TSH", 355)).hasToString("BY-TSH-000355");
         assertThat(new DocumentNumber(DocumentPrefix.BNS, "SMQ", 1)).hasToString("BNS-SMQ-000001");
         assertThat(new DocumentNumber(DocumentPrefix.KR, "FRG", 1_234_567)).hasToString("KR-FRG-1234567");
+        // E11: filial kodi 2–4 harf
+        assertThat(new DocumentNumber(DocumentPrefix.BY, "TS", 1)).hasToString("BY-TS-000001");
+        assertThat(new DocumentNumber(DocumentPrefix.BY, "TSHK", 7)).hasToString("BY-TSHK-000007");
+        assertThat(DocumentNumber.parse("BY-TS-000001").branchCode()).isEqualTo("TS");
     }
 
     @Test
@@ -26,6 +30,8 @@ class DocumentNumberTest {
     @Test
     void rejectsInvalidInput() {
         assertThatThrownBy(() -> new DocumentNumber(DocumentPrefix.BY, "tsh", 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new DocumentNumber(DocumentPrefix.BY, "T", 1)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new DocumentNumber(DocumentPrefix.BY, "TSHKX", 1)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new DocumentNumber(DocumentPrefix.BY, "TSH", 0)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> DocumentNumber.parse("BY-TSH-12")).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> DocumentNumber.parse("XX-TSH-000001")).isInstanceOf(IllegalArgumentException.class);

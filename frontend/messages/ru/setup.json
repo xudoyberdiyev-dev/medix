@@ -101,7 +101,7 @@
     "emptyTitle": "Филиалы ещё не добавлены",
     "emptyDescription": "Каждый филиал — отдельное юрлицо: его код (TSH) используется в номерах документов.",
     "new": "Новый филиал",
-    "codeHint": "3 латинские буквы: TSH, SMQ, BXR, FRG",
+    "codeHint": "2–4 латинские буквы: TSH, SMQ, BXR, FRG",
     "name": "Название",
     "namePlaceholder": "Ташкент",
     "legalNamePlaceholder": "ООО «Medix Toshkent»",
