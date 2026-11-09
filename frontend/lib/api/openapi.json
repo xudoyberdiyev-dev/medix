@@ -18295,6 +18295,10 @@
             "type" : "string",
             "description" : "O'zgarish, %"
           },
+          "cost" : {
+            "type" : "string",
+            "description" : "Tannarx (QQS bilan): partiya qatori — partiya tannarxi, mahsulot qatori — filialdagi qoldig'i bor partiyalarning eng yuqori tannarxi; faqat special.cost bilan"
+          },
           "expiryDate" : {
             "type" : "string",
             "format" : "date"
@@ -18302,6 +18306,9 @@
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "manufacturer" : {
+            "type" : "string"
           },
           "newPrice" : {
             "type" : "string"

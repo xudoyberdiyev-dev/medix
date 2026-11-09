@@ -611,7 +611,7 @@ function MarkupDialog({
   );
 }
 
-function ApproveDialog({ id, onClose }: { id: number; onClose: () => void }) {
+export function ApproveDialog({ id, onClose }: { id: number; onClose: () => void }) {
   const t = useTranslations("prices.approve");
   const approve = useApprove();
   const [pin, setPin] = useState("");

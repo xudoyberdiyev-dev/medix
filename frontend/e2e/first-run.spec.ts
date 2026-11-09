@@ -284,8 +284,12 @@ test("CEO: Ctrl+K — mahsulot (kirillda), sahifa va NO hujjati", async ({ page 
   await page.keyboard.press("Control+K");
   await page.getByRole("combobox", { name: "Qidirish" }).fill("NO-");
   await page.getByRole("group", { name: "Narx oʻzgarishlari (NO)" }).getByRole("option").first().click();
-  await expect(page).toHaveURL(/\/prices\?tab=documents&open=\d+/);
-  await expect(page.getByText("NO-TSH-000001").first()).toBeVisible();
+  // NO hujjati — toʻliq sahifa (prototip Prices → NO hujjati): sarlavha, maʼlumot kartasi, qatorlar
+  await expect(page).toHaveURL(/\/prices\/changes\/\d+/);
+  await expect(page.getByRole("heading", { name: /Narx oʻzgartirish NO-TSH-\d{6}/ })).toBeVisible();
+  await expect(page.getByText("Kuchga kirish", { exact: true })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Eski narx" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Chop etish" })).toBeVisible();
 
   await page.goto("/");
   const palette = page.getByRole("combobox", { name: "Qidirish" });

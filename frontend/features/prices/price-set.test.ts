@@ -105,3 +105,12 @@ describe("filtr va asos", () => {
     expect(toInput("1250.50")).toBe("1250,50");
   });
 });
+
+describe("isBelowCost (NO hujjati)", () => {
+  it("tannarxdan past — tiyin aniqligida", async () => {
+    const { isBelowCost } = await import("./price-change-document");
+    expect(isBelowCost({ newPrice: "11999.99", cost: "12000.00" })).toBe(true);
+    expect(isBelowCost({ newPrice: "12000.00", cost: "12000" })).toBe(false);
+    expect(isBelowCost({ newPrice: "100.00", cost: null })).toBe(false);
+  });
+});

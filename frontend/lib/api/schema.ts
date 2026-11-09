@@ -7603,10 +7603,13 @@ export interface components {
             bigChange: boolean;
             /** @description O'zgarish, % */
             changePercent?: string;
+            /** @description Tannarx (QQS bilan): partiya qatori — partiya tannarxi, mahsulot qatori — filialdagi qoldig'i bor partiyalarning eng yuqori tannarxi; faqat special.cost bilan */
+            cost?: string;
             /** Format: date */
             expiryDate?: string;
             /** Format: int64 */
             id: number;
+            manufacturer?: string;
             newPrice: string;
             oldPrice?: string;
             priceType: string;

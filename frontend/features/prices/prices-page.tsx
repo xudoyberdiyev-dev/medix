@@ -3,7 +3,7 @@
 import { Ban, CircleCheck, CircleX, Clock, FileDown, FilePen, Plus, Tags } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DayField } from "@/components/ui/day-field";
@@ -56,13 +56,16 @@ export function PricesPage() {
   const [branchOverride, setBranchOverride] = useState<number | null>(null);
   const branchId = branchOverride ?? (me.data && !me.data.allBranches ? (me.data.branchId ?? null) : (selected ?? active[0]?.id ?? null));
   const canSet = can(me.data, PRICE_CREATE);
-  // Bildirishnomadan oʻtish: ?tab=documents&open=<id> — NO darhol ochiladi
   // «Narx oʻrnatish» sahifasidan «Kirim boʻyicha»: ?new=receipt — yangi NO kirim rejimida ochiladi
-  const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[]; mode?: "RECEIPT" } | null>(() => {
-    if (params.get("new") === "receipt") return { id: null, mode: "RECEIPT" };
-    const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
-  });
+  const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[]; mode?: "RECEIPT" } | null>(() =>
+    params.get("new") === "receipt" ? { id: null, mode: "RECEIPT" } : null,
+  );
+  // Bildirishnomadan / qidiruvdan oʻtish: ?tab=documents&open=<id> — NO hujjati sahifasiga
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/prices/changes/${openId}`);
+  }, [openId, router]);
+  const openDoc = (id: number) => router.push(`/prices/changes/${id}`);
   const openSet = (priceTypeId?: number) =>
     router.push(
       `/prices/set?${new URLSearchParams({ ...(branchId ? { branch: String(branchId) } : {}), ...(priceTypeId ? { type: String(priceTypeId) } : {}) })}`,
@@ -109,7 +112,7 @@ export function PricesPage() {
       ) : tab === "prices" ? (
         <PricesTab branchId={branchId} canSet={canSet} onSetPrices={(lines) => setEditor({ id: null, preset: lines })} />
       ) : (
-        <PriceChangesTab branchId={branchId} onOpen={(id) => setEditor({ id })} />
+        <PriceChangesTab branchId={branchId} onOpen={openDoc} />
       )}
       {editor && branchId ? (
         <PriceChangeDrawer
@@ -119,7 +122,7 @@ export function PricesPage() {
           initialMode={editor.mode}
           canSet={canSet}
           onClose={() => setEditor(null)}
-          onCreated={(id) => setEditor({ id })}
+          onCreated={(id) => (setEditor(null), openDoc(id))}
         />
       ) : null}
     </>
