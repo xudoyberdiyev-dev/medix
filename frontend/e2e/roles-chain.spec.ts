@@ -657,6 +657,11 @@ test("CEO: Direktor xodimi va mijozga kichik kredit limiti", async ({ page }) =>
   await card.getByLabel(/^Kredit limiti\s*\*?$/).fill("1.000,00");
   await card.getByRole("button", { name: "Shartlarni saqlash" }).click();
   await expect(page.getByText("Filial shartlari saqlandi").first()).toBeVisible();
+  // Kartochka hujjat yorliqlari (prototip CounterpartyCard)
+  await page.getByRole("tab", { name: /^Buyurtmalar/ }).click();
+  await expect(page.getByRole("link", { name: "Boʻlimga oʻtish" })).toBeVisible();
+  await page.getByRole("tab", { name: /^Toʻlovlar/ }).click();
+  await expect(page.getByRole("link", { name: "Boʻlimga oʻtish" })).toHaveAttribute("href", "/payments");
 });
 
 test("Operator: limitdan 20% dan koʻp oshgan buyurtma — Direktor tasdigʻiga", async ({ page }) => {
