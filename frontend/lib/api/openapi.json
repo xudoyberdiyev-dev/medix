@@ -18877,6 +18877,26 @@
         },
         "required" : [ "amount", "date", "number" ]
       },
+      "LastPayment" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "date", "id", "number" ]
+      },
       "License" : {
         "type" : "object",
         "properties" : {
@@ -19884,6 +19904,10 @@
             "type" : "string",
             "format" : "date"
           },
+          "extNo" : {
+            "type" : "string",
+            "description" : "Tashqi raqam — YB yuk xati / hisob-faktura raqami (kirimda)"
+          },
           "open" : {
             "type" : "string"
           },
@@ -19891,9 +19915,21 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Muddati o'tgan kunlar (0 — o'tmagan)"
+          },
+          "paid" : {
+            "type" : "string",
+            "description" : "Avval to'langan (MT/YT/AH taqsimotlari)"
+          },
+          "returned" : {
+            "type" : "string",
+            "description" : "Qaytarishlar (QM/QY) bilan kamaygan summa"
+          },
+          "total" : {
+            "type" : "string",
+            "description" : "Hujjat summasi"
           }
         },
-        "required" : [ "date", "docId", "docNumber", "docType", "open", "overdueDays" ]
+        "required" : [ "date", "docId", "docNumber", "docType", "open", "overdueDays", "paid", "returned", "total" ]
       },
       "OpenDocs" : {
         "type" : "object",
@@ -19910,6 +19946,10 @@
             "items" : {
               "$ref" : "#/components/schemas/OpenDocView"
             }
+          },
+          "lastPayment" : {
+            "$ref" : "#/components/schemas/LastPayment",
+            "description" : "Shu filialdagi oxirgi o'tkazilgan to'lov"
           }
         },
         "required" : [ "advance", "debt", "docs" ]

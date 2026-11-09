@@ -842,7 +842,7 @@ function ReceiptPayment({ doc }: { doc: ReceiptDetail }) {
           icon={ArrowUpRight}
           onClick={() =>
             router.push(
-              `/payments?tab=yt&new=1&supplier=${doc.supplierId}&supplierName=${encodeURIComponent(doc.supplier)}&amount=${encodeURIComponent(left)}`,
+              `/payments/yt/new?supplier=${doc.supplierId}&supplierName=${encodeURIComponent(doc.supplier)}&amount=${encodeURIComponent(left)}`,
             )
           }
         >

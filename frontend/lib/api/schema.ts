@@ -7850,6 +7850,14 @@ export interface components {
             id?: number;
             number: string;
         };
+        LastPayment: {
+            amount: string;
+            /** Format: date */
+            date: string;
+            /** Format: int64 */
+            id: number;
+            number: string;
+        };
         License: {
             controlledAllowed: boolean;
             /** Format: int64 */
@@ -8281,18 +8289,28 @@ export interface components {
             docType: string;
             /** Format: date */
             dueDate?: string;
+            /** @description Tashqi raqam — YB yuk xati / hisob-faktura raqami (kirimda) */
+            extNo?: string;
             open: string;
             /**
              * Format: int32
              * @description Muddati o'tgan kunlar (0 — o'tmagan)
              */
             overdueDays: number;
+            /** @description Avval to'langan (MT/YT/AH taqsimotlari) */
+            paid: string;
+            /** @description Qaytarishlar (QM/QY) bilan kamaygan summa */
+            returned: string;
+            /** @description Hujjat summasi */
+            total: string;
         };
         OpenDocs: {
             /** @description Taqsimlanmagan to'lovlar (avans) */
             advance: string;
             debt: string;
             docs: components["schemas"]["OpenDocView"][];
+            /** @description Shu filialdagi oxirgi o'tkazilgan to'lov */
+            lastPayment?: components["schemas"]["LastPayment"];
         };
         OpeningCancelRequest: {
             reason: string;

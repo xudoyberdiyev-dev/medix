@@ -512,13 +512,17 @@ test("Kassir: YB ga toʻlov (YT) — tasdiqqa", async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/payments");
   await page.getByRole("button", { name: "Yetkazib beruvchiga toʻlov" }).first().click();
+  await expect(page).toHaveURL(/\/payments\/yt\/new$/);
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
   await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
-  await choose(page, "Hisob", /Kassa 2/);
+  await choose(page, "Kassa", /Kassa 2/);
   await field(page, "Summa").fill("60.000,00");
-  await page.getByRole("button", { name: "Tasdiqqa yuborish" }).click();
-  await expect(page.getByText("Tasdiqqa yuborildi").first()).toBeVisible();
+  await page.getByRole("button", { name: "Tasdiqlashga yuborish" }).first().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Tasdiqlashga yuborish" }).click();
+  await expect(page.getByText(/tasdiqlashga yuborildi/).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/payments\/yt\/\d+$/);
+  await expect(page.getByText(/Filial rahbari tasdigʻini kutmoqda/)).toBeVisible();
 });
 
 test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
@@ -527,9 +531,11 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   await page.goto("/payments");
   await page.getByRole("tab", { name: /Yetkazib beruvchilarga/ }).click();
   await page.getByRole("cell", { name: "Pharm Supply E2E" }).first().click();
-  await page.getByRole("button", { name: "Tasdiqlash va oʻtkazish" }).click();
-  await expect(page.getByText("Toʻlov oʻtkazildi").first()).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/payments\/yt\/\d+$/);
+  await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(page.getByText(/tasdiqlandi$/).first()).toBeVisible();
+  await expect(page.getByText(/Tasdiqlangan toʻlov tahrirlanmaydi/)).toBeVisible();
   await page.goto("/cash");
   // 520 000 − 60 000 = 460 000
   await expect(page.getByRole("button", { name: /Kassa 2.*460\.000,00 soʻm/ })).toBeVisible();

@@ -59,7 +59,7 @@ describe("documents-model", () => {
     expect(docHref("RECEIPTS", false, row({ linkId: 9 }))).toBe("/receipts/9");
     expect(docHref("BONUS", false, row({ id: -4, linkId: 4 }))).toBe("/receipts/4");
     expect(sectionHref("BONUS", false)).toBe("/bonuses");
-    expect(docHref("PAYMENTS", true, row({ linkId: 7 }))).toBe("/payments?open=7");
+    expect(docHref("PAYMENTS", true, row({ linkId: 7 }))).toBe("/payments/mt/7");
     expect(sectionHref("PAYMENTS", false)).toBe("/payments?tab=yt");
   });
 });

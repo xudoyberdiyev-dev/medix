@@ -73,7 +73,7 @@ export function docHref(section: DocSection, customers: boolean, row: DocRow): s
     case "SALES":
       return row.linkId != null ? `/orders/${id}` : null;
     case "PAYMENTS":
-      return customers ? `/payments?open=${id}` : "/payments?tab=yt";
+      return customers ? `/payments/mt/${id}` : "/payments?tab=yt";
     case "RETURNS":
       return customers ? (row.linkId != null ? `/orders/${id}` : null) : `/supplier-returns?open=${id}`;
     case "RECEIPTS":

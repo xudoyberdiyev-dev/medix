@@ -2,9 +2,9 @@
 
 import { ArrowDownLeft, ArrowUpRight, Ban, CircleCheck, CircleX, Clock, FilePen, Plus, Truck, Wallet, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DateChip, MultiFilter } from "@/components/ui/multi-filter";
@@ -40,8 +40,6 @@ import {
   type PayFilters,
   type PayStatus,
 } from "./overview-model";
-import { PaymentDrawer } from "./payment-drawer";
-import { SupplierPaymentDrawer } from "./supplier-payment-drawer";
 
 type Row = components["schemas"]["PaymentOverviewRow"];
 
@@ -135,15 +133,18 @@ export function PaymentsPage() {
   const [f, setF] = useState<PayFilters>(() => filtersFromParams((k) => params.get(k)));
   const [search, setSearch] = useState(f.q);
 
-  // Oʻtishlar: ?open=<MT id> — buyurtma kartochkasidan; ?tab=yt&new=1&supplier=&supplierName=&amount= — kirim kartochkasidan «Toʻlash»
+  // Eski oʻtishlar: ?open=<MT id> va ?tab=yt&new=1&supplier=… — endi toʻliq sahifalarga yoʻnaltiriladi
+  const router = useRouter();
   const openId = Number(params.get("open"));
   const fromReceipt = params.get("new") === "1" && Number(params.get("supplier")) > 0;
-  const initialYt = fromReceipt
-    ? { supplierId: Number(params.get("supplier")), supplier: params.get("supplierName") ?? "", amount: params.get("amount") ?? "" }
-    : undefined;
-  const [editor, setEditor] = useState<{ kind: "MT" | "YT"; id: number | null } | null>(() =>
-    Number.isInteger(openId) && openId > 0 ? { kind: "MT", id: openId } : fromReceipt && canYt ? { kind: "YT", id: null } : null,
-  );
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/payments/mt/${openId}`);
+    else if (fromReceipt) {
+      const q = new URLSearchParams();
+      for (const k of ["supplier", "supplierName", "amount"]) q.set(k, params.get(k) ?? "");
+      router.replace(`/payments/yt/new?${q.toString()}`);
+    }
+  }, [openId, fromReceipt, params, router]);
 
   const all = useMemo(() => list.data?.rows ?? [], [list.data]);
   const rows = useMemo(() => filterRows(all, f), [all, f]);
@@ -171,7 +172,7 @@ export function PaymentsPage() {
   const shown = rows.slice((page - 1) * f.size, page * f.size);
   const dead = (r: Row) => r.status === "CANCELLED";
   const muted = (r: Row) => (dead(r) ? "text-text-disabled" : undefined);
-  const open = (r: Row) => setEditor({ kind: r.kind, id: r.id });
+  const open = (r: Row) => router.push(`/payments/${r.kind.toLowerCase()}/${r.id}`);
 
   const columns: TableColumn<Row>[] = [
     { key: "number", title: t("c.number"), mono: true, render: (r) => <span className={muted(r)}>{r.number}</span> },
@@ -260,7 +261,7 @@ export function PaymentsPage() {
         variant={primary ? "primary" : "secondary"}
         disabled={workBranch == null}
         title={workBranch == null ? tp("selectBranchFirst") : undefined}
-        onClick={() => setEditor({ kind, id: null })}
+        onClick={() => router.push(`/payments/${kind.toLowerCase()}/new`)}
       >
         {kind === "MT" ? t("newMt") : t("newYt")}
       </Button>
@@ -460,23 +461,6 @@ export function PaymentsPage() {
           ) : null}
         </>
       )}
-      {editor?.kind === "MT" ? (
-        <PaymentDrawer
-          id={editor.id}
-          branchId={workBranch}
-          onClose={() => setEditor(null)}
-          onCreated={(id) => setEditor({ kind: "MT", id })}
-        />
-      ) : null}
-      {editor?.kind === "YT" ? (
-        <SupplierPaymentDrawer
-          id={editor.id}
-          branchId={workBranch}
-          initial={editor.id == null ? initialYt : undefined}
-          onClose={() => setEditor(null)}
-          onCreated={(id) => setEditor({ kind: "YT", id })}
-        />
-      ) : null}
     </>
   );
 }

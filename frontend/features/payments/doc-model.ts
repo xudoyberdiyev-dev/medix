@@ -187,5 +187,8 @@ export function docSteps(kind: PayKind, status: "DRAFT" | "PENDING" | "POSTED" |
   if (status === "CANCELLED")
     return [...order.map((s) => ({ status: s as string, state: "done" as const })), { status: "CANCELLED", state: "fail" as const }];
   const cur = order.indexOf(status as never);
-  return order.map((s, i) => ({ status: s as string, state: i < cur ? ("done" as const) : i === cur ? ("cur" as const) : ("next" as const) }));
+  return order.map((s, i) => ({
+    status: s as string,
+    state: i < cur ? ("done" as const) : i === cur ? ("cur" as const) : ("next" as const),
+  }));
 }
