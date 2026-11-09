@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -46,9 +47,10 @@ class RoleController {
     @PutMapping("/matrix")
     @PreAuthorize("hasAuthority('roles.view')")
     @Operation(summary = "Matritsani saqlash", description = "Rollar (nom, tavsif, doira, bosh sahifa, faollik), ruxsatlar va yangi rollar — "
-            + "bitta tranzaksiyada. Direktor roli o'zgarmaydi. Xodimning keyingi kirishida kuchga kiradi.")
-    Roles.Matrix save(@Valid @RequestBody SaveRequest r) {
-        return roles.save(r.roles());
+            + "bitta tranzaksiyada. Direktor roli o'zgarmaydi. Rol doirasini (barcha filiallar) faqat Direktor oʻzgartiradi. Xodimning keyingi kirishida kuchga kiradi.")
+    Roles.Matrix save(@Valid @RequestBody SaveRequest r, Authentication auth) {
+        boolean director = auth.getAuthorities().stream().anyMatch(g -> "ROLE_DIRECTOR".equals(g.getAuthority()));
+        return roles.save(r.roles(), director);
     }
 
     @PutMapping("/{code}/permissions")

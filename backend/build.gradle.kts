@@ -61,6 +61,8 @@ tasks.withType<JavaCompile> {
 tasks.withType<Test> {
     useJUnitPlatform()
     systemProperty("user.timezone", "Asia/Tashkent")
+    // Testlarda xodim chegarasi oʻchiq (koʻp IT xodim yaratadi); chegara EmployeeLimitIT da alohida tekshiriladi
+    systemProperty("medix.employees.limit", "0")
     // SetupIT boʻsh bazani kutadi (kompaniya yoʻq) — @Order bilan birinchi ishlaydi; qolganlari topilish tartibida
     systemProperty("junit.jupiter.testclass.order.default", "org.junit.jupiter.api.ClassOrderer\$OrderAnnotation")
     testLogging {

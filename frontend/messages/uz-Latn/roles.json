@@ -94,6 +94,7 @@
     "pTitleNew": "Yangi rol",
     "pName": "Nomi",
     "pDesc": "Tavsif",
+    "scopeDirectorOnly": "Filial doirasini faqat Direktor oʻzgartira oladi.",
     "pScope": "Filial doirasi",
     "scAll": "Barcha filiallar",
     "scOwn": "Oʻz filiali",

@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.AopTestUtils;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -43,6 +45,9 @@ class EmployeeEditIT {
 
     @Autowired
     PasswordEncoder encoder;
+
+    @Autowired
+    Employees employees;
 
     private long employee(String login, String role, Long branch) {
         return jdbc.sql("""
@@ -190,6 +195,34 @@ class EmployeeEditIT {
         mvc.perform(get("/api/employees/seats").cookie(s))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.limit").value(nullValue()));
+    }
+
+    @Test
+    void limitBlocksNewEmployeeWithClearMessage() throws Exception {
+        String dir = uniq("dir");
+        employee(dir, "DIRECTOR", null);
+        Cookie s = login(dir);
+        Object target = AopTestUtils.getTargetObject(employees);
+        long used = employees.seats().used();
+        try {
+            ReflectionTestUtils.setField(target, "limit", (int) used);
+            mvc.perform(get("/api/employees/seats").cookie(s))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.used").value((int) used))
+                    .andExpect(jsonPath("$.limit").value((int) used));
+            mvc.perform(json(post("/api/employees"), s, """
+                            {"login":"%s","lastName":"Karimov","firstName":"Jasur","roleCode":"OPERATOR","branchId":%d,
+                             "temporaryPassword":"Abcdefgh23"}""".formatted(uniq("lim"), branch())))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("employee.limit"));
+            ReflectionTestUtils.setField(target, "limit", (int) used + 1);
+            mvc.perform(json(post("/api/employees"), s, """
+                            {"login":"%s","lastName":"Karimov","firstName":"Jasur","roleCode":"OPERATOR","branchId":%d,
+                             "temporaryPassword":"Abcdefgh23"}""".formatted(uniq("lim"), branch())))
+                    .andExpect(status().isCreated());
+        } finally {
+            ReflectionTestUtils.setField(target, "limit", 0);
+        }
     }
 
     @Test

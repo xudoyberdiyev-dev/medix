@@ -108,6 +108,11 @@ public class Roles {
      */
     @Transactional
     public Matrix save(List<RoleDraft> drafts) {
+        return save(drafts, true);
+    }
+
+    /** {@code director} — false boʻlsa rol doirasini («Barcha filiallar») oʻzgartirib boʻlmaydi (egasi E14). */
+    public Matrix save(List<RoleDraft> drafts, boolean director) {
         Map<String, Role> byCode = new LinkedHashMap<>();
         list().forEach(r -> byCode.put(r.code(), r));
         Map<String, String[]> meta = new LinkedHashMap<>();
@@ -129,6 +134,9 @@ public class Roles {
             }
             if (!SCOPES.contains(d.scope()) || !HOMES.contains(d.home())) {
                 throw MedixException.badRequest("role.badScope");
+            }
+            if (!director && (r == null ? "all".equals(d.scope()) : !d.scope().equals(r.scope()))) {
+                throw MedixException.forbidden("role.scopeDirectorOnly");
             }
         }
         for (Role r : byCode.values()) {
