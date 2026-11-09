@@ -234,13 +234,18 @@ export function TransfersPage() {
     {
       key: "route",
       title: t("col.route"),
+      width: 300,
       wrap: true,
       render: (x) => (
         <span className={cn("flex min-w-0 flex-col", dead(x) && "text-text-secondary")}>
           <span className="font-medium">{x.kind === "ZK" ? place(x.from, false) : `${place(x.from, false)} → ${place(x.to, false)}`}</span>
           <span className="text-caption text-text-secondary">
-            {x.kind === "ZK" ? `${x.from.zone ?? "—"} → ${x.to.zone ?? "—"}` : (x.invoiceNumber ?? "")}
-            {x.shortageQty > 0 ? ` · ${t("shortage", { qty: formatQuantity(x.shortageQty) })}` : ""}
+            {[
+              x.kind === "ZK" ? `${x.from.zone ?? "—"} → ${x.to.zone ?? "—"}` : x.invoiceNumber,
+              x.shortageQty > 0 ? t("shortage", { qty: formatQuantity(x.shortageQty) }) : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </span>
         </span>
       ),
