@@ -6998,6 +6998,38 @@
         "tags" : [ "payments" ]
       }
     },
+    "/api/payments/customer/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tahrirlandi, yuborildi, tasdiqlandi, qaytarildi, bekor qilindi.",
+        "operationId" : "paymentHistory",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "MT tarixi",
+        "tags" : [ "payments" ]
+      }
+    },
     "/api/payments/customer/{id}/post" : {
       "post" : {
         "description" : "Taqsimot: avtomatik (eng eski qarzdan) yoki qo'lda; ortig'i avans. Pul hisobga tushadi.",
@@ -7330,6 +7362,38 @@
           }
         },
         "summary" : "YT ni bekor qilish",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
+    "/api/payments/supplier/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tahrirlandi, yuborildi, tasdiqlandi, qaytarildi, bekor qilindi.",
+        "operationId" : "supplierPaymentHistory",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YT tarixi",
         "tags" : [ "supplier-payments" ]
       }
     },
@@ -21565,6 +21629,25 @@
           }
         },
         "required" : [ "next3Count", "next3Days", "overdue", "overdueCount", "today", "todayCount" ]
+      },
+      "PaymentHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
       },
       "PaymentOverview" : {
         "type" : "object",

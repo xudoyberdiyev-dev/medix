@@ -3114,6 +3114,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/customer/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * MT tarixi
+         * @description Audit jurnalidan: yaratildi, tahrirlandi, yuborildi, tasdiqlandi, qaytarildi, bekor qilindi.
+         */
+        get: operations["paymentHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/customer/{id}/post": {
         parameters: {
             query?: never;
@@ -3238,6 +3258,26 @@ export interface paths {
          * @description O'tkazilgan bo'lsa: qarz va hisob qoldig'i teskari yoziladi.
          */
         post: operations["cancelSupplierPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/supplier/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * YT tarixi
+         * @description Audit jurnalidan: yaratildi, tahrirlandi, yuborildi, tasdiqlandi, qaytarildi, bekor qilindi.
+         */
+        get: operations["supplierPaymentHistory"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5985,38 +6025,6 @@ export interface paths {
          * @description Tovar joyida qoladi.
          */
         post: operations["reject"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/payments/customer/{id}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["paymentHistory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/payments/supplier/{id}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["supplierPaymentHistory"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8994,6 +9002,13 @@ export interface components {
             /** Format: int32 */
             todayCount: number;
         };
+        PaymentHistoryEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            reason?: string;
+        };
         PaymentOverview: {
             rows: components["schemas"]["PaymentOverviewRow"][];
             /**
@@ -11709,13 +11724,6 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
-        };
-        PaymentHistoryEvent: {
-            /** Format: date-time */
-            at: string;
-            employee?: string | null;
-            action: string;
-            reason?: string | null;
         };
     };
     responses: never;
@@ -16189,6 +16197,28 @@ export interface operations {
             };
         };
     };
+    paymentHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentHistoryEvent"][];
+                };
+            };
+        };
+    };
     post_1: {
         parameters: {
             query?: never;
@@ -16406,6 +16436,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SupplierPaymentDetail"];
+                };
+            };
+        };
+    };
+    supplierPaymentHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentHistoryEvent"][];
                 };
             };
         };
@@ -20361,50 +20413,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
-                };
-            };
-        };
-    };
-    paymentHistory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaymentHistoryEvent"][];
-                };
-            };
-        };
-    };
-    supplierPaymentHistory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaymentHistoryEvent"][];
                 };
             };
         };

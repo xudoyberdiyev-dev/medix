@@ -220,6 +220,8 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
   const accountOpts = all.filter(
     (a) => a.kind === method && (String(a.id) === account || (a.active && usableAccount(a, all, me.data?.id, supervisor))),
   );
+  // Yangi hujjatda — usul boʻyicha birinchi mos hisob (prototip `defAcct`)
+  if (editable && account == null && accountOpts.length > 0 && !dirty) setAccount(String(accountOpts[0].id));
   const chosen: MoneyAccount | undefined = all.find((a) => String(a.id) === account);
   const amountStr = amount.trim();
   const effAlloc = manual ? alloc : autoAlloc(docs, amountStr || "0");
@@ -515,7 +517,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
       <div className={cn("grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]", tab === "hist" && "hidden")}>
         <div className="flex min-w-0 flex-col gap-4">
           {editable ? (
-            <section className="rounded-card border border-border bg-surface p-5 shadow-card">
+            <section className="rounded-card border border-border bg-surface p-5 shadow-[0_1px_2px_rgba(18,60,58,0.04)]">
               <h2 className="text-subtitle">{t("secPay")}</h2>
               <p className="mb-4 text-caption text-text-secondary">{t("secPayD")}</p>
               <div className="grid min-w-0 grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
@@ -664,7 +666,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
                     onChange={(e) => (setNote(e.target.value), mark())}
                     rows={2}
                     maxLength={500}
-                    className="resize-y rounded-control border border-border bg-surface px-3 py-[7px] text-body outline-none hover:border-border-strong focus:border-primary-button"
+                    className="resize-y rounded-control border border-border bg-surface px-3 py-[7px] text-body outline-none hover:border-text-disabled focus:border-primary-button"
                   />
                 </label>
               </div>
@@ -687,8 +689,8 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
             />
           ) : null}
 
-          <section data-f="alloc" className="min-w-0 rounded-card border border-border bg-surface shadow-card">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-divider px-4 py-3">
+          <section data-f="alloc" className="min-w-0 rounded-card border border-border bg-surface shadow-[0_1px_2px_rgba(18,60,58,0.04)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
               <span className="flex items-baseline gap-2">
                 <span className="text-[14px] font-semibold">{kind === "mt" ? t("gTitle") : t("gTitleYt")}</span>
                 {editable && party && docs.length ? <span className="text-[13px] text-text-secondary">{docs.length}</span> : null}
@@ -703,7 +705,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
                     )}
                   >
                     <Hand size={14} strokeWidth={1.5} aria-hidden />
-                    {manual ? t("manual") : t("auto")}
+                    {t("manual")}
                   </span>
                   <Button
                     variant="secondary"
@@ -770,7 +772,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
           {party ? (
             <Side kind={kind} partyId={Number(party)} partyName={partyName} ledger={ledger} cp={cp.data} branchId={branchId} />
           ) : (
-            <div className="rounded-card border border-dashed border-border-strong px-4 py-5 text-center text-[13px] text-text-secondary">
+            <div className="rounded-card border border-dashed border-border px-4 py-5 text-center text-[13px] text-text-secondary">
               {t("pickParty")}
             </div>
           )}
@@ -970,7 +972,7 @@ function Steps({ steps }: { steps: { label: string; state: "done" | "cur" | "nex
 
 function InfoCard({ title, rows }: { title: string; rows: ([string, string] | [string, string, boolean])[] }) {
   return (
-    <section className="rounded-card border border-border bg-surface p-5 shadow-card">
+    <section className="rounded-card border border-border bg-surface p-5 shadow-[0_1px_2px_rgba(18,60,58,0.04)]">
       <h2 className="mb-3 text-subtitle">{title}</h2>
       <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
         {rows.map(([k, v, mono]) => (
@@ -1027,8 +1029,8 @@ function AllocTable({
           {rows.map((r) => {
             const href = r.doc.docType === "KR" ? `/receipts/${r.doc.docId}` : null;
             return (
-              <tr key={r.key} className={cn("min-h-12 border-b border-divider", r.value && "bg-primary-subtle/40")}>
-                <td className="px-3 py-1.5">
+              <tr key={r.key} className={cn("min-h-12 border-b border-border", r.value && "bg-primary-soft/40")}>
+                <td className="px-3 py-1.5 whitespace-nowrap">
                   {href ? (
                     <Link href={href} className="font-mono text-[12.5px] hover:text-primary hover:underline">
                       {r.doc.docNumber}
@@ -1108,7 +1110,7 @@ function PostedAllocations({ doc, kind }: { doc: Doc; kind: PayKind }) {
       </thead>
       <tbody>
         {doc.allocations.map((a) => (
-          <tr key={`${a.docType}:${a.docId}`} className="h-11 border-b border-divider">
+          <tr key={`${a.docType}:${a.docId}`} className="h-11 border-b border-border">
             <td className="px-3 font-mono text-[12.5px]">
               {a.docType === "KR" ? (
                 <Link href={`/receipts/${a.docId}`} className="hover:text-primary hover:underline">
@@ -1208,7 +1210,7 @@ function Side({
           {partyName || cp?.name || ""}
         </Link>
       </div>
-      <section className="rounded-card border border-border bg-surface p-4 shadow-card">
+      <section className="rounded-card border border-border bg-surface p-4 shadow-[0_1px_2px_rgba(18,60,58,0.04)]">
         <div className="grid grid-cols-2 gap-x-4 gap-y-4">
           {kpis.map((k) => (
             <div key={k.label} className="flex min-w-0 flex-col gap-0.5">
@@ -1219,7 +1221,7 @@ function Side({
           ))}
         </div>
         {kind === "mt" && limit > 0 ? (
-          <div className="mt-4 flex flex-col gap-1.5 border-t border-divider pt-3">
+          <div className="mt-4 flex flex-col gap-1.5 border-t border-border pt-3">
             <span className="text-caption font-medium">{t("sLimit")}</span>
             <div className="flex items-baseline justify-between gap-2 text-caption">
               <span>{t("sLimitUse", { p: pct })}</span>
@@ -1227,7 +1229,7 @@ function Side({
                 {formatMoney(ledger?.debt ?? "0")} / {formatMoney(terms?.creditLimit ?? "0")}
               </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-divider">
+            <div className="h-1.5 overflow-hidden rounded-full bg-border">
               <div
                 className={cn("h-full rounded-full", pct > 100 ? "bg-danger" : "bg-primary-button")}
                 style={{ width: `${Math.min(100, pct)}%` }}
@@ -1236,7 +1238,7 @@ function Side({
           </div>
         ) : null}
       </section>
-      <section className="flex flex-col gap-2.5 rounded-card border border-border bg-surface px-4 py-3.5 shadow-card">
+      <section className="flex flex-col gap-2.5 rounded-card border border-border bg-surface px-4 py-3.5 shadow-[0_1px_2px_rgba(18,60,58,0.04)]">
         <span className="text-[14px] font-semibold">{kind === "mt" ? t("sCustCard") : t("sReq")}</span>
         {rows.map(([k, v, mono]) => (
           <div key={k} className="flex min-w-0 flex-col gap-0.5">
