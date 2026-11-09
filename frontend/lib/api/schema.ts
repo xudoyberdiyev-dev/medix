@@ -809,7 +809,7 @@ export interface paths {
          * Kassalar roʻyxati (kartalar)
          * @description Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.
          */
-        get: operations["overview_3"];
+        get: operations["overview_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -887,7 +887,7 @@ export interface paths {
          * Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)
          * @description To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.
          */
-        get: operations["overview_2"];
+        get: operations["overview_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1808,6 +1808,23 @@ export interface paths {
          * @description Qoralama. Bitta omborda bitta faol inventarizatsiya.
          */
         post: operations["create_15"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory-counts/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Inventarizatsiya: holatlar soni va har ombor boʻyicha oxirgi toʻliq inventarizatsiya */
+        get: operations["overview_2"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6200,22 +6217,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/inventory-counts/overview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["overview_tmp"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8044,6 +8045,8 @@ export interface components {
             blind: boolean;
             /** Format: int64 */
             branchId: number;
+            /** @description Komissiya (vergul bilan) */
+            commission?: string;
             /** Format: int32 */
             counted: number;
             /** Format: date-time */
@@ -8071,8 +8074,34 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
             zone?: components["schemas"]["ZoneRef"];
-            /** @description Komissiya (vergul bilan) */
-            commission?: string;
+        };
+        InventoryLastFull: {
+            branch: string;
+            /**
+             * Format: date
+             * @description Oxirgi oʻtkazilgan toʻliq (butun ombor) inventarizatsiya
+             */
+            date?: string;
+            /** Format: int32 */
+            days?: number;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+        };
+        InventoryOverview: {
+            lastFull: components["schemas"]["InventoryLastFull"][];
+            /**
+             * Format: int32
+             * @description Shundan eski boʻlsa — eslatma (sariq)
+             */
+            remindDays: number;
+            statuses: components["schemas"]["InventoryStatusCount"][];
+        };
+        InventoryStatusCount: {
+            /** Format: int64 */
+            count: number;
+            /** @enum {string} */
+            status: "DRAFT" | "COUNTING" | "CHECK" | "POSTED" | "CANCELLED";
         };
         InvoiceDoc: {
             address?: string;
@@ -12153,28 +12182,6 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
         };
-        InventoryStatusCount: {
-            /** Format: int64 */
-            count: number;
-            /** @enum {string} */
-            status: "DRAFT" | "COUNTING" | "CHECK" | "POSTED" | "CANCELLED";
-        };
-        InventoryLastFull: {
-            branch: string;
-            /** Format: date */
-            date?: string;
-            /** Format: int32 */
-            days?: number;
-            warehouse: string;
-            /** Format: int64 */
-            warehouseId: number;
-        };
-        InventoryOverview: {
-            lastFull: components["schemas"]["InventoryLastFull"][];
-            /** Format: int32 */
-            remindDays: number;
-            statuses: components["schemas"]["InventoryStatusCount"][];
-        };
     };
     responses: never;
     parameters: never;
@@ -13348,7 +13355,7 @@ export interface operations {
             };
         };
     };
-    overview_3: {
+    overview_4: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -13472,7 +13479,7 @@ export interface operations {
             };
         };
     };
-    overview_2: {
+    overview_3: {
         parameters: {
             query?: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
@@ -14855,6 +14862,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    overview_2: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryOverview"];
                 };
             };
         };
@@ -21093,28 +21122,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
-                };
-            };
-        };
-    };
-    overview_tmp: {
-        parameters: {
-            query?: {
-                branchId?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InventoryOverview"];
                 };
             };
         };
