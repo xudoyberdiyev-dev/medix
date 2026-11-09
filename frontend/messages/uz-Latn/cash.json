@@ -275,21 +275,12 @@
       "title": "Filialni tanlang",
       "description": "Kassa filial boʻyicha yuritiladi — yuqorida filialni tanlang."
     },
-    "accepted": "Pul qabul qilindi",
-    "acceptedDescription": "{payment} · {amount} soʻm · {customer}",
     "title": "Kassa",
     "addAccount": "Hisob qoʻshish",
     "cashiers": "Kassirlar",
     "closeDay": "Kunni yopish",
-    "transfer": "Oʻtkazma",
-    "op": "Kirim / chiqim",
-    "driverCash": "Haydovchidagi pul",
-    "targetCash": "Qabul qilinadigan kassa",
-    "driverEmpty": {
-      "title": "Haydovchilarda pul yoʻq",
-      "description": "Naqd toʻlov yetkazilganda summa shu yerda paydo boʻladi."
-    },
-    "accept": "Qabul qildim",
+    "transfer": "Ichki oʻtkazma",
+    "op": "Kassa operatsiyasi",
     "tabs": {
       "label": "Kassa boʻlimlari",
       "statement": "Koʻchirma",
@@ -297,6 +288,32 @@
       "io": "Oʻtkazmalar (IO)",
       "closes": "Yopilgan kunlar",
       "bank": "Bank koʻchirmasi"
+    },
+    "list": {
+      "sub": "Joriy qoldiq jami: {s} soʻm",
+      "resp": "Masʼul: {n}",
+      "today": "Bugun: kirim {a} · chiqim {b}",
+      "todayError": "Bugungi aylanma yuklanmadi",
+      "cClosed": "Kun yopilgan {d}",
+      "cNotClosed": "{d} yopilmagan",
+      "dayOpen": "Kun ochiq",
+      "emptyTitle": "Pul hisobi yoʻq",
+      "emptyDescription": "Kassa yoki bank hisobini «Hisob qoʻshish» orqali qoʻshing."
+    },
+    "driver": {
+      "title": "Haydovchilardan kutilayotgan pul",
+      "currency": "soʻm",
+      "accept": "Qabul qilish",
+      "got": "Topshirilgan summa",
+      "target": "Qabul qilinadigan kassa",
+      "short": "Kamomad: {s}",
+      "over": "Ortiqcha: {s}",
+      "eSum": "Summani kiriting",
+      "eDiff": "Summa farq qiladi — hozircha faqat toʻliq summa qabul qilinadi. Pulni qayta sanang yoki farqni Filial rahbariga ayting.",
+      "confirm": "Pulni qabul qilish",
+      "cancel": "Bekor qilish",
+      "accepted": "Pul qabul qilindi",
+      "done": "{n} ta MT yozildi · {s} soʻm"
     }
   }
 }

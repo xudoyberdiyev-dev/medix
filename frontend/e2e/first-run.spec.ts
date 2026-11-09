@@ -532,7 +532,7 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
   await expect(page.getByRole("heading", { name: "Kassa" })).toBeVisible();
 
   // Boshqa kirim — darhol oʻtkaziladi
-  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
+  await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
   await choose(page, "Yoʻnalish", /^Kirim$/);
   await choose(page, "Hisob", /Asosiy kassa/);
   await choose(page, "Kirim moddasi", /Boshqa kirim/);
@@ -541,7 +541,7 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
   await expect(page.getByText("Kirim yozildi").first()).toBeVisible();
 
   // 2 000 000 dan katta chiqim — tasdiqqa; Direktor tasdiqlaydi
-  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
+  await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
   await choose(page, "Hisob", /Asosiy kassa/);
   await choose(page, "Xarajat moddasi", /Ijara/);
   await field(page, "Summa").fill("2.500.000,00");
@@ -551,7 +551,7 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
   await expect(page.getByRole("heading", { name: /Tasdiqlashni kutmoqda/ })).toBeVisible();
   await page.getByRole("button", { name: "Tasdiqlash" }).click();
   await expect(page.getByText("Chiqim tasdiqlandi").first()).toBeVisible();
-  await expect(page.getByText("500.000,00 soʻm").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Asosiy kassa.*500\.000,00/ })).toBeVisible();
 
   // Kunni yopish: 2 × 200 000 + 1 × 100 000 = kutilgan 500 000 — farqsiz
   await page.getByRole("button", { name: "Kunni yopish" }).first().click();

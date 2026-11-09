@@ -352,14 +352,15 @@ test("Haydovchi: qabul qiladi, yetkazadi (rasm + naqd), reysni yakunlaydi", asyn
 test("Kassir: haydovchidagi pulni qabul qiladi (MT)", async ({ page }) => {
   await firstLogin(page, "cashier.1");
   await page.goto("/cash");
-  await expect(page.getByRole("heading", { name: "Haydovchidagi pul" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Haydovchilardan kutilayotgan pul" })).toBeVisible();
   await expect(page.getByText(CUSTOMER).first()).toBeVisible();
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).first().click();
   // Kassir faqat oʻz kassasida: tanlovda faqat «Kassa 2» (Asosiy kassada esa CEO kunni yopgan)
   await expect(page.getByRole("combobox", { name: "Qabul qilinadigan kassa", exact: true })).toHaveText(/Kassa 2/);
-  await page.getByRole("button", { name: "Qabul qildim" }).first().click();
+  await page.getByRole("button", { name: "Pulni qabul qilish" }).click();
   await expect(page.getByText("Pul qabul qilindi").first()).toBeVisible();
-  await expect(page.getByText("Haydovchilarda pul yoʻq")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Kassa 2.*20\.000,00 soʻm/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Haydovchilardan kutilayotgan pul" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Kassa 2.*20\.000,00/ })).toBeVisible();
   // Kassir hisob qoʻsha olmaydi
   await expect(page.getByRole("button", { name: "Hisob qoʻshish" })).toHaveCount(0);
 });
@@ -432,7 +433,7 @@ test("Kassir: oʻz kassasiga kirim va katta chiqim — tasdiqqa", async ({ page 
   await login(page, "cashier.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/cash");
-  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
+  await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
   await choose(page, "Yoʻnalish", /^Kirim$/);
   await choose(page, "Hisob", /Kassa 2/);
   await choose(page, "Kirim moddasi", /Boshqa kirim/);
@@ -440,7 +441,7 @@ test("Kassir: oʻz kassasiga kirim va katta chiqim — tasdiqqa", async ({ page 
   await page.getByRole("button", { name: "Yozish" }).click();
   await expect(page.getByText("Kirim yozildi").first()).toBeVisible();
 
-  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
+  await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
   await choose(page, "Hisob", /Kassa 2/);
   await choose(page, "Xarajat moddasi", /Ijara/);
   await field(page, "Summa").fill("2.500.000,00");
@@ -459,7 +460,7 @@ test("Filial rahbari: kassirning katta chiqimini tasdiqlaydi", async ({ page }) 
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(page.getByText("Chiqim tasdiqlandi").first()).toBeVisible();
   // 20 000 (haydovchidan) + 3 000 000 − 2 500 000 = 520 000
-  await expect(page.getByRole("button", { name: /Kassa 2.*520\.000,00 soʻm/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Kassa 2.*520\.000,00/ })).toBeVisible();
 });
 
 test("Xarid: birinchi kirish, kirim qoralamasini kiritadi (qabul qila olmaydi)", async ({ page }) => {
@@ -538,7 +539,7 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   await expect(page.getByText(/Tasdiqlangan toʻlov tahrirlanmaydi/)).toBeVisible();
   await page.goto("/cash");
   // 520 000 − 60 000 = 460 000
-  await expect(page.getByRole("button", { name: /Kassa 2.*460\.000,00 soʻm/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Kassa 2.*460\.000,00/ })).toBeVisible();
 });
 
 /** E1: Markirovkachi markirovkasiz buyurtmani boshlaydi, qatorlarni tasdiqlaydi va yakunlaydi. */
@@ -719,10 +720,11 @@ test("Kassir: qisman reysdagi naqd pulni qabul qiladi — haydovchi yangi reysga
   await login(page, "cashier.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/cash");
-  await expect(page.getByRole("heading", { name: "Haydovchidagi pul" })).toBeVisible();
-  await page.getByRole("button", { name: "Qabul qildim" }).first().click();
+  await expect(page.getByRole("heading", { name: "Haydovchilardan kutilayotgan pul" })).toBeVisible();
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).first().click();
+  await page.getByRole("button", { name: "Pulni qabul qilish" }).click();
   await expect(page.getByText("Pul qabul qilindi").first()).toBeVisible();
-  await expect(page.getByText("Haydovchilarda pul yoʻq")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Haydovchilardan kutilayotgan pul" })).toHaveCount(0);
 });
 
 test("Ombor zanjiri: Direktor tasdiqlagan buyurtma reysga chiqadi", async ({ page }) => {
