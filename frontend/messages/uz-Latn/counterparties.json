@@ -348,14 +348,18 @@
       "SALES": "Sotuvlar",
       "PAYMENTS": "Toʻlovlar",
       "RETURNS": "Qaytarishlar",
-      "RECEIPTS": "Kirimlar"
+      "RECEIPTS": "Kirimlar",
+      "BONUS": "Bonus",
+      "RECON": "Akt sverka",
+      "PRODUCTS": "Mahsulotlar"
     },
     "title": {
       "ORDERS": "Buyurtmalar",
       "SALES": "Sotuvlar (hisob-fakturalar)",
       "PAYMENTS": "Toʻlovlar",
       "RETURNS": "Qaytarishlar",
-      "RECEIPTS": "Kirimlar"
+      "RECEIPTS": "Kirimlar",
+      "BONUS": "Bonus (tasdiqlangan, ishlatilgan, kutilayotgan)"
     },
     "lastN": "Oxirgi {n} ta · jami {total}",
     "goPage": "Boʻlimga oʻtish",
@@ -387,7 +391,11 @@
       "CANCELLED": "Bekor qilingan",
       "POSTED": "Oʻtkazilgan",
       "ACCEPTED": "Qabul qilindi",
-      "PENDING": "Tasdiqlashda"
+      "PENDING": "Tasdiqlashda",
+      "BONUS_CONFIRMED": "Bonus tasdiqlandi",
+      "BONUS_EXPECTED": "Kutilmoqda",
+      "BONUS_USED": "Bonus hisobidan kirim",
+      "BONUS_RETURNED": "Bonusga qaytarildi"
     },
     "hist": {
       "tab": "Tarix",
@@ -402,6 +410,18 @@
       "licenseUpdate": "Litsenziya tahrirlandi",
       "contractAdd": "Shartnoma qoʻshildi",
       "contractUpdate": "Shartnoma tahrirlandi"
+    },
+    "prod": {
+      "period": "Davr",
+      "days": "{n} kun",
+      "all": "Hammasi",
+      "product": "Mahsulot",
+      "lastPrice": "Oxirgi narx",
+      "lastDate": "Oxirgi sana",
+      "qty": "Soni",
+      "receipts": "Kirimlar",
+      "emptyTitle": "Bu davrda kirim boʻlmagan",
+      "emptyDescription": "Davrni oʻzgartiring yoki «Hammasi» ni tanlang."
     }
   }
 }

@@ -958,7 +958,7 @@ export interface paths {
         };
         /**
          * Kartochka hujjat yorliqlari: Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar, Kirimlar (oxirgi 100 ta)
-         * @description Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, qm.view / qy.view, receipt.view. Filial — xodim ko'radiganlari.
+         * @description Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, qm.view / qy.view, receipt.view, Bonus — sdebt.view yoki supplierBonus.confirm. Filial — xodim ko'radiganlari.
          */
         get: operations["documents"];
         put?: never;
@@ -1013,6 +1013,26 @@ export interface paths {
         get?: never;
         /** Litsenziyani tahrirlash */
         put: operations["updateLicense"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/{id}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * YB kartochkasi «Mahsulotlar»: o'tkazilgan kirimlardagi mahsulotlar (oxirgi narx, sana, soni, kirimlar)
+         * @description Ruxsat: suppliers.view + receipt.view. days — oxirgi N kun (30, 90), bo'sh — hammasi. Narx — special.cost yoki kirimni qabul qilmaydigan xodim (kirim qoidasi bilan bir xil). Filial — xodim ko'radiganlari.
+         */
+        get: operations["products_1"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -6887,7 +6907,7 @@ export interface components {
         CounterpartyDocumentsPage: {
             items: components["schemas"]["DocRow"][];
             /** @enum {string} */
-            section: "ORDERS" | "SALES" | "PAYMENTS" | "RETURNS" | "RECEIPTS";
+            section: "ORDERS" | "SALES" | "PAYMENTS" | "RETURNS" | "RECEIPTS" | "BONUS";
             /**
              * Format: int64
              * @description Shartga mos jami soni
@@ -10603,6 +10623,35 @@ export interface components {
             /** Format: int64 */
             supplierId: number;
         };
+        SupplierProductRow: {
+            code: string;
+            /** Format: date */
+            lastDate: string;
+            /** @description Oxirgi kirim narxi (QQSsiz); tannarx ruxsati bo'lmasa — null */
+            lastPrice?: string;
+            manufacturer?: string;
+            name: string;
+            /** Format: int64 */
+            productId: number;
+            /**
+             * Format: int64
+             * @description Kelgan soni (fakt + bonus), dona
+             */
+            qty: number;
+            /**
+             * Format: int64
+             * @description Kirimlar soni
+             */
+            receipts: number;
+        };
+        SupplierProductsPage: {
+            items: components["schemas"]["SupplierProductRow"][];
+            /**
+             * Format: int64
+             * @description Shartga mos jami soni
+             */
+            total: number;
+        };
         SupplierReturnDetail: {
             /** Format: int64 */
             branchId: number;
@@ -12968,7 +13017,7 @@ export interface operations {
         parameters: {
             query: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
-                section: "ORDERS" | "SALES" | "PAYMENTS" | "RETURNS" | "RECEIPTS";
+                section: "ORDERS" | "SALES" | "PAYMENTS" | "RETURNS" | "RECEIPTS" | "BONUS";
             };
             header?: never;
             path: {
@@ -13062,6 +13111,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    products_1: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierProductsPage"];
                 };
             };
         };

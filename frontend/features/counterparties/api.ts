@@ -238,3 +238,13 @@ export function useCounterpartyHistory(id: number, role: CounterpartyRole) {
     queryFn: () => unwrap(api.GET("/api/counterparties/{id}/history", { params: { path: { id }, query: { role } } })),
   });
 }
+
+/** YB kartochkasi «Mahsulotlar»: davr — oxirgi N kun (30, 90) yoki hammasi. */
+export function useSupplierProducts(id: number, days: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: [...KEY, "one", id, "products", days],
+    queryFn: () => unwrap(api.GET("/api/counterparties/{id}/products", { params: { path: { id }, query: { days: days ?? undefined } } })),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
+}

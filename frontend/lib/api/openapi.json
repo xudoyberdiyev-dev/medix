@@ -2302,7 +2302,7 @@
     },
     "/api/counterparties/{id}/documents" : {
       "get" : {
-        "description" : "Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, qm.view / qy.view, receipt.view. Filial — xodim ko'radiganlari.",
+        "description" : "Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, qm.view / qy.view, receipt.view, Bonus — sdebt.view yoki supplierBonus.confirm. Filial — xodim ko'radiganlari.",
         "operationId" : "documents",
         "parameters" : [ {
           "in" : "path",
@@ -2327,7 +2327,7 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "enum" : [ "ORDERS", "SALES", "PAYMENTS", "RETURNS", "RECEIPTS" ]
+            "enum" : [ "ORDERS", "SALES", "PAYMENTS", "RETURNS", "RECEIPTS", "BONUS" ]
           }
         } ],
         "responses" : {
@@ -2467,6 +2467,43 @@
           }
         },
         "summary" : "Litsenziyani tahrirlash",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/products" : {
+      "get" : {
+        "description" : "Ruxsat: suppliers.view + receipt.view. days — oxirgi N kun (30, 90), bo'sh — hammasi. Narx — special.cost yoki kirimni qabul qilmaydigan xodim (kirim qoidasi bilan bir xil). Filial — xodim ko'radiganlari.",
+        "operationId" : "products_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "days",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierProductsPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YB kartochkasi «Mahsulotlar»: o'tkazilgan kirimlardagi mahsulotlar (oxirgi narx, sana, soni, kirimlar)",
         "tags" : [ "counterparties" ]
       }
     },
@@ -16277,7 +16314,7 @@
           },
           "section" : {
             "type" : "string",
-            "enum" : [ "ORDERS", "SALES", "PAYMENTS", "RETURNS", "RECEIPTS" ]
+            "enum" : [ "ORDERS", "SALES", "PAYMENTS", "RETURNS", "RECEIPTS", "BONUS" ]
           },
           "total" : {
             "type" : "integer",
@@ -25635,6 +25672,60 @@
           }
         },
         "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "id", "number", "paymentDate", "status", "supplier", "supplierId" ]
+      },
+      "SupplierProductRow" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "lastDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastPrice" : {
+            "type" : "string",
+            "description" : "Oxirgi kirim narxi (QQSsiz); tannarx ruxsati bo'lmasa — null"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Kelgan soni (fakt + bonus), dona"
+          },
+          "receipts" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Kirimlar soni"
+          }
+        },
+        "required" : [ "code", "lastDate", "name", "productId", "qty", "receipts" ]
+      },
+      "SupplierProductsPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SupplierProductRow"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shartga mos jami soni"
+          }
+        },
+        "required" : [ "items", "total" ]
       },
       "SupplierReturnDetail" : {
         "type" : "object",

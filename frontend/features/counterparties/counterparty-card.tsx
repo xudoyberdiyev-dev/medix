@@ -33,13 +33,21 @@ import { LicenseBadge, StatusBadge } from "./counterparties-page";
 import { ContractsTab, CounterpartyDrawer, LicensesTab, TermsTab } from "./counterparty-drawer";
 import { DocumentsTab } from "./documents-tab";
 import { CardHistory } from "./card-history";
-import { docSections, sectionPermission, type DocSection } from "./documents-model";
+import { docSections, sectionPermissions, type DocSection } from "./documents-model";
+import { ProductsTab, ReconTab } from "./card-extra-tabs";
 import { cents } from "./overview-model";
 
 const BASE_TABS = ["general", "licenses", "terms", "contracts"] as const;
-type Tab = (typeof BASE_TABS)[number] | DocSection | "history";
-/** Prototip tartibi: Umumiy, Litsenziyalar, Shartlar, Buyurtmalar/Kirimlar, … hujjat yorliqlari, Shartnomalar. */
-const tabsFor = (customers: boolean): Tab[] => [...BASE_TABS.slice(0, 3), ...docSections(customers), "contracts", "history"];
+type Tab = (typeof BASE_TABS)[number] | DocSection | "recon" | "products" | "history";
+/** Prototip tartibi: Umumiy, Litsenziyalar, Shartlar, Buyurtmalar/Kirimlar, … hujjat yorliqlari, Akt sverka, (YB) Mahsulotlar, Shartnomalar, Tarix. */
+const tabsFor = (customers: boolean): Tab[] => [
+  ...BASE_TABS.slice(0, 3),
+  ...docSections(customers),
+  "recon",
+  ...(customers ? [] : (["products"] as const)),
+  "contracts",
+  "history",
+];
 
 function InfoList({ title, rows }: { title: string; rows: [string, ReactNode, boolean?][] }) {
   return (
@@ -242,9 +250,13 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
           label:
             k === "history"
               ? td("hist.tab")
-              : k === "general" || k === "licenses" || k === "terms" || k === "contracts"
-                ? t(`tab.${k}`)
-                : td(`tab.${k}`),
+              : k === "recon"
+                ? td("tab.RECON")
+                : k === "products"
+                  ? td("tab.PRODUCTS")
+                  : k === "general" || k === "licenses" || k === "terms" || k === "contracts"
+                    ? t(`tab.${k}`)
+                    : td(`tab.${k}`),
           count: counts[k],
         }))}
         value={tab}
@@ -386,8 +398,30 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
       {tab === "terms" ? <TermsTab cp={c} /> : null}
       {tab === "contracts" ? <ContractsTab cp={c} canEdit={canEdit} /> : null}
       {tab === "history" ? <CardHistory id={c.id} role={role} /> : null}
-      {tab !== "general" && tab !== "licenses" && tab !== "terms" && tab !== "contracts" && tab !== "history" ? (
-        <DocumentsTab key={tab} id={c.id} role={role} section={tab} allowed={can(me.data, sectionPermission(tab, customers))} />
+      {tab === "recon" ? (
+        <ReconTab
+          id={c.id}
+          role={role}
+          branches={branches}
+          defaultBranch={sel?.branchId ?? null}
+          allowed={can(me.data, customers ? "cdebt.view" : "sdebt.view")}
+        />
+      ) : null}
+      {tab === "products" ? <ProductsTab id={c.id} allowed={can(me.data, "receipt.view")} /> : null}
+      {tab !== "general" &&
+      tab !== "licenses" &&
+      tab !== "terms" &&
+      tab !== "contracts" &&
+      tab !== "history" &&
+      tab !== "recon" &&
+      tab !== "products" ? (
+        <DocumentsTab
+          key={tab}
+          id={c.id}
+          role={role}
+          section={tab}
+          allowed={sectionPermissions(tab, customers).some((k) => can(me.data, k))}
+        />
       ) : null}
       {edit ? (
         <CounterpartyDrawer

@@ -6,14 +6,21 @@ export type DocSection = components["schemas"]["CounterpartyDocumentsPage"]["sec
 export type DocRow = components["schemas"]["DocRow"];
 export type DocTone = "success" | "warning" | "danger" | "neutral";
 
-/** Kartochka yorliqlari tartibi (prototip: mijoz — docs, sales, pays, qm; YB — docs (kirimlar), pays, qy). */
+/** Kartochka yorliqlari tartibi (prototip: mijoz — docs, sales, pays, qm; YB — docs (kirimlar), pays, bonus, qy). */
 export function docSections(customers: boolean): DocSection[] {
-  return customers ? ["ORDERS", "SALES", "PAYMENTS", "RETURNS"] : ["RECEIPTS", "PAYMENTS", "RETURNS"];
+  return customers ? ["ORDERS", "SALES", "PAYMENTS", "RETURNS"] : ["RECEIPTS", "PAYMENTS", "BONUS", "RETURNS"];
 }
 
-/** Yorliqni koʻrish ruxsati (API bilan bir xil). */
+/** Yorliqni koʻrish ruxsati (API bilan bir xil): birortasi boʻlsa yetarli. */
+export function sectionPermissions(section: DocSection, customers: boolean): string[] {
+  return section === "BONUS" ? ["sdebt.view", "supplierBonus.confirm"] : [sectionPermission(section, customers)];
+}
+
+/** Yorliqni koʻrish asosiy ruxsati. */
 export function sectionPermission(section: DocSection, customers: boolean): string {
   switch (section) {
+    case "BONUS":
+      return "sdebt.view";
     case "ORDERS":
       return "orders.view";
     case "SALES":
@@ -42,6 +49,10 @@ const STATUS_TONE: Record<string, DocTone> = {
   CANCELLED: "neutral",
   REJECTED: "danger",
   UNDELIVERED: "danger",
+  BONUS_CONFIRMED: "success",
+  BONUS_EXPECTED: "warning",
+  BONUS_USED: "neutral",
+  BONUS_RETURNED: "neutral",
 };
 
 /** Sotuv/kirim: ochiq qoldiq boʻlsa — muddati (yoki kechikkani); toʻlangan — «Toʻlangan»; qolganlari — hujjat holati. */
@@ -66,6 +77,7 @@ export function docHref(section: DocSection, customers: boolean, row: DocRow): s
     case "RETURNS":
       return customers ? (row.linkId != null ? `/orders/${id}` : null) : `/supplier-returns?open=${id}`;
     case "RECEIPTS":
+    case "BONUS":
       return `/receipts/${id}`;
   }
 }
@@ -83,5 +95,7 @@ export function sectionHref(section: DocSection, customers: boolean): string {
       return customers ? "/reports/returns" : "/supplier-returns";
     case "RECEIPTS":
       return "/receipts";
+    case "BONUS":
+      return "/bonuses";
   }
 }
