@@ -267,6 +267,12 @@ class InventoryCountIT {
         tx.executeWithoutResult(s -> ledger.post(new DocRef("BQ", 6, "BQ-INT-000006"), List.of(Move.out(p.quarantine(), q, 1))));
         assertThat(bal(p.quarantine(), q)).isEqualTo(2);
 
+        // Roʻyxat yuqorisi: holatlar soni va ombor boʻyicha oxirgi toʻliq inventarizatsiya (bugun, 0 kun)
+        mvc.perform(get("/api/inventory-counts/overview").param("branchId", "" + p.branchId()).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statuses[?(@.status == 'POSTED')].count").value(org.hamcrest.Matchers.hasItem(1)))
+                .andExpect(jsonPath("$.lastFull[?(@.warehouseId == " + p.warehouseId() + ")].days").value(org.hamcrest.Matchers.hasItem(0)))
+                .andExpect(jsonPath("$.remindDays").value(90));
         // Bazadagi himoya: tasdiqlangan o'zgarmaydi, qatorlar o'chirilmaydi
         assertThatThrownBy(() -> jdbc.sql("UPDATE inventory_count SET note = 'x' WHERE id = :id").param("id", id).update())
                 .hasMessageContaining("yakunlangan");

@@ -27,6 +27,7 @@ import uz.medix.inventory.count.InventoryCountModels.InventoryCountEntries;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountPage;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountRequest;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountSummary;
+import uz.medix.inventory.count.InventoryCountModels.InventoryOverview;
 import uz.medix.inventory.count.InventoryCountModels.Status;
 import uz.medix.inventory.count.InventoryCounts.Approver;
 import uz.medix.shared.error.MedixException;
@@ -86,7 +87,14 @@ class InventoryCountController {
         }
         return new InventoryCountPage(p.items().stream().map(s -> new InventoryCountSummary(s.id(), s.number(), s.branchId(), s.warehouseId(), s.warehouse(),
                 s.zone(), s.blind(), s.status(), s.needsDirector(), s.lines(), s.counted(), s.shortageQty(), s.surplusQty(), null, null,
-                s.createdBy(), s.createdAt(), s.postedAt())).toList(), p.total(), p.page(), p.size());
+                s.createdBy(), s.createdAt(), s.postedAt(), s.commission())).toList(), p.total(), p.page(), p.size());
+    }
+
+    @GetMapping("/overview")
+    @PreAuthorize(VIEW)
+    @Operation(summary = "Inventarizatsiya: holatlar soni va har ombor boʻyicha oxirgi toʻliq inventarizatsiya")
+    InventoryOverview overview(@RequestParam(required = false) Long branchId) {
+        return counts.overview(actor(), branchId);
     }
 
     @GetMapping("/{id}")
