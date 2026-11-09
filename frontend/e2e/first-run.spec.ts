@@ -160,6 +160,12 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   // Omborlar va zonalar (prototip AdminOrg): daraxt + ombor maʼlumotlari + zonalar jadvali
   await expect(page.getByRole("heading", { name: "Markaziy ombor" })).toBeVisible();
   await expect(page.getByRole("table", { name: "Zonalar" }).getByRole("row")).toHaveCount(6);
+  // Audit jurnali (prototip AuditLog): yorliqlar, harakat turi, obyekt nomi
+  await page.goto("/settings/audit");
+  await expect(page.getByRole("tab", { name: /Muvaffaqiyatsiz kirishlar/ })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Kirdi" }).first()).toBeVisible();
+  await page.getByRole("tab", { name: /Ruxsat va sozlama/ }).click();
+  await expect(page.getByRole("cell", { name: "Markaziy ombor" }).first()).toBeVisible();
   await page.goto("/settings/employees");
   await expect(page.getByRole("cell", { name: "operator.1", exact: true })).toBeVisible();
   await expect(page.getByText("Kirmagan — parol bir martalik").first()).toBeVisible();

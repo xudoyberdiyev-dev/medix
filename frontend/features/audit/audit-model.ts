@@ -5,7 +5,7 @@ export type AuditCategory = AuditRow["category"];
 export type AuditView = components["schemas"]["AuditViewCount"]["view"];
 
 /** Obyekt sahifasi (prototip «obyekt — hujjat raqami havola»); sahifasi yoʻq obyekt — null. */
-const ROUTES: Record<string, (id: string) => string> = {
+const ROUTES: Partial<Record<string, (id: string) => string>> = {
   sales_order: (id) => `/orders/${id}`,
   receipt: (id) => `/receipts/${id}`,
   customer_payment: (id) => `/payments/mt/${id}`,

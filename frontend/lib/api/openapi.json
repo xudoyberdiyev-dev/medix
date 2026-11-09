@@ -436,18 +436,77 @@
         "operationId" : "list_31",
         "parameters" : [ {
           "in" : "query",
-          "name" : "entityType",
+          "name" : "view",
           "required" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "enum" : [ "ALL", "CANCEL", "FAIL", "PERM", "CTRL" ]
           }
         }, {
           "in" : "query",
           "name" : "employeeId",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int64"
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CREATE", "APPROVE", "CANCEL", "CHANGE", "LOGIN", "LOGIN_FAIL", "BLOCK", "PERM", "SETTING" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "entityType",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
           }
         }, {
           "in" : "query",
@@ -480,7 +539,123 @@
             "description" : "OK"
           }
         },
-        "summary" : "Audit yozuvlari (yangilari birinchi)",
+        "summary" : "Audit yozuvlari (yangilari birinchi), yorliqlar soni bilan",
+        "tags" : [ "audit" ]
+      }
+    },
+    "/api/audit/export" : {
+      "get" : {
+        "operationId" : "export_3",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "view",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ALL", "CANCEL", "FAIL", "PERM", "CTRL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "employeeId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "category",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CREATE", "APPROVE", "CANCEL", "CHANGE", "LOGIN", "LOGIN_FAIL", "BLOCK", "PERM", "SETTING" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "entityType",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AuditRow"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Excel eksport uchun yozuvlar (filtr boʻyicha, koʻpi bilan 5000 ta)",
+        "tags" : [ "audit" ]
+      }
+    },
+    "/api/audit/facets" : {
+      "get" : {
+        "operationId" : "facets",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditFacets"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filtr chiplari: xodimlar, filiallar, harakat va obyekt turlari (soni bilan, filial doirasida)",
         "tags" : [ "audit" ]
       }
     },
@@ -15266,6 +15441,52 @@
         },
         "required" : [ "bonusDue", "branchOrders", "branchSaleShortagesOpen", "branchSalesToReceive", "cashApprovals", "directorOrders", "driverCash", "expiring", "inventoryCheck", "inventoryCounting", "overdue1to30", "overdue31to60", "overdue61to90", "overdue90plus", "receiptsToPost", "supplierNext3Days", "supplierOverdue", "supplierReturnsPending", "supplierToday", "transferShortagesOpen", "transfersInTransit", "writeOffsPending", "zoneTransfersPending" ]
       },
+      "AuditFacet" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "label", "value" ]
+      },
+      "AuditFacets" : {
+        "type" : "object",
+        "properties" : {
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditFacet"
+            }
+          },
+          "categories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditFacet"
+            }
+          },
+          "employees" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditFacet"
+            }
+          },
+          "entityTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditFacet"
+            }
+          }
+        },
+        "required" : [ "branches", "categories", "employees", "entityTypes" ]
+      },
       "AuditPage" : {
         "type" : "object",
         "properties" : {
@@ -15278,15 +15499,38 @@
           "total" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "views" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditViewCount"
+            }
           }
         },
-        "required" : [ "items", "total" ]
+        "required" : [ "items", "total", "views" ]
       },
       "AuditRow" : {
         "type" : "object",
         "properties" : {
           "action" : {
             "type" : "string"
+          },
+          "branchCode" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "category" : {
+            "type" : "string",
+            "enum" : [ "CREATE", "APPROVE", "CANCEL", "CHANGE", "LOGIN", "LOGIN_FAIL", "BLOCK", "PERM", "SETTING" ]
+          },
+          "controlled" : {
+            "type" : "boolean"
           },
           "employeeId" : {
             "type" : "integer",
@@ -15305,9 +15549,16 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "ip" : {
+            "type" : "string"
+          },
           "newValue" : {
             "type" : "string",
             "description" : "JSON"
+          },
+          "objectLabel" : {
+            "type" : "string",
+            "description" : "Hujjat raqami yoki obyekt nomi"
           },
           "occurredAt" : {
             "type" : "string",
@@ -15319,9 +15570,26 @@
           },
           "reason" : {
             "type" : "string"
+          },
+          "roleName" : {
+            "type" : "string"
           }
         },
-        "required" : [ "action", "entityType", "id", "occurredAt" ]
+        "required" : [ "action", "category", "controlled", "entityType", "id", "occurredAt" ]
+      },
+      "AuditViewCount" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "view" : {
+            "type" : "string",
+            "enum" : [ "ALL", "CANCEL", "FAIL", "PERM", "CTRL" ]
+          }
+        },
+        "required" : [ "count", "view" ]
       },
       "Badge" : {
         "type" : "object",

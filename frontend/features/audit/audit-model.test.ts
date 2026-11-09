@@ -16,7 +16,7 @@ describe("audit model", () => {
   it("obyekt havolasi faqat maʼlum tur va raqamli id uchun", () => {
     expect(objectHref(row())).toBe("/orders/5");
     expect(objectHref(row({ entityType: "company", entityId: "1" }))).toBeNull();
-    expect(objectHref(row({ entityId: null }))).toBeNull();
+    expect(objectHref(row({ entityId: undefined }))).toBeNull();
   });
 
   it("oldin → keyin: faqat oʻzgargan maydonlar", () => {

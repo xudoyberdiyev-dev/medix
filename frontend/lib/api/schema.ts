@@ -135,8 +135,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Audit yozuvlari (yangilari birinchi) */
+        /** Audit yozuvlari (yangilari birinchi), yorliqlar soni bilan */
         get: operations["list_31"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audit/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Excel eksport uchun yozuvlar (filtr boʻyicha, koʻpi bilan 5000 ta) */
+        get: operations["export_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audit/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filtr chiplari: xodimlar, filiallar, harakat va obyekt turlari (soni bilan, filial doirasida) */
+        get: operations["facets"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6649,13 +6683,33 @@ export interface components {
             /** Format: int32 */
             zoneTransfersPending: number;
         };
+        AuditFacet: {
+            /** Format: int64 */
+            count: number;
+            label: string;
+            value: string;
+        };
+        AuditFacets: {
+            branches: components["schemas"]["AuditFacet"][];
+            categories: components["schemas"]["AuditFacet"][];
+            employees: components["schemas"]["AuditFacet"][];
+            entityTypes: components["schemas"]["AuditFacet"][];
+        };
         AuditPage: {
             items: components["schemas"]["AuditRow"][];
             /** Format: int64 */
             total: number;
+            views: components["schemas"]["AuditViewCount"][];
         };
         AuditRow: {
             action: string;
+            branchCode?: string;
+            /** Format: int64 */
+            branchId?: number;
+            branchName?: string;
+            /** @enum {string} */
+            category: "CREATE" | "APPROVE" | "CANCEL" | "CHANGE" | "LOGIN" | "LOGIN_FAIL" | "BLOCK" | "PERM" | "SETTING";
+            controlled: boolean;
             /** Format: int64 */
             employeeId?: number;
             employeeName?: string;
@@ -6663,13 +6717,23 @@ export interface components {
             entityType: string;
             /** Format: int64 */
             id: number;
+            ip?: string;
             /** @description JSON */
             newValue?: string;
+            /** @description Hujjat raqami yoki obyekt nomi */
+            objectLabel?: string;
             /** Format: date-time */
             occurredAt: string;
             /** @description JSON */
             oldValue?: string;
             reason?: string;
+            roleName?: string;
+        };
+        AuditViewCount: {
+            /** Format: int64 */
+            count: number;
+            /** @enum {string} */
+            view: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
         };
         /** @description Ko'rsatkich: son va xavfli holat (qizil) */
         Badge: {
@@ -12905,8 +12969,14 @@ export interface operations {
     list_31: {
         parameters: {
             query?: {
-                entityType?: string;
-                employeeId?: number;
+                view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
+                employeeId?: number[];
+                branchId?: number[];
+                category?: ("CREATE" | "APPROVE" | "CANCEL" | "CHANGE" | "LOGIN" | "LOGIN_FAIL" | "BLOCK" | "PERM" | "SETTING")[];
+                entityType?: string[];
+                from?: string;
+                to?: string;
+                q?: string;
                 page?: number;
                 size?: number;
             };
@@ -12923,6 +12993,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+        };
+    };
+    export_3: {
+        parameters: {
+            query?: {
+                view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
+                employeeId?: number[];
+                branchId?: number[];
+                category?: ("CREATE" | "APPROVE" | "CANCEL" | "CHANGE" | "LOGIN" | "LOGIN_FAIL" | "BLOCK" | "PERM" | "SETTING")[];
+                entityType?: string[];
+                from?: string;
+                to?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditRow"][];
+                };
+            };
+        };
+    };
+    facets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditFacets"];
                 };
             };
         };

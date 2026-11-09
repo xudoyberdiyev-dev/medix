@@ -64,6 +64,45 @@ const ACT: Record<AuditCategory, { icon: LucideIcon; className: string }> = {
   SETTING: { icon: Settings, className: "text-warning" },
 };
 
+const OBJECT_TYPES = [
+  "sales_order",
+  "receipt",
+  "trip",
+  "warehouse_transfer",
+  "zone_transfer",
+  "write_off",
+  "supplier_return",
+  "branch_sale",
+  "inventory_count",
+  "opening_balance",
+  "opening_finance",
+  "customer_payment",
+  "supplier_payment",
+  "cash_op",
+  "money_transfer",
+  "reconciliation_act",
+  "price_change",
+  "advance_offset",
+  "branch_payment",
+  "sale",
+  "cash_day_close",
+  "employee",
+  "counterparty",
+  "product",
+  "warehouse",
+  "zone",
+  "role",
+  "branch",
+  "company",
+  "money_account",
+  "price_type",
+  "expense_item",
+  "vehicle",
+  "import_profile",
+  "setup",
+] as const;
+const isObjectType = (v: string): v is (typeof OBJECT_TYPES)[number] => (OBJECT_TYPES as readonly string[]).includes(v);
+
 const VIEWS: AuditView[] = ["ALL", "CANCEL", "FAIL", "PERM", "CTRL"];
 const CATEGORIES = Object.keys(ACT) as AuditCategory[];
 const EXPORT_WARN = 5000;
@@ -112,7 +151,7 @@ export function AuditPage() {
   const total = audit.data?.total ?? 0;
   const hasActive = !!(q.trim() || who.length || branches.length || cats.length || types.length);
   const clearAll = () => (setQ(""), setWho([]), setBranches([]), setCats([]), setTypes([]), setFrom(null), setTo(null), setPage(1));
-  const typeLabel = (type: string) => (t.has(`ot.${type}`) ? t(`ot.${type}`) : type);
+  const typeLabel = (type: string) => (isObjectType(type) ? t(`ot.${type}`) : type);
   const catLabel = (c: AuditCategory) => t(`act.${c}`);
 
   async function runExport() {
