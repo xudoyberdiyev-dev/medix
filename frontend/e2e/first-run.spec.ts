@@ -472,7 +472,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
   await expect(page.getByText("Muammo yoʻq — buyurtmani yuborish mumkin")).toBeVisible();
-  await expect(page.locator(`dl[aria-label="Jami"]`).getByText("25.000,00", { exact: true })).toBeVisible();
+  await expect(page.locator(`dl[aria-label="Jami"]`).getByText("25.000,00", { exact: true }).last()).toBeVisible();
 
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();

@@ -292,7 +292,7 @@ class AuditController {
         return items.stream()
                 .map(r -> new AuditRow(r.id(), r.occurredAt(), r.employeeId(), r.employeeName(), r.roleName(), r.branchId(),
                         r.branchCode(), r.branchName(), r.action(), r.category(), r.controlled(), r.entityType(), r.entityId(),
-                        labels.getOrDefault(r.entityType(), Map.of()).get(r.entityId()), r.oldValue(), r.newValue(), r.reason(), r.ip()))
+                        r.entityId() == null ? null : labels.getOrDefault(r.entityType(), Map.of()).get(r.entityId()), r.oldValue(), r.newValue(), r.reason(), r.ip()))
                 .toList();
     }
 
