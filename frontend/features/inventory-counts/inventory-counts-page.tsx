@@ -1,12 +1,25 @@
 "use client";
 
-import { CircleCheck, ClipboardCheck, FilePen, ListChecks, Plus, ScanSearch, ShieldAlert, XCircle } from "lucide-react";
+import {
+  CircleCheck,
+  ClipboardCheck,
+  FilePen,
+  ListChecks,
+  Plus,
+  ScanSearch,
+  ShieldAlert,
+  Stamp,
+  XCircle,
+  type LucideIcon,
+} from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { Tabs } from "@/components/ui/tabs";
+import { formatIsoDate } from "@/features/counterparties/api";
+import { cn } from "@/lib/cn";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { can, canAny } from "@/features/auth/can";
@@ -18,6 +31,7 @@ import {
   IN_STATUS_LABELS,
   IN_VIEW_KEYS,
   useInventoryCounts,
+  useInventoryOverview,
   type InventoryCountStatus,
   type InventoryCountSummary,
 } from "./api";
@@ -55,6 +69,9 @@ export function InventoryCountsPage() {
   const canCreate = can(me.data, IN_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useInventoryCounts(branchId, (status as InventoryCountStatus | null) ?? null, page);
+  const ov = useInventoryOverview(branchId, allowed);
+  const countOf = (s: InventoryCountStatus) => ov.data?.statuses.find((x) => x.status === s)?.count ?? 0;
+  const totalCount = (ov.data?.statuses ?? []).reduce((a, x) => a + x.count, 0);
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
@@ -62,7 +79,24 @@ export function InventoryCountsPage() {
   const columns: TableColumn<InventoryCountSummary>[] = [
     { key: "number", title: t("list.number"), mono: true },
     { key: "createdAt", title: t("list.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
-    { key: "warehouse", title: t("list.scope"), render: (d) => `${d.warehouse} · ${d.zone ? d.zone.name : t("list.wholeWarehouse")}` },
+    { key: "warehouse", title: t("ov.scope"), render: (d) => `${d.warehouse} · ${d.zone ? d.zone.name : t("list.wholeWarehouse")}` },
+    {
+      key: "commission",
+      title: t("ov.commission"),
+      render: (d) => {
+        const names = (d.commission ?? "")
+          .split(",")
+          .map((x) => x.trim())
+          .filter(Boolean);
+        if (names.length === 0) return <span className="text-text-secondary">—</span>;
+        return (
+          <div className="flex flex-col">
+            <span>{names[0]}</span>
+            {names.length > 1 ? <span className="text-caption text-text-secondary">{t("ov.plusN", { n: names.length - 1 })}</span> : null}
+          </div>
+        );
+      },
+    },
     {
       key: "counted",
       title: t("list.counted"),
@@ -111,12 +145,70 @@ export function InventoryCountsPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">{t("title")}</h1>
+        <h1 className="flex items-baseline gap-2 text-page-title">
+          {t("title")}
+          {ov.data ? <span className="tabular text-body text-text-secondary">{formatQuantity(totalCount)}</span> : null}
+        </h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => setOpen({ id: null })}>
             {t("start")}
           </Button>
         ) : null}
+      </div>
+      {ov.data ? (
+        <div className="mb-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.2fr)]">
+          <Kpi
+            icon={ScanSearch}
+            iconClass="bg-info-bg text-info"
+            label={t("ov.kCounting")}
+            value={t("ov.nDocs", { n: countOf("COUNTING") })}
+            note={t("ov.kCountingNote")}
+            active={status === "COUNTING"}
+            onClick={() => (setStatus(status === "COUNTING" ? null : "COUNTING"), setPage(1))}
+          />
+          <Kpi
+            icon={Stamp}
+            iconClass="bg-warning-bg text-warning"
+            label={t("ov.kCheck")}
+            value={t("ov.nDocs", { n: countOf("CHECK") })}
+            note={t("ov.kCheckNote")}
+            active={status === "CHECK"}
+            onClick={() => (setStatus(status === "CHECK" ? null : "CHECK"), setPage(1))}
+          />
+          <section className="flex min-w-0 flex-col gap-2 rounded-card border border-border bg-surface px-4 py-3.5">
+            <span className="text-caption font-medium text-text-secondary">{t("ov.lastTitle")}</span>
+            <div className={cn("grid gap-x-6 gap-y-1", ov.data.lastFull.length >= 4 && "md:grid-cols-2")}>
+              {ov.data.lastFull.map((w) => {
+                const warn = w.days == null || w.days > ov.data.remindDays;
+                return (
+                  <div key={w.warehouseId} className="flex min-w-0 items-baseline justify-between gap-3 text-table">
+                    <span className="truncate">{me.data?.allBranches ? `${w.branch} · ${w.warehouse}` : w.warehouse}</span>
+                    <span className={cn("whitespace-nowrap", warn ? "font-semibold text-warning" : "text-text-primary")}>
+                      {w.date
+                        ? `${formatIsoDate(w.date)} · ${w.days === 0 ? t("ov.today") : t("ov.daysAgo", { n: w.days ?? 0 })}`
+                        : t("ov.lastNever")}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      ) : null}
+      <div className="mb-3">
+        <Tabs
+          aria-label={t("ov.tabsLabel")}
+          value={status ?? "all"}
+          onChange={(k) => (setStatus(k === "all" ? null : k), setPage(1))}
+          items={[
+            { key: "all", label: t("ov.all"), count: ov.data ? totalCount : undefined },
+            ...(Object.keys(IN_STATUS_LABELS) as InventoryCountStatus[]).map((k) => ({
+              key: k,
+              label: t(`status.${k}`),
+              count: ov.data ? countOf(k) : undefined,
+            })),
+          ]}
+        />
       </div>
       {docs.error ? (
         <ErrorState onRetry={() => docs.refetch()} />
@@ -128,19 +220,6 @@ export function InventoryCountsPage() {
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
           onRowClick={(d) => setOpen({ id: d.id })}
-          toolbar={
-            <div className="w-56">
-              <Select
-                label={t("list.status")}
-                size="sm"
-                value={status}
-                onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder={t("list.allStatuses")}
-                className="[&>span:first-child]:sr-only"
-                options={(Object.keys(IN_STATUS_LABELS) as InventoryCountStatus[]).map((value) => ({ value, label: t(`status.${value}`) }))}
-              />
-            </div>
-          }
           emptyState={
             status !== null ? (
               <NoResultsState onClearFilters={() => setStatus(null)} />
@@ -175,5 +254,37 @@ export function InventoryCountsPage() {
       )}
       {open ? <InventoryCountDrawer id={open.id} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} /> : null}
     </>
+  );
+}
+
+function Kpi(props: {
+  icon: LucideIcon;
+  iconClass: string;
+  label: string;
+  value: string;
+  note: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = props.icon;
+  return (
+    <button
+      type="button"
+      aria-pressed={props.active}
+      onClick={props.onClick}
+      className={cn(
+        "flex min-w-0 flex-col gap-1.5 rounded-card border bg-surface px-4 py-3.5 text-left transition-colors hover:border-text-secondary",
+        props.active ? "border-primary" : "border-border",
+      )}
+    >
+      <span className="flex items-center gap-2 text-caption font-medium text-text-secondary">
+        <span className={cn("flex size-6 flex-none items-center justify-center rounded-[6px]", props.iconClass)}>
+          <Icon size={14} strokeWidth={1.5} aria-hidden />
+        </span>
+        {props.label}
+      </span>
+      <span className="text-kpi tabular-nums">{props.value}</span>
+      <span className="text-caption text-text-secondary">{props.note}</span>
+    </button>
   );
 }

@@ -135,5 +135,22 @@
     "commissionPlaceholder": "F.I.Sh., vergul bilan",
     "note": "Izoh",
     "notePlaceholder": "Masalan: oylik inventarizatsiya"
+  },
+  "ov": {
+    "kCounting": "Sanoqda",
+    "kCountingNote": "sanoq davom etmoqda",
+    "kCheck": "Tekshiruvda",
+    "kCheckNote": "tasdiq kutmoqda",
+    "nDocs": "{n} ta",
+    "lastTitle": "Oxirgi toʻliq inventarizatsiya",
+    "lastNever": "Oʻtkazilmagan",
+    "daysAgo": "{n} kun oldin",
+    "today": "Bugun",
+    "lastHint": "{n} kundan eski — sariq",
+    "tabsLabel": "Inventarizatsiya holatlari",
+    "all": "Hammasi",
+    "commission": "Komissiya",
+    "plusN": "+{n} kishi",
+    "scope": "Qamrov"
   }
 }
