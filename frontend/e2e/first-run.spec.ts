@@ -749,6 +749,8 @@ test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx)
   await page.getByRole("dialog").getByRole("combobox", { name: "Filial", exact: true }).click();
   await page.getByRole("option", { name: /E2E Samarqand/ }).click();
   await field(page, "Ombor nomi").fill("Samarqand ombori");
+  // Filialda manzil yoʻq — ombor manzili majburiy (prototip WarehousePanel)
+  await field(page, "Manzil").fill("Samarqand, Registon 1");
   await page.getByRole("button", { name: "Omborni saqlash" }).click();
   await expect(page.getByRole("heading", { name: "Samarqand ombori" })).toBeVisible();
 

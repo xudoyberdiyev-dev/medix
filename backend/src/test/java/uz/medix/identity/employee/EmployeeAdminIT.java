@@ -124,6 +124,28 @@ class EmployeeAdminIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total", greaterThanOrEqualTo(3)))
                 .andExpect(jsonPath("$.items[?(@.action == 'employee.block' && @.reason == 'Ishdan ketdi')]").exists());
+
+        // Audit jurnali (prototip AuditLog): harakat turi, obyekt nomi, yorliqlar soni, filtrlar, chiplar, eksport
+        mvc.perform(get("/api/audit").param("category", "BLOCK").param("entityType", "employee").param("size", "100").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].category").value("BLOCK"))
+                .andExpect(jsonPath("$.items[0].objectLabel").isNotEmpty())
+                .andExpect(jsonPath("$.views[?(@.view == 'ALL')].count").value(org.hamcrest.Matchers.contains(org.hamcrest.Matchers.greaterThanOrEqualTo(1))));
+        mvc.perform(get("/api/audit").param("view", "FAIL").param("q", "Ishdan ketdi").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/audit").param("q", "Ishdan ketdi").param("from", java.time.LocalDate.now().minusDays(1).toString()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total", greaterThanOrEqualTo(1)));
+        mvc.perform(get("/api/audit").param("q", "Ishdan ketdi").param("to", "2000-01-01").cookie(admin))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/audit/facets").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.categories[?(@.value == 'BLOCK')]").exists())
+                .andExpect(jsonPath("$.entityTypes[?(@.value == 'employee')]").exists());
+        mvc.perform(get("/api/audit/export").param("category", "BLOCK").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].category").value("BLOCK"));
     }
 
     @Test
