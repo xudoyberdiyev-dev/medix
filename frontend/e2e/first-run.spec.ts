@@ -162,9 +162,15 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await expect(page.getByRole("table", { name: "Zonalar" }).getByRole("row")).toHaveCount(6);
   // E12: «Sotuvga ochiq» — zona darajasidagi almashtirgich
   const zt = page.getByRole("table", { name: "Zonalar" });
-  await zt.getByRole("row", { name: /Asosiy saqlash/ }).getByText("Ochiq").click();
+  await zt
+    .getByRole("row", { name: /Asosiy saqlash/ })
+    .getByText("Ochiq")
+    .click();
   await expect(page.getByText("Zona sotuvga yopildi")).toBeVisible();
-  await zt.getByRole("row", { name: /Asosiy saqlash/ }).getByText("Yopiq").click();
+  await zt
+    .getByRole("row", { name: /Asosiy saqlash/ })
+    .getByText("Yopiq")
+    .click();
   await expect(page.getByText("Zona sotuvga ochildi")).toBeVisible();
   // Audit jurnali (prototip AuditLog): yorliqlar, harakat turi, obyekt nomi
   await page.goto("/settings/audit");
