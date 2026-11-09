@@ -87,5 +87,47 @@
     "amount": "Summa (ixtiyoriy)",
     "currency": "soʻm",
     "amountHint": "Boʻsh qoldirilsa — butun avans hisobga olinadi"
+  },
+  "recv": {
+    "asOf": "{d} holatiga",
+    "payIn": "Mijozdan toʻlov",
+    "kTotal": "Jami qarz",
+    "kOverdue": "Muddati oʻtgan {r}",
+    "nParties": "{n} ta mijoz",
+    "agTitle": "Muddat taqsimoti",
+    "agHint": "Boʻlakni bosing — jadval shu muddat boʻyicha filtrlanadi",
+    "clear": "Tozalash",
+    "age": {
+      "notDue": "Muddati kelmagan",
+      "d1to30": "1–30 kun",
+      "d31to60": "31–60 kun",
+      "d61to90": "61–90 kun",
+      "d90plus": "90+ kun"
+    },
+    "tabsLabel": "Mijozlar qarzi koʻrinishlari",
+    "tab": {
+      "all": "Hammasi",
+      "overdue": "Muddati oʻtgan",
+      "limit": "Limitdan oshgan",
+      "adv": "Avansli",
+      "hide": "Qarzsiz yashirilgan"
+    },
+    "status": {
+      "ok": "Meʼyorida",
+      "overdue": "Muddati oʻtgan",
+      "limit": "Limit oshgan",
+      "adv": "Avans"
+    },
+    "col": {
+      "overdue": "Muddati oʻtgan",
+      "oldest": "Eng eski",
+      "used": "Ishlatilgan",
+      "status": "Holat"
+    },
+    "ageFilter": "Muddat boʻlagi",
+    "statusFilter": "Holat",
+    "recon": "Akt sverka",
+    "clearFilters": "Filtrni tozalash",
+    "totalN": "Jami: {n}"
   }
 }

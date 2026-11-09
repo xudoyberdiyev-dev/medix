@@ -2,9 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { AlarmClock, HandCoins } from "lucide-react";
+import { AlarmClock, ArrowDownLeft, FileCheck2, HandCoins, Plus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { MultiFilter } from "@/components/ui/multi-filter";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -13,14 +17,16 @@ import { TextField } from "@/components/ui/text-field";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { formatIsoDate } from "@/features/counterparties/api";
+import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { ActSection } from "./act-section";
 import { AdvanceOffsetButton } from "./advance-offset";
 import { HubTabs } from "@/components/shell/hub-tabs";
+import { DebtStatusBadge, ReceivablesSummary, UsedBar } from "./receivables";
+import { AGE_KEYS, DEBT_TABS, inAges, inTab, statusOf, sumOf, type AgeKey, type DebtStatus, type DebtTab } from "./receivables-model";
 
 export type DebtRow = components["schemas"]["DebtRow"];
 export type DebtDoc = components["schemas"]["DebtDoc"];
@@ -33,6 +39,12 @@ const CONFIG = {
 
 const money = (v: string) =>
   v === "0.00" ? <span className="text-text-secondary">—</span> : <span className="tabular-nums">{formatMoney(v)}</span>;
+const dangerMoney = (v: string) =>
+  v === "0.00" ? (
+    <span className="text-text-secondary">—</span>
+  ) : (
+    <span className="font-semibold tabular-nums text-danger">{formatMoney(v)}</span>
+  );
 
 /** Lotin/kirill farqsiz oddiy qidiruv: nom yoki STIR. */
 export function matchesDebt(row: { name: string; tin: string }, q: string) {
@@ -61,14 +73,36 @@ export function DebtsPage({ side }: { side: Side }) {
   const [q, setQ] = useState("");
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [open, setOpen] = useState<DebtRow | null>(null);
+  const router = useRouter();
+  const isCustomer = side === "CUSTOMER";
+  const [tab, setTab] = useState<DebtTab>("all");
+  const [ages, setAges] = useState<AgeKey[]>([]);
+  const [statuses, setStatuses] = useState<DebtStatus[]>([]);
+  const all = useMemo(() => report.data?.rows ?? [], [report.data]);
   const rows = useMemo(
-    () => (report.data?.rows ?? []).filter((r) => matchesDebt(r, q) && (!overdueOnly || r.buckets.overdue !== "0.00")),
-    [report.data, q, overdueOnly],
+    () =>
+      all.filter(
+        (r) =>
+          matchesDebt(r, q) &&
+          (isCustomer
+            ? inTab(r, tab) && inAges(r, ages) && (statuses.length === 0 || statuses.includes(statusOf(r)))
+            : !overdueOnly || r.buckets.overdue !== "0.00"),
+      ),
+    [all, q, overdueOnly, isCustomer, tab, ages, statuses],
   );
+  const filtered = isCustomer ? q !== "" || tab !== "all" || ages.length > 0 || statuses.length > 0 : q !== "" || overdueOnly;
+  const clearFilters = () => {
+    setQ("");
+    setOverdueOnly(false);
+    setTab("all");
+    setAges([]);
+    setStatuses([]);
+  };
+  const tr = useTranslations("debts.recv");
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden", { title })} />;
 
-  const columns: TableColumn<DebtRow>[] = [
+  const supplierColumns: TableColumn<DebtRow>[] = [
     {
       key: "name",
       title: t(`side.${side}.party`),
@@ -113,12 +147,98 @@ export function DebtsPage({ side }: { side: Side }) {
       : []),
     { key: "lastPayment", title: t("col.lastPayment"), render: (r) => formatIsoDate(r.lastPayment) },
   ];
+  const customerColumns: TableColumn<DebtRow>[] = [
+    {
+      key: "name",
+      title: t("side.CUSTOMER.party"),
+      wrap: true,
+      render: (r) => (
+        <div className="min-w-0">
+          <div className="font-medium">{r.name}</div>
+          <div className="text-caption text-text-secondary">
+            {t("tin", { tin: "" }).trim()} <span className="font-mono">{r.tin}</span>
+          </div>
+        </div>
+      ),
+    },
+    { key: "debt", title: t("col.debt"), align: "right", render: (r) => <span className="font-semibold">{money(r.buckets.debt)}</span> },
+    { key: "overdue", title: tr("col.overdue"), align: "right", render: (r) => dangerMoney(r.buckets.overdue) },
+    {
+      key: "oldest",
+      title: tr("col.oldest"),
+      align: "right",
+      render: (r) =>
+        r.maxOverdueDays > 0 ? (
+          <span className={r.maxOverdueDays > 90 ? "font-semibold text-danger" : "font-semibold text-warning"}>
+            {t("days", { count: r.maxOverdueDays })}
+          </span>
+        ) : (
+          <span className="text-text-secondary">—</span>
+        ),
+    },
+    { key: "d1to30", title: tr("age.d1to30"), align: "right", render: (r) => dangerMoney(r.buckets.d1to30) },
+    { key: "d31to60", title: tr("age.d31to60"), align: "right", render: (r) => dangerMoney(r.buckets.d31to60) },
+    { key: "d61to90", title: tr("age.d61to90"), align: "right", render: (r) => dangerMoney(r.buckets.d61to90) },
+    { key: "d90plus", title: tr("age.d90plus"), align: "right", render: (r) => dangerMoney(r.buckets.d90plus) },
+    {
+      key: "creditLimit",
+      title: t("col.limit"),
+      align: "right",
+      render: (r) => (r.creditLimit ? money(r.creditLimit) : <span className="text-text-secondary">—</span>),
+    },
+    { key: "used", title: tr("col.used"), render: (r) => <UsedBar row={r} /> },
+    {
+      key: "lastPayment",
+      title: t("col.lastPayment"),
+      align: "right",
+      render: (r) => (r.lastPayment ? formatIsoDate(r.lastPayment) : <span className="text-text-secondary">—</span>),
+    },
+    { key: "status", title: tr("col.status"), render: (r) => <DebtStatusBadge row={r} /> },
+  ];
+  const columns = isCustomer ? customerColumns : supplierColumns;
   const tot = report.data?.totals;
 
   return (
     <>
       {side === "SUPPLIER" ? <HubTabs hub="supplierDebts" /> : null}
-      <h1 className="mb-4 text-page-title">{title}</h1>
+      {isCustomer ? (
+        <div className="mb-4 flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-1">
+              <h1 className="flex items-baseline gap-2 text-page-title">
+                {title}
+                {report.data ? <span className="tabular text-body text-text-secondary">{formatQuantity(all.length)}</span> : null}
+              </h1>
+              <p className="text-table text-text-secondary">{tr("asOf", { d: formatIsoDate(todayTashkent()) })}</p>
+            </div>
+            {can(me.data, "payments.create") ? (
+              <Button icon={Plus} onClick={() => router.push("/payments/mt/new")}>
+                {tr("payIn")}
+              </Button>
+            ) : null}
+          </div>
+          {report.data ? (
+            <ReceivablesSummary
+              rows={all}
+              ages={ages}
+              onAges={(a) => {
+                setAges(a);
+                setTab("all");
+              }}
+              onAll={clearFilters}
+              allActive={tab === "all" && ages.length === 0 && statuses.length === 0}
+            />
+          ) : null}
+          <Tabs
+            aria-label={tr("tabsLabel")}
+            value={tab}
+            onChange={(k) => setTab(k as DebtTab)}
+            items={DEBT_TABS.map((k) => ({ key: k, label: tr(`tab.${k}`), count: all.filter((r) => inTab(r, k)).length }))}
+          />
+        </div>
+      ) : (
+        <h1 className="mb-4 text-page-title">{title}</h1>
+      )}
       {report.error ? (
         <ErrorState onRetry={() => report.refetch()} />
       ) : (
@@ -129,36 +249,97 @@ export function DebtsPage({ side }: { side: Side }) {
           rowKey={(r) => String(r.counterpartyId)}
           loading={!ready || report.isPending}
           onRowClick={setOpen}
-          totals={
-            tot
-              ? {
-                  name: t("total"),
-                  debt: money(tot.debt),
-                  notDue: money(tot.notDue),
-                  d1to30: money(tot.d1to30),
-                  d31to60: money(tot.d31to60),
-                  d61to90: money(tot.d61to90),
-                  d90plus: money(tot.d90plus),
-                  advance: money(tot.advance),
-                }
+          rowActions={
+            isCustomer
+              ? (r) => (
+                  <div className="flex items-center gap-3">
+                    {can(me.data, "payments.create") ? (
+                      <Link
+                        href={`/payments/mt/new?customer=${r.counterpartyId}&customerName=${encodeURIComponent(r.name)}`}
+                        className="inline-flex items-center gap-1 text-table text-primary hover:underline"
+                      >
+                        <ArrowDownLeft size={14} strokeWidth={1.5} aria-hidden />
+                        {tr("payIn")}
+                      </Link>
+                    ) : null}
+                    {can(me.data, "recon.create") ? (
+                      <Link
+                        href={`/reconciliations/new?side=CUSTOMER&party=${r.counterpartyId}&name=${encodeURIComponent(r.name)}${branchId != null ? `&branch=${branchId}` : ""}`}
+                        className="inline-flex items-center gap-1 text-table text-primary hover:underline"
+                      >
+                        <FileCheck2 size={14} strokeWidth={1.5} aria-hidden />
+                        {tr("recon")}
+                      </Link>
+                    ) : null}
+                  </div>
+                )
               : undefined
+          }
+          totals={
+            isCustomer && rows.length > 0
+              ? {
+                  name: tr("totalN", { n: rows.length }),
+                  debt: money(sumOf(rows, (r) => r.buckets.debt)),
+                  overdue: dangerMoney(sumOf(rows, (r) => r.buckets.overdue)),
+                  d1to30: dangerMoney(sumOf(rows, (r) => r.buckets.d1to30)),
+                  d31to60: dangerMoney(sumOf(rows, (r) => r.buckets.d31to60)),
+                  d61to90: dangerMoney(sumOf(rows, (r) => r.buckets.d61to90)),
+                  d90plus: dangerMoney(sumOf(rows, (r) => r.buckets.d90plus)),
+                }
+              : !isCustomer && tot
+                ? {
+                    name: t("total"),
+                    debt: money(tot.debt),
+                    notDue: money(tot.notDue),
+                    d1to30: money(tot.d1to30),
+                    d31to60: money(tot.d31to60),
+                    d61to90: money(tot.d61to90),
+                    d90plus: money(tot.d90plus),
+                    advance: money(tot.advance),
+                  }
+                : undefined
           }
           toolbar={
             <div className="flex flex-wrap items-center gap-4">
               <div className="w-72">
                 <TextField label={t("search")} variant="search" size="sm" value={q} onChange={setQ} placeholder={t("searchPlaceholder")} />
               </div>
-              <Checkbox label={t("overdueOnly")} checked={overdueOnly} onChange={setOverdueOnly} />
+              {isCustomer ? (
+                <>
+                  <MultiFilter
+                    label={tr("statusFilter")}
+                    options={(["ok", "overdue", "limit", "adv"] as const).map((v) => ({
+                      value: v,
+                      label: tr(`status.${v}`),
+                      count: all.filter((r) => statusOf(r) === v).length,
+                    }))}
+                    selected={statuses}
+                    onChange={setStatuses}
+                  />
+                  <MultiFilter
+                    label={tr("ageFilter")}
+                    options={AGE_KEYS.map((v) => ({
+                      value: v,
+                      label: tr(`age.${v}`),
+                      count: all.filter((r) => r.buckets[v] !== "0.00").length,
+                    }))}
+                    selected={ages}
+                    onChange={setAges}
+                  />
+                  {filtered ? (
+                    <Button variant="tertiary" size="sm" onClick={clearFilters}>
+                      {tr("clearFilters")}
+                    </Button>
+                  ) : null}
+                </>
+              ) : (
+                <Checkbox label={t("overdueOnly")} checked={overdueOnly} onChange={setOverdueOnly} />
+              )}
             </div>
           }
           emptyState={
-            q || overdueOnly ? (
-              <NoResultsState
-                onClearFilters={() => {
-                  setQ("");
-                  setOverdueOnly(false);
-                }}
-              />
+            filtered ? (
+              <NoResultsState onClearFilters={clearFilters} />
             ) : (
               <EmptyState icon={HandCoins} title={t("empty.title")} description={t(`side.${side}.empty`)} />
             )

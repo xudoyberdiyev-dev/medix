@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowUpRight, CircleCheck, FileCheck2, Plus, Printer, Send, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -209,10 +209,13 @@ export function ReconNewPage() {
   const selectedBranch = useBranchStore((s) => s.branchId);
   const today = todayTashkent();
   const quick = quickPeriods(today);
-  const [side, setSide] = useState<ReconSide>("CUSTOMER");
-  const [party, setParty] = useState<string | null>(null);
+  const params = useSearchParams();
+  const initParty =
+    Number(params.get("party")) > 0 ? { value: String(Number(params.get("party"))), label: params.get("name") ?? "" } : null;
+  const [side, setSide] = useState<ReconSide>(params.get("side") === "SUPPLIER" ? "SUPPLIER" : "CUSTOMER");
+  const [party, setParty] = useState<string | null>(initParty?.value ?? null);
   const [partyErr, setPartyErr] = useState<string | undefined>();
-  const [branch, setBranch] = useState<string | null>(null);
+  const [branch, setBranch] = useState<string | null>(Number(params.get("branch")) > 0 ? String(Number(params.get("branch"))) : null);
   const [from, setFrom] = useState(formatIsoDate(quick.month[0]));
   const [to, setTo] = useState(formatIsoDate(quick.month[1]));
   const isoFrom = parseUzDate(from);
@@ -297,7 +300,7 @@ export function ReconNewPage() {
             label={t(`new.party.${side}`)}
             required
             searchable
-            options={[]}
+            options={initParty && party === initParty.value ? [initParty] : []}
             loadOptions={side === "CUSTOMER" ? searchCustomers : searchSuppliers}
             placeholder={t("new.pick")}
             value={party}
