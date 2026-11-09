@@ -129,5 +129,63 @@
     "recon": "Akt sverka",
     "clearFilters": "Filtrni tozalash",
     "totalN": "Jami: {n}"
+  },
+  "pay": {
+    "title": "Yetkazib beruvchilar qarzi",
+    "asOf": "{d} holatiga",
+    "newPay": "Yetkazib beruvchiga toʻlov",
+    "recon": "Akt sverka",
+    "nDocs": "{n} ta hujjat",
+    "kTotal": "Jami qarz",
+    "kLate": "Kechikkan",
+    "kToday": "Bugun toʻlanadi",
+    "k3d": "3 kun ichida",
+    "tabsLabel": "YB qarzi koʻrinishlari",
+    "tab": {
+      "all": "Hammasi",
+      "late": "Kechikkan",
+      "today": "Bugun",
+      "3d": "3 kun ichida",
+      "prepaid": "Oldindan toʻlangan"
+    },
+    "search": "Yetkazib beruvchi, kirim raqami yoki «Kim nomiga»",
+    "col": {
+      "supplier": "Yetkazib beruvchi",
+      "branch": "Filial",
+      "no": "Kirim №",
+      "date": "Kirim sanasi",
+      "pay": "Toʻlov turi",
+      "owner": "Kim nomiga",
+      "sum": "Summa",
+      "paid": "Toʻlangan",
+      "left": "Qoldiq",
+      "due": "Toʻlov kuni",
+      "term": "Muddat",
+      "status": "Holat"
+    },
+    "payType": {
+      "CASH": "Naqd",
+      "TRANSFER": "Perechisleniye",
+      "ONLINE": "Online"
+    },
+    "ownerNone": "Koʻrsatilmagan",
+    "late": "{n} kun kechikdi",
+    "today": "Bugun",
+    "left": "{n} kun qoldi",
+    "prepaidShort": "Oldindan toʻlangan",
+    "st": {
+      "paid": "Toʻlangan",
+      "late": "Kechikkan",
+      "today": "Bugun toʻlanadi",
+      "part": "Qisman toʻlangan",
+      "open": "Toʻlanmagan"
+    },
+    "pay": "Toʻlash",
+    "openRc": "Kirimni ochish",
+    "clearFilters": "Filtrni tozalash",
+    "totalN": "Jami: {n}",
+    "emptyTitle": "Ochiq kirim yoʻq",
+    "emptyDescription": "Yetkazib beruvchilar oldida toʻlanmagan kirim yoʻq.",
+    "forbidden": "YB qarzini koʻrish uchun ruxsat yoʻq. Administratorga murojaat qiling."
   }
 }

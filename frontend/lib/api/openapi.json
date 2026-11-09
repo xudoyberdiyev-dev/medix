@@ -2943,6 +2943,34 @@
         "tags" : [ "debts" ]
       }
     },
+    "/api/debts/suppliers/invoices" : {
+      "get" : {
+        "operationId" : "supplierInvoices",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierInvoices"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YB qarzi — kirimlar boʻyicha (summa, toʻlangan, qoldiq, toʻlov kuni)",
+        "tags" : [ "debts" ]
+      }
+    },
     "/api/debts/suppliers/{id}/act" : {
       "get" : {
         "operationId" : "supplierAct",
@@ -26615,6 +26643,80 @@
           }
         },
         "required" : [ "from", "kind", "rows", "to", "total", "truncated" ]
+      },
+      "SupplierInvoice" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Toʻlov kunigacha qolgan kun (manfiy — kechikkan)"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "left" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "owner" : {
+            "type" : "string"
+          },
+          "paid" : {
+            "type" : "string"
+          },
+          "paymentType" : {
+            "type" : "string"
+          },
+          "prepaid" : {
+            "type" : "boolean"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sum" : {
+            "type" : "string"
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "branch", "branchId", "date", "left", "number", "paid", "paymentType", "prepaid", "receiptId", "sum", "supplier", "supplierId" ]
+      },
+      "SupplierInvoices" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SupplierInvoice"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "rows", "today" ]
       },
       "SupplierPaymentDetail" : {
         "type" : "object",

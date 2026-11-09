@@ -1265,6 +1265,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/debts/suppliers/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** YB qarzi — kirimlar boʻyicha (summa, toʻlangan, qoldiq, toʻlov kuni) */
+        get: operations["supplierInvoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/debts/suppliers/{id}/act": {
         parameters: {
             query?: never;
@@ -11048,6 +11065,37 @@ export interface components {
             total: components["schemas"]["SupplierGoodsRow"];
             truncated: boolean;
         };
+        SupplierInvoice: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date */
+            date: string;
+            /**
+             * Format: int32
+             * @description Toʻlov kunigacha qolgan kun (manfiy — kechikkan)
+             */
+            days?: number;
+            /** Format: date */
+            dueDate?: string;
+            left: string;
+            number: string;
+            owner?: string;
+            paid: string;
+            paymentType: string;
+            prepaid: boolean;
+            /** Format: int64 */
+            receiptId: number;
+            sum: string;
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
+        };
+        SupplierInvoices: {
+            rows: components["schemas"]["SupplierInvoice"][];
+            /** Format: date */
+            today: string;
+        };
         SupplierPaymentDetail: {
             account: string;
             accountBalance: string;
@@ -13946,6 +13994,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DebtReport"];
+                };
+            };
+        };
+    };
+    supplierInvoices: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierInvoices"];
                 };
             };
         };
