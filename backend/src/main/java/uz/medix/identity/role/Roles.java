@@ -112,6 +112,7 @@ public class Roles {
     }
 
     /** {@code director} — false boʻlsa rol doirasini («Barcha filiallar») oʻzgartirib boʻlmaydi (egasi E14). */
+    @Transactional
     public Matrix save(List<RoleDraft> drafts, boolean director) {
         Map<String, Role> byCode = new LinkedHashMap<>();
         list().forEach(r -> byCode.put(r.code(), r));
