@@ -293,6 +293,11 @@ class PriceChanges {
 
     @Transactional(readOnly = true)
     Optional<PriceChangeDetail> find(long id, Actor actor) {
+        return find(id, actor, false);
+    }
+
+    /** NO hujjati; {@code showCost} — qatorlarda tannarx (prototip Prices → NO hujjati, «Tannarx (QQS bilan)»). */
+    Optional<PriceChangeDetail> find(long id, Actor actor, boolean showCost) {
         record HeadRow(long id, String number, long branchId, String status, Date effectiveFrom, String note, String createdBy,
                 Timestamp createdAt, Timestamp submittedAt, String decidedBy, Timestamp decidedAt, String decisionReason, Long receiptId,
                 String receiptNumber) {}
@@ -310,11 +315,15 @@ class PriceChanges {
             return Optional.empty();
         }
         HeadRow h = head.get();
+        Map<Long, Money> maxCost = showCost
+                ? costs.maxCost(h.branchId(), jdbc.sql("SELECT DISTINCT product_id FROM price_change_line WHERE price_change_id = :id")
+                        .param("id", id).query(Long.class).list())
+                : Map.of();
         List<Line> lines = jdbc.sql("""
                 SELECT l.id, l.product_id, p.code, p.name, l.price_type_id, t.name AS price_type, l.old_price, l.new_price,
-                       l.batch_id, b.number AS batch_number, b.expiry_date
+                       l.batch_id, b.number AS batch_number, b.expiry_date, m.name AS manufacturer, b.cost AS batch_cost
                 FROM price_change_line l JOIN product p ON p.id = l.product_id JOIN price_type t ON t.id = l.price_type_id
-                     LEFT JOIN batch b ON b.id = l.batch_id
+                     LEFT JOIN batch b ON b.id = l.batch_id LEFT JOIN manufacturer m ON m.id = p.manufacturer_id
                 WHERE l.price_change_id = :id ORDER BY lower(p.name), b.expiry_date NULLS FIRST, l.batch_id NULLS FIRST, t.sort_order""")
                 .param("id", id)
                 .query((rs, n) -> {
@@ -324,13 +333,21 @@ class PriceChanges {
                             rs.getLong("price_type_id"), rs.getString("price_type"), oldP == null ? null : oldP.toString(), newP.toString(),
                             PriceMath.changePercent(oldP, newP).map(BigDecimal::toPlainString).orElse(null), PriceMath.bigChange(oldP, newP),
                             rs.getObject("batch_id", Long.class), rs.getString("batch_number"),
-                            Optional.ofNullable(rs.getDate("expiry_date")).map(Date::toLocalDate).orElse(null));
+                            Optional.ofNullable(rs.getDate("expiry_date")).map(Date::toLocalDate).orElse(null),
+                            rs.getString("manufacturer"), showCost ? lineCost(rs.getBigDecimal("batch_cost"), maxCost.get(rs.getLong("product_id"))) : null);
                 })
                 .list();
         int big = (int) lines.stream().filter(Line::bigChange).count();
         return Optional.of(new PriceChangeDetail(h.id(), h.number(), h.branchId(), Status.valueOf(h.status()), h.effectiveFrom().toLocalDate(),
                 h.note(), h.createdBy(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
                 h.decisionReason(), big, lines, h.receiptId(), h.receiptNumber()));
+    }
+
+    private static String lineCost(BigDecimal batchCost, Money productMax) {
+        if (batchCost != null) {
+            return new Money(batchCost).toString();
+        }
+        return productMax == null ? null : productMax.toString();
     }
 
     // ===== NO: yozish =====

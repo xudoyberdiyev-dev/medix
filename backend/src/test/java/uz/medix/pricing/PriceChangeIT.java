@@ -327,6 +327,13 @@ class PriceChangeIT {
         Cookie director = loginAs("DIRECTOR", null);
         mvc.perform(json(post("/api/price-changes/" + low + "/reject"), director, "{\"reason\":\"Tannarxdan past\"}"))
                 .andExpect(jsonPath("$.status").value("REJECTED"));
+        // NO hujjati: tannarx (eng yuqori partiya tannarxi) — faqat special.cost bilan; ishlab chiqaruvchi qatorda
+        mvc.perform(get("/api/price-changes/" + low).cookie(director))
+                .andExpect(jsonPath("$.lines[0].cost").value("12000.00"))
+                .andExpect(jsonPath("$.decidedBy").isNotEmpty());
+        mvc.perform(get("/api/price-changes/" + low).cookie(purchaser))
+                .andExpect(jsonPath("$.lines[0].cost").doesNotExist())
+                .andExpect(jsonPath("$.lines[0].productName").value("Tannarx NO sinov"));
         // Bildirishnomalar: tasdiq kutmoqda — Direktorga (prices.below), rad etildi — muallifga (Xarid)
         String link = "/prices?tab=documents&open=" + low;
         assertThat(jdbc.sql("""

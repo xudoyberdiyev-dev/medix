@@ -53,7 +53,10 @@ final class PriceChangeModels {
             @Schema(description = "20% dan ko'p o'zgarish") boolean bigChange,
             @Schema(nullable = true) Long batchId,
             @Schema(nullable = true) String batchNumber,
-            @Schema(nullable = true) LocalDate expiryDate) {}
+            @Schema(nullable = true) LocalDate expiryDate,
+            @Schema(nullable = true) String manufacturer,
+            @Schema(nullable = true, description = "Tannarx (QQS bilan): partiya qatori — partiya tannarxi, mahsulot qatori — filialdagi "
+                    + "qoldig'i bor partiyalarning eng yuqori tannarxi; faqat special.cost bilan") String cost) {}
 
     record PriceChangeSummary(long id, String number, long branchId, Status status, LocalDate effectiveFrom, int lines,
             String createdBy, Instant createdAt, @Schema(nullable = true) Instant decidedAt,

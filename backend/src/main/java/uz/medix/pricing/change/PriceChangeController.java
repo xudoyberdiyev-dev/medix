@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,7 +68,12 @@ class PriceChangeController {
     }
 
     private PriceChangeDetail detail(long id) {
-        return changes.find(id, actor()).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        return changes.find(id, actor(), showCost()).orElseThrow(() -> MedixException.notFound("error.notFound"));
+    }
+
+    private static boolean showCost() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
     }
 
     @GetMapping("/prices")
