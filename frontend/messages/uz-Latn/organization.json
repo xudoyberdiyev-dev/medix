@@ -165,6 +165,9 @@
     "requiredNote": "Qabul, Asosiy saqlash, Karantin va Joʻnatish zonalari har omborda doim bor.",
     "eReq": "Zona nomi kiritilmagan. Nom yozing.",
     "eDup": "Bu omborda shu nomli zona bor. Boshqa nom tanlang.",
-    "allZonesT": "Barcha zona turlari bor"
+    "allZonesT": "Barcha zona turlari bor",
+    "zSaleToggle": "«{zone}» — sotuvga ochiq",
+    "zSaleOpened": "Zona sotuvga ochildi",
+    "zSaleClosed": "Zona sotuvga yopildi"
   }
 }

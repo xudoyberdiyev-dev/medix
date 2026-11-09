@@ -752,7 +752,7 @@
     },
     "/api/bank-reconciliations" : {
       "get" : {
-        "operationId" : "list_24",
+        "operationId" : "list_25",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -781,7 +781,7 @@
         "tags" : [ "bank-reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_24",
+        "operationId" : "create_25",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -876,7 +876,7 @@
     "/api/branch-payments" : {
       "get" : {
         "description" : "Filial to'lovchi yoki oluvchi bo'lganlari.",
-        "operationId" : "list_23",
+        "operationId" : "list_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -906,7 +906,7 @@
       },
       "post" : {
         "description" : "Darhol o'tkaziladi: to'lovchi hisobidan chiqim, oluvchi hisobiga kirim, filiallararo qarz kamayadi. Qarzdan oshmaydi.",
-        "operationId" : "create_23",
+        "operationId" : "create_24",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1015,7 +1015,7 @@
     "/api/branch-sales" : {
       "get" : {
         "description" : "branchId — sotuvchi yoki xaridor filial.",
-        "operationId" : "list_22",
+        "operationId" : "list_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -1068,7 +1068,7 @@
       },
       "post" : {
         "description" : "Tovar joʻnatilguncha joyida qoladi.",
-        "operationId" : "create_22",
+        "operationId" : "create_23",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1407,7 +1407,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "responses" : {
           "200" : {
             "content" : {
@@ -1427,7 +1427,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_21",
+        "operationId" : "create_22",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2059,7 +2059,7 @@
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -2153,7 +2153,7 @@
         "tags" : [ "counterparties" ]
       },
       "post" : {
-        "operationId" : "create_20",
+        "operationId" : "create_21",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3323,7 +3323,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_19",
+        "operationId" : "list_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -3352,7 +3352,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_19",
+        "operationId" : "create_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -3531,7 +3531,7 @@
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "responses" : {
           "200" : {
             "content" : {
@@ -3551,7 +3551,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_18",
+        "operationId" : "create_19",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3915,7 +3915,7 @@
     },
     "/api/expense-items" : {
       "get" : {
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "responses" : {
           "200" : {
             "content" : {
@@ -3935,7 +3935,7 @@
         "tags" : [ "expense-items" ]
       },
       "post" : {
-        "operationId" : "create_17",
+        "operationId" : "create_18",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4269,7 +4269,7 @@
     "/api/inventory-counts" : {
       "get" : {
         "description" : "Kamomad / ortiqcha tannarxi — faqat prices.cost.",
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4330,7 +4330,7 @@
       },
       "post" : {
         "description" : "Qoralama. Bitta omborda bitta faol inventarizatsiya.",
-        "operationId" : "create_16",
+        "operationId" : "create_17",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5046,7 +5046,7 @@
     },
     "/api/money-accounts" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5075,7 +5075,7 @@
         "tags" : [ "money-accounts" ]
       },
       "post" : {
-        "operationId" : "create_15",
+        "operationId" : "create_16",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5438,7 +5438,7 @@
     },
     "/api/opening-balances" : {
       "get" : {
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5491,7 +5491,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BQ-TSH-000001). Qoralama qoldiqqa ta'sir qilmaydi.",
-        "operationId" : "create_14",
+        "operationId" : "create_15",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5719,7 +5719,7 @@
     "/api/opening-finance" : {
       "get" : {
         "description" : "Oxirgi 500 ta.",
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5748,7 +5748,7 @@
         "tags" : [ "opening-finance" ]
       },
       "post" : {
-        "operationId" : "create_13",
+        "operationId" : "create_14",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5909,7 +5909,7 @@
     "/api/orders" : {
       "get" : {
         "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -6092,7 +6092,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BY-TSH-000001). Qoldiq va qarzga ta'sir qilmaydi.",
-        "operationId" : "create_12",
+        "operationId" : "create_13",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -7347,7 +7347,7 @@
     },
     "/api/payments/customer" : {
       "get" : {
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7392,7 +7392,7 @@
         "tags" : [ "payments" ]
       },
       "post" : {
-        "operationId" : "create_11",
+        "operationId" : "create_12",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -8099,7 +8099,7 @@
     },
     "/api/price-changes" : {
       "get" : {
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -8197,7 +8197,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (NO-TSH-000001).",
-        "operationId" : "create_10",
+        "operationId" : "create_11",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -8525,7 +8525,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_28",
+        "operationId" : "list_10",
         "responses" : {
           "200" : {
             "content" : {
@@ -8542,6 +8542,43 @@
           }
         },
         "summary" : "Narx turlari",
+        "tags" : [ "pricing" ]
+      },
+      "post" : {
+        "description" : "Bazaviy tur bitta: yangisi bazaviy boʻlsa oldingisi oddiy turga oʻtadi. Bazaviy tur partiyaga bogʻliq boʻlmaydi.",
+        "operationId" : "create_10",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PriceTypeCreate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PriceTypeOverview"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Yangi narx turi (egasi E10)",
         "tags" : [ "pricing" ]
       }
     },
@@ -11320,7 +11357,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_27",
+        "operationId" : "list_28",
         "responses" : {
           "200" : {
             "content" : {
@@ -11360,7 +11397,7 @@
         "tags" : [ "roles" ]
       },
       "put" : {
-        "description" : "Rollar (nom, tavsif, doira, bosh sahifa, faollik), ruxsatlar va yangi rollar — bitta tranzaksiyada. Direktor roli o'zgarmaydi. Xodimning keyingi kirishida kuchga kiradi.",
+        "description" : "Rollar (nom, tavsif, doira, bosh sahifa, faollik), ruxsatlar va yangi rollar — bitta tranzaksiyada. Direktor roli o'zgarmaydi. Rol doirasini (barcha filiallar) faqat Direktor oʻzgartiradi. Xodimning keyingi kirishida kuchga kiradi.",
         "operationId" : "save",
         "requestBody" : {
           "content" : {
@@ -11795,7 +11832,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_26",
+        "operationId" : "list_27",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -12358,7 +12395,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_25",
+        "operationId" : "list_26",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -14349,7 +14386,7 @@
             "description" : "Created"
           }
         },
-        "summary" : "Zona qo'shish (Sovuq yoki Seyf)",
+        "summary" : "Zona qo'shish (Asosiy saqlash, Sovuq yoki Seyf; bir turdagi bir nechta — nomi bilan farqlanadi)",
         "tags" : [ "warehouses" ]
       }
     },
@@ -14469,6 +14506,53 @@
           }
         },
         "summary" : "Zonani qayta ochish",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}/zones/{zoneId}/sellable" : {
+      "put" : {
+        "description" : "Qabul, Karantin, Joʻnatish zonalari doim sotuvga yopiq.",
+        "operationId" : "setZoneSellable",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "zoneId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ZoneSellableRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zona «Sotuvga ochiq» almashtirgichi",
         "tags" : [ "warehouses" ]
       }
     },
@@ -16355,7 +16439,7 @@
           "code" : {
             "type" : "string",
             "minLength" : 1,
-            "pattern" : "^[A-Za-z]{3}$"
+            "pattern" : "^[A-Za-z]{2,4}$"
           },
           "directorName" : {
             "type" : "string",
@@ -17989,7 +18073,7 @@
           "code" : {
             "type" : "string",
             "minLength" : 1,
-            "pattern" : "^[A-Za-z]{3}$"
+            "pattern" : "^[A-Za-z]{2,4}$"
           },
           "directorName" : {
             "type" : "string",
@@ -24517,6 +24601,29 @@
         },
         "required" : [ "changed" ]
       },
+      "PriceTypeCreate" : {
+        "type" : "object",
+        "properties" : {
+          "altName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "base" : {
+            "type" : "boolean",
+            "description" : "true — yangi tur bazaviy boʻladi (oldingisi oddiy turga oʻtadi)"
+          },
+          "batch" : {
+            "type" : "boolean"
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "base", "batch", "name" ]
+      },
       "PriceTypeCustomer" : {
         "type" : "object",
         "properties" : {
@@ -24638,6 +24745,14 @@
             "type" : "string",
             "maxLength" : 100,
             "minLength" : 0
+          },
+          "base" : {
+            "type" : "boolean",
+            "description" : "true — shu tur bazaviy boʻladi (oldingisi oddiy turga oʻtadi); null/false — oʻzgarmaydi"
+          },
+          "batch" : {
+            "type" : "boolean",
+            "description" : "Partiyaga bogʻliq; null — oʻzgarmaydi. Narxi bor turda almashtirib boʻlmaydi"
           },
           "name" : {
             "type" : "string",
@@ -30413,6 +30528,15 @@
           }
         },
         "required" : [ "id", "name", "type" ]
+      },
+      "ZoneSellableRequest" : {
+        "type" : "object",
+        "properties" : {
+          "sellable" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "sellable" ]
       },
       "ZoneStockRow" : {
         "type" : "object",

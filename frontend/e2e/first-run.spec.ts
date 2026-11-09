@@ -160,6 +160,12 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   // Omborlar va zonalar (prototip AdminOrg): daraxt + ombor maʼlumotlari + zonalar jadvali
   await expect(page.getByRole("heading", { name: "Markaziy ombor" })).toBeVisible();
   await expect(page.getByRole("table", { name: "Zonalar" }).getByRole("row")).toHaveCount(6);
+  // E12: «Sotuvga ochiq» — zona darajasidagi almashtirgich
+  const zt = page.getByRole("table", { name: "Zonalar" });
+  await zt.getByRole("row", { name: /Asosiy saqlash/ }).getByText("Ochiq").click();
+  await expect(page.getByText("Zona sotuvga yopildi")).toBeVisible();
+  await zt.getByRole("row", { name: /Asosiy saqlash/ }).getByText("Yopiq").click();
+  await expect(page.getByText("Zona sotuvga ochildi")).toBeVisible();
   // Audit jurnali (prototip AuditLog): yorliqlar, harakat turi, obyekt nomi
   await page.goto("/settings/audit");
   await expect(page.getByRole("tab", { name: /Muvaffaqiyatsiz kirishlar/ })).toBeVisible();
@@ -282,6 +288,14 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await expect(att.getByText(/Faol mijoz yoʻq|STIR/).first()).toBeVisible();
   await att.getByRole("button", { name: "Ortga" }).click();
   await expect(att).toBeHidden();
+  // E10: yangi narx turi — partiyaga bogʻliq
+  await page.getByRole("button", { name: "Narx turi yaratish" }).click();
+  const nd = page.getByRole("dialog", { name: "Yangi narx turi" });
+  await nd.getByRole("textbox", { name: /^Nomi/ }).fill("Klinika narxi");
+  await nd.getByText("Partiyaga bogʻliq").click();
+  await nd.getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText("«Klinika narxi» yaratildi")).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Klinika narxi", exact: true })).toBeVisible();
 });
 
 test("CEO: Ctrl+K — mahsulot (kirillda), sahifa va NO hujjati", async ({ page }) => {

@@ -10,6 +10,7 @@ import { Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
+import { Switch } from "@/components/ui/selection-controls";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
@@ -22,6 +23,9 @@ import { formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import {
   OPTIONAL_ZONES,
+  STORAGE_ZONES,
+  nextZoneName,
+  useSetZoneSellable,
   activeZoneCount,
   useActivateWarehouse,
   useAddNamedZone,
@@ -58,6 +62,7 @@ export function WarehousesPage() {
   const deactivate = useDeactivateWarehouse();
   const activate = useActivateWarehouse();
   const setZoneActive = useSetZoneActive();
+  const setZoneSellable = useSetZoneSellable();
 
   if (me.data && !canEdit) return <ForbiddenState description={t("forbidden")} />;
 
@@ -74,6 +79,18 @@ export function WarehousesPage() {
           toast({ tone: "success", title: active ? t("zReopened") : t("zClosedToast"), description: `${zone.name} · ${sel.name}` });
           setZoneClosing(null);
         },
+        onError: (e) => toast({ tone: "danger", title: t("zFail"), description: describeError(e).message ?? "" }),
+      },
+    );
+  }
+
+  function zoneSellable(zone: WarehouseZoneStock, sellable: boolean) {
+    if (!sel) return;
+    setZoneSellable.mutate(
+      { id: sel.id, zoneId: zone.id, sellable },
+      {
+        onSuccess: () =>
+          toast({ tone: "success", title: sellable ? t("zSaleOpened") : t("zSaleClosed"), description: `${zone.name} · ${sel.name}` }),
         onError: (e) => toast({ tone: "danger", title: t("zFail"), description: describeError(e).message ?? "" }),
       },
     );
@@ -157,6 +174,7 @@ export function WarehousesPage() {
             onAddZone={() => setAdding(true)}
             onZoneClose={(z) => setZoneClosing(z)}
             onZoneReopen={(z) => zoneActive(z, true)}
+            onZoneSellable={zoneSellable}
           />
         </div>
       )}
@@ -210,6 +228,7 @@ function WarehouseDetail({
   onAddZone,
   onZoneClose,
   onZoneReopen,
+  onZoneSellable,
 }: {
   w: WarehouseOverviewItem;
   onEdit: () => void;
@@ -218,6 +237,7 @@ function WarehouseDetail({
   onAddZone: () => void;
   onZoneClose: (z: WarehouseZoneStock) => void;
   onZoneReopen: (z: WarehouseZoneStock) => void;
+  onZoneSellable: (z: WarehouseZoneStock, sellable: boolean) => void;
 }) {
   const t = useTranslations("organization.warehouses");
   const zoneNames = useZoneNames();
@@ -325,7 +345,17 @@ function WarehouseDetail({
                     </td>
                     <td className="px-3 py-[6px] font-medium">{z.name}</td>
                     <td className={cn("px-3 py-[6px] text-table", z.sellable ? "text-success" : "text-text-secondary")}>
-                      {z.sellable ? t("saleOpen") : t("saleClosed")}
+                      {STORAGE_ZONES.includes(z.type) && z.active ? (
+                        <Switch
+                          label={z.sellable ? t("saleOpen") : t("saleClosed")}
+                          checked={z.sellable}
+                          onChange={(v) => onZoneSellable(z, v)}
+                        />
+                      ) : z.sellable ? (
+                        t("saleOpen")
+                      ) : (
+                        t("saleClosed")
+                      )}
                     </td>
                     <td className="px-3 py-[6px] text-right tabular-nums">
                       <span className="flex flex-col items-end">
@@ -337,7 +367,9 @@ function WarehouseDetail({
                       <ActivePill active={z.active} />
                     </td>
                     <td className="px-3 py-[6px] text-right">
-                      {OPTIONAL_ZONES.includes(z.type) || !z.active ? (
+                      {OPTIONAL_ZONES.includes(z.type) ||
+                      !z.active ||
+                      (z.type === "MAIN" && w.zones.filter((x) => x.type === "MAIN" && x.active).length > 1) ? (
                         <RowMenu items={zoneMenu(z)} label={t("rowMenu")} />
                       ) : (
                         <span className="inline-flex size-[30px] items-center justify-center text-text-disabled" title={t("required")}>
@@ -360,9 +392,13 @@ function WarehouseDetail({
 function AddZoneModal({ w, onClose }: { w: WarehouseOverviewItem; onClose: () => void }) {
   const t = useTranslations("organization.warehouses");
   const zoneNames = useZoneNames();
-  const free = OPTIONAL_ZONES.filter((type) => !w.zones.some((z) => z.type === type));
+  // E12: saqlash zonalari (Asosiy / Sovuq / Seyf) bir nechta boʻlishi mumkin — nomi bilan farqlanadi
+  const free = [...OPTIONAL_ZONES.filter((type) => !w.zones.some((z) => z.type === type)), ...STORAGE_ZONES].filter(
+    (v, i, a) => a.indexOf(v) === i,
+  );
+  const names = w.zones.map((z) => z.name);
   const [type, setType] = useState<ZoneType | null>(free[0] ?? null);
-  const [name, setName] = useState(free[0] ? zoneNames[free[0]] : "");
+  const [name, setName] = useState(free[0] ? nextZoneName(zoneNames[free[0]], names) : "");
   const [tried, setTried] = useState(false);
   const add = useAddNamedZone();
   const nm = name.trim();
@@ -398,7 +434,7 @@ function AddZoneModal({ w, onClose }: { w: WarehouseOverviewItem; onClose: () =>
             value={type}
             onChange={(v) => {
               const next = (v as ZoneType | null) ?? type;
-              if (name.trim() === zoneNames[type]) setName(zoneNames[next]);
+              if (name.trim() === nextZoneName(zoneNames[type], names)) setName(nextZoneName(zoneNames[next], names));
               setType(next);
             }}
             options={free.map((f) => ({ value: f, label: zoneNames[f] }))}

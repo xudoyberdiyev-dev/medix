@@ -5,6 +5,7 @@ import {
   filterBranches,
   groupByBranch,
   missingOptionalZones,
+  nextZoneName,
   warehouseTree,
   type Branch,
   type Warehouse,
@@ -98,5 +99,13 @@ describe("Omborlar va zonalar daraxti", () => {
       ]),
     ).toBe(2);
     expect(activeZoneCount([])).toBe(0);
+  });
+});
+
+describe("nextZoneName (E12 — bir turdagi bir nechta zona)", () => {
+  it("band boʻlsa raqam qoʻshadi", () => {
+    expect(nextZoneName("Sovuq", ["Qabul"])).toBe("Sovuq");
+    expect(nextZoneName("Asosiy saqlash", ["Asosiy saqlash", "Qabul"])).toBe("Asosiy saqlash 2");
+    expect(nextZoneName("Asosiy saqlash", ["asosiy saqlash", "Asosiy saqlash 2"])).toBe("Asosiy saqlash 3");
   });
 });

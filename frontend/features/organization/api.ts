@@ -46,6 +46,18 @@ export const ZONE_LABELS: Record<ZoneType, string> = {
 /** Ombor yaratilgandan keyin qoʻshish mumkin boʻlgan zonalar (majburiylari doim bor). */
 export const OPTIONAL_ZONES: ZoneType[] = ["COLD", "SAFE"];
 
+/** Omborda bir nechta boʻlishi mumkin boʻlgan saqlash zonalari va sotuvga ochilishi mumkin turlar (E12). */
+export const STORAGE_ZONES: ZoneType[] = ["MAIN", "COLD", "SAFE"];
+
+/** Yangi zona uchun standart nom: tur nomi, band boʻlsa — «Asosiy saqlash 2». */
+export function nextZoneName(base: string, names: string[]): string {
+  const taken = new Set(names.map((n) => n.trim().toLocaleLowerCase("uz")));
+  if (!taken.has(base.toLocaleLowerCase("uz"))) return base;
+  let i = 2;
+  while (taken.has(`${base} ${i}`.toLocaleLowerCase("uz"))) i++;
+  return `${base} ${i}`;
+}
+
 export function missingOptionalZones(w: Warehouse): ZoneType[] {
   return OPTIONAL_ZONES.filter((t) => !w.zones.some((z) => z.type === t));
 }
@@ -130,6 +142,11 @@ export const useSetZoneActive = () =>
     active
       ? unwrap(api.POST("/api/warehouses/{id}/zones/{zoneId}/reopen", { params: { path: { id, zoneId } } }))
       : unwrap(api.POST("/api/warehouses/{id}/zones/{zoneId}/close", { params: { path: { id, zoneId } } })),
+  );
+
+export const useSetZoneSellable = () =>
+  useMutationWith(WAREHOUSES, ({ id, zoneId, sellable }: { id: number; zoneId: number; sellable: boolean }) =>
+    unwrap(api.PUT("/api/warehouses/{id}/zones/{zoneId}/sellable", { params: { path: { id, zoneId } }, body: { sellable } })),
   );
 
 /** Filial → ombor daraxti (prototip AdminOrg): filial nomi va kodi, ichida omborlar. */
