@@ -42,5 +42,6 @@
   "reportsReturns": "Возвраты",
   "reportsExpenses": "Отчёт по расходам",
   "approvals": "Согласование",
-  "bank": "Банк"
+  "bank": "Банк",
+  "reconciliations": "Акт сверки"
 }

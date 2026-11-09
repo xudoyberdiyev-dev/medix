@@ -20,7 +20,8 @@ describe("ruxsatga qarab menyu", () => {
     expect(keys(["staff.view"], "")).toEqual(["home", "staff", "settings"]);
     expect(keys(["stock.view"], "")).toContain("stock");
     expect(navigationFor(undefined)).toEqual([]);
-    expect(keys(["cdebt.view", "sdebt.view"], "")).toEqual(["home", "customer-debts", "supplier-debts", "reconciliations"]);
+    expect(keys(["cdebt.view", "sdebt.view"], "")).toEqual(["home", "customer-debts", "supplier-debts"]);
+    expect(keys(["recon.view"], "")).toEqual(["home", "reconciliations"]);
   });
 
   it("prototip tuzilmasi: guruhlar va bandlar tartibi", () => {

@@ -199,7 +199,7 @@ export const navigation: NavGroup[] = [
         icon: ReceiptText,
         anyOf: ["sdebt.view", "supplierBonus.confirm"],
       },
-      { key: "reconciliations", label: "Akt sverka", href: "/reconciliations", icon: FileCheck2, anyOf: ["cdebt.view", "sdebt.view"] },
+      { key: "reconciliations", label: "Akt sverka", href: "/reconciliations", icon: FileCheck2, anyOf: ["recon.view"] },
     ],
   },
   {

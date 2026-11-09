@@ -9,6 +9,9 @@
     "url" : "/"
   } ],
   "tags" : [ {
+    "description" : "Akt sverka hujjatlari (AS-…)",
+    "name" : "reconciliations"
+  }, {
     "description" : "Buyurtmalar",
     "name" : "orders"
   }, {
@@ -421,7 +424,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_29",
+        "operationId" : "list_30",
         "parameters" : [ {
           "in" : "query",
           "name" : "entityType",
@@ -565,7 +568,7 @@
     },
     "/api/bank-reconciliations" : {
       "get" : {
-        "operationId" : "list_22",
+        "operationId" : "list_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -594,7 +597,7 @@
         "tags" : [ "bank-reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_22",
+        "operationId" : "create_23",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -689,7 +692,7 @@
     "/api/branch-payments" : {
       "get" : {
         "description" : "Filial to'lovchi yoki oluvchi bo'lganlari.",
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -719,7 +722,7 @@
       },
       "post" : {
         "description" : "Darhol o'tkaziladi: to'lovchi hisobidan chiqim, oluvchi hisobiga kirim, filiallararo qarz kamayadi. Qarzdan oshmaydi.",
-        "operationId" : "create_21",
+        "operationId" : "create_22",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -828,7 +831,7 @@
     "/api/branch-sales" : {
       "get" : {
         "description" : "branchId — sotuvchi yoki xaridor filial.",
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -881,7 +884,7 @@
       },
       "post" : {
         "description" : "Tovar joʻnatilguncha joyida qoladi.",
-        "operationId" : "create_20",
+        "operationId" : "create_21",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -997,7 +1000,7 @@
     },
     "/api/branch-sales/{id}" : {
       "get" : {
-        "operationId" : "get_21",
+        "operationId" : "get_22",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1153,7 +1156,7 @@
     "/api/branch-sales/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi, summa (special.cost) va hal qilish tarixi.",
-        "operationId" : "get_22",
+        "operationId" : "get_23",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1220,7 +1223,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_19",
+        "operationId" : "list_20",
         "responses" : {
           "200" : {
             "content" : {
@@ -1240,7 +1243,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_19",
+        "operationId" : "create_20",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1739,7 +1742,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_20",
+        "operationId" : "get_21",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -1850,7 +1853,7 @@
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -1944,7 +1947,7 @@
         "tags" : [ "counterparties" ]
       },
       "post" : {
-        "operationId" : "create_18",
+        "operationId" : "create_19",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3086,7 +3089,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -3115,7 +3118,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_17",
+        "operationId" : "create_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -3272,7 +3275,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_28",
+        "operationId" : "list_29",
         "responses" : {
           "200" : {
             "content" : {
@@ -3294,7 +3297,7 @@
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "responses" : {
           "200" : {
             "content" : {
@@ -3314,7 +3317,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_16",
+        "operationId" : "create_17",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3678,7 +3681,7 @@
     },
     "/api/expense-items" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "responses" : {
           "200" : {
             "content" : {
@@ -3698,7 +3701,7 @@
         "tags" : [ "expense-items" ]
       },
       "post" : {
-        "operationId" : "create_15",
+        "operationId" : "create_16",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3821,7 +3824,7 @@
     },
     "/api/home/accountant" : {
       "get" : {
-        "operationId" : "get_19",
+        "operationId" : "get_20",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3849,7 +3852,7 @@
     },
     "/api/home/branch" : {
       "get" : {
-        "operationId" : "get_18",
+        "operationId" : "get_19",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3893,7 +3896,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_17",
+        "operationId" : "get_18",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4032,7 +4035,7 @@
     "/api/inventory-counts" : {
       "get" : {
         "description" : "Kamomad / ortiqcha tannarxi — faqat prices.cost.",
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4093,7 +4096,7 @@
       },
       "post" : {
         "description" : "Qoralama. Bitta omborda bitta faol inventarizatsiya.",
-        "operationId" : "create_14",
+        "operationId" : "create_15",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4123,7 +4126,7 @@
     "/api/inventory-counts/{id}" : {
       "get" : {
         "description" : "Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.",
-        "operationId" : "get_16",
+        "operationId" : "get_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4547,7 +4550,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_15",
+        "operationId" : "get_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4781,7 +4784,7 @@
     },
     "/api/money-accounts" : {
       "get" : {
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4810,7 +4813,7 @@
         "tags" : [ "money-accounts" ]
       },
       "post" : {
-        "operationId" : "create_13",
+        "operationId" : "create_14",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5051,7 +5054,7 @@
     "/api/nav/badges" : {
       "get" : {
         "description" : "Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.",
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5079,7 +5082,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_27",
+        "operationId" : "list_28",
         "responses" : {
           "200" : {
             "content" : {
@@ -5150,7 +5153,7 @@
     },
     "/api/opening-balances" : {
       "get" : {
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5203,7 +5206,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BQ-TSH-000001). Qoralama qoldiqqa ta'sir qilmaydi.",
-        "operationId" : "create_12",
+        "operationId" : "create_13",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5431,7 +5434,7 @@
     "/api/orders" : {
       "get" : {
         "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5614,7 +5617,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BY-TSH-000001). Qoldiq va qarzga ta'sir qilmaydi.",
-        "operationId" : "create_11",
+        "operationId" : "create_12",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6869,7 +6872,7 @@
     },
     "/api/payments/customer" : {
       "get" : {
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -6914,7 +6917,7 @@
         "tags" : [ "payments" ]
       },
       "post" : {
-        "operationId" : "create_10",
+        "operationId" : "create_11",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -7621,7 +7624,7 @@
     },
     "/api/price-changes" : {
       "get" : {
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7719,7 +7722,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (NO-TSH-000001).",
-        "operationId" : "create_9",
+        "operationId" : "create_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -8047,7 +8050,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_26",
+        "operationId" : "list_27",
         "responses" : {
           "200" : {
             "content" : {
@@ -8469,7 +8472,7 @@
     "/api/products" : {
       "get" : {
         "description" : "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, IKPU, Farm ID, ishlab chiqaruvchi. Yorliqlar soni va filtr variantlari (soni bilan) bilan.",
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -8640,7 +8643,7 @@
       },
       "post" : {
         "description" : "8 raqamli kod: berilsa — shu (band bo'lsa 409), aks holda avtomatik.",
-        "operationId" : "create_8",
+        "operationId" : "create_9",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -9349,7 +9352,7 @@
     "/api/receipts" : {
       "get" : {
         "description" : "Yorliqlar soni (holat filtrisiz), filtr variantlari va kartalar bilan.",
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -9463,7 +9466,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (KR-TSH-000001). Qoralama qoldiq va qarzga ta'sir qilmaydi.",
-        "operationId" : "create_7",
+        "operationId" : "create_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -9903,6 +9906,128 @@
         },
         "summary" : "O'tkazish",
         "tags" : [ "receipts" ]
+      }
+    },
+    "/api/reconciliations" : {
+      "get" : {
+        "description" : "Filial tanlanmasa — xodim koʻradigan barcha filiallar.",
+        "operationId" : "list_7",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReconList"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Akt sverkalar roʻyxati",
+        "tags" : [ "reconciliations" ]
+      },
+      "post" : {
+        "operationId" : "create_7",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReconCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReconDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Akt sverka tuzish (AS-…)",
+        "tags" : [ "reconciliations" ]
+      }
+    },
+    "/api/reconciliations/{id}" : {
+      "get" : {
+        "operationId" : "get_14",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReconDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Akt sverka varagʻi (sarlavha + qarz jurnalidan qatorlar)",
+        "tags" : [ "reconciliations" ]
+      }
+    },
+    "/api/reconciliations/{id}/status" : {
+      "post" : {
+        "operationId" : "status",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReconStatusRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReconDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Holat: Yuborildi / Imzolandi / Farq bor (kontragent qoldigʻi + izoh)",
+        "tags" : [ "reconciliations" ]
       }
     },
     "/api/reports/expenses" : {
@@ -10720,7 +10845,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_25",
+        "operationId" : "list_26",
         "responses" : {
           "200" : {
             "content" : {
@@ -10893,7 +11018,7 @@
     },
     "/api/setup" : {
       "get" : {
-        "operationId" : "status",
+        "operationId" : "status_1",
         "responses" : {
           "200" : {
             "content" : {
@@ -11195,7 +11320,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_24",
+        "operationId" : "list_25",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -11758,7 +11883,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_23",
+        "operationId" : "list_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -24981,6 +25106,62 @@
         },
         "required" : [ "customer", "id", "number", "status", "total" ]
       },
+      "ReconCreateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "counterpartyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "side" : {
+            "type" : "string",
+            "enum" : [ "SUPPLIER", "CUSTOMER" ]
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "branchId", "counterpartyId", "from", "side", "to" ]
+      },
+      "ReconDetail" : {
+        "type" : "object",
+        "properties" : {
+          "act" : {
+            "$ref" : "#/components/schemas/Act"
+          },
+          "head" : {
+            "$ref" : "#/components/schemas/ReconRow"
+          },
+          "ourName" : {
+            "type" : "string"
+          },
+          "ourTin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "act", "head", "ourName", "ourTin" ]
+      },
+      "ReconList" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconRow"
+            }
+          }
+        },
+        "required" : [ "rows" ]
+      },
       "ReconPreview" : {
         "type" : "object",
         "properties" : {
@@ -25047,6 +25228,86 @@
           }
         },
         "required" : [ "accountId", "bankBalance", "statementDate" ]
+      },
+      "ReconRow" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "closing" : {
+            "type" : "string"
+          },
+          "counterparty" : {
+            "type" : "string"
+          },
+          "counterpartyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "diffNote" : {
+            "type" : "string"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "side" : {
+            "type" : "string",
+            "enum" : [ "SUPPLIER", "CUSTOMER" ]
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "MADE", "SENT", "SIGNED", "DIFF" ]
+          },
+          "theirBalance" : {
+            "type" : "string"
+          },
+          "tin" : {
+            "type" : "string"
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "branch", "branchId", "closing", "counterparty", "counterpartyId", "createdAt", "createdBy", "from", "id", "number", "side", "status", "tin", "to" ]
+      },
+      "ReconStatusRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "MADE", "SENT", "SIGNED", "DIFF" ]
+          },
+          "theirBalance" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
       },
       "Reconciliation" : {
         "type" : "object",
