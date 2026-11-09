@@ -53,12 +53,15 @@ class CounterpartyController {
     private final CurrentActor currentActor;
     private final CounterpartyExcel excel;
     private final CounterpartyOverview overview;
+    private final CounterpartyDocuments documents;
 
-    CounterpartyController(Counterparties counterparties, CurrentActor currentActor, CounterpartyExcel excel, CounterpartyOverview overview) {
+    CounterpartyController(Counterparties counterparties, CurrentActor currentActor, CounterpartyExcel excel, CounterpartyOverview overview,
+            CounterpartyDocuments documents) {
         this.counterparties = counterparties;
         this.currentActor = currentActor;
         this.excel = excel;
         this.overview = overview;
+        this.documents = documents;
     }
 
     private Actor actor() {
@@ -140,6 +143,29 @@ class CounterpartyController {
         }
         detail(id);
         return overview.summary(actor(), id, customers);
+    }
+
+    @GetMapping("/{id}/documents")
+    @Operation(summary = "Kartochka hujjat yorliqlari: Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar, Kirimlar (oxirgi 100 ta)",
+            description = "Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, "
+                    + "qm.view / qy.view, receipt.view. Filial — xodim ko'radiganlari.")
+    CounterpartyDocuments.CounterpartyDocumentsPage documents(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
+            @RequestParam CounterpartyDocuments.Section section, Authentication auth) {
+        boolean customers = role != Role.SUPPLIER;
+        require(auth, customers ? "clients.view" : "suppliers.view");
+        String need = switch (section) {
+            case ORDERS -> customers ? "orders.view" : null;
+            case SALES -> customers ? "shipments.view" : null;
+            case PAYMENTS -> "payments.view";
+            case RETURNS -> customers ? "qm.view" : "qy.view";
+            case RECEIPTS -> customers ? null : "receipt.view";
+        };
+        if (need == null) {
+            throw MedixException.badRequest("counterparty.section.invalid");
+        }
+        require(auth, need);
+        detail(id);
+        return documents.list(actor(), id, customers, section);
     }
 
     @GetMapping("/price-type-customers")

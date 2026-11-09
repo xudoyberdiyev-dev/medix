@@ -178,4 +178,64 @@ class CounterpartyOverviewIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.kind").value("PHARMACY"));
     }
+
+    @Test
+    void cardDocumentTabsAreScopedAndPermissioned() throws Exception {
+        long b1 = branch();
+        long b2 = branch();
+        String tin = tin();
+        long c = jdbc.sql("INSERT INTO counterparty (tin, name, is_customer, is_supplier) VALUES (:t, :n, true, false) RETURNING id")
+                .param("t", tin)
+                .param("n", "Hujjat Dorixona " + tin)
+                .query(Long.class)
+                .single();
+        long emp = jdbc.sql("SELECT min(id) FROM employee").query(Long.class).single();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Tashkent"));
+        for (long b : new long[] {b1, b2}) {
+            long acc = jdbc.sql("INSERT INTO money_account (branch_id, kind, code, name) VALUES (:b, 'TERMINAL', :k, 'Terminal') RETURNING id")
+                    .param("b", b)
+                    .param("k", "T" + b + "-" + c)
+                    .query(Long.class)
+                    .single();
+            jdbc.sql("""
+                    INSERT INTO customer_payment (number, branch_id, customer_id, account_id, payment_date, amount, created_by)
+                    VALUES (:n, :b, :c, :a, :d, 150000.25, :e)""")
+                    .param("n", "MT-DOC-" + b + "-" + c)
+                    .param("b", b)
+                    .param("c", c)
+                    .param("a", acc)
+                    .param("d", b == b1 ? today.minusDays(1) : today)
+                    .param("e", emp)
+                    .update();
+        }
+        String url = "/api/counterparties/" + c + "/documents";
+
+        Cookie director = loginAs("DIRECTOR", null);
+        mvc.perform(get(url).param("role", "CUSTOMER").param("section", "PAYMENTS").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[0].number").value("MT-DOC-" + b2 + "-" + c))
+                .andExpect(jsonPath("$.items[0].amount").value("150000.25"))
+                .andExpect(jsonPath("$.items[0].status").value("DRAFT"))
+                .andExpect(jsonPath("$.items[1].date").value(today.minusDays(1).toString()));
+        mvc.perform(get(url).param("role", "CUSTOMER").param("section", "ORDERS").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0));
+        // Mijozda «Kirimlar» yorlig'i yo'q
+        mvc.perform(get(url).param("role", "CUSTOMER").param("section", "RECEIPTS").cookie(director))
+                .andExpect(status().isBadRequest());
+
+        // Filial rahbari — faqat o'z filiali
+        Cookie manager = loginAs("BRANCH_MANAGER", b2);
+        mvc.perform(get(url).param("role", "CUSTOMER").param("section", "PAYMENTS").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].branchCode").value(
+                        jdbc.sql("SELECT code FROM branch WHERE id = :b").param("b", b2).query(String.class).single()));
+
+        // Operatorda payments.view yo'q
+        Cookie operator = loginAs("OPERATOR", b2);
+        mvc.perform(get(url).param("role", "CUSTOMER").param("section", "PAYMENTS").cookie(operator))
+                .andExpect(status().isForbidden());
+    }
 }
