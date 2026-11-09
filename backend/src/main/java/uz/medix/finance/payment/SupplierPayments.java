@@ -74,6 +74,20 @@ class SupplierPayments {
         return LocalDate.now(clock.withZone(TASHKENT));
     }
 
+    /** Hujjat tarixi — audit jurnalidan (eng eskisi birinchi). Kirish huquqi — controllerda {@code find} bilan tekshiriladi. */
+    @Transactional(readOnly = true)
+    List<PaymentModels.PaymentHistoryEvent> history(long id) {
+        return jdbc.sql("""
+                SELECT a.occurred_at, e.full_name AS employee, a.action, a.reason
+                FROM audit_log a LEFT JOIN employee e ON e.id = a.employee_id
+                WHERE a.entity_type = 'supplier_payment' AND a.entity_id = :id
+                ORDER BY a.occurred_at, a.id""")
+                .param("id", String.valueOf(id))
+                .query((rs, n) -> new PaymentModels.PaymentHistoryEvent(rs.getTimestamp("occurred_at").toInstant(), rs.getString("employee"),
+                        rs.getString("action"), rs.getString("reason")))
+                .list();
+    }
+
     @Transactional(readOnly = true)
     OpenDocs openDocs(Actor actor, long branchId, long supplierId) {
         if (!actor.canAccessBranch(branchId)) {

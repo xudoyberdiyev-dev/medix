@@ -61,6 +61,8 @@ final class PaymentModels {
             @Schema(description = "Avval to'langan (MT/YT/AH taqsimotlari)") String paid,
             @Schema(nullable = true, description = "Tashqi raqam — YB yuk xati / hisob-faktura raqami (kirimda)") String extNo) {}
 
+    record PaymentHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
+
     record LastPayment(long id, String number, LocalDate date, String amount) {}
 
     record DocPaymentLine(long paymentId, String number, LocalDate date, String account, String amount) {}

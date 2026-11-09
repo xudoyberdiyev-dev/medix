@@ -62,6 +62,14 @@ class SupplierPaymentController {
         return payments.find(actor(), id);
     }
 
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAuthority('payments.view')")
+    @Operation(summary = "YT tarixi", description = "Audit jurnalidan: yaratildi, tahrirlandi, yuborildi, tasdiqlandi, qaytarildi, bekor qilindi.")
+    List<PaymentModels.PaymentHistoryEvent> supplierPaymentHistory(@PathVariable long id) {
+        payments.find(actor(), id);
+        return payments.history(id);
+    }
+
     @GetMapping("/open-docs")
     @PreAuthorize("hasAuthority('payments.view')")
     @Operation(summary = "YB oldidagi ochiq qarzlar (eng eskisi birinchi) va avans")

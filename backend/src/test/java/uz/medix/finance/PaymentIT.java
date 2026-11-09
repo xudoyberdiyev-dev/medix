@@ -183,6 +183,13 @@ class PaymentIT {
         assertThat(debtOf(b, c)).isEqualTo("2000.00");
         assertThat(balance(k)).isEqualTo("7000.00");
         send(post("/api/payments/customer/" + p1 + "/post"), cashier, "{}").andExpect(jsonPath("$.code").value("payment.notDraft"));
+        mvc.perform(get("/api/payments/customer/" + p1 + "/history").cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("payment.create"))
+                .andExpect(jsonPath("$[1].action").value("payment.update"))
+                .andExpect(jsonPath("$[2].action").value("payment.post"))
+                .andExpect(jsonPath("$[0].employee").isNotEmpty());
+        mvc.perform(get("/api/payments/customer/" + p1 + "/history").cookie(picker)).andExpect(status().isForbidden());
         assertThatThrownBy(() -> jdbc.sql("UPDATE customer_payment SET amount = 1 WHERE id = :p").param("p", p1).update())
                 .hasMessageContaining("oʻzgarmaydi");
 
