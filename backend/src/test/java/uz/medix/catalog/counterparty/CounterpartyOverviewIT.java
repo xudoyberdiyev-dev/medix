@@ -182,7 +182,7 @@ class CounterpartyOverviewIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].action").value("counterparty.create"))
                 .andExpect(jsonPath("$[0].employee").value("Sinov"));
-        mvc.perform(get("/api/counterparties/" + id + "/history").param("role", "SUPPLIER").cookie(loginAs("PICKER", null)))
+        mvc.perform(get("/api/counterparties/" + id + "/history").param("role", "SUPPLIER").cookie(loginAs("PICKER", branch())))
                 .andExpect(status().isForbidden());
     }
 
