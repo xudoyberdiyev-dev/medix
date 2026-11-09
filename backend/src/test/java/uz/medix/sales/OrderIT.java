@@ -1028,7 +1028,13 @@ class OrderIT {
         long driver = jdbc.sql("SELECT id FROM employee WHERE full_name = 'Haydovchi Sinov' AND branch_id = :b").param("b", p.branchId())
                 .query(Long.class).single();
 
-        mvc.perform(get("/api/trips/ready").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) o1)));
+        mvc.perform(get("/api/trips/ready").cookie(keeper))
+                .andExpect(jsonPath("$[*].id", hasItem((int) o1)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].lines").value(hasItem(1)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].qty").value(hasItem(2)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].shortQty").value(hasItem(0)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].controlled").value(hasItem(false)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].readyAt").exists());
         mvc.perform(get("/api/trips/options").param("branchId", String.valueOf(p.branchId())).cookie(keeper))
                 .andExpect(jsonPath("$.vehicles[0].hasRefrigerator").value(true))
                 .andExpect(jsonPath("$.drivers[0].fullName").value("Haydovchi Sinov"));
@@ -1048,6 +1054,10 @@ class OrderIT {
                 .andReturn();
         long t1 = id(trip);
         assertThat(statusOf(o1)).isEqualTo("LOADING");
+        mvc.perform(get("/api/trips").param("branchId", String.valueOf(p.branchId())).cookie(keeper))
+                .andExpect(jsonPath("$[?(@.id == " + t1 + ")].plateNumber").value(hasItem(plate)))
+                .andExpect(jsonPath("$[?(@.id == " + t1 + ")].refrigerator").value(hasItem(true)))
+                .andExpect(jsonPath("$[?(@.id == " + t1 + ")].marked").value(hasItem(0)));
         String nk1 = jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o1).query(String.class).single();
         // Nakladnoy — server PDF (raqam, mahsulot, miqdor, imzolar)
         assertThat(pdfText("/api/orders/" + o1 + "/waybill/pdf", keeper)).contains("Nakladnoy", nk1, "BY Reys", "Jami", "Qabul qildi");
@@ -1289,6 +1299,9 @@ class OrderIT {
         send(post("/api/trips/pickup"), keeper, "{\"orderId\":" + o2 + "}").andExpect(status().isOk());
         send(post("/api/trips/pickup/" + o2 + "/handover"), keeper, "").andExpect(jsonPath("$.sale", matchesPattern("SV-[A-Z]{3}-\\d{6}")));
         assertThat(statusOf(o2)).isEqualTo("IN_TRANSIT");
+        // «Topshirilgan» (prototip Shipping): o'zi olib ketdi — reyssiz
+        mvc.perform(get("/api/trips/handed").cookie(keeper))
+                .andExpect(jsonPath("$[?(@.orderId == " + o2 + ")].method").value(hasItem("PICKUP")));
         assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
                         .query(String.class).single())
                 .isEqualTo("3000.00");

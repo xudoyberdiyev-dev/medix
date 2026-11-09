@@ -22,8 +22,23 @@ final class TripModels {
 
     record PickupRequest(@NotNull(message = "{validation.required}") Long orderId) {}
 
+    /** Jo'natishga tayyor buyurtma (prototip Shipping «Tayyor»): hudud bo'yicha guruh, yetkazish sanasi, belgilar. */
     record ReadyOrder(long id, String number, long branchId, String customer, @Schema(nullable = true) String address, String delivery, int places,
-            String total) {}
+            String total,
+            @Schema(nullable = true, description = "Mijoz telefoni") String phone,
+            @Schema(nullable = true, description = "Mijoz hududi") String region,
+            @Schema(nullable = true) LocalDate deliveryDate,
+            @Schema(description = "Qatorlar soni") int lines,
+            @Schema(description = "Jami miqdor (dona)") int qty,
+            @Schema(description = "Terish tugab «Hujjatlashtirilmoqda»ga o'tgan vaqt") Instant readyAt,
+            @Schema(description = "Nazoratdagi preparat bor") boolean controlled,
+            @Schema(description = "Yetishmagan miqdor (buyurtma − yig'ilgan)") int shortQty) {}
+
+    /** Topshirilgan sotuv (prototip Shipping «Topshirilgan», so'nggi 30 kun). */
+    record HandedSale(long id, String number, long orderId, String orderNumber, long customerId, String customer,
+            @Schema(nullable = true) String region,
+            @Schema(description = "PICKUP — o'zi olib ketdi, TRIP — reys bilan") String method,
+            @Schema(nullable = true) String tripNumber, Instant at, String total, String by) {}
 
     record VehicleOption(long id, String plateNumber, String model, @Schema(description = "Muzlatkichi bor (faqat ma'lumot)") boolean hasRefrigerator,
             @Schema(description = "Faol reysdagi joylar (Rejalashtirilgan / Yo'lda)") int busyPlaces) {}
@@ -41,7 +56,13 @@ final class TripModels {
             @Schema(description = "Mijoz imzosi olinganmi (ixtiyoriy)") boolean signed) {}
 
     record TripSummary(long id, String number, long branchId, LocalDate tripDate, TripStatus status, String vehicle,
-            String driver, int orders, int places, String total, Instant createdAt) {}
+            String driver, int orders, int places, String total, Instant createdAt,
+            @Schema(nullable = true) String driverPhone,
+            @Schema(description = "Davlat raqami") String plateNumber,
+            @Schema(nullable = true, description = "Mashina modeli") String vehicleModel,
+            @Schema(description = "Muzlatkichi bor (faqat ma'lumot)") boolean refrigerator,
+            @Schema(description = "Yetkazilgan (to'liq yoki qisman) bekatlar") int delivered,
+            @Schema(description = "Natijasi belgilangan bekatlar") int marked) {}
 
     record TripDetail(long id, String number, long branchId, LocalDate tripDate, TripStatus status, long vehicleId, String vehicle,
             long driverId, String driver, @Schema(nullable = true) String note, int places,
