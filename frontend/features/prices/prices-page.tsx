@@ -57,10 +57,16 @@ export function PricesPage() {
   const branchId = branchOverride ?? (me.data && !me.data.allBranches ? (me.data.branchId ?? null) : (selected ?? active[0]?.id ?? null));
   const canSet = can(me.data, PRICE_CREATE);
   // Bildirishnomadan oʻtish: ?tab=documents&open=<id> — NO darhol ochiladi
-  const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[] } | null>(() => {
+  // «Narx oʻrnatish» sahifasidan «Kirim boʻyicha»: ?new=receipt — yangi NO kirim rejimida ochiladi
+  const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[]; mode?: "RECEIPT" } | null>(() => {
+    if (params.get("new") === "receipt") return { id: null, mode: "RECEIPT" };
     const id = Number(params.get("open"));
     return Number.isInteger(id) && id > 0 ? { id } : null;
   });
+  const openSet = (priceTypeId?: number) =>
+    router.push(
+      `/prices/set?${new URLSearchParams({ ...(branchId ? { branch: String(branchId) } : {}), ...(priceTypeId ? { type: String(priceTypeId) } : {}) })}`,
+    );
 
   return (
     <>
@@ -80,7 +86,7 @@ export function PricesPage() {
             </div>
           ) : null}
           {canSet ? (
-            <Button icon={Plus} onClick={() => setEditor({ id: null })}>
+            <Button icon={Plus} onClick={() => openSet()}>
               {t("set")}
             </Button>
           ) : null}
@@ -99,12 +105,7 @@ export function PricesPage() {
         />
       </div>
       {tab === "types" ? (
-        <PriceTypesTab
-          branchId={branchId}
-          canSet={canSet}
-          canEdit={can(me.data, "lookups.ptypes")}
-          onSetPrices={() => setEditor({ id: null })}
-        />
+        <PriceTypesTab branchId={branchId} canSet={canSet} canEdit={can(me.data, "lookups.ptypes")} onSetPrices={(id) => openSet(id)} />
       ) : tab === "prices" ? (
         <PricesTab branchId={branchId} canSet={canSet} onSetPrices={(lines) => setEditor({ id: null, preset: lines })} />
       ) : (
@@ -115,6 +116,7 @@ export function PricesPage() {
           id={editor.id}
           branchId={branchId}
           preset={editor.preset}
+          initialMode={editor.mode}
           canSet={canSet}
           onClose={() => setEditor(null)}
           onCreated={(id) => setEditor({ id })}

@@ -123,15 +123,12 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
 
   await page.goto("/prices");
   await page.getByRole("button", { name: "Narx oʻrnatish" }).click();
-  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
-  await page.getByPlaceholder("Qidirish").fill("Amoksitsillin");
-  await page.getByRole("option", { name: /Amoksitsillin E2E/ }).click();
-  await choose(page, "Narx turi", /^Narx$/);
-  await field(page, "Yangi narx").first().fill("5000");
-  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
-  await page.getByRole("button", { name: "Oʻtkazish" }).click();
-  await expect(page.getByText("Narxlar kuchga kirdi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/prices\/set/);
+  await page.getByRole("searchbox", { name: "Qidiruv" }).fill("Amoksitsillin");
+  await page.getByRole("textbox", { name: /Yangi narx \(QQS bilan\) — Amoksitsillin E2E/ }).fill("5000");
+  await page.getByRole("button", { name: "Saqlash" }).first().click();
+  await page.getByRole("dialog", { name: "Narxlarni saqlash" }).getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText(/Saqlandi: NO-[A-Z]{3}-\d{6} — 1 ta narx/)).toBeVisible();
 
   await page.goto("/opening");
   await page.getByRole("button", { name: "Qoldiq kiritish" }).first().click();

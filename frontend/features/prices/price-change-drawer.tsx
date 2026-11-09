@@ -44,6 +44,8 @@ export function PriceChangeDrawer(props: {
   id: number | null;
   branchId: number;
   preset?: DraftLine[];
+  /** Yangi hujjat rejimi (masalan, «Narx oʻrnatish» sahifasidan «Kirim boʻyicha»). */
+  initialMode?: "PRODUCT" | "RECEIPT";
   canSet: boolean;
   onClose: () => void;
   onCreated: (id: number) => void;
@@ -85,6 +87,7 @@ function Editor({
   doc,
   branchId,
   preset,
+  initialMode,
   canSet,
   onClose,
   onCreated,
@@ -92,6 +95,7 @@ function Editor({
   doc: PriceChangeDetail | null;
   branchId: number;
   preset?: DraftLine[];
+  initialMode?: "PRODUCT" | "RECEIPT";
   canSet: boolean;
   onClose: () => void;
   onCreated: (id: number) => void;
@@ -120,7 +124,7 @@ function Editor({
   });
   const [local, setLocal] = useState<string | null>(null);
   // «Kirim boʻyicha» rejimi (SPEC 6): narx faqat tanlangan oʻtkazilgan kirim partiyalariga.
-  const [mode, setMode] = useState<"PRODUCT" | "RECEIPT">(doc?.receiptId ? "RECEIPT" : "PRODUCT");
+  const [mode, setMode] = useState<"PRODUCT" | "RECEIPT">(doc?.receiptId ? "RECEIPT" : doc ? "PRODUCT" : (initialMode ?? "PRODUCT"));
   const [receipt, setReceipt] = useState<string | null>(doc?.receiptId ? String(doc.receiptId) : null);
   const [receiptLabel, setReceiptLabel] = useState<string | null>(doc?.receiptNumber ?? null);
   const [batchType, setBatchType] = useState<string | null>(null);

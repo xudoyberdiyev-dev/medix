@@ -64,7 +64,7 @@ export function PriceTypesTab({
   branchId: number | null;
   canSet: boolean;
   canEdit: boolean;
-  onSetPrices: () => void;
+  onSetPrices: (priceTypeId: number) => void;
 }) {
   const t = useTranslations("prices.types");
   const qc = useQueryClient();
@@ -160,7 +160,7 @@ export function PriceTypesTab({
 
   const actions = (r: PriceType) =>
     [
-      canSet && r.active ? { key: "set", label: t("aSet"), icon: <Icon icon={Tag} />, onSelect: onSetPrices } : null,
+      canSet && r.active ? { key: "set", label: t("aSet"), icon: <Icon icon={Tag} />, onSelect: () => onSetPrices(r.id) } : null,
       canEdit ? { key: "edit", label: t("aEdit"), icon: <Icon icon={Pencil} />, onSelect: () => (setSelId(r.id), setEdit(r)) } : null,
       { key: "hist", label: t("aHist"), icon: <Icon icon={History} />, onSelect: () => (setSelId(r.id), setHist(r)) },
     ].filter((x) => x !== null);
@@ -184,7 +184,7 @@ export function PriceTypesTab({
           <>
             <span className="mr-2 font-semibold">{sel.name}</span>
             {canSet ? (
-              <Button variant="secondary" icon={Tag} disabled={!sel.active} onClick={onSetPrices}>
+              <Button variant="secondary" icon={Tag} disabled={!sel.active} onClick={() => onSetPrices(sel.id)}>
                 {t("aSet")}
               </Button>
             ) : null}

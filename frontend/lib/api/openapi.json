@@ -7808,6 +7808,43 @@
         "tags" : [ "pricing" ]
       }
     },
+    "/api/prices/grid" : {
+      "get" : {
+        "description" : "Faol mahsulotlar × narx turi: amaldagi, kelgusi, bazaviy narx; kirim narxlari — faqat special.cost bilan.",
+        "operationId" : "grid",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "priceTypeId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PriceGrid"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Narx o'rnatish» jadvali",
+        "tags" : [ "pricing" ]
+      }
+    },
     "/api/prices/history" : {
       "get" : {
         "description" : "branchId berilmasa — o'z filiali (yoki birinchi filial); priceTypeId — bazaviy.",
@@ -21346,6 +21383,100 @@
           }
         },
         "required" : [ "branchId", "branchName", "createdAt", "createdBy", "effectiveFrom", "id", "lines", "number", "priceTypes", "status" ]
+      },
+      "PriceGrid" : {
+        "type" : "object",
+        "properties" : {
+          "batchLinked" : {
+            "type" : "boolean"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PriceGridRow"
+            }
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceTypeName" : {
+            "type" : "string"
+          },
+          "showCost" : {
+            "type" : "boolean",
+            "description" : "Tannarx ustunlari ko'rinadimi (special.cost)"
+          }
+        },
+        "required" : [ "batchLinked", "branchId", "items", "priceTypeId", "priceTypeName", "showCost" ]
+      },
+      "PriceGridRow" : {
+        "type" : "object",
+        "properties" : {
+          "avgCost" : {
+            "type" : "string",
+            "description" : "O'rtacha kirim narxi — faqat special.cost bilan"
+          },
+          "basePrice" : {
+            "type" : "string",
+            "description" : "Bazaviy tur narxi"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "costLimit" : {
+            "type" : "string",
+            "description" : "Tannarx chegarasi (qoldiqdagi eng yuqori) — faqat special.cost bilan"
+          },
+          "country" : {
+            "type" : "string"
+          },
+          "currentPrice" : {
+            "type" : "string",
+            "description" : "Bugun amaldagi narx (QQS bilan)"
+          },
+          "lastCost" : {
+            "type" : "string",
+            "description" : "Oxirgi kirim narxi — faqat special.cost bilan"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "nextFrom" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "nextPrice" : {
+            "type" : "string",
+            "description" : "Kelgusi (rejalashtirilgan) narx"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "searchText" : {
+            "type" : "string",
+            "description" : "Qidiruv matni (lotin, normallashgan)"
+          },
+          "supplyEmployee" : {
+            "type" : "string"
+          },
+          "vatRate" : {
+            "type" : "string",
+            "description" : "QQS stavkasi, %"
+          }
+        },
+        "required" : [ "code", "name", "productId", "searchText", "vatRate" ]
       },
       "PriceHistory" : {
         "type" : "object",

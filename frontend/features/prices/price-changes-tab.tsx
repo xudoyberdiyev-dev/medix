@@ -110,7 +110,7 @@ export function PriceChangesTab({ branchId, onOpen }: { branchId: number | null;
             e.stopPropagation();
             onOpen(d.id);
           }}
-          className="inline-flex size-7 items-center justify-center rounded-md text-text-secondary hover:bg-surface-subtle hover:text-text-primary"
+          className="inline-flex size-7 items-center justify-center rounded-md text-text-secondary hover:bg-background hover:text-text-primary"
         >
           <ArrowUpRight className="size-4" strokeWidth={1.5} aria-hidden />
         </button>

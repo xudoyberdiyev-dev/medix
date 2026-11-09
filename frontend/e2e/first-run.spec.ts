@@ -237,16 +237,19 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
 
   // Narx: NO → o'tkazish → amaldagi narx
   await page.goto("/prices");
+  // «Narx oʻrnatish» — toʻliq sahifa: qidiruv, jadvalda yangi narx, «Oʻzgartirilgan» koʻrinishi, tasdiq oynasi
   await page.getByRole("button", { name: "Narx oʻrnatish" }).click();
-  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
-  await page.getByPlaceholder("Qidirish").fill("E2E");
-  await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
-  await choose(page, "Narx turi", /^Narx$/);
-  await field(page, "Yangi narx").first().fill("2500");
-  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
-  await page.getByRole("button", { name: "Oʻtkazish" }).click();
-  await expect(page.getByText("Narxlar kuchga kirdi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/prices\/set/);
+  await expect(page.getByRole("heading", { name: /Narx oʻrnatish: Narx/ })).toBeVisible();
+  await page.getByRole("searchbox", { name: "Qidiruv" }).fill("E2E");
+  await page.getByRole("textbox", { name: /Yangi narx \(QQS bilan\) — Paracetamol E2E/ }).fill("2500");
+  await page.getByRole("tab", { name: /Oʻzgartirilgan/ }).click();
+  await expect(page.getByText("1 ta narx oʻzgartirildi")).toBeVisible();
+  await page.getByRole("button", { name: "Saqlash" }).first().click();
+  const dlg = page.getByRole("dialog", { name: "Narxlarni saqlash" });
+  await expect(dlg.getByText(/1 ta narx .* dan kuchga kiradi/)).toBeVisible();
+  await dlg.getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText(/Saqlandi: NO-[A-Z]{3}-\d{6} — 1 ta narx/)).toBeVisible();
   await page.goto("/prices?tab=prices");
   await expect(page.getByRole("cell", { name: "2.500,00" })).toBeVisible();
   // Narx oʻzgarishlari: holat yorligʻi, mahsulot boʻyicha qidiruv (kirillda), manba

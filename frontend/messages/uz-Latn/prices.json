@@ -195,5 +195,90 @@
     "histT": "Tarix: {n}",
     "hUpdate": "Tahrirlandi",
     "close": "Yopish"
+  },
+  "set": {
+    "crumb": "Narxlar",
+    "title": "Narx oʻrnatish",
+    "heading": "Narx oʻrnatish: {t} (soʻm) · {b}",
+    "close": "Yopish",
+    "save": "Saqlash",
+    "cancel": "Ortga",
+    "leave": "Saqlanmagan narxlar bor. Sahifadan chiqilsinmi?",
+    "modeLabel": "Narx oʻrnatish rejimi",
+    "modeProd": "Mahsulot boʻyicha",
+    "modeRc": "Kirim boʻyicha",
+    "type": "Narx turi",
+    "branch": "Filial",
+    "eff": "Kuchga kirish sanasi",
+    "rel": "Ustama nisbatan",
+    "relOpt": {
+      "avg": "Oʻrtacha kirim narxi",
+      "last": "Oxirgi kirim narxi",
+      "base": "Bazaviy narx"
+    },
+    "pct": "Ustama / chegirma, %",
+    "pctPh": "+25 yoki −5",
+    "apply": "Qoʻllash",
+    "rnd": "Yaxlitlash",
+    "rndOff": "Oʻchiq",
+    "search": "Qidiruv",
+    "searchPh": "Kod, nom, IKPU, Farm ID, shtrix-kod",
+    "f": {
+      "maker": "Ishlab chiqaruvchi",
+      "category": "Kategoriya",
+      "country": "Mamlakat",
+      "supply": "Taʼminot masʼuli"
+    },
+    "clear": "Filtrlarni tozalash",
+    "viewsLabel": "Koʻrinishlar",
+    "views": {
+      "all": "Hammasi",
+      "noPrice": "Narxi yoʻqlar",
+      "changed": "Oʻzgartirilgan",
+      "below": "Tannarxdan past",
+      "big": "20% dan koʻp"
+    },
+    "caption": "Narx oʻrnatish jadvali",
+    "k": {
+      "code": "Kod",
+      "prod": "Mahsulot",
+      "cat": "Kategoriya",
+      "avg": "Oʻrtacha kirim",
+      "last": "Oxirgi kirim",
+      "cur": "Joriy narx (QQS bilan)",
+      "new": "Yangi narx (QQS bilan)",
+      "chg": "Oʻzgarish",
+      "mk": "Ustama",
+      "flags": "Belgilar"
+    },
+    "loading": "Yuklanmoqda…",
+    "empty": "Mahsulot topilmadi — filtrlarni oʻzgartiring",
+    "nextChip": "kelgusi: {p} · {d}",
+    "noVat": "QQSsiz {v}",
+    "flBelow": "Tannarxdan past ({c})",
+    "flBelow0": "Tannarxdan past — Direktor tasdigʻi kerak",
+    "flBig": "Oʻzgarish {x}",
+    "more": "Yana koʻrsatish ({n})",
+    "foot": "{n} ta narx oʻzgartirildi · {m} ta tannarxdan past · {k} ta 20% dan koʻp",
+    "applied": "{n} ta qatorga qoʻllandi",
+    "dlgTitle": "Narxlarni saqlash",
+    "d": {
+      "eff": "{n} ta narx {d} dan kuchga kiradi",
+      "avg": "Oʻrtacha oʻzgarish {x}",
+      "branch": "Filial: {b}",
+      "drafts": "Qoralama buyurtmalarda narx kuchga kirgach yangilanadi",
+      "conf": "Tasdiqlangan buyurtma va sotuv narxi oʻzgarmaydi",
+      "below": "{n} ta narx tannarxdan past — hujjat Direktor tasdigʻiga yuboriladi",
+      "big": "20% dan koʻp oʻzgarganlar"
+    },
+    "savedPosted": "Saqlandi: {no} — {n} ta narx {d} dan kuchda",
+    "savedPending": "Saqlandi: {no} — tannarxdan past narx bor, Direktor tasdigʻi kutilmoqda",
+    "errors": {
+      "pct": "Foizni kiriting, masalan 25 yoki −5",
+      "eff": "Sanani kk.oo.yyyy koʻrinishida kiriting",
+      "past": "Oʻtgan sana — bugun yoki keyingi sanani tanlang",
+      "price": "Narx 0 dan katta boʻlishi kerak — qizil qatorlarni tuzating",
+      "none": "Oʻzgartirilgan narx yoʻq — yangi narx kiriting"
+    }
   }
 }

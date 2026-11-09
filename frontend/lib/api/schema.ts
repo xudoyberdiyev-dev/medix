@@ -3441,6 +3441,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/prices/grid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * «Narx o'rnatish» jadvali
+         * @description Faol mahsulotlar × narx turi: amaldagi, kelgusi, bazaviy narx; kirim narxlari — faqat special.cost bilan.
+         */
+        get: operations["grid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/prices/history": {
         parameters: {
             query?: never;
@@ -8865,6 +8885,45 @@ export interface components {
             receiptNumber?: string;
             /** @enum {string} */
             status: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED";
+        };
+        PriceGrid: {
+            batchLinked: boolean;
+            /** Format: int64 */
+            branchId: number;
+            items: components["schemas"]["PriceGridRow"][];
+            /** Format: int64 */
+            priceTypeId: number;
+            priceTypeName: string;
+            /** @description Tannarx ustunlari ko'rinadimi (special.cost) */
+            showCost: boolean;
+        };
+        PriceGridRow: {
+            /** @description O'rtacha kirim narxi — faqat special.cost bilan */
+            avgCost?: string;
+            /** @description Bazaviy tur narxi */
+            basePrice?: string;
+            category?: string;
+            code: string;
+            /** @description Tannarx chegarasi (qoldiqdagi eng yuqori) — faqat special.cost bilan */
+            costLimit?: string;
+            country?: string;
+            /** @description Bugun amaldagi narx (QQS bilan) */
+            currentPrice?: string;
+            /** @description Oxirgi kirim narxi — faqat special.cost bilan */
+            lastCost?: string;
+            manufacturer?: string;
+            name: string;
+            /** Format: date */
+            nextFrom?: string;
+            /** @description Kelgusi (rejalashtirilgan) narx */
+            nextPrice?: string;
+            /** Format: int64 */
+            productId: number;
+            /** @description Qidiruv matni (lotin, normallashgan) */
+            searchText: string;
+            supplyEmployee?: string;
+            /** @description QQS stavkasi, % */
+            vatRate: string;
         };
         PriceHistory: {
             /** Format: int64 */
@@ -16076,6 +16135,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    grid: {
+        parameters: {
+            query: {
+                branchId: number;
+                priceTypeId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceGrid"];
+                };
             };
         };
     };
