@@ -17,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.medix.finance.MoneyLedger;
 import uz.medix.finance.PartyLedger;
 import uz.medix.finance.opening.OpeningFinanceModels.Kind;
-import uz.medix.finance.opening.OpeningFinanceModels.Line;
-import uz.medix.finance.opening.OpeningFinanceModels.LineRequest;
+import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceLine;
+import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceLineRequest;
 import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceDetail;
 import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceRequest;
 import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceSummary;
@@ -86,14 +86,14 @@ class OpeningFinances {
 
     @Transactional(readOnly = true)
     Optional<OpeningFinanceDetail> find(long id, Actor actor) {
-        List<Line> lines = jdbc.sql("""
+        List<OpeningFinanceLine> lines = jdbc.sql("""
                 SELECT l.id, l.line_no, l.counterparty_id, l.account_id, coalesce(c.name, a.name) AS name, c.tin, l.amount, l.due_date, l.doc_ref
                 FROM opening_finance_line l
                 LEFT JOIN counterparty c ON c.id = l.counterparty_id
                 LEFT JOIN money_account a ON a.id = l.account_id
                 WHERE l.opening_id = :id ORDER BY l.line_no""")
                 .param("id", id)
-                .query((rs, n) -> new Line(rs.getLong("id"), rs.getInt("line_no"), (Long) rs.getObject("counterparty_id"),
+                .query((rs, n) -> new OpeningFinanceLine(rs.getLong("id"), rs.getInt("line_no"), (Long) rs.getObject("counterparty_id"),
                         (Long) rs.getObject("account_id"), rs.getString("name"), rs.getString("tin"),
                         new Money(rs.getBigDecimal("amount")).toString(), date(rs.getDate("due_date")), rs.getString("doc_ref")))
                 .list();
@@ -246,10 +246,10 @@ class OpeningFinances {
     }
 
     /** Qator tekshiruvi: qarz — mijoz/YB belgisi bor kontragent; pul — shu filialning faol hisobi, musbat, takrorlanmaydi. */
-    private void validate(Kind kind, long branchId, List<LineRequest> lines) {
+    private void validate(Kind kind, long branchId, List<OpeningFinanceLineRequest> lines) {
         Set<Long> accounts = new HashSet<>();
         int no = 0;
-        for (LineRequest l : lines) {
+        for (OpeningFinanceLineRequest l : lines) {
             no++;
             Money amount = Money.of(l.amount());
             if (amount.isZero()) {
@@ -289,9 +289,9 @@ class OpeningFinances {
         }
     }
 
-    private void insertLines(long id, List<LineRequest> lines) {
+    private void insertLines(long id, List<OpeningFinanceLineRequest> lines) {
         int no = 0;
-        for (LineRequest l : lines) {
+        for (OpeningFinanceLineRequest l : lines) {
             no++;
             jdbc.sql("""
                     INSERT INTO opening_finance_line (opening_id, line_no, counterparty_id, account_id, amount, due_date, doc_ref)

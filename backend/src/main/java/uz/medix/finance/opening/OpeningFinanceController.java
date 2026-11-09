@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import uz.medix.finance.opening.OpeningFinanceModels.CancelRequest;
+import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceCancelRequest;
 import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceDetail;
 import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceRequest;
 import uz.medix.finance.opening.OpeningFinanceModels.OpeningFinanceSummary;
@@ -91,7 +91,7 @@ class OpeningFinanceController {
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyAuthority('opening.create', 'opening.cancel')")
     @Operation(summary = "Qoralamani bekor qilish")
-    OpeningFinanceDetail cancel(@PathVariable long id, @Valid @RequestBody CancelRequest r) {
+    OpeningFinanceDetail cancel(@PathVariable long id, @Valid @RequestBody OpeningFinanceCancelRequest r) {
         openings.cancel(id, r.reason(), actor());
         return detail(id);
     }
