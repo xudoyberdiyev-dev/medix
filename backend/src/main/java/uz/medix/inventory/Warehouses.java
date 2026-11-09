@@ -179,6 +179,23 @@ public class Warehouses {
         }
     }
 
+    /** Masʼul — shu filialdagi (yoki barcha filiallar) faol xodim; aks holda {@code warehouse.keeperInvalid}. */
+    @Transactional(readOnly = true)
+    public void checkKeeper(Long keeperId, long branchId) {
+        if (keeperId == null) {
+            return;
+        }
+        boolean ok = jdbc.sql("""
+                SELECT EXISTS (SELECT 1 FROM employee WHERE id = :e AND status = 'ACTIVE' AND (branch_id IS NULL OR branch_id = :b))""")
+                .param("e", keeperId)
+                .param("b", branchId)
+                .query(Boolean.class)
+                .single();
+        if (!ok) {
+            throw MedixException.badRequest("warehouse.keeperInvalid");
+        }
+    }
+
     /** Xodim omborchi boʻlgan omborlar. */
     @Transactional(readOnly = true)
     public List<Long> keeperWarehouses(long employeeId) {

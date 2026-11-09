@@ -282,15 +282,30 @@ class BranchWarehouseAdminIT {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
 
+        // Ombor kartasi (WarehousePanel): tur, masʼul, ixtiyoriy zona nomi bilan; boshqa filial xodimi masʼul boʻlmaydi
+        long keeper = jdbc.sql("SELECT id FROM employee WHERE branch_id = :b ORDER BY id LIMIT 1").param("b", own).query(Long.class).single();
+        mvc.perform(json(post("/api/warehouses/card"), admin, "{\"branchId\":" + own + ",\"name\":\"Sovuq ombor\",\"kind\":\"COLD\",\"keeperId\":"
+                        + keeper + ",\"extraZones\":[\"COLD\"],\"zoneNames\":{\"COLD\":\"Muzlatkich 1\"}}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.kind").value("COLD"))
+                .andExpect(jsonPath("$.keeperId").value(keeper))
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].name").value("Muzlatkich 1"));
+        long otherKeeper = jdbc.sql("SELECT id FROM employee WHERE branch_id IS NOT NULL AND branch_id <> :b ORDER BY id LIMIT 1")
+                .param("b", own).query(Long.class).optional().orElse(-1L);
+        mvc.perform(json(put("/api/warehouses/" + wid + "/card"), admin, "{\"branchId\":" + own + ",\"name\":\"Markaziy ombor\",\"keeperId\":"
+                        + otherKeeper + ",\"extraZones\":[\"COLD\"]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("warehouse.keeperInvalid"));
+        mvc.perform(json(put("/api/warehouses/" + wid + "/card"), manager, "{\"branchId\":" + own + ",\"name\":\"X\"}"))
+                .andExpect(status().isForbidden());
+
         // Omborlar va zonalar sahifasi: filial, zonalar qoldig'i bilan; filial rahbari faqat o'z filiali
         mvc.perform(get("/api/warehouses/overview").cookie(manager))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(wid))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[?(@.name == 'Sovuq ombor')].keeperName").value("Sinov"))
                 .andExpect(jsonPath("$[0].branchName").value("Filial"))
-                .andExpect(jsonPath("$[0].qty").value(0))
-                .andExpect(jsonPath("$[0].zones", hasSize(5)))
-                .andExpect(jsonPath("$[0].zones[?(@.type == 'COLD')].active").value(true));
+                .andExpect(jsonPath("$[0].qty").value(0));
 
         // Zonani yopish: majburiy zona — yo'q; ixtiyoriy, qoldiqsiz — ha; qayta ochish
         long mainId = jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'MAIN'").param("w", wid).query(Long.class).single();

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,6 +44,22 @@ class WarehouseController {
     record UpdateWarehouseRequest(
             @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
             @Schema(nullable = true) @Size(max = 500) String address) {}
+
+    /** Ombor kartasi (prototip WarehousePanel): tur, masʼul, ixtiyoriy zonalar va zona nomlari. */
+    record WarehouseCardRequest(
+            @NotNull(message = "{validation.required}") Long branchId,
+            @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
+            @Schema(nullable = true) @Size(max = 500) String address,
+            @Schema(nullable = true) Set<ZoneType> extraZones,
+            @Schema(nullable = true, description = "Ombor turi; berilmasa — NORMAL") WarehouseKind kind,
+            @Schema(nullable = true, description = "Masʼul ombor mudiri (shu filial xodimi)") Long keeperId,
+            @Schema(nullable = true, description = "Zona nomlari turi boʻyicha; berilmagani — standart nom")
+            Map<ZoneType, String> zoneNames) {
+
+        Warehouses.Spec spec() {
+            return new Warehouses.Spec(name, address, kind, keeperId, extraZones == null ? Set.of() : extraZones, zoneNames);
+        }
+    }
 
     record AddZoneRequest(@NotNull(message = "{validation.required}") ZoneType type,
             @Schema(nullable = true) @Size(max = 100) String name) {}
@@ -98,6 +115,30 @@ class WarehouseController {
             throw MedixException.badRequest("warehouse.extraZones");
         }
         return warehouses.create(r.branchId(), r.name(), r.address(), extra);
+    }
+
+    @PostMapping("/card")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Ombor qo'shish (karta: tur, masʼul, zonalar)")
+    Warehouses.Warehouse createCard(@Valid @RequestBody WarehouseCardRequest r) {
+        if (!actor().canAccessBranch(r.branchId()) || !warehouses.branchActive(r.branchId())) {
+            throw MedixException.badRequest("employee.branchUnknown");
+        }
+        warehouses.checkKeeper(r.keeperId(), r.branchId());
+        return warehouses.create(r.branchId(), r.spec());
+    }
+
+    @PutMapping("/{id}/card")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Ombor kartasini saqlash (tur, masʼul, zonalar)")
+    Warehouses.Warehouse updateCard(@PathVariable long id, @Valid @RequestBody WarehouseCardRequest r) {
+        Warehouses.Warehouse w = scoped(id);
+        if (w.branchId() != r.branchId()) {
+            throw MedixException.badRequest("warehouse.branchFixed");
+        }
+        warehouses.checkKeeper(r.keeperId(), w.branchId());
+        return warehouses.configure(id, r.spec());
     }
 
     @PutMapping("/{id}")
