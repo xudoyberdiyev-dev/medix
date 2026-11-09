@@ -826,7 +826,7 @@ export interface paths {
          * Kassalar roʻyxati (kartalar)
          * @description Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.
          */
-        get: operations["overview_5"];
+        get: operations["overview_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -904,7 +904,7 @@ export interface paths {
          * Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)
          * @description To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.
          */
-        get: operations["overview_4"];
+        get: operations["overview_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1839,7 +1839,7 @@ export interface paths {
             cookie?: never;
         };
         /** Inventarizatsiya: holatlar soni va har ombor boʻyicha oxirgi toʻliq inventarizatsiya */
-        get: operations["overview_3"];
+        get: operations["overview_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3386,7 +3386,7 @@ export interface paths {
             cookie?: never;
         };
         /** To'lovlar ro'yxati: MT + YT bitta jadvalda (prototip Payments) */
-        get: operations["overview_2"];
+        get: operations["overview_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3754,7 +3754,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari jadvali (filial bo'yicha statistika bilan, nofaollari ham) */
-        get: operations["overview_1"];
+        get: operations["overview_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5337,7 +5337,7 @@ export interface paths {
          * Ko'chirishlar (ZK, OK, FS)
          * @description Har turdan oxirgi 200 ta; branchId — filial.
          */
-        get: operations["overview"];
+        get: operations["overview_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6069,6 +6069,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/warehouses/card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ombor qo'shish (karta: tur, masʼul, zonalar) */
+        post: operations["createCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Omborlar va zonalar sahifasi: filial → ombor, omborchi, zonalar qoldig'i bilan */
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouses/{id}": {
         parameters: {
             query?: never;
@@ -6097,6 +6131,23 @@ export interface paths {
         put?: never;
         /** Omborni faollashtirish */
         post: operations["activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}/card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ombor kartasini saqlash (tur, masʼul, zonalar) */
+        put: operations["updateCard"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6148,6 +6199,43 @@ export interface paths {
         /** Zona nomini o'zgartirish */
         put: operations["renameZone"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}/zones/{zoneId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zonani yopish
+         * @description Majburiy zona va qoldig'i bor zona yopilmaydi.
+         */
+        post: operations["closeZone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}/zones/{zoneId}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Zonani qayta ochish */
+        post: operations["reopenZone"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6507,6 +6595,7 @@ export interface components {
             orderIds: number[];
         };
         AddZoneRequest: {
+            name?: string;
             /** @enum {string} */
             type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
@@ -12101,6 +12190,48 @@ export interface components {
             name: string;
             zones: components["schemas"]["Zone"][];
         };
+        WarehouseCardRequest: {
+            address?: string;
+            /** Format: int64 */
+            branchId: number;
+            extraZones?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
+            /**
+             * Format: int64
+             * @description Masʼul ombor mudiri (shu filial xodimi)
+             */
+            keeperId?: number;
+            /**
+             * @description Ombor turi; berilmasa — NORMAL
+             * @enum {string}
+             */
+            kind?: "NORMAL" | "COLD";
+            name: string;
+            /** @description Zona nomlari turi boʻyicha; berilmagani — standart nom */
+            zoneNames?: {
+                [key: string]: string;
+            };
+        };
+        WarehouseOverviewItem: {
+            active: boolean;
+            address?: string;
+            branchCode: string;
+            /** Format: int64 */
+            branchId: number;
+            branchName: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            keeperId?: number;
+            keeperName?: string;
+            /** @enum {string} */
+            kind: "NORMAL" | "COLD";
+            name: string;
+            /** Format: int64 */
+            products: number;
+            /** Format: int64 */
+            qty: number;
+            zones: components["schemas"]["WarehouseZoneStock"][];
+        };
         WarehouseRef: {
             /** Format: int64 */
             id: number;
@@ -12226,6 +12357,19 @@ export interface components {
             status: "DRAFT" | "IN_TRANSIT" | "RECEIVED" | "CANCELLED";
             toWarehouse: components["schemas"]["WarehouseRef"];
             toZone?: components["schemas"]["ZoneRef"];
+        };
+        WarehouseZoneStock: {
+            active: boolean;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** Format: int64 */
+            products: number;
+            /** Format: int64 */
+            qty: number;
+            sellable: boolean;
+            /** @enum {string} */
+            type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
         WorkerReportView: {
             /** Format: int64 */
@@ -12413,6 +12557,7 @@ export interface components {
             zone: components["schemas"]["ZoneRef"];
         };
         Zone: {
+            active: boolean;
             /** Format: int64 */
             id: number;
             name: string;
@@ -13733,7 +13878,7 @@ export interface operations {
             };
         };
     };
-    overview_5: {
+    overview_6: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -13857,7 +14002,7 @@ export interface operations {
             };
         };
     };
-    overview_4: {
+    overview_5: {
         parameters: {
             query?: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
@@ -15244,7 +15389,7 @@ export interface operations {
             };
         };
     };
-    overview_3: {
+    overview_4: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -17374,7 +17519,7 @@ export interface operations {
             };
         };
     };
-    overview_2: {
+    overview_3: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -17955,7 +18100,7 @@ export interface operations {
             };
         };
     };
-    overview_1: {
+    overview_2: {
         parameters: {
             query: {
                 branchId: number;
@@ -20281,7 +20426,7 @@ export interface operations {
             };
         };
     };
-    overview: {
+    overview_1: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -21276,6 +21421,50 @@ export interface operations {
             };
         };
     };
+    createCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarehouseCardRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WarehouseOverviewItem"][];
+                };
+            };
+        };
+    };
     update: {
         parameters: {
             query?: never;
@@ -21312,6 +21501,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    updateCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarehouseCardRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -21391,6 +21606,52 @@ export interface operations {
                 "application/json": components["schemas"]["RenameZoneRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    closeZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                zoneId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Warehouse"];
+                };
+            };
+        };
+    };
+    reopenZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                zoneId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {

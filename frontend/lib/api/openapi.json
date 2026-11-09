@@ -1835,7 +1835,7 @@
     "/api/cash/overview" : {
       "get" : {
         "description" : "Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.",
-        "operationId" : "overview_5",
+        "operationId" : "overview_6",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2083,7 +2083,7 @@
     "/api/counterparties/overview" : {
       "get" : {
         "description" : "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.",
-        "operationId" : "overview_4",
+        "operationId" : "overview_5",
         "parameters" : [ {
           "in" : "query",
           "name" : "role",
@@ -4184,7 +4184,7 @@
     },
     "/api/inventory-counts/overview" : {
       "get" : {
-        "operationId" : "overview_3",
+        "operationId" : "overview_4",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7492,7 +7492,7 @@
     },
     "/api/payments/overview" : {
       "get" : {
-        "operationId" : "overview_2",
+        "operationId" : "overview_3",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -8372,7 +8372,7 @@
     },
     "/api/price-types/overview" : {
       "get" : {
-        "operationId" : "overview_1",
+        "operationId" : "overview_2",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -12512,7 +12512,7 @@
     "/api/transfers/overview" : {
       "get" : {
         "description" : "Har turdan oxirgi 200 ta; branchId — filial.",
-        "operationId" : "overview",
+        "operationId" : "overview_1",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -13947,6 +13947,57 @@
         "tags" : [ "warehouses" ]
       }
     },
+    "/api/warehouses/card" : {
+      "post" : {
+        "operationId" : "createCard",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WarehouseCardRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Ombor qo'shish (karta: tur, masʼul, zonalar)",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/overview" : {
+      "get" : {
+        "operationId" : "overview",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/WarehouseOverviewItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Omborlar va zonalar sahifasi: filial → ombor, omborchi, zonalar qoldig'i bilan",
+        "tags" : [ "warehouses" ]
+      }
+    },
     "/api/warehouses/{id}" : {
       "put" : {
         "operationId" : "update",
@@ -14010,6 +14061,44 @@
           }
         },
         "summary" : "Omborni faollashtirish",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}/card" : {
+      "put" : {
+        "operationId" : "updateCard",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WarehouseCardRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ombor kartasini saqlash (tur, masʼul, zonalar)",
         "tags" : [ "warehouses" ]
       }
     },
@@ -14132,6 +14221,79 @@
           }
         },
         "summary" : "Zona nomini o'zgartirish",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}/zones/{zoneId}/close" : {
+      "post" : {
+        "description" : "Majburiy zona va qoldig'i bor zona yopilmaydi.",
+        "operationId" : "closeZone",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "zoneId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zonani yopish",
+        "tags" : [ "warehouses" ]
+      }
+    },
+    "/api/warehouses/{id}/zones/{zoneId}/reopen" : {
+      "post" : {
+        "operationId" : "reopenZone",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "zoneId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zonani qayta ochish",
         "tags" : [ "warehouses" ]
       }
     },
@@ -14957,6 +15119,11 @@
       "AddZoneRequest" : {
         "type" : "object",
         "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
           "type" : {
             "type" : "string",
             "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
@@ -29079,6 +29246,105 @@
         },
         "required" : [ "active", "branchId", "id", "kind", "name", "zones" ]
       },
+      "WarehouseCardRequest" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "extraZones" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+            },
+            "uniqueItems" : true
+          },
+          "keeperId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Masʼul ombor mudiri (shu filial xodimi)"
+          },
+          "kind" : {
+            "type" : "string",
+            "description" : "Ombor turi; berilmasa — NORMAL",
+            "enum" : [ "NORMAL", "COLD" ]
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "zoneNames" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Zona nomlari turi boʻyicha; berilmagani — standart nom"
+          }
+        },
+        "required" : [ "branchId", "name" ]
+      },
+      "WarehouseOverviewItem" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "branchCode" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "keeperId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "keeperName" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "NORMAL", "COLD" ]
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "products" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zones" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WarehouseZoneStock"
+            }
+          }
+        },
+        "required" : [ "active", "branchCode", "branchId", "branchName", "id", "kind", "name", "products", "qty", "zones" ]
+      },
       "WarehouseRef" : {
         "type" : "object",
         "properties" : {
@@ -29387,6 +29653,37 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "fromWarehouse", "fromZone", "id", "lines", "number", "qty", "shortageQty", "status", "toWarehouse" ]
+      },
+      "WarehouseZoneStock" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "products" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sellable" : {
+            "type" : "boolean"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "active", "id", "name", "products", "qty", "sellable", "type" ]
       },
       "WorkerReportView" : {
         "type" : "object",
@@ -29812,6 +30109,9 @@
       "Zone" : {
         "type" : "object",
         "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -29827,7 +30127,7 @@
             "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
           }
         },
-        "required" : [ "id", "name", "sellable", "type" ]
+        "required" : [ "active", "id", "name", "sellable", "type" ]
       },
       "ZoneRef" : {
         "type" : "object",

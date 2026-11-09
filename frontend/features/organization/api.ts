@@ -133,7 +133,9 @@ export const useSetZoneActive = () =>
   );
 
 /** Filial → ombor daraxti (prototip AdminOrg): filial nomi va kodi, ichida omborlar. */
-export function warehouseTree(items: WarehouseOverviewItem[]): { branchId: number; name: string; code: string; items: WarehouseOverviewItem[] }[] {
+export function warehouseTree(
+  items: WarehouseOverviewItem[],
+): { branchId: number; name: string; code: string; items: WarehouseOverviewItem[] }[] {
   const groups = new Map<number, { branchId: number; name: string; code: string; items: WarehouseOverviewItem[] }>();
   for (const w of items) {
     const g = groups.get(w.branchId) ?? { branchId: w.branchId, name: w.branchName, code: w.branchCode, items: [] };

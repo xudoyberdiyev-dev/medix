@@ -56,9 +56,9 @@ describe("ombor kartasi (WarehousePanel)", () => {
       kind: "COLD",
       keeperId: 9,
       zones: [
-        { id: 1, type: "MAIN", name: "Javon", sellable: true },
-        { id: 2, type: "RECEIVING", name: "Qabul", sellable: false },
-        { id: 3, type: "SAFE", name: "Seyf", sellable: true },
+        { id: 1, type: "MAIN", name: "Javon", sellable: true, active: true },
+        { id: 2, type: "RECEIVING", name: "Qabul", sellable: false, active: true },
+        { id: 3, type: "SAFE", name: "Seyf", sellable: true, active: true },
       ],
     };
     const f = formFromWarehouse(w, { branchId: 1, branchAddress: "Chilonzor", zoneNames: names });

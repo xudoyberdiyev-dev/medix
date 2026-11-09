@@ -161,9 +161,10 @@
     "zFail": "Zona saqlanmadi",
     "zAddT": "{w}: yangi zona",
     "zAdded": "«{zone}» zonasi qoʻshildi",
-    "allZones": "Bu omborda barcha zona turlari bor. Yopilgan zonani jadvaldagi «…» menyusidan qayta oching.",
+    "allZones": "Yopilgan zonani jadvaldagi «…» menyusidan qayta oching.",
     "requiredNote": "Qabul, Asosiy saqlash, Karantin va Joʻnatish zonalari har omborda doim bor.",
     "eReq": "Zona nomi kiritilmagan. Nom yozing.",
-    "eDup": "Bu omborda shu nomli zona bor. Boshqa nom tanlang."
+    "eDup": "Bu omborda shu nomli zona bor. Boshqa nom tanlang.",
+    "allZonesT": "Barcha zona turlari bor"
   }
 }

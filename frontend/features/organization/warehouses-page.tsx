@@ -85,7 +85,9 @@ export function WarehousesPage() {
         <div className="min-w-0">
           <h1 className="flex items-baseline gap-2 text-page-title">
             {t("title")}
-            {overview.data ? <span className="text-body font-normal text-text-secondary tabular-nums">{formatQuantity(items.length)}</span> : null}
+            {overview.data ? (
+              <span className="text-body font-normal text-text-secondary tabular-nums">{formatQuantity(items.length)}</span>
+            ) : null}
           </h1>
           <p className="mt-1 text-body text-text-secondary">{t("subtitle", { z: formatQuantity(activeZoneCount(items)) })}</p>
         </div>
@@ -159,7 +161,9 @@ export function WarehousesPage() {
         </div>
       )}
 
-      {panel ? <CardPanel id={panel.id} branchId={panel.branchId} onClose={() => setPanel(null)} onSaved={(id) => setSelected(id)} /> : null}
+      {panel ? (
+        <CardPanel id={panel.id} branchId={panel.branchId} onClose={() => setPanel(null)} onSaved={(id) => setSelected(id)} />
+      ) : null}
 
       {closing ? (
         <DeactivateDialog
@@ -384,7 +388,9 @@ function AddZoneModal({ w, onClose }: { w: WarehouseOverviewItem; onClose: () =>
       primaryAction={{ label: t("zAdd"), onClick: submit, loading: add.isPending, disabled: !type }}
     >
       {!type ? (
-        <Alert tone="info">{t("allZones")}</Alert>
+        <Alert tone="info" title={t("allZonesT")}>
+          {t("allZones")}
+        </Alert>
       ) : (
         <div className="flex flex-col gap-4">
           <Select
@@ -399,7 +405,11 @@ function AddZoneModal({ w, onClose }: { w: WarehouseOverviewItem; onClose: () =>
           />
           <TextField label={t("zName")} value={name} onChange={setName} error={err} maxLength={100} />
           <p className="text-caption text-text-secondary">{t("requiredNote")}</p>
-          {add.error ? <Alert tone="danger">{describeError(add.error).message}</Alert> : null}
+          {add.error ? (
+            <Alert tone="danger" title={t("zFail")}>
+              {describeError(add.error).message}
+            </Alert>
+          ) : null}
         </div>
       )}
     </Modal>

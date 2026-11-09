@@ -29,7 +29,7 @@ const warehouse = (id: number, branchId: number, types: Warehouse["zones"][numbe
   name: `Ombor ${id}`,
   active: true,
   kind: "NORMAL",
-  zones: types.map((type, i) => ({ id: id * 10 + i, type, name: type, sellable: type === "MAIN" })),
+  zones: types.map((type, i) => ({ id: id * 10 + i, type, name: type, sellable: type === "MAIN", active: true })),
 });
 
 describe("filterBranches", () => {
@@ -88,7 +88,15 @@ describe("Omborlar va zonalar daraxti", () => {
   });
 
   it("faqat faol zonalarni sanaydi", () => {
-    expect(activeZoneCount([item(1, 1, [["MAIN", true], ["COLD", false]]), item(2, 1, [["RECEIVING", true]])])).toBe(2);
+    expect(
+      activeZoneCount([
+        item(1, 1, [
+          ["MAIN", true],
+          ["COLD", false],
+        ]),
+        item(2, 1, [["RECEIVING", true]]),
+      ]),
+    ).toBe(2);
     expect(activeZoneCount([])).toBe(0);
   });
 });
