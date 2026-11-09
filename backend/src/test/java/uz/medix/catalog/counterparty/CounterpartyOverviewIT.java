@@ -177,6 +177,13 @@ class CounterpartyOverviewIT {
         mvc.perform(get("/api/counterparties/" + id).cookie(manager))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.kind").value("PHARMACY"));
+        // Kartochka «Tarix»: yaratish yozuvi, kim bilan
+        mvc.perform(get("/api/counterparties/" + id + "/history").param("role", "CUSTOMER").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("counterparty.create"))
+                .andExpect(jsonPath("$[0].employee").value("Sinov"));
+        mvc.perform(get("/api/counterparties/" + id + "/history").param("role", "SUPPLIER").cookie(loginAs("PICKER", null)))
+                .andExpect(status().isForbidden());
     }
 
     @Test

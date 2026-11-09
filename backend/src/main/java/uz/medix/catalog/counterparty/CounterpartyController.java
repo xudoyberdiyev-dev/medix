@@ -168,6 +168,15 @@ class CounterpartyController {
         return documents.list(actor(), id, customers, section);
     }
 
+    @GetMapping("/{id}/history")
+    @Operation(summary = "Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi)")
+    List<CounterpartyDocuments.CounterpartyHistoryEvent> history(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
+            Authentication auth) {
+        require(auth, role != Role.SUPPLIER ? "clients.view" : "suppliers.view");
+        detail(id);
+        return documents.history(id);
+    }
+
     @GetMapping("/price-type-customers")
     @PreAuthorize("hasAuthority('clients.terms')")
     @Operation(summary = "Narx turiga biriktirish — mijozlar ro'yxati",

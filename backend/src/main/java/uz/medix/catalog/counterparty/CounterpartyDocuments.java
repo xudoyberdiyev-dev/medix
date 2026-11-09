@@ -3,6 +3,7 @@ package uz.medix.catalog.counterparty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -37,6 +38,8 @@ class CounterpartyDocuments {
             @Schema(nullable = true, description = "Ochiladigan hujjat: buyurtma (sotuv, mijoz qaytarishi), aks holda shu hujjat") Long linkId) {}
 
     record CounterpartyDocumentsPage(Section section, List<DocRow> items, @Schema(description = "Shartga mos jami soni") long total) {}
+
+    record CounterpartyHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
 
     private final JdbcClient jdbc;
 
@@ -102,6 +105,20 @@ class CounterpartyDocuments {
                         rs.getObject("link") == null ? null : rs.getLong("link")))
                 .list();
         return new CounterpartyDocumentsPage(section, items, total);
+    }
+
+    /** Kartochka «Tarix» — audit jurnalidan (yaratish, tahrir, shartlar, holat, litsenziya, shartnoma), yangisi birinchi. */
+    @Transactional(readOnly = true)
+    List<CounterpartyHistoryEvent> history(long counterpartyId) {
+        return jdbc.sql("""
+                SELECT a.occurred_at, e.full_name AS employee, a.action, a.reason
+                FROM audit_log a LEFT JOIN employee e ON e.id = a.employee_id
+                WHERE a.entity_type = 'counterparty' AND a.entity_id = :id
+                ORDER BY a.occurred_at DESC, a.id DESC LIMIT 500""")
+                .param("id", String.valueOf(counterpartyId))
+                .query((rs, n) -> new CounterpartyHistoryEvent(rs.getTimestamp("occurred_at").toInstant(), rs.getString("employee"),
+                        rs.getString("action"), rs.getString("reason")))
+                .list();
     }
 
     private static LocalDate date(Date d) {
