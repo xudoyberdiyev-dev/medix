@@ -36,11 +36,12 @@ const vendor = {
   p.on("pageerror", (e) => errs.push(e.message));
   await p.goto(`http://localhost:${port}/${encodeURIComponent(screen)}.dc.html`);
   await p.waitForTimeout(Number(wait));
-  // STEPS (`|` bilan): click:<matn>, btn:<nom>, key:<tugma>, type:<matn>, wait:<ms>, fill:<placeholder>=<qiymat>
+  // STEPS (`|` bilan): click:<matn>, exact:<aniq matn>, btn:<nom>, key:<tugma>, type:<matn>, wait:<ms>, fill:<placeholder>=<qiymat>
   for (const step of (process.env.STEPS || "").split("|").filter(Boolean)) {
     const [kind, ...rest] = step.split(":");
     const arg = rest.join(":");
     if (kind === "click") await p.getByText(arg, { exact: false }).first().click();
+    else if (kind === "exact") await p.getByText(arg, { exact: true }).first().click();
     else if (kind === "btn") await p.getByRole("button", { name: arg }).first().click();
     else if (kind === "key") await p.keyboard.press(arg);
     else if (kind === "type") await p.keyboard.type(arg, { delay: 20 });

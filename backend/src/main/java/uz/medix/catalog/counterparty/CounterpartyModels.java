@@ -24,6 +24,9 @@ final class CounterpartyModels {
 
     enum PaymentType { CASH, TRANSFER, ONLINE }
 
+    /** Kontragent turi (prototip: Dorixona, Klinika, Shifoxona, Distribyutor, Ishlab chiqaruvchi). */
+    enum Kind { PHARMACY, CLINIC, HOSPITAL, DISTRIBUTOR, MAKER }
+
     record Ref(long id, String name) {}
 
     record CounterpartyRow(
@@ -66,6 +69,7 @@ final class CounterpartyModels {
             @Schema(nullable = true) String legalName,
             boolean customer,
             boolean supplier,
+            @Schema(nullable = true) Kind kind,
             @Schema(nullable = true) Ref region,
             @Schema(nullable = true) String address,
             @Schema(nullable = true) String phone,
@@ -89,6 +93,7 @@ final class CounterpartyModels {
             @Schema(nullable = true) @Size(max = 300) String legalName,
             boolean customer,
             boolean supplier,
+            @Schema(nullable = true) Kind kind,
             @Schema(nullable = true) Long regionId,
             @Schema(nullable = true) @Size(max = 500) String address,
             @Schema(nullable = true) @Size(max = 64) String phone,

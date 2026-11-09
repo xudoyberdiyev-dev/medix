@@ -49,11 +49,13 @@ class CounterpartyController {
     private final Counterparties counterparties;
     private final CurrentActor currentActor;
     private final CounterpartyExcel excel;
+    private final CounterpartyOverview overview;
 
-    CounterpartyController(Counterparties counterparties, CurrentActor currentActor, CounterpartyExcel excel) {
+    CounterpartyController(Counterparties counterparties, CurrentActor currentActor, CounterpartyExcel excel, CounterpartyOverview overview) {
         this.counterparties = counterparties;
         this.currentActor = currentActor;
         this.excel = excel;
+        this.overview = overview;
     }
 
     private Actor actor() {
@@ -109,6 +111,15 @@ class CounterpartyController {
 
     private static SortField sort(SortField sort, boolean sortByTin) {
         return sort != null ? sort : sortByTin ? SortField.TIN : SortField.NAME;
+    }
+
+    @GetMapping("/overview")
+    @Operation(summary = "Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)",
+            description = "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.")
+    CounterpartyOverview.CounterpartyOverviewPage overview(
+            @RequestParam(defaultValue = "CUSTOMER") Role role,
+            @RequestParam(required = false) Long branchId) {
+        return overview.overview(actor(), role != Role.SUPPLIER, branchId);
     }
 
     @GetMapping("/price-type-customers")

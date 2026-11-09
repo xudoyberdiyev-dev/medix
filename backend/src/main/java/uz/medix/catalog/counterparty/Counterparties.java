@@ -21,6 +21,7 @@ import uz.medix.catalog.counterparty.CounterpartyModels.ContractRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyDetail;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRow;
+import uz.medix.catalog.counterparty.CounterpartyModels.Kind;
 import uz.medix.catalog.counterparty.CounterpartyModels.License;
 import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
@@ -107,12 +108,12 @@ class Counterparties {
 
     @Transactional(readOnly = true)
     Optional<CounterpartyDetail> find(long id, Actor actor) {
-        record Base(long id, String tin, String name, String legalName, boolean isCustomer, boolean isSupplier, Long regionId,
+        record Base(long id, String tin, String name, String legalName, boolean isCustomer, boolean isSupplier, String kind, Long regionId,
                 String region, String address, String phone, String contactPerson, String email, String bankName,
                 String bankAccount, String bankMfo, String vatCode, String note, boolean blocked, String blockedReason,
                 boolean active) {}
         Optional<Base> base = jdbc.sql("""
-                SELECT c.id, c.tin, c.name, c.legal_name, c.is_customer, c.is_supplier, c.region_id, r.name AS region, c.address,
+                SELECT c.id, c.tin, c.name, c.legal_name, c.is_customer, c.is_supplier, c.kind, c.region_id, r.name AS region, c.address,
                        c.phone, c.contact_person, c.email, c.bank_name, c.bank_account, c.bank_mfo, c.vat_code, c.note,
                        c.blocked, c.blocked_reason, c.active
                 FROM counterparty c LEFT JOIN region r ON r.id = c.region_id WHERE c.id = :id""")
@@ -162,6 +163,7 @@ class Counterparties {
                 .filter(t -> actor.canAccessBranch(t.branchId()))
                 .toList();
         return Optional.of(new CounterpartyDetail(b.id(), b.tin(), b.name(), b.legalName(), b.isCustomer(), b.isSupplier(),
+                b.kind() == null ? null : Kind.valueOf(b.kind()),
                 b.regionId() == null ? null : new Ref(b.regionId(), b.region()), b.address(), b.phone(), b.contactPerson(), b.email(),
                 b.bankName(), b.bankAccount(), b.bankMfo(), b.vatCode(), b.note(), b.blocked(), b.blockedReason(), b.active(),
                 licenses, contracts, terms));
@@ -173,9 +175,9 @@ class Counterparties {
     long create(CounterpartyRequest r) {
         validateCard(r, null);
         long id = jdbc.sql("""
-                INSERT INTO counterparty (tin, name, legal_name, is_customer, is_supplier, region_id, address, phone, contact_person,
+                INSERT INTO counterparty (tin, name, legal_name, is_customer, is_supplier, kind, region_id, address, phone, contact_person,
                                           email, bank_name, bank_account, bank_mfo, vat_code, note)
-                VALUES (:tin, :name, :legal, :customer, :supplier, :region, :address, :phone, :contact, :email, :bank, :account,
+                VALUES (:tin, :name, :legal, :customer, :supplier, :kind, :region, :address, :phone, :contact, :email, :bank, :account,
                         :mfo, :vat, :note) RETURNING id""")
                 .params(cardParams(r))
                 .query(Long.class)
@@ -190,7 +192,7 @@ class Counterparties {
         Map<String, Object> before = lockCard(id);
         validateCard(r, id);
         jdbc.sql("""
-                UPDATE counterparty SET tin = :tin, name = :name, legal_name = :legal, is_customer = :customer, is_supplier = :supplier,
+                UPDATE counterparty SET tin = :tin, name = :name, legal_name = :legal, is_customer = :customer, is_supplier = :supplier, kind = :kind,
                        region_id = :region, address = :address, phone = :phone, contact_person = :contact, email = :email,
                        bank_name = :bank, bank_account = :account, bank_mfo = :mfo, vat_code = :vat, note = :note,
                        updated_at = now(), version = version + 1
@@ -576,6 +578,7 @@ class Counterparties {
         m.put("legal", blankToNull(r.legalName()));
         m.put("customer", r.customer());
         m.put("supplier", r.supplier());
+        m.put("kind", r.kind() == null ? null : r.kind().name());
         m.put("region", r.regionId());
         m.put("address", blankToNull(r.address()));
         m.put("phone", blankToNull(r.phone()));
