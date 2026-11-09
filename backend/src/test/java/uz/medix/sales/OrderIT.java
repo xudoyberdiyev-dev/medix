@@ -1429,8 +1429,8 @@ class OrderIT {
 
         // Kassa (prototip `Cash`): reys bo'yicha qabul — kam sanalsa izoh majburiy, MT sanalgan summaga yoziladi
         Cookie cashier = loginAs("CASHIER", p.branchId());
-        long kassa = jdbc.sql("SELECT id FROM money_account WHERE branch_id = :b AND kind = 'CASH' ORDER BY id LIMIT 1")
-                .param("b", p.branchId()).query(Long.class).single();
+        long kassa = jdbc.sql("INSERT INTO money_account (branch_id, kind, code, name) VALUES (:b, 'CASH', :c, 'Kassa') RETURNING id")
+                .param("b", p.branchId()).param("c", "K-" + UUID.randomUUID().toString().substring(0, 8)).query(Long.class).single();
         String accept = "/api/trips/" + trip + "/cash/accept";
         send(post(accept), cashier, "{\"accountId\":" + kassa + ",\"received\":\"800\"}")
                 .andExpect(status().isBadRequest())
