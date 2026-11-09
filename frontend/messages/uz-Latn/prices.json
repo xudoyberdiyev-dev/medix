@@ -13,7 +13,7 @@
     "branch": "Filial",
     "set": "Narx oʻrnatish",
     "tabCurrent": "Amaldagi narxlar",
-    "tabDocuments": "Narx oʻzgarishlari (NO)",
+    "tabDocuments": "Narx oʻzgarishlari",
     "tabTypes": "Narx turlari"
   },
   "current": {
@@ -45,7 +45,23 @@
     "caption": "NO hujjatlari",
     "allStatuses": "Barcha holatlar",
     "emptyTitle": "Hali narx oʻzgarishi yoʻq",
-    "emptyDescription": "Har narx saqlash NO hujjati boʻladi va tarixi yoziladi."
+    "emptyDescription": "Har narx saqlash NO hujjati boʻladi va tarixi yoziladi.",
+    "no": "№",
+    "createdAt": "Hujjat sanasi",
+    "priceType": "Narx turi",
+    "branch": "Filial",
+    "source": "Manba",
+    "who": "Kim",
+    "note": "Izoh",
+    "srcManual": "Qoʻlda kiritish",
+    "search": "Qidiruv",
+    "searchPlaceholder": "Raqam, izoh yoki mahsulot",
+    "viewsLabel": "Holat boʻyicha",
+    "all": "Hammasi",
+    "fDate": "Hujjat sanasi",
+    "dateInvalid": "Sana notoʻgʻri — KK.OO.YYYY",
+    "clearFilters": "Filtrlarni tozalash",
+    "open": "Ochish"
   },
   "drawer": {
     "kind": "Narx oʻzgarishi",

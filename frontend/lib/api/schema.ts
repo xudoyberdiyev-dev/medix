@@ -6560,9 +6560,22 @@ export interface components {
             code: string;
             reason: string;
         };
+        ChangeFacet: {
+            /** Format: int64 */
+            count: number;
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
+        };
+        ChangeStatusCount: {
+            /** Format: int64 */
+            count: number;
+            /** @enum {string} */
+            status: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED";
         };
         CheckRequest: {
             checkedLines: number[];
@@ -8797,13 +8810,22 @@ export interface components {
             submittedAt?: string;
         };
         PriceChangePage: {
+            branches: components["schemas"]["ChangeFacet"][];
             items: components["schemas"]["PriceChangeSummary"][];
             /** Format: int32 */
             page: number;
+            priceTypes: components["schemas"]["ChangeFacet"][];
             /** Format: int32 */
             size: number;
+            /** @description Holat bo'yicha soni — holatdan boshqa filtrlar bilan */
+            statusCounts: components["schemas"]["ChangeStatusCount"][];
             /** Format: int64 */
             total: number;
+            /**
+             * Format: int64
+             * @description Ruxsat doirasidagi barcha NO hujjatlari (filtrsiz)
+             */
+            totalAll: number;
         };
         PriceChangeRequest: {
             /** Format: int64 */
@@ -8821,6 +8843,7 @@ export interface components {
         PriceChangeSummary: {
             /** Format: int64 */
             branchId: number;
+            branchName: string;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -8832,7 +8855,12 @@ export interface components {
             id: number;
             /** Format: int32 */
             lines: number;
+            note?: string;
             number: string;
+            /** @description Hujjat qatorlaridagi narx turlari (tartib bo'yicha) */
+            priceTypes: string[];
+            /** Format: int64 */
+            receiptId?: number;
             /** @description «Kirim bo'yicha» — kirim raqami */
             receiptNumber?: string;
             /** @enum {string} */
@@ -15640,6 +15668,11 @@ export interface operations {
             query?: {
                 branchId?: number;
                 status?: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED";
+                q?: string;
+                priceTypeIds?: number[];
+                branchIds?: number[];
+                from?: string;
+                to?: string;
                 page?: number;
                 size?: number;
             };

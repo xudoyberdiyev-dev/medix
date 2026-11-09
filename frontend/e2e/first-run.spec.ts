@@ -249,6 +249,13 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await page.keyboard.press("Escape");
   await page.goto("/prices?tab=prices");
   await expect(page.getByRole("cell", { name: "2.500,00" })).toBeVisible();
+  // Narx oʻzgarishlari: holat yorligʻi, mahsulot boʻyicha qidiruv (kirillda), manba
+  await page.goto("/prices?tab=documents");
+  await expect(page.getByRole("tab", { name: /Tasdiqlangan/ })).toBeVisible();
+  await page.getByRole("searchbox", { name: "Qidiruv" }).fill("парацетамол");
+  await expect(page.getByRole("cell", { name: "Qoʻlda kiritish" }).first()).toBeVisible();
+  await page.getByRole("searchbox", { name: "Qidiruv" }).fill("yoq-mahsulot-xyz");
+  await expect(page.getByRole("button", { name: "Filtrlarni tozalash" }).first()).toBeVisible();
   // Narx turlari: bazaviy «Narx» — narxi bor mahsulot soni, tahrirlash va tarix
   await page.goto("/prices");
   await expect(page.getByRole("tab", { name: "Narx turlari", selected: true })).toBeVisible();

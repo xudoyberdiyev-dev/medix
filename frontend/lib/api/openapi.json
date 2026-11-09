@@ -7123,6 +7123,51 @@
           }
         }, {
           "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "priceTypeIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
           "name" : "page",
           "required" : false,
           "schema" : {
@@ -15406,6 +15451,23 @@
         },
         "required" : [ "code", "reason" ]
       },
+      "ChangeFacet" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "id", "name" ]
+      },
       "ChangePasswordRequest" : {
         "type" : "object",
         "properties" : {
@@ -15421,6 +15483,20 @@
           }
         },
         "required" : [ "currentPassword", "newPassword" ]
+      },
+      "ChangeStatusCount" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED" ]
+          }
+        },
+        "required" : [ "count", "status" ]
       },
       "CheckRequest" : {
         "type" : "object",
@@ -21133,6 +21209,12 @@
       "PriceChangePage" : {
         "type" : "object",
         "properties" : {
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChangeFacet"
+            }
+          },
           "items" : {
             "type" : "array",
             "items" : {
@@ -21143,16 +21225,34 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "priceTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChangeFacet"
+            }
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
           },
+          "statusCounts" : {
+            "type" : "array",
+            "description" : "Holat bo'yicha soni — holatdan boshqa filtrlar bilan",
+            "items" : {
+              "$ref" : "#/components/schemas/ChangeStatusCount"
+            }
+          },
           "total" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "totalAll" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Ruxsat doirasidagi barcha NO hujjatlari (filtrsiz)"
           }
         },
-        "required" : [ "items", "page", "size", "total" ]
+        "required" : [ "branches", "items", "page", "priceTypes", "size", "statusCounts", "total", "totalAll" ]
       },
       "PriceChangeRequest" : {
         "type" : "object",
@@ -21193,6 +21293,9 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "branchName" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -21216,8 +21319,22 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "note" : {
+            "type" : "string"
+          },
           "number" : {
             "type" : "string"
+          },
+          "priceTypes" : {
+            "type" : "array",
+            "description" : "Hujjat qatorlaridagi narx turlari (tartib bo'yicha)",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "receiptNumber" : {
             "type" : "string",
@@ -21228,7 +21345,7 @@
             "enum" : [ "DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED" ]
           }
         },
-        "required" : [ "branchId", "createdAt", "createdBy", "effectiveFrom", "id", "lines", "number", "status" ]
+        "required" : [ "branchId", "branchName", "createdAt", "createdBy", "effectiveFrom", "id", "lines", "number", "priceTypes", "status" ]
       },
       "PriceHistory" : {
         "type" : "object",
