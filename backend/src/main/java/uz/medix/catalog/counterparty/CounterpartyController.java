@@ -130,6 +130,18 @@ class CounterpartyController {
         return overview.overview(actor(), customers, branchId, has(auth, customers ? "clients.contact" : "suppliers.contact"));
     }
 
+    @GetMapping("/{id}/summary")
+    @Operation(summary = "Kartochka o'ng paneli: filiallar bo'yicha qarz, limit, oxirgi sotuv/kirim va to'lov")
+    CounterpartyOverview.CounterpartySummary summary(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
+            Authentication auth) {
+        boolean customers = role != Role.SUPPLIER;
+        if (!has(auth, customers ? "clients.view" : "suppliers.view")) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+        detail(id);
+        return overview.summary(actor(), id, customers);
+    }
+
     @GetMapping("/price-type-customers")
     @PreAuthorize("hasAuthority('clients.terms')")
     @Operation(summary = "Narx turiga biriktirish — mijozlar ro'yxati",

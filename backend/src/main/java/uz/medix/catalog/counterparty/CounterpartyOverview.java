@@ -73,6 +73,27 @@ class CounterpartyOverview {
 
     record CounterpartyOverviewPage(List<OverviewRow> items, List<OverviewBranch> branches, LocalDate today) {}
 
+    record LastDoc(LocalDate date, String amount, String number, @Schema(nullable = true) Long id) {}
+
+    record BranchSummary(
+            long branchId,
+            String code,
+            String name,
+            boolean hasTerms,
+            @Schema(description = "Qarz (mijoz — bizga, YB — bizning qarzimiz)") String debt,
+            String advance,
+            String overdue,
+            int maxOverdueDays,
+            @Schema(nullable = true) String creditLimit,
+            @Schema(nullable = true, description = "Qolgan limit = limit − qarz (manfiy bo'lmaydi)") String limitLeft,
+            @Schema(nullable = true, description = "NULL shart — bazaviy narx turi nomi") String priceType,
+            @Schema(nullable = true) String operator,
+            @Schema(nullable = true) Integer paymentDays,
+            @Schema(nullable = true, description = "Mijoz — oxirgi sotuv (id — buyurtma), YB — oxirgi kirim (id — kirim)") LastDoc lastDoc,
+            @Schema(nullable = true) LastDoc lastPayment) {}
+
+    record CounterpartySummary(List<BranchSummary> branches) {}
+
     private final JdbcClient jdbc;
     private final DebtSummaries debts;
     private final Clock clock;
@@ -141,6 +162,76 @@ class CounterpartyOverview {
                 .query(OverviewBranch.class)
                 .list();
         return new CounterpartyOverviewPage(rows, branches, today);
+    }
+
+    /** Kartochka o'ng paneli (prototip CounterpartyCard «Umumiy»): har filial bo'yicha qarz, limit, oxirgi sotuv/kirim va to'lov. */
+    @Transactional(readOnly = true)
+    CounterpartySummary summary(Actor actor, long id, boolean customers) {
+        Side side = customers ? Side.CUSTOMER : Side.SUPPLIER;
+        record Br(long id, String code, String name, boolean hasTerms, BigDecimal creditLimit, String priceType, String operator,
+                Integer paymentDays) {}
+        List<Br> brs = jdbc.sql("""
+                SELECT b.id, b.code, b.name, t.counterparty_id IS NOT NULL AS has_terms, t.credit_limit,
+                       CASE WHEN t.counterparty_id IS NULL THEN NULL ELSE coalesce(pt.name, (SELECT name FROM price_type WHERE base)) END
+                           AS price_type,
+                       op.full_name AS operator,
+                       CASE WHEN :customers THEN t.payment_days ELSE t.supplier_payment_days END AS payment_days
+                FROM branch b
+                LEFT JOIN counterparty_branch_terms t ON t.branch_id = b.id AND t.counterparty_id = :c
+                LEFT JOIN price_type pt ON pt.id = t.price_type_id
+                LEFT JOIN employee op ON op.id = CASE WHEN :customers THEN t.operator_employee_id ELSE t.supply_employee_id END
+                WHERE t.counterparty_id IS NOT NULL
+                   OR EXISTS (SELECT 1 FROM party_ledger p WHERE p.branch_id = b.id AND p.counterparty_id = :c AND p.side = :side)
+                ORDER BY b.code""")
+                .param("c", id)
+                .param("customers", customers)
+                .param("side", side.name())
+                .query((rs, n) -> new Br(rs.getLong("id"), rs.getString("code"), rs.getString("name"), rs.getBoolean("has_terms"),
+                        rs.getBigDecimal("credit_limit"), rs.getString("price_type"), rs.getString("operator"),
+                        rs.getObject("payment_days", Integer.class)))
+                .list()
+                .stream()
+                .filter(b -> actor.canAccessBranch(b.id()))
+                .toList();
+        List<BranchSummary> out = new java.util.ArrayList<>();
+        for (Br b : brs) {
+            DebtSummaries.PartyDebt d = debts.byParty(actor, side, b.id()).get(id);
+            Money debt = d == null ? Money.ZERO : Money.of(d.debt());
+            Money left = null;
+            if (b.creditLimit() != null) {
+                Money l = new Money(b.creditLimit()).minus(debt);
+                left = l.isNegative() ? Money.ZERO : l;
+            }
+            LastDoc lastDoc = customers
+                    ? jdbc.sql("""
+                            SELECT sale_date AS date, total AS amount, number, order_id AS id FROM sale
+                            WHERE customer_id = :c AND branch_id = :b AND status = 'POSTED' ORDER BY sale_date DESC, id DESC LIMIT 1""")
+                            .param("c", id).param("b", b.id()).query((rs, n) -> lastDoc(rs)).optional().orElse(null)
+                    : jdbc.sql("""
+                            SELECT x.receipt_date AS date, coalesce((SELECT abs(sum(p.amount)) FROM party_ledger p WHERE p.side = 'SUPPLIER'
+                                     AND p.doc_type = 'KR' AND p.doc_id = x.id AND p.applies_doc_type IS NULL), 0) AS amount,
+                                   x.number, x.id FROM receipt x
+                            WHERE x.supplier_id = :c AND x.branch_id = :b AND x.status = 'POSTED' ORDER BY x.receipt_date DESC, x.id DESC LIMIT 1""")
+                            .param("c", id).param("b", b.id()).query((rs, n) -> lastDoc(rs)).optional().orElse(null);
+            LastDoc lastPay = jdbc.sql("""
+                    SELECT (max(occurred_at) AT TIME ZONE 'Asia/Tashkent')::date AS date, abs(sum(amount)) AS amount, min(doc_number) AS number,
+                           NULL::bigint AS id
+                    FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :side AND doc_type = :pd
+                    GROUP BY doc_id ORDER BY max(occurred_at) DESC LIMIT 1""")
+                    .param("b", b.id()).param("c", id).param("side", side.name()).param("pd", customers ? "MT" : "YT")
+                    .query((rs, n) -> lastDoc(rs)).optional().orElse(null);
+            out.add(new BranchSummary(b.id(), b.code(), b.name(), b.hasTerms(), debt.toString(),
+                    d == null ? Money.ZERO.toString() : d.advance(), d == null ? Money.ZERO.toString() : d.overdue(),
+                    d == null ? 0 : d.maxOverdueDays(), b.creditLimit() == null ? null : new Money(b.creditLimit()).toString(),
+                    left == null ? null : left.toString(), b.priceType(), b.operator(), b.paymentDays(), lastDoc, lastPay));
+        }
+        return new CounterpartySummary(out);
+    }
+
+    private static LastDoc lastDoc(ResultSet rs) throws SQLException {
+        BigDecimal a = rs.getBigDecimal("amount");
+        return new LastDoc(rs.getDate("date").toLocalDate(), new Money(a == null ? BigDecimal.ZERO : a).toString(), rs.getString("number"),
+                rs.getObject("id", Long.class));
     }
 
     private static OverviewRow row(ResultSet rs, DebtSummaries.PartyDebt d, boolean contacts) throws SQLException {

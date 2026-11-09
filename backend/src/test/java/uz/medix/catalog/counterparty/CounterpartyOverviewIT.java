@@ -135,6 +135,17 @@ class CounterpartyOverviewIT {
                 .andExpect(jsonPath(row + ".status").value(contains("ACTIVE")))
                 .andExpect(jsonPath("$.branches[*].code").value(hasItem(code1)));
 
+        // Kartochka o'ng paneli: filial bo'yicha qarz, qolgan limit, narx turi
+        mvc.perform(get("/api/counterparties/" + c + "/summary").param("role", "CUSTOMER").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.branches[0].code").value(code1))
+                .andExpect(jsonPath("$.branches[0].hasTerms").value(true))
+                .andExpect(jsonPath("$.branches[0].debt").value("1250000.50"))
+                .andExpect(jsonPath("$.branches[0].maxOverdueDays").value(40))
+                .andExpect(jsonPath("$.branches[0].limitLeft").value("3749999.50"))
+                .andExpect(jsonPath("$.branches[0].paymentDays").value(15))
+                .andExpect(jsonPath("$.branches.length()").value(1));
+
         // Boshqa filial tanlansa: sharti yo'q, qarz 0
         mvc.perform(get("/api/counterparties/overview").param("role", "CUSTOMER").param("branchId", String.valueOf(b2)).cookie(director))
                 .andExpect(status().isOk())

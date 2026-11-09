@@ -48,7 +48,7 @@ class DebtSummariesService implements DebtSummaries {
         Map<Long, PartyDebt> out = new LinkedHashMap<>();
         for (Debts.DebtRow x : debts.report(actor, side, branchId).rows()) {
             Debts.Buckets b = x.buckets();
-            out.put(x.counterpartyId(), new PartyDebt(b.debt(), b.overdue(), b.d1to30(), b.d31to60(), b.d61to90(), b.d90plus(), x.maxOverdueDays()));
+            out.put(x.counterpartyId(), new PartyDebt(b.debt(), b.advance(), b.overdue(), b.d1to30(), b.d31to60(), b.d61to90(), b.d90plus(), x.maxOverdueDays()));
         }
         return out;
     }
