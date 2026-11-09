@@ -368,6 +368,11 @@
       "sumPos": "Summa 0 dan katta boʻlsin.",
       "date": "Sana notoʻgʻri. Masalan: 04.10.2026.",
       "future": "Kelajak sana boʻlmaydi. Bugungi yoki oldingi sanani kiriting."
-    }
+    },
+    "iHead": "Hujjat maʼlumotlari",
+    "iType": "Turi",
+    "iBy": "Kim yaratdi",
+    "iApproved": "Kim tasdiqladi",
+    "iCancelled": "Kim bekor qildi / rad etdi"
   }
 }

@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { Ban, CircleCheck, CircleX, Hourglass, ArrowLeftRight, Printer, ReceiptText, LockKeyhole, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -242,7 +243,16 @@ export function OpsTab(props: { branchId: number; filter?: OpsFilter | null; onC
   const [cancelling, setCancelling] = useState<CashOp | null>(null);
   const mayCancel = can(me.data, CASH_CANCEL);
   const columns: TableColumn<CashOp>[] = [
-    { key: "number", title: tc("col.number"), mono: true },
+    {
+      key: "number",
+      title: tc("col.number"),
+      mono: true,
+      render: (o) => (
+        <Link href={`/cash/ops/${o.id}`} className="text-primary hover:underline">
+          {o.number}
+        </Link>
+      ),
+    },
     { key: "opDate", title: tc("col.date"), render: (o) => formatIsoDate(o.opDate) },
     { key: "account", title: tc("col.account") },
     { key: "item", title: tc("col.item"), render: (o) => (o.source === "CLOSE" ? tc("ops.closeItem", { item: o.item }) : o.item) },
