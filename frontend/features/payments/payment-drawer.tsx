@@ -16,6 +16,7 @@ import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
 import { CASH_APPROVE, usableAccount } from "@/features/cash/api";
 import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
+import { BankRefFields, checkRefs, useBankRefs } from "./bank-refs";
 import { searchCustomers } from "@/features/orders/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
@@ -58,6 +59,7 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
   const [date, setDate] = useState(formatIsoDate(doc?.paymentDate ?? todayTashkent()));
   const [amount, setAmount] = useState(doc?.amount ?? "");
   const [note, setNote] = useState(doc?.note ?? "");
+  const [refs, setRefs] = useBankRefs(doc);
   const [manual, setManual] = useState(false);
   const [alloc, setAlloc] = useState<Record<string, string>>({});
   const [pending, setPending] = useState<string | null>(null);
@@ -77,6 +79,9 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
     const iso = parseUzDate(date);
     if (iso === null) return (setLocal(tp("form.badDate")), null);
     if (!amount) return (setLocal(tp("form.enterAmount")), null);
+    const refsKind = (accounts.data ?? []).find((x) => String(x.id) === account)?.kind;
+    const rc = checkRefs(refsKind, refs);
+    if (!rc.ok) return (setLocal(tp(`refs.${rc.key as "payOrderNoRequired"}`)), null);
     return {
       branchId: props.branchId,
       customerId: Number(customer),
@@ -84,6 +89,7 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
       paymentDate: iso,
       amount,
       note: note.trim() || undefined,
+      ...rc.body,
     };
   }
 
@@ -233,6 +239,12 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
             disabled={!editable}
             required
             suffix={tp("currency")}
+          />
+          <BankRefFields
+            kind={(accounts.data ?? []).find((x) => String(x.id) === account)?.kind}
+            value={refs}
+            onChange={setRefs}
+            disabled={!editable}
           />
           <TextField label={tp("form.note")} value={note} onChange={setNote} maxLength={500} disabled={!editable} />
         </div>

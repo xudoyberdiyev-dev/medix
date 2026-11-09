@@ -23,6 +23,8 @@ export interface PayRowLike {
   status: PayStatus;
   createdBy: string;
   createdAt: string;
+  payOrderNo?: string | null;
+  checkNo?: string | null;
 }
 
 export const PAY_VIEWS = ["all", "in", "out", "pending", "cancelled"] as const;
@@ -86,7 +88,7 @@ const inView = (view: PayView, r: PayRowLike) =>
 
 export function matches(r: PayRowLike, f: PayFilters): boolean {
   if (!inView(f.view, r)) return false;
-  if (f.q.trim() && !matchesSearch(f.q, [r.number, r.party, r.partySub])) return false;
+  if (f.q.trim() && !matchesSearch(f.q, [r.number, r.party, r.partySub, r.payOrderNo, r.checkNo])) return false;
   if (f.parties.length && !f.parties.includes(r.party)) return false;
   if (f.methods.length && !f.methods.includes(r.accountKind)) return false;
   if (f.accounts.length && !f.accounts.includes(r.accountId)) return false;

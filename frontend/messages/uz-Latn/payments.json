@@ -146,7 +146,7 @@
       "cancelled": "Bekor qilingan"
     },
     "search": "Qidirish",
-    "searchPlaceholder": "Raqam yoki kontragent…",
+    "searchPlaceholder": "Raqam, kontragent yoki topshiriqnoma…",
     "f": {
       "party": "Kontragent",
       "method": "Usul",
@@ -193,5 +193,13 @@
     "open": "Ochish",
     "caption": "Toʻlovlar roʻyxati",
     "dateInvalid": "Sana notoʻgʻri — kk.oo.yyyy"
+  },
+  "refs": {
+    "payOrderNo": "Toʻlov topshiriqnomasi №",
+    "bankDate": "Bank sanasi",
+    "checkNo": "Chek raqami",
+    "payOrderNoRequired": "Toʻlov topshiriqnomasi № kiritilmagan — bank toʻlovida majburiy",
+    "badBankDate": "Bank sanasi notoʻgʻri — kk.oo.yyyy",
+    "checkNoRequired": "Chek raqami kiritilmagan — terminal toʻlovida majburiy"
   }
 }

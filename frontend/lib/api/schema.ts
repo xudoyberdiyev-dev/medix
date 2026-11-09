@@ -8899,12 +8899,15 @@ export interface components {
             advance?: string;
             allocations: components["schemas"]["PaymentAllocation"][];
             amount: string;
+            /** Format: date */
+            bankDate?: string;
             /** Format: int64 */
             branchId: number;
             cancelReason?: string;
             /** Format: date-time */
             cancelledAt?: string;
             cancelledBy?: string;
+            checkNo?: string;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -8916,6 +8919,7 @@ export interface components {
             id: number;
             note?: string;
             number: string;
+            payOrderNo?: string;
             /** Format: date */
             paymentDate: string;
             /** Format: date-time */
@@ -8962,6 +8966,8 @@ export interface components {
             branchCode: string;
             /** Format: int64 */
             branchId: number;
+            /** @description Terminal cheki raqami */
+            checkNo?: string;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -8975,6 +8981,8 @@ export interface components {
             partyId: number;
             /** @description MT — mijoz hududi, YT — STIR */
             partySub?: string;
+            /** @description To'lov topshiriqnomasi № */
+            payOrderNo?: string;
             /** Format: date */
             paymentDate: string;
             /** @description MT: MANUAL / DRIVER; YT: MANUAL */
@@ -8991,11 +8999,20 @@ export interface components {
             accountId: number;
             /** @description Summa, masalan «250000.00» */
             amount: string;
+            /**
+             * Format: date
+             * @description Bank sanasi
+             */
+            bankDate?: string;
             /** Format: int64 */
             branchId: number;
+            /** @description Terminal cheki raqami */
+            checkNo?: string;
             /** Format: int64 */
             customerId: number;
             note?: string;
+            /** @description To'lov topshiriqnomasi № (bank) */
+            payOrderNo?: string;
             /**
              * Format: date
              * @description Bo'sh bo'lsa — bugun
@@ -10627,12 +10644,15 @@ export interface components {
             advance?: string;
             allocations: components["schemas"]["PaymentAllocation"][];
             amount: string;
+            /** Format: date */
+            bankDate?: string;
             /** Format: int64 */
             branchId: number;
             cancelReason?: string;
             /** Format: date-time */
             cancelledAt?: string;
             cancelledBy?: string;
+            checkNo?: string;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -10640,6 +10660,7 @@ export interface components {
             id: number;
             note?: string;
             number: string;
+            payOrderNo?: string;
             /** Format: date */
             paymentDate: string;
             /** Format: date-time */
@@ -10663,9 +10684,18 @@ export interface components {
             accountId: number;
             /** @description Summa, masalan «250000.00» */
             amount: string;
+            /**
+             * Format: date
+             * @description Bank sanasi
+             */
+            bankDate?: string;
             /** Format: int64 */
             branchId: number;
+            /** @description Terminal cheki raqami */
+            checkNo?: string;
             note?: string;
+            /** @description To'lov topshiriqnomasi № (bank) */
+            payOrderNo?: string;
             /**
              * Format: date
              * @description Bo'sh bo'lsa — bugun

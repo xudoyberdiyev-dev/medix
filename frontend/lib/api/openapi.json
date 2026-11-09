@@ -21419,6 +21419,10 @@
           "amount" : {
             "type" : "string"
           },
+          "bankDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -21431,6 +21435,9 @@
             "format" : "date-time"
           },
           "cancelledBy" : {
+            "type" : "string"
+          },
+          "checkNo" : {
             "type" : "string"
           },
           "createdAt" : {
@@ -21458,6 +21465,9 @@
             "type" : "string"
           },
           "number" : {
+            "type" : "string"
+          },
+          "payOrderNo" : {
             "type" : "string"
           },
           "paymentDate" : {
@@ -21565,6 +21575,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "checkNo" : {
+            "type" : "string",
+            "description" : "Terminal cheki raqami"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -21593,6 +21607,10 @@
           "partySub" : {
             "type" : "string",
             "description" : "MT — mijoz hududi, YT — STIR"
+          },
+          "payOrderNo" : {
+            "type" : "string",
+            "description" : "To'lov topshiriqnomasi №"
           },
           "paymentDate" : {
             "type" : "string",
@@ -21636,9 +21654,20 @@
             "maxLength" : 24,
             "minLength" : 0
           },
+          "bankDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bank sanasi"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "checkNo" : {
+            "type" : "string",
+            "description" : "Terminal cheki raqami",
+            "maxLength" : 30,
+            "minLength" : 0
           },
           "customerId" : {
             "type" : "integer",
@@ -21647,6 +21676,12 @@
           "note" : {
             "type" : "string",
             "maxLength" : 500,
+            "minLength" : 0
+          },
+          "payOrderNo" : {
+            "type" : "string",
+            "description" : "To'lov topshiriqnomasi № (bank)",
+            "maxLength" : 30,
             "minLength" : 0
           },
           "paymentDate" : {
@@ -25703,6 +25738,10 @@
           "amount" : {
             "type" : "string"
           },
+          "bankDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -25715,6 +25754,9 @@
             "format" : "date-time"
           },
           "cancelledBy" : {
+            "type" : "string"
+          },
+          "checkNo" : {
             "type" : "string"
           },
           "createdAt" : {
@@ -25732,6 +25774,9 @@
             "type" : "string"
           },
           "number" : {
+            "type" : "string"
+          },
+          "payOrderNo" : {
             "type" : "string"
           },
           "paymentDate" : {
@@ -25789,13 +25834,30 @@
             "maxLength" : 24,
             "minLength" : 0
           },
+          "bankDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bank sanasi"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
           },
+          "checkNo" : {
+            "type" : "string",
+            "description" : "Terminal cheki raqami",
+            "maxLength" : 30,
+            "minLength" : 0
+          },
           "note" : {
             "type" : "string",
             "maxLength" : 500,
+            "minLength" : 0
+          },
+          "payOrderNo" : {
+            "type" : "string",
+            "description" : "To'lov topshiriqnomasi № (bank)",
+            "maxLength" : 30,
             "minLength" : 0
           },
           "paymentDate" : {
