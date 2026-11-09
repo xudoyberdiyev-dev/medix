@@ -2384,6 +2384,43 @@
         "tags" : [ "counterparties" ]
       }
     },
+    "/api/counterparties/{id}/summary" : {
+      "get" : {
+        "operationId" : "summary_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "CUSTOMER",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartySummary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kartochka o'ng paneli: filiallar bo'yicha qarz, limit, oxirgi sotuv/kirim va to'lov",
+        "tags" : [ "counterparties" ]
+      }
+    },
     "/api/counterparties/{id}/terms/{branchId}" : {
       "put" : {
         "description" : "Limit, to'lov muddati, narx turi, minimal yaroqlilik, operator; YB shartlari.",
@@ -15286,6 +15323,64 @@
         },
         "required" : [ "buyer", "createdAt", "createdBy", "fromWarehouse", "fromZone", "id", "lines", "number", "qty", "seller", "shortageQty", "status", "toWarehouse" ]
       },
+      "BranchSummary" : {
+        "type" : "object",
+        "properties" : {
+          "advance" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "creditLimit" : {
+            "type" : "string"
+          },
+          "debt" : {
+            "type" : "string",
+            "description" : "Qarz (mijoz — bizga, YB — bizning qarzimiz)"
+          },
+          "hasTerms" : {
+            "type" : "boolean"
+          },
+          "lastDoc" : {
+            "$ref" : "#/components/schemas/LastDoc",
+            "description" : "Mijoz — oxirgi sotuv (id — buyurtma), YB — oxirgi kirim (id — kirim)"
+          },
+          "lastPayment" : {
+            "$ref" : "#/components/schemas/LastDoc"
+          },
+          "limitLeft" : {
+            "type" : "string",
+            "description" : "Qolgan limit = limit − qarz (manfiy bo'lmaydi)"
+          },
+          "maxOverdueDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "operator" : {
+            "type" : "string"
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "paymentDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "priceType" : {
+            "type" : "string",
+            "description" : "NULL shart — bazaviy narx turi nomi"
+          }
+        },
+        "required" : [ "advance", "branchId", "code", "debt", "hasTerms", "maxOverdueDays", "name", "overdue" ]
+      },
       "Buckets" : {
         "type" : "object",
         "properties" : {
@@ -16253,6 +16348,18 @@
           }
         },
         "required" : [ "active", "blocked", "customer", "id", "name", "supplier", "tin" ]
+      },
+      "CounterpartySummary" : {
+        "type" : "object",
+        "properties" : {
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BranchSummary"
+            }
+          }
+        },
+        "required" : [ "branches" ]
       },
       "CreateBranchRequest" : {
         "type" : "object",
@@ -18442,6 +18549,26 @@
           }
         },
         "required" : [ "at" ]
+      },
+      "LastDoc" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "date", "number" ]
       },
       "License" : {
         "type" : "object",

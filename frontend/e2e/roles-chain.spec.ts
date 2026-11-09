@@ -652,7 +652,7 @@ test("CEO: Direktor xodimi va mijozga kichik kredit limiti", async ({ page }) =>
 
   await page.goto("/customers");
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
-  await page.getByRole("tab", { name: "Filial shartlari" }).click();
+  await page.getByRole("tab", { name: /^Filiallar boʻyicha shartlar/ }).click();
   const card = page.locator("section").filter({ has: page.getByRole("heading", { name: /Toshkent/ }) });
   await card.getByLabel(/^Kredit limiti\s*\*?$/).fill("1.000,00");
   await card.getByRole("button", { name: "Shartlarni saqlash" }).click();

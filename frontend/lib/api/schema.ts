@@ -983,6 +983,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/counterparties/{id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kartochka o'ng paneli: filiallar bo'yicha qarz, limit, oxirgi sotuv/kirim va to'lov */
+        get: operations["summary_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties/{id}/terms/{branchId}": {
         parameters: {
             query?: never;
@@ -6511,6 +6528,30 @@ export interface components {
             /** @description Faqat special.cost ruxsati bilan */
             total?: string;
         };
+        BranchSummary: {
+            advance: string;
+            /** Format: int64 */
+            branchId: number;
+            code: string;
+            creditLimit?: string;
+            /** @description Qarz (mijoz — bizga, YB — bizning qarzimiz) */
+            debt: string;
+            hasTerms: boolean;
+            /** @description Mijoz — oxirgi sotuv (id — buyurtma), YB — oxirgi kirim (id — kirim) */
+            lastDoc?: components["schemas"]["LastDoc"];
+            lastPayment?: components["schemas"]["LastDoc"];
+            /** @description Qolgan limit = limit − qarz (manfiy bo'lmaydi) */
+            limitLeft?: string;
+            /** Format: int32 */
+            maxOverdueDays: number;
+            name: string;
+            operator?: string;
+            overdue: string;
+            /** Format: int32 */
+            paymentDays?: number;
+            /** @description NULL shart — bazaviy narx turi nomi */
+            priceType?: string;
+        };
         Buckets: {
             advance: string;
             d1to30: string;
@@ -6859,6 +6900,9 @@ export interface components {
             region?: string;
             supplier: boolean;
             tin: string;
+        };
+        CounterpartySummary: {
+            branches: components["schemas"]["BranchSummary"][];
         };
         CreateBranchRequest: {
             accountantName?: string;
@@ -7668,6 +7712,14 @@ export interface components {
             /** Format: date-time */
             at: string;
             by?: string;
+        };
+        LastDoc: {
+            amount: string;
+            /** Format: date */
+            date: string;
+            /** Format: int64 */
+            id?: number;
+            number: string;
         };
         License: {
             controlledAllowed: boolean;
@@ -12883,6 +12935,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    summary_1: {
+        parameters: {
+            query?: {
+                role?: "CUSTOMER" | "SUPPLIER" | "ALL";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartySummary"];
                 };
             };
         };

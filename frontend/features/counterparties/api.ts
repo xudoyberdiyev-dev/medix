@@ -85,6 +85,14 @@ export function useCounterpartyOverview(role: CounterpartyRole, branchId: number
   });
 }
 
+/** Kartochka oʻng paneli: filiallar boʻyicha qarz, limit, oxirgi sotuv/kirim va toʻlov. */
+export function useCounterpartySummary(id: number, role: CounterpartyRole) {
+  return useQuery({
+    queryKey: [...KEY, "one", id, "summary", role],
+    queryFn: () => unwrap(api.GET("/api/counterparties/{id}/summary", { params: { path: { id }, query: { role } } })),
+  });
+}
+
 export function useCounterparty(id: number | null) {
   return useQuery({
     queryKey: [...KEY, "one", id],

@@ -383,14 +383,19 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
     });
 
   const rowItems = (r: OverviewRow): RowMenuItem[] => [
-    { key: "open", label: t("aOpen"), icon: <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden />, onSelect: () => setOpen(r.id) },
+    {
+      key: "open",
+      label: t("aOpen"),
+      icon: <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden />,
+      onSelect: () => router.push(`${pathname}/${r.id}`),
+    },
     ...(canEdit
       ? [
           {
             key: "terms",
             label: t("aTerms"),
             icon: <GitBranchPlus size={16} strokeWidth={1.5} aria-hidden />,
-            onSelect: () => setOpen(r.id),
+            onSelect: () => router.push(`${pathname}/${r.id}?tab=terms`),
           },
         ]
       : []),
@@ -632,7 +637,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
           rowKey={(r) => String(r.id)}
           loading={list.isPending}
           activeKey={typeof open === "number" ? String(open) : undefined}
-          onRowClick={(r) => setOpen(r.id)}
+          onRowClick={(r) => router.push(`${pathname}/${r.id}`)}
           rowActions={(r) => <RowMenu label={t("actions")} items={rowItems(r)} />}
           selectable
           selectedKeys={selected}
@@ -722,7 +727,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
           defaultRole={role}
           canEdit={canEdit}
           onClose={() => setOpen(null)}
-          onCreated={setOpen}
+          onCreated={(id) => router.push(`${pathname}/${id}`)}
         />
       ) : null}
       {dialog && dialog.rows.length > 0 ? (

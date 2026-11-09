@@ -364,7 +364,7 @@ function MainTab({
   );
 }
 
-function LicensesTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean }) {
+export function LicensesTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean }) {
   const t = useTranslations("counterparties.licenses");
   const [editing, setEditing] = useState<License | "new" | null>(null);
   return (
@@ -465,7 +465,7 @@ function LicenseDialog({ cpId, license, onClose }: { cpId: number; license: Lice
   );
 }
 
-function ContractsTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean }) {
+export function ContractsTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean }) {
   const t = useTranslations("counterparties.contracts");
   const branches = useBranchList();
   const [editing, setEditing] = useState<Contract | "new" | null>(null);
@@ -568,7 +568,7 @@ function ContractDialog({ cpId, contract, onClose }: { cpId: number; contract: C
   );
 }
 
-function TermsTab({ cp }: { cp: CounterpartyDetail }) {
+export function TermsTab({ cp }: { cp: CounterpartyDetail }) {
   const tt = useTranslations("counterparties.terms");
   const me = useMe();
   const branches = useBranchList();
