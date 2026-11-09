@@ -969,6 +969,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/counterparties/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi) */
+        get: operations["history_5"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties/{id}/licenses": {
         parameters: {
             query?: never;
@@ -6876,6 +6893,13 @@ export interface components {
              * @description Shartga mos jami soni
              */
             total: number;
+        };
+        CounterpartyHistoryEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            reason?: string;
         };
         CounterpartyOverviewPage: {
             branches: components["schemas"]["OverviewBranch"][];
@@ -12961,6 +12985,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CounterpartyDocumentsPage"];
+                };
+            };
+        };
+    };
+    history_5: {
+        parameters: {
+            query?: {
+                role?: "CUSTOMER" | "SUPPLIER" | "ALL";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyHistoryEvent"][];
                 };
             };
         };

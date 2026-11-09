@@ -2346,6 +2346,46 @@
         "tags" : [ "counterparties" ]
       }
     },
+    "/api/counterparties/{id}/history" : {
+      "get" : {
+        "operationId" : "history_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "CUSTOMER",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CounterpartyHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi)",
+        "tags" : [ "counterparties" ]
+      }
+    },
     "/api/counterparties/{id}/licenses" : {
       "post" : {
         "operationId" : "addLicense",
@@ -16246,6 +16286,25 @@
           }
         },
         "required" : [ "items", "section", "total" ]
+      },
+      "CounterpartyHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
       },
       "CounterpartyOverviewPage" : {
         "type" : "object",

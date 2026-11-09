@@ -230,3 +230,11 @@ export function useCounterpartyDocuments(
     enabled,
   });
 }
+
+/** Kartochka «Tarix» — audit jurnalidan, yangisi birinchi. */
+export function useCounterpartyHistory(id: number, role: CounterpartyRole) {
+  return useQuery({
+    queryKey: [...KEY, "one", id, "history", role],
+    queryFn: () => unwrap(api.GET("/api/counterparties/{id}/history", { params: { path: { id }, query: { role } } })),
+  });
+}

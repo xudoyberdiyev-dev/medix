@@ -388,6 +388,20 @@
       "POSTED": "Oʻtkazilgan",
       "ACCEPTED": "Qabul qilindi",
       "PENDING": "Tasdiqlashda"
+    },
+    "hist": {
+      "tab": "Tarix",
+      "create": "Karta yaratildi",
+      "update": "Karta tahrirlandi",
+      "terms": "Filial shartlari oʻzgartirildi",
+      "block": "Bloklandi",
+      "unblock": "Blokdan chiqarildi",
+      "activate": "Faollashtirildi",
+      "deactivate": "Nofaol qilindi",
+      "licenseAdd": "Litsenziya qoʻshildi",
+      "licenseUpdate": "Litsenziya tahrirlandi",
+      "contractAdd": "Shartnoma qoʻshildi",
+      "contractUpdate": "Shartnoma tahrirlandi"
     }
   }
 }

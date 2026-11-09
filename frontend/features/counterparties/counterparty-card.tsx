@@ -32,13 +32,14 @@ import {
 import { LicenseBadge, StatusBadge } from "./counterparties-page";
 import { ContractsTab, CounterpartyDrawer, LicensesTab, TermsTab } from "./counterparty-drawer";
 import { DocumentsTab } from "./documents-tab";
+import { CardHistory } from "./card-history";
 import { docSections, sectionPermission, type DocSection } from "./documents-model";
 import { cents } from "./overview-model";
 
 const BASE_TABS = ["general", "licenses", "terms", "contracts"] as const;
-type Tab = (typeof BASE_TABS)[number] | DocSection;
+type Tab = (typeof BASE_TABS)[number] | DocSection | "history";
 /** Prototip tartibi: Umumiy, Litsenziyalar, Shartlar, Buyurtmalar/Kirimlar, … hujjat yorliqlari, Shartnomalar. */
-const tabsFor = (customers: boolean): Tab[] => [...BASE_TABS.slice(0, 3), ...docSections(customers), "contracts"];
+const tabsFor = (customers: boolean): Tab[] => [...BASE_TABS.slice(0, 3), ...docSections(customers), "contracts", "history"];
 
 function InfoList({ title, rows }: { title: string; rows: [string, ReactNode, boolean?][] }) {
   return (
@@ -238,7 +239,12 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
         aria-label={t("tabsLabel")}
         items={tabsFor(customers).map((k) => ({
           key: k,
-          label: k === "general" || k === "licenses" || k === "terms" || k === "contracts" ? t(`tab.${k}`) : td(`tab.${k}`),
+          label:
+            k === "history"
+              ? td("hist.tab")
+              : k === "general" || k === "licenses" || k === "terms" || k === "contracts"
+                ? t(`tab.${k}`)
+                : td(`tab.${k}`),
           count: counts[k],
         }))}
         value={tab}
@@ -379,7 +385,8 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
       {tab === "licenses" ? <LicensesTab cp={c} canEdit={can(me.data, "clients.lic")} /> : null}
       {tab === "terms" ? <TermsTab cp={c} /> : null}
       {tab === "contracts" ? <ContractsTab cp={c} canEdit={canEdit} /> : null}
-      {tab !== "general" && tab !== "licenses" && tab !== "terms" && tab !== "contracts" ? (
+      {tab === "history" ? <CardHistory id={c.id} role={role} /> : null}
+      {tab !== "general" && tab !== "licenses" && tab !== "terms" && tab !== "contracts" && tab !== "history" ? (
         <DocumentsTab key={tab} id={c.id} role={role} section={tab} allowed={can(me.data, sectionPermission(tab, customers))} />
       ) : null}
       {edit ? (
