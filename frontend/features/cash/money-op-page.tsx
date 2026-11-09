@@ -63,6 +63,13 @@ const DIR_ICON: Record<OpDir, LucideIcon> = { IN: ArrowDownLeft, OUT: ArrowUpRig
  */
 export function MoneyOpPage() {
   const params = useSearchParams();
+  // Next 16 tark etilgan sahifa holatini saqlaydi (Activity): har yangi hujjat — toza forma
+  const [gen, setGen] = useState(0);
+  return <MoneyOpForm key={`${params.toString()}#${gen}`} onDone={() => setGen((g) => g + 1)} />;
+}
+
+function MoneyOpForm({ onDone }: { onDone: () => void }) {
+  const params = useSearchParams();
   const kind = parseKind(params.get("kind"));
   const t = useTranslations("cash.doc");
   const tc = useTranslations("cash");
@@ -178,6 +185,7 @@ export function MoneyOpPage() {
         });
       }
       await refreshMoney(qc);
+      onDone();
       router.push("/cash");
     } catch (e) {
       setError(e);
