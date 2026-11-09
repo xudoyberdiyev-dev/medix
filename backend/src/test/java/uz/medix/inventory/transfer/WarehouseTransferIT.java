@@ -245,6 +245,13 @@ class WarehouseTransferIT {
         assertThat(bal(p.targetMain(), b)).isEqualTo(8);
         assertThat(jdbc.sql("SELECT count(*) FROM notification WHERE dedup_key = :k").param("k", "transfer.ok.shortage:" + id)
                 .query(Long.class).single()).isPositive();
+        // Ko'chirish ro'yxati: yetishmovchilik bilan qabul — DIFF, filial ichida
+        mvc.perform(get("/api/transfers/overview").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.kind == 'OK' && @.id == " + id + ")].state").value(org.hamcrest.Matchers.hasItem("DIFF")))
+                .andExpect(jsonPath("$.items[?(@.kind == 'OK' && @.id == " + id + ")].direction")
+                        .value(org.hamcrest.Matchers.hasItem("INTERNAL")))
+                .andExpect(jsonPath("$.items[?(@.kind == 'OK' && @.id == " + id + ")].qty").value(org.hamcrest.Matchers.hasItem(10)));
     }
 
     @Test
