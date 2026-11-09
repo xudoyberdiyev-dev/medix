@@ -254,6 +254,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bank/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bank hisoblari va terminallar (kartalar)
+         * @description Qoldiq, oxirgi harakat, oxirgi koʻchirma bilan solishtirilgan sana.
+         */
+        get: operations["bank"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/branch-payments": {
         parameters: {
             query?: never;
@@ -6332,6 +6352,34 @@ export interface components {
             main: boolean;
             mfo: string;
         };
+        BankCard: {
+            accountNo?: string;
+            balance: string;
+            bankName?: string;
+            /** Format: int64 */
+            branchId: number;
+            branchName: string;
+            code: string;
+            /** Format: int64 */
+            id: number;
+            /** @description BANK yoki TERMINAL */
+            kind: string;
+            /**
+             * Format: date
+             * @description Oxirgi harakat sanasi
+             */
+            lastMove?: string;
+            name: string;
+            /**
+             * Format: date
+             * @description Oxirgi koʻchirma bilan solishtirilgan sana
+             */
+            reconciledOn?: string;
+        };
+        BankOverview: {
+            cards: components["schemas"]["BankCard"][];
+            total: string;
+        };
         BarcodeOwner: {
             barcode: string;
             product: components["schemas"]["Ref"];
@@ -12324,6 +12372,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReconPreview"];
+                };
+            };
+        };
+    };
+    bank: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankOverview"];
                 };
             };
         };

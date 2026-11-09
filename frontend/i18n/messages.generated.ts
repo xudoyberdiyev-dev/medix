@@ -1,6 +1,7 @@
 // AVTOMATIK YASALGAN (`pnpm i18n:cyrl`) — qoʻlda oʻzgartirmang.
 import uzLatn_approvals from "@/messages/uz-Latn/approvals.json";
 import uzLatn_audit from "@/messages/uz-Latn/audit.json";
+import uzLatn_bank from "@/messages/uz-Latn/bank.json";
 import uzLatn_bonuses from "@/messages/uz-Latn/bonuses.json";
 import uzLatn_branchPanel from "@/messages/uz-Latn/branchPanel.json";
 import uzLatn_branchSales from "@/messages/uz-Latn/branchSales.json";
@@ -42,6 +43,7 @@ import uzLatn_writeOffs from "@/messages/uz-Latn/writeOffs.json";
 import uzLatn_zoneTransfers from "@/messages/uz-Latn/zoneTransfers.json";
 import uzCyrl_approvals from "@/messages/uz-Cyrl/approvals.json";
 import uzCyrl_audit from "@/messages/uz-Cyrl/audit.json";
+import uzCyrl_bank from "@/messages/uz-Cyrl/bank.json";
 import uzCyrl_bonuses from "@/messages/uz-Cyrl/bonuses.json";
 import uzCyrl_branchPanel from "@/messages/uz-Cyrl/branchPanel.json";
 import uzCyrl_branchSales from "@/messages/uz-Cyrl/branchSales.json";
@@ -83,6 +85,7 @@ import uzCyrl_writeOffs from "@/messages/uz-Cyrl/writeOffs.json";
 import uzCyrl_zoneTransfers from "@/messages/uz-Cyrl/zoneTransfers.json";
 import ru_approvals from "@/messages/ru/approvals.json";
 import ru_audit from "@/messages/ru/audit.json";
+import ru_bank from "@/messages/ru/bank.json";
 import ru_bonuses from "@/messages/ru/bonuses.json";
 import ru_branchPanel from "@/messages/ru/branchPanel.json";
 import ru_branchSales from "@/messages/ru/branchSales.json";
@@ -126,6 +129,7 @@ import ru_zoneTransfers from "@/messages/ru/zoneTransfers.json";
 export const uzLatn = {
   "approvals": uzLatn_approvals,
   "audit": uzLatn_audit,
+  "bank": uzLatn_bank,
   "bonuses": uzLatn_bonuses,
   "branchPanel": uzLatn_branchPanel,
   "branchSales": uzLatn_branchSales,
@@ -170,6 +174,7 @@ export const uzLatn = {
 export const uzCyrl = {
   "approvals": uzCyrl_approvals,
   "audit": uzCyrl_audit,
+  "bank": uzCyrl_bank,
   "bonuses": uzCyrl_bonuses,
   "branchPanel": uzCyrl_branchPanel,
   "branchSales": uzCyrl_branchSales,
@@ -214,6 +219,7 @@ export const uzCyrl = {
 export const ru = {
   "approvals": ru_approvals,
   "audit": ru_audit,
+  "bank": ru_bank,
   "bonuses": ru_bonuses,
   "branchPanel": ru_branchPanel,
   "branchSales": ru_branchSales,

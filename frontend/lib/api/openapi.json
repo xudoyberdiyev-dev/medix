@@ -657,6 +657,35 @@
         "tags" : [ "bank-reconciliations" ]
       }
     },
+    "/api/bank/overview" : {
+      "get" : {
+        "description" : "Qoldiq, oxirgi harakat, oxirgi koʻchirma bilan solishtirilgan sana.",
+        "operationId" : "bank",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BankOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bank hisoblari va terminallar (kartalar)",
+        "tags" : [ "cash" ]
+      }
+    },
     "/api/branch-payments" : {
       "get" : {
         "description" : "Filial to'lovchi yoki oluvchi bo'lganlari.",
@@ -14678,6 +14707,67 @@
           }
         },
         "required" : [ "account", "bankName", "main", "mfo" ]
+      },
+      "BankCard" : {
+        "type" : "object",
+        "properties" : {
+          "accountNo" : {
+            "type" : "string"
+          },
+          "balance" : {
+            "type" : "string"
+          },
+          "bankName" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "description" : "BANK yoki TERMINAL"
+          },
+          "lastMove" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Oxirgi harakat sanasi"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "reconciledOn" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Oxirgi koʻchirma bilan solishtirilgan sana"
+          }
+        },
+        "required" : [ "balance", "branchId", "branchName", "code", "id", "kind", "name" ]
+      },
+      "BankOverview" : {
+        "type" : "object",
+        "properties" : {
+          "cards" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankCard"
+            }
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cards", "total" ]
       },
       "BarcodeOwner" : {
         "type" : "object",
