@@ -51,4 +51,7 @@ final class TripModels {
     /** Haydovchidagi pul (SPEC 5.4): Kassir qabul qilguncha. */
     record DriverCash(long stopId, long tripId, String tripNumber, String driver, String orderNumber, long customerId, String customer, String amount,
             Instant collectedAt, TripStatus tripStatus) {}
+
+    /** Reys bo'yicha qabul natijasi: kutilgan, sanalgan, farq (sanalgan − kutilgan) va yozilgan MT raqamlari. */
+    record TripCashAccepted(String expected, String received, String diff, List<String> payments) {}
 }

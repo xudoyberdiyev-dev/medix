@@ -2,6 +2,7 @@ package uz.medix.delivery.trip;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -25,6 +26,7 @@ import uz.medix.delivery.trip.TripModels.TripOptions;
 import uz.medix.delivery.trip.TripModels.TripRequest;
 import uz.medix.delivery.trip.TripModels.TripSummary;
 import uz.medix.shared.error.MedixException;
+import uz.medix.shared.money.Money;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
 
@@ -54,6 +56,12 @@ class TripController {
     record CashAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") Long accountId) {}
 
     record CashAcceptResult(String payment) {}
+
+    record TripCashAcceptRequest(
+            @jakarta.validation.constraints.NotNull(message = "{validation.required}") Long accountId,
+            @jakarta.validation.constraints.NotNull(message = "{validation.required}")
+            @Schema(description = "Kassir sanagan summa") String received,
+            @Schema(nullable = true, description = "Farq bo'lsa majburiy") @Size(max = 300) String note) {}
 
     record ReturnedLine(@jakarta.validation.constraints.NotNull(message = "{validation.required}") Long saleLineId,
             @jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0) Integer qty) {}
@@ -254,5 +262,21 @@ class TripController {
     @Operation(summary = "Haydovchidan pulni qabul qilish", description = "MT yoziladi va o'tkaziladi, mijoz qarzi kamayadi, pul kassaga tushadi.")
     CashAcceptResult acceptCash(@PathVariable long stopId, @Valid @RequestBody CashAcceptRequest r) {
         return new CashAcceptResult(trips.acceptCash(actor(), stopId, r.accountId()));
+    }
+
+    @PostMapping("/{id}/cash/accept")
+    @PreAuthorize("hasAuthority('payments.mt')")
+    @Operation(summary = "Haydovchidan pulni reys bo'yicha qabul qilish",
+            description = "Sanalgan summa to'xtashlar bo'yicha taqsimlanadi, har ulush — MT. Farq bo'lsa izoh majburiy.")
+    TripModels.TripCashAccepted acceptTripCash(@PathVariable long id, @Valid @RequestBody TripCashAcceptRequest r) {
+        return trips.acceptTripCash(actor(), id, r.accountId(), parseMoney(r.received()), r.note());
+    }
+
+    private static Money parseMoney(String s) {
+        try {
+            return Money.of(s.strip().replace(" ", "").replace(',', '.'));
+        } catch (NumberFormatException e) {
+            throw MedixException.badRequest("trip.cashReceivedInvalid");
+        }
     }
 }
