@@ -157,7 +157,9 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await page.goto("/settings/branches");
   await expect(page.getByRole("cell", { name: "TSH", exact: true })).toBeVisible();
   await page.goto("/settings/warehouses");
-  await expect(page.getByText("Markaziy ombor")).toBeVisible();
+  // Omborlar va zonalar (prototip AdminOrg): daraxt + ombor maʼlumotlari + zonalar jadvali
+  await expect(page.getByRole("heading", { name: "Markaziy ombor" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Zonalar" }).getByRole("row")).toHaveCount(6);
   await page.goto("/settings/employees");
   await expect(page.getByRole("cell", { name: "operator.1", exact: true })).toBeVisible();
   await expect(page.getByText("Kirmagan — parol bir martalik").first()).toBeVisible();
@@ -575,10 +577,10 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
 
   // Filialda ikkinchi ombor
   await page.goto("/settings/warehouses");
-  await page.getByRole("button", { name: "Ombor qoʻshish" }).click();
-  await field(page, "Nomi").fill("E2E ikkinchi ombor");
+  await page.getByRole("button", { name: "Yangi ombor" }).click();
+  await field(page, "Ombor nomi").fill("E2E ikkinchi ombor");
   await page.getByRole("button", { name: "Omborni saqlash" }).click();
-  await expect(page.getByText("E2E ikkinchi ombor").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "E2E ikkinchi ombor" })).toBeVisible();
 
   await page.goto("/warehouse-transfers");
   await page.getByRole("button", { name: "Koʻchirish tuzish" }).first().click();
@@ -743,13 +745,12 @@ test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx)
   await expect(page.getByText("E2E Samarqand").first()).toBeVisible();
 
   await page.goto("/settings/warehouses");
-  await page.getByRole("button", { name: "Ombor qoʻshish" }).click();
-  // Roʻyxat filtrida ham «Filial» bor — ombor oynasi ichidagisi
+  await page.getByRole("button", { name: "Yangi ombor" }).click();
   await page.getByRole("dialog").getByRole("combobox", { name: "Filial", exact: true }).click();
   await page.getByRole("option", { name: /E2E Samarqand/ }).click();
-  await field(page, "Nomi").fill("Samarqand ombori");
+  await field(page, "Ombor nomi").fill("Samarqand ombori");
   await page.getByRole("button", { name: "Omborni saqlash" }).click();
-  await expect(page.getByText("Samarqand ombori").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Samarqand ombori" })).toBeVisible();
 
   await page.goto("/branch-sales");
   await page.getByRole("button", { name: "Savdo tuzish" }).first().click();

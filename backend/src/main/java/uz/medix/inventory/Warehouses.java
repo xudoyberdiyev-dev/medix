@@ -331,9 +331,6 @@ public class Warehouses {
     public Warehouse addZone(long id, ZoneType type, String name) {
         Warehouse w = lock(id);
         String zoneName = name == null || name.isBlank() ? type.defaultName() : name.strip();
-        if (w.zones().stream().anyMatch(z -> z.name().equalsIgnoreCase(zoneName))) {
-            throw MedixException.conflict("warehouse.zoneDuplicateName", zoneName);
-        }
         if (ZoneType.REQUIRED.contains(type)) {
             throw MedixException.badRequest("warehouse.extraZones");
         }
@@ -344,6 +341,9 @@ public class Warehouses {
                 .single();
         if (exists) {
             throw MedixException.conflict("warehouse.zoneExists", type.defaultName());
+        }
+        if (w.zones().stream().anyMatch(z -> z.name().equalsIgnoreCase(zoneName))) {
+            throw MedixException.conflict("warehouse.zoneDuplicateName", zoneName);
         }
         long zoneId = jdbc.sql("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, :t, :n) RETURNING id")
                 .param("w", id)
