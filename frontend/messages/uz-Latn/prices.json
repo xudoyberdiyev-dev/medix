@@ -280,7 +280,16 @@
       "past": "Oʻtgan sana — bugun yoki keyingi sanani tanlang",
       "price": "Narx 0 dan katta boʻlishi kerak — qizil qatorlarni tuzating",
       "none": "Oʻzgartirilgan narx yoʻq — yangi narx kiriting"
-    }
+    },
+    "importXls": "Excelʼdan yuklash",
+    "export": "Eksport",
+    "exportFile": "Narxlar_{t}.xlsx",
+    "importing": "Fayl oʻqilmoqda…",
+    "imported": "{n} ta narx yuklandi",
+    "importedNone": "Faylda yangi narx topilmadi",
+    "importSkipped": "{k} ta qator oʻtkazib yuborildi: nomaʼlum kod — {a}, notoʻgʻri narx — {b}, takror — {c}. Qatorlar: {rows}",
+    "importOutside": " · {k} ta mahsulot bu jadvalda yoʻq",
+    "exportFailed": "Eksport qilib boʻlmadi. Qayta urinib koʻring."
   },
   "doc": {
     "parent": "Narx oʻzgarishlari",

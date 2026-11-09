@@ -7926,6 +7926,65 @@
         "tags" : [ "pricing" ]
       }
     },
+    "/api/prices/grid/export" : {
+      "post" : {
+        "description" : "Brauzerdagi ko'rinib turgan qatorlar: Kod, Mahsulot, Joriy narx, Yangi narx (kiritilgan, saqlanmagan bo'lsa ham).",
+        "operationId" : "exportSet",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetExportRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Narx o'rnatish» — Excel'ga eksport (.xlsx)",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/prices/grid/import" : {
+      "post" : {
+        "description" : "Birinchi varaq; «Kod» va «Yangi narx» (yoki «Narx») ustunlari. Hech narsa yozilmaydi — narxlar jadvalga qo'yiladi.",
+        "operationId" : "importSet",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetImportResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Narx o'rnatish» — Excel'dan yuklash",
+        "tags" : [ "pricing" ]
+      }
+    },
     "/api/prices/history" : {
       "get" : {
         "description" : "branchId berilmasa — o'z filiali (yoki birinchi filial); priceTypeId — bazaviy.",
@@ -24166,6 +24225,98 @@
           }
         },
         "required" : [ "used" ]
+      },
+      "SetExportRequest" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SetExportRow"
+            },
+            "maxItems" : 50000,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "rows" ]
+      },
+      "SetExportRow" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "currentPrice" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "newPrice" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "currentPrice", "name", "newPrice" ]
+      },
+      "SetImportIssue" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "code", "reason", "row" ]
+      },
+      "SetImportLine" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "price" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "code", "price", "productId", "row" ]
+      },
+      "SetImportResult" : {
+        "type" : "object",
+        "properties" : {
+          "issues" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SetImportIssue"
+            }
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SetImportLine"
+            }
+          },
+          "rows" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "issues", "lines", "rows" ]
       },
       "SetPinRequest" : {
         "type" : "object",

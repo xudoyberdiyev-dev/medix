@@ -165,3 +165,36 @@ export function markupBase(r: GridRowLike, rel: MarkupRel): bigint | null {
 export function toInput(v: string): string {
   return v.endsWith(".00") ? v.slice(0, -3) : v.replace(".", ",");
 }
+
+/** Excel importi natijasini jadvalga qoʻyish: faqat jadvaldagi mahsulotlar; qolganlari — «outside». */
+export function applyImport(
+  raw: Record<number, string>,
+  gridIds: ReadonlySet<number>,
+  lines: readonly { productId: number; price: string }[],
+): { raw: Record<number, string>; n: number; outside: number } {
+  const next = { ...raw };
+  let n = 0;
+  let outside = 0;
+  for (const l of lines) {
+    if (!gridIds.has(l.productId)) {
+      outside++;
+      continue;
+    }
+    next[l.productId] = toInput(l.price);
+    n++;
+  }
+  return { raw: next, n, outside };
+}
+
+/** Oʻtkazib yuborilgan qatorlar: sabab boʻyicha soni va dastlabki 5 ta qator raqami. */
+export function importIssues(issues: readonly { row: number; reason: string }[]) {
+  const by = (r: string) => issues.filter((i) => i.reason === r).length;
+  const rows = issues.slice(0, 5).map((i) => String(i.row));
+  return {
+    k: issues.length,
+    a: by("CODE_UNKNOWN"),
+    b: by("PRICE_BAD"),
+    c: by("DUPLICATE"),
+    rows: issues.length > 5 ? `${rows.join(", ")}…` : rows.join(", "),
+  };
+}

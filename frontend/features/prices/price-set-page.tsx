@@ -8,6 +8,7 @@ import {
   Check,
   CircleCheck,
   ClipboardList,
+  Download,
   GitBranch,
   Lock,
   Package,
@@ -15,9 +16,10 @@ import {
   Percent,
   TrendingDown,
   TriangleAlert,
+  Upload,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -37,12 +39,14 @@ import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { PRICE_CREATE, useSaveDraft, useSubmit } from "./api";
+import { PRICE_CREATE, exportPriceSet, importPriceSet, useSaveDraft, useSubmit } from "./api";
 import {
+  applyImport,
   applyMarkup,
   EMPTY_SET_FILTER,
   formatPct,
   fromCents,
+  importIssues,
   markupBase,
   matchesFilter,
   parsePercent,
@@ -126,6 +130,54 @@ export function PriceSetPage() {
   const nBelow = changed.filter((r) => states.get(r.productId)!.below).length;
   const nBig = changed.filter((r) => states.get(r.productId)!.big).length;
   const dirty = changed.length > 0;
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  async function onImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImporting(true);
+    try {
+      const res = await importPriceSet(file);
+      const applied = applyImport(raw, new Set(rows.map((r) => r.productId)), res.lines);
+      setRaw(applied.raw);
+      if (applied.n) {
+        setView("changed");
+        setLimit(CHUNK);
+      }
+      const outside = applied.outside ? t("importOutside", { k: formatQuantity(applied.outside) }) : "";
+      toast({
+        tone: applied.n ? "success" : "warning",
+        title: (applied.n ? t("imported", { n: formatQuantity(applied.n) }) : t("importedNone")) + outside,
+        description: res.issues.length ? t("importSkipped", importIssues(res.issues)) : undefined,
+      });
+    } catch (err) {
+      toast({ tone: "danger", title: describeError(err).message ?? t("importedNone") });
+    } finally {
+      setImporting(false);
+    }
+  }
+  async function doExport() {
+    try {
+      const blob = await exportPriceSet(
+        visible.map((r) => ({
+          code: r.code,
+          name: r.name,
+          currentPrice: r.currentPrice ?? "",
+          newPrice: states.get(r.productId)!.next ?? "",
+        })),
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = t("exportFile", { t: typeName });
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      toast({ tone: "danger", title: t("exportFailed") });
+    }
+  }
 
   useEffect(() => {
     if (!dirty) return;
@@ -230,7 +282,14 @@ export function PriceSetPage() {
           </nav>
           <h1 className="text-[22px] leading-7 font-semibold tracking-[-0.01em]">{t("heading", { t: typeName, b: branchName })}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <input ref={fileRef} type="file" accept=".xlsx" className="hidden" onChange={onImportFile} />
+          <Button variant="secondary" icon={Upload} disabled={importing || !rows.length} onClick={() => fileRef.current?.click()}>
+            {importing ? t("importing") : t("importXls")}
+          </Button>
+          <Button variant="secondary" icon={Download} disabled={!visible.length} onClick={doExport}>
+            {t("export")}
+          </Button>
           <Button variant="secondary" onClick={() => guard(() => router.push("/prices"))}>
             {t("close")}
           </Button>

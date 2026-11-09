@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { parseMoneyInput } from "@/features/counterparties/api";
 import {
+  applyImport,
   applyMarkup,
   formatPct,
   fromCents,
+  importIssues,
   markupBase,
   matchesFilter,
   parsePercent,
@@ -126,5 +128,27 @@ describe("attachDiff (Biriktirish)", () => {
       [5, { on: false, was: false }],
     ]);
     expect(attachDiff(m)).toEqual({ attach: [1, 3], detach: [2] });
+  });
+});
+
+describe("Excel importi", () => {
+  it("faqat jadvaldagi mahsulotlarga narx qoʻyadi", () => {
+    const r = applyImport({ 1: "100" }, new Set([1, 2]), [
+      { productId: 2, price: "15500.50" },
+      { productId: 1, price: "7777.00" },
+      { productId: 9, price: "10.00" },
+    ]);
+    expect(r.raw).toEqual({ 1: "7777", 2: "15500,50" });
+    expect(r.n).toBe(2);
+    expect(r.outside).toBe(1);
+    expect(parseMoneyInput(r.raw[2]!)).toBe("15500.50");
+  });
+  it("oʻtkazilgan qatorlar xulosasi", () => {
+    const issues = [4, 5, 6, 7, 8, 9].map((row, i) => ({
+      row,
+      reason: i % 3 === 0 ? "CODE_UNKNOWN" : i % 3 === 1 ? "PRICE_BAD" : "DUPLICATE",
+    }));
+    expect(importIssues(issues)).toEqual({ k: 6, a: 2, b: 2, c: 2, rows: "4, 5, 6, 7, 8…" });
+    expect(importIssues([]).rows).toBe("");
   });
 });

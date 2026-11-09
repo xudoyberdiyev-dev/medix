@@ -229,3 +229,28 @@ export function batchLines(rb: ReceiptBatches, priceTypeId: number): DraftLine[]
     };
   });
 }
+
+export type PriceSetImport = components["schemas"]["SetImportResult"];
+
+/** «Narx oʻrnatish» — koʻrinib turgan qatorlarni .xlsx ga (kiritilgan yangi narx bilan). */
+export async function exportPriceSet(rows: components["schemas"]["SetExportRow"][]): Promise<Blob> {
+  await ensureCsrf();
+  const { data, error } = await api.POST("/api/prices/grid/export", { body: { rows }, parseAs: "blob" });
+  if (error || !data) throw error ?? new Error("export");
+  return data as Blob;
+}
+
+/** «Excelʼdan yuklash» — hech narsa yozilmaydi, topilgan narxlar jadvalga qoʻyiladi. */
+export async function importPriceSet(file: File): Promise<PriceSetImport> {
+  await ensureCsrf();
+  return unwrap(
+    api.POST("/api/prices/grid/import", {
+      body: { file: file as unknown as string },
+      bodySerializer: () => {
+        const fd = new FormData();
+        fd.append("file", file);
+        return fd;
+      },
+    }),
+  );
+}

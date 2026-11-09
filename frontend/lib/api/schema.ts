@@ -3485,6 +3485,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/prices/grid/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Narx o'rnatish» — Excel'ga eksport (.xlsx)
+         * @description Brauzerdagi ko'rinib turgan qatorlar: Kod, Mahsulot, Joriy narx, Yangi narx (kiritilgan, saqlanmagan bo'lsa ham).
+         */
+        post: operations["exportSet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prices/grid/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Narx o'rnatish» — Excel'dan yuklash
+         * @description Birinchi varaq; «Kod» va «Yangi narx» (yoki «Narx») ustunlari. Hech narsa yozilmaydi — narxlar jadvalga qo'yiladi.
+         */
+        post: operations["importSet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/prices/history": {
         parameters: {
             query?: never;
@@ -9988,6 +10028,35 @@ export interface components {
              */
             used: number;
         };
+        SetExportRequest: {
+            rows: components["schemas"]["SetExportRow"][];
+        };
+        SetExportRow: {
+            code: string;
+            currentPrice: string;
+            name: string;
+            newPrice: string;
+        };
+        SetImportIssue: {
+            code: string;
+            reason: string;
+            /** Format: int32 */
+            row: number;
+        };
+        SetImportLine: {
+            code: string;
+            price: string;
+            /** Format: int64 */
+            productId: number;
+            /** Format: int32 */
+            row: number;
+        };
+        SetImportResult: {
+            issues: components["schemas"]["SetImportIssue"][];
+            lines: components["schemas"]["SetImportLine"][];
+            /** Format: int32 */
+            rows: number;
+        };
         SetPinRequest: {
             currentPassword: string;
             pin: string;
@@ -16268,6 +16337,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PriceGrid"];
+                };
+            };
+        };
+    };
+    exportSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetExportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    importSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetImportResult"];
                 };
             };
         };
