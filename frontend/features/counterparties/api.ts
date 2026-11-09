@@ -52,8 +52,9 @@ export interface CounterpartyQuery {
 
 export type CounterpartySort = "NAME" | "TIN" | "REGION" | "LICENSE";
 
-export function useCounterparties(f: CounterpartyQuery) {
+export function useCounterparties(f: CounterpartyQuery, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: [...KEY, "list", f],
     queryFn: () =>
       unwrap(

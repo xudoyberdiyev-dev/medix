@@ -16135,6 +16135,42 @@
         },
         "required" : [ "lineIds" ]
       },
+      "Contact" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "position" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "name" ]
+      },
+      "ContactRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
+          "position" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
       "Contract" : {
         "type" : "object",
         "properties" : {
@@ -16242,6 +16278,13 @@
           "contactPerson" : {
             "type" : "string"
           },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Kontakt shaxslar (tartib bo'yicha)",
+            "items" : {
+              "$ref" : "#/components/schemas/Contact"
+            }
+          },
           "contracts" : {
             "type" : "array",
             "description" : "Faqat xodim ko'ra oladigan filiallar",
@@ -16301,7 +16344,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "active", "blocked", "contracts", "customer", "id", "licenses", "name", "supplier", "terms", "tin" ]
+        "required" : [ "active", "blocked", "contacts", "contracts", "customer", "id", "licenses", "name", "supplier", "terms", "tin" ]
       },
       "CounterpartyDocumentsPage" : {
         "type" : "object",
@@ -16414,6 +16457,15 @@
             "type" : "string",
             "maxLength" : 200,
             "minLength" : 0
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Kontakt shaxslar — berilsa ro'yxat to'liq almashtiriladi (birinchisi — contactPerson); null — o'zgarmaydi",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactRequest"
+            },
+            "maxItems" : 20,
+            "minItems" : 0
           },
           "customer" : {
             "type" : "boolean"

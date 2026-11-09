@@ -6845,6 +6845,16 @@ export interface components {
         ConfirmRequest: {
             lineIds: number[];
         };
+        Contact: {
+            name: string;
+            phone?: string;
+            position?: string;
+        };
+        ContactRequest: {
+            name: string;
+            phone?: string;
+            position?: string;
+        };
         Contract: {
             /** Format: int64 */
             branchId: number;
@@ -6884,6 +6894,8 @@ export interface components {
             blocked: boolean;
             blockedReason?: string;
             contactPerson?: string;
+            /** @description Kontakt shaxslar (tartib bo'yicha) */
+            contacts: components["schemas"]["Contact"][];
             /** @description Faqat xodim ko'ra oladigan filiallar */
             contracts: components["schemas"]["Contract"][];
             customer: boolean;
@@ -6942,6 +6954,8 @@ export interface components {
             bankMfo?: string;
             bankName?: string;
             contactPerson?: string;
+            /** @description Kontakt shaxslar — berilsa ro'yxat to'liq almashtiriladi (birinchisi — contactPerson); null — o'zgarmaydi */
+            contacts?: components["schemas"]["ContactRequest"][];
             customer: boolean;
             email?: string;
             /** @enum {string} */

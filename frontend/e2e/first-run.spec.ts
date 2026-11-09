@@ -351,6 +351,8 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.getByRole("button", { name: "Yetkazib beruvchi qoʻshish" }).first().click();
   await field(page, "STIR / JShShIR").fill("309876543");
   await field(page, "Nomi").fill("Pharm Supply E2E");
+  await choose(page, "Turi", /Distribyutor/);
+  await choose(page, "Asosiy toʻlov turi", /Perechisleniye/);
   await page.getByRole("button", { name: "Kartani saqlash" }).click();
   await expect(page.getByText("Kontragent qoʻshildi")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -418,6 +420,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.getByRole("button", { name: "Mijoz qoʻshish" }).first().click();
   await field(page, "STIR / JShShIR").fill("305551234");
   await field(page, "Nomi").fill("Shifo Dorixona E2E");
+  await choose(page, "Turi", /Dorixona/);
   await page.getByRole("button", { name: "Kartani saqlash" }).click();
   await expect(page.getByText("Kontragent qoʻshildi")).toBeVisible();
   await page.keyboard.press("Escape");

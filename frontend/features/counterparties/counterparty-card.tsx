@@ -3,7 +3,7 @@
 import { ArrowUpRight, Ban, Building2, CircleCheck, CirclePause, Lock, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,7 @@ import {
   type CounterpartyRole,
 } from "./api";
 import { LicenseBadge, StatusBadge } from "./counterparties-page";
-import { ContractsTab, CounterpartyDrawer, LicensesTab, TermsTab } from "./counterparty-drawer";
+import { ContractsTab, LicensesTab, TermsTab } from "./counterparty-drawer";
 import { DocumentsTab } from "./documents-tab";
 import { CardHistory } from "./card-history";
 import { docSections, sectionPermissions, type DocSection } from "./documents-model";
@@ -125,10 +125,10 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
   const block = useBlockCounterparty();
   const activate = useActivateCounterparty();
   const params = useSearchParams();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>(
     (tabsFor(customers) as string[]).includes(params.get("tab") ?? "") ? (params.get("tab") as Tab) : "general",
   );
-  const [edit, setEdit] = useState(false);
   const [dialog, setDialog] = useState<"block" | "inactive" | null>(null);
   const [branch, setBranch] = useState<number | null>(null);
   const branches = summary.data?.branches ?? [];
@@ -228,7 +228,7 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
             <>
               {menu.length ? <RowMenu label={t("more")} items={menu} /> : null}
               {canEdit ? (
-                <Button icon={Pencil} onClick={() => setEdit(true)}>
+                <Button icon={Pencil} onClick={() => router.push(`${customers ? "/customers" : "/suppliers"}/${c.id}/edit`)}>
                   {t("edit")}
                 </Button>
               ) : null}
@@ -421,15 +421,6 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
           role={role}
           section={tab}
           allowed={sectionPermissions(tab, customers).some((k) => can(me.data, k))}
-        />
-      ) : null}
-      {edit ? (
-        <CounterpartyDrawer
-          counterpartyId={c.id}
-          defaultRole={role}
-          canEdit={canEdit}
-          onClose={() => setEdit(false)}
-          onCreated={() => undefined}
         />
       ) : null}
       {dialog ? (

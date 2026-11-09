@@ -49,7 +49,6 @@ import {
   type CounterpartyRole,
   type OverviewRow,
 } from "./api";
-import { CounterpartyDrawer } from "./counterparty-drawer";
 import {
   EMPTY_FILTERS,
   VIEWS_C,
@@ -172,7 +171,6 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
   const [page, setPage] = useState(1);
   const [size, setSize] = useState<PageSize>(25);
   const [selected, setSelected] = useState<string[]>([]);
-  const [open, setOpen] = useState<number | "new" | null>(null);
   const [dialog, setDialog] = useState<{ kind: "block" | "inactive"; rows: OverviewRow[] } | null>(null);
 
   const data = list.data;
@@ -455,7 +453,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
             {t("export")}
           </Button>
           {canEdit ? (
-            <Button icon={Plus} onClick={() => setOpen("new")}>
+            <Button icon={Plus} onClick={() => router.push(`${pathname}/new`)}>
               {customers ? t("addC") : t("addS")}
             </Button>
           ) : null}
@@ -699,7 +697,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
                 description={t("emptyD")}
                 action={
                   canEdit ? (
-                    <Button icon={Plus} onClick={() => setOpen("new")}>
+                    <Button icon={Plus} onClick={() => router.push(`${pathname}/new`)}>
                       {customers ? t("addC") : t("addS")}
                     </Button>
                   ) : undefined
@@ -721,15 +719,6 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
           }
         />
       )}
-      {open !== null ? (
-        <CounterpartyDrawer
-          counterpartyId={open === "new" ? null : open}
-          defaultRole={role}
-          canEdit={canEdit}
-          onClose={() => setOpen(null)}
-          onCreated={(id) => router.push(`${pathname}/${id}`)}
-        />
-      ) : null}
       {dialog && dialog.rows.length > 0 ? (
         <DeactivateDialog
           title={

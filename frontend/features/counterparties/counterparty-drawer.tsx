@@ -1,368 +1,37 @@
 "use client";
 
-import { Ban, FileText, LockOpen, Pencil, Plus, Power, PowerOff, ShieldCheck } from "lucide-react";
+import { FileText, Pencil, Plus, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
-import { EmptyState, ErrorState, Skeleton } from "@/components/ui/system-states";
+import { EmptyState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useDictionary } from "@/features/dictionaries/api";
 import { useBranchList } from "@/features/organization/api";
-import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { useEmployeeOptions } from "@/features/products/api";
 import { describeError } from "@/features/setup/form-error";
 import { formatMoney } from "@/lib/format";
 import {
-  canBlockCard,
-  canEditCard,
   PAYMENT_TYPE_VALUES,
   formatIsoDate,
   parseMoneyInput,
   parseUzDate,
-  useActivateCounterparty,
-  useBlockCounterparty,
-  useCounterparty,
   useSaveContract,
-  useSaveCounterparty,
   useSaveLicense,
   useSaveTerms,
   usePriceTypes,
   type Contract,
   type CounterpartyDetail,
-  type CounterpartyRequest,
-  type CounterpartyRole,
   type License,
   type Terms,
 } from "./api";
-import { LicenseBadge, StatusBadge } from "./counterparties-page";
-
-const KIND_VALUES = ["PHARMACY", "CLINIC", "HOSPITAL", "DISTRIBUTOR", "MAKER"] as const;
-
-export function CounterpartyDrawer({
-  counterpartyId,
-  defaultRole,
-  canEdit,
-  onClose,
-  onCreated,
-}: {
-  counterpartyId: number | null;
-  defaultRole: CounterpartyRole;
-  canEdit: boolean;
-  onClose: () => void;
-  onCreated: (id: number) => void;
-}) {
-  const t = useTranslations("counterparties.drawer");
-  const tc = useTranslations("common");
-  const cp = useCounterparty(counterpartyId);
-  const me = useMe();
-  const [tab, setTab] = useState("main");
-  if (counterpartyId !== null && cp.error)
-    return (
-      <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("kind")}>
-        <ErrorState onRetry={() => cp.refetch()} />
-      </Drawer>
-    );
-  if (counterpartyId !== null && !cp.data)
-    return (
-      <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={tc("loading")}>
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-2/3" />
-        </div>
-      </Drawer>
-    );
-  const c = cp.data ?? null;
-  const cardEdit = c ? canEditCard(me.data?.permissions, c.customer, c.supplier) : canEdit;
-  const licenseEdit = can(me.data, "clients.lic");
-  const tabs = c
-    ? {
-        items: [
-          { key: "main", label: t("tabs.main") },
-          { key: "licenses", label: t("tabs.licenses"), count: c.licenses.length },
-          { key: "contracts", label: t("tabs.contracts"), count: c.contracts.length },
-          { key: "terms", label: t("tabs.terms") },
-        ],
-        value: tab,
-        onChange: setTab,
-      }
-    : undefined;
-  return (
-    <Drawer
-      open
-      onClose={onClose}
-      size="lg"
-      kind={c ? (c.customer && c.supplier ? t("kindBoth") : c.customer ? t("kindCustomer") : t("kindSupplier")) : t("kind")}
-      title={c ? c.name : defaultRole === "CUSTOMER" ? t("newCustomer") : t("newSupplier")}
-      subtitle={c?.tin}
-      status={c ? <StatusBadge blocked={c.blocked} active={c.active} /> : undefined}
-      tabs={tabs}
-    >
-      {tab === "main" || !c ? (
-        <MainTab
-          key={c ? `${c.id}-${c.blocked}-${c.active}` : "new"}
-          cp={c}
-          defaultRole={defaultRole}
-          canEdit={cardEdit}
-          onClose={onClose}
-          onCreated={onCreated}
-        />
-      ) : null}
-      {tab === "licenses" && c ? <LicensesTab cp={c} canEdit={licenseEdit} /> : null}
-      {tab === "contracts" && c ? <ContractsTab cp={c} canEdit={cardEdit} /> : null}
-      {tab === "terms" && c ? <TermsTab cp={c} /> : null}
-    </Drawer>
-  );
-}
-
-function MainTab({
-  cp,
-  defaultRole,
-  canEdit,
-  onClose,
-  onCreated,
-}: {
-  cp: CounterpartyDetail | null;
-  defaultRole: CounterpartyRole;
-  canEdit: boolean;
-  onClose: () => void;
-  onCreated: (id: number) => void;
-}) {
-  const tm = useTranslations("counterparties.main");
-  const tk = useTranslations("counterparties.overview");
-  const me = useMe();
-  const save = useSaveCounterparty();
-  const block = useBlockCounterparty();
-  const activate = useActivateCounterparty();
-  const regions = useDictionary("REGION");
-  const [dialog, setDialog] = useState<"block" | "deactivate" | null>(null);
-  const [form, setForm] = useState({
-    tin: cp?.tin ?? "",
-    name: cp?.name ?? "",
-    legalName: cp?.legalName ?? "",
-    customer: cp ? cp.customer : defaultRole === "CUSTOMER",
-    supplier: cp ? cp.supplier : defaultRole === "SUPPLIER",
-    regionId: cp?.region ? String(cp.region.id) : null,
-    kind: (cp?.kind ?? null) as string | null,
-    address: cp?.address ?? "",
-    phone: cp?.phone ?? "",
-    contactPerson: cp?.contactPerson ?? "",
-    email: cp?.email ?? "",
-    bankName: cp?.bankName ?? "",
-    bankAccount: cp?.bankAccount ?? "",
-    bankMfo: cp?.bankMfo ?? "",
-    vatCode: cp?.vatCode ?? "",
-    note: cp?.note ?? "",
-  });
-  const err = describeError(save.error);
-  const set =
-    <K extends keyof typeof form>(k: K) =>
-    (v: (typeof form)[K]) =>
-      setForm((f) => ({ ...f, [k]: v }));
-  const canBlock = cp ? canBlockCard(me.data?.permissions, cp.customer, cp.supplier) : false;
-
-  function submit(e?: FormEvent) {
-    e?.preventDefault();
-    const t = (v: string) => v.trim() || undefined;
-    save.mutate(
-      {
-        id: cp?.id,
-        body: {
-          tin: form.tin.trim(),
-          name: form.name,
-          legalName: t(form.legalName),
-          customer: form.customer,
-          supplier: form.supplier,
-          regionId: form.regionId ? Number(form.regionId) : undefined,
-          kind: (form.kind ?? undefined) as CounterpartyRequest["kind"],
-          address: t(form.address),
-          phone: t(form.phone),
-          contactPerson: t(form.contactPerson),
-          email: t(form.email),
-          bankName: t(form.bankName),
-          bankAccount: t(form.bankAccount),
-          bankMfo: t(form.bankMfo),
-          vatCode: t(form.vatCode),
-          note: t(form.note),
-        },
-      },
-      {
-        onSuccess: (c) => {
-          toast({ tone: "success", title: cp ? tm("saved") : tm("created"), description: `${c.name} · ${c.tin}` });
-          if (!cp) onCreated(c.id);
-        },
-      },
-    );
-  }
-
-  return (
-    <>
-      {cp?.blocked ? <Alert tone="danger" title={tm("blockedReason", { reason: cp.blockedReason ?? "" })} className="mb-4" /> : null}
-      <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
-        <fieldset disabled={!canEdit} className="contents">
-          <TextField
-            label={tm("tin")}
-            value={form.tin}
-            onChange={set("tin")}
-            error={err.fields.tin}
-            inputMode="numeric"
-            maxLength={14}
-            required
-          />
-          <TextField label={tm("name")} value={form.name} onChange={set("name")} error={err.fields.name} required />
-          <TextField
-            label={tm("legalName")}
-            value={form.legalName}
-            onChange={set("legalName")}
-            error={err.fields.legalName}
-            className="col-span-2"
-          />
-          <div className="col-span-2 flex gap-6">
-            <Checkbox label={tm("customer")} checked={form.customer} disabled={!canEdit} onChange={set("customer")} />
-            <Checkbox label={tm("supplier")} checked={form.supplier} disabled={!canEdit} onChange={set("supplier")} />
-          </div>
-          <Select
-            label={tk("f.kind")}
-            disabled={!canEdit}
-            value={form.kind}
-            onChange={set("kind")}
-            options={KIND_VALUES.map((k) => ({ value: k, label: tk(`kind.${k}`) }))}
-          />
-          <Select
-            label={tm("region")}
-            searchable
-            disabled={!canEdit}
-            value={form.regionId}
-            onChange={set("regionId")}
-            options={(regions.data ?? [])
-              .filter((r) => r.active || String(r.id) === form.regionId)
-              .map((r) => ({ value: String(r.id), label: r.name }))}
-          />
-          <TextField label={tm("address")} value={form.address} onChange={set("address")} error={err.fields.address} />
-          <TextField
-            label={tm("phone")}
-            value={form.phone}
-            onChange={set("phone")}
-            error={err.fields.phone}
-            placeholder="+998 90 123 45 67"
-          />
-          <TextField
-            label={tm("contactPerson")}
-            value={form.contactPerson}
-            onChange={set("contactPerson")}
-            error={err.fields.contactPerson}
-          />
-          <TextField label={tm("email")} value={form.email} onChange={set("email")} error={err.fields.email} />
-          <TextField
-            label={tm("vatCode")}
-            value={form.vatCode}
-            onChange={set("vatCode")}
-            error={err.fields.vatCode}
-            inputMode="numeric"
-            maxLength={12}
-          />
-          <TextField label={tm("bank")} value={form.bankName} onChange={set("bankName")} error={err.fields.bankName} />
-          <TextField
-            label={tm("mfo")}
-            value={form.bankMfo}
-            onChange={set("bankMfo")}
-            error={err.fields.bankMfo}
-            inputMode="numeric"
-            maxLength={5}
-          />
-          <TextField
-            label={tm("account")}
-            value={form.bankAccount}
-            onChange={set("bankAccount")}
-            error={err.fields.bankAccount}
-            inputMode="numeric"
-            maxLength={20}
-            className="col-span-2"
-          />
-          <TextField label={tm("note")} value={form.note} onChange={set("note")} error={err.fields.note} className="col-span-2" />
-        </fieldset>
-        {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
-        {canEdit ? (
-          <div className="col-span-2 flex items-center gap-2 border-t border-border pt-4">
-            {cp && canBlock ? (
-              cp.blocked ? (
-                <Button
-                  variant="tertiary"
-                  icon={LockOpen}
-                  loading={block.isPending}
-                  onClick={() =>
-                    block.mutate({ id: cp.id, reason: null }, { onSuccess: () => toast({ tone: "success", title: tm("unblocked") }) })
-                  }
-                >
-                  {tm("unblock")}
-                </Button>
-              ) : (
-                <Button variant="tertiary" icon={Ban} onClick={() => (block.reset(), setDialog("block"))}>
-                  {tm("block")}
-                </Button>
-              )
-            ) : null}
-            {cp ? (
-              cp.active ? (
-                <Button variant="tertiary" icon={PowerOff} onClick={() => (activate.reset(), setDialog("deactivate"))}>
-                  {tm("deactivate")}
-                </Button>
-              ) : (
-                <Button
-                  variant="tertiary"
-                  icon={Power}
-                  loading={activate.isPending}
-                  onClick={() =>
-                    activate.mutate({ id: cp.id, reason: null }, { onSuccess: () => toast({ tone: "success", title: tm("activated") }) })
-                  }
-                >
-                  {tm("activate")}
-                </Button>
-              )
-            ) : null}
-            <div className="ml-auto flex gap-2">
-              <Button variant="secondary" onClick={onClose}>
-                {tm("back")}
-              </Button>
-              <Button type="submit" loading={save.isPending}>
-                {tm("save")}
-              </Button>
-            </div>
-          </div>
-        ) : null}
-      </form>
-      {dialog && cp ? (
-        <DeactivateDialog
-          title={dialog === "block" ? tm("blockTitle", { name: cp.name }) : tm("deactivateTitle", { name: cp.name })}
-          consequence={dialog === "block" ? tm("blockConsequence") : tm("deactivateConsequence")}
-          actionLabel={dialog === "block" ? tm("blockAction") : tm("deactivateAction")}
-          pending={dialog === "block" ? block.isPending : activate.isPending}
-          error={dialog === "block" ? block.error : activate.error}
-          onClose={() => setDialog(null)}
-          onConfirm={(reason) =>
-            (dialog === "block" ? block : activate).mutate(
-              { id: cp.id, reason },
-              {
-                onSuccess: () => (
-                  toast({ tone: "success", title: dialog === "block" ? tm("blockedToast") : tm("deactivatedToast"), description: cp.name }),
-                  setDialog(null)
-                ),
-              },
-            )
-          }
-        />
-      ) : null}
-    </>
-  );
-}
+import { LicenseBadge } from "./counterparties-page";
 
 export function LicensesTab({ cp, canEdit }: { cp: CounterpartyDetail; canEdit: boolean }) {
   const t = useTranslations("counterparties.licenses");
