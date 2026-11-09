@@ -2,9 +2,9 @@
 
 import { ArrowDownLeft, ArrowUpRight, Ban, CircleCheck, CircleX, Clock, FilePen, Plus, Truck, Wallet, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DateChip, MultiFilter } from "@/components/ui/multi-filter";
@@ -40,8 +40,6 @@ import {
   type PayFilters,
   type PayStatus,
 } from "./overview-model";
-import { PaymentDrawer } from "./payment-drawer";
-import { SupplierPaymentDrawer } from "./supplier-payment-drawer";
 
 type Row = components["schemas"]["PaymentOverviewRow"];
 
@@ -135,15 +133,22 @@ export function PaymentsPage() {
   const [f, setF] = useState<PayFilters>(() => filtersFromParams((k) => params.get(k)));
   const [search, setSearch] = useState(f.q);
 
-  // Oʻtishlar: ?open=<MT id> — buyurtma kartochkasidan; ?tab=yt&new=1&supplier=&supplierName=&amount= — kirim kartochkasidan «Toʻlash»
-  const openId = Number(params.get("open"));
-  const fromReceipt = params.get("new") === "1" && Number(params.get("supplier")) > 0;
-  const initialYt = fromReceipt
-    ? { supplierId: Number(params.get("supplier")), supplier: params.get("supplierName") ?? "", amount: params.get("amount") ?? "" }
-    : undefined;
-  const [editor, setEditor] = useState<{ kind: "MT" | "YT"; id: number | null } | null>(() =>
-    Number.isInteger(openId) && openId > 0 ? { kind: "MT", id: openId } : fromReceipt && canYt ? { kind: "YT", id: null } : null,
-  );
+  // Hujjat — toʻliq sahifa: /payments/mt|yt/new, /payments/mt|yt/<id>. Eski oʻtishlar yoʻnaltiriladi:
+  // ?open=<MT id> — buyurtma kartochkasidan; ?tab=yt&new=1&supplier=&supplierName=&amount= — kirim kartochkasidan «Toʻlash»
+  const router = useRouter();
+  const setEditor = (e: { kind: "MT" | "YT"; id: number | null }) =>
+    router.push(`/payments/${e.kind.toLowerCase()}/${e.id === null ? "new" : e.id}`);
+  const openParam = params.get("open");
+  const newParam = params.get("new");
+  useEffect(() => {
+    const id = Number(openParam);
+    if (Number.isInteger(id) && id > 0) router.replace(`/payments/mt/${id}`);
+    else if (newParam === "1" && Number(params.get("supplier")) > 0) {
+      const qs = new URLSearchParams();
+      for (const k of ["supplier", "supplierName", "amount"]) qs.set(k, params.get(k) ?? "");
+      router.replace(`/payments/yt/new?${qs.toString()}`);
+    }
+  }, [openParam, newParam, params, router]);
 
   const all = useMemo(() => list.data?.rows ?? [], [list.data]);
   const rows = useMemo(() => filterRows(all, f), [all, f]);
@@ -460,23 +465,6 @@ export function PaymentsPage() {
           ) : null}
         </>
       )}
-      {editor?.kind === "MT" ? (
-        <PaymentDrawer
-          id={editor.id}
-          branchId={workBranch}
-          onClose={() => setEditor(null)}
-          onCreated={(id) => setEditor({ kind: "MT", id })}
-        />
-      ) : null}
-      {editor?.kind === "YT" ? (
-        <SupplierPaymentDrawer
-          id={editor.id}
-          branchId={workBranch}
-          initial={editor.id == null ? initialYt : undefined}
-          onClose={() => setEditor(null)}
-          onCreated={(id) => setEditor({ kind: "YT", id })}
-        />
-      ) : null}
     </>
   );
 }

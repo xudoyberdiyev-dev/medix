@@ -7,7 +7,6 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
@@ -18,6 +17,7 @@ import { ensureCsrf, useMe } from "@/features/auth/session";
 import { CASH_APPROVE, usableAccount } from "@/features/cash/api";
 import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { BankRefFields, checkRefs, useBankRefs } from "./bank-refs";
+import { DocFrame } from "./doc-frame";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney } from "@/lib/format";
@@ -58,21 +58,22 @@ export function SupplierPaymentDrawer(props: {
   initial?: { supplierId: number; supplier: string; amount: string };
   onClose: () => void;
   onCreated: (id: number) => void;
+  frame?: "page";
 }) {
   const t = useTranslations("payments.mt");
   const one = useSupplierPayment(props.id);
   if (props.id != null && one.error) {
     return (
-      <Drawer open onClose={props.onClose} kind={t("payment")} title={t("payment")}>
+      <DocFrame frame={props.frame} onClose={props.onClose} kind={t("payment")} title={t("payment")}>
         <ErrorState onRetry={() => one.refetch()} />
-      </Drawer>
+      </DocFrame>
     );
   }
   if (props.id != null && !one.data) {
     return (
-      <Drawer open onClose={props.onClose} kind={t("payment")} title={t("payment")}>
+      <DocFrame frame={props.frame} onClose={props.onClose} kind={t("payment")} title={t("payment")}>
         <Skeleton className="h-40 w-full" />
-      </Drawer>
+      </DocFrame>
     );
   }
   return <Editor key={one.data?.version ?? "new"} {...props} doc={one.data ?? null} branchId={one.data?.branchId ?? props.branchId} />;
@@ -84,6 +85,7 @@ function Editor(props: {
   initial?: { supplierId: number; supplier: string; amount: string };
   onClose: () => void;
   onCreated: (id: number) => void;
+  frame?: "page";
 }) {
   const t = useTranslations("payments.yt");
   const tp = useTranslations("payments");
@@ -265,8 +267,8 @@ function Editor(props: {
   );
 
   return (
-    <Drawer
-      open
+    <DocFrame
+      frame={props.frame}
       onClose={props.onClose}
       size="lg"
       kind={t("kind")}
@@ -385,6 +387,6 @@ function Editor(props: {
         <p className="mb-3">{dialog === "cancel" ? (status === "POSTED" ? t("cancelPosted") : t("cancelDraft")) : t("returnHint")}</p>
         <TextField label={tp("form.reason")} value={reason} onChange={setReason} maxLength={300} />
       </Modal>
-    </Drawer>
+    </DocFrame>
   );
 }

@@ -6,7 +6,6 @@ import { Ban, CircleCheck, Save } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
@@ -17,6 +16,7 @@ import { ensureCsrf, useMe } from "@/features/auth/session";
 import { CASH_APPROVE, usableAccount } from "@/features/cash/api";
 import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { BankRefFields, checkRefs, useBankRefs } from "./bank-refs";
+import { DocFrame } from "./doc-frame";
 import { searchCustomers } from "@/features/orders/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
@@ -25,27 +25,39 @@ import { PAYMENT_CANCEL, PAYMENT_MT, useAccounts, useOpenDocs, usePayment, type 
 import { OpenDocsSection } from "./open-docs";
 import { PaymentStatusBadge } from "./payments-page";
 
-export function PaymentDrawer(props: { id: number | null; branchId: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+export function PaymentDrawer(props: {
+  id: number | null;
+  branchId: number | null;
+  onClose: () => void;
+  onCreated: (id: number) => void;
+  frame?: "page";
+}) {
   const t = useTranslations("payments.mt");
   const one = usePayment(props.id);
   if (props.id != null && one.error) {
     return (
-      <Drawer open onClose={props.onClose} kind={t("payment")} title={t("payment")}>
+      <DocFrame frame={props.frame} onClose={props.onClose} kind={t("payment")} title={t("payment")}>
         <ErrorState onRetry={() => one.refetch()} />
-      </Drawer>
+      </DocFrame>
     );
   }
   if (props.id != null && !one.data) {
     return (
-      <Drawer open onClose={props.onClose} kind={t("payment")} title={t("payment")}>
+      <DocFrame frame={props.frame} onClose={props.onClose} kind={t("payment")} title={t("payment")}>
         <Skeleton className="h-40 w-full" />
-      </Drawer>
+      </DocFrame>
     );
   }
   return <Editor key={one.data?.version ?? "new"} {...props} doc={one.data ?? null} branchId={one.data?.branchId ?? props.branchId} />;
 }
 
-function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onClose: () => void; onCreated: (id: number) => void }) {
+function Editor(props: {
+  doc: PaymentDetail | null;
+  branchId: number | null;
+  onClose: () => void;
+  onCreated: (id: number) => void;
+  frame?: "page";
+}) {
   const t = useTranslations("payments.mt");
   const tp = useTranslations("payments");
   const { doc } = props;
@@ -178,8 +190,8 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
   );
 
   return (
-    <Drawer
-      open
+    <DocFrame
+      frame={props.frame}
       onClose={props.onClose}
       size="lg"
       kind={t("kind")}
@@ -277,7 +289,7 @@ function Editor(props: { doc: PaymentDetail | null; branchId: number | null; onC
         <p className="mb-3">{doc?.status === "POSTED" ? t("cancelPosted") : tp("form.cancelDraft")}</p>
         <TextField label={tp("form.reason")} value={reason} onChange={setReason} maxLength={300} />
       </Modal>
-    </Drawer>
+    </DocFrame>
   );
 }
 
