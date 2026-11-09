@@ -393,6 +393,7 @@ function FormBody({
                       onChange={set("pharmNo")}
                       error={err("pharmNo")}
                       placeholder="FA-0000-2026"
+                      required
                     />
                   </div>
                   <div data-f="pharmUntil">
@@ -402,6 +403,7 @@ function FormBody({
                       onChange={set("pharmUntil")}
                       error={err("pharmUntil")}
                       placeholder={t("datePh")}
+                      required
                     />
                   </div>
                 </div>

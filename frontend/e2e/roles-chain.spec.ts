@@ -166,6 +166,8 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   await field(page, "STIR / JShShIR").fill("305559876");
   await field(page, "Nomi").fill(CUSTOMER);
   await choose(page, "Turi", /Dorixona/);
+  await field(page, "Litsenziya raqami").fill("FA-E2E-1");
+  await field(page, "Amal qilish muddati").fill("31.12.2030");
   await page.getByRole("button", { name: "Kartani saqlash" }).click();
   await expect(page.getByText("Kontragent qoʻshildi")).toBeVisible();
   await page.keyboard.press("Escape");

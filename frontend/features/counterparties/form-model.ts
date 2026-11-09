@@ -120,7 +120,7 @@ export function validateForm(f: CpForm, o: { isNew: boolean; supplier: boolean; 
   });
   if (!o.isNew) return e;
   if (o.supplier && !f.mainPay) e.mainPay = "required";
-  // Litsenziya: raqam yoki muddat kiritilsa — ikkalasi ham shart
+  // Litsenziya (farmatsevtik) — yangi kontragentda majburiy (egasi E9); nazoratdagi — belgilansa
   const pair = (no: "pharmNo" | "ctrlNo", until: "pharmUntil" | "ctrlUntil", need: boolean) => {
     if (!need && !f[no].trim() && !f[until].trim()) return;
     if (!f[no].trim()) e[no] = "required";
@@ -129,7 +129,7 @@ export function validateForm(f: CpForm, o: { isNew: boolean; supplier: boolean; 
     else if (!d) e[until] = "date";
     else if (d <= new Date().toISOString().slice(0, 10)) e[until] = "dateOrder";
   };
-  pair("pharmNo", "pharmUntil", false);
+  pair("pharmNo", "pharmUntil", true);
   if (f.ctrl) pair("ctrlNo", "ctrlUntil", true);
   if (o.terms) {
     if (!f.branchId) e.branchId = "required";
