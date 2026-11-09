@@ -76,7 +76,12 @@ class IdentitySchemaIT {
                 .query(String.class)
                 .list();
         assertThat(sellable).containsExactly("COLD", "MAIN", "SAFE");
-        assertRejected("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, 'MAIN', 'Ikkinchi')", Map.of("w", wh));
+        // E12: saqlash zonasi bir nechta boʻlishi mumkin; Qabul/Karantin/Joʻnatish — bittadan; oqim zonasi sotuvga ochilmaydi
+        jdbc.sql("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, 'MAIN', 'Ikkinchi')").param("w", wh).update();
+        assertRejected("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, 'SHIPPING', 'Ikkinchi joʻnatish')", Map.of("w", wh));
+        assertRejected("UPDATE zone SET sellable = true WHERE warehouse_id = :w AND type = 'QUARANTINE'", Map.of("w", wh));
+        assertThat(jdbc.sql("UPDATE zone SET sellable = false WHERE warehouse_id = :w AND name = 'Ikkinchi'").param("w", wh).update())
+                .isEqualTo(1);
     }
 
     @Test
