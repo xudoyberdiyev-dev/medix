@@ -809,7 +809,7 @@ export interface paths {
          * Kassalar roʻyxati (kartalar)
          * @description Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.
          */
-        get: operations["overview_4"];
+        get: operations["overview_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -887,7 +887,7 @@ export interface paths {
          * Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)
          * @description To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.
          */
-        get: operations["overview_3"];
+        get: operations["overview_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1822,7 +1822,7 @@ export interface paths {
             cookie?: never;
         };
         /** Inventarizatsiya: holatlar soni va har ombor boʻyicha oxirgi toʻliq inventarizatsiya */
-        get: operations["overview_2"];
+        get: operations["overview_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3293,7 +3293,7 @@ export interface paths {
             cookie?: never;
         };
         /** To'lovlar ro'yxati: MT + YT bitta jadvalda (prototip Payments) */
-        get: operations["overview_1"];
+        get: operations["overview_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3661,7 +3661,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turlari jadvali (filial bo'yicha statistika bilan, nofaollari ham) */
-        get: operations["overview"];
+        get: operations["overview_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5227,6 +5227,26 @@ export interface paths {
          * @description Tovar joyida qoladi.
          */
         post: operations["reject_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transfers/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ko'chirishlar (ZK, OK, FS)
+         * @description Har turdan oxirgi 200 ta; branchId — filial.
+         */
+        get: operations["overview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9647,6 +9667,11 @@ export interface components {
         PinRequest: {
             pin: string;
         };
+        Place: {
+            branch?: components["schemas"]["BranchRef"];
+            warehouse: string;
+            zone?: string;
+        };
         PostRequest: {
             /**
              * @description Farq bo'lsa majburiy
@@ -11550,6 +11575,35 @@ export interface components {
             toAccountId: number;
             /** Format: date */
             transferDate: string;
+        };
+        TransferItem: {
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** @enum {string} */
+            direction: "INTERNAL" | "OUT" | "IN";
+            from: components["schemas"]["Place"];
+            /** Format: int64 */
+            id: number;
+            invoiceNumber?: string;
+            /** @enum {string} */
+            kind: "ZK" | "OK" | "FS";
+            /** Format: int32 */
+            lines: number;
+            number: string;
+            /** Format: int64 */
+            qty: number;
+            /** Format: int32 */
+            shortageQty: number;
+            /** @enum {string} */
+            state: "PENDING" | "POSTED" | "REJECTED" | "DRAFT" | "TRANSIT" | "RECEIVED" | "DIFF" | "CANCELLED";
+            to: components["schemas"]["Place"];
+            /** @description Faqat FS va special.cost ruxsati bilan */
+            total?: string;
+        };
+        TransferOverview: {
+            items: components["schemas"]["TransferItem"][];
+            truncated: boolean;
         };
         TransferRequest: {
             amount: string;
@@ -13459,7 +13513,7 @@ export interface operations {
             };
         };
     };
-    overview_4: {
+    overview_5: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -13583,7 +13637,7 @@ export interface operations {
             };
         };
     };
-    overview_3: {
+    overview_4: {
         parameters: {
             query?: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
@@ -14970,7 +15024,7 @@ export interface operations {
             };
         };
     };
-    overview_2: {
+    overview_3: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -16958,7 +17012,7 @@ export interface operations {
             };
         };
     };
-    overview_1: {
+    overview_2: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -17539,7 +17593,7 @@ export interface operations {
             };
         };
     };
-    overview: {
+    overview_1: {
         parameters: {
             query: {
                 branchId: number;
@@ -19861,6 +19915,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SupplierReturnDetail"];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferOverview"];
                 };
             };
         };

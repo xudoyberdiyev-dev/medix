@@ -14,6 +14,7 @@
   "badge": "{count} та кутмоқда",
   "hubTabs": {
     "transfers": "Кўчириш турлари",
+    "transfersAll": "Ҳаммаси",
     "transfersWarehouse": "Омборлар ўртасида",
     "transfersZone": "Зона ичида",
     "transfersBranch": "Филиаллараро",

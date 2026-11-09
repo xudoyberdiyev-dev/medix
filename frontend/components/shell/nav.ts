@@ -66,6 +66,7 @@ export interface NavGroup {
 }
 
 export type HubTabKey =
+  | "transfersAll"
   | "transfersWarehouse"
   | "transfersZone"
   | "transfersBranch"
@@ -80,9 +81,21 @@ export interface HubTab {
   anyOf: string[];
 }
 
+/** Koʻchirishning istalgan turini koʻrish ruxsatlari. */
+export const TRANSFER_ANY = [
+  "transfer.view",
+  "transfer.zk",
+  "transfer.quar",
+  "transfer.ok",
+  "transfer.fs",
+  "transfer.send",
+  "transfer.receive",
+] as const;
+
 /** Bitta menyu bandi ostidagi sahifalar (prototip: «Koʻchirish», «Qaytarish va hisobdan chiqarish», YB qarzi → Bonus balans). */
 export const HUBS = {
   transfers: [
+    { key: "transfersAll", href: "/transfers", anyOf: [...TRANSFER_ANY] },
     {
       key: "transfersWarehouse",
       href: "/warehouse-transfers",
@@ -110,7 +123,7 @@ export function hubTabsFor(hub: HubKey, permissions: string[] | undefined): HubT
 }
 
 /** Koʻchirishning uch turi — bitta «Koʻchirish» bandi, sahifalarda yorliqlar. */
-export const TRANSFER_PAGES = ["/warehouse-transfers", "/zone-transfers", "/branch-sales"] as const;
+export const TRANSFER_PAGES = ["/transfers", "/warehouse-transfers", "/zone-transfers", "/branch-sales"] as const;
 /** «Qaytarish va hisobdan chiqarish» yorliqlari. */
 export const RETURN_PAGES = ["/write-offs", "/supplier-returns"] as const;
 
@@ -161,7 +174,7 @@ export const navigation: NavGroup[] = [
         also: [...TRANSFER_PAGES],
         hub: "transfers",
         icon: ArrowLeftRight,
-        anyOf: ["transfer.view", "transfer.zk", "transfer.quar", "transfer.ok", "transfer.fs", "transfer.send", "transfer.receive"],
+        anyOf: [...TRANSFER_ANY],
       },
       {
         key: "inventory-counts",

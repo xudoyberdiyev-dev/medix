@@ -1,0 +1,72 @@
+{
+  "title": "Koʻchirish",
+  "countLabel": "Jami hujjatlar",
+  "new": "Yangi",
+  "newMenu": "Yangi koʻchirish turi",
+  "kind": {
+    "ZK": "Zona koʻchirish",
+    "OK": "Ombor koʻchirish",
+    "FS": "Filiallararo savdo"
+  },
+  "kindDesc": {
+    "ZK": "Bir ombor ichida zonadan zonaga, masalan Karantin → Asosiy saqlash. Bir bosqich.",
+    "OK": "Filial ichida ombordan omborga. Joʻnatildi → yoʻlda → qabul qilindi. Tannarx va partiya oʻzgarmaydi.",
+    "FS": "Boshqa filialga tannarxda sotuv: hisob-faktura va QQS bilan, ikki bosqich."
+  },
+  "view": {
+    "all": "Hammasi",
+    "out": "Chiquvchi",
+    "in": "Kiruvchi",
+    "transit": "Yoʻlda",
+    "zk": "Zona ichida",
+    "fs": "Filiallararo"
+  },
+  "viewsLabel": "Koʻchirish koʻrinishlari",
+  "col": {
+    "number": "Raqam",
+    "kind": "Turi",
+    "date": "Sana",
+    "route": "Qayerdan → Qayerga",
+    "lines": "Qatorlar",
+    "qty": "Miqdor",
+    "sum": "Summa (QQS bilan)",
+    "status": "Holat",
+    "createdBy": "Yaratgan"
+  },
+  "out": "chiquvchi",
+  "in": "kiruvchi",
+  "kpi": {
+    "transit": "Yoʻlda",
+    "cost": "Summa {sum}",
+    "qty": "{qty} dona",
+    "incoming": "Menga kelayotgan",
+    "incomingNote": "Bosing — qabul qilish roʻyxati",
+    "drafts": "Qoralamalar",
+    "pending": "{count} tasi rahbar tasdigʻida",
+    "diff": "Farq bilan qabul qilingan",
+    "diffNote": "Hal qilinishi kerak boʻlishi mumkin",
+    "count": "{count} ta"
+  },
+  "state": {
+    "DRAFT": "Qoralama",
+    "PENDING": "Rahbar tasdigʻida",
+    "POSTED": "Tasdiqlangan",
+    "TRANSIT": "Yoʻlda",
+    "RECEIVED": "Qabul qilindi",
+    "DIFF": "Farq bilan qabul qilindi",
+    "REJECTED": "Rad etilgan",
+    "CANCELLED": "Bekor qilingan"
+  },
+  "search": "Qidirish",
+  "searchPlaceholder": "Raqam, ombor, filial yoki xodim…",
+  "dateInvalid": "Sana notoʻgʻri — KK.OO.YYYY koʻrinishida kiriting",
+  "clearFilters": "Filtrlarni tozalash",
+  "open": "Ochish",
+  "receive": "Qabul qilish",
+  "rowActions": "Amallar",
+  "shortage": "{qty} dona yetishmadi",
+  "truncated": "Har turdan oxirgi 200 ta hujjat koʻrsatildi. Eskilarini koʻrish uchun tur sahifasini oching.",
+  "emptyTitle": "Koʻchirish hali yoʻq",
+  "emptyText": "Zonalar, omborlar yoki filiallar oʻrtasida tovar koʻchirish uchun «Yangi» tugmasini bosing.",
+  "forbidden": "Koʻchirishlarni koʻrish uchun ruxsat yoʻq. Filial rahbari yoki administratorga murojaat qiling."
+}

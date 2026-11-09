@@ -603,6 +603,16 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   const row = page.getByRole("row", { name: /OK-/ }).first();
   await expect(row).toContainText("Qabul qilindi");
   await expect(row).toContainText("E2E ikkinchi ombor");
+
+  // Koʻchirish — bitta roʻyxat: kamomad bilan qabul — «Farq bilan qabul qilindi», qator → tur sahifasidagi hujjat
+  await page.goto("/transfers");
+  await page.getByRole("button", { name: /Farq bilan qabul qilingan/ }).click();
+  const all = page.getByRole("row", { name: /OK-/ }).first();
+  await expect(all).toContainText("Farq bilan qabul qilindi");
+  await expect(all).toContainText("Ombor koʻchirish");
+  await all.click();
+  await expect(page).toHaveURL(/\/warehouse-transfers\?open=\d+/);
+  await page.keyboard.press("Escape");
 });
 
 test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, tannarx bilan", async ({ page }) => {

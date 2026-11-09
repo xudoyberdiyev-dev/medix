@@ -132,6 +132,9 @@
     "description" : "Kompaniya",
     "name" : "company"
   }, {
+    "description" : "Ko'chirish — ZK, OK, FS bitta ro'yxatda",
+    "name" : "transfer-overview"
+  }, {
     "description" : "Reyslar",
     "name" : "trips"
   }, {
@@ -1804,7 +1807,7 @@
     "/api/cash/overview" : {
       "get" : {
         "description" : "Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.",
-        "operationId" : "overview_4",
+        "operationId" : "overview_5",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2052,7 +2055,7 @@
     "/api/counterparties/overview" : {
       "get" : {
         "description" : "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.",
-        "operationId" : "overview_3",
+        "operationId" : "overview_4",
         "parameters" : [ {
           "in" : "query",
           "name" : "role",
@@ -4153,7 +4156,7 @@
     },
     "/api/inventory-counts/overview" : {
       "get" : {
-        "operationId" : "overview_2",
+        "operationId" : "overview_3",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7271,7 +7274,7 @@
     },
     "/api/payments/overview" : {
       "get" : {
-        "operationId" : "overview_1",
+        "operationId" : "overview_2",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -8151,7 +8154,7 @@
     },
     "/api/price-types/overview" : {
       "get" : {
-        "operationId" : "overview",
+        "operationId" : "overview_1",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -12286,6 +12289,35 @@
         },
         "summary" : "Rad etish",
         "tags" : [ "supplier-return" ]
+      }
+    },
+    "/api/transfers/overview" : {
+      "get" : {
+        "description" : "Har turdan oxirgi 200 ta; branchId — filial.",
+        "operationId" : "overview",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TransferOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ko'chirishlar (ZK, OK, FS)",
+        "tags" : [ "transfer-overview" ]
       }
     },
     "/api/trips" : {
@@ -23020,6 +23052,21 @@
         },
         "required" : [ "pin" ]
       },
+      "Place" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "$ref" : "#/components/schemas/BranchRef"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "zone" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "warehouse" ]
+      },
       "PostRequest" : {
         "type" : "object",
         "properties" : {
@@ -27719,6 +27766,78 @@
           }
         },
         "required" : [ "amount", "branchId", "createdAt", "createdBy", "fromAccount", "fromAccountId", "id", "number", "status", "toAccount", "toAccountId", "transferDate" ]
+      },
+      "TransferItem" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "INTERNAL", "OUT", "IN" ]
+          },
+          "from" : {
+            "$ref" : "#/components/schemas/Place"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "ZK", "OK", "FS" ]
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "shortageQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "state" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "POSTED", "REJECTED", "DRAFT", "TRANSIT", "RECEIVED", "DIFF", "CANCELLED" ]
+          },
+          "to" : {
+            "$ref" : "#/components/schemas/Place"
+          },
+          "total" : {
+            "type" : "string",
+            "description" : "Faqat FS va special.cost ruxsati bilan"
+          }
+        },
+        "required" : [ "createdAt", "createdBy", "direction", "from", "id", "kind", "lines", "number", "qty", "shortageQty", "state", "to" ]
+      },
+      "TransferOverview" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TransferItem"
+            }
+          },
+          "truncated" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "items", "truncated" ]
       },
       "TransferRequest" : {
         "type" : "object",
