@@ -577,6 +577,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/branches/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filiallar ko'rsatkichlari */
+        get: operations["stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/branches/{id}": {
         parameters: {
             query?: never;
@@ -7003,6 +7020,17 @@ export interface components {
             /** @description Faqat special.cost ruxsati bilan */
             total?: string;
         };
+        BranchStats: {
+            /** Format: int64 */
+            branchId: number;
+            /** @description Faqat cdebt.view bilan */
+            customerDebt?: string;
+            /** Format: int32 */
+            employees: number;
+            headName?: string;
+            /** Format: int32 */
+            warehouses: number;
+        };
         BranchSummary: {
             advance: string;
             /** Format: int64 */
@@ -13341,6 +13369,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Branch"];
+                };
+            };
+        };
+    };
+    stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchStats"][];
                 };
             };
         };

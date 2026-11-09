@@ -54,6 +54,11 @@ export function useBranchList() {
   return useQuery({ queryKey: BRANCHES, queryFn: () => unwrap(api.GET("/api/branches")) });
 }
 
+/** Filiallar roʻyxati ustunlari: rahbar, omborlar, xodimlar, mijozlar qarzi (`/api/branches/stats`). */
+export function useBranchStats() {
+  return useQuery({ queryKey: [...BRANCHES, "stats"], queryFn: () => unwrap(api.GET("/api/branches/stats")) });
+}
+
 export function useWarehouses() {
   return useQuery({ queryKey: WAREHOUSES, queryFn: () => unwrap(api.GET("/api/warehouses")) });
 }

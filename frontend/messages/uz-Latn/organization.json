@@ -30,13 +30,34 @@
   "reason": "Sabab",
   "reasonRequired": "Sabab kiritilmagan. Nega nofaol qilinayotganini yozing.",
   "sections": {
-    "branches": { "title": "Filiallar", "description": "Kod, STIR, yuridik nom; nofaol qilish" },
-    "warehouses": { "title": "Omborlar va zonalar", "description": "Omborlar, Sovuq va Seyf zonalari" },
-    "employees": { "title": "Xodimlar", "description": "Loginlar, rollar, bloklash, vaqtinchalik parol" },
-    "roles": { "title": "Rollar va ruxsatlar", "description": "11 rol, 132 ruxsat kaliti, rol nusxasi" },
-    "audit": { "title": "Audit jurnali", "description": "Kim, qachon, nima oʻzgartirdi" },
-    "profile": { "title": "Profil", "description": "Telefon, parol, PIN" },
-    "setup": { "title": "Sozlash ustasi", "description": "Birinchi ishga tushirish: kompaniya, filiallar, omborlar" }
+    "branches": {
+      "title": "Filiallar",
+      "description": "Kod, STIR, yuridik nom; nofaol qilish"
+    },
+    "warehouses": {
+      "title": "Omborlar va zonalar",
+      "description": "Omborlar, Sovuq va Seyf zonalari"
+    },
+    "employees": {
+      "title": "Xodimlar",
+      "description": "Loginlar, rollar, bloklash, vaqtinchalik parol"
+    },
+    "roles": {
+      "title": "Rollar va ruxsatlar",
+      "description": "11 rol, 132 ruxsat kaliti, rol nusxasi"
+    },
+    "audit": {
+      "title": "Audit jurnali",
+      "description": "Kim, qachon, nima oʻzgartirdi"
+    },
+    "profile": {
+      "title": "Profil",
+      "description": "Telefon, parol, PIN"
+    },
+    "setup": {
+      "title": "Sozlash ustasi",
+      "description": "Birinchi ishga tushirish: kompaniya, filiallar, omborlar"
+    }
   },
   "branches": {
     "forbidden": "Filiallarni Direktor va Bosh administrator boshqaradi.",
@@ -56,7 +77,14 @@
     "new": "Yangi filial",
     "save": "Filialni saqlash",
     "codeHintLocked": "Kod hujjat raqamlarida ishlatiladi — oʻzgarmaydi",
-    "codeHintNew": "3 ta lotin harfi, masalan TSH"
+    "codeHintNew": "3 ta lotin harfi, masalan TSH",
+    "codeNote": "Filial kodi hujjat raqamlarida ishlatiladi va oʻzgarmaydi",
+    "head": "Filial rahbari",
+    "noHead": "Tayinlanmagan",
+    "warehousesCol": "Omborlar",
+    "employeesCol": "Xodimlar",
+    "customerDebt": "Mijozlar qarzi",
+    "countLabel": "Jami filiallar"
   },
   "warehouses": {
     "forbidden": "Omborlarni Direktor va Bosh administrator boshqaradi.",

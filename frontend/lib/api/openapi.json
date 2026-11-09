@@ -15,6 +15,9 @@
     "description" : "Boshlang'ich qoldiq: qarzlar, kassa va bank",
     "name" : "opening-finance"
   }, {
+    "description" : "Filiallar ro'yxati ko'rsatkichlari",
+    "name" : "branch-stats"
+  }, {
     "description" : "Buyurtmalar",
     "name" : "orders"
   }, {
@@ -1274,6 +1277,28 @@
         },
         "summary" : "Filial qo'shish",
         "tags" : [ "branches" ]
+      }
+    },
+    "/api/branches/stats" : {
+      "get" : {
+        "operationId" : "stats",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/BranchStats"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Filiallar ko'rsatkichlari",
+        "tags" : [ "branch-stats" ]
       }
     },
     "/api/branches/{id}" : {
@@ -16272,6 +16297,31 @@
           }
         },
         "required" : [ "buyer", "createdAt", "createdBy", "fromWarehouse", "fromZone", "id", "lines", "number", "qty", "seller", "shortageQty", "status", "toWarehouse" ]
+      },
+      "BranchStats" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customerDebt" : {
+            "type" : "string",
+            "description" : "Faqat cdebt.view bilan"
+          },
+          "employees" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "headName" : {
+            "type" : "string"
+          },
+          "warehouses" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "branchId", "employees", "warehouses" ]
       },
       "BranchSummary" : {
         "type" : "object",
