@@ -161,7 +161,7 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
 
   // Mijoz
   await page.goto("/customers");
-  await page.getByRole("button", { name: "Mijoz qoʻshish" }).click();
+  await page.getByRole("button", { name: "Mijoz qoʻshish" }).first().click();
   await field(page, "STIR / JShShIR").fill("305559876");
   await field(page, "Nomi").fill(CUSTOMER);
   await page.getByRole("button", { name: "Kartani saqlash" }).click();

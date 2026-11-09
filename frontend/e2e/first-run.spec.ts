@@ -348,7 +348,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
 
   // Yetkazib beruvchi
   await page.goto("/suppliers");
-  await page.getByRole("button", { name: "Yetkazib beruvchi qoʻshish" }).click();
+  await page.getByRole("button", { name: "Yetkazib beruvchi qoʻshish" }).first().click();
   await field(page, "STIR / JShShIR").fill("309876543");
   await field(page, "Nomi").fill("Pharm Supply E2E");
   await page.getByRole("button", { name: "Kartani saqlash" }).click();
@@ -415,7 +415,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/customers");
-  await page.getByRole("button", { name: "Mijoz qoʻshish" }).click();
+  await page.getByRole("button", { name: "Mijoz qoʻshish" }).first().click();
   await field(page, "STIR / JShShIR").fill("305551234");
   await field(page, "Nomi").fill("Shifo Dorixona E2E");
   await page.getByRole("button", { name: "Kartani saqlash" }).click();
