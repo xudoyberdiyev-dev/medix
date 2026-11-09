@@ -189,7 +189,8 @@ class CounterpartyOverviewIT {
                 .param("n", "Hujjat Dorixona " + tin)
                 .query(Long.class)
                 .single();
-        long emp = jdbc.sql("SELECT min(id) FROM employee").query(Long.class).single();
+        Cookie director = loginAs("DIRECTOR", null);
+        long emp = jdbc.sql("SELECT max(id) FROM employee").query(Long.class).single();
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Tashkent"));
         for (long b : new long[] {b1, b2}) {
             long acc = jdbc.sql("INSERT INTO money_account (branch_id, kind, code, name) VALUES (:b, 'TERMINAL', :k, 'Terminal') RETURNING id")
@@ -210,7 +211,6 @@ class CounterpartyOverviewIT {
         }
         String url = "/api/counterparties/" + c + "/documents";
 
-        Cookie director = loginAs("DIRECTOR", null);
         mvc.perform(get(url).param("role", "CUSTOMER").param("section", "PAYMENTS").cookie(director))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(2))
