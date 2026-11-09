@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,7 @@ import uz.medix.catalog.counterparty.CounterpartyModels.SortField;
 import uz.medix.catalog.counterparty.CounterpartyModels.Status;
 import uz.medix.catalog.counterparty.CounterpartyModels.TermsRequest;
 import uz.medix.shared.error.MedixException;
+import uz.medix.shared.pdf.PdfFormat;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
 
@@ -148,7 +150,7 @@ class CounterpartyController {
     @GetMapping("/{id}/documents")
     @Operation(summary = "Kartochka hujjat yorliqlari: Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar, Kirimlar (oxirgi 100 ta)",
             description = "Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, "
-                    + "qm.view / qy.view, receipt.view. Filial — xodim ko'radiganlari.")
+                    + "qm.view / qy.view, receipt.view, Bonus — sdebt.view yoki supplierBonus.confirm. Filial — xodim ko'radiganlari.")
     CounterpartyDocuments.CounterpartyDocumentsPage documents(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
             @RequestParam CounterpartyDocuments.Section section, Authentication auth) {
         boolean customers = role != Role.SUPPLIER;
@@ -159,6 +161,7 @@ class CounterpartyController {
             case PAYMENTS -> "payments.view";
             case RETURNS -> customers ? "qm.view" : "qy.view";
             case RECEIPTS -> customers ? null : "receipt.view";
+            case BONUS -> customers ? null : has(auth, "supplierBonus.confirm") ? "supplierBonus.confirm" : "sdebt.view";
         };
         if (need == null) {
             throw MedixException.badRequest("counterparty.section.invalid");
@@ -166,6 +169,22 @@ class CounterpartyController {
         require(auth, need);
         detail(id);
         return documents.list(actor(), id, customers, section);
+    }
+
+    @GetMapping("/{id}/products")
+    @Operation(summary = "YB kartochkasi «Mahsulotlar»: o'tkazilgan kirimlardagi mahsulotlar (oxirgi narx, sana, soni, kirimlar)",
+            description = "Ruxsat: suppliers.view + receipt.view. days — oxirgi N kun (30, 90), bo'sh — hammasi. Narx — special.cost "
+                    + "yoki kirimni qabul qilmaydigan xodim (kirim qoidasi bilan bir xil). Filial — xodim ko'radiganlari.")
+    CounterpartyDocuments.SupplierProductsPage products(@PathVariable long id, @RequestParam(required = false) Integer days,
+            Authentication auth) {
+        require(auth, "suppliers.view");
+        require(auth, "receipt.view");
+        if (days != null && (days < 1 || days > 3660)) {
+            throw MedixException.badRequest("counterparty.section.invalid");
+        }
+        detail(id);
+        boolean prices = has(auth, "special.cost") || !has(auth, "receipt.accept");
+        return documents.products(actor(), id, days, prices, LocalDate.now(PdfFormat.TASHKENT));
     }
 
     @GetMapping("/{id}/history")

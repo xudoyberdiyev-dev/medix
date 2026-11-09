@@ -245,4 +245,110 @@ class CounterpartyOverviewIT {
         mvc.perform(get(url).param("role", "CUSTOMER").param("section", "PAYMENTS").cookie(operator))
                 .andExpect(status().isForbidden());
     }
+
+    private long postedReceipt(long b, long w, long z, long s, long product, long emp, LocalDate d, int qty, String price, String discount) {
+        long r = jdbc.sql("""
+                INSERT INTO receipt (number, branch_id, warehouse_id, supplier_id, receipt_date, payment_type, due_date, owner_id, created_by,
+                                     discount_kind, discount_value)
+                VALUES (:n, :b, :w, :s, :d, 'TRANSFER', :d, :e, :e, :k, CAST(:v AS NUMERIC)) RETURNING id""")
+                .param("n", "KR-CP-" + UUID.randomUUID().toString().substring(0, 8))
+                .param("b", b).param("w", w).param("s", s).param("d", d).param("e", emp)
+                .param("k", discount == null ? null : "SUM").param("v", discount)
+                .query(Long.class).single();
+        jdbc.sql("""
+                INSERT INTO receipt_line (receipt_id, line_no, product_id, qty, bonus_qty, expiry_date, zone_id, batch_number, price)
+                VALUES (:r, 1, :p, :q, 1, :x, :z, 'B1', CAST(:c AS NUMERIC))""")
+                .param("r", r).param("p", product).param("q", qty).param("x", d.plusYears(2)).param("z", z).param("c", price)
+                .update();
+        jdbc.sql("""
+                UPDATE receipt SET status = 'POSTED', accepted_at = now(), posted_at = now(),
+                       debt_amount = (SELECT sum(qty * price) FROM receipt_line WHERE receipt_id = :r) WHERE id = :r""")
+                .param("r", r).update();
+        return r;
+    }
+
+    @Test
+    void supplierCardBonusAndProductsTabs() throws Exception {
+        long b1 = branch();
+        long b2 = branch();
+        long s = jdbc.sql("INSERT INTO counterparty (tin, name, is_customer, is_supplier) VALUES (:t, :n, false, true) RETURNING id")
+                .param("t", tin())
+                .param("n", "Bonus YB " + UUID.randomUUID().toString().substring(0, 6))
+                .query(Long.class)
+                .single();
+        Cookie director = loginAs("DIRECTOR", null);
+        long emp = jdbc.sql("SELECT max(id) FROM employee").query(Long.class).single();
+        long product = jdbc.sql("""
+                INSERT INTO product (unit_id, code, name) SELECT id, :c, 'Analgin YB' FROM unit ORDER BY id LIMIT 1 RETURNING id""")
+                .param("c", String.valueOf(10_000_000 + ThreadLocalRandom.current().nextInt(89_999_999)))
+                .query(Long.class).single();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Tashkent"));
+        long[] receipts = new long[3];
+        int i = 0;
+        for (long b : new long[] {b1, b2}) {
+            long w = jdbc.sql("INSERT INTO warehouse (branch_id, name) VALUES (:b, 'Asosiy') RETURNING id").param("b", b).query(Long.class).single();
+            long z = jdbc.sql("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, 'MAIN', 'Asosiy zona') RETURNING id").param("w", w)
+                    .query(Long.class).single();
+            if (b == b1) {
+                // 100 kun oldin (90 kunlik davrdan tashqari) va kecha — oxirgi narx kechagisi
+                receipts[i++] = postedReceipt(b, w, z, s, product, emp, today.minusDays(100), 10, "1000.00", null);
+                receipts[i++] = postedReceipt(b, w, z, s, product, emp, today.minusDays(1), 5, "1200.50", "15000.00");
+            } else {
+                receipts[i++] = postedReceipt(b, w, z, s, product, emp, today, 4, "1300.00", "20000.00");
+            }
+        }
+        // b2 kirimiga BNS tasdiqlangan — kutilmaydi; b1 kechagi kirim — kutilayotgan bonus
+        long bns = jdbc.sql("""
+                INSERT INTO supplier_bonus (number, branch_id, supplier_id, receipt_id, amount, created_by)
+                VALUES (:n, :b, :s, :r, 20000.00, :e) RETURNING id""")
+                .param("n", "BNS-CP-" + s).param("b", b2).param("s", s).param("r", receipts[2]).param("e", emp)
+                .query(Long.class).single();
+        jdbc.sql("""
+                INSERT INTO supplier_bonus_ledger (branch_id, supplier_id, amount, doc_type, doc_id, doc_number, employee_id, note)
+                VALUES (:b, :s, 20000.00, 'BNS', :d, :n, :e, 'KR')""")
+                .param("b", b2).param("s", s).param("d", bns).param("n", "BNS-CP-" + s).param("e", emp).update();
+
+        String url = "/api/counterparties/" + s + "/documents";
+        mvc.perform(get(url).param("role", "SUPPLIER").param("section", "BONUS").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[0].status").value("BONUS_CONFIRMED"))
+                .andExpect(jsonPath("$.items[0].amount").value("20000.00"))
+                .andExpect(jsonPath("$.items[0].linkId").value(receipts[2]))
+                .andExpect(jsonPath("$.items[1].status").value("BONUS_EXPECTED"))
+                .andExpect(jsonPath("$.items[1].amount").value("15000.00"))
+                .andExpect(jsonPath("$.items[1].linkId").value(receipts[1]));
+        // Mijozda «Bonus» yo'q
+        mvc.perform(get(url).param("role", "CUSTOMER").param("section", "BONUS").cookie(director))
+                .andExpect(status().isBadRequest());
+
+        String prods = "/api/counterparties/" + s + "/products";
+        mvc.perform(get(prods).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].name").value("Analgin YB"))
+                .andExpect(jsonPath("$.items[0].lastPrice").value("1300.00"))
+                .andExpect(jsonPath("$.items[0].lastDate").value(today.toString()))
+                .andExpect(jsonPath("$.items[0].qty").value(22))
+                .andExpect(jsonPath("$.items[0].receipts").value(3));
+        mvc.perform(get(prods).param("days", "90").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].qty").value(11))
+                .andExpect(jsonPath("$.items[0].receipts").value(2));
+
+        // Filial rahbari — faqat o'z filiali (b1): oxirgi narx kechagisi
+        Cookie manager = loginAs("BRANCH_MANAGER", b1);
+        mvc.perform(get(prods).param("days", "30").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].lastPrice").value("1200.50"))
+                .andExpect(jsonPath("$.items[0].qty").value(6))
+                .andExpect(jsonPath("$.items[0].receipts").value(1));
+        mvc.perform(get(url).param("role", "SUPPLIER").param("section", "BONUS").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1));
+        // Operator — receipt.view yo'q
+        Cookie operator = loginAs("OPERATOR", b1);
+        mvc.perform(get(prods).cookie(operator)).andExpect(status().isForbidden());
+        mvc.perform(get(prods).param("days", "0").cookie(director)).andExpect(status().isBadRequest());
+    }
 }

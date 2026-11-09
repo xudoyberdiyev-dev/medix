@@ -16,13 +16,15 @@ import uz.medix.shared.security.Actor;
  * Kontragent kartochkasi hujjat yorliqlari (prototip CounterpartyCard): mijoz — Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar;
  * yetkazib beruvchi — Kirimlar, To'lovlar, Qaytarishlar. Har yorliq — oxirgi {@value #LIMIT} ta hujjat, eng yangisi birinchi, xodim
  * ko'radigan filiallar bo'yicha. Sotuv va kirimda ochiq qoldiq (qarz yozuvlari + ularni yopgan to'lovlar) va to'lov muddati.
+ * Yetkazib beruvchi «Bonus» — bonus balans jurnali (BNS tasdig'i, bonus hisobidan kirim, bekor qilish) va kutilayotgan bonuslar
+ * (o'tkazilgan chegirmali kirim, BNS hali yo'q; id manfiy). «Mahsulotlar» — davr ichida o'tkazilgan kirimlardagi mahsulotlar.
  */
 @Service
 class CounterpartyDocuments {
 
     static final int LIMIT = 100;
 
-    enum Section { ORDERS, SALES, PAYMENTS, RETURNS, RECEIPTS }
+    enum Section { ORDERS, SALES, PAYMENTS, RETURNS, RECEIPTS, BONUS }
 
     record DocRow(
             long id,
@@ -38,6 +40,18 @@ class CounterpartyDocuments {
             @Schema(nullable = true, description = "Ochiladigan hujjat: buyurtma (sotuv, mijoz qaytarishi), aks holda shu hujjat") Long linkId) {}
 
     record CounterpartyDocumentsPage(Section section, List<DocRow> items, @Schema(description = "Shartga mos jami soni") long total) {}
+
+    record SupplierProductRow(
+            long productId,
+            String code,
+            String name,
+            @Schema(nullable = true) String manufacturer,
+            @Schema(nullable = true, description = "Oxirgi kirim narxi (QQSsiz); tannarx ruxsati bo'lmasa — null") String lastPrice,
+            LocalDate lastDate,
+            @Schema(description = "Kelgan soni (fakt + bonus), dona") long qty,
+            @Schema(description = "Kirimlar soni") long receipts) {}
+
+    record SupplierProductsPage(List<SupplierProductRow> items, @Schema(description = "Shartga mos jami soni") long total) {}
 
     record CounterpartyHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
 
@@ -87,6 +101,20 @@ class CounterpartyDocuments {
                                AND p.applies_doc_type IS NULL) OR (p.applies_doc_type = 'KR' AND p.applies_doc_id = x.id))), 0)) END AS open,
                            x.due_date AS due, x.id AS link
                     FROM receipt x WHERE x.supplier_id = :c""";
+            case BONUS -> """
+                    SELECT l.id, l.doc_number AS number, l.note AS extra, (l.occurred_at AT TIME ZONE 'Asia/Tashkent')::date AS d,
+                           l.branch_id, CASE WHEN l.doc_type = 'BNS' THEN 'BONUS_CONFIRMED' WHEN l.amount < 0 THEN 'BONUS_USED'
+                           ELSE 'BONUS_RETURNED' END AS status, abs(l.amount) AS amount, NULL::numeric AS open, NULL::date AS due,
+                           CASE WHEN l.doc_type = 'BNS' THEN (SELECT sb.receipt_id FROM supplier_bonus sb WHERE sb.id = l.doc_id)
+                           ELSE l.doc_id END AS link
+                    FROM supplier_bonus_ledger l WHERE l.supplier_id = :c
+                    UNION ALL
+                    SELECT -x.id, x.number, x.invoice_number, x.receipt_date, x.branch_id, 'BONUS_EXPECTED',
+                           CASE x.discount_kind WHEN 'SUM' THEN x.discount_value WHEN 'PERCENT' THEN round(coalesce(x.debt_amount,
+                               (SELECT sum(rl.qty * rl.price) FROM receipt_line rl WHERE rl.receipt_id = x.id), 0) * x.discount_value / 100, 2)
+                           END, NULL::numeric, NULL::date, x.id
+                    FROM receipt x WHERE x.supplier_id = :c AND x.status = 'POSTED' AND x.discount_kind IS NOT NULL
+                      AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = x.id)""";
         };
         Long scope = actor.allBranches() ? null : actor.branchId();
         String scoped = "SELECT q.*, b.code AS branch_code, b.name AS branch_name FROM (" + sql + ") q JOIN branch b ON b.id = q.branch_id"
@@ -105,6 +133,43 @@ class CounterpartyDocuments {
                         rs.getObject("link") == null ? null : rs.getLong("link")))
                 .list();
         return new CounterpartyDocumentsPage(section, items, total);
+    }
+
+    /**
+     * YB kartochkasi «Mahsulotlar»: davr ichida (days — oxirgi N kun, null — hammasi) o'tkazilgan kirimlardagi mahsulotlar — oxirgi
+     * narx va sana, kelgan soni, kirimlar soni; eng oxirgi kelgani birinchi. Narx — faqat {@code prices} bo'lsa.
+     */
+    @Transactional(readOnly = true)
+    SupplierProductsPage products(Actor actor, long supplierId, Integer days, boolean prices, LocalDate today) {
+        Long scope = actor.allBranches() ? null : actor.branchId();
+        LocalDate from = days == null ? null : today.minusDays(days - 1L);
+        String base = """
+                SELECT l.product_id, r.receipt_date, r.id AS receipt_id, l.price, coalesce(l.received_qty, l.qty) + l.bonus_qty AS q, l.id AS line_id
+                FROM receipt_line l JOIN receipt r ON r.id = l.receipt_id
+                WHERE r.supplier_id = :s AND r.status = 'POSTED'
+                  AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                  AND (CAST(:f AS DATE) IS NULL OR r.receipt_date >= :f)""";
+        String agg = "SELECT x.product_id, max(x.receipt_date) AS last_date, sum(x.q) AS qty, count(DISTINCT x.receipt_id) AS receipts,"
+                + " (SELECT y.price FROM (" + base + ") y WHERE y.product_id = x.product_id"
+                + " ORDER BY y.receipt_date DESC, y.receipt_id DESC, y.line_id DESC LIMIT 1) AS last_price"
+                + " FROM (" + base + ") x GROUP BY x.product_id";
+        long total = jdbc.sql("SELECT count(DISTINCT x.product_id) FROM (" + base + ") x")
+                .param("s", supplierId)
+                .param("b", scope)
+                .param("f", from)
+                .query(Long.class)
+                .single();
+        List<SupplierProductRow> items = jdbc.sql("SELECT a.*, p.code, p.name, m.name AS maker FROM (" + agg + ") a"
+                        + " JOIN product p ON p.id = a.product_id LEFT JOIN manufacturer m ON m.id = p.manufacturer_id"
+                        + " ORDER BY a.last_date DESC, p.name LIMIT " + LIMIT)
+                .param("s", supplierId)
+                .param("b", scope)
+                .param("f", from)
+                .query((rs, n) -> new SupplierProductRow(rs.getLong("product_id"), rs.getString("code"), rs.getString("name"),
+                        rs.getString("maker"), prices && rs.getBigDecimal("last_price") != null ? money(rs.getBigDecimal("last_price")) : null,
+                        date(rs.getDate("last_date")), rs.getLong("qty"), rs.getLong("receipts")))
+                .list();
+        return new SupplierProductsPage(items, total);
     }
 
     /** Kartochka «Tarix» — audit jurnalidan (yaratish, tahrir, shartlar, holat, litsenziya, shartnoma), yangisi birinchi. */
