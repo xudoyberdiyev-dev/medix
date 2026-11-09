@@ -32,13 +32,14 @@ final class CashModels {
             @NotBlank(message = "{validation.required}") @Size(max = 24) @Schema(description = "Summa, masalan «250000.00»") String amount,
             @Schema(nullable = true, description = "Bo'sh bo'lsa — bugun") LocalDate opDate,
             @Schema(nullable = true, description = "Kimdan / kimga (ixtiyoriy)") @Size(max = 200) String party,
-            @Schema(nullable = true) @Size(max = 500) String note) {}
+            @Schema(nullable = true) @Size(max = 500) String note,
+            @Schema(nullable = true, description = "Asos hujjat № (ixtiyoriy)") @Size(max = 40) String baseNo) {}
 
     record ReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
     record CashOp(long id, String number, String docType, long branchId, long accountId, String account, String accountKind, LocalDate opDate,
             Direction direction, long itemId, String item, String amount, @Schema(nullable = true) String party, @Schema(nullable = true) String note,
-            OpSource source, OpStatus status, String createdBy, Instant createdAt, @Schema(nullable = true) String approvedBy,
+            @Schema(nullable = true) String baseNo, OpSource source, OpStatus status, String createdBy, Instant createdAt, @Schema(nullable = true) String approvedBy,
             @Schema(nullable = true) Instant approvedAt, @Schema(nullable = true) String cancelledBy, @Schema(nullable = true) Instant cancelledAt,
             @Schema(nullable = true) String cancelReason, long version) {}
 

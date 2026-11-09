@@ -109,7 +109,7 @@ class CashOps {
             throw MedixException.badRequest("payment.dateFuture");
         }
         boolean needsApproval = acc.kind() == Accounts.Kind.CASH && r.direction() == Direction.OUT && amount.compareTo(APPROVAL_LIMIT) > 0;
-        long id = insert(actor, acc, r.direction(), r.itemId(), amount, date, blank(r.party()), blank(r.note()), OpSource.MANUAL,
+        long id = insert(actor, acc, r.direction(), r.itemId(), amount, date, blank(r.party()), blank(r.note()), blank(r.baseNo()), OpSource.MANUAL,
                 needsApproval ? OpStatus.PENDING : OpStatus.POSTED);
         if (!needsApproval) {
             post(id);
@@ -131,20 +131,20 @@ class CashOps {
                 .query(Long.class)
                 .single();
         Money amount = diff.isNegative() ? Money.ZERO.minus(diff) : diff;
-        long id = insert(actor, acc, dir, item, amount, date, null, note, OpSource.CLOSE, OpStatus.POSTED);
+        long id = insert(actor, acc, dir, item, amount, date, null, note, null, OpSource.CLOSE, OpStatus.POSTED);
         post(id);
         return id;
     }
 
     private long insert(Actor actor, Accounts.Account acc, Direction dir, long itemId, Money amount, LocalDate date, String party, String note,
-            OpSource source, OpStatus status) {
+            String baseNo, OpSource source, OpStatus status) {
         DocumentPrefix prefix = acc.kind() == Accounts.Kind.CASH ? DocumentPrefix.KO : DocumentPrefix.BO;
         String branchCode = jdbc.sql("SELECT code FROM branch WHERE id = :b").param("b", acc.branchId()).query(String.class).single();
         String number = numbers.next(prefix, branchCode).toString();
         long id = jdbc.sql("""
-                INSERT INTO cash_op (number, doc_type, branch_id, account_id, op_date, direction, expense_item_id, amount, party, note, source,
-                                     status, created_by, posted_at)
-                VALUES (:n, :t, :b, :a, :d, :dir, :i, :amt, :p, :note, :src, :s, :by, CASE WHEN :s = 'POSTED' THEN now() END) RETURNING id""")
+                INSERT INTO cash_op (number, doc_type, branch_id, account_id, op_date, direction, expense_item_id, amount, party, note, base_no,
+                                     source, status, created_by, posted_at)
+                VALUES (:n, :t, :b, :a, :d, :dir, :i, :amt, :p, :note, :base, :src, :s, :by, CASE WHEN :s = 'POSTED' THEN now() END) RETURNING id""")
                 .param("n", number)
                 .param("t", prefix.name())
                 .param("b", acc.branchId())
@@ -155,6 +155,7 @@ class CashOps {
                 .param("amt", amount.amount())
                 .param("p", party)
                 .param("note", note)
+                .param("base", baseNo)
                 .param("src", source.name())
                 .param("s", status.name())
                 .param("by", actor.employeeId())
@@ -260,7 +261,7 @@ class CashOps {
 
     private static final String SELECT = """
             SELECT o.id, o.number, o.doc_type, o.branch_id, o.account_id, a.name AS account, a.kind AS account_kind, o.op_date, o.direction,
-                   o.expense_item_id, i.name AS item, o.amount, o.party, o.note, o.source, o.status, cb.full_name AS created_by, o.created_at,
+                   o.expense_item_id, i.name AS item, o.amount, o.party, o.note, o.base_no, o.source, o.status, cb.full_name AS created_by, o.created_at,
                    ab.full_name AS approved_by, o.approved_at, xb.full_name AS cancelled_by, o.cancelled_at, o.cancel_reason, o.version
             FROM cash_op o JOIN money_account a ON a.id = o.account_id JOIN expense_item i ON i.id = o.expense_item_id
             JOIN employee cb ON cb.id = o.created_by LEFT JOIN employee ab ON ab.id = o.approved_by LEFT JOIN employee xb ON xb.id = o.cancelled_by""";
@@ -269,7 +270,7 @@ class CashOps {
         return new CashOp(rs.getLong("id"), rs.getString("number"), rs.getString("doc_type"), rs.getLong("branch_id"), rs.getLong("account_id"),
                 rs.getString("account"), rs.getString("account_kind"), rs.getDate("op_date").toLocalDate(), Direction.valueOf(rs.getString("direction")),
                 rs.getLong("expense_item_id"), rs.getString("item"), new Money(rs.getBigDecimal("amount")).toString(), rs.getString("party"),
-                rs.getString("note"), OpSource.valueOf(rs.getString("source")), OpStatus.valueOf(rs.getString("status")), rs.getString("created_by"),
+                rs.getString("note"), rs.getString("base_no"), OpSource.valueOf(rs.getString("source")), OpStatus.valueOf(rs.getString("status")), rs.getString("created_by"),
                 rs.getTimestamp("created_at").toInstant(), rs.getString("approved_by"),
                 rs.getTimestamp("approved_at") == null ? null : rs.getTimestamp("approved_at").toInstant(), rs.getString("cancelled_by"),
                 rs.getTimestamp("cancelled_at") == null ? null : rs.getTimestamp("cancelled_at").toInstant(), rs.getString("cancel_reason"),
