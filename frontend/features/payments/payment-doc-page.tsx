@@ -68,7 +68,9 @@ import {
 } from "./api";
 import {
   autoAlloc,
+  cents,
   checkDoc,
+  fromCents,
   docSteps,
   gridRows,
   keyOf,
@@ -177,6 +179,9 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
   const status: Status = doc?.status ?? "DRAFT";
   const createPerm = kind === "mt" ? PAYMENT_MT : PAYMENT_YT;
   const editable = status === "DRAFT" && can(me.data, createPerm);
+  // Taqsimot jadvali: qoralamada va «Tasdiqlashda» (YT — taqsimot tasdiqlashda qilinadi; Filial rahbari oʻzgartira oladi)
+  const allocMode = editable || status === "PENDING";
+  const allocEditable = editable || (status === "PENDING" && can(me.data, PAYMENT_YT_APPROVE));
   const today = todayTashkent();
 
   // Yangi hujjat oʻtishdan: ?customer=&customerName=&amount= (MT), ?supplier=&supplierName=&amount= (YT, kirim kartochkasidan)
@@ -336,7 +341,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
 
   const tryPrimary = (mode: "post" | "send" | "approve") => {
     setTried(true);
-    if (mode !== "approve" && check.errors.length) return setDialog("vs");
+    if (check.errors.some((e) => mode !== "approve" || e.field === "alloc")) return setDialog("vs");
     setDialog(mode);
   };
 
@@ -469,7 +474,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
       title: t("bCancelled", { at: at(doc.cancelledAt), who: doc.cancelledBy ?? "" }),
       text: doc.cancelReason ?? "",
     });
-  const advWarn = editable ? check.warnings[0] : undefined;
+  const advWarn = allocMode ? check.warnings[0] : undefined;
   if (advWarn) banners.push({ tone: "warning", icon: PiggyBank, title: text(advWarn) });
   if (status === "POSTED" && doc?.advance && doc.advance !== "0.00")
     banners.push({ tone: "warning", icon: PiggyBank, title: t(kind === "mt" ? "wAdvMt" : "wAdvYt", { s: formatMoney(doc.advance) }) });
@@ -693,9 +698,9 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
               <span className="flex items-baseline gap-2">
                 <span className="text-[14px] font-semibold">{kind === "mt" ? t("gTitle") : t("gTitleYt")}</span>
-                {editable && party && docs.length ? <span className="text-[13px] text-text-secondary">{docs.length}</span> : null}
+                {allocMode && party && docs.length ? <span className="text-[13px] text-text-secondary">{docs.length}</span> : null}
               </span>
-              {editable && party && docs.length ? (
+              {allocEditable && party && docs.length ? (
                 <span className="flex flex-wrap items-center gap-3">
                   <span
                     title={manual ? t("manualTip") : undefined}
@@ -721,7 +726,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
                 </span>
               ) : null}
             </div>
-            {!editable && doc ? (
+            {!allocMode && doc ? (
               <PostedAllocations doc={doc} kind={kind} />
             ) : !party ? (
               <div className="flex items-center justify-center gap-2 px-4 py-7 text-center text-[13px] text-text-secondary">
@@ -743,6 +748,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
                 kind={kind}
                 rows={rows}
                 tried={tried}
+                disabled={!allocEditable}
                 onValue={(key, v) => {
                   const next = { ...effAlloc };
                   if (v && v !== "0.00") next[key] = v;
@@ -755,15 +761,15 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
             )}
             <Totals
               items={[
-                [t("tSum"), formatMoney(editable ? amountStr || "0" : (doc?.amount ?? "0"))],
+                [t("tSum"), formatMoney(allocMode ? amountStr || "0" : (doc?.amount ?? "0"))],
                 [
                   t("tAlloc"),
                   formatMoney(
-                    editable ? check.totals.allocated : (doc?.allocations ?? []).reduce((s, a) => s + Number(a.amount), 0).toFixed(2),
+                    allocMode ? check.totals.allocated : fromCents((doc?.allocations ?? []).reduce((s, a) => s + cents(a.amount), 0n)),
                   ),
                 ],
               ]}
-              total={[t("tAdv"), formatMoney(editable ? check.totals.advance : (doc?.advance ?? "0"))]}
+              total={[t("tAdv"), formatMoney(allocMode ? check.totals.advance : (doc?.advance ?? "0"))]}
             />
           </section>
         </div>
@@ -990,11 +996,13 @@ function AllocTable({
   kind,
   rows,
   tried,
+  disabled,
   onValue,
 }: {
   kind: PayKind;
   rows: ReturnType<typeof gridRows>;
   tried: boolean;
+  disabled?: boolean;
   onValue: (key: string, v: string) => void;
 }) {
   const t = useTranslations("payments.doc");
@@ -1084,6 +1092,7 @@ function AllocTable({
                     value={r.value}
                     placeholder="0,00"
                     onChange={(v) => onValue(r.key, v)}
+                    disabled={disabled}
                     error={r.over && tried ? t("eRowShort") : undefined}
                   />
                 </td>
@@ -1162,17 +1171,16 @@ function Side({
 }) {
   const t = useTranslations("payments.doc");
   const docs = ledger?.docs ?? [];
-  const overdue = docs.filter((d) => d.overdueDays > 0).reduce((s, d) => s + Number(d.open) * 100, 0);
+  const overdue = docs.filter((d) => d.overdueDays > 0).reduce((s, d) => s + cents(d.open), 0n);
   const oldest = docs.reduce((m, d) => Math.max(m, d.overdueDays), 0);
-  const overdueStr = (Math.round(overdue) / 100).toFixed(2);
+  const overdueStr = fromCents(overdue);
   const terms = cp?.terms.find((x) => x.branchId === branchId);
   const today = todayTashkent();
   const license = cp?.licenses
     .filter((l) => !l.validUntil || l.validUntil >= today)
     .sort((a, b) => (b.validUntil ?? "9999").localeCompare(a.validUntil ?? "9999"))[0];
-  const limit = terms?.creditLimit ? Number(terms.creditLimit) : 0;
-  const debtNum = Number(ledger?.debt ?? 0);
-  const pct = limit > 0 ? Math.round((debtNum / limit) * 100) : 0;
+  const limit = cents(terms?.creditLimit);
+  const pct = limit > 0n ? Number((cents(ledger?.debt) * 100n) / limit) : 0;
   const last = ledger?.lastPayment;
   const href = kind === "mt" ? `/customers/${partyId}` : `/suppliers/${partyId}`;
   const kpis: { label: string; value: string; note?: string; danger?: boolean }[] = [
@@ -1220,7 +1228,7 @@ function Side({
             </div>
           ))}
         </div>
-        {kind === "mt" && limit > 0 ? (
+        {kind === "mt" && limit > 0n ? (
           <div className="mt-4 flex flex-col gap-1.5 border-t border-border pt-3">
             <span className="text-caption font-medium">{t("sLimit")}</span>
             <div className="flex items-baseline justify-between gap-2 text-caption">
