@@ -421,4 +421,40 @@ class PaymentIT {
                 .andExpect(jsonPath("$.advance").value("0.00"))
                 .andExpect(jsonPath("$.docs[0].open").value("1000.00"));
     }
+    @Test
+    void overviewListsMtAndYtInBranchScope() throws Exception {
+        long b = branch();
+        long other = branch();
+        long c = customer();
+        Cookie cashier = loginAs("CASHIER", b);
+        Cookie stranger = loginAs("BRANCH_MANAGER", other);
+        long k = kassa(cashier, b);
+        debt(b, c, 9_300_001L, "1000.00", today().minusDays(3));
+        long p1 = id(send(post("/api/payments/customer"), cashier, draft(b, c, k, "1500")).andReturn());
+        send(post("/api/payments/customer/" + p1 + "/post"), cashier, "{}").andExpect(jsonPath("$.status").value("POSTED"));
+        long sup = customer();
+        String ytNo = "YT-TST-" + p1;
+        jdbc.sql("""
+                INSERT INTO supplier_payment (number, branch_id, supplier_id, account_id, payment_date, amount, status, created_by)
+                SELECT :n, :b, :s, :a, :d, 700, 'PENDING', id FROM employee ORDER BY id LIMIT 1""")
+                .param("n", ytNo).param("b", b).param("s", sup).param("a", k).param("d", java.sql.Date.valueOf(today())).update();
+
+        mvc.perform(get("/api/payments/overview").cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.today").value(today().toString()))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].amount").value("1500.00"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].allocated").value("1000.00"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].advance").value("500.00"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].status").value("POSTED"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].accountKind").value("CASH"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'YT')].number").value(ytNo))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'YT')].status").value("PENDING"));
+        mvc.perform(get("/api/payments/overview").param("from", today().plusDays(1).toString()).cookie(cashier))
+                .andExpect(jsonPath("$.rows.length()").value(0));
+        // Boshqa filial xodimi filial parametrini bersa ham koʻrmaydi
+        mvc.perform(get("/api/payments/overview").param("branchId", "" + b).cookie(stranger))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(0));
+    }
 }
