@@ -15,6 +15,7 @@ import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { QY_CREATE, QY_STATUSES, QY_VIEW_KEYS, useSupplierReturns, type SupplierReturnStatus, type SupplierReturnSummary } from "./api";
 import { SupplierReturnDrawer, type ReturnPreset } from "./supplier-return-drawer";
+import { HubTabs } from "@/components/shell/hub-tabs";
 
 export function SupplierReturnStatusBadge({ status }: { status: SupplierReturnStatus }) {
   const t = useTranslations("supplierReturns");
@@ -90,6 +91,7 @@ export function SupplierReturnsPage() {
 
   return (
     <>
+      <HubTabs hub="returns" />
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (

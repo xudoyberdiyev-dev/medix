@@ -13,11 +13,7 @@ import { useNavBadges, type NavBadge } from "./nav-badges";
 import { LOCALE_NAMES, LOCALES, writeLocaleCookie, type Locale } from "@/i18n/config";
 import { useSidebarStore } from "@/lib/stores/sidebar";
 import { LANG_CODE } from "./language-chip";
-import { navigationFor } from "./nav";
-
-function isActive(pathname: string, href: string): boolean {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
-}
+import { isNavActive, navigationFor } from "./nav";
 
 /**
  * Sidebar (prototip `Medix ERP`): fon brand-900; guruhlar yigʻiladi (chevron), faol band — sidebar-active rangli ikonka va chap chiziq.
@@ -91,8 +87,8 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
         </span>
       </div>
       <nav aria-label={t("shell.mainMenu")} className={cn("flex-1 overflow-y-auto px-3 pb-4", compact("px-2", "max-xl:px-2"))}>
-        {navigationFor(me.data?.permissions).map((group, gi) => {
-          const hasActive = group.items.some((i) => isActive(pathname, i.href));
+        {navigationFor(me.data?.permissions, me.data?.role.home ?? "").map((group, gi) => {
+          const hasActive = group.items.some((i) => isNavActive(pathname, i));
           const key = group.key;
           const isOpen = !key || (open[key] ?? hasActive);
           return (
@@ -117,7 +113,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
               ) : null}
               <ul className={cn("flex flex-col gap-0.5", !isOpen && (rail ? (mini ? "" : "xl:hidden") : "hidden"))}>
                 {group.items.map((item) => {
-                  const active = isActive(pathname, item.href);
+                  const active = isNavActive(pathname, item);
                   const Icon = item.icon;
                   const label = t(`nav.${item.key}`);
                   const badge: NavBadge | null | undefined = badges[item.key];

@@ -15,6 +15,7 @@ import { formatDateTime, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { TRANSFER_VIEW_KEYS, TRANSFER_ZK, ZK_STATUSES, useZoneTransfers, type ZoneTransferStatus, type ZoneTransferSummary } from "./api";
 import { ZoneTransferDrawer } from "./zone-transfer-drawer";
+import { HubTabs } from "@/components/shell/hub-tabs";
 
 export function ZoneTransferStatusBadge({ status }: { status: ZoneTransferStatus }) {
   const t = useTranslations("zoneTransfers");
@@ -73,6 +74,7 @@ export function ZoneTransfersPage() {
 
   return (
     <>
+      <HubTabs hub="transfers" />
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (

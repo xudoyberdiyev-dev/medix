@@ -11,5 +11,17 @@
   "expand": "Развернуть меню",
   "userMenu": "Меню пользователя",
   "language": "Язык",
-  "badge": "Ожидают: {count}"
+  "badge": "Ожидают: {count}",
+  "hubTabs": {
+    "transfers": "Виды перемещений",
+    "transfersWarehouse": "Между складами",
+    "transfersZone": "Внутри зоны",
+    "transfersBranch": "Межфилиальные",
+    "returns": "Виды возвратов",
+    "returnsWriteOffs": "Списание",
+    "returnsSupplier": "Возврат поставщику",
+    "supplierDebts": "Разделы долгов поставщикам",
+    "supplierDebtsDebts": "Долги",
+    "supplierDebtsBonus": "Бонусный баланс"
+  }
 }

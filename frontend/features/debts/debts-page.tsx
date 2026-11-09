@@ -20,6 +20,7 @@ import { formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { ActSection } from "./act-section";
 import { AdvanceOffsetButton } from "./advance-offset";
+import { HubTabs } from "@/components/shell/hub-tabs";
 
 export type DebtRow = components["schemas"]["DebtRow"];
 export type DebtDoc = components["schemas"]["DebtDoc"];
@@ -116,6 +117,7 @@ export function DebtsPage({ side }: { side: Side }) {
 
   return (
     <>
+      {side === "SUPPLIER" ? <HubTabs hub="supplierDebts" /> : null}
       <h1 className="mb-4 text-page-title">{title}</h1>
       {report.error ? (
         <ErrorState onRetry={() => report.refetch()} />

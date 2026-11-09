@@ -11,5 +11,17 @@
   "expand": "Sidebarʼni ochish",
   "userMenu": "Foydalanuvchi menyusi",
   "language": "Til",
-  "badge": "{count} ta kutmoqda"
+  "badge": "{count} ta kutmoqda",
+  "hubTabs": {
+    "transfers": "Koʻchirish turlari",
+    "transfersWarehouse": "Omborlar oʻrtasida",
+    "transfersZone": "Zona ichida",
+    "transfersBranch": "Filiallararo",
+    "returns": "Qaytarish turlari",
+    "returnsWriteOffs": "Hisobdan chiqarish",
+    "returnsSupplier": "YB ga qaytarish",
+    "supplierDebts": "YB qarzi boʻlimlari",
+    "supplierDebtsDebts": "Qarzlar",
+    "supplierDebtsBonus": "Bonus balans"
+  }
 }
