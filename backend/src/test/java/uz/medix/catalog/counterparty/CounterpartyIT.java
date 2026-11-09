@@ -214,11 +214,11 @@ class CounterpartyIT {
         Cookie admin = loginAs("ADMIN", null);
         String tag = UUID.randomUUID().toString().substring(0, 6);
         long a = id(mvc.perform(json(post("/api/counterparties"), admin, "{\"tin\":\"" + tin() + "\",\"name\":\"Biriktir A " + tag
-                + "\",\"customer\":true}")).andExpect(status().isCreated()).andReturn());
+                + "\",\"customer\":true,\"supplier\":false}")).andExpect(status().isCreated()).andReturn());
         long b = id(mvc.perform(json(post("/api/counterparties"), admin, "{\"tin\":\"" + tin() + "\",\"name\":\"Biriktir B " + tag
-                + "\",\"customer\":true}")).andExpect(status().isCreated()).andReturn());
+                + "\",\"customer\":true,\"supplier\":false}")).andExpect(status().isCreated()).andReturn());
         long supplier = id(mvc.perform(json(post("/api/counterparties"), admin, "{\"tin\":\"" + tin() + "\",\"name\":\"Biriktir YB " + tag
-                + "\",\"supplier\":true}")).andExpect(status().isCreated()).andReturn());
+                + "\",\"customer\":false,\"supplier\":true}")).andExpect(status().isCreated()).andReturn());
         long promo = jdbc.sql("SELECT id FROM price_type WHERE code = 'PROMO'").query(Long.class).single();
         Cookie manager = loginAs("BRANCH_MANAGER", own);
         String body = "{\"branchId\":" + own + ",\"priceTypeId\":" + promo + ",\"attach\":ATT,\"detach\":DET}";
