@@ -16,6 +16,8 @@ import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.catalog.counterparty.CounterpartyModels.Contact;
+import uz.medix.catalog.counterparty.CounterpartyModels.ContactRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.Contract;
 import uz.medix.catalog.counterparty.CounterpartyModels.ContractRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyDetail;
@@ -162,11 +164,16 @@ class Counterparties {
                 .stream()
                 .filter(t -> actor.canAccessBranch(t.branchId()))
                 .toList();
+        List<Contact> contacts = jdbc.sql("""
+                SELECT name, job_title, phone FROM counterparty_contact WHERE counterparty_id = :id ORDER BY sort_order""")
+                .param("id", id)
+                .query((rs, n) -> new Contact(rs.getString("name"), rs.getString("job_title"), rs.getString("phone")))
+                .list();
         return Optional.of(new CounterpartyDetail(b.id(), b.tin(), b.name(), b.legalName(), b.isCustomer(), b.isSupplier(),
                 b.kind() == null ? null : Kind.valueOf(b.kind()),
                 b.regionId() == null ? null : new Ref(b.regionId(), b.region()), b.address(), b.phone(), b.contactPerson(), b.email(),
                 b.bankName(), b.bankAccount(), b.bankMfo(), b.vatCode(), b.note(), b.blocked(), b.blockedReason(), b.active(),
-                licenses, contracts, terms));
+                licenses, contacts, contracts, terms));
     }
 
     // ===== Karta =====
@@ -182,6 +189,7 @@ class Counterparties {
                 .params(cardParams(r))
                 .query(Long.class)
                 .single();
+        saveContacts(id, r);
         refreshSearchText(id);
         audit.record(AuditEntry.of("counterparty.create", "counterparty", id).change(null, cardParams(r)));
         return id;
@@ -200,6 +208,7 @@ class Counterparties {
                 .params(cardParams(r))
                 .param("id", id)
                 .update();
+        saveContacts(id, r);
         refreshSearchText(id);
         audit.record(AuditEntry.of("counterparty.update", "counterparty", id).change(before, cardParams(r)));
     }
@@ -590,6 +599,30 @@ class Counterparties {
         m.put("vat", blankToNull(r.vatCode()));
         m.put("note", blankToNull(r.note()));
         return m;
+    }
+
+    /** Kontaktlar berilgan bo'lsa — to'liq almashtiriladi; contact_person = birinchi kontakt ismi. */
+    private void saveContacts(long id, CounterpartyRequest r) {
+        if (r.contacts() == null) {
+            return;
+        }
+        jdbc.sql("DELETE FROM counterparty_contact WHERE counterparty_id = :id").param("id", id).update();
+        int order = 0;
+        for (ContactRequest c : r.contacts()) {
+            jdbc.sql("""
+                    INSERT INTO counterparty_contact (counterparty_id, sort_order, name, job_title, phone)
+                    VALUES (:id, :o, :n, :p, :ph)""")
+                    .param("id", id)
+                    .param("o", ++order)
+                    .param("n", c.name().strip())
+                    .param("p", blankToNull(c.position()))
+                    .param("ph", blankToNull(c.phone()))
+                    .update();
+        }
+        jdbc.sql("UPDATE counterparty SET contact_person = :c WHERE id = :id")
+                .param("c", r.contacts().isEmpty() ? null : r.contacts().getFirst().name().strip())
+                .param("id", id)
+                .update();
     }
 
     private void refreshSearchText(long id) {

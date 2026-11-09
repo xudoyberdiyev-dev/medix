@@ -317,4 +317,40 @@ class CounterpartyIT {
         // Haydovchida kontragent ko'rish ruxsati yo'q
         mvc.perform(get("/api/counterparties/export").cookie(loginAs("DRIVER", null))).andExpect(status().isForbidden());
     }
+
+    @Test
+    void contactsReplaceListAndFirstIsContactPerson() throws Exception {
+        Cookie manager = loginAs("BRANCH_MANAGER", null);
+        String tag = UUID.randomUUID().toString().substring(0, 5);
+        long id = id(mvc.perform(json(post("/api/counterparties"), manager,
+                        "{\"tin\":\"" + tin() + "\",\"name\":\"Kontakt " + tag + "\",\"customer\":true,\"supplier\":false,"
+                                + "\"contacts\":[{\"name\":\"Aliyev " + tag + "\",\"position\":\"Mudir\",\"phone\":\"+998 90 000 00 01\"},"
+                                + "{\"name\":\"Karimova\",\"position\":\"\",\"phone\":\"\"}]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.contacts.length()").value(2))
+                .andExpect(jsonPath("$.contacts[0].position").value("Mudir"))
+                .andExpect(jsonPath("$.contacts[1].position").doesNotExist())
+                .andExpect(jsonPath("$.contactPerson").value("Aliyev " + tag))
+                .andReturn());
+        // Birinchi kontakt bo'yicha qidiruv
+        mvc.perform(get("/api/counterparties").param("q", "aliyev " + tag).cookie(manager))
+                .andExpect(jsonPath("$.total").value(1));
+        // contacts berilmasa — o'zgarmaydi; berilsa — to'liq almashtiriladi
+        String tinNow = jdbc.sql("SELECT tin FROM counterparty WHERE id = :id").param("id", id).query(String.class).single();
+        mvc.perform(json(put("/api/counterparties/" + id), manager,
+                        "{\"tin\":\"" + tinNow + "\",\"name\":\"Kontakt " + tag + "\",\"customer\":true,\"supplier\":false,"
+                                + "\"contactPerson\":\"Aliyev " + tag + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contacts.length()").value(2));
+        mvc.perform(json(put("/api/counterparties/" + id), manager,
+                        "{\"tin\":\"" + tinNow + "\",\"name\":\"Kontakt " + tag + "\",\"customer\":true,\"supplier\":false,"
+                                + "\"contacts\":[{\"name\":\"Karimova\"}]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contacts.length()").value(1))
+                .andExpect(jsonPath("$.contactPerson").value("Karimova"));
+        mvc.perform(json(put("/api/counterparties/" + id), manager,
+                        "{\"tin\":\"" + tinNow + "\",\"name\":\"Kontakt " + tag + "\",\"customer\":true,\"supplier\":false,"
+                                + "\"contacts\":[{\"name\":\" \"}]}"))
+                .andExpect(status().isBadRequest());
+    }
 }

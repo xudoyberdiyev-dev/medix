@@ -1,6 +1,7 @@
 package uz.medix.catalog.counterparty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -84,6 +85,7 @@ final class CounterpartyModels {
             @Schema(nullable = true) String blockedReason,
             boolean active,
             List<License> licenses,
+            @Schema(description = "Kontakt shaxslar (tartib bo'yicha)") List<Contact> contacts,
             @Schema(description = "Faqat xodim ko'ra oladigan filiallar") List<Contract> contracts,
             @Schema(description = "Faqat xodim ko'ra oladigan filiallar") List<Terms> terms) {}
 
@@ -103,7 +105,16 @@ final class CounterpartyModels {
             @Schema(nullable = true) @Pattern(regexp = "^$|^[0-9]{20}$", message = "{validation.bankAccount}") String bankAccount,
             @Schema(nullable = true) @Pattern(regexp = "^$|^[0-9]{5}$", message = "{validation.bankMfo}") String bankMfo,
             @Schema(nullable = true) @Pattern(regexp = "^$|^[0-9]{12}$", message = "{validation.vatCode}") String vatCode,
-            @Schema(nullable = true) @Size(max = 1000) String note) {}
+            @Schema(nullable = true) @Size(max = 1000) String note,
+            @Schema(nullable = true, description = "Kontakt shaxslar — berilsa ro'yxat to'liq almashtiriladi (birinchisi — contactPerson); "
+                    + "null — o'zgarmaydi") @Valid @Size(max = 20) List<ContactRequest> contacts) {}
+
+    record Contact(String name, @Schema(nullable = true) String position, @Schema(nullable = true) String phone) {}
+
+    record ContactRequest(
+            @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
+            @Schema(nullable = true) @Size(max = 200) String position,
+            @Schema(nullable = true) @Size(max = 64) String phone) {}
 
     record ReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
