@@ -22,8 +22,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import uz.medix.pricing.change.PriceChangeModels.MarkupLine;
 import uz.medix.pricing.change.PriceChangeModels.MarkupRequest;
 import uz.medix.pricing.change.PriceChangeModels.PinRequest;
@@ -119,6 +121,26 @@ class PriceChangeController {
         response.setHeader("Content-Disposition", "attachment; filename=\"narxlar.xlsx\"");
         excel.export(changes.prices(branchId, q, manufacturerId, at == null ? changes.today() : at, sort, desc, 0, PriceExcel.MAX_EXPORT_ROWS),
                 response.getOutputStream());
+    }
+
+    @PostMapping("/prices/grid/export")
+    @PreAuthorize(SET_PRICES)
+    @Operation(summary = "«Narx o'rnatish» — Excel'ga eksport (.xlsx)",
+            description = "Brauzerdagi ko'rinib turgan qatorlar: Kod, Mahsulot, Joriy narx, Yangi narx (kiritilgan, saqlanmagan bo'lsa ham).")
+    void exportSet(@Valid @RequestBody PriceExcel.SetExportRequest r, HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"narxlar.xlsx\"");
+        excel.exportSet(r.rows(), response.getOutputStream());
+    }
+
+    @PostMapping(path = "/prices/grid/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize(SET_PRICES)
+    @Operation(summary = "«Narx o'rnatish» — Excel'dan yuklash",
+            description = "Birinchi varaq; «Kod» va «Yangi narx» (yoki «Narx») ustunlari. Hech narsa yozilmaydi — narxlar jadvalga qo'yiladi.")
+    PriceExcel.SetImportResult importSet(@RequestPart("file") MultipartFile file) throws IOException {
+        try (var in = file.getInputStream()) {
+            return excel.importSet(in);
+        }
     }
 
     @GetMapping("/price-changes")

@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,6 +30,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -306,6 +308,72 @@ class PriceChangeIT {
         assertThatThrownBy(() -> jdbc.sql("DELETE FROM price WHERE price_change_id = :id").param("id", docs[0]).update())
                 .hasMessageContaining("faqat qo'shiladigan");
         mvc.perform(json(post("/api/price-changes/" + docs[1] + "/cancel"), purchaser, "{\"reason\":\"Yana\"}")).andExpect(status().isConflict());
+    }
+
+    @Test
+    void priceSetExcelExportAndImport() throws Exception {
+        long branch = branch();
+        long p1 = product("Excel narx sinov A");
+        long p2 = product("Excel narx sinov B");
+        String c1 = jdbc.sql("SELECT code FROM product WHERE id = :id").param("id", p1).query(String.class).single();
+        String c2 = jdbc.sql("SELECT code FROM product WHERE id = :id").param("id", p2).query(String.class).single();
+        Cookie purchaser = loginAs("PURCHASER", branch);
+
+        MvcResult res = mvc.perform(json(post("/api/prices/grid/export"), purchaser, "{\"rows\":[{\"code\":\"" + c1
+                        + "\",\"name\":\"Excel narx sinov A\",\"currentPrice\":\"1250000\",\"newPrice\":\"1300000.50\"},{\"code\":\"" + c2
+                        + "\",\"name\":\"Excel narx sinov B\",\"currentPrice\":null,\"newPrice\":\"\"}]}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        byte[] exported = res.getResponse().getContentAsByteArray();
+        try (XSSFWorkbook wb = new XSSFWorkbook(new ByteArrayInputStream(exported))) {
+            Sheet sh = wb.getSheetAt(0);
+            assertThat(sh.getRow(0).getCell(3).getStringCellValue()).isEqualTo("Yangi narx (QQS bilan)");
+            assertThat(sh.getRow(1).getCell(2).getStringCellValue()).isEqualTo("1.250.000,00");
+            assertThat(sh.getRow(1).getCell(3).getStringCellValue()).isEqualTo("1.300.000,50");
+            assertThat(sh.getRow(2).getCell(3).getStringCellValue()).isEmpty();
+        }
+        // Eksport qilingan fayl qayta yuklanadi
+        mvc.perform(multipart("/api/prices/grid/import").file(new MockMultipartFile("file", "narxlar.xlsx", null, exported)).with(csrf()).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows").value(2))
+                .andExpect(jsonPath("$.lines", hasSize(1)))
+                .andExpect(jsonPath("$.lines[0].productId").value(p1))
+                .andExpect(jsonPath("$.lines[0].price").value("1300000.50"))
+                .andExpect(jsonPath("$.issues", hasSize(0)));
+
+        // Rus sarlavhalari 2-qatorda; noma'lum kod, noto'g'ri narx, takror
+        byte[] file;
+        try (XSSFWorkbook wb = new XSSFWorkbook(); java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+            Sheet sh = wb.createSheet("Лист1");
+            sh.createRow(0).createCell(0).setCellValue("Прайс");
+            String[][] data = {{"Код", "Наименование", "Новая цена"}, {c2, "B", "15 500,5"}, {"NOPE-1", "X", "100"}, {c1, "A", "-5"}, {c2, "B", "16000"}};
+            for (int i = 0; i < data.length; i++) {
+                Row r = sh.createRow(i + 1);
+                for (int j = 0; j < data[i].length; j++) {
+                    r.createCell(j).setCellValue(data[i][j]);
+                }
+            }
+            sh.createRow(6).createCell(0).setCellValue(c1);
+            sh.getRow(6).createCell(2).setCellValue(7777);
+            wb.write(out);
+            file = out.toByteArray();
+        }
+        mvc.perform(multipart("/api/prices/grid/import").file(new MockMultipartFile("file", "x.xlsx", null, file)).with(csrf()).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows").value(5))
+                .andExpect(jsonPath("$.lines", hasSize(2)))
+                .andExpect(jsonPath("$.lines[0].price").value("15500.50"))
+                .andExpect(jsonPath("$.lines[1].productId").value(p1))
+                .andExpect(jsonPath("$.lines[1].price").value("7777.00"))
+                .andExpect(jsonPath("$.issues[*].reason").value(contains("CODE_UNKNOWN", "PRICE_BAD", "DUPLICATE")))
+                .andExpect(jsonPath("$.issues[0].row").value(4));
+
+        mvc.perform(multipart("/api/prices/grid/import").file(new MockMultipartFile("file", "x.xlsx", null, "salom".getBytes())).with(csrf()).cookie(purchaser))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("prices.import.badFile"));
+        Cookie operator = loginAs("OPERATOR", branch);
+        mvc.perform(multipart("/api/prices/grid/import").file(new MockMultipartFile("file", "x.xlsx", null, file)).with(csrf()).cookie(operator))
+                .andExpect(status().isForbidden());
     }
 
     @Test
