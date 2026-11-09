@@ -313,7 +313,8 @@ test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/opening");
-  await page.getByRole("button", { name: "Qoldiq kiritish" }).first().click();
+  await page.getByRole("button", { name: "Yangi hujjat" }).click();
+  await page.getByRole("menuitem", { name: /Tovar qoldigʻi/ }).click();
   await choose(page, "Ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("E2E");

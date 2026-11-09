@@ -5655,7 +5655,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CancelRequest"
+                "$ref" : "#/components/schemas/OpeningFinanceCancelRequest"
               }
             }
           },
@@ -16395,17 +16395,6 @@
         },
         "required" : [ "date", "incoming", "outgoing" ]
       },
-      "CancelRequest" : {
-        "type" : "object",
-        "properties" : {
-          "reason" : {
-            "type" : "string",
-            "maxLength" : 300,
-            "minLength" : 0
-          }
-        },
-        "required" : [ "reason" ]
-      },
       "CashAcceptRequest" : {
         "type" : "object",
         "properties" : {
@@ -21075,6 +21064,17 @@
         },
         "required" : [ "branchId", "createdAt", "createdBy", "cutoffDate", "expiredLines", "id", "lines", "number", "source", "status", "totalQty", "warehouse", "warehouseId" ]
       },
+      "OpeningFinanceCancelRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
       "OpeningFinanceDetail" : {
         "type" : "object",
         "properties" : {
@@ -21117,7 +21117,7 @@
           "lines" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/Line"
+              "$ref" : "#/components/schemas/OpeningFinanceLine"
             }
           },
           "note" : {
@@ -21147,6 +21147,74 @@
         },
         "required" : [ "branch", "branchId", "createdAt", "createdBy", "cutoffDate", "id", "kind", "lines", "number", "status", "total", "version" ]
       },
+      "OpeningFinanceLine" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "counterpartyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docRef" : {
+            "type" : "string"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "id", "lineNo", "name" ]
+      },
+      "OpeningFinanceLineRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Kassa va bank uchun"
+          },
+          "amount" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^-?\\d{1,16}(\\.\\d{1,2})?$"
+          },
+          "counterpartyId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Qarz turlari uchun"
+          },
+          "docRef" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "amount" ]
+      },
       "OpeningFinanceRequest" : {
         "type" : "object",
         "properties" : {
@@ -21165,7 +21233,7 @@
           "lines" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/LineRequest"
+              "$ref" : "#/components/schemas/OpeningFinanceLineRequest"
             },
             "maxItems" : 5000,
             "minItems" : 0

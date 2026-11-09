@@ -131,7 +131,8 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   await expect(page.getByText(/Saqlandi: NO-[A-Z]{3}-\d{6} — 1 ta narx/)).toBeVisible();
 
   await page.goto("/opening");
-  await page.getByRole("button", { name: "Qoldiq kiritish" }).first().click();
+  await page.getByRole("button", { name: "Yangi hujjat" }).click();
+  await page.getByRole("menuitem", { name: /Tovar qoldigʻi/ }).click();
   await choose(page, "Ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Amoksitsillin");

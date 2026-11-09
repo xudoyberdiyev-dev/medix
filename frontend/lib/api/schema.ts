@@ -7049,9 +7049,6 @@ export interface components {
             incoming: string;
             outgoing: string;
         };
-        CancelRequest: {
-            reason: string;
-        };
         CashAcceptRequest: {
             /** Format: int64 */
             accountId: number;
@@ -8851,6 +8848,9 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
         };
+        OpeningFinanceCancelRequest: {
+            reason: string;
+        };
         OpeningFinanceDetail: {
             branch: string;
             /** Format: int64 */
@@ -8868,7 +8868,7 @@ export interface components {
             id: number;
             /** @enum {string} */
             kind: "CUSTOMER_DEBT" | "SUPPLIER_DEBT" | "MONEY";
-            lines: components["schemas"]["Line"][];
+            lines: components["schemas"]["OpeningFinanceLine"][];
             note?: string;
             number: string;
             /** Format: date-time */
@@ -8880,6 +8880,38 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        OpeningFinanceLine: {
+            /** Format: int64 */
+            accountId?: number;
+            amount: string;
+            /** Format: int64 */
+            counterpartyId?: number;
+            docRef?: string;
+            /** Format: date */
+            dueDate?: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lineNo: number;
+            name: string;
+            tin?: string;
+        };
+        OpeningFinanceLineRequest: {
+            /**
+             * Format: int64
+             * @description Kassa va bank uchun
+             */
+            accountId?: number;
+            amount: string;
+            /**
+             * Format: int64
+             * @description Qarz turlari uchun
+             */
+            counterpartyId?: number;
+            docRef?: string;
+            /** Format: date */
+            dueDate?: string;
+        };
         OpeningFinanceRequest: {
             /** Format: int64 */
             branchId: number;
@@ -8887,7 +8919,7 @@ export interface components {
             cutoffDate: string;
             /** @enum {string} */
             kind: "CUSTOMER_DEBT" | "SUPPLIER_DEBT" | "MONEY";
-            lines: components["schemas"]["LineRequest"][];
+            lines: components["schemas"]["OpeningFinanceLineRequest"][];
             note?: string;
         };
         OpeningFinanceSummary: {
@@ -16239,7 +16271,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CancelRequest"];
+                "application/json": components["schemas"]["OpeningFinanceCancelRequest"];
             };
         };
         responses: {
