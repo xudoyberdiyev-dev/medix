@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,11 +33,13 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
+import { HistoryTimeline } from "@/components/ui/history-timeline";
 import { Modal } from "@/components/ui/modal";
 import { RowMenu } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
+import { Tabs } from "@/components/ui/tabs";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/system-states";
-import { TextField, parseAmount } from "@/components/ui/text-field";
+import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
@@ -201,6 +203,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
   const [dialog, setDialog] = useState<null | "vs" | "post" | "send" | "approve" | "cancel" | "return">(null);
   const [reason, setReason] = useState("");
   const [reasonErr, setReasonErr] = useState("");
+  const [tab, setTab] = useState<"doc" | "hist">("doc");
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
 
@@ -218,8 +221,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
     (a) => a.kind === method && (String(a.id) === account || (a.active && usableAccount(a, all, me.data?.id, supervisor))),
   );
   const chosen: MoneyAccount | undefined = all.find((a) => String(a.id) === account);
-  const amountCanon = parseAmount(amount);
-  const amountStr = amountCanon ?? "";
+  const amountStr = amount.trim();
   const effAlloc = manual ? alloc : autoAlloc(docs, amountStr || "0");
 
   const mark = () => setDirty(true);
@@ -236,7 +238,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
     party,
     date,
     amount: amountStr,
-    amountInvalid: amountCanon === null,
+    amountInvalid: false,
     method,
     account: chosen ? { id: chosen.id, kind: chosen.kind as AccountKind, balance: chosen.balance } : null,
     payOrderNo,
@@ -499,7 +501,18 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
       ))}
       {err.message ? <Alert tone="danger" title={err.message} /> : null}
 
-      <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      {doc ? (
+        <Tabs
+          items={[
+            { key: "doc", label: t("tabDoc") },
+            { key: "hist", label: t("tabHist") },
+          ]}
+          value={tab}
+          onChange={(k) => setTab(k as "doc" | "hist")}
+        />
+      ) : null}
+      {doc && tab === "hist" ? <PaymentHistory kind={kind} id={doc.id} /> : null}
+      <div className={cn("grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]", tab === "hist" && "hidden")}>
         <div className="flex min-w-0 flex-col gap-4">
           {editable ? (
             <section className="rounded-card border border-border bg-surface p-5 shadow-card">
@@ -888,6 +901,37 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
   );
 }
 
+const HISTORY: Record<string, "h_create" | "h_change" | "h_send" | "h_post" | "h_return" | "h_cancel"> = {
+  create: "h_create",
+  update: "h_change",
+  send: "h_send",
+  post: "h_post",
+  return: "h_return",
+  cancel: "h_cancel",
+};
+
+/** «Tarix» yorligʻi (prototip `HistoryTimeline`): audit jurnalidan, kunlar boʻyicha. */
+function PaymentHistory({ kind, id }: { kind: PayKind; id: number }) {
+  const t = useTranslations("payments.doc");
+  const q = useQuery({
+    queryKey: ["payments", kind, "history", id],
+    queryFn: () =>
+      kind === "mt"
+        ? unwrap(api.GET("/api/payments/customer/{id}/history", { params: { path: { id } } }))
+        : unwrap(api.GET("/api/payments/supplier/{id}/history", { params: { path: { id } } })),
+  });
+  const data = q.data?.map((e) => ({ ...e, employee: e.employee ?? undefined, reason: e.reason ?? undefined }));
+  return (
+    <HistoryTimeline
+      query={{ data, error: q.error, refetch: q.refetch }}
+      label={(a) => {
+        const k = HISTORY[a.split(".").pop() ?? ""];
+        return k ? t(k) : a;
+      }}
+    />
+  );
+}
+
 function Effect({ icon: Icon, className, children }: { icon: LucideIcon; className?: string; children: ReactNode }) {
   return (
     <li className={cn("flex items-start gap-2.5", className)}>
@@ -1037,7 +1081,7 @@ function AllocTable({
                     size="sm"
                     value={r.value}
                     placeholder="0,00"
-                    onChange={(v) => onValue(r.key, parseAmount(v) ?? "")}
+                    onChange={(v) => onValue(r.key, v)}
                     error={r.over && tried ? t("eRowShort") : undefined}
                   />
                 </td>

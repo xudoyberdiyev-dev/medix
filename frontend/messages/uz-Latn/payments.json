@@ -357,6 +357,13 @@
     "sReq": "Bank rekvizitlari",
     "sLic": "Litsenziya",
     "sLicV": "{no} · {d} gacha",
-    "sNoLic": "Yoʻq"
+    "sNoLic": "Yoʻq",
+    "tabHist": "Tarix",
+    "h_create": "hujjatni yaratdi",
+    "h_change": "tahrirladi",
+    "h_send": "tasdiqlashga yubordi",
+    "h_post": "tasdiqladi",
+    "h_return": "qoralamaga qaytardi",
+    "h_cancel": "bekor qildi"
   }
 }
