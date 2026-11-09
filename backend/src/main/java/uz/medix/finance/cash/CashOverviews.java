@@ -40,6 +40,22 @@ class CashOverviews {
 
     record CashOverview(@Schema(description = "Bugun (Asia/Tashkent)") LocalDate today, String total, List<CashCard> cards) {}
 
+    /** «Bank» sahifasi kartasi (prototip `Bank`): bank hisobi yoki terminal — qoldiq, oxirgi harakat, oxirgi koʻchirma bilan solishtirish. */
+    record BankCard(
+            long id,
+            long branchId,
+            String branchName,
+            @Schema(description = "BANK yoki TERMINAL") String kind,
+            String code,
+            String name,
+            @Schema(nullable = true) String bankName,
+            @Schema(nullable = true) String accountNo,
+            String balance,
+            @Schema(nullable = true, description = "Oxirgi harakat sanasi") LocalDate lastMove,
+            @Schema(nullable = true, description = "Oxirgi koʻchirma bilan solishtirilgan sana") LocalDate reconciledOn) {}
+
+    record BankOverview(String total, List<BankCard> cards) {}
+
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
 
     private final JdbcClient jdbc;
@@ -76,6 +92,31 @@ class CashOverviews {
         return new CashOverview(today, total.toString(), cards);
     }
 
+    @Transactional(readOnly = true)
+    BankOverview bank(Actor actor, Long branchId) {
+        if (branchId != null && !actor.canAccessBranch(branchId)) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+        Long scope = actor.allBranches() ? branchId : actor.branchId();
+        List<BankCard> cards = jdbc.sql("""
+                SELECT a.id, a.branch_id, b.name AS branch_name, a.kind, a.code, a.name, a.bank_name, a.account_no, a.balance,
+                       (SELECT max(m.move_date) FROM money_move m WHERE m.account_id = a.id) AS last_move,
+                       (SELECT max(r.statement_date) FROM bank_reconciliation r WHERE r.account_id = a.id) AS reconciled_on
+                FROM money_account a JOIN branch b ON b.id = a.branch_id
+                WHERE a.kind IN ('BANK', 'TERMINAL') AND a.active AND (CAST(:b AS BIGINT) IS NULL OR a.branch_id = :b)
+                ORDER BY b.id, CASE a.kind WHEN 'BANK' THEN 0 ELSE 1 END, a.id""")
+                .param("b", scope)
+                .query((rs, n) -> new BankCard(rs.getLong("id"), rs.getLong("branch_id"), rs.getString("branch_name"), rs.getString("kind"),
+                        rs.getString("code"), rs.getString("name"), rs.getString("bank_name"), rs.getString("account_no"),
+                        money(rs.getBigDecimal("balance")), rs.getObject("last_move", LocalDate.class), rs.getObject("reconciled_on", LocalDate.class)))
+                .list()
+                .stream()
+                .filter(c -> actor.canAccessBranch(c.branchId()))
+                .toList();
+        Money total = cards.stream().map(c -> Money.of(c.balance())).reduce(Money.ZERO, Money::plus);
+        return new BankOverview(total.toString(), cards);
+    }
+
     private static String money(BigDecimal v) {
         return new Money(v).toString();
     }
@@ -97,6 +138,14 @@ class CashOverviews {
         CashOverview overview(@RequestParam(required = false) Long branchId) {
             Actor a = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
             return overviews.overview(a, branchId);
+        }
+
+        @GetMapping("/api/bank/overview")
+        @PreAuthorize("hasAuthority('bank.view')")
+        @Operation(summary = "Bank hisoblari va terminallar (kartalar)", description = "Qoldiq, oxirgi harakat, oxirgi koʻchirma bilan solishtirilgan sana.")
+        BankOverview bank(@RequestParam(required = false) Long branchId) {
+            Actor a = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
+            return overviews.bank(a, branchId);
         }
     }
 }
