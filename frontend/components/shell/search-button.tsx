@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { useCallback, useState } from "react";
 import { CommandPalette, useCommandPaletteHotkey } from "./command-palette";
 
-/** TopBar qidiruv maydoni: bosilganda yoki Ctrl+K — universal qidiruv oynasi. */
+/** TopBar qidiruv maydoni (prototip: «Mahsulot, mijoz yoki hujjat raqami…», Ctrl K): bosilganda yoki Ctrl+K — universal qidiruv oynasi. */
 export function SearchButton() {
   const t = useTranslations("shell");
   const [open, setOpen] = useState(false);
@@ -18,11 +18,17 @@ export function SearchButton() {
         type="button"
         onClick={show}
         aria-keyshortcuts="Control+K"
-        className="flex size-control-md items-center justify-center gap-2 rounded-control text-text-secondary hover:bg-background md:w-56 md:justify-start md:border md:border-border md:bg-surface md:px-3 md:text-text-disabled md:hover:border-text-disabled md:hover:bg-surface lg:w-72"
+        aria-label={t("search")}
+        className="flex size-control-md items-center justify-center gap-2 rounded-control text-text-secondary hover:bg-background md:w-64 md:justify-start md:border md:border-border md:bg-background md:px-3 md:text-text-disabled md:hover:border-text-disabled lg:w-[360px]"
       >
         <Search size={16} strokeWidth={1.5} aria-hidden />
-        <span className="max-md:sr-only">{t("search")}</span>
-        <kbd className="ml-auto rounded-sm border border-border px-1.5 text-caption text-text-secondary max-md:hidden">Ctrl K</kbd>
+        <span aria-hidden className="truncate text-table max-md:hidden">
+          {t("searchPlaceholder")}
+        </span>
+        <span aria-hidden className="ml-auto flex gap-1 max-md:hidden">
+          <kbd className="rounded-sm border border-border bg-surface px-1.5 text-caption text-text-secondary">Ctrl</kbd>
+          <kbd className="rounded-sm border border-border bg-surface px-1.5 text-caption text-text-secondary">K</kbd>
+        </span>
       </button>
       <CommandPalette open={open} onClose={hide} />
     </>

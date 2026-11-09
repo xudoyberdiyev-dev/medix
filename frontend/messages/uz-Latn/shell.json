@@ -23,5 +23,6 @@
     "supplierDebts": "YB qarzi boʻlimlari",
     "supplierDebtsDebts": "Qarzlar",
     "supplierDebtsBonus": "Bonus balans"
-  }
+  },
+  "searchPlaceholder": "Mahsulot, mijoz yoki hujjat raqami…"
 }

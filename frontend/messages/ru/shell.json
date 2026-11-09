@@ -23,5 +23,6 @@
     "supplierDebts": "Разделы долгов поставщикам",
     "supplierDebtsDebts": "Долги",
     "supplierDebtsBonus": "Бонусный баланс"
-  }
+  },
+  "searchPlaceholder": "Товар, клиент или номер документа…"
 }

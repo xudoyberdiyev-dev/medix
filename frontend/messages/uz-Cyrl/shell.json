@@ -23,5 +23,6 @@
     "supplierDebts": "ЕБ қарзи бўлимлари",
     "supplierDebtsDebts": "Қарзлар",
     "supplierDebtsBonus": "Бонус баланс"
-  }
+  },
+  "searchPlaceholder": "Маҳсулот, мижоз ёки ҳужжат рақами…"
 }
