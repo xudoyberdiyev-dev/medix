@@ -51,7 +51,7 @@ class ReconActController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('recon.create')")
     @Operation(summary = "Akt sverka tuzish (AS-…)")
-    ReconActs.ReconDetail create(@Valid @RequestBody ReconActs.CreateRequest r) {
+    ReconActs.ReconDetail create(@Valid @RequestBody ReconActs.ReconCreateRequest r) {
         Actor a = actor();
         return acts.get(a, acts.create(a, r));
     }
@@ -59,7 +59,7 @@ class ReconActController {
     @PostMapping("/api/reconciliations/{id}/status")
     @PreAuthorize("hasAuthority('recon.create')")
     @Operation(summary = "Holat: Yuborildi / Imzolandi / Farq bor (kontragent qoldigʻi + izoh)")
-    ReconActs.ReconDetail status(@PathVariable long id, @Valid @RequestBody ReconActs.StatusRequest r) {
+    ReconActs.ReconDetail status(@PathVariable long id, @Valid @RequestBody ReconActs.ReconStatusRequest r) {
         Actor a = actor();
         acts.setStatus(a, id, r);
         return acts.get(a, id);

@@ -38,9 +38,9 @@ class ReconActs {
 
     record ReconDetail(ReconRow head, String ourName, String ourTin, Debts.Act act) {}
 
-    record CreateRequest(@NotNull Side side, long counterpartyId, long branchId, @NotNull LocalDate from, @NotNull LocalDate to) {}
+    record ReconCreateRequest(@NotNull Side side, long counterpartyId, long branchId, @NotNull LocalDate from, @NotNull LocalDate to) {}
 
-    record StatusRequest(@NotNull Status status, @Schema(nullable = true) String theirBalance,
+    record ReconStatusRequest(@NotNull Status status, @Schema(nullable = true) String theirBalance,
             @Schema(nullable = true) @Size(max = 500) String note) {}
 
     private static final String SELECT = """
@@ -89,7 +89,7 @@ class ReconActs {
     }
 
     @Transactional
-    long create(Actor actor, CreateRequest r) {
+    long create(Actor actor, ReconCreateRequest r) {
         if (!actor.canAccessBranch(r.branchId())) {
             throw MedixException.notFound("error.notFound");
         }
@@ -123,7 +123,7 @@ class ReconActs {
     }
 
     @Transactional
-    void setStatus(Actor actor, long id, StatusRequest r) {
+    void setStatus(Actor actor, long id, ReconStatusRequest r) {
         ReconRow head = find(actor, id);
         jdbc.sql("SELECT id FROM reconciliation_act WHERE id = :i FOR UPDATE").param("i", id).query(Long.class).single();
         Status from = head.status();
