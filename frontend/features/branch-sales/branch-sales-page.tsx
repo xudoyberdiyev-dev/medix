@@ -37,8 +37,9 @@ export function BranchSalesPage() {
   const params = useSearchParams();
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
-  // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi
+  // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi; «Koʻchirish» → «Yangi»: ?new=1 — yangi qoralama
   const [open, setOpen] = useState<{ id: number | null } | null>(() => {
+    if (params.get("new") === "1") return { id: null };
     const id = Number(params.get("open"));
     return Number.isInteger(id) && id > 0 ? { id } : null;
   });

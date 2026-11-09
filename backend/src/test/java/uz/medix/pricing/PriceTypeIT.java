@@ -114,4 +114,77 @@ class PriceTypeIT {
                         .content("{\"name\":\"Promo\",\"active\":true}").with(csrf()).cookie(director))
                 .andExpect(status().isOk());
     }
+
+    /** E10: yangi narx turi, «Partiyaga bogʻliq» / «Bazaviy» almashtirish, Vozvrat saqlanadi. */
+    @Test
+    void createSwitchBaseAndBatch() throws Exception {
+        long branch = branch();
+        Cookie director = loginAs("DIRECTOR", branch);
+        String b = String.valueOf(branch);
+        long base = jdbc.sql("SELECT id FROM price_type WHERE code = 'BASE'").query(Long.class).single();
+        long ret = jdbc.sql("SELECT id FROM price_type WHERE code = 'RETURN'").query(Long.class).single();
+        String name = "Klinika " + UUID.randomUUID().toString().substring(0, 6);
+        MvcResult created = mvc.perform(post("/api/price-types").param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"" + name + "\",\"batch\":true,\"base\":false}").with(csrf()).cookie(director))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value(name))
+                .andExpect(jsonPath("$.batch").value(true))
+                .andExpect(jsonPath("$.base").value(false))
+                .andExpect(jsonPath("$.active").value(true))
+                .andReturn();
+        long id = ((Number) com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.id")).longValue();
+        // Nom band, bazaviy + partiya — mumkin emas, Operator — ruxsat yoʻq
+        mvc.perform(post("/api/price-types").param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"" + name + "\",\"batch\":false,\"base\":false}").with(csrf()).cookie(director))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("priceType.duplicate"));
+        mvc.perform(post("/api/price-types").param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"X" + name + "\",\"batch\":true,\"base\":true}").with(csrf()).cookie(director))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("priceType.baseBatch"));
+        mvc.perform(post("/api/price-types").param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Y" + name + "\",\"batch\":false,\"base\":false}").with(csrf())
+                        .cookie(loginAs("OPERATOR", branch)))
+                .andExpect(status().isForbidden());
+
+        // Narxi yoʻq — partiyadan ajratish mumkin; bazaviy qilinsa eski bazaviy oddiy turga oʻtadi
+        mvc.perform(put("/api/price-types/" + id).param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"" + name + "\",\"active\":true,\"batch\":false,\"base\":true}").with(csrf()).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.batch").value(false))
+                .andExpect(jsonPath("$.base").value(true));
+        try {
+            org.junit.jupiter.api.Assertions.assertEquals(1L,
+                    jdbc.sql("SELECT count(*) FROM price_type WHERE base").query(Long.class).single());
+            org.junit.jupiter.api.Assertions.assertFalse(
+                    jdbc.sql("SELECT base FROM price_type WHERE id = :id").param("id", base).query(Boolean.class).single());
+            mvc.perform(put("/api/price-types/" + id).param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"name\":\"" + name + "\",\"active\":true,\"batch\":true}").with(csrf()).cookie(director))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("priceType.baseBatch"));
+        } finally {
+            // Asl bazaviy turga qaytarish
+            mvc.perform(put("/api/price-types/" + base).param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"name\":\"Narx\",\"active\":true,\"base\":true}").with(csrf()).cookie(director))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.base").value(true));
+        }
+        org.junit.jupiter.api.Assertions.assertFalse(
+                jdbc.sql("SELECT base FROM price_type WHERE id = :id").param("id", id).query(Boolean.class).single());
+
+        // Narxi bor turda «Partiyaga bogʻliq» almashtirilmaydi (bazaviy turda narxlar bor)
+        long withPrices = jdbc.sql("SELECT price_type_id FROM price LIMIT 1").query(Long.class).optional().orElse(-1L);
+        if (withPrices > 0 && withPrices != base) {
+            String n = jdbc.sql("SELECT name FROM price_type WHERE id = :id").param("id", withPrices).query(String.class).single();
+            mvc.perform(put("/api/price-types/" + withPrices).param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"name\":\"" + n + "\",\"active\":true,\"batch\":true}").with(csrf()).cookie(director))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("priceType.hasPrices"));
+        }
+        // Vozvrat — nofaol qilinmaydi
+        mvc.perform(put("/api/price-types/" + ret).param("branchId", b).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Vozvrat\",\"active\":false}").with(csrf()).cookie(director))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("priceType.returnKept"));
+    }
 }

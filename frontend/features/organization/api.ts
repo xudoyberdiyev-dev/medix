@@ -10,6 +10,9 @@ export type Branch = components["schemas"]["Branch"];
 export type Warehouse = components["schemas"]["Warehouse"];
 export type Zone = components["schemas"]["Zone"];
 export type ZoneType = Zone["type"];
+export type WarehouseOverviewItem = components["schemas"]["WarehouseOverviewItem"];
+export type WarehouseZoneStock = components["schemas"]["WarehouseZoneStock"];
+export type WarehouseCardRequest = components["schemas"]["WarehouseCardRequest"];
 export type CreateBranchRequest = components["schemas"]["CreateBranchRequest"];
 export type UpdateBranchRequest = components["schemas"]["UpdateBranchRequest"];
 
@@ -43,6 +46,18 @@ export const ZONE_LABELS: Record<ZoneType, string> = {
 /** Ombor yaratilgandan keyin qoʻshish mumkin boʻlgan zonalar (majburiylari doim bor). */
 export const OPTIONAL_ZONES: ZoneType[] = ["COLD", "SAFE"];
 
+/** Omborda bir nechta boʻlishi mumkin boʻlgan saqlash zonalari va sotuvga ochilishi mumkin turlar (E12). */
+export const STORAGE_ZONES: ZoneType[] = ["MAIN", "COLD", "SAFE"];
+
+/** Yangi zona uchun standart nom: tur nomi, band boʻlsa — «Asosiy saqlash 2». */
+export function nextZoneName(base: string, names: string[]): string {
+  const taken = new Set(names.map((n) => n.trim().toLocaleLowerCase("uz")));
+  if (!taken.has(base.toLocaleLowerCase("uz"))) return base;
+  let i = 2;
+  while (taken.has(`${base} ${i}`.toLocaleLowerCase("uz"))) i++;
+  return `${base} ${i}`;
+}
+
 export function missingOptionalZones(w: Warehouse): ZoneType[] {
   return OPTIONAL_ZONES.filter((t) => !w.zones.some((z) => z.type === t));
 }
@@ -54,8 +69,18 @@ export function useBranchList() {
   return useQuery({ queryKey: BRANCHES, queryFn: () => unwrap(api.GET("/api/branches")) });
 }
 
+/** Filiallar roʻyxati ustunlari: rahbar, omborlar, xodimlar, mijozlar qarzi (`/api/branches/stats`). */
+export function useBranchStats() {
+  return useQuery({ queryKey: [...BRANCHES, "stats"], queryFn: () => unwrap(api.GET("/api/branches/stats")) });
+}
+
 export function useWarehouses() {
   return useQuery({ queryKey: WAREHOUSES, queryFn: () => unwrap(api.GET("/api/warehouses")) });
+}
+
+/** Omborlar va zonalar sahifasi: filial → ombor, omborchi, zonalar qoldigʻi bilan. */
+export function useWarehouseOverview() {
+  return useQuery({ queryKey: [...WAREHOUSES, "overview"], queryFn: () => unwrap(api.GET("/api/warehouses/overview")) });
 }
 
 function useMutationWith<T, R>(key: readonly string[], fn: (v: T) => Promise<R>) {
@@ -98,6 +123,49 @@ export const useAddZone = () =>
   useMutationWith(WAREHOUSES, ({ id, type }: { id: number; type: ZoneType }) =>
     unwrap(api.POST("/api/warehouses/{id}/zones", { params: { path: { id } }, body: { type } })),
   );
+
+export const useCreateWarehouseCard = () =>
+  useMutationWith(WAREHOUSES, (body: WarehouseCardRequest) => unwrap(api.POST("/api/warehouses/card", { body })));
+
+export const useUpdateWarehouseCard = () =>
+  useMutationWith(WAREHOUSES, ({ id, body }: { id: number; body: WarehouseCardRequest }) =>
+    unwrap(api.PUT("/api/warehouses/{id}/card", { params: { path: { id } }, body })),
+  );
+
+export const useAddNamedZone = () =>
+  useMutationWith(WAREHOUSES, ({ id, type, name }: { id: number; type: ZoneType; name?: string }) =>
+    unwrap(api.POST("/api/warehouses/{id}/zones", { params: { path: { id } }, body: { type, name } })),
+  );
+
+export const useSetZoneActive = () =>
+  useMutationWith(WAREHOUSES, ({ id, zoneId, active }: { id: number; zoneId: number; active: boolean }) =>
+    active
+      ? unwrap(api.POST("/api/warehouses/{id}/zones/{zoneId}/reopen", { params: { path: { id, zoneId } } }))
+      : unwrap(api.POST("/api/warehouses/{id}/zones/{zoneId}/close", { params: { path: { id, zoneId } } })),
+  );
+
+export const useSetZoneSellable = () =>
+  useMutationWith(WAREHOUSES, ({ id, zoneId, sellable }: { id: number; zoneId: number; sellable: boolean }) =>
+    unwrap(api.PUT("/api/warehouses/{id}/zones/{zoneId}/sellable", { params: { path: { id, zoneId } }, body: { sellable } })),
+  );
+
+/** Filial → ombor daraxti (prototip AdminOrg): filial nomi va kodi, ichida omborlar. */
+export function warehouseTree(
+  items: WarehouseOverviewItem[],
+): { branchId: number; name: string; code: string; items: WarehouseOverviewItem[] }[] {
+  const groups = new Map<number, { branchId: number; name: string; code: string; items: WarehouseOverviewItem[] }>();
+  for (const w of items) {
+    const g = groups.get(w.branchId) ?? { branchId: w.branchId, name: w.branchName, code: w.branchCode, items: [] };
+    g.items.push(w);
+    groups.set(w.branchId, g);
+  }
+  return [...groups.values()];
+}
+
+/** Faol zonalar soni (sarlavha izohi va daraxt qatori). */
+export function activeZoneCount(items: Pick<WarehouseOverviewItem, "zones">[]): number {
+  return items.reduce((n, w) => n + w.zones.filter((z) => z.active).length, 0);
+}
 
 export const useRenameZone = () =>
   useMutationWith(WAREHOUSES, ({ id, zoneId, name }: { id: number; zoneId: number; name: string }) =>

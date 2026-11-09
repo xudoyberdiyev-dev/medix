@@ -97,7 +97,7 @@ class SetupIT {
                 .andExpect(jsonPath("$.name").value("Medix Group"));
 
         mvc.perform(json(post("/api/setup/branches"), ceo,
-                        "{\"code\":\"TS\",\"name\":\"Toshkent\",\"legalName\":\"Medix TSH MChJ\",\"tin\":\"12345\"}"))
+                        "{\"code\":\"T\",\"name\":\"Toshkent\",\"legalName\":\"Medix TSH MChJ\",\"tin\":\"12345\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.code").isNotEmpty())
                 .andExpect(jsonPath("$.errors.tin").isNotEmpty());

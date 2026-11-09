@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uz.medix.delivery.trip.TripModels.PickupRequest;
+import uz.medix.delivery.trip.TripModels.HandedSale;
 import uz.medix.delivery.trip.TripModels.ReadyOrder;
 import uz.medix.delivery.trip.TripModels.TripDetail;
 import uz.medix.delivery.trip.TripModels.TripOptions;
@@ -111,6 +112,13 @@ class TripController {
     @Operation(summary = "Jo'natishga tayyor buyurtmalar", description = "«Hujjatlashtirilmoqda» holatidagilar.")
     List<ReadyOrder> ready(@RequestParam(required = false) Long branchId) {
         return trips.ready(actor(), branchId);
+    }
+
+    @GetMapping("/handed")
+    @PreAuthorize("hasAuthority('shipments.view')")
+    @Operation(summary = "Topshirilgan sotuvlar", description = "So'nggi 30 kun: o'zi olib ketdi yoki reys bilan (prototip «Topshirilgan»).")
+    List<HandedSale> handed(@RequestParam(required = false) Long branchId) {
+        return trips.handed(actor(), branchId);
     }
 
     @GetMapping("/options")

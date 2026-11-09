@@ -58,6 +58,7 @@ describe("yorliqli bandlar", () => {
     expect(href(["qy.view"], "returns")).toBe("/supplier-returns");
     expect(href(["hc.view", "qy.view"], "returns")).toBe("/write-offs");
     expect(href(["supplierBonus.confirm"], "supplier-debts")).toBe("/bonuses");
-    expect(href(["transfer.zk"], "transfers")).toBe("/zone-transfers");
+    // Koʻchirish — bitta roʻyxat har qanday koʻchirish ruxsati bilan
+    expect(href(["transfer.zk"], "transfers")).toBe("/transfers");
   });
 });

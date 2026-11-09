@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.delivery.trip.TripModels.DriverOption;
+import uz.medix.delivery.trip.TripModels.HandedSale;
 import uz.medix.delivery.trip.TripModels.ReadyOrder;
 import uz.medix.delivery.trip.TripModels.TripDetail;
 import uz.medix.delivery.trip.TripModels.TripOptions;
@@ -58,11 +59,60 @@ class Trips {
 
     @Transactional(readOnly = true)
     List<ReadyOrder> ready(Actor actor, Long branchId) {
-        return dispatch.ready(actor, branchId).stream().map(Trips::ready).toList();
+        List<DispatchOrder> orders = dispatch.ready(actor, branchId);
+        if (orders.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, ReadyExtra> extra = new java.util.HashMap<>();
+        jdbc.sql("""
+                SELECT o.id, c.phone, r.name AS region, o.delivery_date, o.status_changed_at,
+                       (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id)::int AS lines,
+                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l WHERE l.order_id = o.id)::int AS qty,
+                       EXISTS (SELECT 1 FROM sales_order_line l JOIN product p ON p.id = l.product_id
+                               WHERE l.order_id = o.id AND p.controlled) AS controlled,
+                       (SELECT coalesce(sum(qty), 0) FROM sales_order_pick WHERE order_id = o.id)::int AS picked,
+                       (SELECT coalesce(sum(qty), 0) FROM sales_order_pick_return WHERE order_id = o.id)::int AS returned
+                FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN region r ON r.id = c.region_id
+                WHERE o.id IN (:ids)""")
+                .param("ids", orders.stream().map(DispatchOrder::id).toList())
+                .query((rs, n) -> extra.put(rs.getLong("id"), new ReadyExtra(rs.getString("phone"), rs.getString("region"),
+                        rs.getDate("delivery_date") == null ? null : rs.getDate("delivery_date").toLocalDate(),
+                        rs.getInt("lines"), rs.getInt("qty"), rs.getTimestamp("status_changed_at").toInstant(), rs.getBoolean("controlled"),
+                        Math.max(0, rs.getInt("qty") - Math.max(0, rs.getInt("picked") - rs.getInt("returned"))))))
+                .list();
+        return orders.stream().map(o -> ready(o, extra.get(o.id()))).toList();
     }
 
-    private static ReadyOrder ready(DispatchOrder o) {
-        return new ReadyOrder(o.id(), o.number(), o.branchId(), o.customer(), o.address(), o.delivery().name(), o.places(), o.total());
+    private record ReadyExtra(String phone, String region, LocalDate deliveryDate, int lines, int qty, java.time.Instant readyAt, boolean controlled,
+            int shortQty) {}
+
+    private static ReadyOrder ready(DispatchOrder o, ReadyExtra x) {
+        return new ReadyOrder(o.id(), o.number(), o.branchId(), o.customer(), o.address(), o.delivery().name(), o.places(), o.total(),
+                x.phone(), x.region(), x.deliveryDate(), x.lines(), x.qty(), x.readyAt(), x.controlled(), x.shortQty());
+    }
+
+    /** «Topshirilgan» (prototip Shipping): so'nggi 30 kundagi o'tkazilgan sotuvlar — o'zi olib ketdi yoki reys bilan. */
+    @Transactional(readOnly = true)
+    List<HandedSale> handed(Actor actor, Long branchId) {
+        return jdbc.sql("""
+                SELECT s.id, s.number, s.order_id, o.number AS order_number, s.customer_id, c.name AS customer, r.name AS region,
+                       s.branch_id, t.number AS trip_number, s.created_at, s.total, e.full_name AS by_name
+                FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN counterparty c ON c.id = s.customer_id
+                LEFT JOIN region r ON r.id = c.region_id LEFT JOIN trip t ON t.id = s.trip_id JOIN employee e ON e.id = s.created_by
+                WHERE s.status = 'POSTED' AND s.created_at >= now() - INTERVAL '30 days'
+                  AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b)
+                ORDER BY s.created_at DESC, s.id DESC LIMIT 500""")
+                .param("b", branchId)
+                .query((rs, n) -> actor.canAccessBranch(rs.getLong("branch_id"))
+                        ? new HandedSale(rs.getLong("id"), rs.getString("number"), rs.getLong("order_id"), rs.getString("order_number"),
+                                rs.getLong("customer_id"), rs.getString("customer"), rs.getString("region"),
+                                rs.getString("trip_number") == null ? "PICKUP" : "TRIP", rs.getString("trip_number"),
+                                rs.getTimestamp("created_at").toInstant(), money(rs.getBigDecimal("total")), rs.getString("by_name"))
+                        : null)
+                .list()
+                .stream()
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -644,6 +694,9 @@ class Trips {
 
     private static final String SUMMARY = """
             SELECT t.id, t.number, t.branch_id, t.trip_date, t.status, v.plate_number || ' · ' || v.model AS vehicle,
+                   v.plate_number, v.model AS vehicle_model, v.has_refrigerator, d.phone AS driver_phone,
+                   (SELECT count(*) FROM trip_stop s WHERE s.trip_id = t.id AND s.active AND s.outcome IN ('DELIVERED', 'PARTIAL')) AS delivered,
+                   (SELECT count(*) FROM trip_stop s WHERE s.trip_id = t.id AND s.active AND s.outcome IS NOT NULL) AS marked,
                    d.full_name AS driver, t.places, t.created_at, t.note, t.vehicle_id, t.driver_id, cb.full_name AS created_by, t.started_at,
                    t.cancel_reason,
                    (SELECT count(*) FROM trip_stop s WHERE s.trip_id = t.id AND (s.active OR t.status = 'CANCELLED')) AS orders,
@@ -669,7 +722,8 @@ class Trips {
         return new TripSummary(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getDate("trip_date").toLocalDate(),
                 TripStatus.valueOf(rs.getString("status")), rs.getString("vehicle"),
                 rs.getString("driver"), rs.getInt("orders"), rs.getInt("places"), money(rs.getBigDecimal("total")),
-                rs.getTimestamp("created_at").toInstant());
+                rs.getTimestamp("created_at").toInstant(), rs.getString("driver_phone"), rs.getString("plate_number"), rs.getString("vehicle_model"),
+                rs.getBoolean("has_refrigerator"), rs.getInt("delivered"), rs.getInt("marked"));
     }
 
     /** Haydovchi paneli «Yakunlangan reyslar» (SPEC 5.4): o'z reyslari — yakunlangan yoki bekor qilingan, oxirgi 100 ta. */

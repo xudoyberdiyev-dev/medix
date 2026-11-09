@@ -16,6 +16,7 @@ export type OrderStatus = OrderDetail["status"];
 export const ORDER_CREATE = "orders.create";
 export const ORDER_CANCEL = "orders.cancel";
 export const ORDER_MANAGE = "orders.manage";
+export const ORDER_DISCOUNT = "orders.discount";
 export const ORDER_CANCEL_PICK = "orders.cancelPick";
 export const APPROVE_BRANCH = "approvals.branch";
 export const APPROVE_DIRECTOR = "approvals.director";

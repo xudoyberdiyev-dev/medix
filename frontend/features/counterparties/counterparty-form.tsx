@@ -393,6 +393,7 @@ function FormBody({
                       onChange={set("pharmNo")}
                       error={err("pharmNo")}
                       placeholder="FA-0000-2026"
+                      required
                     />
                   </div>
                   <div data-f="pharmUntil">
@@ -402,6 +403,7 @@ function FormBody({
                       onChange={set("pharmUntil")}
                       error={err("pharmUntil")}
                       placeholder={t("datePh")}
+                      required
                     />
                   </div>
                 </div>
@@ -486,6 +488,30 @@ function FormBody({
                       error={err("days")}
                     />
                   </div>
+                  {supplier ? (
+                    <div data-f="lead">
+                      <TextField
+                        label={tt("leadDays")}
+                        suffix={tt("days")}
+                        inputMode="numeric"
+                        value={f.lead}
+                        onChange={set("lead")}
+                        error={err("lead")}
+                      />
+                    </div>
+                  ) : (
+                    <div data-f="disc">
+                      <TextField
+                        label={tt("discount")}
+                        suffix="%"
+                        inputMode="decimal"
+                        value={f.disc}
+                        onChange={set("disc")}
+                        error={err("disc")}
+                        hint={tt("discountHint")}
+                      />
+                    </div>
+                  )}
                   {!supplier ? (
                     <div data-f="priceTypeId">
                       <Select

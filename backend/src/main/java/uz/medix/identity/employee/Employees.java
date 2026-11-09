@@ -83,10 +83,11 @@ public class Employees {
     private final AuditLog audit;
     private final Warehouses warehouses;
     private final CashierAssignments cashiers;
-    private final int limit;
+    /** Litsenziya chegarasi (E13); testda oʻzgartiriladi, shuning uchun final emas. */
+    private int limit;
 
     Employees(JdbcClient jdbc, PasswordEncoder encoder, AuditLog audit, Warehouses warehouses, CashierAssignments cashiers,
-            @Value("${medix.employees.limit:0}") int limit) {
+            @Value("${medix.employees.limit:40}") int limit) {
         this.jdbc = jdbc;
         this.encoder = encoder;
         this.audit = audit;

@@ -37,6 +37,15 @@ export function useOpenings(branchId: number | null, status: OpeningStatus | nul
   });
 }
 
+/** Matritsa va umumiy roʻyxat uchun: oxirgi 200 ta tovar BQ. */
+export function useAllOpenings(branchId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["openings", "list", "all", branchId],
+    queryFn: () => unwrap(api.GET("/api/opening-balances", { params: { query: { branchId: branchId ?? undefined, size: 200 } } })),
+    enabled,
+  });
+}
+
 export function useOpening(id: number | null) {
   return useQuery({
     queryKey: ["openings", "one", id],

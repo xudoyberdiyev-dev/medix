@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { sectionsFor } from "./settings-sections";
-import { filterBranches, groupByBranch, missingOptionalZones, type Branch, type Warehouse } from "./api";
+import {
+  activeZoneCount,
+  filterBranches,
+  groupByBranch,
+  missingOptionalZones,
+  nextZoneName,
+  warehouseTree,
+  type Branch,
+  type Warehouse,
+  type WarehouseOverviewItem,
+} from "./api";
 
 const branch = (id: number, over: Partial<Branch> = {}): Branch => ({
   id,
@@ -20,7 +30,7 @@ const warehouse = (id: number, branchId: number, types: Warehouse["zones"][numbe
   name: `Ombor ${id}`,
   active: true,
   kind: "NORMAL",
-  zones: types.map((type, i) => ({ id: id * 10 + i, type, name: type, sellable: type === "MAIN" })),
+  zones: types.map((type, i) => ({ id: id * 10 + i, type, name: type, sellable: type === "MAIN", active: true })),
 });
 
 describe("filterBranches", () => {
@@ -53,5 +63,49 @@ describe("sectionsFor", () => {
   it("Sozlash ustasi — company.edit bilan", () => {
     expect(sectionsFor(["staff.view"]).some((s) => s.href === "/setup")).toBe(false);
     expect(sectionsFor(["company.edit"]).some((s) => s.href === "/setup")).toBe(true);
+  });
+});
+
+const item = (id: number, branchId: number, zones: [WarehouseOverviewItem["zones"][number]["type"], boolean][]): WarehouseOverviewItem => ({
+  id,
+  branchId,
+  branchName: branchId === 1 ? "Toshkent" : "Samarqand",
+  branchCode: branchId === 1 ? "TSH" : "SMQ",
+  name: `Ombor ${id}`,
+  active: true,
+  kind: "NORMAL",
+  qty: 0,
+  products: 0,
+  zones: zones.map(([type, active], i) => ({ id: id * 10 + i, type, name: type, sellable: type === "MAIN", active, qty: 0, products: 0 })),
+});
+
+describe("Omborlar va zonalar daraxti", () => {
+  it("omborlarni filial boʻyicha guruhlaydi, tartibni saqlaydi", () => {
+    const tree = warehouseTree([item(1, 1, []), item(2, 2, []), item(3, 1, [])]);
+    expect(tree.map((g) => [g.code, g.items.map((w) => w.id)])).toEqual([
+      ["TSH", [1, 3]],
+      ["SMQ", [2]],
+    ]);
+  });
+
+  it("faqat faol zonalarni sanaydi", () => {
+    expect(
+      activeZoneCount([
+        item(1, 1, [
+          ["MAIN", true],
+          ["COLD", false],
+        ]),
+        item(2, 1, [["RECEIVING", true]]),
+      ]),
+    ).toBe(2);
+    expect(activeZoneCount([])).toBe(0);
+  });
+});
+
+describe("nextZoneName (E12 — bir turdagi bir nechta zona)", () => {
+  it("band boʻlsa raqam qoʻshadi", () => {
+    expect(nextZoneName("Sovuq", ["Qabul"])).toBe("Sovuq");
+    expect(nextZoneName("Asosiy saqlash", ["Asosiy saqlash", "Qabul"])).toBe("Asosiy saqlash 2");
+    expect(nextZoneName("Asosiy saqlash", ["asosiy saqlash", "Asosiy saqlash 2"])).toBe("Asosiy saqlash 3");
   });
 });

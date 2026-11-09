@@ -50,6 +50,7 @@ import {
   ORDER_CANCEL,
   ORDER_CANCEL_PICK,
   ORDER_CREATE,
+  ORDER_DISCOUNT,
   ORDER_MANAGE,
   canApprove,
   canCancelOrder,
@@ -69,6 +70,7 @@ import {
   codesExportUrl,
 } from "./api";
 import { CatalogView } from "./catalog-dialog";
+import { formatPct, parsePct, pctText } from "./discount";
 import { OrderCardAside, OrderCardBody, OrderStepper } from "./order-card";
 import { CustomerStateRow, RecentOrders, useCustomerCredit, type PreviousOrder } from "./customer-state";
 import { clearOpenDraft, draftFormFor, readOpenDraft, writeOpenDraft } from "./open-draft";
@@ -138,6 +140,8 @@ interface DraftLine {
   productCode: string;
   productName: string;
   qty: string;
+  /** Chegirma % (E7); boʻsh — mijozning standart chegirmasi */
+  discount?: string;
 }
 
 const isInt = (s: string) => /^\d+$/.test(s.trim());
@@ -196,7 +200,13 @@ function Editor({
     restored
       ? restored.lines
       : doc
-        ? doc.lines.map((l) => ({ productId: l.productId, productCode: l.productCode, productName: l.productName, qty: String(l.qty) }))
+        ? doc.lines.map((l) => ({
+            productId: l.productId,
+            productCode: l.productCode,
+            productName: l.productName,
+            qty: String(l.qty),
+            discount: pctText(l.discountPct),
+          }))
         : [],
   );
   const [adding, setAdding] = useState<{ product: string | null; qty: string }>({ product: null, qty: "" });
@@ -227,7 +237,13 @@ function Editor({
   const dirty =
     doc !== null &&
     (lines.length !== doc.lines.length ||
-      lines.some((l, i) => l.productId !== doc.lines[i]?.productId || Number(l.qty) !== doc.lines[i]?.qty));
+      lines.some(
+        (l, i) =>
+          l.productId !== doc.lines[i]?.productId ||
+          Number(l.qty) !== doc.lines[i]?.qty ||
+          (l.discount ?? "") !== pctText(doc.lines[i]?.discountPct),
+      ));
+  const discountRight = can(me.data, ORDER_DISCOUNT);
   const unsaved = hasUnsavedChanges({ editable, isNew: doc === null, dirty, lineCount: lines.length });
   // Saqlanmagan qatorlar bilan sahifani yopish / yangilash — brauzer ogohlantiradi (SPEC 6)
   useEffect(() => {
@@ -270,6 +286,7 @@ function Editor({
     if (dd === null) return (setLocal(t("drawer.errDate")), null);
     for (const [i, l] of lines.entries()) {
       if (!isInt(l.qty) || Number(l.qty) < 1) return (setLocal(t("drawer.errLineQty", { n: i + 1, name: l.productName })), null);
+      if (parsePct(l.discount) === undefined) return (setLocal(t("entry.eDisc", { n: i + 1, name: l.productName })), null);
     }
     setLocal(null);
     return {
@@ -280,7 +297,7 @@ function Editor({
       address: address.trim() || undefined,
       paymentType: (paymentType ?? "TRANSFER") as OrderRequest["paymentType"],
       note: note.trim() || undefined,
-      lines: lines.map((l) => ({ productId: l.productId, qty: Number(l.qty) })),
+      lines: lines.map((l) => ({ productId: l.productId, qty: Number(l.qty), discountPct: parsePct(l.discount) ?? undefined })),
     };
   }
 
@@ -714,6 +731,7 @@ function Editor({
                     {editable ? <span className="ml-0.5 text-danger">*</span> : null}
                   </th>
                   <th className="px-3 py-2.5 text-right font-medium">{t("drawer.col.price")}</th>
+                  <th className="px-3 py-2.5 text-right font-medium">{t("entry.colDisc")}</th>
                   <th className="px-3 py-2.5 text-right font-medium">{t("entry.colSum")}</th>
                   {editable ? <th className="w-10" /> : null}
                 </tr>
@@ -721,7 +739,7 @@ function Editor({
               <tbody>
                 {lines.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-3 py-7 text-center text-text-secondary">
+                    <td colSpan={8} className="px-3 py-7 text-center text-text-secondary">
                       {editable ? t("entry.noLines") : t("drawer.noLines")}
                     </td>
                   </tr>
@@ -731,6 +749,7 @@ function Editor({
                     const qty = Number(l.qty);
                     const over = s && isInt(l.qty) && qty > s.available;
                     const price = s ? (doc?.status === "DRAFT" ? s.currentPrice : s.price) : null;
+                    const list = s?.listPrice && s.listPrice !== price ? s.listPrice : null;
                     return (
                       <tr key={l.productId} className="group border-t border-border hover:bg-background">
                         <td className="px-3 py-2 text-text-secondary tabular-nums">{i + 1}</td>
@@ -778,6 +797,28 @@ function Editor({
                             </span>
                           ) : (
                             <span className="text-text-disabled">{s ? t("drawer.noPrice") : "—"}</span>
+                          )}
+                          {list && !dirty ? (
+                            <span className="block text-caption text-text-secondary line-through">{formatMoney(list)}</span>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-1 text-right tabular-nums">
+                          {editable && discountRight ? (
+                            <TextField
+                              label={`${t("entry.colDisc")}, ${i + 1}`}
+                              size="sm"
+                              value={l.discount ?? ""}
+                              onChange={(v) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, discount: v } : x)))}
+                              inputMode="decimal"
+                              placeholder="0"
+                              suffix="%"
+                              error={parsePct(l.discount) === undefined ? t("entry.eDiscShort") : undefined}
+                              className="ml-auto w-24 [&>:first-child]:sr-only [&_input]:text-right"
+                            />
+                          ) : (
+                            <span className={s && Number(s.discountPct) > 0 ? "" : "text-text-secondary"}>
+                              {s ? `${formatPct(s.discountPct)}%` : "—"}
+                            </span>
                           )}
                         </td>
                         <td className="px-3 py-2 text-right font-medium tabular-nums">
@@ -843,6 +884,14 @@ function Editor({
             <div className="flex gap-1.5">
               <dt className="text-text-secondary">{t("entry.tQty")}</dt>
               <dd className="tabular-nums">{formatQuantity(totalQty)}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-text-secondary">{t("entry.tGross")}</dt>
+              <dd className="tabular-nums">{doc && !dirty ? formatMoney(doc.grossTotal) : lines.length ? "—" : formatMoney("0")}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-text-secondary">{t("entry.tDisc")}</dt>
+              <dd className="tabular-nums">{doc && !dirty ? formatMoney(doc.discountTotal) : lines.length ? "—" : formatMoney("0")}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="text-text-secondary">{t("entry.tVat")}</dt>

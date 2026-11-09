@@ -131,7 +131,8 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   await expect(page.getByText(/Saqlandi: NO-[A-Z]{3}-\d{6} — 1 ta narx/)).toBeVisible();
 
   await page.goto("/opening");
-  await page.getByRole("button", { name: "Qoldiq kiritish" }).first().click();
+  await page.getByRole("button", { name: "Yangi hujjat" }).click();
+  await page.getByRole("menuitem", { name: /Tovar qoldigʻi/ }).click();
   await choose(page, "Ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Amoksitsillin");
@@ -165,6 +166,8 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   await field(page, "STIR / JShShIR").fill("305559876");
   await field(page, "Nomi").fill(CUSTOMER);
   await choose(page, "Turi", /Dorixona/);
+  await field(page, "Litsenziya raqami").fill("FA-E2E-1");
+  await field(page, "Amal qilish muddati").fill("31.12.2030");
   await page.getByRole("button", { name: "Kartani saqlash" }).click();
   await expect(page.getByText("Kontragent qoʻshildi")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -248,7 +251,7 @@ test("Operator: naqd toʻlovli buyurtma kiritadi va navbatga yuboradi", async ({
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
-  await expect(page.locator(`dl[aria-label="Jami"]`).getByText("20.000,00", { exact: true })).toBeVisible();
+  await expect(page.locator(`dl[aria-label="Jami"]`).getByText("20.000,00", { exact: true }).last()).toBeVisible();
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();
   // Operatorda vaqt berish yoʻq — bu Ombor mudiri ishi
@@ -322,13 +325,18 @@ test("Ombor mudiri: hisobdan oʻtkazadi va reys tuzadi", async ({ page }) => {
   await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
   await page.keyboard.press("Escape");
 
+  // Joʻnatish: buyurtma «Tayyor» — yetkazish, hudud boʻyicha jadvalda
   await page.goto("/shipments");
+  await expect(page.getByRole("region", { name: "Yetkazish" })).toContainText(CUSTOMER);
+  // Reys — faqat Ombor mudiri paneli «Hujjatlashtirish» yorligʻida (prototip)
+  await page.goto("/warehouse?tab=docs");
   const ready = page.getByRole("region", { name: "Joʻnatishga tayyor" });
   await ready.getByRole("listitem").filter({ hasText: CUSTOMER }).getByText("Reysga").click();
   await choose(page, "Mashina", /01 E 777 EE/);
   await choose(page, "Haydovchi", /Hasan Haydovchiyev/);
   await page.getByRole("button", { name: "Reysni rejalashtirish" }).click();
   await expect(page.getByText(/^Reys RS-.* rejalashtirildi$/).first()).toBeVisible();
+  await page.goto("/shipments?tab=trips");
   await expect(page.getByRole("region", { name: "Faol reyslar" })).toContainText("Hasan Haydovchiyev");
 });
 
@@ -599,7 +607,7 @@ async function warehouseChain(page: Page) {
   await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
   await page.keyboard.press("Escape");
 
-  await page.goto("/shipments");
+  await page.goto("/warehouse?tab=docs");
   await page
     .getByRole("region", { name: "Joʻnatishga tayyor" })
     .getByRole("listitem")

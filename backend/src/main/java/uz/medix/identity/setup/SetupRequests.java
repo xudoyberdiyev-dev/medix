@@ -24,7 +24,7 @@ final class SetupRequests {
             @Schema(nullable = true) @Pattern(regexp = "^(uz-Latn|uz-Cyrl|ru)$", message = "{validation.locale}") String defaultLocale) {}
 
     record BranchRequest(
-            @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[A-Za-z]{3}$", message = "{validation.branchCode}") String code,
+            @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[A-Za-z]{2,4}$", message = "{validation.branchCode}") String code,
             @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
             @NotBlank(message = "{validation.required}") @Size(max = 300) String legalName,
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[0-9]{9}$", message = "{validation.tin}") String tin,

@@ -47,8 +47,8 @@ medix:
     login: ${MEDIX_BOOTSTRAP_LOGIN:}
     password: ${MEDIX_BOOTSTRAP_PASSWORD:}
   employees:
-    # Litsenziya: bloklanmagan xodimlar chegarasi (prototip WizStaff «N / 40»); 0 — cheklanmagan
-    limit: ${MEDIX_EMPLOYEE_LIMIT:0}
+    # Litsenziya: bloklanmagan xodimlar chegarasi (prototip WizStaff «N / 40», egasi E13 — standart 40); 0 — cheklanmagan
+    limit: ${MEDIX_EMPLOYEE_LIMIT:40}
   orders:
     # Umumiy kechikish: buyurtma bir holatda shuncha kundan ortiq tursa — «N kundan oshgan» (SPEC 5.2)
     late-days: 2

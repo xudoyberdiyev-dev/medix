@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { emptyForm, licenseRequests, termsRequest, toRequest, validateForm, type CpForm } from "./form-model";
 
-const base = (p: Partial<CpForm> = {}): CpForm => ({ ...emptyForm("3"), tin: "302 118 447", name: "Shifo", kind: "PHARMACY", ...p });
+const base = (p: Partial<CpForm> = {}): CpForm => ({
+  ...emptyForm("3"),
+  tin: "302 118 447",
+  name: "Shifo",
+  kind: "PHARMACY",
+  pharmNo: "FA-1",
+  pharmUntil: "04.10.2030",
+  ...p,
+});
 const NEW_C = { isNew: true, supplier: false, terms: true };
 
 describe("counterparty form-model", () => {
@@ -32,8 +40,9 @@ describe("counterparty form-model", () => {
     expect(validateForm(f, NEW_C)).toEqual({ contact1: "contactName" });
   });
 
-  it("litsenziya: raqam va muddat juft; nazoratdagi — yoqilsa majburiy", () => {
-    expect(validateForm(base({ pharmNo: "FA-1" }), NEW_C).pharmUntil).toBe("required");
+  it("litsenziya: yangi kontragentda majburiy (E9); nazoratdagi — yoqilsa majburiy", () => {
+    expect(validateForm(base({ pharmNo: "", pharmUntil: "" }), NEW_C)).toEqual({ pharmNo: "required", pharmUntil: "required" });
+    expect(validateForm(base({ pharmUntil: "" }), NEW_C).pharmUntil).toBe("required");
     expect(validateForm(base({ pharmNo: "FA-1", pharmUntil: "31.02.2030" }), NEW_C).pharmUntil).toBe("date");
     expect(validateForm(base({ pharmNo: "FA-1", pharmUntil: "01.01.2020" }), NEW_C).pharmUntil).toBe("dateOrder");
     expect(validateForm(base({ ctrl: true }), NEW_C)).toMatchObject({ ctrlNo: "required", ctrlUntil: "required" });
@@ -45,6 +54,8 @@ describe("counterparty form-model", () => {
     const o = { isNew: true, supplier: true, terms: true };
     expect(validateForm(base({ limit: "x" }), o)).toEqual({ mainPay: "required" });
     expect(termsRequest(base({ mainPay: "CASH", days: "45" }), true)).toEqual({ supplierPaymentDays: 45, defaultPaymentType: "CASH" });
+    expect(termsRequest(base({ mainPay: "CASH", days: "45", lead: "3" }), true)).toMatchObject({ supplierDeliveryDays: 3 });
+    expect(validateForm(base({ mainPay: "CASH", lead: "400" }), o)).toEqual({ lead: "days" });
   });
 
   it("soʻrov: STIR boʻshliqsiz, kontaktlar toʻldirilganlari, birinchisi — masʼul shaxs", () => {
@@ -69,8 +80,15 @@ describe("counterparty form-model", () => {
     });
   });
 
+  it("E8: mijoz standart chegirmasi %", () => {
+    const o = { isNew: true, supplier: false, terms: true };
+    expect(validateForm(base({ disc: "2,5" }), o)).toEqual({});
+    expect(validateForm(base({ disc: "100" }), o)).toEqual({ disc: "pct" });
+    expect(termsRequest(base({ disc: "2,5" }), false)).toMatchObject({ discountPct: 2.5 });
+  });
+
   it("litsenziyalar: farmatsevtika va nazoratdagi", () => {
-    expect(licenseRequests(base())).toEqual([]);
+    expect(licenseRequests(base({ pharmNo: "", pharmUntil: "" }))).toEqual([]);
     const l = licenseRequests(base({ pharmNo: "FA-1", pharmUntil: "04.10.2030", ctrl: true, ctrlNo: "NP-2", ctrlUntil: "04.10.2030" }));
     expect(l).toHaveLength(2);
     expect(l[0]).toMatchObject({ number: "FA-1", validUntil: "2030-10-04", controlledAllowed: false });

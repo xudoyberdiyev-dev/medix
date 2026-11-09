@@ -33,7 +33,7 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { isKnownAction } from "@/features/audit/audit-page";
+import { isKnownAction } from "@/features/audit/actions";
 import { can as canMe } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useWarehouses } from "@/features/organization/api";

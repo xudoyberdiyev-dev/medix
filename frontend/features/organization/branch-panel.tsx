@@ -176,7 +176,7 @@ function BranchPanelInner({
                   required
                   className="w-[146px]"
                   value={form.code}
-                  maxLength={3}
+                  maxLength={4}
                   disabled={!isNew}
                   onChange={(v) => {
                     setCodeTouched(true);

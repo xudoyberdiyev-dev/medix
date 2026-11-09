@@ -4,17 +4,17 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Hujjat raqami: {@code PREFIKS-FILIAL-000001}, masalan {@code BY-TSH-000355}. */
+/** Hujjat raqami: {@code PREFIKS-FILIAL-000001}, masalan {@code BY-TSH-000355}, {@code BY-TS-000001} (filial kodi 2–4 harf, E11). */
 public record DocumentNumber(DocumentPrefix prefix, String branchCode, long sequence) {
 
-    private static final Pattern BRANCH = Pattern.compile("[A-Z]{3}");
-    private static final Pattern FORMAT = Pattern.compile("([A-Z]{2,3})-([A-Z]{3})-(\\d{6,})");
+    private static final Pattern BRANCH = Pattern.compile("[A-Z]{2,4}");
+    private static final Pattern FORMAT = Pattern.compile("([A-Z]{2,3})-([A-Z]{2,4})-(\\d{6,})");
 
     public DocumentNumber {
         Objects.requireNonNull(prefix, "prefix");
         Objects.requireNonNull(branchCode, "branchCode");
         if (!BRANCH.matcher(branchCode).matches()) {
-            throw new IllegalArgumentException("Filial kodi 3 ta katta lotin harfidan iborat bo'lishi kerak: " + branchCode);
+            throw new IllegalArgumentException("Filial kodi 2–4 ta katta lotin harfidan iborat bo'lishi kerak: " + branchCode);
         }
         if (sequence < 1) {
             throw new IllegalArgumentException("Tartib raqami 1 dan boshlanadi: " + sequence);

@@ -22,7 +22,7 @@ import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { partialTotals } from "./partial";
 import { SignatureModal } from "./signature-modal";
-import { TRIP_STATUS } from "./shipments-page";
+import { TRIP_STATUS } from "./shipments-model";
 
 export type TripDetail = components["schemas"]["TripDetail"];
 

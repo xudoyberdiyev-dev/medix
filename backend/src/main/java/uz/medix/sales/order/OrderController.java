@@ -235,15 +235,15 @@ class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('orders.create')")
     @Operation(summary = "Buyurtma qoralamasi", description = "Raqam darhol beriladi (BY-TSH-000001). Qoldiq va qarzga ta'sir qilmaydi.")
-    OrderDetail create(@Valid @RequestBody OrderRequest r) {
-        return detail(orders.create(actor(), r));
+    OrderDetail create(@Valid @RequestBody OrderRequest r, Authentication auth) {
+        return detail(orders.create(actor(), r, has(auth, "orders.discount")));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('orders.create')")
     @Operation(summary = "Qoralamani tahrirlash")
-    OrderDetail update(@PathVariable long id, @Valid @RequestBody OrderRequest r) {
-        orders.update(actor(), id, r);
+    OrderDetail update(@PathVariable long id, @Valid @RequestBody OrderRequest r, Authentication auth) {
+        orders.update(actor(), id, r, has(auth, "orders.discount"));
         return detail(id);
     }
 

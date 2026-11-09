@@ -136,7 +136,7 @@ export type ErrorKey = "eName" | "eCode" | "eLegal" | "eStir" | "eRegion" | "eAd
 export function validateBranch(f: BranchForm, isNew: boolean): Record<string, ErrorKey> {
   const e: Record<string, ErrorKey> = {};
   if (!f.name.trim()) e.name = "eName";
-  if (isNew && !/^[A-Za-z]{3}$/.test(f.code.trim())) e.code = "eCode";
+  if (isNew && !/^[A-Za-z]{2,4}$/.test(f.code.trim())) e.code = "eCode";
   if (!f.legalName.trim()) e.legalName = "eLegal";
   if (!/^\d{9}$/.test(f.tin.trim())) e.tin = "eStir";
   if (f.vatPayer && f.vatCertNo.trim() && !/^\d{6,20}$/.test(f.vatCertNo.trim())) e.vatCertNo = "eVatNo";

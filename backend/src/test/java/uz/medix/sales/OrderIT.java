@@ -326,6 +326,81 @@ class OrderIT {
         mvc.perform(get("/api/orders/" + doc + "/history").cookie(foreign)).andExpect(status().isNotFound());
     }
 
+    private static String discounted(Place p, long customer, long product, int qty, String pct) {
+        return "{\"warehouseId\":" + p.warehouseId() + ",\"customerId\":" + customer
+                + ",\"deliveryType\":\"DELIVERY\",\"paymentType\":\"TRANSFER\",\"lines\":[{\"productId\":" + product + ",\"qty\":" + qty
+                + (pct == null ? "" : ",\"discountPct\":" + pct) + "}]}";
+    }
+
+    /** E7/E8: qator chegirmasi %, 5% dan katta — Filial rahbari tasdig'i, narx chegirmali muzlatiladi, standart chegirma, ruxsat. */
+    @Test
+    void discountUpToFivePercentSelfAboveNeedsBranchApproval() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        long a = product(p, "BY Chegirma", "1000", 50, null, null);
+
+        long doc = id(send(post("/api/orders"), operator, discounted(p, c, a, 10, "5"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.total").value("9500.00"))
+                .andExpect(jsonPath("$.grossTotal").value("10000.00"))
+                .andExpect(jsonPath("$.discountTotal").value("500.00"))
+                .andExpect(jsonPath("$.lines[0].discountPct").value("5.00"))
+                .andExpect(jsonPath("$.lines[0].listPrice").value("1000.00"))
+                .andExpect(jsonPath("$.lines[0].currentPrice").value("950.00"))
+                .andExpect(jsonPath("$.issues.length()").value(0))
+                .andReturn());
+        // 7,5% — tasdiqqa ketadi (Filial rahbari)
+        send(put("/api/orders/" + doc), operator, discounted(p, c, a, 10, "7.5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value("9250.00"))
+                .andExpect(jsonPath("$.issues[*].code", hasItem("order.discountOver")));
+        send(post("/api/orders/" + doc + "/submit"), operator, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING_APPROVAL"))
+                .andExpect(jsonPath("$.approvalLevel").value("BRANCH"))
+                .andExpect(jsonPath("$.total").value("9250.00"))
+                .andExpect(jsonPath("$.lines[0].price").value("925.00"));
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        send(post("/api/orders/" + doc + "/approve"), manager, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("QUEUED"));
+        // Muzlatilgan: narx turi o'zgarsa ham chegirmali narx va chegirmasiz summa saqlanadi
+        setPrice(p, a, "2000");
+        mvc.perform(get("/api/orders/" + doc).cookie(operator))
+                .andExpect(jsonPath("$.total").value("9250.00"))
+                .andExpect(jsonPath("$.grossTotal").value("10000.00"))
+                .andExpect(jsonPath("$.discountTotal").value("750.00"))
+                .andExpect(jsonPath("$.lines[0].price").value("925.00"))
+                .andExpect(jsonPath("$.lines[0].listPrice").value("1000.00"))
+                .andExpect(jsonPath("$.lines[0].discountPct").value("7.50"));
+
+        // E8: mijozning standart chegirmasi qatorga avtomatik qo'yiladi; 2000 × (100 − 3,3) / 100 = 1934,00
+        long c2 = customer(p.branchId(), null);
+        jdbc.sql("UPDATE counterparty_branch_terms SET discount_pct = 3.3 WHERE counterparty_id = :c").param("c", c2).update();
+        send(post("/api/orders"), operator, discounted(p, c2, a, 1, null))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.lines[0].discountPct").value("3.30"))
+                .andExpect(jsonPath("$.lines[0].currentPrice").value("1934.00"))
+                .andExpect(jsonPath("$.total").value("1934.00"));
+        // Noto'g'ri qiymat — 400
+        send(post("/api/orders"), operator, discounted(p, c, a, 1, "100")).andExpect(status().isBadRequest());
+
+        // orders.discount ruxsatisiz — qo'lda chegirma taqiqlanadi, standart chegirma esa qo'yiladi
+        String code = "NODISC" + ThreadLocalRandom.current().nextInt(1_000_000);
+        long role = jdbc.sql("INSERT INTO role (code, name) VALUES (:c, :c) RETURNING id").param("c", code).query(Long.class).single();
+        jdbc.sql("INSERT INTO role_permission (role_id, permission_key) VALUES (:r, 'orders.create'), (:r, 'orders.view')")
+                .param("r", role)
+                .update();
+        Cookie limited = loginAs(code, p.branchId());
+        send(post("/api/orders"), limited, discounted(p, c, a, 1, "2"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("order.discountForbidden"));
+        send(post("/api/orders"), limited, discounted(p, c2, a, 1, null))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.lines[0].discountPct").value("3.30"));
+    }
+
     @Test
     void creditLimitAndOverdueRequireApprovalLevels() throws Exception {
         Place p = place();
@@ -1028,7 +1103,13 @@ class OrderIT {
         long driver = jdbc.sql("SELECT id FROM employee WHERE full_name = 'Haydovchi Sinov' AND branch_id = :b").param("b", p.branchId())
                 .query(Long.class).single();
 
-        mvc.perform(get("/api/trips/ready").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) o1)));
+        mvc.perform(get("/api/trips/ready").cookie(keeper))
+                .andExpect(jsonPath("$[*].id", hasItem((int) o1)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].lines").value(hasItem(1)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].qty").value(hasItem(2)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].shortQty").value(hasItem(0)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].controlled").value(hasItem(false)))
+                .andExpect(jsonPath("$[?(@.id == " + o1 + ")].readyAt").exists());
         mvc.perform(get("/api/trips/options").param("branchId", String.valueOf(p.branchId())).cookie(keeper))
                 .andExpect(jsonPath("$.vehicles[0].hasRefrigerator").value(true))
                 .andExpect(jsonPath("$.drivers[0].fullName").value("Haydovchi Sinov"));
@@ -1048,6 +1129,10 @@ class OrderIT {
                 .andReturn();
         long t1 = id(trip);
         assertThat(statusOf(o1)).isEqualTo("LOADING");
+        mvc.perform(get("/api/trips").param("branchId", String.valueOf(p.branchId())).cookie(keeper))
+                .andExpect(jsonPath("$[?(@.id == " + t1 + ")].plateNumber").value(hasItem(plate)))
+                .andExpect(jsonPath("$[?(@.id == " + t1 + ")].refrigerator").value(hasItem(true)))
+                .andExpect(jsonPath("$[?(@.id == " + t1 + ")].marked").value(hasItem(0)));
         String nk1 = jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o1).query(String.class).single();
         // Nakladnoy — server PDF (raqam, mahsulot, miqdor, imzolar)
         assertThat(pdfText("/api/orders/" + o1 + "/waybill/pdf", keeper)).contains("Nakladnoy", nk1, "BY Reys", "Jami", "Qabul qildi");
@@ -1289,6 +1374,9 @@ class OrderIT {
         send(post("/api/trips/pickup"), keeper, "{\"orderId\":" + o2 + "}").andExpect(status().isOk());
         send(post("/api/trips/pickup/" + o2 + "/handover"), keeper, "").andExpect(jsonPath("$.sale", matchesPattern("SV-[A-Z]{3}-\\d{6}")));
         assertThat(statusOf(o2)).isEqualTo("IN_TRANSIT");
+        // «Topshirilgan» (prototip Shipping): o'zi olib ketdi — reyssiz
+        mvc.perform(get("/api/trips/handed").cookie(keeper))
+                .andExpect(jsonPath("$[?(@.orderId == " + o2 + ")].method").value(hasItem("PICKUP")));
         assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
                         .query(String.class).single())
                 .isEqualTo("3000.00");

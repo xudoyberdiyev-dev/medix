@@ -105,5 +105,87 @@
     "errorsHint": "Xatolarni faylda tuzatib, qayta tekshiring.",
     "row": "{row}-qator",
     "ok": "Fayl toʻgʻri: {count} ta qator yuklashga tayyor"
+  },
+  "subtitle": "SMARTUP dan koʻchirish. Import faqat qoralama yaratadi — qoldiq, qarz va kassa hujjat tasdiqlanganda oʻzgaradi.",
+  "newDoc": "Yangi hujjat",
+  "newMenu": "Boshlangʻich qoldiq turi",
+  "type": {
+    "GOODS": "Tovar qoldigʻi",
+    "CUSTOMER_DEBT": "Mijozlar qarzi",
+    "SUPPLIER_DEBT": "Yetkazib beruvchilar qarzi",
+    "MONEY": "Kassa va bank"
+  },
+  "typeDesc": {
+    "GOODS": "Ombor boʻyicha: partiya, yaroqlilik, tannarx. Excel import.",
+    "CUSTOMER_DEBT": "Filial boʻyicha mijozlar qarzi yoki avansi, toʻlov muddati bilan.",
+    "SUPPLIER_DEBT": "Filial boʻyicha yetkazib beruvchilarga qarzimiz yoki avansimiz.",
+    "MONEY": "Filialning kassa, terminal va bank hisoblaridagi qoldiq."
+  },
+  "matrix": {
+    "title": "Koʻchirish holati",
+    "hint": "Katakni bosing — hujjat ochiladi yoki yangisi yaratiladi",
+    "branch": "Filial",
+    "wh": "{posted}/{total} ombor",
+    "readOnly": "Siz faqat koʻchirish holatini koʻrasiz. Hujjatlar: Direktor, Bosh administrator, Buxgalter.",
+    "state": {
+      "NONE": "Kiritilmagan",
+      "DRAFT": "Qoralama",
+      "POSTED": "Oʻtkazildi"
+    }
+  },
+  "views": {
+    "label": "Boshlangʻich qoldiq koʻrinishlari",
+    "ALL": "Hammasi",
+    "DRAFT": "Qoralama",
+    "POSTED": "Oʻtkazildi",
+    "CANCELLED": "Bekor qilingan"
+  },
+  "search": "Qidirish",
+  "searchPlaceholder": "Raqam, filial, ombor yoki tur…",
+  "col": {
+    "number": "№",
+    "type": "Turi",
+    "place": "Filial · ombor",
+    "cutoff": "Kesish sanasi",
+    "lines": "Qatorlar",
+    "sum": "Summa",
+    "source": "Manba",
+    "status": "Holat"
+  },
+  "source": {
+    "MANUAL": "Qoʻlda kiritish",
+    "IMPORT": "Excel import"
+  },
+  "open": "Ochish",
+  "rowActions": "Amallar",
+  "fin": {
+    "titleNew": "Yangi boshlangʻich qoldiq — {type}",
+    "branch": "Filial",
+    "cutoff": "Kesish sanasi",
+    "note": "Izoh",
+    "lines": "Qatorlar",
+    "addLine": "Qator qoʻshish",
+    "removeLine": "{n}-qatorni olib tashlash",
+    "party": "Kontragent",
+    "account": "Hisob",
+    "amount": "Summa",
+    "amountHint": "Manfiy — avans",
+    "due": "Toʻlov muddati",
+    "docRef": "Asos hujjat №",
+    "total": "Jami",
+    "partyPh": "Nomi yoki STIR boʻyicha qidiring",
+    "accountPh": "Hisobni tanlang",
+    "save": "Saqlash",
+    "post": "Oʻtkazish",
+    "cancel": "Bekor qilish",
+    "cancelReason": "Bekor qilish sababi",
+    "cancelConfirm": "Qoralamani bekor qilish",
+    "saved": "Saqlandi",
+    "posted": "Oʻtkazildi — {type} jurnalga yozildi",
+    "cancelled": "Qoralama bekor qilindi",
+    "postedNote": "Oʻtkazilgan — qarz yoki kassa jurnaliga yozilgan, oʻzgartirib boʻlmaydi. Farqni oddiy hujjat bilan tuzating.",
+    "needLine": "Kamida bitta qatorni toʻldiring: {what} va summa.",
+    "badAmount": "{n}-qatorda summa notoʻgʻri. Masalan: 1250000,50",
+    "pickBranch": "Avval yuqoridagi filial tanlovidan filialni tanlang."
   }
 }

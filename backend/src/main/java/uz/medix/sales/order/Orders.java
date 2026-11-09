@@ -69,6 +69,21 @@ class Orders {
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
     static final String DOC_TYPE = "BY";
     static final BigDecimal LIMIT_BRANCH_PCT = BigDecimal.valueOf(20);
+    /** E7: operator o'zi beradigan chegirma chegarasi, %; undan katta — Filial rahbari tasdig'i. */
+    static final BigDecimal DISCOUNT_SELF_PCT = BigDecimal.valueOf(5);
+    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+
+    /** Chegirmali narx: narx × (100 − %) / 100, HALF_UP (2 xona). */
+    static Money discounted(Money list, BigDecimal pct) {
+        if (pct == null || pct.signum() == 0) {
+            return list;
+        }
+        return new Money(list.amount().multiply(HUNDRED.subtract(pct)).divide(HUNDRED, 2, RoundingMode.HALF_UP));
+    }
+
+    private static BigDecimal pct(BigDecimal p) {
+        return p == null ? BigDecimal.ZERO : p.stripTrailingZeros().signum() == 0 ? BigDecimal.ZERO : p;
+    }
     static final int OVERDUE_DIRECTOR_DAYS = 30;
     static final Set<OrderStatus> CANCEL_BY_WAREHOUSE = Set.of(OrderStatus.QUEUED, OrderStatus.PICKING, OrderStatus.MARKING,
             OrderStatus.CHECKING, OrderStatus.DOCUMENTING, OrderStatus.LOADING);
@@ -111,14 +126,20 @@ class Orders {
 
     record Customer(long id, String name, String tin, boolean customer, boolean active, boolean blocked, String address) {}
 
-    record Terms(BigDecimal creditLimit, Integer paymentDays, Long priceTypeId, String priceType, Integer minShelfLifeDays) {}
+    record Terms(BigDecimal creditLimit, Integer paymentDays, Long priceTypeId, String priceType, Integer minShelfLifeDays,
+            BigDecimal discountPct) {}
 
     record Product(long id, String code, String name, String manufacturer, boolean active, boolean controlled, boolean marked,
             Integer minQty, Integer maxQty, BigDecimal vatRate) {}
 
     /** Baholash natijasi: qator narxlari, jami, muammolar va tasdiq darajasi. */
     record Evaluation(Map<Long, Quote> quotes, Map<Long, Available> available, Map<Long, Product> products, Money total,
-            List<OrderIssue> issues, ApprovalLevel level, CustomerCredit credit) {
+            List<OrderIssue> issues, ApprovalLevel level, CustomerCredit credit, Money gross, Map<Long, BigDecimal> discounts) {
+
+        /** Qator chegirmasi, % (mahsulot bo'yicha). */
+        BigDecimal discount(long productId) {
+            return discounts.getOrDefault(productId, BigDecimal.ZERO);
+        }
 
         boolean hasErrors() {
             return issues.stream().anyMatch(i -> i.level() == IssueLevel.ERROR);
@@ -149,14 +170,14 @@ class Orders {
 
     private Terms terms(long customerId, long branchId) {
         return jdbc.sql("""
-                SELECT t.credit_limit, t.payment_days, t.price_type_id, pt.name AS price_type, t.min_shelf_life_days
+                SELECT t.credit_limit, t.payment_days, t.price_type_id, pt.name AS price_type, t.min_shelf_life_days, t.discount_pct
                 FROM counterparty_branch_terms t LEFT JOIN price_type pt ON pt.id = t.price_type_id
                 WHERE t.counterparty_id = :c AND t.branch_id = :b""")
                 .param("c", customerId)
                 .param("b", branchId)
                 .query(Terms.class)
                 .optional()
-                .orElse(new Terms(null, null, null, null, null));
+                .orElse(new Terms(null, null, null, null, null, null));
     }
 
     private Map<Long, Product> products(List<Long> ids) {
@@ -225,6 +246,8 @@ class Orders {
         Map<Long, Available> available = availability.available(warehouseId, ids, minExpiry);
         Boolean license = controlledLicense(customerId, today);
         Money total = Money.ZERO;
+        Money gross = Money.ZERO;
+        Map<Long, BigDecimal> discounts = new HashMap<>();
         ApprovalLevel level = null;
         Set<Long> seen = new HashSet<>();
         int no = 0;
@@ -238,11 +261,19 @@ class Orders {
             if (!seen.add(p.id())) {
                 issues.add(issue(IssueLevel.ERROR, "order.duplicateLine", no, no, p.name()));
             }
+            BigDecimal d = pct(l.discountPct() != null ? l.discountPct() : t.discountPct());
+            discounts.put(p.id(), d);
+            if (d.compareTo(DISCOUNT_SELF_PCT) > 0) {
+                issues.add(issue(IssueLevel.APPROVAL, "order.discountOver", no, p.name(), d.stripTrailingZeros().toPlainString(),
+                        DISCOUNT_SELF_PCT.toPlainString(), approver(ApprovalLevel.BRANCH)));
+                level = max(level, ApprovalLevel.BRANCH);
+            }
             Quote q = quotes.get(p.id());
             if (q == null) {
                 issues.add(issue(IssueLevel.ERROR, "order.noPrice", no, no, p.name()));
             } else {
-                total = total.plus(q.price().times(l.qty()));
+                gross = gross.plus(q.price().times(l.qty()));
+                total = total.plus(discounted(q.price(), d).times(l.qty()));
             }
             int have = Optional.ofNullable(available.get(p.id())).map(Available::qty).orElse(0);
             if (l.qty() > have) {
@@ -283,7 +314,7 @@ class Orders {
         CustomerCredit credit = new CustomerCredit(t.priceType(), cs.debt().toString(), cs.overdue().toString(), cs.overdueDays(),
                 t.creditLimit() == null ? null : new Money(t.creditLimit()).toString(), limitLeft == null ? null : limitLeft.toString(),
                 t.paymentDays(), t.minShelfLifeDays(), c.blocked(), license);
-        return new Evaluation(quotes, available, products, total, issues, level, credit);
+        return new Evaluation(quotes, available, products, total, issues, level, credit, gross, discounts);
     }
 
     private static ApprovalLevel max(ApprovalLevel a, ApprovalLevel b) {
@@ -479,7 +510,13 @@ class Orders {
                 new CreditFlag(c.blocked(), over, overdue, cs.overdueDays()));
     }
 
-    record LineRow(long id, int lineNo, long productId, int qty, BigDecimal price, Long priceTypeId, String priceType) {}
+    record LineRow(long id, int lineNo, long productId, int qty, BigDecimal price, Long priceTypeId, String priceType, BigDecimal discountPct,
+            BigDecimal listPrice) {
+
+        OrderLineRequest request() {
+            return new OrderLineRequest(productId, qty, discountPct);
+        }
+    }
 
     @Transactional(readOnly = true)
     Optional<OrderDetail> find(long id, Actor actor) {
@@ -514,18 +551,23 @@ class Orders {
         OrderStatus status = OrderStatus.valueOf(h.status());
         List<LineRow> rows = lineRows(id);
         Evaluation ev = evaluate(h.branchId(), h.warehouseId(), h.customerId(),
-                rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList());
+                rows.stream().map(LineRow::request).toList());
         boolean draft = status == OrderStatus.DRAFT;
         boolean priceChanged = false;
         Map<Long, Integer> picked = draft ? Map.of() : pickedByLine(id);
         Map<Long, Integer> shipped = draft ? Map.of() : shippedByLine(id);
         List<OrderLine> lines = new ArrayList<>();
         Money vatTotal = Money.ZERO;
+        Money storedGross = Money.ZERO;
         for (LineRow r : rows) {
             Product p = ev.products().get(r.productId());
             Quote q = ev.quotes().get(r.productId());
             Money stored = r.price() == null ? null : new Money(r.price());
-            Money current = q == null ? null : q.price();
+            Money current = q == null ? null : discounted(q.price(), r.discountPct());
+            Money list = draft ? (q == null ? null : q.price()) : r.listPrice() == null ? stored : new Money(r.listPrice());
+            if (!draft && list != null) {
+                storedGross = storedGross.plus(list.times(r.qty()));
+            }
             if (draft && stored != null && current != null && stored.compareTo(current) != 0) {
                 priceChanged = true;
             }
@@ -539,6 +581,7 @@ class Orders {
             }
             lines.add(new OrderLine(r.id(), r.lineNo(), r.productId(), p.code(), p.name(), p.manufacturer(), r.qty(),
                     stored == null ? null : stored.toString(), current == null ? null : current.toString(),
+                    pct(r.discountPct()).setScale(2, RoundingMode.HALF_UP).toPlainString(), list == null ? null : list.toString(),
                     amount == null ? null : amount.toString(), vat == null ? null : vat.toString(), r.priceType(), a == null ? 0 : a.qty(),
                     a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked(), List.of(),
                     picked.get(r.id()), shipped.get(r.id())));
@@ -555,11 +598,14 @@ class Orders {
         }
         List<String> reasons = h.approvalReasons() == null || h.approvalReasons().isBlank() ? List.of()
                 : Arrays.asList(h.approvalReasons().split("\n"));
-        String total = draft ? ev.total().toString() : new Money(h.total()).toString();
+        Money totalMoney = draft ? ev.total() : new Money(h.total());
+        String total = totalMoney.toString();
+        Money gross = draft ? ev.gross() : storedGross;
         return Optional.of(new OrderDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.customerId(), h.customer(),
                 h.customerTin(), h.orderDate().toLocalDate(), DeliveryType.valueOf(h.deliveryType()), localDate(h.deliveryDate()), h.address(),
                 PaymentType.valueOf(h.paymentType()), h.note(), status,
-                h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, vatTotal.toString(), priceChanged,
+                h.approvalLevel() == null ? null : ApprovalLevel.valueOf(h.approvalLevel()), reasons, total, gross.toString(),
+                gross.minus(totalMoney).toString(), vatTotal.toString(), priceChanged,
                 ev.credit(), issues,
                 h.createdBy(), h.createdById(), h.createdAt().toInstant(), instant(h.submittedAt()), h.decidedBy(), instant(h.decidedAt()),
                 h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
@@ -679,7 +725,7 @@ class Orders {
 
     private List<LineRow> lineRows(long orderId) {
         return jdbc.sql("""
-                SELECT l.id, l.line_no, l.product_id, l.qty, l.price, l.price_type_id, pt.name AS price_type
+                SELECT l.id, l.line_no, l.product_id, l.qty, l.price, l.price_type_id, pt.name AS price_type, l.discount_pct, l.list_price
                 FROM sales_order_line l LEFT JOIN price_type pt ON pt.id = l.price_type_id WHERE l.order_id = :id ORDER BY l.line_no""")
                 .param("id", orderId)
                 .query(LineRow.class)
@@ -694,7 +740,7 @@ class Orders {
     OrderModels.CatalogPage catalog(Actor actor, long warehouseId, Long customerId, String q, boolean inStockOnly, OrderModels.CatalogFilter filter,
             int page, int size) {
         Place place = place(actor, warehouseId);
-        Terms t = customerId == null ? new Terms(null, null, null, null, null) : terms(customerId, place.branchId());
+        Terms t = customerId == null ? new Terms(null, null, null, null, null, null) : terms(customerId, place.branchId());
         LocalDate minExpiry = today().plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
         StringBuilder where = new StringBuilder(" WHERE p.active");
         Map<String, Object> params = new HashMap<>();
@@ -824,7 +870,7 @@ class Orders {
     // ===== Qoralama =====
 
     @Transactional
-    long create(Actor actor, OrderRequest r) {
+    long create(Actor actor, OrderRequest r, boolean discountRight) {
         Place place = place(actor, r.warehouseId());
         Customer c = customer(r.customerId());
         if (!c.customer() || !c.active() || c.blocked()) {
@@ -848,13 +894,13 @@ class Orders {
                 .param("by", actor.employeeId())
                 .query(Long.class)
                 .single();
-        writeLines(id, place.branchId(), r);
+        writeLines(id, place.branchId(), r, discountRight);
         audit.record(AuditEntry.of("order.create", "sales_order", id).change(null, Map.of("number", number, "lines", r.lines().size())));
         return id;
     }
 
     @Transactional
-    void update(Actor actor, long id, OrderRequest r) {
+    void update(Actor actor, long id, OrderRequest r, boolean discountRight) {
         Head h = lock(id, actor);
         requireStatus(h, OrderStatus.DRAFT);
         Place place = place(actor, r.warehouseId());
@@ -872,17 +918,26 @@ class Orders {
                 .param("id", id)
                 .update();
         jdbc.sql("DELETE FROM sales_order_line WHERE order_id = :id").param("id", id).update();
-        writeLines(id, place.branchId(), r);
+        writeLines(id, place.branchId(), r, discountRight);
         audit.record(AuditEntry.of("order.update", "sales_order", id).change(null, Map.of("lines", r.lines().size())));
     }
 
     /** Qatorlar va joriy narx (qoralamada — ogohlantirish uchun saqlanadi). Takror mahsulot — bitta qatorga qo'shiladi. */
-    private void writeLines(long id, long branchId, OrderRequest r) {
+    private void writeLines(long id, long branchId, OrderRequest r, boolean discountRight) {
         Map<Long, Integer> merged = new java.util.LinkedHashMap<>();
+        Map<Long, BigDecimal> given = new HashMap<>();
         for (OrderLineRequest l : r.lines()) {
             merged.merge(l.productId(), l.qty(), Integer::sum);
+            if (l.discountPct() != null) {
+                given.put(l.productId(), pct(l.discountPct()));
+            }
         }
         Terms t = terms(r.customerId(), branchId);
+        BigDecimal standard = pct(t.discountPct());
+        // E7: qo'lda chegirma faqat orders.discount bilan; mijozning standart chegirmasi (E8) — shartnoma bo'yicha, ruxsatsiz ham.
+        if (!discountRight && given.values().stream().anyMatch(d -> d.signum() > 0 && d.compareTo(standard) != 0)) {
+            throw MedixException.forbidden("order.discountForbidden");
+        }
         LocalDate minExpiry = today().plusDays(t.minShelfLifeDays() == null ? 0 : t.minShelfLifeDays());
         Map<Long, Quote> quotes = prices.quotes(branchId, t.priceTypeId(), batchShares(r.warehouseId(), minExpiry, r.lines()), today());
         Map<Long, Product> products = products(List.copyOf(merged.keySet()));
@@ -898,16 +953,22 @@ class Orders {
                 throw MedixException.badRequest("order.qtyTooLarge", no);
             }
             Quote q = quotes.get(e.getKey());
-            if (q != null) {
-                total = total.plus(q.price().times(e.getValue()));
+            BigDecimal d = given.getOrDefault(e.getKey(), standard);
+            Money net = q == null ? null : discounted(q.price(), d);
+            if (net != null) {
+                total = total.plus(net.times(e.getValue()));
             }
-            jdbc.sql("INSERT INTO sales_order_line (order_id, line_no, product_id, qty, price, price_type_id) VALUES (:o, :n, :p, :q, :pr, :pt)")
+            jdbc.sql("""
+                    INSERT INTO sales_order_line (order_id, line_no, product_id, qty, price, price_type_id, discount_pct, list_price)
+                    VALUES (:o, :n, :p, :q, :pr, :pt, :d, :lp)""")
                     .param("o", id)
                     .param("n", no)
                     .param("p", e.getKey())
                     .param("q", e.getValue())
-                    .param("pr", q == null ? null : q.price().amount())
+                    .param("pr", net == null ? null : net.amount())
                     .param("pt", q == null ? null : q.priceTypeId())
+                    .param("d", d)
+                    .param("lp", q == null ? null : q.price().amount())
                     .update();
         }
         jdbc.sql("UPDATE sales_order SET total = :t, price_type_id = :pt WHERE id = :id")
@@ -926,7 +987,7 @@ class Orders {
         requireStatus(h, OrderStatus.DRAFT);
         List<LineRow> rows = lineRows(id);
         Evaluation ev = evaluate(h.branchId(), h.warehouseId(), h.customerId(),
-                rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList());
+                rows.stream().map(LineRow::request).toList());
         if (ev.hasErrors()) {
             OrderIssue first = ev.issues().stream().filter(i -> i.level() == IssueLevel.ERROR).findFirst().orElseThrow();
             throw MedixException.badRequest("order.hasErrors", first.message());
@@ -934,8 +995,9 @@ class Orders {
         // Narxni muzlatish: qatorlar hali qoralamada — yangilanadi, keyin holat o'zgaradi.
         for (LineRow r : rows) {
             Quote q = ev.quotes().get(r.productId());
-            jdbc.sql("UPDATE sales_order_line SET price = :p, price_type_id = :t WHERE id = :id")
-                    .param("p", q.price().amount())
+            jdbc.sql("UPDATE sales_order_line SET price = :p, list_price = :lp, price_type_id = :t WHERE id = :id")
+                    .param("p", discounted(q.price(), ev.discount(r.productId())).amount())
+                    .param("lp", q.price().amount())
                     .param("t", q.priceTypeId())
                     .param("id", r.id())
                     .update();
@@ -981,7 +1043,7 @@ class Orders {
         }
         List<LineRow> rows = lineRows(id);
         reserve(h, rows, evaluate(h.branchId(), h.warehouseId(), h.customerId(),
-                rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList()));
+                rows.stream().map(LineRow::request).toList()));
         jdbc.sql("""
                 UPDATE sales_order SET status = 'QUEUED', decided_by = :by, decided_at = now(), queued_at = now(), status_changed_at = now(),
                        updated_at = now(), version = version + 1 WHERE id = :id""")
@@ -1121,7 +1183,7 @@ class Orders {
                 .single();
         List<LineRow> rows = lineRows(orderId).stream().filter(r -> onlyLines == null || onlyLines.contains(r.id())).toList();
         reserve(h, rows, evaluate(h.branchId(), h.warehouseId(), h.customerId(),
-                rows.stream().map(r -> new OrderLineRequest(r.productId(), r.qty())).toList()));
+                rows.stream().map(LineRow::request).toList()));
     }
 
     /** Narx partiyalar bo'yicha (SPEC 6): FEFO rejasi — zahira qaysi partiyalardan olinsa, narx ham shulardan; qoldiq yetmagan qism — partiyasiz. */

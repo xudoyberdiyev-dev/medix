@@ -185,7 +185,6 @@
     "fAlt": "Muqobil nomi",
     "fAltHint": "Masalan, SMARTUPʼdagi nomi — import va qidiruvda yordam beradi",
     "eName": "Nomini kiriting",
-    "fixedHint": "Narx turlari roʻyxati va ularning turi (bazaviy, partiyaga bogʻliq) SPEC boʻyicha belgilangan — oʻzgarmaydi.",
     "save": "Saqlash",
     "saved": "«{n}» saqlandi",
     "activated": "«{n}» faollashtirildi",
@@ -195,7 +194,14 @@
     "histT": "Tarix: {n}",
     "hUpdate": "Tahrirlandi",
     "close": "Yopish",
-    "aAttach": "Biriktirish"
+    "aAttach": "Biriktirish",
+    "aNew": "Narx turi yaratish",
+    "newT": "Yangi narx turi",
+    "created": "«{n}» yaratildi",
+    "hCreate": "Yaratildi",
+    "fBatchHint": "Narx har partiya uchun alohida oʻrnatiladi",
+    "fBatchLock": "Bu turda narxlar bor — «Partiyaga bogʻliq» oʻzgarmaydi",
+    "fBaseHint": "Faqat bitta tur bazaviy boʻladi. Mijoz turida narx boʻlmasa bazaviy narx olinadi; yangisi tanlansa oldingisi oddiy turga oʻtadi."
   },
   "set": {
     "crumb": "Narxlar",

@@ -267,10 +267,11 @@ class BranchWarehouseAdminIT {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.zones", hasSize(5)))
                 .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].sellable").value(true));
+        // E12: bir turdagi ikkinchi zona — nomi bilan farqlanadi; Qabul/Karantin/Joʻnatish — bittadan
         mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"COLD\"}"))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("warehouse.zoneExists"));
-        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"MAIN\"}"))
+                .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"SHIPPING\",\"name\":\"Joʻnatish 2\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("warehouse.extraZones"));
 
@@ -281,6 +282,78 @@ class BranchWarehouseAdminIT {
         mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + zoneId), admin, "{\"name\":\"karantin\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
+
+        // Ombor kartasi (WarehousePanel): tur, masʼul, ixtiyoriy zona nomi bilan; boshqa filial xodimi masʼul boʻlmaydi
+        long keeper = jdbc.sql("SELECT id FROM employee WHERE branch_id = :b ORDER BY id LIMIT 1").param("b", own).query(Long.class).single();
+        mvc.perform(json(post("/api/warehouses/card"), admin, "{\"branchId\":" + own + ",\"name\":\"Sovuq ombor\",\"kind\":\"COLD\",\"keeperId\":"
+                        + keeper + ",\"extraZones\":[\"COLD\"],\"zoneNames\":{\"COLD\":\"Muzlatkich 1\"}}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.kind").value("COLD"))
+                .andExpect(jsonPath("$.keeperId").value(keeper))
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].name").value("Muzlatkich 1"));
+        long otherKeeper = jdbc.sql("SELECT id FROM employee WHERE branch_id IS NOT NULL AND branch_id <> :b ORDER BY id LIMIT 1")
+                .param("b", own).query(Long.class).optional().orElse(-1L);
+        mvc.perform(json(put("/api/warehouses/" + wid + "/card"), admin, "{\"branchId\":" + own + ",\"name\":\"Markaziy ombor\",\"keeperId\":"
+                        + otherKeeper + ",\"extraZones\":[\"COLD\"]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("warehouse.keeperInvalid"));
+        mvc.perform(json(put("/api/warehouses/" + wid + "/card"), manager, "{\"branchId\":" + own + ",\"name\":\"X\"}"))
+                .andExpect(status().isForbidden());
+
+        // Omborlar va zonalar sahifasi: filial, zonalar qoldig'i bilan; filial rahbari faqat o'z filiali
+        mvc.perform(get("/api/warehouses/overview").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[?(@.name == 'Sovuq ombor')].keeperName").value("Sinov"))
+                .andExpect(jsonPath("$[0].branchName").value("Filial"))
+                .andExpect(jsonPath("$[0].qty").value(0));
+
+        // Zonani yopish: majburiy zona — yo'q; ixtiyoriy, qoldiqsiz — ha; qayta ochish
+        long mainId = jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'MAIN'").param("w", wid).query(Long.class).single();
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + mainId + "/close").with(csrf()).cookie(admin))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("warehouse.zoneRequired"));
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + zoneId + "/close").with(csrf()).cookie(manager))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + zoneId + "/close").with(csrf()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].active").value(false));
+        assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE action = 'zone.close' AND entity_id = :z")
+                .param("z", String.valueOf(zoneId)).query(Long.class).single()).isEqualTo(1L);
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + zoneId + "/reopen").with(csrf()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].active").value(true));
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"SAFE\",\"name\":\"Muzlatkich\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"SAFE\",\"name\":\"Nazorat seyfi\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.zones[?(@.type == 'SAFE')].name").value("Nazorat seyfi"));
+
+        // E12: ikkinchi Asosiy saqlash zonasi; oxirgisi boʻlmagani uchun yopiladi
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"MAIN\",\"name\":\"Asosiy 2\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.zones[?(@.type == 'MAIN')]", hasSize(2)))
+                .andExpect(jsonPath("$.zones[?(@.name == 'Asosiy 2')].sellable").value(true));
+        long main2 = jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND name = 'Asosiy 2'").param("w", wid).query(Long.class).single();
+        // «Sotuvga ochiq» almashtirgichi — zona darajasida
+        mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + main2 + "/sellable"), admin, "{\"sellable\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.zones[?(@.name == 'Asosiy 2')].sellable").value(false));
+        assertThat(jdbc.sql("SELECT sellable FROM zone WHERE id = :z").param("z", main2).query(Boolean.class).single()).isFalse();
+        mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + main2 + "/sellable"), admin, "{\"sellable\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.zones[?(@.name == 'Asosiy 2')].sellable").value(true));
+        long quarantine = jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'QUARANTINE'").param("w", wid)
+                .query(Long.class).single();
+        mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + quarantine + "/sellable"), admin, "{\"sellable\":true}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("warehouse.zoneNotSellable"));
+        mvc.perform(json(put("/api/warehouses/" + wid + "/zones/" + main2 + "/sellable"), manager, "{\"sellable\":false}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + main2 + "/close").with(csrf()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.zones[?(@.name == 'Asosiy 2')].active").value(false));
 
         mvc.perform(json(post("/api/warehouses/" + wid + "/deactivate"), admin, "{\"reason\":\"Ta'mirlash\"}"))
                 .andExpect(status().isOk())

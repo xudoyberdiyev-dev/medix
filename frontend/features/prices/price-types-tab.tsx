@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleCheck, CirclePause, CirclePlay, History, Pencil, Tag, Users } from "lucide-react";
+import { CircleCheck, CirclePause, CirclePlay, History, Pencil, Plus, Tag, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { HistoryTimeline } from "@/components/ui/history-timeline";
 import { Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { RowMenu } from "@/components/ui/row-menu";
+import { Switch } from "@/components/ui/selection-controls";
 import { Table, type SortState, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
@@ -77,6 +78,7 @@ export function PriceTypesTab({
   const [sort, setSort] = useState<SortState>({ key: "name", dir: "asc" });
   const [selId, setSelId] = useState<number | null>(null);
   const [edit, setEdit] = useState<PriceType | null>(null);
+  const [creating, setCreating] = useState(false);
   const [hist, setHist] = useState<PriceType | null>(null);
   const [deact, setDeact] = useState<PriceType | null>(null);
   const [attach, setAttach] = useState<PriceType | null>(null);
@@ -89,12 +91,12 @@ export function PriceTypesTab({
   const sel = rows.find((r) => r.id === selId) ?? null;
 
   const save = useMutation({
-    mutationFn: async (v: { id: number; name: string; altName: string | null; active: boolean }) => {
+    mutationFn: async (v: { id: number; name: string; altName: string | null; active: boolean; batch?: boolean; base?: boolean }) => {
       await ensureCsrf();
       return unwrap(
         api.PUT("/api/price-types/{id}", {
           params: { path: { id: v.id }, query: { branchId: branchId ?? 0 } },
-          body: { name: v.name, altName: v.altName ?? undefined, active: v.active },
+          body: { name: v.name, altName: v.altName ?? undefined, active: v.active, batch: v.batch, base: v.base },
         }),
       );
     },
@@ -111,6 +113,24 @@ export function PriceTypesTab({
       });
       setEdit(null);
       setDeact(null);
+    },
+  });
+
+  const create = useMutation({
+    mutationFn: async (v: { name: string; altName: string | null; batch: boolean; base: boolean }) => {
+      await ensureCsrf();
+      return unwrap(
+        api.POST("/api/price-types", {
+          params: { query: { branchId: branchId ?? 0 } },
+          body: { name: v.name, altName: v.altName ?? undefined, batch: v.batch, base: v.base },
+        }),
+      );
+    },
+    onSuccess: async (r) => {
+      await qc.invalidateQueries({ queryKey: ["price-types"] });
+      toast({ tone: "success", title: t("created", { n: r.name }) });
+      setCreating(false);
+      setSelId(r.id);
     },
   });
 
@@ -174,6 +194,13 @@ export function PriceTypesTab({
 
   return (
     <div className="flex flex-col gap-3">
+      {canEdit && branchId != null ? (
+        <div className="flex justify-end">
+          <Button variant="secondary" icon={Plus} onClick={() => setCreating(true)}>
+            {t("aNew")}
+          </Button>
+        </div>
+      ) : null}
       <Table
         caption={t("caption")}
         columns={columns}
@@ -230,6 +257,14 @@ export function PriceTypesTab({
         )}
       </div>
 
+      {creating ? (
+        <EditDialog
+          pending={create.isPending}
+          error={create.error}
+          onClose={() => (setCreating(false), create.reset())}
+          onSave={(v) => create.mutate({ name: v.name, altName: v.altName, batch: v.batch, base: v.base })}
+        />
+      ) : null}
       {edit ? (
         <EditDialog
           key={edit.id}
@@ -266,6 +301,7 @@ export function PriceTypesTab({
   );
 }
 
+/** Narx turi oynasi (prototip `Prices` → «Yangi narx turi» / «Narx turi: …»); `type` yoʻq — yangi. */
 function EditDialog({
   type,
   pending,
@@ -273,39 +309,45 @@ function EditDialog({
   onClose,
   onSave,
 }: {
-  type: PriceType;
+  type?: PriceType;
   pending: boolean;
   error: unknown;
   onClose: () => void;
-  onSave: (v: { name: string; altName: string | null; active: boolean }) => void;
+  onSave: (v: { name: string; altName: string | null; active: boolean; batch: boolean; base: boolean }) => void;
 }) {
   const t = useTranslations("prices.types");
-  const [name, setName] = useState(type.name);
-  const [alt, setAlt] = useState(type.altName ?? "");
+  const [name, setName] = useState(type?.name ?? "");
+  const [alt, setAlt] = useState(type?.altName ?? "");
+  const [batch, setBatch] = useState(type?.batch ?? false);
+  const [base, setBase] = useState(type?.base ?? false);
   const [err, setErr] = useState("");
   const serverErr = describeError(error).message;
+  // Narxi bor turda «Partiyaga bogʻliq» almashtirilmaydi (server ham tekshiradi); bazaviy turni qaytarib boʻlmaydi — boshqasini bazaviy qiling
+  const batchLocked = !!type && type.priced > 0;
   return (
     <Modal
       open
-      title={t("editT", { n: type.name })}
+      title={type ? t("editT", { n: type.name }) : t("newT")}
       onClose={onClose}
       primaryAction={{
         label: t("save"),
         loading: pending,
         onClick: () => {
           if (!name.trim()) return setErr(t("eName"));
-          onSave({ name: name.trim(), altName: alt.trim() || null, active: type.active });
+          onSave({ name: name.trim(), altName: alt.trim() || null, active: type?.active ?? true, batch, base });
         },
       }}
     >
       <div className="flex flex-col gap-4">
         <TextField label={t("fName")} required value={name} onChange={(v) => (setName(v), setErr(""))} error={err || undefined} />
         <TextField label={t("fAlt")} value={alt} onChange={setAlt} hint={t("fAltHint")} />
-        <div className="flex flex-col gap-1 text-caption text-text-secondary">
-          <span>
-            {t("cBatch")}: {type.batch ? t("yes") : t("no")} · {t("cBase")}: {type.base ? t("yes") : t("no")}
-          </span>
-          <span>{t("fixedHint")}</span>
+        <div className="flex flex-col gap-1">
+          <Switch label={t("cBatch")} checked={batch} disabled={batchLocked || base} onChange={(v) => setBatch(v)} />
+          <span className="text-caption text-text-secondary">{batchLocked ? t("fBatchLock") : t("fBatchHint")}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <Switch label={t("cBase")} checked={base} disabled={!!type?.base || batch} onChange={(v) => setBase(v)} />
+          <span className="text-caption text-text-secondary">{t("fBaseHint")}</span>
         </div>
         {serverErr ? <p className="text-danger">{serverErr}</p> : null}
       </div>
@@ -327,7 +369,10 @@ function HistoryDialog({ type, onClose }: { type: PriceType; onClose: () => void
   }));
   return (
     <Modal open title={t("histT", { n: type.name })} onClose={onClose} primaryAction={{ label: t("close"), onClick: onClose }}>
-      <HistoryTimeline query={{ data, error: q.error, refetch: q.refetch }} label={(a) => (a === "priceType.update" ? t("hUpdate") : a)} />
+      <HistoryTimeline
+        query={{ data, error: q.error, refetch: q.refetch }}
+        label={(a) => (a === "priceType.update" ? t("hUpdate") : a === "priceType.create" ? t("hCreate") : a)}
+      />
     </Modal>
   );
 }

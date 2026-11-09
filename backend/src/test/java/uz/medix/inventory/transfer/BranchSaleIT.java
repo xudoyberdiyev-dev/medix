@@ -216,6 +216,14 @@ class BranchSaleIT {
                 .single()).isZero();
         assertThat(jdbc.sql("SELECT count(*) FROM notification WHERE dedup_key = :k").param("k", "transfer.fs.sent:" + id)
                 .query(Long.class).single()).isPositive();
+        // Ko'chirish — bitta ro'yxat: sotuvchi uchun chiquvchi, yo'lda, summa bilan
+        mvc.perform(get("/api/transfers/overview").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.kind == 'FS' && @.id == " + id + ")].state").value(org.hamcrest.Matchers.hasItem("TRANSIT")))
+                .andExpect(jsonPath("$.items[?(@.kind == 'FS' && @.id == " + id + ")].direction").value(org.hamcrest.Matchers.hasItem("OUT")))
+                .andExpect(jsonPath("$.items[?(@.kind == 'FS' && @.id == " + id + ")].total").value(org.hamcrest.Matchers.hasItem("4480.00")))
+                .andExpect(jsonPath("$.items[?(@.kind == 'FS' && @.id == " + id + ")].to.branch.id")
+                        .value(org.hamcrest.Matchers.hasItem((int) buyer.branchId())));
 
         // Sotuvchi filial xodimi xaridor nomidan qabul qila olmaydi
         send(post("/api/branch-sales/" + id + "/receive"), manager, "{\"toZoneId\":" + buyer.receiving() + "}")
@@ -227,6 +235,10 @@ class BranchSaleIT {
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.items[0].total").value(nullValue()));
         mvc.perform(get("/api/branch-sales/balances").cookie(keeper)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/transfers/overview").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.kind == 'FS')].direction").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("IN"))))
+                .andExpect(jsonPath("$.items[?(@.kind == 'FS')].total").value(org.hamcrest.Matchers.everyItem(nullValue())));
         send(post("/api/branch-sales/" + id + "/receive"), keeper, "{\"toZoneId\":" + seller.receiving() + "}")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("transfer.ok.zoneNotInTarget"));

@@ -13,6 +13,7 @@ const PAGES = [
   "/shipments",
   "/stock",
   "/receipts",
+  "/transfers",
   "/zone-transfers",
   "/warehouse-transfers",
   "/branch-sales",

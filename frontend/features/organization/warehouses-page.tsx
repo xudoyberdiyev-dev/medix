@@ -1,422 +1,490 @@
 "use client";
 
-import {
-  CircleCheck,
-  CirclePause,
-  Lock,
-  Pencil,
-  Plus,
-  Power,
-  PowerOff,
-  ShoppingCart,
-  Snowflake,
-  Vault,
-  Warehouse as WarehouseIcon,
-} from "lucide-react";
+import { ArchiveX, Ellipsis, Pencil, Plus, Power, RotateCcw, Snowflake, Warehouse as WarehouseIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Drawer } from "@/components/ui/drawer";
+import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/selection-controls";
-import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
-import { Table, type TableColumn } from "@/components/ui/table";
+import { Switch } from "@/components/ui/selection-controls";
+import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
+import { useEmployees } from "@/features/employees/api";
 import { describeError } from "@/features/setup/form-error";
+import { WarehousePanel, ZONE_LOOK, useZoneNames } from "@/features/setup/warehouse-panel";
+import { formatQuantity } from "@/lib/format";
+import { cn } from "@/lib/cn";
 import {
   OPTIONAL_ZONES,
-  missingOptionalZones,
+  STORAGE_ZONES,
+  nextZoneName,
+  useSetZoneSellable,
+  activeZoneCount,
   useActivateWarehouse,
-  useAddZone,
+  useAddNamedZone,
   useBranchList,
-  useCreateWarehouse,
+  useCreateWarehouseCard,
   useDeactivateWarehouse,
-  useRenameZone,
-  useUpdateWarehouse,
+  useSetZoneActive,
+  useUpdateWarehouseCard,
+  useWarehouseOverview,
   useWarehouses,
-  type Warehouse,
-  type Zone,
+  warehouseTree,
+  type WarehouseOverviewItem,
+  type WarehouseZoneStock,
   type ZoneType,
 } from "./api";
 import { DeactivateDialog } from "./deactivate-dialog";
 
-const ZONE_ICONS: Partial<Record<ZoneType, typeof Snowflake>> = { COLD: Snowflake, SAFE: Vault };
-
-function ZoneBadge({ zone }: { zone: Zone }) {
-  const t = useTranslations("organization");
-  return (
-    <span title={zone.sellable ? t("sellableOpen") : t("sellableClosed")}>
-      <Badge tone={zone.sellable ? "success" : "neutral"} icon={zone.sellable ? ShoppingCart : Lock}>
-        {zone.name}
-      </Badge>
-    </span>
-  );
+function ActivePill({ active }: { active: boolean }) {
+  const t = useTranslations("organization.warehouses");
+  return <Badge tone={active ? "success" : "neutral"}>{active ? t("stActive") : t("stClosed")}</Badge>;
 }
 
+/** Boshqaruv → Omborlar va zonalar (prototip AdminOrg): chapda filial → ombor daraxti, oʻngda ombor maʼlumotlari va zonalar. */
 export function WarehousesPage() {
-  const t = useTranslations("organization");
+  const t = useTranslations("organization.warehouses");
   const me = useMe();
-  const warehouses = useWarehouses();
-  const branches = useBranchList();
-  const activate = useActivateWarehouse();
+  const overview = useWarehouseOverview();
+  const canEdit = !!me.data && can(me.data, "warehouses.view");
+  const [selected, setSelected] = useState<number | null>(null);
+  const [panel, setPanel] = useState<{ id: number | null; branchId: number | null } | null>(null);
+  const [closing, setClosing] = useState<WarehouseOverviewItem | null>(null);
+  const [zoneClosing, setZoneClosing] = useState<WarehouseZoneStock | null>(null);
+  const [adding, setAdding] = useState(false);
   const deactivate = useDeactivateWarehouse();
-  const addZone = useAddZone();
-  const [query, setQuery] = useState("");
-  const [branchFilter, setBranchFilter] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Warehouse | "new" | null>(null);
-  const [deactivating, setDeactivating] = useState<Warehouse | null>(null);
+  const activate = useActivateWarehouse();
+  const setZoneActive = useSetZoneActive();
+  const setZoneSellable = useSetZoneSellable();
 
-  if (me.data && !can(me.data, "warehouses.view")) return <ForbiddenState description={t("warehouses.forbidden")} />;
+  if (me.data && !canEdit) return <ForbiddenState description={t("forbidden")} />;
 
-  const branchName = (id: number) => branches.data?.find((b) => b.id === id)?.name ?? "";
-  const q = query.trim().toLocaleLowerCase("uz");
-  const rows = (warehouses.data ?? []).filter(
-    (w) =>
-      (!branchFilter || String(w.branchId) === branchFilter) &&
-      (!q || [w.name, w.address ?? "", branchName(w.branchId)].some((v) => v.toLocaleLowerCase("uz").includes(q))),
-  );
-  const multiBranch = (branches.data?.length ?? 0) > 1;
+  const items = overview.data ?? [];
+  const sel = items.find((w) => w.id === selected) ?? items[0];
+  const tree = warehouseTree(items);
 
-  const columns: TableColumn<Warehouse>[] = [
-    ...(multiBranch ? [{ key: "branch", title: t("branch"), render: (w: Warehouse) => branchName(w.branchId) }] : []),
-    {
-      key: "name",
-      title: t("warehouses.warehouse"),
-      render: (w) => (
-        <span className="flex flex-col">
-          <span>{w.name}</span>
-          {w.address ? <span className="text-caption text-text-secondary">{w.address}</span> : null}
-        </span>
-      ),
-    },
-    {
-      key: "zones",
-      title: t("warehouses.zones"),
-      render: (w) => (
-        <span className="flex flex-wrap gap-1">
-          {w.zones.map((z) => (
-            <ZoneBadge key={z.id} zone={z} />
-          ))}
-        </span>
-      ),
-    },
-    {
-      key: "active",
-      title: t("status"),
-      render: (w) =>
-        w.active ? (
-          <Badge tone="success" icon={CircleCheck}>
-            {t("active")}
-          </Badge>
-        ) : (
-          <Badge tone="neutral" icon={CirclePause}>
-            {t("inactive")}
-          </Badge>
-        ),
-    },
-  ];
-
-  function menu(w: Warehouse): RowMenuItem[] {
-    const items: RowMenuItem[] = [
-      { key: "edit", label: t("edit"), icon: <Pencil size={16} strokeWidth={1.5} aria-hidden />, onSelect: () => setEditing(w) },
-    ];
-    for (const type of missingOptionalZones(w)) {
-      const ZoneIcon = ZONE_ICONS[type] ?? Plus;
-      items.push({
-        key: `zone-${type}`,
-        label: t("warehouses.addZone", { zone: t(`zone.${type}`) }),
-        icon: <ZoneIcon size={16} strokeWidth={1.5} aria-hidden />,
-        onSelect: () =>
-          addZone.mutate(
-            { id: w.id, type },
-            {
-              onSuccess: () =>
-                toast({ tone: "success", title: t("warehouses.zoneAdded", { zone: t(`zone.${type}`) }), description: w.name }),
-              onError: (e) => toast({ tone: "danger", title: t("warehouses.zoneAddFailed"), description: describeError(e).message ?? "" }),
-            },
-          ),
-      });
-    }
-    items.push(
-      w.active
-        ? {
-            key: "deactivate",
-            label: t("deactivate"),
-            icon: <PowerOff size={16} strokeWidth={1.5} aria-hidden />,
-            onSelect: () => (deactivate.reset(), setDeactivating(w)),
-          }
-        : {
-            key: "activate",
-            label: t("activate"),
-            icon: <Power size={16} strokeWidth={1.5} aria-hidden />,
-            onSelect: () =>
-              activate.mutate(w.id, {
-                onSuccess: () => toast({ tone: "success", title: t("warehouses.activated"), description: w.name }),
-                onError: (e) =>
-                  toast({ tone: "danger", title: t("warehouses.activateFailed"), description: describeError(e).message ?? "" }),
-              }),
-          },
+  function zoneActive(zone: WarehouseZoneStock, active: boolean) {
+    if (!sel) return;
+    setZoneActive.mutate(
+      { id: sel.id, zoneId: zone.id, active },
+      {
+        onSuccess: () => {
+          toast({ tone: "success", title: active ? t("zReopened") : t("zClosedToast"), description: `${zone.name} · ${sel.name}` });
+          setZoneClosing(null);
+        },
+        onError: (e) => toast({ tone: "danger", title: t("zFail"), description: describeError(e).message ?? "" }),
+      },
     );
-    return items;
   }
 
-  return (
-    <>
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">{t("warehouses.title")}</h1>
-        <Button icon={Plus} onClick={() => setEditing("new")}>
-          {t("warehouses.add")}
-        </Button>
-      </div>
-      {warehouses.error ? (
-        <ErrorState onRetry={() => warehouses.refetch()} />
-      ) : (
-        <Table
-          caption={t("warehouses.caption")}
-          columns={columns}
-          rows={rows}
-          rowKey={(w) => String(w.id)}
-          loading={warehouses.isPending}
-          onRowClick={(w) => setEditing(w)}
-          toolbar={
-            <div className="flex items-center gap-3">
-              <div className="w-72">
-                <TextField
-                  label={t("search")}
-                  variant="search"
-                  size="sm"
-                  value={query}
-                  onChange={setQuery}
-                  placeholder={t("warehouses.searchPlaceholder")}
-                  className="[&>label]:sr-only"
-                />
-              </div>
-              {multiBranch ? (
-                <div className="w-56">
-                  <Select
-                    label={t("branch")}
-                    size="sm"
-                    value={branchFilter}
-                    onChange={setBranchFilter}
-                    placeholder={t("allBranches")}
-                    className="[&>span:first-child]:sr-only"
-                    options={(branches.data ?? []).map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
-                  />
-                </div>
-              ) : null}
-            </div>
-          }
-          rowActions={(w) => <RowMenu items={menu(w)} />}
-          emptyState={
-            query || branchFilter ? (
-              <NoResultsState onClearFilters={() => (setQuery(""), setBranchFilter(null))} />
-            ) : (
-              <EmptyState icon={WarehouseIcon} title={t("warehouses.emptyTitle")} description={t("warehouses.emptyDescription")} />
-            )
-          }
-        />
-      )}
-      {editing === "new" ? <CreateWarehouseDrawer onClose={() => setEditing(null)} /> : null}
-      {editing && editing !== "new" ? (
-        <EditWarehouseDrawer
-          warehouse={warehouses.data?.find((w) => w.id === editing.id) ?? editing}
-          branchName={branchName(editing.branchId)}
-          onClose={() => setEditing(null)}
-        />
-      ) : null}
-      {deactivating ? (
-        <DeactivateDialog
-          title={t("warehouses.deactivateTitle", { name: deactivating.name })}
-          consequence={t("warehouses.deactivateConsequence")}
-          actionLabel={t("warehouses.deactivateAction")}
-          pending={deactivate.isPending}
-          error={deactivate.error}
-          onClose={() => setDeactivating(null)}
-          onConfirm={(reason) =>
-            deactivate.mutate(
-              { id: deactivating.id, reason },
-              {
-                onSuccess: () => (
-                  toast({ tone: "success", title: t("warehouses.deactivated"), description: deactivating.name }),
-                  setDeactivating(null)
-                ),
-              },
-            )
-          }
-        />
-      ) : null}
-    </>
-  );
-}
-
-function CreateWarehouseDrawer({ onClose }: { onClose: () => void }) {
-  const t = useTranslations("organization");
-  const me = useMe();
-  const branches = useBranchList();
-  const create = useCreateWarehouse();
-  const activeBranches = (branches.data ?? []).filter((b) => b.active);
-  const [branchId, setBranchId] = useState<string | null>(me.data?.branchId ? String(me.data.branchId) : null);
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [extra, setExtra] = useState<ZoneType[]>([]);
-  const [branchError, setBranchError] = useState<string>();
-  const err = describeError(create.error);
-  const effectiveBranch = branchId ?? (activeBranches.length === 1 ? String(activeBranches[0].id) : null);
-
-  function submit(e?: FormEvent) {
-    e?.preventDefault();
-    if (!effectiveBranch) return setBranchError(t("warehouses.branchRequired"));
-    create.mutate(
-      { branchId: Number(effectiveBranch), name, address: address || undefined, extraZones: extra },
+  function zoneSellable(zone: WarehouseZoneStock, sellable: boolean) {
+    if (!sel) return;
+    setZoneSellable.mutate(
+      { id: sel.id, zoneId: zone.id, sellable },
       {
-        onSuccess: (w) => (
-          toast({
-            tone: "success",
-            title: t("warehouses.added"),
-            description: t("warehouses.addedDescription", { name: w.name, count: w.zones.length }),
-          }),
-          onClose()
-        ),
+        onSuccess: () =>
+          toast({ tone: "success", title: sellable ? t("zSaleOpened") : t("zSaleClosed"), description: `${zone.name} · ${sel.name}` }),
+        onError: (e) => toast({ tone: "danger", title: t("zFail"), description: describeError(e).message ?? "" }),
       },
     );
   }
 
   return (
-    <Drawer
-      open
-      onClose={onClose}
-      size="lg"
-      kind={t("warehouses.warehouse")}
-      title={t("warehouses.new")}
-      actions={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            {t("back")}
-          </Button>
-          <Button loading={create.isPending} onClick={() => submit()}>
-            {t("warehouses.save")}
-          </Button>
-        </>
-      }
-    >
-      <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
-        <Select
-          label={t("branch")}
-          required
-          value={effectiveBranch}
-          onChange={(v) => (setBranchId(v), setBranchError(undefined))}
-          error={branchError ?? err.fields.branchId}
-          options={activeBranches.map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
-          className="col-span-2"
+    <>
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="flex items-baseline gap-2 text-page-title">
+            {t("title")}
+            {overview.data ? (
+              <span className="text-body font-normal text-text-secondary tabular-nums">{formatQuantity(items.length)}</span>
+            ) : null}
+          </h1>
+          <p className="mt-1 text-body text-text-secondary">{t("subtitle", { z: formatQuantity(activeZoneCount(items)) })}</p>
+        </div>
+        <Button icon={Plus} onClick={() => setPanel({ id: null, branchId: sel?.branchId ?? null })}>
+          {t("new")}
+        </Button>
+      </div>
+
+      {overview.error ? (
+        <ErrorState onRetry={() => overview.refetch()} />
+      ) : overview.isPending ? (
+        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]" aria-busy>
+          <div className="h-64 animate-pulse rounded-lg bg-table-header" />
+          <div className="h-64 animate-pulse rounded-lg bg-table-header" />
+        </div>
+      ) : !sel ? (
+        <EmptyState icon={WarehouseIcon} title={t("emptyTitle")} description={t("emptyDescription")} />
+      ) : (
+        <div className="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <nav aria-label={t("treeLabel")} className="flex flex-col gap-[2px] rounded-lg border border-border bg-surface p-2">
+            {tree.map((g) => (
+              <div key={g.branchId} className="flex flex-col gap-[2px]">
+                <div className="flex justify-between gap-2 px-2 pt-[10px] pb-1 text-caption font-semibold text-text-secondary">
+                  <span>{g.name}</span>
+                  <span className="font-mono font-normal text-text-secondary">{g.code}</span>
+                </div>
+                {g.items.map((w) => {
+                  const on = w.id === sel.id;
+                  const cold = w.zones.some((z) => z.active && z.type === "COLD");
+                  return (
+                    <button
+                      key={w.id}
+                      type="button"
+                      aria-current={on ? "true" : undefined}
+                      onClick={() => setSelected(w.id)}
+                      className={cn(
+                        "flex min-h-10 items-center gap-[10px] rounded-md px-2 py-[6px] text-left",
+                        on ? "bg-primary-soft" : "hover:bg-table-header",
+                      )}
+                    >
+                      <Icon icon={cold ? Snowflake : WarehouseIcon} size="sm" className={on ? "text-primary" : "text-text-secondary"} />
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className={cn("truncate text-table", on ? "font-semibold" : "font-medium")}>{w.name}</span>
+                        <span className="text-caption text-text-secondary">
+                          {t("zN", { n: formatQuantity(activeZoneCount([w])) })}
+                          {cold ? ` · ${t("coldShort")}` : ""}
+                        </span>
+                      </span>
+                      {!w.active ? <Badge tone="neutral">{t("stClosed")}</Badge> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </nav>
+
+          <WarehouseDetail
+            w={sel}
+            onEdit={() => setPanel({ id: sel.id, branchId: sel.branchId })}
+            onClose={() => (sel.active ? (deactivate.reset(), setClosing(sel)) : toast({ tone: "info", title: t("alreadyClosed") }))}
+            onActivate={() =>
+              activate.mutate(sel.id, {
+                onSuccess: () => toast({ tone: "success", title: t("activated"), description: sel.name }),
+                onError: (e) => toast({ tone: "danger", title: t("activateFailed"), description: describeError(e).message ?? "" }),
+              })
+            }
+            onAddZone={() => setAdding(true)}
+            onZoneClose={(z) => setZoneClosing(z)}
+            onZoneReopen={(z) => zoneActive(z, true)}
+            onZoneSellable={zoneSellable}
+          />
+        </div>
+      )}
+
+      {panel ? (
+        <CardPanel id={panel.id} branchId={panel.branchId} onClose={() => setPanel(null)} onSaved={(id) => setSelected(id)} />
+      ) : null}
+
+      {closing ? (
+        <DeactivateDialog
+          title={t("closeTitle", { n: closing.name })}
+          consequence={t("deactivateConsequence")}
+          actionLabel={t("close")}
+          pending={deactivate.isPending}
+          error={deactivate.error}
+          onClose={() => setClosing(null)}
+          onConfirm={(reason) =>
+            deactivate.mutate(
+              { id: closing.id, reason },
+              { onSuccess: () => (toast({ tone: "success", title: t("deactivated"), description: closing.name }), setClosing(null)) },
+            )
+          }
         />
-        <TextField label={t("name")} value={name} onChange={setName} error={err.fields.name} required />
-        <TextField label={t("address")} value={address} onChange={setAddress} error={err.fields.address} />
-        <fieldset className="col-span-2 flex flex-col gap-3">
-          <legend className="mb-2 text-label">{t("warehouses.extraZones")}</legend>
-          <p className="text-text-secondary">{t("warehouses.alwaysCreated")}</p>
-          {OPTIONAL_ZONES.map((z) => (
-            <Checkbox
-              key={z}
-              label={t(`zone.${z}`)}
-              description={z === "COLD" ? t("warehouses.coldDescription") : t("warehouses.safeDescription")}
-              checked={extra.includes(z)}
-              onChange={(c) => setExtra((x) => (c ? [...x, z] : x.filter((y) => y !== z)))}
-            />
-          ))}
-        </fieldset>
-        {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
-      </form>
-    </Drawer>
+      ) : null}
+
+      <Modal
+        open={zoneClosing !== null}
+        onClose={() => setZoneClosing(null)}
+        tone="danger"
+        size="sm"
+        title={t("zCloseT", { n: zoneClosing?.name ?? "" })}
+        primaryAction={{
+          label: t("zCloseOk"),
+          loading: setZoneActive.isPending,
+          onClick: () => zoneClosing && zoneActive(zoneClosing, false),
+        }}
+      >
+        <p className="text-body">{t("zCloseText")}</p>
+      </Modal>
+
+      {adding && sel ? <AddZoneModal w={sel} onClose={() => setAdding(false)} /> : null}
+    </>
   );
 }
 
-function EditWarehouseDrawer({ warehouse, branchName, onClose }: { warehouse: Warehouse; branchName: string; onClose: () => void }) {
-  const t = useTranslations("organization");
-  const update = useUpdateWarehouse();
-  const [name, setName] = useState(warehouse.name);
-  const [address, setAddress] = useState(warehouse.address ?? "");
-  const err = describeError(update.error);
+function WarehouseDetail({
+  w,
+  onEdit,
+  onClose,
+  onActivate,
+  onAddZone,
+  onZoneClose,
+  onZoneReopen,
+  onZoneSellable,
+}: {
+  w: WarehouseOverviewItem;
+  onEdit: () => void;
+  onClose: () => void;
+  onActivate: () => void;
+  onAddZone: () => void;
+  onZoneClose: (z: WarehouseZoneStock) => void;
+  onZoneReopen: (z: WarehouseZoneStock) => void;
+  onZoneSellable: (z: WarehouseZoneStock, sellable: boolean) => void;
+}) {
+  const t = useTranslations("organization.warehouses");
+  const zoneNames = useZoneNames();
+  const active = w.zones.filter((z) => z.active);
+  const info: [string, string][] = [
+    [t("address"), w.address ?? "—"],
+    [t("keepers"), w.keeperName ?? t("noKeeper")],
+    [t("ctrlL"), active.some((z) => z.type === "SAFE") ? t("ctrlYes") : t("no")],
+    [t("coldL"), active.some((z) => z.type === "COLD") ? t("yes") : t("no")],
+  ];
 
-  function submit(e?: FormEvent) {
-    e?.preventDefault();
-    update.mutate(
-      { id: warehouse.id, name, address: address || undefined },
-      { onSuccess: (w) => (toast({ tone: "success", title: t("warehouses.saved"), description: w.name }), onClose()) },
+  function zoneMenu(z: WarehouseZoneStock): RowMenuItem[] {
+    if (!z.active) {
+      return [{ key: "reopen", label: t("zReopen"), icon: <Icon icon={RotateCcw} size="sm" />, onSelect: () => onZoneReopen(z) }];
+    }
+    return [{ key: "close", label: t("zClose"), icon: <Icon icon={ArchiveX} size="sm" />, onSelect: () => onZoneClose(z) }];
+  }
+
+  return (
+    <section className="flex min-w-0 flex-col gap-4" aria-labelledby="wh-title">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-[2px]">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 id="wh-title" className="text-section-title">
+              {w.name}
+            </h2>
+            <ActivePill active={w.active} />
+          </div>
+          <span className="text-table text-text-secondary">{w.branchName}</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {w.active ? (
+            <Button variant="secondary" size="sm" icon={ArchiveX} onClick={onClose}>
+              {t("close")}
+            </Button>
+          ) : (
+            <Button variant="secondary" size="sm" icon={Power} onClick={onActivate}>
+              {t("activate")}
+            </Button>
+          )}
+          <Button variant="secondary" size="sm" icon={Pencil} onClick={onEdit}>
+            {t("edit")}
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-surface">
+        <h3 className="border-b border-border px-4 py-3 text-subtitle">{t("info")}</h3>
+        <dl className="grid gap-x-6 gap-y-3 p-4 sm:grid-cols-2">
+          {info.map(([label, value]) => (
+            <div key={label} className="flex min-w-0 flex-col gap-[2px]">
+              <dt className="text-caption text-text-secondary">{label}</dt>
+              <dd className="text-body">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-border bg-surface">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-[14px]">
+          <h3 className="text-subtitle">
+            {t("zonesT")} <span className="font-normal text-text-secondary">{formatQuantity(w.zones.length)}</span>
+          </h3>
+          <Button variant="tertiary" size="sm" icon={Plus} onClick={onAddZone}>
+            {t("zAdd")}
+          </Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-body">
+            <caption className="sr-only">{t("zonesT")}</caption>
+            <thead className="bg-table-header text-caption font-medium text-text-secondary">
+              <tr>
+                <th scope="col" className="px-4 py-[10px] text-left font-medium">
+                  {t("zType")}
+                </th>
+                <th scope="col" className="px-3 py-[10px] text-left font-medium">
+                  {t("zName")}
+                </th>
+                <th scope="col" className="px-3 py-[10px] text-left font-medium">
+                  {t("zSale")}
+                </th>
+                <th scope="col" className="px-3 py-[10px] text-right font-medium">
+                  {t("zStock")}
+                </th>
+                <th scope="col" className="px-3 py-[10px] text-left font-medium">
+                  {t("status")}
+                </th>
+                <th scope="col" className="w-12 px-3 py-[10px]">
+                  <span className="sr-only">{t("rowMenu")}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {w.zones.map((z) => {
+                const look = ZONE_LOOK[z.type];
+                return (
+                  <tr key={z.id} className={cn("border-t border-border", !z.active && "opacity-60")}>
+                    <td className="px-4 py-[6px]">
+                      <span className="flex min-h-9 items-center gap-2">
+                        <span className={cn("flex size-7 flex-none items-center justify-center rounded-md", look.className)}>
+                          <Icon icon={look.icon} size="sm" />
+                        </span>
+                        <span className="truncate text-table">{zoneNames[z.type]}</span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-[6px] font-medium">{z.name}</td>
+                    <td className={cn("px-3 py-[6px] text-table", z.sellable ? "text-success" : "text-text-secondary")}>
+                      {STORAGE_ZONES.includes(z.type) && z.active ? (
+                        <Switch
+                          label={z.sellable ? t("saleOpen") : t("saleClosed")}
+                          checked={z.sellable}
+                          onChange={(v) => onZoneSellable(z, v)}
+                        />
+                      ) : z.sellable ? (
+                        t("saleOpen")
+                      ) : (
+                        t("saleClosed")
+                      )}
+                    </td>
+                    <td className="px-3 py-[6px] text-right tabular-nums">
+                      <span className="flex flex-col items-end">
+                        <span>{t("pcs", { n: formatQuantity(z.qty) })}</span>
+                        <span className="text-caption text-text-secondary">{t("prodN", { n: formatQuantity(z.products) })}</span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-[6px]">
+                      <ActivePill active={z.active} />
+                    </td>
+                    <td className="px-3 py-[6px] text-right">
+                      {OPTIONAL_ZONES.includes(z.type) ||
+                      !z.active ||
+                      (z.type === "MAIN" && w.zones.filter((x) => x.type === "MAIN" && x.active).length > 1) ? (
+                        <RowMenu items={zoneMenu(z)} label={t("rowMenu")} />
+                      ) : (
+                        <span className="inline-flex size-[30px] items-center justify-center text-text-disabled" title={t("required")}>
+                          <Icon icon={Ellipsis} size="sm" aria-hidden />
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** «Zona qoʻshish» (prototip): omborda hali yoʻq ixtiyoriy tur (Sovuq / Seyf) va nom. */
+function AddZoneModal({ w, onClose }: { w: WarehouseOverviewItem; onClose: () => void }) {
+  const t = useTranslations("organization.warehouses");
+  const zoneNames = useZoneNames();
+  // E12: saqlash zonalari (Asosiy / Sovuq / Seyf) bir nechta boʻlishi mumkin — nomi bilan farqlanadi
+  const free = [...OPTIONAL_ZONES.filter((type) => !w.zones.some((z) => z.type === type)), ...STORAGE_ZONES].filter(
+    (v, i, a) => a.indexOf(v) === i,
+  );
+  const names = w.zones.map((z) => z.name);
+  const [type, setType] = useState<ZoneType | null>(free[0] ?? null);
+  const [name, setName] = useState(free[0] ? nextZoneName(zoneNames[free[0]], names) : "");
+  const [tried, setTried] = useState(false);
+  const add = useAddNamedZone();
+  const nm = name.trim();
+  const dup = !!nm && w.zones.some((z) => z.name.trim().toLocaleLowerCase("uz") === nm.toLocaleLowerCase("uz"));
+  const err = tried && !nm ? t("eReq") : dup ? t("eDup") : undefined;
+
+  function submit() {
+    setTried(true);
+    if (!type || !nm || dup) return;
+    add.mutate(
+      { id: w.id, type, name: nm },
+      {
+        onSuccess: () => (toast({ tone: "success", title: t("zAdded", { zone: nm }), description: w.name }), onClose()),
+      },
     );
   }
 
   return (
-    <Drawer
+    <Modal
       open
       onClose={onClose}
-      size="lg"
-      kind={branchName ? t("warehouses.warehouseWithBranch", { branch: branchName }) : t("warehouses.warehouse")}
-      title={warehouse.name}
-      actions={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            {t("back")}
-          </Button>
-          <Button loading={update.isPending} onClick={() => submit()}>
-            {t("warehouses.save")}
-          </Button>
-        </>
-      }
+      title={t("zAddT", { w: w.name })}
+      primaryAction={{ label: t("zAdd"), onClick: submit, loading: add.isPending, disabled: !type }}
     >
-      <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
-        <TextField label={t("name")} value={name} onChange={setName} error={err.fields.name} required />
-        <TextField label={t("address")} value={address} onChange={setAddress} error={err.fields.address} />
-        {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
-      </form>
-      <h3 className="mt-6 mb-3 text-subtitle">{t("warehouses.zones")}</h3>
-      <ul className="flex flex-col gap-3">
-        {warehouse.zones.map((z) => (
-          <ZoneRow key={z.id} warehouseId={warehouse.id} zone={z} />
-        ))}
-      </ul>
-    </Drawer>
+      {!type ? (
+        <Alert tone="info" title={t("allZonesT")}>
+          {t("allZones")}
+        </Alert>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <Select
+            label={t("zType")}
+            value={type}
+            onChange={(v) => {
+              const next = (v as ZoneType | null) ?? type;
+              if (name.trim() === nextZoneName(zoneNames[type], names)) setName(nextZoneName(zoneNames[next], names));
+              setType(next);
+            }}
+            options={free.map((f) => ({ value: f, label: zoneNames[f] }))}
+          />
+          <TextField label={t("zName")} value={name} onChange={setName} error={err} maxLength={100} />
+          <p className="text-caption text-text-secondary">{t("requiredNote")}</p>
+          {add.error ? (
+            <Alert tone="danger" title={t("zFail")}>
+              {describeError(add.error).message}
+            </Alert>
+          ) : null}
+        </div>
+      )}
+    </Modal>
   );
 }
 
-function ZoneRow({ warehouseId, zone }: { warehouseId: number; zone: Zone }) {
-  const t = useTranslations("organization");
-  const rename = useRenameZone();
-  const [name, setName] = useState(zone.name);
-  const err = describeError(rename.error);
-  const changed = name.trim() !== zone.name;
+/** Ombor kartasi (prototip WarehousePanel): yangi yoki mavjud ombor — tur, masʼul, zonalar. */
+function CardPanel({
+  id,
+  branchId,
+  onClose,
+  onSaved,
+}: {
+  id: number | null;
+  branchId: number | null;
+  onClose: () => void;
+  onSaved: (id: number) => void;
+}) {
+  const t = useTranslations("organization.warehouses");
+  const branches = useBranchList();
+  const warehouses = useWarehouses();
+  const employees = useEmployees();
+  const create = useCreateWarehouseCard();
+  const update = useUpdateWarehouseCard();
+  const warehouse = id == null ? null : (warehouses.data?.find((w) => w.id === id) ?? null);
+  if (!branches.data || !warehouses.data || (id != null && !warehouse)) return null;
   return (
-    <li className="flex items-start gap-3">
-      <div className="flex-1">
-        <TextField
-          label={t(zone.sellable ? "zoneLabel" : "zoneLabelClosed", { zone: t(`zone.${zone.type}`) })}
-          size="sm"
-          value={name}
-          onChange={setName}
-          error={err.fields.name ?? err.message ?? undefined}
-        />
-      </div>
-      {changed ? (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="mt-6"
-          loading={rename.isPending}
-          onClick={() =>
-            rename.mutate(
-              { id: warehouseId, zoneId: zone.id, name: name.trim() },
-              { onSuccess: () => toast({ tone: "success", title: t("warehouses.zoneRenamed"), description: name.trim() }) },
-            )
-          }
-        >
-          {t("warehouses.saveName")}
-        </Button>
-      ) : null}
-    </li>
+    <WarehousePanel
+      open
+      warehouse={warehouse}
+      presetBranchId={branchId}
+      branches={branches.data}
+      employees={employees.data ?? []}
+      onClose={onClose}
+      onSave={async (body) => {
+        const saved = warehouse ? await update.mutateAsync({ id: warehouse.id, body }) : await create.mutateAsync(body);
+        toast({ tone: "success", title: warehouse ? t("saved") : t("added"), description: saved.name });
+        onSaved(saved.id);
+      }}
+    />
   );
 }

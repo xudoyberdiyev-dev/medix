@@ -106,6 +106,9 @@ function MatrixEditor({ data, mode, onSaved }: { data: Matrix; mode: "wizard" | 
   // Dinamik kalitlar (ruxsat, modul, rol kodi) — mavjudligi `has` bilan tekshiriladi
   const tx = t as unknown as { (key: string, values?: Record<string, string | number>): string; has: (key: string) => boolean };
   const qc = useQueryClient();
+  const me = useMe();
+  // Rol doirasini faqat Direktor oʻzgartiradi (E14); server ham tekshiradi
+  const scopeLocked = me.data?.role.code !== DIRECTOR;
   const employees = useEmployees();
   const branches = useBranches();
   const perms: MatrixPermission[] = data.permissions;
@@ -619,7 +622,8 @@ function MatrixEditor({ data, mode, onSaved }: { data: Matrix; mode: "wizard" | 
               options={scopeOpts}
               value={panel.scope}
               onChange={(v) => setPanel({ ...panel, scope: v ?? "own" })}
-              disabled={panelRole?.code === DIRECTOR}
+              disabled={panelRole?.code === DIRECTOR || scopeLocked}
+              hint={scopeLocked && panelRole?.code !== DIRECTOR ? t("matrix.scopeDirectorOnly") : undefined}
             />
             <Select
               label={t("matrix.pHome")}

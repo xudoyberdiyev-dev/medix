@@ -2,7 +2,9 @@ package uz.medix.finance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -356,6 +358,25 @@ class CashIT {
         send(post("/api/cash-ops"), cashier, op(b, k, "IN", "Boshqa kirim", "1", null)).andExpect(jsonPath("$.code").value("money.dayClosed"));
         send(post("/api/cash-ops"), cashier, op(b, t, "IN", "Boshqa kirim", "5", null)).andExpect(status().isCreated());
         assertThatThrownBy(() -> jdbc.sql("DELETE FROM cash_day_close WHERE account_id = :a").param("a", k).update()).isNotNull();
+    }
+
+    /** Kassa sahifasi filial tanlanmaganda (prototip Cash): barcha ochiq filiallar hisoblari; boshqa filial — koʻrinmaydi. */
+    @Test
+    void allAccountsRespectBranchScope() throws Exception {
+        long b1 = branch();
+        long b2 = branch();
+        Cookie director = loginAs("DIRECTOR", b1).cookie();
+        long k1 = account(director, b1, 0);
+        long k2 = account(director, b2, 0);
+        mvc.perform(get("/api/money-accounts/all").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].id", hasItem((int) k1)))
+                .andExpect(jsonPath("$[*].id", hasItem((int) k2)));
+        Cookie cashier = loginAs("CASHIER", b1).cookie();
+        mvc.perform(get("/api/money-accounts/all").cookie(cashier))
+                .andExpect(jsonPath("$[*].id", hasItem((int) k1)))
+                .andExpect(jsonPath("$[*].id", not(hasItem((int) k2))));
+        mvc.perform(get("/api/money-accounts/all").cookie(loginAs("PICKER", b1).cookie())).andExpect(status().isForbidden());
     }
 
     @Test

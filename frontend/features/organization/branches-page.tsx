@@ -4,6 +4,7 @@ import { Building2, CircleCheck, CirclePause, Pencil, Plus, Power, PowerOff } fr
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
@@ -15,10 +16,12 @@ import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
+import { formatMoney, formatQuantity } from "@/lib/format";
 import {
   filterBranches,
   useActivateBranch,
   useBranchList,
+  useBranchStats,
   useCreateBranch,
   useDeactivateBranch,
   useUpdateBranch,
@@ -43,6 +46,7 @@ export function BranchesPage() {
   const t = useTranslations("organization");
   const me = useMe();
   const branches = useBranchList();
+  const stats = useBranchStats();
   const activate = useActivateBranch();
   const deactivate = useDeactivateBranch();
   const [query, setQuery] = useState("");
@@ -52,28 +56,69 @@ export function BranchesPage() {
   if (me.data && !can(me.data, "branches.view")) return <ForbiddenState description={t("branches.forbidden")} />;
 
   const rows = filterBranches(branches.data ?? [], query);
+  const statOf = (id: number) => stats.data?.find((x) => x.branchId === id);
+  const showDebt = (stats.data ?? []).some((x) => x.customerDebt != null);
   const columns: TableColumn<Branch>[] = [
     { key: "code", title: t("code"), mono: true, width: 80 },
-    {
-      key: "name",
-      title: t("branch"),
-      render: (b) => (
-        <span className="flex flex-col">
-          <span>{b.name}</span>
-          <span className="text-caption text-text-secondary">{b.legalName}</span>
-        </span>
-      ),
-    },
+    { key: "name", title: t("branch"), render: (b) => <span className="font-medium">{b.name}</span> },
     { key: "tin", title: t("tin"), mono: true },
-    { key: "phone", title: t("phone") },
-    { key: "address", title: t("address") },
+    {
+      key: "head",
+      title: t("branches.head"),
+      render: (b) => {
+        const head = statOf(b.id)?.headName;
+        return head ? (
+          <span className="flex items-center gap-2">
+            <Avatar name={head} size="sm" decorative />
+            {head}
+          </span>
+        ) : (
+          <span className="text-text-secondary">{t("branches.noHead")}</span>
+        );
+      },
+    },
+    {
+      key: "warehouses",
+      title: t("branches.warehousesCol"),
+      align: "right",
+      render: (b) => <span className="tabular">{formatQuantity(statOf(b.id)?.warehouses ?? 0)}</span>,
+    },
+    {
+      key: "employees",
+      title: t("branches.employeesCol"),
+      align: "right",
+      render: (b) => <span className="tabular">{formatQuantity(statOf(b.id)?.employees ?? 0)}</span>,
+    },
+    ...(showDebt
+      ? [
+          {
+            key: "debt",
+            title: t("branches.customerDebt"),
+            align: "right" as const,
+            render: (b: Branch) => {
+              const d = statOf(b.id)?.customerDebt;
+              return <span className="tabular">{d ? formatMoney(d) : "—"}</span>;
+            },
+          },
+        ]
+      : []),
     { key: "active", title: t("status"), render: (b) => <BranchStatus active={b.active} /> },
   ];
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">{t("branches.title")}</h1>
+        <div className="min-w-0">
+          <h1 className="flex items-baseline gap-2 text-page-title">
+            {t("branches.title")}
+            {branches.data ? (
+              <span className="text-body font-normal text-text-secondary tabular-nums" aria-label={t("branches.countLabel")}>
+                {formatQuantity(branches.data.length)}
+              </span>
+            ) : null}
+          </h1>
+          <p className="mt-1 text-body text-text-secondary">{t("branches.codeNote")}</p>
+        </div>
         <Button icon={Plus} onClick={() => setEditing("new")}>
           {t("branches.add")}
         </Button>
@@ -227,7 +272,7 @@ function BranchDrawer({ branch, onClose }: { branch: Branch | null; onClose: () 
           error={err.fields.code}
           hint={branch ? t("branches.codeHintLocked") : t("branches.codeHintNew")}
           disabled={Boolean(branch)}
-          maxLength={3}
+          maxLength={4}
           required
         />
         <TextField
