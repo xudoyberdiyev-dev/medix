@@ -52,6 +52,8 @@ export interface NavItem {
   also?: string[];
   /** Panel bandi — faqat bosh sahifasi shu panel boʻlgan rolga koʻrinadi (prototip: Monitor/Yigʻish/Markirovka/Reysim — oʻz rollari uchun). */
   panel?: string;
+  /** Yorliqli band: manzil — foydalanuvchiga ruxsatli birinchi yorliq (masalan, Xarid uchun «Qaytarish» → YB ga qaytarish). */
+  hub?: HubKey;
   /** Faqat aynan shu manzilda faol (ichki sahifalarning oʻz bandi bor — masalan, Sozlamalar va Boshqaruv bandlari). */
   exact?: boolean;
 }
@@ -61,6 +63,50 @@ export interface NavGroup {
   key?: NavGroupKey;
   title?: string;
   items: NavItem[];
+}
+
+export type HubTabKey =
+  | "transfersWarehouse"
+  | "transfersZone"
+  | "transfersBranch"
+  | "returnsWriteOffs"
+  | "returnsSupplier"
+  | "supplierDebtsDebts"
+  | "supplierDebtsBonus";
+
+export interface HubTab {
+  key: HubTabKey;
+  href: string;
+  anyOf: string[];
+}
+
+/** Bitta menyu bandi ostidagi sahifalar (prototip: «Koʻchirish», «Qaytarish va hisobdan chiqarish», YB qarzi → Bonus balans). */
+export const HUBS = {
+  transfers: [
+    {
+      key: "transfersWarehouse",
+      href: "/warehouse-transfers",
+      anyOf: ["transfer.view", "transfer.ok", "transfer.send", "transfer.receive"],
+    },
+    { key: "transfersZone", href: "/zone-transfers", anyOf: ["transfer.view", "transfer.zk", "transfer.quar"] },
+    { key: "transfersBranch", href: "/branch-sales", anyOf: ["transfer.view", "transfer.fs", "transfer.send", "transfer.receive"] },
+  ],
+  returns: [
+    { key: "returnsWriteOffs", href: "/write-offs", anyOf: ["hc.view", "hc.create", "hc.approve"] },
+    { key: "returnsSupplier", href: "/supplier-returns", anyOf: ["qy.view", "qy.create", "qy.approve"] },
+  ],
+  supplierDebts: [
+    { key: "supplierDebtsDebts", href: "/debts/suppliers", anyOf: ["sdebt.view"] },
+    { key: "supplierDebtsBonus", href: "/bonuses", anyOf: ["sdebt.view", "supplierBonus.confirm"] },
+  ],
+} satisfies Record<string, HubTab[]>;
+
+export type HubKey = keyof typeof HUBS;
+
+/** Ruxsat boʻyicha koʻrinadigan yorliqlar (bittasi qolsa — yorliq qatori koʻrsatilmaydi). */
+export function hubTabsFor(hub: HubKey, permissions: string[] | undefined): HubTab[] {
+  if (!permissions) return [];
+  return HUBS[hub].filter((t) => t.anyOf.some((k) => permissions.includes(k)));
 }
 
 /** Koʻchirishning uch turi — bitta «Koʻchirish» bandi, sahifalarda yorliqlar. */
@@ -113,6 +159,7 @@ export const navigation: NavGroup[] = [
         label: "Koʻchirish",
         href: TRANSFER_PAGES[0],
         also: [...TRANSFER_PAGES],
+        hub: "transfers",
         icon: ArrowLeftRight,
         anyOf: ["transfer.view", "transfer.zk", "transfer.quar", "transfer.ok", "transfer.fs", "transfer.send", "transfer.receive"],
       },
@@ -128,6 +175,7 @@ export const navigation: NavGroup[] = [
         label: "Qaytarish va hisobdan chiqarish",
         href: RETURN_PAGES[0],
         also: [...RETURN_PAGES],
+        hub: "returns",
         icon: PackageMinus,
         anyOf: ["hc.view", "hc.create", "hc.approve", "qy.view", "qy.create", "qy.approve"],
       },
@@ -147,6 +195,7 @@ export const navigation: NavGroup[] = [
         label: "Yetkazib beruvchilar qarzi",
         href: "/debts/suppliers",
         also: ["/bonuses"],
+        hub: "supplierDebts",
         icon: ReceiptText,
         anyOf: ["sdebt.view", "supplierBonus.confirm"],
       },
@@ -211,9 +260,9 @@ export function navigationFor(permissions: string[] | undefined, home?: string):
   return navigation
     .map((g) => ({
       ...g,
-      items: g.items.filter(
-        (i) => (!i.panel || home === undefined || i.panel === home) && (!i.anyOf || i.anyOf.some((k) => permissions.includes(k))),
-      ),
+      items: g.items
+        .filter((i) => (!i.panel || home === undefined || i.panel === home) && (!i.anyOf || i.anyOf.some((k) => permissions.includes(k))))
+        .map((i) => (i.hub ? { ...i, href: hubTabsFor(i.hub, permissions)[0]?.href ?? i.href } : i)),
     }))
     .filter((g) => g.items.length > 0);
 }

@@ -46,3 +46,17 @@ describe("ruxsatga qarab menyu", () => {
     expect(isNavActive("/orders", item("home"))).toBe(false);
   });
 });
+
+describe("yorliqli bandlar", () => {
+  const href = (perms: string[], key: string) =>
+    navigationFor(perms)
+      .flatMap((g) => g.items)
+      .find((i) => i.key === key)?.href;
+
+  it("manzil — ruxsatli birinchi yorliq", () => {
+    expect(href(["qy.view"], "returns")).toBe("/supplier-returns");
+    expect(href(["hc.view", "qy.view"], "returns")).toBe("/write-offs");
+    expect(href(["supplierBonus.confirm"], "supplier-debts")).toBe("/bonuses");
+    expect(href(["transfer.zk"], "transfers")).toBe("/zone-transfers");
+  });
+});
