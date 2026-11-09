@@ -88,6 +88,7 @@ export function MoneyOpPage() {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => formatIsoDate(todayTashkent()));
   const [party, setParty] = useState("");
+  const [baseNo, setBaseNo] = useState("");
   const [note, setNote] = useState("");
   const [tried, setTried] = useState(false);
   const [vsOpen, setVsOpen] = useState(false);
@@ -166,6 +167,7 @@ export function MoneyOpPage() {
               opDate: dateIso,
               party: party.trim() || undefined,
               note: note.trim() || undefined,
+              baseNo: baseNo.trim() || undefined,
             },
           }),
         );
@@ -336,6 +338,7 @@ export function MoneyOpPage() {
                       />
                     </div>
                     <TextField label={tc(`op.party.${dir}`)} value={party} onChange={setParty} maxLength={200} />
+                    <TextField label={t("hBase")} value={baseNo} onChange={setBaseNo} placeholder="AV-0412" maxLength={40} />
                   </>
                 ) : null}
                 <label className="flex flex-col gap-1.5 md:col-span-2">

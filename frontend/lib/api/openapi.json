@@ -15829,6 +15829,9 @@
           "approvedBy" : {
             "type" : "string"
           },
+          "baseNo" : {
+            "type" : "string"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -15907,6 +15910,12 @@
             "type" : "string",
             "description" : "Summa, masalan «250000.00»",
             "maxLength" : 24,
+            "minLength" : 0
+          },
+          "baseNo" : {
+            "type" : "string",
+            "description" : "Asos hujjat № (ixtiyoriy)",
+            "maxLength" : 40,
             "minLength" : 0
           },
           "branchId" : {

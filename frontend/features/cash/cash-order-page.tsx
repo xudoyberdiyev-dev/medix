@@ -91,6 +91,12 @@ export function CashOrderPage() {
         <dd>{o.party ?? "—"}</dd>
         <dt className="text-text-secondary">Asos (modda)</dt>
         <dd>{o.item}</dd>
+        {o.baseNo ? (
+          <>
+            <dt className="text-text-secondary">Asos hujjat №</dt>
+            <dd className="font-mono">{o.baseNo}</dd>
+          </>
+        ) : null}
         <dt className="text-text-secondary">Hisob</dt>
         <dd>{o.account}</dd>
         <dt className="text-text-secondary">Summa</dt>

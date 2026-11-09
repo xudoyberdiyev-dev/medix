@@ -6765,6 +6765,7 @@ export interface components {
             /** Format: date-time */
             approvedAt?: string;
             approvedBy?: string;
+            baseNo?: string;
             /** Format: int64 */
             branchId: number;
             cancelReason?: string;
@@ -6799,6 +6800,8 @@ export interface components {
             accountId: number;
             /** @description Summa, masalan «250000.00» */
             amount: string;
+            /** @description Asos hujjat № (ixtiyoriy) */
+            baseNo?: string;
             /** Format: int64 */
             branchId: number;
             /** @enum {string} */
