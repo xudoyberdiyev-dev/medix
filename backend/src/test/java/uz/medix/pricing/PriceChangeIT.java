@@ -234,6 +234,34 @@ class PriceChangeIT {
     }
 
     @Test
+    void priceGridShowsCurrentAndNextPrice() throws Exception {
+        long branch = branch();
+        long p = product("Grid narx sinov");
+        long base = type("BASE");
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        String tomorrow = LocalDate.parse(today()).plusDays(3).toString();
+        for (String[] x : new String[][] {{today(), "7000"}, {tomorrow, "7700"}}) {
+            long doc = id(mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + x[0]
+                            + "\",\"lines\":[{\"productId\":" + p + ",\"priceTypeId\":" + base + ",\"newPrice\":\"" + x[1] + "\"}]}"))
+                    .andExpect(status().isCreated())
+                    .andReturn());
+            mvc.perform(post("/api/price-changes/" + doc + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+        }
+        String row = "$.items[?(@.productId == " + p + ")]";
+        mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.batchLinked").value(false))
+                .andExpect(jsonPath(row + ".currentPrice").value(contains("7000.00")))
+                .andExpect(jsonPath(row + ".basePrice").value(contains("7000.00")))
+                .andExpect(jsonPath(row + ".nextPrice").value(contains("7700.00")))
+                .andExpect(jsonPath(row + ".nextFrom").value(contains(tomorrow)))
+                .andExpect(jsonPath(row + ".vatRate").value(contains("12")));
+        Cookie operator = loginAs("OPERATOR", branch);
+        mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(operator))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void validationsAndCancel() throws Exception {
         long branch = branch();
         long other = branch();

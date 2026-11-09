@@ -31,6 +31,8 @@ import uz.medix.pricing.change.PriceChangeModels.PriceChangeDetail;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeRequest;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeSummary;
+import uz.medix.pricing.change.PriceChangeModels.PriceGrid;
+import uz.medix.pricing.change.PriceChangeModels.PriceGridRow;
 import uz.medix.pricing.change.PriceChangeModels.PricePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceRow;
 import uz.medix.pricing.change.PriceChangeModels.PriceSort;
@@ -98,6 +100,50 @@ class PriceChanges {
                 .query((rs, n) -> m.put(rs.getLong("product_id") + ":" + rs.getLong("price_type_id"), new Money(rs.getBigDecimal("amount"))))
                 .list();
         return m;
+    }
+
+    /** «Narx o'rnatish» jadvali: faol mahsulotlar, amaldagi va kelgusi narx, bazaviy narx, kirim narxlari (ruxsat bo'lsa). */
+    @Transactional(readOnly = true)
+    PriceGrid grid(Actor actor, long branchId, long priceTypeId, boolean showCost) {
+        branchCode(actor, branchId);
+        checkPriceType(priceTypeId);
+        record Type(String name, boolean batch) {}
+        Type type = jdbc.sql("SELECT name, batch FROM price_type WHERE id = :id")
+                .param("id", priceTypeId).query(Type.class).single();
+        long baseType = jdbc.sql("SELECT id FROM price_type WHERE base").query(Long.class).single();
+        record P(long id, String code, String name, String manufacturer, String country, String category, String supplyEmployee,
+                String searchText, BigDecimal vatRate) {}
+        List<P> prods = jdbc.sql("""
+                SELECT p.id, p.code, p.name, m.name AS manufacturer, co.name AS country, c.name AS category, e.full_name AS supply_employee,
+                       coalesce(p.search_text, '') AS search_text, p.vat_rate
+                FROM product p LEFT JOIN manufacturer m ON m.id = p.manufacturer_id LEFT JOIN country co ON co.id = p.country_id
+                     LEFT JOIN category c ON c.id = p.category_id LEFT JOIN employee e ON e.id = p.supply_employee_id
+                WHERE p.active ORDER BY lower(p.name), p.id LIMIT 5000""").query(P.class).list();
+        List<Long> ids = prods.stream().map(P::id).toList();
+        LocalDate today = today();
+        Map<String, Money> current = currentPrices(branchId, ids, today);
+        record Next(long productId, BigDecimal amount, Date effectiveFrom) {}
+        Map<Long, Next> next = new HashMap<>();
+        if (!ids.isEmpty()) {
+            jdbc.sql("""
+                    SELECT DISTINCT ON (product_id) product_id, amount, effective_from FROM price
+                    WHERE branch_id = :b AND price_type_id = :t AND effective_from > :d
+                    ORDER BY product_id, effective_from, id DESC""")
+                    .param("b", branchId).param("t", priceTypeId).param("d", Date.valueOf(today))
+                    .query(Next.class).list().forEach(n -> next.put(n.productId(), n));
+        }
+        Map<Long, Money> avg = showCost ? costs.averageCost(branchId, ids) : Map.of();
+        Map<Long, Money> last = showCost ? costs.lastReceiptCost(branchId, ids) : Map.of();
+        Map<Long, Money> limit = showCost ? costs.maxCost(branchId, ids) : Map.of();
+        List<PriceGridRow> rows = new ArrayList<>(prods.size());
+        for (P p : prods) {
+            Next n = next.get(p.id());
+            rows.add(new PriceGridRow(p.id(), p.code(), p.name(), p.manufacturer(), p.country(), p.category(), p.supplyEmployee(), p.searchText(),
+                    p.vatRate().stripTrailingZeros().toPlainString(), str(current.get(p.id() + ":" + priceTypeId)),
+                    n == null ? null : new Money(n.amount()).toString(), n == null ? null : n.effectiveFrom().toLocalDate(),
+                    str(current.get(p.id() + ":" + baseType)), str(avg.get(p.id())), str(last.get(p.id())), str(limit.get(p.id()))));
+        }
+        return new PriceGrid(branchId, priceTypeId, type.name(), type.batch(), showCost, rows);
     }
 
     @Transactional(readOnly = true)

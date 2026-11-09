@@ -115,6 +115,22 @@ final class PriceChangeModels {
     /** Narxlar jadvali saralash ustuni (SPEC 4 «Jadvallar standarti»). */
     enum PriceSort { CODE, NAME, MANUFACTURER }
 
+    /** «Narx o'rnatish» sahifasi (prototip Prices → set, «Mahsulot bo'yicha»): faol mahsulot × tanlangan narx turi. */
+    record PriceGridRow(long productId, String code, String name, @Schema(nullable = true) String manufacturer,
+            @Schema(nullable = true) String country, @Schema(nullable = true) String category,
+            @Schema(nullable = true) String supplyEmployee, @Schema(description = "Qidiruv matni (lotin, normallashgan)") String searchText,
+            @Schema(description = "QQS stavkasi, %") String vatRate,
+            @Schema(nullable = true, description = "Bugun amaldagi narx (QQS bilan)") String currentPrice,
+            @Schema(nullable = true, description = "Kelgusi (rejalashtirilgan) narx") String nextPrice,
+            @Schema(nullable = true) LocalDate nextFrom,
+            @Schema(nullable = true, description = "Bazaviy tur narxi") String basePrice,
+            @Schema(nullable = true, description = "O'rtacha kirim narxi — faqat special.cost bilan") String avgCost,
+            @Schema(nullable = true, description = "Oxirgi kirim narxi — faqat special.cost bilan") String lastCost,
+            @Schema(nullable = true, description = "Tannarx chegarasi (qoldiqdagi eng yuqori) — faqat special.cost bilan") String costLimit) {}
+
+    record PriceGrid(long branchId, long priceTypeId, String priceTypeName, boolean batchLinked,
+            @Schema(description = "Tannarx ustunlari ko'rinadimi (special.cost)") boolean showCost, List<PriceGridRow> items) {}
+
     /** «Kirim bo'yicha» rejimi: o'tkazilgan kirim partiyasi va uning amaldagi partiya narxlari. */
     record ReceiptBatch(
             long batchId,

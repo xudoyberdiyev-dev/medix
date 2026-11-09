@@ -29,6 +29,7 @@ import uz.medix.pricing.change.PriceChangeModels.PinRequest;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeDetail;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeRequest;
+import uz.medix.pricing.change.PriceChangeModels.PriceGrid;
 import uz.medix.pricing.change.PriceChangeModels.PricePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceSort;
 import uz.medix.pricing.change.PriceChangeModels.ReceiptBatches;
@@ -85,6 +86,13 @@ class PriceChangeController {
         }
         return changes.prices(branchId, q, manufacturerId, at == null ? changes.today() : at, sort, desc, Math.max(page, 0),
                 Math.clamp(size, 1, 200));
+    }
+
+    @GetMapping("/prices/grid")
+    @PreAuthorize(SET_PRICES)
+    @Operation(summary = "«Narx o'rnatish» jadvali", description = "Faol mahsulotlar × narx turi: amaldagi, kelgusi, bazaviy narx; kirim narxlari — faqat special.cost bilan.")
+    PriceGrid grid(@RequestParam long branchId, @RequestParam long priceTypeId, Authentication auth) {
+        return changes.grid(actor(), branchId, priceTypeId, auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority())));
     }
 
     @GetMapping("/prices/export")
