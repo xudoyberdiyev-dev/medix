@@ -315,5 +315,58 @@
       "accepted": "Pul qabul qilindi",
       "done": "{n} ta MT yozildi · {s} soʻm"
     }
+  },
+  "doc": {
+    "title": {
+      "ko": "Kassa operatsiyasi",
+      "bo": "Bank operatsiyasi",
+      "io": "Hisoblar orasida oʻtkazma"
+    },
+    "crumbNew": "Yangi hujjat",
+    "st_draft": "Qoralama",
+    "secOp": "Operatsiya",
+    "secOpD": "Qaysi hisobdan, qancha va qaysi modda boʻyicha.",
+    "secIo": "Oʻtkazma",
+    "secIoD": "Pul bir hisobdan ikkinchisiga oʻtadi — filial puli jami oʻzgarmaydi.",
+    "dir": "Yoʻnalish",
+    "ioType": "Oʻtkazma turi",
+    "io_k2b": "Kassa → bank",
+    "io_b2k": "Bank → kassa",
+    "io_k2k": "Kassa → kassa",
+    "io_t2b": "Terminal → bank",
+    "hCash": "Kassa",
+    "hBank": "Bank hisobi",
+    "hFrom": "Qaysi hisobdan",
+    "hTo": "Qaysi hisobga",
+    "hDate": "Sana",
+    "hSum": "Summa",
+    "hNote": "Izoh",
+    "bal": "Qoldiq: ",
+    "useMt": "Mijozdan pul qabul qilish — «Kirim toʻlovi (MT)» orqali",
+    "sideT": "Hisob qoldigʻi",
+    "now": "Hozir",
+    "after": "Amaldan keyin",
+    "totalNote": "Filial puli jami: {s} soʻm — oʻtkazmada oʻzgarmaydi.",
+    "rule": "Kassadan {s} soʻmdan katta chiqim — Filial rahbari tasdiqlagach oʻtkaziladi.",
+    "short": "Hisobda pul yetmaydi: qoldiq {s} soʻm. Summani kamaytiring yoki boshqa hisobni tanlang.",
+    "post": "Oʻtkazish",
+    "send": "Tasdiqqa yuborish",
+    "back": "Orqaga",
+    "noAccounts": "Bu filialda mos hisob yoʻq. Sozlamalar → Hisoblar boʻlimida qoʻshing.",
+    "forbidden": "Bu hujjatni yaratishga ruxsatingiz yoʻq.",
+    "vsTitle": "{n, plural, one {# ta xato} other {# ta xato}} — tuzating",
+    "vsSub": "Xatoga bosing — maydonga oʻtadi.",
+    "close": "Yopish",
+    "e": {
+      "acct": "Hisobni tanlang.",
+      "from": "Qaysi hisobdan — tanlang.",
+      "to": "Qaysi hisobga — tanlang.",
+      "same": "Bitta hisobdan oʻziga oʻtkazib boʻlmaydi. Boshqa hisobni tanlang.",
+      "item": "Moddani tanlang.",
+      "sum": "Summani kiriting.",
+      "sumPos": "Summa 0 dan katta boʻlsin.",
+      "date": "Sana notoʻgʻri. Masalan: 04.10.2026.",
+      "future": "Kelajak sana boʻlmaydi. Bugungi yoki oldingi sanani kiriting."
+    }
   }
 }

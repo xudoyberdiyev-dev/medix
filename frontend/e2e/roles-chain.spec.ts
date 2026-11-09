@@ -434,15 +434,17 @@ test("Kassir: oʻz kassasiga kirim va katta chiqim — tasdiqqa", async ({ page 
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/cash");
   await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
-  await choose(page, "Yoʻnalish", /^Kirim$/);
-  await choose(page, "Hisob", /Kassa 2/);
+  await expect(page).toHaveURL(/\/cash\/ops\/new\?kind=ko/);
+  await page.getByRole("radio", { name: "Kirim" }).click();
+  await choose(page, "Kassa", /Kassa 2/);
   await choose(page, "Kirim moddasi", /Boshqa kirim/);
   await field(page, "Summa").fill("3.000.000,00");
-  await page.getByRole("button", { name: "Yozish" }).click();
+  await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Kirim yozildi").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/cash$/);
 
   await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
-  await choose(page, "Hisob", /Kassa 2/);
+  await choose(page, "Kassa", /Kassa 2/);
   await choose(page, "Xarajat moddasi", /Ijara/);
   await field(page, "Summa").fill("2.500.000,00");
   await field(page, "Summa").press("Tab");

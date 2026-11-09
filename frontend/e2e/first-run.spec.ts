@@ -533,16 +533,18 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
 
   // Boshqa kirim — darhol oʻtkaziladi
   await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
-  await choose(page, "Yoʻnalish", /^Kirim$/);
-  await choose(page, "Hisob", /Asosiy kassa/);
+  await expect(page).toHaveURL(/\/cash\/ops\/new\?kind=ko/);
+  await page.getByRole("radio", { name: "Kirim" }).click();
+  await choose(page, "Kassa", /Asosiy kassa/);
   await choose(page, "Kirim moddasi", /Boshqa kirim/);
   await field(page, "Summa").fill("3.000.000,00");
-  await page.getByRole("button", { name: "Yozish" }).click();
+  await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Kirim yozildi").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/cash$/);
 
   // 2 000 000 dan katta chiqim — tasdiqqa; Direktor tasdiqlaydi
   await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
-  await choose(page, "Hisob", /Asosiy kassa/);
+  await choose(page, "Kassa", /Asosiy kassa/);
   await choose(page, "Xarajat moddasi", /Ijara/);
   await field(page, "Summa").fill("2.500.000,00");
   await field(page, "Summa").press("Tab");

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { ArrowLeftRight, Banknote, Landmark, LockKeyhole, Plus, UserRound } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,7 +19,6 @@ import { BankReconTab } from "@/features/cash/bank-recon";
 import { AccountDialog } from "@/features/cash/account-dialog";
 import { CashierDialog } from "@/features/cash/cashier-dialog";
 import { CloseDrawer } from "@/features/cash/close-drawer";
-import { CashOpDialog, TransferDialog } from "@/features/cash/op-dialogs";
 import { useBranchStore } from "@/lib/stores/branch";
 import { AccountCard, DriverCashSection } from "@/features/cash/cash-list";
 import { sumMoney } from "@/features/cash/list-model";
@@ -57,7 +56,8 @@ export function CashPage() {
   // Xarajatlar hisobotidan: ?tab=ops&expenseItemId=… — KO/BO roʻyxati shu modda va davr bilan
   const [opsFilter, setOpsFilter] = useState(() => opsFilterFromParams(params));
   const [tab, setTab] = useState(() => (params.get("tab") === "ops" ? "ops" : "statement"));
-  const [dialog, setDialog] = useState<"op" | "io" | "close" | "cashiers" | "account" | null>(null);
+  const [dialog, setDialog] = useState<"close" | "cashiers" | "account" | null>(null);
+  const router = useRouter();
   const canIo = can(me.data, CASH_IO);
   const canClose = can(me.data, CASH_CLOSE);
   const canBank = can(me.data, "bank.view");
@@ -107,10 +107,15 @@ export function CashPage() {
           ) : null}
           {canIo ? (
             <>
-              <Button variant="secondary" icon={ArrowLeftRight} disabled={usable.length < 2} onClick={() => setDialog("io")}>
+              <Button
+                variant="secondary"
+                icon={ArrowLeftRight}
+                disabled={usable.length < 2}
+                onClick={() => router.push(`/cash/ops/new?kind=io${actionDefault != null ? `&acct=${actionDefault}` : ""}`)}
+              >
                 {t("transfer")}
               </Button>
-              <Button icon={Plus} disabled={usable.length === 0} onClick={() => setDialog("op")}>
+              <Button icon={Plus} disabled={usable.length === 0} onClick={() => router.push(opHref(usable, actionDefault))}>
                 {t("op")}
               </Button>
             </>
@@ -169,11 +174,7 @@ export function CashPage() {
               <ClosesTab branchId={branchId} />
             )}
           </div>
-          {dialog === "op" ? (
-            <CashOpDialog branchId={branchId} accounts={usable} defaultAccount={actionDefault} onClose={() => setDialog(null)} />
-          ) : dialog === "io" ? (
-            <TransferDialog branchId={branchId} accounts={usable} defaultFrom={actionDefault} onClose={() => setDialog(null)} />
-          ) : dialog === "close" ? (
+          {dialog === "close" ? (
             <CloseDrawer accounts={usable} defaultAccount={actionDefault} onClose={() => setDialog(null)} />
           ) : dialog === "account" ? (
             <AccountDialog branchId={branchId} onClose={() => setDialog(null)} />
@@ -184,4 +185,10 @@ export function CashPage() {
       ) : null}
     </div>
   );
+}
+
+/** «Kassa operatsiyasi»: tanlangan hisob kassa boʻlsa — KO, bank/terminal — BO (prototip `MoneyOpDoc`). */
+function opHref(usable: { id: number; kind: string }[], acct: number | null): string {
+  const a = usable.find((x) => x.id === acct);
+  return `/cash/ops/new?kind=${a && a.kind !== "CASH" ? "bo" : "ko"}${a ? `&acct=${a.id}` : ""}`;
 }
