@@ -20,6 +20,7 @@ import uz.medix.finance.PartyLedger.Side;
 import uz.medix.finance.account.Accounts;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocation;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocationRequest;
+import uz.medix.finance.payment.PaymentModels.BankRefs;
 import uz.medix.finance.payment.PaymentModels.OpenDocView;
 import uz.medix.finance.payment.PaymentModels.DocPayment;
 import uz.medix.finance.payment.PaymentModels.DocPaymentLine;
@@ -132,7 +133,7 @@ class Payments implements CustomerPayments {
 
     // ===== Qoralama =====
 
-    private record Checked(long branchId, long customerId, long accountId, LocalDate date, Money amount, String note) {}
+    private record Checked(long branchId, long customerId, long accountId, LocalDate date, Money amount, String note, BankRefs refs) {}
 
     private Checked check(Actor actor, PaymentRequest r) {
         if (!actor.canAccessBranch(r.branchId())) {
@@ -161,7 +162,7 @@ class Payments implements CustomerPayments {
             throw MedixException.badRequest("payment.dateFuture");
         }
         String note = r.note() == null || r.note().isBlank() ? null : r.note().strip();
-        return new Checked(r.branchId(), r.customerId(), acc.id(), date, amount, note);
+        return new Checked(r.branchId(), r.customerId(), acc.id(), date, amount, note, BankRefs.of(r.payOrderNo(), r.bankDate(), r.checkNo()));
     }
 
     @Transactional
@@ -173,8 +174,12 @@ class Payments implements CustomerPayments {
         String branchCode = jdbc.sql("SELECT code FROM branch WHERE id = :b").param("b", c.branchId()).query(String.class).single();
         String number = numbers.next(DocumentPrefix.MT, branchCode).toString();
         long id = jdbc.sql("""
-                INSERT INTO customer_payment (number, branch_id, customer_id, account_id, payment_date, amount, source, source_ref, note, created_by)
-                VALUES (:n, :b, :c, :a, :d, :amt, :src, :ref, :note, :by) RETURNING id""")
+                INSERT INTO customer_payment (number, branch_id, customer_id, account_id, payment_date, amount, source, source_ref, note, created_by,
+                                              pay_order_no, bank_date, check_no)
+                VALUES (:n, :b, :c, :a, :d, :amt, :src, :ref, :note, :by, :pon, :bd, :chk) RETURNING id""")
+                .param("pon", c.refs().payOrderNo())
+                .param("bd", c.refs().bankDate() == null ? null : Date.valueOf(c.refs().bankDate()))
+                .param("chk", c.refs().checkNo())
                 .param("n", number)
                 .param("b", c.branchId())
                 .param("c", c.customerId())
@@ -219,7 +224,10 @@ class Payments implements CustomerPayments {
         }
         jdbc.sql("""
                 UPDATE customer_payment SET customer_id = :c, account_id = :a, payment_date = :d, amount = :amt, note = :note, updated_at = now(),
-                       version = version + 1 WHERE id = :id""")
+                       pay_order_no = :pon, bank_date = :bd, check_no = :chk, version = version + 1 WHERE id = :id""")
+                .param("pon", c.refs().payOrderNo())
+                .param("bd", c.refs().bankDate() == null ? null : Date.valueOf(c.refs().bankDate()))
+                .param("chk", c.refs().checkNo())
                 .param("c", c.customerId())
                 .param("a", c.accountId())
                 .param("d", Date.valueOf(c.date()))
@@ -357,7 +365,7 @@ class Payments implements CustomerPayments {
         Accounts.Account acc = accounts.find(accountId)
                 .filter(a -> a.branchId() == branchId && a.active() && a.kind() == Accounts.Kind.CASH)
                 .orElseThrow(() -> MedixException.badRequest("payment.cashAccountRequired"));
-        Checked c = new Checked(branchId, customerId, acc.id(), today(), amount, note);
+        Checked c = new Checked(branchId, customerId, acc.id(), today(), amount, note, BankRefs.NONE);
         long id = insert(actor, c, PaymentSource.DRIVER, sourceRef);
         Head h = lock(actor, id);
         doPost(actor, h, null);
@@ -369,7 +377,8 @@ class Payments implements CustomerPayments {
     private static final String SUMMARY = """
             SELECT p.id, p.number, p.branch_id, p.customer_id, c.name AS customer, c.tin AS customer_tin, p.account_id, a.name AS account,
                    a.kind AS account_kind, p.payment_date, p.amount, p.advance, p.status, p.source, p.source_ref, p.note, cb.full_name AS created_by,
-                   p.created_at, pb.full_name AS posted_by, p.posted_at, xb.full_name AS cancelled_by, p.cancelled_at, p.cancel_reason, p.version
+                   p.created_at, pb.full_name AS posted_by, p.posted_at, xb.full_name AS cancelled_by, p.cancelled_at, p.cancel_reason, p.version,
+                   p.pay_order_no, p.bank_date, p.check_no
             FROM customer_payment p JOIN counterparty c ON c.id = p.customer_id JOIN money_account a ON a.id = p.account_id
             JOIN employee cb ON cb.id = p.created_by LEFT JOIN employee pb ON pb.id = p.posted_by LEFT JOIN employee xb ON xb.id = p.cancelled_by""";
 
@@ -413,7 +422,8 @@ class Payments implements CustomerPayments {
                                 rs.getString("note"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(), rs.getString("posted_by"),
                                 rs.getTimestamp("posted_at") == null ? null : rs.getTimestamp("posted_at").toInstant(), rs.getString("cancelled_by"),
                                 rs.getTimestamp("cancelled_at") == null ? null : rs.getTimestamp("cancelled_at").toInstant(),
-                                rs.getString("cancel_reason"), rs.getLong("version"), allocs)
+                                rs.getString("cancel_reason"), rs.getLong("version"), allocs, rs.getString("pay_order_no"),
+                                rs.getDate("bank_date") == null ? null : rs.getDate("bank_date").toLocalDate(), rs.getString("check_no"))
                         : null)
                 .list()
                 .stream()

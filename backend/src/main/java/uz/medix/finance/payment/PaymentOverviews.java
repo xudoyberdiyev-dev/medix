@@ -53,7 +53,9 @@ class PaymentOverviews {
             PaymentOverviewStatus status,
             @Schema(description = "MT: MANUAL / DRIVER; YT: MANUAL") String source,
             String createdBy,
-            Instant createdAt) {}
+            Instant createdAt,
+            @Schema(nullable = true, description = "To'lov topshiriqnomasi №") String payOrderNo,
+            @Schema(nullable = true, description = "Terminal cheki raqami") String checkNo) {}
 
     record PaymentOverview(@Schema(description = "Bugun (Asia/Tashkent)") LocalDate today, List<PaymentOverviewRow> rows) {}
 
@@ -73,14 +75,14 @@ class PaymentOverviews {
                 SELECT * FROM (
                     SELECT 'MT' AS kind, p.id, p.number, p.branch_id, br.code AS branch_code, p.payment_date, p.customer_id AS party_id,
                            c.name AS party, r.name AS party_sub, p.account_id, a.name AS account, a.kind AS account_kind, p.amount, p.advance,
-                           p.status, p.source, cb.full_name AS created_by, p.created_at
+                           p.status, p.source, cb.full_name AS created_by, p.created_at, p.pay_order_no, p.check_no
                     FROM customer_payment p JOIN counterparty c ON c.id = p.customer_id LEFT JOIN region r ON r.id = c.region_id
                     JOIN money_account a ON a.id = p.account_id JOIN branch br ON br.id = p.branch_id JOIN employee cb ON cb.id = p.created_by
                     WHERE (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)
                       AND (CAST(:f AS DATE) IS NULL OR p.payment_date >= :f) AND (CAST(:t AS DATE) IS NULL OR p.payment_date <= :t)
                     UNION ALL
                     SELECT 'YT', p.id, p.number, p.branch_id, br.code, p.payment_date, p.supplier_id, s.name, s.tin, p.account_id, a.name, a.kind,
-                           p.amount, p.advance, p.status, 'MANUAL', cb.full_name, p.created_at
+                           p.amount, p.advance, p.status, 'MANUAL', cb.full_name, p.created_at, p.pay_order_no, p.check_no
                     FROM supplier_payment p JOIN counterparty s ON s.id = p.supplier_id
                     JOIN money_account a ON a.id = p.account_id JOIN branch br ON br.id = p.branch_id JOIN employee cb ON cb.id = p.created_by
                     WHERE (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)
@@ -103,7 +105,8 @@ class PaymentOverviews {
                             rs.getString("party"), rs.getString("party_sub"), rs.getLong("account_id"), rs.getString("account"),
                             rs.getString("account_kind"), new Money(amount).toString(),
                             settled ? new Money(amount.subtract(adv)).toString() : null, settled ? new Money(adv).toString() : null, st,
-                            rs.getString("source"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant());
+                            rs.getString("source"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
+                            rs.getString("pay_order_no"), rs.getString("check_no"));
                 })
                 .list()
                 .stream()

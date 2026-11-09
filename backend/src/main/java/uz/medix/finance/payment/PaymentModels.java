@@ -23,7 +23,23 @@ final class PaymentModels {
             @NotNull(message = "{validation.required}") Long accountId,
             @Schema(nullable = true, description = "Bo'sh bo'lsa — bugun") LocalDate paymentDate,
             @NotBlank(message = "{validation.required}") @Size(max = 24) @Schema(description = "Summa, masalan «250000.00»") String amount,
-            @Schema(nullable = true) @Size(max = 500) String note) {}
+            @Schema(nullable = true) @Size(max = 500) String note,
+            @Schema(nullable = true, description = "To'lov topshiriqnomasi № (bank)") @Size(max = 30) String payOrderNo,
+            @Schema(nullable = true, description = "Bank sanasi") LocalDate bankDate,
+            @Schema(nullable = true, description = "Terminal cheki raqami") @Size(max = 30) String checkNo) {}
+
+    /** Bank / terminal rekvizitlari (bo'sh satr — null). */
+    record BankRefs(String payOrderNo, LocalDate bankDate, String checkNo) {
+        static final BankRefs NONE = new BankRefs(null, null, null);
+
+        static BankRefs of(String payOrderNo, LocalDate bankDate, String checkNo) {
+            return new BankRefs(blank(payOrderNo), bankDate, blank(checkNo));
+        }
+
+        private static String blank(String s) {
+            return s == null || s.isBlank() ? null : s.strip();
+        }
+    }
 
     record PaymentAllocationRequest(
             @NotBlank(message = "{validation.required}") @Size(max = 8) String docType,
@@ -58,7 +74,8 @@ final class PaymentModels {
             PaymentStatus status, PaymentSource source, @Schema(nullable = true) String sourceRef, @Schema(nullable = true) String note,
             String createdBy, Instant createdAt, @Schema(nullable = true) String postedBy, @Schema(nullable = true) Instant postedAt,
             @Schema(nullable = true) String cancelledBy, @Schema(nullable = true) Instant cancelledAt,
-            @Schema(nullable = true) String cancelReason, long version, List<PaymentAllocation> allocations) {}
+            @Schema(nullable = true) String cancelReason, long version, List<PaymentAllocation> allocations,
+            @Schema(nullable = true) String payOrderNo, @Schema(nullable = true) LocalDate bankDate, @Schema(nullable = true) String checkNo) {}
 
     // ===== YT =====
 
@@ -70,7 +87,10 @@ final class PaymentModels {
             @NotNull(message = "{validation.required}") Long accountId,
             @Schema(nullable = true, description = "Bo'sh bo'lsa — bugun") LocalDate paymentDate,
             @NotBlank(message = "{validation.required}") @Size(max = 24) @Schema(description = "Summa, masalan «250000.00»") String amount,
-            @Schema(nullable = true) @Size(max = 500) String note) {}
+            @Schema(nullable = true) @Size(max = 500) String note,
+            @Schema(nullable = true, description = "To'lov topshiriqnomasi № (bank)") @Size(max = 30) String payOrderNo,
+            @Schema(nullable = true, description = "Bank sanasi") LocalDate bankDate,
+            @Schema(nullable = true, description = "Terminal cheki raqami") @Size(max = 30) String checkNo) {}
 
     record SupplierPaymentSummary(long id, String number, long branchId, long supplierId, String supplier, long accountId, String account,
             String accountKind, LocalDate paymentDate, String amount, SupplierPaymentStatus status, String createdBy, Instant createdAt) {}
@@ -81,5 +101,6 @@ final class PaymentModels {
             Instant createdAt, @Schema(nullable = true) String sentBy, @Schema(nullable = true) Instant sentAt,
             @Schema(nullable = true) String returnedReason, @Schema(nullable = true) String postedBy, @Schema(nullable = true) Instant postedAt,
             @Schema(nullable = true) String cancelledBy, @Schema(nullable = true) Instant cancelledAt,
-            @Schema(nullable = true) String cancelReason, long version, List<PaymentAllocation> allocations) {}
+            @Schema(nullable = true) String cancelReason, long version, List<PaymentAllocation> allocations,
+            @Schema(nullable = true) String payOrderNo, @Schema(nullable = true) LocalDate bankDate, @Schema(nullable = true) String checkNo) {}
 }

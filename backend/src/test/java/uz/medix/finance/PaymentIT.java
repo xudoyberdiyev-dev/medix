@@ -430,7 +430,12 @@ class PaymentIT {
         Cookie stranger = loginAs("BRANCH_MANAGER", other);
         long k = kassa(cashier, b);
         debt(b, c, 9_300_001L, "1000.00", today().minusDays(3));
-        long p1 = id(send(post("/api/payments/customer"), cashier, draft(b, c, k, "1500")).andReturn());
+        String withRefs = draft(b, c, k, "1500").replace("}", ",\"payOrderNo\":\" 0702 \",\"bankDate\":\"" + today() + "\",\"checkNo\":\"\"}");
+        long p1 = id(send(post("/api/payments/customer"), cashier, withRefs).andReturn());
+        mvc.perform(get("/api/payments/customer/" + p1).cookie(cashier))
+                .andExpect(jsonPath("$.payOrderNo").value("0702"))
+                .andExpect(jsonPath("$.bankDate").value(today().toString()))
+                .andExpect(jsonPath("$.checkNo").doesNotExist());
         send(post("/api/payments/customer/" + p1 + "/post"), cashier, "{}").andExpect(jsonPath("$.status").value("POSTED"));
         long sup = customer();
         String ytNo = "YT-TST-" + p1;
@@ -448,6 +453,7 @@ class PaymentIT {
                 .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].advance").value("500.00"))
                 .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].status").value("POSTED"))
                 .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].accountKind").value("CASH"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].payOrderNo").value("0702"))
                 .andExpect(jsonPath("$.rows[?(@.kind == 'YT')].number").value(ytNo))
                 .andExpect(jsonPath("$.rows[?(@.kind == 'YT')].status").value("PENDING"));
         mvc.perform(get("/api/payments/overview").param("from", today().plusDays(1).toString()).cookie(cashier))
