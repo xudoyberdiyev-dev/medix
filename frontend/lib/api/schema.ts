@@ -2220,6 +2220,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/money-accounts/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Barcha ochiq filiallar hisoblari (qoldiq bilan)
+         * @description Kassa sahifasi filial tanlanmaganda (prototip Cash): chaqiruvchiga ochiq filiallarning barcha hisoblari.
+         */
+        get: operations["listAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/money-accounts/cashier-options": {
         parameters: {
             query?: never;
@@ -15457,6 +15477,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Account"];
+                };
+            };
+        };
+    };
+    listAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"][];
                 };
             };
         };

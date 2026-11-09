@@ -4896,6 +4896,29 @@
         "tags" : [ "money-accounts" ]
       }
     },
+    "/api/money-accounts/all" : {
+      "get" : {
+        "description" : "Kassa sahifasi filial tanlanmaganda (prototip Cash): chaqiruvchiga ochiq filiallarning barcha hisoblari.",
+        "operationId" : "listAll",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Account"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Barcha ochiq filiallar hisoblari (qoldiq bilan)",
+        "tags" : [ "money-accounts" ]
+      }
+    },
     "/api/money-accounts/cashier-options" : {
       "get" : {
         "operationId" : "cashierOptions",

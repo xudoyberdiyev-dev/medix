@@ -59,6 +59,15 @@ export function useAccounts(branchId: number | null) {
   });
 }
 
+/** Barcha ochiq filiallar hisoblari — Kassa sahifasi filial tanlanmaganda (prototip Cash). */
+export function useAllAccounts(enabled: boolean) {
+  return useQuery({
+    queryKey: ["money-accounts", "all"],
+    queryFn: () => unwrap(api.GET("/api/money-accounts/all")),
+    enabled,
+  });
+}
+
 const cents = (s: string) => {
   const [i, f = ""] = s.split(".");
   const neg = i.startsWith("-");

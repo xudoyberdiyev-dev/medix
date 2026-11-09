@@ -23,7 +23,7 @@ import { useBranchStore } from "@/lib/stores/branch";
 import { AccountCard, DriverCashSection } from "@/features/cash/cash-list";
 import { sumMoney } from "@/features/cash/list-model";
 import { useBranchList } from "@/features/organization/api";
-import { PAYMENT_MT, useAccounts } from "./api";
+import { PAYMENT_MT, useAccounts, useAllAccounts } from "./api";
 
 /**
  * Pul → Kassa (SPEC 5.4, 5.5): hisoblar qoldigʻi (faqat hujjatlardan), KO/BO (kirim/chiqim, moddalar bilan; katta chiqim — tasdiq),
@@ -37,11 +37,16 @@ export function CashPage() {
   const allowed = can(me.data, "cash.view");
   const canAccept = can(me.data, PAYMENT_MT);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const accounts = useAccounts(allowed ? branchId : null);
+  // Filial tanlanmagan (barcha filiallar): barcha kassalar kartasi (prototip Cash); jurnal va amallar — filial tanlanganda
+  const overall = Boolean(me.data?.allBranches) && branchId == null;
+  const branchAccounts = useAccounts(allowed ? branchId : null);
+  const allAccounts = useAllAccounts(allowed && overall);
+  const accounts = overall ? allAccounts : branchAccounts;
+  const setBranchId = useBranchStore((s) => s.setBranchId);
   const cash = useQuery({
     queryKey: ["trips", "cash", branchId],
     queryFn: () => unwrap(api.GET("/api/trips/cash", { params: { query: { branchId: branchId ?? undefined } } })),
-    enabled: canAccept && branchId != null,
+    enabled: canAccept && (branchId != null || overall),
     refetchInterval: 30_000,
   });
   const supervisor = can(me.data, CASH_APPROVE);
@@ -66,7 +71,7 @@ export function CashPage() {
   const actionDefault = current != null && usable.some((a) => a.id === current) ? current : (usable[0]?.id ?? null);
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
-  if (me.data && branchId == null)
+  if (me.data && branchId == null && !overall)
     return (
       <>
         <h1 className="mb-4 text-page-title">{t("title")}</h1>
@@ -78,7 +83,7 @@ export function CashPage() {
 
   const cashCount = accountList.length;
   const total = sumMoney(accountList.map((a) => a.balance));
-  const branchName = branches.data?.find((b) => b.id === branchId)?.name ?? "";
+  const branchNameOf = (id: number) => branches.data?.find((b) => b.id === id)?.name ?? "";
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -95,12 +100,12 @@ export function CashPage() {
               {t("addAccount")}
             </Button>
           ) : null}
-          {canAssign && accountList.some((a) => a.kind === "CASH") ? (
+          {canAssign && !overall && accountList.some((a) => a.kind === "CASH") ? (
             <Button variant="secondary" icon={UserRound} onClick={() => setDialog("cashiers")}>
               {t("cashiers")}
             </Button>
           ) : null}
-          {canClose && kassas.length > 0 ? (
+          {canClose && !overall && kassas.length > 0 ? (
             <Button variant="secondary" icon={LockKeyhole} onClick={() => setDialog("close")}>
               {t("closeDay")}
             </Button>
@@ -133,7 +138,17 @@ export function CashPage() {
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3">
           {accountList.map((a) => (
-            <AccountCard key={a.id} account={a} branchName={branchName} selected={a.id === current} onOpen={() => setSelected(a.id)} />
+            <AccountCard
+              key={a.id}
+              account={a}
+              branchName={branchNameOf(a.branchId)}
+              selected={!overall && a.id === current}
+              onOpen={() => {
+                // Barcha filiallar koʻrinishida karta — shu filialga oʻtadi va hisob jurnalini ochadi
+                if (overall) setBranchId(a.branchId);
+                setSelected(a.id);
+              }}
+            />
           ))}
         </div>
       )}
