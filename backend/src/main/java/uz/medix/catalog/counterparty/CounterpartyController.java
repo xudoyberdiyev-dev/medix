@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uz.medix.catalog.counterparty.CounterpartyModels.ContractRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyDetail;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRequest;
+import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRow;
 import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
 import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeAttachRequest;
@@ -118,8 +121,13 @@ class CounterpartyController {
             description = "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.")
     CounterpartyOverview.CounterpartyOverviewPage overview(
             @RequestParam(defaultValue = "CUSTOMER") Role role,
-            @RequestParam(required = false) Long branchId) {
-        return overview.overview(actor(), role != Role.SUPPLIER, branchId);
+            @RequestParam(required = false) Long branchId,
+            Authentication auth) {
+        boolean customers = role != Role.SUPPLIER;
+        if (!has(auth, customers ? "clients.view" : "suppliers.view")) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+        return overview.overview(actor(), customers, branchId, has(auth, customers ? "clients.contact" : "suppliers.contact"));
     }
 
     @GetMapping("/price-type-customers")
@@ -156,6 +164,7 @@ class CounterpartyController {
             @RequestParam(required = false) Long regionId,
             @RequestParam(required = false) SortField sort,
             @RequestParam(defaultValue = "false") boolean desc,
+            @Parameter(description = "Faqat shu kontragentlar (jadvalda tanlanganlar)") @RequestParam(required = false) List<Long> ids,
             Authentication auth,
             HttpServletResponse response) throws IOException {
         boolean customers = has(auth, "clients.view");
@@ -180,8 +189,13 @@ class CounterpartyController {
         };
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + file + "\"");
-        excel.export(counterparties.search(q, scope, status, regionId, sort(sort, false), desc, 0, CounterpartyExcel.MAX_EXPORT_ROWS),
-                contacts, response.getOutputStream());
+        CounterpartyPage rows = counterparties.search(q, scope, status, regionId, sort(sort, false), desc, 0, CounterpartyExcel.MAX_EXPORT_ROWS);
+        if (ids != null && !ids.isEmpty()) {
+            Set<Long> only = Set.copyOf(ids);
+            List<CounterpartyRow> picked = rows.items().stream().filter(r -> only.contains(r.id())).toList();
+            rows = new CounterpartyPage(picked, picked.size(), 0, picked.size());
+        }
+        excel.export(rows, contacts, response.getOutputStream());
     }
 
     @GetMapping("/{id}")

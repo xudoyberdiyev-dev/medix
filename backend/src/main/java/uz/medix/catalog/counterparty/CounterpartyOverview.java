@@ -45,7 +45,7 @@ class CounterpartyOverview {
             boolean supplier,
             @Schema(nullable = true) Kind kind,
             @Schema(nullable = true) String region,
-            @Schema(nullable = true) String phone,
+            @Schema(nullable = true, description = "Faqat clients.contact / suppliers.contact bilan") String phone,
             @Schema(nullable = true) String contactPerson,
             @Schema(description = "Sharti bor filiallar kodlari") List<String> branches,
             @Schema(description = "Tanlangan (yoki xodimning) filialida sharti bor; filial tanlanmagan — true") boolean inScope,
@@ -84,7 +84,7 @@ class CounterpartyOverview {
     }
 
     @Transactional(readOnly = true)
-    CounterpartyOverviewPage overview(Actor actor, boolean customers, Long branchId) {
+    CounterpartyOverviewPage overview(Actor actor, boolean customers, Long branchId, boolean contacts) {
         Long scope = actor.allBranches() ? branchId : actor.branchId();
         if (scope != null && !actor.canAccessBranch(scope)) {
             throw MedixException.notFound("error.notFound");
@@ -135,7 +135,7 @@ class CounterpartyOverview {
                 .param("customers", customers)
                 .param("side", side.name())
                 .param("pd", customers ? "MT" : "YT")
-                .query((rs, n) -> row(rs, debt.get(rs.getLong("id"))))
+                .query((rs, n) -> row(rs, debt.get(rs.getLong("id")), contacts))
                 .list();
         List<OverviewBranch> branches = jdbc.sql("SELECT code, name FROM branch WHERE active ORDER BY code")
                 .query(OverviewBranch.class)
@@ -143,15 +143,15 @@ class CounterpartyOverview {
         return new CounterpartyOverviewPage(rows, branches, today);
     }
 
-    private static OverviewRow row(ResultSet rs, DebtSummaries.PartyDebt d) throws SQLException {
+    private static OverviewRow row(ResultSet rs, DebtSummaries.PartyDebt d, boolean contacts) throws SQLException {
         CounterpartyState status = rs.getBoolean("blocked") ? CounterpartyState.BLOCKED : rs.getBoolean("active") ? CounterpartyState.ACTIVE : CounterpartyState.INACTIVE;
         String kind = rs.getString("kind");
         String pay = rs.getString("main_pay");
         BigDecimal limit = rs.getBigDecimal("credit_limit");
         List<String> aging = d == null ? List.of() : buckets(d);
         return new OverviewRow(rs.getLong("id"), rs.getString("tin"), rs.getString("name"), rs.getString("legal_name"), rs.getBoolean("is_customer"),
-                rs.getBoolean("is_supplier"), kind == null ? null : Kind.valueOf(kind), rs.getString("region"), rs.getString("phone"),
-                rs.getString("contact_person"), split(rs.getString("branches"), ","), rs.getBoolean("in_scope"), date(rs, "lic"),
+                rs.getBoolean("is_supplier"), kind == null ? null : Kind.valueOf(kind), rs.getString("region"), contacts ? rs.getString("phone") : null,
+                contacts ? rs.getString("contact_person") : null, split(rs.getString("branches"), ","), rs.getBoolean("in_scope"), date(rs, "lic"),
                 rs.getBoolean("ctrl"), status, d == null ? Money.ZERO.toString() : d.debt(), d == null ? Money.ZERO.toString() : d.overdue(),
                 d == null ? 0 : d.maxOverdueDays(), aging, limit == null ? null : new Money(limit).toString(),
                 split(rs.getString("price_types"), "\\|"), split(rs.getString("operators"), "\\|"), date(rs, "sale_date"),
