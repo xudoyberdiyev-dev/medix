@@ -9367,9 +9367,13 @@ export interface components {
             deliveryDate?: string;
             /** @enum {string} */
             deliveryType: "DELIVERY" | "PICKUP";
+            /** @description Chegirma summasi */
+            discountTotal: string;
             documents: components["schemas"]["OrderDocuments"];
             /** @description Yig'uvchi FEFO taklif qilmagan partiyani olgan */
             fefoDeviation: boolean;
+            /** @description Summa (chegirmasiz) */
+            grossTotal: string;
             /** @description «Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2) */
             holder: string;
             /** Format: int64 */
@@ -9481,12 +9485,16 @@ export interface components {
              */
             available: number;
             controlled: boolean;
-            /** @description Hozirgi narx (qoralamada) */
+            /** @description Hozirgi narx (qoralamada), chegirmadan keyin */
             currentPrice?: string;
+            /** @description Chegirma, % */
+            discountPct: string;
             /** Format: int64 */
             id: number;
             /** Format: int32 */
             lineNo: number;
+            /** @description Narx turidagi narx (chegirmasiz) */
+            listPrice?: string;
             manufacturer?: string;
             marked: boolean;
             /** Format: int32 */
@@ -9520,6 +9528,8 @@ export interface components {
             vatAmount?: string;
         };
         OrderLineRequest: {
+            /** @description Chegirma, % (0–99.99); null — mijozning standart chegirmasi */
+            discountPct?: number;
             /** Format: int64 */
             productId: number;
             /** Format: int32 */
@@ -11904,12 +11914,19 @@ export interface components {
             creditLimit?: string;
             /** @enum {string} */
             defaultPaymentType?: "CASH" | "TRANSFER" | "ONLINE";
+            /** @description Mijozning standart chegirmasi, % (buyurtma qatoriga avtomatik) */
+            discountPct?: string;
             /** Format: int32 */
             minShelfLifeDays?: number;
             operator?: components["schemas"]["Ref"];
             /** Format: int32 */
             paymentDays?: number;
             priceType?: components["schemas"]["Ref"];
+            /**
+             * Format: int32
+             * @description Yetkazib beruvchining yetkazish muddati, kun
+             */
+            supplierDeliveryDays?: number;
             /** Format: int32 */
             supplierPaymentDays?: number;
             supplyEmployee?: components["schemas"]["Ref"];
@@ -11919,6 +11936,8 @@ export interface components {
             creditLimit?: string;
             /** @enum {string} */
             defaultPaymentType?: "CASH" | "TRANSFER" | "ONLINE";
+            /** @description Standart chegirma, % (0–99.99) */
+            discountPct?: number;
             /** Format: int32 */
             minShelfLifeDays?: number;
             /** Format: int64 */
@@ -11927,6 +11946,8 @@ export interface components {
             paymentDays?: number;
             /** Format: int64 */
             priceTypeId?: number;
+            /** Format: int32 */
+            supplierDeliveryDays?: number;
             /** Format: int32 */
             supplierPaymentDays?: number;
             /** Format: int64 */

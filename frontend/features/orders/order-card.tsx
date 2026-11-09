@@ -15,6 +15,7 @@ import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { formatDate, formatMoney, formatQuantity, formatTime } from "@/lib/format";
 import { useOrderHistory, type OrderDetail } from "./api";
+import { formatPct } from "./discount";
 import { pickPhase, pickRows } from "./order-pick";
 import { day } from "./orders-page";
 
@@ -458,6 +459,7 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
                     <th className="px-3 py-2.5 text-right font-medium">{t("card.cPicked")}</th>
                     <th className="px-3 py-2.5 text-right font-medium">{t("card.cShipped")}</th>
                     <th className="px-3 py-2.5 text-right font-medium">{t("drawer.col.price")}</th>
+                    <th className="px-3 py-2.5 text-right font-medium">{t("card.cDisc")}</th>
                     <th className="px-3 py-2.5 text-right font-medium">{t("card.cSum")}</th>
                   </tr>
                 </thead>
@@ -491,11 +493,14 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
                           </td>
                           <td className="px-3 py-3 text-right tabular-nums">{l.shipped != null ? formatQuantity(l.shipped) : "—"}</td>
                           <td className="px-3 py-3 text-right tabular-nums">{l.price ? formatMoney(l.price) : "—"}</td>
+                          <td className={`px-3 py-3 text-right tabular-nums ${Number(l.discountPct) > 0 ? "" : "text-text-secondary"}`}>
+                            {formatPct(l.discountPct)}%
+                          </td>
                           <td className="px-3 py-3 text-right font-medium tabular-nums">{l.amount ? formatMoney(l.amount) : "—"}</td>
                         </tr>
                         {expanded ? (
                           <tr className="bg-background">
-                            <td colSpan={6} className="px-3 pt-2 pb-3 pl-8 text-[13px]">
+                            <td colSpan={7} className="px-3 pt-2 pb-3 pl-8 text-[13px]">
                               <span className="font-mono text-caption text-text-secondary">{l.productCode}</span>
                               {l.manufacturer ? <span className="ml-2 text-text-secondary">{l.manufacturer}</span> : null}
                               {l.reserved.length > 0 ? (
@@ -530,6 +535,14 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
               <div className="flex gap-1.5">
                 <dt className="text-text-secondary">{t("entry.tQty")}</dt>
                 <dd className="tabular-nums">{formatQuantity(totalQty)}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="text-text-secondary">{t("entry.tGross")}</dt>
+                <dd className="tabular-nums">{formatMoney(doc.grossTotal)}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="text-text-secondary">{t("entry.tDisc")}</dt>
+                <dd className="tabular-nums">{formatMoney(doc.discountTotal)}</dd>
               </div>
               <div className="flex gap-1.5">
                 <dt className="text-text-secondary">{t("entry.tVat")}</dt>

@@ -54,6 +54,8 @@ describe("counterparty form-model", () => {
     const o = { isNew: true, supplier: true, terms: true };
     expect(validateForm(base({ limit: "x" }), o)).toEqual({ mainPay: "required" });
     expect(termsRequest(base({ mainPay: "CASH", days: "45" }), true)).toEqual({ supplierPaymentDays: 45, defaultPaymentType: "CASH" });
+    expect(termsRequest(base({ mainPay: "CASH", days: "45", lead: "3" }), true)).toMatchObject({ supplierDeliveryDays: 3 });
+    expect(validateForm(base({ mainPay: "CASH", lead: "400" }), o)).toEqual({ lead: "days" });
   });
 
   it("soʻrov: STIR boʻshliqsiz, kontaktlar toʻldirilganlari, birinchisi — masʼul shaxs", () => {
@@ -76,6 +78,13 @@ describe("counterparty form-model", () => {
       paymentDays: 30,
       priceTypeId: undefined,
     });
+  });
+
+  it("E8: mijoz standart chegirmasi %", () => {
+    const o = { isNew: true, supplier: false, terms: true };
+    expect(validateForm(base({ disc: "2,5" }), o)).toEqual({});
+    expect(validateForm(base({ disc: "100" }), o)).toEqual({ disc: "pct" });
+    expect(termsRequest(base({ disc: "2,5" }), false)).toMatchObject({ discountPct: 2.5 });
   });
 
   it("litsenziyalar: farmatsevtika va nazoratdagi", () => {

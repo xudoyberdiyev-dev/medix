@@ -294,6 +294,8 @@ function TermsCard({
     supplierPaymentDays: terms?.supplierPaymentDays != null ? String(terms.supplierPaymentDays) : "",
     defaultPaymentType: (terms?.defaultPaymentType ?? null) as string | null,
     supplyEmployeeId: terms?.supplyEmployee ? String(terms.supplyEmployee.id) : null,
+    discountPct: terms?.discountPct ? terms.discountPct.replace(/\.?0+$/, "").replace(".", ",") : "",
+    supplierDeliveryDays: terms?.supplierDeliveryDays != null ? String(terms.supplierDeliveryDays) : "",
   });
   const [local, setLocal] = useState<Record<string, string>>({});
   const err = describeError(save.error);
@@ -316,7 +318,11 @@ function TermsCard({
       }
       return Number(t);
     };
+    const disc = f.discountPct.trim().replace(",", ".");
+    if (disc && !/^\d{1,2}(\.\d{1,2})?$/.test(disc)) e.discountPct = tt("pctError");
     const body = {
+      discountPct: disc && !e.discountPct ? Number(disc) : undefined,
+      supplierDeliveryDays: int(f.supplierDeliveryDays, "supplierDeliveryDays", 365),
       creditLimit: limit ?? undefined,
       paymentDays: int(f.paymentDays, "paymentDays", 365),
       priceTypeId: f.priceTypeId ? Number(f.priceTypeId) : undefined,
@@ -367,6 +373,15 @@ function TermsCard({
               suffix={tt("days")}
               inputMode="numeric"
             />
+            <TextField
+              label={tt("discount")}
+              value={f.discountPct}
+              onChange={set("discountPct")}
+              error={fe("discountPct")}
+              suffix="%"
+              inputMode="decimal"
+              hint={tt("discountHint")}
+            />
             <Select
               label={tt("priceType")}
               disabled={!customerSide}
@@ -403,6 +418,14 @@ function TermsCard({
               value={f.supplierPaymentDays}
               onChange={set("supplierPaymentDays")}
               error={fe("supplierPaymentDays")}
+              suffix={tt("days")}
+              inputMode="numeric"
+            />
+            <TextField
+              label={tt("leadDays")}
+              value={f.supplierDeliveryDays}
+              onChange={set("supplierDeliveryDays")}
+              error={fe("supplierDeliveryDays")}
               suffix={tt("days")}
               inputMode="numeric"
             />

@@ -22420,12 +22420,20 @@
             "type" : "string",
             "enum" : [ "DELIVERY", "PICKUP" ]
           },
+          "discountTotal" : {
+            "type" : "string",
+            "description" : "Chegirma summasi"
+          },
           "documents" : {
             "$ref" : "#/components/schemas/OrderDocuments"
           },
           "fefoDeviation" : {
             "type" : "boolean",
             "description" : "Yig'uvchi FEFO taklif qilmagan partiyani olgan"
+          },
+          "grossTotal" : {
+            "type" : "string",
+            "description" : "Summa (chegirmasiz)"
           },
           "holder" : {
             "type" : "string",
@@ -22521,7 +22529,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "documents", "fefoDeviation", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "vatTotal", "warehouse", "warehouseId" ]
+        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "discountTotal", "documents", "fefoDeviation", "grossTotal", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "vatTotal", "warehouse", "warehouseId" ]
       },
       "OrderDocuments" : {
         "type" : "object",
@@ -22694,7 +22702,11 @@
           },
           "currentPrice" : {
             "type" : "string",
-            "description" : "Hozirgi narx (qoralamada)"
+            "description" : "Hozirgi narx (qoralamada), chegirmadan keyin"
+          },
+          "discountPct" : {
+            "type" : "string",
+            "description" : "Chegirma, %"
           },
           "id" : {
             "type" : "integer",
@@ -22703,6 +22715,10 @@
           "lineNo" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "listPrice" : {
+            "type" : "string",
+            "description" : "Narx turidagi narx (chegirmasiz)"
           },
           "manufacturer" : {
             "type" : "string"
@@ -22765,11 +22781,17 @@
             "description" : "Summa ichidagi QQS"
           }
         },
-        "required" : [ "available", "controlled", "id", "lineNo", "marked", "productCode", "productId", "productName", "qty", "reserved" ]
+        "required" : [ "available", "controlled", "discountPct", "id", "lineNo", "marked", "productCode", "productId", "productName", "qty", "reserved" ]
       },
       "OrderLineRequest" : {
         "type" : "object",
         "properties" : {
+          "discountPct" : {
+            "type" : "number",
+            "description" : "Chegirma, % (0–99.99); null — mijozning standart chegirmasi",
+            "maximum" : 99.99,
+            "minimum" : 0
+          },
           "productId" : {
             "type" : "integer",
             "format" : "int64"
@@ -28644,6 +28666,10 @@
             "type" : "string",
             "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
           },
+          "discountPct" : {
+            "type" : "string",
+            "description" : "Mijozning standart chegirmasi, % (buyurtma qatoriga avtomatik)"
+          },
           "minShelfLifeDays" : {
             "type" : "integer",
             "format" : "int32"
@@ -28657,6 +28683,11 @@
           },
           "priceType" : {
             "$ref" : "#/components/schemas/Ref"
+          },
+          "supplierDeliveryDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yetkazib beruvchining yetkazish muddati, kun"
           },
           "supplierPaymentDays" : {
             "type" : "integer",
@@ -28680,6 +28711,12 @@
             "type" : "string",
             "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
           },
+          "discountPct" : {
+            "type" : "number",
+            "description" : "Standart chegirma, % (0–99.99)",
+            "maximum" : 99.99,
+            "minimum" : 0
+          },
           "minShelfLifeDays" : {
             "type" : "integer",
             "format" : "int32",
@@ -28699,6 +28736,12 @@
           "priceTypeId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "supplierDeliveryDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 365,
+            "minimum" : 0
           },
           "supplierPaymentDays" : {
             "type" : "integer",

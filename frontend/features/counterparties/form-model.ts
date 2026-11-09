@@ -36,11 +36,16 @@ export interface CpForm {
   branchId: string | null;
   limit: string;
   days: string;
+  /** Mijoz: standart chegirma, % (E8) */
+  disc: string;
+  /** YB: yetkazish muddati, kun (E8) */
+  lead: string;
   priceTypeId: string | null;
   mainPay: PaymentType | null;
 }
 
-export type FormErr = "required" | "tin" | "email" | "mfo" | "account" | "vat" | "date" | "dateOrder" | "money" | "days" | "contactName";
+export type FormErr =
+  "required" | "tin" | "email" | "mfo" | "account" | "vat" | "date" | "dateOrder" | "money" | "days" | "pct" | "contactName";
 export type ErrKey = keyof CpForm | `contact${number}`;
 
 const blankContact = (): ContactForm => ({ name: "", position: "", phone: "" });
@@ -69,6 +74,8 @@ export function emptyForm(branchId: string | null): CpForm {
     branchId,
     limit: "",
     days: "30",
+    disc: "",
+    lead: "",
     priceTypeId: null,
     mainPay: null,
   };
@@ -135,6 +142,8 @@ export function validateForm(f: CpForm, o: { isNew: boolean; supplier: boolean; 
     if (!f.branchId) e.branchId = "required";
     if (!o.supplier && parseMoneyInput(f.limit) === null) e.limit = "money";
     if (!/^\d{1,3}$/.test(f.days.trim()) || Number(f.days) > 365) e.days = "days";
+    if (!o.supplier && f.disc.trim() && !/^\d{1,2}([.,]\d{1,2})?$/.test(f.disc.trim())) e.disc = "pct";
+    if (o.supplier && f.lead.trim() && (!/^\d{1,3}$/.test(f.lead.trim()) || Number(f.lead) > 365)) e.lead = "days";
   }
   return e;
 }
@@ -189,10 +198,15 @@ export function licenseRequests(f: CpForm) {
 export function termsRequest(f: CpForm, supplier: boolean): components["schemas"]["TermsRequest"] {
   const days = Number(f.days.trim());
   return supplier
-    ? { supplierPaymentDays: days, defaultPaymentType: f.mainPay ?? undefined }
+    ? {
+        supplierPaymentDays: days,
+        defaultPaymentType: f.mainPay ?? undefined,
+        supplierDeliveryDays: f.lead.trim() ? Number(f.lead.trim()) : undefined,
+      }
     : {
         creditLimit: parseMoneyInput(f.limit) ?? undefined,
         paymentDays: days,
         priceTypeId: f.priceTypeId ? Number(f.priceTypeId) : undefined,
+        discountPct: f.disc.trim() ? Number(f.disc.trim().replace(",", ".")) : undefined,
       };
 }

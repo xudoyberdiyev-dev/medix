@@ -6,7 +6,19 @@ type OrderDetail = components["schemas"]["OrderDetail"];
 type Line = components["schemas"]["OrderLine"];
 
 function line(id: number, code: string, name: string, qty: number, reserved: Line["reserved"], marked = false): Line {
-  return { id, lineNo: id, productId: id, productCode: code, productName: name, qty, reserved, available: 0, controlled: false, marked };
+  return {
+    id,
+    lineNo: id,
+    productId: id,
+    productCode: code,
+    productName: name,
+    qty,
+    reserved,
+    available: 0,
+    controlled: false,
+    marked,
+    discountPct: "0.00",
+  };
 }
 
 function order(id: number, number: string, lines: Line[]): OrderDetail {
