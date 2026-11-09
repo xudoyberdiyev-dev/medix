@@ -810,7 +810,7 @@ export interface paths {
          * Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)
          * @description To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.
          */
-        get: operations["overview_1"];
+        get: operations["overview_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3128,6 +3128,23 @@ export interface paths {
          * @description Taqsimot: avtomatik (eng eski qarzdan) yoki qo'lda; ortig'i avans. Pul hisobga tushadi.
          */
         post: operations["post_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** To'lovlar ro'yxati: MT + YT bitta jadvalda (prototip Payments) */
+        get: operations["overview_1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8923,6 +8940,48 @@ export interface components {
             /** Format: int32 */
             todayCount: number;
         };
+        PaymentOverview: {
+            rows: components["schemas"]["PaymentOverviewRow"][];
+            /**
+             * Format: date
+             * @description Bugun (Asia/Tashkent)
+             */
+            today: string;
+        };
+        PaymentOverviewRow: {
+            account: string;
+            /** Format: int64 */
+            accountId: number;
+            /** @enum {string} */
+            accountKind: "CASH" | "TERMINAL" | "BANK";
+            /** @description Avans (taqsimlanmagan qism) */
+            advance?: string;
+            /** @description Hujjatlarga taqsimlangan (faqat o'tkazilgan/bekor qilinganda) */
+            allocated?: string;
+            amount: string;
+            branchCode: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "MT" | "YT";
+            number: string;
+            party: string;
+            /** Format: int64 */
+            partyId: number;
+            /** @description MT — mijoz hududi, YT — STIR */
+            partySub?: string;
+            /** Format: date */
+            paymentDate: string;
+            /** @description MT: MANUAL / DRIVER; YT: MANUAL */
+            source: string;
+            /** @enum {string} */
+            status: "DRAFT" | "PENDING" | "POSTED" | "CANCELLED";
+        };
         PaymentPostRequest: {
             /** @description Bo'sh — avtomatik (eng eski qarzdan); berilsa — qo'lda taqsimot, ortig'i avans */
             allocations?: components["schemas"]["PaymentAllocationRequest"][];
@@ -12780,7 +12839,7 @@ export interface operations {
             };
         };
     };
-    overview_1: {
+    overview_2: {
         parameters: {
             query?: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
@@ -16065,6 +16124,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentDetail"];
+                };
+            };
+        };
+    };
+    overview_1: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOverview"];
                 };
             };
         };

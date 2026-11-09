@@ -511,8 +511,7 @@ test("Kassir: YB ga toʻlov (YT) — tasdiqqa", async ({ page }) => {
   await login(page, "cashier.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/payments");
-  await page.getByRole("tab", { name: "Yetkazib beruvchiga (YT)" }).click();
-  await page.getByRole("button", { name: "Toʻlov qoʻshish" }).first().click();
+  await page.getByRole("button", { name: "Yetkazib beruvchiga toʻlov" }).first().click();
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
   await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
@@ -526,7 +525,7 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   await login(page, "manager.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/payments");
-  await page.getByRole("tab", { name: "Yetkazib beruvchiga (YT)" }).click();
+  await page.getByRole("tab", { name: /Yetkazib beruvchilarga/ }).click();
   await page.getByRole("cell", { name: "Pharm Supply E2E" }).first().click();
   await page.getByRole("button", { name: "Tasdiqlash va oʻtkazish" }).click();
   await expect(page.getByText("Toʻlov oʻtkazildi").first()).toBeVisible();

@@ -1931,7 +1931,7 @@
     "/api/counterparties/overview" : {
       "get" : {
         "description" : "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.",
-        "operationId" : "overview_1",
+        "operationId" : "overview_2",
         "parameters" : [ {
           "in" : "query",
           "name" : "role",
@@ -7034,6 +7034,50 @@
           }
         },
         "summary" : "O'tkazish",
+        "tags" : [ "payments" ]
+      }
+    },
+    "/api/payments/overview" : {
+      "get" : {
+        "operationId" : "overview_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "To'lovlar ro'yxati: MT + YT bitta jadvalda (prototip Payments)",
         "tags" : [ "payments" ]
       }
     },
@@ -21471,6 +21515,99 @@
           }
         },
         "required" : [ "next3Count", "next3Days", "overdue", "overdueCount", "today", "todayCount" ]
+      },
+      "PaymentOverview" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentOverviewRow"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bugun (Asia/Tashkent)"
+          }
+        },
+        "required" : [ "rows", "today" ]
+      },
+      "PaymentOverviewRow" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "accountKind" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TERMINAL", "BANK" ]
+          },
+          "advance" : {
+            "type" : "string",
+            "description" : "Avans (taqsimlanmagan qism)"
+          },
+          "allocated" : {
+            "type" : "string",
+            "description" : "Hujjatlarga taqsimlangan (faqat o'tkazilgan/bekor qilinganda)"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "branchCode" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "MT", "YT" ]
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "party" : {
+            "type" : "string"
+          },
+          "partyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "partySub" : {
+            "type" : "string",
+            "description" : "MT — mijoz hududi, YT — STIR"
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "source" : {
+            "type" : "string",
+            "description" : "MT: MANUAL / DRIVER; YT: MANUAL"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING", "POSTED", "CANCELLED" ]
+          }
+        },
+        "required" : [ "account", "accountId", "accountKind", "amount", "branchCode", "branchId", "createdAt", "createdBy", "id", "kind", "number", "party", "partyId", "paymentDate", "source", "status" ]
       },
       "PaymentPostRequest" : {
         "type" : "object",

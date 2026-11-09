@@ -126,5 +126,72 @@
     "overdueDays": "{count} kun oʻtgan",
     "allocLabel": "Toʻlovdan: {number}",
     "auto": "Avtomatik: eng eski qarzdan boshlab. Ortigʻi avans boʻladi: <num>{advance}</num> soʻm."
+  },
+  "list": {
+    "title": "Toʻlovlar",
+    "newMt": "Mijozdan toʻlov",
+    "newYt": "Yetkazib beruvchiga toʻlov",
+    "kIn": "Bugun kirim",
+    "kOut": "Bugun chiqim",
+    "kPending": "Tasdiqlashda",
+    "kDrafts": "Qoralamalar",
+    "kN": "{n} ta",
+    "kDocs": "{n} ta hujjat",
+    "views": {
+      "label": "Koʻrinishlar",
+      "all": "Hammasi",
+      "in": "Mijozlardan",
+      "out": "Yetkazib beruvchilarga",
+      "pending": "Tasdiqlashda",
+      "cancelled": "Bekor qilingan"
+    },
+    "search": "Qidirish",
+    "searchPlaceholder": "Raqam yoki kontragent…",
+    "f": {
+      "party": "Kontragent",
+      "method": "Usul",
+      "account": "Kassa / hisob",
+      "status": "Holat",
+      "by": "Yaratgan",
+      "date": "Sana"
+    },
+    "c": {
+      "number": "Raqam",
+      "date": "Sana",
+      "type": "Turi",
+      "party": "Kontragent",
+      "method": "Usul",
+      "account": "Kassa / hisob",
+      "amount": "Summa",
+      "allocated": "Taqsimlangan",
+      "advance": "Avans",
+      "status": "Holat",
+      "by": "Yaratgan"
+    },
+    "in": "Kirim",
+    "out": "Chiqim",
+    "stir": "STIR {tin}",
+    "driver": "Haydovchidan",
+    "method": {
+      "CASH": "Naqd",
+      "BANK": "Perechisleniye",
+      "TERMINAL": "Terminal"
+    },
+    "st": {
+      "DRAFT": "Qoralama",
+      "PENDING": "Tasdiqlashda",
+      "POSTED": "Tasdiqlangan",
+      "CANCELLED": "Bekor qilingan"
+    },
+    "totIn": "Kirim jami",
+    "totOut": "Chiqim jami",
+    "totNet": "Sof",
+    "totNote": "Jami — filtrdagi tasdiqlangan toʻlovlar boʻyicha",
+    "emptyT": "Hali toʻlov yoʻq",
+    "emptyD": "Mijozdan pul kelganda yoki yetkazib beruvchiga toʻlanganda shu yerda hujjat yaratiladi. Tasdiqlangan toʻlov qarzni yopadi va kassa yoki bank qoldigʻini oʻzgartiradi.",
+    "clearF": "Filtrni tozalash",
+    "open": "Ochish",
+    "caption": "Toʻlovlar roʻyxati",
+    "dateInvalid": "Sana notoʻgʻri — kk.oo.yyyy"
   }
 }
