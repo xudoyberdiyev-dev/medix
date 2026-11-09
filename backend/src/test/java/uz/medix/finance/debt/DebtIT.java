@@ -202,4 +202,33 @@ class DebtIT {
                 .andExpect(jsonPath("$.rows[0].buckets.d61to90").value("8000.00"))
                 .andExpect(jsonPath("$.rows[0].creditLimit").value(org.hamcrest.Matchers.nullValue()));
     }
+
+    @Test
+    void supplierInvoicesByReceipt() throws Exception {
+        long b = branch();
+        long s = party(true);
+        Session purchaser = loginAs("PURCHASER", b);
+        long w = jdbc.sql("INSERT INTO warehouse (branch_id, name) VALUES (:b, 'Asosiy') RETURNING id").param("b", b).query(Long.class).single();
+        LocalDate t = today();
+        long r = jdbc.sql("""
+                INSERT INTO receipt (number, branch_id, warehouse_id, supplier_id, receipt_date, payment_type, due_date, owner_id, created_by)
+                VALUES (:n, :b, :w, :s, :d, 'CASH', :due, :e, :e) RETURNING id""")
+                .param("n", "KR-DQ-" + UUID.randomUUID().toString().substring(0, 8))
+                .param("b", b).param("w", w).param("s", s).param("d", t.minusDays(20)).param("due", t.minusDays(2)).param("e", purchaser.id())
+                .query(Long.class).single();
+        entry(b, s, "SUPPLIER", "KR", r, "8000.00", t.minusDays(2), null, null);
+        entry(b, s, "SUPPLIER", "YT", 9_600_001L, "-3000.00", null, "KR", r);
+        mvc.perform(get("/api/debts/suppliers/invoices").param("branchId", "" + b).cookie(purchaser.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].receiptId").value(r))
+                .andExpect(jsonPath("$.rows[0].sum").value("8000.00"))
+                .andExpect(jsonPath("$.rows[0].paid").value("3000.00"))
+                .andExpect(jsonPath("$.rows[0].left").value("5000.00"))
+                .andExpect(jsonPath("$.rows[0].paymentType").value("CASH"))
+                .andExpect(jsonPath("$.rows[0].owner").value(org.hamcrest.Matchers.startsWith("Sinov")))
+                .andExpect(jsonPath("$.rows[0].days").value(-2));
+        Cookie cashier = loginAs("CASHIER", b).cookie();
+        mvc.perform(get("/api/debts/suppliers/invoices").param("branchId", "" + b).cookie(cashier)).andExpect(status().isForbidden());
+    }
 }

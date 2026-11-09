@@ -22,6 +22,7 @@ import {
   type WarehouseTransferSummary,
 } from "./api";
 import { WarehouseTransferDrawer } from "./warehouse-transfer-drawer";
+import { HubTabs } from "@/components/shell/hub-tabs";
 
 export function WarehouseTransferStatusBadge({ status }: { status: WarehouseTransferStatus }) {
   const t = useTranslations("warehouseTransfers");
@@ -94,6 +95,7 @@ export function WarehouseTransfersPage() {
 
   return (
     <>
+      <HubTabs hub="transfers" />
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (

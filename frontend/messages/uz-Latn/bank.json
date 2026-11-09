@@ -1,0 +1,21 @@
+{
+  "title": "Bank",
+  "sub": "Joriy qoldiq jami: {sum} soʻm",
+  "forbidden": "Bank hisoblarini koʻrishga ruxsatingiz yoʻq. Kerak boʻlsa, administratorga murojaat qiling.",
+  "transfer": "Ichki oʻtkazma",
+  "newOp": "Bank operatsiyasi",
+  "reconciled": "Koʻchirma bilan solishtirilgan: {date}",
+  "notReconciled": "Solishtirilmagan",
+  "lastMove": "Oxirgi harakat: {date}",
+  "noMoves": "Harakat yoʻq",
+  "kindBANK": "Bank hisobi",
+  "kindTERMINAL": "Terminal",
+  "emptyTitle": "Bank hisobi yoʻq",
+  "emptyDescription": "Bank hisobi yoki terminal Kassa sahifasida «Hisob qoʻshish» bilan qoʻshiladi.",
+  "tabsLabel": "Hisob boʻlimlari",
+  "tabStatement": "Koʻchirma",
+  "tabRecon": "Solishtirish",
+  "integrationTitle": "Integratsiya hali ulanmagan — Bank API",
+  "integrationText": "Maʼlumot MEDIXʼda saqlandi, ulangandan keyin koʻchirmalar avtomatik olinadi. Hozircha solishtirish qoʻlda.",
+  "selectedLabel": "{name} — tanlangan hisob"
+}

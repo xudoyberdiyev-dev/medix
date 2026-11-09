@@ -15,7 +15,8 @@ import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { Tooltip } from "@/components/ui/tooltip";
-import { ensureCsrf } from "@/features/auth/session";
+import { can } from "@/features/auth/can";
+import { ensureCsrf, useMe } from "@/features/auth/session";
 import { useBranches, useEmployees } from "@/features/employees/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
@@ -43,8 +44,14 @@ type Matrix = components["schemas"]["Matrix"];
 
 const MATRIX_KEY = ["roles", "matrix"] as const;
 
+/** Rollar matritsasi — faqat roles.view bilan (Xodimlar sahifasini roles.view siz ochgan Filial rahbari 403 olmasin). */
 export function useRoleMatrix() {
-  return useQuery({ queryKey: MATRIX_KEY, queryFn: () => unwrap(api.GET("/api/roles/matrix")) });
+  const me = useMe();
+  return useQuery({
+    queryKey: MATRIX_KEY,
+    queryFn: () => unwrap(api.GET("/api/roles/matrix")),
+    enabled: can(me.data, "roles.view"),
+  });
 }
 
 function toState(m: Matrix): MatrixState {

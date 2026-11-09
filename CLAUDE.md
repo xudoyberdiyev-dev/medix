@@ -4,7 +4,7 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 
 ## Haqiqat manbalari (shu tartibda)
 1. `docs/SPEC.md` — loyihaning to'liq tavsifi (rollar, jarayonlar, biznes qoidalari, texnologiyalar, arxitektura). **Har sessiyada kerakli bo'limini o'qing.**
-2. `PLAN.md` — **avval «Egasi talabi (07.11) — MUDDAT 11.11», «Egasi javoblari (07.11)» va «Egasi qarori — USTUVORLIK» bo'limlari**, keyin bosqichlar, vazifalar, **hozirgi holat** va egasidan kutilayotganlar.
+2. `PLAN.md` — **avval «Egasi talabi (07.11) — MUDDAT 11.11», «Egasi javoblari (09.11) E7–E15», «Egasi javoblari (07.11)» va «Egasi qarori — USTUVORLIK» bo'limlari**, keyin bosqichlar, vazifalar, **hozirgi holat** va egasidan kutilayotganlar.
 3. `design/prototype/` — **egasining Claude Design prototipi: UI unga AYNAN mos bo'lishi shart** (eng ustun dizayn manbai; yo'riqnoma `design/prototype/README.md`, tarmoqsiz skrinshot: `NODE_PATH=$(npm root -g) node scripts/prototype-shot.cjs "<Ekran>" /tmp/p.png`). `design/` — dizayn tizimi (`design/system/`) va ekran manbalari (`design/README.md`).
 4. Ziddiyat bo'lsa — eng keyingi sanali qaror ustun; hal qilib bo'lmasa, PLAN.md → «Egasiga savollar» ga yozing va boshqa vazifaga o'ting.
 
@@ -25,6 +25,7 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 3. **Boshlanish xabari** (`status/last-start.txt` → Telegram) faqat oynaning BIRINCHI sessiyasida.
 4. **Kontekst tugay boshlasa** (ko'p ish qilingan, xotira og'irlashgan) yoki vazifa tugab kontekstning katta qismi ishlatilgan bo'lsa: ishni commit+push qiling, `PLAN.md` → «Sessiya jurnali» ga 1–3 qator yozing, `zanjir: davom` commit qiling, so'ng **keyingi sessiyani ishga tushiring**: `mcp__claude-code-remote__fire_trigger` (ToolSearch bilan yuklang), `trigger_id: trig_019P1iLSzuMPtmKdMR7if1hA`, `text: "Oyna tugashi: HH:MM"` (shu oynaning tugash vaqti). Faqat oyna tugashiga ≥ 20 daqiqa qolgan bo'lsa.
 5. **Oyna tugaganda** (yoki oxirgi sessiya): zanjirni davom ettirmang; `reports/YYYY-MM-DD-HHMM.md` hisobot yozing — butun oyna bo'yicha (shu oynadagi barcha sessiyalar, «Sessiya jurnali» qaydlaridan) — `PLAN.md` ni yangilang, commit `hisobot: …` + push (Telegram'ga ketadi).
+6a. **Oyna oxirida develop → main (egasi qarori 09.11.2026 20:12):** hisobot push qilingach, develop'dagi oxirgi CI yashil bo'lishini kuting (`gh run list --branch develop -L 3`, kerak bo'lsa `gh run watch`). Yashil bo'lsa: `gh pr create --base main --head develop --title "Oyna DD.MM HH:MM: …" --body …` (PR allaqachon ochiq bo'lsa — o'shani ishlating), PR CI yashil bo'lgach REST bilan merge: `gh api -X PUT repos/xudoyberdiyev-dev/medix/pulls/<N>/merge -f merge_method=merge`. CI qizil bo'lsa — merge QILMANG, hisobotda «main'ga o'tkazilmadi — CI qizil» deb yozing. Hech qachon main'ga to'g'ridan-to'g'ri push / force-push yo'q.
 6. Limit tugasa sessiya o'zi yopiladi — zaxira ishga tushirishlar (har oyna ichida soatlik :30 da) zanjirni qayta ulaydi.
 
 ## Kontekstni tejash (sessiyani uzoqroq ishlatish uchun)
@@ -41,7 +42,7 @@ Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + C
 3. Oldingi CI natijasini tekshiring: `gh run list --branch develop -L 3`. Yiqilgan bo'lsa — **birinchi navbatda shuni tuzating** (`gh run view <id> --log-failed`).
 4. Keyingi vazifani bajaring: kod → testlar → tekshiruv (pastga qarang) → commit → push. **Har tugagan kichik vazifadan keyin darhol commit va push** — limit tugasa ham ish yo'qolmasin.
 5. Sessiya oxirida: «Zanjir rejimi» 4–5-qoidalari (davom ettirish yoki oyna hisoboti).
-6. Bosqich to'liq tugasa — `develop → main` PR oching (`gh pr create`), sarlavha «N-bosqich: …», tavsifda nima qilindi va qanday tekshirildi. Merge'ni **egasi** qiladi.
+6. Bosqich to'liq tugasa — `develop → main` PR oching (`gh pr create`), sarlavha «N-bosqich: …», tavsifda nima qilindi va qanday tekshirildi. Merge — oyna oxirida avtomatik (6a-qoida).
 
 **Egasining qarori (01.11.2026):** SPEC 17-bo'limidagi «har vazifa uchun egasi tasdiqlaydi» o'rniga — vazifalar avtonom bajariladi, egasi bosqich oxirida PR orqali ko'rib chiqadi. Kichik qarorlarni o'zingiz qabul qiling va hisobotda yozing.
 
@@ -100,7 +101,7 @@ docs/  design/  reports/  PLAN.md
 
 ## Commit va branch
 - Ish branch'i: `develop`. Commit xabari o'zbekcha, qisqa: `backend: hujjat raqamlash servisi`, `frontend: login sahifasi`.
-- `main` — faqat egasi merge qilgan PR'lar orqali. Vercel `main` ni production, `develop` ni preview sifatida joylaydi.
+- `main` — faqat PR orqali: oyna oxirida CI yashil bo'lsa avtomatik merge (6a-qoida), aks holda egasi. Vercel `main` ni production, `develop` ni preview sifatida joylaydi.
 
 ## Hisobot formati (`reports/YYYY-MM-DD-HHMM.md`, Telegram'ga avtomatik ketadi, ≤ 3500 belgi)
 ```

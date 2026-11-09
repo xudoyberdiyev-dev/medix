@@ -516,5 +516,16 @@ class CashIT {
                 .andExpect(jsonPath("$[0].note").value("Ijara toʻlovi bankda hali oʻtmagan"));
         assertThatThrownBy(() -> jdbc.sql("UPDATE bank_reconciliation SET bank_balance = 0 WHERE account_id = :a").param("a", bank).update())
                 .hasMessageContaining("faqat qo'shiladigan");
+
+        // «Bank» sahifasi: bank hisobi kartasi — qoldiq, oxirgi harakat, oxirgi solishtirish; kassa kirmaydi; ruxsat — bank.view
+        mvc.perform(get("/api/bank/overview").param("branchId", "" + b).cookie(acct))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cards[?(@.id == " + bank + ")].balance").value("1300000.00"))
+                .andExpect(jsonPath("$.cards[?(@.id == " + bank + ")].kind").value("BANK"))
+                .andExpect(jsonPath("$.cards[?(@.id == " + bank + ")].accountNo").value("20208000900111222001"))
+                .andExpect(jsonPath("$.cards[?(@.id == " + bank + ")].lastMove").value(today().toString()))
+                .andExpect(jsonPath("$.cards[?(@.id == " + bank + ")].reconciledOn").value(today().toString()))
+                .andExpect(jsonPath("$.cards[?(@.id == " + k + ")]").isEmpty());
+        mvc.perform(get("/api/bank/overview").param("branchId", "" + b).cookie(picker)).andExpect(status().isForbidden());
     }
 }

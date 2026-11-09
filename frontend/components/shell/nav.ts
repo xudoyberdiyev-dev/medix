@@ -1,31 +1,37 @@
 import {
-  Building2,
-  FileMinus,
-  Undo2,
-  ListChecks,
-  ArrowRightLeft,
+  ArrowLeftRight,
   Banknote,
-  BadgeDollarSign,
-  Gift,
-  BookOpen,
   Boxes,
+  Building,
+  Building2,
   CalendarClock,
   ChartColumn,
   ClipboardCheck,
   ClipboardList,
-  LayoutDashboard,
+  Database,
+  Factory,
+  FileCheck2,
+  HandCoins,
+  House,
+  LayoutGrid,
+  Landmark,
+  List,
   MonitorDot,
-  PackageOpen,
+  PackageCheck,
+  PackageMinus,
   PackagePlus,
   Pill,
+  ReceiptText,
   ScanLine,
+  ScrollText,
   Settings,
-  Tags,
+  ShieldCheck,
+  Stamp,
+  Tag,
   Truck,
   Users,
+  UsersRound,
   Wallet,
-  Warehouse,
-  HandCoins,
   type LucideIcon,
 } from "lucide-react";
 import type navGroups from "@/messages/uz-Latn/navGroups.json";
@@ -42,6 +48,14 @@ export interface NavItem {
   icon: LucideIcon;
   /** Koʻrish uchun ruxsat kalitlaridan biri kerak (1.3, T12 §7 «Menyu sahifalari»); berilmasa — hamma. */
   anyOf?: string[];
+  /** Shu band ostidagi boshqa sahifalar (yorliqlar): ularda ham band faol koʻrinadi. */
+  also?: string[];
+  /** Panel bandi — faqat bosh sahifasi shu panel boʻlgan rolga koʻrinadi (prototip: Monitor/Yigʻish/Markirovka/Reysim — oʻz rollari uchun). */
+  panel?: string;
+  /** Yorliqli band: manzil — foydalanuvchiga ruxsatli birinchi yorliq (masalan, Xarid uchun «Qaytarish» → YB ga qaytarish). */
+  hub?: HubKey;
+  /** Faqat aynan shu manzilda faol (ichki sahifalarning oʻz bandi bor — masalan, Sozlamalar va Boshqaruv bandlari). */
+  exact?: boolean;
 }
 
 export interface NavGroup {
@@ -51,9 +65,67 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-/** Menyu tuzilmasi (SPEC 4-boʻlim). Rolga qarab filtrlash 1-bosqichda qoʻshiladi. */
+export type HubTabKey =
+  | "transfersWarehouse"
+  | "transfersZone"
+  | "transfersBranch"
+  | "returnsWriteOffs"
+  | "returnsSupplier"
+  | "supplierDebtsDebts"
+  | "supplierDebtsBonus";
+
+export interface HubTab {
+  key: HubTabKey;
+  href: string;
+  anyOf: string[];
+}
+
+/** Bitta menyu bandi ostidagi sahifalar (prototip: «Koʻchirish», «Qaytarish va hisobdan chiqarish», YB qarzi → Bonus balans). */
+export const HUBS = {
+  transfers: [
+    {
+      key: "transfersWarehouse",
+      href: "/warehouse-transfers",
+      anyOf: ["transfer.view", "transfer.ok", "transfer.send", "transfer.receive"],
+    },
+    { key: "transfersZone", href: "/zone-transfers", anyOf: ["transfer.view", "transfer.zk", "transfer.quar"] },
+    { key: "transfersBranch", href: "/branch-sales", anyOf: ["transfer.view", "transfer.fs", "transfer.send", "transfer.receive"] },
+  ],
+  returns: [
+    { key: "returnsWriteOffs", href: "/write-offs", anyOf: ["hc.view", "hc.create", "hc.approve"] },
+    { key: "returnsSupplier", href: "/supplier-returns", anyOf: ["qy.view", "qy.create", "qy.approve"] },
+  ],
+  supplierDebts: [
+    { key: "supplierDebtsDebts", href: "/debts/suppliers", anyOf: ["sdebt.view"] },
+    { key: "supplierDebtsBonus", href: "/bonuses", anyOf: ["sdebt.view", "supplierBonus.confirm"] },
+  ],
+} satisfies Record<string, HubTab[]>;
+
+export type HubKey = keyof typeof HUBS;
+
+/** Ruxsat boʻyicha koʻrinadigan yorliqlar (bittasi qolsa — yorliq qatori koʻrsatilmaydi). */
+export function hubTabsFor(hub: HubKey, permissions: string[] | undefined): HubTab[] {
+  if (!permissions) return [];
+  return HUBS[hub].filter((t) => t.anyOf.some((k) => permissions.includes(k)));
+}
+
+/** Koʻchirishning uch turi — bitta «Koʻchirish» bandi, sahifalarda yorliqlar. */
+export const TRANSFER_PAGES = ["/warehouse-transfers", "/zone-transfers", "/branch-sales"] as const;
+/** «Qaytarish va hisobdan chiqarish» yorliqlari. */
+export const RETURN_PAGES = ["/write-offs", "/supplier-returns"] as const;
+
+/** Menyu tuzilmasi — prototip `Medix ERP` (NAV) bilan aynan. */
 export const navigation: NavGroup[] = [
-  { items: [{ key: "home", label: "Bosh sahifa", href: "/", icon: LayoutDashboard }] },
+  { items: [{ key: "home", label: "Bosh sahifa", href: "/", icon: House }] },
+  {
+    // Panel rollari (Ombor mudiri, Yigʻuvchi, Markirovkachi, Haydovchi) — faqat oʻz paneli
+    items: [
+      { key: "warehouse", label: "Monitor", href: "/warehouse", icon: MonitorDot, anyOf: ["orders.queue"], panel: "keeper" },
+      { key: "picking", label: "Yigʻish", href: "/picking", icon: ClipboardCheck, anyOf: ["picking.do"], panel: "picker" },
+      { key: "marking", label: "Markirovka", href: "/marking", icon: ScanLine, anyOf: ["marking.scan"], panel: "marker" },
+      { key: "driver", label: "Reysim", href: "/driver", icon: Truck, anyOf: ["trip.driver"], panel: "driver" },
+    ],
+  },
   {
     key: "sales",
     title: "Savdo",
@@ -65,63 +137,49 @@ export const navigation: NavGroup[] = [
         icon: ClipboardList,
         anyOf: ["orders.create", "orders.manage", "orders.queue"],
       },
+      {
+        key: "approvals",
+        label: "Tasdiqlash",
+        href: "/approvals",
+        icon: Stamp,
+        anyOf: ["approvals.view", "approvals.branch", "approvals.director"],
+      },
+      { key: "shipments", label: "Joʻnatish", href: "/shipments", icon: PackageCheck, anyOf: ["shipments.view"] },
     ],
   },
   {
     key: "warehouse",
     title: "Ombor",
     items: [
-      { key: "warehouse", label: "Monitor", href: "/warehouse", icon: MonitorDot, anyOf: ["orders.queue"] },
       { key: "receipts", label: "Kirim", href: "/receipts", icon: PackagePlus, anyOf: ["receipt.view"] },
-      { key: "picking", label: "Yigʻish", href: "/picking", icon: ClipboardCheck, anyOf: ["picking.do"] },
-      { key: "marking", label: "Markirovka", href: "/marking", icon: ScanLine, anyOf: ["marking.scan"] },
-      { key: "shipments", label: "Joʻnatish", href: "/shipments", icon: Truck, anyOf: ["shipments.view"] },
-      { key: "driver", label: "Reysim", href: "/driver", icon: Truck, anyOf: ["trip.driver"] },
       { key: "stock", label: "Qoldiqlar", href: "/stock", icon: Boxes, anyOf: ["stock.view"] },
+      { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
       {
-        key: "zone-transfers",
-        label: "Zona koʻchirishlari",
-        href: "/zone-transfers",
-        icon: ArrowRightLeft,
-        anyOf: ["transfer.view", "transfer.zk", "transfer.quar"],
-      },
-      {
-        key: "warehouse-transfers",
-        label: "Ombor koʻchirishlari",
-        href: "/warehouse-transfers",
-        icon: Warehouse,
-        anyOf: ["transfer.view", "transfer.ok", "transfer.send", "transfer.receive"],
-      },
-      {
-        key: "branch-sales",
-        label: "Filiallararo savdo",
-        href: "/branch-sales",
-        icon: Building2,
-        anyOf: ["transfer.view", "transfer.fs", "transfer.send", "transfer.receive"],
+        key: "transfers",
+        label: "Koʻchirish",
+        href: TRANSFER_PAGES[0],
+        also: [...TRANSFER_PAGES],
+        hub: "transfers",
+        icon: ArrowLeftRight,
+        anyOf: ["transfer.view", "transfer.zk", "transfer.quar", "transfer.ok", "transfer.fs", "transfer.send", "transfer.receive"],
       },
       {
         key: "inventory-counts",
         label: "Inventarizatsiya",
         href: "/inventory-counts",
-        icon: ListChecks,
+        icon: ClipboardCheck,
         anyOf: ["inventory.view", "inventory.create", "inventory.count", "inventory.approve"],
       },
       {
-        key: "write-offs",
-        label: "Hisobdan chiqarish",
-        href: "/write-offs",
-        icon: FileMinus,
-        anyOf: ["hc.view", "hc.create", "hc.approve"],
+        key: "returns",
+        label: "Qaytarish va hisobdan chiqarish",
+        href: RETURN_PAGES[0],
+        also: [...RETURN_PAGES],
+        hub: "returns",
+        icon: PackageMinus,
+        anyOf: ["hc.view", "hc.create", "hc.approve", "qy.view", "qy.create", "qy.approve"],
       },
-      {
-        key: "supplier-returns",
-        label: "YB ga qaytarish",
-        href: "/supplier-returns",
-        icon: Undo2,
-        anyOf: ["qy.view", "qy.create", "qy.approve"],
-      },
-      { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
-      { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: PackageOpen, anyOf: ["opening.list", "opening.view"] },
+      { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: Database, anyOf: ["opening.list", "opening.view"] },
     ],
   },
   {
@@ -130,9 +188,18 @@ export const navigation: NavGroup[] = [
     items: [
       { key: "payments", label: "Toʻlovlar", href: "/payments", icon: Wallet, anyOf: ["payments.view"] },
       { key: "cash", label: "Kassa", href: "/cash", icon: Banknote, anyOf: ["cash.view"] },
+      { key: "bank", label: "Bank", href: "/bank", icon: Landmark, anyOf: ["bank.view"] },
       { key: "customer-debts", label: "Mijozlar qarzi", href: "/debts/customers", icon: HandCoins, anyOf: ["cdebt.view"] },
-      { key: "supplier-debts", label: "YB qarzi", href: "/debts/suppliers", icon: BadgeDollarSign, anyOf: ["sdebt.view"] },
-      { key: "bonuses", label: "Bonus balans", href: "/bonuses", icon: Gift, anyOf: ["sdebt.view", "supplierBonus.confirm"] },
+      {
+        key: "supplier-debts",
+        label: "Yetkazib beruvchilar qarzi",
+        href: "/debts/suppliers",
+        also: ["/bonuses"],
+        hub: "supplierDebts",
+        icon: ReceiptText,
+        anyOf: ["sdebt.view", "supplierBonus.confirm"],
+      },
+      { key: "reconciliations", label: "Akt sverka", href: "/reconciliations", icon: FileCheck2, anyOf: ["recon.view"] },
     ],
   },
   {
@@ -141,9 +208,9 @@ export const navigation: NavGroup[] = [
     items: [
       { key: "products", label: "Mahsulotlar", href: "/products", icon: Pill, anyOf: ["products.view"] },
       { key: "customers", label: "Mijozlar", href: "/customers", icon: Users, anyOf: ["clients.view"] },
-      { key: "suppliers", label: "Yetkazib beruvchilar", href: "/suppliers", icon: Truck, anyOf: ["suppliers.view"] },
-      { key: "prices", label: "Narxlar", href: "/prices", icon: Tags, anyOf: ["prices.view"] },
-      { key: "dictionaries", label: "Kichik maʼlumotnomalar", href: "/dictionaries", icon: BookOpen, anyOf: ["lookups.view"] },
+      { key: "suppliers", label: "Yetkazib beruvchilar", href: "/suppliers", icon: Factory, anyOf: ["suppliers.view"] },
+      { key: "prices", label: "Narxlar", href: "/prices", icon: Tag, anyOf: ["prices.view"] },
+      { key: "dictionaries", label: "Boshqa maʼlumotnomalar", href: "/dictionaries", icon: List, anyOf: ["lookups.view"] },
     ],
   },
   {
@@ -162,21 +229,40 @@ export const navigation: NavGroup[] = [
     key: "admin",
     title: "Boshqaruv",
     items: [
+      { key: "company", label: "Kompaniya", href: "/company", icon: Building, anyOf: ["company.view", "company.edit"] },
+      { key: "branches", label: "Filiallar", href: "/settings/branches", icon: Building2, anyOf: ["branches.view"] },
+      { key: "warehouses", label: "Omborlar va zonalar", href: "/settings/warehouses", icon: LayoutGrid, anyOf: ["warehouses.view"] },
+      { key: "staff", label: "Xodimlar", href: "/settings/employees", icon: UsersRound, anyOf: ["staff.view"] },
+      { key: "roles", label: "Rollar va ruxsatlar", href: "/settings/roles", icon: ShieldCheck, anyOf: ["roles.view"] },
+      { key: "audit", label: "Audit jurnali", href: "/settings/audit", icon: ScrollText, anyOf: ["audit.view"] },
       {
         key: "settings",
         label: "Sozlamalar",
         href: "/settings",
+        exact: true,
         icon: Settings,
-        anyOf: ["staff.view", "audit.view", "branches.view", "warehouses.view", "roles.view", "company.view"],
+        anyOf: ["company.view", "company.edit", "staff.view", "audit.view", "branches.view", "warehouses.view", "roles.view"],
       },
     ],
   },
 ];
 
-/** Ruxsatga qarab menyu: frontend faqat koʻrinishni boshqaradi, yakuniy ruxsat serverda. */
-export function navigationFor(permissions: string[] | undefined): NavGroup[] {
+/** Band faolmi: oʻz manzili yoki `also` sahifalaridan biri (va ularning ichki sahifalari). */
+export function isNavActive(pathname: string, item: Pick<NavItem, "href" | "also" | "exact">): boolean {
+  if (item.exact) return pathname === item.href;
+  const hit = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
+  return hit(item.href) || (item.also ?? []).some(hit);
+}
+
+/** Ruxsatga qarab menyu (`home` — rolning bosh sahifasi; berilmasa panel bandlari ham qoladi — buyruqlar oynasi uchun): frontend faqat koʻrinishni boshqaradi, yakuniy ruxsat serverda. */
+export function navigationFor(permissions: string[] | undefined, home?: string): NavGroup[] {
   if (!permissions) return [];
   return navigation
-    .map((g) => ({ ...g, items: g.items.filter((i) => !i.anyOf || i.anyOf.some((k) => permissions.includes(k))) }))
+    .map((g) => ({
+      ...g,
+      items: g.items
+        .filter((i) => (!i.panel || home === undefined || i.panel === home) && (!i.anyOf || i.anyOf.some((k) => permissions.includes(k))))
+        .map((i) => (i.hub ? { ...i, href: hubTabsFor(i.hub, permissions)[0]?.href ?? i.href } : i)),
+    }))
     .filter((g) => g.items.length > 0);
 }

@@ -40,5 +40,8 @@
   "zoneTransfers": "Zona koʻchirishlari",
   "reportsProducts": "Mahsulotlar savdosi",
   "reportsReturns": "Qaytarishlar",
-  "reportsExpenses": "Xarajatlar hisoboti"
+  "reportsExpenses": "Xarajatlar hisoboti",
+  "approvals": "Tasdiqlash",
+  "bank": "Bank",
+  "reconciliations": "Akt sverka"
 }

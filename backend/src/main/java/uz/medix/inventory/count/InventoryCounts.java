@@ -23,6 +23,9 @@ import uz.medix.inventory.count.InventoryCountModels.InventoryCountLine;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountPage;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountRequest;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountSummary;
+import uz.medix.inventory.count.InventoryCountModels.InventoryLastFull;
+import uz.medix.inventory.count.InventoryCountModels.InventoryOverview;
+import uz.medix.inventory.count.InventoryCountModels.InventoryStatusCount;
 import uz.medix.inventory.count.InventoryCountModels.Status;
 import uz.medix.inventory.count.InventoryCountModels.ZoneRef;
 import uz.medix.notification.Notifications;
@@ -97,7 +100,7 @@ class InventoryCounts {
                 SELECT c.id, c.number, c.branch_id, c.warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone_name,
                        z.type AS zone_type, c.blind, c.status, c.needs_director, coalesce(l.lines, 0) AS lines,
                        coalesce(l.counted, 0) AS counted, c.shortage_qty, c.surplus_qty, c.shortage_cost, c.surplus_cost,
-                       e.full_name AS created_by, c.created_at, c.posted_at
+                       e.full_name AS created_by, c.created_at, c.posted_at, c.commission
                 FROM inventory_count c
                 JOIN warehouse w ON w.id = c.warehouse_id
                 LEFT JOIN zone z ON z.id = c.zone_id
@@ -113,9 +116,41 @@ class InventoryCounts {
                         rs.getBoolean("blind"), Status.valueOf(rs.getString("status")), rs.getBoolean("needs_director"), rs.getInt("lines"),
                         rs.getInt("counted"), rs.getInt("shortage_qty"), rs.getInt("surplus_qty"), money(rs.getBigDecimal("shortage_cost")),
                         money(rs.getBigDecimal("surplus_cost")), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
-                        instant(rs.getTimestamp("posted_at"))))
+                        instant(rs.getTimestamp("posted_at")), rs.getString("commission")))
                 .list();
         return new InventoryCountPage(items, total, page, size);
+    }
+
+    static final int REMIND_DAYS = 90;
+
+    /** Roʻyxat yuqorisi (prototip Inventory): holatlar soni va har ombor boʻyicha oxirgi toʻliq inventarizatsiya. */
+    @Transactional(readOnly = true)
+    InventoryOverview overview(Actor actor, Long branchId) {
+        Long scope = branchId != null ? branchId : actor.allBranches() ? null : (actor.branchId() == null ? -1L : actor.branchId());
+        if (branchId != null && !actor.canAccessBranch(branchId)) {
+            throw MedixException.notFound("error.notFound");
+        }
+        List<InventoryStatusCount> statuses = jdbc.sql("""
+                SELECT status, count(*) AS n FROM inventory_count WHERE CAST(:b AS BIGINT) IS NULL OR branch_id = :b GROUP BY status""")
+                .param("b", scope)
+                .query((rs, n) -> new InventoryStatusCount(Status.valueOf(rs.getString("status")), rs.getLong("n")))
+                .list();
+        java.time.LocalDate today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Tashkent"));
+        List<InventoryLastFull> last = jdbc.sql("""
+                SELECT w.id, w.name, b.name AS bname,
+                       (SELECT max((c.posted_at AT TIME ZONE 'Asia/Tashkent')::date) FROM inventory_count c
+                        WHERE c.warehouse_id = w.id AND c.zone_id IS NULL AND c.status = 'POSTED') AS last
+                FROM warehouse w JOIN branch b ON b.id = w.branch_id
+                WHERE w.active AND (CAST(:b AS BIGINT) IS NULL OR w.branch_id = :b)
+                ORDER BY b.name, w.name""")
+                .param("b", scope)
+                .query((rs, n) -> {
+                    java.time.LocalDate d = rs.getDate("last") == null ? null : rs.getDate("last").toLocalDate();
+                    return new InventoryLastFull(rs.getLong("id"), rs.getString("name"), rs.getString("bname"), d,
+                            d == null ? null : (int) java.time.temporal.ChronoUnit.DAYS.between(d, today));
+                })
+                .list();
+        return new InventoryOverview(statuses, last, REMIND_DAYS);
     }
 
     @Transactional(readOnly = true)

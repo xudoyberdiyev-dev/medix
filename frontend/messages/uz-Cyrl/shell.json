@@ -11,5 +11,18 @@
   "expand": "Сидебаръни очиш",
   "userMenu": "Фойдаланувчи менюси",
   "language": "Тил",
-  "badge": "{count} та кутмоқда"
+  "badge": "{count} та кутмоқда",
+  "hubTabs": {
+    "transfers": "Кўчириш турлари",
+    "transfersWarehouse": "Омборлар ўртасида",
+    "transfersZone": "Зона ичида",
+    "transfersBranch": "Филиаллараро",
+    "returns": "Қайтариш турлари",
+    "returnsWriteOffs": "Ҳисобдан чиқариш",
+    "returnsSupplier": "ЕБ га қайтариш",
+    "supplierDebts": "ЕБ қарзи бўлимлари",
+    "supplierDebtsDebts": "Қарзлар",
+    "supplierDebtsBonus": "Бонус баланс"
+  },
+  "searchPlaceholder": "Маҳсулот, мижоз ёки ҳужжат рақами…"
 }

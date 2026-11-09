@@ -26,6 +26,7 @@ import {
 } from "./api";
 import { BranchSaleDrawer } from "./branch-sale-drawer";
 import { BranchPayDialog, BranchPaymentsList, canPayFor, useBranchPayments } from "./branch-payments";
+import { HubTabs } from "@/components/shell/hub-tabs";
 
 /** FS — filiallararo savdo: Qoralama → Yoʻlda (HF, xaridor filial qarzi) → Qabul qilindi. */
 export function BranchSalesPage() {
@@ -98,6 +99,7 @@ export function BranchSalesPage() {
 
   return (
     <>
+      <HubTabs hub="transfers" />
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (

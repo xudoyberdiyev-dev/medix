@@ -62,6 +62,14 @@ export function progress(lines: InventoryCountLine[]): number {
   return Math.round((lines.filter((l) => l.countedQty != null).length * 100) / lines.length);
 }
 
+export function useInventoryOverview(branchId: number | null, enabled: boolean) {
+  return useQuery({
+    enabled,
+    queryKey: ["inventory-counts", "overview", branchId],
+    queryFn: () => unwrap(api.GET("/api/inventory-counts/overview", { params: { query: { branchId: branchId ?? undefined } } })),
+  });
+}
+
 export function useInventoryCounts(branchId: number | null, status: InventoryCountStatus | null, page: number) {
   return useQuery({
     queryKey: ["inventory-counts", "list", branchId, status, page],

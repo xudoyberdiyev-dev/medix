@@ -19,6 +19,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { HubTabs } from "@/components/shell/hub-tabs";
 
 export type BonusRow = components["schemas"]["BonusRow"];
 type BonusMove = components["schemas"]["BonusMove"];
@@ -102,6 +103,7 @@ export function BonusPage() {
 
   return (
     <>
+      <HubTabs hub="supplierDebts" />
       <h1 className="mb-4 text-page-title">{t("title")}</h1>
       {d ? (
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">

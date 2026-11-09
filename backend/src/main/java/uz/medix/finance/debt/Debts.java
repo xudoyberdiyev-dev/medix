@@ -51,6 +51,12 @@ class Debts {
     record Act(long counterpartyId, String name, String tin, long branchId, String branch, LocalDate from, LocalDate to, String opening,
             String debitTotal, String creditTotal, String closing, List<ActLine> lines) {}
 
+    record SupplierInvoice(long receiptId, String number, long branchId, String branch, long supplierId, String supplier, LocalDate date,
+            String paymentType, @Schema(nullable = true) String owner, @Schema(nullable = true) LocalDate dueDate, boolean prepaid,
+            String sum, String paid, String left, @Schema(nullable = true, description = "Toʻlov kunigacha qolgan kun (manfiy — kechikkan)") Integer days) {}
+
+    record SupplierInvoices(LocalDate today, List<SupplierInvoice> rows) {}
+
     private final JdbcClient jdbc;
     private final PartyLedger parties;
     private final Clock clock;
@@ -139,6 +145,45 @@ class Debts {
         rows.sort(Comparator.comparing((DebtRow r) -> Money.of(r.buckets().overdue())).reversed()
                 .thenComparing((DebtRow r) -> Money.of(r.buckets().debt()), Comparator.reverseOrder()));
         return new DebtReport(branchId, today, Buckets.of(total), rows);
+    }
+
+    /**
+     * YB qarzi — kirim (KR) boʻyicha (prototip Payables): summa, toʻlangan, qoldiq, toʻlov kuni, toʻlov turi, kim nomiga. Ochiq kirimlar va
+     * oxirgi 30 kundagi oldindan toʻlangan kirimlar.
+     */
+    @Transactional(readOnly = true)
+    SupplierInvoices supplierInvoices(Actor actor, Long branchId) {
+        if (branchId == null ? !actor.allBranches() : !actor.canAccessBranch(branchId)) {
+            throw MedixException.notFound("error.notFound");
+        }
+        LocalDate today = today();
+        List<SupplierInvoice> rows = jdbc.sql("""
+                WITH own AS (SELECT doc_id, sum(amount) AS amt FROM party_ledger
+                             WHERE side = 'SUPPLIER' AND doc_type = 'KR' AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                             GROUP BY doc_id),
+                     app AS (SELECT applies_doc_id AS i, sum(amount) AS amt FROM party_ledger
+                             WHERE side = 'SUPPLIER' AND applies_doc_type = 'KR' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                             GROUP BY applies_doc_id)
+                SELECT r.id, r.number, r.branch_id, b.name AS bname, c.id AS cid, c.name AS cname, r.receipt_date, r.payment_type, e.full_name,
+                       r.due_date, r.prepaid, own.amt AS total, -coalesce(app.amt, 0) AS paid, own.amt + coalesce(app.amt, 0) AS left_amt
+                FROM own JOIN receipt r ON r.id = own.doc_id JOIN branch b ON b.id = r.branch_id JOIN counterparty c ON c.id = r.supplier_id
+                     LEFT JOIN employee e ON e.id = r.owner_id LEFT JOIN app ON app.i = own.doc_id
+                WHERE own.amt + coalesce(app.amt, 0) > 0 OR (r.prepaid AND r.receipt_date >= :since)
+                ORDER BY r.due_date NULLS LAST, r.receipt_date, r.id
+                LIMIT 2000""")
+                .param("b", branchId)
+                .param("since", java.sql.Date.valueOf(today.minusDays(30)))
+                .query((rs, n) -> {
+                    Money left = new Money(rs.getBigDecimal("left_amt"));
+                    LocalDate due = rs.getDate("due_date") == null ? null : rs.getDate("due_date").toLocalDate();
+                    Integer days = due == null || !left.isPositive() ? null : (int) java.time.temporal.ChronoUnit.DAYS.between(today, due);
+                    return new SupplierInvoice(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getString("bname"),
+                            rs.getLong("cid"), rs.getString("cname"), rs.getDate("receipt_date").toLocalDate(), rs.getString("payment_type"),
+                            rs.getString("full_name"), due, rs.getBoolean("prepaid"), new Money(rs.getBigDecimal("total")).toString(),
+                            new Money(rs.getBigDecimal("paid")).toString(), left.isPositive() ? left.toString() : "0.00", days);
+                })
+                .list();
+        return new SupplierInvoices(today, rows);
     }
 
     @Transactional(readOnly = true)

@@ -50,7 +50,17 @@ final class InventoryCountModels {
             boolean blind, Status status, boolean needsDirector, int lines, int counted, int shortageQty, int surplusQty,
             @Schema(nullable = true, description = "Faqat prices.cost") String shortageCost,
             @Schema(nullable = true, description = "Faqat prices.cost") String surplusCost,
-            String createdBy, Instant createdAt, @Schema(nullable = true) Instant postedAt) {}
+            String createdBy, Instant createdAt, @Schema(nullable = true) Instant postedAt,
+            @Schema(nullable = true, description = "Komissiya (vergul bilan)") String commission) {}
+
+    record InventoryStatusCount(Status status, long count) {}
+
+    record InventoryLastFull(long warehouseId, String warehouse, String branch,
+            @Schema(nullable = true, description = "Oxirgi oʻtkazilgan toʻliq (butun ombor) inventarizatsiya") LocalDate date,
+            @Schema(nullable = true) Integer days) {}
+
+    record InventoryOverview(List<InventoryStatusCount> statuses, List<InventoryLastFull> lastFull,
+            @Schema(description = "Shundan eski boʻlsa — eslatma (sariq)") int remindDays) {}
 
     record InventoryCountPage(List<InventoryCountSummary> items, long total, int page, int size) {}
 

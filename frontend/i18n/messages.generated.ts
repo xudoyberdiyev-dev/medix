@@ -1,5 +1,7 @@
 // AVTOMATIK YASALGAN (`pnpm i18n:cyrl`) — qoʻlda oʻzgartirmang.
+import uzLatn_approvals from "@/messages/uz-Latn/approvals.json";
 import uzLatn_audit from "@/messages/uz-Latn/audit.json";
+import uzLatn_bank from "@/messages/uz-Latn/bank.json";
 import uzLatn_bonuses from "@/messages/uz-Latn/bonuses.json";
 import uzLatn_branchPanel from "@/messages/uz-Latn/branchPanel.json";
 import uzLatn_branchSales from "@/messages/uz-Latn/branchSales.json";
@@ -26,6 +28,7 @@ import uzLatn_prices from "@/messages/uz-Latn/prices.json";
 import uzLatn_products from "@/messages/uz-Latn/products.json";
 import uzLatn_profile from "@/messages/uz-Latn/profile.json";
 import uzLatn_receipts from "@/messages/uz-Latn/receipts.json";
+import uzLatn_reconciliations from "@/messages/uz-Latn/reconciliations.json";
 import uzLatn_reports from "@/messages/uz-Latn/reports.json";
 import uzLatn_roles from "@/messages/uz-Latn/roles.json";
 import uzLatn_search from "@/messages/uz-Latn/search.json";
@@ -39,7 +42,9 @@ import uzLatn_warehousePanel from "@/messages/uz-Latn/warehousePanel.json";
 import uzLatn_warehouseTransfers from "@/messages/uz-Latn/warehouseTransfers.json";
 import uzLatn_writeOffs from "@/messages/uz-Latn/writeOffs.json";
 import uzLatn_zoneTransfers from "@/messages/uz-Latn/zoneTransfers.json";
+import uzCyrl_approvals from "@/messages/uz-Cyrl/approvals.json";
 import uzCyrl_audit from "@/messages/uz-Cyrl/audit.json";
+import uzCyrl_bank from "@/messages/uz-Cyrl/bank.json";
 import uzCyrl_bonuses from "@/messages/uz-Cyrl/bonuses.json";
 import uzCyrl_branchPanel from "@/messages/uz-Cyrl/branchPanel.json";
 import uzCyrl_branchSales from "@/messages/uz-Cyrl/branchSales.json";
@@ -66,6 +71,7 @@ import uzCyrl_prices from "@/messages/uz-Cyrl/prices.json";
 import uzCyrl_products from "@/messages/uz-Cyrl/products.json";
 import uzCyrl_profile from "@/messages/uz-Cyrl/profile.json";
 import uzCyrl_receipts from "@/messages/uz-Cyrl/receipts.json";
+import uzCyrl_reconciliations from "@/messages/uz-Cyrl/reconciliations.json";
 import uzCyrl_reports from "@/messages/uz-Cyrl/reports.json";
 import uzCyrl_roles from "@/messages/uz-Cyrl/roles.json";
 import uzCyrl_search from "@/messages/uz-Cyrl/search.json";
@@ -79,7 +85,9 @@ import uzCyrl_warehousePanel from "@/messages/uz-Cyrl/warehousePanel.json";
 import uzCyrl_warehouseTransfers from "@/messages/uz-Cyrl/warehouseTransfers.json";
 import uzCyrl_writeOffs from "@/messages/uz-Cyrl/writeOffs.json";
 import uzCyrl_zoneTransfers from "@/messages/uz-Cyrl/zoneTransfers.json";
+import ru_approvals from "@/messages/ru/approvals.json";
 import ru_audit from "@/messages/ru/audit.json";
+import ru_bank from "@/messages/ru/bank.json";
 import ru_bonuses from "@/messages/ru/bonuses.json";
 import ru_branchPanel from "@/messages/ru/branchPanel.json";
 import ru_branchSales from "@/messages/ru/branchSales.json";
@@ -106,6 +114,7 @@ import ru_prices from "@/messages/ru/prices.json";
 import ru_products from "@/messages/ru/products.json";
 import ru_profile from "@/messages/ru/profile.json";
 import ru_receipts from "@/messages/ru/receipts.json";
+import ru_reconciliations from "@/messages/ru/reconciliations.json";
 import ru_reports from "@/messages/ru/reports.json";
 import ru_roles from "@/messages/ru/roles.json";
 import ru_search from "@/messages/ru/search.json";
@@ -121,7 +130,9 @@ import ru_writeOffs from "@/messages/ru/writeOffs.json";
 import ru_zoneTransfers from "@/messages/ru/zoneTransfers.json";
 
 export const uzLatn = {
+  "approvals": uzLatn_approvals,
   "audit": uzLatn_audit,
+  "bank": uzLatn_bank,
   "bonuses": uzLatn_bonuses,
   "branchPanel": uzLatn_branchPanel,
   "branchSales": uzLatn_branchSales,
@@ -148,6 +159,7 @@ export const uzLatn = {
   "products": uzLatn_products,
   "profile": uzLatn_profile,
   "receipts": uzLatn_receipts,
+  "reconciliations": uzLatn_reconciliations,
   "reports": uzLatn_reports,
   "roles": uzLatn_roles,
   "search": uzLatn_search,
@@ -164,7 +176,9 @@ export const uzLatn = {
 };
 
 export const uzCyrl = {
+  "approvals": uzCyrl_approvals,
   "audit": uzCyrl_audit,
+  "bank": uzCyrl_bank,
   "bonuses": uzCyrl_bonuses,
   "branchPanel": uzCyrl_branchPanel,
   "branchSales": uzCyrl_branchSales,
@@ -191,6 +205,7 @@ export const uzCyrl = {
   "products": uzCyrl_products,
   "profile": uzCyrl_profile,
   "receipts": uzCyrl_receipts,
+  "reconciliations": uzCyrl_reconciliations,
   "reports": uzCyrl_reports,
   "roles": uzCyrl_roles,
   "search": uzCyrl_search,
@@ -207,7 +222,9 @@ export const uzCyrl = {
 };
 
 export const ru = {
+  "approvals": ru_approvals,
   "audit": ru_audit,
+  "bank": ru_bank,
   "bonuses": ru_bonuses,
   "branchPanel": ru_branchPanel,
   "branchSales": ru_branchSales,
@@ -234,6 +251,7 @@ export const ru = {
   "products": ru_products,
   "profile": ru_profile,
   "receipts": ru_receipts,
+  "reconciliations": ru_reconciliations,
   "reports": ru_reports,
   "roles": ru_roles,
   "search": ru_search,

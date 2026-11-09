@@ -24,6 +24,7 @@ import {
   type WriteOffSummary,
 } from "./api";
 import { WriteOffDrawer } from "./write-off-drawer";
+import { HubTabs } from "@/components/shell/hub-tabs";
 
 export function WriteOffStatusBadge({ status }: { status: WriteOffStatus }) {
   const t = useTranslations("writeOffs");
@@ -97,6 +98,7 @@ export function WriteOffsPage() {
 
   return (
     <>
+      <HubTabs hub="returns" />
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (

@@ -4,7 +4,7 @@ import { SectionPlaceholderBody } from "./placeholder";
 
 /** Oʻz sahifasi bor boʻlimlar bu yerda emas. */
 const BUILT = new Set(["/", "/settings", "/dictionaries", "/products", "/customers", "/suppliers", "/prices", "/stock", "/expiry"]);
-const sections = navigation.flatMap((g) => g.items).filter((i) => !BUILT.has(i.href));
+const sections = navigation.flatMap((g) => g.items).filter((i) => !BUILT.has(i.href) && !i.href.slice(1).includes("/"));
 
 export function generateStaticParams() {
   return sections.map((s) => ({ section: s.href.slice(1) }));

@@ -58,6 +58,13 @@ class DebtController {
         return debts.report(actor(), Side.SUPPLIER, branchId);
     }
 
+    @GetMapping("/api/debts/suppliers/invoices")
+    @PreAuthorize("hasAuthority('sdebt.view')")
+    @Operation(summary = "YB qarzi — kirimlar boʻyicha (summa, toʻlangan, qoldiq, toʻlov kuni)")
+    Debts.SupplierInvoices supplierInvoices(@RequestParam(required = false) Long branchId) {
+        return debts.supplierInvoices(actor(), branchId);
+    }
+
     @GetMapping("/api/debts/suppliers/{id}/docs")
     @PreAuthorize("hasAuthority('sdebt.view')")
     @Operation(summary = "Yetkazib beruvchi bo'yicha ochiq hujjatlar")
