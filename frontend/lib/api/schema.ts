@@ -949,6 +949,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/counterparties/{id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kartochka hujjat yorliqlari: Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar, Kirimlar (oxirgi 100 ta)
+         * @description Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, qm.view / qy.view, receipt.view. Filial — xodim ko'radiganlari.
+         */
+        get: operations["documents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties/{id}/licenses": {
         parameters: {
             query?: never;
@@ -6847,6 +6867,16 @@ export interface components {
             tin: string;
             vatCode?: string;
         };
+        CounterpartyDocumentsPage: {
+            items: components["schemas"]["DocRow"][];
+            /** @enum {string} */
+            section: "ORDERS" | "SALES" | "PAYMENTS" | "RETURNS" | "RECEIPTS";
+            /**
+             * Format: int64
+             * @description Shartga mos jami soni
+             */
+            total: number;
+        };
         CounterpartyOverviewPage: {
             branches: components["schemas"]["OverviewBranch"][];
             items: components["schemas"]["OverviewRow"][];
@@ -7107,6 +7137,30 @@ export interface components {
             number: string;
             /** Format: int64 */
             paymentId: number;
+        };
+        DocRow: {
+            /** @description Summa, so'm */
+            amount: string;
+            branchCode: string;
+            branchName: string;
+            /** Format: date */
+            date: string;
+            /** Format: date */
+            dueDate?: string;
+            /** @description Sotuv — hisob-faktura raqami, kirim — yuk xati */
+            extraNumber?: string;
+            /** Format: int64 */
+            id: number;
+            /**
+             * Format: int64
+             * @description Ochiladigan hujjat: buyurtma (sotuv, mijoz qaytarishi), aks holda shu hujjat
+             */
+            linkId?: number;
+            number: string;
+            /** @description Sotuv/kirim: to'lanmagan qoldiq (0 — to'langan) */
+            open?: string;
+            /** @description Hujjat holati (bazadagi kod: DRAFT, POSTED, CANCELLED, …) */
+            status: string;
         };
         DriverCash: {
             amount: string;
@@ -12882,6 +12936,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CounterpartyDetail"];
+                };
+            };
+        };
+    };
+    documents: {
+        parameters: {
+            query: {
+                role?: "CUSTOMER" | "SUPPLIER" | "ALL";
+                section: "ORDERS" | "SALES" | "PAYMENTS" | "RETURNS" | "RECEIPTS";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyDocumentsPage"];
                 };
             };
         };

@@ -216,3 +216,17 @@ export function parseMoneyInput(input: string): string | undefined | null {
   const normalized = t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : /^\d{1,3}(\.\d{3})+$/.test(t) ? t.replace(/\./g, "") : t;
   return /^\d{1,16}(\.\d{1,2})?$/.test(normalized) ? normalized : null;
 }
+
+/** Kartochka hujjat yorligʻi: oxirgi 100 ta hujjat (Buyurtmalar, Sotuvlar, Toʻlovlar, Qaytarishlar, Kirimlar). */
+export function useCounterpartyDocuments(
+  id: number,
+  role: CounterpartyRole,
+  section: components["schemas"]["CounterpartyDocumentsPage"]["section"],
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...KEY, "one", id, "documents", role, section],
+    queryFn: () => unwrap(api.GET("/api/counterparties/{id}/documents", { params: { path: { id }, query: { role, section } } })),
+    enabled,
+  });
+}

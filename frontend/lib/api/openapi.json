@@ -2300,6 +2300,52 @@
         "tags" : [ "counterparties" ]
       }
     },
+    "/api/counterparties/{id}/documents" : {
+      "get" : {
+        "description" : "Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, qm.view / qy.view, receipt.view. Filial — xodim ko'radiganlari.",
+        "operationId" : "documents",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "CUSTOMER",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "section",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ORDERS", "SALES", "PAYMENTS", "RETURNS", "RECEIPTS" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDocumentsPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kartochka hujjat yorliqlari: Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar, Kirimlar (oxirgi 100 ta)",
+        "tags" : [ "counterparties" ]
+      }
+    },
     "/api/counterparties/{id}/licenses" : {
       "post" : {
         "operationId" : "addLicense",
@@ -16180,6 +16226,27 @@
         },
         "required" : [ "active", "blocked", "contracts", "customer", "id", "licenses", "name", "supplier", "terms", "tin" ]
       },
+      "CounterpartyDocumentsPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DocRow"
+            }
+          },
+          "section" : {
+            "type" : "string",
+            "enum" : [ "ORDERS", "SALES", "PAYMENTS", "RETURNS", "RECEIPTS" ]
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shartga mos jami soni"
+          }
+        },
+        "required" : [ "items", "section", "total" ]
+      },
       "CounterpartyOverviewPage" : {
         "type" : "object",
         "properties" : {
@@ -16960,6 +17027,54 @@
           }
         },
         "required" : [ "account", "amount", "date", "number", "paymentId" ]
+      },
+      "DocRow" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "description" : "Summa, so'm"
+          },
+          "branchCode" : {
+            "type" : "string"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "extraNumber" : {
+            "type" : "string",
+            "description" : "Sotuv — hisob-faktura raqami, kirim — yuk xati"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "linkId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Ochiladigan hujjat: buyurtma (sotuv, mijoz qaytarishi), aks holda shu hujjat"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "open" : {
+            "type" : "string",
+            "description" : "Sotuv/kirim: to'lanmagan qoldiq (0 — to'langan)"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Hujjat holati (bazadagi kod: DRAFT, POSTED, CANCELLED, …)"
+          }
+        },
+        "required" : [ "amount", "branchCode", "branchName", "date", "id", "number", "status" ]
       },
       "DriverCash" : {
         "type" : "object",

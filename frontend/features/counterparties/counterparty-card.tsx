@@ -31,10 +31,14 @@ import {
 } from "./api";
 import { LicenseBadge, StatusBadge } from "./counterparties-page";
 import { ContractsTab, CounterpartyDrawer, LicensesTab, TermsTab } from "./counterparty-drawer";
+import { DocumentsTab } from "./documents-tab";
+import { docSections, sectionPermission, type DocSection } from "./documents-model";
 import { cents } from "./overview-model";
 
-const TABS = ["general", "licenses", "terms", "contracts"] as const;
-type Tab = (typeof TABS)[number];
+const BASE_TABS = ["general", "licenses", "terms", "contracts"] as const;
+type Tab = (typeof BASE_TABS)[number] | DocSection;
+/** Prototip tartibi: Umumiy, Litsenziyalar, Shartlar, Buyurtmalar/Kirimlar, … hujjat yorliqlari, Shartnomalar. */
+const tabsFor = (customers: boolean): Tab[] => [...BASE_TABS.slice(0, 3), ...docSections(customers), "contracts"];
 
 function InfoList({ title, rows }: { title: string; rows: [string, ReactNode, boolean?][] }) {
   return (
@@ -103,6 +107,7 @@ export function CounterpartyCardPage({ id, role }: { id: number; role: Counterpa
 function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
   const t = useTranslations("counterparties.card");
   const tl = useTranslations("counterparties.overview");
+  const td = useTranslations("counterparties.docs");
   const me = useMe();
   const customers = role === "CUSTOMER";
   const canEdit = canEditCard(me.data?.permissions, c.customer, c.supplier);
@@ -112,7 +117,7 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
   const activate = useActivateCounterparty();
   const params = useSearchParams();
   const [tab, setTab] = useState<Tab>(
-    (TABS as readonly string[]).includes(params.get("tab") ?? "") ? (params.get("tab") as Tab) : "general",
+    (tabsFor(customers) as string[]).includes(params.get("tab") ?? "") ? (params.get("tab") as Tab) : "general",
   );
   const [edit, setEdit] = useState(false);
   const [dialog, setDialog] = useState<"block" | "inactive" | null>(null);
@@ -231,7 +236,11 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
       ) : null}
       <Tabs
         aria-label={t("tabsLabel")}
-        items={TABS.map((k) => ({ key: k, label: t(`tab.${k}`), count: counts[k] }))}
+        items={tabsFor(customers).map((k) => ({
+          key: k,
+          label: k === "general" || k === "licenses" || k === "terms" || k === "contracts" ? t(`tab.${k}`) : td(`tab.${k}`),
+          count: counts[k],
+        }))}
         value={tab}
         onChange={(k) => setTab(k as Tab)}
       />
@@ -370,6 +379,9 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
       {tab === "licenses" ? <LicensesTab cp={c} canEdit={can(me.data, "clients.lic")} /> : null}
       {tab === "terms" ? <TermsTab cp={c} /> : null}
       {tab === "contracts" ? <ContractsTab cp={c} canEdit={canEdit} /> : null}
+      {tab !== "general" && tab !== "licenses" && tab !== "terms" && tab !== "contracts" ? (
+        <DocumentsTab key={tab} id={c.id} role={role} section={tab} allowed={can(me.data, sectionPermission(tab, customers))} />
+      ) : null}
       {edit ? (
         <CounterpartyDrawer
           counterpartyId={c.id}
