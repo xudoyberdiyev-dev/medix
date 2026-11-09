@@ -62,6 +62,20 @@ public class Accounts {
                 .list();
     }
 
+    /** Chaqiruvchiga ochiq barcha filiallar hisoblari (filial kodi, keyin tur tartibida). Standart hisoblar yaratilmaydi. */
+    @Transactional(readOnly = true)
+    public List<Account> listAll(Actor actor) {
+        return jdbc.sql("""
+                SELECT a.id, a.branch_id, a.kind, a.code, a.name, a.bank_name, a.account_no, a.active, a.balance, a.cashier_id, e.full_name AS cashier_name
+                FROM money_account a JOIN branch b ON b.id = a.branch_id LEFT JOIN employee e ON e.id = a.cashier_id
+                ORDER BY b.code, CASE a.kind WHEN 'CASH' THEN 0 WHEN 'TERMINAL' THEN 1 ELSE 2 END, a.id""")
+                .query(Accounts::map)
+                .list()
+                .stream()
+                .filter(a -> actor.canAccessBranch(a.branchId()))
+                .toList();
+    }
+
     /** Filialning standart hisoblari (kassa, Terminal) birinchi murojaatda yaratiladi; chaqiruvchi tranzaksiyasida. */
     public void ensureDefaults(long branchId) {
         // Filial qatori qulflanadi — parallel birinchi murojaatda takror yaratilmaydi

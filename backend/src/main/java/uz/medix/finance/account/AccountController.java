@@ -44,6 +44,14 @@ class AccountController {
         return accounts.list(actor(), branchId);
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyAuthority('cash.view', 'bank.view', 'payments.view')")
+    @Operation(summary = "Barcha ochiq filiallar hisoblari (qoldiq bilan)",
+            description = "Kassa sahifasi filial tanlanmaganda (prototip Cash): chaqiruvchiga ochiq filiallarning barcha hisoblari.")
+    List<Accounts.Account> listAll() {
+        return accounts.listAll(actor());
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('settings.view')")
