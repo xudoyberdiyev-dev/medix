@@ -166,10 +166,10 @@ class OpeningFinances {
         Head h = lock(id, actor);
         requireDraft(h);
         // Bir filial va tur uchun parallel o'tkazishlar navbatga turadi — ikkinchisi birinchisining natijasini ko'radi
-        jdbc.sql("SELECT pg_advisory_xact_lock(:k, CAST(:b AS INTEGER))")
+        jdbc.sql("SELECT 1 FROM (SELECT pg_advisory_xact_lock(:k, CAST(:b AS INTEGER))) x")
                 .param("k", ("opening_finance:" + h.kind().name()).hashCode())
                 .param("b", h.branchId())
-                .query(Object.class)
+                .query(Integer.class)
                 .single();
         boolean posted = jdbc.sql("SELECT EXISTS (SELECT 1 FROM opening_finance WHERE branch_id = :b AND kind = :k AND status = 'POSTED')")
                 .param("b", h.branchId())
