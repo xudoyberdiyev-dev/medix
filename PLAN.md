@@ -39,6 +39,17 @@ Navbat: Direktor bosh sahifasi → boshqa rollar bosh sahifalari → Buyurtmalar
 - [x] Sidebar nishonlari ✅ 08.11 04:10 (`/api/nav/badges`: Buyurtmalar — tasdiq kutayotgan, Joʻnatish — «Hujjatlashtirilmoqda», Muddat nazorati — 90 kun ichida / oʻtgan boʻlsa qizil; har biri ruxsat boʻlsa; filial doirasi; SSE bilan yangilanadi) va sidebar sarlavhasida tashkilot nomi.
   - Keyinroq (o'z ekranlarida): Buxgalter «Akt sverka — yuborilgan yoki farqli» (akt holati kuzatuvi Akt sverka ekranida), Xarid «Qoralama (yuborilmagan)» (kirimni omborga «Yuborildi» belgisi — Kirim ekranida).
 
+## Egasi javoblari (09.11.2026 17:36) — «Hammasi prototipdagidek, tavsiya bo'yicha» — BIRINCHI NAVBATDA
+- [ ] **E7. Buyurtmada chegirma %** (prototip OrderEntry/OrderCard): qator chegirmasi %; jami «Summa (chegirmasiz) / Chegirma / Jami». Operator 5% gacha o'zi beradi; 5% dan katta — buyurtma tasdiqqa ketadi (Filial rahbari; sabab «Chegirma N% > 5%»). Narx muzlatish chegirmali narxga; sotuv/HF/qarz chegirmadan keyingi summada; hisobotlarda chegirma ustuni. Ruxsat kaliti `orders.discount` (+ `orders.discount.approve`). Migratsiya + test.
+- [ ] **E8. Kontragent shartlari:** mijoz uchun «Chegirma %» (standart chegirma — buyurtma qatoriga avtomatik qo'yiladi, E7 qoidalari bilan), YB uchun «Yetkazish muddati (kun)».
+- [ ] **E9. Litsenziya majburiy** — yangi kontragent kartasida litsenziya raqami va muddati majburiy (prototipdagidek *).
+- [ ] **E10. Yangi narx turi qo'shish** va turini «Partiyaga bog'liq»/«Bazaviy» almashtirish — prototipdagidek (bazaviy tur bitta bo'lishi shart; Vozvrat turi QM uchun saqlanadi).
+- [ ] **E11. Filial kodi 2–4 lotin harf** (hujjat raqami `BY-TS-000001` ham bo'lishi mumkin — DocumentNumber, regex, testlar). «Filialni o'chirish» tugmasi → **nofaol qilish** (o'chirilmaydi, tarix saqlanadi).
+- [ ] **E12. Zonalar:** «Sotuvga ochiq» almashtirgichi haqiqiy (zona darajasida saqlanadi; Qabul/Karantin/Jo'natish uchun yopiq qoladi), bir omborda bir turdagi bir nechta zona (nomi bilan farqlanadi).
+- [ ] **E13. Xodimlar chegarasi** — prototipdagidek «N / 40 foydalanuvchi», standart chegara 40 (`MEDIX_EMPLOYEE_LIMIT`), chegaraga yetganda yangi xodim qo'shish bloklanadi va aniq xabar.
+- [ ] **E14. Rol doirasi «Barcha filiallar»** — faqat Direktor o'zgartira oladi (Bosh administrator ko'radi, lekin o'zgartirolmaydi).
+- [ ] **E15. Login cheklovi** — 5 xato → 15 daqiqa (tasdiqlandi); prototipdagi «Qolgan urinishlar: N» ko'rsatiladi.
+
 ## Egasi javoblari (07.11.2026 18:12) — BIRINCHI NAVBATDA BAJARILADI
 Bu javoblar SPEC/T12 dan ustun. Har birini kod + test + e2e bilan joriy qiling, PLAN'da belgilang:
 - [x] **E1. Markirovka:** ✅ 07.11 20:15 (V49 `sales_order_mark_confirm`, `/api/marking/orders/{id}/confirm`, Markirovkachi paneli «Markirovkasiz qatorlar» + «Tasdiqlash», IT + e2e) HAR bir buyurtma Markirovkachi bosqichidan o'tadi. Bitta buyurtmada markirovkali va markirovkasiz qatorlar aralash bo'lishi mumkin: markirovkali qatorlar skanerlanadi, markirovkasiz qatorlar Markirovkachi tomonidan «Tasdiqlash» bilan o'tadi; hammasi markirovkasiz bo'lsa — butun buyurtma «Markirovkasiz — tasdiqlash». Yig'ishdan to'g'ridan-to'g'ri Tekshiruvga o'tish olib tashlansin.
@@ -73,6 +84,7 @@ Bu javoblar SPEC/T12 dan ustun. Har birini kod + test + e2e bilan joriy qiling, 
 - [ ] (Ixtiyoriy) Bulut muhiti tarmoq sozlamasida Maven Central (`repo.maven.apache.org`), `services.gradle.org` va Docker Hub'ga ruxsat — shunda backend sessiya ichida ham tekshiriladi, CI kutish shart bo'lmaydi.
 
 ## Egasiga savollar
+_(09.11.2026 17:36 — quyidagi 9 savolga javob: «hammasi prototipdagidek, tavsiya bo'yicha» → yuqoridagi E7–E15)_
 - (09.11 14:35) **Kontragent shakli (prototip CounterpartyForm):** (a) yangi kartada litsenziya raqami/muddati prototipda majburiy (*) — hozir ixtiyoriy qilindi (YB va litsenziyasi keyin keladigan mijozlar uchun; kiritilsa — ikkalasi shart). Majburiy qilinsinmi? (b) Shartlardagi «Chegirma %» (savdo chegirmasi — avvalgi savol bilan bir xil) va «Yetkazish muddati (kun)» (YB) qoʻyilmadi — biznes qoidasi kerak.
 - (09.11 03:10) **Xodimlar chegarasi (prototip «12 / 40 foydalanuvchi», «Litsenziya chegarasi»):** chegara `MEDIX_EMPLOYEE_LIMIT` env bilan sozlanadi, standart — 0 (cheklanmagan, hisoblagich «N foydalanuvchi»). Chegara kerak boʻlsa — sonini ayting (masalan, 40).
 - (09.11 02:20) Rollar matritsasida (prototip WizRoles) rolga «Filial doirasi: Barcha filiallar» qoʻyish mumkin — bu rol xodimlari barcha filiallarni koʻradi. E3 qarori (Buxgalter — faqat oʻz filiali, istisno — Direktor belgisi) bilan toʻqnashmasligi uchun: standart Buxgalter roli «Oʻz filiali»da qoldirildi, lekin Rollar sahifasini ochadigan (Direktor/Bosh administrator) uni oʻzgartira oladi. Doira oʻzgarishini faqat Direktorga qoldiraymi?
