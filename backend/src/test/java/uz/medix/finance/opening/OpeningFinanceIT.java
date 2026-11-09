@@ -163,6 +163,11 @@ class OpeningFinanceIT {
                 .andExpect(jsonPath("$.status").value("POSTED"));
         assertThat(ledger(c1, b, "CUSTOMER")).isEqualByComparingTo("1000.50");
         assertThat(ledger(c2, b, "CUSTOMER")).isEqualByComparingTo("-200.00");
+        // Filiallar ro'yxati: mijozlar qarzi — faqat qarzdorlar (avans ayirilmaydi), xodimlar soni
+        mvc.perform(get("/api/branches/stats").cookie(dir.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.branchId == " + b + ")].customerDebt").value(org.hamcrest.Matchers.hasItem("1000.50")))
+                .andExpect(jsonPath("$[?(@.branchId == " + b + ")].employees").value(org.hamcrest.Matchers.hasItem(1)));
         assertThat(jdbc.sql("SELECT due_date FROM party_ledger WHERE counterparty_id = :c AND doc_type = 'BQ'").param("c", c1)
                 .query(java.sql.Date.class).single().toLocalDate()).isEqualTo(today().plusDays(10));
 
