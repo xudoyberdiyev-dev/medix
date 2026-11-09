@@ -38,11 +38,14 @@ import {
   usePriceTypes,
   type Contract,
   type CounterpartyDetail,
+  type CounterpartyRequest,
   type CounterpartyRole,
   type License,
   type Terms,
 } from "./api";
 import { LicenseBadge, StatusBadge } from "./counterparties-page";
+
+const KIND_VALUES = ["PHARMACY", "CLINIC", "HOSPITAL", "DISTRIBUTOR", "MAKER"] as const;
 
 export function CounterpartyDrawer({
   counterpartyId,
@@ -134,6 +137,7 @@ function MainTab({
   onCreated: (id: number) => void;
 }) {
   const tm = useTranslations("counterparties.main");
+  const tk = useTranslations("counterparties.overview");
   const me = useMe();
   const save = useSaveCounterparty();
   const block = useBlockCounterparty();
@@ -147,6 +151,7 @@ function MainTab({
     customer: cp ? cp.customer : defaultRole === "CUSTOMER",
     supplier: cp ? cp.supplier : defaultRole === "SUPPLIER",
     regionId: cp?.region ? String(cp.region.id) : null,
+    kind: (cp?.kind ?? null) as string | null,
     address: cp?.address ?? "",
     phone: cp?.phone ?? "",
     contactPerson: cp?.contactPerson ?? "",
@@ -177,6 +182,7 @@ function MainTab({
           customer: form.customer,
           supplier: form.supplier,
           regionId: form.regionId ? Number(form.regionId) : undefined,
+          kind: (form.kind ?? undefined) as CounterpartyRequest["kind"],
           address: t(form.address),
           phone: t(form.phone),
           contactPerson: t(form.contactPerson),
@@ -223,6 +229,13 @@ function MainTab({
             <Checkbox label={tm("customer")} checked={form.customer} disabled={!canEdit} onChange={set("customer")} />
             <Checkbox label={tm("supplier")} checked={form.supplier} disabled={!canEdit} onChange={set("supplier")} />
           </div>
+          <Select
+            label={tk("f.kind")}
+            disabled={!canEdit}
+            value={form.kind}
+            onChange={set("kind")}
+            options={KIND_VALUES.map((k) => ({ value: k, label: tk(`kind.${k}`) }))}
+          />
           <Select
             label={tm("region")}
             searchable

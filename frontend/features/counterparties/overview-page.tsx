@@ -248,7 +248,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
     );
   };
   const brChips = (r: OverviewRow) => (
-    <span className="flex flex-wrap gap-1">
+    <span className="flex gap-1 whitespace-nowrap">
       {r.branches.map((b) => (
         <span
           key={b}
@@ -286,8 +286,8 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
               }`
             : (r.legalName ?? "");
         return (
-          <span className="flex min-w-0 flex-col">
-            <span className="flex items-center gap-2">
+          <span className="flex max-w-[236px] min-w-0 flex-col">
+            <span className="flex min-w-0 items-center gap-2">
               <span className={cn("truncate font-medium", grey && "text-text-secondary")}>
                 <Highlight text={r.name} q={hit?.where === "name" ? q : ""} />
               </span>

@@ -8607,9 +8607,12 @@ export interface components {
             lastReceiptNumber?: string;
             /** Format: date */
             lastSaleDate?: string;
-            /** Format: int64 */
-            lastSaleOrderId?: number;
             lastSaleNumber?: string;
+            /**
+             * Format: int64
+             * @description Oxirgi sotuv buyurtmasi (karta havolasi)
+             */
+            lastSaleOrderId?: number;
             legalName?: string;
             /**
              * Format: date

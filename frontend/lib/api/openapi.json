@@ -20680,12 +20680,13 @@
             "type" : "string",
             "format" : "date"
           },
-          "lastSaleOrderId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "lastSaleNumber" : {
             "type" : "string"
+          },
+          "lastSaleOrderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Oxirgi sotuv buyurtmasi (karta havolasi)"
           },
           "legalName" : {
             "type" : "string"
