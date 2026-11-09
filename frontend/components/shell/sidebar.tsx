@@ -58,7 +58,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
     return () => document.removeEventListener("mousedown", onDoc);
   }, [menu]);
   const selectedBranch = useBranchStore((s) => s.branchId);
-  const { badges, company } = useNavBadges(me.data ? (me.data.allBranches ? (selectedBranch ?? null) : null) : undefined);
+  const { badges, company, logo } = useNavBadges(me.data ? (me.data.allBranches ? (selectedBranch ?? null) : null) : undefined);
   const rail = variant === "rail";
   // Ixcham koʻrinish: 768–1279 px da har doim, ≥1280 da — yigʻilganda
   const mini = rail && collapsed;
@@ -77,9 +77,14 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
           compact("justify-center px-0", "max-xl:justify-center max-xl:px-0"),
         )}
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-primary-button font-semibold text-white">
-          M
-        </span>
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- kompaniya logotipi serverdan (PNG/SVG)
+          <img src={logo} alt="" className="size-8 shrink-0 rounded-control bg-white object-contain" />
+        ) : (
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-primary-button font-semibold text-white">
+            M
+          </span>
+        )}
         <span className={cn("flex min-w-0 flex-col", compact("hidden", "max-xl:hidden"))}>
           <span className="text-subtitle leading-5 text-white">MEDIX</span>
           {company ? <span className="truncate text-[11px] leading-[14px] text-sidebar-text/75">{company}</span> : null}
@@ -206,7 +211,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
                 role="menuitem"
                 type="button"
                 disabled={logout.isPending}
-                onClick={() => logout.mutate(undefined, { onSettled: () => router.replace("/login") })}
+                onClick={() => logout.mutate(undefined, { onSettled: () => router.replace("/login?out=1") })}
                 className="flex h-8 w-full items-center gap-2 rounded-control px-2 text-left text-[13px] text-danger hover:bg-danger-bg"
               >
                 <LogOut size={16} strokeWidth={1.5} aria-hidden />

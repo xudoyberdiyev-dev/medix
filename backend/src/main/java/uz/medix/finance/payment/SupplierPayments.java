@@ -17,6 +17,8 @@ import uz.medix.finance.MoneyLedger;
 import uz.medix.finance.PartyLedger;
 import uz.medix.finance.PartyLedger.Side;
 import uz.medix.finance.account.Accounts;
+import uz.medix.finance.payment.PaymentModels.BankRefs;
+import uz.medix.finance.payment.PaymentModels.LastPayment;
 import uz.medix.finance.payment.PaymentModels.OpenDocView;
 import uz.medix.finance.payment.PaymentModels.OpenDocs;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocation;
@@ -72,6 +74,20 @@ class SupplierPayments {
         return LocalDate.now(clock.withZone(TASHKENT));
     }
 
+    /** Hujjat tarixi — audit jurnalidan (eng eskisi birinchi). Kirish huquqi — controllerda {@code find} bilan tekshiriladi. */
+    @Transactional(readOnly = true)
+    List<PaymentModels.PaymentHistoryEvent> history(long id) {
+        return jdbc.sql("""
+                SELECT a.occurred_at, e.full_name AS employee, a.action, a.reason
+                FROM audit_log a LEFT JOIN employee e ON e.id = a.employee_id
+                WHERE a.entity_type = 'supplier_payment' AND a.entity_id = :id
+                ORDER BY a.occurred_at, a.id""")
+                .param("id", String.valueOf(id))
+                .query((rs, n) -> new PaymentModels.PaymentHistoryEvent(rs.getTimestamp("occurred_at").toInstant(), rs.getString("employee"),
+                        rs.getString("action"), rs.getString("reason")))
+                .list();
+    }
+
     @Transactional(readOnly = true)
     OpenDocs openDocs(Actor actor, long branchId, long supplierId) {
         if (!actor.canAccessBranch(branchId)) {
@@ -81,7 +97,17 @@ class SupplierPayments {
         Money debt = Money.ZERO;
         Money advance = Money.ZERO;
         List<OpenDocView> docs = new ArrayList<>();
-        for (PartyLedger.OpenDoc d : parties.openDocs(branchId, supplierId, Side.SUPPLIER)) {
+        List<PartyLedger.OpenDoc> open = parties.openDocs(branchId, supplierId, Side.SUPPLIER);
+        java.util.Map<Long, String> ext = new java.util.HashMap<>();
+        List<Long> kr = open.stream().filter(d -> "KR".equals(d.type())).map(PartyLedger.OpenDoc::id).toList();
+        if (!kr.isEmpty()) {
+            jdbc.sql("SELECT id, invoice_number FROM receipt WHERE id IN (:ids) AND invoice_number IS NOT NULL")
+                    .param("ids", kr)
+                    .query(rs -> {
+                        ext.put(rs.getLong("id"), rs.getString("invoice_number"));
+                    });
+        }
+        for (PartyLedger.OpenDoc d : open) {
             debt = debt.plus(d.open());
             if (d.open().isNegative()) {
                 advance = advance.minus(d.open());
@@ -89,12 +115,21 @@ class SupplierPayments {
             }
             int overdue = d.dueDate() != null && d.dueDate().isBefore(today)
                     ? (int) java.time.temporal.ChronoUnit.DAYS.between(d.dueDate(), today) : 0;
-            docs.add(new OpenDocView(d.type(), d.id(), d.number(), d.date(), d.dueDate(), d.open().toString(), overdue));
+            docs.add(new OpenDocView(d.type(), d.id(), d.number(), d.date(), d.dueDate(), d.open().toString(), overdue,
+                    d.total().toString(), d.returned().toString(), d.paid().toString(), ext.get(d.id())));
         }
-        return new OpenDocs(debt.toString(), advance.toString(), docs);
+        LastPayment last = jdbc.sql("""
+                SELECT id, number, payment_date, amount FROM supplier_payment
+                WHERE branch_id = :b AND supplier_id = :c AND status = 'POSTED' ORDER BY payment_date DESC, id DESC LIMIT 1""")
+                .param("b", branchId)
+                .param("c", supplierId)
+                .query((rs, n) -> new LastPayment(rs.getLong("id"), rs.getString("number"), rs.getDate("payment_date").toLocalDate(),
+                        new Money(rs.getBigDecimal("amount")).toString()))
+                .optional().orElse(null);
+        return new OpenDocs(debt.toString(), advance.toString(), docs, last);
     }
 
-    private record Checked(long branchId, long supplierId, long accountId, LocalDate date, Money amount, String note) {}
+    private record Checked(long branchId, long supplierId, long accountId, LocalDate date, Money amount, String note, BankRefs refs) {}
 
     private Checked check(Actor actor, SupplierPaymentRequest r) {
         if (!actor.canAccessBranch(r.branchId())) {
@@ -122,7 +157,8 @@ class SupplierPayments {
         if (date.isAfter(today())) {
             throw MedixException.badRequest("payment.dateFuture");
         }
-        return new Checked(r.branchId(), r.supplierId(), acc.id(), date, amount, r.note() == null || r.note().isBlank() ? null : r.note().strip());
+        return new Checked(r.branchId(), r.supplierId(), acc.id(), date, amount, r.note() == null || r.note().isBlank() ? null : r.note().strip(),
+                BankRefs.of(r.payOrderNo(), r.bankDate(), r.checkNo()));
     }
 
     @Transactional
@@ -131,8 +167,12 @@ class SupplierPayments {
         String branchCode = jdbc.sql("SELECT code FROM branch WHERE id = :b").param("b", c.branchId()).query(String.class).single();
         String number = numbers.next(DocumentPrefix.YT, branchCode).toString();
         long id = jdbc.sql("""
-                INSERT INTO supplier_payment (number, branch_id, supplier_id, account_id, payment_date, amount, note, created_by)
-                VALUES (:n, :b, :s, :a, :d, :amt, :note, :by) RETURNING id""")
+                INSERT INTO supplier_payment (number, branch_id, supplier_id, account_id, payment_date, amount, note, created_by,
+                                              pay_order_no, bank_date, check_no)
+                VALUES (:n, :b, :s, :a, :d, :amt, :note, :by, :pon, :bd, :chk) RETURNING id""")
+                .param("pon", c.refs().payOrderNo())
+                .param("bd", c.refs().bankDate() == null ? null : Date.valueOf(c.refs().bankDate()))
+                .param("chk", c.refs().checkNo())
                 .param("n", number)
                 .param("b", c.branchId())
                 .param("s", c.supplierId())
@@ -174,7 +214,10 @@ class SupplierPayments {
         }
         jdbc.sql("""
                 UPDATE supplier_payment SET supplier_id = :s, account_id = :a, payment_date = :d, amount = :amt, note = :note, updated_at = now(),
-                       version = version + 1 WHERE id = :id""")
+                       pay_order_no = :pon, bank_date = :bd, check_no = :chk, version = version + 1 WHERE id = :id""")
+                .param("pon", c.refs().payOrderNo())
+                .param("bd", c.refs().bankDate() == null ? null : Date.valueOf(c.refs().bankDate()))
+                .param("chk", c.refs().checkNo())
                 .param("s", c.supplierId())
                 .param("a", c.accountId())
                 .param("d", Date.valueOf(c.date()))
@@ -337,7 +380,7 @@ class SupplierPayments {
             SELECT p.id, p.number, p.branch_id, p.supplier_id, c.name AS supplier, c.tin AS supplier_tin, p.account_id, a.name AS account,
                    a.kind AS account_kind, a.balance AS account_balance, p.payment_date, p.amount, p.advance, p.status, p.note,
                    cb.full_name AS created_by, p.created_at, sb.full_name AS sent_by, p.sent_at, p.returned_reason, pb.full_name AS posted_by,
-                   p.posted_at, xb.full_name AS cancelled_by, p.cancelled_at, p.cancel_reason, p.version
+                   p.posted_at, xb.full_name AS cancelled_by, p.cancelled_at, p.cancel_reason, p.version, p.pay_order_no, p.bank_date, p.check_no
             FROM supplier_payment p JOIN counterparty c ON c.id = p.supplier_id JOIN money_account a ON a.id = p.account_id
             JOIN employee cb ON cb.id = p.created_by LEFT JOIN employee sb ON sb.id = p.sent_by LEFT JOIN employee pb ON pb.id = p.posted_by
             LEFT JOIN employee xb ON xb.id = p.cancelled_by""";
@@ -383,7 +426,8 @@ class SupplierPayments {
                                 rs.getTimestamp("sent_at") == null ? null : rs.getTimestamp("sent_at").toInstant(), rs.getString("returned_reason"),
                                 rs.getString("posted_by"), rs.getTimestamp("posted_at") == null ? null : rs.getTimestamp("posted_at").toInstant(),
                                 rs.getString("cancelled_by"), rs.getTimestamp("cancelled_at") == null ? null : rs.getTimestamp("cancelled_at").toInstant(),
-                                rs.getString("cancel_reason"), rs.getLong("version"), allocs)
+                                rs.getString("cancel_reason"), rs.getLong("version"), allocs, rs.getString("pay_order_no"),
+                                rs.getDate("bank_date") == null ? null : rs.getDate("bank_date").toLocalDate(), rs.getString("check_no"))
                         : null)
                 .list()
                 .stream()

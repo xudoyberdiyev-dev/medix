@@ -160,6 +160,7 @@ class PaymentIT {
 
         mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
                 .andExpect(jsonPath("$.debt").value("9000.00"))
+                .andExpect(jsonPath("$.lastPayment").doesNotExist())
                 .andExpect(jsonPath("$.docs[0].docNumber").value("SV-TST-9100001"))
                 .andExpect(jsonPath("$.docs[0].overdueDays").value(40));
         send(post("/api/payments/customer"), picker, draft(b, c, k, "7000")).andExpect(status().isForbidden());
@@ -182,6 +183,13 @@ class PaymentIT {
         assertThat(debtOf(b, c)).isEqualTo("2000.00");
         assertThat(balance(k)).isEqualTo("7000.00");
         send(post("/api/payments/customer/" + p1 + "/post"), cashier, "{}").andExpect(jsonPath("$.code").value("payment.notDraft"));
+        mvc.perform(get("/api/payments/customer/" + p1 + "/history").cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("payment.create"))
+                .andExpect(jsonPath("$[1].action").value("payment.update"))
+                .andExpect(jsonPath("$[2].action").value("payment.post"))
+                .andExpect(jsonPath("$[0].employee").isNotEmpty());
+        mvc.perform(get("/api/payments/customer/" + p1 + "/history").cookie(picker)).andExpect(status().isForbidden());
         assertThatThrownBy(() -> jdbc.sql("UPDATE customer_payment SET amount = 1 WHERE id = :p").param("p", p1).update())
                 .hasMessageContaining("oʻzgarmaydi");
 
@@ -195,7 +203,12 @@ class PaymentIT {
         assertThat(debtOf(b, c)).isEqualTo("-1000.00");
         mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
                 .andExpect(jsonPath("$.advance").value("1500.00"))
-                .andExpect(jsonPath("$.docs[0].open").value("500.00"));
+                .andExpect(jsonPath("$.docs[0].open").value("500.00"))
+                .andExpect(jsonPath("$.docs[0].total").value("4000.00"))
+                .andExpect(jsonPath("$.docs[0].returned").value("0.00"))
+                .andExpect(jsonPath("$.docs[0].paid").value("3500.00"))
+                .andExpect(jsonPath("$.lastPayment.id").value(p2))
+                .andExpect(jsonPath("$.lastPayment.amount").value("3000.00"));
         mvc.perform(get("/api/payments/customer/doc").param("docType", "SV").param("docId", "9100001").cookie(cashier))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value("5000.00"))
@@ -420,5 +433,47 @@ class PaymentIT {
         mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
                 .andExpect(jsonPath("$.advance").value("0.00"))
                 .andExpect(jsonPath("$.docs[0].open").value("1000.00"));
+    }
+    @Test
+    void overviewListsMtAndYtInBranchScope() throws Exception {
+        long b = branch();
+        long other = branch();
+        long c = customer();
+        Cookie cashier = loginAs("CASHIER", b);
+        Cookie stranger = loginAs("BRANCH_MANAGER", other);
+        long k = kassa(cashier, b);
+        debt(b, c, 9_300_001L, "1000.00", today().minusDays(3));
+        String withRefs = draft(b, c, k, "1500").replace("}", ",\"payOrderNo\":\" 0702 \",\"bankDate\":\"" + today() + "\",\"checkNo\":\"\"}");
+        long p1 = id(send(post("/api/payments/customer"), cashier, withRefs).andReturn());
+        mvc.perform(get("/api/payments/customer/" + p1).cookie(cashier))
+                .andExpect(jsonPath("$.payOrderNo").value("0702"))
+                .andExpect(jsonPath("$.bankDate").value(today().toString()))
+                .andExpect(jsonPath("$.checkNo").doesNotExist());
+        send(post("/api/payments/customer/" + p1 + "/post"), cashier, "{}").andExpect(jsonPath("$.status").value("POSTED"));
+        long sup = customer();
+        String ytNo = "YT-TST-" + p1;
+        jdbc.sql("""
+                INSERT INTO supplier_payment (number, branch_id, supplier_id, account_id, payment_date, amount, status, created_by)
+                SELECT :n, :b, :s, :a, :d, 700, 'PENDING', id FROM employee ORDER BY id LIMIT 1""")
+                .param("n", ytNo).param("b", b).param("s", sup).param("a", k).param("d", java.sql.Date.valueOf(today())).update();
+
+        mvc.perform(get("/api/payments/overview").cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.today").value(today().toString()))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].amount").value("1500.00"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].allocated").value("1000.00"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].advance").value("500.00"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].status").value("POSTED"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].accountKind").value("CASH"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'MT')].payOrderNo").value("0702"))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'YT')].number").value(ytNo))
+                .andExpect(jsonPath("$.rows[?(@.kind == 'YT')].status").value("PENDING"));
+        mvc.perform(get("/api/payments/overview").param("from", today().plusDays(1).toString()).cookie(cashier))
+                .andExpect(jsonPath("$.rows.length()").value(0));
+        // Boshqa filial xodimi filial parametrini bersa ham koʻrmaydi
+        mvc.perform(get("/api/payments/overview").param("branchId", "" + b).cookie(stranger))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(0));
     }
 }

@@ -60,6 +60,14 @@ class PaymentController {
         return payments.find(actor(), id);
     }
 
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAuthority('payments.view')")
+    @Operation(summary = "MT tarixi", description = "Audit jurnalidan: yaratildi, tahrirlandi, yuborildi, tasdiqlandi, qaytarildi, bekor qilindi.")
+    List<PaymentModels.PaymentHistoryEvent> paymentHistory(@PathVariable long id) {
+        payments.find(actor(), id);
+        return payments.history(id);
+    }
+
     @GetMapping("/doc")
     @PreAuthorize("hasAnyAuthority('payments.view', 'orders.view')")
     @Operation(summary = "Hujjat bo'yicha to'lov holati", description = "Buyurtma kartochkasidagi «To'lov» yorlig'i: SV summasi, to'langan, qoldi, muddat, MT lar.")

@@ -3,7 +3,7 @@
 import { Ban, CircleCheck, CircleX, Clock, FileDown, FilePen, Plus, Tags } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DayField } from "@/components/ui/day-field";
@@ -18,19 +18,12 @@ import { useMe } from "@/features/auth/session";
 import { usePriceTypes } from "@/features/counterparties/api";
 import { useDictionary } from "@/features/dictionaries/api";
 import { useBranchList } from "@/features/organization/api";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import {
-  PRICE_CREATE,
-  STATUS_LABELS,
-  usePriceChanges,
-  usePrices,
-  type DraftLine,
-  type PriceChangeStatus,
-  type PriceChangeSummary,
-  type PriceRow,
-} from "./api";
+import { PRICE_CREATE, usePrices, type DraftLine, type PriceChangeStatus, type PriceRow } from "./api";
+import { PriceChangesTab } from "./price-changes-tab";
 import { PriceTypesTab } from "./price-types-tab";
+import { CLIENT_TERMS } from "./attach-customers-dialog";
 import { PriceChangeDrawer } from "./price-change-drawer";
 import { parsePriceFilters, priceExportQuery, priceSortFromKey, priceSortKey, serializePriceFilters, type PriceFilters } from "./url-state";
 
@@ -64,11 +57,20 @@ export function PricesPage() {
   const [branchOverride, setBranchOverride] = useState<number | null>(null);
   const branchId = branchOverride ?? (me.data && !me.data.allBranches ? (me.data.branchId ?? null) : (selected ?? active[0]?.id ?? null));
   const canSet = can(me.data, PRICE_CREATE);
-  // Bildirishnomadan oʻtish: ?tab=documents&open=<id> — NO darhol ochiladi
-  const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[] } | null>(() => {
-    const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
-  });
+  // «Narx oʻrnatish» sahifasidan «Kirim boʻyicha»: ?new=receipt — yangi NO kirim rejimida ochiladi
+  const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[]; mode?: "RECEIPT" } | null>(() =>
+    params.get("new") === "receipt" ? { id: null, mode: "RECEIPT" } : null,
+  );
+  // Bildirishnomadan / qidiruvdan oʻtish: ?tab=documents&open=<id> — NO hujjati sahifasiga
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/prices/changes/${openId}`);
+  }, [openId, router]);
+  const openDoc = (id: number) => router.push(`/prices/changes/${id}`);
+  const openSet = (priceTypeId?: number) =>
+    router.push(
+      `/prices/set?${new URLSearchParams({ ...(branchId ? { branch: String(branchId) } : {}), ...(priceTypeId ? { type: String(priceTypeId) } : {}) })}`,
+    );
 
   return (
     <>
@@ -88,7 +90,7 @@ export function PricesPage() {
             </div>
           ) : null}
           {canSet ? (
-            <Button icon={Plus} onClick={() => setEditor({ id: null })}>
+            <Button icon={Plus} onClick={() => openSet()}>
               {t("set")}
             </Button>
           ) : null}
@@ -111,21 +113,24 @@ export function PricesPage() {
           branchId={branchId}
           canSet={canSet}
           canEdit={can(me.data, "lookups.ptypes")}
-          onSetPrices={() => setEditor({ id: null })}
+          canAttach={can(me.data, CLIENT_TERMS)}
+          branchName={active.find((b) => b.id === branchId)?.name ?? ""}
+          onSetPrices={(id) => openSet(id)}
         />
       ) : tab === "prices" ? (
         <PricesTab branchId={branchId} canSet={canSet} onSetPrices={(lines) => setEditor({ id: null, preset: lines })} />
       ) : (
-        <DocumentsTab branchId={branchId} onOpen={(id) => setEditor({ id })} />
+        <PriceChangesTab branchId={branchId} onOpen={openDoc} />
       )}
       {editor && branchId ? (
         <PriceChangeDrawer
           id={editor.id}
           branchId={branchId}
           preset={editor.preset}
+          initialMode={editor.mode}
           canSet={canSet}
           onClose={() => setEditor(null)}
-          onCreated={(id) => setEditor({ id })}
+          onCreated={(id) => (setEditor(null), openDoc(id))}
         />
       ) : null}
     </>
@@ -302,62 +307,6 @@ function PricesTab({
               onPageChange: (page) => apply({ page }),
               onPageSizeChange: (size) => apply({ size }),
             }
-          : undefined
-      }
-    />
-  );
-}
-
-function DocumentsTab({ branchId, onOpen }: { branchId: number | null; onOpen: (id: number) => void }) {
-  const t = useTranslations("prices.documents");
-  const tp = useTranslations("prices");
-  const [status, setStatus] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const docs = usePriceChanges(branchId, (status as PriceChangeStatus | null) ?? null, page);
-  const columns: TableColumn<PriceChangeSummary>[] = [
-    { key: "number", title: t("number"), mono: true },
-    { key: "effectiveFrom", title: t("effectiveFrom"), render: (d) => formatDate(new Date(`${d.effectiveFrom}T00:00:00+05:00`)) },
-    {
-      key: "receiptNumber",
-      title: t("mode"),
-      render: (d) => (d.receiptNumber ? t("byReceipt", { number: d.receiptNumber }) : t("byProduct")),
-    },
-    { key: "lines", title: t("lines"), align: "right" },
-    { key: "createdBy", title: t("createdBy") },
-    { key: "status", title: t("status"), render: (d) => <StatusBadge status={d.status} /> },
-  ];
-  if (docs.error) return <ErrorState onRetry={() => docs.refetch()} />;
-  return (
-    <Table
-      caption={t("caption")}
-      columns={columns}
-      rows={docs.data?.items ?? []}
-      rowKey={(d) => String(d.id)}
-      loading={docs.isPending}
-      onRowClick={(d) => onOpen(d.id)}
-      toolbar={
-        <div className="w-56">
-          <Select
-            label={t("status")}
-            size="sm"
-            value={status}
-            onChange={(v) => (setStatus(v), setPage(1))}
-            placeholder={t("allStatuses")}
-            className="[&>span:first-child]:sr-only"
-            options={(Object.keys(STATUS_LABELS) as PriceChangeStatus[]).map((value) => ({ value, label: tp(`status.${value}`) }))}
-          />
-        </div>
-      }
-      emptyState={
-        status ? (
-          <NoResultsState onClearFilters={() => setStatus(null)} />
-        ) : (
-          <EmptyState icon={FilePen} title={t("emptyTitle")} description={t("emptyDescription")} />
-        )
-      }
-      pagination={
-        docs.data && docs.data.total > 50
-          ? { page, pageSize: 50, total: docs.data.total, onPageChange: setPage, onPageSizeChange: () => undefined, pageSizeOptions: [50] }
           : undefined
       }
     />

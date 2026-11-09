@@ -12,6 +12,8 @@ export type License = components["schemas"]["License"];
 export type Contract = components["schemas"]["Contract"];
 export type Terms = components["schemas"]["Terms"];
 export type TermsRequest = components["schemas"]["TermsRequest"];
+export type OverviewRow = components["schemas"]["OverviewRow"];
+export type CounterpartyOverviewPage = components["schemas"]["CounterpartyOverviewPage"];
 export type CounterpartyRole = "CUSTOMER" | "SUPPLIER";
 export type CounterpartyStatus = "ACTIVE" | "BLOCKED" | "INACTIVE" | "ALL";
 
@@ -50,8 +52,9 @@ export interface CounterpartyQuery {
 
 export type CounterpartySort = "NAME" | "TIN" | "REGION" | "LICENSE";
 
-export function useCounterparties(f: CounterpartyQuery) {
+export function useCounterparties(f: CounterpartyQuery, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: [...KEY, "list", f],
     queryFn: () =>
       unwrap(
@@ -71,6 +74,23 @@ export function useCounterparties(f: CounterpartyQuery) {
         }),
       ),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** «Mijozlar» / «Yetkazib beruvchilar» roʻyxati (prototip Counterparties) — toʻliq, filtrlar brauzerda. */
+export function useCounterpartyOverview(role: CounterpartyRole, branchId: number | null) {
+  return useQuery({
+    queryKey: [...KEY, "list", "overview", role, branchId],
+    queryFn: () => unwrap(api.GET("/api/counterparties/overview", { params: { query: { role, branchId: branchId ?? undefined } } })),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Kartochka oʻng paneli: filiallar boʻyicha qarz, limit, oxirgi sotuv/kirim va toʻlov. */
+export function useCounterpartySummary(id: number, role: CounterpartyRole) {
+  return useQuery({
+    queryKey: [...KEY, "one", id, "summary", role],
+    queryFn: () => unwrap(api.GET("/api/counterparties/{id}/summary", { params: { path: { id }, query: { role } } })),
   });
 }
 
@@ -196,4 +216,36 @@ export function parseMoneyInput(input: string): string | undefined | null {
   if (!t) return undefined;
   const normalized = t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : /^\d{1,3}(\.\d{3})+$/.test(t) ? t.replace(/\./g, "") : t;
   return /^\d{1,16}(\.\d{1,2})?$/.test(normalized) ? normalized : null;
+}
+
+/** Kartochka hujjat yorligʻi: oxirgi 100 ta hujjat (Buyurtmalar, Sotuvlar, Toʻlovlar, Qaytarishlar, Kirimlar). */
+export function useCounterpartyDocuments(
+  id: number,
+  role: CounterpartyRole,
+  section: components["schemas"]["CounterpartyDocumentsPage"]["section"],
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...KEY, "one", id, "documents", role, section],
+    queryFn: () => unwrap(api.GET("/api/counterparties/{id}/documents", { params: { path: { id }, query: { role, section } } })),
+    enabled,
+  });
+}
+
+/** Kartochka «Tarix» — audit jurnalidan, yangisi birinchi. */
+export function useCounterpartyHistory(id: number, role: CounterpartyRole) {
+  return useQuery({
+    queryKey: [...KEY, "one", id, "history", role],
+    queryFn: () => unwrap(api.GET("/api/counterparties/{id}/history", { params: { path: { id }, query: { role } } })),
+  });
+}
+
+/** YB kartochkasi «Mahsulotlar»: davr — oxirgi N kun (30, 90) yoki hammasi. */
+export function useSupplierProducts(id: number, days: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: [...KEY, "one", id, "products", days],
+    queryFn: () => unwrap(api.GET("/api/counterparties/{id}/products", { params: { path: { id }, query: { days: days ?? undefined } } })),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
 }

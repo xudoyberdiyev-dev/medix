@@ -38,14 +38,42 @@ class BranchController {
             @NotBlank(message = "{validation.required}") @Size(max = 300) String legalName,
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[0-9]{9}$", message = "{validation.tin}") String tin,
             @Schema(nullable = true) @Size(max = 500) String address,
-            @Schema(nullable = true) @Size(max = 32) String phone) {}
+            @Schema(nullable = true) @Size(max = 32) String phone,
+            @Schema(nullable = true, description = "null — qoʻshimchalar oʻzgarmaydi") Boolean vatPayer,
+            @Schema(nullable = true) @Pattern(regexp = "^[0-9]{6,20}$", message = "{validation.vatCertNo}") String vatCertNo,
+            @Schema(nullable = true) @Size(max = 100) String region,
+            @Schema(nullable = true) @Size(max = 500) String actualAddress,
+            @Schema(nullable = true) @Size(max = 200) String directorName,
+            @Schema(nullable = true) @Size(max = 200) String accountantName,
+            @Valid @Schema(nullable = true) @Size(max = 10) List<Organization.BankAccount> bankAccounts) {
+
+        Organization.BranchExtra extra() {
+            return vatPayer == null
+                    ? null
+                    : new Organization.BranchExtra(vatPayer, vatCertNo, region, actualAddress, directorName, accountantName, bankAccounts);
+        }
+    }
 
     record UpdateBranchRequest(
             @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
             @NotBlank(message = "{validation.required}") @Size(max = 300) String legalName,
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[0-9]{9}$", message = "{validation.tin}") String tin,
             @Schema(nullable = true) @Size(max = 500) String address,
-            @Schema(nullable = true) @Size(max = 32) String phone) {}
+            @Schema(nullable = true) @Size(max = 32) String phone,
+            @Schema(nullable = true, description = "null — qoʻshimchalar oʻzgarmaydi") Boolean vatPayer,
+            @Schema(nullable = true) @Pattern(regexp = "^[0-9]{6,20}$", message = "{validation.vatCertNo}") String vatCertNo,
+            @Schema(nullable = true) @Size(max = 100) String region,
+            @Schema(nullable = true) @Size(max = 500) String actualAddress,
+            @Schema(nullable = true) @Size(max = 200) String directorName,
+            @Schema(nullable = true) @Size(max = 200) String accountantName,
+            @Valid @Schema(nullable = true) @Size(max = 10) List<Organization.BankAccount> bankAccounts) {
+
+        Organization.BranchExtra extra() {
+            return vatPayer == null
+                    ? null
+                    : new Organization.BranchExtra(vatPayer, vatCertNo, region, actualAddress, directorName, accountantName, bankAccounts);
+        }
+    }
 
     record DeactivateRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
@@ -73,7 +101,7 @@ class BranchController {
     @PreAuthorize("hasAuthority('branches.view')")
     @Operation(summary = "Filial qo'shish")
     Organization.Branch create(@Valid @RequestBody CreateBranchRequest r) {
-        return organization.createBranch(new Organization.BranchData(r.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone()));
+        return organization.createBranch(new Organization.BranchData(r.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone(), r.extra()));
     }
 
     @PutMapping("/{id}")
@@ -82,7 +110,7 @@ class BranchController {
     Organization.Branch update(@PathVariable long id, @Valid @RequestBody UpdateBranchRequest r) {
         Organization.Branch current = scoped(id);
         return organization.updateBranch(id,
-                new Organization.BranchData(current.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone()));
+                new Organization.BranchData(current.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone(), r.extra()));
     }
 
     @PostMapping("/{id}/deactivate")

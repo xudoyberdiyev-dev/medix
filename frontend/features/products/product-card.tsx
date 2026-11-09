@@ -510,10 +510,7 @@ function PricesTab({ t, productId, branchId }: { t: CardT; productId: number; br
                       )}
                     </td>
                     <td className="px-3">
-                      <Link
-                        href={`/prices?tab=documents&open=${r.priceChangeId}`}
-                        className="font-mono text-primary-button hover:underline"
-                      >
+                      <Link href={`/prices/changes/${r.priceChangeId}`} className="font-mono text-primary-button hover:underline">
                         {r.priceChangeNumber}
                       </Link>
                     </td>

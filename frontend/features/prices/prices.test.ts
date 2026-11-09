@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { batchLines, lineKey, percentChange } from "./api";
+import { batchLines, CHANGE_VIEWS, isFiltered, isFuture, lineKey, percentChange } from "./api";
 
 describe("percentChange", () => {
   it("foiz va chegaralar", () => {
@@ -65,5 +65,25 @@ describe("batchLines", () => {
     expect(lines[2].oldPrice).toBeNull();
     expect(new Set(lines.map(lineKey)).size).toBe(3);
     expect(lineKey(lines[0])).toBe("5:1:10");
+  });
+});
+
+describe("Narx oʻzgarishlari roʻyxati", () => {
+  const empty = { status: null, q: "", priceTypeIds: [], from: null, to: null, page: 1 };
+  it("filtr faolligi — holat yorligʻi filtr hisoblanmaydi", () => {
+    expect(isFiltered(empty)).toBe(false);
+    expect(isFiltered({ ...empty, status: "APPROVED" })).toBe(false);
+    expect(isFiltered({ ...empty, q: "  " })).toBe(false);
+    expect(isFiltered({ ...empty, q: "NO-TSH" })).toBe(true);
+    expect(isFiltered({ ...empty, priceTypeIds: [2] })).toBe(true);
+    expect(isFiltered({ ...empty, from: "2026-11-01" })).toBe(true);
+  });
+  it("kelajakdagi kuchga kirish sanasi", () => {
+    expect(isFuture("2026-11-10", "2026-11-09")).toBe(true);
+    expect(isFuture("2026-11-09", "2026-11-09")).toBe(false);
+    expect(isFuture("2026-10-30", "2026-11-09")).toBe(false);
+  });
+  it("yorliqlar tartibi prototip boʻyicha", () => {
+    expect(CHANGE_VIEWS.slice(0, 4)).toEqual(["PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED"]);
   });
 });

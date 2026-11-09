@@ -68,6 +68,9 @@ function cellValue<T>(row: T, col: TableColumn<T>): ReactNode {
  * Jadval (design/system: Table) — server tomonida saralash va sahifalash uchun boshqariladigan komponent.
  * Raqamli ustunlar oʻngga (`align: "right"`, tabular), sarlavha yopishib turadi, ↑↓ qatorlar, Enter ochadi, Space tanlaydi.
  */
+
+/** Tanlash ustuni — yopishqoq ustunlar chap chegarasi shunga tayanadi (jadval kengayganda ham qisqarmasin). */
+const SELECT_COL: CSSProperties = { width: 44, minWidth: 44 };
 export function Table<T>({
   columns,
   rows,
@@ -177,7 +180,8 @@ export function Table<T>({
               {selectable ? (
                 <th
                   scope="col"
-                  className={cn("sticky top-0 z-10 w-11 border-b border-border bg-table-header pr-1 pl-4", anyPinned && "left-0 z-20")}
+                  style={SELECT_COL}
+                  className={cn("sticky top-0 z-10 border-b border-border bg-table-header pr-1 pl-4", anyPinned && "left-0 z-20")}
                 >
                   <Checkbox
                     checked={allSelected}
@@ -264,8 +268,9 @@ export function Table<T>({
                       >
                         {selectable ? (
                           <td
+                            style={SELECT_COL}
                             className={cn(
-                              "w-11 border-b border-border pr-1 pl-4",
+                              "border-b border-border pr-1 pl-4",
                               isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
                               anyPinned && "sticky left-0 z-[1]",
                             )}

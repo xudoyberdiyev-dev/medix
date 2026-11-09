@@ -350,7 +350,7 @@ class DirectorHome {
                 .param("b", branchId).query(Integer.class).single();
         BigDecimal driver = jdbc.sql("""
                 SELECT coalesce(sum(s.cash_collected), 0) FROM trip_stop s JOIN trip t ON t.id = s.trip_id
-                WHERE s.active AND s.cash_collected > 0 AND s.cash_payment_id IS NULL AND t.status IN ('IN_TRANSIT', 'RETURN_WAIT')
+                WHERE s.active AND s.cash_collected > 0 AND s.cash_payment_id IS NULL AND s.cash_accept_id IS NULL AND t.status IN ('IN_TRANSIT', 'RETURN_WAIT')
                   AND (CAST(:b AS BIGINT) IS NULL OR t.branch_id = :b)""")
                 .param("b", branchId).query(BigDecimal.class).single();
         // Bonus tasdig'i (SPEC 8): chegirmali o'tkazilgan kirim, BNS hali yo'q, tasdiqlash sanasi kelgan

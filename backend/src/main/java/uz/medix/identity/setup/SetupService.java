@@ -8,6 +8,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.identity.employee.Employees;
+import uz.medix.identity.organization.CompanyLogos;
 import uz.medix.identity.organization.Organization;
 import uz.medix.inventory.Warehouses;
 import uz.medix.inventory.ZoneType;
@@ -51,7 +52,24 @@ class SetupService {
     @Transactional
     Organization.Company saveCompany(SetupRequests.CompanyRequest r) {
         ensureOpen();
-        return organization.saveCompany(r.name());
+        return r.defaultLocale() == null ? organization.saveCompany(r.name()) : organization.saveCompany(r.name(), r.defaultLocale());
+    }
+
+    /** Logotip: PNG yoki xavfsiz SVG, 2 MB gacha (prototip SetupWizard 1-qadam). */
+    @Transactional
+    Organization.Company saveLogo(byte[] content) {
+        ensureOpen();
+        if (content.length > CompanyLogos.MAX_BYTES) {
+            throw MedixException.badRequest("setup.logoTooBig");
+        }
+        String type = CompanyLogos.detect(content).orElseThrow(() -> MedixException.badRequest("setup.logoType"));
+        return organization.saveLogo(content, type);
+    }
+
+    @Transactional
+    Organization.Company removeLogo() {
+        ensureOpen();
+        return organization.saveLogo(null, null);
     }
 
     @Transactional
@@ -74,14 +92,54 @@ class SetupService {
         if (!OPTIONAL_ZONES.containsAll(extra)) {
             throw MedixException.badRequest("warehouse.extraZones");
         }
-        return warehouses.create(r.branchId(), r.name(), r.address(), extra);
+        checkKeeper(r.keeperId(), r.branchId());
+        return warehouses.create(r.branchId(), spec(r, extra));
+    }
+
+    @Transactional
+    Warehouses.Warehouse updateWarehouse(long id, SetupRequests.WarehouseRequest r) {
+        ensureOpen();
+        Warehouses.Warehouse w = warehouses.findById(id).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (w.branchId() != r.branchId()) {
+            throw MedixException.badRequest("warehouse.branchFixed");
+        }
+        Set<ZoneType> extra = r.extraZones() == null ? Set.of() : r.extraZones();
+        if (!OPTIONAL_ZONES.containsAll(extra)) {
+            throw MedixException.badRequest("warehouse.extraZones");
+        }
+        checkKeeper(r.keeperId(), w.branchId());
+        return warehouses.configure(id, spec(r, extra));
+    }
+
+    @Transactional
+    void deleteWarehouse(long id) {
+        ensureOpen();
+        warehouses.findById(id).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        warehouses.delete(id);
+    }
+
+    private static Warehouses.Spec spec(SetupRequests.WarehouseRequest r, Set<ZoneType> extra) {
+        return new Warehouses.Spec(r.name(), r.address(), r.kind(), r.keeperId(), extra, r.zoneNames());
+    }
+
+    /** Masʼul — shu filialdagi faol xodim (sozlash ustasida xodimlar 5-qadamda qoʻshiladi, shuning uchun ixtiyoriy). */
+    private void checkKeeper(Long keeperId, long branchId) {
+        if (keeperId == null) {
+            return;
+        }
+        boolean ok = employees.list().stream()
+                .anyMatch(e -> e.id() == keeperId && "ACTIVE".equals(e.status())
+                        && (e.branchId() == null || e.branchId() == branchId));
+        if (!ok) {
+            throw MedixException.badRequest("warehouse.keeperInvalid");
+        }
     }
 
     @Transactional
     Employees.Employee createEmployee(SetupRequests.EmployeeRequest r) {
         ensureOpen();
-        return employees.create(new Employees.NewEmployee(r.login(), r.fullName(), r.phone(), r.position(), r.roleCode(),
-                r.branchId(), r.temporaryPassword()));
+        return employees.create(new Employees.NewEmployee(r.login(), r.fullName(), null, null, null, r.phone(), r.position(),
+                r.roleCode(), r.branchId(), r.temporaryPassword(), List.of(), List.of()));
     }
 
     @Transactional
@@ -123,6 +181,6 @@ class SetupService {
     }
 
     private static Organization.BranchData toData(SetupRequests.BranchRequest r) {
-        return new Organization.BranchData(r.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone());
+        return new Organization.BranchData(r.code(), r.name(), r.legalName(), r.tin(), r.address(), r.phone(), r.extra());
     }
 }

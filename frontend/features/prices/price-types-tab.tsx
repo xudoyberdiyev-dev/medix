@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleCheck, CirclePause, CirclePlay, History, Pencil, Tag } from "lucide-react";
+import { CircleCheck, CirclePause, CirclePlay, History, Pencil, Tag, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
 import { formatDate, formatQuantity } from "@/lib/format";
+import { AttachCustomersDialog } from "./attach-customers-dialog";
 
 type PriceType = components["schemas"]["PriceTypeOverview"];
 
@@ -59,12 +60,17 @@ export function PriceTypesTab({
   branchId,
   canSet,
   canEdit,
+  canAttach = false,
+  branchName = "",
   onSetPrices,
 }: {
   branchId: number | null;
   canSet: boolean;
   canEdit: boolean;
-  onSetPrices: () => void;
+  /** «Biriktirish» — mijozlar shartidagi narx turi (clients.terms). */
+  canAttach?: boolean;
+  branchName?: string;
+  onSetPrices: (priceTypeId: number) => void;
 }) {
   const t = useTranslations("prices.types");
   const qc = useQueryClient();
@@ -73,6 +79,7 @@ export function PriceTypesTab({
   const [edit, setEdit] = useState<PriceType | null>(null);
   const [hist, setHist] = useState<PriceType | null>(null);
   const [deact, setDeact] = useState<PriceType | null>(null);
+  const [attach, setAttach] = useState<PriceType | null>(null);
   const list = useQuery({
     queryKey: ["price-types", "overview", branchId],
     queryFn: () => unwrap(api.GET("/api/price-types/overview", { params: { query: { branchId: branchId ?? 0 } } })),
@@ -160,7 +167,7 @@ export function PriceTypesTab({
 
   const actions = (r: PriceType) =>
     [
-      canSet && r.active ? { key: "set", label: t("aSet"), icon: <Icon icon={Tag} />, onSelect: onSetPrices } : null,
+      canSet && r.active ? { key: "set", label: t("aSet"), icon: <Icon icon={Tag} />, onSelect: () => onSetPrices(r.id) } : null,
       canEdit ? { key: "edit", label: t("aEdit"), icon: <Icon icon={Pencil} />, onSelect: () => (setSelId(r.id), setEdit(r)) } : null,
       { key: "hist", label: t("aHist"), icon: <Icon icon={History} />, onSelect: () => (setSelId(r.id), setHist(r)) },
     ].filter((x) => x !== null);
@@ -184,13 +191,18 @@ export function PriceTypesTab({
           <>
             <span className="mr-2 font-semibold">{sel.name}</span>
             {canSet ? (
-              <Button variant="secondary" icon={Tag} disabled={!sel.active} onClick={onSetPrices}>
+              <Button variant="secondary" icon={Tag} disabled={!sel.active} onClick={() => onSetPrices(sel.id)}>
                 {t("aSet")}
               </Button>
             ) : null}
             {canEdit ? (
               <Button variant="secondary" icon={Pencil} onClick={() => setEdit(sel)}>
                 {t("aEdit")}
+              </Button>
+            ) : null}
+            {canAttach && branchId != null ? (
+              <Button variant="secondary" icon={Users} disabled={!sel.active} onClick={() => setAttach(sel)}>
+                {t("aAttach")}
               </Button>
             ) : null}
             <Button variant="secondary" icon={History} onClick={() => setHist(sel)}>
@@ -227,6 +239,9 @@ export function PriceTypesTab({
           onClose={() => (setEdit(null), save.reset())}
           onSave={(v) => save.mutate({ id: edit.id, ...v })}
         />
+      ) : null}
+      {attach && branchId != null ? (
+        <AttachCustomersDialog key={attach.id} type={attach} branchId={branchId} branchName={branchName} onClose={() => setAttach(null)} />
       ) : null}
       {hist ? <HistoryDialog type={hist} onClose={() => setHist(null)} /> : null}
       {deact ? (

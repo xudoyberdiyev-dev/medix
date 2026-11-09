@@ -132,7 +132,7 @@ class AuthIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(login, "noto'g'ri-parol")))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("auth.badCredentials"));
+                .andExpect(jsonPath("$.code").value("auth.badCredentialsLeft"));
         Integer failed = jdbc.sql("SELECT failed_login_count FROM employee WHERE login = :l")
                 .param("l", login)
                 .query(Integer.class)
@@ -151,7 +151,44 @@ class AuthIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("mavjud-emas", PASSWORD)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("auth.badCredentials"));
+                .andExpect(jsonPath("$.code").value("auth.badCredentialsLeft"));
+    }
+
+    @Test
+    void fiveWrongAttemptsLockLoginEvenForCorrectPassword() throws Exception {
+        String login = newEmployee("ACTIVE", false);
+        for (int left = 4; left >= 1; left--) {
+            mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json(login, "xato-parol-1")))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value("auth.badCredentialsLeft"))
+                    .andExpect(jsonPath("$.detail").value("Login yoki parol notoʻgʻri. Qolgan urinishlar: " + left + "."));
+        }
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json(login, "xato-parol-1")))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("auth.locked"))
+                .andExpect(jsonPath("$.detail").value("Juda koʻp notoʻgʻri urinish. 15 daqiqadan keyin qayta urining yoki administratorga murojaat qiling."));
+        // To'g'ri parol bilan ham yopiq
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json(login, PASSWORD)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("auth.locked"));
+        // Muddati o'tgach — kirish mumkin, hisoblagich tozalanadi
+        jdbc.sql("UPDATE login_throttle SET locked_until = now() - interval '1 minute' WHERE login = :l").param("l", login).update();
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json(login, PASSWORD)))
+                .andExpect(status().isOk());
+        Long rows = jdbc.sql("SELECT count(*) FROM login_throttle WHERE login = :l").param("l", login).query(Long.class).single();
+        assertThat(rows).isZero();
+    }
+
+    @Test
+    void unknownLoginIsThrottledTheSameWay() throws Exception {
+        String login = "yoq-login-" + System.nanoTime();
+        for (int i = 0; i < 4; i++) {
+            mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json(login, PASSWORD)))
+                    .andExpect(jsonPath("$.code").value("auth.badCredentialsLeft"));
+        }
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json(login, PASSWORD)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("auth.locked"));
     }
 
     @Test
@@ -217,6 +254,17 @@ class AuthIT {
                         .content("{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"qisqa\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.newPassword").isNotEmpty());
+
+        // Prototip talablari: kamida bitta raqam va bitta harf
+        for (String weak : new String[] {"faqatharflardan", "1234567890"}) {
+            mvc.perform(post("/api/auth/password")
+                            .with(csrf())
+                            .cookie(session)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"" + weak + "\"}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.newPassword").value("Parolda kamida bitta harf va bitta raqam boʻlishi kerak. Ularni qoʻshing."));
+        }
 
         mvc.perform(post("/api/auth/password")
                         .with(csrf())

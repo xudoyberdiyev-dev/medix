@@ -52,13 +52,48 @@ export function usePrices(branchId: number | null, f: PriceFilters) {
   });
 }
 
-export function usePriceChanges(branchId: number | null, status: PriceChangeStatus | null, page: number) {
+/** «Narx oʻzgarishlari» roʻyxati filtri (prototip Prices → changes). */
+export interface PriceChangeListFilter {
+  status: PriceChangeStatus | null;
+  q: string;
+  priceTypeIds: number[];
+  from: string | null;
+  to: string | null;
+  page: number;
+}
+
+export const PRICE_CHANGE_PAGE_SIZE = 25;
+
+/** Yorliqlar tartibi (prototip: Hammasi / Tasdiqlashda / Tasdiqlangan / Rad etilgan / Bekor qilingan); qoralama — bor boʻlsa. */
+export const CHANGE_VIEWS: PriceChangeStatus[] = ["PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED", "DRAFT"];
+
+export function isFiltered(f: PriceChangeListFilter): boolean {
+  return Boolean(f.q.trim() || f.priceTypeIds.length || f.from || f.to);
+}
+
+/** Kuchga kirish sanasi bugundan keyin — kelajakdagi narx (prototipda koʻk, qalin). */
+export function isFuture(effectiveFrom: string, today: string): boolean {
+  return effectiveFrom > today;
+}
+
+export function usePriceChanges(branchId: number | null, f: PriceChangeListFilter) {
   return useQuery({
-    queryKey: ["price-changes", "list", branchId, status, page],
+    queryKey: ["price-changes", "list", branchId, f],
     queryFn: () =>
       unwrap(
         api.GET("/api/price-changes", {
-          params: { query: { branchId: branchId ?? undefined, status: status ?? undefined, page: page - 1, size: 50 } },
+          params: {
+            query: {
+              branchId: branchId ?? undefined,
+              status: f.status ?? undefined,
+              q: f.q.trim() || undefined,
+              priceTypeIds: f.priceTypeIds.length ? f.priceTypeIds : undefined,
+              from: f.from ?? undefined,
+              to: f.to ?? undefined,
+              page: f.page - 1,
+              size: PRICE_CHANGE_PAGE_SIZE,
+            },
+          },
         }),
       ),
     placeholderData: keepPreviousData,
@@ -193,4 +228,29 @@ export function batchLines(rb: ReceiptBatches, priceTypeId: number): DraftLine[]
       expiryDate: b.expiryDate,
     };
   });
+}
+
+export type PriceSetImport = components["schemas"]["SetImportResult"];
+
+/** «Narx oʻrnatish» — koʻrinib turgan qatorlarni .xlsx ga (kiritilgan yangi narx bilan). */
+export async function exportPriceSet(rows: components["schemas"]["SetExportRow"][]): Promise<Blob> {
+  await ensureCsrf();
+  const { data, error } = await api.POST("/api/prices/grid/export", { body: { rows }, parseAs: "blob" });
+  if (error || !data) throw error ?? new Error("export");
+  return data as Blob;
+}
+
+/** «Excelʼdan yuklash» — hech narsa yozilmaydi, topilgan narxlar jadvalga qoʻyiladi. */
+export async function importPriceSet(file: File): Promise<PriceSetImport> {
+  await ensureCsrf();
+  return unwrap(
+    api.POST("/api/prices/grid/import", {
+      body: { file: file as unknown as string },
+      bodySerializer: () => {
+        const fd = new FormData();
+        fd.append("file", file);
+        return fd;
+      },
+    }),
+  );
 }

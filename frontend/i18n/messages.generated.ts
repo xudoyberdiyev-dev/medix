@@ -1,6 +1,7 @@
 // AVTOMATIK YASALGAN (`pnpm i18n:cyrl`) — qoʻlda oʻzgartirmang.
 import uzLatn_audit from "@/messages/uz-Latn/audit.json";
 import uzLatn_bonuses from "@/messages/uz-Latn/bonuses.json";
+import uzLatn_branchPanel from "@/messages/uz-Latn/branchPanel.json";
 import uzLatn_branchSales from "@/messages/uz-Latn/branchSales.json";
 import uzLatn_cash from "@/messages/uz-Latn/cash.json";
 import uzLatn_common from "@/messages/uz-Latn/common.json";
@@ -30,14 +31,17 @@ import uzLatn_roles from "@/messages/uz-Latn/roles.json";
 import uzLatn_search from "@/messages/uz-Latn/search.json";
 import uzLatn_setup from "@/messages/uz-Latn/setup.json";
 import uzLatn_shell from "@/messages/uz-Latn/shell.json";
+import uzLatn_staff from "@/messages/uz-Latn/staff.json";
 import uzLatn_stock from "@/messages/uz-Latn/stock.json";
 import uzLatn_supplierReturns from "@/messages/uz-Latn/supplierReturns.json";
 import uzLatn_ui from "@/messages/uz-Latn/ui.json";
+import uzLatn_warehousePanel from "@/messages/uz-Latn/warehousePanel.json";
 import uzLatn_warehouseTransfers from "@/messages/uz-Latn/warehouseTransfers.json";
 import uzLatn_writeOffs from "@/messages/uz-Latn/writeOffs.json";
 import uzLatn_zoneTransfers from "@/messages/uz-Latn/zoneTransfers.json";
 import uzCyrl_audit from "@/messages/uz-Cyrl/audit.json";
 import uzCyrl_bonuses from "@/messages/uz-Cyrl/bonuses.json";
+import uzCyrl_branchPanel from "@/messages/uz-Cyrl/branchPanel.json";
 import uzCyrl_branchSales from "@/messages/uz-Cyrl/branchSales.json";
 import uzCyrl_cash from "@/messages/uz-Cyrl/cash.json";
 import uzCyrl_common from "@/messages/uz-Cyrl/common.json";
@@ -67,14 +71,17 @@ import uzCyrl_roles from "@/messages/uz-Cyrl/roles.json";
 import uzCyrl_search from "@/messages/uz-Cyrl/search.json";
 import uzCyrl_setup from "@/messages/uz-Cyrl/setup.json";
 import uzCyrl_shell from "@/messages/uz-Cyrl/shell.json";
+import uzCyrl_staff from "@/messages/uz-Cyrl/staff.json";
 import uzCyrl_stock from "@/messages/uz-Cyrl/stock.json";
 import uzCyrl_supplierReturns from "@/messages/uz-Cyrl/supplierReturns.json";
 import uzCyrl_ui from "@/messages/uz-Cyrl/ui.json";
+import uzCyrl_warehousePanel from "@/messages/uz-Cyrl/warehousePanel.json";
 import uzCyrl_warehouseTransfers from "@/messages/uz-Cyrl/warehouseTransfers.json";
 import uzCyrl_writeOffs from "@/messages/uz-Cyrl/writeOffs.json";
 import uzCyrl_zoneTransfers from "@/messages/uz-Cyrl/zoneTransfers.json";
 import ru_audit from "@/messages/ru/audit.json";
 import ru_bonuses from "@/messages/ru/bonuses.json";
+import ru_branchPanel from "@/messages/ru/branchPanel.json";
 import ru_branchSales from "@/messages/ru/branchSales.json";
 import ru_cash from "@/messages/ru/cash.json";
 import ru_common from "@/messages/ru/common.json";
@@ -104,9 +111,11 @@ import ru_roles from "@/messages/ru/roles.json";
 import ru_search from "@/messages/ru/search.json";
 import ru_setup from "@/messages/ru/setup.json";
 import ru_shell from "@/messages/ru/shell.json";
+import ru_staff from "@/messages/ru/staff.json";
 import ru_stock from "@/messages/ru/stock.json";
 import ru_supplierReturns from "@/messages/ru/supplierReturns.json";
 import ru_ui from "@/messages/ru/ui.json";
+import ru_warehousePanel from "@/messages/ru/warehousePanel.json";
 import ru_warehouseTransfers from "@/messages/ru/warehouseTransfers.json";
 import ru_writeOffs from "@/messages/ru/writeOffs.json";
 import ru_zoneTransfers from "@/messages/ru/zoneTransfers.json";
@@ -114,6 +123,7 @@ import ru_zoneTransfers from "@/messages/ru/zoneTransfers.json";
 export const uzLatn = {
   "audit": uzLatn_audit,
   "bonuses": uzLatn_bonuses,
+  "branchPanel": uzLatn_branchPanel,
   "branchSales": uzLatn_branchSales,
   "cash": uzLatn_cash,
   "common": uzLatn_common,
@@ -143,9 +153,11 @@ export const uzLatn = {
   "search": uzLatn_search,
   "setup": uzLatn_setup,
   "shell": uzLatn_shell,
+  "staff": uzLatn_staff,
   "stock": uzLatn_stock,
   "supplierReturns": uzLatn_supplierReturns,
   "ui": uzLatn_ui,
+  "warehousePanel": uzLatn_warehousePanel,
   "warehouseTransfers": uzLatn_warehouseTransfers,
   "writeOffs": uzLatn_writeOffs,
   "zoneTransfers": uzLatn_zoneTransfers,
@@ -154,6 +166,7 @@ export const uzLatn = {
 export const uzCyrl = {
   "audit": uzCyrl_audit,
   "bonuses": uzCyrl_bonuses,
+  "branchPanel": uzCyrl_branchPanel,
   "branchSales": uzCyrl_branchSales,
   "cash": uzCyrl_cash,
   "common": uzCyrl_common,
@@ -183,9 +196,11 @@ export const uzCyrl = {
   "search": uzCyrl_search,
   "setup": uzCyrl_setup,
   "shell": uzCyrl_shell,
+  "staff": uzCyrl_staff,
   "stock": uzCyrl_stock,
   "supplierReturns": uzCyrl_supplierReturns,
   "ui": uzCyrl_ui,
+  "warehousePanel": uzCyrl_warehousePanel,
   "warehouseTransfers": uzCyrl_warehouseTransfers,
   "writeOffs": uzCyrl_writeOffs,
   "zoneTransfers": uzCyrl_zoneTransfers,
@@ -194,6 +209,7 @@ export const uzCyrl = {
 export const ru = {
   "audit": ru_audit,
   "bonuses": ru_bonuses,
+  "branchPanel": ru_branchPanel,
   "branchSales": ru_branchSales,
   "cash": ru_cash,
   "common": ru_common,
@@ -223,9 +239,11 @@ export const ru = {
   "search": ru_search,
   "setup": ru_setup,
   "shell": ru_shell,
+  "staff": ru_staff,
   "stock": ru_stock,
   "supplierReturns": ru_supplierReturns,
   "ui": ru_ui,
+  "warehousePanel": ru_warehousePanel,
   "warehouseTransfers": ru_warehouseTransfers,
   "writeOffs": ru_writeOffs,
   "zoneTransfers": ru_zoneTransfers,

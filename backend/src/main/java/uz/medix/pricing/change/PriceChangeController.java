@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,14 +22,17 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import uz.medix.pricing.change.PriceChangeModels.MarkupLine;
 import uz.medix.pricing.change.PriceChangeModels.MarkupRequest;
 import uz.medix.pricing.change.PriceChangeModels.PinRequest;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeDetail;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceChangeRequest;
+import uz.medix.pricing.change.PriceChangeModels.PriceGrid;
 import uz.medix.pricing.change.PriceChangeModels.PricePage;
 import uz.medix.pricing.change.PriceChangeModels.PriceSort;
 import uz.medix.pricing.change.PriceChangeModels.ReceiptBatches;
@@ -66,7 +70,12 @@ class PriceChangeController {
     }
 
     private PriceChangeDetail detail(long id) {
-        return changes.find(id, actor()).orElseThrow(() -> MedixException.notFound("error.notFound"));
+        return changes.find(id, actor(), showCost()).orElseThrow(() -> MedixException.notFound("error.notFound"));
+    }
+
+    private static boolean showCost() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority()));
     }
 
     @GetMapping("/prices")
@@ -85,6 +94,13 @@ class PriceChangeController {
         }
         return changes.prices(branchId, q, manufacturerId, at == null ? changes.today() : at, sort, desc, Math.max(page, 0),
                 Math.clamp(size, 1, 200));
+    }
+
+    @GetMapping("/prices/grid")
+    @PreAuthorize(SET_PRICES)
+    @Operation(summary = "«Narx o'rnatish» jadvali", description = "Faol mahsulotlar × narx turi: amaldagi, kelgusi, bazaviy narx; kirim narxlari — faqat special.cost bilan.")
+    PriceGrid grid(@RequestParam long branchId, @RequestParam long priceTypeId, Authentication auth) {
+        return changes.grid(actor(), branchId, priceTypeId, auth.getAuthorities().stream().anyMatch(a -> "special.cost".equals(a.getAuthority())));
     }
 
     @GetMapping("/prices/export")
@@ -107,14 +123,40 @@ class PriceChangeController {
                 response.getOutputStream());
     }
 
+    @PostMapping("/prices/grid/export")
+    @PreAuthorize(SET_PRICES)
+    @Operation(summary = "«Narx o'rnatish» — Excel'ga eksport (.xlsx)",
+            description = "Brauzerdagi ko'rinib turgan qatorlar: Kod, Mahsulot, Joriy narx, Yangi narx (kiritilgan, saqlanmagan bo'lsa ham).")
+    void exportSet(@Valid @RequestBody PriceExcel.SetExportRequest r, HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"narxlar.xlsx\"");
+        excel.exportSet(r.rows(), response.getOutputStream());
+    }
+
+    @PostMapping(path = "/prices/grid/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize(SET_PRICES)
+    @Operation(summary = "«Narx o'rnatish» — Excel'dan yuklash",
+            description = "Birinchi varaq; «Kod» va «Yangi narx» (yoki «Narx») ustunlari. Hech narsa yozilmaydi — narxlar jadvalga qo'yiladi.")
+    PriceExcel.SetImportResult importSet(@RequestPart("file") MultipartFile file) throws IOException {
+        try (var in = file.getInputStream()) {
+            return excel.importSet(in);
+        }
+    }
+
     @GetMapping("/price-changes")
     @Operation(summary = "NO hujjatlari")
     PriceChangePage list(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) Status status,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) List<Long> priceTypeIds,
+            @RequestParam(required = false) List<Long> branchIds,
+            @RequestParam(required = false) LocalDate from,
+            @RequestParam(required = false) LocalDate to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return changes.list(actor(), branchId, status, Math.max(page, 0), Math.clamp(size, 1, 200));
+        return changes.list(actor(), new PriceChanges.ListFilter(branchId, status, q, priceTypeIds, branchIds, from, to),
+                Math.max(page, 0), Math.clamp(size, 1, 200));
     }
 
     @GetMapping("/price-changes/{id}")
@@ -177,7 +219,7 @@ class PriceChangeController {
 
     @PostMapping("/price-changes/{id}/cancel")
     @PreAuthorize(SET_PRICES)
-    @Operation(summary = "Bekor qilish", description = "Faqat qoralama yoki tasdiq kutayotgan hujjat.")
+    @Operation(summary = "Bekor qilish", description = "Qoralama, tasdiq kutayotgan yoki tasdiqlangan, lekin hali kuchga kirmagan hujjat.")
     PriceChangeDetail cancel(@PathVariable long id, @Valid @RequestBody ReasonRequest r) {
         changes.cancel(actor(), id, r.reason());
         return detail(id);

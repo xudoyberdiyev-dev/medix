@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 /**
  * Rollar boʻyicha toʻliq buyurtma zanjiri (egasi ustuvorligi 06.11 — №2): har qadamni oʻz roli bajaradi.
@@ -11,7 +11,8 @@ test.describe.configure({ mode: "serial" });
 const CEO_LOGIN = process.env.E2E_CEO_LOGIN ?? "ceo";
 const CEO_PASSWORD = "Yangi-CEO-parol-2026";
 const OPERATOR_PASSWORD = "Operator-parol-2026";
-const TEMP = "Vaqtincha-parol-2";
+/** Xodim qoʻshilganda «Kirish maʼlumotlari» oynasidagi bir martalik parollar (testlar ketma-ket, workers: 1). */
+const TEMP: Record<string, string> = {};
 const PASSWORD = "Rol-parol-2026";
 const CUSTOMER = "Baraka Dorixona E2E";
 const PLATE = "01 E 777 EE";
@@ -36,7 +37,7 @@ const mark = (serial: string) => `(01)0${BARCODE}(21)${serial}(17)291231(10)MK-0
 /** 1×1 PNG — yetkazish rasmi uchun. */
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
 
-function field(page: Page, label: string) {
+function field(page: Page | Locator, label: string) {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return page.getByLabel(new RegExp(`^${escaped}\\s*\\*?$`));
 }
@@ -45,17 +46,17 @@ async function login(page: Page, login: string, password: string) {
   await page.goto("/login");
   await field(page, "Login").fill(login);
   await field(page, "Parol").fill(password);
-  await page.getByRole("button", { name: "Tizimga kirish" }).click();
+  await page.getByRole("button", { name: "Kirish", exact: true }).click();
 }
 
 /** Birinchi kirish: vaqtinchalik parol → doimiy parol → bosh sahifa. */
 async function firstLogin(page: Page, user: string) {
-  await login(page, user, TEMP);
+  await login(page, user, TEMP[user] ?? "");
   await expect(page).toHaveURL(/\/password/);
-  await field(page, "Joriy parol").fill(TEMP);
   await field(page, "Yangi parol").fill(PASSWORD);
   await field(page, "Yangi parolni takrorlang").fill(PASSWORD);
   await page.getByRole("button", { name: "Parolni saqlash" }).click();
+  await page.getByRole("button", { name: "Davom etish" }).click();
   await expect(page).toHaveURL(/\/$/);
 }
 
@@ -64,29 +65,45 @@ async function choose(page: Page, label: string, option: RegExp) {
   await page.getByRole("option", { name: option }).first().click();
 }
 
+async function pick(page: Page, scope: Locator, label: string, option: RegExp) {
+  await scope.getByRole("combobox", { name: label, exact: true }).click();
+  await page.getByRole("option", { name: option }).first().click();
+}
+
+/** Sozlamalar → Xodimlar (prototip AdminStaff/WizStaff paneli): xodim qoʻshadi, bir martalik parolni eslab qoladi. */
+async function addStaff(page: Page, s: { name: string; login: string; role: RegExp; phone: string; branch?: RegExp }) {
+  const [first, last] = s.name.split(" ");
+  await page.getByRole("button", { name: "Xodim qoʻshish" }).first().click();
+  const panel = page.getByRole("dialog", { name: "Yangi xodim" });
+  await field(panel, "Familiya").fill(last);
+  await field(panel, "Ism").fill(first);
+  await field(panel, "Telefon").fill(s.phone);
+  await pick(page, panel, "Rol", s.role);
+  if (s.branch) await pick(page, panel, "Filial", s.branch);
+  await field(panel, "Login").fill(s.login);
+  await panel.getByRole("button", { name: "Saqlash", exact: true }).click();
+  const creds = page.getByRole("dialog", { name: "Kirish maʼlumotlari" });
+  await expect(creds.getByText(s.login, { exact: true })).toBeVisible();
+  TEMP[s.login] = ((await creds.locator(".font-mono").nth(1).textContent()) ?? "").trim();
+  await creds.getByRole("button", { name: "Tayyor" }).click();
+  await expect(page.getByRole("cell", { name: s.login, exact: true })).toBeVisible();
+}
+
 test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", async ({ page }) => {
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/settings/employees");
-  for (const s of STAFF) {
-    await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
-    const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
-    await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill(s.name);
-    await dialog.getByLabel(/^Login\s*\*?$/).fill(s.login);
-    await choose(page, "Rol", s.role);
-    await choose(page, "Filial", /Toshkent/);
-    await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(TEMP);
-    await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
-    await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
-    await expect(page.getByRole("cell", { name: s.login, exact: true })).toBeVisible();
+  for (const [i, s] of STAFF.entries()) {
+    await addStaff(page, { ...s, phone: `9180000${String(i).padStart(2, "0")}`, branch: /Toshkent/ });
   }
-  // E3: Direktor Buxgalterga barcha filiallar doirasini beradi (audit bilan)
-  await page.getByRole("row").filter({ hasText: "accountant.1" }).getByRole("button", { name: "Amallar" }).click();
+  // E3: Direktor Buxgalterga barcha filiallar doirasini beradi (audit bilan) — xodim kartasida
+  await page.getByRole("cell", { name: "accountant.1", exact: true }).click();
+  await page.getByRole("button", { name: "Yana" }).click();
   await page.getByRole("menuitem", { name: "Barcha filiallarga ruxsat berish" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Barcha filiallarga ruxsat berish" }).click();
   await expect(page.getByText("Barcha filiallar ruxsati berildi").first()).toBeVisible();
-  await expect(page.getByRole("row").filter({ hasText: "accountant.1" })).toContainText("Barcha filiallar");
+  await expect(page.getByText("Barcha filiallar", { exact: true }).first()).toBeVisible();
 
   // Markirovkali mahsulot: karta → narx (NO) → boshlangʻich qoldiq (BQ)
   await page.goto("/products");
@@ -106,15 +123,12 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
 
   await page.goto("/prices");
   await page.getByRole("button", { name: "Narx oʻrnatish" }).click();
-  await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
-  await page.getByPlaceholder("Qidirish").fill("Amoksitsillin");
-  await page.getByRole("option", { name: /Amoksitsillin E2E/ }).click();
-  await choose(page, "Narx turi", /^Narx$/);
-  await field(page, "Yangi narx").first().fill("5000");
-  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
-  await page.getByRole("button", { name: "Oʻtkazish" }).click();
-  await expect(page.getByText("Narxlar kuchga kirdi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/prices\/set/);
+  await page.getByRole("searchbox", { name: "Qidiruv" }).fill("Amoksitsillin");
+  await page.getByRole("textbox", { name: /Yangi narx \(QQS bilan\) — Amoksitsillin E2E/ }).fill("5000");
+  await page.getByRole("button", { name: "Saqlash" }).first().click();
+  await page.getByRole("dialog", { name: "Narxlarni saqlash" }).getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText(/Saqlandi: NO-[A-Z]{3}-\d{6} — 1 ta narx/)).toBeVisible();
 
   await page.goto("/opening");
   await page.getByRole("button", { name: "Qoldiq kiritish" }).first().click();
@@ -147,9 +161,10 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
 
   // Mijoz
   await page.goto("/customers");
-  await page.getByRole("button", { name: "Mijoz qoʻshish" }).click();
+  await page.getByRole("button", { name: "Mijoz qoʻshish" }).first().click();
   await field(page, "STIR / JShShIR").fill("305559876");
   await field(page, "Nomi").fill(CUSTOMER);
+  await choose(page, "Turi", /Dorixona/);
   await page.getByRole("button", { name: "Kartani saqlash" }).click();
   await expect(page.getByText("Kontragent qoʻshildi")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -337,14 +352,15 @@ test("Haydovchi: qabul qiladi, yetkazadi (rasm + naqd), reysni yakunlaydi", asyn
 test("Kassir: haydovchidagi pulni qabul qiladi (MT)", async ({ page }) => {
   await firstLogin(page, "cashier.1");
   await page.goto("/cash");
-  await expect(page.getByRole("heading", { name: "Haydovchidagi pul" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Haydovchilardan kutilayotgan pul" })).toBeVisible();
   await expect(page.getByText(CUSTOMER).first()).toBeVisible();
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).first().click();
   // Kassir faqat oʻz kassasida: tanlovda faqat «Kassa 2» (Asosiy kassada esa CEO kunni yopgan)
   await expect(page.getByRole("combobox", { name: "Qabul qilinadigan kassa", exact: true })).toHaveText(/Kassa 2/);
-  await page.getByRole("button", { name: "Qabul qildim" }).first().click();
+  await page.getByRole("button", { name: "Pulni qabul qilish" }).click();
   await expect(page.getByText("Pul qabul qilindi").first()).toBeVisible();
-  await expect(page.getByText("Haydovchilarda pul yoʻq")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Kassa 2.*20\.000,00 soʻm/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Haydovchilardan kutilayotgan pul" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Kassa 2.*20\.000,00/ })).toBeVisible();
   // Kassir hisob qoʻsha olmaydi
   await expect(page.getByRole("button", { name: "Hisob qoʻshish" })).toHaveCount(0);
 });
@@ -417,16 +433,18 @@ test("Kassir: oʻz kassasiga kirim va katta chiqim — tasdiqqa", async ({ page 
   await login(page, "cashier.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/cash");
-  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
-  await choose(page, "Yoʻnalish", /^Kirim$/);
-  await choose(page, "Hisob", /Kassa 2/);
+  await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
+  await expect(page).toHaveURL(/\/cash\/ops\/new\?kind=ko/);
+  await page.getByRole("radio", { name: "Kirim" }).click();
+  await choose(page, "Kassa", /Kassa 2/);
   await choose(page, "Kirim moddasi", /Boshqa kirim/);
   await field(page, "Summa").fill("3.000.000,00");
-  await page.getByRole("button", { name: "Yozish" }).click();
+  await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Kirim yozildi").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/cash$/);
 
-  await page.getByRole("button", { name: "Kirim / chiqim" }).click();
-  await choose(page, "Hisob", /Kassa 2/);
+  await page.getByRole("button", { name: "Kassa operatsiyasi" }).click();
+  await choose(page, "Kassa", /Kassa 2/);
   await choose(page, "Xarajat moddasi", /Ijara/);
   await field(page, "Summa").fill("2.500.000,00");
   await field(page, "Summa").press("Tab");
@@ -444,7 +462,7 @@ test("Filial rahbari: kassirning katta chiqimini tasdiqlaydi", async ({ page }) 
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(page.getByText("Chiqim tasdiqlandi").first()).toBeVisible();
   // 20 000 (haydovchidan) + 3 000 000 − 2 500 000 = 520 000
-  await expect(page.getByRole("button", { name: /Kassa 2.*520\.000,00 soʻm/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Kassa 2.*520\.000,00/ })).toBeVisible();
 });
 
 test("Xarid: birinchi kirish, kirim qoralamasini kiritadi (qabul qila olmaydi)", async ({ page }) => {
@@ -496,29 +514,34 @@ test("Kassir: YB ga toʻlov (YT) — tasdiqqa", async ({ page }) => {
   await login(page, "cashier.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/payments");
-  await page.getByRole("tab", { name: "Yetkazib beruvchiga (YT)" }).click();
-  await page.getByRole("button", { name: "Toʻlov qoʻshish" }).first().click();
+  await page.getByRole("button", { name: "Yetkazib beruvchiga toʻlov" }).first().click();
+  await expect(page).toHaveURL(/\/payments\/yt\/new$/);
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
   await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
-  await choose(page, "Hisob", /Kassa 2/);
+  await choose(page, "Kassa", /Kassa 2/);
   await field(page, "Summa").fill("60.000,00");
-  await page.getByRole("button", { name: "Tasdiqqa yuborish" }).click();
-  await expect(page.getByText("Tasdiqqa yuborildi").first()).toBeVisible();
+  await page.getByRole("button", { name: "Tasdiqlashga yuborish" }).first().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Tasdiqlashga yuborish" }).click();
+  await expect(page.getByText(/tasdiqlashga yuborildi/).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/payments\/yt\/\d+$/);
+  await expect(page.getByText(/Filial rahbari tasdigʻini kutmoqda/)).toBeVisible();
 });
 
 test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   await login(page, "manager.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/payments");
-  await page.getByRole("tab", { name: "Yetkazib beruvchiga (YT)" }).click();
+  await page.getByRole("tab", { name: /Yetkazib beruvchilarga/ }).click();
   await page.getByRole("cell", { name: "Pharm Supply E2E" }).first().click();
-  await page.getByRole("button", { name: "Tasdiqlash va oʻtkazish" }).click();
-  await expect(page.getByText("Toʻlov oʻtkazildi").first()).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/payments\/yt\/\d+$/);
+  await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Tasdiqlash", exact: true }).click();
+  await expect(page.getByText(/tasdiqlandi$/).first()).toBeVisible();
+  await expect(page.getByText(/Tasdiqlangan toʻlov tahrirlanmaydi/)).toBeVisible();
   await page.goto("/cash");
   // 520 000 − 60 000 = 460 000
-  await expect(page.getByRole("button", { name: /Kassa 2.*460\.000,00 soʻm/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Kassa 2.*460\.000,00/ })).toBeVisible();
 });
 
 /** E1: Markirovkachi markirovkasiz buyurtmani boshlaydi, qatorlarni tasdiqlaydi va yakunlaydi. */
@@ -634,22 +657,20 @@ test("CEO: Direktor xodimi va mijozga kichik kredit limiti", async ({ page }) =>
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/settings/employees");
-  await page.getByRole("button", { name: "Xodim qoʻshish" }).click();
-  const dialog = page.getByRole("dialog", { name: "Yangi xodim" });
-  await dialog.getByLabel(/^F\.I\.Sh\.\s*\*?$/).fill("Dilshod Direktorov");
-  await dialog.getByLabel(/^Login\s*\*?$/).fill("director.1");
-  await choose(page, "Rol", /^Direktor$/);
-  await dialog.getByLabel(/^Vaqtinchalik parol\s*\*?$/).fill(TEMP);
-  await dialog.getByRole("button", { name: "Xodimni saqlash" }).click();
-  await expect(page.getByText("Xodim qoʻshildi").first()).toBeVisible();
+  await addStaff(page, { name: "Dilshod Direktorov", login: "director.1", role: /^Direktor$/, phone: "918009900" });
 
   await page.goto("/customers");
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
-  await page.getByRole("tab", { name: "Filial shartlari" }).click();
+  await page.getByRole("tab", { name: /^Filiallar boʻyicha shartlar/ }).click();
   const card = page.locator("section").filter({ has: page.getByRole("heading", { name: /Toshkent/ }) });
   await card.getByLabel(/^Kredit limiti\s*\*?$/).fill("1.000,00");
   await card.getByRole("button", { name: "Shartlarni saqlash" }).click();
   await expect(page.getByText("Filial shartlari saqlandi").first()).toBeVisible();
+  // Kartochka hujjat yorliqlari (prototip CounterpartyCard)
+  await page.getByRole("tab", { name: /^Buyurtmalar/ }).click();
+  await expect(page.getByRole("link", { name: "Boʻlimga oʻtish" })).toBeVisible();
+  await page.getByRole("tab", { name: /^Toʻlovlar/ }).click();
+  await expect(page.getByRole("link", { name: "Boʻlimga oʻtish" })).toHaveAttribute("href", "/payments");
 });
 
 test("Operator: limitdan 20% dan koʻp oshgan buyurtma — Direktor tasdigʻiga", async ({ page }) => {
@@ -701,10 +722,11 @@ test("Kassir: qisman reysdagi naqd pulni qabul qiladi — haydovchi yangi reysga
   await login(page, "cashier.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/cash");
-  await expect(page.getByRole("heading", { name: "Haydovchidagi pul" })).toBeVisible();
-  await page.getByRole("button", { name: "Qabul qildim" }).first().click();
+  await expect(page.getByRole("heading", { name: "Haydovchilardan kutilayotgan pul" })).toBeVisible();
+  await page.getByRole("button", { name: "Qabul qilish", exact: true }).first().click();
+  await page.getByRole("button", { name: "Pulni qabul qilish" }).click();
   await expect(page.getByText("Pul qabul qilindi").first()).toBeVisible();
-  await expect(page.getByText("Haydovchilarda pul yoʻq")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Haydovchilardan kutilayotgan pul" })).toHaveCount(0);
 });
 
 test("Ombor zanjiri: Direktor tasdiqlagan buyurtma reysga chiqadi", async ({ page }) => {

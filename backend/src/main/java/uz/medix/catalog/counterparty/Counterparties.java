@@ -16,15 +16,21 @@ import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.catalog.counterparty.CounterpartyModels.Contact;
+import uz.medix.catalog.counterparty.CounterpartyModels.ContactRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.Contract;
 import uz.medix.catalog.counterparty.CounterpartyModels.ContractRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyDetail;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRow;
+import uz.medix.catalog.counterparty.CounterpartyModels.Kind;
 import uz.medix.catalog.counterparty.CounterpartyModels.License;
 import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
 import uz.medix.catalog.counterparty.CounterpartyModels.PaymentType;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeAttachRequest;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeCustomer;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeCustomers;
 import uz.medix.catalog.counterparty.CounterpartyModels.Ref;
 import uz.medix.catalog.counterparty.CounterpartyModels.Role;
 import uz.medix.catalog.counterparty.CounterpartyModels.SortField;
@@ -104,12 +110,12 @@ class Counterparties {
 
     @Transactional(readOnly = true)
     Optional<CounterpartyDetail> find(long id, Actor actor) {
-        record Base(long id, String tin, String name, String legalName, boolean isCustomer, boolean isSupplier, Long regionId,
+        record Base(long id, String tin, String name, String legalName, boolean isCustomer, boolean isSupplier, String kind, Long regionId,
                 String region, String address, String phone, String contactPerson, String email, String bankName,
                 String bankAccount, String bankMfo, String vatCode, String note, boolean blocked, String blockedReason,
                 boolean active) {}
         Optional<Base> base = jdbc.sql("""
-                SELECT c.id, c.tin, c.name, c.legal_name, c.is_customer, c.is_supplier, c.region_id, r.name AS region, c.address,
+                SELECT c.id, c.tin, c.name, c.legal_name, c.is_customer, c.is_supplier, c.kind, c.region_id, r.name AS region, c.address,
                        c.phone, c.contact_person, c.email, c.bank_name, c.bank_account, c.bank_mfo, c.vat_code, c.note,
                        c.blocked, c.blocked_reason, c.active
                 FROM counterparty c LEFT JOIN region r ON r.id = c.region_id WHERE c.id = :id""")
@@ -158,10 +164,16 @@ class Counterparties {
                 .stream()
                 .filter(t -> actor.canAccessBranch(t.branchId()))
                 .toList();
+        List<Contact> contacts = jdbc.sql("""
+                SELECT name, job_title, phone FROM counterparty_contact WHERE counterparty_id = :id ORDER BY sort_order""")
+                .param("id", id)
+                .query((rs, n) -> new Contact(rs.getString("name"), rs.getString("job_title"), rs.getString("phone")))
+                .list();
         return Optional.of(new CounterpartyDetail(b.id(), b.tin(), b.name(), b.legalName(), b.isCustomer(), b.isSupplier(),
+                b.kind() == null ? null : Kind.valueOf(b.kind()),
                 b.regionId() == null ? null : new Ref(b.regionId(), b.region()), b.address(), b.phone(), b.contactPerson(), b.email(),
                 b.bankName(), b.bankAccount(), b.bankMfo(), b.vatCode(), b.note(), b.blocked(), b.blockedReason(), b.active(),
-                licenses, contracts, terms));
+                licenses, contacts, contracts, terms));
     }
 
     // ===== Karta =====
@@ -170,13 +182,14 @@ class Counterparties {
     long create(CounterpartyRequest r) {
         validateCard(r, null);
         long id = jdbc.sql("""
-                INSERT INTO counterparty (tin, name, legal_name, is_customer, is_supplier, region_id, address, phone, contact_person,
+                INSERT INTO counterparty (tin, name, legal_name, is_customer, is_supplier, kind, region_id, address, phone, contact_person,
                                           email, bank_name, bank_account, bank_mfo, vat_code, note)
-                VALUES (:tin, :name, :legal, :customer, :supplier, :region, :address, :phone, :contact, :email, :bank, :account,
+                VALUES (:tin, :name, :legal, :customer, :supplier, :kind, :region, :address, :phone, :contact, :email, :bank, :account,
                         :mfo, :vat, :note) RETURNING id""")
                 .params(cardParams(r))
                 .query(Long.class)
                 .single();
+        saveContacts(id, r);
         refreshSearchText(id);
         audit.record(AuditEntry.of("counterparty.create", "counterparty", id).change(null, cardParams(r)));
         return id;
@@ -187,7 +200,7 @@ class Counterparties {
         Map<String, Object> before = lockCard(id);
         validateCard(r, id);
         jdbc.sql("""
-                UPDATE counterparty SET tin = :tin, name = :name, legal_name = :legal, is_customer = :customer, is_supplier = :supplier,
+                UPDATE counterparty SET tin = :tin, name = :name, legal_name = :legal, is_customer = :customer, is_supplier = :supplier, kind = :kind,
                        region_id = :region, address = :address, phone = :phone, contact_person = :contact, email = :email,
                        bank_name = :bank, bank_account = :account, bank_mfo = :mfo, vat_code = :vat, note = :note,
                        updated_at = now(), version = version + 1
@@ -195,6 +208,7 @@ class Counterparties {
                 .params(cardParams(r))
                 .param("id", id)
                 .update();
+        saveContacts(id, r);
         refreshSearchText(id);
         audit.record(AuditEntry.of("counterparty.update", "counterparty", id).change(before, cardParams(r)));
     }
@@ -392,6 +406,104 @@ class Counterparties {
         audit.record(AuditEntry.of("counterparty.terms", "counterparty", counterpartyId).change(before, after));
     }
 
+    /**
+     * «Mijozlarga biriktirish» ro'yxati: faol mijozlar (qidiruv — nom/STIR, lotin-kirill farqsiz), shu filialdagi joriy narx turi bilan;
+     * avval shu turga biriktirilganlar, keyin nom bo'yicha.
+     */
+    @Transactional(readOnly = true)
+    PriceTypeCustomers priceTypeCustomers(long branchId, long priceTypeId, String q, int limit) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("b", branchId);
+        params.put("t", priceTypeId);
+        StringBuilder where = new StringBuilder(" WHERE c.is_customer AND c.active");
+        String nq = SearchText.normalize(q);
+        if (!nq.isEmpty()) {
+            String[] parts = nq.split(" ");
+            where.append(" AND (c.tin = :exact OR (true");
+            for (int i = 0; i < parts.length && i < 8; i++) {
+                where.append(" AND c.search_text LIKE :w").append(i).append(" ESCAPE '\\'");
+                params.put("w" + i, "%" + SearchText.likeEscape(parts[i]) + "%");
+            }
+            where.append("))");
+            params.put("exact", q.strip());
+        }
+        String from = " FROM counterparty c LEFT JOIN counterparty_branch_terms bt ON bt.counterparty_id = c.id AND bt.branch_id = :b"
+                + " LEFT JOIN price_type pt ON pt.id = bt.price_type_id";
+        long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
+        long attached = jdbc.sql("SELECT count(*) FROM counterparty_branch_terms WHERE branch_id = :b AND price_type_id = :t")
+                .param("b", branchId).param("t", priceTypeId).query(Long.class).single();
+        params.put("lim", limit);
+        List<PriceTypeCustomer> items = jdbc.sql("SELECT c.id, c.name, c.tin, bt.price_type_id, pt.name AS price_type" + from + where
+                        + " ORDER BY (bt.price_type_id = :t) IS TRUE DESC, lower(c.name), c.id LIMIT :lim")
+                .params(params)
+                .query((rs, n) -> new PriceTypeCustomer(rs.getLong("id"), rs.getString("name"), rs.getString("tin"),
+                        rs.getObject("price_type_id", Long.class), rs.getString("price_type")))
+                .list();
+        return new PriceTypeCustomers(items, total, attached);
+    }
+
+    /**
+     * Mijozlarni narx turiga biriktirish (shu filial sharti): {@code attach} — narx turi shu turga o'zgaradi (shart yo'q bo'lsa —
+     * yaratiladi); {@code detach} — faqat hozir shu turda bo'lsa, bazaviyga qaytadi (NULL). Har o'zgarish auditda.
+     */
+    @Transactional
+    int attachPriceType(PriceTypeAttachRequest r) {
+        if (!branchExists(r.branchId())) {
+            throw MedixException.badRequest("employee.branchUnknown");
+        }
+        checkRef("price_type", r.priceTypeId());
+        int changed = 0;
+        List<Long> attach = r.attach().stream().distinct().sorted().toList();
+        List<Long> detach = r.detach().stream().filter(id -> !attach.contains(id)).distinct().sorted().toList();
+        for (long id : attach) {
+            if (setCustomerPriceType(id, r.branchId(), r.priceTypeId(), null)) {
+                changed++;
+            }
+        }
+        for (long id : detach) {
+            if (setCustomerPriceType(id, r.branchId(), null, r.priceTypeId())) {
+                changed++;
+            }
+        }
+        return changed;
+    }
+
+    /** {@code onlyIf} berilsa — joriy tur shu bo'lsagina o'zgaradi. O'zgargan bo'lsa true. */
+    private boolean setCustomerPriceType(long counterpartyId, long branchId, Long priceTypeId, Long onlyIf) {
+        Boolean customer = jdbc.sql("SELECT is_customer AND active FROM counterparty WHERE id = :id FOR UPDATE")
+                .param("id", counterpartyId).query(Boolean.class).optional().orElse(null);
+        if (customer == null || !customer) {
+            throw MedixException.badRequest("counterparty.notCustomer");
+        }
+        Optional<Long> current = jdbc.sql("""
+                SELECT price_type_id FROM counterparty_branch_terms WHERE counterparty_id = :cp AND branch_id = :b FOR UPDATE""")
+                .param("cp", counterpartyId).param("b", branchId)
+                .query((rs, n) -> Optional.ofNullable(rs.getObject("price_type_id", Long.class)))
+                .optional()
+                .orElse(null);
+        Long before = current == null ? null : current.orElse(null);
+        if (onlyIf != null && !onlyIf.equals(before)) {
+            return false;
+        }
+        if (Objects.equals(before, priceTypeId)) {
+            return false;
+        }
+        jdbc.sql("""
+                INSERT INTO counterparty_branch_terms (counterparty_id, branch_id, price_type_id) VALUES (:cp, :b, :t)
+                ON CONFLICT (counterparty_id, branch_id) DO UPDATE SET price_type_id = excluded.price_type_id, updated_at = now(),
+                       version = counterparty_branch_terms.version + 1""")
+                .param("cp", counterpartyId).param("b", branchId).param("t", priceTypeId)
+                .update();
+        Map<String, Object> was = new HashMap<>();
+        was.put("branch", branchId);
+        was.put("price", before);
+        Map<String, Object> now = new HashMap<>();
+        now.put("branch", branchId);
+        now.put("price", priceTypeId);
+        audit.record(AuditEntry.of("counterparty.terms", "counterparty", counterpartyId).change(was, now));
+        return true;
+    }
+
     /** Litsenziya amal qiladimi (Toshkent sanasi bo'yicha) — buyurtma tekshiruvida ishlatiladi (6-bosqich). */
     boolean hasValidLicense(long counterpartyId) {
         return jdbc.sql("""
@@ -475,6 +587,7 @@ class Counterparties {
         m.put("legal", blankToNull(r.legalName()));
         m.put("customer", r.customer());
         m.put("supplier", r.supplier());
+        m.put("kind", r.kind() == null ? null : r.kind().name());
         m.put("region", r.regionId());
         m.put("address", blankToNull(r.address()));
         m.put("phone", blankToNull(r.phone()));
@@ -486,6 +599,30 @@ class Counterparties {
         m.put("vat", blankToNull(r.vatCode()));
         m.put("note", blankToNull(r.note()));
         return m;
+    }
+
+    /** Kontaktlar berilgan bo'lsa — to'liq almashtiriladi; contact_person = birinchi kontakt ismi. */
+    private void saveContacts(long id, CounterpartyRequest r) {
+        if (r.contacts() == null) {
+            return;
+        }
+        jdbc.sql("DELETE FROM counterparty_contact WHERE counterparty_id = :id").param("id", id).update();
+        int order = 0;
+        for (ContactRequest c : r.contacts()) {
+            jdbc.sql("""
+                    INSERT INTO counterparty_contact (counterparty_id, sort_order, name, job_title, phone)
+                    VALUES (:id, :o, :n, :p, :ph)""")
+                    .param("id", id)
+                    .param("o", ++order)
+                    .param("n", c.name().strip())
+                    .param("p", blankToNull(c.position()))
+                    .param("ph", blankToNull(c.phone()))
+                    .update();
+        }
+        jdbc.sql("UPDATE counterparty SET contact_person = :c WHERE id = :id")
+                .param("c", r.contacts().isEmpty() ? null : r.contacts().getFirst().name().strip())
+                .param("id", id)
+                .update();
     }
 
     private void refreshSearchText(long id) {

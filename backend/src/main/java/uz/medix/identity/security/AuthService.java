@@ -28,9 +28,11 @@ public class AuthService {
     private final PasswordEncoder encoder;
     private final Clock clock;
     private final AuditLog audit;
+    private final LoginThrottle throttle;
 
-    AuthService(EmployeeAccounts accounts, PasswordEncoder encoder, Clock clock, AuditLog audit) {
+    AuthService(EmployeeAccounts accounts, PasswordEncoder encoder, Clock clock, AuditLog audit, LoginThrottle throttle) {
         this.accounts = accounts;
+        this.throttle = throttle;
         this.encoder = encoder;
         this.clock = clock;
         this.audit = audit;
@@ -44,25 +46,42 @@ public class AuthService {
     /** Muvaffaqiyatsiz urinish ham hisoblanishi uchun xatoda ham commit qilinadi. */
     @Transactional(noRollbackFor = MedixException.class, propagation = Propagation.REQUIRED)
     public UsernamePasswordAuthenticationToken login(String rawLogin, String password) {
-        var account = accounts.findByLogin(normalizeLogin(rawLogin));
+        String login = normalizeLogin(rawLogin);
+        var now = clock.instant();
+        throttle.checkNotLocked(login, now);
+        var account = accounts.findByLogin(login);
         if (account.isEmpty()) {
             encoder.matches(password, dummyHash);
-            throw MedixException.unauthorized("auth.badCredentials");
+            throw throttle.fail(login, now);
         }
         var a = account.get();
         var actor = new Actor(a.id(), a.branchId(), MedixPrincipal.allBranches(a.roleCode(), a.allBranches()));
         if (!encoder.matches(password, a.passwordHash())) {
             accounts.recordFailedLogin(a.id());
-            audit.record(AuditEntry.of("auth.loginFailed", "employee", a.id()), actor);
-            throw MedixException.unauthorized("auth.badCredentials");
+            audit.record(AuditEntry.of("auth.loginFailed", "employee", a.id()).change(null, device()), actor);
+            throw throttle.fail(login, now);
         }
         if (a.blocked()) {
-            audit.record(AuditEntry.of("auth.loginBlocked", "employee", a.id()), actor);
+            audit.record(AuditEntry.of("auth.loginBlocked", "employee", a.id()).change(null, device()), actor);
             throw MedixException.forbidden("auth.blocked");
         }
-        accounts.recordSuccessfulLogin(a.id(), clock.instant());
-        audit.record(AuditEntry.of("auth.login", "employee", a.id()), actor);
+        throttle.reset(login);
+        accounts.recordSuccessfulLogin(a.id(), now);
+        audit.record(AuditEntry.of("auth.login", "employee", a.id()).change(null, device()), actor);
         return authenticationFor(a);
+    }
+
+    /** Kirish qurilmasi (User-Agent, qisqartirilgan) — xodim kartasidagi «Kirishlar» uchun. */
+    private static java.util.Map<String, String> device() {
+        String ua = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()
+                        instanceof org.springframework.web.context.request.ServletRequestAttributes attrs
+                ? attrs.getRequest().getHeader("User-Agent")
+                : null;
+        if (ua == null || ua.isBlank()) {
+            return null;
+        }
+        String v = ua.strip();
+        return java.util.Map.of("device", v.length() > 160 ? v.substring(0, 160) : v);
     }
 
     /** Sessiyani yangilash uchun (masalan, rol o'zgargandan keyin) — bazadan qayta o'qiydi. */

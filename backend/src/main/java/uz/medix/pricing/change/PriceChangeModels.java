@@ -53,13 +53,28 @@ final class PriceChangeModels {
             @Schema(description = "20% dan ko'p o'zgarish") boolean bigChange,
             @Schema(nullable = true) Long batchId,
             @Schema(nullable = true) String batchNumber,
-            @Schema(nullable = true) LocalDate expiryDate) {}
+            @Schema(nullable = true) LocalDate expiryDate,
+            @Schema(nullable = true) String manufacturer,
+            @Schema(nullable = true, description = "Tannarx (QQS bilan): partiya qatori — partiya tannarxi, mahsulot qatori — filialdagi "
+                    + "qoldig'i bor partiyalarning eng yuqori tannarxi; faqat special.cost bilan") String cost) {}
 
     record PriceChangeSummary(long id, String number, long branchId, Status status, LocalDate effectiveFrom, int lines,
             String createdBy, Instant createdAt, @Schema(nullable = true) Instant decidedAt,
-            @Schema(nullable = true, description = "«Kirim bo'yicha» — kirim raqami") String receiptNumber) {}
+            @Schema(nullable = true, description = "«Kirim bo'yicha» — kirim raqami") String receiptNumber,
+            @Schema(nullable = true) Long receiptId,
+            @Schema(nullable = true) String note,
+            String branchName,
+            @Schema(description = "Hujjat qatorlaridagi narx turlari (tartib bo'yicha)") List<String> priceTypes) {}
 
-    record PriceChangePage(List<PriceChangeSummary> items, long total, int page, int size) {}
+    /** «Narx o'zgarishlari» filtri varianti: id, nom va hujjatlar soni (prototip Prices → chFilters). */
+    record ChangeFacet(long id, String name, long count) {}
+
+    record ChangeStatusCount(Status status, long count) {}
+
+    record PriceChangePage(List<PriceChangeSummary> items, long total, int page, int size,
+            @Schema(description = "Ruxsat doirasidagi barcha NO hujjatlari (filtrsiz)") long totalAll,
+            @Schema(description = "Holat bo'yicha soni — holatdan boshqa filtrlar bilan") List<ChangeStatusCount> statusCounts,
+            List<ChangeFacet> priceTypes, List<ChangeFacet> branches) {}
 
     record PriceChangeDetail(
             long id,
@@ -102,6 +117,22 @@ final class PriceChangeModels {
 
     /** Narxlar jadvali saralash ustuni (SPEC 4 «Jadvallar standarti»). */
     enum PriceSort { CODE, NAME, MANUFACTURER }
+
+    /** «Narx o'rnatish» sahifasi (prototip Prices → set, «Mahsulot bo'yicha»): faol mahsulot × tanlangan narx turi. */
+    record PriceGridRow(long productId, String code, String name, @Schema(nullable = true) String manufacturer,
+            @Schema(nullable = true) String country, @Schema(nullable = true) String category,
+            @Schema(nullable = true) String supplyEmployee, @Schema(description = "Qidiruv matni (lotin, normallashgan)") String searchText,
+            @Schema(description = "QQS stavkasi, %") String vatRate,
+            @Schema(nullable = true, description = "Bugun amaldagi narx (QQS bilan)") String currentPrice,
+            @Schema(nullable = true, description = "Kelgusi (rejalashtirilgan) narx") String nextPrice,
+            @Schema(nullable = true) LocalDate nextFrom,
+            @Schema(nullable = true, description = "Bazaviy tur narxi") String basePrice,
+            @Schema(nullable = true, description = "O'rtacha kirim narxi — faqat special.cost bilan") String avgCost,
+            @Schema(nullable = true, description = "Oxirgi kirim narxi — faqat special.cost bilan") String lastCost,
+            @Schema(nullable = true, description = "Tannarx chegarasi (qoldiqdagi eng yuqori) — faqat special.cost bilan") String costLimit) {}
+
+    record PriceGrid(long branchId, long priceTypeId, String priceTypeName, boolean batchLinked,
+            @Schema(description = "Tannarx ustunlari ko'rinadimi (special.cost)") boolean showCost, List<PriceGridRow> items) {}
 
     /** «Kirim bo'yicha» rejimi: o'tkazilgan kirim partiyasi va uning amaldagi partiya narxlari. */
     record ReceiptBatch(

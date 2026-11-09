@@ -372,7 +372,7 @@ function OrderPayment({ doc }: { doc: OrderDetail }) {
               className="grid min-h-11 grid-cols-[140px_110px_minmax(0,1fr)_140px] items-center gap-3 border-b border-border px-4 text-[13px] last:border-b-0"
             >
               {canOpen ? (
-                <Link href={`/payments?open=${x.paymentId}`} className="font-mono text-mono text-primary hover:underline">
+                <Link href={`/payments/mt/${x.paymentId}`} className="font-mono text-mono text-primary hover:underline">
                   {x.number}
                 </Link>
               ) : (

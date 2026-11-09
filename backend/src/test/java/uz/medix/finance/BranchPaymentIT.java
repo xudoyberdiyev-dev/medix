@@ -217,10 +217,11 @@ class BranchPaymentIT {
         Session manager = loginAs("BRANCH_MANAGER", a);
         long ka = cash(a);
         long kb = cash(b);
-        seedDebt(a, b, "5000.00", manager.id());
+        seedDebt(a, b, "2000.00", manager.id());
         income(manager.cookie(), a, ka, "100000");
 
-        int n = 8;
+        // 4 ta parallel so'rov: har biri sessiya + tranzaksiya ulanishini oladi — 10 talik pulda kutib qolmasin (flaky edi)
+        int n = 4;
         List<Cookie> who = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             who.add(loginAs("BRANCH_MANAGER", a).cookie());
@@ -248,10 +249,10 @@ class BranchPaymentIT {
             }
         }
         pool.shutdown();
-        assertThat(ok).isEqualTo(5);
-        assertThat(rejected).isEqualTo(3);
+        assertThat(ok).isEqualTo(2);
+        assertThat(rejected).isEqualTo(2);
         assertThat(debt(a, b)).isEqualTo("0.00");
-        assertThat(balance(ka)).isEqualTo("95000.00");
-        assertThat(balance(kb)).isEqualTo("5000.00");
+        assertThat(balance(ka)).isEqualTo("98000.00");
+        assertThat(balance(kb)).isEqualTo("2000.00");
     }
 }

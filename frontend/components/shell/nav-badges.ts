@@ -10,6 +10,8 @@ export type NavBadge = components["schemas"]["Badge"];
 export function useNavBadges(branchId: number | null | undefined): {
   badges: Partial<Record<string, NavBadge | null>>;
   company: string | null;
+  /** Logotip URL (versiya bilan) yoki null. */
+  logo: string | null;
 } {
   const q = useQuery({
     queryKey: ["nav-badges", branchId ?? null],
@@ -17,7 +19,11 @@ export function useNavBadges(branchId: number | null | undefined): {
     enabled: branchId !== undefined,
     refetchInterval: 60_000,
   });
-  return { badges: badgeMap(q.data), company: q.data?.company ?? null };
+  return {
+    badges: badgeMap(q.data),
+    company: q.data?.company ?? null,
+    logo: q.data?.logoVersion != null ? `/api/company/logo?v=${q.data.logoVersion}` : null,
+  };
 }
 
 /** Menyu kaliti → nishon: buyurtmalar (tasdiq kutmoqda), joʻnatish (tayyor), muddat nazorati (yaqin / oʻtgan — qizil). */

@@ -1,6 +1,7 @@
 package uz.medix.catalog.counterparty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -23,6 +24,9 @@ final class CounterpartyModels {
     enum SortField { NAME, TIN, REGION, LICENSE }
 
     enum PaymentType { CASH, TRANSFER, ONLINE }
+
+    /** Kontragent turi (prototip: Dorixona, Klinika, Shifoxona, Distribyutor, Ishlab chiqaruvchi). */
+    enum Kind { PHARMACY, CLINIC, HOSPITAL, DISTRIBUTOR, MAKER }
 
     record Ref(long id, String name) {}
 
@@ -66,6 +70,7 @@ final class CounterpartyModels {
             @Schema(nullable = true) String legalName,
             boolean customer,
             boolean supplier,
+            @Schema(nullable = true) Kind kind,
             @Schema(nullable = true) Ref region,
             @Schema(nullable = true) String address,
             @Schema(nullable = true) String phone,
@@ -80,6 +85,7 @@ final class CounterpartyModels {
             @Schema(nullable = true) String blockedReason,
             boolean active,
             List<License> licenses,
+            @Schema(description = "Kontakt shaxslar (tartib bo'yicha)") List<Contact> contacts,
             @Schema(description = "Faqat xodim ko'ra oladigan filiallar") List<Contract> contracts,
             @Schema(description = "Faqat xodim ko'ra oladigan filiallar") List<Terms> terms) {}
 
@@ -89,6 +95,7 @@ final class CounterpartyModels {
             @Schema(nullable = true) @Size(max = 300) String legalName,
             boolean customer,
             boolean supplier,
+            @Schema(nullable = true) Kind kind,
             @Schema(nullable = true) Long regionId,
             @Schema(nullable = true) @Size(max = 500) String address,
             @Schema(nullable = true) @Size(max = 64) String phone,
@@ -98,7 +105,16 @@ final class CounterpartyModels {
             @Schema(nullable = true) @Pattern(regexp = "^$|^[0-9]{20}$", message = "{validation.bankAccount}") String bankAccount,
             @Schema(nullable = true) @Pattern(regexp = "^$|^[0-9]{5}$", message = "{validation.bankMfo}") String bankMfo,
             @Schema(nullable = true) @Pattern(regexp = "^$|^[0-9]{12}$", message = "{validation.vatCode}") String vatCode,
-            @Schema(nullable = true) @Size(max = 1000) String note) {}
+            @Schema(nullable = true) @Size(max = 1000) String note,
+            @Schema(nullable = true, description = "Kontakt shaxslar — berilsa ro'yxat to'liq almashtiriladi (birinchisi — contactPerson); "
+                    + "null — o'zgarmaydi") @Valid @Size(max = 20) List<ContactRequest> contacts) {}
+
+    record Contact(String name, @Schema(nullable = true) String position, @Schema(nullable = true) String phone) {}
+
+    record ContactRequest(
+            @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
+            @Schema(nullable = true) @Size(max = 200) String position,
+            @Schema(nullable = true) @Size(max = 64) String phone) {}
 
     record ReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
@@ -126,4 +142,18 @@ final class CounterpartyModels {
             @Schema(nullable = true) @Min(0) @Max(365) Integer supplierPaymentDays,
             @Schema(nullable = true) PaymentType defaultPaymentType,
             @Schema(nullable = true) Long supplyEmployeeId) {}
+
+    /** «Mijozlarga biriktirish» (prototip Prices → Narx turlari): mijoz va shu filialdagi joriy narx turi (NULL — bazaviy). */
+    record PriceTypeCustomer(long id, String name, String tin, @Schema(nullable = true) Long priceTypeId,
+            @Schema(nullable = true, description = "Joriy narx turi nomi; NULL — bazaviy") String priceType) {}
+
+    record PriceTypeCustomers(List<PriceTypeCustomer> items, long total,
+            @Schema(description = "Shu filialda shu narx turiga biriktirilgan mijozlar soni") long attached) {}
+
+    record PriceTypeAttachRequest(@NotNull(message = "{validation.required}") Long branchId,
+            @NotNull(message = "{validation.required}") Long priceTypeId,
+            @NotNull @Size(max = 5000) List<Long> attach,
+            @NotNull @Size(max = 5000) List<Long> detach) {}
+
+    record PriceTypeAttachResult(@Schema(description = "Narx turi o'zgargan mijozlar soni") int changed) {}
 }

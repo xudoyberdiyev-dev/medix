@@ -41,6 +41,16 @@ class RoleController {
         return roles.matrix();
     }
 
+    record SaveRequest(@NotNull(message = "{validation.required}") List<Roles.RoleDraft> roles) {}
+
+    @PutMapping("/matrix")
+    @PreAuthorize("hasAuthority('roles.view')")
+    @Operation(summary = "Matritsani saqlash", description = "Rollar (nom, tavsif, doira, bosh sahifa, faollik), ruxsatlar va yangi rollar — "
+            + "bitta tranzaksiyada. Direktor roli o'zgarmaydi. Xodimning keyingi kirishida kuchga kiradi.")
+    Roles.Matrix save(@Valid @RequestBody SaveRequest r) {
+        return roles.save(r.roles());
+    }
+
     @PutMapping("/{code}/permissions")
     @PreAuthorize("hasAuthority('roles.view')")
     @Operation(summary = "Rol ruxsatlarini saqlash", description = "Direktor roli himoyalangan. Xodimning keyingi kirishida kuchga kiradi.")

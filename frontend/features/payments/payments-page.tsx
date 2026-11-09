@@ -1,34 +1,47 @@
 "use client";
 
-import { Ban, CircleCheck, FilePen, Plus, Truck, Wallet } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { ArrowDownLeft, ArrowUpRight, Ban, CircleCheck, CircleX, Clock, FilePen, Plus, Truck, Wallet, type LucideIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useMemo, useState } from "react";
+import { Badge, type Tone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { DateChip, MultiFilter } from "@/components/ui/multi-filter";
+import type { PageSize } from "@/components/ui/pagination";
+import { RowMenu } from "@/components/ui/row-menu";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
+import { TextField } from "@/components/ui/text-field";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { formatMoney } from "@/lib/format";
+import { api, unwrap } from "@/lib/api/client";
+import type { components } from "@/lib/api/schema";
+import { cn } from "@/lib/cn";
+import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { PAYMENT_MT, PAYMENT_YT, type PaymentStatus } from "./api";
 import {
-  PAYMENT_MT,
-  PAYMENT_STATUS,
-  PAYMENT_YT,
-  SUPPLIER_PAYMENT_STATUS,
-  usePayments,
-  useSupplierPayments,
-  type PaymentStatus,
-  type PaymentSummary,
-  type SupplierPaymentStatus,
-  type SupplierPaymentSummary,
-} from "./api";
-import { PaymentDrawer } from "./payment-drawer";
-import { SupplierPaymentDrawer, SupplierPaymentStatusBadge } from "./supplier-payment-drawer";
+  ACCOUNT_KINDS,
+  EMPTY_FILTERS,
+  PAY_PAGE_SIZES,
+  PAY_STATUSES,
+  PAY_VIEWS,
+  advanceOf,
+  facet,
+  filterRows,
+  filtersFromParams,
+  hasFilters,
+  kpis as kpisOf,
+  totals as totalsOf,
+  viewCounts,
+  type PayFilters,
+  type PayStatus,
+} from "./overview-model";
+
+type Row = components["schemas"]["PaymentOverviewRow"];
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   const t = useTranslations("payments");
@@ -44,208 +57,410 @@ export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   );
 }
 
-/** Pul → Toʻlovlar (SPEC 5.5): mijozdan (MT) va yetkazib beruvchiga (YT). */
-export function PaymentsPage() {
-  const t = useTranslations("payments");
-  const me = useMe();
-  // Bildirishnomadan oʻtish: ?tab=yt
-  const initialTab = useSearchParams().get("tab");
-  const [tab, setTab] = useState(initialTab === "yt" ? "yt" : "mt");
-  if (me.data && !can(me.data, "payments.view")) return <ForbiddenState description={t("forbidden")} />;
+const STATUS_LOOK: Record<PayStatus, { tone: Tone; icon: LucideIcon }> = {
+  DRAFT: { tone: "neutral", icon: FilePen },
+  PENDING: { tone: "warning", icon: Clock },
+  POSTED: { tone: "success", icon: CircleCheck },
+  CANCELLED: { tone: "neutral", icon: CircleX },
+};
+
+function usePaymentOverview(branchId: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["payments", "overview", branchId],
+    queryFn: () => unwrap(api.GET("/api/payments/overview", { params: { query: { branchId: branchId ?? undefined } } })),
+    enabled,
+  });
+}
+
+/** Bosiladigan karta (prototip `Payments` KPI): ikonka, nom, qiymat, izoh; faol boʻlsa — chegarasi asosiy rangda. */
+function KpiTile(props: {
+  icon: LucideIcon;
+  tone: "success" | "neutral" | "warning";
+  label: string;
+  value: string;
+  note: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = props.icon;
   return (
-    <>
-      <h1 className="mb-4 text-page-title">{t("title")}</h1>
-      <Tabs
-        aria-label={t("tabs.label")}
-        value={tab}
-        onChange={setTab}
-        items={[
-          { key: "mt", label: t("tabs.mt") },
-          { key: "yt", label: t("tabs.yt") },
-        ]}
-      />
-      <div className="mt-4">{tab === "mt" ? <CustomerPayments /> : <SupplierPaymentsTab />}</div>
-    </>
+    <button
+      type="button"
+      onClick={props.onClick}
+      aria-pressed={props.active}
+      className={cn(
+        "flex min-w-0 flex-col items-start gap-1.5 rounded-card border bg-surface px-4 py-3.5 text-left shadow-sm transition-colors hover:border-text-secondary",
+        props.active ? "border-primary" : "border-border",
+      )}
+    >
+      <span className="flex items-center gap-2 text-caption font-medium text-text-secondary">
+        <span
+          className={cn(
+            "flex size-6 flex-none items-center justify-center rounded-md",
+            props.tone === "success" && "bg-success-bg text-success",
+            props.tone === "warning" && "bg-warning-bg text-warning",
+            props.tone === "neutral" && "bg-table-header text-text-secondary",
+          )}
+        >
+          <Icon size={14} strokeWidth={1.5} aria-hidden />
+        </span>
+        {props.label}
+      </span>
+      <span className="tabular max-w-full truncate text-kpi">{props.value}</span>
+      <span className="max-w-full truncate text-caption text-text-secondary">{props.note}</span>
+    </button>
   );
 }
 
-/** MT — qoralama → oʻtkazish (eng eski qarzdan, ortigʻi avans) → bekor qilish. */
-function CustomerPayments() {
-  const t = useTranslations("payments");
+/**
+ * Pul → Toʻlovlar (prototip `Payments`, SPEC 5.5): MT (mijozdan kirim) va YT (yetkazib beruvchiga chiqim) bitta jadvalda —
+ * 4 karta (bugun kirim / chiqim, tasdiqlashda, qoralamalar), koʻrinishlar soni bilan, qidiruv + Kontragent / Usul / Kassa-hisob /
+ * Holat / Yaratgan / Sana, ustunlar (Raqam, Sana, Turi, Kontragent, Usul, Kassa / hisob, Summa, Taqsimlangan, Avans, Holat,
+ * Yaratgan), pastda filtrdagi tasdiqlanganlar jami (kirim, chiqim, sof), 25/50/100.
+ */
+export function PaymentsPage() {
+  const t = useTranslations("payments.list");
+  const tp = useTranslations("payments");
   const me = useMe();
+  const params = useSearchParams();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const allowed = can(me.data, "payments.view");
-  const canCreate = can(me.data, PAYMENT_MT);
+  const canMt = can(me.data, PAYMENT_MT);
+  const canYt = can(me.data, PAYMENT_YT);
   const scopeBranch = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const workBranch = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const [status, setStatus] = useState<string | null>(null);
-  // Buyurtma kartochkasidan oʻtish: ?open=<MT id> — hujjat darhol ochiladi
-  const openId = Number(useSearchParams().get("open"));
-  const [editor, setEditor] = useState<{ id: number | null } | null>(Number.isInteger(openId) && openId > 0 ? { id: openId } : null);
-  const list = usePayments(scopeBranch, (status as PaymentStatus | null) ?? null, allowed);
+  const list = usePaymentOverview(scopeBranch, allowed);
+  const [f, setF] = useState<PayFilters>(() => filtersFromParams((k) => params.get(k)));
+  const [search, setSearch] = useState(f.q);
 
-  const columns: TableColumn<PaymentSummary>[] = [
-    { key: "number", title: t("col.number"), mono: true },
-    { key: "paymentDate", title: t("col.date"), render: (p) => formatIsoDate(p.paymentDate) },
-    { key: "customer", title: t("col.customer") },
-    { key: "account", title: t("col.account") },
+  // Eski oʻtishlar: ?open=<MT id> va ?tab=yt&new=1&supplier=… — endi toʻliq sahifalarga yoʻnaltiriladi
+  const router = useRouter();
+  const openId = Number(params.get("open"));
+  const fromReceipt = params.get("new") === "1" && Number(params.get("supplier")) > 0;
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/payments/mt/${openId}`);
+    else if (fromReceipt) {
+      const q = new URLSearchParams();
+      for (const k of ["supplier", "supplierName", "amount"]) q.set(k, params.get(k) ?? "");
+      router.replace(`/payments/yt/new?${q.toString()}`);
+    }
+  }, [openId, fromReceipt, params, router]);
+
+  const all = useMemo(() => list.data?.rows ?? [], [list.data]);
+  const rows = useMemo(() => filterRows(all, f), [all, f]);
+  const counts = useMemo(() => viewCounts(all), [all]);
+  const today = list.data?.today ?? "";
+  const k = useMemo(() => kpisOf(all, today), [all, today]);
+  const tot = useMemo(() => totalsOf(rows), [rows]);
+
+  if (me.data && !allowed) return <ForbiddenState description={tp("forbidden")} />;
+
+  const apply = (patch: Partial<PayFilters>) => setF((cur) => ({ ...cur, page: 1, ...patch }));
+  const clearAll = () => {
+    setSearch("");
+    setF({ ...EMPTY_FILTERS, size: f.size });
+  };
+  const preset = (patch: Partial<PayFilters>) => {
+    setSearch("");
+    setF({ ...EMPTY_FILTERS, size: f.size, ...patch });
+  };
+  const todayOnly = f.from === today && (!f.to || f.to === today);
+  const onlyStatus = (s: PayStatus) => f.statuses.length === 1 && f.statuses[0] === s;
+
+  const pages = Math.max(1, Math.ceil(rows.length / f.size));
+  const page = Math.min(f.page, pages);
+  const shown = rows.slice((page - 1) * f.size, page * f.size);
+  const dead = (r: Row) => r.status === "CANCELLED";
+  const muted = (r: Row) => (dead(r) ? "text-text-disabled" : undefined);
+  const open = (r: Row) => router.push(`/payments/${r.kind.toLowerCase()}/${r.id}`);
+
+  const columns: TableColumn<Row>[] = [
+    { key: "number", title: t("c.number"), mono: true, render: (r) => <span className={muted(r)}>{r.number}</span> },
+    { key: "date", title: t("c.date"), render: (r) => <span className={muted(r)}>{formatIsoDate(r.paymentDate)}</span> },
+    {
+      key: "type",
+      title: t("c.type"),
+      render: (r) => {
+        const Icon = r.kind === "YT" ? ArrowUpRight : ArrowDownLeft;
+        return (
+          <span className={cn("inline-flex items-center gap-1.5", muted(r))}>
+            <Icon size={16} strokeWidth={1.5} aria-hidden />
+            {r.kind === "YT" ? t("out") : t("in")}
+          </span>
+        );
+      },
+    },
+    {
+      key: "party",
+      title: t("c.party"),
+      wrap: true,
+      render: (r) => (
+        <span className={cn("flex min-w-0 flex-col", muted(r))}>
+          <span className="truncate font-medium">{r.party}</span>
+          <span className="flex items-center gap-1.5 truncate text-caption text-text-secondary">
+            {r.kind === "YT" ? (r.partySub ? t("stir", { tin: r.partySub }) : "") : (r.partySub ?? "")}
+            {r.source === "DRIVER" ? (
+              <Badge tone="info" icon={Truck}>
+                {t("driver")}
+              </Badge>
+            ) : null}
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: "method",
+      title: t("c.method"),
+      render: (r) => (
+        <span className={muted(r) ?? "text-text-secondary"}>{t(`method.${r.accountKind as "CASH" | "BANK" | "TERMINAL"}`)}</span>
+      ),
+    },
+    { key: "account", title: t("c.account"), render: (r) => <span className={muted(r)}>{r.account}</span> },
     {
       key: "amount",
-      title: t("col.amount"),
+      title: t("c.amount"),
       align: "right",
-      render: (p) => <span className="tabular-nums">{formatMoney(p.amount)}</span>,
+      render: (r) => (
+        <span className={cn("tabular font-semibold", muted(r))}>{formatMoney(r.kind === "YT" ? `-${r.amount}` : r.amount)}</span>
+      ),
     },
     {
-      key: "source",
-      title: t("col.source"),
-      render: (p) =>
-        p.source === "DRIVER" ? (
-          <Badge tone="info" icon={Truck}>
-            {t("source.driver")}
-          </Badge>
-        ) : (
-          t("source.cashier")
-        ),
+      key: "allocated",
+      title: t("c.allocated"),
+      align: "right",
+      render: (r) => (
+        <span className={cn("tabular", muted(r) ?? "text-text-secondary")}>{r.allocated ? formatMoney(r.allocated) : "—"}</span>
+      ),
     },
-    { key: "status", title: t("col.status"), render: (p) => <PaymentStatusBadge status={p.status} /> },
+    {
+      key: "advance",
+      title: t("c.advance"),
+      align: "right",
+      render: (r) => {
+        const adv = advanceOf(r);
+        return <span className={cn("tabular", adv ? "text-warning" : "text-text-disabled")}>{adv ? formatMoney(adv) : "—"}</span>;
+      },
+    },
+    {
+      key: "status",
+      title: t("c.status"),
+      render: (r) => (
+        <Badge tone={STATUS_LOOK[r.status].tone} icon={STATUS_LOOK[r.status].icon}>
+          {t(`st.${r.status}`)}
+        </Badge>
+      ),
+    },
+    { key: "by", title: t("c.by"), render: (r) => <span className="text-text-secondary">{r.createdBy}</span> },
   ];
+
+  const newButton = (kind: "MT" | "YT", primary: boolean) =>
+    (kind === "MT" ? canMt : canYt) ? (
+      <Button
+        key={kind}
+        icon={kind === "MT" ? Plus : ArrowUpRight}
+        variant={primary ? "primary" : "secondary"}
+        disabled={workBranch == null}
+        title={workBranch == null ? tp("selectBranchFirst") : undefined}
+        onClick={() => router.push(`/payments/${kind.toLowerCase()}/new`)}
+      >
+        {kind === "MT" ? t("newMt") : t("newYt")}
+      </Button>
+    ) : null;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-end gap-4">
-        {canCreate ? (
-          <Button
-            icon={Plus}
-            disabled={workBranch == null}
-            title={workBranch == null ? t("selectBranchFirst") : undefined}
-            onClick={() => setEditor({ id: null })}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="flex items-baseline gap-2 text-page-title">
+          {t("title")}
+          {list.data ? <span className="tabular text-text-secondary">{formatQuantity(all.length)}</span> : null}
+        </h1>
+        <div className="flex items-center gap-2">
+          {newButton("YT", false)}
+          {newButton("MT", true)}
+        </div>
+      </div>
+      {list.data ? (
+        <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <KpiTile
+            icon={ArrowDownLeft}
+            tone="success"
+            label={t("kIn")}
+            value={formatMoney(k.inToday.sum)}
+            note={t("kDocs", { n: formatQuantity(k.inToday.count) })}
+            active={f.view === "in" && todayOnly}
+            onClick={() => preset({ view: "in", statuses: ["POSTED"], from: today, to: today })}
+          />
+          <KpiTile
+            icon={ArrowUpRight}
+            tone="neutral"
+            label={t("kOut")}
+            value={formatMoney(k.outToday.sum)}
+            note={t("kDocs", { n: formatQuantity(k.outToday.count) })}
+            active={f.view === "out" && todayOnly}
+            onClick={() => preset({ view: "out", statuses: ["POSTED"], from: today, to: today })}
+          />
+          <KpiTile
+            icon={Clock}
+            tone="warning"
+            label={t("kPending")}
+            value={t("kN", { n: formatQuantity(k.pending.count) })}
+            note={formatMoney(k.pending.sum)}
+            active={f.view === "pending"}
+            onClick={() => preset({ view: "pending" })}
+          />
+          <KpiTile
+            icon={FilePen}
+            tone="neutral"
+            label={t("kDrafts")}
+            value={t("kN", { n: formatQuantity(k.drafts.count) })}
+            note={formatMoney(k.drafts.sum)}
+            active={f.view === "all" && onlyStatus("DRAFT")}
+            onClick={() => preset({ statuses: ["DRAFT"] })}
+          />
+        </div>
+      ) : null}
+      <div className="mb-3">
+        <Tabs
+          aria-label={t("views.label")}
+          value={f.view}
+          onChange={(v) => apply({ view: v as PayFilters["view"] })}
+          items={PAY_VIEWS.map((v) => ({ key: v, label: t(`views.${v}`), count: list.data ? counts[v] : undefined }))}
+        />
+      </div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="w-80">
+          <TextField
+            label={t("search")}
+            variant="search"
+            size="sm"
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              apply({ q: v });
+            }}
+            placeholder={t("searchPlaceholder")}
+            className="[&>label]:sr-only"
+          />
+        </div>
+        <MultiFilter
+          label={t("f.party")}
+          searchable
+          options={facet(
+            all,
+            (r) => r.party,
+            (r) => r.party,
+          )}
+          selected={f.parties}
+          onChange={(v) => apply({ parties: v })}
+        />
+        <MultiFilter
+          label={t("f.method")}
+          options={ACCOUNT_KINDS.map((m) => ({ value: m, label: t(`method.${m}`), count: all.filter((r) => r.accountKind === m).length }))}
+          selected={f.methods}
+          onChange={(v) => apply({ methods: v })}
+        />
+        <MultiFilter
+          label={t("f.account")}
+          options={facet(
+            all,
+            (r) => r.accountId,
+            (r) => r.account,
+          )}
+          selected={f.accounts}
+          onChange={(v) => apply({ accounts: v })}
+        />
+        <MultiFilter
+          label={t("f.status")}
+          options={PAY_STATUSES.map((s) => ({ value: s, label: t(`st.${s}`), count: all.filter((r) => r.status === s).length }))}
+          selected={f.statuses}
+          onChange={(v) => apply({ statuses: v })}
+        />
+        <MultiFilter
+          label={t("f.by")}
+          searchable
+          options={facet(
+            all,
+            (r) => r.createdBy,
+            (r) => r.createdBy,
+          )}
+          selected={f.by}
+          onChange={(v) => apply({ by: v })}
+        />
+        <DateChip label={t("f.date")} from={f.from} to={f.to} invalid={t("dateInvalid")} onChange={(from, to) => apply({ from, to })} />
+        {hasFilters(f) ? (
+          <button
+            type="button"
+            onClick={clearAll}
+            className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
           >
-            {t("add")}
-          </Button>
+            {t("clearF")}
+          </button>
         ) : null}
       </div>
       {list.error ? (
         <ErrorState onRetry={() => list.refetch()} />
       ) : (
-        <Table
-          caption={t("mtCaption")}
-          columns={columns}
-          rows={list.data ?? []}
-          rowKey={(p) => String(p.id)}
-          loading={list.isPending}
-          onRowClick={(p) => setEditor({ id: p.id })}
-          toolbar={
-            <div className="w-56">
-              <Select
-                label={t("col.status")}
-                size="sm"
-                value={status}
-                onChange={setStatus}
-                placeholder={t("allStatuses")}
-                className="[&>span:first-child]:sr-only"
-                options={(Object.keys(PAYMENT_STATUS) as PaymentStatus[]).map((value) => ({ value, label: t(`status.${value}`) }))}
+        <>
+          <Table
+            caption={t("caption")}
+            columns={columns}
+            rows={shown}
+            rowKey={(r) => `${r.kind}-${r.id}`}
+            loading={list.isPending}
+            onRowClick={open}
+            rowActions={(r) => (
+              <RowMenu
+                items={[
+                  {
+                    key: "open",
+                    label: t("open"),
+                    icon: <ArrowUpRight size={16} strokeWidth={1.5} aria-hidden />,
+                    onSelect: () => open(r),
+                  },
+                ]}
               />
+            )}
+            emptyState={
+              all.length > 0 ? (
+                <NoResultsState onClearFilters={clearAll} />
+              ) : (
+                <EmptyState icon={Wallet} title={t("emptyT")} description={t("emptyD")} action={newButton("MT", true) ?? undefined} />
+              )
+            }
+            pagination={
+              rows.length > PAY_PAGE_SIZES[0]
+                ? {
+                    page,
+                    pageSize: f.size as PageSize,
+                    total: rows.length,
+                    onPageChange: (p) => setF((cur) => ({ ...cur, page: p })),
+                    onPageSizeChange: (size) => apply({ size }),
+                    pageSizeOptions: [...PAY_PAGE_SIZES],
+                  }
+                : undefined
+            }
+          />
+          {rows.length > 0 ? (
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-card border border-border bg-table-header px-5 py-2.5">
+              <span className="text-caption text-text-secondary">{t("totNote")}</span>
+              <span className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-[13px]">
+                <span className="flex gap-1.5 whitespace-nowrap">
+                  <span className="text-text-secondary">{t("totIn")}:</span>
+                  <span className="tabular font-medium">{formatMoney(tot.in)}</span>
+                </span>
+                <span className="flex gap-1.5 whitespace-nowrap">
+                  <span className="text-text-secondary">{t("totOut")}:</span>
+                  <span className="tabular font-medium">{formatMoney(tot.out)}</span>
+                </span>
+                <span className="flex items-baseline gap-2 whitespace-nowrap border-l border-border pl-5">
+                  <span className="text-text-secondary">{t("totNet")}:</span>
+                  <span className="tabular text-base font-semibold">{formatMoney(tot.net)}</span>
+                </span>
+              </span>
             </div>
-          }
-          emptyState={
-            status ? (
-              <NoResultsState onClearFilters={() => setStatus(null)} />
-            ) : (
-              <EmptyState icon={Wallet} title={t("mtEmpty.title")} description={t("mtEmpty.description")} />
-            )
-          }
-        />
+          ) : null}
+        </>
       )}
-      {editor ? (
-        <PaymentDrawer id={editor.id} branchId={workBranch} onClose={() => setEditor(null)} onCreated={(id) => setEditor({ id })} />
-      ) : null}
-    </>
-  );
-}
-
-/** YT — qoralama → tasdiqlashda → oʻtkazilgan (tasdiqsiz — Direktor). */
-function SupplierPaymentsTab() {
-  const t = useTranslations("payments");
-  const me = useMe();
-  const selectedBranch = useBranchStore((s) => s.branchId);
-  const canCreate = can(me.data, PAYMENT_YT);
-  const scopeBranch = me.data?.allBranches ? (selectedBranch ?? null) : null;
-  const workBranch = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const [status, setStatus] = useState<string | null>(null);
-  // Kirim kartochkasidan «Toʻlash»: ?tab=yt&new=1&supplier=&supplierName=&amount=
-  const params = useSearchParams();
-  const fromReceipt = params.get("new") === "1" && Number(params.get("supplier")) > 0;
-  const initial = fromReceipt
-    ? { supplierId: Number(params.get("supplier")), supplier: params.get("supplierName") ?? "", amount: params.get("amount") ?? "" }
-    : undefined;
-  const [editor, setEditor] = useState<{ id: number | null } | null>(fromReceipt && canCreate ? { id: null } : null);
-  const list = useSupplierPayments(scopeBranch, (status as SupplierPaymentStatus | null) ?? null, true);
-  const columns: TableColumn<SupplierPaymentSummary>[] = [
-    { key: "number", title: t("col.number"), mono: true },
-    { key: "paymentDate", title: t("col.date"), render: (p) => formatIsoDate(p.paymentDate) },
-    { key: "supplier", title: t("col.supplier") },
-    { key: "account", title: t("col.account") },
-    { key: "amount", title: t("col.amount"), align: "right", render: (p) => <span className="tabular-nums">{formatMoney(p.amount)}</span> },
-    { key: "status", title: t("col.status"), render: (p) => <SupplierPaymentStatusBadge status={p.status} /> },
-  ];
-  return (
-    <>
-      <div className="mb-4 flex items-center justify-end gap-4">
-        {canCreate ? (
-          <Button
-            icon={Plus}
-            disabled={workBranch == null}
-            title={workBranch == null ? t("selectBranchFirst") : undefined}
-            onClick={() => setEditor({ id: null })}
-          >
-            {t("add")}
-          </Button>
-        ) : null}
-      </div>
-      {list.error ? (
-        <ErrorState onRetry={() => list.refetch()} />
-      ) : (
-        <Table
-          caption={t("ytCaption")}
-          columns={columns}
-          rows={list.data ?? []}
-          rowKey={(p) => String(p.id)}
-          loading={list.isPending}
-          onRowClick={(p) => setEditor({ id: p.id })}
-          toolbar={
-            <div className="w-56">
-              <Select
-                label={t("col.status")}
-                size="sm"
-                value={status}
-                onChange={setStatus}
-                placeholder={t("allStatuses")}
-                className="[&>span:first-child]:sr-only"
-                options={(Object.keys(SUPPLIER_PAYMENT_STATUS) as SupplierPaymentStatus[]).map((value) => ({
-                  value,
-                  label: t(`supplierStatus.${value}`),
-                }))}
-              />
-            </div>
-          }
-          emptyState={
-            status ? (
-              <NoResultsState onClearFilters={() => setStatus(null)} />
-            ) : (
-              <EmptyState icon={Wallet} title={t("ytEmpty.title")} description={t("ytEmpty.description")} />
-            )
-          }
-        />
-      )}
-      {editor ? (
-        <SupplierPaymentDrawer
-          id={editor.id}
-          branchId={workBranch}
-          initial={editor.id == null ? initial : undefined}
-          onClose={() => setEditor(null)}
-          onCreated={(id) => setEditor({ id })}
-        />
-      ) : null}
     </>
   );
 }

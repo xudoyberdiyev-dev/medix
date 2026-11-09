@@ -53,7 +53,7 @@ public class TripReminders {
                        (SELECT count(*) FROM trip_stop s JOIN sales_return_pending r ON r.order_id = s.order_id
                         WHERE s.trip_id = t.id AND s.active AND r.received_at IS NULL) AS goods,
                        (SELECT coalesce(sum(s.cash_collected), 0) FROM trip_stop s
-                        WHERE s.trip_id = t.id AND s.active AND s.cash_payment_id IS NULL) AS cash
+                        WHERE s.trip_id = t.id AND s.active AND s.cash_payment_id IS NULL AND s.cash_accept_id IS NULL) AS cash
                 FROM trip t JOIN employee d ON d.id = t.driver_id
                 WHERE t.status = 'RETURN_WAIT' AND t.finished_at IS NOT NULL AND t.finished_at <= :limit
                 ORDER BY t.id""")

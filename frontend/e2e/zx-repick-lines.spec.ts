@@ -23,7 +23,7 @@ async function login(page: Page, login: string, password: string) {
   await page.goto("/login");
   await field(page, "Login").fill(login);
   await field(page, "Parol").fill(password);
-  await page.getByRole("button", { name: "Tizimga kirish" }).click();
+  await page.getByRole("button", { name: "Kirish", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
 }
 
@@ -54,12 +54,10 @@ test("Operator: oddiy va markirovkali qatorli buyurtma", async ({ page }) => {
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi").first()).toBeVisible();
-  number =
-    (await page
-      .getByRole("main")
-      .getByText(/^BY-[A-Z]{3}-\d{6}$/)
-      .first()
-      .textContent()) ?? "";
+  // Raqam — sarlavhadagi hujjat raqami («Oxirgi buyurtmalar» dagi eski raqamlar emas)
+  const docNumber = page.getByRole("main").getByRole("heading", { level: 1 }).locator("xpath=following-sibling::span[1]");
+  await expect(docNumber).toHaveText(/^BY-[A-Z]{3}-\d{6}$/);
+  number = (await docNumber.textContent()) ?? "";
   expect(number).toMatch(/^BY-/);
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();

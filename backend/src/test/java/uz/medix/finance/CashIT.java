@@ -134,6 +134,23 @@ class CashIT {
     }
 
     @Test
+    void baseNumberIsStoredAndReturned() throws Exception {
+        long b = branch();
+        Cookie cashier = loginAs("CASHIER", b).cookie();
+        long k = account(cashier, b, 0);
+        // «Asos hujjat №» (prototip `MoneyOpDoc`): bo'shliqsiz saqlanadi va qaytadi; bo'sh — null; 40 belgidan uzun — rad
+        String withBase = op(b, k, "IN", "Boshqa kirim", "10", null).replace("}", ",\"baseNo\":\" AV-0412 \"}");
+        long based = id(send(post("/api/cash-ops"), cashier, withBase).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.baseNo").value("AV-0412")).andReturn());
+        mvc.perform(get("/api/cash-ops/" + based).cookie(cashier)).andExpect(jsonPath("$.baseNo").value("AV-0412"));
+        send(post("/api/cash-ops"), cashier, withBase.replace(" AV-0412 ", " ")).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.baseNo").doesNotExist());
+        send(post("/api/cash-ops"), cashier, withBase.replace(" AV-0412 ", "A".repeat(41))).andExpect(status().isBadRequest());
+        assertThat(balance(k)).isEqualTo("20.00");
+        assertThat(jdbc.sql("SELECT base_no FROM cash_op WHERE id = :id").param("id", based).query(String.class).single()).isEqualTo("AV-0412");
+    }
+
+    @Test
     void operationsApprovalCancelTransfersAndStatement() throws Exception {
         long b = branch();
         Cookie cashier = loginAs("CASHIER", b).cookie();
@@ -151,7 +168,6 @@ class CashIT {
                 .andExpect(jsonPath("$.number", matchesPattern("KO-[A-Z]{3}-\\d{6}")))
                 .andExpect(jsonPath("$.status").value("POSTED"));
         assertThat(balance(k)).isEqualTo("5000000.00");
-
         // 2 000 000 dan katta kassa chiqimi — tasdiqlashda; rad etish
         long big1 = id(send(post("/api/cash-ops"), cashier, op(b, k, "OUT", "Ijara", "2500000", null))
                 .andExpect(jsonPath("$.status").value("PENDING")).andReturn());

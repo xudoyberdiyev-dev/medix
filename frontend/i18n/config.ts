@@ -13,6 +13,13 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   ru: "Русский",
 };
 
+/** Qisqa nom — kirish sahifasidagi segmentli tanlagich uchun (prototip LoginScreen). */
+export const LOCALE_SHORT: Record<Locale, string> = {
+  "uz-Latn": "Oʻz",
+  "uz-Cyrl": "Ўз",
+  ru: "Ру",
+};
+
 export function isLocale(value: unknown): value is Locale {
   return typeof value === "string" && (LOCALES as readonly string[]).includes(value);
 }

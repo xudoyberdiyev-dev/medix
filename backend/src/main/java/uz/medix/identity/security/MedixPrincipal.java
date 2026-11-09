@@ -9,7 +9,7 @@ import uz.medix.shared.security.Actor;
  * Sessiyadagi foydalanuvchi. Spring Session JDBC uni seriyalashtiradi — faqat oddiy qiymatlar.
  *
  * @param branchId asosiy filial; {@code null} — filial biriktirilmagan (CEO sozlash ustasigacha)
- * @param allBranchesGrant Direktor bergan «barcha filiallar» belgisi (faqat Buxgalter uchun, E3)
+ * @param allBranchesGrant «barcha filiallar»: Direktor bergan belgi (faqat Buxgalter, E3) yoki rol doirasi «all»
  */
 public record MedixPrincipal(
         long id,
@@ -38,8 +38,11 @@ public record MedixPrincipal(
     /** Belgi bilan barcha filiallarni ko'ra oladigan rol (egasi qarori 07.11.2026, E3). */
     public static final String GRANTABLE_ROLE = "ACCOUNTANT";
 
+    /**
+     * @param grant xodim belgisi (bazada trigger bilan faqat Buxgalterda) yoki rol doirasi «barcha filiallar» (Rollar matritsasi)
+     */
     public static boolean allBranches(String roleCode, boolean grant) {
-        return ALL_BRANCH_ROLES.contains(roleCode) || (grant && GRANTABLE_ROLE.equals(roleCode));
+        return ALL_BRANCH_ROLES.contains(roleCode) || grant;
     }
 
     public boolean allBranches() {

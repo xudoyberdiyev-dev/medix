@@ -208,6 +208,59 @@ class CounterpartyIT {
     }
 
     @Test
+    void attachCustomersToPriceType() throws Exception {
+        long own = branch();
+        long other = branch();
+        Cookie admin = loginAs("ADMIN", null);
+        String tag = UUID.randomUUID().toString().substring(0, 6);
+        long a = id(mvc.perform(json(post("/api/counterparties"), admin, "{\"tin\":\"" + tin() + "\",\"name\":\"Biriktir A " + tag
+                + "\",\"customer\":true,\"supplier\":false}")).andExpect(status().isCreated()).andReturn());
+        long b = id(mvc.perform(json(post("/api/counterparties"), admin, "{\"tin\":\"" + tin() + "\",\"name\":\"Biriktir B " + tag
+                + "\",\"customer\":true,\"supplier\":false}")).andExpect(status().isCreated()).andReturn());
+        long supplier = id(mvc.perform(json(post("/api/counterparties"), admin, "{\"tin\":\"" + tin() + "\",\"name\":\"Biriktir YB " + tag
+                + "\",\"customer\":false,\"supplier\":true}")).andExpect(status().isCreated()).andReturn());
+        long promo = jdbc.sql("SELECT id FROM price_type WHERE code = 'PROMO'").query(Long.class).single();
+        Cookie manager = loginAs("BRANCH_MANAGER", own);
+        String body = "{\"branchId\":" + own + ",\"priceTypeId\":" + promo + ",\"attach\":ATT,\"detach\":DET}";
+        // Biriktirish: A — shart yo'q edi (yaratiladi), B — ham
+        mvc.perform(json(put("/api/counterparties/price-type-customers"), manager, body.replace("ATT", "[" + a + "," + b + "]").replace("DET", "[]")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.changed").value(2));
+        mvc.perform(get("/api/counterparties/price-type-customers").param("branchId", String.valueOf(own))
+                        .param("priceTypeId", String.valueOf(promo)).param("q", "biriktir " + tag).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.attached").value(2))
+                .andExpect(jsonPath("$.items[0].priceType").value("Promo"));
+        // Qayta biriktirish — o'zgarish yo'q; B ni olib tashlash — bazaviyga (NULL)
+        mvc.perform(json(put("/api/counterparties/price-type-customers"), manager, body.replace("ATT", "[" + a + "]").replace("DET", "[" + b + "]")))
+                .andExpect(jsonPath("$.changed").value(1));
+        assertThat(jdbc.sql("SELECT count(*) FROM counterparty_branch_terms WHERE counterparty_id = :c AND branch_id = :b AND price_type_id IS NULL")
+                .param("c", b).param("b", own).query(Integer.class).single()).isEqualTo(1);
+        assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE action = 'counterparty.terms' AND entity_id = :c")
+                .param("c", String.valueOf(a)).query(Integer.class).single()).isEqualTo(1);
+        // Kredit limiti va boshqa shartlar saqlanadi
+        mvc.perform(json(put("/api/counterparties/" + a + "/terms/" + own), manager, "{\"creditLimit\":\"500000\",\"priceTypeId\":" + promo + "}"))
+                .andExpect(status().isOk());
+        long base = jdbc.sql("SELECT id FROM price_type WHERE base").query(Long.class).single();
+        mvc.perform(json(put("/api/counterparties/price-type-customers"), manager, "{\"branchId\":" + own + ",\"priceTypeId\":" + base
+                        + ",\"attach\":[" + a + "],\"detach\":[]}"))
+                .andExpect(jsonPath("$.changed").value(1));
+        mvc.perform(get("/api/counterparties/" + a).cookie(manager))
+                .andExpect(jsonPath("$.terms[0].creditLimit").value("500000.00"));
+        // YB mijoz emas; boshqa filial — yopiq; ruxsatsiz — 403
+        mvc.perform(json(put("/api/counterparties/price-type-customers"), manager, body.replace("ATT", "[" + supplier + "]").replace("DET", "[]")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("counterparty.notCustomer"));
+        mvc.perform(json(put("/api/counterparties/price-type-customers"), manager,
+                        body.replace("\"branchId\":" + own, "\"branchId\":" + other).replace("ATT", "[" + a + "]").replace("DET", "[]")))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/counterparties/price-type-customers").param("branchId", String.valueOf(own))
+                        .param("priceTypeId", String.valueOf(promo)).cookie(loginAs("CASHIER", own)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void sortingAndExcelExport() throws Exception {
         Cookie admin = loginAs("ADMIN", null);
         String tag = "srt" + UUID.randomUUID().toString().substring(0, 5);
@@ -263,5 +316,41 @@ class CounterpartyIT {
         }
         // Haydovchida kontragent ko'rish ruxsati yo'q
         mvc.perform(get("/api/counterparties/export").cookie(loginAs("DRIVER", null))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void contactsReplaceListAndFirstIsContactPerson() throws Exception {
+        Cookie manager = loginAs("BRANCH_MANAGER", null);
+        String tag = UUID.randomUUID().toString().substring(0, 5);
+        long id = id(mvc.perform(json(post("/api/counterparties"), manager,
+                        "{\"tin\":\"" + tin() + "\",\"name\":\"Kontakt " + tag + "\",\"customer\":true,\"supplier\":false,"
+                                + "\"contacts\":[{\"name\":\"Aliyev " + tag + "\",\"position\":\"Mudir\",\"phone\":\"+998 90 000 00 01\"},"
+                                + "{\"name\":\"Karimova\",\"position\":\"\",\"phone\":\"\"}]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.contacts.length()").value(2))
+                .andExpect(jsonPath("$.contacts[0].position").value("Mudir"))
+                .andExpect(jsonPath("$.contacts[1].position").doesNotExist())
+                .andExpect(jsonPath("$.contactPerson").value("Aliyev " + tag))
+                .andReturn());
+        // Birinchi kontakt bo'yicha qidiruv
+        mvc.perform(get("/api/counterparties").param("q", "aliyev " + tag).cookie(manager))
+                .andExpect(jsonPath("$.total").value(1));
+        // contacts berilmasa — o'zgarmaydi; berilsa — to'liq almashtiriladi
+        String tinNow = jdbc.sql("SELECT tin FROM counterparty WHERE id = :id").param("id", id).query(String.class).single();
+        mvc.perform(json(put("/api/counterparties/" + id), manager,
+                        "{\"tin\":\"" + tinNow + "\",\"name\":\"Kontakt " + tag + "\",\"customer\":true,\"supplier\":false,"
+                                + "\"contactPerson\":\"Aliyev " + tag + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contacts.length()").value(2));
+        mvc.perform(json(put("/api/counterparties/" + id), manager,
+                        "{\"tin\":\"" + tinNow + "\",\"name\":\"Kontakt " + tag + "\",\"customer\":true,\"supplier\":false,"
+                                + "\"contacts\":[{\"name\":\"Karimova\"}]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contacts.length()").value(1))
+                .andExpect(jsonPath("$.contactPerson").value("Karimova"));
+        mvc.perform(json(put("/api/counterparties/" + id), manager,
+                        "{\"tin\":\"" + tinNow + "\",\"name\":\"Kontakt " + tag + "\",\"customer\":true,\"supplier\":false,"
+                                + "\"contacts\":[{\"name\":\" \"}]}"))
+                .andExpect(status().isBadRequest());
     }
 }

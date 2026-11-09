@@ -3,7 +3,9 @@ package uz.medix.sales;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -1370,7 +1372,7 @@ class OrderIT {
         assertThat(jdbc.sql("SELECT count(*) FROM sales_return WHERE order_id = :o").param("o", o).query(Long.class).single()).isZero();
         assertThat(statusOf(o)).isEqualTo("IN_TRANSIT");
 
-        send(post(path), driverSession, two + "}")
+        send(post(path), driverSession, two + ",\"cash\":\"1000\"}")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.stops[0].outcome").value("PARTIAL"))
                 .andExpect(jsonPath("$.stops[0].returnNumber", matchesPattern("QM-[A-Z]{3}-\\d{6}")))
@@ -1422,7 +1424,50 @@ class OrderIT {
         assertThat(jdbc.sql("SELECT count(*) FROM stock_move WHERE doc_type = 'QM' AND batch_id IN (SELECT id FROM batch WHERE product_id = :p)")
                         .param("p", prod).query(Long.class).single())
                 .isEqualTo(1);
+        // Naqd (1 000) hali qabul qilinmagan — reys yopilmaydi
+        assertThat(jdbc.sql("SELECT status FROM trip WHERE id = :t").param("t", trip).query(String.class).single()).isEqualTo("RETURN_WAIT");
+
+        // Kassa (prototip `Cash`): reys bo'yicha qabul — kam sanalsa izoh majburiy, MT sanalgan summaga yoziladi
+        Cookie cashier = loginAs("CASHIER", p.branchId());
+        long kassa = jdbc.sql("INSERT INTO money_account (branch_id, kind, code, name) VALUES (:b, 'CASH', :c, 'Kassa') RETURNING id")
+                .param("b", p.branchId()).param("c", "K-" + UUID.randomUUID().toString().substring(0, 8)).query(Long.class).single();
+        String accept = "/api/trips/" + trip + "/cash/accept";
+        send(post(accept), cashier, "{\"accountId\":" + kassa + ",\"received\":\"800\"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("trip.cashNoteRequired"));
+        send(post(accept), cashier, "{\"accountId\":" + kassa + ",\"received\":\"-1\"}")
+                .andExpect(jsonPath("$.code").value("trip.cashReceivedInvalid"));
+        send(post(accept), cashier, "{\"accountId\":" + kassa + ",\"received\":\"abc\"}")
+                .andExpect(jsonPath("$.code").value("trip.cashReceivedInvalid"));
+        send(post(accept), driverSession, "{\"accountId\":" + kassa + ",\"received\":\"1000\"}").andExpect(status().isForbidden());
+        send(post(accept), cashier, "{\"accountId\":" + kassa + ",\"received\":\"800,00\",\"note\":\"200 soʻm kam\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expected").value("1000.00"))
+                .andExpect(jsonPath("$.received").value("800.00"))
+                .andExpect(jsonPath("$.diff").value("-200.00"))
+                .andExpect(jsonPath("$.payments[0]", matchesPattern("MT-[A-Z]{3}-\\d{6}")));
+        send(post(accept), cashier, "{\"accountId\":" + kassa + ",\"received\":\"800\",\"note\":\"x\"}")
+                .andExpect(jsonPath("$.code").value("trip.cashNotFound"));
+        mvc.perform(get("/api/trips/cash").cookie(cashier)).andExpect(jsonPath("$[?(@.tripId == " + trip + ")]").isEmpty());
+        assertThat(jdbc.sql("SELECT sum(amount)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'").param("c", c)
+                        .query(String.class).single())
+                .isEqualTo("2200.00");
+        assertThat(jdbc.sql("SELECT diff::text || '|' || note FROM trip_cash_accept WHERE trip_id = :t").param("t", trip).query(String.class).single())
+                .isEqualTo("-200.00|200 soʻm kam");
+        assertThatThrownBy(() -> jdbc.sql("UPDATE trip_cash_accept SET note = 'y' WHERE trip_id = :t").param("t", trip).update())
+                .hasMessageContaining("faqat qo");
         assertThat(jdbc.sql("SELECT status FROM trip WHERE id = :t").param("t", trip).query(String.class).single()).isEqualTo("DONE");
+        // Kassalar ro'yxati: bugungi kirim, mas'ul, qoldiq
+        mvc.perform(get("/api/cash/overview").cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.today").isNotEmpty())
+                .andExpect(jsonPath("$.cards[?(@.id == " + kassa + ")].todayIn").value(hasItem("800.00")))
+                .andExpect(jsonPath("$.cards[?(@.id == " + kassa + ")].todayOut").value(hasItem("0.00")))
+                .andExpect(jsonPath("$.cards[?(@.id == " + kassa + ")].balance").value(hasItem("800.00")))
+                .andExpect(jsonPath("$.cards[*].branchId", everyItem(is((int) p.branchId()))));
+        mvc.perform(get("/api/cash/overview").param("branchId", String.valueOf(p.branchId() + 100_000)).cookie(cashier))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/cash/overview").cookie(driverSession)).andExpect(status().isForbidden());
     }
 
     @Test

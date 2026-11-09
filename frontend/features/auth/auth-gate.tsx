@@ -17,7 +17,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const unauthorized = me.error instanceof ApiError && me.error.isUnauthorized;
 
   useEffect(() => {
-    if (unauthorized) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    // Avval kirgan boʻlsa (keshda maʼlumot bor) — sessiya tugagan: kirish sahifasi shuni aytadi.
+    if (unauthorized) router.replace(`/login?next=${encodeURIComponent(pathname)}${me.data ? "&reason=session" : ""}`);
     else if (me.data?.mustChangePassword) router.replace("/password");
   }, [unauthorized, me.data, pathname, router]);
 

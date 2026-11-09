@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, PackagePlus, Undo2, Wallet, X } from "lucide-react";
+import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, Copy, PackagePlus, Undo2, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,24 +60,33 @@ const TARGET_ZONES = new Set(["MAIN", "COLD", "SAFE", "QUARANTINE"]);
  * Kirim hujjati toʻliq SAHIFA sifatida (prototip `Receipts` hujjat koʻrinishi): `/receipts/new`, `/receipts/[id]`.
  * Yopish — roʻyxatga; yangi kirim saqlanganda manzil `/receipts/<id>` ga almashadi.
  */
-export function ReceiptDocumentPage({ id }: { id: number | null }) {
+export function ReceiptDocumentPage({ id, copyFrom }: { id: number | null; copyFrom?: number }) {
   const router = useRouter();
   return (
     <ReceiptDrawer
       frame="page"
       id={id}
+      copyFrom={copyFrom}
       onClose={() => router.push("/receipts")}
       onCreated={(newId) => router.replace(`/receipts/${newId}`)}
     />
   );
 }
 
-export function ReceiptDrawer(props: { id: number | null; onClose: () => void; onCreated: (id: number) => void; frame?: "page" }) {
+export function ReceiptDrawer(props: {
+  id: number | null;
+  onClose: () => void;
+  onCreated: (id: number) => void;
+  frame?: "page";
+  /** Prototip `Receipts` → «Nusxa olish»: yangi qoralama shu hujjatdan (yetkazib beruvchi, ombor, toʻlov, izoh, qatorlar). */
+  copyFrom?: number;
+}) {
   const t = useTranslations("receipts.drawer");
   const tr = useTranslations("receipts");
   const tc = useTranslations("common");
-  const doc = useReceipt(props.id);
-  if (props.frame === "page" && props.id !== null && (doc.error || !doc.data))
+  const doc = useReceipt(props.id ?? props.copyFrom ?? null);
+  const isCopy = props.id === null && props.copyFrom !== undefined;
+  if (props.frame === "page" && (props.id !== null || isCopy) && (doc.error || !doc.data))
     return (
       <div className="flex flex-col gap-4">
         <DocumentHeader
@@ -100,6 +109,7 @@ export function ReceiptDrawer(props: { id: number | null; onClose: () => void; o
         <Skeleton className="h-40 w-full" />
       </Drawer>
     );
+  if (isCopy && doc.data) return <Editor key={`copy-${doc.data.id}`} doc={null} source={doc.data} {...props} />;
   const d = doc.data ?? null;
   return <Editor key={d ? `${d.id}-${d.status}` : "new"} doc={d} {...props} />;
 }
@@ -146,11 +156,13 @@ const isInt = (s: string) => /^\d+$/.test(s.trim());
 
 function Editor({
   doc,
+  source,
   onClose,
   onCreated,
   frame,
 }: {
   doc: ReceiptDetail | null;
+  source?: ReceiptDetail;
   onClose: () => void;
   onCreated: (id: number) => void;
   frame?: "page";
@@ -174,23 +186,24 @@ function Editor({
   const pricesVisible = doc ? doc.pricesVisible : can(me.data, "special.cost") || !canAccept;
   const editable = canCreate && (!doc || doc.status === "DRAFT") && (pricesVisible || !doc?.hasPrices);
 
-  const [warehouseId, setWarehouseId] = useState<string | null>(doc ? String(doc.warehouseId) : null);
-  const [supplier, setSupplier] = useState<string | null>(doc ? String(doc.supplierId) : null);
-  const [supplierLabel, setSupplierLabel] = useState(doc?.supplier ?? "");
+  const init = doc ?? source ?? null;
+  const [warehouseId, setWarehouseId] = useState<string | null>(init ? String(init.warehouseId) : null);
+  const [supplier, setSupplier] = useState<string | null>(init ? String(init.supplierId) : null);
+  const [supplierLabel, setSupplierLabel] = useState(init?.supplier ?? "");
   const [date, setDate] = useState(formatIsoDate(doc?.receiptDate ?? todayTashkent()));
   const [invoice, setInvoice] = useState(doc?.invoiceNumber ?? "");
   const [invoiceDate, setInvoiceDate] = useState(formatIsoDate(doc?.invoiceDate));
-  const [paymentType, setPaymentType] = useState<string | null>(doc?.paymentType ?? "TRANSFER");
+  const [paymentType, setPaymentType] = useState<string | null>(init?.paymentType ?? "TRANSFER");
   const [due, setDue] = useState(doc?.dueManual ? formatIsoDate(doc.dueDate) : "");
-  const [owner, setOwner] = useState<string | null>(doc?.ownerId ? String(doc.ownerId) : null);
+  const [owner, setOwner] = useState<string | null>(init?.ownerId ? String(init.ownerId) : null);
   const [prepaid, setPrepaid] = useState(doc?.prepaid ?? false);
   const [fromBonus, setFromBonus] = useState(doc?.fromBonus ?? false);
   const confirmBonus = useConfirmBonus();
   const [discountKind, setDiscountKind] = useState<string | null>(doc?.discountKind ?? null);
   const [discountValue, setDiscountValue] = useState(doc?.discountValue ?? "");
   const [discountDate, setDiscountDate] = useState(formatIsoDate(doc?.discountDate));
-  const [note, setNote] = useState(doc?.note ?? "");
-  const [lines, setLines] = useState<DraftLine[]>(doc ? toDraft(doc) : []);
+  const [note, setNote] = useState(init?.note ?? "");
+  const [lines, setLines] = useState<DraftLine[]>(init ? toDraft(init) : []);
   const [adding, setAdding] = useState(emptyAdd);
   const [local, setLocal] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"accept" | "post" | "cancel" | null>(null);
@@ -198,6 +211,13 @@ function Editor({
   const [catalogOpen, setCatalogOpen] = useState(false);
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const err = describeError(save.error ?? post.error ?? confirmBonus.error);
+  const copyToast = useRef(false);
+  useEffect(() => {
+    if (source && !copyToast.current) {
+      copyToast.current = true;
+      toast({ tone: "success", title: t("copied", { no: source.number }) });
+    }
+  }, [source, t]);
 
   const activeWarehouses = (warehouses.data ?? []).filter((w) => w.active || String(w.id) === warehouseId);
   const warehouse = activeWarehouses.find((w) => String(w.id) === warehouseId) ?? null;
@@ -329,6 +349,11 @@ function Editor({
       <Button variant="secondary" onClick={onClose}>
         {t("back")}
       </Button>
+      {doc && canCreate && frame === "page" ? (
+        <Button variant="secondary" icon={Copy} onClick={() => router.push(`/receipts/new?copy=${doc.id}`)}>
+          {t("copy")}
+        </Button>
+      ) : null}
       {editable ? (
         <Button variant={primaryIsAccept ? "secondary" : "primary"} loading={save.isPending} onClick={() => saveDraft()}>
           {t("saveDraft")}
@@ -817,7 +842,7 @@ function ReceiptPayment({ doc }: { doc: ReceiptDetail }) {
           icon={ArrowUpRight}
           onClick={() =>
             router.push(
-              `/payments?tab=yt&new=1&supplier=${doc.supplierId}&supplierName=${encodeURIComponent(doc.supplier)}&amount=${encodeURIComponent(left)}`,
+              `/payments/yt/new?supplier=${doc.supplierId}&supplierName=${encodeURIComponent(doc.supplier)}&amount=${encodeURIComponent(left)}`,
             )
           }
         >

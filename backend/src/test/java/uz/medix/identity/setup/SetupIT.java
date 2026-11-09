@@ -3,25 +3,33 @@ package uz.medix.identity.setup;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.servlet.http.Cookie;
 import java.util.UUID;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.TestcontainersConfig;
 
@@ -30,6 +38,7 @@ import uz.medix.TestcontainersConfig;
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 @Transactional
+@Order(1)
 class SetupIT {
 
     private static final String PASSWORD = "Sinov-parol-2026";
@@ -108,17 +117,50 @@ class SetupIT {
         mvc.perform(get("/api/setup").cookie(ceo))
                 .andExpect(jsonPath("$.blockers[0]").value(containsString("Toshkent")));
 
-        mvc.perform(json(post("/api/setup/warehouses"), ceo,
+        MvcResult wh = mvc.perform(json(post("/api/setup/warehouses"), ceo,
                         "{\"branchId\":" + branchId + ",\"name\":\"Markaziy ombor\",\"extraZones\":[\"COLD\"]}"))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.kind").value("NORMAL"))
                 .andExpect(jsonPath("$.zones", hasSize(5)))
                 .andExpect(jsonPath("$.zones[?(@.type == 'QUARANTINE')].sellable").value(false))
-                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].sellable").value(true));
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].sellable").value(true))
+                .andReturn();
 
         mvc.perform(json(post("/api/setup/warehouses"), ceo,
                         "{\"branchId\":" + branchId + ",\"name\":\"Boshqa\",\"extraZones\":[\"MAIN\"]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("warehouse.extraZones"));
+
+        // Ombor kartasi (prototip WarehousePanel): tur, zona nomlari, ixtiyoriy zonalar almashadi, masʼul tekshiriladi
+        String whId = wh.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1");
+        String card = "{\"branchId\":" + branchId + ",\"name\":\"Markaziy ombor\",\"kind\":\"COLD\",\"extraZones\":[\"SAFE\"],"
+                + "\"zoneNames\":{\"MAIN\":\"Qabul\",\"RECEIVING\":\"Asosiy saqlash\"}}";
+        mvc.perform(json(put("/api/setup/warehouses/" + whId), ceo, card))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.kind").value("COLD"))
+                .andExpect(jsonPath("$.zones", hasSize(5)))
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')]").isEmpty())
+                .andExpect(jsonPath("$.zones[?(@.type == 'SAFE')].sellable").value(true))
+                .andExpect(jsonPath("$.zones[?(@.type == 'MAIN')].name").value("Qabul"))
+                .andExpect(jsonPath("$.zones[?(@.type == 'RECEIVING')].name").value("Asosiy saqlash"));
+        mvc.perform(json(put("/api/setup/warehouses/" + whId), ceo,
+                        "{\"branchId\":" + branchId + ",\"name\":\"Markaziy ombor\",\"zoneNames\":{\"MAIN\":\"Karantin\"}}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
+        mvc.perform(json(put("/api/setup/warehouses/" + whId), ceo,
+                        "{\"branchId\":" + branchId + ",\"name\":\"Markaziy ombor\",\"keeperId\":999999}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("warehouse.keeperInvalid"));
+        MvcResult spare = mvc.perform(json(post("/api/setup/warehouses"), ceo,
+                        "{\"branchId\":" + branchId + ",\"name\":\"Zaxira ombor\",\"zoneNames\":{\"MAIN\":\"Javonlar\"}}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.zones[?(@.type == 'MAIN')].name").value("Javonlar"))
+                .andReturn();
+        String spareId = spare.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1");
+        mvc.perform(delete("/api/setup/warehouses/" + spareId).with(csrf()).cookie(ceo))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/setup").cookie(ceo))
+                .andExpect(jsonPath("$.warehouses", hasSize(1)));
 
         mvc.perform(json(post("/api/setup/employees"), ceo,
                         "{\"login\":\"Operator.1\",\"fullName\":\"Dilshod Aliyev\",\"roleCode\":\"OPERATOR\",\"branchId\":"
@@ -139,6 +181,56 @@ class SetupIT {
         mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Boshqa nom\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("setup.completed"));
+    }
+
+    private MockMultipartHttpServletRequestBuilder logo(Cookie session, byte[] bytes) {
+        return multipart(HttpMethod.PUT, "/api/setup/company/logo")
+                .file(new MockMultipartFile("file", "logo", "application/octet-stream", bytes))
+                .with(csrf())
+                .cookie(session);
+    }
+
+    @Test
+    void companyLocaleAndLogo() throws Exception {
+        Cookie ceo = loginAs("DIRECTOR");
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\",\"defaultLocale\":\"ru\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.defaultLocale").value("ru"))
+                .andExpect(jsonPath("$.logoVersion").doesNotExist());
+        // Til berilmasa — oʻzgarmaydi
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\"}"))
+                .andExpect(jsonPath("$.defaultLocale").value("ru"));
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\",\"defaultLocale\":\"de\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.defaultLocale").value("Tilni roʻyxatdan tanlang."));
+
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0, 0, 13};
+        mvc.perform(logo(ceo, png)).andExpect(status().isOk()).andExpect(jsonPath("$.logoVersion").isNumber());
+        mvc.perform(get("/api/company/logo").cookie(ceo))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/png"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(content().bytes(png));
+
+        // Skriptli SVG, boshqa tur va 2 MB dan katta — rad etiladi
+        mvc.perform(logo(ceo, "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>".getBytes()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("setup.logoType"));
+        mvc.perform(logo(ceo, "GIF89a".getBytes())).andExpect(jsonPath("$.code").value("setup.logoType"));
+        byte[] big = new byte[2 * 1024 * 1024 + 1];
+        System.arraycopy(png, 0, big, 0, png.length);
+        mvc.perform(logo(ceo, big)).andExpect(jsonPath("$.code").value("setup.logoTooBig"));
+
+        byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 8 8\"><rect width=\"8\" height=\"8\"/></svg>".getBytes();
+        mvc.perform(logo(ceo, svg)).andExpect(status().isOk());
+        mvc.perform(get("/api/company/logo").cookie(ceo))
+                .andExpect(header().string("Content-Type", "image/svg+xml"))
+                .andExpect(header().string("Content-Security-Policy", containsString("sandbox")));
+
+        mvc.perform(delete("/api/setup/company/logo").with(csrf()).cookie(ceo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.logoVersion").doesNotExist());
+        mvc.perform(get("/api/company/logo").cookie(ceo)).andExpect(status().isNotFound());
     }
 
     @Test

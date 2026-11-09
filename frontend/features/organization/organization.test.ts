@@ -8,6 +8,8 @@ const branch = (id: number, over: Partial<Branch> = {}): Branch => ({
   name: "Toshkent",
   legalName: "Medix TSH MChJ",
   tin: "301234567",
+  vatPayer: true,
+  bankAccounts: [],
   active: true,
   ...over,
 });
@@ -17,6 +19,7 @@ const warehouse = (id: number, branchId: number, types: Warehouse["zones"][numbe
   branchId,
   name: `Ombor ${id}`,
   active: true,
+  kind: "NORMAL",
   zones: types.map((type, i) => ({ id: id * 10 + i, type, name: type, sellable: type === "MAIN" })),
 });
 

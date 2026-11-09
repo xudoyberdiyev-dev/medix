@@ -6,7 +6,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,14 +24,19 @@ import org.springframework.web.bind.annotation.RestController;
 import uz.medix.catalog.counterparty.CounterpartyModels.ContractRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyDetail;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRequest;
+import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyRow;
 import uz.medix.catalog.counterparty.CounterpartyModels.LicenseRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.CounterpartyPage;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeAttachRequest;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeAttachResult;
+import uz.medix.catalog.counterparty.CounterpartyModels.PriceTypeCustomers;
 import uz.medix.catalog.counterparty.CounterpartyModels.ReasonRequest;
 import uz.medix.catalog.counterparty.CounterpartyModels.Role;
 import uz.medix.catalog.counterparty.CounterpartyModels.SortField;
 import uz.medix.catalog.counterparty.CounterpartyModels.Status;
 import uz.medix.catalog.counterparty.CounterpartyModels.TermsRequest;
 import uz.medix.shared.error.MedixException;
+import uz.medix.shared.pdf.PdfFormat;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
 
@@ -45,11 +54,16 @@ class CounterpartyController {
     private final Counterparties counterparties;
     private final CurrentActor currentActor;
     private final CounterpartyExcel excel;
+    private final CounterpartyOverview overview;
+    private final CounterpartyDocuments documents;
 
-    CounterpartyController(Counterparties counterparties, CurrentActor currentActor, CounterpartyExcel excel) {
+    CounterpartyController(Counterparties counterparties, CurrentActor currentActor, CounterpartyExcel excel, CounterpartyOverview overview,
+            CounterpartyDocuments documents) {
         this.counterparties = counterparties;
         this.currentActor = currentActor;
         this.excel = excel;
+        this.overview = overview;
+        this.documents = documents;
     }
 
     private Actor actor() {
@@ -107,6 +121,104 @@ class CounterpartyController {
         return sort != null ? sort : sortByTin ? SortField.TIN : SortField.NAME;
     }
 
+    @GetMapping("/overview")
+    @Operation(summary = "Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)",
+            description = "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.")
+    CounterpartyOverview.CounterpartyOverviewPage overview(
+            @RequestParam(defaultValue = "CUSTOMER") Role role,
+            @RequestParam(required = false) Long branchId,
+            Authentication auth) {
+        boolean customers = role != Role.SUPPLIER;
+        if (!has(auth, customers ? "clients.view" : "suppliers.view")) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+        return overview.overview(actor(), customers, branchId, has(auth, customers ? "clients.contact" : "suppliers.contact"));
+    }
+
+    @GetMapping("/{id}/summary")
+    @Operation(summary = "Kartochka o'ng paneli: filiallar bo'yicha qarz, limit, oxirgi sotuv/kirim va to'lov")
+    CounterpartyOverview.CounterpartySummary summary(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
+            Authentication auth) {
+        boolean customers = role != Role.SUPPLIER;
+        if (!has(auth, customers ? "clients.view" : "suppliers.view")) {
+            throw MedixException.forbidden("auth.forbidden");
+        }
+        detail(id);
+        return overview.summary(actor(), id, customers);
+    }
+
+    @GetMapping("/{id}/documents")
+    @Operation(summary = "Kartochka hujjat yorliqlari: Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar, Kirimlar (oxirgi 100 ta)",
+            description = "Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, "
+                    + "qm.view / qy.view, receipt.view, Bonus — sdebt.view yoki supplierBonus.confirm. Filial — xodim ko'radiganlari.")
+    CounterpartyDocuments.CounterpartyDocumentsPage documents(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
+            @RequestParam CounterpartyDocuments.Section section, Authentication auth) {
+        boolean customers = role != Role.SUPPLIER;
+        require(auth, customers ? "clients.view" : "suppliers.view");
+        String need = switch (section) {
+            case ORDERS -> customers ? "orders.view" : null;
+            case SALES -> customers ? "shipments.view" : null;
+            case PAYMENTS -> "payments.view";
+            case RETURNS -> customers ? "qm.view" : "qy.view";
+            case RECEIPTS -> customers ? null : "receipt.view";
+            case BONUS -> customers ? null : has(auth, "supplierBonus.confirm") ? "supplierBonus.confirm" : "sdebt.view";
+        };
+        if (need == null) {
+            throw MedixException.badRequest("counterparty.section.invalid");
+        }
+        require(auth, need);
+        detail(id);
+        return documents.list(actor(), id, customers, section);
+    }
+
+    @GetMapping("/{id}/products")
+    @Operation(summary = "YB kartochkasi «Mahsulotlar»: o'tkazilgan kirimlardagi mahsulotlar (oxirgi narx, sana, soni, kirimlar)",
+            description = "Ruxsat: suppliers.view + receipt.view. days — oxirgi N kun (30, 90), bo'sh — hammasi. Narx — special.cost "
+                    + "yoki kirimni qabul qilmaydigan xodim (kirim qoidasi bilan bir xil). Filial — xodim ko'radiganlari.")
+    CounterpartyDocuments.SupplierProductsPage products(@PathVariable long id, @RequestParam(required = false) Integer days,
+            Authentication auth) {
+        require(auth, "suppliers.view");
+        require(auth, "receipt.view");
+        if (days != null && (days < 1 || days > 3660)) {
+            throw MedixException.badRequest("counterparty.section.invalid");
+        }
+        detail(id);
+        boolean prices = has(auth, "special.cost") || !has(auth, "receipt.accept");
+        return documents.products(actor(), id, days, prices, LocalDate.now(PdfFormat.TASHKENT));
+    }
+
+    @GetMapping("/{id}/history")
+    @Operation(summary = "Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi)")
+    List<CounterpartyDocuments.CounterpartyHistoryEvent> history(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
+            Authentication auth) {
+        require(auth, role != Role.SUPPLIER ? "clients.view" : "suppliers.view");
+        detail(id);
+        return documents.history(id);
+    }
+
+    @GetMapping("/price-type-customers")
+    @PreAuthorize("hasAuthority('clients.terms')")
+    @Operation(summary = "Narx turiga biriktirish — mijozlar ro'yxati",
+            description = "Faol mijozlar va shu filialdagi joriy narx turi; avval shu turga biriktirilganlar. Qidiruv: nom, STIR.")
+    PriceTypeCustomers priceTypeCustomers(@RequestParam long branchId, @RequestParam long priceTypeId,
+            @RequestParam(required = false) String q, @RequestParam(defaultValue = "200") int limit) {
+        if (!actor().canAccessBranch(branchId)) {
+            throw MedixException.notFound("error.notFound");
+        }
+        return counterparties.priceTypeCustomers(branchId, priceTypeId, q, Math.clamp(limit, 1, 500));
+    }
+
+    @PutMapping("/price-type-customers")
+    @PreAuthorize("hasAuthority('clients.terms')")
+    @Operation(summary = "Mijozlarni narx turiga biriktirish",
+            description = "attach — shu filial shartidagi narx turi shu turga; detach — shu turda bo'lsa bazaviyga qaytadi. Auditda.")
+    PriceTypeAttachResult attachPriceType(@Valid @RequestBody PriceTypeAttachRequest r) {
+        if (!actor().canAccessBranch(r.branchId())) {
+            throw MedixException.notFound("error.notFound");
+        }
+        return new PriceTypeAttachResult(counterparties.attachPriceType(r));
+    }
+
     @GetMapping("/export")
     @Operation(summary = "Excel'ga eksport (.xlsx)",
             description = "Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; "
@@ -118,6 +230,7 @@ class CounterpartyController {
             @RequestParam(required = false) Long regionId,
             @RequestParam(required = false) SortField sort,
             @RequestParam(defaultValue = "false") boolean desc,
+            @Parameter(description = "Faqat shu kontragentlar (jadvalda tanlanganlar)") @RequestParam(required = false) List<Long> ids,
             Authentication auth,
             HttpServletResponse response) throws IOException {
         boolean customers = has(auth, "clients.view");
@@ -142,8 +255,13 @@ class CounterpartyController {
         };
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + file + "\"");
-        excel.export(counterparties.search(q, scope, status, regionId, sort(sort, false), desc, 0, CounterpartyExcel.MAX_EXPORT_ROWS),
-                contacts, response.getOutputStream());
+        CounterpartyPage rows = counterparties.search(q, scope, status, regionId, sort(sort, false), desc, 0, CounterpartyExcel.MAX_EXPORT_ROWS);
+        if (ids != null && !ids.isEmpty()) {
+            Set<Long> only = Set.copyOf(ids);
+            List<CounterpartyRow> picked = rows.items().stream().filter(r -> only.contains(r.id())).toList();
+            rows = new CounterpartyPage(picked, picked.size(), 0, picked.size());
+        }
+        excel.export(rows, contacts, response.getOutputStream());
     }
 
     @GetMapping("/{id}")

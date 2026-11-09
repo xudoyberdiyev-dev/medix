@@ -30,11 +30,11 @@
     "description" : "Boshlang'ich qoldiq",
     "name" : "opening"
   }, {
-    "description" : "Narxlar",
-    "name" : "pricing"
-  }, {
     "description" : "Sozlash ustasi",
     "name" : "setup"
+  }, {
+    "description" : "Narxlar",
+    "name" : "pricing"
   }, {
     "description" : "Xarajat va kirim moddalari",
     "name" : "expense-items"
@@ -122,6 +122,9 @@
   }, {
     "description" : "Ombor ko'chirishi (OK)",
     "name" : "warehouse-transfer"
+  }, {
+    "description" : "Kompaniya",
+    "name" : "company"
   }, {
     "description" : "Reyslar",
     "name" : "trips"
@@ -1178,7 +1181,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_12",
+        "operationId" : "update_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1706,6 +1709,55 @@
         "tags" : [ "cash-panel" ]
       }
     },
+    "/api/cash/overview" : {
+      "get" : {
+        "description" : "Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.",
+        "operationId" : "overview_3",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kassalar roʻyxati (kartalar)",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/company/logo" : {
+      "get" : {
+        "operationId" : "logo",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kompaniya logotipi (PNG yoki SVG); yo'q bo'lsa — 404",
+        "tags" : [ "company" ]
+      }
+    },
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
@@ -1883,6 +1935,18 @@
             "type" : "boolean",
             "default" : false
           }
+        }, {
+          "description" : "Faqat shu kontragentlar (jadvalda tanlanganlar)",
+          "in" : "query",
+          "name" : "ids",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1890,6 +1954,125 @@
           }
         },
         "summary" : "Excel'ga eksport (.xlsx)",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/overview" : {
+      "get" : {
+        "description" : "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.",
+        "operationId" : "overview_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "CUSTOMER",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyOverviewPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/price-type-customers" : {
+      "get" : {
+        "description" : "Faol mijozlar va shu filialdagi joriy narx turi; avval shu turga biriktirilganlar. Qidiruv: nom, STIR.",
+        "operationId" : "priceTypeCustomers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "priceTypeId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 200
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PriceTypeCustomers"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Narx turiga biriktirish — mijozlar ro'yxati",
+        "tags" : [ "counterparties" ]
+      },
+      "put" : {
+        "description" : "attach — shu filial shartidagi narx turi shu turga; detach — shu turda bo'lsa bazaviyga qaytadi. Auditda.",
+        "operationId" : "attachPriceType",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PriceTypeAttachRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PriceTypeAttachResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijozlarni narx turiga biriktirish",
         "tags" : [ "counterparties" ]
       }
     },
@@ -1921,7 +2104,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_11",
+        "operationId" : "update_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2146,6 +2329,92 @@
         "tags" : [ "counterparties" ]
       }
     },
+    "/api/counterparties/{id}/documents" : {
+      "get" : {
+        "description" : "Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, qm.view / qy.view, receipt.view, Bonus — sdebt.view yoki supplierBonus.confirm. Filial — xodim ko'radiganlari.",
+        "operationId" : "documents",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "CUSTOMER",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "section",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ORDERS", "SALES", "PAYMENTS", "RETURNS", "RECEIPTS", "BONUS" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyDocumentsPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kartochka hujjat yorliqlari: Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar, Kirimlar (oxirgi 100 ta)",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/history" : {
+      "get" : {
+        "operationId" : "history_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "CUSTOMER",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CounterpartyHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi)",
+        "tags" : [ "counterparties" ]
+      }
+    },
     "/api/counterparties/{id}/licenses" : {
       "post" : {
         "operationId" : "addLicense",
@@ -2227,6 +2496,80 @@
           }
         },
         "summary" : "Litsenziyani tahrirlash",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/products" : {
+      "get" : {
+        "description" : "Ruxsat: suppliers.view + receipt.view. days — oxirgi N kun (30, 90), bo'sh — hammasi. Narx — special.cost yoki kirimni qabul qilmaydigan xodim (kirim qoidasi bilan bir xil). Filial — xodim ko'radiganlari.",
+        "operationId" : "products_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "days",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SupplierProductsPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YB kartochkasi «Mahsulotlar»: o'tkazilgan kirimlardagi mahsulotlar (oxirgi narx, sana, soni, kirimlar)",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/{id}/summary" : {
+      "get" : {
+        "operationId" : "summary_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "role",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "CUSTOMER",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartySummary"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kartochka o'ng paneli: filiallar bo'yicha qarz, limit, oxirgi sotuv/kirim va to'lov",
         "tags" : [ "counterparties" ]
       }
     },
@@ -2721,7 +3064,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_10",
+        "operationId" : "update_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -2909,6 +3252,113 @@
         "tags" : [ "employees" ]
       }
     },
+    "/api/employees/login-check" : {
+      "get" : {
+        "operationId" : "loginCheck",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "firstName",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "lastName",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "login",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "exceptId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LoginCheck"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Login taklifi va boʻshligi",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/seats" : {
+      "get" : {
+        "operationId" : "seats",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Seats"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xodim oʻrinlari (bloklanmaganlar / litsenziya chegarasi)",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/{id}" : {
+      "put" : {
+        "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
+        "operationId" : "update_10",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateEmployeeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Employee"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xodimni tahrirlash",
+        "tags" : [ "employees" ]
+      }
+    },
     "/api/employees/{id}/all-branches" : {
       "post" : {
         "description" : "Standart holatda Buxgalter faqat o'z filialini ko'radi (E3). Ochiq sessiyalari tugatiladi.",
@@ -2987,6 +3437,62 @@
         "tags" : [ "employees" ]
       }
     },
+    "/api/employees/{id}/end-sessions" : {
+      "post" : {
+        "operationId" : "endSessions",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EndSessionsResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ochiq sessiyalarni tugatish",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/{id}/journal" : {
+      "get" : {
+        "operationId" : "journal",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Journal"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xodim kartasi: kirishlar, harakatlar, sessiyalar, PIN holati",
+        "tags" : [ "employees" ]
+      }
+    },
     "/api/employees/{id}/reset-password" : {
       "post" : {
         "operationId" : "resetPassword",
@@ -3022,6 +3528,34 @@
           }
         },
         "summary" : "Vaqtinchalik parol berish",
+        "tags" : [ "employees" ]
+      }
+    },
+    "/api/employees/{id}/reset-pin" : {
+      "post" : {
+        "operationId" : "resetPin",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Employee"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "PIN-kodni bekor qilish (xodim yangisini oʻrnatadi)",
         "tags" : [ "employees" ]
       }
     },
@@ -6493,6 +7027,38 @@
         "tags" : [ "payments" ]
       }
     },
+    "/api/payments/customer/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tahrirlandi, yuborildi, tasdiqlandi, qaytarildi, bekor qilindi.",
+        "operationId" : "paymentHistory",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "MT tarixi",
+        "tags" : [ "payments" ]
+      }
+    },
     "/api/payments/customer/{id}/post" : {
       "post" : {
         "description" : "Taqsimot: avtomatik (eng eski qarzdan) yoki qo'lda; ortig'i avans. Pul hisobga tushadi.",
@@ -6529,6 +7095,50 @@
           }
         },
         "summary" : "O'tkazish",
+        "tags" : [ "payments" ]
+      }
+    },
+    "/api/payments/overview" : {
+      "get" : {
+        "operationId" : "overview_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "To'lovlar ro'yxati: MT + YT bitta jadvalda (prototip Payments)",
         "tags" : [ "payments" ]
       }
     },
@@ -6784,6 +7394,38 @@
         "tags" : [ "supplier-payments" ]
       }
     },
+    "/api/payments/supplier/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tahrirlandi, yuborildi, tasdiqlandi, qaytarildi, bekor qilindi.",
+        "operationId" : "supplierPaymentHistory",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "YT tarixi",
+        "tags" : [ "supplier-payments" ]
+      }
+    },
     "/api/payments/supplier/{id}/post" : {
       "post" : {
         "operationId" : "postSupplierPayment",
@@ -6906,6 +7548,51 @@
           "schema" : {
             "type" : "string",
             "enum" : [ "DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "priceTypeIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
           }
         }, {
           "in" : "query",
@@ -7136,7 +7823,7 @@
     },
     "/api/price-changes/{id}/cancel" : {
       "post" : {
-        "description" : "Faqat qoralama yoki tasdiq kutayotgan hujjat.",
+        "description" : "Qoralama, tasdiq kutayotgan yoki tasdiqlangan, lekin hali kuchga kirmagan hujjat.",
         "operationId" : "cancel_3",
         "parameters" : [ {
           "in" : "path",
@@ -7546,6 +8233,102 @@
           }
         },
         "summary" : "Amaldagi narxlar — Excel'ga eksport (.xlsx)",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/prices/grid" : {
+      "get" : {
+        "description" : "Faol mahsulotlar × narx turi: amaldagi, kelgusi, bazaviy narx; kirim narxlari — faqat special.cost bilan.",
+        "operationId" : "grid",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "priceTypeId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PriceGrid"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Narx o'rnatish» jadvali",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/prices/grid/export" : {
+      "post" : {
+        "description" : "Brauzerdagi ko'rinib turgan qatorlar: Kod, Mahsulot, Joriy narx, Yangi narx (kiritilgan, saqlanmagan bo'lsa ham).",
+        "operationId" : "exportSet",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetExportRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Narx o'rnatish» — Excel'ga eksport (.xlsx)",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/prices/grid/import" : {
+      "post" : {
+        "description" : "Birinchi varaq; «Kod» va «Yangi narx» (yoki «Narx») ustunlari. Hech narsa yozilmaydi — narxlar jadvalga qo'yiladi.",
+        "operationId" : "importSet",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetImportResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Narx o'rnatish» — Excel'dan yuklash",
         "tags" : [ "pricing" ]
       }
     },
@@ -9886,6 +10669,34 @@
         },
         "summary" : "Ruxsatlar matritsasi",
         "tags" : [ "roles" ]
+      },
+      "put" : {
+        "description" : "Rollar (nom, tavsif, doira, bosh sahifa, faollik), ruxsatlar va yangi rollar — bitta tranzaksiyada. Direktor roli o'zgarmaydi. Xodimning keyingi kirishida kuchga kiradi.",
+        "operationId" : "save",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SaveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Matrix"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Matritsani saqlash",
+        "tags" : [ "roles" ]
       }
     },
     "/api/roles/{code}/copy" : {
@@ -10106,6 +10917,58 @@
         "tags" : [ "setup" ]
       }
     },
+    "/api/setup/company/logo" : {
+      "delete" : {
+        "operationId" : "removeLogo",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Company"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Logotipni o'chirish",
+        "tags" : [ "setup" ]
+      },
+      "put" : {
+        "operationId" : "uploadLogo",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Company"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Logotip yuklash (PNG yoki SVG, 2 MB gacha)",
+        "tags" : [ "setup" ]
+      }
+    },
     "/api/setup/complete" : {
       "post" : {
         "operationId" : "complete",
@@ -10180,6 +11043,63 @@
           }
         },
         "summary" : "Ombor va zonalarni qo'shish",
+        "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup/warehouses/{id}" : {
+      "delete" : {
+        "operationId" : "deleteWarehouse",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Ishlatilmagan omborni oʻchirish",
+        "tags" : [ "setup" ]
+      },
+      "put" : {
+        "operationId" : "updateWarehouse",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WarehouseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Warehouse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ombor kartasini saqlash (tur, masʼul, zonalar)",
         "tags" : [ "setup" ]
       }
     },
@@ -11441,6 +12361,45 @@
           }
         },
         "summary" : "Reysni bekor qilish",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/cash/accept" : {
+      "post" : {
+        "description" : "Sanalgan summa to'xtashlar bo'yicha taqsimlanadi, har ulush — MT. Farq bo'lsa izoh majburiy.",
+        "operationId" : "acceptTripCash",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TripCashAcceptRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripCashAccepted"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Haydovchidan pulni reys bo'yicha qabul qilish",
         "tags" : [ "trips" ]
       }
     },
@@ -13383,6 +14342,28 @@
         },
         "required" : [ "balance", "credit", "date", "debit", "docId", "docNumber", "docType", "occurredAt" ]
       },
+      "ActionEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "entityId" : {
+            "type" : "string"
+          },
+          "entityType" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at", "entityType" ]
+      },
       "AddOrdersRequest" : {
         "type" : "object",
         "properties" : {
@@ -13573,6 +14554,30 @@
           }
         },
         "required" : [ "count", "danger" ]
+      },
+      "BankAccount" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{20}$"
+          },
+          "bankName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "main" : {
+            "type" : "boolean"
+          },
+          "mfo" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[0-9]{5}$"
+          }
+        },
+        "required" : [ "account", "bankName", "main", "mfo" ]
       },
       "BarcodeOwner" : {
         "type" : "object",
@@ -13889,13 +14894,28 @@
       "Branch" : {
         "type" : "object",
         "properties" : {
+          "accountantName" : {
+            "type" : "string"
+          },
           "active" : {
             "type" : "boolean"
+          },
+          "actualAddress" : {
+            "type" : "string"
           },
           "address" : {
             "type" : "string"
           },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            }
+          },
           "code" : {
+            "type" : "string"
+          },
+          "directorName" : {
             "type" : "string"
           },
           "id" : {
@@ -13911,11 +14931,20 @@
           "phone" : {
             "type" : "string"
           },
+          "region" : {
+            "type" : "string"
+          },
           "tin" : {
             "type" : "string"
+          },
+          "vatCertNo" : {
+            "type" : "string"
+          },
+          "vatPayer" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "active", "code", "id", "legalName", "name", "tin" ]
+        "required" : [ "active", "bankAccounts", "code", "id", "legalName", "name", "tin", "vatPayer" ]
       },
       "BranchBalance" : {
         "type" : "object",
@@ -14189,15 +15218,38 @@
       "BranchRequest" : {
         "type" : "object",
         "properties" : {
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
           "address" : {
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
           },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
+          },
           "code" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[A-Za-z]{3}$"
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
           },
           "legalName" : {
             "type" : "string",
@@ -14214,10 +15266,23 @@
             "maxLength" : 32,
             "minLength" : 0
           },
+          "region" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
           "tin" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[0-9]{9}$"
+          },
+          "vatCertNo" : {
+            "type" : "string",
+            "pattern" : "^[0-9]{6,20}$"
+          },
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
           }
         },
         "required" : [ "code", "legalName", "name", "tin" ]
@@ -14557,6 +15622,64 @@
         },
         "required" : [ "buyer", "createdAt", "createdBy", "fromWarehouse", "fromZone", "id", "lines", "number", "qty", "seller", "shortageQty", "status", "toWarehouse" ]
       },
+      "BranchSummary" : {
+        "type" : "object",
+        "properties" : {
+          "advance" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "creditLimit" : {
+            "type" : "string"
+          },
+          "debt" : {
+            "type" : "string",
+            "description" : "Qarz (mijoz — bizga, YB — bizning qarzimiz)"
+          },
+          "hasTerms" : {
+            "type" : "boolean"
+          },
+          "lastDoc" : {
+            "$ref" : "#/components/schemas/LastDoc",
+            "description" : "Mijoz — oxirgi sotuv (id — buyurtma), YB — oxirgi kirim (id — kirim)"
+          },
+          "lastPayment" : {
+            "$ref" : "#/components/schemas/LastDoc"
+          },
+          "limitLeft" : {
+            "type" : "string",
+            "description" : "Qolgan limit = limit − qarz (manfiy bo'lmaydi)"
+          },
+          "maxOverdueDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "operator" : {
+            "type" : "string"
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "paymentDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "priceType" : {
+            "type" : "string",
+            "description" : "NULL shart — bazaviy narx turi nomi"
+          }
+        },
+        "required" : [ "advance", "branchId", "code", "debt", "hasTerms", "maxOverdueDays", "name", "overdue" ]
+      },
       "Buckets" : {
         "type" : "object",
         "properties" : {
@@ -14640,6 +15763,49 @@
         },
         "required" : [ "payment" ]
       },
+      "CashCard" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "cashierName" : {
+            "type" : "string",
+            "description" : "Mas'ul (biriktirilgan kassir)"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lastClosed" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Oxirgi yopilgan kun"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "todayIn" : {
+            "type" : "string",
+            "description" : "Bugungi kirim (Asia/Tashkent)"
+          },
+          "todayOut" : {
+            "type" : "string",
+            "description" : "Bugungi chiqim, musbat son"
+          }
+        },
+        "required" : [ "balance", "branchId", "branchName", "code", "id", "name", "todayIn", "todayOut" ]
+      },
       "CashOp" : {
         "type" : "object",
         "properties" : {
@@ -14661,6 +15827,9 @@
             "format" : "date-time"
           },
           "approvedBy" : {
+            "type" : "string"
+          },
+          "baseNo" : {
             "type" : "string"
           },
           "branchId" : {
@@ -14743,6 +15912,12 @@
             "maxLength" : 24,
             "minLength" : 0
           },
+          "baseNo" : {
+            "type" : "string",
+            "description" : "Asos hujjat № (ixtiyoriy)",
+            "maxLength" : 40,
+            "minLength" : 0
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -14773,6 +15948,26 @@
           }
         },
         "required" : [ "accountId", "amount", "branchId", "direction", "itemId" ]
+      },
+      "CashOverview" : {
+        "type" : "object",
+        "properties" : {
+          "cards" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CashCard"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bugun (Asia/Tashkent)"
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cards", "today", "total" ]
       },
       "CashierOption" : {
         "type" : "object",
@@ -14949,6 +16144,23 @@
         },
         "required" : [ "code", "reason" ]
       },
+      "ChangeFacet" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "id", "name" ]
+      },
       "ChangePasswordRequest" : {
         "type" : "object",
         "properties" : {
@@ -14959,10 +16171,25 @@
           "newPassword" : {
             "type" : "string",
             "maxLength" : 128,
-            "minLength" : 8
+            "minLength" : 8,
+            "pattern" : "^(?=.*\\p{L})(?=.*\\d).*$"
           }
         },
         "required" : [ "currentPassword", "newPassword" ]
+      },
+      "ChangeStatusCount" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED" ]
+          }
+        },
+        "required" : [ "count", "status" ]
       },
       "CheckRequest" : {
         "type" : "object",
@@ -15105,7 +16332,14 @@
       "Company" : {
         "type" : "object",
         "properties" : {
+          "defaultLocale" : {
+            "type" : "string"
+          },
           "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "logoVersion" : {
             "type" : "integer",
             "format" : "int64"
           },
@@ -15117,11 +16351,15 @@
             "format" : "date-time"
           }
         },
-        "required" : [ "id", "name" ]
+        "required" : [ "defaultLocale", "id", "name" ]
       },
       "CompanyRequest" : {
         "type" : "object",
         "properties" : {
+          "defaultLocale" : {
+            "type" : "string",
+            "pattern" : "^(uz-Latn|uz-Cyrl|ru)$"
+          },
           "name" : {
             "type" : "string",
             "maxLength" : 200,
@@ -15144,6 +16382,42 @@
           }
         },
         "required" : [ "lineIds" ]
+      },
+      "Contact" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "position" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "name" ]
+      },
+      "ContactRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
+          "position" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
       },
       "Contract" : {
         "type" : "object",
@@ -15252,6 +16526,13 @@
           "contactPerson" : {
             "type" : "string"
           },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Kontakt shaxslar (tartib bo'yicha)",
+            "items" : {
+              "$ref" : "#/components/schemas/Contact"
+            }
+          },
           "contracts" : {
             "type" : "array",
             "description" : "Faqat xodim ko'ra oladigan filiallar",
@@ -15268,6 +16549,10 @@
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "PHARMACY", "CLINIC", "HOSPITAL", "DISTRIBUTOR", "MAKER" ]
           },
           "legalName" : {
             "type" : "string"
@@ -15307,7 +16592,69 @@
             "type" : "string"
           }
         },
-        "required" : [ "active", "blocked", "contracts", "customer", "id", "licenses", "name", "supplier", "terms", "tin" ]
+        "required" : [ "active", "blocked", "contacts", "contracts", "customer", "id", "licenses", "name", "supplier", "terms", "tin" ]
+      },
+      "CounterpartyDocumentsPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DocRow"
+            }
+          },
+          "section" : {
+            "type" : "string",
+            "enum" : [ "ORDERS", "SALES", "PAYMENTS", "RETURNS", "RECEIPTS", "BONUS" ]
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shartga mos jami soni"
+          }
+        },
+        "required" : [ "items", "section", "total" ]
+      },
+      "CounterpartyHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
+      },
+      "CounterpartyOverviewPage" : {
+        "type" : "object",
+        "properties" : {
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OverviewBranch"
+            }
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OverviewRow"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "branches", "items", "today" ]
       },
       "CounterpartyPage" : {
         "type" : "object",
@@ -15359,6 +16706,15 @@
             "maxLength" : 200,
             "minLength" : 0
           },
+          "contacts" : {
+            "type" : "array",
+            "description" : "Kontakt shaxslar — berilsa ro'yxat to'liq almashtiriladi (birinchisi — contactPerson); null — o'zgarmaydi",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactRequest"
+            },
+            "maxItems" : 20,
+            "minItems" : 0
+          },
           "customer" : {
             "type" : "boolean"
           },
@@ -15367,6 +16723,10 @@
             "maxLength" : 200,
             "minLength" : 0,
             "pattern" : "^$|^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "PHARMACY", "CLINIC", "HOSPITAL", "DISTRIBUTOR", "MAKER" ]
           },
           "legalName" : {
             "type" : "string",
@@ -15452,18 +16812,53 @@
         },
         "required" : [ "active", "blocked", "customer", "id", "name", "supplier", "tin" ]
       },
+      "CounterpartySummary" : {
+        "type" : "object",
+        "properties" : {
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BranchSummary"
+            }
+          }
+        },
+        "required" : [ "branches" ]
+      },
       "CreateBranchRequest" : {
         "type" : "object",
         "properties" : {
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
           "address" : {
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
           },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
+          },
           "code" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[A-Za-z]{3}$"
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
           },
           "legalName" : {
             "type" : "string",
@@ -15480,10 +16875,23 @@
             "maxLength" : 32,
             "minLength" : 0
           },
+          "region" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
           "tin" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[0-9]{9}$"
+          },
+          "vatCertNo" : {
+            "type" : "string",
+            "pattern" : "^[0-9]{6,20}$"
+          },
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
           }
         },
         "required" : [ "code", "legalName", "name", "tin" ]
@@ -15495,15 +16903,38 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "cashAccountIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "firstName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
           "fullName" : {
             "type" : "string",
+            "description" : "Boʻsh boʻlsa — «Ism Familiya» qismlardan",
             "maxLength" : 200,
+            "minLength" : 0
+          },
+          "lastName" : {
+            "type" : "string",
+            "maxLength" : 100,
             "minLength" : 0
           },
           "login" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[A-Za-z0-9._-]{3,64}$"
+          },
+          "middleName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
           },
           "phone" : {
             "type" : "string",
@@ -15523,9 +16954,16 @@
             "type" : "string",
             "maxLength" : 128,
             "minLength" : 8
+          },
+          "warehouseIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         },
-        "required" : [ "fullName", "login", "roleCode", "temporaryPassword" ]
+        "required" : [ "login", "roleCode", "temporaryPassword" ]
       },
       "CreateRequest" : {
         "type" : "object",
@@ -15986,6 +17424,54 @@
         },
         "required" : [ "account", "amount", "date", "number", "paymentId" ]
       },
+      "DocRow" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "description" : "Summa, so'm"
+          },
+          "branchCode" : {
+            "type" : "string"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "extraNumber" : {
+            "type" : "string",
+            "description" : "Sotuv — hisob-faktura raqami, kirim — yuk xati"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "linkId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Ochiladigan hujjat: buyurtma (sotuv, mijoz qaytarishi), aks holda shu hujjat"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "open" : {
+            "type" : "string",
+            "description" : "Sotuv/kirim: to'lanmagan qoldiq (0 — to'langan)"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Hujjat holati (bazadagi kod: DRAFT, POSTED, CANCELLED, …)"
+          }
+        },
+        "required" : [ "amount", "branchCode", "branchName", "date", "id", "number", "status" ]
+      },
       "DriverCash" : {
         "type" : "object",
         "properties" : {
@@ -16071,9 +17557,23 @@
             "type" : "boolean",
             "description" : "Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3)"
           },
+          "blockedReason" : {
+            "type" : "string"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "cashAccountIds" : {
+            "type" : "array",
+            "description" : "Kassir boʻlgan kassalar (special.till)",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "firstName" : {
+            "type" : "string"
           },
           "fullName" : {
             "type" : "string"
@@ -16082,7 +17582,19 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "lastLoginAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Oxirgi kirish; boʻsh — hali kirmagan («Yangi»)"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Familiya (eski yozuvlarda boʻsh)"
+          },
           "login" : {
+            "type" : "string"
+          },
+          "middleName" : {
             "type" : "string"
           },
           "mustChangePassword" : {
@@ -16102,9 +17614,17 @@
           },
           "status" : {
             "type" : "string"
+          },
+          "warehouseIds" : {
+            "type" : "array",
+            "description" : "Omborchi boʻlgan omborlar (special.whs)",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         },
-        "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "roleCode", "roleName", "status" ]
+        "required" : [ "allBranches", "cashAccountIds", "fullName", "id", "login", "mustChangePassword", "roleCode", "roleName", "status", "warehouseIds" ]
       },
       "EmployeeOption" : {
         "type" : "object",
@@ -16163,6 +17683,16 @@
           }
         },
         "required" : [ "fullName", "login", "roleCode", "temporaryPassword" ]
+      },
+      "EndSessionsResult" : {
+        "type" : "object",
+        "properties" : {
+          "ended" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "ended" ]
       },
       "Entry" : {
         "type" : "object",
@@ -17470,6 +19000,36 @@
         },
         "required" : [ "amount", "item" ]
       },
+      "Journal" : {
+        "type" : "object",
+        "properties" : {
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ActionEvent"
+            }
+          },
+          "logins" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LoginEvent"
+            }
+          },
+          "pinSet" : {
+            "type" : "boolean"
+          },
+          "pinSetAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sessions" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Ochiq sessiyalar soni"
+          }
+        },
+        "required" : [ "actions", "logins", "pinSet", "sessions" ]
+      },
       "KindTotals" : {
         "type" : "object",
         "properties" : {
@@ -17487,6 +19047,59 @@
           }
         },
         "required" : [ "bank", "cash", "terminal", "total" ]
+      },
+      "LastChange" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "by" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at" ]
+      },
+      "LastDoc" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "date", "number" ]
+      },
+      "LastPayment" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "date", "id", "number" ]
       },
       "License" : {
         "type" : "object",
@@ -17560,6 +19173,10 @@
             "type" : "string",
             "description" : "O'zgarish, %"
           },
+          "cost" : {
+            "type" : "string",
+            "description" : "Tannarx (QQS bilan): partiya qatori — partiya tannarxi, mahsulot qatori — filialdagi qoldig'i bor partiyalarning eng yuqori tannarxi; faqat special.cost bilan"
+          },
           "expiryDate" : {
             "type" : "string",
             "format" : "date"
@@ -17567,6 +19184,9 @@
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "manufacturer" : {
+            "type" : "string"
           },
           "newPrice" : {
             "type" : "string"
@@ -17628,6 +19248,40 @@
           }
         },
         "required" : [ "places" ]
+      },
+      "LoginCheck" : {
+        "type" : "object",
+        "properties" : {
+          "available" : {
+            "type" : "boolean",
+            "description" : "Berilgan login boʻshmi; login berilmasa — null"
+          },
+          "suggested" : {
+            "type" : "string",
+            "description" : "Ism va familiyadan taklif (boʻsh joyi bilan raqam qoʻshiladi)"
+          }
+        },
+        "required" : [ "suggested" ]
+      },
+      "LoginEvent" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "device" : {
+            "type" : "string"
+          },
+          "ip" : {
+            "type" : "string"
+          },
+          "result" : {
+            "type" : "string",
+            "description" : "OK — kirdi, FAILED — notoʻgʻri parol, BLOCKED — bloklangan"
+          }
+        },
+        "required" : [ "at", "result" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -17986,6 +19640,16 @@
       "Matrix" : {
         "type" : "object",
         "properties" : {
+          "defaults" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "description" : "Standart rol kodi → standart ruxsatlar («Standartga qaytarish»)"
+          },
           "grants" : {
             "type" : "object",
             "additionalProperties" : {
@@ -17995,6 +19659,10 @@
               }
             },
             "description" : "Rol kodi → ruxsat kalitlari"
+          },
+          "lastChange" : {
+            "$ref" : "#/components/schemas/LastChange",
+            "description" : "Oxirgi o'zgarish"
           },
           "permissions" : {
             "type" : "array",
@@ -18009,7 +19677,7 @@
             }
           }
         },
-        "required" : [ "grants", "permissions", "roles" ]
+        "required" : [ "defaults", "grants", "permissions", "roles" ]
       },
       "MeResponse" : {
         "type" : "object",
@@ -18226,6 +19894,11 @@
           "expiry" : {
             "$ref" : "#/components/schemas/Badge"
           },
+          "logoVersion" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Logotip versiyasi (epoch ms) — /api/company/logo?v=…; null — logotip yoʻq"
+          },
           "orders" : {
             "$ref" : "#/components/schemas/Badge"
           },
@@ -18435,6 +20108,10 @@
             "type" : "string",
             "format" : "date"
           },
+          "extNo" : {
+            "type" : "string",
+            "description" : "Tashqi raqam — YB yuk xati / hisob-faktura raqami (kirimda)"
+          },
           "open" : {
             "type" : "string"
           },
@@ -18442,9 +20119,21 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Muddati o'tgan kunlar (0 — o'tmagan)"
+          },
+          "paid" : {
+            "type" : "string",
+            "description" : "Avval to'langan (MT/YT/AH taqsimotlari)"
+          },
+          "returned" : {
+            "type" : "string",
+            "description" : "Qaytarishlar (QM/QY) bilan kamaygan summa"
+          },
+          "total" : {
+            "type" : "string",
+            "description" : "Hujjat summasi"
           }
         },
-        "required" : [ "date", "docId", "docNumber", "docType", "open", "overdueDays" ]
+        "required" : [ "date", "docId", "docNumber", "docType", "open", "overdueDays", "paid", "returned", "total" ]
       },
       "OpenDocs" : {
         "type" : "object",
@@ -18461,6 +20150,10 @@
             "items" : {
               "$ref" : "#/components/schemas/OpenDocView"
             }
+          },
+          "lastPayment" : {
+            "$ref" : "#/components/schemas/LastPayment",
+            "description" : "Shu filialdagi oxirgi o'tkazilgan to'lov"
           }
         },
         "required" : [ "advance", "debt", "docs" ]
@@ -19576,6 +21269,166 @@
         },
         "required" : [ "branchId", "createdAt", "createdBy", "customer", "customerId", "deliveryType", "holder", "id", "lines", "number", "orderDate", "paymentType", "status", "statusChangedAt", "total", "warehouse" ]
       },
+      "OverviewBranch" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "name" ]
+      },
+      "OverviewRow" : {
+        "type" : "object",
+        "properties" : {
+          "agingBuckets" : {
+            "type" : "array",
+            "description" : "Muddati o'tgan qarz guruhlari: 1-30, 31-60, 61-90, 90plus",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "branches" : {
+            "type" : "array",
+            "description" : "Sharti bor filiallar kodlari",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "buyers" : {
+            "type" : "array",
+            "description" : "YB: ta'minotchilar",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "contactPerson" : {
+            "type" : "string"
+          },
+          "controlledAllowed" : {
+            "type" : "boolean",
+            "description" : "Nazoratdagi mahsulotlarga amaldagi ruxsat"
+          },
+          "createdOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "creditLimit" : {
+            "type" : "string",
+            "description" : "Kredit limiti (filial tanlanmagan — filiallar yig'indisi)"
+          },
+          "customer" : {
+            "type" : "boolean"
+          },
+          "debt" : {
+            "type" : "string",
+            "description" : "Qarz (mijoz — bizga, YB — bizning qarzimiz), so'm"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "inScope" : {
+            "type" : "boolean",
+            "description" : "Tanlangan (yoki xodimning) filialida sharti bor; filial tanlanmagan — true"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "PHARMACY", "CLINIC", "HOSPITAL", "DISTRIBUTOR", "MAKER" ]
+          },
+          "lastPaymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastReceiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastReceiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lastReceiptNumber" : {
+            "type" : "string"
+          },
+          "lastSaleDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastSaleNumber" : {
+            "type" : "string"
+          },
+          "lastSaleOrderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Oxirgi sotuv buyurtmasi (karta havolasi)"
+          },
+          "legalName" : {
+            "type" : "string"
+          },
+          "licenseValidUntil" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Eng uzoq amal qiladigan litsenziya muddati"
+          },
+          "mainPayment" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "maxOverdueDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "operators" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "paymentDays" : {
+            "type" : "array",
+            "description" : "YB: to'lov muddati (kun), filiallar bo'yicha",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          },
+          "phone" : {
+            "type" : "string",
+            "description" : "Faqat clients.contact / suppliers.contact bilan"
+          },
+          "priceTypes" : {
+            "type" : "array",
+            "description" : "Narx turlari (NULL shart — bazaviy)",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "region" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "BLOCKED", "INACTIVE" ]
+          },
+          "supplier" : {
+            "type" : "boolean"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "agingBuckets", "branches", "buyers", "controlledAllowed", "createdOn", "customer", "debt", "id", "inScope", "maxOverdueDays", "name", "operators", "overdue", "paymentDays", "priceTypes", "status", "supplier", "tin" ]
+      },
       "OwnGoods" : {
         "type" : "object",
         "properties" : {
@@ -19810,6 +21663,10 @@
           "amount" : {
             "type" : "string"
           },
+          "bankDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -19822,6 +21679,9 @@
             "format" : "date-time"
           },
           "cancelledBy" : {
+            "type" : "string"
+          },
+          "checkNo" : {
             "type" : "string"
           },
           "createdAt" : {
@@ -19849,6 +21709,9 @@
             "type" : "string"
           },
           "number" : {
+            "type" : "string"
+          },
+          "payOrderNo" : {
             "type" : "string"
           },
           "paymentDate" : {
@@ -19907,6 +21770,126 @@
         },
         "required" : [ "next3Count", "next3Days", "overdue", "overdueCount", "today", "todayCount" ]
       },
+      "PaymentHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
+      },
+      "PaymentOverview" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentOverviewRow"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bugun (Asia/Tashkent)"
+          }
+        },
+        "required" : [ "rows", "today" ]
+      },
+      "PaymentOverviewRow" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "accountKind" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TERMINAL", "BANK" ]
+          },
+          "advance" : {
+            "type" : "string",
+            "description" : "Avans (taqsimlanmagan qism)"
+          },
+          "allocated" : {
+            "type" : "string",
+            "description" : "Hujjatlarga taqsimlangan (faqat o'tkazilgan/bekor qilinganda)"
+          },
+          "amount" : {
+            "type" : "string"
+          },
+          "branchCode" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "checkNo" : {
+            "type" : "string",
+            "description" : "Terminal cheki raqami"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "MT", "YT" ]
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "party" : {
+            "type" : "string"
+          },
+          "partyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "partySub" : {
+            "type" : "string",
+            "description" : "MT — mijoz hududi, YT — STIR"
+          },
+          "payOrderNo" : {
+            "type" : "string",
+            "description" : "To'lov topshiriqnomasi №"
+          },
+          "paymentDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "source" : {
+            "type" : "string",
+            "description" : "MT: MANUAL / DRIVER; YT: MANUAL"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING", "POSTED", "CANCELLED" ]
+          }
+        },
+        "required" : [ "account", "accountId", "accountKind", "amount", "branchCode", "branchId", "createdAt", "createdBy", "id", "kind", "number", "party", "partyId", "paymentDate", "source", "status" ]
+      },
       "PaymentPostRequest" : {
         "type" : "object",
         "properties" : {
@@ -19934,9 +21917,20 @@
             "maxLength" : 24,
             "minLength" : 0
           },
+          "bankDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bank sanasi"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "checkNo" : {
+            "type" : "string",
+            "description" : "Terminal cheki raqami",
+            "maxLength" : 30,
+            "minLength" : 0
           },
           "customerId" : {
             "type" : "integer",
@@ -19945,6 +21939,12 @@
           "note" : {
             "type" : "string",
             "maxLength" : 500,
+            "minLength" : 0
+          },
+          "payOrderNo" : {
+            "type" : "string",
+            "description" : "To'lov topshiriqnomasi № (bank)",
+            "maxLength" : 30,
             "minLength" : 0
           },
           "paymentDate" : {
@@ -20110,14 +22110,32 @@
           "description" : {
             "type" : "string"
           },
+          "group" : {
+            "type" : "string",
+            "description" : "Matritsa guruhi",
+            "enum" : [ "sales", "wh", "money", "ref", "rep", "admin", "special" ]
+          },
           "key" : {
             "type" : "string"
           },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "view", "create", "cancel", "approve", "special" ]
+          },
+          "lock" : {
+            "type" : "string",
+            "description" : "dir — faqat Direktorda; excl — Direktorga avtomatik berilmaydi",
+            "enum" : [ "dir", "excl" ]
+          },
           "module" : {
             "type" : "string"
+          },
+          "page" : {
+            "type" : "string",
+            "description" : "Bog'liq sahifa: amal uchun <page>.view kerak"
           }
         },
-        "required" : [ "description", "key", "module" ]
+        "required" : [ "description", "group", "key", "kind", "module" ]
       },
       "PermissionsRequest" : {
         "type" : "object",
@@ -20440,6 +22458,12 @@
       "PriceChangePage" : {
         "type" : "object",
         "properties" : {
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChangeFacet"
+            }
+          },
           "items" : {
             "type" : "array",
             "items" : {
@@ -20450,16 +22474,34 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "priceTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChangeFacet"
+            }
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
           },
+          "statusCounts" : {
+            "type" : "array",
+            "description" : "Holat bo'yicha soni — holatdan boshqa filtrlar bilan",
+            "items" : {
+              "$ref" : "#/components/schemas/ChangeStatusCount"
+            }
+          },
           "total" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "totalAll" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Ruxsat doirasidagi barcha NO hujjatlari (filtrsiz)"
           }
         },
-        "required" : [ "items", "page", "size", "total" ]
+        "required" : [ "branches", "items", "page", "priceTypes", "size", "statusCounts", "total", "totalAll" ]
       },
       "PriceChangeRequest" : {
         "type" : "object",
@@ -20500,6 +22542,9 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "branchName" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -20523,8 +22568,22 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "note" : {
+            "type" : "string"
+          },
           "number" : {
             "type" : "string"
+          },
+          "priceTypes" : {
+            "type" : "array",
+            "description" : "Hujjat qatorlaridagi narx turlari (tartib bo'yicha)",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "receiptNumber" : {
             "type" : "string",
@@ -20535,7 +22594,101 @@
             "enum" : [ "DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED" ]
           }
         },
-        "required" : [ "branchId", "createdAt", "createdBy", "effectiveFrom", "id", "lines", "number", "status" ]
+        "required" : [ "branchId", "branchName", "createdAt", "createdBy", "effectiveFrom", "id", "lines", "number", "priceTypes", "status" ]
+      },
+      "PriceGrid" : {
+        "type" : "object",
+        "properties" : {
+          "batchLinked" : {
+            "type" : "boolean"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PriceGridRow"
+            }
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceTypeName" : {
+            "type" : "string"
+          },
+          "showCost" : {
+            "type" : "boolean",
+            "description" : "Tannarx ustunlari ko'rinadimi (special.cost)"
+          }
+        },
+        "required" : [ "batchLinked", "branchId", "items", "priceTypeId", "priceTypeName", "showCost" ]
+      },
+      "PriceGridRow" : {
+        "type" : "object",
+        "properties" : {
+          "avgCost" : {
+            "type" : "string",
+            "description" : "O'rtacha kirim narxi — faqat special.cost bilan"
+          },
+          "basePrice" : {
+            "type" : "string",
+            "description" : "Bazaviy tur narxi"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "costLimit" : {
+            "type" : "string",
+            "description" : "Tannarx chegarasi (qoldiqdagi eng yuqori) — faqat special.cost bilan"
+          },
+          "country" : {
+            "type" : "string"
+          },
+          "currentPrice" : {
+            "type" : "string",
+            "description" : "Bugun amaldagi narx (QQS bilan)"
+          },
+          "lastCost" : {
+            "type" : "string",
+            "description" : "Oxirgi kirim narxi — faqat special.cost bilan"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "nextFrom" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "nextPrice" : {
+            "type" : "string",
+            "description" : "Kelgusi (rejalashtirilgan) narx"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "searchText" : {
+            "type" : "string",
+            "description" : "Qidiruv matni (lotin, normallashgan)"
+          },
+          "supplyEmployee" : {
+            "type" : "string"
+          },
+          "vatRate" : {
+            "type" : "string",
+            "description" : "QQS stavkasi, %"
+          }
+        },
+        "required" : [ "code", "name", "productId", "searchText", "vatRate" ]
       },
       "PriceHistory" : {
         "type" : "object",
@@ -20664,6 +22817,94 @@
           }
         },
         "required" : [ "base", "batch", "code", "id", "name" ]
+      },
+      "PriceTypeAttachRequest" : {
+        "type" : "object",
+        "properties" : {
+          "attach" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 5000,
+            "minItems" : 0
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "detach" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 5000,
+            "minItems" : 0
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "attach", "branchId", "detach", "priceTypeId" ]
+      },
+      "PriceTypeAttachResult" : {
+        "type" : "object",
+        "properties" : {
+          "changed" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Narx turi o'zgargan mijozlar soni"
+          }
+        },
+        "required" : [ "changed" ]
+      },
+      "PriceTypeCustomer" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "priceType" : {
+            "type" : "string",
+            "description" : "Joriy narx turi nomi; NULL — bazaviy"
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name", "tin" ]
+      },
+      "PriceTypeCustomers" : {
+        "type" : "object",
+        "properties" : {
+          "attached" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shu filialda shu narx turiga biriktirilgan mijozlar soni"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PriceTypeCustomer"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "attached", "items", "total" ]
       },
       "PriceTypeHistoryRow" : {
         "type" : "object",
@@ -22771,13 +25012,24 @@
       "Role" : {
         "type" : "object",
         "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
           "code" : {
+            "type" : "string"
+          },
+          "description" : {
             "type" : "string"
           },
           "employeeCount" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Biriktirilgan xodimlar soni"
+            "description" : "Biriktirilgan faol xodimlar soni"
+          },
+          "home" : {
+            "type" : "string",
+            "description" : "Bosh sahifa turi",
+            "enum" : [ "director", "branch", "operator", "purchase", "keeper", "cashier", "accountant", "picker", "marker", "driver" ]
           },
           "id" : {
             "type" : "integer",
@@ -22786,12 +25038,51 @@
           "name" : {
             "type" : "string"
           },
+          "scope" : {
+            "type" : "string",
+            "description" : "all — barcha filiallar, own — o'z filiali",
+            "enum" : [ "all", "own" ]
+          },
           "system" : {
             "type" : "boolean",
             "description" : "Standart rol: o'chirilmaydi"
           }
         },
-        "required" : [ "code", "employeeCount", "id", "name", "system" ]
+        "required" : [ "active", "code", "employeeCount", "home", "id", "name", "scope", "system" ]
+      },
+      "RoleDraft" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "copiedFrom" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "home" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "permissions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "scope" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "home", "name", "permissions", "scope" ]
       },
       "RoleRef" : {
         "type" : "object",
@@ -22799,11 +25090,16 @@
           "code" : {
             "type" : "string"
           },
+          "home" : {
+            "type" : "string",
+            "description" : "Bosh sahifa turi (Rollar matritsasidan)",
+            "enum" : [ "director", "branch", "operator", "purchase", "keeper", "cashier", "accountant", "picker", "marker", "driver" ]
+          },
           "name" : {
             "type" : "string"
           }
         },
-        "required" : [ "code", "name" ]
+        "required" : [ "code", "home", "name" ]
       },
       "SaleLine" : {
         "type" : "object",
@@ -22931,6 +25227,18 @@
         },
         "required" : [ "key", "name", "net", "orders", "returns", "sales" ]
       },
+      "SaveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleDraft"
+            }
+          }
+        },
+        "required" : [ "roles" ]
+      },
       "ScanRequest" : {
         "type" : "object",
         "properties" : {
@@ -22966,6 +25274,114 @@
           }
         },
         "required" : [ "field", "value" ]
+      },
+      "Seats" : {
+        "type" : "object",
+        "properties" : {
+          "limit" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Litsenziya chegarasi; null — cheklanmagan"
+          },
+          "used" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Bloklanmagan xodimlar"
+          }
+        },
+        "required" : [ "used" ]
+      },
+      "SetExportRequest" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SetExportRow"
+            },
+            "maxItems" : 50000,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "rows" ]
+      },
+      "SetExportRow" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "currentPrice" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "newPrice" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "currentPrice", "name", "newPrice" ]
+      },
+      "SetImportIssue" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "code", "reason", "row" ]
+      },
+      "SetImportLine" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "price" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "code", "price", "productId", "row" ]
+      },
+      "SetImportResult" : {
+        "type" : "object",
+        "properties" : {
+          "issues" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SetImportIssue"
+            }
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SetImportLine"
+            }
+          },
+          "rows" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "issues", "lines", "rows" ]
       },
       "SetPinRequest" : {
         "type" : "object",
@@ -23585,6 +26001,10 @@
           "amount" : {
             "type" : "string"
           },
+          "bankDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -23597,6 +26017,9 @@
             "format" : "date-time"
           },
           "cancelledBy" : {
+            "type" : "string"
+          },
+          "checkNo" : {
             "type" : "string"
           },
           "createdAt" : {
@@ -23614,6 +26037,9 @@
             "type" : "string"
           },
           "number" : {
+            "type" : "string"
+          },
+          "payOrderNo" : {
             "type" : "string"
           },
           "paymentDate" : {
@@ -23671,13 +26097,30 @@
             "maxLength" : 24,
             "minLength" : 0
           },
+          "bankDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bank sanasi"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
           },
+          "checkNo" : {
+            "type" : "string",
+            "description" : "Terminal cheki raqami",
+            "maxLength" : 30,
+            "minLength" : 0
+          },
           "note" : {
             "type" : "string",
             "maxLength" : 500,
+            "minLength" : 0
+          },
+          "payOrderNo" : {
+            "type" : "string",
+            "description" : "To'lov topshiriqnomasi № (bank)",
+            "maxLength" : 30,
             "minLength" : 0
           },
           "paymentDate" : {
@@ -23743,6 +26186,60 @@
           }
         },
         "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "id", "number", "paymentDate", "status", "supplier", "supplierId" ]
+      },
+      "SupplierProductRow" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "lastDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lastPrice" : {
+            "type" : "string",
+            "description" : "Oxirgi kirim narxi (QQSsiz); tannarx ruxsati bo'lmasa — null"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Kelgan soni (fakt + bonus), dona"
+          },
+          "receipts" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Kirimlar soni"
+          }
+        },
+        "required" : [ "code", "lastDate", "name", "productId", "qty", "receipts" ]
+      },
+      "SupplierProductsPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SupplierProductRow"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shartga mos jami soni"
+          }
+        },
+        "required" : [ "items", "total" ]
       },
       "SupplierReturnDetail" : {
         "type" : "object",
@@ -24383,6 +26880,47 @@
         },
         "required" : [ "branch", "branchId", "level", "products", "qty" ]
       },
+      "TripCashAcceptRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "note" : {
+            "type" : "string",
+            "description" : "Farq bo'lsa majburiy",
+            "maxLength" : 300,
+            "minLength" : 0
+          },
+          "received" : {
+            "type" : "string",
+            "description" : "Kassir sanagan summa"
+          }
+        },
+        "required" : [ "accountId", "received" ]
+      },
+      "TripCashAccepted" : {
+        "type" : "object",
+        "properties" : {
+          "diff" : {
+            "type" : "string"
+          },
+          "expected" : {
+            "type" : "string"
+          },
+          "payments" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "received" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "diff", "expected", "payments", "received" ]
+      },
       "TripDetail" : {
         "type" : "object",
         "properties" : {
@@ -24654,9 +27192,32 @@
       "UpdateBranchRequest" : {
         "type" : "object",
         "properties" : {
+          "accountantName" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          },
+          "actualAddress" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
           "address" : {
             "type" : "string",
             "maxLength" : 500,
+            "minLength" : 0
+          },
+          "bankAccounts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BankAccount"
+            },
+            "maxItems" : 10,
+            "minItems" : 0
+          },
+          "directorName" : {
+            "type" : "string",
+            "maxLength" : 200,
             "minLength" : 0
           },
           "legalName" : {
@@ -24674,13 +27235,84 @@
             "maxLength" : 32,
             "minLength" : 0
           },
+          "region" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
           "tin" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^[0-9]{9}$"
+          },
+          "vatCertNo" : {
+            "type" : "string",
+            "pattern" : "^[0-9]{6,20}$"
+          },
+          "vatPayer" : {
+            "type" : "boolean",
+            "description" : "null — qoʻshimchalar oʻzgarmaydi"
           }
         },
         "required" : [ "legalName", "name", "tin" ]
+      },
+      "UpdateEmployeeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cashAccountIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "firstName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "lastName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "login" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[A-Za-z0-9._-]{3,64}$"
+          },
+          "middleName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "position" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "roleCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "warehouseIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "firstName", "lastName", "login", "roleCode" ]
       },
       "UpdateProfileRequest" : {
         "type" : "object",
@@ -24831,6 +27463,14 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "keeperId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "NORMAL", "COLD" ]
+          },
           "name" : {
             "type" : "string"
           },
@@ -24841,7 +27481,7 @@
             }
           }
         },
-        "required" : [ "active", "branchId", "id", "name", "zones" ]
+        "required" : [ "active", "branchId", "id", "kind", "name", "zones" ]
       },
       "WarehouseRef" : {
         "type" : "object",
@@ -24876,10 +27516,27 @@
             },
             "uniqueItems" : true
           },
+          "keeperId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Masʼul ombor mudiri (shu filial xodimi)"
+          },
+          "kind" : {
+            "type" : "string",
+            "description" : "Ombor turi; berilmasa — NORMAL",
+            "enum" : [ "NORMAL", "COLD" ]
+          },
           "name" : {
             "type" : "string",
             "maxLength" : 200,
             "minLength" : 0
+          },
+          "zoneNames" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "Zona nomlari turi boʻyicha; berilmagani — standart nom"
           }
         },
         "required" : [ "branchId", "name" ]

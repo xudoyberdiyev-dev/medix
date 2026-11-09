@@ -28,7 +28,10 @@
       "create": "Xodim qoʻshildi",
       "block": "Xodim bloklandi",
       "unblock": "Xodim blokdan chiqarildi",
-      "resetPassword": "Vaqtinchalik parol berildi"
+      "resetPassword": "Vaqtinchalik parol berildi",
+      "update": "Xodim maʼlumoti oʻzgartirildi",
+      "endSessions": "Sessiyalar yakunlandi",
+      "resetPin": "PIN tiklandi"
     },
     "company": {
       "create": "Kompaniya yaratildi",

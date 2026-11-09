@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,17 @@ class DebtSummariesService implements DebtSummaries {
                 .map(x -> new Top(x.counterpartyId(), x.name(), x.buckets().debt(), x.buckets().overdue(), x.maxOverdueDays()))
                 .toList();
         return new Summary(t.debt(), t.advance(), t.overdue(), t.d1to30(), t.d31to60(), t.d61to90(), t.d90plus(), rows);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, PartyDebt> byParty(Actor actor, Side side, Long branchId) {
+        Map<Long, PartyDebt> out = new LinkedHashMap<>();
+        for (Debts.DebtRow x : debts.report(actor, side, branchId).rows()) {
+            Debts.Buckets b = x.buckets();
+            out.put(x.counterpartyId(), new PartyDebt(b.debt(), b.advance(), b.overdue(), b.d1to30(), b.d31to60(), b.d61to90(), b.d90plus(), x.maxOverdueDays()));
+        }
+        return out;
     }
 
     @Override

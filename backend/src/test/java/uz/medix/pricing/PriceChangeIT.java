@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -28,6 +30,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -188,6 +191,192 @@ class PriceChangeIT {
     }
 
     @Test
+    void changesListFiltersAndCounts() throws Exception {
+        long branch = branch();
+        long p1 = product("Ketonal royxat sinov");
+        long p2 = product("Analgin royxat sinov");
+        long base = type("BASE");
+        long promo = type("PROMO");
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        long doc1 = id(mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today()
+                        + "\",\"note\":\"Kuzgi aksiya\",\"lines\":[{\"productId\":" + p1 + ",\"priceTypeId\":" + base + ",\"newPrice\":\"5000\"}]}"))
+                .andExpect(status().isCreated())
+                .andReturn());
+        mvc.perform(post("/api/price-changes/" + doc1 + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+        mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + today()
+                        + "\",\"lines\":[{\"productId\":" + p2 + ",\"priceTypeId\":" + promo + ",\"newPrice\":\"3000\"}]}"))
+                .andExpect(status().isCreated());
+        String b = String.valueOf(branch);
+        String baseName = jdbc.sql("SELECT name FROM price_type WHERE id = :id").param("id", base).query(String.class).single();
+
+        mvc.perform(get("/api/price-changes").param("branchId", b).cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.totalAll").value(2))
+                .andExpect(jsonPath("$.statusCounts[?(@.status == 'APPROVED')].count").value(contains(1)))
+                .andExpect(jsonPath("$.statusCounts[?(@.status == 'DRAFT')].count").value(contains(1)))
+                .andExpect(jsonPath("$.priceTypes", hasSize(2)))
+                .andExpect(jsonPath("$.branches", hasSize(1)));
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("status", "APPROVED").cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.statusCounts[?(@.status == 'DRAFT')].count").value(contains(1)))
+                .andExpect(jsonPath("$.items[0].note").value("Kuzgi aksiya"))
+                .andExpect(jsonPath("$.items[0].branchName").value(matchesPattern("^Filial [A-Z]{3}$")))
+                .andExpect(jsonPath("$.items[0].priceTypes", contains(baseName)));
+        // Qidiruv: mahsulot nomi (kirillda ham), izoh, raqam
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("q", "кетонал").cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(doc1));
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("q", "aksiya").cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("priceTypeIds", String.valueOf(promo)).cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].status").value("DRAFT"));
+        mvc.perform(get("/api/price-changes").param("branchId", b).param("from", LocalDate.parse(today()).plusDays(1).toString()).cookie(purchaser))
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.totalAll").value(2));
+    }
+
+    @Test
+    void priceGridShowsCurrentAndNextPrice() throws Exception {
+        long branch = branch();
+        long p = product("Grid narx sinov");
+        long base = type("BASE");
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        String tomorrow = LocalDate.parse(today()).plusDays(3).toString();
+        for (String[] x : new String[][] {{today(), "7000"}, {tomorrow, "7700"}}) {
+            long doc = id(mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + x[0]
+                            + "\",\"lines\":[{\"productId\":" + p + ",\"priceTypeId\":" + base + ",\"newPrice\":\"" + x[1] + "\"}]}"))
+                    .andExpect(status().isCreated())
+                    .andReturn());
+            mvc.perform(post("/api/price-changes/" + doc + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+        }
+        String row = "$.items[?(@.productId == " + p + ")]";
+        mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.batchLinked").value(false))
+                .andExpect(jsonPath(row + ".currentPrice").value(contains("7000.00")))
+                .andExpect(jsonPath(row + ".basePrice").value(contains("7000.00")))
+                .andExpect(jsonPath(row + ".nextPrice").value(contains("7700.00")))
+                .andExpect(jsonPath(row + ".nextFrom").value(contains(tomorrow)))
+                .andExpect(jsonPath(row + ".vatRate").value(contains("12")));
+        Cookie operator = loginAs("OPERATOR", branch);
+        mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(operator))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void approvedFutureChangeCanBeCancelledButEffectiveCannot() throws Exception {
+        long branch = branch();
+        long p = product("Kelajak NO bekor sinov");
+        long base = type("BASE");
+        Cookie purchaser = loginAs("PURCHASER", branch);
+        String later = LocalDate.parse(today()).plusDays(5).toString();
+        long[] docs = new long[2];
+        String[][] rows = {{today(), "5000"}, {later, "5500"}};
+        for (int i = 0; i < 2; i++) {
+            docs[i] = id(mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\"" + rows[i][0]
+                            + "\",\"lines\":[{\"productId\":" + p + ",\"priceTypeId\":" + base + ",\"newPrice\":\"" + rows[i][1] + "\"}]}"))
+                    .andExpect(status().isCreated())
+                    .andReturn());
+            mvc.perform(post("/api/price-changes/" + docs[i] + "/submit").with(csrf()).cookie(purchaser)).andExpect(jsonPath("$.status").value("APPROVED"));
+        }
+        String row = "$.items[?(@.productId == " + p + ")]";
+        mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(purchaser))
+                .andExpect(jsonPath(row + ".nextPrice").value(contains("5500.00")));
+
+        // Kuchga kirgan — bekor qilinmaydi (API ham, baza ham)
+        mvc.perform(json(post("/api/price-changes/" + docs[0] + "/cancel"), purchaser, "{\"reason\":\"Xato\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("priceChange.alreadyEffective"));
+        assertThatThrownBy(() -> jdbc.sql("UPDATE price_change SET status = 'CANCELLED' WHERE id = :id").param("id", docs[0]).update())
+                .hasMessageContaining("yakunlangan");
+
+        // Kelajak — operator bekor qila olmaydi, xarid bekor qiladi; narx qatorlari olib tashlanadi
+        Cookie operator = loginAs("OPERATOR", branch);
+        mvc.perform(json(post("/api/price-changes/" + docs[1] + "/cancel"), operator, "{\"reason\":\"Xato\"}")).andExpect(status().isForbidden());
+        mvc.perform(json(post("/api/price-changes/" + docs[1] + "/cancel"), purchaser, "{\"reason\":\"Taʼminotchi narxni qaytardi\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.decisionReason").value("Taʼminotchi narxni qaytardi"));
+        assertThat(jdbc.sql("SELECT count(*) FROM price WHERE price_change_id = :id").param("id", docs[1]).query(Integer.class).single()).isZero();
+        assertThat(jdbc.sql("SELECT count(*) FROM price WHERE price_change_id = :id").param("id", docs[0]).query(Integer.class).single()).isOne();
+        mvc.perform(get("/api/prices/grid").param("branchId", String.valueOf(branch)).param("priceTypeId", String.valueOf(base)).cookie(purchaser))
+                .andExpect(jsonPath(row + ".currentPrice").value(contains("5000.00")))
+                .andExpect(jsonPath(row + ".nextPrice").value(not(contains("5500.00"))));
+
+        // Kuchdagi narx qatori bazada ham o'chirilmaydi; bekor qilingan NO qayta o'zgarmaydi
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM price WHERE price_change_id = :id").param("id", docs[0]).update())
+                .hasMessageContaining("faqat qo'shiladigan");
+        mvc.perform(json(post("/api/price-changes/" + docs[1] + "/cancel"), purchaser, "{\"reason\":\"Yana\"}")).andExpect(status().isConflict());
+    }
+
+    @Test
+    void priceSetExcelExportAndImport() throws Exception {
+        long branch = branch();
+        long p1 = product("Excel narx sinov A");
+        long p2 = product("Excel narx sinov B");
+        String c1 = jdbc.sql("SELECT code FROM product WHERE id = :id").param("id", p1).query(String.class).single();
+        String c2 = jdbc.sql("SELECT code FROM product WHERE id = :id").param("id", p2).query(String.class).single();
+        Cookie purchaser = loginAs("PURCHASER", branch);
+
+        MvcResult res = mvc.perform(json(post("/api/prices/grid/export"), purchaser, "{\"rows\":[{\"code\":\"" + c1
+                        + "\",\"name\":\"Excel narx sinov A\",\"currentPrice\":\"1250000\",\"newPrice\":\"1300000.50\"},{\"code\":\"" + c2
+                        + "\",\"name\":\"Excel narx sinov B\",\"currentPrice\":null,\"newPrice\":\"\"}]}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        byte[] exported = res.getResponse().getContentAsByteArray();
+        try (XSSFWorkbook wb = new XSSFWorkbook(new ByteArrayInputStream(exported))) {
+            Sheet sh = wb.getSheetAt(0);
+            assertThat(sh.getRow(0).getCell(3).getStringCellValue()).isEqualTo("Yangi narx (QQS bilan)");
+            assertThat(sh.getRow(1).getCell(2).getStringCellValue()).isEqualTo("1.250.000,00");
+            assertThat(sh.getRow(1).getCell(3).getStringCellValue()).isEqualTo("1.300.000,50");
+            assertThat(sh.getRow(2).getCell(3).getStringCellValue()).isEmpty();
+        }
+        // Eksport qilingan fayl qayta yuklanadi
+        mvc.perform(multipart("/api/prices/grid/import").file(new MockMultipartFile("file", "narxlar.xlsx", null, exported)).with(csrf()).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows").value(2))
+                .andExpect(jsonPath("$.lines", hasSize(1)))
+                .andExpect(jsonPath("$.lines[0].productId").value(p1))
+                .andExpect(jsonPath("$.lines[0].price").value("1300000.50"))
+                .andExpect(jsonPath("$.issues", hasSize(0)));
+
+        // Rus sarlavhalari 2-qatorda; noma'lum kod, noto'g'ri narx, takror
+        byte[] file;
+        try (XSSFWorkbook wb = new XSSFWorkbook(); java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+            Sheet sh = wb.createSheet("Лист1");
+            sh.createRow(0).createCell(0).setCellValue("Прайс");
+            String[][] data = {{"Код", "Наименование", "Новая цена"}, {c2, "B", "15 500,5"}, {"NOPE-1", "X", "100"}, {c1, "A", "-5"}, {c2, "B", "16000"}};
+            for (int i = 0; i < data.length; i++) {
+                Row r = sh.createRow(i + 1);
+                for (int j = 0; j < data[i].length; j++) {
+                    r.createCell(j).setCellValue(data[i][j]);
+                }
+            }
+            sh.createRow(6).createCell(0).setCellValue(c1);
+            sh.getRow(6).createCell(2).setCellValue(7777);
+            wb.write(out);
+            file = out.toByteArray();
+        }
+        mvc.perform(multipart("/api/prices/grid/import").file(new MockMultipartFile("file", "x.xlsx", null, file)).with(csrf()).cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows").value(5))
+                .andExpect(jsonPath("$.lines", hasSize(2)))
+                .andExpect(jsonPath("$.lines[0].price").value("15500.50"))
+                .andExpect(jsonPath("$.lines[1].productId").value(p1))
+                .andExpect(jsonPath("$.lines[1].price").value("7777.00"))
+                .andExpect(jsonPath("$.issues[*].reason").value(contains("CODE_UNKNOWN", "PRICE_BAD", "DUPLICATE")))
+                .andExpect(jsonPath("$.issues[0].row").value(4));
+
+        mvc.perform(multipart("/api/prices/grid/import").file(new MockMultipartFile("file", "x.xlsx", null, "salom".getBytes())).with(csrf()).cookie(purchaser))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("prices.import.badFile"));
+        Cookie operator = loginAs("OPERATOR", branch);
+        mvc.perform(multipart("/api/prices/grid/import").file(new MockMultipartFile("file", "x.xlsx", null, file)).with(csrf()).cookie(operator))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void validationsAndCancel() throws Exception {
         long branch = branch();
         long other = branch();
@@ -253,6 +442,13 @@ class PriceChangeIT {
         Cookie director = loginAs("DIRECTOR", null);
         mvc.perform(json(post("/api/price-changes/" + low + "/reject"), director, "{\"reason\":\"Tannarxdan past\"}"))
                 .andExpect(jsonPath("$.status").value("REJECTED"));
+        // NO hujjati: tannarx (eng yuqori partiya tannarxi) — faqat special.cost bilan; ishlab chiqaruvchi qatorda
+        mvc.perform(get("/api/price-changes/" + low).cookie(director))
+                .andExpect(jsonPath("$.lines[0].cost").value("12000.00"))
+                .andExpect(jsonPath("$.decidedBy").isNotEmpty());
+        mvc.perform(get("/api/price-changes/" + low).cookie(purchaser))
+                .andExpect(jsonPath("$.lines[0].cost").doesNotExist())
+                .andExpect(jsonPath("$.lines[0].productName").value("Tannarx NO sinov"));
         // Bildirishnomalar: tasdiq kutmoqda — Direktorga (prices.below), rad etildi — muallifga (Xarid)
         String link = "/prices?tab=documents&open=" + low;
         assertThat(jdbc.sql("""
