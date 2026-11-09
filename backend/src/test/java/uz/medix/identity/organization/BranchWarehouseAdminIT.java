@@ -282,6 +282,38 @@ class BranchWarehouseAdminIT {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
 
+        // Omborlar va zonalar sahifasi: filial, zonalar qoldig'i bilan; filial rahbari faqat o'z filiali
+        mvc.perform(get("/api/warehouses/overview").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(wid))
+                .andExpect(jsonPath("$[0].branchName").value("Filial"))
+                .andExpect(jsonPath("$[0].qty").value(0))
+                .andExpect(jsonPath("$[0].zones", hasSize(5)))
+                .andExpect(jsonPath("$[0].zones[?(@.type == 'COLD')].active").value(true));
+
+        // Zonani yopish: majburiy zona — yo'q; ixtiyoriy, qoldiqsiz — ha; qayta ochish
+        long mainId = jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'MAIN'").param("w", wid).query(Long.class).single();
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + mainId + "/close").with(csrf()).cookie(admin))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("warehouse.zoneRequired"));
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + zoneId + "/close").with(csrf()).cookie(manager))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + zoneId + "/close").with(csrf()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].active").value(false));
+        assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE action = 'zone.close' AND entity_id = :z")
+                .param("z", String.valueOf(zoneId)).query(Long.class).single()).isEqualTo(1L);
+        mvc.perform(post("/api/warehouses/" + wid + "/zones/" + zoneId + "/reopen").with(csrf()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.zones[?(@.type == 'COLD')].active").value(true));
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"SAFE\",\"name\":\"Muzlatkich\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("warehouse.zoneDuplicateName"));
+        mvc.perform(json(post("/api/warehouses/" + wid + "/zones"), admin, "{\"type\":\"SAFE\",\"name\":\"Nazorat seyfi\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.zones[?(@.type == 'SAFE')].name").value("Nazorat seyfi"));
+
         mvc.perform(json(post("/api/warehouses/" + wid + "/deactivate"), admin, "{\"reason\":\"Ta'mirlash\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));

@@ -44,17 +44,20 @@ class WarehouseController {
             @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
             @Schema(nullable = true) @Size(max = 500) String address) {}
 
-    record AddZoneRequest(@NotNull(message = "{validation.required}") ZoneType type) {}
+    record AddZoneRequest(@NotNull(message = "{validation.required}") ZoneType type,
+            @Schema(nullable = true) @Size(max = 100) String name) {}
 
     record RenameZoneRequest(@NotBlank(message = "{validation.required}") @Size(max = 100) String name) {}
 
     record DeactivateRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
     private final Warehouses warehouses;
+    private final WarehouseOverview overview;
     private final CurrentActor currentActor;
 
-    WarehouseController(Warehouses warehouses, CurrentActor currentActor) {
+    WarehouseController(Warehouses warehouses, WarehouseOverview overview, CurrentActor currentActor) {
         this.warehouses = warehouses;
+        this.overview = overview;
         this.currentActor = currentActor;
     }
 
@@ -70,6 +73,16 @@ class WarehouseController {
             return warehouses.listAll();
         }
         return a.branchId() == null ? List.of() : warehouses.listByBranches(List.of(a.branchId()));
+    }
+
+    @GetMapping("/overview")
+    @Operation(summary = "Omborlar va zonalar sahifasi: filial → ombor, omborchi, zonalar qoldig'i bilan")
+    List<WarehouseOverview.WarehouseOverviewItem> overview() {
+        Actor a = actor();
+        if (a.allBranches()) {
+            return overview.list(null);
+        }
+        return a.branchId() == null ? List.of() : overview.list(a.branchId());
     }
 
     @PostMapping
@@ -101,7 +114,7 @@ class WarehouseController {
     @Operation(summary = "Zona qo'shish (Sovuq yoki Seyf)")
     Warehouses.Warehouse addZone(@PathVariable long id, @Valid @RequestBody AddZoneRequest r) {
         scoped(id);
-        return warehouses.addZone(id, r.type());
+        return warehouses.addZone(id, r.type(), r.name());
     }
 
     @PutMapping("/{id}/zones/{zoneId}")
@@ -110,6 +123,22 @@ class WarehouseController {
     Warehouses.Warehouse renameZone(@PathVariable long id, @PathVariable long zoneId, @Valid @RequestBody RenameZoneRequest r) {
         scoped(id);
         return warehouses.renameZone(id, zoneId, r.name());
+    }
+
+    @PostMapping("/{id}/zones/{zoneId}/close")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Zonani yopish", description = "Majburiy zona va qoldig'i bor zona yopilmaydi.")
+    Warehouses.Warehouse closeZone(@PathVariable long id, @PathVariable long zoneId) {
+        scoped(id);
+        return warehouses.setZoneActive(id, zoneId, false);
+    }
+
+    @PostMapping("/{id}/zones/{zoneId}/reopen")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "Zonani qayta ochish")
+    Warehouses.Warehouse reopenZone(@PathVariable long id, @PathVariable long zoneId) {
+        scoped(id);
+        return warehouses.setZoneActive(id, zoneId, true);
     }
 
     @PostMapping("/{id}/deactivate")

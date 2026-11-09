@@ -19,7 +19,7 @@ import uz.medix.shared.error.MedixException;
 @Service
 public class Warehouses {
 
-    public record Zone(long id, ZoneType type, String name, boolean sellable) {}
+    public record Zone(long id, ZoneType type, String name, boolean sellable, boolean active) {}
 
     public record Warehouse(long id, long branchId, String name, @Schema(nullable = true) String address, boolean active,
             List<Zone> zones, WarehouseKind kind, @Schema(nullable = true) Long keeperId) {}
@@ -306,7 +306,17 @@ public class Warehouses {
     /** Ixtiyoriy zona (Sovuq yoki Seyf) qo'shadi. Majburiy zonalar ombor yaratilganda bor. */
     @Transactional
     public Warehouse addZone(long id, ZoneType type) {
-        lock(id);
+        return addZone(id, type, null);
+    }
+
+    /** Ixtiyoriy zona qo'shadi; {@code name} bo'sh bo'lsa — standart nom. */
+    @Transactional
+    public Warehouse addZone(long id, ZoneType type, String name) {
+        Warehouse w = lock(id);
+        String zoneName = name == null || name.isBlank() ? type.defaultName() : name.strip();
+        if (w.zones().stream().anyMatch(z -> z.name().equalsIgnoreCase(zoneName))) {
+            throw MedixException.conflict("warehouse.zoneDuplicateName", zoneName);
+        }
         if (ZoneType.REQUIRED.contains(type)) {
             throw MedixException.badRequest("warehouse.extraZones");
         }
@@ -321,7 +331,7 @@ public class Warehouses {
         long zoneId = jdbc.sql("INSERT INTO zone (warehouse_id, type, name) VALUES (:w, :t, :n) RETURNING id")
                 .param("w", id)
                 .param("t", type.name())
-                .param("n", type.defaultName())
+                .param("n", zoneName)
                 .query(Long.class)
                 .single();
         audit.record(AuditEntry.of("zone.create", "zone", zoneId)
@@ -345,6 +355,39 @@ public class Warehouses {
                 .update();
         audit.record(AuditEntry.of("zone.update", "zone", zoneId)
                 .change(Map.of("name", zone.name()), Map.of("name", name.strip())));
+        return find(warehouseId);
+    }
+
+    /**
+     * Zonani yopish / qayta ochish (prototip «Zonani yopish»). Majburiy zona (Qabul, Asosiy saqlash, Karantin, Joʻnatish)
+     * yopilmaydi; qoldigʻi bor zona yopilmaydi. Yopiq zonaga harakat qilinmaydi (ZK, BQ, sotuv qoldigʻi — {@code z.active}).
+     */
+    @Transactional
+    public Warehouse setZoneActive(long warehouseId, long zoneId, boolean active) {
+        Warehouse w = lock(warehouseId);
+        Zone zone = w.zones().stream().filter(z -> z.id() == zoneId).findFirst()
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (zone.active() == active) {
+            return w;
+        }
+        if (!active) {
+            if (ZoneType.REQUIRED.contains(zone.type())) {
+                throw MedixException.conflict("warehouse.zoneRequired", zone.name());
+            }
+            long stock = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_balance WHERE zone_id = :z")
+                    .param("z", zoneId)
+                    .query(Long.class)
+                    .single();
+            if (stock > 0) {
+                throw MedixException.conflict("warehouse.zoneHasStock", zone.name(), String.valueOf(stock));
+            }
+        }
+        jdbc.sql("UPDATE zone SET active = :a, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("a", active)
+                .param("id", zoneId)
+                .update();
+        audit.record(AuditEntry.of(active ? "zone.reopen" : "zone.close", "zone", zoneId)
+                .change(Map.of("active", !active), Map.of("active", active)));
         return find(warehouseId);
     }
 
@@ -411,10 +454,10 @@ public class Warehouses {
                 .query(Row.class)
                 .single();
         Map<Long, Zone> zones = new LinkedHashMap<>();
-        jdbc.sql("SELECT id, type, name, sellable FROM zone WHERE warehouse_id = :id ORDER BY id")
+        jdbc.sql("SELECT id, type, name, sellable, active FROM zone WHERE warehouse_id = :id ORDER BY id")
                 .param("id", id)
                 .query((rs, n) -> new Zone(rs.getLong("id"), ZoneType.valueOf(rs.getString("type")), rs.getString("name"),
-                        rs.getBoolean("sellable")))
+                        rs.getBoolean("sellable"), rs.getBoolean("active")))
                 .list()
                 .forEach(z -> zones.put(z.id(), z));
         return new Warehouse(w.id(), w.branchId(), w.name(), w.address(), w.active(), List.copyOf(zones.values()),
