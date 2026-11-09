@@ -19,7 +19,7 @@ import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
 import { toCents, useStatement } from "./api";
-import { dayBadge, groupTrips, handoverDiff, type DriverTrip } from "./list-model";
+import { dayBadge, groupTrips, handoverDiff, sumMoney, type DriverTrip } from "./list-model";
 
 const BADGE = {
   closed: { tone: "success", icon: LockKeyhole, key: "cClosed" },
@@ -105,7 +105,7 @@ export function DriverCashSection(props: {
   if (!props.list) return <Skeleton className="h-24 w-full" />;
   if (props.list.length === 0) return null;
   const trips = groupTrips(props.list);
-  const total = trips.reduce((s, x) => s + toCents(x.total), 0n);
+  const total = sumMoney(trips.map((x) => x.total));
   return (
     <section className="flex min-w-0 flex-col rounded-card border border-border bg-surface">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
