@@ -18,6 +18,7 @@ import uz.medix.finance.PartyLedger;
 import uz.medix.finance.PartyLedger.Side;
 import uz.medix.finance.account.Accounts;
 import uz.medix.finance.payment.PaymentModels.BankRefs;
+import uz.medix.finance.payment.PaymentModels.LastPayment;
 import uz.medix.finance.payment.PaymentModels.OpenDocView;
 import uz.medix.finance.payment.PaymentModels.OpenDocs;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocation;
@@ -82,7 +83,17 @@ class SupplierPayments {
         Money debt = Money.ZERO;
         Money advance = Money.ZERO;
         List<OpenDocView> docs = new ArrayList<>();
-        for (PartyLedger.OpenDoc d : parties.openDocs(branchId, supplierId, Side.SUPPLIER)) {
+        List<PartyLedger.OpenDoc> open = parties.openDocs(branchId, supplierId, Side.SUPPLIER);
+        java.util.Map<Long, String> ext = new java.util.HashMap<>();
+        List<Long> kr = open.stream().filter(d -> "KR".equals(d.type())).map(PartyLedger.OpenDoc::id).toList();
+        if (!kr.isEmpty()) {
+            jdbc.sql("SELECT id, invoice_number FROM receipt WHERE id IN (:ids) AND invoice_number IS NOT NULL")
+                    .param("ids", kr)
+                    .query(rs -> {
+                        ext.put(rs.getLong("id"), rs.getString("invoice_number"));
+                    });
+        }
+        for (PartyLedger.OpenDoc d : open) {
             debt = debt.plus(d.open());
             if (d.open().isNegative()) {
                 advance = advance.minus(d.open());
@@ -90,9 +101,18 @@ class SupplierPayments {
             }
             int overdue = d.dueDate() != null && d.dueDate().isBefore(today)
                     ? (int) java.time.temporal.ChronoUnit.DAYS.between(d.dueDate(), today) : 0;
-            docs.add(new OpenDocView(d.type(), d.id(), d.number(), d.date(), d.dueDate(), d.open().toString(), overdue));
+            docs.add(new OpenDocView(d.type(), d.id(), d.number(), d.date(), d.dueDate(), d.open().toString(), overdue,
+                    d.total().toString(), d.returned().toString(), d.paid().toString(), ext.get(d.id())));
         }
-        return new OpenDocs(debt.toString(), advance.toString(), docs);
+        LastPayment last = jdbc.sql("""
+                SELECT id, number, payment_date, amount FROM supplier_payment
+                WHERE branch_id = :b AND supplier_id = :c AND status = 'POSTED' ORDER BY payment_date DESC, id DESC LIMIT 1""")
+                .param("b", branchId)
+                .param("c", supplierId)
+                .query((rs, n) -> new LastPayment(rs.getLong("id"), rs.getString("number"), rs.getDate("payment_date").toLocalDate(),
+                        new Money(rs.getBigDecimal("amount")).toString()))
+                .optional().orElse(null);
+        return new OpenDocs(debt.toString(), advance.toString(), docs, last);
     }
 
     private record Checked(long branchId, long supplierId, long accountId, LocalDate date, Money amount, String note, BankRefs refs) {}

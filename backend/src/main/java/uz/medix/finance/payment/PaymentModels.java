@@ -55,7 +55,13 @@ final class PaymentModels {
     record PaymentAllocation(String docType, long docId, String docNumber, String amount) {}
 
     record OpenDocView(String docType, long docId, String docNumber, LocalDate date, @Schema(nullable = true) LocalDate dueDate, String open,
-            @Schema(description = "Muddati o'tgan kunlar (0 — o'tmagan)") int overdueDays) {}
+            @Schema(description = "Muddati o'tgan kunlar (0 — o'tmagan)") int overdueDays,
+            @Schema(description = "Hujjat summasi") String total,
+            @Schema(description = "Qaytarishlar (QM/QY) bilan kamaygan summa") String returned,
+            @Schema(description = "Avval to'langan (MT/YT/AH taqsimotlari)") String paid,
+            @Schema(nullable = true, description = "Tashqi raqam — YB yuk xati / hisob-faktura raqami (kirimda)") String extNo) {}
+
+    record LastPayment(long id, String number, LocalDate date, String amount) {}
 
     record DocPaymentLine(long paymentId, String number, LocalDate date, String account, String amount) {}
 
@@ -63,7 +69,8 @@ final class PaymentModels {
             @Schema(description = "Muddati o'tgan kunlar (0 — o'tmagan yoki yopilgan)") int overdueDays,
             @Schema(description = "Shu hujjatga taqsimlangan o'tkazilgan MT lar") List<DocPaymentLine> payments) {}
 
-    record OpenDocs(String debt, @Schema(description = "Taqsimlanmagan to'lovlar (avans)") String advance, List<OpenDocView> docs) {}
+    record OpenDocs(String debt, @Schema(description = "Taqsimlanmagan to'lovlar (avans)") String advance, List<OpenDocView> docs,
+            @Schema(nullable = true, description = "Shu filialdagi oxirgi o'tkazilgan to'lov") LastPayment lastPayment) {}
 
     record PaymentSummary(long id, String number, long branchId, long customerId, String customer, long accountId, String account,
             String accountKind, LocalDate paymentDate, String amount, PaymentStatus status, PaymentSource source, String createdBy,

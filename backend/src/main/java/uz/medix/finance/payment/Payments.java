@@ -21,6 +21,7 @@ import uz.medix.finance.account.Accounts;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocation;
 import uz.medix.finance.payment.PaymentModels.PaymentAllocationRequest;
 import uz.medix.finance.payment.PaymentModels.BankRefs;
+import uz.medix.finance.payment.PaymentModels.LastPayment;
 import uz.medix.finance.payment.PaymentModels.OpenDocView;
 import uz.medix.finance.payment.PaymentModels.DocPayment;
 import uz.medix.finance.payment.PaymentModels.DocPaymentLine;
@@ -126,9 +127,18 @@ class Payments implements CustomerPayments {
             }
             int overdue = d.dueDate() != null && d.dueDate().isBefore(today)
                     ? (int) java.time.temporal.ChronoUnit.DAYS.between(d.dueDate(), today) : 0;
-            docs.add(new OpenDocView(d.type(), d.id(), d.number(), d.date(), d.dueDate(), d.open().toString(), overdue));
+            docs.add(new OpenDocView(d.type(), d.id(), d.number(), d.date(), d.dueDate(), d.open().toString(), overdue,
+                    d.total().toString(), d.returned().toString(), d.paid().toString(), null));
         }
-        return new OpenDocs(debt.toString(), advance.toString(), docs);
+        LastPayment last = jdbc.sql("""
+                SELECT id, number, payment_date, amount FROM customer_payment
+                WHERE branch_id = :b AND customer_id = :c AND status = 'POSTED' ORDER BY payment_date DESC, id DESC LIMIT 1""")
+                .param("b", branchId)
+                .param("c", customerId)
+                .query((rs, n) -> new LastPayment(rs.getLong("id"), rs.getString("number"), rs.getDate("payment_date").toLocalDate(),
+                        new Money(rs.getBigDecimal("amount")).toString()))
+                .optional().orElse(null);
+        return new OpenDocs(debt.toString(), advance.toString(), docs, last);
     }
 
     // ===== Qoralama =====

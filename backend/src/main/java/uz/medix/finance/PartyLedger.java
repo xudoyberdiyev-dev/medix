@@ -109,7 +109,7 @@ public class PartyLedger {
     public record CreditState(Money debt, Money overdue, int overdueDays) {}
 
     /** Ochiq hujjat: o'z yozuvlari + uni yopgan yozuvlar. open > 0 — qarz, open < 0 — avans (taqsimlanmagan to'lov). */
-    public record OpenDoc(String type, long id, String number, LocalDate dueDate, LocalDate date, Money open) {
+    public record OpenDoc(String type, long id, String number, LocalDate dueDate, LocalDate date, Money open, Money total, Money returned, Money paid) {
         public DocRef ref() {
             return new DocRef(type, id, number);
         }
@@ -122,11 +122,13 @@ public class PartyLedger {
                 WITH own AS (SELECT doc_type, doc_id, min(doc_number) AS doc_number, min(due_date) AS due, min(occurred_at) AS at, sum(amount) AS amt
                              FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s AND applies_doc_type IS NULL
                              GROUP BY doc_type, doc_id),
-                     app AS (SELECT applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
+                     app AS (SELECT applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt,
+                                    sum(amount) FILTER (WHERE doc_type IN ('MT', 'YT', 'AH')) AS pay
                              FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s AND applies_doc_type IS NOT NULL
                              GROUP BY applies_doc_type, applies_doc_id)
                 SELECT own.doc_type, own.doc_id, own.doc_number, own.due, (own.at AT TIME ZONE 'Asia/Tashkent')::date AS d,
-                       own.amt + coalesce(app.amt, 0) AS open
+                       own.amt + coalesce(app.amt, 0) AS open, own.amt AS total,
+                       coalesce(app.pay, 0) AS pay, coalesce(app.amt, 0) - coalesce(app.pay, 0) AS ret
                 FROM own LEFT JOIN app ON app.t = own.doc_type AND app.i = own.doc_id
                 WHERE own.amt + coalesce(app.amt, 0) <> 0
                 ORDER BY coalesce(own.due, (own.at AT TIME ZONE 'Asia/Tashkent')::date), own.at, own.doc_id""")
@@ -135,7 +137,8 @@ public class PartyLedger {
                 .param("s", side.name())
                 .query((rs, n) -> new OpenDoc(rs.getString("doc_type"), rs.getLong("doc_id"), rs.getString("doc_number"),
                         rs.getDate("due") == null ? null : rs.getDate("due").toLocalDate(), rs.getDate("d").toLocalDate(),
-                        new Money(rs.getBigDecimal("open"))))
+                        new Money(rs.getBigDecimal("open")), new Money(rs.getBigDecimal("total")),
+                        Money.ZERO.minus(new Money(rs.getBigDecimal("ret"))), Money.ZERO.minus(new Money(rs.getBigDecimal("pay")))))
                 .list();
     }
 

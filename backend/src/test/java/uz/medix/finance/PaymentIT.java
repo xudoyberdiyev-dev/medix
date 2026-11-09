@@ -160,6 +160,7 @@ class PaymentIT {
 
         mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
                 .andExpect(jsonPath("$.debt").value("9000.00"))
+                .andExpect(jsonPath("$.lastPayment").doesNotExist())
                 .andExpect(jsonPath("$.docs[0].docNumber").value("SV-TST-9100001"))
                 .andExpect(jsonPath("$.docs[0].overdueDays").value(40));
         send(post("/api/payments/customer"), picker, draft(b, c, k, "7000")).andExpect(status().isForbidden());
@@ -195,7 +196,12 @@ class PaymentIT {
         assertThat(debtOf(b, c)).isEqualTo("-1000.00");
         mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
                 .andExpect(jsonPath("$.advance").value("1500.00"))
-                .andExpect(jsonPath("$.docs[0].open").value("500.00"));
+                .andExpect(jsonPath("$.docs[0].open").value("500.00"))
+                .andExpect(jsonPath("$.docs[0].total").value("4000.00"))
+                .andExpect(jsonPath("$.docs[0].returned").value("0.00"))
+                .andExpect(jsonPath("$.docs[0].paid").value("3500.00"))
+                .andExpect(jsonPath("$.lastPayment.id").value(p2))
+                .andExpect(jsonPath("$.lastPayment.amount").value("3000.00"));
         mvc.perform(get("/api/payments/customer/doc").param("docType", "SV").param("docId", "9100001").cookie(cashier))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value("5000.00"))
