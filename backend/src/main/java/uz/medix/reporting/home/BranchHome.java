@@ -158,7 +158,7 @@ class BranchHome {
 
     static String href(String type, long id) {
         return switch (type) {
-            case "ORDER" -> "/orders?open=" + id;
+            case "ORDER" -> "/approvals?open=" + id;
             case "NO" -> "/prices?tab=documents&open=" + id;
             case "YT" -> "/payments?tab=yt";
             case "ZK" -> "/zone-transfers?open=" + id;
