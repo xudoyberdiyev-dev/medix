@@ -56,7 +56,9 @@ function InfoList({ title, rows }: { title: string; rows: [string, ReactNode, bo
 
 function Tile({ label, value, sub, tone, href }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "danger"; href?: string }) {
   const v = (
-    <span className={cn("text-[18px] font-semibold tabular-nums", tone === "danger" && "text-danger")}>
+    <span
+      className={cn("text-[17px] leading-6 font-semibold tabular-nums", href && "whitespace-nowrap", tone === "danger" && "text-danger")}
+    >
       {value}
       {href ? <ArrowUpRight size={14} strokeWidth={1.5} className="ml-1 inline text-primary-button" aria-hidden /> : null}
     </span>
