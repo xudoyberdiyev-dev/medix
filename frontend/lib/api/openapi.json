@@ -36,6 +36,9 @@
     "description" : "Narxlar",
     "name" : "pricing"
   }, {
+    "description" : "Tasdiqlash navbati",
+    "name" : "approvals"
+  }, {
     "description" : "Xarajat va kirim moddalari",
     "name" : "expense-items"
   }, {
@@ -357,6 +360,63 @@
         },
         "summary" : "AH ni bekor qilish (teskari yozuvlar)",
         "tags" : [ "advance-offsets" ]
+      }
+    },
+    "/api/approvals" : {
+      "get" : {
+        "description" : "branchId bo'lmasa — barcha filiallarni ko'radiganlarga hammasi, qolganlarga o'z filiali.",
+        "operationId" : "view",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApprovalsView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tasdiq navbati: buyurtmalar (Tasdiqlashda), narx tasdiqlari, bugun hal qilinganlar",
+        "tags" : [ "approvals" ]
+      }
+    },
+    "/api/approvals/orders/{id}/credit" : {
+      "get" : {
+        "operationId" : "credit",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreditDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buyurtma mijozining kredit tafsiloti: qarz yoshi, oxirgi to'lovlar, to'lov intizomi (so'nggi 6 oy)",
+        "tags" : [ "approvals" ]
       }
     },
     "/api/audit" : {
@@ -14398,6 +14458,46 @@
         },
         "required" : [ "enabled" ]
       },
+      "ApprovalPayment" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "kind" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "date", "kind" ]
+      },
+      "ApprovalsView" : {
+        "type" : "object",
+        "properties" : {
+          "orders" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OrderApproval"
+            }
+          },
+          "prices" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PriceApproval"
+            }
+          },
+          "resolvedToday" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ResolvedApproval"
+            }
+          }
+        },
+        "required" : [ "orders", "prices", "resolvedToday" ]
+      },
       "Attention" : {
         "type" : "object",
         "properties" : {
@@ -17007,6 +17107,40 @@
           }
         },
         "required" : [ "branchId", "name" ]
+      },
+      "CreditDetail" : {
+        "type" : "object",
+        "properties" : {
+          "avgDelayDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "d0to30" : {
+            "type" : "string"
+          },
+          "d31to60" : {
+            "type" : "string"
+          },
+          "d61to90" : {
+            "type" : "string"
+          },
+          "d90plus" : {
+            "type" : "string"
+          },
+          "months" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MonthDelay"
+            }
+          },
+          "payments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ApprovalPayment"
+            }
+          }
+        },
+        "required" : [ "avgDelayDays", "d0to30", "d31to60", "d61to90", "d90plus", "months", "payments" ]
       },
       "CreditFlag" : {
         "type" : "object",
@@ -19808,6 +19942,19 @@
         },
         "required" : [ "customer", "id", "late", "lines", "marked", "number", "since", "stale", "status", "timeGiven", "totalQty" ]
       },
+      "MonthDelay" : {
+        "type" : "object",
+        "properties" : {
+          "avgDelayDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "month" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "avgDelayDays", "month" ]
+      },
       "Move" : {
         "type" : "object",
         "properties" : {
@@ -20649,6 +20796,92 @@
           }
         },
         "required" : [ "active", "docs", "id", "name", "sales" ]
+      },
+      "OrderApproval" : {
+        "type" : "object",
+        "properties" : {
+          "blocked" : {
+            "type" : "boolean"
+          },
+          "branchCode" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "creditLimit" : {
+            "type" : "string"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerAddress" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customerTin" : {
+            "type" : "string"
+          },
+          "debt" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "level" : {
+            "type" : "string"
+          },
+          "limitOverPct" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "mine" : {
+            "type" : "boolean"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "overdue" : {
+            "type" : "string"
+          },
+          "overdueDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "reasons" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "submittedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "total" : {
+            "type" : "string"
+          },
+          "waitMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "blocked", "branchCode", "branchId", "createdBy", "customer", "customerId", "debt", "id", "level", "lines", "mine", "number", "overdue", "overdueDays", "reasons", "submittedAt", "total", "waitMinutes" ]
       },
       "OrderDetail" : {
         "type" : "object",
@@ -22388,6 +22621,33 @@
           }
         },
         "required" : [ "id", "lines", "number", "orderDate", "products", "total" ]
+      },
+      "PriceApproval" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "submittedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "branch", "createdBy", "id", "lines", "number", "submittedAt" ]
       },
       "PriceChangeDetail" : {
         "type" : "object",
@@ -24818,6 +25078,38 @@
           }
         },
         "required" : [ "resolution" ]
+      },
+      "ResolvedApproval" : {
+        "type" : "object",
+        "properties" : {
+          "customer" : {
+            "type" : "string"
+          },
+          "decidedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "decidedBy" : {
+            "type" : "string"
+          },
+          "decision" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "customer", "decidedAt", "decidedBy", "decision", "id", "number", "total" ]
       },
       "Result" : {
         "type" : "object",

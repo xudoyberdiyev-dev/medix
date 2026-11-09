@@ -1,4 +1,5 @@
 // AVTOMATIK YASALGAN (`pnpm i18n:cyrl`) — qoʻlda oʻzgartirmang.
+import uzLatn_approvals from "@/messages/uz-Latn/approvals.json";
 import uzLatn_audit from "@/messages/uz-Latn/audit.json";
 import uzLatn_bonuses from "@/messages/uz-Latn/bonuses.json";
 import uzLatn_branchPanel from "@/messages/uz-Latn/branchPanel.json";
@@ -39,6 +40,7 @@ import uzLatn_warehousePanel from "@/messages/uz-Latn/warehousePanel.json";
 import uzLatn_warehouseTransfers from "@/messages/uz-Latn/warehouseTransfers.json";
 import uzLatn_writeOffs from "@/messages/uz-Latn/writeOffs.json";
 import uzLatn_zoneTransfers from "@/messages/uz-Latn/zoneTransfers.json";
+import uzCyrl_approvals from "@/messages/uz-Cyrl/approvals.json";
 import uzCyrl_audit from "@/messages/uz-Cyrl/audit.json";
 import uzCyrl_bonuses from "@/messages/uz-Cyrl/bonuses.json";
 import uzCyrl_branchPanel from "@/messages/uz-Cyrl/branchPanel.json";
@@ -79,6 +81,7 @@ import uzCyrl_warehousePanel from "@/messages/uz-Cyrl/warehousePanel.json";
 import uzCyrl_warehouseTransfers from "@/messages/uz-Cyrl/warehouseTransfers.json";
 import uzCyrl_writeOffs from "@/messages/uz-Cyrl/writeOffs.json";
 import uzCyrl_zoneTransfers from "@/messages/uz-Cyrl/zoneTransfers.json";
+import ru_approvals from "@/messages/ru/approvals.json";
 import ru_audit from "@/messages/ru/audit.json";
 import ru_bonuses from "@/messages/ru/bonuses.json";
 import ru_branchPanel from "@/messages/ru/branchPanel.json";
@@ -121,6 +124,7 @@ import ru_writeOffs from "@/messages/ru/writeOffs.json";
 import ru_zoneTransfers from "@/messages/ru/zoneTransfers.json";
 
 export const uzLatn = {
+  "approvals": uzLatn_approvals,
   "audit": uzLatn_audit,
   "bonuses": uzLatn_bonuses,
   "branchPanel": uzLatn_branchPanel,
@@ -164,6 +168,7 @@ export const uzLatn = {
 };
 
 export const uzCyrl = {
+  "approvals": uzCyrl_approvals,
   "audit": uzCyrl_audit,
   "bonuses": uzCyrl_bonuses,
   "branchPanel": uzCyrl_branchPanel,
@@ -207,6 +212,7 @@ export const uzCyrl = {
 };
 
 export const ru = {
+  "approvals": ru_approvals,
   "audit": ru_audit,
   "bonuses": ru_bonuses,
   "branchPanel": ru_branchPanel,

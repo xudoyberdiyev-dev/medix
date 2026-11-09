@@ -57,7 +57,7 @@ class ApprovalsQueue {
     record ApprovalsView(List<PriceApproval> prices, List<OrderApproval> orders, List<ResolvedApproval> resolvedToday) {}
 
     /** Mijozning oxirgi to'lovi: kind — hisob turi (CASH / TERMINAL / BANK). */
-    record LastPayment(LocalDate date, String kind, String amount) {}
+    record ApprovalPayment(LocalDate date, String kind, String amount) {}
 
     /** Oy bo'yicha o'rtacha kechikish (kun) — to'lov intizomi ustunlari; to'lov bo'lmagan oy — 0. */
     record MonthDelay(String month, int avgDelayDays) {}
@@ -66,7 +66,7 @@ class ApprovalsQueue {
      * Mijoz kredit tafsiloti (filial bo'yicha): qarz yoshi — ochiq qarz hujjat sanasidan beri o'tgan kun bo'yicha; avgDelayDays — so'nggi 6
      * oyda to'lovlar sotuv to'lov muddatidan o'rtacha necha kun kechikkan.
      */
-    record CreditDetail(String d0to30, String d31to60, String d61to90, String d90plus, List<LastPayment> payments, int avgDelayDays,
+    record CreditDetail(String d0to30, String d31to60, String d61to90, String d90plus, List<ApprovalPayment> payments, int avgDelayDays,
             List<MonthDelay> months) {}
 
     private final JdbcClient jdbc;
@@ -200,13 +200,13 @@ class ApprovalsQueue {
                     return 0;
                 })
                 .list();
-        List<LastPayment> payments = jdbc.sql("""
+        List<ApprovalPayment> payments = jdbc.sql("""
                 SELECT p.payment_date, a.kind, p.amount FROM customer_payment p JOIN money_account a ON a.id = p.account_id
                 WHERE p.customer_id = :c AND p.branch_id = :b AND p.status = 'POSTED'
                 ORDER BY p.payment_date DESC, p.id DESC LIMIT 5""")
                 .param("c", h.customerId())
                 .param("b", h.branchId())
-                .query((rs, n) -> new LastPayment(rs.getDate("payment_date").toLocalDate(), rs.getString("kind"),
+                .query((rs, n) -> new ApprovalPayment(rs.getDate("payment_date").toLocalDate(), rs.getString("kind"),
                         new Money(rs.getBigDecimal("amount")).toString()))
                 .list();
         // To'lov intizomi: to'lov yozuvi (manfiy, qarz hujjatiga qo'llangan) sanasi − o'sha hujjat to'lov muddati, so'nggi 6 oy

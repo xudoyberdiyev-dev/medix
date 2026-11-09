@@ -91,6 +91,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tasdiq navbati: buyurtmalar (Tasdiqlashda), narx tasdiqlari, bugun hal qilinganlar
+         * @description branchId bo'lmasa — barcha filiallarni ko'radiganlarga hammasi, qolganlarga o'z filiali.
+         */
+        get: operations["view"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/approvals/orders/{id}/credit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Buyurtma mijozining kredit tafsiloti: qarz yoshi, oxirgi to'lovlar, to'lov intizomi (so'nggi 6 oy) */
+        get: operations["credit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audit": {
         parameters: {
             query?: never;
@@ -6214,6 +6251,17 @@ export interface components {
         AllBranchesRequest: {
             enabled: boolean;
         };
+        ApprovalPayment: {
+            amount: string;
+            /** Format: date */
+            date: string;
+            kind: string;
+        };
+        ApprovalsView: {
+            orders: components["schemas"]["OrderApproval"][];
+            prices: components["schemas"]["PriceApproval"][];
+            resolvedToday: components["schemas"]["ResolvedApproval"][];
+        };
         Attention: {
             /** Format: int32 */
             bonusDue: number;
@@ -7165,6 +7213,16 @@ export interface components {
             branchId: number;
             extraZones?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
             name: string;
+        };
+        CreditDetail: {
+            /** Format: int32 */
+            avgDelayDays: number;
+            d0to30: string;
+            d31to60: string;
+            d61to90: string;
+            d90plus: string;
+            months: components["schemas"]["MonthDelay"][];
+            payments: components["schemas"]["ApprovalPayment"][];
         };
         CreditFlag: {
             blocked: boolean;
@@ -8282,6 +8340,11 @@ export interface components {
             /** Format: int64 */
             totalQty: number;
         };
+        MonthDelay: {
+            /** Format: int32 */
+            avgDelayDays: number;
+            month: string;
+        };
         Move: {
             amount: string;
             /** Format: int64 */
@@ -8618,6 +8681,39 @@ export interface components {
             id: number;
             name: string;
             sales: string;
+        };
+        OrderApproval: {
+            blocked: boolean;
+            branchCode: string;
+            /** Format: int64 */
+            branchId: number;
+            createdBy: string;
+            creditLimit?: string;
+            customer: string;
+            customerAddress?: string;
+            /** Format: int64 */
+            customerId: number;
+            customerTin?: string;
+            debt: string;
+            /** Format: int64 */
+            id: number;
+            level: string;
+            /** Format: int32 */
+            limitOverPct?: number;
+            /** Format: int32 */
+            lines: number;
+            mine: boolean;
+            note?: string;
+            number: string;
+            overdue: string;
+            /** Format: int32 */
+            overdueDays: number;
+            reasons: string[];
+            /** Format: date-time */
+            submittedAt: string;
+            total: string;
+            /** Format: int64 */
+            waitMinutes: number;
         };
         OrderDetail: {
             address?: string;
@@ -9343,6 +9439,17 @@ export interface components {
             /** @description Birinchi 3 ta mahsulot nomi (qator tartibida) */
             products: string[];
             total: string;
+        };
+        PriceApproval: {
+            branch: string;
+            createdBy: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lines: number;
+            number: string;
+            /** Format: date-time */
+            submittedAt: string;
         };
         PriceChangeDetail: {
             /** Format: int32 */
@@ -10310,6 +10417,18 @@ export interface components {
         };
         ResolveRequest: {
             resolution: string;
+        };
+        ResolvedApproval: {
+            customer: string;
+            /** Format: date-time */
+            decidedAt: string;
+            decidedBy: string;
+            decision: string;
+            /** Format: int64 */
+            id: number;
+            number: string;
+            reason?: string;
+            total: string;
         };
         Result: {
             hits: components["schemas"]["Hit"][];
@@ -11981,6 +12100,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Offset"];
+                };
+            };
+        };
+    };
+    view: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalsView"];
+                };
+            };
+        };
+    };
+    credit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditDetail"];
                 };
             };
         };

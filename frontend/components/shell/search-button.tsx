@@ -18,10 +18,10 @@ export function SearchButton() {
         type="button"
         onClick={show}
         aria-keyshortcuts="Control+K"
-        aria-label={t("search")}
         className="flex size-control-md items-center justify-center gap-2 rounded-control text-text-secondary hover:bg-background md:w-64 md:justify-start md:border md:border-border md:bg-background md:px-3 md:text-text-disabled md:hover:border-text-disabled lg:w-[360px]"
       >
         <Search size={16} strokeWidth={1.5} aria-hidden />
+        <span className="sr-only">{t("search")}</span>
         <span aria-hidden className="truncate text-table max-md:hidden">
           {t("searchPlaceholder")}
         </span>
