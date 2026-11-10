@@ -41,6 +41,10 @@ import uz.medix.shared.security.CurrentActor;
 @Tag(name = "marking", description = "Markirovka")
 class MarkingController {
 
+    /** Rad etilgan kod (skaner xatosi) kalitlari — «Xato urishlar» uchun. */
+    static final java.util.Set<String> WRONG_SCAN = java.util.Set.of("marking.format", "marking.batchMismatch", "marking.duplicate",
+            "marking.duplicateHere", "marking.lineFull", "marking.productMismatch", "marking.expiryInvalid", "marking.gtinInvalid");
+
     private final OrderMarking marking;
     private final MarkScanErrors scanErrors;
     private final CurrentActor currentActor;
@@ -92,8 +96,8 @@ class MarkingController {
         try {
             return marking.scan(a, id, r.code());
         } catch (MedixException e) {
-            // «Xato urishlar»: kod rad etildi (format, takror, mahsulot, partiya, tur, ortiqcha); ruxsat/topilmadi — hisoblanmaydi
-            if (e.status().value() == 400 || e.status().value() == 409) {
+            // «Xato urishlar»: faqat kodning o'zi rad etilgani (format, takror, mahsulot, partiya, tur, ortiqcha); holat/ruxsat xatolari hisoblanmaydi
+            if (WRONG_SCAN.contains(e.code()) || e.code().startsWith("marking.kind")) {
                 scanErrors.record(id, a.employeeId(), e.code());
             }
             throw e;
