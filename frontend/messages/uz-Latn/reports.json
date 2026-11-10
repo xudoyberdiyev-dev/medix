@@ -137,7 +137,16 @@
       "show": "Grafikni koʻrsatish",
       "soum": "soʻm",
       "docsN": "{n} ta hujjat"
-    }
+    },
+    "group1": "Guruh 1",
+    "group2": "Guruh 2",
+    "none": "Yoʻq",
+    "vatMode": "QQS",
+    "vatNet": "QQSsiz",
+    "vatGross": "QQS bilan",
+    "netExVat": "Sof savdo (QQSsiz)",
+    "vat": "QQS",
+    "totalVat": "Jami (QQS bilan)"
   },
   "worker": {
     "forbidden": "{title} sizning rolingiz uchun yopiq.",
