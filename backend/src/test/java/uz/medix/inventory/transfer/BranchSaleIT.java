@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -400,6 +401,46 @@ class BranchSaleIT {
         send(post("/api/branch-sales/" + id + "/send"), manager, "{}").andExpect(status().isConflict());
         assertThat(bal(seller.main(), b)).isEqualTo(3);
         assertThat(debt(buyer.branchId(), seller.branchId())).isZero();
+    }
+
+    /** Qoralamani tahrirlash (TransferDoc avtomatik saqlash): xaridor filiali va qatorlar almashtiriladi; joʻnatilgandan keyin — 409. */
+    @Test
+    void draftIsEditableUntilSent() throws Exception {
+        Place seller = place();
+        Place buyer = place();
+        Place other = place();
+        long b1 = stocked(seller.main(), "FS tahrir 1", 5);
+        long b2 = stocked(seller.main(), "FS tahrir 2", 4);
+        Cookie manager = loginAs("BRANCH_MANAGER", seller.branchId());
+        long id = id(send(post("/api/branch-sales"), manager, doc(seller.main(), buyer.warehouseId(), b1, 2)).andReturn());
+        String two = "{\"fromZoneId\":" + seller.main() + ",\"toWarehouseId\":" + other.warehouseId() + ",\"note\":\"Tahrir\",\"lines\":[{\"batchId\":"
+                + b2 + ",\"qty\":3},{\"batchId\":" + b1 + ",\"qty\":1}]}";
+        send(put("/api/branch-sales/" + id), manager, two)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.buyer.id").value(other.branchId()))
+                .andExpect(jsonPath("$.note").value("Tahrir"))
+                .andExpect(jsonPath("$.totalQty").value(4))
+                .andExpect(jsonPath("$.lines.length()").value(2));
+        // Qoldiqdan ortiq — 409; oʻz filiali ombori — 400
+        send(put("/api/branch-sales/" + id), manager, doc(seller.main(), buyer.warehouseId(), b1, 6))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.zk.notEnough"));
+        send(put("/api/branch-sales/" + id), manager, doc(seller.main(), seller.warehouseId(), b1, 1))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("transfer.fs.sameBranch"));
+        // Xaridor filial rahbari tahrirlay olmaydi
+        send(put("/api/branch-sales/" + id), loginAs("BRANCH_MANAGER", other.branchId()), doc(seller.main(), buyer.warehouseId(), b1, 1))
+                .andExpect(status().isNotFound());
+        assertThat(jdbc.sql("SELECT sum(qty) FROM branch_sale_line WHERE sale_id = :t").param("t", id).query(Integer.class).single())
+                .isEqualTo(4);
+        send(post("/api/branch-sales/" + id + "/send"), manager, "{}").andExpect(status().isOk());
+        assertThat(debt(other.branchId(), seller.branchId())).isPositive();
+        send(put("/api/branch-sales/" + id), manager, doc(seller.main(), buyer.warehouseId(), b1, 1))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.ok.badStatus"));
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM branch_sale_line WHERE sale_id = :id").param("id", id).update())
+                .hasMessageContaining("o'chirilmaydi");
     }
 
     @Test
