@@ -644,12 +644,17 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   await expect(page.getByText(/joʻnatildi — yoʻlda/)).toBeVisible();
   await expect(page.getByText(/^Joʻnatildi · /)).toBeVisible();
 
+  // Qabul — alohida sahifa (prototip TransferReceive): qator boʻyicha miqdor, farq sababi, qayerga zona
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
-  await page.getByLabel(/E2E-01 — kelgan soni/).fill("4");
-  await field(page, "Izoh").fill("1 dona shikastlangan");
-  // Qabul oynasi hujjat oynasi ichida (oxirgi dialog) — uning asosiy tugmasi
-  await page.getByRole("dialog").last().getByRole("button", { name: "Qabul qilish", exact: true }).click();
-  await expect(page.getByText("Qabul qilindi, kamomad 1 dona")).toBeVisible();
+  await expect(page).toHaveURL(/\/warehouse-transfers\/\d+\/receive$/);
+  await page.getByLabel(/E2E-01 · .* — qabul qilingan/).fill("4");
+  await page.getByRole("button", { name: "Qabulni tasdiqlash" }).click();
+  await expect(page.getByText("Farq bor — sababni tanlang")).toBeVisible();
+  await page.getByRole("radio", { name: "Kam keldi" }).click();
+  await page.getByRole("button", { name: "Qabulni tasdiqlash" }).click();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qabulni tasdiqlash" }).click();
+  await expect(page.getByText(/farq bilan qabul qilindi$/)).toBeVisible();
+  await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
   await expect(page.getByText(/^Farq bilan qabul qilindi · /)).toBeVisible();
   await page.getByRole("tab", { name: /Tarix/ }).click();
   await expect(page.getByText("farq bilan qabul qildi")).toBeVisible();

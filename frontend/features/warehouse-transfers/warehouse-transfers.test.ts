@@ -12,6 +12,7 @@ const line = (id: number, qty: number): TransferLine => ({
   productName: "Paratsetamol",
   qty,
   receivedQty: undefined,
+  damagedQty: 0,
 });
 
 describe("ombor koʻchirishi — qabul", () => {

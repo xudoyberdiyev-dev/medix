@@ -2,6 +2,7 @@
 
 import { ArrowLeftRight, Layers, PackageCheck, Truck, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,6 @@ import {
 } from "./api";
 import { okHistory, okSteps } from "./doc-model";
 import { ShortagePanel } from "./shortage-panel";
-import { ReceiveModal } from "./warehouse-transfer-drawer";
 import { WarehouseTransferStatusBadge } from "./warehouse-transfers-page";
 
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
@@ -58,12 +58,14 @@ export function WarehouseTransferDocPage({ id }: { id: number }) {
 function View({ doc }: { doc: WarehouseTransferDetail }) {
   const t = useTranslations("warehouseTransfers.doc");
   const tw = useTranslations("warehouseTransfers");
+  const tr = useTranslations("warehouseTransfers.rcv");
   const me = useMe();
   const branches = useBranchList();
   const send = useSendWarehouseTransfer();
   const cancel = useCancelWarehouseTransfer();
+  const router = useRouter();
   const [tab, setTab] = useState("doc");
-  const [dlg, setDlg] = useState<"send" | "cancel" | "receive" | null>(null);
+  const [dlg, setDlg] = useState<"send" | "cancel" | null>(null);
   const fail = (e: unknown) => toast({ tone: "danger", title: tw("failed"), description: describeError(e).message ?? tw("retryHint") });
 
   const st = doc.status;
@@ -111,6 +113,22 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
             render: (l: TransferLine) => <span className="tabular-nums">{formatQuantity(l.receivedQty ?? 0)}</span>,
           },
           {
+            key: "reason",
+            title: t("cReason"),
+            wrap: true,
+            render: (l: TransferLine) =>
+              l.reason ? (
+                <span className="flex flex-col">
+                  <span>{tr(`r_${l.reason as "SHORT"}`)}</span>
+                  {l.damagedQty > 0 ? (
+                    <span className="text-caption text-warning">{t("dmgQuar", { q: formatQuantity(l.damagedQty) })}</span>
+                  ) : null}
+                </span>
+              ) : (
+                "—"
+              ),
+          },
+          {
             key: "diff",
             title: t("cDiff"),
             align: "right" as const,
@@ -124,8 +142,10 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
     {
       key: "toZone",
       title: t("cToZone"),
-      render: () =>
-        doc.toZone ? <ZoneCell name={doc.toZone.name} /> : <span className="text-text-secondary">{t("toZoneOnReceive")}</span>,
+      render: (l) => {
+        const z = l.toZone ?? doc.toZone;
+        return z ? <ZoneCell name={z.name} /> : <span className="text-text-secondary">{t("toZoneOnReceive")}</span>;
+      },
     },
   ];
 
@@ -158,7 +178,7 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
               </Button>
             ) : null}
             {canReceive ? (
-              <Button icon={PackageCheck} onClick={() => setDlg("receive")}>
+              <Button icon={PackageCheck} onClick={() => router.push(`/warehouse-transfers/${doc.id}/receive`)}>
                 {t("receive")}
               </Button>
             ) : null}
@@ -282,7 +302,6 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
       >
         <p className="text-body">{t("dCanc")}</p>
       </Modal>
-      {dlg === "receive" ? <ReceiveModal doc={doc} onClose={() => setDlg(null)} /> : null}
     </div>
   );
 }

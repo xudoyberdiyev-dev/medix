@@ -11801,10 +11801,15 @@ export interface components {
             warehouse: string;
         };
         ReceiveLineRequest: {
+            /** Format: int32 */
+            damagedQty?: number;
             /** Format: int64 */
             lineId: number;
+            reason?: string;
             /** Format: int32 */
             receivedQty: number;
+            /** Format: int64 */
+            toZoneId?: number;
         };
         ReceiveRequest: {
             lines: components["schemas"]["ReceiveLineRequest"][];
@@ -13427,6 +13432,8 @@ export interface components {
             /** Format: int64 */
             batchId: number;
             batchNumber: string;
+            /** Format: int32 */
+            damagedQty: number;
             /** Format: date */
             expiryDate: string;
             /** Format: int64 */
@@ -13439,8 +13446,10 @@ export interface components {
             productName: string;
             /** Format: int32 */
             qty: number;
+            reason?: string;
             /** Format: int32 */
             receivedQty?: number;
+            toZone?: components["schemas"]["ZoneRef"];
         };
         WarehouseTransferLineRequest: {
             /** Format: int64 */

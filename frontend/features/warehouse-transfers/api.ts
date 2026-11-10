@@ -31,7 +31,7 @@ export type ReceiveLineError =
  * Qaytaradi: serverga yuboriladigan qatorlar (faqat farqlilari), jami kamomad va xato.
  */
 export function receiveLinesFrom(
-  lines: TransferLine[],
+  lines: Pick<TransferLine, "id" | "qty" | "productName" | "batchNumber">[],
   got: Record<number, string>,
 ): { lines: NonNullable<ReceiveRequest["lines"]>; shortage: number; error: ReceiveLineError | null } {
   const out: NonNullable<ReceiveRequest["lines"]> = [];

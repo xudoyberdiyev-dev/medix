@@ -28123,15 +28123,29 @@
       "ReceiveLineRequest" : {
         "type" : "object",
         "properties" : {
+          "damagedQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000000,
+            "minimum" : 0
+          },
           "lineId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "reason" : {
+            "type" : "string",
+            "pattern" : "SHORT|DAMAGED|OTHER"
           },
           "receivedQty" : {
             "type" : "integer",
             "format" : "int32",
             "maximum" : 10000000,
             "minimum" : 0
+          },
+          "toZoneId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
         "required" : [ "lineId", "receivedQty" ]
@@ -32178,6 +32192,10 @@
           "batchNumber" : {
             "type" : "string"
           },
+          "damagedQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "expiryDate" : {
             "type" : "string",
             "format" : "date"
@@ -32204,12 +32222,18 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "reason" : {
+            "type" : "string"
+          },
           "receivedQty" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "toZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
           }
         },
-        "required" : [ "batchId", "batchNumber", "expiryDate", "id", "lineNo", "productCode", "productId", "productName", "qty" ]
+        "required" : [ "batchId", "batchNumber", "damagedQty", "expiryDate", "id", "lineNo", "productCode", "productId", "productName", "qty" ]
       },
       "WarehouseTransferLineRequest" : {
         "type" : "object",
