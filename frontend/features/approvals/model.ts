@@ -38,16 +38,24 @@ export interface Chip {
 }
 
 /**
- * Roʻyxat qatoridagi belgilar (prototip): «Limit +N%» (≤20% — sariq, undan koʻp — qizil), «Muddati oʻtgan X mln · N kun»
- * (≤30 kun — sariq, undan koʻp — qizil), «Bloklangan».
+ * Roʻyxat qatoridagi belgilar (prototip): «Limit +N%» (≤ Sozlamalardagi limit % — sariq, undan koʻp — qizil), «Muddati oʻtgan X mln · N kun»
+ * (≤ Sozlamalardagi kun — sariq, undan koʻp — qizil), «Bloklangan».
  */
-export function chips(o: QueueItem): Chip[] {
+export function chips(
+  o: QueueItem,
+  th: { limitBranchPct: number; overdueDirDays: number } = { limitBranchPct: 20, overdueDirDays: 30 },
+): Chip[] {
   const out: Chip[] = [];
   if (o.limitOverPct != null && o.limitOverPct > 0) {
-    out.push({ kind: "limit", tone: o.limitOverPct > 20 ? "danger" : "warning", pct: o.limitOverPct });
+    out.push({ kind: "limit", tone: o.limitOverPct > th.limitBranchPct ? "danger" : "warning", pct: o.limitOverPct });
   }
   if (o.overdueDays > 0) {
-    out.push({ kind: "overdue", tone: o.overdueDays > 30 ? "danger" : "warning", mln: toMln(o.overdue), days: o.overdueDays });
+    out.push({
+      kind: "overdue",
+      tone: o.overdueDays > th.overdueDirDays ? "danger" : "warning",
+      mln: toMln(o.overdue),
+      days: o.overdueDays,
+    });
   }
   if (o.blocked) out.push({ kind: "blocked", tone: "danger" });
   return out;

@@ -76,6 +76,7 @@ export function SettingsPage() {
 
   const onSaved = (d: View, msg: string) => {
     qc.setQueryData(KEY, d);
+    void qc.invalidateQueries({ queryKey: ["settings-thresholds"] });
     toast({ tone: "success", title: msg });
   };
   const onFail = (e: unknown) => toast({ tone: "danger", title: t("saveFailed"), description: describeError(e).message ?? undefined });

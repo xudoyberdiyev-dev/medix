@@ -12058,6 +12058,26 @@
         "tags" : [ "settings" ]
       }
     },
+    "/api/settings/thresholds" : {
+      "get" : {
+        "description" : "Muddat ogohlantirishi (kun), narx o'zgarishi ogohlantirishi (%), limit oshishi — Filial rahbari (%), muddati o'tgan qarz — Direktor (kun).",
+        "operationId" : "thresholds",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UiThresholds"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Interfeys chegaralari",
+        "tags" : [ "settings" ]
+      }
+    },
     "/api/settings/vat" : {
       "post" : {
         "description" : "Faqat kelajakdagi sanadan; bir sanaga bitta stavka. Avvalgi hujjatlar o'z stavkasida qoladi.",
@@ -30641,6 +30661,27 @@
           }
         },
         "required" : [ "branchId", "createdAt", "delivered", "driver", "id", "marked", "number", "orders", "places", "plateNumber", "refrigerator", "status", "total", "tripDate", "vehicle" ]
+      },
+      "UiThresholds" : {
+        "type" : "object",
+        "description" : "Interfeys uchun chegaralar (barcha kirgan xodimlarga)",
+        "properties" : {
+          "expiryWarnDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "limitBranchPct" : {
+            "type" : "string"
+          },
+          "overdueDirDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "priceWarnPct" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "expiryWarnDays", "limitBranchPct", "overdueDirDays", "priceWarnPct" ]
       },
       "UnmarkedLine" : {
         "type" : "object",

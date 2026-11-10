@@ -5154,6 +5154,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/thresholds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Interfeys chegaralari
+         * @description Muddat ogohlantirishi (kun), narx o'zgarishi ogohlantirishi (%), limit oshishi — Filial rahbari (%), muddati o'tgan qarz — Direktor (kun).
+         */
+        get: operations["thresholds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/vat": {
         parameters: {
             query?: never;
@@ -12811,6 +12831,15 @@ export interface components {
             vehicle: string;
             /** @description Mashina modeli */
             vehicleModel?: string;
+        };
+        /** @description Interfeys uchun chegaralar (barcha kirgan xodimlarga) */
+        UiThresholds: {
+            /** Format: int32 */
+            expiryWarnDays: number;
+            limitBranchPct: string;
+            /** Format: int32 */
+            overdueDirDays: number;
+            priceWarnPct: string;
         };
         UnmarkedLine: {
             confirmed: boolean;
@@ -20931,6 +20960,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingsView"];
+                };
+            };
+        };
+    };
+    thresholds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UiThresholds"];
                 };
             };
         };

@@ -39,6 +39,7 @@ import {
   type PriceChangeDetail,
 } from "./api";
 import { StatusBadge } from "./prices-page";
+import { useThresholds } from "@/features/settings/thresholds";
 
 export function PriceChangeDrawer(props: {
   id: number | null;
@@ -133,9 +134,10 @@ function Editor({
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const [dialog, setDialog] = useState<"markup" | "approve" | "reject" | "cancel" | null>(null);
   const isDirector = can(me.data, PRICE_BELOW);
+  const { priceWarnPct } = useThresholds();
   const typeName = (id: number) => types.data?.find((pt) => pt.id === id)?.name ?? "";
   const err = describeError(save.error ?? submit.error);
-  const bigCount = lines.filter((l) => Math.abs(percentChange(l.oldPrice, parseMoneyInput(l.newPrice) ?? "") ?? 0) > 20).length;
+  const bigCount = lines.filter((l) => Math.abs(percentChange(l.oldPrice, parseMoneyInput(l.newPrice) ?? "") ?? 0) > priceWarnPct).length;
 
   function body() {
     const iso = parseUzDate(date);
@@ -465,7 +467,7 @@ function Editor({
                       <td className="px-3 py-2 text-right">
                         {pct === null ? (
                           <span className="text-text-disabled">{t("new")}</span>
-                        ) : Math.abs(pct) > 20 ? (
+                        ) : Math.abs(pct) > priceWarnPct ? (
                           <Badge tone="warning" icon={TriangleAlert}>
                             {pct > 0 ? "+" : ""}
                             {pct.toLocaleString("uz-UZ")}%
