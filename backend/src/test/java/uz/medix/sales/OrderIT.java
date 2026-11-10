@@ -162,7 +162,7 @@ class OrderIT {
                 .single();
         jdbc.sql("""
                 INSERT INTO price (product_id, price_type_id, branch_id, effective_from, amount, price_change_id)
-                SELECT :p, id, :b, :d, :a, :doc FROM price_type WHERE """ + (typeCode == null ? "base" : "code = '" + typeCode + "'"))
+                SELECT :p, id, :b, :d, :a, :doc FROM price_type WHERE\s""" + (typeCode == null ? "base" : "code = '" + typeCode + "'"))
                 .param("p", product)
                 .param("b", p.branchId())
                 .param("d", java.sql.Date.valueOf(today()))
