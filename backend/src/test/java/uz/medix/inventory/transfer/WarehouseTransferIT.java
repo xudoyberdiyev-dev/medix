@@ -255,6 +255,48 @@ class WarehouseTransferIT {
     }
 
     @Test
+    void receiveLinesWithZoneReasonAndDamagedToQuarantine() throws Exception {
+        Place p = place();
+        long b = stocked(p.main(), "OK qator zonasi", 10);
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        long id = id(send(post("/api/warehouse-transfers"), manager, doc(p.main(), p.target(), b, 10)).andReturn());
+        send(post("/api/warehouse-transfers/" + id + "/send"), manager, "{}").andExpect(status().isOk());
+        long line = lineId(id);
+        long quar = jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'QUARANTINE'").param("w", p.target())
+                .query(Long.class).single();
+
+        // Shikastlangan kelgandan ko'p — xato; sababsiz va izohsiz farq — xato
+        send(post("/api/warehouse-transfers/" + id + "/receive"), manager, "{\"toZoneId\":" + p.targetReceiving()
+                + ",\"lines\":[{\"lineId\":" + line + ",\"receivedQty\":5,\"damagedQty\":6,\"reason\":\"DAMAGED\"}]}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("transfer.ok.damagedOver"));
+        send(post("/api/warehouse-transfers/" + id + "/receive"), manager, "{\"toZoneId\":" + p.targetReceiving()
+                + ",\"lines\":[{\"lineId\":" + line + ",\"receivedQty\":10,\"damagedQty\":3}]}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("transfer.ok.shortageNote"));
+        // Boshqa omborning zonasi — xato
+        send(post("/api/warehouse-transfers/" + id + "/receive"), manager, "{\"toZoneId\":" + p.targetReceiving()
+                + ",\"lines\":[{\"lineId\":" + line + ",\"receivedQty\":10,\"toZoneId\":" + p.main() + "}]}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("transfer.ok.zoneNotInTarget"));
+        assertThat(bal(p.targetMain(), b)).isZero();
+
+        // 10 jo'natildi: 9 keldi, shundan 3 shikastlangan (Karantin), 6 — qatorning zonasiga (Asosiy); 1 kamomad
+        send(post("/api/warehouse-transfers/" + id + "/receive"), manager, "{\"toZoneId\":" + p.targetReceiving()
+                + ",\"lines\":[{\"lineId\":" + line + ",\"receivedQty\":9,\"damagedQty\":3,\"toZoneId\":" + p.targetMain()
+                + ",\"reason\":\"DAMAGED\"}]}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.shortageQty").value(1))
+                .andExpect(jsonPath("$.lines[0].receivedQty").value(9))
+                .andExpect(jsonPath("$.lines[0].damagedQty").value(3))
+                .andExpect(jsonPath("$.lines[0].reason").value("DAMAGED"))
+                .andExpect(jsonPath("$.lines[0].toZone.id").value(p.targetMain()));
+        assertThat(bal(p.targetMain(), b)).isEqualTo(6);
+        assertThat(bal(quar, b)).isEqualTo(3);
+        assertThat(bal(p.targetReceiving(), b)).isZero();
+    }
+
+    @Test
     void stockTransitListsInTransitAndUnresolvedShortage() throws Exception {
         Place p = place();
         long b = stocked(p.main(), "OK yo'lda", 10);

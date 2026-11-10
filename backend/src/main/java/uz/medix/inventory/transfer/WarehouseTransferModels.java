@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -34,9 +35,16 @@ final class WarehouseTransferModels {
             @NotEmpty(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid @NotNull WarehouseTransferLineRequest> lines) {}
 
     /** Qabul: har qator uchun haqiqatda kelgan miqdor (0 … jo'natilgan). Ko'rsatilmagan qator — to'liq keldi. */
+    /**
+     * Qabul qatori: {@code receivedQty} — jismonan kelgan (shikastlangan ham); {@code damagedQty} — shundan Karantin zonasiga;
+     * {@code toZoneId} — qatorning qayerga zonasi (berilmasa — hujjat zonasi); {@code reason} — farq sababi (SHORT, DAMAGED, OTHER).
+     */
     record ReceiveLineRequest(
             @NotNull(message = "{validation.required}") Long lineId,
-            @NotNull(message = "{validation.required}") @Min(0) @Max(MAX_QTY) Integer receivedQty) {}
+            @NotNull(message = "{validation.required}") @Min(0) @Max(MAX_QTY) Integer receivedQty,
+            @Schema(nullable = true) Long toZoneId,
+            @Schema(nullable = true) @Min(0) @Max(MAX_QTY) Integer damagedQty,
+            @Schema(nullable = true) @Pattern(regexp = "SHORT|DAMAGED|OTHER") String reason) {}
 
     record ReceiveRequest(
             @NotNull(message = "{validation.required}") Long toZoneId,
@@ -52,7 +60,8 @@ final class WarehouseTransferModels {
     record WarehouseTransferPage(List<WarehouseTransferSummary> items, long total, int page, int size) {}
 
     record WarehouseTransferLine(long id, int lineNo, long batchId, String batchNumber, LocalDate expiryDate, long productId,
-            String productCode, String productName, int qty, @Schema(nullable = true) Integer receivedQty) {}
+            String productCode, String productName, int qty, @Schema(nullable = true) Integer receivedQty,
+            @Schema(nullable = true) ZoneRef toZone, int damagedQty, @Schema(nullable = true) String reason) {}
 
     record WarehouseTransferDetail(long id, String number, long branchId, WarehouseRef fromWarehouse, ZoneRef fromZone,
             WarehouseRef toWarehouse, @Schema(nullable = true) ZoneRef toZone, Status status, @Schema(nullable = true) String note,

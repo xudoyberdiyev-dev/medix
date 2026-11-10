@@ -144,13 +144,18 @@ class WarehouseTransfers {
         }
         WarehouseTransferDetail h = head.get();
         List<WarehouseTransferLine> lines = jdbc.sql("""
-                SELECT l.id, l.line_no, l.batch_id, b.number AS batch_number, b.expiry_date, l.product_id, p.code, p.name, l.qty, l.received_qty
+                SELECT l.id, l.line_no, l.batch_id, b.number AS batch_number, b.expiry_date, l.product_id, p.code, p.name, l.qty, l.received_qty,
+                       l.damaged_qty, l.diff_reason, lz.id AS lz_id, lz.name AS lz_name, lz.type AS lz_type
                 FROM warehouse_transfer_line l JOIN batch b ON b.id = l.batch_id JOIN product p ON p.id = l.product_id
+                LEFT JOIN zone lz ON lz.id = l.to_zone_id
                 WHERE l.transfer_id = :id ORDER BY l.line_no""")
                 .param("id", id)
                 .query((rs, n) -> new WarehouseTransferLine(rs.getLong("id"), rs.getInt("line_no"), rs.getLong("batch_id"),
                         rs.getString("batch_number"), rs.getDate("expiry_date").toLocalDate(), rs.getLong("product_id"), rs.getString("code"),
-                        rs.getString("name"), rs.getInt("qty"), (Integer) rs.getObject("received_qty")))
+                        rs.getString("name"), rs.getInt("qty"), (Integer) rs.getObject("received_qty"),
+                        rs.getObject("lz_id") == null ? null
+                                : new ZoneRef(rs.getLong("lz_id"), rs.getString("lz_name"), ZoneType.valueOf(rs.getString("lz_type"))),
+                        rs.getInt("damaged_qty"), rs.getString("diff_reason")))
                 .list();
         return Optional.of(new WarehouseTransferDetail(h.id(), h.number(), h.branchId(), h.fromWarehouse(), h.fromZone(), h.toWarehouse(),
                 h.toZone(), h.status(), h.note(), h.shortageQty(), h.receiveNote(), h.createdBy(), h.createdAt(), h.sentBy(), h.sentAt(),
@@ -252,35 +257,75 @@ class WarehouseTransfers {
             throw MedixException.badRequest("transfer.zk.zoneInactive", toZone.name());
         }
         List<LineRow> lines = lines(id);
-        Map<Long, Integer> received = new HashMap<>();
+        Map<Long, ReceiveLineRequest> given = new HashMap<>();
         if (r.lines() != null) {
             Set<Long> known = new HashSet<>();
             lines.forEach(l -> known.add(l.id()));
             for (ReceiveLineRequest l : r.lines()) {
-                if (!known.contains(l.lineId()) || received.put(l.lineId(), l.receivedQty()) != null) {
+                if (!known.contains(l.lineId()) || given.put(l.lineId(), l) != null) {
                     throw MedixException.badRequest("transfer.ok.badLine");
                 }
             }
         }
+        // Qator zonasi berilmasa — hujjat zonasi; har biri qabul qiluvchi omborda va faol
+        Set<Long> zonesOk = new HashSet<>();
+        zonesOk.add(toZone.id());
         int shortage = 0;
+        int damaged = 0;
+        boolean reasonsGiven = true;
         for (LineRow l : lines) {
-            int got = received.getOrDefault(l.id(), l.qty());
+            ReceiveLineRequest g = given.get(l.id());
+            int got = g == null ? l.qty() : g.receivedQty();
+            int dmg = g == null || g.damagedQty() == null ? 0 : g.damagedQty();
             if (got > l.qty()) {
                 throw MedixException.badRequest("transfer.ok.surplus", String.valueOf(l.qty()), String.valueOf(got));
             }
+            if (dmg > got) {
+                throw MedixException.badRequest("transfer.ok.damagedOver", String.valueOf(got), String.valueOf(dmg));
+            }
+            if (g != null && g.toZoneId() != null && !zonesOk.contains(g.toZoneId())) {
+                ZoneInfo z = zone(actor, g.toZoneId());
+                if (z.warehouseId() != h.toWarehouseId()) {
+                    throw MedixException.badRequest("transfer.ok.zoneNotInTarget");
+                }
+                if (!z.active()) {
+                    throw MedixException.badRequest("transfer.zk.zoneInactive", z.name());
+                }
+                zonesOk.add(z.id());
+            }
             shortage += l.qty() - got;
+            damaged += dmg;
+            if ((got < l.qty() || dmg > 0) && (g == null || g.reason() == null)) {
+                reasonsGiven = false;
+            }
         }
         String note = blankToNull(r.note());
-        if (shortage > 0 && note == null) {
+        if ((shortage > 0 || damaged > 0) && note == null && !reasonsGiven) {
             throw MedixException.badRequest("transfer.ok.shortageNote");
         }
+        long quarantine = damaged > 0 ? quarantineZone(h.toWarehouseId()) : 0L;
         List<Move> moves = new ArrayList<>();
         for (LineRow l : lines) {
-            int got = received.getOrDefault(l.id(), l.qty());
-            if (got > 0) {
-                moves.add(Move.in(toZone.id(), l.batchId(), got));
+            ReceiveLineRequest g = given.get(l.id());
+            int got = g == null ? l.qty() : g.receivedQty();
+            int dmg = g == null || g.damagedQty() == null ? 0 : g.damagedQty();
+            long lineZone = g == null || g.toZoneId() == null ? toZone.id() : g.toZoneId();
+            if (got - dmg > 0) {
+                moves.add(Move.in(lineZone, l.batchId(), got - dmg));
             }
-            jdbc.sql("UPDATE warehouse_transfer_line SET received_qty = :q WHERE id = :id").param("q", got).param("id", l.id()).update();
+            if (dmg > 0) {
+                moves.add(Move.in(quarantine, l.batchId(), dmg));
+            }
+            String reason = g == null || (got == l.qty() && dmg == 0) ? null : g.reason();
+            jdbc.sql("""
+                    UPDATE warehouse_transfer_line SET received_qty = :q, damaged_qty = :d, to_zone_id = :z, diff_reason = :r
+                    WHERE id = :id""")
+                    .param("q", got)
+                    .param("d", dmg)
+                    .param("z", lineZone)
+                    .param("r", reason)
+                    .param("id", l.id())
+                    .update();
         }
         ledger.post(new DocRef(DOC_TYPE, id, h.number()), moves);
         jdbc.sql("""
@@ -294,7 +339,7 @@ class WarehouseTransfers {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("transfer.ok.receive", "warehouse_transfer", id)
-                .change(null, Map.of("number", h.number(), "zone", toZone.name(), "shortage", shortage)), actor);
+                .change(null, Map.of("number", h.number(), "zone", toZone.name(), "shortage", shortage, "damaged", damaged)), actor);
         if (shortage > 0) {
             notifications.notify("transfer.resolve", h.branchId(), List.of(),
                     notifications.message("transfer.ok.shortage", "transfer.ok.shortage", "/warehouse-transfers?open=" + id,
@@ -371,6 +416,15 @@ class WarehouseTransfers {
         if (h.status() != expected) {
             throw MedixException.conflict("transfer.ok.badStatus", h.status().name());
         }
+    }
+
+    /** Qabul qiluvchi omborning faol Karantin zonasi (shikastlangan miqdor uchun). */
+    private long quarantineZone(long warehouseId) {
+        return jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'QUARANTINE' AND active ORDER BY id LIMIT 1")
+                .param("w", warehouseId)
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> MedixException.badRequest("transfer.ok.noQuarantine"));
     }
 
     private ZoneInfo zone(Actor actor, long zoneId) {
