@@ -1807,6 +1807,60 @@ class OrderIT {
         assertThat(qtyIn(p.quarantine(), cheap)).isEqualTo(2);
     }
 
+    @Test
+    void postedCustomerReturnCancelRestoresDebtStockAndReturnableButBlockedWhenQuarantineMovedOut() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        Cookie director = loginAs("DIRECTOR", null);
+        long prod = product(p, "BY QM bekor", "1000", 20, null, null);
+        long o = delivered(p, c, prod, 5, operator, keeper, picker);
+        long sale = jdbc.sql("SELECT id FROM sale WHERE order_id = :o").param("o", o).query(Long.class).single();
+        long saleLine = jdbc.sql("SELECT id FROM sale_line WHERE sale_id = :s").param("s", sale).query(Long.class).single();
+        long batch = jdbc.sql("SELECT batch_id FROM sale_line WHERE id = :l").param("l", saleLine).query(Long.class).single();
+        String body = "{\"saleId\":" + sale + ",\"lines\":[{\"saleLineId\":" + saleLine + ",\"qty\":%d,\"reason\":\"DAMAGED\"}]}";
+
+        long qm = id(send(post("/api/customer-returns"), manager, body.formatted(3)).andExpect(jsonPath("$.status").value("POSTED")).andReturn());
+        String number = jdbc.sql("SELECT number FROM customer_return WHERE id = :id").param("id", qm).query(String.class).single();
+        assertThat(debtOf(c)).isEqualTo("2000.00");
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(3);
+
+        // Ruxsat: faqat qm.cancelPosted (Direktor); sabab majburiy
+        send(post("/api/customer-returns/" + qm + "/cancel"), manager, "{\"reason\":\"Xato\"}").andExpect(status().isForbidden());
+        send(post("/api/customer-returns/" + qm + "/cancel"), director, "{\"reason\":\" \"}").andExpect(status().isBadRequest());
+
+        send(post("/api/customer-returns/" + qm + "/cancel"), director, "{\"reason\":\"Notoʻgʻri kiritilgan\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.cancelReason").value("Notoʻgʻri kiritilgan"))
+                .andExpect(jsonPath("$.cancelledBy").isNotEmpty());
+        assertThat(debtOf(c)).isEqualTo("5000.00");
+        assertThat(qtyIn(p.quarantine(), prod)).isZero();
+        assertThat(jdbc.sql("SELECT cancelled_at IS NOT NULL FROM sales_return WHERE number = :n").param("n", number).query(Boolean.class).single())
+                .isTrue();
+        mvc.perform(get("/api/customer-returns/sales/" + sale + "/lines").cookie(operator))
+                .andExpect(jsonPath("$[0].returned").value(0))
+                .andExpect(jsonPath("$[0].left").value(5));
+        send(post("/api/customer-returns/" + qm + "/cancel"), director, "{\"reason\":\"Yana\"}")
+                .andExpect(jsonPath("$.code").value("qm.notPosted"));
+        // Bekor qilingan QM va sales_return o'zgarmaydi
+        assertThatThrownBy(() -> jdbc.sql("UPDATE sales_return SET total = 1 WHERE number = :n").param("n", number).update())
+                .hasStackTraceContaining("faqat qoʻshiladi");
+
+        // Yangi QM 2 dona; Karantindan 1 dona keyingi hujjat bilan chiqarildi → bekor qilib bo'lmaydi
+        long qm2 = id(send(post("/api/customer-returns"), manager, body.formatted(2)).andExpect(jsonPath("$.status").value("POSTED")).andReturn());
+        tx.executeWithoutResult(s -> ledger.post(new DocRef("HC", qm2, "HC-TST-" + qm2), List.of(Move.out(p.quarantine(), batch, 1))));
+        send(post("/api/customer-returns/" + qm2 + "/cancel"), director, "{\"reason\":\"Xato\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("qm.cancelBlocked"))
+                .andExpect(jsonPath("$.detail", containsString("HC-TST-" + qm2)));
+        assertThat(debtOf(c)).isEqualTo("3000.00");
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(1);
+    }
+
     /** Buyurtma bo'yicha bildirishnoma olgan, berilgan roldagi xodimlar soni. */
     private int notified(String kind, long orderId, String role) {
         return jdbc.sql("""

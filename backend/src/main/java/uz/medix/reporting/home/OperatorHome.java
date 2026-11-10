@@ -89,7 +89,7 @@ class OperatorHome {
                     UNION ALL
                     SELECT o.payment_type, -r.total
                     FROM sales_return r JOIN sales_order o ON o.id = r.order_id
-                    WHERE r.return_date BETWEEN :f AND :t AND o.created_by = :e
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t AND o.created_by = :e
                 ) x GROUP BY kind""")
                 .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("e", me)
                 .query(Amount.class).list();
@@ -126,7 +126,7 @@ class OperatorHome {
                     UNION ALL
                     SELECT o.customer_id, NULL, -r.total
                     FROM sales_return r JOIN sales_order o ON o.id = r.order_id
-                    WHERE r.return_date BETWEEN :f AND :t AND o.created_by = :e
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t AND o.created_by = :e
                 ) x JOIN counterparty c ON c.id = x.cust
                 GROUP BY c.id, c.name ORDER BY amount DESC, c.name LIMIT :top""")
                 .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("e", me).param("top", TOP)

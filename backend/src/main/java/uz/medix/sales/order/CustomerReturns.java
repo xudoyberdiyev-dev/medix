@@ -148,14 +148,15 @@ class CustomerReturns {
         record H(long id, String number, long branchId, String branch, long customerId, String customer, long saleId, String saleNumber,
                 LocalDate saleDate, long orderId, String orderNumber, long warehouseId, String warehouse, String quarantine, LocalDate date,
                 String status, String note, BigDecimal total, String createdBy, Timestamp createdAt, String postedBy, Timestamp postedAt,
-                String rejectedBy, Timestamp rejectedAt, String rejectReason) {}
+                String rejectedBy, Timestamp rejectedAt, String rejectReason, String cancelledBy, Timestamp cancelledAt, String cancelReason) {}
         Optional<H> head = jdbc.sql("""
                 SELECT h.id, h.number, h.branch_id, br.name AS branch, h.customer_id, c.name AS customer, h.sale_id, s.number AS sale_number,
                        s.sale_date, h.order_id, o.number AS order_number, h.warehouse_id, w.name AS warehouse,
                        (SELECT z.name FROM zone z WHERE z.warehouse_id = h.warehouse_id AND z.type = 'QUARANTINE' AND z.active
                         ORDER BY z.id LIMIT 1) AS quarantine,
                        h.return_date, h.status, h.note, h.total, cb.full_name AS created_by, h.created_at, pb.full_name AS posted_by,
-                       h.posted_at, rb.full_name AS rejected_by, h.rejected_at, h.reject_reason
+                       h.posted_at, rb.full_name AS rejected_by, h.rejected_at, h.reject_reason,
+                       xb.full_name AS cancelled_by, h.cancelled_at, h.cancel_reason
                 FROM customer_return h
                 JOIN branch br ON br.id = h.branch_id
                 JOIN counterparty c ON c.id = h.customer_id
@@ -165,6 +166,7 @@ class CustomerReturns {
                 JOIN employee cb ON cb.id = h.created_by
                 LEFT JOIN employee pb ON pb.id = h.posted_by
                 LEFT JOIN employee rb ON rb.id = h.rejected_by
+                LEFT JOIN employee xb ON xb.id = h.cancelled_by
                 WHERE h.id = :id""")
                 .param("id", id)
                 .query((rs, n) -> new H(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getString("branch"),
@@ -173,7 +175,8 @@ class CustomerReturns {
                         rs.getString("warehouse"), rs.getString("quarantine"), rs.getDate("return_date").toLocalDate(), rs.getString("status"),
                         rs.getString("note"), rs.getBigDecimal("total"), rs.getString("created_by"), rs.getTimestamp("created_at"),
                         rs.getString("posted_by"), rs.getTimestamp("posted_at"), rs.getString("rejected_by"), rs.getTimestamp("rejected_at"),
-                        rs.getString("reject_reason")))
+                        rs.getString("reject_reason"), rs.getString("cancelled_by"), rs.getTimestamp("cancelled_at"),
+                        rs.getString("cancel_reason")))
                 .optional()
                 .filter(h -> actor.canAccessBranch(h.branchId()));
         if (head.isEmpty()) {
@@ -195,12 +198,13 @@ class CustomerReturns {
         return Optional.of(new CustomerReturnDetail(h.id(), h.number(), h.branchId(), h.branch(), h.customerId(), h.customer(), h.saleId(),
                 h.saleNumber(), h.saleDate(), h.orderId(), h.orderNumber(), h.warehouseId(), h.warehouse(), h.quarantine(), h.date(),
                 Status.valueOf(h.status()), h.note(), money(h.total()), qty, h.createdBy(), h.createdAt().toInstant(), h.postedBy(),
-                instant(h.postedAt()), h.rejectedBy(), instant(h.rejectedAt()), h.rejectReason(), lines));
+                instant(h.postedAt()), h.rejectedBy(), instant(h.rejectedAt()), h.rejectReason(), h.cancelledBy(), instant(h.cancelledAt()),
+                h.cancelReason(), lines));
     }
 
     /** Qatorlar bo'yicha qaytarilgan: o'tkazilgan QM (sales_return_line) + kutilayotgan QM (customer_return PENDING). */
     private static final String RETURNED_SQL = """
-            (SELECT coalesce(sum(r.qty), 0) FROM sales_return_line r WHERE r.sale_line_id = sl.id)
+            (SELECT coalesce(sum(r.qty), 0) FROM sales_return_line r JOIN sales_return rh ON rh.id = r.return_id WHERE r.sale_line_id = sl.id AND rh.cancelled_at IS NULL)
             + (SELECT coalesce(sum(cl.qty), 0) FROM customer_return_line cl JOIN customer_return ch ON ch.id = cl.customer_return_id
                WHERE cl.sale_line_id = sl.id AND ch.status = 'PENDING')""";
 
@@ -399,7 +403,7 @@ class CustomerReturns {
                 BigDecimal vatRate, BigDecimal cost, int sold, int posted) {}
         List<L> lines = jdbc.sql("""
                 SELECT l.sale_line_id, l.product_id, l.batch_id, l.qty, l.price, l.amount, l.reason, sl.vat_rate, sl.cost, sl.qty AS sold,
-                       (SELECT coalesce(sum(r.qty), 0) FROM sales_return_line r WHERE r.sale_line_id = sl.id) AS posted
+                       (SELECT coalesce(sum(r.qty), 0) FROM sales_return_line r JOIN sales_return rh ON rh.id = r.return_id WHERE r.sale_line_id = sl.id AND rh.cancelled_at IS NULL) AS posted
                 FROM customer_return_line l JOIN sale_line sl ON sl.id = l.sale_line_id
                 WHERE l.customer_return_id = :id ORDER BY l.line_no""")
                 .param("id", id)
@@ -497,6 +501,81 @@ class CustomerReturns {
                 .param("id", h.id())
                 .update();
         audit.record(AuditEntry.of("qm.reject", "customer_return", id).change(Map.of("status", "PENDING"), Map.of("status", "REJECTED"))
+                .withReason(why), actor);
+    }
+
+    /**
+     * O'tkazilgan QM ni bekor qilish (prototip tryCancel/qmBlock): Karantindan tovar chiqadi, mijoz qarzi qaytadi (storno),
+     * sales_return bekor qilingan deb belgilanadi (hisobotlardan chiqadi), qaytarish miqdori bo'shaydi. Karantindagi partiya
+     * keyingi hujjat bilan chiqarilgan bo'lsa — rad etiladi ({@code qm.cancelBlocked}, hujjat raqamlari bilan).
+     */
+    @Transactional
+    void cancel(Actor actor, long id, String reason) {
+        record C(String number, long branchId, long saleId, long customerId, long warehouseId, String status, Long srId, Timestamp postedAt,
+                BigDecimal total) {}
+        C h = jdbc.sql("""
+                SELECT number, branch_id, sale_id, customer_id, warehouse_id, status, sales_return_id, posted_at, total
+                FROM customer_return WHERE id = :id FOR UPDATE""")
+                .param("id", id)
+                .query((rs, n) -> new C(rs.getString("number"), rs.getLong("branch_id"), rs.getLong("sale_id"), rs.getLong("customer_id"),
+                        rs.getLong("warehouse_id"), rs.getString("status"), (Long) rs.getObject("sales_return_id"), rs.getTimestamp("posted_at"),
+                        rs.getBigDecimal("total")))
+                .optional()
+                .filter(x -> actor.canAccessBranch(x.branchId()))
+                .orElseThrow(() -> MedixException.notFound("error.notFound"));
+        if (!"POSTED".equals(h.status()) || h.srId() == null) {
+            throw MedixException.conflict("qm.notPosted");
+        }
+        String saleNumber = jdbc.sql("SELECT number FROM sale WHERE id = :s").param("s", h.saleId()).query(String.class).single();
+        // Karantinga kirgan harakatlar (o'tkazishda yozilgan) — shu zona va partiyalardan qaytarib chiqariladi
+        record In(long zoneId, long batchId, long productId, int qty) {}
+        List<In> ins = jdbc.sql("""
+                SELECT zone_id, batch_id, product_id, sum(qty) AS qty FROM stock_move
+                WHERE doc_type = :t AND doc_id = :sr AND qty > 0 GROUP BY zone_id, batch_id, product_id ORDER BY batch_id""")
+                .param("t", OrderSales.RETURN_DOC_TYPE)
+                .param("sr", h.srId())
+                .query((rs, n) -> new In(rs.getLong("zone_id"), rs.getLong("batch_id"), rs.getLong("product_id"), rs.getInt("qty")))
+                .list();
+        for (In in : ins) {
+            int have = jdbc.sql("SELECT qty FROM stock_balance WHERE zone_id = :z AND batch_id = :b FOR UPDATE")
+                    .param("z", in.zoneId())
+                    .param("b", in.batchId())
+                    .query(Integer.class)
+                    .optional()
+                    .orElse(0);
+            if (have < in.qty()) {
+                String product = jdbc.sql("SELECT name FROM product WHERE id = :p").param("p", in.productId()).query(String.class).single();
+                List<String> docs = jdbc.sql("""
+                        SELECT doc_number FROM stock_move WHERE zone_id = :z AND batch_id = :b AND qty < 0 AND occurred_at >= :at
+                        GROUP BY doc_number ORDER BY min(id)""")
+                        .param("z", in.zoneId())
+                        .param("b", in.batchId())
+                        .param("at", h.postedAt())
+                        .query(String.class)
+                        .list();
+                throw MedixException.conflict("qm.cancelBlocked", product, in.qty() - have, docs.isEmpty() ? "—" : String.join(", ", docs));
+            }
+        }
+        String why = reason.strip();
+        stock.post(new StockLedger.DocRef(OrderSales.RETURN_DOC_TYPE, h.srId(), h.number()),
+                ins.stream().map(in -> StockLedger.Move.out(in.zoneId(), in.batchId(), in.qty())).toList());
+        parties.record(new PartyLedger.DocRef(OrderSales.RETURN_DOC_TYPE, h.srId(), h.number()), h.branchId(), h.customerId(),
+                PartyLedger.Side.CUSTOMER, new Money(h.total()), null, "Mijozdan qaytarish bekor qilindi (" + saleNumber + "): " + why,
+                new PartyLedger.DocRef(OrderSales.DOC_TYPE, h.saleId(), saleNumber));
+        jdbc.sql("UPDATE sales_return SET cancelled_by = :by, cancelled_at = now(), cancel_reason = :r WHERE id = :sr")
+                .param("by", actor.employeeId())
+                .param("r", why)
+                .param("sr", h.srId())
+                .update();
+        jdbc.sql("""
+                UPDATE customer_return SET status = 'CANCELLED', cancelled_by = :by, cancelled_at = now(), cancel_reason = :r, version = version + 1
+                WHERE id = :id""")
+                .param("by", actor.employeeId())
+                .param("r", why)
+                .param("id", id)
+                .update();
+        audit.record(AuditEntry.of("qm.cancel", "customer_return", id)
+                .change(Map.of("status", "POSTED"), Map.of("status", "CANCELLED", "total", new Money(h.total()).toString()))
                 .withReason(why), actor);
     }
 }

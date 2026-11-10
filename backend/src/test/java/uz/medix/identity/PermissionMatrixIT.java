@@ -29,7 +29,7 @@ class PermissionMatrixIT {
 
     @Test
     void catalogAndDefaults() {
-        assertThat(jdbc.sql("SELECT count(*) FROM permission").query(Long.class).single()).isEqualTo(135);
+        assertThat(jdbc.sql("SELECT count(*) FROM permission").query(Long.class).single()).isEqualTo(136);
         assertThat(of("DIRECTOR")).contains("prices.below", "approvals.director", "staff.edit").doesNotContain("marking.scan");
         assertThat(of("ADMIN")).contains("staff.edit", "roles.view").doesNotContain("prices.below", "approvals.director");
         assertThat(of("BRANCH_MANAGER")).contains("staff.view", "clients.terms", "approvals.branch").doesNotContain("staff.edit", "warehouses.view");

@@ -178,7 +178,7 @@ class BranchHome {
                     WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t AND s.branch_id = :b
                     UNION ALL
                     SELECT -(r.total - r.vat_total), -r.cost_total, 0 FROM sales_return r
-                    WHERE r.return_date BETWEEN :f AND :t AND r.branch_id = :b
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t AND r.branch_id = :b
                 ) x""")
                 .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId)
                 .query(SalesRaw.class).single();
