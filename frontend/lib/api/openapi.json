@@ -25057,6 +25057,11 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "issues" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yig'ish bosqichida yuborilgan «Muammo bor» xabarlari soni"
+          },
           "lines" : {
             "type" : "integer",
             "format" : "int32"
@@ -25084,7 +25089,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "customer", "finishedAt", "id", "lines", "number", "onTime", "startedAt", "status", "totalQty" ]
+        "required" : [ "customer", "finishedAt", "id", "issues", "lines", "number", "onTime", "startedAt", "status", "totalQty" ]
       },
       "PickFinishRequest" : {
         "type" : "object",
@@ -25126,6 +25131,14 @@
             "format" : "date-time",
             "description" : "Berilgan vaqt tugash payti"
           },
+          "deliveryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "deliveryType" : {
+            "type" : "string",
+            "enum" : [ "DELIVERY", "PICKUP" ]
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -25140,6 +25153,10 @@
           },
           "marked" : {
             "type" : "boolean"
+          },
+          "note" : {
+            "type" : "string",
+            "description" : "Buyurtma izohi"
           },
           "number" : {
             "type" : "string"
@@ -25172,7 +25189,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "customer", "id", "lines", "marked", "number", "queuedAt", "status", "totalQty" ]
+        "required" : [ "customer", "deliveryType", "id", "lines", "marked", "number", "queuedAt", "status", "totalQty" ]
       },
       "PickupRequest" : {
         "type" : "object",

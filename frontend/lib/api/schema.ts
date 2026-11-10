@@ -10554,6 +10554,11 @@ export interface components {
             finishedAt: string;
             /** Format: int64 */
             id: number;
+            /**
+             * Format: int32
+             * @description Yig'ish bosqichida yuborilgan «Muammo bor» xabarlari soni
+             */
+            issues: number;
             /** Format: int32 */
             lines: number;
             /** Format: int32 */
@@ -10585,6 +10590,10 @@ export interface components {
              * @description Berilgan vaqt tugash payti
              */
             deadline?: string;
+            /** Format: date */
+            deliveryDate?: string;
+            /** @enum {string} */
+            deliveryType: "DELIVERY" | "PICKUP";
             /** Format: int64 */
             id: number;
             /** @description Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa */
@@ -10592,6 +10601,8 @@ export interface components {
             /** Format: int32 */
             lines: number;
             marked: boolean;
+            /** @description Buyurtma izohi */
+            note?: string;
             number: string;
             /** Format: int32 */
             pickMinutes?: number;
