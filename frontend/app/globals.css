@@ -176,3 +176,12 @@
     min-width: var(--spacing-control-touch);
   }
 }
+
+/* Aylantirish chizigʻi koʻrinmaydi, aylantirish (gʻildirak, sensor, klaviatura) ishlaydi — sidebar (egasi talabi 10.11) */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

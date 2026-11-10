@@ -86,7 +86,10 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
           {company ? <span className="truncate text-[11px] leading-[14px] text-sidebar-text/75">{company}</span> : null}
         </span>
       </div>
-      <nav aria-label={t("shell.mainMenu")} className={cn("flex-1 overflow-y-auto px-3 pb-4", compact("px-2", "max-xl:px-2"))}>
+      <nav
+        aria-label={t("shell.mainMenu")}
+        className={cn("scrollbar-none flex-1 overflow-y-auto px-3 pb-4", compact("px-2", "max-xl:px-2"))}
+      >
         {navigationFor(me.data?.permissions, me.data?.role.home ?? "").map((group, gi) => {
           const hasActive = group.items.some((i) => isNavActive(pathname, i));
           const key = group.key;
