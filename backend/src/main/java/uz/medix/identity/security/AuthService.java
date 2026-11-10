@@ -30,7 +30,11 @@ public class AuthService {
     private final AuditLog audit;
     private final LoginThrottle throttle;
 
-    AuthService(EmployeeAccounts accounts, PasswordEncoder encoder, Clock clock, AuditLog audit, LoginThrottle throttle) {
+    private final PasswordPolicy passwords;
+
+    AuthService(EmployeeAccounts accounts, PasswordEncoder encoder, Clock clock, AuditLog audit, LoginThrottle throttle,
+            PasswordPolicy passwords) {
+        this.passwords = passwords;
         this.accounts = accounts;
         this.throttle = throttle;
         this.encoder = encoder;
@@ -103,6 +107,7 @@ public class AuthService {
         if (currentPassword.equals(newPassword)) {
             throw MedixException.badRequest("auth.passwordSame");
         }
+        passwords.check(newPassword);
         accounts.changePassword(employeeId, encoder.encode(newPassword), clock.instant());
         audit.record(AuditEntry.of("auth.passwordChanged", "employee", employeeId), new Actor(a.id(), a.branchId(), MedixPrincipal.allBranches(a.roleCode(), a.allBranches())));
     }

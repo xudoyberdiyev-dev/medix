@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.finance.CashierAssignments;
+import uz.medix.identity.security.PasswordPolicy;
 import uz.medix.inventory.Warehouses;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
@@ -86,8 +87,11 @@ public class Employees {
     /** Litsenziya chegarasi (E13); testda oʻzgartiriladi, shuning uchun final emas. */
     private int limit;
 
+    private final PasswordPolicy passwords;
+
     Employees(JdbcClient jdbc, PasswordEncoder encoder, AuditLog audit, Warehouses warehouses, CashierAssignments cashiers,
-            @Value("${medix.employees.limit:40}") int limit) {
+            @Value("${medix.employees.limit:40}") int limit, PasswordPolicy passwords) {
+        this.passwords = passwords;
         this.jdbc = jdbc;
         this.encoder = encoder;
         this.audit = audit;
@@ -155,6 +159,7 @@ public class Employees {
     @Transactional
     public Employee resetPassword(Actor actor, long id, String temporaryPassword) {
         Employee e = accessible(actor, id);
+        passwords.check(temporaryPassword);
         jdbc.sql("UPDATE employee SET password_hash = :h, must_change_password = true, updated_at = now(), version = version + 1 WHERE id = :id")
                 .param("h", encoder.encode(temporaryPassword))
                 .param("id", id)
@@ -297,6 +302,7 @@ public class Employees {
 
     @Transactional
     public Employee create(NewEmployee n) {
+        passwords.check(n.temporaryPassword());
         Long roleId = roleId(n.roleCode());
         checkBranch(n.branchId());
         String fullName = fullName(n.fullName(), n.firstName(), n.lastName());

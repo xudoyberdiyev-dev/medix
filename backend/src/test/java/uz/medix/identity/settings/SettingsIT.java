@@ -115,6 +115,15 @@ class SettingsIT {
                             .content(json("{\"values\":{\"pwMin\":\"10\"}}")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.values[?(@.key == 'pwMin')].value").value("10"));
+            // Parol siyosati darhol amal qiladi: 9 belgi — rad, 10 belgi — qabul
+            long target = jdbc.sql("""
+                    INSERT INTO employee (login, full_name, role_id, password_hash, must_change_password)
+                    SELECT :l, 'Parol Sinov', id, 'x', false FROM role WHERE code = 'OPERATOR' RETURNING id""")
+                    .param("l", "pw" + UUID.randomUUID().toString().substring(0, 8)).query(Long.class).single();
+            mvc.perform(post("/api/employees/" + target + "/reset-password").with(csrf()).cookie(director).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"temporaryPassword\":\"Qisqa-123\"}")).andExpect(status().isBadRequest());
+            mvc.perform(post("/api/employees/" + target + "/reset-password").with(csrf()).cookie(director).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"temporaryPassword\":\"Uzunroq-12\"}")).andExpect(status().isOk());
         } finally {
             jdbc.sql("UPDATE app_setting SET value = :v WHERE key = 'expiryWarnDays'").param("v", expiry).update();
             jdbc.sql("UPDATE app_setting SET value = :v WHERE key = 'pwMin'").param("v", pw).update();
