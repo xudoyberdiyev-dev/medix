@@ -30,8 +30,7 @@ export function zkHistory(doc: ZoneTransferDetail): ZkEvent[] {
   const out: ZkEvent[] = [
     { at: doc.createdAt, employee: doc.createdBy, action: doc.needsApproval ? "pending" : "create", reason: doc.note || undefined },
   ];
-  if (doc.postedAt && doc.needsApproval)
-    out.push({ at: doc.postedAt, employee: doc.postedBy ?? undefined, action: "posted" });
+  if (doc.postedAt && doc.needsApproval) out.push({ at: doc.postedAt, employee: doc.postedBy ?? undefined, action: "posted" });
   if (doc.rejectedAt)
     out.push({ at: doc.rejectedAt, employee: doc.rejectedBy ?? undefined, action: "rejected", reason: doc.rejectReason ?? undefined });
   return out.sort((a, b) => b.at.localeCompare(a.at));
