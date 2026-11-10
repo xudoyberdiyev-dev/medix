@@ -1,1 +1,1 @@
-▶️ MEDIX: 13:03 sessiya boshlandi (kunduzgi oyna erta, egasi qarori) — reja: Railway backend «Crashed» sababini topish, so'ng sidebar scrollbar
+▶️ MEDIX: 00:13 sessiya boshlandi — reja: yakuniy ekranma-ekran prototip solishtirish (Buyurtmalar, Kirim, Qoldiqlar) va e2e

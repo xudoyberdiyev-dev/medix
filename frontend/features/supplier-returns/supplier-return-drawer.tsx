@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DocumentHeader } from "@/components/ui/document-header";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
@@ -44,7 +45,7 @@ const zoneLabel = (z: { name: string; type: string }) => {
   return !t || z.name === t ? z.name : `${z.name} · ${zoneTypeLabel(type)}`;
 };
 
-function BonusBadge() {
+export function BonusBadge() {
   const t = useTranslations("supplierReturns");
   return (
     <Badge tone="info" icon={Gift}>
@@ -250,7 +251,18 @@ function View({ doc, onClose }: { doc: SupplierReturnDetail; onClose: () => void
   );
 }
 
-function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onClose: () => void; onCreated: (id: number) => void }) {
+export function CreateForm({
+  preset,
+  onClose,
+  onCreated,
+  page = false,
+}: {
+  preset?: ReturnPreset;
+  onClose: () => void;
+  onCreated: (id: number) => void;
+  /** Toʻliq sahifa (prototip `StockDocs`, kind = qy, yangi hujjat). */
+  page?: boolean;
+}) {
   const t = useTranslations("supplierReturns");
   const lineError = useLineErrorText();
   const me = useMe();
@@ -365,101 +377,110 @@ function CreateForm({ preset, onClose, onCreated }: { preset?: ReturnPreset; onC
     );
   };
 
-  return (
-    <Drawer
-      open
-      onClose={onClose}
-      size="lg"
-      kind={t("kind")}
-      title={t("form.title")}
-      actions={
-        <Button icon={Check} loading={create.isPending} onClick={submit} disabled={!receiptId || !zone || !reason}>
-          {canApprove ? t("form.submit") : t("form.sendForApproval")}
-        </Button>
-      }
-    >
-      <div className="flex flex-col gap-4">
-        {error ? (
-          <Alert tone="danger" title={t("form.errorTitle")}>
-            {error}
-          </Alert>
-        ) : null}
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label={t("form.supplier")}
-            value={supplier}
-            loadOptions={async (q) => {
-              const found = await searchSuppliers(q);
-              found.forEach((o) => seen.current.set(o.value, o.label));
-              return found;
-            }}
-            onChange={(v) => (
-              setSupplier(v),
-              setSupplierLabel(v ? (seen.current.get(v) ?? "") : ""),
-              setReceiptId(null),
-              setZoneId(null),
-              setQty({})
-            )}
-            placeholder={supplierLabel || t("form.supplierPlaceholder")}
-            options={supplier && supplierLabel ? [{ value: supplier, label: supplierLabel }] : []}
-            required
-          />
-          <Select
-            label={t("form.receipt")}
-            value={receiptId}
-            onChange={(v) => (setReceiptId(v), setZoneId(null), setQty({}))}
-            options={receiptOptions}
-            placeholder={supplier ? t("form.receiptPlaceholder") : t("form.receiptFirst")}
-            disabled={!supplier}
-            required
-          />
-          <Select
-            label={t("form.zone")}
-            value={zone ? String(zone.id) : null}
-            onChange={(v) => (setZoneId(v), setQty({}))}
-            options={zones.map((z) => ({ value: String(z.id), label: zoneLabel(z) }))}
-            disabled={zones.length === 0}
-            hint={receiptId && stock.data && zones.length === 0 ? t("form.noStock") : undefined}
-            required
-          />
-          <Select
-            label={t("form.reason")}
-            value={reason}
-            onChange={(v) => setReason(v as SupplierReturnReason | null)}
-            options={QY_REASONS.map((value) => ({ value, label: t(`reason.${value}`) }))}
-            required
-          />
-        </div>
-        <Alert tone="info" title={canApprove ? t("form.selfApproveTitle") : t("form.needApprovalTitle")}>
-          {canApprove ? t("form.selfApproveBody") : t("form.needApprovalBody")}
+  const action = (
+    <Button icon={Check} loading={create.isPending} onClick={submit} disabled={!receiptId || !zone || !reason}>
+      {canApprove ? t("form.submit") : t("form.sendForApproval")}
+    </Button>
+  );
+  const body = (
+    <div className="flex flex-col gap-4">
+      {error ? (
+        <Alert tone="danger" title={t("form.errorTitle")}>
+          {error}
         </Alert>
-        {receiptId ? (
-          stock.error ? (
-            <ErrorState onRetry={() => stock.refetch()} />
-          ) : zone || stock.isPending ? (
-            <Table
-              caption={zone ? t("form.stockCaption", { zone: zone.name }) : t("form.stockCaptionAll")}
-              density="compact"
-              columns={columns}
-              rows={rows}
-              rowKey={(r) => String(r.batchId)}
-              loading={stock.isPending}
-              emptyState={<EmptyState icon={X} title={t("form.emptyZoneTitle")} description={t("form.emptyZoneHint")} />}
-            />
-          ) : zones.length > 1 ? (
-            <Alert tone="info" title={t("form.pickZoneTitle")}>
-              {t("form.pickZoneBody")}
-            </Alert>
-          ) : null
-        ) : null}
-        <TextField
-          label={t("form.note")}
-          value={note}
-          onChange={setNote}
-          placeholder={t("form.notePlaceholder")}
-          required={reason === "OTHER"}
+      ) : null}
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          label={t("form.supplier")}
+          value={supplier}
+          loadOptions={async (q) => {
+            const found = await searchSuppliers(q);
+            found.forEach((o) => seen.current.set(o.value, o.label));
+            return found;
+          }}
+          onChange={(v) => (
+            setSupplier(v),
+            setSupplierLabel(v ? (seen.current.get(v) ?? "") : ""),
+            setReceiptId(null),
+            setZoneId(null),
+            setQty({})
+          )}
+          placeholder={supplierLabel || t("form.supplierPlaceholder")}
+          options={supplier && supplierLabel ? [{ value: supplier, label: supplierLabel }] : []}
+          required
+        />
+        <Select
+          label={t("form.receipt")}
+          value={receiptId}
+          onChange={(v) => (setReceiptId(v), setZoneId(null), setQty({}))}
+          options={receiptOptions}
+          placeholder={supplier ? t("form.receiptPlaceholder") : t("form.receiptFirst")}
+          disabled={!supplier}
+          required
+        />
+        <Select
+          label={t("form.zone")}
+          value={zone ? String(zone.id) : null}
+          onChange={(v) => (setZoneId(v), setQty({}))}
+          options={zones.map((z) => ({ value: String(z.id), label: zoneLabel(z) }))}
+          disabled={zones.length === 0}
+          hint={receiptId && stock.data && zones.length === 0 ? t("form.noStock") : undefined}
+          required
+        />
+        <Select
+          label={t("form.reason")}
+          value={reason}
+          onChange={(v) => setReason(v as SupplierReturnReason | null)}
+          options={QY_REASONS.map((value) => ({ value, label: t(`reason.${value}`) }))}
+          required
         />
       </div>
+      <Alert tone="info" title={canApprove ? t("form.selfApproveTitle") : t("form.needApprovalTitle")}>
+        {canApprove ? t("form.selfApproveBody") : t("form.needApprovalBody")}
+      </Alert>
+      {receiptId ? (
+        stock.error ? (
+          <ErrorState onRetry={() => stock.refetch()} />
+        ) : zone || stock.isPending ? (
+          <Table
+            caption={zone ? t("form.stockCaption", { zone: zone.name }) : t("form.stockCaptionAll")}
+            density="compact"
+            columns={columns}
+            rows={rows}
+            rowKey={(r) => String(r.batchId)}
+            loading={stock.isPending}
+            emptyState={<EmptyState icon={X} title={t("form.emptyZoneTitle")} description={t("form.emptyZoneHint")} />}
+          />
+        ) : zones.length > 1 ? (
+          <Alert tone="info" title={t("form.pickZoneTitle")}>
+            {t("form.pickZoneBody")}
+          </Alert>
+        ) : null
+      ) : null}
+      <TextField
+        label={t("form.note")}
+        value={note}
+        onChange={setNote}
+        placeholder={t("form.notePlaceholder")}
+        required={reason === "OTHER"}
+      />
+    </div>
+  );
+  if (page)
+    return (
+      <div className="flex min-w-0 flex-col gap-4 pb-12">
+        <DocumentHeader
+          parent={{ label: t("doc.parent"), href: "/supplier-returns" }}
+          crumb={t("doc.crumbNew")}
+          title={t("form.title")}
+          actions={action}
+        />
+        <section className="rounded-card border border-border bg-surface p-5">{body}</section>
+      </div>
+    );
+  return (
+    <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("form.title")} actions={action}>
+      {body}
     </Drawer>
   );
 }

@@ -2,8 +2,8 @@
 
 import { CircleCheck, Clock, Plus, Undo2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -14,7 +14,6 @@ import { useMe } from "@/features/auth/session";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { QY_CREATE, QY_STATUSES, QY_VIEW_KEYS, useSupplierReturns, type SupplierReturnStatus, type SupplierReturnSummary } from "./api";
-import { SupplierReturnDrawer, type ReturnPreset } from "./supplier-return-drawer";
 import { HubTabs } from "@/components/shell/hub-tabs";
 
 export function SupplierReturnStatusBadge({ status }: { status: SupplierReturnStatus }) {
@@ -41,23 +40,16 @@ export function SupplierReturnsPage() {
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi
   // Kirim hujjatidan oʻtish: ?receipt=<id>&supplier=<id>&supplierName=…&receiptNo=… — yangi qaytarish shu kirim bilan ochiladi
-  const [open, setOpen] = useState<{ id: number | null; preset?: ReturnPreset } | null>(() => {
-    const id = Number(params.get("open"));
-    if (Number.isInteger(id) && id > 0) return { id };
-    const receiptId = Number(params.get("receipt"));
-    const supplierId = Number(params.get("supplier"));
-    if (Number.isInteger(receiptId) && receiptId > 0 && Number.isInteger(supplierId) && supplierId > 0)
-      return {
-        id: null,
-        preset: {
-          receiptId,
-          receiptNo: params.get("receiptNo") ?? "",
-          supplierId,
-          supplierName: params.get("supplierName") ?? "",
-        },
-      };
-    return null;
-  });
+  const router = useRouter();
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/supplier-returns/${openId}`);
+  }, [openId, router]);
+  // Kirimdan: ?receipt=… — yangi hujjat sahifasiga shu parametrlar bilan
+  const fromReceipt = params.get("receipt") !== null && params.get("supplier") !== null;
+  useEffect(() => {
+    if (fromReceipt) router.replace(`/supplier-returns/new?${params.toString()}`);
+  }, [fromReceipt, params, router]);
   const allowed = canAny(me.data, QY_VIEW_KEYS);
   const canCreate = can(me.data, QY_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -95,7 +87,7 @@ export function SupplierReturnsPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => router.push("/supplier-returns/new")}>
             {t("create")}
           </Button>
         ) : null}
@@ -109,7 +101,7 @@ export function SupplierReturnsPage() {
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setOpen({ id: d.id })}
+          onRowClick={(d) => router.push(`/supplier-returns/${d.id}`)}
           toolbar={
             <div className="w-56">
               <Select
@@ -133,7 +125,7 @@ export function SupplierReturnsPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/supplier-returns/new")}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -155,9 +147,6 @@ export function SupplierReturnsPage() {
           }
         />
       )}
-      {open ? (
-        <SupplierReturnDrawer id={open.id} preset={open.preset} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} />
-      ) : null}
     </>
   );
 }

@@ -77,6 +77,12 @@ export function useCreateBranchSale() {
   return useFsMutation((body: BranchSaleRequest) => unwrap(api.POST("/api/branch-sales", { body })));
 }
 
+export function useUpdateBranchSale() {
+  return useFsMutation((v: { id: number; body: BranchSaleRequest }) =>
+    unwrap(api.PUT("/api/branch-sales/{id}", { params: { path: { id: v.id } }, body: v.body })),
+  );
+}
+
 export function useSendBranchSale() {
   return useFsMutation((id: number) => unwrap(api.POST("/api/branch-sales/{id}/send", { params: { path: { id } } })));
 }

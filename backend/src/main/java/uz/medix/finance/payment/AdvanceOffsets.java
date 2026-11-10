@@ -1,6 +1,7 @@
 package uz.medix.finance.payment;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.sql.Date;
@@ -38,7 +39,14 @@ class AdvanceOffsets {
     record OffsetRequest(@NotNull(message = "{validation.required}") Long branchId,
             @NotNull(message = "{validation.required}") Long counterpartyId,
             @Schema(nullable = true, description = "Eng ko'pi bilan shu summa; bo'sh — butun avans") @Size(max = 24) String amount,
-            @Schema(nullable = true) @Size(max = 500) String note) {}
+            @Schema(nullable = true) @Size(max = 500) String note,
+            @Schema(nullable = true, description = "Qo'lda taqsimot (prototip AdvanceDoc): qaysi qarz hujjatiga qancha; bo'sh — eng eskisidan")
+            @Size(max = 200) List<@Valid Allocation> allocations) {}
+
+    /** Qarz hujjatiga hisoblanadigan summa (qo'lda taqsimot). */
+    record Allocation(@NotNull(message = "{validation.required}") @Size(max = 8) String docType,
+            @NotNull(message = "{validation.required}") Long docId,
+            @NotNull(message = "{validation.required}") @Size(max = 24) String amount) {}
 
     record OffsetLine(String advanceDocNumber, String debtDocType, long debtDocId, String debtDocNumber, String amount) {}
 
@@ -46,7 +54,9 @@ class AdvanceOffsets {
 
     record Offset(long id, String number, long branchId, long counterpartyId, String counterparty, Side side, LocalDate offsetDate, String amount,
             @Schema(nullable = true) String note, String status, String createdBy, Instant createdAt, @Schema(nullable = true) String cancelReason,
-            List<OffsetLine> lines) {}
+            List<OffsetLine> lines,
+            @Schema(nullable = true) String cancelledBy,
+            @Schema(nullable = true) Instant cancelledAt) {}
 
     private final JdbcClient jdbc;
     private final PartyLedger parties;
@@ -119,7 +129,39 @@ class AdvanceOffsets {
             }
         }
         lockParty(side, r.branchId(), r.counterpartyId());
-        List<Offsetter.Line> lines = plan(side, r.branchId(), r.counterpartyId(), cap);
+        List<Offsetter.Line> lines;
+        if (r.allocations() != null && !r.allocations().isEmpty()) {
+            Map<String, Money> wanted = new java.util.LinkedHashMap<>();
+            for (Allocation al : r.allocations()) {
+                Money m;
+                try {
+                    m = Money.of(al.amount().strip());
+                } catch (RuntimeException e) {
+                    throw MedixException.badRequest("payment.amountInvalid");
+                }
+                if (m.isNegative()) {
+                    throw MedixException.badRequest("payment.amountInvalid");
+                }
+                if (m.isPositive()) {
+                    wanted.merge(al.docType() + ":" + al.docId(), m, Money::plus);
+                }
+            }
+            List<Allocator.Doc> docs = parties.openDocs(r.branchId(), r.counterpartyId(), side).stream()
+                    .map(d -> new Allocator.Doc(d.type(), d.id(), d.number(), d.open()))
+                    .toList();
+            List<Allocator.Doc> restricted;
+            try {
+                restricted = Offsetter.restrict(docs, wanted);
+            } catch (IllegalArgumentException e) {
+                throw MedixException.badRequest(e.getMessage());
+            }
+            lines = Offsetter.plan(restricted, cap);
+            if (Offsetter.total(lines).compareTo(wanted.values().stream().reduce(Money.ZERO, Money::plus)) != 0) {
+                throw MedixException.badRequest("advance.overAdvance");
+            }
+        } else {
+            lines = plan(side, r.branchId(), r.counterpartyId(), cap);
+        }
         if (lines.isEmpty()) {
             throw MedixException.conflict("advance.nothing");
         }
@@ -230,14 +272,16 @@ class AdvanceOffsets {
 
     private static final String SELECT = """
             SELECT o.id, o.number, o.branch_id, o.counterparty_id, c.name AS counterparty, o.side, o.offset_date, o.amount, o.note, o.status,
-                   e.full_name AS created_by, o.created_at, o.cancel_reason
-            FROM advance_offset o JOIN counterparty c ON c.id = o.counterparty_id JOIN employee e ON e.id = o.created_by""";
+                   e.full_name AS created_by, o.created_at, o.cancel_reason, ce.full_name AS cancelled_by, o.cancelled_at
+            FROM advance_offset o JOIN counterparty c ON c.id = o.counterparty_id JOIN employee e ON e.id = o.created_by
+            LEFT JOIN employee ce ON ce.id = o.cancelled_by""";
 
     private record Row(long id, String number, long branchId, long counterpartyId, String counterparty, Side side, LocalDate date, String amount,
-            String note, String status, String createdBy, Instant createdAt, String cancelReason) {
+            String note, String status, String createdBy, Instant createdAt, String cancelReason, String cancelledBy, Instant cancelledAt) {
 
         Offset with(List<OffsetLine> lines) {
-            return new Offset(id, number, branchId, counterpartyId, counterparty, side, date, amount, note, status, createdBy, createdAt, cancelReason, lines);
+            return new Offset(id, number, branchId, counterpartyId, counterparty, side, date, amount, note, status, createdBy, createdAt, cancelReason, lines,
+                    cancelledBy, cancelledAt);
         }
     }
 
@@ -245,7 +289,8 @@ class AdvanceOffsets {
         return new Row(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getLong("counterparty_id"), rs.getString("counterparty"),
                 Side.valueOf(rs.getString("side")), rs.getDate("offset_date").toLocalDate(), new Money(rs.getBigDecimal("amount")).toString(),
                 rs.getString("note"), rs.getString("status"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant(),
-                rs.getString("cancel_reason"));
+                rs.getString("cancel_reason"), rs.getString("cancelled_by"),
+                rs.getTimestamp("cancelled_at") == null ? null : rs.getTimestamp("cancelled_at").toInstant());
     }
 
     @Transactional(readOnly = true)

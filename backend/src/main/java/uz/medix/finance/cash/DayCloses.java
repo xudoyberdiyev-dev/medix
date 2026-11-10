@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.finance.CashierGuard;
 import uz.medix.finance.account.Accounts;
+import uz.medix.finance.cash.CashModels.CloseApprover;
 import uz.medix.finance.cash.CashModels.CloseRequest;
 import uz.medix.finance.cash.CashModels.ClosePreview;
 import uz.medix.finance.cash.CashModels.DayClose;
@@ -189,8 +190,17 @@ class DayCloses {
         Money diff = counted.minus(expected);
         String note = CashOps.blank(r.note());
         Long correction = null;
+        Long approvedBy = null;
         if (!diff.isZero()) {
-            if (!mayCloseWithDiff) {
+            long approver;
+            if (r.approverId() != null && r.approverId() != actor.employeeId()) {
+                if (approvers(acc.branchId()).stream().noneMatch(a -> a.id() == r.approverId())) {
+                    throw MedixException.forbidden("cashClose.approverInvalid");
+                }
+                approver = r.approverId();
+            } else if (mayCloseWithDiff) {
+                approver = actor.employeeId();
+            } else {
                 throw MedixException.forbidden("cashClose.diffForbidden", diff.format());
             }
             if (note == null) {
@@ -199,12 +209,13 @@ class DayCloses {
             if (r.pin() == null || r.pin().isBlank()) {
                 throw MedixException.badRequest("cashClose.pinRequired");
             }
-            pins.verify(actor.employeeId(), r.pin());
+            pins.verify(approver, r.pin());
+            approvedBy = approver;
             correction = ops.correction(actor, acc, diff, d, "Kunni yopish: " + note);
         }
         long id = jdbc.sql("""
-                INSERT INTO cash_day_close (account_id, close_date, expected, counted, diff, denominations, note, correction_op_id, closed_by)
-                VALUES (:a, :d, :e, :c, :diff, CAST(:j AS JSONB), :note, :corr, :by) RETURNING id""")
+                INSERT INTO cash_day_close (account_id, close_date, expected, counted, diff, denominations, note, correction_op_id, closed_by, approved_by)
+                VALUES (:a, :d, :e, :c, :diff, CAST(:j AS JSONB), :note, :corr, :by, :appr) RETURNING id""")
                 .param("a", acc.id())
                 .param("d", Date.valueOf(d))
                 .param("e", expected.amount())
@@ -214,6 +225,7 @@ class DayCloses {
                 .param("note", note)
                 .param("corr", correction)
                 .param("by", actor.employeeId())
+                .param("appr", approvedBy)
                 .query(Long.class)
                 .single();
         audit.record(AuditEntry.of("cash.close", "cash_day_close", id)
@@ -222,12 +234,32 @@ class DayCloses {
         return id;
     }
 
+    /** Farqni tasdiqlay oladiganlar: faol, rolida cash.closeDiff, kassa filiali doirasida (o'z filiali avval). */
+    private List<CloseApprover> approvers(long branchId) {
+        return jdbc.sql("""
+                SELECT e.id, e.full_name, r.name AS role, (e.branch_id = :b) AS own
+                FROM employee e JOIN role r ON r.id = e.role_id
+                JOIN role_permission rp ON rp.role_id = r.id AND rp.permission_key = 'cash.closeDiff'
+                WHERE e.status = 'ACTIVE'
+                  AND (e.branch_id = :b OR r.scope = 'all' OR r.code IN ('DIRECTOR', 'ADMIN') OR (r.code = 'ACCOUNTANT' AND e.all_branches))
+                ORDER BY (e.branch_id = :b) DESC, e.full_name""")
+                .param("b", branchId)
+                .query((rs, n) -> new CloseApprover(rs.getLong("id"), rs.getString("full_name"), rs.getString("role"), rs.getBoolean("own")))
+                .list();
+    }
+
+    @Transactional(readOnly = true)
+    List<CloseApprover> approvers(Actor actor, long accountId) {
+        return approvers(account(actor, accountId).branchId());
+    }
+
     // ===== O'qish =====
 
     private static final String SELECT = """
             SELECT c.id, c.account_id, a.name AS account, a.branch_id, c.close_date, c.expected, c.counted, c.diff, c.note, o.number AS correction,
-                   e.full_name AS closed_by, c.closed_at
+                   e.full_name AS closed_by, c.closed_at, ap.full_name AS approved_by
             FROM cash_day_close c JOIN money_account a ON a.id = c.account_id JOIN employee e ON e.id = c.closed_by
+            LEFT JOIN employee ap ON ap.id = c.approved_by
             LEFT JOIN cash_op o ON o.id = c.correction_op_id""";
 
     private List<Denomination> denominations(long id) {
@@ -244,12 +276,12 @@ class DayCloses {
         return new DayClose(rs.getLong("id"), rs.getLong("account_id"), rs.getString("account"), rs.getDate("close_date").toLocalDate(),
                 new Money(rs.getBigDecimal("expected")).toString(), new Money(rs.getBigDecimal("counted")).toString(),
                 new Money(rs.getBigDecimal("diff")).toString(), List.of(), rs.getString("note"), rs.getString("correction"),
-                rs.getString("closed_by"), rs.getTimestamp("closed_at").toInstant());
+                rs.getString("closed_by"), rs.getTimestamp("closed_at").toInstant(), rs.getString("approved_by"));
     }
 
     private DayClose withDenominations(DayClose c) {
         return new DayClose(c.id(), c.accountId(), c.account(), c.closeDate(), c.expected(), c.counted(), c.diff(), denominations(c.id()), c.note(),
-                c.correctionNumber(), c.closedBy(), c.closedAt());
+                c.correctionNumber(), c.closedBy(), c.closedAt(), c.approvedBy());
     }
 
     @Transactional(readOnly = true)

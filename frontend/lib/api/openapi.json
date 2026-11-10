@@ -342,6 +342,34 @@
         "tags" : [ "advance-offsets" ]
       }
     },
+    "/api/advance-offsets/{id}" : {
+      "get" : {
+        "operationId" : "one",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Offset"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "AH hujjati (prototip AdvanceDoc)",
+        "tags" : [ "advance-offsets" ]
+      }
+    },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
         "operationId" : "cancel_12",
@@ -1212,7 +1240,7 @@
     },
     "/api/branch-sales/{id}" : {
       "get" : {
-        "operationId" : "get_26",
+        "operationId" : "get_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1235,6 +1263,43 @@
           }
         },
         "summary" : "FS hujjati",
+        "tags" : [ "branch-sale" ]
+      },
+      "put" : {
+        "description" : "Sotuvchi zona, xaridor ombori, izoh va qatorlar almashtiriladi. Faqat qoralama.",
+        "operationId" : "update_19",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BranchSaleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSaleDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani tahrirlash",
         "tags" : [ "branch-sale" ]
       }
     },
@@ -1507,7 +1572,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_15",
+        "operationId" : "update_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1674,6 +1739,37 @@
           }
         },
         "summary" : "Kunni yopish",
+        "tags" : [ "cash" ]
+      }
+    },
+    "/api/cash-close/approvers" : {
+      "get" : {
+        "operationId" : "closeApprovers",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "accountId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CloseApprover"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Farqni PIN bilan tasdiqlay oladigan xodimlar (kassa filiali doirasida)",
         "tags" : [ "cash" ]
       }
     },
@@ -1976,7 +2072,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_25",
+        "operationId" : "get_26",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2067,7 +2163,7 @@
     "/api/company" : {
       "get" : {
         "description" : "Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.",
-        "operationId" : "get_10",
+        "operationId" : "get_13",
         "responses" : {
           "200" : {
             "content" : {
@@ -2452,7 +2548,7 @@
     },
     "/api/counterparties/{id}" : {
       "get" : {
-        "operationId" : "get_9",
+        "operationId" : "get_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2478,7 +2574,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_14",
+        "operationId" : "update_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3202,7 +3298,7 @@
     },
     "/api/customer-returns/{id}" : {
       "get" : {
-        "operationId" : "get_24",
+        "operationId" : "get_25",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3830,7 +3926,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_13",
+        "operationId" : "update_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4089,7 +4185,7 @@
     "/api/employees/{id}" : {
       "put" : {
         "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
-        "operationId" : "update_12",
+        "operationId" : "update_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4498,7 +4594,7 @@
     },
     "/api/home/accountant" : {
       "get" : {
-        "operationId" : "get_23",
+        "operationId" : "get_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4526,7 +4622,7 @@
     },
     "/api/home/branch" : {
       "get" : {
-        "operationId" : "get_22",
+        "operationId" : "get_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4570,7 +4666,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_21",
+        "operationId" : "get_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4825,10 +4921,39 @@
         "tags" : [ "inventory-count" ]
       }
     },
+    "/api/inventory-counts/scope-options" : {
+      "get" : {
+        "description" : "Zonada partiyalar soni va band boʻlsa — faol inventarizatsiya raqami; mahsulotlar zonalar boʻyicha.",
+        "operationId" : "scopeOptions",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryScopeOptions"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralama formasi: zonalar, mahsulotlar, komissiya xodimlari",
+        "tags" : [ "inventory-count" ]
+      }
+    },
     "/api/inventory-counts/{id}" : {
       "get" : {
         "description" : "Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.",
-        "operationId" : "get_20",
+        "operationId" : "get_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4851,6 +4976,43 @@
           }
         },
         "summary" : "Inventarizatsiya hujjati",
+        "tags" : [ "inventory-count" ]
+      },
+      "put" : {
+        "description" : "Ombor (shu filialda), sana, qamrov, komissiya, ko'r sanoq — faqat qoralamada.",
+        "operationId" : "update_14",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryCountRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani saqlash",
         "tags" : [ "inventory-count" ]
       }
     },
@@ -5000,6 +5162,53 @@
         "tags" : [ "inventory-count" ]
       }
     },
+    "/api/inventory-counts/{id}/lines/{lineId}/note" : {
+      "put" : {
+        "description" : "Sanoq yoki tekshirish holatida.",
+        "operationId" : "note",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "lineId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryLineNote"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qator izohi",
+        "tags" : [ "inventory-count" ]
+      }
+    },
     "/api/inventory-counts/{id}/pdf" : {
       "get" : {
         "description" : "Sanoqda — sanoq varag'i («Sanaldi» bo'sh), keyin — farqlar bilan qaydnoma. Tannarx — faqat prices.cost.",
@@ -5032,6 +5241,7 @@
     },
     "/api/inventory-counts/{id}/recount" : {
       "post" : {
+        "description" : "lineIds — tanlangan qatorlar sanoqqa qaytadi («qayta sanash»); boʻsh — hujjat.",
         "operationId" : "recount",
         "parameters" : [ {
           "in" : "path",
@@ -5042,6 +5252,15 @@
             "format" : "int64"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryRecountRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "content" : {
@@ -5252,7 +5471,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_19",
+        "operationId" : "get_21",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5779,7 +5998,7 @@
     "/api/nav/badges" : {
       "get" : {
         "description" : "Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.",
-        "operationId" : "get_18",
+        "operationId" : "get_20",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5972,7 +6191,7 @@
     },
     "/api/opening-balances/{id}" : {
       "get" : {
-        "operationId" : "get_8",
+        "operationId" : "get_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5999,7 +6218,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_11",
+        "operationId" : "update_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6217,7 +6436,7 @@
     },
     "/api/opening-finance/{id}" : {
       "get" : {
-        "operationId" : "get_7",
+        "operationId" : "get_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6243,7 +6462,7 @@
         "tags" : [ "opening-finance" ]
       },
       "put" : {
-        "operationId" : "update_10",
+        "operationId" : "update_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7175,7 +7394,7 @@
     "/api/orders/{id}" : {
       "get" : {
         "description" : "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.",
-        "operationId" : "get_6",
+        "operationId" : "get_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7201,7 +7420,7 @@
         "tags" : [ "orders" ]
       },
       "put" : {
-        "operationId" : "update_9",
+        "operationId" : "update_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7933,7 +8152,7 @@
     },
     "/api/payments/customer/{id}" : {
       "get" : {
-        "operationId" : "get_5",
+        "operationId" : "get_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7959,7 +8178,7 @@
         "tags" : [ "payments" ]
       },
       "put" : {
-        "operationId" : "update_8",
+        "operationId" : "update_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8728,7 +8947,7 @@
     },
     "/api/price-changes/{id}" : {
       "get" : {
-        "operationId" : "get_4",
+        "operationId" : "get_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8754,7 +8973,7 @@
         "tags" : [ "pricing" ]
       },
       "put" : {
-        "operationId" : "update_7",
+        "operationId" : "update_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9056,7 +9275,7 @@
     "/api/price-types/{id}" : {
       "put" : {
         "description" : "Bazaviy turni yoki mijozlarga biriktirilgan turni nofaol qilib bo'lmaydi. Ro'yxat tarkibi (SPEC 6) o'zgarmaydi.",
-        "operationId" : "update_6",
+        "operationId" : "update_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10033,7 +10252,7 @@
     },
     "/api/products/{id}" : {
       "get" : {
-        "operationId" : "get_3",
+        "operationId" : "get_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10059,7 +10278,7 @@
         "tags" : [ "products" ]
       },
       "put" : {
-        "operationId" : "update_5",
+        "operationId" : "update_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10234,7 +10453,7 @@
     },
     "/api/profile" : {
       "get" : {
-        "operationId" : "get_2",
+        "operationId" : "get_4",
         "responses" : {
           "200" : {
             "content" : {
@@ -10251,7 +10470,7 @@
         "tags" : [ "profile" ]
       },
       "put" : {
-        "operationId" : "update_4",
+        "operationId" : "update_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -10660,7 +10879,7 @@
     },
     "/api/receipts/{id}" : {
       "get" : {
-        "operationId" : "get_1",
+        "operationId" : "get_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10687,7 +10906,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_3",
+        "operationId" : "update_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10959,7 +11178,7 @@
     },
     "/api/reconciliations/{id}" : {
       "get" : {
-        "operationId" : "get_17",
+        "operationId" : "get_19",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -12028,7 +12247,7 @@
     "/api/settings" : {
       "get" : {
         "description" : "Barcha bo'limlar qiymatlari, oxirgi o'zgarish (kim, qachon) va tahrirlash huquqlari.",
-        "operationId" : "get",
+        "operationId" : "get_2",
         "responses" : {
           "200" : {
             "content" : {
@@ -12046,7 +12265,7 @@
       },
       "put" : {
         "description" : "Bir nechta qiymat birdaniga; har biri oraliq bo'yicha tekshiriladi, audit — eski → yangi.",
-        "operationId" : "update_2",
+        "operationId" : "update_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -13261,7 +13480,7 @@
     },
     "/api/supplier-returns/{id}" : {
       "get" : {
-        "operationId" : "get_16",
+        "operationId" : "get_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13750,7 +13969,7 @@
     },
     "/api/trips/{id}" : {
       "get" : {
-        "operationId" : "get_15",
+        "operationId" : "get_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13773,6 +13992,43 @@
           }
         },
         "summary" : "Reys",
+        "tags" : [ "trips" ]
+      },
+      "put" : {
+        "description" : "Sana, haydovchi, mashina, ekspeditor, izoh — «Rejalashtirilgan», yuklash boshlanmagan.",
+        "operationId" : "update_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TripUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Reys sarlavhasini tahrirlash",
         "tags" : [ "trips" ]
       }
     },
@@ -14024,6 +14280,45 @@
           }
         },
         "summary" : "«Yuklab bo'lindi — reysni boshlash»",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/stops/order" : {
+      "post" : {
+        "description" : "Faqat «Rejalashtirilgan» reys; barcha faol bekatlar yangi tartibda.",
+        "operationId" : "reorder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StopOrderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekatlar tartibi",
         "tags" : [ "trips" ]
       }
     },
@@ -14365,7 +14660,7 @@
     },
     "/api/vehicles/{id}" : {
       "put" : {
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14582,7 +14877,7 @@
     },
     "/api/warehouse-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_13",
+        "operationId" : "get",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14605,6 +14900,43 @@
           }
         },
         "summary" : "OK hujjati",
+        "tags" : [ "warehouse-transfer" ]
+      },
+      "put" : {
+        "description" : "Manba zona, qabul qiluvchi ombor, izoh va qatorlar almashtiriladi. Faqat qoralama.",
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WarehouseTransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WarehouseTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani tahrirlash",
         "tags" : [ "warehouse-transfer" ]
       }
     },
@@ -14708,7 +15040,7 @@
     "/api/warehouse-transfers/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi va hal qilish tarixi.",
-        "operationId" : "get_14",
+        "operationId" : "get_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15353,7 +15685,7 @@
     },
     "/api/write-offs/{id}" : {
       "get" : {
-        "operationId" : "get_12",
+        "operationId" : "get_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15601,7 +15933,7 @@
     },
     "/api/zone-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_11",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -16062,6 +16394,26 @@
           }
         },
         "required" : [ "enabled" ]
+      },
+      "Allocation" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docType" : {
+            "type" : "string",
+            "maxLength" : 8,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "amount", "docId", "docType" ]
       },
       "ApprovalPayment" : {
         "type" : "object",
@@ -18096,6 +18448,25 @@
         },
         "required" : [ "checkedLines", "places" ]
       },
+      "CloseApprover" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "ownBranch" : {
+            "type" : "boolean"
+          },
+          "role" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name", "ownBranch", "role" ]
+      },
       "ClosePreview" : {
         "type" : "object",
         "properties" : {
@@ -18143,6 +18514,11 @@
           "accountId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "approverId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Farqni tasdiqlovchi (cash.closeDiff); bo'sh bo'lsa — yopayotgan xodimning o'zi"
           },
           "closeDate" : {
             "type" : "string",
@@ -19426,6 +19802,9 @@
           "accountId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "approvedBy" : {
+            "type" : "string"
           },
           "closeDate" : {
             "type" : "string",
@@ -20957,8 +21336,16 @@
           "cancelledBy" : {
             "type" : "string"
           },
+          "chairId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "commission" : {
             "type" : "string"
+          },
+          "countDate" : {
+            "type" : "string",
+            "format" : "date"
           },
           "counted" : {
             "type" : "integer",
@@ -20971,6 +21358,12 @@
           "createdBy" : {
             "type" : "string"
           },
+          "events" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InventoryEvent"
+            }
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -20979,6 +21372,12 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/InventoryCountLine"
+            }
+          },
+          "members" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberRef"
             }
           },
           "needsDirector" : {
@@ -20996,6 +21395,16 @@
           },
           "postedBy" : {
             "type" : "string"
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRef"
+            }
+          },
+          "scopeMode" : {
+            "type" : "string",
+            "enum" : [ "WAREHOUSE", "ZONES", "PRODUCTS" ]
           },
           "shortageCost" : {
             "type" : "string"
@@ -21038,9 +21447,15 @@
           },
           "zone" : {
             "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "zones" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ZoneRef"
+            }
           }
         },
-        "required" : [ "blind", "bookHidden", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId" ]
+        "required" : [ "blind", "bookHidden", "branchId", "counted", "createdAt", "createdBy", "events", "id", "lines", "members", "needsDirector", "number", "products", "scopeMode", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId", "zones" ]
       },
       "InventoryCountEntries" : {
         "type" : "object",
@@ -21131,6 +21546,9 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "note" : {
+            "type" : "string"
+          },
           "productCode" : {
             "type" : "string"
           },
@@ -21141,11 +21559,14 @@
           "productName" : {
             "type" : "string"
           },
+          "recount" : {
+            "type" : "boolean"
+          },
           "zone" : {
             "$ref" : "#/components/schemas/ZoneRef"
           }
         },
-        "required" : [ "added", "batchId", "batchNumber", "controlled", "expiryDate", "id", "productCode", "productId", "productName", "zone" ]
+        "required" : [ "added", "batchId", "batchNumber", "controlled", "expiryDate", "id", "productCode", "productId", "productName", "recount", "zone" ]
       },
       "InventoryCountPage" : {
         "type" : "object",
@@ -21177,15 +21598,48 @@
           "blind" : {
             "type" : "boolean"
           },
+          "chairId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Komissiya raisi — aʼzolardan biri"
+          },
           "commission" : {
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
           },
+          "countDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "memberIds" : {
+            "type" : "array",
+            "description" : "Komissiya aʼzolari (xodimlar)",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 30,
+            "minItems" : 0
+          },
           "note" : {
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
+          },
+          "productIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          },
+          "scopeMode" : {
+            "type" : "string",
+            "description" : "Boʻsh — zonalar tanlangan boʻlsa ZONES, aks holda WAREHOUSE",
+            "enum" : [ "WAREHOUSE", "ZONES", "PRODUCTS" ]
           },
           "warehouseId" : {
             "type" : "integer",
@@ -21194,7 +21648,16 @@
           "zoneId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Bo'sh — butun ombor"
+            "description" : "Eski shakl: bitta zona (zoneIds boʻlmasa)"
+          },
+          "zoneIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 50,
+            "minItems" : 0
           }
         },
         "required" : [ "blind", "commission", "note", "warehouseId" ]
@@ -21212,6 +21675,10 @@
           "commission" : {
             "type" : "string",
             "description" : "Komissiya (vergul bilan)"
+          },
+          "countDate" : {
+            "type" : "string",
+            "format" : "date"
           },
           "counted" : {
             "type" : "integer",
@@ -21242,6 +21709,14 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "productCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "scopeMode" : {
+            "type" : "string",
+            "enum" : [ "WAREHOUSE", "ZONES", "PRODUCTS" ]
+          },
           "shortageCost" : {
             "type" : "string",
             "description" : "Faqat prices.cost"
@@ -21271,9 +21746,34 @@
           },
           "zone" : {
             "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "zoneNames" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         },
-        "required" : [ "blind", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId" ]
+        "required" : [ "blind", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "productCount", "scopeMode", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId", "zoneNames" ]
+      },
+      "InventoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "text" : {
+            "type" : "string"
+          },
+          "who" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at", "kind", "who" ]
       },
       "InventoryLastFull" : {
         "type" : "object",
@@ -21300,6 +21800,16 @@
         },
         "required" : [ "branch", "warehouse", "warehouseId" ]
       },
+      "InventoryLineNote" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        }
+      },
       "InventoryOverview" : {
         "type" : "object",
         "properties" : {
@@ -21322,6 +21832,44 @@
           }
         },
         "required" : [ "lastFull", "remindDays", "statuses" ]
+      },
+      "InventoryRecountRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lineIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          }
+        }
+      },
+      "InventoryScopeOptions" : {
+        "type" : "object",
+        "properties" : {
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeProduct"
+            }
+          },
+          "staff" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberRef"
+            }
+          },
+          "zones" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeZone"
+            }
+          }
+        },
+        "required" : [ "products", "staff", "zones" ]
       },
       "InventoryStatusCount" : {
         "type" : "object",
@@ -22222,6 +22770,19 @@
         },
         "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
       },
+      "MemberRef" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ]
+      },
       "MonitorBoard" : {
         "type" : "object",
         "properties" : {
@@ -22494,6 +23055,13 @@
           "cancelReason" : {
             "type" : "string"
           },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
           "counterparty" : {
             "type" : "string"
           },
@@ -22584,6 +23152,15 @@
       "OffsetRequest" : {
         "type" : "object",
         "properties" : {
+          "allocations" : {
+            "type" : "array",
+            "description" : "Qo'lda taqsimot (prototip AdvanceDoc): qaysi qarz hujjatiga qancha; bo'sh — eng eskisidan",
+            "items" : {
+              "$ref" : "#/components/schemas/Allocation"
+            },
+            "maxItems" : 200,
+            "minItems" : 0
+          },
           "amount" : {
             "type" : "string",
             "description" : "Eng ko'pi bilan shu summa; bo'sh — butun avans",
@@ -26147,6 +26724,22 @@
         },
         "required" : [ "items", "page", "size", "total" ]
       },
+      "ProductRef" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "id", "name" ]
+      },
       "ProductRequest" : {
         "type" : "object",
         "properties" : {
@@ -27604,15 +28197,29 @@
       "ReceiveLineRequest" : {
         "type" : "object",
         "properties" : {
+          "damagedQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000000,
+            "minimum" : 0
+          },
           "lineId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "reason" : {
+            "type" : "string",
+            "pattern" : "SHORT|DAMAGED|OTHER"
           },
           "receivedQty" : {
             "type" : "integer",
             "format" : "int32",
             "maximum" : 10000000,
             "minimum" : 0
+          },
+          "toZoneId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
         "required" : [ "lineId", "receivedQty" ]
@@ -28604,6 +29211,69 @@
         },
         "required" : [ "accepted", "work" ]
       },
+      "ScopeProduct" : {
+        "type" : "object",
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "zones" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeProductZone"
+            }
+          }
+        },
+        "required" : [ "code", "id", "name", "zones" ]
+      },
+      "ScopeProductZone" : {
+        "type" : "object",
+        "properties" : {
+          "batches" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "batches", "zoneId" ]
+      },
+      "ScopeZone" : {
+        "type" : "object",
+        "properties" : {
+          "batches" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lockedBy" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "batches", "id", "name", "type" ]
+      },
       "SearchMatch" : {
         "type" : "object",
         "properties" : {
@@ -29421,6 +30091,21 @@
           }
         },
         "required" : [ "categories", "countries", "expired", "expiry", "manufacturers", "near", "products", "quarantine", "suppliers", "supplyBy", "transitDocs", "transitQty", "warehouses", "zoneTypes" ]
+      },
+      "StopOrderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "stopIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 100,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "stopIds" ]
       },
       "SupplierBlock" : {
         "type" : "object",
@@ -30643,6 +31328,12 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "driverPhone" : {
+            "type" : "string"
+          },
+          "expeditor" : {
+            "type" : "string"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -30656,6 +31347,12 @@
           "places" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "plateNumber" : {
+            "type" : "string"
+          },
+          "refrigerator" : {
+            "type" : "boolean"
           },
           "startedAt" : {
             "type" : "string",
@@ -30684,9 +31381,12 @@
           "vehicleId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "vehicleModel" : {
+            "type" : "string"
           }
         },
-        "required" : [ "branchId", "createdAt", "createdBy", "driver", "driverId", "id", "number", "places", "status", "stops", "total", "tripDate", "vehicle", "vehicleId" ]
+        "required" : [ "branchId", "createdAt", "createdBy", "driver", "driverId", "id", "number", "places", "plateNumber", "refrigerator", "status", "stops", "total", "tripDate", "vehicle", "vehicleId" ]
       },
       "TripOptions" : {
         "type" : "object",
@@ -30712,6 +31412,12 @@
           "driverId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "expeditor" : {
+            "type" : "string",
+            "description" : "Ekspeditor (ixtiyoriy)",
+            "maxLength" : 120,
+            "minLength" : 0
           },
           "note" : {
             "type" : "string",
@@ -30754,6 +31460,11 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Buyurtma qatorlari soni"
+          },
           "loadedAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -30786,6 +31497,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Buyurtma miqdori (dona)"
+          },
+          "region" : {
+            "type" : "string",
+            "description" : "Mijoz hududi"
+          },
           "returnNumber" : {
             "type" : "string",
             "description" : "Qisman yetkazishda QM raqami"
@@ -30809,7 +31529,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "customer", "id", "orderId", "orderNumber", "paymentType", "photos", "places", "seq", "signed", "total" ]
+        "required" : [ "customer", "id", "lines", "orderId", "orderNumber", "paymentType", "photos", "places", "qty", "seq", "signed", "total" ]
       },
       "TripSummary" : {
         "type" : "object",
@@ -30881,6 +31601,34 @@
           }
         },
         "required" : [ "branchId", "createdAt", "delivered", "driver", "id", "marked", "number", "orders", "places", "plateNumber", "refrigerator", "status", "total", "tripDate", "vehicle" ]
+      },
+      "TripUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "driverId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expeditor" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "tripDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "vehicleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "driverId", "tripDate", "vehicleId" ]
       },
       "UiThresholds" : {
         "type" : "object",
@@ -31518,6 +32266,10 @@
           "batchNumber" : {
             "type" : "string"
           },
+          "damagedQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "expiryDate" : {
             "type" : "string",
             "format" : "date"
@@ -31544,12 +32296,18 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "reason" : {
+            "type" : "string"
+          },
           "receivedQty" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "toZone" : {
+            "$ref" : "#/components/schemas/ZoneRef"
           }
         },
-        "required" : [ "batchId", "batchNumber", "expiryDate", "id", "lineNo", "productCode", "productId", "productName", "qty" ]
+        "required" : [ "batchId", "batchNumber", "damagedQty", "expiryDate", "id", "lineNo", "productCode", "productId", "productName", "qty" ]
       },
       "WarehouseTransferLineRequest" : {
         "type" : "object",

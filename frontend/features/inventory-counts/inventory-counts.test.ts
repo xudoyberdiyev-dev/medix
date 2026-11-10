@@ -14,6 +14,7 @@ const line = (id: number, countedQty: number | null): InventoryCountLine => ({
   bookQty: 5,
   countedQty: countedQty ?? undefined,
   added: false,
+  recount: false,
 });
 
 describe("inventarizatsiya", () => {

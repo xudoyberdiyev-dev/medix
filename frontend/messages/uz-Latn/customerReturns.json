@@ -4,6 +4,7 @@
   "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
   "create": "Yangi qaytarish",
   "newTitle": "Yangi qaytarish",
+  "crumbNew": "Yangi",
   "caption": "Mijozdan qaytarish hujjatlari",
   "search": "Raqam, mijoz yoki sotuv…",
   "status": {
@@ -121,5 +122,11 @@
     "cancelledBody": "{who} · {at} — tovar Karantindan chiqarildi, mijoz qarzi qaytarildi.",
     "blockedTitle": "Bekor qilib boʻlmaydi",
     "blockedHint": "Qaytgan tovar Karantindan keyingi hujjat bilan chiqarilgan. Avval oʻsha hujjatni bekor qiling, soʻng qayta urinib koʻring."
+  },
+  "doc": {
+    "loading": "Hujjat yuklanmoqda",
+    "stepCreated": "Yaratildi",
+    "stepApproval": "Tasdiqlash",
+    "stepPosted": "Oʻtkazildi"
   }
 }

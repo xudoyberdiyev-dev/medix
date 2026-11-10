@@ -2,8 +2,8 @@
 
 import { ArrowRight, Banknote, Building2, Plus, TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -24,7 +24,6 @@ import {
   type BranchSaleStatus,
   type BranchSaleSummary,
 } from "./api";
-import { BranchSaleDrawer } from "./branch-sale-drawer";
 import { BranchPayDialog, BranchPaymentsList, canPayFor, useBranchPayments } from "./branch-payments";
 import { HubTabs } from "@/components/shell/hub-tabs";
 
@@ -37,12 +36,14 @@ export function BranchSalesPage() {
   const params = useSearchParams();
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
-  // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi; «Koʻchirish» → «Yangi»: ?new=1 — yangi qoralama
-  const [open, setOpen] = useState<{ id: number | null } | null>(() => {
-    if (params.get("new") === "1") return { id: null };
-    const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
-  });
+  // Bildirishnomadan oʻtish: ?open=<id> — hujjat sahifasiga yoʻnaltiriladi; «Koʻchirish» → «Yangi»: ?new=1 — yangi qoralama
+  const router = useRouter();
+  const isNew = params.get("new") === "1";
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (isNew) router.replace("/branch-sales/new");
+    else if (Number.isInteger(openId) && openId > 0) router.replace(`/branch-sales/${openId}`);
+  }, [isNew, openId, router]);
   const allowed = canAny(me.data, FS_VIEW_KEYS);
   const canCreate = can(me.data, TRANSFER_FS);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -104,7 +105,7 @@ export function BranchSalesPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => router.push("/branch-sales/new")}>
             {t("create")}
           </Button>
         ) : null}
@@ -145,7 +146,7 @@ export function BranchSalesPage() {
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setOpen({ id: d.id })}
+          onRowClick={(d) => router.push(`/branch-sales/${d.id}`)}
           toolbar={
             <div className="w-56">
               <Select
@@ -169,7 +170,7 @@ export function BranchSalesPage() {
                 description={t("empty.description", { hf: "HF" })}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/branch-sales/new")}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -191,7 +192,6 @@ export function BranchSalesPage() {
           }
         />
       )}
-      {open ? <BranchSaleDrawer id={open.id} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} /> : null}
     </>
   );
 }

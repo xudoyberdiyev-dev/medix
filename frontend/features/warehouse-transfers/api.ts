@@ -31,7 +31,7 @@ export type ReceiveLineError =
  * Qaytaradi: serverga yuboriladigan qatorlar (faqat farqlilari), jami kamomad va xato.
  */
 export function receiveLinesFrom(
-  lines: TransferLine[],
+  lines: Pick<TransferLine, "id" | "qty" | "productName" | "batchNumber">[],
   got: Record<number, string>,
 ): { lines: NonNullable<ReceiveRequest["lines"]>; shortage: number; error: ReceiveLineError | null } {
   const out: NonNullable<ReceiveRequest["lines"]> = [];
@@ -97,6 +97,12 @@ function useOkMutation<T>(fn: (v: T) => Promise<WarehouseTransferDetail>) {
 
 export function useCreateWarehouseTransfer() {
   return useOkMutation((body: WarehouseTransferRequest) => unwrap(api.POST("/api/warehouse-transfers", { body })));
+}
+
+export function useUpdateWarehouseTransfer() {
+  return useOkMutation((v: { id: number; body: WarehouseTransferRequest }) =>
+    unwrap(api.PUT("/api/warehouse-transfers/{id}", { params: { path: { id: v.id } }, body: v.body })),
+  );
 }
 
 export function useSendWarehouseTransfer() {

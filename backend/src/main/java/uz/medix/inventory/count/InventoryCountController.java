@@ -27,6 +27,9 @@ import uz.medix.inventory.count.InventoryCountModels.InventoryCountEntries;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountPage;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountRequest;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountSummary;
+import uz.medix.inventory.count.InventoryCountModels.InventoryLineNote;
+import uz.medix.inventory.count.InventoryCountModels.InventoryRecountRequest;
+import uz.medix.inventory.count.InventoryCountModels.InventoryScopeOptions;
 import uz.medix.inventory.count.InventoryCountModels.InventoryOverview;
 import uz.medix.inventory.count.InventoryCountModels.Status;
 import uz.medix.inventory.count.InventoryCounts.Approver;
@@ -87,7 +90,8 @@ class InventoryCountController {
         }
         return new InventoryCountPage(p.items().stream().map(s -> new InventoryCountSummary(s.id(), s.number(), s.branchId(), s.warehouseId(), s.warehouse(),
                 s.zone(), s.blind(), s.status(), s.needsDirector(), s.lines(), s.counted(), s.shortageQty(), s.surplusQty(), null, null,
-                s.createdBy(), s.createdAt(), s.postedAt(), s.commission())).toList(), p.total(), p.page(), p.size());
+                s.createdBy(), s.createdAt(), s.postedAt(), s.commission(), s.scopeMode(), s.zoneNames(), s.productCount(), s.countDate()))
+                .toList(), p.total(), p.page(), p.size());
     }
 
     @GetMapping("/overview")
@@ -131,6 +135,30 @@ class InventoryCountController {
         return detail(counts.create(actor(), r), auth);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('inventory.create')")
+    @Operation(summary = "Qoralamani saqlash", description = "Ombor (shu filialda), sana, qamrov, komissiya, ko'r sanoq — faqat qoralamada.")
+    InventoryCountDetail update(@PathVariable long id, @Valid @RequestBody InventoryCountRequest r, Authentication auth) {
+        counts.update(actor(), id, r);
+        return detail(id, auth);
+    }
+
+    @GetMapping("/scope-options")
+    @PreAuthorize("hasAuthority('inventory.create')")
+    @Operation(summary = "Qoralama formasi: zonalar, mahsulotlar, komissiya xodimlari",
+            description = "Zonada partiyalar soni va band boʻlsa — faol inventarizatsiya raqami; mahsulotlar zonalar boʻyicha.")
+    InventoryScopeOptions scopeOptions(@RequestParam long warehouseId) {
+        return counts.scopeOptions(actor(), warehouseId);
+    }
+
+    @PutMapping("/{id}/lines/{lineId}/note")
+    @PreAuthorize("hasAnyAuthority('inventory.count', 'inventory.approve')")
+    @Operation(summary = "Qator izohi", description = "Sanoq yoki tekshirish holatida.")
+    InventoryCountDetail note(@PathVariable long id, @PathVariable long lineId, @Valid @RequestBody InventoryLineNote r, Authentication auth) {
+        counts.note(actor(), id, lineId, r.note());
+        return detail(id, auth);
+    }
+
     @PostMapping("/{id}/start")
     @PreAuthorize("hasAuthority('inventory.openCount')")
     @Operation(summary = "Sanoqni ochish", description = "Qoldiq surati olinadi, qamrovdagi zonalarda ombor harakati to'xtatiladi.")
@@ -156,10 +184,10 @@ class InventoryCountController {
     }
 
     @PostMapping("/{id}/recount")
-    @PreAuthorize("hasAuthority('inventory.openCount')")
-    @Operation(summary = "Qayta sanashga qaytarish")
-    InventoryCountDetail recount(@PathVariable long id, Authentication auth) {
-        counts.recount(actor(), id);
+    @PreAuthorize("hasAnyAuthority('inventory.openCount', 'inventory.count')")
+    @Operation(summary = "Qayta sanashga qaytarish", description = "lineIds — tanlangan qatorlar sanoqqa qaytadi («qayta sanash»); boʻsh — hujjat.")
+    InventoryCountDetail recount(@PathVariable long id, @Valid @RequestBody(required = false) InventoryRecountRequest r, Authentication auth) {
+        counts.recount(actor(), id, r == null ? null : r.lineIds());
         return detail(id, auth);
     }
 

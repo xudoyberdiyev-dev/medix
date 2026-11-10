@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -85,6 +86,14 @@ class WarehouseTransferController {
     @Operation(summary = "Ombor ko'chirishi (qoralama)", description = "Bitta filial ichida. Tovar joʻnatilguncha joyida qoladi.")
     WarehouseTransferDetail create(@Valid @RequestBody WarehouseTransferRequest r) {
         return detail(transfers.create(actor(), r));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('transfer.ok')")
+    @Operation(summary = "Qoralamani tahrirlash", description = "Manba zona, qabul qiluvchi ombor, izoh va qatorlar almashtiriladi. Faqat qoralama.")
+    WarehouseTransferDetail update(@PathVariable long id, @Valid @RequestBody WarehouseTransferRequest r) {
+        transfers.update(actor(), id, r);
+        return detail(id);
     }
 
     @PostMapping("/{id}/send")

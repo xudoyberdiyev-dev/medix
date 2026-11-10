@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,7 +25,9 @@ import uz.medix.delivery.trip.TripModels.HandedSale;
 import uz.medix.delivery.trip.TripModels.ReadyOrder;
 import uz.medix.delivery.trip.TripModels.TripDetail;
 import uz.medix.delivery.trip.TripModels.TripOptions;
+import uz.medix.delivery.trip.TripModels.StopOrderRequest;
 import uz.medix.delivery.trip.TripModels.TripRequest;
+import uz.medix.delivery.trip.TripModels.TripUpdate;
 import uz.medix.delivery.trip.TripModels.TripSummary;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.money.Money;
@@ -148,6 +151,22 @@ class TripController {
     @Operation(summary = "Reysni bekor qilish", description = "Faqat yuklash boshlanmagan «Rejalashtirilgan» reys.")
     TripDetail cancel(@PathVariable long id, @Valid @RequestBody ReasonRequest r) {
         trips.cancel(actor(), id, r.reason());
+        return trips.find(actor(), id);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('shipments.trip')")
+    @Operation(summary = "Reys sarlavhasini tahrirlash", description = "Sana, haydovchi, mashina, ekspeditor, izoh — «Rejalashtirilgan», yuklash boshlanmagan.")
+    TripDetail update(@PathVariable long id, @Valid @RequestBody TripUpdate r) {
+        trips.update(actor(), id, r);
+        return trips.find(actor(), id);
+    }
+
+    @PostMapping("/{id}/stops/order")
+    @PreAuthorize("hasAuthority('shipments.trip')")
+    @Operation(summary = "Bekatlar tartibi", description = "Faqat «Rejalashtirilgan» reys; barcha faol bekatlar yangi tartibda.")
+    TripDetail reorder(@PathVariable long id, @Valid @RequestBody StopOrderRequest r) {
+        trips.reorder(actor(), id, r.stopIds());
         return trips.find(actor(), id);
     }
 

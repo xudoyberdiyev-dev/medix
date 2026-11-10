@@ -207,6 +207,64 @@ class BranchSales {
     /** Qoralama: sotuvchi zona (xodim filiali doirasida), xaridor — BOSHQA filialning faol ombori. */
     @Transactional
     long create(Actor actor, BranchSaleRequest r) {
+        Route route = route(actor, r);
+        String number = numbers.next(DocumentPrefix.FS, route.from().branchCode()).toString();
+        long id = jdbc.sql("""
+                INSERT INTO branch_sale (number, seller_branch_id, buyer_branch_id, from_warehouse_id, from_zone_id, to_warehouse_id, note,
+                                         status, created_by)
+                VALUES (:n, :s, :b, :fw, :fz, :tw, :note, 'DRAFT', :by) RETURNING id""")
+                .param("n", number)
+                .param("s", route.from().branchId())
+                .param("b", route.buyerBranchId())
+                .param("fw", route.from().warehouseId())
+                .param("fz", route.from().id())
+                .param("tw", route.toWarehouseId())
+                .param("note", blankToNull(r.note()))
+                .param("by", actor.employeeId())
+                .query(Long.class)
+                .single();
+        insertLines(id, r.lines());
+        checkFree(route.from().id(), lines(id), false);
+        audit.record(AuditEntry.of("transfer.fs.create", "branch_sale", id)
+                .change(null, Map.of("number", number, "lines", r.lines().size(), "buyer", route.buyerBranchId())), actor);
+        return id;
+    }
+
+    /**
+     * Qoralamani tahrirlash (prototip TransferDoc — avtomatik saqlash): sotuvchi zona, xaridor ombori, izoh va qatorlar to'liq
+     * almashtiriladi. Sotuvchi filial o'zgarmaydi; faqat qoralama, faqat sotuvchi filial xodimi.
+     */
+    @Transactional
+    void update(Actor actor, long id, BranchSaleRequest r) {
+        Head h = lock(id);
+        if (!actor.canAccessBranch(h.sellerBranchId())) {
+            throw MedixException.notFound("error.notFound");
+        }
+        require(h, Status.DRAFT);
+        Route route = route(actor, r);
+        if (route.from().branchId() != h.sellerBranchId()) {
+            throw MedixException.badRequest("transfer.fs.sellerFixed");
+        }
+        jdbc.sql("""
+                UPDATE branch_sale SET buyer_branch_id = :b, from_warehouse_id = :fw, from_zone_id = :fz, to_warehouse_id = :tw, note = :note,
+                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("b", route.buyerBranchId())
+                .param("fw", route.from().warehouseId())
+                .param("fz", route.from().id())
+                .param("tw", route.toWarehouseId())
+                .param("note", blankToNull(r.note()))
+                .param("id", id)
+                .update();
+        jdbc.sql("DELETE FROM branch_sale_line WHERE sale_id = :id").param("id", id).update();
+        insertLines(id, r.lines());
+        checkFree(route.from().id(), lines(id), false);
+        audit.record(AuditEntry.of("transfer.fs.update", "branch_sale", id)
+                .change(null, Map.of("number", h.number(), "lines", r.lines().size(), "buyer", route.buyerBranchId())), actor);
+    }
+
+    private record Route(ZoneInfo from, long toWarehouseId, long buyerBranchId) {}
+
+    private Route route(Actor actor, BranchSaleRequest r) {
         ZoneInfo from = zone(r.fromZoneId());
         if (!actor.canAccessBranch(from.branchId())) {
             throw MedixException.badRequest("stock.zoneUnknown");
@@ -229,23 +287,12 @@ class BranchSales {
                 throw MedixException.badRequest("transfer.zk.duplicateBatch");
             }
         }
-        String number = numbers.next(DocumentPrefix.FS, from.branchCode()).toString();
-        long id = jdbc.sql("""
-                INSERT INTO branch_sale (number, seller_branch_id, buyer_branch_id, from_warehouse_id, from_zone_id, to_warehouse_id, note,
-                                         status, created_by)
-                VALUES (:n, :s, :b, :fw, :fz, :tw, :note, 'DRAFT', :by) RETURNING id""")
-                .param("n", number)
-                .param("s", from.branchId())
-                .param("b", to.branchId())
-                .param("fw", from.warehouseId())
-                .param("fz", from.id())
-                .param("tw", to.id())
-                .param("note", blankToNull(r.note()))
-                .param("by", actor.employeeId())
-                .query(Long.class)
-                .single();
+        return new Route(from, to.id(), to.branchId());
+    }
+
+    private void insertLines(long id, List<BranchSaleLineRequest> lines) {
         int lineNo = 0;
-        for (BranchSaleLineRequest l : r.lines()) {
+        for (BranchSaleLineRequest l : lines) {
             Long product = jdbc.sql("SELECT product_id FROM batch WHERE id = :b").param("b", l.batchId()).query(Long.class).optional()
                     .orElseThrow(() -> MedixException.badRequest("stock.batchUnknown"));
             jdbc.sql("INSERT INTO branch_sale_line (sale_id, line_no, batch_id, product_id, qty) VALUES (:t, :no, :b, :p, :q)")
@@ -256,10 +303,6 @@ class BranchSales {
                     .param("q", l.qty())
                     .update();
         }
-        checkFree(from.id(), lines(id), false);
-        audit.record(AuditEntry.of("transfer.fs.create", "branch_sale", id)
-                .change(null, Map.of("number", number, "lines", r.lines().size(), "buyer", to.branchId())), actor);
-        return id;
     }
 
     /**

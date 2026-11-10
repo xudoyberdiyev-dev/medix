@@ -134,7 +134,34 @@ export function useSubmitInventoryCount() {
 }
 
 export function useRecountInventoryCount() {
-  return useInMutation((id: number) => unwrap(api.POST("/api/inventory-counts/{id}/recount", { params: { path: { id } } })));
+  return useInMutation((v: { id: number; lineIds?: number[] }) =>
+    unwrap(api.POST("/api/inventory-counts/{id}/recount", { params: { path: { id: v.id } }, body: { lineIds: v.lineIds } })),
+  );
+}
+
+export function useUpdateInventoryCount() {
+  return useInMutation((v: { id: number; body: InventoryCountRequest }) =>
+    unwrap(api.PUT("/api/inventory-counts/{id}", { params: { path: { id: v.id } }, body: v.body })),
+  );
+}
+
+export function useLineNote() {
+  return useInMutation((v: { id: number; lineId: number; note: string }) =>
+    unwrap(
+      api.PUT("/api/inventory-counts/{id}/lines/{lineId}/note", {
+        params: { path: { id: v.id, lineId: v.lineId } },
+        body: { note: v.note.trim() || undefined },
+      }),
+    ),
+  );
+}
+
+export function useScopeOptions(warehouseId: number | null) {
+  return useQuery({
+    queryKey: ["inventory-counts", "scope-options", warehouseId],
+    queryFn: () => unwrap(api.GET("/api/inventory-counts/scope-options", { params: { query: { warehouseId: warehouseId ?? 0 } } })),
+    enabled: warehouseId !== null,
+  });
 }
 
 export function useApproveInventoryCount() {

@@ -2,28 +2,35 @@
 
 import { Check, CircleAlert, Download, FileSpreadsheet, Trash2, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DocumentHeader } from "@/components/ui/document-header";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
+import { RowMenu } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
-import { ErrorState, Skeleton } from "@/components/ui/system-states";
+import { ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { can } from "@/features/auth/can";
+import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
-import { useWarehouses, zoneLabel } from "@/features/organization/api";
+import { useBranchList, useWarehouses, zoneLabel } from "@/features/organization/api";
+import { Steps } from "@/features/payments/payment-doc-page";
+import { InfoRow } from "@/features/warehouse-transfers/transfer-doc-page";
 import { searchProducts } from "@/features/prices/api";
 import { describeError } from "@/features/setup/form-error";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import {
   OPENING_APPROVE,
   OPENING_CANCEL,
+  OPENING_CREATE,
+  OPENING_GOODS,
   duplicateKey,
   lineTotal,
   tiyinToMoney,
@@ -59,6 +66,34 @@ export function OpeningDrawer(props: { id: number | null; canEdit: boolean; onCl
   return <Editor key={d ? `${d.id}-${d.status}-${d.lines.length}-${d.fileName ?? ""}` : "new"} doc={d} {...props} />;
 }
 
+/** BQ (tovar) hujjati — toʻliq sahifa (prototip `OpeningDoc`): `/opening/goods/new` va `/opening/goods/[id]`. */
+export function OpeningDocPage({ id }: { id: number | null }) {
+  const t = useTranslations("opening");
+  const me = useMe();
+  const router = useRouter();
+  const doc = useOpening(id);
+  if (me.data && !canAny(me.data, ["opening.list", "opening.view"])) return <ForbiddenState description={t("forbidden")} />;
+  if (id !== null && doc.error) return <ErrorState onRetry={() => doc.refetch()} />;
+  if (id !== null && !doc.data)
+    return (
+      <div className="flex flex-col gap-4" aria-label={t("drawer.loading")}>
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  const d = doc.data ?? null;
+  return (
+    <Editor
+      key={d ? `${d.id}-${d.status}-${d.lines.length}-${d.fileName ?? ""}` : "new"}
+      doc={d}
+      page
+      canEdit={can(me.data, OPENING_CREATE) && can(me.data, OPENING_GOODS)}
+      onClose={() => router.push("/opening")}
+      onCreated={(nid) => router.replace(`/opening/goods/${nid}`)}
+    />
+  );
+}
+
 function toDraft(d: OpeningDetail): DraftLine[] {
   return d.lines.map((l) => ({
     productId: l.productId,
@@ -90,16 +125,20 @@ function Editor({
   canEdit,
   onClose,
   onCreated,
+  page = false,
 }: {
   doc: OpeningDetail | null;
   canEdit: boolean;
   onClose: () => void;
   onCreated: (id: number) => void;
+  /** Toʻliq sahifa (prototip `OpeningDoc`): DocumentHeader, maʼlumotlar va qatorlar boʻlimlari; aks holda — drawer. */
+  page?: boolean;
 }) {
   const t = useTranslations("opening");
   const KIND = t("title");
   const me = useMe();
   const warehouses = useWarehouses();
+  const branches = useBranchList();
   const save = useSaveOpening();
   const post = usePostOpening();
   const cancel = useCancelOpening();
@@ -121,6 +160,7 @@ function Editor({
   const zones = warehouse?.zones ?? [];
   const zoneName = (id: number) => warehouse?.zones.find((z) => z.id === id)?.name ?? doc?.lines.find((l) => l.zoneId === id)?.zone ?? "";
   const showCost = !doc || doc.totalCost != null;
+  const branchName = branches.data?.find((b) => b.id === warehouse?.branchId)?.name ?? "";
   const today = todayTashkent();
 
   let total = 0n;
@@ -212,6 +252,23 @@ function Editor({
     setLocal(null);
   }
 
+  const postNow = () =>
+    saveDraft((id) =>
+      post.mutate(id, {
+        onSuccess: (d) => {
+          toast({
+            tone: "success",
+            title: t("drawer.posted"),
+            description: t("drawer.postedDescription", { number: d.number, qty: formatQuantity(d.totalQty) }),
+          });
+          if (!doc) onCreated(d.id);
+        },
+        onError: () => {
+          if (!doc) onCreated(id);
+        },
+      }),
+    );
+
   const actions = (
     <>
       {doc && ((doc.status === "DRAFT" && canEdit) || (doc.status === "POSTED" && canCancelPosted)) ? (
@@ -228,27 +285,7 @@ function Editor({
             {t("drawer.saveDraft")}
           </Button>
           {canPost ? (
-            <Button
-              icon={Check}
-              loading={post.isPending}
-              onClick={() =>
-                saveDraft((id) =>
-                  post.mutate(id, {
-                    onSuccess: (d) => {
-                      toast({
-                        tone: "success",
-                        title: t("drawer.posted"),
-                        description: t("drawer.postedDescription", { number: d.number, qty: formatQuantity(d.totalQty) }),
-                      });
-                      if (!doc) onCreated(d.id);
-                    },
-                    onError: () => {
-                      if (!doc) onCreated(id);
-                    },
-                  }),
-                )
-              }
-            >
+            <Button icon={Check} loading={post.isPending} onClick={postNow}>
               {t("drawer.post")}
             </Button>
           ) : null}
@@ -257,29 +294,36 @@ function Editor({
     </>
   );
 
-  return (
-    <Drawer
-      open
-      onClose={onClose}
-      size="lg"
-      kind={doc ? `${KIND} · ${doc.createdBy}` : KIND}
-      title={doc ? doc.number : t("drawer.newTitle")}
-      subtitle={doc?.fileName ? t("drawer.excelFile", { name: doc.fileName }) : undefined}
-      status={doc ? <OpeningStatusBadge status={doc.status} /> : undefined}
-      actions={actions}
-    >
-      <div className="flex flex-col gap-4">
-        {doc?.status === "CANCELLED" && doc.cancelReason ? (
-          <Alert tone="info" title={t("drawer.cancelledReason", { reason: doc.cancelReason })}>
-            {doc.cancelledBy}
-          </Alert>
-        ) : null}
-        {doc?.status === "POSTED" ? (
-          <Alert tone="success" title={t("drawer.postedTitle")}>
-            {t("drawer.postedHint")}
-          </Alert>
-        ) : null}
-        <div className="grid grid-cols-3 gap-4">
+  const content = (
+    <div className="flex flex-col gap-4">
+      {doc?.status === "CANCELLED" && doc.cancelReason ? (
+        <Alert tone="info" title={t("drawer.cancelledReason", { reason: doc.cancelReason })}>
+          {doc.cancelledBy}
+        </Alert>
+      ) : null}
+      {doc?.status === "POSTED" ? (
+        <Alert tone="success" title={t("drawer.postedTitle")}>
+          {t("drawer.postedHint")}
+        </Alert>
+      ) : null}
+      {page && !editable && doc ? (
+        <section className="rounded-card border border-border bg-surface">
+          <h2 className="border-b border-border px-5 py-4 text-subtitle">{t("doc.info")}</h2>
+          <dl className="flex flex-col px-5 py-2">
+            <InfoRow k={t("doc.branch")} v={branchName} />
+            <InfoRow k={t("drawer.warehouse")} v={warehouse?.name ?? "—"} />
+            <InfoRow k={t("drawer.cutoffDate")} v={date} />
+            <InfoRow k={t("doc.source")} v={doc.fileName ?? t("doc.manual")} />
+            <InfoRow k={t("doc.createdBy")} v={doc.createdBy} />
+            {doc.note ? <InfoRow k={t("drawer.note")} v={doc.note} /> : null}
+          </dl>
+        </section>
+      ) : (
+        <div
+          className={
+            page ? "grid grid-cols-1 gap-4 rounded-card border border-border bg-surface p-5 md:grid-cols-3" : "grid grid-cols-3 gap-4"
+          }
+        >
           <Select
             label={t("drawer.warehouse")}
             value={warehouseId}
@@ -305,161 +349,166 @@ function Editor({
             placeholder={t("drawer.notePlaceholder")}
           />
         </div>
+      )}
 
-        {editable && warehouse ? (
-          <div className="grid grid-cols-4 items-end gap-3 rounded-card border border-border p-3">
-            <Select
-              label={t("drawer.product")}
-              value={adding.product}
-              loadOptions={async (q) => {
-                const found = await searchProducts(q);
-                found.forEach((o) => seen.current.set(o.value, { code: o.sub, name: o.label }));
-                return found;
-              }}
-              onChange={(v) => setAdding((a) => ({ ...a, product: v }))}
-              placeholder={t("drawer.productPlaceholder")}
-              options={[]}
-              className="col-span-3"
-            />
-            <Select
-              label={t("drawer.zone")}
-              value={adding.zone}
-              onChange={(v) => setAdding((a) => ({ ...a, zone: v }))}
-              options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: zoneLabel(z.type) }))}
-            />
-            <TextField label={t("drawer.batch")} value={adding.batch} onChange={(v) => setAdding((a) => ({ ...a, batch: v }))} />
-            <TextField
-              label={t("drawer.produced")}
-              value={adding.produced}
-              onChange={(v) => setAdding((a) => ({ ...a, produced: v }))}
-              placeholder="KK.OO.YYYY"
-            />
-            <TextField
-              label={t("drawer.expiry")}
-              value={adding.expiry}
-              onChange={(v) => setAdding((a) => ({ ...a, expiry: v }))}
-              placeholder="KK.OO.YYYY"
-            />
-            <TextField
-              label={t("drawer.qty")}
-              value={adding.qty}
-              onChange={(v) => setAdding((a) => ({ ...a, qty: v }))}
-              inputMode="numeric"
-              suffix={t("drawer.unit")}
-            />
-            <TextField
-              label={t("drawer.cost")}
-              value={adding.bonus ? "0" : adding.cost}
-              onChange={(v) => setAdding((a) => ({ ...a, cost: v }))}
-              inputMode="decimal"
-              suffix={t("drawer.currency")}
-              disabled={adding.bonus}
-              className="col-span-2"
-            />
-            <Checkbox
-              label={t("drawer.bonusBatch")}
-              description={t("drawer.bonusHint")}
-              checked={adding.bonus}
-              onChange={(v) => setAdding((a) => ({ ...a, bonus: v }))}
-            />
-            <Button variant="secondary" onClick={addLine}>
-              {t("drawer.addLine")}
-            </Button>
-          </div>
-        ) : null}
-
-        {local ? <Alert tone="danger" title={local} /> : null}
-        {err.message ? <Alert tone="danger" title={err.message} /> : null}
-        {expiredCount > 0 ? (
-          <Alert tone="warning" title={t("drawer.expiredCount", { count: expiredCount })}>
-            {t("drawer.expiredHint")}
-          </Alert>
-        ) : null}
-
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-subtitle">
-            {t("drawer.lines", { count: formatQuantity(lines.length) })}
-            <span className="ml-3 text-body font-normal text-text-secondary">
-              {t("drawer.linesQty", { qty: formatQuantity(qtyTotal) })}
-              {showCost ? ` · ${t("drawer.linesSum", { sum: formatMoney(tiyinToMoney(total)) })}` : ""}
-            </span>
-          </h3>
-          {editable && doc ? (
-            <Button variant="tertiary" icon={Upload} onClick={() => setDialog("import")}>
-              {t("drawer.importExcel")}
-            </Button>
-          ) : null}
+      {editable && warehouse ? (
+        <div className="grid grid-cols-4 items-end gap-3 rounded-card border border-border p-3">
+          <Select
+            label={t("drawer.product")}
+            value={adding.product}
+            loadOptions={async (q) => {
+              const found = await searchProducts(q);
+              found.forEach((o) => seen.current.set(o.value, { code: o.sub, name: o.label }));
+              return found;
+            }}
+            onChange={(v) => setAdding((a) => ({ ...a, product: v }))}
+            placeholder={t("drawer.productPlaceholder")}
+            options={[]}
+            className="col-span-3"
+          />
+          <Select
+            label={t("drawer.zone")}
+            value={adding.zone}
+            onChange={(v) => setAdding((a) => ({ ...a, zone: v }))}
+            options={zones.map((z) => ({ value: String(z.id), label: z.name, sub: zoneLabel(z.type) }))}
+          />
+          <TextField label={t("drawer.batch")} value={adding.batch} onChange={(v) => setAdding((a) => ({ ...a, batch: v }))} />
+          <TextField
+            label={t("drawer.produced")}
+            value={adding.produced}
+            onChange={(v) => setAdding((a) => ({ ...a, produced: v }))}
+            placeholder="KK.OO.YYYY"
+          />
+          <TextField
+            label={t("drawer.expiry")}
+            value={adding.expiry}
+            onChange={(v) => setAdding((a) => ({ ...a, expiry: v }))}
+            placeholder="KK.OO.YYYY"
+          />
+          <TextField
+            label={t("drawer.qty")}
+            value={adding.qty}
+            onChange={(v) => setAdding((a) => ({ ...a, qty: v }))}
+            inputMode="numeric"
+            suffix={t("drawer.unit")}
+          />
+          <TextField
+            label={t("drawer.cost")}
+            value={adding.bonus ? "0" : adding.cost}
+            onChange={(v) => setAdding((a) => ({ ...a, cost: v }))}
+            inputMode="decimal"
+            suffix={t("drawer.currency")}
+            disabled={adding.bonus}
+            className="col-span-2"
+          />
+          <Checkbox
+            label={t("drawer.bonusBatch")}
+            description={t("drawer.bonusHint")}
+            checked={adding.bonus}
+            onChange={(v) => setAdding((a) => ({ ...a, bonus: v }))}
+          />
+          <Button variant="secondary" onClick={addLine}>
+            {t("drawer.addLine")}
+          </Button>
         </div>
-        {editable && !doc ? <p className="text-caption text-text-secondary">{t("drawer.importAfterSave")}</p> : null}
-        <div className="overflow-x-auto rounded-card border border-border">
-          <table className="w-full text-table">
-            <thead className="bg-table-header text-left text-text-secondary">
-              <tr>
-                <th className="px-3 py-2 font-medium">{t("drawer.product")}</th>
-                <th className="px-3 py-2 font-medium">{t("drawer.zone")}</th>
-                <th className="px-3 py-2 font-medium">{t("drawer.batch")}</th>
-                <th className="px-3 py-2 font-medium">{t("drawer.expiry")}</th>
-                <th className="px-3 py-2 text-right font-medium">{t("drawer.qty")}</th>
-                {showCost ? <th className="px-3 py-2 text-right font-medium">{t("drawer.costColumn")}</th> : null}
-                {editable ? <th className="w-10" /> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {lines.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-3 py-6 text-center text-text-secondary">
-                    {editable ? (warehouse ? t("drawer.noLinesHint") : t("drawer.chooseWarehouseFirst")) : t("drawer.noLines")}
-                  </td>
-                </tr>
-              ) : (
-                lines.map((l, i) => {
-                  const e = parseUzDate(l.expiryDate);
-                  const expired = Boolean(e && cutoffIso && e < cutoffIso);
-                  return (
-                    <tr key={`${duplicateKey(l)}-${i}`} className="border-t border-border">
-                      <td className="px-3 py-2">
-                        <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
-                      </td>
-                      <td className="px-3 py-2">{zoneName(l.zoneId)}</td>
-                      <td className="px-3 py-2 font-mono">
-                        <span className="flex items-center gap-2">
-                          {l.batchNumber}
-                          {l.bonus ? <Badge tone="info">{t("drawer.bonus")}</Badge> : null}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 tabular-nums">
-                        {expired ? (
-                          <Badge tone="danger" icon={CircleAlert}>
-                            {t("drawer.expired", { date: l.expiryDate })}
-                          </Badge>
-                        ) : (
-                          l.expiryDate
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums">{/^\d+$/.test(l.qty) ? formatQuantity(Number(l.qty)) : l.qty}</td>
-                      {showCost ? (
-                        <td className="px-3 py-2 text-right tabular-nums">
-                          {parseMoneyInput(l.cost) ? formatMoney(parseMoneyInput(l.cost)!) : l.cost}
-                        </td>
-                      ) : null}
-                      {editable ? (
-                        <td className="px-1">
-                          <Button
-                            variant="icon"
-                            icon={Trash2}
-                            aria-label={t("drawer.removeLine")}
-                            onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
-                          />
-                        </td>
-                      ) : null}
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+      ) : null}
+
+      {local ? <Alert tone="danger" title={local} /> : null}
+      {err.message ? <Alert tone="danger" title={err.message} /> : null}
+      {expiredCount > 0 ? (
+        <Alert tone="warning" title={t("drawer.expiredCount", { count: expiredCount })}>
+          {t("drawer.expiredHint")}
+        </Alert>
+      ) : null}
+
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-subtitle">
+          {t("drawer.lines", { count: formatQuantity(lines.length) })}
+          <span className="ml-3 text-body font-normal text-text-secondary">
+            {t("drawer.linesQty", { qty: formatQuantity(qtyTotal) })}
+            {showCost ? ` · ${t("drawer.linesSum", { sum: formatMoney(tiyinToMoney(total)) })}` : ""}
+          </span>
+        </h3>
+        {editable && doc ? (
+          <Button variant="tertiary" icon={Upload} onClick={() => setDialog("import")}>
+            {t("drawer.importExcel")}
+          </Button>
+        ) : null}
       </div>
+      {editable && !doc ? <p className="text-caption text-text-secondary">{t("drawer.importAfterSave")}</p> : null}
+      <div className="overflow-x-auto rounded-card border border-border">
+        <table className="w-full text-table">
+          <thead className="bg-table-header text-left text-text-secondary">
+            <tr>
+              <th className="px-3 py-2 font-medium">{t("drawer.product")}</th>
+              <th className="px-3 py-2 font-medium">{t("drawer.zone")}</th>
+              <th className="px-3 py-2 font-medium">{t("drawer.batch")}</th>
+              <th className="px-3 py-2 font-medium">{t("drawer.expiry")}</th>
+              <th className="px-3 py-2 text-right font-medium">{t("drawer.qty")}</th>
+              {showCost ? <th className="px-3 py-2 text-right font-medium">{t("drawer.costColumn")}</th> : null}
+              {editable ? <th className="w-10" /> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {lines.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-3 py-6 text-center text-text-secondary">
+                  {editable ? (warehouse ? t("drawer.noLinesHint") : t("drawer.chooseWarehouseFirst")) : t("drawer.noLines")}
+                </td>
+              </tr>
+            ) : (
+              lines.map((l, i) => {
+                const e = parseUzDate(l.expiryDate);
+                const expired = Boolean(e && cutoffIso && e < cutoffIso);
+                return (
+                  <tr key={`${duplicateKey(l)}-${i}`} className="border-t border-border">
+                    <td className="px-3 py-2">
+                      <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
+                    </td>
+                    <td className="px-3 py-2">{zoneName(l.zoneId)}</td>
+                    <td className="px-3 py-2 font-mono">
+                      <span className="flex items-center gap-2">
+                        {l.batchNumber}
+                        {l.bonus ? <Badge tone="info">{t("drawer.bonus")}</Badge> : null}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 tabular-nums">
+                      {expired ? (
+                        <Badge tone="danger" icon={CircleAlert}>
+                          {t("drawer.expired", { date: l.expiryDate })}
+                        </Badge>
+                      ) : (
+                        l.expiryDate
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums">{/^\d+$/.test(l.qty) ? formatQuantity(Number(l.qty)) : l.qty}</td>
+                    {showCost ? (
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {parseMoneyInput(l.cost) ? formatMoney(parseMoneyInput(l.cost)!) : l.cost}
+                      </td>
+                    ) : null}
+                    {editable ? (
+                      <td className="px-1">
+                        <Button
+                          variant="icon"
+                          icon={Trash2}
+                          aria-label={t("drawer.removeLine")}
+                          onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
+                        />
+                      </td>
+                    ) : null}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const dialogs = (
+    <>
       {dialog === "import" && doc ? <ImportDialog id={doc.id} onClose={() => setDialog(null)} /> : null}
       {dialog === "cancel" && doc ? (
         <DeactivateDialog
@@ -477,6 +526,83 @@ function Editor({
           }
         />
       ) : null}
+    </>
+  );
+
+  if (page) {
+    const cancelable = doc && ((doc.status === "DRAFT" && canEdit) || (doc.status === "POSTED" && canCancelPosted));
+    const st = doc?.status ?? "DRAFT";
+    return (
+      <div className="flex min-w-0 flex-col gap-4 pb-12">
+        <DocumentHeader
+          parent={{ label: KIND, href: "/opening" }}
+          crumb={doc ? doc.number : t("doc.crumbNew")}
+          crumbMono={Boolean(doc)}
+          title={doc ? t("type.GOODS") : t("drawer.newTitle")}
+          number={doc?.number}
+          status={doc ? <OpeningStatusBadge status={doc.status} /> : undefined}
+          sub={warehouse ? [branchName, warehouse.name, date].filter(Boolean).join(" · ") : undefined}
+          meta={
+            <Steps
+              steps={[
+                { label: t("doc.stepDraft"), state: st === "DRAFT" ? "cur" : st === "CANCELLED" ? "fail" : "done" },
+                { label: t("doc.stepPosted"), state: st === "POSTED" ? "done" : "next" },
+              ]}
+            />
+          }
+          actions={
+            <>
+              {cancelable ? (
+                <RowMenu
+                  label={t("doc.more")}
+                  items={[
+                    {
+                      key: "cancel",
+                      label: t("drawer.cancelDoc"),
+                      icon: <X size={16} strokeWidth={1.5} aria-hidden />,
+                      onSelect: () => (cancel.reset(), setDialog("cancel")),
+                    },
+                  ]}
+                />
+              ) : null}
+              {editable ? (
+                <>
+                  <Button
+                    variant={canPost ? "secondary" : "primary"}
+                    loading={save.isPending && !post.isPending}
+                    onClick={() => saveDraft()}
+                  >
+                    {t("drawer.saveDraft")}
+                  </Button>
+                  {canPost ? (
+                    <Button icon={Check} loading={post.isPending} onClick={postNow}>
+                      {t("drawer.post")}
+                    </Button>
+                  ) : null}
+                </>
+              ) : null}
+            </>
+          }
+        />
+        {content}
+        {dialogs}
+      </div>
+    );
+  }
+
+  return (
+    <Drawer
+      open
+      onClose={onClose}
+      size="lg"
+      kind={doc ? `${KIND} · ${doc.createdBy}` : KIND}
+      title={doc ? doc.number : t("drawer.newTitle")}
+      subtitle={doc?.fileName ? t("drawer.excelFile", { name: doc.fileName }) : undefined}
+      status={doc ? <OpeningStatusBadge status={doc.status} /> : undefined}
+      actions={actions}
+    >
+      {content}
+      {dialogs}
     </Drawer>
   );
 }

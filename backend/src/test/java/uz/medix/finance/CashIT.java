@@ -335,8 +335,20 @@ class CashIT {
                 .andExpect(jsonPath("$.code").value("cashClose.pinRequired"));
         send(post("/api/cash-close"), manager.cookie(), counted.formatted(",\"note\":\"Mayda pul yoʻq\",\"pin\":\"1111\""))
                 .andExpect(jsonPath("$.code").value("pin.wrong"));
-        send(post("/api/cash-close"), manager.cookie(), counted.formatted(",\"note\":\"Mayda pul yoʻq\",\"pin\":\"4826\""))
+        // Prototip CashClose: kassir tasdiqlovchini tanlaydi, tasdiqlovchi o'z PIN kodini kiritadi
+        Session operator = loginAs("OPERATOR", b);
+        mvc.perform(get("/api/cash-close/approvers").param("accountId", "" + k).cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == " + manager.id() + ")].ownBranch").value(true))
+                .andExpect(jsonPath("$[?(@.id == " + operator.id() + ")]").isEmpty());
+        send(post("/api/cash-close"), cashier, counted.formatted(",\"note\":\"Mayda pul yoʻq\",\"pin\":\"4826\",\"approverId\":" + operator.id()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("cashClose.approverInvalid"));
+        send(post("/api/cash-close"), cashier, counted.formatted(",\"note\":\"Mayda pul yoʻq\",\"pin\":\"1111\",\"approverId\":" + manager.id()))
+                .andExpect(jsonPath("$.code").value("pin.wrong"));
+        send(post("/api/cash-close"), cashier, counted.formatted(",\"note\":\"Mayda pul yoʻq\",\"pin\":\"4826\",\"approverId\":" + manager.id()))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.approvedBy").isNotEmpty())
                 .andExpect(jsonPath("$.expected").value("1350350.50"))
                 .andExpect(jsonPath("$.diff").value("-350.50"))
                 .andExpect(jsonPath("$.correctionNumber", matchesPattern("KO-[A-Z]{3}-\\d{6}")));

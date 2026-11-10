@@ -349,6 +349,8 @@ test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await page.goto("/opening");
   await page.getByRole("button", { name: "Yangi hujjat" }).click();
   await page.getByRole("menuitem", { name: /Tovar qoldigʻi/ }).click();
+  // Toʻliq sahifa (prototip OpeningDoc)
+  await expect(page).toHaveURL(/\/opening\/goods\/new$/);
   await choose(page, "Ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("E2E");
@@ -362,7 +364,8 @@ test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await expect(page.getByRole("cell", { name: "E2E-01" })).toBeVisible();
   await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Qoldiq omborga kirdi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/opening\/goods\/\d+$/);
+  await expect(page.getByRole("main").getByText("Qoʻlda kiritilgan")).toBeVisible();
 
   // Qoldiqlar — mahsulot boʻyicha: jami va mavjud
   await page.goto("/stock");
@@ -598,14 +601,20 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
   await expect(page.getByText("Chiqim tasdiqlandi").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /Asosiy kassa.*500\.000,00/ })).toBeVisible();
 
-  // Kunni yopish: 2 × 200 000 + 1 × 100 000 = kutilgan 500 000 — farqsiz
+  // Kunni yopish — toʻliq sahifa (prototip CashClose): 2 × 200 000 + 1 × 100 000 = tizim qoldigʻi 500 000 — farqsiz
   await page.getByRole("button", { name: "Kunni yopish" }).first().click();
-  const drawer = page.getByRole("dialog");
-  await expect(drawer.getByText("Kutilgan qoldiq")).toBeVisible();
-  await field(page, "200.000 soʻm").fill("2");
-  await field(page, "100.000 soʻm").fill("1");
-  await drawer.getByRole("button", { name: "Kunni yopish" }).click();
-  await expect(page.getByText(/Kun yopildi/).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/cash\/close\?acct=\d+/);
+  await expect(page.getByRole("heading", { name: "Kassa kunini yopish" })).toBeVisible();
+  await page.getByRole("button", { name: "Kunni yopish" }).last().click();
+  await expect(page.getByText("Kunni yopib boʻlmaydi: 1 ta muammo").first()).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Yopish", exact: true }).last().click();
+  await page.getByLabel("200.000", { exact: true }).fill("2");
+  await page.getByLabel("100.000", { exact: true }).fill("1");
+  await expect(page.getByText("Mos keldi — sanoq tizim qoldigʻiga teng")).toBeVisible();
+  await page.getByRole("button", { name: "Kunni yopish" }).last().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Kunni yopish" }).click();
+  await expect(page.getByText(/kassa kuni yopilgan/).first()).toBeVisible();
+  await page.goto("/cash");
   await page.getByRole("tab", { name: "Yopilgan kunlar" }).click();
   await expect(page.getByRole("cell", { name: "500.000,00" }).first()).toBeVisible();
 });
@@ -623,23 +632,37 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
 
   await page.goto("/warehouse-transfers");
   await page.getByRole("button", { name: "Koʻchirish tuzish" }).first().click();
+  await expect(page).toHaveURL(/\/warehouse-transfers\/new$/);
+  await expect(page.getByRole("heading", { name: "Yangi ombor koʻchirishi" })).toBeVisible();
   await choose(page, "Qaysi ombordan", /Markaziy ombor/);
   await choose(page, "Zona", /Asosiy saqlash/);
   await choose(page, "Qaysi omborga", /E2E ikkinchi ombor/);
   await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("5");
-  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
-  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
 
+  // Yangi qoralama toʻliq sahifada (prototip TransferDoc): avtomatik saqlanadi → hujjat sahifasi, tahrirlash davom etadi
+  await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
+  await expect(page.getByRole("main").getByText(/^Saqlandi · /)).toBeVisible();
+  await expect(page.getByRole("main").getByLabel(/E2E-01 — joʻnatish soni/)).toHaveValue("5");
+  await expect(page.getByRole("heading", { name: /Ombor koʻchirish/ })).toBeVisible();
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
-  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText(/joʻnatildi — yoʻlda/)).toBeVisible();
+  await expect(page.getByText(/^Joʻnatildi · \d/)).toBeVisible();
 
+  // Qabul — alohida sahifa (prototip TransferReceive): qator boʻyicha miqdor, farq sababi, qayerga zona
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
-  await page.getByLabel(/E2E-01 — kelgan soni/).fill("4");
-  await field(page, "Izoh").fill("1 dona shikastlangan");
-  // Qabul oynasi hujjat oynasi ichida (oxirgi dialog) — uning asosiy tugmasi
-  await page.getByRole("dialog").last().getByRole("button", { name: "Qabul qilish", exact: true }).click();
-  await expect(page.getByText("Qabul qilindi, kamomad 1 dona")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/warehouse-transfers\/\d+\/receive$/);
+  await page.getByLabel(/· E2E-01 — qabul qilingan/).fill("4");
+  await page.getByRole("button", { name: "Qabulni tasdiqlash" }).click();
+  await expect(page.getByText("Farq bor — sababni tanlang")).toBeVisible();
+  await page.getByRole("radio", { name: "Kam keldi" }).click();
+  await page.getByRole("button", { name: "Qabulni tasdiqlash" }).click();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Qabulni tasdiqlash" }).click();
+  await expect(page.getByText(/farq bilan qabul qilindi$/)).toBeVisible();
+  await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
+  await expect(page.getByText(/^Farq bilan qabul qilindi · \d/)).toBeVisible();
+  await page.getByRole("tab", { name: /Tarix/ }).click();
+  await expect(page.getByText("farq bilan qabul qildi")).toBeVisible();
 
   await page.goto("/warehouse-transfers");
   const row = page.getByRole("row", { name: /OK-/ }).first();
@@ -653,8 +676,17 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   await expect(all).toContainText("Farq bilan qabul qilindi");
   await expect(all).toContainText("Ombor koʻchirish");
   await all.click();
-  await expect(page).toHaveURL(/\/warehouse-transfers\?open=\d+/);
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
+
+  // ZK — yangi hujjat toʻliq sahifada (prototip TransferDoc): ?new=1 → /zone-transfers/new; tanlash, partiyalar FEFO, tasdiqlash oynasi
+  await page.goto("/zone-transfers?new=1");
+  await expect(page).toHaveURL(/\/zone-transfers\/new$/);
+  await expect(page.getByRole("heading", { name: "Yangi zona koʻchirishi" })).toBeVisible();
+  await choose(page, "Ombor", /Markaziy ombor/);
+  await choose(page, "Qayerdan", /Asosiy saqlash/);
+  await expect(page.getByLabel(/E2E-01 — koʻchirish soni/)).toBeVisible();
+  await page.getByRole("button", { name: "Koʻchirish", exact: true }).click();
+  await expect(page.getByText("Qayerdan va qayerga zonalarini tanlang.").first()).toBeVisible();
 });
 
 test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, tannarx bilan", async ({ page }) => {
@@ -663,7 +695,9 @@ test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, 
 
   await page.goto("/write-offs");
   await page.getByRole("button", { name: "Hisobdan chiqarish" }).first().click();
-  const drawer = page.getByRole("dialog").last();
+  // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = hc)
+  await expect(page).toHaveURL(/\/write-offs\/new$/);
+  const drawer = page.getByRole("main");
   await drawer.getByRole("combobox", { name: "Ombor", exact: true }).click();
   await page.getByRole("option", { name: /Markaziy ombor/ }).click();
   await drawer.getByRole("combobox", { name: "Zona", exact: true }).click();
@@ -674,9 +708,12 @@ test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, 
   await drawer.getByLabel("Dalolatnoma raqami").fill("E2E-AKT-1");
   await drawer.getByRole("button", { name: "Hisobdan chiqarish", exact: true }).click();
   await expect(page.getByText("Tovar hisobdan chiqarildi")).toBeVisible();
-  await expect(drawer.getByText("3.601,00", { exact: false }).first()).toBeVisible();
-  await page.keyboard.press("Escape");
+  // Hujjat — toʻliq sahifa (prototip StockDocs, kind = hc): tannarx bilan
+  await expect(page).toHaveURL(/\/write-offs\/\d+$/);
+  await expect(page.getByRole("main").getByText("3.601,00", { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole("main").getByText(/^Oʻtkazildi · \d/)).toBeVisible();
 
+  await page.goto("/write-offs");
   const row = page.getByRole("row", { name: /HC-/ }).first();
   await expect(row).toContainText("Oʻtkazildi");
   await expect(row).toContainText("Shikastlangan");
@@ -688,52 +725,65 @@ test("CEO: OK kamomadini hisobdan chiqarish (HC, qoldiq harakatisiz)", async ({ 
 
   await page.goto("/warehouse-transfers");
   await page.getByRole("row", { name: /OK-/ }).first().click();
+  await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
   await expect(page.getByText("Kamomad: 1 dona — hal qilinmagan")).toBeVisible();
-  await page.getByRole("dialog").last().getByRole("button", { name: "Hisobdan chiqarish", exact: true }).click();
+  await page.getByRole("button", { name: "Hisobdan chiqarish", exact: true }).first().click();
   await page.getByRole("dialog").last().getByLabel("Izoh").fill("Yoʻlda shikastlangan");
   await page.getByRole("dialog").last().getByRole("button", { name: "Hisobdan chiqarish", exact: true }).click();
   await expect(page.getByText("Hisobdan chiqarish hujjati tuzildi")).toBeVisible();
   await expect(page.getByText("Kamomad: 1 dona — hal qilindi")).toBeVisible();
-  await page.keyboard.press("Escape");
 
   await page.goto("/write-offs");
   const row = page.getByRole("row", { name: /Kamomad/ }).first();
   await expect(row).toContainText("Oʻtkazildi");
 });
 
-test("CEO: inventarizatsiya (IN) — qoralama → sanoqni ochish → sanash → bekor qilish (qulf yechiladi)", async ({ page }) => {
+test("CEO: inventarizatsiya (IN) — hujjat sahifasi: qoralama (avtosaqlash) → komissiya → sanoq ekrani → bekor qilish", async ({ page }) => {
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/inventory-counts");
   await page.getByRole("button", { name: "Inventarizatsiya boshlash" }).first().click();
-  const drawer = page.getByRole("dialog").last();
-  await drawer.getByRole("combobox", { name: "Ombor", exact: true }).click();
+  await expect(page).toHaveURL(/\/inventory-counts\/new$/);
+  await page.getByRole("combobox", { name: "Ombor", exact: true }).click();
   await page.getByRole("option", { name: /Markaziy ombor/ }).click();
-  await drawer.getByRole("combobox", { name: "Zona", exact: true }).click();
-  await page.getByRole("option", { name: /Asosiy saqlash/ }).click();
-  await drawer.getByRole("button", { name: "Qoralama yaratish" }).click();
-  await expect(page.getByText("Qoralama yaratildi")).toBeVisible();
-  await expect(page.getByText("Sanoq hali ochilmagan")).toBeVisible();
-
-  await page.getByRole("dialog").last().getByRole("button", { name: "Sanoqni ochish" }).click();
-  await expect(page.getByText(/Sanoq ketmoqda · 0%/)).toBeVisible();
+  // Ombor tanlanishi bilan qoralama saqlanadi va raqam oladi
+  await expect(page).toHaveURL(/\/inventory-counts\/\d+$/);
+  await expect(page.getByText(/IN-[A-Z]{3}-\d{6}/).first()).toBeVisible();
   await page
-    .getByRole("dialog")
-    .last()
+    .getByRole("button", { name: /Asosiy saqlash/ })
+    .first()
+    .click();
+  await page.getByRole("button", { name: "Sanoqni boshlash" }).click();
+  await expect(page.getByText("Komissiya — kamida 2 xodim").first()).toBeVisible();
+  await page.getByRole("button", { name: /Dilshod/ }).click();
+  await page.getByRole("button", { name: /Malika/ }).click();
+  await expect(page.getByText("Rais:")).toBeVisible();
+  await page.getByRole("button", { name: "Sanoqni boshlash" }).click();
+  const confirm = page.getByRole("dialog").last();
+  await expect(confirm.getByText(/qulflanadi/)).toBeVisible();
+  await confirm.getByRole("button", { name: "Sanoqni boshlash" }).click();
+  await expect(page.getByText(/sanoq boshlandi, zona qulflandi/)).toBeVisible();
+
+  // Sanoq ekrani (planshet): kiritilgan miqdor avtomatik saqlanadi
+  await page.getByRole("button", { name: "Sanoq ekranini ochish" }).click();
+  await expect(page).toHaveURL(/\/inventory-counts\/\d+\/count$/);
+  await page
     .getByLabel(/— sanalgan soni/)
     .first()
     .fill("1");
-  await page.getByRole("dialog").last().getByRole("button", { name: "Saqlash" }).click();
-  await expect(page.getByText("Sanoq saqlandi")).toBeVisible();
+  await expect(page.getByText(/^Saqlandi · /).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(/Sanaldi 1 \//)).toBeVisible();
+  await page.getByRole("link", { name: "Hujjatga qaytish" }).click();
 
-  await page.getByRole("dialog").last().getByRole("button", { name: "Bekor qilish" }).click();
+  await page.getByRole("button", { name: "Boshqa amallar" }).click();
+  await page.getByRole("menuitem", { name: "Inventarizatsiyani bekor qilish" }).click();
   const modal = page.getByRole("dialog").last();
-  await modal.getByLabel("Sabab").fill("E2E sinov");
-  await modal.getByRole("button", { name: "Bekor qilish" }).click();
-  await expect(page.getByText("Bekor qilindi, qulf yechildi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await modal.getByLabel("Bekor qilish sababi").fill("E2E sinov");
+  await modal.getByRole("button", { name: "Inventarizatsiyani bekor qilish" }).click();
+  await expect(page.getByText(/bekor qilindi/).first()).toBeVisible();
 
+  await page.goto("/inventory-counts");
   const row = page.getByRole("row", { name: /IN-/ }).first();
   await expect(row).toContainText("Bekor qilingan");
 });
@@ -744,7 +794,9 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
 
   await page.goto("/supplier-returns");
   await page.getByRole("button", { name: "Qaytarish" }).first().click();
-  const drawer = page.getByRole("dialog").last();
+  // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = qy)
+  await expect(page).toHaveURL(/\/supplier-returns\/new$/);
+  const drawer = page.getByRole("main");
   await drawer.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
   await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
@@ -761,9 +813,12 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
   await drawer.getByLabel(/KR-E2E — qaytarish soni/).fill("1");
   await drawer.getByRole("button", { name: "Qaytarish", exact: true }).click();
   await expect(page.getByText("Tovar YB ga qaytarildi")).toBeVisible();
-  await expect(drawer.getByText("2.000,00", { exact: false }).first()).toBeVisible();
-  await page.keyboard.press("Escape");
+  // Hujjat — toʻliq sahifa (prototip StockDocs, kind = qy)
+  await expect(page).toHaveURL(/\/supplier-returns\/\d+$/);
+  await expect(page.getByRole("main").getByText("2.000,00", { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: /KR-/ })).toBeVisible();
 
+  await page.goto("/supplier-returns");
   const row = page.getByRole("row", { name: /QY-/ }).first();
   await expect(row).toContainText("Oʻtkazildi");
   await expect(row).toContainText("Pharm Supply E2E");
@@ -795,15 +850,19 @@ test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx)
 
   await page.goto("/branch-sales");
   await page.getByRole("button", { name: "Savdo tuzish" }).first().click();
+  // Yangi qoralama — toʻliq sahifa (prototip TransferDoc, kind = fs): avtomatik saqlanadi → hujjat sahifasi
+  await expect(page).toHaveURL(/\/branch-sales\/new$/);
+  await expect(page.getByRole("heading", { name: "Yangi filiallararo savdo" })).toBeVisible();
   await choose(page, "Qaysi ombordan", /Markaziy ombor/);
   await choose(page, "Zona", /Asosiy saqlash/);
   await choose(page, "Xaridor ombori", /Samarqand ombori/);
   await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("1");
-  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
-  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
-
+  await expect(page).toHaveURL(/\/branch-sales\/\d+$/);
+  await expect(page.getByRole("main").getByText(/^Saqlandi · /)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Filiallararo savdo" })).toBeVisible();
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
-  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText(/FS-.* joʻnatildi — yoʻlda/)).toBeVisible();
   await expect(page.getByText(/HF-[A-Z]{3}-\d{6}/).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
@@ -827,10 +886,11 @@ test("CEO: FS kamomadi — topildi, sotuvchiga qaytariladi (qarz kamayadi)", asy
   await choose(page, "Zona", /Asosiy saqlash/);
   await choose(page, "Xaridor ombori", /Samarqand ombori/);
   await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("2");
-  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
-  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  await expect(page).toHaveURL(/\/branch-sales\/\d+$/);
+  await expect(page.getByRole("main").getByText(/^Saqlandi · /)).toBeVisible();
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
-  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText(/FS-.* joʻnatildi — yoʻlda/)).toBeVisible();
 
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
   await page.getByLabel(/E2E-01 — kelgan soni/).fill("1");

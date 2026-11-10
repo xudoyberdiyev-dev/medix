@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Ban, CircleCheck, CircleX, Hourglass, ArrowLeftRight, Printer, ReceiptText, LockKeyhole, ScrollText } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -394,6 +395,7 @@ export function TransfersTab(props: { branchId: number }) {
 
 export function ClosesTab(props: { branchId: number }) {
   const tc = useTranslations("cash");
+  const router = useRouter();
   const list = useDayCloses(props.branchId, true);
   const columns: TableColumn<DayClose>[] = [
     { key: "closeDate", title: tc("col.day"), render: (c) => formatIsoDate(c.closeDate) },
@@ -418,6 +420,7 @@ export function ClosesTab(props: { branchId: number }) {
       columns={columns}
       rows={list.data ?? []}
       rowKey={(c) => String(c.id)}
+      onRowClick={(c) => router.push(`/cash/close?acct=${c.accountId}&date=${c.closeDate}`)}
       loading={list.isPending}
       emptyState={<EmptyState icon={LockKeyhole} title={tc("closes.empty.title")} description={tc("closes.empty.description")} />}
     />

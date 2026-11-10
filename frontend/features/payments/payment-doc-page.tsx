@@ -950,7 +950,7 @@ function Effect({ icon: Icon, className, children }: { icon: LucideIcon; classNa
 }
 
 /** Bosqichlar (prototip `DocumentHeader.steps`): bajarilgan — ✓, joriy — qalin, bekor — qizil. */
-function Steps({ steps }: { steps: { label: string; state: "done" | "cur" | "next" | "fail" }[] }) {
+export function Steps({ steps }: { steps: { label: string; state: "done" | "cur" | "next" | "fail" }[] }) {
   return (
     <ol className="flex flex-wrap items-center gap-1.5 text-caption">
       {steps.map((s, i) => (
@@ -992,20 +992,24 @@ function InfoCard({ title, rows }: { title: string; rows: ([string, string] | [s
   );
 }
 
-function AllocTable({
+export function AllocTable({
   kind,
   rows,
   tried,
   disabled,
   onValue,
+  valLabel,
 }: {
   kind: PayKind;
   rows: ReturnType<typeof gridRows>;
   tried: boolean;
   disabled?: boolean;
   onValue: (key: string, v: string) => void;
+  /** Oxirgi ustun nomi (standart — «Shu toʻlovdan»; avansni hisobga olishda — «Hisobga olinadi»). */
+  valLabel?: string;
 }) {
   const t = useTranslations("payments.doc");
+  const val = valLabel ?? t("c_val");
   const head = [
     kind === "mt" ? t("c_no") : t("c_noYt"),
     t("c_date"),
@@ -1029,7 +1033,7 @@ function AllocTable({
               </th>
             ))}
             <th className="sticky right-0 w-[180px] bg-table-header px-3 text-right font-medium shadow-[-8px_0_8px_-8px_rgba(18,60,58,0.16)]">
-              {t("c_val")}
+              {val}
             </th>
           </tr>
         </thead>
@@ -1085,7 +1089,7 @@ function AllocTable({
                 </td>
                 <td className="sticky right-0 bg-surface px-3 py-2 shadow-[-8px_0_8px_-8px_rgba(18,60,58,0.16)]">
                   <TextField
-                    label={`${t("c_val")} · ${r.doc.docNumber}`}
+                    label={`${val} · ${r.doc.docNumber}`}
                     className="[&_label]:sr-only"
                     variant="amount"
                     size="sm"

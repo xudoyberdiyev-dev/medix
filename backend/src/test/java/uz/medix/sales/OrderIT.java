@@ -1244,6 +1244,26 @@ class OrderIT {
         send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o2 + "]}")
                 .andExpect(jsonPath("$.stops[1].seq").value(3)).andExpect(jsonPath("$.places").value(4));
 
+        // Prototip TripPage: bekatlar tartibi (sudrab) va sarlavha (sana, haydovchi, mashina, ekspeditor)
+        long s1 = jdbc.sql("SELECT id FROM trip_stop WHERE trip_id = :t AND order_id = :o AND active").param("t", t).param("o", o1).query(Long.class).single();
+        long s2 = jdbc.sql("SELECT id FROM trip_stop WHERE trip_id = :t AND order_id = :o AND active").param("t", t).param("o", o2).query(Long.class).single();
+        send(post("/api/trips/" + t + "/stops/order"), keeper, "{\"stopIds\":[" + s2 + "]}").andExpect(jsonPath("$.code").value("trip.stopsMismatch"));
+        send(post("/api/trips/" + t + "/stops/order"), operator, "{\"stopIds\":[" + s2 + "," + s1 + "]}").andExpect(status().isForbidden());
+        send(post("/api/trips/" + t + "/stops/order"), keeper, "{\"stopIds\":[" + s2 + "," + s1 + "]}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stops[0].orderId").value(o2))
+                .andExpect(jsonPath("$.stops[0].seq").value(1))
+                .andExpect(jsonPath("$.stops[1].orderId").value(o1))
+                .andExpect(jsonPath("$.stops[1].seq").value(2))
+                .andExpect(jsonPath("$.stops[0].lines").value(1));
+        String head = "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"%s\",\"expeditor\":\"Ali Valiyev\"}";
+        send(put("/api/trips/" + t), keeper, head.formatted(today().minusDays(1))).andExpect(jsonPath("$.code").value("trip.datePast"));
+        send(put("/api/trips/" + t), keeper, head.formatted(today().plusDays(1)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expeditor").value("Ali Valiyev"))
+                .andExpect(jsonPath("$.tripDate").value(today().plusDays(1).toString()))
+                .andExpect(jsonPath("$.plateNumber").isNotEmpty());
+
         // Bekor qilingan reys o'zgarmaydi
         send(post("/api/trips/" + t + "/cancel"), keeper, "{\"reason\":\"Mashina buzildi\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
         send(post("/api/trips/" + t + "/orders"), keeper, "{\"orderIds\":[" + o3 + "]}").andExpect(jsonPath("$.code").value("trip.notEditable"));

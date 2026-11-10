@@ -1,7 +1,9 @@
 package uz.medix.finance.payment;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import uz.medix.shared.money.Money;
 
 /**
@@ -43,6 +45,39 @@ final class Offsetter {
             }
         }
         return lines;
+    }
+
+    /**
+     * Qo'lda taqsimot (prototip AdvanceDoc): avanslar o'zgarmaydi, qarz hujjatlari faqat tanlanganlari va so'ralgan summa bilan.
+     * Kalit — «tur:id». Noma'lum hujjat yoki ochiq qoldiqdan katta summa — IllegalArgumentException (xabar — i18n kalit).
+     */
+    static List<Allocator.Doc> restrict(List<Allocator.Doc> docs, Map<String, Money> wanted) {
+        Map<String, Allocator.Doc> debts = new HashMap<>();
+        docs.stream().filter(d -> d.open().isPositive()).forEach(d -> debts.put(d.type() + ":" + d.id(), d));
+        for (Map.Entry<String, Money> w : wanted.entrySet()) {
+            Allocator.Doc d = debts.get(w.getKey());
+            if (d == null) {
+                throw new IllegalArgumentException("advance.docUnknown");
+            }
+            if (w.getValue().compareTo(d.open()) > 0) {
+                throw new IllegalArgumentException("advance.overDoc");
+            }
+        }
+        if (wanted.isEmpty()) {
+            throw new IllegalArgumentException("advance.nothing");
+        }
+        List<Allocator.Doc> out = new ArrayList<>();
+        for (Allocator.Doc d : docs) {
+            if (d.open().isNegative()) {
+                out.add(d);
+            } else {
+                Money m = wanted.get(d.type() + ":" + d.id());
+                if (m != null) {
+                    out.add(new Allocator.Doc(d.type(), d.id(), d.number(), m));
+                }
+            }
+        }
+        return out;
     }
 
     static Money total(List<Line> lines) {

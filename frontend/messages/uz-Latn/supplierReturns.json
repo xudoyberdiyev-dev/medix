@@ -109,5 +109,22 @@
     "noLines": "Kamida bitta partiyaga qaytarish sonini kiriting.",
     "sent": "Tasdiqqa yuborildi",
     "done": "Tovar YB ga qaytarildi"
+  },
+  "doc": {
+    "loading": "Hujjat yuklanmoqda",
+    "parent": "YB ga qaytarish",
+    "stepCreated": "Yaratildi",
+    "stepApproval": "Tasdiqlash",
+    "stepPosted": "Oʻtkazildi",
+    "bPosted": "Oʻtkazildi · {at} · {who}",
+    "sAmount": "Qaytarish summasi",
+    "sBy": "Yaratdi",
+    "sPosted": "Tasdiqladi",
+    "sRejected": "Rad etdi",
+    "dApproveT": "{n} ni tasdiqlaysizmi?",
+    "dApprove": "«{zone}» zonasidan {n} qator, {q} dona yetkazib beruvchiga qaytariladi.",
+    "dApproveDebt": "«{s}» oldidagi qarz {amount} ga kamayadi.",
+    "dApproveBonus": "{amount} bonus balansidan hisoblanadi.",
+    "crumbNew": "Yangi"
   }
 }

@@ -144,13 +144,18 @@ class WarehouseTransfers {
         }
         WarehouseTransferDetail h = head.get();
         List<WarehouseTransferLine> lines = jdbc.sql("""
-                SELECT l.id, l.line_no, l.batch_id, b.number AS batch_number, b.expiry_date, l.product_id, p.code, p.name, l.qty, l.received_qty
+                SELECT l.id, l.line_no, l.batch_id, b.number AS batch_number, b.expiry_date, l.product_id, p.code, p.name, l.qty, l.received_qty,
+                       l.damaged_qty, l.diff_reason, lz.id AS lz_id, lz.name AS lz_name, lz.type AS lz_type
                 FROM warehouse_transfer_line l JOIN batch b ON b.id = l.batch_id JOIN product p ON p.id = l.product_id
+                LEFT JOIN zone lz ON lz.id = l.to_zone_id
                 WHERE l.transfer_id = :id ORDER BY l.line_no""")
                 .param("id", id)
                 .query((rs, n) -> new WarehouseTransferLine(rs.getLong("id"), rs.getInt("line_no"), rs.getLong("batch_id"),
                         rs.getString("batch_number"), rs.getDate("expiry_date").toLocalDate(), rs.getLong("product_id"), rs.getString("code"),
-                        rs.getString("name"), rs.getInt("qty"), (Integer) rs.getObject("received_qty")))
+                        rs.getString("name"), rs.getInt("qty"), (Integer) rs.getObject("received_qty"),
+                        rs.getObject("lz_id") == null ? null
+                                : new ZoneRef(rs.getLong("lz_id"), rs.getString("lz_name"), ZoneType.valueOf(rs.getString("lz_type"))),
+                        rs.getInt("damaged_qty"), rs.getString("diff_reason")))
                 .list();
         return Optional.of(new WarehouseTransferDetail(h.id(), h.number(), h.branchId(), h.fromWarehouse(), h.fromZone(), h.toWarehouse(),
                 h.toZone(), h.status(), h.note(), h.shortageQty(), h.receiveNote(), h.createdBy(), h.createdAt(), h.sentBy(), h.sentAt(),
@@ -162,6 +167,59 @@ class WarehouseTransfers {
     /** Qoralama: manba zona (filial ichidagi faol ombor), qabul qiluvchi boshqa ombor — shu filialda. */
     @Transactional
     long create(Actor actor, WarehouseTransferRequest r) {
+        Route route = route(actor, r);
+        String number = numbers.next(DocumentPrefix.OK, route.from().branchCode()).toString();
+        long id = jdbc.sql("""
+                INSERT INTO warehouse_transfer (number, branch_id, from_warehouse_id, from_zone_id, to_warehouse_id, note, status, created_by)
+                VALUES (:n, :b, :fw, :fz, :tw, :note, 'DRAFT', :by) RETURNING id""")
+                .param("n", number)
+                .param("b", route.from().branchId())
+                .param("fw", route.from().warehouseId())
+                .param("fz", route.from().id())
+                .param("tw", route.to().id())
+                .param("note", blankToNull(r.note()))
+                .param("by", actor.employeeId())
+                .query(Long.class)
+                .single();
+        insertLines(id, r.lines());
+        // Qoralamada ham qoldiq yetishi tekshiriladi (qulfsiz) — yo'q tovarga hujjat tuzilmasin; jo'natishda qayta, qulf bilan.
+        checkFree(route.from().id(), lines(id), false);
+        audit.record(AuditEntry.of("transfer.ok.create", "warehouse_transfer", id)
+                .change(null, Map.of("number", number, "lines", r.lines().size(), "to", route.to().name())), actor);
+        return id;
+    }
+
+    /**
+     * Qoralamani tahrirlash (prototip TransferDoc — avtomatik saqlash): manba zona, qabul qiluvchi ombor, izoh va qatorlar to'liq
+     * almashtiriladi. Filial o'zgarmaydi (manba zona hujjat filialida bo'lishi shart); faqat qoralama.
+     */
+    @Transactional
+    void update(Actor actor, long id, WarehouseTransferRequest r) {
+        Head h = lock(id, actor);
+        require(h, Status.DRAFT);
+        Route route = route(actor, r);
+        if (route.from().branchId() != h.branchId()) {
+            throw MedixException.badRequest("transfer.ok.otherBranch");
+        }
+        jdbc.sql("""
+                UPDATE warehouse_transfer SET from_warehouse_id = :fw, from_zone_id = :fz, to_warehouse_id = :tw, note = :note,
+                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("fw", route.from().warehouseId())
+                .param("fz", route.from().id())
+                .param("tw", route.to().id())
+                .param("note", blankToNull(r.note()))
+                .param("id", id)
+                .update();
+        jdbc.sql("DELETE FROM warehouse_transfer_line WHERE transfer_id = :id").param("id", id).update();
+        insertLines(id, r.lines());
+        checkFree(route.from().id(), lines(id), false);
+        audit.record(AuditEntry.of("transfer.ok.update", "warehouse_transfer", id)
+                .change(null, Map.of("number", h.number(), "lines", r.lines().size(), "to", route.to().name())), actor);
+    }
+
+    private record Route(ZoneInfo from, WarehouseInfo to) {}
+
+    private Route route(Actor actor, WarehouseTransferRequest r) {
         ZoneInfo from = zone(actor, r.fromZoneId());
         WarehouseInfo to = warehouse(actor, r.toWarehouseId());
         if (from.warehouseId() == to.id()) {
@@ -179,21 +237,12 @@ class WarehouseTransfers {
                 throw MedixException.badRequest("transfer.zk.duplicateBatch");
             }
         }
-        String number = numbers.next(DocumentPrefix.OK, from.branchCode()).toString();
-        long id = jdbc.sql("""
-                INSERT INTO warehouse_transfer (number, branch_id, from_warehouse_id, from_zone_id, to_warehouse_id, note, status, created_by)
-                VALUES (:n, :b, :fw, :fz, :tw, :note, 'DRAFT', :by) RETURNING id""")
-                .param("n", number)
-                .param("b", from.branchId())
-                .param("fw", from.warehouseId())
-                .param("fz", from.id())
-                .param("tw", to.id())
-                .param("note", blankToNull(r.note()))
-                .param("by", actor.employeeId())
-                .query(Long.class)
-                .single();
+        return new Route(from, to);
+    }
+
+    private void insertLines(long id, List<WarehouseTransferLineRequest> lines) {
         int lineNo = 0;
-        for (WarehouseTransferLineRequest l : r.lines()) {
+        for (WarehouseTransferLineRequest l : lines) {
             Long product = jdbc.sql("SELECT product_id FROM batch WHERE id = :b").param("b", l.batchId()).query(Long.class).optional()
                     .orElseThrow(() -> MedixException.badRequest("stock.batchUnknown"));
             jdbc.sql("INSERT INTO warehouse_transfer_line (transfer_id, line_no, batch_id, product_id, qty) VALUES (:t, :no, :b, :p, :q)")
@@ -204,11 +253,6 @@ class WarehouseTransfers {
                     .param("q", l.qty())
                     .update();
         }
-        // Qoralamada ham qoldiq yetishi tekshiriladi (qulfsiz) — yo'q tovarga hujjat tuzilmasin; jo'natishda qayta, qulf bilan.
-        checkFree(from.id(), lines(id), false);
-        audit.record(AuditEntry.of("transfer.ok.create", "warehouse_transfer", id)
-                .change(null, Map.of("number", number, "lines", r.lines().size(), "to", to.name())), actor);
-        return id;
     }
 
     /** Jo'natish: tovar manba zonadan chiqadi, hujjat «Yo'lda». Qabul qiluvchilarga (transfer.receive) bildirishnoma. */
@@ -252,35 +296,75 @@ class WarehouseTransfers {
             throw MedixException.badRequest("transfer.zk.zoneInactive", toZone.name());
         }
         List<LineRow> lines = lines(id);
-        Map<Long, Integer> received = new HashMap<>();
+        Map<Long, ReceiveLineRequest> given = new HashMap<>();
         if (r.lines() != null) {
             Set<Long> known = new HashSet<>();
             lines.forEach(l -> known.add(l.id()));
             for (ReceiveLineRequest l : r.lines()) {
-                if (!known.contains(l.lineId()) || received.put(l.lineId(), l.receivedQty()) != null) {
+                if (!known.contains(l.lineId()) || given.put(l.lineId(), l) != null) {
                     throw MedixException.badRequest("transfer.ok.badLine");
                 }
             }
         }
+        // Qator zonasi berilmasa — hujjat zonasi; har biri qabul qiluvchi omborda va faol
+        Set<Long> zonesOk = new HashSet<>();
+        zonesOk.add(toZone.id());
         int shortage = 0;
+        int damaged = 0;
+        boolean reasonsGiven = true;
         for (LineRow l : lines) {
-            int got = received.getOrDefault(l.id(), l.qty());
+            ReceiveLineRequest g = given.get(l.id());
+            int got = g == null ? l.qty() : g.receivedQty();
+            int dmg = g == null || g.damagedQty() == null ? 0 : g.damagedQty();
             if (got > l.qty()) {
                 throw MedixException.badRequest("transfer.ok.surplus", String.valueOf(l.qty()), String.valueOf(got));
             }
+            if (dmg > got) {
+                throw MedixException.badRequest("transfer.ok.damagedOver", String.valueOf(got), String.valueOf(dmg));
+            }
+            if (g != null && g.toZoneId() != null && !zonesOk.contains(g.toZoneId())) {
+                ZoneInfo z = zone(actor, g.toZoneId());
+                if (z.warehouseId() != h.toWarehouseId()) {
+                    throw MedixException.badRequest("transfer.ok.zoneNotInTarget");
+                }
+                if (!z.active()) {
+                    throw MedixException.badRequest("transfer.zk.zoneInactive", z.name());
+                }
+                zonesOk.add(z.id());
+            }
             shortage += l.qty() - got;
+            damaged += dmg;
+            if ((got < l.qty() || dmg > 0) && (g == null || g.reason() == null)) {
+                reasonsGiven = false;
+            }
         }
         String note = blankToNull(r.note());
-        if (shortage > 0 && note == null) {
+        if ((shortage > 0 || damaged > 0) && note == null && !reasonsGiven) {
             throw MedixException.badRequest("transfer.ok.shortageNote");
         }
+        long quarantine = damaged > 0 ? quarantineZone(h.toWarehouseId()) : 0L;
         List<Move> moves = new ArrayList<>();
         for (LineRow l : lines) {
-            int got = received.getOrDefault(l.id(), l.qty());
-            if (got > 0) {
-                moves.add(Move.in(toZone.id(), l.batchId(), got));
+            ReceiveLineRequest g = given.get(l.id());
+            int got = g == null ? l.qty() : g.receivedQty();
+            int dmg = g == null || g.damagedQty() == null ? 0 : g.damagedQty();
+            long lineZone = g == null || g.toZoneId() == null ? toZone.id() : g.toZoneId();
+            if (got - dmg > 0) {
+                moves.add(Move.in(lineZone, l.batchId(), got - dmg));
             }
-            jdbc.sql("UPDATE warehouse_transfer_line SET received_qty = :q WHERE id = :id").param("q", got).param("id", l.id()).update();
+            if (dmg > 0) {
+                moves.add(Move.in(quarantine, l.batchId(), dmg));
+            }
+            String reason = g == null || (got == l.qty() && dmg == 0) ? null : g.reason();
+            jdbc.sql("""
+                    UPDATE warehouse_transfer_line SET received_qty = :q, damaged_qty = :d, to_zone_id = :z, diff_reason = :r
+                    WHERE id = :id""")
+                    .param("q", got)
+                    .param("d", dmg)
+                    .param("z", lineZone)
+                    .param("r", reason)
+                    .param("id", l.id())
+                    .update();
         }
         ledger.post(new DocRef(DOC_TYPE, id, h.number()), moves);
         jdbc.sql("""
@@ -294,7 +378,7 @@ class WarehouseTransfers {
                 .param("id", id)
                 .update();
         audit.record(AuditEntry.of("transfer.ok.receive", "warehouse_transfer", id)
-                .change(null, Map.of("number", h.number(), "zone", toZone.name(), "shortage", shortage)), actor);
+                .change(null, Map.of("number", h.number(), "zone", toZone.name(), "shortage", shortage, "damaged", damaged)), actor);
         if (shortage > 0) {
             notifications.notify("transfer.resolve", h.branchId(), List.of(),
                     notifications.message("transfer.ok.shortage", "transfer.ok.shortage", "/warehouse-transfers?open=" + id,
@@ -371,6 +455,15 @@ class WarehouseTransfers {
         if (h.status() != expected) {
             throw MedixException.conflict("transfer.ok.badStatus", h.status().name());
         }
+    }
+
+    /** Qabul qiluvchi omborning faol Karantin zonasi (shikastlangan miqdor uchun). */
+    private long quarantineZone(long warehouseId) {
+        return jdbc.sql("SELECT id FROM zone WHERE warehouse_id = :w AND type = 'QUARANTINE' AND active ORDER BY id LIMIT 1")
+                .param("w", warehouseId)
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> MedixException.badRequest("transfer.ok.noQuarantine"));
     }
 
     private ZoneInfo zone(Actor actor, long zoneId) {

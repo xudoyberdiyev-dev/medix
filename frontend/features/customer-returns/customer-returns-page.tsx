@@ -2,8 +2,8 @@
 
 import { Ban, CircleCheck, Clock, Plus, Undo2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { HubTabs } from "@/components/shell/hub-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import { useMe } from "@/features/auth/session";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { QM_CREATE, QM_STATUSES, QM_VIEW_KEYS, useCustomerReturns, type CustomerReturnStatus, type CustomerReturnSummary } from "./api";
-import { CustomerReturnDrawer } from "./customer-return-drawer";
 
 export function CustomerReturnStatusBadge({ status }: { status: CustomerReturnStatus }) {
   const t = useTranslations("customerReturns");
@@ -48,11 +47,14 @@ export function CustomerReturnsPage() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id>; yangi hujjat: ?new=1
-  const [open, setOpen] = useState<{ id: number | null } | null>(() => {
-    const id = Number(params.get("open"));
-    if (Number.isInteger(id) && id > 0) return { id };
-    return params.get("new") === "1" ? { id: null } : null;
-  });
+  const router = useRouter();
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/customer-returns/${openId}`);
+  }, [openId, router]);
+  useEffect(() => {
+    if (params.get("new") === "1") router.replace("/customer-returns/new");
+  }, [params, router]);
   const allowed = canAny(me.data, QM_VIEW_KEYS);
   const canCreate = can(me.data, QM_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -89,7 +91,7 @@ export function CustomerReturnsPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => router.push("/customer-returns/new")}>
             {t("create")}
           </Button>
         ) : null}
@@ -103,7 +105,7 @@ export function CustomerReturnsPage() {
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setOpen({ id: d.id })}
+          onRowClick={(d) => router.push(`/customer-returns/${d.id}`)}
           toolbar={
             <div className="flex flex-wrap items-end gap-3">
               <div className="w-72">
@@ -140,7 +142,7 @@ export function CustomerReturnsPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/customer-returns/new")}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -162,7 +164,6 @@ export function CustomerReturnsPage() {
           }
         />
       )}
-      {open ? <CustomerReturnDrawer id={open.id} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} /> : null}
     </>
   );
 }

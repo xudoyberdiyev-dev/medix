@@ -56,7 +56,8 @@ class InventoryCountPdf {
         Map<String, Object> doc = new HashMap<>();
         doc.put("number", d.number());
         doc.put("warehouse", d.warehouse());
-        doc.put("zone", d.zone() == null ? "butun ombor" : d.zone().name());
+        doc.put("zone", (d.zones().isEmpty() ? "butun ombor" : String.join(", ", d.zones().stream().map(z -> z.name()).toList()))
+                + (d.products().isEmpty() ? "" : " · " + d.products().size() + " ta mahsulot"));
         doc.put("createdBy", d.createdBy());
         doc.put("postedBy", d.postedBy());
         doc.put("note", d.note());

@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -124,6 +125,14 @@ class BranchSaleController {
     @Operation(summary = "Filiallararo savdo (qoralama)", description = "Tovar joʻnatilguncha joyida qoladi.")
     BranchSaleDetail create(@Valid @RequestBody BranchSaleRequest r, Authentication auth) {
         return detail(sales.create(actor(), r), auth);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('transfer.fs')")
+    @Operation(summary = "Qoralamani tahrirlash", description = "Sotuvchi zona, xaridor ombori, izoh va qatorlar almashtiriladi. Faqat qoralama.")
+    BranchSaleDetail update(@PathVariable long id, @Valid @RequestBody BranchSaleRequest r, Authentication auth) {
+        sales.update(actor(), id, r);
+        return detail(id, auth);
     }
 
     @PostMapping("/{id}/send")

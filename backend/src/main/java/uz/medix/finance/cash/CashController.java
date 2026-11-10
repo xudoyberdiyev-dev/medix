@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uz.medix.finance.cash.CashModels.CashOp;
 import uz.medix.finance.cash.CashModels.CashOpRequest;
+import uz.medix.finance.cash.CashModels.CloseApprover;
 import uz.medix.finance.cash.CashModels.CloseRequest;
 import uz.medix.finance.cash.CashModels.ClosePreview;
 import uz.medix.finance.cash.CashModels.DayClose;
@@ -167,6 +168,13 @@ class CashController {
     @Operation(summary = "Kunni yopish oldidan: kutilgan qoldiq, kun aylanmasi, tasdiq kutayotganlar")
     ClosePreview preview(@RequestParam long accountId, @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return closes.preview(actor(), accountId, date);
+    }
+
+    @GetMapping("/api/cash-close/approvers")
+    @PreAuthorize("hasAuthority('cash.close')")
+    @Operation(summary = "Farqni PIN bilan tasdiqlay oladigan xodimlar (kassa filiali doirasida)")
+    List<CloseApprover> closeApprovers(@RequestParam long accountId) {
+        return closes.approvers(actor(), accountId);
     }
 
     @GetMapping("/api/cash-close")

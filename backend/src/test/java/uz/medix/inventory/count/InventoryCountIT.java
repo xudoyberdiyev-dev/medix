@@ -189,6 +189,103 @@ class InventoryCountIT {
         return ledger.balance(zone, batch);
     }
 
+    private long employee(long branchId) {
+        return jdbc.sql("""
+                INSERT INTO employee (login, full_name, role_id, branch_id, password_hash, must_change_password)
+                SELECT :login, 'Komissiya ' || :login, id, :b, 'x', false FROM role WHERE code = 'PICKER' RETURNING id""")
+                .param("login", "inm" + UUID.randomUUID().toString().substring(0, 8))
+                .param("b", branchId)
+                .query(Long.class)
+                .single();
+    }
+
+    @Test
+    void scopeZonesProductsCommissionDraftUpdateRecountLinesAndNote() throws Exception {
+        Place p = place();
+        long pa = product("IN qamrov A");
+        long pb = product("IN qamrov B");
+        long a1 = stocked(p.main(), pa, 4, "100.00");
+        long b1 = stocked(p.main(), pb, 6, "100.00");
+        long q1 = stocked(p.quarantine(), pa, 2, "100.00");
+        long s1 = stocked(p.safe(), pb, 1, "100.00");
+        long m1 = employee(p.branchId());
+        long m2 = employee(p.branchId());
+        long stranger = employee(place().branchId());
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+
+        // Qoralama formasi: zonalar (partiyalar soni), mahsulotlar zonalar boʻyicha, xodimlar
+        mvc.perform(get("/api/inventory-counts/scope-options").param("warehouseId", String.valueOf(p.warehouseId())).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.products.length()").value(2))
+                .andExpect(jsonPath("$.staff[?(@.id == " + m1 + ")]").exists());
+
+        // Ikki zona, komissiya — bitta xodim: boshlanmaydi
+        String body = "{\"warehouseId\":" + p.warehouseId() + ",\"scopeMode\":\"ZONES\",\"zoneIds\":[" + p.main() + "," + p.quarantine()
+                + "],\"memberIds\":[" + m1 + "],\"chairId\":" + m1 + ",\"countDate\":\"2026-11-11\",\"blind\":true}";
+        long id = id(send(post("/api/inventory-counts"), manager, body)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.scopeMode").value("ZONES"))
+                .andExpect(jsonPath("$.zones.length()").value(2))
+                .andExpect(jsonPath("$.countDate").value("2026-11-11"))
+                .andExpect(jsonPath("$.chairId").value(m1))
+                .andReturn());
+        send(post("/api/inventory-counts/" + id + "/start"), manager, "")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("inventory.commissionRequired"));
+        // Boshqa filial xodimi komissiyaga kirmaydi
+        send(put("/api/inventory-counts/" + id), manager, body.replace("[" + m1 + "]", "[" + m1 + "," + stranger + "]"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("inventory.memberUnknown"));
+        // Avtomatik saqlash: «Mahsulotlar» qamrovi — A mahsuloti, zonalar: Asosiy + Karantin; komissiya 2 xodim, rais m2
+        String upd = "{\"warehouseId\":" + p.warehouseId() + ",\"scopeMode\":\"PRODUCTS\",\"zoneIds\":[" + p.main() + "," + p.quarantine()
+                + "],\"productIds\":[" + pa + "],\"memberIds\":[" + m1 + "," + m2 + "],\"chairId\":" + m2 + ",\"blind\":false}";
+        send(put("/api/inventory-counts/" + id), manager, upd)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scopeMode").value("PRODUCTS"))
+                .andExpect(jsonPath("$.products.length()").value(1))
+                .andExpect(jsonPath("$.members.length()").value(2))
+                .andExpect(jsonPath("$.chairId").value(m2));
+        send(post("/api/inventory-counts/" + id + "/start"), manager, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lines.length()").value(2));
+        // Qamrov sanoqdan keyin oʻzgarmaydi (baza himoyasi)
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM inventory_count_zone WHERE count_id = :id").param("id", id).update())
+                .hasMessageContaining("faqat qoralamada");
+        // Qulf: A qatorlari bor zonalar (Asosiy, Karantin) — qulflangan, Seyf — yoʻq
+        assertThatThrownBy(() -> tx.executeWithoutResult(s -> ledger.post(new DocRef("BQ", 5, "BQ-INT-000005"),
+                List.of(Move.out(p.main(), b1, 1))))).hasMessageContaining("stock.inventoryLock");
+        tx.executeWithoutResult(s -> ledger.post(new DocRef("BQ", 6, "BQ-INT-000006"), List.of(Move.in(p.safe(), s1, 1))));
+        mvc.perform(get("/api/inventory-counts/scope-options").param("warehouseId", String.valueOf(p.warehouseId())).cookie(manager))
+                .andExpect(jsonPath("$.zones[?(@.id == " + p.main() + ")].lockedBy").value(org.hamcrest.Matchers.hasItem(
+                        org.hamcrest.Matchers.startsWith("IN-"))));
+
+        long la = lineId(id, p.main(), a1);
+        long lq = lineId(id, p.quarantine(), q1);
+        send(put("/api/inventory-counts/" + id + "/counts"), manager, "{\"entries\":[{\"lineId\":" + la + ",\"countedQty\":3},{\"lineId\":" + lq
+                + ",\"countedQty\":2}]}").andExpect(status().isOk());
+        send(post("/api/inventory-counts/" + id + "/submit"), manager, "").andExpect(jsonPath("$.status").value("CHECK"));
+        // Tekshirishda izoh yoziladi, miqdor — yoʻq
+        send(put("/api/inventory-counts/" + id + "/lines/" + la + "/note"), manager, "{\"note\":\"Qadoq yirtilgan\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lines[?(@.id == " + la + ")].note").value(org.hamcrest.Matchers.hasItem("Qadoq yirtilgan")));
+        assertThatThrownBy(() -> jdbc.sql("UPDATE inventory_count_line SET counted_qty = 9 WHERE id = :l").param("l", la).update())
+                .hasMessageContaining("faqat izoh");
+        // Tanlangan qatorni qayta sanash: faqat u sanoqqa qaytadi
+        send(post("/api/inventory-counts/" + id + "/recount"), manager, "{\"lineIds\":[" + la + "]}")
+                .andExpect(jsonPath("$.status").value("COUNTING"))
+                .andExpect(jsonPath("$.counted").value(1))
+                .andExpect(jsonPath("$.lines[?(@.id == " + la + ")].recount").value(org.hamcrest.Matchers.hasItem(true)))
+                .andExpect(jsonPath("$.events[?(@.kind == 'recount')]").exists());
+        send(put("/api/inventory-counts/" + id + "/counts"), manager, entry(la, 4)).andExpect(status().isOk());
+        send(post("/api/inventory-counts/" + id + "/submit"), manager, "").andExpect(jsonPath("$.shortageQty").value(0));
+        send(post("/api/inventory-counts/" + id + "/approve"), manager, "").andExpect(jsonPath("$.status").value("POSTED"));
+        assertThat(bal(p.main(), a1)).isEqualTo(4);
+        mvc.perform(get("/api/inventory-counts").param("branchId", String.valueOf(p.branchId())).cookie(manager))
+                .andExpect(jsonPath("$.items[0].scopeMode").value("PRODUCTS"))
+                .andExpect(jsonPath("$.items[0].productCount").value(1))
+                .andExpect(jsonPath("$.items[0].zoneNames.length()").value(2));
+    }
+
     @Test
     void fullFlowWithLockShortageSurplusAndFoundBatch() throws Exception {
         Place p = place();
@@ -405,7 +502,7 @@ class InventoryCountIT {
                 .query(Long.class)
                 .single();
         var who = new uz.medix.shared.security.Actor(actor, p.branchId(), false);
-        long id = counts.create(who, new InventoryCountModels.InventoryCountRequest(p.warehouseId(), null, false, null, null));
+        long id = counts.create(who, new InventoryCountModels.InventoryCountRequest(p.warehouseId(), null, null, null, null, null, null, null, false, "K", null));
         ExecutorService pool = Executors.newFixedThreadPool(3);
         List<Future<Boolean>> results = new ArrayList<>();
         for (int i = 0; i < 12; i++) {

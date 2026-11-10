@@ -85,6 +85,13 @@ class AdvanceOffsetController {
         return offsets.find(a, offsets.create(a, Side.SUPPLIER, r));
     }
 
+    @GetMapping("/api/advance-offsets/{id}")
+    @PreAuthorize("hasAuthority('payments.view')")
+    @Operation(summary = "AH hujjati (prototip AdvanceDoc)")
+    AdvanceOffsets.Offset one(@PathVariable long id) {
+        return offsets.find(actor(), id);
+    }
+
     @PostMapping("/api/advance-offsets/{id}/cancel")
     @PreAuthorize("hasAuthority('payments.cancel')")
     @Operation(summary = "AH ni bekor qilish (teskari yozuvlar)")

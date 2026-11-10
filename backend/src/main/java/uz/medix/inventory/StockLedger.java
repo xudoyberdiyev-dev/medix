@@ -101,7 +101,11 @@ public class StockLedger {
         }
         jdbc.sql("""
                 SELECT c.number FROM inventory_count c JOIN zone z ON z.warehouse_id = c.warehouse_id
-                WHERE z.id IN (:z) AND c.status IN ('COUNTING', 'CHECK') AND (c.zone_id IS NULL OR c.zone_id = z.id) LIMIT 1""")
+                WHERE z.id IN (:z) AND c.status IN ('COUNTING', 'CHECK')
+                  AND (c.scope_mode = 'WAREHOUSE'
+                       OR EXISTS (SELECT 1 FROM inventory_count_zone cz WHERE cz.count_id = c.id AND cz.zone_id = z.id)
+                       OR (c.scope_mode = 'PRODUCTS' AND EXISTS (SELECT 1 FROM inventory_count_line l WHERE l.count_id = c.id AND l.zone_id = z.id)))
+                LIMIT 1""")
                 .param("z", zoneIds)
                 .query(String.class)
                 .optional()
