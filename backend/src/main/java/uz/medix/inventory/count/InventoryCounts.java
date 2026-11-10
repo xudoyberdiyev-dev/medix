@@ -12,9 +12,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockLedger.DocRef;
 import uz.medix.inventory.StockLedger.Move;
+import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.ZoneType;
 import uz.medix.inventory.count.InventoryCountModels.InventoryBatchHit;
 import uz.medix.inventory.count.InventoryCountModels.InventoryCountDetail;
@@ -36,6 +36,8 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 
 /**
  * IN — inventarizatsiya (T12: draft → count → check → posted; cancelled). Sanoq ochilganda (inventory.openCount) qamrovdagi qoldiq
@@ -49,15 +51,17 @@ class InventoryCounts {
     static final String DOC_TYPE = "IN";
 
     /** T12 ivDirApprove: kamomad tannarxi shundan KATTA bo'lsa — Direktor tasdig'i. */
-    static final Money DIRECTOR_LIMIT = Money.of(5_000_000);
 
     private final JdbcClient jdbc;
     private final StockLedger ledger;
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
     private final Notifications notifications;
+    private final SystemSettings settings;
 
-    InventoryCounts(JdbcClient jdbc, StockLedger ledger, AuditLog audit, DocumentSequenceService numbers, Notifications notifications) {
+    InventoryCounts(JdbcClient jdbc, StockLedger ledger, AuditLog audit, DocumentSequenceService numbers, Notifications notifications,
+            SystemSettings settings) {
+        this.settings = settings;
         this.jdbc = jdbc;
         this.ledger = ledger;
         this.audit = audit;
@@ -385,7 +389,7 @@ class InventoryCounts {
         if (t.uncounted() > 0) {
             throw MedixException.badRequest("inventory.notCounted", String.valueOf(t.uncounted()));
         }
-        boolean director = t.shortageCost().compareTo(DIRECTOR_LIMIT) > 0 || t.controlledDiff();
+        boolean director = t.shortageCost().compareTo(settings.money(SettingKey.ivDirApprove)) > 0 || t.controlledDiff();
         jdbc.sql("""
                 UPDATE inventory_count SET status = 'CHECK', shortage_qty = :sq, shortage_cost = :sc, surplus_qty = :pq, surplus_cost = :pc,
                        needs_director = :dir, submitted_by = :by, submitted_at = now(), updated_at = now(), version = version + 1
@@ -425,7 +429,7 @@ class InventoryCounts {
         Head h = head(id, actor, true);
         requireStatus(h, Status.CHECK);
         if (!approver.canPost(h.needsDirector())) {
-            throw MedixException.forbidden("inventory.directorRequired", DIRECTOR_LIMIT.format());
+            throw MedixException.forbidden("inventory.directorRequired", settings.money(SettingKey.ivDirApprove).format());
         }
         record Diff(long zoneId, long batchId, int book, int counted) {}
         List<Diff> diffs = jdbc.sql("""

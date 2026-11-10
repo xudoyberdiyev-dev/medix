@@ -16,9 +16,9 @@ import java.util.Set;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.StockLedger.DocRef;
 import uz.medix.inventory.StockLedger.Move;
+import uz.medix.inventory.StockLedger;
 import uz.medix.inventory.ZoneType;
 import uz.medix.inventory.writeoff.WriteOffModels.Reason;
 import uz.medix.inventory.writeoff.WriteOffModels.Status;
@@ -38,6 +38,8 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 
 /**
  * HC — hisobdan chiqarish (T12: draft → posted; hc.create / hc.approve / hc.director, hcDirApprove = 5 000 000). Yaratilganda
@@ -51,7 +53,6 @@ class WriteOffs {
     static final String DOC_TYPE = "HC";
 
     /** T12 hcDirApprove: tannarx summasi shundan KATTA bo'lsa — Direktor tasdig'i. */
-    static final Money DIRECTOR_LIMIT = Money.of(5_000_000);
 
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
 
@@ -60,9 +61,12 @@ class WriteOffs {
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
     private final Notifications notifications;
+    private final SystemSettings settings;
     private final Clock clock;
 
-    WriteOffs(JdbcClient jdbc, StockLedger ledger, AuditLog audit, DocumentSequenceService numbers, Notifications notifications, Clock clock) {
+    WriteOffs(JdbcClient jdbc, StockLedger ledger, AuditLog audit, DocumentSequenceService numbers, Notifications notifications, Clock clock,
+            SystemSettings settings) {
+        this.settings = settings;
         this.jdbc = jdbc;
         this.ledger = ledger;
         this.audit = audit;
@@ -82,8 +86,8 @@ class WriteOffs {
     record ZoneInfo(long id, String name, ZoneType type, boolean active, long warehouseId, boolean warehouseActive, long branchId,
             String branchCode) {}
 
-    static boolean needsDirector(Money total) {
-        return total.compareTo(DIRECTOR_LIMIT) > 0;
+    boolean needsDirector(Money total) {
+        return total.compareTo(settings.money(SettingKey.hcDirApprove)) > 0;
     }
 
     // ===== O'qish =====
@@ -424,7 +428,7 @@ class WriteOffs {
 
     private static void requireLevel(Head h, Approver approver) {
         if (!approver.canPost(h.needsDirector())) {
-            throw MedixException.forbidden("hc.directorRequired", DIRECTOR_LIMIT.format());
+            throw MedixException.forbidden("hc.directorRequired", settings.money(SettingKey.hcDirApprove).format());
         }
     }
 

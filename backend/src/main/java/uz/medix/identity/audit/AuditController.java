@@ -94,7 +94,8 @@ class AuditController {
               WHEN a.action ~ '\\.(approve|post)$' THEN 'APPROVE'
               WHEN a.action ~ '\\.(create|import)$' THEN 'CREATE'
               WHEN a.entity_type IN ('company', 'branch', 'warehouse', 'zone', 'money_account', 'expense_item', 'price_type',
-                                     'vehicle', 'import_profile') THEN 'SETTING'
+                                     'vehicle', 'import_profile', 'app_setting', 'vat_rate',
+                                     'print_setting') THEN 'SETTING'
               ELSE 'CHANGE'
             END""";
 
