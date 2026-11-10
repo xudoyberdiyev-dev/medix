@@ -78,7 +78,18 @@ class AuthController {
         context.setAuthentication(updated);
         SecurityContextHolder.setContext(context);
         contextRepository.saveContext(context, request, response);
+        // Profil → «Faol sessiyalar»: qurilma va IP sessiya atributida (sessiya identifikatori foydalanuvchiga berilmaydi)
+        var session = request.getSession();
+        String ua = request.getHeader("User-Agent");
+        if (ua != null && !ua.isBlank()) {
+            session.setAttribute(SESSION_DEVICE, ua.strip().length() > 160 ? ua.strip().substring(0, 160) : ua.strip());
+        }
+        session.setAttribute(SESSION_IP, request.getRemoteAddr());
     }
+
+    /** Sessiya atributlari (Profil → Faol sessiyalar). */
+    static final String SESSION_DEVICE = "medix.device";
+    static final String SESSION_IP = "medix.ip";
 
     private void establish(UsernamePasswordAuthenticationToken authentication, HttpServletRequest request, HttpServletResponse response) {
         sessionStrategy.onAuthentication(authentication, request, response);
