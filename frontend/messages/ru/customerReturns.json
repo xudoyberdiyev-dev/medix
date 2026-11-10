@@ -108,6 +108,7 @@
     "rejectTitle": "Отклонить возврат",
     "rejectReason": "Причина",
     "rejectPlaceholder": "Например: товар не поступил",
-    "rejected": "Отклонено"
+    "rejected": "Отклонено",
+    "print": "Печать"
   }
 }

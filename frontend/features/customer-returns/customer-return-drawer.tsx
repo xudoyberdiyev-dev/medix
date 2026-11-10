@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, HandCoins, Link2, Lock, Send, ShieldAlert, X } from "lucide-react";
+import { Check, HandCoins, Link2, Lock, Printer, Send, ShieldAlert, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -96,16 +96,25 @@ function View({ doc, onClose }: { doc: CustomerReturnDetail; onClose: () => void
       subtitle={formatDateTime(new Date(doc.createdAt))}
       status={<CustomerReturnStatusBadge status={doc.status} />}
       actions={
-        canDecide ? (
-          <>
-            <Button variant="secondary" icon={X} onClick={() => setRejecting(true)}>
-              {t("view.reject")}
-            </Button>
-            <Button icon={Check} onClick={() => setConfirming(true)}>
-              {t("accept")}
-            </Button>
-          </>
-        ) : null
+        <>
+          <Button
+            variant="tertiary"
+            icon={Printer}
+            onClick={() => window.open(`/api/customer-returns/${doc.id}/pdf`, "_blank", "noopener")}
+          >
+            {t("view.print")}
+          </Button>
+          {canDecide ? (
+            <>
+              <Button variant="secondary" icon={X} onClick={() => setRejecting(true)}>
+                {t("view.reject")}
+              </Button>
+              <Button icon={Check} onClick={() => setConfirming(true)}>
+                {t("accept")}
+              </Button>
+            </>
+          ) : null}
+        </>
       }
     >
       <div className="flex flex-col gap-4">

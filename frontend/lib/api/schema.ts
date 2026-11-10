@@ -1364,6 +1364,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/customer-returns/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** QM dalolatnomasi — PDF (chop etish) */
+        get: operations["customerReturnPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/customer-returns/{id}/reject": {
         parameters: {
             query?: never;
@@ -15493,6 +15510,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerReturnDetail"];
+                };
+            };
+        };
+    };
+    customerReturnPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

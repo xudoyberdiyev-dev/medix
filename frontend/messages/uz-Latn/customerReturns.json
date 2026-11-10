@@ -108,6 +108,7 @@
     "rejectTitle": "Qaytarishni rad etish",
     "rejectReason": "Sabab",
     "rejectPlaceholder": "Masalan: tovar kelmadi",
-    "rejected": "Rad etildi"
+    "rejected": "Rad etildi",
+    "print": "Chop etish"
   }
 }

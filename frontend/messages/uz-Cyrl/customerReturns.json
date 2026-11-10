@@ -108,6 +108,7 @@
     "rejectTitle": "Қайтаришни рад этиш",
     "rejectReason": "Сабаб",
     "rejectPlaceholder": "Масалан: товар келмади",
-    "rejected": "Рад этилди"
+    "rejected": "Рад этилди",
+    "print": "Чоп этиш"
   }
 }

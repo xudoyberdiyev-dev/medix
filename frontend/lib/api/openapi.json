@@ -3257,6 +3257,35 @@
         "tags" : [ "customer-return" ]
       }
     },
+    "/api/customer-returns/{id}/pdf" : {
+      "get" : {
+        "operationId" : "customerReturnPdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "QM dalolatnomasi — PDF (chop etish)",
+        "tags" : [ "customer-return" ]
+      }
+    },
     "/api/customer-returns/{id}/reject" : {
       "post" : {
         "description" : "Hech narsa o'zgarmaydi; qaytarish miqdori bo'shaydi.",

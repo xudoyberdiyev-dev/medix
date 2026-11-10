@@ -1717,6 +1717,9 @@ class OrderIT {
         assertThat(jdbc.sql("SELECT count(*) FROM stock_move WHERE doc_type = 'QM' AND doc_number = :n").param("n", number).query(Long.class).single())
                 .isEqualTo(1);
         send(post("/api/customer-returns/" + qm + "/approve"), keeper, "").andExpect(jsonPath("$.code").value("qm.notPending"));
+        // QM dalolatnomasi — server PDF
+        assertThat(pdfText("/api/customer-returns/" + qm + "/pdf", keeper))
+                .contains("Mijozdan qaytarish dalolatnomasi", number, "Shikastlangan", "Oʻtkazildi", "Qabul qildi");
         assertThatThrownBy(() -> jdbc.sql("UPDATE customer_return SET note = 'x' WHERE id = :id").param("id", qm).update())
                 .hasMessageContaining("hal qilingan");
 

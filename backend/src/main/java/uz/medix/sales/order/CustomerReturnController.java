@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +41,10 @@ class CustomerReturnController {
 
     private final CustomerReturns returns;
     private final CurrentActor currentActor;
+    private final CustomerReturnPdf pdf;
 
-    CustomerReturnController(CustomerReturns returns, CurrentActor currentActor) {
+    CustomerReturnController(CustomerReturns returns, CurrentActor currentActor, CustomerReturnPdf pdf) {
+        this.pdf = pdf;
         this.returns = returns;
         this.currentActor = currentActor;
     }
@@ -72,6 +76,13 @@ class CustomerReturnController {
     @Operation(summary = "QM hujjati")
     CustomerReturnDetail get(@PathVariable long id) {
         return detail(id);
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize(VIEW)
+    @Operation(summary = "QM dalolatnomasi — PDF (chop etish)")
+    ResponseEntity<byte[]> customerReturnPdf(@PathVariable long id) {
+        return pdf.render(actor(), id).response();
     }
 
     @GetMapping("/sales")
