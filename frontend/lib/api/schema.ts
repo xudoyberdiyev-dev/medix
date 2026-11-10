@@ -136,7 +136,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi), yorliqlar soni bilan */
-        get: operations["list_31"];
+        get: operations["list_32"];
         put?: never;
         post?: never;
         delete?: never;
@@ -278,10 +278,10 @@ export interface paths {
             cookie?: never;
         };
         /** Hisob boʻyicha solishtirishlar tarixi */
-        get: operations["list_25"];
+        get: operations["list_26"];
         put?: never;
         /** Solishtirishni yozish (farq boʻlsa — izoh majburiy) */
-        post: operations["create_25"];
+        post: operations["create_26"];
         delete?: never;
         options?: never;
         head?: never;
@@ -336,13 +336,13 @@ export interface paths {
          * Filiallararo to'lovlar
          * @description Filial to'lovchi yoki oluvchi bo'lganlari.
          */
-        get: operations["list_24"];
+        get: operations["list_25"];
         put?: never;
         /**
          * Filialga to'lov
          * @description Darhol o'tkaziladi: to'lovchi hisobidan chiqim, oluvchi hisobiga kirim, filiallararo qarz kamayadi. Qarzdan oshmaydi.
          */
-        post: operations["create_24"];
+        post: operations["create_25"];
         delete?: never;
         options?: never;
         head?: never;
@@ -400,13 +400,13 @@ export interface paths {
          * FS hujjatlari
          * @description branchId — sotuvchi yoki xaridor filial.
          */
-        get: operations["list_23"];
+        get: operations["list_24"];
         put?: never;
         /**
          * Filiallararo savdo (qoralama)
          * @description Tovar joʻnatilguncha joyida qoladi.
          */
-        post: operations["create_23"];
+        post: operations["create_24"];
         delete?: never;
         options?: never;
         head?: never;
@@ -481,7 +481,7 @@ export interface paths {
             cookie?: never;
         };
         /** FS hujjati */
-        get: operations["get_23"];
+        get: operations["get_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -581,7 +581,7 @@ export interface paths {
          * FS kamomadi
          * @description Ochiqmi, summa (special.cost) va hal qilish tarixi.
          */
-        get: operations["get_24"];
+        get: operations["get_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -618,10 +618,10 @@ export interface paths {
             cookie?: never;
         };
         /** Ko'rish mumkin bo'lgan filiallar */
-        get: operations["list_22"];
+        get: operations["list_23"];
         put?: never;
         /** Filial qo'shish */
-        post: operations["create_22"];
+        post: operations["create_23"];
         delete?: never;
         options?: never;
         head?: never;
@@ -857,7 +857,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_22"];
+        get: operations["get_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -914,10 +914,10 @@ export interface paths {
          * Kontragentlar
          * @description Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).
          */
-        get: operations["list_21"];
+        get: operations["list_22"];
         put?: never;
         /** Kontragent qo'shish */
-        post: operations["create_21"];
+        post: operations["create_22"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1239,6 +1239,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/customer-returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * QM hujjatlari
+         * @description Qidiruv: raqam, mijoz, sotuv raqami.
+         */
+        get: operations["list_21"];
+        put?: never;
+        /**
+         * Mijozdan qaytarish
+         * @description «Qabul kutilmoqda» holatida yaratiladi; yaratuvchida qm.approve bo'lsa darhol qabul qilinadi.
+         */
+        post: operations["create_21"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-returns/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mijozning yetkazilgan sotuvlari
+         * @description Qaytarsa bo'ladigan qatorlar soni bilan; filial doirasida.
+         */
+        get: operations["sales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-returns/sales/{saleId}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sotuv qatorlari
+         * @description Sotilgan / avval qaytarilgan (o'tkazilgan + kutilayotgan) / qoldi; narx — sotuv narxi.
+         */
+        get: operations["saleLines"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-returns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** QM hujjati */
+        get: operations["get_22"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-returns/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Qabul qilish
+         * @description Tovar Karantin zonasiga kiradi, mijoz qarzi qaytarish summasiga kamayadi.
+         */
+        post: operations["approve_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-returns/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rad etish
+         * @description Hech narsa o'zgarmaydi; qaytarish miqdori bo'shaydi.
+         */
+        post: operations["reject_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/debts/customers": {
         parameters: {
             query?: never;
@@ -1498,7 +1619,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_30"];
+        get: operations["list_31"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2445,7 +2566,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_29"];
+        get: operations["list_30"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4858,7 +4979,7 @@ export interface paths {
             cookie?: never;
         };
         /** Rollar ro'yxati */
-        get: operations["list_28"];
+        get: operations["list_29"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5111,7 +5232,7 @@ export interface paths {
          * Qoldiqlar (zona × partiya)
          * @description expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.
          */
-        get: operations["list_27"];
+        get: operations["list_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5285,7 +5406,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
-        get: operations["list_26"];
+        get: operations["list_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7796,6 +7917,129 @@ export interface components {
             /** Format: int32 */
             paymentDays?: number;
             priceType?: string;
+        };
+        CustomerReturnDetail: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            customer: string;
+            /** Format: int64 */
+            customerId: number;
+            /** Format: int64 */
+            id: number;
+            lines: components["schemas"]["CustomerReturnLine"][];
+            note?: string;
+            number: string;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            /** Format: date-time */
+            postedAt?: string;
+            postedBy?: string;
+            quarantineZone?: string;
+            rejectReason?: string;
+            /** Format: date-time */
+            rejectedAt?: string;
+            rejectedBy?: string;
+            /** Format: date */
+            returnDate: string;
+            /** Format: date */
+            saleDate: string;
+            /** Format: int64 */
+            saleId: number;
+            saleNumber: string;
+            /** @enum {string} */
+            status: "PENDING" | "POSTED" | "REJECTED";
+            total: string;
+            /** Format: int64 */
+            totalQty: number;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+        };
+        CustomerReturnLine: {
+            amount: string;
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lineNo: number;
+            price: string;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            /** @enum {string} */
+            reason: "EXPIRING" | "DAMAGED" | "WRONG_ITEM" | "REFUSED" | "OTHER";
+            /** Format: int64 */
+            saleLineId: number;
+        };
+        CustomerReturnLineRequest: {
+            /** Format: int32 */
+            qty: number;
+            /** @enum {string} */
+            reason: "EXPIRING" | "DAMAGED" | "WRONG_ITEM" | "REFUSED" | "OTHER";
+            /** Format: int64 */
+            saleLineId: number;
+        };
+        CustomerReturnPage: {
+            items: components["schemas"]["CustomerReturnSummary"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        CustomerReturnRejectRequest: {
+            reason: string;
+        };
+        CustomerReturnRequest: {
+            lines: components["schemas"]["CustomerReturnLineRequest"][];
+            note: string;
+            /** Format: int64 */
+            saleId: number;
+        };
+        CustomerReturnSummary: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            customer: string;
+            /** Format: int64 */
+            customerId: number;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            lines: number;
+            number: string;
+            /** Format: date-time */
+            postedAt?: string;
+            /** Format: int64 */
+            qty: number;
+            region?: string;
+            /** Format: date */
+            returnDate: string;
+            /** Format: int64 */
+            saleId: number;
+            saleNumber: string;
+            /** @enum {string} */
+            status: "PENDING" | "POSTED" | "REJECTED";
+            total: string;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
         };
         CustomerRow: {
             /** Format: int64 */
@@ -11287,6 +11531,40 @@ export interface components {
             lineIds?: number[];
             reason: string;
         };
+        ReturnableLine: {
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            /** Format: date */
+            expiryDate: string;
+            /** Format: int32 */
+            left: number;
+            marked: boolean;
+            price: string;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int32 */
+            returned: number;
+            /** Format: int64 */
+            saleLineId: number;
+            /** Format: int32 */
+            sold: number;
+        };
+        ReturnableSale: {
+            /** Format: int64 */
+            id: number;
+            number: string;
+            /** Format: int32 */
+            returnableLines: number;
+            /** Format: date */
+            saleDate: string;
+            total: string;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+        };
         ReturnedLine: {
             /** Format: int32 */
             qty: number;
@@ -13130,7 +13408,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_32: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -13316,7 +13594,7 @@ export interface operations {
             };
         };
     };
-    list_25: {
+    list_26: {
         parameters: {
             query: {
                 accountId: number;
@@ -13338,7 +13616,7 @@ export interface operations {
             };
         };
     };
-    create_25: {
+    create_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -13407,7 +13685,7 @@ export interface operations {
             };
         };
     };
-    list_24: {
+    list_25: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -13429,7 +13707,7 @@ export interface operations {
             };
         };
     };
-    create_24: {
+    create_25: {
         parameters: {
             query?: never;
             header?: never;
@@ -13502,7 +13780,7 @@ export interface operations {
             };
         };
     };
-    list_23: {
+    list_24: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -13527,7 +13805,7 @@ export interface operations {
             };
         };
     };
-    create_23: {
+    create_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -13615,7 +13893,7 @@ export interface operations {
             };
         };
     };
-    get_23: {
+    get_24: {
         parameters: {
             query?: never;
             header?: never;
@@ -13729,7 +14007,7 @@ export interface operations {
             };
         };
     };
-    get_24: {
+    get_25: {
         parameters: {
             query?: never;
             header?: never;
@@ -13777,7 +14055,7 @@ export interface operations {
             };
         };
     };
-    list_22: {
+    list_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -13797,7 +14075,7 @@ export interface operations {
             };
         };
     };
-    create_22: {
+    create_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -14154,7 +14432,7 @@ export interface operations {
             };
         };
     };
-    get_22: {
+    get_23: {
         parameters: {
             query: {
                 branchId: number;
@@ -14223,7 +14501,7 @@ export interface operations {
             };
         };
     };
-    list_21: {
+    list_22: {
         parameters: {
             query?: {
                 q?: string;
@@ -14254,7 +14532,7 @@ export interface operations {
             };
         };
     };
-    create_21: {
+    create_22: {
         parameters: {
             query?: never;
             header?: never;
@@ -14751,6 +15029,173 @@ export interface operations {
             };
         };
     };
+    list_21: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                customerId?: number;
+                saleId?: number;
+                status?: "PENDING" | "POSTED" | "REJECTED";
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReturnPage"];
+                };
+            };
+        };
+    };
+    create_21: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerReturnRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReturnDetail"];
+                };
+            };
+        };
+    };
+    sales: {
+        parameters: {
+            query: {
+                customerId: number;
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnableSale"][];
+                };
+            };
+        };
+    };
+    saleLines: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                saleId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnableLine"][];
+                };
+            };
+        };
+    };
+    get_22: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReturnDetail"];
+                };
+            };
+        };
+    };
+    approve_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReturnDetail"];
+                };
+            };
+        };
+    };
+    reject_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerReturnRejectRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReturnDetail"];
+                };
+            };
+        };
+    };
     customers_1: {
         parameters: {
             query?: {
@@ -15110,7 +15555,7 @@ export interface operations {
             };
         };
     };
-    list_30: {
+    list_31: {
         parameters: {
             query?: never;
             header?: never;
@@ -16410,7 +16855,7 @@ export interface operations {
             };
         };
     };
-    list_29: {
+    list_30: {
         parameters: {
             query?: never;
             header?: never;
@@ -19973,7 +20418,7 @@ export interface operations {
             };
         };
     };
-    list_28: {
+    list_29: {
         parameters: {
             query?: never;
             header?: never;
@@ -20366,7 +20811,7 @@ export interface operations {
             };
         };
     };
-    list_27: {
+    list_28: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -20603,7 +21048,7 @@ export interface operations {
             };
         };
     };
-    list_26: {
+    list_27: {
         parameters: {
             query: {
                 branchId: number;

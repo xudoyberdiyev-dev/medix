@@ -803,3 +803,51 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText(/ruxsat/i)).toHaveCount(0);
 });
+
+test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yuboradi", async ({ page }) => {
+  await login(page, "operator.1", OPERATOR_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/customer-returns");
+  await expect(page.getByRole("heading", { name: "Mijozdan qaytarish", level: 1 })).toBeVisible();
+  await page.getByRole("button", { name: "Yangi qaytarish" }).first().click();
+  const drawer = page.getByRole("dialog").last();
+  await drawer.getByRole("combobox", { name: "Mijoz", exact: true }).click();
+  await page.getByPlaceholder("Qidirish").fill("Baraka");
+  await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
+  await pick(page, drawer, "Asos — sotuv hujjati", /SV-/);
+  await expect(drawer.getByText("Sotilgan", { exact: true })).toBeVisible();
+  // Sababsiz — tasdiqlab boʻlmaydi
+  await drawer
+    .getByLabel(/Paracetamol E2E.*qaytarilayotgan miqdor/)
+    .first()
+    .fill("1");
+  await drawer.getByRole("button", { name: "Qabul qilishga yuborish" }).click();
+  await expect(drawer.getByText(/sabab tanlanmagan/)).toBeVisible();
+  await drawer
+    .getByRole("combobox", { name: /Paracetamol E2E.*: sabab/ })
+    .first()
+    .click();
+  await page.getByRole("option", { name: "Shikastlangan" }).click();
+  await drawer.getByRole("button", { name: "Qabul qilishga yuborish" }).click();
+  await expect(page.getByText("Hujjat ombor mudiriga yuborildi").first()).toBeVisible();
+  await expect(drawer.getByText("Qabul kutilmoqda").first()).toBeVisible();
+});
+
+test("Ombor mudiri: QM ni qabul qiladi — tovar Karantinga, mijoz qarzi kamayadi", async ({ page }) => {
+  await login(page, "keeper.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/customer-returns");
+  const row = page.getByRole("row", { name: /QM-/ }).filter({ hasText: "Qabul kutilmoqda" }).first();
+  await expect(row).toContainText(CUSTOMER);
+  await row.click();
+  const drawer = page.getByRole("dialog").last();
+  await drawer.getByRole("button", { name: "Qabul qilish va tasdiqlash" }).click();
+  const confirm = page.getByRole("dialog", { name: "Qaytarishni tasdiqlaysizmi?" });
+  await expect(confirm.getByText(/Karantin zonasiga kiradi/)).toBeVisible();
+  await confirm.getByRole("button", { name: "Qabul qilish va tasdiqlash" }).click();
+  await expect(page.getByText(/QM-[A-Z]{2,4}-\d{6} tasdiqlandi/).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("row", { name: /QM-/ }).first()).toContainText("Tasdiqlangan");
+  // Qaytarish turlari yorligʻi: QM birinchi
+  await expect(page.getByRole("tab", { name: "Mijozdan qaytarish" })).toBeVisible();
+});

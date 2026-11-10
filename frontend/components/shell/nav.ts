@@ -70,6 +70,7 @@ export type HubTabKey =
   | "transfersWarehouse"
   | "transfersZone"
   | "transfersBranch"
+  | "returnsCustomer"
   | "returnsWriteOffs"
   | "returnsSupplier"
   | "supplierDebtsDebts"
@@ -105,6 +106,7 @@ export const HUBS = {
     { key: "transfersBranch", href: "/branch-sales", anyOf: ["transfer.view", "transfer.fs", "transfer.send", "transfer.receive"] },
   ],
   returns: [
+    { key: "returnsCustomer", href: "/customer-returns", anyOf: ["qm.view", "qm.create", "qm.approve"] },
     { key: "returnsWriteOffs", href: "/write-offs", anyOf: ["hc.view", "hc.create", "hc.approve"] },
     { key: "returnsSupplier", href: "/supplier-returns", anyOf: ["qy.view", "qy.create", "qy.approve"] },
   ],
@@ -125,7 +127,7 @@ export function hubTabsFor(hub: HubKey, permissions: string[] | undefined): HubT
 /** Koʻchirishning uch turi — bitta «Koʻchirish» bandi, sahifalarda yorliqlar. */
 export const TRANSFER_PAGES = ["/transfers", "/warehouse-transfers", "/zone-transfers", "/branch-sales"] as const;
 /** «Qaytarish va hisobdan chiqarish» yorliqlari. */
-export const RETURN_PAGES = ["/write-offs", "/supplier-returns"] as const;
+export const RETURN_PAGES = ["/customer-returns", "/write-offs", "/supplier-returns"] as const;
 
 /** Menyu tuzilmasi — prototip `Medix ERP` (NAV) bilan aynan. */
 export const navigation: NavGroup[] = [
@@ -190,7 +192,7 @@ export const navigation: NavGroup[] = [
         also: [...RETURN_PAGES],
         hub: "returns",
         icon: PackageMinus,
-        anyOf: ["hc.view", "hc.create", "hc.approve", "qy.view", "qy.create", "qy.approve"],
+        anyOf: ["qm.view", "qm.create", "qm.approve", "hc.view", "hc.create", "hc.approve", "qy.view", "qy.create", "qy.approve"],
       },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: Database, anyOf: ["opening.list", "opening.view"] },
     ],

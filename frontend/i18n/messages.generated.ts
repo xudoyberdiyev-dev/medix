@@ -8,6 +8,7 @@ import uzLatn_branchSales from "@/messages/uz-Latn/branchSales.json";
 import uzLatn_cash from "@/messages/uz-Latn/cash.json";
 import uzLatn_common from "@/messages/uz-Latn/common.json";
 import uzLatn_counterparties from "@/messages/uz-Latn/counterparties.json";
+import uzLatn_customerReturns from "@/messages/uz-Latn/customerReturns.json";
 import uzLatn_debts from "@/messages/uz-Latn/debts.json";
 import uzLatn_dictionaries from "@/messages/uz-Latn/dictionaries.json";
 import uzLatn_employees from "@/messages/uz-Latn/employees.json";
@@ -52,6 +53,7 @@ import uzCyrl_branchSales from "@/messages/uz-Cyrl/branchSales.json";
 import uzCyrl_cash from "@/messages/uz-Cyrl/cash.json";
 import uzCyrl_common from "@/messages/uz-Cyrl/common.json";
 import uzCyrl_counterparties from "@/messages/uz-Cyrl/counterparties.json";
+import uzCyrl_customerReturns from "@/messages/uz-Cyrl/customerReturns.json";
 import uzCyrl_debts from "@/messages/uz-Cyrl/debts.json";
 import uzCyrl_dictionaries from "@/messages/uz-Cyrl/dictionaries.json";
 import uzCyrl_employees from "@/messages/uz-Cyrl/employees.json";
@@ -96,6 +98,7 @@ import ru_branchSales from "@/messages/ru/branchSales.json";
 import ru_cash from "@/messages/ru/cash.json";
 import ru_common from "@/messages/ru/common.json";
 import ru_counterparties from "@/messages/ru/counterparties.json";
+import ru_customerReturns from "@/messages/ru/customerReturns.json";
 import ru_debts from "@/messages/ru/debts.json";
 import ru_dictionaries from "@/messages/ru/dictionaries.json";
 import ru_employees from "@/messages/ru/employees.json";
@@ -142,6 +145,7 @@ export const uzLatn = {
   "cash": uzLatn_cash,
   "common": uzLatn_common,
   "counterparties": uzLatn_counterparties,
+  "customerReturns": uzLatn_customerReturns,
   "debts": uzLatn_debts,
   "dictionaries": uzLatn_dictionaries,
   "employees": uzLatn_employees,
@@ -189,6 +193,7 @@ export const uzCyrl = {
   "cash": uzCyrl_cash,
   "common": uzCyrl_common,
   "counterparties": uzCyrl_counterparties,
+  "customerReturns": uzCyrl_customerReturns,
   "debts": uzCyrl_debts,
   "dictionaries": uzCyrl_dictionaries,
   "employees": uzCyrl_employees,
@@ -236,6 +241,7 @@ export const ru = {
   "cash": ru_cash,
   "common": ru_common,
   "counterparties": ru_counterparties,
+  "customerReturns": ru_customerReturns,
   "debts": ru_debts,
   "dictionaries": ru_dictionaries,
   "employees": ru_employees,

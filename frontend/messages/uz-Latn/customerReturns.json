@@ -1,0 +1,113 @@
+{
+  "kind": "Mijozdan qaytarish",
+  "title": "Mijozdan qaytarish",
+  "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
+  "create": "Yangi qaytarish",
+  "newTitle": "Yangi qaytarish",
+  "caption": "Mijozdan qaytarish hujjatlari",
+  "search": "Raqam, mijoz yoki sotuv…",
+  "status": {
+    "PENDING": "Qabul kutilmoqda",
+    "POSTED": "Tasdiqlangan",
+    "REJECTED": "Rad etildi"
+  },
+  "reason": {
+    "EXPIRING": "Muddati yaqin",
+    "DAMAGED": "Shikastlangan",
+    "WRONG_ITEM": "Notoʻgʻri yuborilgan",
+    "REFUSED": "Mijoz rad etdi",
+    "OTHER": "Boshqa"
+  },
+  "filter": {
+    "status": "Holat",
+    "allStatuses": "Barcha holatlar"
+  },
+  "col": {
+    "number": "Raqam",
+    "date": "Sana",
+    "customer": "Mijoz",
+    "base": "Asos",
+    "warehouse": "Ombor",
+    "lines": "Qatorlar",
+    "sum": "Summa",
+    "status": "Holat",
+    "createdBy": "Kim yaratgan",
+    "product": "Mahsulot",
+    "batch": "Partiya",
+    "expiry": "Muddat",
+    "sold": "Sotilgan",
+    "prior": "Avval qaytarilgan",
+    "qty": "Qaytarilayotgan",
+    "price": "Narx (chegirma bilan)",
+    "reason": "Sabab",
+    "zone": "Zona"
+  },
+  "head": {
+    "customer": "Mijoz",
+    "sale": "Asos — sotuv hujjati",
+    "warehouse": "Ombor",
+    "date": "Sana",
+    "note": "Izoh"
+  },
+  "empty": {
+    "title": "Hali mijozdan qaytarish yoʻq",
+    "description": "Mijoz qaytargan tovarni sotuv hujjati asosida rasmiylashtiring — tovar Karantinga tushadi, qarz avtomatik kamayadi."
+  },
+  "quarantine": "Karantin",
+  "zoneTip": "Mijozdan qaytgan tovar har doim Karantinga tushadi",
+  "choose": "Tanlang",
+  "pickCustomer": "Avval mijozni tanlang",
+  "noSales": "Bu mijozda joʻnatilgan sotuv yoʻq",
+  "canReturn": "qaytarish mumkin: {n} qator",
+  "saleHint": "Qatorlar sotuvdan toʻldirildi (miqdor 0) · qaytarish mumkin: {n} qator",
+  "whLocked": "Sotuv omboridan olinadi",
+  "keeperAccepts": "Tovarni ombor mudiri qabul qilib tasdiqlaydi",
+  "keeperAcceptsBody": "Hujjat Ombor mudiriga yuboriladi. Qabul qilinmaguncha qoldiq va mijoz qarzi oʻzgarmaydi.",
+  "accept": "Qabul qilish va tasdiqlash",
+  "send": "Qabul qilishga yuborish",
+  "sent": "Hujjat ombor mudiriga yuborildi",
+  "posted": "{n} tasdiqlandi",
+  "linesCaption": "Sotuv qatorlari",
+  "emptyQm": "Mijoz va sotuv hujjatini tanlang",
+  "emptyLines": "Sotuvda qatorlar yoʻq",
+  "fromSale": "Qatorlar sotuv hujjatidan olinadi",
+  "qtyLabel": "{product}, {batch}: qaytarilayotgan miqdor",
+  "reasonLabel": "{product}: sabab",
+  "notePlaceholder": "Masalan: qadoq ezilgan",
+  "totals": "Qatorlar: {lines} · Jami dona: {qty} ·",
+  "totalSum": "Jami: {sum}",
+  "errorTitle": "Saqlanmadi",
+  "vsTitle": "Tasdiqlab boʻlmaydi: {n} ta xato",
+  "err": {
+    "customer": "Mijoz tanlanmagan",
+    "sale": "Sotuv hujjati tanlanmagan",
+    "qty": "miqdor butun musbat son boʻlishi kerak",
+    "left": "Qaytarish mumkin: {n}",
+    "reason": "sabab tanlanmagan",
+    "noLines": "Kamida bitta qatorda miqdor kiriting",
+    "otherNote": "Sabab «Boshqa» boʻlsa izoh yozing"
+  },
+  "postTitle": "Qaytarishni tasdiqlaysizmi?",
+  "confirm": {
+    "quarantine": "{lines} qator, {qty} dona {wh} Karantin zonasiga kiradi",
+    "debt": "{customer} qarzi {sum} soʻmga kamayadi",
+    "link": "{n} ga bogʻlanadi"
+  },
+  "failed": "Bajarilmadi",
+  "retryHint": "Qayta urinib koʻring.",
+  "saveFailed": "Saqlanmadi. Qayta urinib koʻring.",
+  "view": {
+    "pendingTitle": "Qabul kutilmoqda",
+    "pendingBody": "Ombor mudiri tovarni sanab qabul qiladi. Qabul qilinmaguncha qoldiq va mijoz qarzi oʻzgarmaydi.",
+    "postedTitle": "Hujjat tasdiqlangan · {who}",
+    "postedBody": "{at} · tovar «{zone}» zonasiga kirdi, mijoz qarzi kamaydi. Oʻzgartirib boʻlmaydi.",
+    "rejectedTitle": "Rad etildi: {reason}",
+    "rejectedBody": "{who} — qoldiq va qarz oʻzgarmadi.",
+    "linesCaption": "Qaytarilgan qatorlar",
+    "reject": "Rad etish",
+    "rejectTitle": "Qaytarishni rad etish",
+    "rejectReason": "Sabab",
+    "rejectPlaceholder": "Masalan: tovar kelmadi",
+    "rejected": "Rad etildi"
+  }
+}
