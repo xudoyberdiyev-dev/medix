@@ -37,7 +37,11 @@ class SalesReport {
         /** Mijoz hududi; ko'rsatilmagan — bo'sh kalit. */
         REGION("coalesce(x.region_id::text, '')", "coalesce(rg.name, '')", "LEFT JOIN region rg ON rg.id = x.region_id", "net DESC, name"),
         /** Buyurtmaning to'lov turi: kalit va nom — CASH / TRANSFER / ONLINE (UI tarjima qiladi). */
-        PAYMENT_TYPE("x.payment_type", "x.payment_type", "", "net DESC, name");
+        PAYMENT_TYPE("x.payment_type", "x.payment_type", "", "net DESC, name"),
+        /** Hafta (dushanbadan): kalit — dushanba sanasi YYYY-MM-DD. */
+        WEEK("to_char(date_trunc('week', x.d), 'YYYY-MM-DD')", "to_char(date_trunc('week', x.d), 'DD.MM.YYYY')", "", "k"),
+        /** Oy: kalit — YYYY-MM, nom — MM.YYYY. */
+        MONTH("to_char(x.d, 'YYYY-MM')", "to_char(x.d, 'MM.YYYY')", "", "k");
 
         final String key;
         final String name;

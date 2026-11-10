@@ -93,6 +93,8 @@ class SalesReportController {
                 case DAY -> "Sana";
                 case REGION -> "Hudud";
                 case PAYMENT_TYPE -> "Toʻlov turi";
+                case WEEK -> "Hafta";
+                case MONTH -> "Oy";
             };
             List<String> titles = new ArrayList<>(List.of(first, "Buyurtmalar", "Sotuv", "Chegirma", "Qaytarish", "Sof savdo (QQS bilan)", "QQS",
                     "Sof savdo (QQSsiz)"));

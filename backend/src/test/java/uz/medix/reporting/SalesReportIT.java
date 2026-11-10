@@ -169,6 +169,15 @@ class SalesReportIT {
                 .andExpect(jsonPath("$.rows[1].children.length()").value(1))
                 .andExpect(jsonPath("$.total.vat").exists())
                 .andExpect(jsonPath("$.total.netExVat").exists());
+        // Hafta va oy (prototip GK: week, month): kalit — dushanba / YYYY-MM
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("to", t).param("groupBy", "WEEK").cookie(director))
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].key").value(today().with(java.time.DayOfWeek.MONDAY).toString()))
+                .andExpect(jsonPath("$.rows[0].net").value("2000000.00"));
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("to", t).param("groupBy", "MONTH")
+                .param("groupBy2", "OPERATOR").cookie(director))
+                .andExpect(jsonPath("$.rows[0].key").value(t.substring(0, 7)))
+                .andExpect(jsonPath("$.rows[0].children.length()").value(2));
         // Guruh 2 = Guruh 1 — e'tiborga olinmaydi
         mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy2", "CUSTOMER").cookie(director))
                 .andExpect(jsonPath("$.groupBy2").doesNotExist())

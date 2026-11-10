@@ -3,7 +3,7 @@ import { groupedReports, REPORTS, visibleReports } from "./catalog";
 import { expenseExportHref, initialDirection } from "./expense-report";
 import { drillFilter, formatMargin, initialProductGroupBy, productSalesExportHref } from "./product-sales-report";
 import { drillReturns, initialReturnsGroupBy, returnsExportHref } from "./returns-report";
-import { flattenGroups, initialGroup2, initialGroupBy, isPaymentType, salesExportHref, salesRowHref } from "./sales-report";
+import { flattenGroups, groupRange, initialGroup2, initialGroupBy, isPaymentType, salesExportHref, salesRowHref } from "./sales-report";
 import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
 import { formatMinutes, workerExportHref } from "./worker-report";
 
@@ -183,5 +183,14 @@ describe("Qaytarishlar hisoboti", () => {
     expect(salesExportHref({ branchId: 1, from: "2026-11-01", to: "2026-11-02", groupBy: "CUSTOMER", groupBy2: "OPERATOR" })).toContain(
       "groupBy2=OPERATOR",
     );
+  });
+  it("savdo: hafta va oy qatori sana oraligʻiga", () => {
+    expect(groupRange("WEEK", "2026-11-09")).toEqual({ from: "2026-11-09", to: "2026-11-15" });
+    expect(groupRange("WEEK", "2026-12-28")).toEqual({ from: "2026-12-28", to: "2027-01-03" });
+    expect(groupRange("MONTH", "2026-02")).toEqual({ from: "2026-02-01", to: "2026-02-28" });
+    expect(groupRange("MONTH", "2028-02")).toEqual({ from: "2028-02-01", to: "2028-02-29" });
+    expect(groupRange("DAY", "2026-11-10")).toEqual({ from: "2026-11-10", to: "2026-11-10" });
+    expect(groupRange("MONTH", "x")).toBeNull();
+    expect(salesRowHref("MONTH", { key: "2026-11", name: "11.2026" })).toBe("/orders?soldFrom=2026-11-01&soldTo=2026-11-30");
   });
 });

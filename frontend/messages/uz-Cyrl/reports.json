@@ -102,7 +102,9 @@
       "BRANCH": "Филиал",
       "DAY": "Кун",
       "REGION": "Ҳудуд",
-      "PAYMENT_TYPE": "Тўлов тури"
+      "PAYMENT_TYPE": "Тўлов тури",
+      "WEEK": "Ҳафта",
+      "MONTH": "Ой"
     },
     "sales": "Сотув",
     "discount": "Чегирма",

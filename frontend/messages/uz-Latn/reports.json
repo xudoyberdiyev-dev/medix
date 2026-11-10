@@ -102,7 +102,9 @@
       "BRANCH": "Filial",
       "DAY": "Kun",
       "REGION": "Hudud",
-      "PAYMENT_TYPE": "Toʻlov turi"
+      "PAYMENT_TYPE": "Toʻlov turi",
+      "WEEK": "Hafta",
+      "MONTH": "Oy"
     },
     "sales": "Sotuv",
     "discount": "Chegirma",

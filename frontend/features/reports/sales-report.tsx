@@ -41,6 +41,8 @@ export const GROUP_LABELS: Record<GroupBy, string> = {
   DAY: "Kun",
   REGION: "Hudud",
   PAYMENT_TYPE: "Toʻlov turi",
+  WEEK: "Hafta",
+  MONTH: "Oy",
 };
 
 /** .xlsx eksport havolasi — jadvaldagi filtrlar bilan. */
@@ -66,6 +68,23 @@ export function salesExportHref(f: {
 
 const money = (v: string | undefined) => <span className="font-mono tabular-nums">{v == null ? "—" : formatMoney(v)}</span>;
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** Kun / hafta (kalit — dushanba) / oy (YYYY-MM) qatorining sana oraligʻi; notoʻgʻri kalit — null. UTC'da hisoblanadi (faqat sana). */
+export function groupRange(by: "DAY" | "WEEK" | "MONTH", key: string): { from: string; to: string } | null {
+  if (by === "MONTH") {
+    const m = /^(\d{4})-(\d{2})$/.exec(key);
+    if (!m) return null;
+    const last = new Date(Date.UTC(Number(m[1]), Number(m[2]), 0)).getUTCDate();
+    return { from: `${key}-01`, to: `${key}-${pad(last)}` };
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return null;
+  if (by === "DAY") return { from: key, to: key };
+  const d = new Date(`${key}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 6);
+  return { from: key, to: `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}` };
+}
+
 /**
  * Qatordan hujjatlarga (SPEC 8): shu davrda sotilgan/qaytarilgan buyurtmalar — mijoz, operator yoki kun boʻyicha.
  * «Faqat oʻz savdom» (reports.own) boʻlsa — «Mening buyurtmalarim» bilan. Filial qatori va «Jami» — null.
@@ -84,10 +103,11 @@ export function salesRowHref(
     q.set(name, row.name);
     if (period.from) q.set("soldFrom", period.from);
     if (period.to) q.set("soldTo", period.to);
-  } else if (groupBy === "DAY") {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(row.key)) return null;
-    q.set("soldFrom", row.key);
-    q.set("soldTo", row.key);
+  } else if (groupBy === "DAY" || groupBy === "WEEK" || groupBy === "MONTH") {
+    const range = groupRange(groupBy, row.key);
+    if (!range) return null;
+    q.set("soldFrom", range.from);
+    q.set("soldTo", range.to);
   } else {
     return null;
   }

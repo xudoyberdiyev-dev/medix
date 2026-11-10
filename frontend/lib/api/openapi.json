@@ -11643,7 +11643,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           }
         }, {
           "in" : "query",
@@ -11651,7 +11651,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           }
         }, {
           "in" : "query",
@@ -11719,7 +11719,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           }
         }, {
           "in" : "query",
@@ -11727,7 +11727,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           }
         }, {
           "in" : "query",
@@ -28474,11 +28474,11 @@
           },
           "groupBy" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           },
           "groupBy2" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           },
           "mineOnly" : {
             "type" : "boolean"

@@ -11945,9 +11945,9 @@ export interface components {
             /** Format: date */
             from: string;
             /** @enum {string} */
-            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
             /** @enum {string} */
-            groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+            groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
             mineOnly: boolean;
             /** @enum {string} */
             paymentType?: "CASH" | "TRANSFER" | "ONLINE";
@@ -20807,8 +20807,8 @@ export interface operations {
                 branchId?: number;
                 from?: string;
                 to?: string;
-                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
-                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
+                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
                 paymentType?: "CASH" | "TRANSFER" | "ONLINE";
                 regionId?: number;
             };
@@ -20835,8 +20835,8 @@ export interface operations {
                 branchId?: number;
                 from?: string;
                 to?: string;
-                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
-                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
+                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
                 paymentType?: "CASH" | "TRANSFER" | "ONLINE";
                 regionId?: number;
             };

@@ -102,7 +102,9 @@
       "BRANCH": "Филиал",
       "DAY": "День",
       "REGION": "Регион",
-      "PAYMENT_TYPE": "Тип оплаты"
+      "PAYMENT_TYPE": "Тип оплаты",
+      "WEEK": "Неделя",
+      "MONTH": "Месяц"
     },
     "sales": "Продажи",
     "discount": "Скидка",
