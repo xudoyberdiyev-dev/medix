@@ -342,6 +342,34 @@
         "tags" : [ "advance-offsets" ]
       }
     },
+    "/api/advance-offsets/{id}" : {
+      "get" : {
+        "operationId" : "one",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Offset"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "AH hujjati (prototip AdvanceDoc)",
+        "tags" : [ "advance-offsets" ]
+      }
+    },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
         "operationId" : "cancel_12",
@@ -16170,6 +16198,26 @@
         },
         "required" : [ "enabled" ]
       },
+      "Allocation" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "docId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "docType" : {
+            "type" : "string",
+            "maxLength" : 8,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "amount", "docId", "docType" ]
+      },
       "ApprovalPayment" : {
         "type" : "object",
         "properties" : {
@@ -22628,6 +22676,13 @@
           "cancelReason" : {
             "type" : "string"
           },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
           "counterparty" : {
             "type" : "string"
           },
@@ -22718,6 +22773,15 @@
       "OffsetRequest" : {
         "type" : "object",
         "properties" : {
+          "allocations" : {
+            "type" : "array",
+            "description" : "Qo'lda taqsimot (prototip AdvanceDoc): qaysi qarz hujjatiga qancha; bo'sh — eng eskisidan",
+            "items" : {
+              "$ref" : "#/components/schemas/Allocation"
+            },
+            "maxItems" : 200,
+            "minItems" : 0
+          },
           "amount" : {
             "type" : "string",
             "description" : "Eng ko'pi bilan shu summa; bo'sh — butun avans",

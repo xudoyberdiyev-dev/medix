@@ -74,6 +74,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/advance-offsets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** AH hujjati (prototip AdvanceDoc) */
+        get: operations["one"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/advance-offsets/{id}/cancel": {
         parameters: {
             query?: never;
@@ -7055,6 +7072,12 @@ export interface components {
         AllBranchesRequest: {
             enabled: boolean;
         };
+        Allocation: {
+            amount: string;
+            /** Format: int64 */
+            docId: number;
+            docType: string;
+        };
         ApprovalPayment: {
             amount: string;
             /** Format: date */
@@ -9554,6 +9577,9 @@ export interface components {
             /** Format: int64 */
             branchId: number;
             cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
             counterparty: string;
             /** Format: int64 */
             counterpartyId: number;
@@ -9586,6 +9612,8 @@ export interface components {
             lines: components["schemas"]["OffsetLine"][];
         };
         OffsetRequest: {
+            /** @description Qo'lda taqsimot (prototip AdvanceDoc): qaysi qarz hujjatiga qancha; bo'sh — eng eskisidan */
+            allocations?: components["schemas"]["Allocation"][];
             /** @description Eng ko'pi bilan shu summa; bo'sh — butun avans */
             amount?: string;
             /** Format: int64 */
@@ -13811,6 +13839,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OffsetPreview"];
+                };
+            };
+        };
+    };
+    one: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Offset"];
                 };
             };
         };
