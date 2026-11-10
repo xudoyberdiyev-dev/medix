@@ -800,6 +800,17 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   // Savdo: toʻlov turi boʻyicha guruhlash; Xarajatlar hisoboti ochiladi
   await page.goto("/reports/sales?groupBy=PAYMENT_TYPE");
   await expect(page.getByRole("columnheader", { name: /Toʻlov turi/ })).toBeVisible();
+  // «Mening hisobotlarim»: saqlash → katalogda yorliq → ochilganda guruh va davr tiklanadi
+  await page.getByRole("radio", { name: "Shu hafta" }).click();
+  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
+  const saveDlg = page.getByRole("dialog", { name: "Hisobotni saqlash" });
+  await field(saveDlg, "Nomi").fill("Haftalik toʻlov turlari");
+  await saveDlg.getByRole("button", { name: "Saqlash", exact: true }).click();
+  await page.goto("/reports");
+  await page.getByRole("region", { name: "Mening hisobotlarim" }).getByRole("link", { name: "Haftalik toʻlov turlari" }).click();
+  await expect(page).toHaveURL(/period=week&groupBy=PAYMENT_TYPE/);
+  await expect(page.getByRole("radio", { name: "Shu hafta" })).toBeChecked();
+  await expect(page.getByRole("columnheader", { name: /Toʻlov turi/ })).toBeVisible();
   await page.goto("/reports/expenses");
   await expect(page.getByRole("heading", { name: "Xarajatlar", level: 1 })).toBeVisible();
   // Qaytarishlar: katalogdan ochiladi, mijoz boʻyicha guruhlashda ulush ustuni

@@ -9,7 +9,9 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
+import { PeriodPicker } from "@/features/home/period-picker";
+import { reportHref } from "@/lib/saved-reports";
+import { SaveReportButton, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { rowField, useClientTable } from "@/lib/client-table";
@@ -69,7 +71,7 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
   const allowed = can(me.data, k.perm);
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const period = usePeriodState();
+  const period = useReportPeriod();
   const { from, to } = period.range;
   const report = useQuery({
     queryKey: ["reports", kind, branchId, from, to],
@@ -125,7 +127,13 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
       </Link>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{title}</h1>
-        <PeriodPicker state={period} />
+        <div className="flex flex-wrap items-end gap-3">
+          <PeriodPicker state={period} />
+          <SaveReportButton
+            href={reportHref(kind === "PICKERS" ? "/reports/pickers" : "/reports/markers", period.preset)}
+            defaultName={title}
+          />
+        </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-end gap-4 text-caption text-text-secondary">
         {r ? (

@@ -12,7 +12,9 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
+import { PeriodPicker } from "@/features/home/period-picker";
+import { reportHref } from "@/lib/saved-reports";
+import { SaveReportButton, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -50,7 +52,7 @@ export function SupplierGoodsReportPage() {
   const canOpenReceipts = (me.data?.permissions ?? []).includes("receipt.view");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const period = usePeriodState();
+  const period = useReportPeriod();
   const { from, to } = period.range;
   const params = useSearchParams();
   const [kind, setKind] = useState<SupplierKind>(params.get("kind") === "COMPANY" ? "COMPANY" : "STAFF");
@@ -113,7 +115,10 @@ export function SupplierGoodsReportPage() {
       </Link>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{pageTitle}</h1>
-        <PeriodPicker state={period} />
+        <div className="flex flex-wrap items-end gap-3">
+          <PeriodPicker state={period} />
+          <SaveReportButton href={reportHref("/reports/supplier-goods", period.preset, { kind })} defaultName={pageTitle} />
+        </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <Tabs

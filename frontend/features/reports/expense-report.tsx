@@ -13,7 +13,9 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { opsFilterHref } from "@/features/cash/api";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
+import { PeriodPicker } from "@/features/home/period-picker";
+import { reportHref } from "@/lib/saved-reports";
+import { SaveReportButton, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -59,7 +61,7 @@ export function ExpenseReportPage() {
   const canOpenOps = can(me.data, "cash.view") || can(me.data, "bank.view");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const period = usePeriodState();
+  const period = useReportPeriod();
   const { from, to } = period.range;
   const params = useSearchParams();
   const [direction, setDirection] = useState<ExpenseDirection>(() => initialDirection(params.get("direction")));
@@ -112,7 +114,10 @@ export function ExpenseReportPage() {
       </Link>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{title}</h1>
-        <PeriodPicker state={period} />
+        <div className="flex flex-wrap items-end gap-3">
+          <PeriodPicker state={period} />
+          <SaveReportButton href={reportHref("/reports/expenses", period.preset, { direction })} defaultName={title} />
+        </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">

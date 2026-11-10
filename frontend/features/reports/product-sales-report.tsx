@@ -13,7 +13,9 @@ import { Tabs } from "@/components/ui/tabs";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
+import { PeriodPicker } from "@/features/home/period-picker";
+import { reportHref } from "@/lib/saved-reports";
+import { SaveReportButton, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
@@ -77,7 +79,7 @@ export function ProductSalesReportPage() {
   const allowed = can(me.data, "reports.all") || can(me.data, "reports.view") || can(me.data, "reports.own");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const period = usePeriodState();
+  const period = useReportPeriod();
   const { from, to } = period.range;
   const params = useSearchParams();
   const [groupBy, setGroupBy] = useState<ProductGroupBy>(() => initialProductGroupBy(params.get("groupBy")));
@@ -180,7 +182,10 @@ export function ProductSalesReportPage() {
       </Link>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{t("products.title")}</h1>
-        <PeriodPicker state={period} />
+        <div className="flex flex-wrap items-end gap-3">
+          <PeriodPicker state={period} />
+          <SaveReportButton href={reportHref("/reports/products", period.preset, { groupBy })} defaultName={t("products.title")} />
+        </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">

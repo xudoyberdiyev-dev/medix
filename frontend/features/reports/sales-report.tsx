@@ -14,7 +14,9 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { useDictionary } from "@/features/dictionaries/api";
-import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
+import { PeriodPicker } from "@/features/home/period-picker";
+import { reportHref } from "@/lib/saved-reports";
+import { SaveReportButton, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -103,7 +105,7 @@ export function SalesReportPage() {
   const fullScope = can(me.data, "reports.all") || can(me.data, "reports.view");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const period = usePeriodState();
+  const period = useReportPeriod();
   const { from, to } = period.range;
   const groups = (Object.keys(GROUP_LABELS) as GroupBy[]).filter((g) => fullScope || (g !== "OPERATOR" && g !== "BRANCH"));
   const regions = useDictionary("REGION");
@@ -188,7 +190,10 @@ export function SalesReportPage() {
       </Link>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{t("sales.title")}</h1>
-        <PeriodPicker state={period} />
+        <div className="flex flex-wrap items-end gap-3">
+          <PeriodPicker state={period} />
+          <SaveReportButton href={reportHref("/reports/sales", period.preset, { groupBy })} defaultName={t("sales.title")} />
+        </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <Tabs
