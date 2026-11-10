@@ -695,7 +695,9 @@ test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, 
 
   await page.goto("/write-offs");
   await page.getByRole("button", { name: "Hisobdan chiqarish" }).first().click();
-  const drawer = page.getByRole("dialog").last();
+  // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = hc)
+  await expect(page).toHaveURL(/\/write-offs\/new$/);
+  const drawer = page.getByRole("main");
   await drawer.getByRole("combobox", { name: "Ombor", exact: true }).click();
   await page.getByRole("option", { name: /Markaziy ombor/ }).click();
   await drawer.getByRole("combobox", { name: "Zona", exact: true }).click();

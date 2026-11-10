@@ -121,6 +121,7 @@
     "sRejected": "Rad etdi",
     "dApproveT": "{n} ni tasdiqlaysizmi?",
     "dApprove": "«{zone}» zonasidan {n} qator, {q} dona qoldiqdan chiqariladi.",
-    "dApproveCost": "Tannarxda {amount} xarajatga yoziladi."
+    "dApproveCost": "Tannarxda {amount} xarajatga yoziladi.",
+    "crumbNew": "Yangi"
   }
 }

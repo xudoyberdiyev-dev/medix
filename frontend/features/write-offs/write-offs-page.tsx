@@ -23,7 +23,6 @@ import {
   type WriteOffStatus,
   type WriteOffSummary,
 } from "./api";
-import { WriteOffDrawer } from "./write-off-drawer";
 import { HubTabs } from "@/components/shell/hub-tabs";
 
 export function WriteOffStatusBadge({ status }: { status: WriteOffStatus }) {
@@ -51,7 +50,6 @@ export function WriteOffsPage() {
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — hujjat sahifasiga yoʻnaltiriladi (prototip StockDocs — toʻliq sahifa)
   const router = useRouter();
-  const [creating, setCreating] = useState(false);
   const openId = Number(params.get("open"));
   useEffect(() => {
     if (Number.isInteger(openId) && openId > 0) router.replace(`/write-offs/${openId}`);
@@ -104,7 +102,7 @@ export function WriteOffsPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setCreating(true)}>
+          <Button icon={Plus} onClick={() => router.push("/write-offs/new")}>
             {t("create")}
           </Button>
         ) : null}
@@ -155,7 +153,7 @@ export function WriteOffsPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setCreating(true)}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/write-offs/new")}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -177,13 +175,6 @@ export function WriteOffsPage() {
           }
         />
       )}
-      {creating ? (
-        <WriteOffDrawer
-          id={null}
-          onClose={() => setCreating(false)}
-          onCreated={(id) => (setCreating(false), router.push(`/write-offs/${id}`))}
-        />
-      ) : null}
     </>
   );
 }
