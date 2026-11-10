@@ -43,21 +43,22 @@ class SalesReportController {
     }
 
     private SalesReport.SalesReportView build(Long branchId, LocalDate from, LocalDate to, SalesReport.GroupBy groupBy,
-            SalesReport.PaymentType paymentType, Long regionId, Authentication auth) {
+            SalesReport.GroupBy groupBy2, SalesReport.PaymentType paymentType, Long regionId, Authentication auth) {
         Actor actor = currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
         boolean full = has(auth, "reports.all") || has(auth, "reports.view");
-        return report.report(actor, branchId, from, to, groupBy, paymentType, regionId, full, has(auth, "prices.cost"));
+        return report.report(actor, branchId, from, to, groupBy, groupBy2, paymentType, regionId, full, has(auth, "prices.cost"));
     }
 
     @GetMapping("/api/reports/sales")
     @PreAuthorize("hasAnyAuthority('reports.all', 'reports.view', 'reports.own')")
-    @Operation(summary = "Savdo hisoboti: sof savdo (sotuv − qaytarish), mijoz / operator / filial / kun bo'yicha; tannarx va yalpi foyda — prices.cost")
+    @Operation(summary = "Savdo hisoboti: sof savdo (sotuv − qaytarish), mijoz / operator / filial / kun / hudud / to'lov turi bo'yicha, ixtiyoriy Guruh 2 (groupBy2 — ichki qatorlar); QQS alohida; tannarx va yalpi foyda — prices.cost")
     SalesReport.SalesReportView salesReport(@RequestParam(required = false) Long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) SalesReport.GroupBy groupBy, @RequestParam(required = false) SalesReport.PaymentType paymentType,
+            @RequestParam(required = false) SalesReport.GroupBy groupBy, @RequestParam(required = false) SalesReport.GroupBy groupBy2,
+            @RequestParam(required = false) SalesReport.PaymentType paymentType,
             @RequestParam(required = false) Long regionId, Authentication auth) {
-        return build(branchId, from, to, groupBy, paymentType, regionId, auth);
+        return build(branchId, from, to, groupBy, groupBy2, paymentType, regionId, auth);
     }
 
     @GetMapping("/api/reports/sales/export")
@@ -66,10 +67,11 @@ class SalesReportController {
     void salesReportExport(@RequestParam(required = false) Long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) SalesReport.GroupBy groupBy, @RequestParam(required = false) SalesReport.PaymentType paymentType,
+            @RequestParam(required = false) SalesReport.GroupBy groupBy, @RequestParam(required = false) SalesReport.GroupBy groupBy2,
+            @RequestParam(required = false) SalesReport.PaymentType paymentType,
             @RequestParam(required = false) Long regionId, Authentication auth, HttpServletResponse response)
             throws IOException {
-        SalesReport.SalesReportView r = build(branchId, from, to, groupBy, paymentType, regionId, auth);
+        SalesReport.SalesReportView r = build(branchId, from, to, groupBy, groupBy2, paymentType, regionId, auth);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"savdo-hisoboti-" + r.from() + "-" + r.to() + ".xlsx\"");
         try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
@@ -91,8 +93,11 @@ class SalesReportController {
                 case DAY -> "Sana";
                 case REGION -> "Hudud";
                 case PAYMENT_TYPE -> "Toʻlov turi";
+                case WEEK -> "Hafta";
+                case MONTH -> "Oy";
             };
-            List<String> titles = new ArrayList<>(List.of(first, "Buyurtmalar", "Sotuv", "Chegirma", "Qaytarish", "Sof savdo (QQS bilan)"));
+            List<String> titles = new ArrayList<>(List.of(first, "Buyurtmalar", "Sotuv", "Chegirma", "Qaytarish", "Sof savdo (QQS bilan)", "QQS",
+                    "Sof savdo (QQSsiz)"));
             if (r.costVisible()) {
                 titles.addAll(List.of("Tannarx", "Yalpi foyda (QQSsiz)"));
             }
@@ -106,10 +111,15 @@ class SalesReportController {
             }
             int n = 3;
             for (SalesReport.SalesRow row : r.rows()) {
-                write(sheet.createRow(n++), row, r.costVisible(), null, right);
+                write(sheet.createRow(n++), row, "", r.costVisible(), null, right);
+                if (row.children() != null) {
+                    for (SalesReport.SalesRow child : row.children()) {
+                        write(sheet.createRow(n++), child, "    ", r.costVisible(), null, right);
+                    }
+                }
             }
-            write(sheet.createRow(n), r.total(), r.costVisible(), bold, boldRight);
-            int[] widths = {40, 12, 18, 16, 18, 22, 18, 20};
+            write(sheet.createRow(n), r.total(), "", r.costVisible(), bold, boldRight);
+            int[] widths = {40, 12, 18, 16, 18, 22, 16, 20, 18, 20};
             for (int i = 0; i < titles.size(); i++) {
                 sheet.setColumnWidth(i, widths[i] * 256);
             }
@@ -123,9 +133,9 @@ class SalesReportController {
     }
 
     /** Pul matn sifatida (1.250.000,00): float/double ishlatilmaydi (CLAUDE.md). */
-    private static void write(Row x, SalesReport.SalesRow r, boolean cost, CellStyle text, CellStyle money) {
+    private static void write(Row x, SalesReport.SalesRow r, String indent, boolean cost, CellStyle text, CellStyle money) {
         Cell name = x.createCell(0);
-        name.setCellValue(switch (r.name()) {
+        name.setCellValue(indent + switch (r.name()) {
             case "" -> "—";
             case "CASH" -> "Naqd";
             case "TRANSFER" -> "Perechisleniye";
@@ -136,7 +146,7 @@ class SalesReportController {
             name.setCellStyle(text);
         }
         x.createCell(1).setCellValue(r.orders());
-        List<String> values = new ArrayList<>(List.of(r.sales(), r.discount(), r.returns(), r.net()));
+        List<String> values = new ArrayList<>(List.of(r.sales(), r.discount(), r.returns(), r.net(), r.vat(), r.netExVat()));
         if (cost) {
             values.add(r.cost());
             values.add(r.profit());

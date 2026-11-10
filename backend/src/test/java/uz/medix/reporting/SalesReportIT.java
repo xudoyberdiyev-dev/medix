@@ -157,6 +157,31 @@ class SalesReportIT {
         mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "OPERATOR").cookie(director))
                 .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(op1.id())))
                 .andExpect(jsonPath("$.rows[0].net").value("1500000.00"));
+        // Guruh 2 (prototip Reports): mijoz → operator ichki qatorlari; QQS ustunlari
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy2", "OPERATOR").cookie(director))
+                .andExpect(jsonPath("$.groupBy2").value("OPERATOR"))
+                .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(c1)))
+                .andExpect(jsonPath("$.rows[0].children.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].children[0].key").value(String.valueOf(op1.id())))
+                .andExpect(jsonPath("$.rows[0].children[0].net").value("1200000.00"))
+                .andExpect(jsonPath("$.rows[0].children[1].key").value(String.valueOf(op2.id())))
+                .andExpect(jsonPath("$.rows[0].children[1].net").value("500000.00"))
+                .andExpect(jsonPath("$.rows[1].children.length()").value(1))
+                .andExpect(jsonPath("$.total.vat").exists())
+                .andExpect(jsonPath("$.total.netExVat").exists());
+        // Hafta va oy (prototip GK: week, month): kalit — dushanba / YYYY-MM
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("to", t).param("groupBy", "WEEK").cookie(director))
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].key").value(today().with(java.time.DayOfWeek.MONDAY).toString()))
+                .andExpect(jsonPath("$.rows[0].net").value("2000000.00"));
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("to", t).param("groupBy", "MONTH")
+                .param("groupBy2", "OPERATOR").cookie(director))
+                .andExpect(jsonPath("$.rows[0].key").value(t.substring(0, 7)))
+                .andExpect(jsonPath("$.rows[0].children.length()").value(2));
+        // Guruh 2 = Guruh 1 — e'tiborga olinmaydi
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy2", "CUSTOMER").cookie(director))
+                .andExpect(jsonPath("$.groupBy2").doesNotExist())
+                .andExpect(jsonPath("$.rows[0].children").doesNotExist());
         // Kun bo'yicha
         mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "DAY").cookie(director))
                 .andExpect(jsonPath("$.rows.length()").value(1))

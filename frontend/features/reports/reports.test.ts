@@ -3,7 +3,7 @@ import { groupedReports, REPORTS, visibleReports } from "./catalog";
 import { expenseExportHref, initialDirection } from "./expense-report";
 import { drillFilter, formatMargin, initialProductGroupBy, productSalesExportHref } from "./product-sales-report";
 import { drillReturns, initialReturnsGroupBy, returnsExportHref } from "./returns-report";
-import { initialGroupBy, isPaymentType, salesExportHref, salesRowHref } from "./sales-report";
+import { flattenGroups, groupRange, initialGroup2, initialGroupBy, isPaymentType, salesExportHref, salesRowHref } from "./sales-report";
 import { canSeeSupplierGoods, supplierGoodsExportHref } from "./supplier-goods-report";
 import { formatMinutes, workerExportHref } from "./worker-report";
 
@@ -150,5 +150,47 @@ describe("Qaytarishlar hisoboti", () => {
     });
     expect(drillReturns("REASON", { key: "muddati yaqin", name: "Muddati yaqin" })).toBeNull();
     expect(drillReturns("DAY", { key: "2026-11-07", name: "07.11.2026" })).toBeNull();
+  });
+  it("savdo: Guruh 2 — URL tanlovi va ichki qatorlar", () => {
+    const groups = ["CUSTOMER", "OPERATOR", "DAY"] as const;
+    expect(initialGroup2("OPERATOR", [...groups], "CUSTOMER")).toBe("OPERATOR");
+    expect(initialGroup2("CUSTOMER", [...groups], "CUSTOMER")).toBeNull();
+    expect(initialGroup2("BRANCH", [...groups], "CUSTOMER")).toBeNull();
+    expect(initialGroup2(null, [...groups], "CUSTOMER")).toBeNull();
+    const m = {
+      orders: 1,
+      sales: "1.00",
+      discount: "0.00",
+      returns: "0.00",
+      net: "1.00",
+      vat: "0.00",
+      salesExVat: "1.00",
+      returnsExVat: "0.00",
+      netExVat: "1.00",
+    };
+    const rows = [
+      { ...m, key: "1", name: "A", children: [{ ...m, key: "7", name: "Op" }] },
+      { ...m, key: "2", name: "B", children: [] },
+    ];
+    expect(flattenGroups(rows, [], true).map((r) => r.key)).toEqual(["1", "2"]);
+    const open = flattenGroups(rows, ["1"], true);
+    expect(open.map((r) => [r.key, r.level, r.parent])).toEqual([
+      ["1", 0, null],
+      ["7", 1, "1"],
+      ["2", 0, null],
+    ]);
+    expect(flattenGroups(rows, ["1"], false)).toHaveLength(2);
+    expect(salesExportHref({ branchId: 1, from: "2026-11-01", to: "2026-11-02", groupBy: "CUSTOMER", groupBy2: "OPERATOR" })).toContain(
+      "groupBy2=OPERATOR",
+    );
+  });
+  it("savdo: hafta va oy qatori sana oraligʻiga", () => {
+    expect(groupRange("WEEK", "2026-11-09")).toEqual({ from: "2026-11-09", to: "2026-11-15" });
+    expect(groupRange("WEEK", "2026-12-28")).toEqual({ from: "2026-12-28", to: "2027-01-03" });
+    expect(groupRange("MONTH", "2026-02")).toEqual({ from: "2026-02-01", to: "2026-02-28" });
+    expect(groupRange("MONTH", "2028-02")).toEqual({ from: "2028-02-01", to: "2028-02-29" });
+    expect(groupRange("DAY", "2026-11-10")).toEqual({ from: "2026-11-10", to: "2026-11-10" });
+    expect(groupRange("MONTH", "x")).toBeNull();
+    expect(salesRowHref("MONTH", { key: "2026-11", name: "11.2026" })).toBe("/orders?soldFrom=2026-11-01&soldTo=2026-11-30");
   });
 });

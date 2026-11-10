@@ -815,6 +815,15 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   await expect(page).toHaveURL(/period=week&groupBy=PAYMENT_TYPE/);
   await expect(page.getByRole("radio", { name: "Shu hafta" })).toBeChecked();
   await expect(page.getByRole("columnheader", { name: /Toʻlov turi/ })).toBeVisible();
+  // Guruh 2 va QQS rejimi (prototip Reports): mijoz → toʻlov turi ichki qatorlari; «QQS bilan» — «Jami (QQS bilan)» ustuni
+  await page.goto("/reports/sales?groupBy=CUSTOMER&groupBy2=PAYMENT_TYPE");
+  await expect(page.getByRole("columnheader", { name: /Mijoz \/ Toʻlov turi/ })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: /^QQS$/ })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: /Jami \(QQS bilan\)/ })).toHaveCount(0);
+  await page.getByRole("radio", { name: "QQS bilan" }).click();
+  await expect(page.getByRole("columnheader", { name: /Jami \(QQS bilan\)/ })).toBeVisible();
+  await page.getByRole("row").nth(1).click();
+  await expect(page.getByRole("row", { name: /Naqd|Perechisleniye|Online/ }).first()).toBeVisible();
   await page.goto("/reports/expenses");
   await expect(page.getByRole("heading", { name: "Xarajatlar", level: 1 })).toBeVisible();
   // Qaytarishlar: katalogdan ochiladi, mijoz boʻyicha guruhlashda ulush ustuni
