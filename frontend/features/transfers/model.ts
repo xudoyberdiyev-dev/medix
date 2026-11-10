@@ -160,9 +160,9 @@ export function kpisOf(items: TransferItem[]): TransferKpis {
   };
 }
 
-/** Hujjat sahifasi (mavjud tur sahifalari `?open=` ni qoʻllaydi). */
+/** Hujjat sahifasi: OK — toʻliq sahifa `/warehouse-transfers/{id}`; boshqalar — tur sahifasi `?open=`. */
 export function docHref(x: Pick<TransferItem, "kind" | "id">): string {
-  return `${KIND_PAGE[x.kind]}?open=${x.id}`;
+  return x.kind === "OK" ? `/warehouse-transfers/${x.id}` : `${KIND_PAGE[x.kind]}?open=${x.id}`;
 }
 
 export const KIND_PAGE: Record<TransferKind, string> = {

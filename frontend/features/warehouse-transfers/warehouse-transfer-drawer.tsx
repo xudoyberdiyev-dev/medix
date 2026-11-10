@@ -201,7 +201,7 @@ function View({ doc, onClose }: { doc: WarehouseTransferDetail; onClose: () => v
   );
 }
 
-function ReceiveModal({ doc, onClose }: { doc: WarehouseTransferDetail; onClose: () => void }) {
+export function ReceiveModal({ doc, onClose }: { doc: WarehouseTransferDetail; onClose: () => void }) {
   const t = useTranslations("warehouseTransfers");
   const receiveError = useReceiveErrorText();
   const warehouses = useWarehouses();

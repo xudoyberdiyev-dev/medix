@@ -2,8 +2,8 @@
 
 import { ArrowRight, CircleCheck, FilePen, Plus, Truck, TriangleAlert, Warehouse, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -47,12 +47,13 @@ export function WarehouseTransfersPage() {
   const params = useSearchParams();
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
-  // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi; «Koʻchirish» → «Yangi»: ?new=1 — yangi qoralama
-  const [open, setOpen] = useState<{ id: number | null } | null>(() => {
-    if (params.get("new") === "1") return { id: null };
-    const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
-  });
+  const router = useRouter();
+  // «Koʻchirish» → «Yangi»: ?new=1 — yangi qoralama; bildirishnomadan ?open=<id> — hujjat sahifasiga yoʻnaltiriladi
+  const [creating, setCreating] = useState(() => params.get("new") === "1");
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/warehouse-transfers/${openId}`);
+  }, [openId, router]);
   const allowed = canAny(me.data, OK_VIEW_KEYS);
   const canCreate = can(me.data, TRANSFER_OK);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -100,7 +101,7 @@ export function WarehouseTransfersPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => setCreating(true)}>
             {t("create")}
           </Button>
         ) : null}
@@ -114,7 +115,7 @@ export function WarehouseTransfersPage() {
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setOpen({ id: d.id })}
+          onRowClick={(d) => router.push(`/warehouse-transfers/${d.id}`)}
           toolbar={
             <div className="w-56">
               <Select
@@ -138,7 +139,7 @@ export function WarehouseTransfersPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => setCreating(true)}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -160,7 +161,13 @@ export function WarehouseTransfersPage() {
           }
         />
       )}
-      {open ? <WarehouseTransferDrawer id={open.id} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} /> : null}
+      {creating ? (
+        <WarehouseTransferDrawer
+          id={null}
+          onClose={() => setCreating(false)}
+          onCreated={(id) => router.push(`/warehouse-transfers/${id}`)}
+        />
+      ) : null}
     </>
   );
 }
