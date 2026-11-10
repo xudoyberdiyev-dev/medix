@@ -155,7 +155,7 @@ function Approvals({ rows }: { rows: Approval[] }) {
   );
 }
 
-function Delta({ cur, prev }: { cur: string; prev: string | null | undefined }) {
+export function Delta({ cur, prev }: { cur: string; prev: string | null | undefined }) {
   const t = useTranslations("home.br");
   const d = prev == null ? null : pctDelta(cur, prev);
   if (!d)

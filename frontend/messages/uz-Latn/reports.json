@@ -123,7 +123,14 @@
     "allPayments": "Barcha toʻlov turlari",
     "region": "Hudud",
     "allRegions": "Barcha hududlar",
-    "unspecified": "Koʻrsatilmagan"
+    "unspecified": "Koʻrsatilmagan",
+    "kpi": {
+      "net": "Sof savdo",
+      "docs": "Hujjatlar soni",
+      "avg": "Oʻrtacha hujjat summasi",
+      "retShare": "Qaytarish ulushi",
+      "soum": "soʻm"
+    }
   },
   "worker": {
     "forbidden": "{title} sizning rolingiz uchun yopiq.",

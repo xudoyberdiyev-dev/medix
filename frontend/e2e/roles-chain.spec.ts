@@ -791,6 +791,8 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   await expect(page.getByText("Davrda savdo yoʻq")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Excelʼga yuklab olish" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Chop etish" })).toBeVisible();
+  await expect(page.getByText("Sof savdo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Qaytarish ulushi", { exact: true })).toBeVisible();
   // Mahsulotlar savdosi: sotilgan mahsulot qatori; kategoriya boʻyicha guruhlash
   await page.goto("/reports");
   await page.getByRole("link", { name: /^Mahsulotlar savdosi/ }).click();

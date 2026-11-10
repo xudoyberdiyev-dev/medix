@@ -17,6 +17,8 @@ import { useDictionary } from "@/features/dictionaries/api";
 import { PeriodPicker } from "@/features/home/period-picker";
 import { reportHref } from "@/lib/saved-reports";
 import { ReportActions, useReportPeriod } from "./saved-reports";
+import { averageDoc, previousRange, returnShare } from "./sales-kpis";
+import { Delta } from "@/features/home/branch-home";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -115,24 +117,32 @@ export function SalesReportPage() {
   const groupBy = picked ?? initialGroupBy(params.get("groupBy"), groups);
   const [paymentType, setPaymentType] = useState<PaymentType | null>(null);
   const [regionId, setRegionId] = useState<number | null>(null);
+  const fetchSales = (range: { from: string; to: string }) =>
+    unwrap(
+      api.GET("/api/reports/sales", {
+        params: {
+          query: {
+            branchId: branchId ?? undefined,
+            from: range.from,
+            to: range.to,
+            groupBy,
+            paymentType: paymentType ?? undefined,
+            regionId: regionId ?? undefined,
+          },
+        },
+      }),
+    );
   const report = useQuery({
     queryKey: ["reports", "sales", branchId, from, to, groupBy, paymentType, regionId],
-    queryFn: () =>
-      unwrap(
-        api.GET("/api/reports/sales", {
-          params: {
-            query: {
-              branchId: branchId ?? undefined,
-              from: from ?? undefined,
-              to: to ?? undefined,
-              groupBy,
-              paymentType: paymentType ?? undefined,
-              regionId: regionId ?? undefined,
-            },
-          },
-        }),
-      ),
+    queryFn: () => fetchSales({ from: from ?? "", to: to ?? "" }),
     enabled: allowed && !!from && !!to,
+  });
+  // KPI taqqoslashi (prototip): oldingi teng davr, xuddi shu filtrlar bilan
+  const prevRange = from && to ? previousRange(from, to) : null;
+  const prev = useQuery({
+    queryKey: ["reports", "sales", branchId, prevRange?.from, prevRange?.to, groupBy, paymentType, regionId],
+    queryFn: () => fetchSales(prevRange ?? { from: "", to: "" }),
+    enabled: allowed && !!prevRange,
   });
 
   const table = useClientTable(report.data?.rows ?? NO_ROWS);
@@ -199,6 +209,25 @@ export function SalesReportPage() {
           />
         </div>
       </div>
+      {r ? (
+        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiTile label={t("sales.kpi.net")} value={formatMoney(r.total.net)} unit={t("sales.kpi.soum")}>
+            <Delta cur={r.total.net} prev={prev.data?.total.net} />
+          </KpiTile>
+          <KpiTile label={t("sales.kpi.docs")} value={String(r.total.orders)}>
+            <Delta cur={`${r.total.orders}.00`} prev={prev.data ? `${prev.data.total.orders}.00` : null} />
+          </KpiTile>
+          <KpiTile
+            label={t("sales.kpi.avg")}
+            value={(() => {
+              const avg = averageDoc(r.total.net, r.total.orders);
+              return avg ? formatMoney(avg) : "—";
+            })()}
+            unit={t("sales.kpi.soum")}
+          />
+          <KpiTile label={t("sales.kpi.retShare")} value={returnShare(r.total.returns, r.total.sales)} />
+        </div>
+      ) : null}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <Tabs
           aria-label={t("sales.groupBy")}
@@ -268,5 +297,18 @@ export function SalesReportPage() {
       {r?.truncated ? <p className="mt-2 text-caption text-warning">{t("sales.truncated")}</p> : null}
       <p className="mt-2 text-caption text-text-secondary">{t("sales.note")}</p>
     </>
+  );
+}
+
+function KpiTile({ label, value, unit, children }: { label: string; value: string; unit?: string; children?: React.ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1 rounded-card border border-border bg-surface p-4">
+      <span className="text-body text-text-secondary">{label}</span>
+      <span className="flex flex-wrap items-baseline gap-x-1.5">
+        <span className="text-section-title whitespace-nowrap tabular-nums">{value}</span>
+        {unit ? <span className="text-caption text-text-secondary">{unit}</span> : null}
+      </span>
+      {children}
+    </div>
   );
 }
