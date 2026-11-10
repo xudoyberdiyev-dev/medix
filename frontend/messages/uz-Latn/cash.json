@@ -229,7 +229,13 @@
       "description": "Pul harakati boʻlgach shu yerda koʻrinadi."
     },
     "kind": "Toʻlov turi",
-    "allKinds": "Barcha turlar"
+    "allKinds": "Barcha turlar",
+    "act": {
+      "out": "Chiqim",
+      "driver": "Haydovchidan pul qabul qilish · {n}",
+      "close": "Kunni yopish",
+      "mt": "Mijozdan toʻlov"
+    }
   },
   "bank": {
     "noAccount": {
