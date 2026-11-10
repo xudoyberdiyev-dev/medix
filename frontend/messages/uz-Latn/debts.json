@@ -133,7 +133,13 @@
     "clearFilters": "Filtrni tozalash",
     "totalN": "Jami: {n}",
     "groupNote": "Guruh ichidagi hisob-kitoblar: {s} (jamiga kirmaydi)",
-    "groupOpen": "Filiallararo sotuvlar"
+    "groupOpen": "Filiallararo sotuvlar",
+    "hideGroup": "Guruh ichidagini yashirish",
+    "groupTitle": "Guruh ichidagi qarz (jamiga kirmaydi)",
+    "groupDebtor": "Qarzdor filial",
+    "groupCreditor": "Kreditor filial",
+    "groupAmount": "Qarz",
+    "groupBadge": "Guruh ichida"
   },
   "pay": {
     "title": "Yetkazib beruvchilar qarzi",

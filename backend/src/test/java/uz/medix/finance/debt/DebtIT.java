@@ -162,7 +162,8 @@ class DebtIT {
                 .andExpect(jsonPath("$.rows[1].buckets.advance").value("1000.00"))
                 .andExpect(jsonPath("$.totals.debt").value("2900.00"))
                 .andExpect(jsonPath("$.totals.advance").value("1000.00"))
-                .andExpect(jsonPath("$.groupDebt").exists());
+                .andExpect(jsonPath("$.groupDebt").exists())
+                .andExpect(jsonPath("$.groupRows").isArray());
 
         mvc.perform(get("/api/debts/customers/" + c1 + "/docs").param("branchId", "" + b).cookie(cashier))
                 .andExpect(jsonPath("$.length()").value(4))

@@ -8285,6 +8285,8 @@ export interface components {
             branchId?: number;
             /** @description Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi */
             groupDebt: string;
+            /** @description Guruh ichidagi qarz juftliklari (faqat musbat) — «Guruh ichidagini yashirish» oʻchirilganda qator */
+            groupRows: components["schemas"]["GroupDebtRow"][];
             rows: components["schemas"]["DebtRow"][];
             /** Format: date */
             today: string;
@@ -8605,6 +8607,16 @@ export interface components {
             /** @enum {string} */
             kind: "WRITE_OFF" | "RETURN";
             note: string;
+        };
+        /** @description Filiallararo qarz: debitor filial kreditor filialga qarzdor */
+        GroupDebtRow: {
+            amount: string;
+            creditor: string;
+            /** Format: int64 */
+            creditorId: number;
+            debtor: string;
+            /** Format: int64 */
+            debtorId: number;
         };
         HandedSale: {
             /** Format: date-time */

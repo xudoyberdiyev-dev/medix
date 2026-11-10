@@ -19504,6 +19504,13 @@
             "type" : "string",
             "description" : "Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi"
           },
+          "groupRows" : {
+            "type" : "array",
+            "description" : "Guruh ichidagi qarz juftliklari (faqat musbat) — «Guruh ichidagini yashirish» oʻchirilganda qator",
+            "items" : {
+              "$ref" : "#/components/schemas/GroupDebtRow"
+            }
+          },
           "rows" : {
             "type" : "array",
             "items" : {
@@ -19518,7 +19525,7 @@
             "$ref" : "#/components/schemas/Buckets"
           }
         },
-        "required" : [ "groupDebt", "rows", "today", "totals" ]
+        "required" : [ "groupDebt", "groupRows", "rows", "today", "totals" ]
       },
       "DebtRow" : {
         "type" : "object",
@@ -20311,6 +20318,30 @@
           }
         },
         "required" : [ "kind", "note" ]
+      },
+      "GroupDebtRow" : {
+        "type" : "object",
+        "description" : "Filiallararo qarz: debitor filial kreditor filialga qarzdor",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "creditor" : {
+            "type" : "string"
+          },
+          "creditorId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "debtor" : {
+            "type" : "string"
+          },
+          "debtorId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "amount", "creditor", "creditorId", "debtor", "debtorId" ]
       },
       "HandedSale" : {
         "type" : "object",

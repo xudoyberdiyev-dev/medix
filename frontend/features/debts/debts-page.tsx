@@ -27,6 +27,7 @@ import { AGE_KEYS, DEBT_TABS, inAges, inTab, statusOf, sumOf, type AgeKey, type 
 
 export type DebtRow = components["schemas"]["DebtRow"];
 export type DebtDoc = components["schemas"]["DebtDoc"];
+type GroupDebtRow = components["schemas"]["GroupDebtRow"];
 type Side = "CUSTOMER" | "SUPPLIER";
 
 const CONFIG = {
@@ -105,6 +106,28 @@ export function DebtsPage({ side }: { side: Side }) {
     setOperators([]);
   };
   const tr = useTranslations("debts.recv");
+  const [hideGroup, setHideGroup] = useState(true);
+  const groupColumns: TableColumn<GroupDebtRow>[] = [
+    {
+      key: "debtor",
+      title: tr("groupDebtor"),
+      render: (g) => (
+        <span className="flex items-center gap-2">
+          <span className="font-medium">{g.debtor}</span>
+          <Badge tone="neutral" icon={Building2}>
+            {tr("groupBadge")}
+          </Badge>
+        </span>
+      ),
+    },
+    { key: "creditor", title: tr("groupCreditor") },
+    {
+      key: "amount",
+      title: tr("groupAmount"),
+      align: "right",
+      render: (g) => <span className="tabular-nums">{formatMoney(g.amount)}</span>,
+    },
+  ];
   // Hudud / Operator chiplari (prototip Receivables): qiymatlar hisobotdagi qatorlardan, «Koʻrsatilmagan» — boʻsh
   const valuesOf = (pick: (r: DebtRow) => string[]) => {
     const counts = new Map<string, number>();
@@ -357,6 +380,9 @@ export function DebtsPage({ side }: { side: Side }) {
                     selected={ages}
                     onChange={setAges}
                   />
+                  {report.data && report.data.groupRows.length > 0 ? (
+                    <Checkbox label={tr("hideGroup")} checked={hideGroup} onChange={setHideGroup} />
+                  ) : null}
                   {filtered ? (
                     <Button variant="tertiary" size="sm" onClick={clearFilters}>
                       {tr("clearFilters")}
@@ -377,6 +403,17 @@ export function DebtsPage({ side }: { side: Side }) {
           }
         />
       )}
+      {isCustomer && !hideGroup && report.data && report.data.groupRows.length > 0 ? (
+        <div className="mt-4">
+          <Table
+            caption={tr("groupTitle")}
+            density="compact"
+            columns={groupColumns}
+            rows={report.data.groupRows}
+            rowKey={(g) => `${g.debtorId}:${g.creditorId}`}
+          />
+        </div>
+      ) : null}
     </>
   );
 }

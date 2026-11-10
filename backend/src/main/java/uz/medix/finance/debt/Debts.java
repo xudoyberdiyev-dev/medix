@@ -44,7 +44,11 @@ class Debts {
             @Schema(nullable = true, description = "To'lov sharti, kun (faqat bitta filial tanlanganda)") Integer paymentDays) {}
 
     record DebtReport(@Schema(nullable = true) Long branchId, LocalDate today, Buckets totals, List<DebtRow> rows,
-            @Schema(description = "Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi") String groupDebt) {}
+            @Schema(description = "Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi") String groupDebt,
+            @Schema(description = "Guruh ichidagi qarz juftliklari (faqat musbat) — «Guruh ichidagini yashirish» oʻchirilganda qator") List<GroupDebtRow> groupRows) {}
+
+    @Schema(description = "Filiallararo qarz: debitor filial kreditor filialga qarzdor")
+    record GroupDebtRow(long debtorId, String debtor, long creditorId, String creditor, String amount) {}
 
     record DebtDoc(long branchId, String branch, String docType, long docId, String docNumber, LocalDate date, @Schema(nullable = true) LocalDate dueDate,
             String open, int overdueDays, @Schema(description = "Hujjat summasi") String total,
@@ -115,7 +119,8 @@ class Debts {
             byParty.merge(first.counterpartyId(), Aging.of(docs, today), Aging.Result::plus);
         }
         if (byParty.isEmpty()) {
-            return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of(), groupDebt(side, branchId));
+            List<GroupDebtRow> group = groupRows(side, branchId);
+            return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of(), groupSum(group), group);
         }
         record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment, String region, String operator, Integer days) {}
         String payDoc = side == Side.CUSTOMER ? "MT" : "YT";
@@ -154,20 +159,30 @@ class Debts {
         // Eng ko'p muddati o'tgan qarz birinchi, keyin umumiy qarz
         rows.sort(Comparator.comparing((DebtRow r) -> Money.of(r.buckets().overdue())).reversed()
                 .thenComparing((DebtRow r) -> Money.of(r.buckets().debt()), Comparator.reverseOrder()));
-        return new DebtReport(branchId, today, Buckets.of(total), rows, groupDebt(side, branchId));
+        List<GroupDebtRow> group = groupRows(side, branchId);
+        return new DebtReport(branchId, today, Buckets.of(total), rows, groupSum(group), group);
     }
 
     /**
      * Filiallararo (FS) ochiq qarz, juftlik bo'yicha musbat qoldiq: mijozlar tomoni — boshqa filiallar bizga (kreditor = filial), YB
      * tomoni — biz boshqa filiallarga (debitor = filial); filial tanlanmasa — barcha juftliklar.
      */
-    private String groupDebt(Side side, Long branchId) {
+    private List<GroupDebtRow> groupRows(Side side, Long branchId) {
         String col = side == Side.CUSTOMER ? "creditor_branch_id" : "debtor_branch_id";
-        return new Money(jdbc.sql("""
-                SELECT coalesce(sum(greatest(x.amt, 0)), 0) FROM (
+        return jdbc.sql("""
+                SELECT x.debtor_branch_id, d.name AS debtor, x.creditor_branch_id, c.name AS creditor, x.amt FROM (
                     SELECT debtor_branch_id, creditor_branch_id, sum(amount) AS amt FROM branch_ledger
-                    WHERE CAST(:b AS BIGINT) IS NULL OR %s = :b GROUP BY 1, 2) x""".formatted(col))
-                .param("b", branchId).query(BigDecimal.class).single()).toString();
+                    WHERE CAST(:b AS BIGINT) IS NULL OR %s = :b GROUP BY 1, 2) x
+                JOIN branch d ON d.id = x.debtor_branch_id JOIN branch c ON c.id = x.creditor_branch_id
+                WHERE x.amt > 0 ORDER BY x.amt DESC, d.name""".formatted(col))
+                .param("b", branchId)
+                .query((rs, n) -> new GroupDebtRow(rs.getLong("debtor_branch_id"), rs.getString("debtor"), rs.getLong("creditor_branch_id"),
+                        rs.getString("creditor"), new Money(rs.getBigDecimal("amt")).toString()))
+                .list();
+    }
+
+    private static String groupSum(List<GroupDebtRow> rows) {
+        return rows.stream().map(r -> Money.of(r.amount())).reduce(Money.ZERO, Money::plus).toString();
     }
 
     /**
