@@ -179,6 +179,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audit/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mening harakatlarim — oxirgi 10 ta (kirishlarsiz) */
+        get: operations["mine_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/csrf": {
         parameters: {
             query?: never;
@@ -860,7 +877,7 @@ export interface paths {
          * Kassalar roʻyxati (kartalar)
          * @description Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.
          */
-        get: operations["overview_6"];
+        get: operations["overview_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -938,7 +955,7 @@ export interface paths {
          * Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)
          * @description To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.
          */
-        get: operations["overview_5"];
+        get: operations["overview_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1376,6 +1393,23 @@ export interface paths {
         };
         /** Yetkazib beruvchi bo'yicha ochiq hujjatlar */
         get: operations["supplierDocs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dictionaries-overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Boshqa ma'lumotnomalar: soni va oxirgi o'zgarish */
+        get: operations["overview_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4264,6 +4298,40 @@ export interface paths {
          */
         put: operations["setPin"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Faol sessiyalarim (joriysi birinchi) */
+        get: operations["sessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/sessions/end-others": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Boshqa qurilmalardagi sessiyalarni tugatish (joriysi qoladi) */
+        post: operations["endOthers"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9616,6 +9684,27 @@ export interface components {
             code: string;
             name: string;
         };
+        OverviewCard: {
+            /**
+             * Format: int32
+             * @description Faol elementlar soni
+             */
+            active: number;
+            /**
+             * Format: int32
+             * @description Elementlar soni (FLEET — mashinalar)
+             */
+            count: number;
+            /**
+             * Format: int32
+             * @description Faqat FLEET: faol haydovchilar soni
+             */
+            drivers?: number;
+            /** @enum {string} */
+            kind: "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "UNIT" | "REGION" | "FLEET" | "EXPENSE_ITEM";
+            /** Format: date-time */
+            lastChangedAt?: string;
+        };
         OverviewRow: {
             /** @description Muddati o'tgan qarz guruhlari: 1-30, 31-60, 61-90, 90plus */
             agingBuckets: string[];
@@ -10591,6 +10680,11 @@ export interface components {
             /** Format: date-time */
             lastLoginAt?: string;
             login: string;
+            /**
+             * Format: date-time
+             * @description Oxirgi parol almashtirish (audit jurnalidan)
+             */
+            passwordChangedAt?: string;
             phone?: string;
             pinSet: boolean;
             /** Format: date-time */
@@ -11353,6 +11447,15 @@ export interface components {
              * @description Bloklanmagan xodimlar
              */
             used: number;
+        };
+        SessionInfo: {
+            /** Format: date-time */
+            createdAt: string;
+            current: boolean;
+            device?: string;
+            ip?: string;
+            /** Format: date-time */
+            lastAccessAt: string;
         };
         SetExportRequest: {
             rows: components["schemas"]["SetExportRow"][];
@@ -13107,6 +13210,26 @@ export interface operations {
             };
         };
     };
+    mine_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditRow"][];
+                };
+            };
+        };
+    };
     csrf: {
         parameters: {
             query?: never;
@@ -14058,7 +14181,7 @@ export interface operations {
             };
         };
     };
-    overview_6: {
+    overview_7: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -14182,7 +14305,7 @@ export interface operations {
             };
         };
     };
-    overview_5: {
+    overview_6: {
         parameters: {
             query?: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
@@ -14842,6 +14965,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DebtDoc"][];
+                };
+            };
+        };
+    };
+    overview_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverviewCard"][];
                 };
             };
         };
@@ -19023,6 +19166,46 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionInfo"][];
+                };
+            };
+        };
+    };
+    endOthers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndSessionsResult"];
+                };
             };
         };
     };

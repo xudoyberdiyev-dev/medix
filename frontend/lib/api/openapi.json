@@ -659,6 +659,28 @@
         "tags" : [ "audit" ]
       }
     },
+    "/api/audit/mine" : {
+      "get" : {
+        "operationId" : "mine_2",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AuditRow"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mening harakatlarim — oxirgi 10 ta (kirishlarsiz)",
+        "tags" : [ "audit" ]
+      }
+    },
     "/api/auth/csrf" : {
       "get" : {
         "description" : "XSRF-TOKEN cookie'sini o'rnatadi. Ilova ochilganda bir marta chaqiriladi.",
@@ -2010,7 +2032,7 @@
     "/api/cash/overview" : {
       "get" : {
         "description" : "Qoldiq, masʼul, bugungi kirim/chiqim, oxirgi yopilgan kun.",
-        "operationId" : "overview_6",
+        "operationId" : "overview_7",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2258,7 +2280,7 @@
     "/api/counterparties/overview" : {
       "get" : {
         "description" : "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.",
-        "operationId" : "overview_5",
+        "operationId" : "overview_6",
         "parameters" : [ {
           "in" : "query",
           "name" : "role",
@@ -3319,6 +3341,28 @@
         },
         "summary" : "Yetkazib beruvchi bo'yicha ochiq hujjatlar",
         "tags" : [ "debts" ]
+      }
+    },
+    "/api/dictionaries-overview" : {
+      "get" : {
+        "operationId" : "overview_5",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OverviewCard"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Boshqa ma'lumotnomalar: soni va oxirgi o'zgarish",
+        "tags" : [ "dictionaries" ]
       }
     },
     "/api/dictionaries/{kind}" : {
@@ -9858,6 +9902,47 @@
           }
         },
         "summary" : "PIN o'rnatish yoki almashtirish",
+        "tags" : [ "profile" ]
+      }
+    },
+    "/api/profile/sessions" : {
+      "get" : {
+        "operationId" : "sessions",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SessionInfo"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faol sessiyalarim (joriysi birinchi)",
+        "tags" : [ "profile" ]
+      }
+    },
+    "/api/profile/sessions/end-others" : {
+      "post" : {
+        "operationId" : "endOthers",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EndSessionsResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Boshqa qurilmalardagi sessiyalarni tugatish (joriysi qoladi)",
         "tags" : [ "profile" ]
       }
     },
@@ -23001,6 +23086,35 @@
         },
         "required" : [ "code", "name" ]
       },
+      "OverviewCard" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faol elementlar soni"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Elementlar soni (FLEET — mashinalar)"
+          },
+          "drivers" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faqat FLEET: faol haydovchilar soni"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "MANUFACTURER", "CATEGORY", "COUNTRY", "UNIT", "REGION", "FLEET", "EXPENSE_ITEM" ]
+          },
+          "lastChangedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "active", "count", "kind" ]
+      },
       "OverviewRow" : {
         "type" : "object",
         "properties" : {
@@ -25429,6 +25543,11 @@
           "login" : {
             "type" : "string"
           },
+          "passwordChangedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Oxirgi parol almashtirish (audit jurnalidan)"
+          },
           "phone" : {
             "type" : "string"
           },
@@ -27291,6 +27410,29 @@
           }
         },
         "required" : [ "used" ]
+      },
+      "SessionInfo" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "current" : {
+            "type" : "boolean"
+          },
+          "device" : {
+            "type" : "string"
+          },
+          "ip" : {
+            "type" : "string"
+          },
+          "lastAccessAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "createdAt", "current", "lastAccessAt" ]
       },
       "SetExportRequest" : {
         "type" : "object",
