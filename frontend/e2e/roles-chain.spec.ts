@@ -348,16 +348,19 @@ test("Ombor mudiri: hisobdan oʻtkazadi va reys tuzadi", async ({ page }) => {
 test("Haydovchi: qabul qiladi, yetkazadi (rasm + naqd), reysni yakunlaydi", async ({ page }) => {
   await firstLogin(page, "driver.1");
   await page.goto("/driver");
-  await field(page, "Joylar soni").fill("1");
   await page.getByRole("button", { name: "Qabul qildim" }).click();
-  await expect(page.getByText("Hammasi qabul qilindi")).toBeVisible();
+  await field(page, "Sanagan joylar soni").fill("1");
+  await page.getByRole("button", { name: "Qabul qildim" }).click();
+  await expect(page.getByText("Qabul qilindi: 1 / 1")).toBeVisible();
   await page.getByRole("button", { name: "Yuklab boʻlindi — reysni boshlash" }).click();
   await expect(page.getByText("Reys boshlandi").first()).toBeVisible();
 
   await page.getByLabel(`Rasm: ${CUSTOMER}`).setInputFiles({ name: "yetkazildi.png", mimeType: "image/png", buffer: PNG });
   await expect(page.getByText("Rasm: 1")).toBeVisible();
-  await field(page, "Naqd olindi").fill("20.000,00");
   await page.getByRole("button", { name: "Yetkazildi", exact: true }).click();
+  const deliverModal = page.getByRole("dialog", { name: `Yetkazildi · ${CUSTOMER}` });
+  await field(deliverModal, "Naqd olindi").fill("20.000,00");
+  await deliverModal.getByRole("button", { name: "Yetkazildi deb belgilash" }).click();
   await page.getByRole("button", { name: "Reysni yakunlash" }).click();
   await expect(page.getByText("Reys yakunlandi").first()).toBeVisible();
 });
@@ -633,7 +636,8 @@ test("Haydovchi: qisman yetkazadi (3 ta qaytdi)", async ({ page }) => {
   await login(page, "driver.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/driver");
-  await field(page, "Joylar soni").fill("1");
+  await page.getByRole("button", { name: "Qabul qildim" }).click();
+  await field(page, "Sanagan joylar soni").fill("1");
   await page.getByRole("button", { name: "Qabul qildim" }).click();
   await page.getByRole("button", { name: "Yuklab boʻlindi — reysni boshlash" }).click();
   await expect(page.getByText("Reys boshlandi").first()).toBeVisible();
@@ -750,7 +754,8 @@ test("Haydovchi: «Yetkazilmadi» (sabab bilan), reysni yakunlaydi", async ({ pa
   await login(page, "driver.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/driver");
-  await field(page, "Joylar soni").fill("1");
+  await page.getByRole("button", { name: "Qabul qildim" }).click();
+  await field(page, "Sanagan joylar soni").fill("1");
   await page.getByRole("button", { name: "Qabul qildim" }).click();
   await page.getByRole("button", { name: "Yuklab boʻlindi — reysni boshlash" }).click();
   await expect(page.getByText("Reys boshlandi").first()).toBeVisible();
