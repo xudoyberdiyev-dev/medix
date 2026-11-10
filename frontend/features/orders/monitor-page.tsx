@@ -1,7 +1,22 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlarmClockOff, CalendarX, Clock, LayoutDashboard, PackageOpen, Tag, Timer, Truck, User } from "lucide-react";
+import {
+  AlarmClockOff,
+  ArrowLeftRight,
+  CalendarX,
+  ClipboardCheck,
+  Clock,
+  FileText,
+  LayoutDashboard,
+  PackageOpen,
+  Tag,
+  Timer,
+  TriangleAlert,
+  Truck,
+  Undo2,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -67,6 +82,8 @@ export function boardColumns(cards: MonitorCard[], lateOnly = false): BoardColum
   ];
 }
 
+const lateOf = (cards: MonitorCard[] | undefined) => (cards ?? []).filter((c) => c.late || c.stale).length;
+
 function useNow(): Date {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -93,18 +110,27 @@ export function keeperTabs(
     /** «Hujjatlashtirish» (prototip SupervisorPanel `docs`) — shipments.trip bilan; soni — joʻnatishga tayyor buyurtmalar. */
     docs?: boolean;
     docsCount?: number;
+    /** Prototip: yorliqda jami va qizil kechikkanlar soni. */
+    active?: number;
+    lateAll?: number;
+    lateWaiting?: number;
+    lateCheck?: number;
+    lateDocs?: number;
+    issues?: number;
   },
   t: OrdersT,
 ): TabItem[] {
   return [
-    { key: "monitor", label: t("monitor.tab.monitor") },
-    { key: "time", label: t("monitor.tab.time"), count: opts.waitingTime },
-    ...(opts.check ? [{ key: "check", label: t("monitor.tab.check"), count: opts.checkCount }] : []),
-    ...(opts.docs ? [{ key: "docs", label: t("monitor.tab.docs"), count: opts.docsCount }] : []),
-    { key: "issues", label: t("monitor.tab.issues") },
-    ...(opts.receipts ? [{ key: "receipts", label: t("monitor.tab.receipts"), count: opts.receiptCount }] : []),
-    ...(opts.transfers ? [{ key: "transfers", label: t("monitor.tab.transfers"), count: opts.transferCount }] : []),
-    ...(opts.returns ? [{ key: "returns", label: t("monitor.tab.returns") }] : []),
+    { key: "monitor", label: t("monitor.tab.monitor"), icon: LayoutDashboard, count: opts.active, alert: opts.lateAll },
+    { key: "time", label: t("monitor.tab.time"), icon: Timer, count: opts.waitingTime, alert: opts.lateWaiting },
+    ...(opts.check
+      ? [{ key: "check", label: t("monitor.tab.check"), icon: ClipboardCheck, count: opts.checkCount, alert: opts.lateCheck }]
+      : []),
+    ...(opts.docs ? [{ key: "docs", label: t("monitor.tab.docs"), icon: FileText, count: opts.docsCount, alert: opts.lateDocs }] : []),
+    { key: "issues", label: t("monitor.tab.issues"), icon: TriangleAlert, count: opts.issues },
+    ...(opts.receipts ? [{ key: "receipts", label: t("monitor.tab.receipts"), icon: PackageOpen, count: opts.receiptCount }] : []),
+    ...(opts.transfers ? [{ key: "transfers", label: t("monitor.tab.transfers"), icon: ArrowLeftRight, count: opts.transferCount }] : []),
+    ...(opts.returns ? [{ key: "returns", label: t("monitor.tab.returns"), icon: Undo2 }] : []),
   ];
 }
 
@@ -164,6 +190,12 @@ export function MonitorPage() {
       checkCount: board.data?.cards.filter((c) => c.status === "CHECKING").length,
       docs: canDocs,
       docsCount: board.data?.cards.filter((c) => c.status === "DOCUMENTING").length,
+      active: board.data?.cards.length,
+      lateAll: lateOf(board.data?.cards),
+      lateWaiting: lateOf(board.data?.cards.filter((c) => c.status === "QUEUED" && !c.timeGiven)),
+      lateCheck: lateOf(board.data?.cards.filter((c) => c.status === "CHECKING")),
+      lateDocs: lateOf(board.data?.cards.filter((c) => c.status === "DOCUMENTING")),
+      issues: openIssues.data?.length,
     },
     t,
   );
