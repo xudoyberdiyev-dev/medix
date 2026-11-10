@@ -256,7 +256,7 @@ export const navigation: NavGroup[] = [
         href: "/settings",
         exact: true,
         icon: Settings,
-        anyOf: ["company.view", "company.edit", "staff.view", "audit.view", "branches.view", "warehouses.view", "roles.view"],
+        anyOf: ["settings.view"],
       },
     ],
   },

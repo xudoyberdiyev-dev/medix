@@ -15,9 +15,10 @@ describe("ruxsatga qarab menyu", () => {
     expect(keys(["orders.queue"])).toContain("warehouse");
   });
 
-  it("kalitga qarab: Qoldiqlar — stock.view, Sozlamalar — xodimlar/audit/…", () => {
+  it("kalitga qarab: Qoldiqlar — stock.view, Sozlamalar — settings.view", () => {
     expect(keys(["receipt.view", "products.view"], "")).toEqual(["home", "receipts", "products"]);
-    expect(keys(["staff.view"], "")).toEqual(["home", "staff", "settings"]);
+    expect(keys(["staff.view"], "")).toEqual(["home", "staff"]);
+    expect(keys(["settings.view"], "")).toEqual(["home", "settings"]);
     expect(keys(["stock.view"], "")).toContain("stock");
     expect(navigationFor(undefined)).toEqual([]);
     expect(keys(["cdebt.view", "sdebt.view"], "")).toEqual(["home", "customer-debts", "supplier-debts"]);

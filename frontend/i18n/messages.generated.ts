@@ -34,6 +34,7 @@ import uzLatn_reconciliations from "@/messages/uz-Latn/reconciliations.json";
 import uzLatn_reports from "@/messages/uz-Latn/reports.json";
 import uzLatn_roles from "@/messages/uz-Latn/roles.json";
 import uzLatn_search from "@/messages/uz-Latn/search.json";
+import uzLatn_settings from "@/messages/uz-Latn/settings.json";
 import uzLatn_setup from "@/messages/uz-Latn/setup.json";
 import uzLatn_shell from "@/messages/uz-Latn/shell.json";
 import uzLatn_staff from "@/messages/uz-Latn/staff.json";
@@ -80,6 +81,7 @@ import uzCyrl_reconciliations from "@/messages/uz-Cyrl/reconciliations.json";
 import uzCyrl_reports from "@/messages/uz-Cyrl/reports.json";
 import uzCyrl_roles from "@/messages/uz-Cyrl/roles.json";
 import uzCyrl_search from "@/messages/uz-Cyrl/search.json";
+import uzCyrl_settings from "@/messages/uz-Cyrl/settings.json";
 import uzCyrl_setup from "@/messages/uz-Cyrl/setup.json";
 import uzCyrl_shell from "@/messages/uz-Cyrl/shell.json";
 import uzCyrl_staff from "@/messages/uz-Cyrl/staff.json";
@@ -126,6 +128,7 @@ import ru_reconciliations from "@/messages/ru/reconciliations.json";
 import ru_reports from "@/messages/ru/reports.json";
 import ru_roles from "@/messages/ru/roles.json";
 import ru_search from "@/messages/ru/search.json";
+import ru_settings from "@/messages/ru/settings.json";
 import ru_setup from "@/messages/ru/setup.json";
 import ru_shell from "@/messages/ru/shell.json";
 import ru_staff from "@/messages/ru/staff.json";
@@ -174,6 +177,7 @@ export const uzLatn = {
   "reports": uzLatn_reports,
   "roles": uzLatn_roles,
   "search": uzLatn_search,
+  "settings": uzLatn_settings,
   "setup": uzLatn_setup,
   "shell": uzLatn_shell,
   "staff": uzLatn_staff,
@@ -223,6 +227,7 @@ export const uzCyrl = {
   "reports": uzCyrl_reports,
   "roles": uzCyrl_roles,
   "search": uzCyrl_search,
+  "settings": uzCyrl_settings,
   "setup": uzCyrl_setup,
   "shell": uzCyrl_shell,
   "staff": uzCyrl_staff,
@@ -272,6 +277,7 @@ export const ru = {
   "reports": ru_reports,
   "roles": ru_roles,
   "search": ru_search,
+  "settings": ru_settings,
   "setup": ru_setup,
   "shell": ru_shell,
   "staff": ru_staff,

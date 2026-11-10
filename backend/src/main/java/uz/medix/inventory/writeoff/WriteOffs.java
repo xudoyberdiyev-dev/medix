@@ -426,7 +426,7 @@ class WriteOffs {
         }
     }
 
-    private static void requireLevel(Head h, Approver approver) {
+    private void requireLevel(Head h, Approver approver) {
         if (!approver.canPost(h.needsDirector())) {
             throw MedixException.forbidden("hc.directorRequired", settings.money(SettingKey.hcDirApprove).format());
         }
