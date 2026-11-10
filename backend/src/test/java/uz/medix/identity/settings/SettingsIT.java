@@ -91,6 +91,10 @@ class SettingsIT {
                 .andExpect(jsonPath("$.canEdit").value(false))
                 .andExpect(jsonPath("$.canSecurity").value(true));
         mvc.perform(get("/api/settings").cookie(picker)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/settings/thresholds").cookie(picker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expiryWarnDays").value(expiry.intValue()))
+                .andExpect(jsonPath("$.priceWarnPct").value("20"));
 
         try {
             // Oraliqdan tashqari — 400; admin Direktor bo'limini o'zgartira olmaydi — 403
