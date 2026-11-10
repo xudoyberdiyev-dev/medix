@@ -229,12 +229,12 @@ class DirectorHome {
                 canSeeCost ? suppliers(branchId, f, t, "supplier_id", "counterparty", "name") : null);
     }
 
-    /** Buyurtma holatlari: createdBy berilsa — faqat shu xodim kiritgan buyurtmalar (Operator bosh sahifasi). */
     /** Buyurtma kechikishi (kun) — Sozlamalar → Savdo ({@code orderLateDays}). */
     int staleDays() {
         return settings.intValue(SettingKey.orderLateDays);
     }
 
+    /** Buyurtma holatlari: createdBy berilsa — faqat shu xodim kiritgan buyurtmalar (Operator bosh sahifasi). */
     List<StatusCell> statuses(Long branchId, Long createdBy, LocalDate f, LocalDate t, LocalDate today) {
         Map<String, StatusCell> by = new HashMap<>();
         jdbc.sql("""
