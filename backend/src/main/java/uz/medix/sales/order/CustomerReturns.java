@@ -217,7 +217,7 @@ class CustomerReturns {
         }
         return jdbc.sql("""
                 SELECT s.id, s.number, s.sale_date, s.total, s.warehouse_id, w.name AS warehouse,
-                       (SELECT count(*) FROM sale_line sl WHERE sl.sale_id = s.id AND sl.qty > """ + RETURNED_SQL + """
+                       (SELECT count(*) FROM sale_line sl WHERE sl.sale_id = s.id AND sl.qty >\s""" + RETURNED_SQL + """
                        ) AS returnable
                 FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN warehouse w ON w.id = s.warehouse_id""" + where
                 + " ORDER BY s.sale_date DESC, s.id DESC LIMIT 200")
@@ -236,7 +236,7 @@ class CustomerReturns {
     private List<ReturnableLine> lines(long saleId) {
         return jdbc.sql("""
                 SELECT sl.id, sl.product_id, p.code, p.name, p.marked, sl.batch_id, b.number AS batch_number, b.expiry_date, sl.qty, sl.price,
-                       """ + RETURNED_SQL + """
+                """ + RETURNED_SQL + """
                  AS returned
                 FROM sale_line sl JOIN product p ON p.id = sl.product_id JOIN batch b ON b.id = sl.batch_id
                 JOIN sales_order_line ol ON ol.id = sl.order_line_id
