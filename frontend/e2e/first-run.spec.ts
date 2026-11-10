@@ -629,15 +629,17 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
 
   await page.goto("/warehouse-transfers");
   await page.getByRole("button", { name: "Koʻchirish tuzish" }).first().click();
+  await expect(page).toHaveURL(/\/warehouse-transfers\/new$/);
+  await expect(page.getByRole("heading", { name: "Yangi ombor koʻchirishi" })).toBeVisible();
   await choose(page, "Qaysi ombordan", /Markaziy ombor/);
   await choose(page, "Zona", /Asosiy saqlash/);
   await choose(page, "Qaysi omborga", /E2E ikkinchi ombor/);
   await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("5");
-  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
-  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
 
-  // Qoralama saqlangach — hujjat sahifasi (prototip TransferDoc): Joʻnatish → tasdiqlash oynasi
+  // Yangi qoralama toʻliq sahifada (prototip TransferDoc): avtomatik saqlanadi → hujjat sahifasi, tahrirlash davom etadi
   await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
+  await expect(page.getByText(/^Saqlandi · /)).toBeVisible();
+  await expect(page.getByLabel(/E2E-01 — joʻnatish soni/)).toHaveValue("5");
   await expect(page.getByRole("heading", { name: /Ombor koʻchirish/ })).toBeVisible();
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
   await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();

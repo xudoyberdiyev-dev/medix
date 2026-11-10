@@ -31,3 +31,35 @@ export function okHistory(doc: WarehouseTransferDetail): OkEvent[] {
   if (doc.cancelledAt) out.push({ at: doc.cancelledAt, employee: doc.cancelledBy ?? undefined, action: "cancelled" });
   return out.sort((a, b) => b.at.localeCompare(a.at));
 }
+
+/** Qoralama yuklamasi (avtomatik saqlash uchun): qatorlar tartibidan qatʼi nazar bir xil kalit — oʻzgarmagan boʻlsa saqlanmaydi. */
+export interface OkDraft {
+  fromZoneId: number;
+  toWarehouseId: number;
+  note: string;
+  lines: { batchId: number; qty: number }[];
+}
+
+export function draftKey(d: OkDraft | null): string | null {
+  if (!d) return null;
+  const lines = [...d.lines].sort((a, b) => a.batchId - b.batchId).map((l) => `${l.batchId}:${l.qty}`);
+  return `${d.fromZoneId}>${d.toWarehouseId}|${d.note.trim()}|${lines.join(",")}`;
+}
+
+/** Saqlangan hujjatdan qoralama (tahrirlashni boshlash). */
+export function draftOf(doc: WarehouseTransferDetail): OkDraft {
+  return {
+    fromZoneId: doc.fromZone.id,
+    toWarehouseId: doc.toWarehouse.id,
+    note: doc.note ?? "",
+    lines: doc.lines.map((l) => ({ batchId: l.batchId, qty: l.qty })),
+  };
+}
+
+/** FEFO: eng yaqin muddatli partiya birinchi, keyin mahsulot nomi va partiya. */
+export function fefo<T extends { expiryDate: string; productName: string; batchNumber: string }>(rows: readonly T[]): T[] {
+  return [...rows].sort(
+    (a, b) =>
+      a.expiryDate.localeCompare(b.expiryDate) || a.productName.localeCompare(b.productName) || a.batchNumber.localeCompare(b.batchNumber),
+  );
+}

@@ -1535,7 +1535,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_17",
+        "operationId" : "update_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2126,7 +2126,7 @@
     "/api/company" : {
       "get" : {
         "description" : "Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.",
-        "operationId" : "get_12",
+        "operationId" : "get_13",
         "responses" : {
           "200" : {
             "content" : {
@@ -2511,7 +2511,7 @@
     },
     "/api/counterparties/{id}" : {
       "get" : {
-        "operationId" : "get_11",
+        "operationId" : "get_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2537,7 +2537,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_16",
+        "operationId" : "update_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3889,7 +3889,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_15",
+        "operationId" : "update_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4148,7 +4148,7 @@
     "/api/employees/{id}" : {
       "put" : {
         "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
-        "operationId" : "update_14",
+        "operationId" : "update_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4916,7 +4916,7 @@
     "/api/inventory-counts/{id}" : {
       "get" : {
         "description" : "Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.",
-        "operationId" : "get_10",
+        "operationId" : "get_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4943,7 +4943,7 @@
       },
       "put" : {
         "description" : "Ombor (shu filialda), sana, qamrov, komissiya, ko'r sanoq — faqat qoralamada.",
-        "operationId" : "update_13",
+        "operationId" : "update_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6154,7 +6154,7 @@
     },
     "/api/opening-balances/{id}" : {
       "get" : {
-        "operationId" : "get_9",
+        "operationId" : "get_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6181,7 +6181,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_12",
+        "operationId" : "update_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6399,7 +6399,7 @@
     },
     "/api/opening-finance/{id}" : {
       "get" : {
-        "operationId" : "get_8",
+        "operationId" : "get_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6425,7 +6425,7 @@
         "tags" : [ "opening-finance" ]
       },
       "put" : {
-        "operationId" : "update_11",
+        "operationId" : "update_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7357,7 +7357,7 @@
     "/api/orders/{id}" : {
       "get" : {
         "description" : "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.",
-        "operationId" : "get_7",
+        "operationId" : "get_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7383,7 +7383,7 @@
         "tags" : [ "orders" ]
       },
       "put" : {
-        "operationId" : "update_10",
+        "operationId" : "update_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8115,7 +8115,7 @@
     },
     "/api/payments/customer/{id}" : {
       "get" : {
-        "operationId" : "get_6",
+        "operationId" : "get_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8141,7 +8141,7 @@
         "tags" : [ "payments" ]
       },
       "put" : {
-        "operationId" : "update_9",
+        "operationId" : "update_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8910,7 +8910,7 @@
     },
     "/api/price-changes/{id}" : {
       "get" : {
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8936,7 +8936,7 @@
         "tags" : [ "pricing" ]
       },
       "put" : {
-        "operationId" : "update_8",
+        "operationId" : "update_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9238,7 +9238,7 @@
     "/api/price-types/{id}" : {
       "put" : {
         "description" : "Bazaviy turni yoki mijozlarga biriktirilgan turni nofaol qilib bo'lmaydi. Ro'yxat tarkibi (SPEC 6) o'zgarmaydi.",
-        "operationId" : "update_7",
+        "operationId" : "update_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10215,7 +10215,7 @@
     },
     "/api/products/{id}" : {
       "get" : {
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10241,7 +10241,7 @@
         "tags" : [ "products" ]
       },
       "put" : {
-        "operationId" : "update_6",
+        "operationId" : "update_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10416,7 +10416,7 @@
     },
     "/api/profile" : {
       "get" : {
-        "operationId" : "get_3",
+        "operationId" : "get_4",
         "responses" : {
           "200" : {
             "content" : {
@@ -10433,7 +10433,7 @@
         "tags" : [ "profile" ]
       },
       "put" : {
-        "operationId" : "update_5",
+        "operationId" : "update_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -10842,7 +10842,7 @@
     },
     "/api/receipts/{id}" : {
       "get" : {
-        "operationId" : "get_2",
+        "operationId" : "get_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10869,7 +10869,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -12210,7 +12210,7 @@
     "/api/settings" : {
       "get" : {
         "description" : "Barcha bo'limlar qiymatlari, oxirgi o'zgarish (kim, qachon) va tahrirlash huquqlari.",
-        "operationId" : "get_1",
+        "operationId" : "get_2",
         "responses" : {
           "200" : {
             "content" : {
@@ -12228,7 +12228,7 @@
       },
       "put" : {
         "description" : "Bir nechta qiymat birdaniga; har biri oraliq bo'yicha tekshiriladi, audit — eski → yangi.",
-        "operationId" : "update_3",
+        "operationId" : "update_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -13932,7 +13932,7 @@
     },
     "/api/trips/{id}" : {
       "get" : {
-        "operationId" : "get",
+        "operationId" : "get_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13959,7 +13959,7 @@
       },
       "put" : {
         "description" : "Sana, haydovchi, mashina, ekspeditor, izoh — «Rejalashtirilgan», yuklash boshlanmagan.",
-        "operationId" : "update_2",
+        "operationId" : "update_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14623,7 +14623,7 @@
     },
     "/api/vehicles/{id}" : {
       "put" : {
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14840,7 +14840,7 @@
     },
     "/api/warehouse-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_15",
+        "operationId" : "get",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14863,6 +14863,43 @@
           }
         },
         "summary" : "OK hujjati",
+        "tags" : [ "warehouse-transfer" ]
+      },
+      "put" : {
+        "description" : "Manba zona, qabul qiluvchi ombor, izoh va qatorlar almashtiriladi. Faqat qoralama.",
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WarehouseTransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WarehouseTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani tahrirlash",
         "tags" : [ "warehouse-transfer" ]
       }
     },
@@ -15611,7 +15648,7 @@
     },
     "/api/write-offs/{id}" : {
       "get" : {
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15859,7 +15896,7 @@
     },
     "/api/zone-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_13",
+        "operationId" : "get_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",

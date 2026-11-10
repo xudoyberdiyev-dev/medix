@@ -24,6 +24,7 @@ import { formatDate, formatDateTime, formatQuantity } from "@/lib/format";
 import {
   OK_VIEW_KEYS,
   TRANSFER_CANCEL,
+  TRANSFER_OK,
   TRANSFER_RECEIVE,
   TRANSFER_SEND,
   useCancelWarehouseTransfer,
@@ -33,10 +34,40 @@ import {
   type WarehouseTransferDetail,
 } from "./api";
 import { okHistory, okSteps } from "./doc-model";
+import { AutosaveNote, OkDraftForm, type SaveState } from "./ok-draft-form";
 import { ShortagePanel } from "./shortage-panel";
 import { WarehouseTransferStatusBadge } from "./warehouse-transfers-page";
 
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
+
+/** OK — yangi qoralama toʻliq sahifa (prototip `TransferDoc`, raqamsiz): birinchi avtomatik saqlashda yaratiladi va hujjat sahifasiga oʻtiladi. */
+export function NewWarehouseTransferPage() {
+  const t = useTranslations("warehouseTransfers.doc");
+  const te = useTranslations("warehouseTransfers.edit");
+  const me = useMe();
+  const [draft, setDraft] = useState<SaveState>({ save: "idle", savedAt: "", dirty: false });
+  if (me.data && !can(me.data, TRANSFER_OK)) return <ForbiddenState />;
+  const steps = okSteps("DRAFT").map((s) => ({ label: t(`step.${s.key}`), state: s.state }));
+  return (
+    <div className="flex min-w-0 flex-col gap-4 pb-12">
+      <DocumentHeader
+        parent={{ label: t("parent"), href: "/transfers" }}
+        crumb={te("crumbNew")}
+        title={te("newTitle")}
+        meta={
+          <>
+            <Steps steps={steps} />
+            <AutosaveNote state={draft} />
+          </>
+        }
+      />
+      <Alert tone="info" title={t("bDraftT")}>
+        {te("bNew")}
+      </Alert>
+      <OkDraftForm doc={null} onState={setDraft} />
+    </div>
+  );
+}
 
 /** OK — ombor koʻchirish hujjati toʻliq sahifa (prototip `TransferDoc`, kind = ok). */
 export function WarehouseTransferDocPage({ id }: { id: number }) {
@@ -66,6 +97,7 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
   const router = useRouter();
   const [tab, setTab] = useState("doc");
   const [dlg, setDlg] = useState<"send" | "cancel" | null>(null);
+  const [draft, setDraft] = useState<SaveState>({ save: "idle", savedAt: "", dirty: false });
   const fail = (e: unknown) => toast({ tone: "danger", title: tw("failed"), description: describeError(e).message ?? tw("retryHint") });
 
   const st = doc.status;
@@ -77,6 +109,7 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
   const canCancel = st === "DRAFT" && can(me.data, TRANSFER_CANCEL);
   const canReceive = st === "IN_TRANSIT" && can(me.data, TRANSFER_RECEIVE);
   const received = st === "RECEIVED";
+  const editable = st === "DRAFT" && can(me.data, TRANSFER_OK);
   const diff = received && doc.shortageQty > 0;
   const steps = okSteps(st).map((s) => ({ label: t(`step.${s.key}`), state: s.state }));
   const events = okHistory(doc);
@@ -168,12 +201,17 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
             {fromPlace} → {toPlace}
           </span>
         }
-        meta={<Steps steps={steps} />}
+        meta={
+          <>
+            <Steps steps={steps} />
+            {editable ? <AutosaveNote state={draft} /> : null}
+          </>
+        }
         actions={
           <>
             {menu.length ? <RowMenu items={menu} label={t("more")} /> : null}
             {canSend ? (
-              <Button icon={Truck} loading={send.isPending} onClick={() => setDlg("send")}>
+              <Button icon={Truck} loading={send.isPending} disabled={editable && draft.dirty} onClick={() => setDlg("send")}>
                 {t("send")}
               </Button>
             ) : null}
@@ -214,7 +252,9 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
         value={tab}
         onChange={setTab}
       />
-      {tab === "doc" ? (
+      {tab === "doc" && editable ? (
+        <OkDraftForm doc={doc} onState={setDraft} />
+      ) : tab === "doc" ? (
         <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div className="flex min-w-0 flex-col gap-4">
             <section className="rounded-card border border-border bg-surface">

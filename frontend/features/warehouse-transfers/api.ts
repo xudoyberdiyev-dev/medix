@@ -99,6 +99,12 @@ export function useCreateWarehouseTransfer() {
   return useOkMutation((body: WarehouseTransferRequest) => unwrap(api.POST("/api/warehouse-transfers", { body })));
 }
 
+export function useUpdateWarehouseTransfer() {
+  return useOkMutation((v: { id: number; body: WarehouseTransferRequest }) =>
+    unwrap(api.PUT("/api/warehouse-transfers/{id}", { params: { path: { id: v.id } }, body: v.body })),
+  );
+}
+
 export function useSendWarehouseTransfer() {
   return useOkMutation((id: number) => unwrap(api.POST("/api/warehouse-transfers/{id}/send", { params: { path: { id } } })));
 }

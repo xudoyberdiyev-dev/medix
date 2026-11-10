@@ -217,5 +217,19 @@
     "tDiff": "{n} farq bilan qabul qilindi",
     "failed": "Qabul qilinmadi",
     "retry": "Qayta urinib koʻring."
+  },
+  "edit": {
+    "newTitle": "Yangi ombor koʻchirishi",
+    "crumbNew": "Yangi",
+    "bNew": "Manba ombor va zonani, qabul qiluvchi omborni tanlang, partiyalarga joʻnatish sonini kiriting — qoralama avtomatik saqlanadi va raqam oladi.",
+    "saving": "Saqlanmoqda…",
+    "saved": "Saqlandi · {t}",
+    "saveErr": "Saqlanmadi — maʼlumotni tekshiring",
+    "kindLocked": "Raqam olingan hujjatning turi oʻzgarmaydi",
+    "cAvail": "Mavjud",
+    "reserved": "zahirada {q}",
+    "fefoHint": "Partiyalar muddat boʻyicha (FEFO) — eng yaqini birinchi",
+    "pickFromTitle": "Manba zonani tanlang",
+    "pickFromHint": "Qaysi ombor va zonadan joʻnatilishini tanlang — zonadagi partiyalar shu yerda chiqadi."
   }
 }
