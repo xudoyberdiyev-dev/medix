@@ -146,6 +146,11 @@ class OrderIT {
     }
 
     private void setPrice(Place p, long product, String price) {
+        setTypePrice(p, product, null, price);
+    }
+
+    /** Narx turidagi narx (code == null — bazaviy). */
+    private void setTypePrice(Place p, long product, String typeCode, String price) {
         long doc = jdbc.sql("""
                 INSERT INTO price_change (number, branch_id, effective_from, created_by, status)
                 VALUES (:n, :b, :d, :e, 'APPROVED') RETURNING id""")
@@ -157,7 +162,7 @@ class OrderIT {
                 .single();
         jdbc.sql("""
                 INSERT INTO price (product_id, price_type_id, branch_id, effective_from, amount, price_change_id)
-                SELECT :p, id, :b, :d, :a, :doc FROM price_type WHERE base""")
+                SELECT :p, id, :b, :d, :a, :doc FROM price_type WHERE """ + (typeCode == null ? "base" : "code = '" + typeCode + "'"))
                 .param("p", product)
                 .param("b", p.branchId())
                 .param("d", java.sql.Date.valueOf(today()))
@@ -1767,6 +1772,39 @@ class OrderIT {
         send(post("/api/customer-returns"), manager, body.formatted(1, "WRONG_ITEM")).andExpect(jsonPath("$.status").value("POSTED"));
         assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(4);
         assertThat(debtOf(c)).isEqualTo("1000.00");
+    }
+
+    @Test
+    void customerReturnUsesReturnPriceTypeButNeverAboveSalePrice() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        long cheap = product(p, "BY Vozvrat arzon", "1000", 20, null, null);
+        long dear = product(p, "BY Vozvrat qimmat", "1000", 20, null, null);
+        long o1 = delivered(p, c, cheap, 5, operator, keeper, picker);
+        long o2 = delivered(p, c, dear, 5, operator, keeper, picker);
+        assertThat(debtOf(c)).isEqualTo("10000.00");
+        // «Vozvrat» turi: arzonida 950 (sotuvdan past) → QM shu narxda; qimmatida 1200 (sotuvdan yuqori) → sotuv narxi 1000
+        setTypePrice(p, cheap, "RETURN", "950");
+        setTypePrice(p, dear, "RETURN", "1200");
+        long s1 = jdbc.sql("SELECT id FROM sale WHERE order_id = :o").param("o", o1).query(Long.class).single();
+        long s2 = jdbc.sql("SELECT id FROM sale WHERE order_id = :o").param("o", o2).query(Long.class).single();
+        MvcResult l1 = mvc.perform(get("/api/customer-returns/sales/" + s1 + "/lines").cookie(operator))
+                .andExpect(jsonPath("$[0].price").value("950.00"))
+                .andReturn();
+        mvc.perform(get("/api/customer-returns/sales/" + s2 + "/lines").cookie(operator)).andExpect(jsonPath("$[0].price").value("1000.00"));
+
+        long saleLine = ((Number) JsonPath.read(l1.getResponse().getContentAsString(), "$[0].saleLineId")).longValue();
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        send(post("/api/customer-returns"), manager,
+                "{\"saleId\":" + s1 + ",\"lines\":[{\"saleLineId\":" + saleLine + ",\"qty\":2,\"reason\":\"EXPIRING\"}]}")
+                .andExpect(jsonPath("$.status").value("POSTED"))
+                .andExpect(jsonPath("$.total").value("1900.00"))
+                .andExpect(jsonPath("$.lines[0].price").value("950.00"));
+        assertThat(debtOf(c)).isEqualTo("8100.00");
+        assertThat(qtyIn(p.quarantine(), cheap)).isEqualTo(2);
     }
 
     /** Buyurtma bo'yicha bildirishnoma olgan, berilgan roldagi xodimlar soni. */

@@ -37,6 +37,29 @@ public class PriceBook {
         return jdbc.sql("SELECT id FROM price_type WHERE base").query(Long.class).single();
     }
 
+    /**
+     * «Vozvrat» narx turidagi narxlar (QQS bilan) shu filial va sanada — QM qatori shu narxda (SPEC 6). Bazaviyga
+     * qaytilmaydi: narxi yo'q mahsulot natijada yo'q.
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Money> returnPrices(long branchId, Collection<Long> productIds, LocalDate at) {
+        Map<Long, Money> out = new HashMap<>();
+        if (productIds.isEmpty()) {
+            return out;
+        }
+        jdbc.sql("""
+                SELECT DISTINCT ON (pr.product_id) pr.product_id, pr.amount
+                FROM price pr JOIN price_type t ON t.id = pr.price_type_id
+                WHERE t.code = 'RETURN' AND t.active AND pr.branch_id = :b AND pr.product_id IN (:p) AND pr.effective_from <= :at
+                ORDER BY pr.product_id, pr.effective_from DESC, pr.id DESC""")
+                .param("b", branchId)
+                .param("p", productIds)
+                .param("at", Date.valueOf(at))
+                .query((rs, n) -> out.put(rs.getLong("product_id"), new Money(rs.getBigDecimal("amount"))))
+                .list();
+        return out;
+    }
+
     /** Mahsulot → narx (QQS bilan) shu filial va sanada; mijoz turi bo'lmasa — bazaviy. Narxi yo'q mahsulot natijada yo'q. */
     @Transactional(readOnly = true)
     public Map<Long, Quote> quotes(long branchId, Long customerPriceTypeId, Collection<Long> productIds, LocalDate at) {

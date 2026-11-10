@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uz.medix.finance.PartyLedger;
 import uz.medix.inventory.StockLedger;
 import uz.medix.notification.Notifications;
+import uz.medix.pricing.PriceBook;
 import uz.medix.sales.order.CustomerReturnModels.CustomerReturnDetail;
 import uz.medix.sales.order.CustomerReturnModels.CustomerReturnLine;
 import uz.medix.sales.order.CustomerReturnModels.CustomerReturnLineRequest;
@@ -61,9 +62,10 @@ class CustomerReturns {
     private final AuditLog audit;
     private final Notifications notifications;
     private final Clock clock;
+    private final PriceBook prices;
 
     CustomerReturns(JdbcClient jdbc, StockLedger stock, PartyLedger parties, DocumentSequenceService numbers, AuditLog audit,
-            Notifications notifications, Clock clock) {
+            Notifications notifications, Clock clock, PriceBook prices) {
         this.jdbc = jdbc;
         this.stock = stock;
         this.parties = parties;
@@ -71,6 +73,7 @@ class CustomerReturns {
         this.audit = audit;
         this.notifications = notifications;
         this.clock = clock;
+        this.prices = prices;
     }
 
     private static String money(BigDecimal v) {
@@ -229,11 +232,28 @@ class CustomerReturns {
 
     @Transactional(readOnly = true)
     List<ReturnableLine> saleLines(Actor actor, long saleId) {
-        saleHead(actor, saleId, false);
-        return lines(saleId);
+        return lines(saleHead(actor, saleId, false));
     }
 
-    private List<ReturnableLine> lines(long saleId) {
+    /**
+     * Qaytariladigan qatorlar; narx — «Vozvrat» narx turidan (SPEC 6, prototip qmLinesFor), yo'q bo'lsa — sotuv narxi.
+     * Mijoz to'lagandan ko'p qaytarilmaydi: vozvrat narxi sotuv narxidan oshsa (masalan, E7 chegirmasi) — sotuv narxi.
+     */
+    private List<ReturnableLine> lines(SaleHead sale) {
+        List<ReturnableLine> raw = rawLines(sale.id());
+        Map<Long, Money> vz = prices.returnPrices(sale.branchId(), raw.stream().map(ReturnableLine::productId).distinct().toList(),
+                LocalDate.now(clock.withZone(TASHKENT)));
+        return raw.stream().map(l -> {
+            Money v = vz.get(l.productId());
+            Money sold = new Money(new BigDecimal(l.price()));
+            return v != null && v.amount().compareTo(sold.amount()) < 0
+                    ? new ReturnableLine(l.saleLineId(), l.productId(), l.productCode(), l.productName(), l.marked(), l.batchId(),
+                            l.batchNumber(), l.expiryDate(), l.sold(), l.returned(), l.left(), money(v.amount()))
+                    : l;
+        }).toList();
+    }
+
+    private List<ReturnableLine> rawLines(long saleId) {
         return jdbc.sql("""
                 SELECT sl.id, sl.product_id, p.code, p.name, p.marked, sl.batch_id, b.number AS batch_number, b.expiry_date, sl.qty, sl.price,
                 """ + RETURNED_SQL + """
@@ -282,7 +302,7 @@ class CustomerReturns {
     @Transactional
     long create(Actor actor, CustomerReturnRequest r, boolean canApprove) {
         SaleHead sale = saleHead(actor, r.saleId(), true);
-        Map<Long, ReturnableLine> avail = lines(sale.id()).stream()
+        Map<Long, ReturnableLine> avail = lines(sale).stream()
                 .collect(Collectors.toMap(ReturnableLine::saleLineId, l -> l, (a, b) -> a, LinkedHashMap::new));
         Set<Long> seen = new HashSet<>();
         String note = r.note() == null || r.note().isBlank() ? null : r.note().strip();
