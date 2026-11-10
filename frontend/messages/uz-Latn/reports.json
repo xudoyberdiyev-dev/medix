@@ -245,5 +245,6 @@
     "limit": "{max} tadan ortiq hisobot saqlanmaydi. Keraksizini katalogda oʻchiring.",
     "done": "Hisobot saqlandi — «Mening hisobotlarim»da",
     "remove": "«{name}» ni oʻchirish"
-  }
+  },
+  "print": "Chop etish"
 }

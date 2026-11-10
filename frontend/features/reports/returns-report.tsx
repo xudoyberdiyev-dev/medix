@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Download, Undo2 } from "lucide-react";
+import { ArrowLeft, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -15,7 +15,7 @@ import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { PeriodPicker } from "@/features/home/period-picker";
 import { reportHref } from "@/lib/saved-reports";
-import { SaveReportButton, useReportPeriod } from "./saved-reports";
+import { ReportActions, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
@@ -158,7 +158,22 @@ export function ReturnsReportPage() {
         <h1 className="text-page-title">{t("returns.title")}</h1>
         <div className="flex flex-wrap items-end gap-3">
           <PeriodPicker state={period} />
-          <SaveReportButton href={reportHref("/reports/returns", period.preset, { groupBy })} defaultName={t("returns.title")} />
+          <ReportActions
+            href={reportHref("/reports/returns", period.preset, { groupBy })}
+            defaultName={t("returns.title")}
+            exportHref={
+              from && to
+                ? returnsExportHref({
+                    branchId,
+                    from,
+                    to,
+                    groupBy,
+                    customerId: customer?.id ?? null,
+                    productId: product?.id ?? null,
+                  })
+                : null
+            }
+          />
         </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -192,22 +207,6 @@ export function ReturnsReportPage() {
             </span>
           ) : null}
           {r?.total.rate != null ? <span>{t("returns.totalRate", { rate: formatMargin(r.total.rate) })}</span> : null}
-          {from && to ? (
-            <a
-              href={returnsExportHref({
-                branchId,
-                from,
-                to,
-                groupBy,
-                customerId: customer?.id ?? null,
-                productId: product?.id ?? null,
-              })}
-              download
-              className="inline-flex items-center gap-1 text-primary hover:underline"
-            >
-              <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
-            </a>
-          ) : null}
         </div>
       </div>
       {report.error ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Download, PackageCheck, ScanBarcode } from "lucide-react";
+import { ArrowLeft, PackageCheck, ScanBarcode } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
@@ -11,7 +11,7 @@ import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { PeriodPicker } from "@/features/home/period-picker";
 import { reportHref } from "@/lib/saved-reports";
-import { SaveReportButton, useReportPeriod } from "./saved-reports";
+import { ReportActions, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { rowField, useClientTable } from "@/lib/client-table";
@@ -129,9 +129,10 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
         <h1 className="text-page-title">{title}</h1>
         <div className="flex flex-wrap items-end gap-3">
           <PeriodPicker state={period} />
-          <SaveReportButton
+          <ReportActions
             href={reportHref(kind === "PICKERS" ? "/reports/pickers" : "/reports/markers", period.preset)}
             defaultName={title}
+            exportHref={from && to ? workerExportHref(kind, { branchId, from, to }) : null}
           />
         </div>
       </div>
@@ -141,15 +142,6 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
             {r.from === r.to ? formatIsoDate(r.from) : `${formatIsoDate(r.from)} – ${formatIsoDate(r.to)}`}
             {r.branchId == null ? ` · ${t("allBranches")}` : ""}
           </span>
-        ) : null}
-        {from && to ? (
-          <a
-            href={workerExportHref(kind, { branchId, from, to })}
-            download
-            className="inline-flex items-center gap-1 text-primary hover:underline"
-          >
-            <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
-          </a>
         ) : null}
       </div>
       {report.error ? (

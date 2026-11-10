@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, X } from "lucide-react";
+import { Bookmark, FileSpreadsheet, Printer, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -139,5 +139,31 @@ export function MyReports({ allowed }: { allowed: (href: string) => boolean }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+/** Hisobot sarlavhasi amallari (prototip Reports): «Saqlash», «Chop etish», asosiy — «Excelʼga yuklab olish». */
+export function ReportActions({ href, defaultName, exportHref }: { href: string; defaultName: string; exportHref: string | null }) {
+  const t = useTranslations("reports");
+  return (
+    <div className="flex flex-wrap items-center gap-2 print:hidden">
+      <SaveReportButton href={href} defaultName={defaultName} />
+      <Button variant="secondary" icon={Printer} onClick={() => window.print()}>
+        {t("print")}
+      </Button>
+      <Button
+        icon={FileSpreadsheet}
+        disabled={!exportHref}
+        onClick={() => {
+          if (!exportHref) return;
+          const a = document.createElement("a");
+          a.href = exportHref;
+          a.download = "";
+          a.click();
+        }}
+      >
+        {t("export")}
+      </Button>
+    </div>
   );
 }

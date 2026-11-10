@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChartColumn, Download } from "lucide-react";
+import { ArrowLeft, ChartColumn } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -16,7 +16,7 @@ import { formatIsoDate } from "@/features/counterparties/api";
 import { useDictionary } from "@/features/dictionaries/api";
 import { PeriodPicker } from "@/features/home/period-picker";
 import { reportHref } from "@/lib/saved-reports";
-import { SaveReportButton, useReportPeriod } from "./saved-reports";
+import { ReportActions, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -192,7 +192,11 @@ export function SalesReportPage() {
         <h1 className="text-page-title">{t("sales.title")}</h1>
         <div className="flex flex-wrap items-end gap-3">
           <PeriodPicker state={period} />
-          <SaveReportButton href={reportHref("/reports/sales", period.preset, { groupBy })} defaultName={t("sales.title")} />
+          <ReportActions
+            href={reportHref("/reports/sales", period.preset, { groupBy })}
+            defaultName={t("sales.title")}
+            exportHref={from && to ? salesExportHref({ branchId, from, to, groupBy, paymentType, regionId }) : null}
+          />
         </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -233,15 +237,6 @@ export function SalesReportPage() {
               {r.from === r.to ? formatIsoDate(r.from) : `${formatIsoDate(r.from)} – ${formatIsoDate(r.to)}`}
               {r.mineOnly ? ` · ${t("sales.mineOnly")}` : r.branchId == null ? ` · ${t("allBranches")}` : ""}
             </span>
-          ) : null}
-          {from && to ? (
-            <a
-              href={salesExportHref({ branchId, from, to, groupBy, paymentType, regionId })}
-              download
-              className="inline-flex items-center gap-1 text-primary hover:underline"
-            >
-              <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
-            </a>
           ) : null}
         </div>
       </div>
