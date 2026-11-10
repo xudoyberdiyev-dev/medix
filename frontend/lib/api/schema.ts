@@ -9230,7 +9230,10 @@ export interface components {
             scanned: number;
         };
         MarkQueueItem: {
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Skanerlanadigan qutilar (o'lchov birligi «dona» emas)
+             */
             boxesNeeded: number;
             customer: string;
             /**
@@ -9244,6 +9247,7 @@ export interface components {
             deliveryType: "DELIVERY" | "PICKUP";
             /** Format: int64 */
             id: number;
+            /** @description Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa */
             invoice?: string;
             /**
              * Format: int32
@@ -9257,8 +9261,10 @@ export interface components {
             marker?: string;
             /** Format: int64 */
             markerId?: number;
+            /** @description Buyurtma izohi */
             note?: string;
             number: string;
+            /** @description Yig'uvchi */
             picker?: string;
             /** Format: date-time */
             statusChangedAt: string;
@@ -9267,7 +9273,10 @@ export interface components {
              * @description Skanerlanadigan kodlar soni
              */
             totalQty: number;
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Skanerlanadigan donalar (o'lchov birligi «dona»)
+             */
             unitsNeeded: number;
             /**
              * Format: int32
@@ -13258,7 +13267,10 @@ export interface components {
              * @description Bir buyurtmaga o'rtacha haqiqiy vaqt, daqiqa
              */
             avgMinutes: number;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Faqat markirovkachilar: qolgan kodlardan qutilar (qolgani — donalar)
+             */
             boxCodes?: number;
             /**
              * Format: int32
@@ -13293,7 +13305,10 @@ export interface components {
             removedCodes?: number;
             /** Format: int32 */
             units: number;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Faqat markirovkachilar: rad etilgan skanerlashlar («Xato urishlar»)
+             */
             wrongScans?: number;
         };
         WriteOffDetail: {

@@ -21905,7 +21905,8 @@
         "properties" : {
           "boxesNeeded" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "Skanerlanadigan qutilar (o'lchov birligi «dona» emas)"
           },
           "customer" : {
             "type" : "string"
@@ -21928,7 +21929,8 @@
             "format" : "int64"
           },
           "invoice" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa"
           },
           "lines" : {
             "type" : "integer",
@@ -21951,13 +21953,15 @@
             "format" : "int64"
           },
           "note" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Buyurtma izohi"
           },
           "number" : {
             "type" : "string"
           },
           "picker" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Yig'uvchi"
           },
           "statusChangedAt" : {
             "type" : "string",
@@ -21970,7 +21974,8 @@
           },
           "unitsNeeded" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "Skanerlanadigan donalar (o'lchov birligi «dona»)"
           },
           "unmarkedLines" : {
             "type" : "integer",
@@ -31710,7 +31715,8 @@
           },
           "boxCodes" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "Faqat markirovkachilar: qolgan kodlardan qutilar (qolgani — donalar)"
           },
           "codes" : {
             "type" : "integer",
@@ -31761,7 +31767,8 @@
           },
           "wrongScans" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "Faqat markirovkachilar: rad etilgan skanerlashlar («Xato urishlar»)"
           }
         },
         "required" : [ "actualMinutes", "avgMinutes", "employeeId", "givenMinutes", "late", "lines", "name", "onTime", "orders", "units" ]
