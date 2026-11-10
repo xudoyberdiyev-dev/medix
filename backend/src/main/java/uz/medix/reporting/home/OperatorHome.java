@@ -134,7 +134,7 @@ class OperatorHome {
                         rs.getInt("orders")))
                 .list();
 
-        return new OperatorHomeView(f, t, today, DirectorHome.byPayment(sales), created, DirectorHome.STALE_DAYS, statuses,
+        return new OperatorHomeView(f, t, today, DirectorHome.byPayment(sales), created, director.staleDays(), statuses,
                 new OperatorAttention(drafts, pending, rejected, REJECTED_DAYS, new CountAmount(staleCount, DirectorHome.m(staleAmount).toString())),
                 top, recent(me), notes(me, today));
     }
