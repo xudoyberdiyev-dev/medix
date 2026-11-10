@@ -349,6 +349,8 @@ test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await page.goto("/opening");
   await page.getByRole("button", { name: "Yangi hujjat" }).click();
   await page.getByRole("menuitem", { name: /Tovar qoldigʻi/ }).click();
+  // Toʻliq sahifa (prototip OpeningDoc)
+  await expect(page).toHaveURL(/\/opening\/goods\/new$/);
   await choose(page, "Ombor", /Markaziy ombor/);
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("E2E");
@@ -362,7 +364,8 @@ test("CEO: boshlangʻich qoldiq (BQ) → Qoldiqlar", async ({ page }) => {
   await expect(page.getByRole("cell", { name: "E2E-01" })).toBeVisible();
   await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Qoldiq omborga kirdi")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/opening\/goods\/\d+$/);
+  await expect(page.getByRole("main").getByText("Qoʻlda kiritilgan")).toBeVisible();
 
   // Qoldiqlar — mahsulot boʻyicha: jami va mavjud
   await page.goto("/stock");

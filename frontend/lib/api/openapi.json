@@ -1240,7 +1240,7 @@
     },
     "/api/branch-sales/{id}" : {
       "get" : {
-        "operationId" : "get_26",
+        "operationId" : "get_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1263,6 +1263,43 @@
           }
         },
         "summary" : "FS hujjati",
+        "tags" : [ "branch-sale" ]
+      },
+      "put" : {
+        "description" : "Sotuvchi zona, xaridor ombori, izoh va qatorlar almashtiriladi. Faqat qoralama.",
+        "operationId" : "update_19",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BranchSaleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSaleDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani tahrirlash",
         "tags" : [ "branch-sale" ]
       }
     },
@@ -2035,7 +2072,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_25",
+        "operationId" : "get_26",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3261,7 +3298,7 @@
     },
     "/api/customer-returns/{id}" : {
       "get" : {
-        "operationId" : "get_24",
+        "operationId" : "get_25",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4557,7 +4594,7 @@
     },
     "/api/home/accountant" : {
       "get" : {
-        "operationId" : "get_23",
+        "operationId" : "get_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4585,7 +4622,7 @@
     },
     "/api/home/branch" : {
       "get" : {
-        "operationId" : "get_22",
+        "operationId" : "get_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4629,7 +4666,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_21",
+        "operationId" : "get_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5434,7 +5471,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_20",
+        "operationId" : "get_21",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5961,7 +5998,7 @@
     "/api/nav/badges" : {
       "get" : {
         "description" : "Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.",
-        "operationId" : "get_19",
+        "operationId" : "get_20",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -11141,7 +11178,7 @@
     },
     "/api/reconciliations/{id}" : {
       "get" : {
-        "operationId" : "get_18",
+        "operationId" : "get_19",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13443,7 +13480,7 @@
     },
     "/api/supplier-returns/{id}" : {
       "get" : {
-        "operationId" : "get_17",
+        "operationId" : "get_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15003,7 +15040,7 @@
     "/api/warehouse-transfers/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi va hal qilish tarixi.",
-        "operationId" : "get_16",
+        "operationId" : "get_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15648,7 +15685,7 @@
     },
     "/api/write-offs/{id}" : {
       "get" : {
-        "operationId" : "get_15",
+        "operationId" : "get_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15896,7 +15933,7 @@
     },
     "/api/zone-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",

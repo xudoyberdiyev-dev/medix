@@ -187,5 +187,16 @@
     "needLine": "Kamida bitta qatorni toʻldiring: {what} va summa.",
     "badAmount": "{n}-qatorda summa notoʻgʻri. Masalan: 1250000,50",
     "pickBranch": "Avval yuqoridagi filial tanlovidan filialni tanlang."
+  },
+  "doc": {
+    "info": "Hujjat maʼlumotlari",
+    "branch": "Filial",
+    "source": "Manba",
+    "manual": "Qoʻlda kiritilgan",
+    "createdBy": "Kim yaratgan",
+    "crumbNew": "Yangi",
+    "stepDraft": "Qoralama",
+    "stepPosted": "Oʻtkazildi",
+    "more": "Boshqa amallar"
   }
 }

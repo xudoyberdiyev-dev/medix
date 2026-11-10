@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge, type Tone } from "@/components/ui/badge";
@@ -36,7 +37,6 @@ import { OPENING_CREATE, OPENING_GOODS, useAllOpenings, type OpeningStatus } fro
 import { FinanceDrawer } from "./finance-drawer";
 import { useFinOpenings, type FinKind } from "./finance-api";
 import { BQ_TYPES, buildMatrix, legendOf, type BqDoc, type BqType, type CellState, type MatrixItem } from "./matrix";
-import { OpeningDrawer } from "./opening-drawer";
 
 export function OpeningStatusBadge({ status }: { status: OpeningStatus }) {
   const t = useTranslations("opening.status");
@@ -135,6 +135,7 @@ export function OpeningPage() {
   const [view, setView] = useState<(typeof VIEWS)[number]>("ALL");
   const [q, setQ] = useState("");
   const [editor, setEditor] = useState<Editor | null>(null);
+  const router = useRouter();
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
@@ -183,10 +184,11 @@ export function OpeningPage() {
   const legend = legendOf(rows);
   const creatable = BQ_TYPES.filter((k) => canCreate && (k !== "GOODS" || can(me.data, OPENING_GOODS)));
 
+  // Tovar BQ — toʻliq sahifa (prototip OpeningDoc); pul BQ — drawer
   const openDoc = (d: BqDoc) =>
-    setEditor(d.type === "GOODS" ? { type: "GOODS", id: d.id } : { type: d.type, id: d.id, branchId: d.branchId });
+    d.type === "GOODS" ? router.push(`/opening/goods/${d.id}`) : setEditor({ type: d.type, id: d.id, branchId: d.branchId });
   const openNew = (type: BqType, forBranch: number | null) => {
-    if (type === "GOODS") return setEditor({ type, id: null });
+    if (type === "GOODS") return router.push("/opening/goods/new");
     if (forBranch == null) return toast({ tone: "warning", title: t("fin.pickBranch") });
     setEditor({ type, id: null, branchId: forBranch });
   };
@@ -408,14 +410,7 @@ export function OpeningPage() {
           />
         </>
       ) : null}
-      {editor?.type === "GOODS" ? (
-        <OpeningDrawer
-          id={editor.id}
-          onClose={() => setEditor(null)}
-          onCreated={(id) => setEditor({ type: "GOODS", id })}
-          canEdit={canCreate && can(me.data, OPENING_GOODS)}
-        />
-      ) : editor ? (
+      {editor && editor.type !== "GOODS" ? (
         <FinanceDrawer
           id={editor.id}
           kind={editor.type}
