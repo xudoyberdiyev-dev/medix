@@ -8256,6 +8256,12 @@ export interface components {
             open: string;
             /** Format: int32 */
             overdueDays: number;
+            /** @description To'langan (avans hisobga olinishi bilan) */
+            paid: string;
+            /** @description Qaytarishlar */
+            returned: string;
+            /** @description Hujjat summasi */
+            total: string;
         };
         DebtReport: {
             /** Format: int64 */
@@ -8278,6 +8284,11 @@ export interface components {
             name: string;
             /** @description Masʼul operator (filial shartidan; filial tanlanmasa — barcha filiallardagilar) */
             operator?: string;
+            /**
+             * Format: int32
+             * @description To'lov sharti, kun (faqat bitta filial tanlanganda)
+             */
+            paymentDays?: number;
             phone?: string;
             /** @description Hudud (mijoz kartochkasidan) */
             region?: string;

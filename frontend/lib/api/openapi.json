@@ -19448,9 +19448,21 @@
           "overdueDays" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paid" : {
+            "type" : "string",
+            "description" : "To'langan (avans hisobga olinishi bilan)"
+          },
+          "returned" : {
+            "type" : "string",
+            "description" : "Qaytarishlar"
+          },
+          "total" : {
+            "type" : "string",
+            "description" : "Hujjat summasi"
           }
         },
-        "required" : [ "branch", "branchId", "date", "docId", "docNumber", "docType", "open", "overdueDays" ]
+        "required" : [ "branch", "branchId", "date", "docId", "docNumber", "docType", "open", "overdueDays", "paid", "returned", "total" ]
       },
       "DebtReport" : {
         "type" : "object",
@@ -19503,6 +19515,11 @@
           "operator" : {
             "type" : "string",
             "description" : "Masʼul operator (filial shartidan; filial tanlanmasa — barcha filiallardagilar)"
+          },
+          "paymentDays" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "To'lov sharti, kun (faqat bitta filial tanlanganda)"
           },
           "phone" : {
             "type" : "string"

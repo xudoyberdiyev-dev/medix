@@ -157,6 +157,7 @@ class DebtIT {
                 .andExpect(jsonPath("$.rows[0].region", org.hamcrest.Matchers.startsWith("Hudud ")))
                 .andExpect(jsonPath("$.rows[0].operator").value("Sinov OPERATOR"))
                 .andExpect(jsonPath("$.rows[1].operator").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.rows[0].paymentDays").hasJsonPath())
                 .andExpect(jsonPath("$.rows[1].buckets.debt").value("0.00"))
                 .andExpect(jsonPath("$.rows[1].buckets.advance").value("1000.00"))
                 .andExpect(jsonPath("$.totals.debt").value("2900.00"))
@@ -166,7 +167,10 @@ class DebtIT {
                 .andExpect(jsonPath("$.length()").value(4))
                 .andExpect(jsonPath("$[0].docNumber").value("SV-TST-9400001"))
                 .andExpect(jsonPath("$[0].overdueDays").value(95))
-                .andExpect(jsonPath("$[1].open").value("1500.00"));
+                .andExpect(jsonPath("$[1].open").value("1500.00"))
+                .andExpect(jsonPath("$[0].total").exists())
+                .andExpect(jsonPath("$[0].returned").exists())
+                .andExpect(jsonPath("$[0].paid").exists());
 
         // Akt sverka: davr boshi 0, qarz oshdi 3 700, kamaydi 800, oxiri 2 900; boshqa filial xodimiga yopiq
         mvc.perform(get("/api/debts/customers/" + c1 + "/act").param("branchId", "" + b).cookie(cashier))
