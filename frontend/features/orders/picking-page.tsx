@@ -206,9 +206,16 @@ export function StatCards({ title, items }: { title: string; items: [string, str
       {items ? (
         <div className={cn("grid grid-cols-2 gap-3", items.length > 4 ? "lg:grid-cols-5" : "lg:grid-cols-4")}>
           {items.map(([label, value, tone]) => (
-            <div key={label} className="rounded-card border border-border bg-surface px-4 py-3">
+            <div key={label} className="min-w-0 rounded-card border border-border bg-surface px-4 py-3">
               <div className="text-caption text-text-secondary">{label}</div>
-              <div className={cn("mt-1 text-[24px] leading-8 font-semibold tabular-nums", tone)}>{value}</div>
+              <div
+                className={cn(
+                  "mt-1 text-[24px] leading-8 font-semibold break-words tabular-nums max-sm:text-[20px] max-sm:leading-7",
+                  tone,
+                )}
+              >
+                {value}
+              </div>
             </div>
           ))}
         </div>
@@ -273,7 +280,7 @@ function QueueCard({ o, blocked, pending, onStart }: { o: QueueItem; blocked: bo
         </div>
       ) : null}
       {open ? <QueueLines id={o.id} /> : null}
-      <div className={cn("mt-4 grid gap-2", busy ? "grid-cols-1" : "grid-cols-2")}>
+      <div className={cn("mt-4 grid gap-2", busy ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2")}>
         <Button variant="secondary" size="lg" icon={open ? ChevronUp : ChevronDown} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           {open ? t("picking.hide") : t("picking.details")}
         </Button>

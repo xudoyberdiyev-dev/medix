@@ -524,9 +524,9 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await expect(marker).toHaveURL(/\/$/);
   await marker.goto("/marking");
   await marker.getByRole("tab", { name: /Navbat/ }).click();
-  const card = marker.getByRole("listitem").filter({ hasText: "Shifo Dorixona E2E" }).first();
+  const card = marker.locator("article").filter({ hasText: "Shifo Dorixona E2E" }).first();
   await expect(card).toContainText("Markirovkasiz — tasdiqlash");
-  await card.getByRole("button", { name: "Markirovkani boshlash" }).click();
+  await card.getByRole("button", { name: "Markirovkasiz — tasdiqlash" }).click();
   await marker.getByRole("region", { name: "Markirovkasiz qatorlar" }).getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(marker.getByText("1 / 1 qator tasdiqlandi")).toBeVisible();
   await marker.getByRole("button", { name: "Markirovkani yakunlash" }).click();

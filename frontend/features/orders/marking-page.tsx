@@ -316,7 +316,7 @@ function MarkQueueCard({ o, blocked, pending, onStart }: { o: MarkQueueItem; blo
         </div>
       ) : null}
       {open ? <MarkQueueLines id={o.id} /> : null}
-      <div className={cn("mt-4 grid gap-2", busy ? "grid-cols-1" : "grid-cols-[2fr_3fr]")}>
+      <div className={cn("mt-4 grid gap-2", busy ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-[2fr_3fr]")}>
         <Button variant="secondary" size="lg" icon={open ? ChevronUp : ChevronDown} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           {open ? t("picking.hide") : t("picking.details")}
         </Button>

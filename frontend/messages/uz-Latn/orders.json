@@ -498,7 +498,15 @@
     "checkHint": "Yigʻilgan (va markirovka qilingan) buyurtmalar — kartani oching, qatorlarni tekshirib hisobdan oʻtkazing. Hujjatlashtirish va reys —",
     "toShipments": "Joʻnatish sahifasida",
     "checkEmpty": "Tekshiruv kutayotgan buyurtma yoʻq",
-    "checkEmptyHint": "Yigʻish yakunlangach buyurtma shu yerda chiqadi."
+    "checkEmptyHint": "Yigʻish yakunlangach buyurtma shu yerda chiqadi.",
+    "active": "Faol buyurtmalar",
+    "lateCount": "Kechikkanlar",
+    "openIssues": "Ochiq muammolar",
+    "lateOnly": "Faqat kechikkanlar",
+    "colWait": "Vaqt kutilmoqda",
+    "colGiven": "Vaqt berildi",
+    "leftMin": "{m} daqiqa qoldi",
+    "nobody": "Hali hech kim olmagan"
   },
   "driver": {
     "forbidden": "Reys paneli faqat haydovchilar uchun.",

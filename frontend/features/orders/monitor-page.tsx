@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlarmClock, CalendarX, Clock, LayoutDashboard, PackageOpen, Tag, Timer, Truck } from "lucide-react";
+import { AlarmClockOff, CalendarX, Clock, LayoutDashboard, PackageOpen, Tag, Timer, Truck, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs, type TabItem } from "@/components/ui/tabs";
+import { useBranches } from "@/features/employees/api";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
@@ -31,7 +32,6 @@ import { IssuesList } from "./issues";
 import { ReturnsList } from "./returns";
 import { OrderDrawer } from "./order-drawer";
 import { useLiveConnected } from "@/lib/live";
-import { timerText } from "./picking-page";
 
 export type MonitorCard = components["schemas"]["MonitorCard"];
 
@@ -54,6 +54,17 @@ export function groupByStage(cards: MonitorCard[]): Record<OrderStatus, MonitorC
     out[s].sort((a, b) => Number(b.late) - Number(a.late) || Number(b.stale) - Number(a.stale) || a.since.localeCompare(b.since));
   }
   return out;
+}
+
+/** Monitor ustunlari (prototip SupervisorPanel): «Navbatda» ikkiga — «Vaqt kutilmoqda» va «Vaqt berildi»; qolganlari holat boʻyicha. */
+export type BoardColumn = { key: string; cards: MonitorCard[] };
+export function boardColumns(cards: MonitorCard[], lateOnly = false): BoardColumn[] {
+  const g = groupByStage(lateOnly ? cards.filter((c) => c.late || c.stale) : cards);
+  return [
+    { key: "WAIT", cards: g.QUEUED.filter((c) => !c.timeGiven) },
+    { key: "GIVEN", cards: g.QUEUED.filter((c) => c.timeGiven) },
+    ...MONITOR_COLUMNS.filter((x) => x !== "QUEUED").map((x) => ({ key: x as string, cards: g[x] })),
+  ];
 }
 
 function useNow(): Date {
@@ -107,6 +118,15 @@ export function MonitorPage() {
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const [open, setOpen] = useState<number | null>(null);
+  const [lateOnly, setLateOnly] = useState(false);
+  const branches = useBranches();
+  const branchName = branches.data?.find((b) => b.id === (branchId ?? me.data?.branchId))?.name;
+  const openIssues = useQuery({
+    queryKey: ["orders", "issues"],
+    queryFn: () => unwrap(api.GET("/api/orders/issues", { params: { query: { open: true } } })),
+    enabled: allowed,
+    refetchInterval: 15_000,
+  });
   const [receipt, setReceipt] = useState<number | null>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -153,8 +173,11 @@ export function MonitorPage() {
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-page-title">{t("monitor.title")}</h1>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-page-title">{t("monitor.title")}</h1>
+          {me.data ? <p className="mt-1 text-text-secondary">{[me.data.fullName, branchName].filter(Boolean).join(" · ")}</p> : null}
+        </div>
         {can(me.data, "shipments.view") ? (
           <Link
             href="/shipments"
@@ -170,40 +193,64 @@ export function MonitorPage() {
         <Skeleton className="h-64 w-full" />
       ) : (
         <>
-          <section aria-label={t("monitor.stateAria")} className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label={t("monitor.inWork")} value={board.data.cards.length} icon={LayoutDashboard} />
-            <Stat
-              label={t("monitor.noTime")}
-              value={board.data.waitingTime}
-              icon={Clock}
-              tone={board.data.waitingTime ? "warning" : undefined}
-            />
-            <Stat label={t("monitor.late")} value={board.data.late} icon={AlarmClock} tone={board.data.late ? "danger" : undefined} />
-            <Stat
-              label={t("monitor.stale", { days: board.data.lateDays })}
-              value={board.data.stale}
-              icon={CalendarX}
-              tone={board.data.stale ? "danger" : undefined}
-            />
-          </section>
           <div className="mb-4">
             <Tabs items={tabs} value={tab} onChange={setTab} aria-label={t("monitor.title")} />
           </div>
+          {tab !== "monitor" ? null : (
+            <>
+              <section aria-label={t("monitor.stateAria")} className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <Stat label={t("monitor.active")} value={board.data.cards.length} />
+                <Stat label={t("monitor.lateCount")} value={board.data.late} tone={board.data.late ? "danger" : undefined} />
+                <Stat
+                  label={t("monitor.openIssues")}
+                  value={openIssues.data?.length ?? 0}
+                  tone={openIssues.data?.length ? "danger" : undefined}
+                />
+              </section>
+              <div className="mb-4">
+                <label className="inline-flex h-control-lg cursor-pointer items-center gap-2 rounded-card border border-border bg-surface px-4">
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-primary-button"
+                    checked={lateOnly}
+                    onChange={(e) => setLateOnly(e.target.checked)}
+                  />
+                  {t("monitor.lateOnly")}
+                </label>
+              </div>
+            </>
+          )}
           {tab !== "monitor" ? null : board.data.cards.length === 0 ? (
             <Card>
               <EmptyState icon={LayoutDashboard} title={t("monitor.emptyTitle")} description={t("monitor.emptyHint")} />
             </Card>
           ) : (
             <div className="grid grid-flow-col auto-cols-[minmax(14rem,1fr)] gap-3 overflow-x-auto pb-2">
-              {MONITOR_COLUMNS.map((s) => {
-                const cards = groupByStage(board.data.cards)[s];
+              {boardColumns(board.data.cards, lateOnly).map((col) => {
+                const late = col.cards.filter((c) => c.late || c.stale).length;
+                const title =
+                  col.key === "WAIT"
+                    ? t("monitor.colWait")
+                    : col.key === "GIVEN"
+                      ? t("monitor.colGiven")
+                      : t(`status.${col.key as OrderStatus}`);
                 return (
-                  <section key={s} aria-label={t(`status.${s}`)} className="rounded-card bg-background p-2">
-                    <h2 className="mb-2 flex items-center justify-between px-1 text-subtitle">
-                      {t(`status.${s}`)} <span className="text-text-secondary tabular-nums">{cards.length}</span>
+                  <section key={col.key} aria-label={title} className="rounded-card bg-border/40 p-2.5">
+                    <h2 className="mb-2.5 flex items-start justify-between gap-2 px-1 text-table font-semibold">
+                      <span>{title}</span>
+                      <span className="flex shrink-0 items-center gap-1">
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-surface px-1.5 text-caption tabular-nums">
+                          {col.cards.length}
+                        </span>
+                        {late > 0 ? (
+                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-caption text-white tabular-nums">
+                            {late}
+                          </span>
+                        ) : null}
+                      </span>
                     </h2>
                     <ul className="flex flex-col gap-2">
-                      {cards.map((c) => (
+                      {col.cards.map((c) => (
                         <li key={c.id}>
                           <MonitorCardView card={c} now={now} onOpen={() => setOpen(c.id)} />
                         </li>
@@ -274,58 +321,57 @@ export function MonitorPage() {
   );
 }
 
-function Stat({ label, value, icon: Icon, tone }: { label: string; value: number; icon: typeof Clock; tone?: "warning" | "danger" }) {
+function Stat({ label, value, tone }: { label: string; value: number; tone?: "warning" | "danger" }) {
   return (
-    <div className="rounded-card border border-border bg-surface p-3">
-      <div className="flex items-center gap-2 text-caption text-text-secondary">
-        <Icon size={16} strokeWidth={1.5} aria-hidden /> {label}
-      </div>
-      <div className={`mt-1 text-page-title tabular-nums ${tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : ""}`}>
+    <div className="rounded-card border border-border bg-surface px-4 py-3">
+      <div className="text-caption text-text-secondary">{label}</div>
+      <div
+        className={`mt-1 text-[24px] leading-8 font-semibold tabular-nums ${tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : ""}`}
+      >
         {formatQuantity(value)}
       </div>
     </div>
   );
 }
 
+/** Monitor kartasi (prototip): raqam, mijoz, masʼul (yoki «Hali hech kim olmagan»), vaqt belgisi — qolgan yoki «+kechikish». */
 function MonitorCardView({ card: c, now, onOpen }: { card: MonitorCard; now: Date; onOpen: () => void }) {
   const tr = useTranslations("orders");
-  const t = c.deadline ? timerText(new Date(c.deadline), now, tr) : null;
+  const deadline = c.deadline ? new Date(c.deadline) : null;
+  const over = deadline ? deadline.getTime() < now.getTime() : c.late;
+  const chip = deadline
+    ? over
+      ? `+${sinceText(deadline, now, tr)}`
+      : tr("monitor.leftMin", { m: Math.max(1, Math.ceil((deadline.getTime() - now.getTime()) / 60000)) })
+    : c.late
+      ? `+${sinceText(new Date(c.since), now, tr)}`
+      : sinceText(new Date(c.since), now, tr);
+  const person = c.person ?? (c.status === "QUEUED" ? "—" : tr("monitor.nobody"));
   return (
     <button
       type="button"
       onClick={onOpen}
-      className={`w-full rounded-card border bg-surface p-2 text-left hover:border-primary ${c.late || c.stale ? "border-danger" : "border-border"}`}
+      className={`w-full rounded-card border bg-surface p-3 text-left hover:border-primary ${c.late || c.stale ? "border-danger/40" : "border-border"}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-caption">{c.number}</span>
-        {c.marked ? (
-          <Badge tone="info" icon={Tag}>
-            {tr("monitor.marking")}
-          </Badge>
-        ) : null}
+        <span className="font-mono text-table font-semibold">{c.number}</span>
+        {c.marked ? <Tag size={14} strokeWidth={1.5} className="text-primary" aria-label={tr("monitor.marking")} /> : null}
       </div>
-      <div className="mt-1 truncate">{c.customer}</div>
-      <div className="mt-1 text-caption text-text-secondary">
-        {tr("monitor.cardMeta", { lines: formatQuantity(c.lines), qty: formatQuantity(c.totalQty) })}
-        {c.person ? ` · ${c.person}` : ""}
+      <div className="mt-1 text-body">{c.customer}</div>
+      <div className="mt-1 flex items-center gap-1.5 text-caption text-text-secondary">
+        <User size={14} strokeWidth={1.5} aria-hidden />
+        <span className="truncate">{person}</span>
       </div>
-      <div className="mt-1 flex flex-wrap items-center gap-2 text-caption">
-        {t ? (
-          <span className={`inline-flex items-center gap-1 tabular-nums ${t.late ? "text-danger" : ""}`} role="timer">
-            <Timer size={14} strokeWidth={1.5} aria-hidden />
-            {t.text}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 text-text-secondary">
-            <Clock size={14} strokeWidth={1.5} aria-hidden />
-            {sinceText(new Date(c.since), now, tr)}
-          </span>
-        )}
-        {c.status === "QUEUED" && !c.timeGiven ? (
-          <Badge tone="warning" icon={Clock}>
-            {tr("monitor.noTime")}
-          </Badge>
-        ) : null}
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <span
+          role="timer"
+          className={`inline-flex items-center gap-1 rounded-control px-2 py-0.5 text-caption font-medium tabular-nums ${
+            over ? "bg-danger-bg text-danger" : deadline ? "bg-info-bg text-info" : "bg-background text-text-secondary"
+          }`}
+        >
+          {over ? <AlarmClockOff size={13} strokeWidth={1.5} aria-hidden /> : <Timer size={13} strokeWidth={1.5} aria-hidden />}
+          {chip}
+        </span>
         {c.stale ? (
           <Badge tone="danger" icon={CalendarX}>
             {tr("monitor.lateBadge")}
