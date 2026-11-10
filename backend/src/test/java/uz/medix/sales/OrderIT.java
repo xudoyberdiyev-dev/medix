@@ -1603,6 +1603,155 @@ class OrderIT {
         mvc.perform(get("/api/orders/" + second).cookie(operator)).andExpect(jsonPath("$.total").value("2000.00"));
     }
 
+    /** Reys orqali to'liq yetkazilgan buyurtma (DELIVERED); qaytadi — buyurtma id. */
+    private long delivered(Place p, long c, long prod, int qty, Cookie operator, Cookie keeper, Cookie picker) throws Exception {
+        Cookie driverSession = loginAs("DRIVER", p.branchId());
+        long driver = jdbc.sql("SELECT max(id) FROM employee WHERE full_name = 'Sinov DRIVER' AND branch_id = :b").param("b", p.branchId())
+                .query(Long.class).single();
+        long o = documenting(p, c, prod, qty, 1, "DELIVERY", operator, keeper, picker);
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model) VALUES (:b, :p, 'Labo') RETURNING id")
+                .param("b", p.branchId()).param("p", "30" + ThreadLocalRandom.current().nextInt(100_000, 999_999)).query(Long.class).single();
+        MvcResult t = send(post("/api/trips"), keeper, "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today()
+                + "\",\"orderIds\":[" + o + "]}").andExpect(status().isCreated()).andReturn();
+        long trip = id(t);
+        long stop = ((Number) JsonPath.read(t.getResponse().getContentAsString(), "$.stops[0].id")).longValue();
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/load"), driverSession, "{\"places\":1}").andExpect(status().isOk());
+        send(post("/api/trips/" + trip + "/start"), driverSession, "").andExpect(status().isOk());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/trips/" + trip + "/stops/" + stop + "/photos")
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[] {1, 2, 3}))
+                        .with(csrf()).cookie(driverSession))
+                .andExpect(status().isCreated());
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/deliver"), driverSession, "{}").andExpect(status().isOk());
+        assertThat(statusOf(o)).isEqualTo("DELIVERED");
+        return o;
+    }
+
+    private String debtOf(long customer) {
+        return jdbc.sql("SELECT coalesce(sum(amount), 0)::text FROM party_ledger WHERE counterparty_id = :c AND side = 'CUSTOMER'")
+                .param("c", customer).query(String.class).single();
+    }
+
+    @Test
+    void customerReturnQmPendingAcceptToQuarantineReducesDebtRejectAndParallelNeverOverReturns() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        long prod = product(p, "BY Qaytarish QM", "1000", 20, null, null);
+        long o = delivered(p, c, prod, 5, operator, keeper, picker);
+        long sale = jdbc.sql("SELECT id FROM sale WHERE order_id = :o").param("o", o).query(Long.class).single();
+        assertThat(debtOf(c)).isEqualTo("5000.00");
+
+        // Sotuvlar va qatorlar — faqat qm.create (Operator); Ombor mudirida yo'q
+        mvc.perform(get("/api/customer-returns/sales").param("customerId", "" + c).cookie(keeper)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/customer-returns/sales").param("customerId", "" + c).cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value((int) sale))
+                .andExpect(jsonPath("$[0].returnableLines").value(1));
+        MvcResult ls = mvc.perform(get("/api/customer-returns/sales/" + sale + "/lines").cookie(operator))
+                .andExpect(jsonPath("$[0].sold").value(5))
+                .andExpect(jsonPath("$[0].returned").value(0))
+                .andExpect(jsonPath("$[0].left").value(5))
+                .andExpect(jsonPath("$[0].price").value("1000.00"))
+                .andReturn();
+        long saleLine = ((Number) JsonPath.read(ls.getResponse().getContentAsString(), "$[0].saleLineId")).longValue();
+        String body = "{\"saleId\":" + sale + ",\"lines\":[{\"saleLineId\":" + saleLine + ",\"qty\":%d,\"reason\":\"%s\"}]}";
+
+        // Xatolar: ko'p; «Boshqa» izohsiz; begona qator; begona filial
+        send(post("/api/customer-returns"), operator, body.formatted(6, "DAMAGED")).andExpect(jsonPath("$.code").value("qm.qtyExceeds"));
+        send(post("/api/customer-returns"), operator, body.formatted(1, "OTHER")).andExpect(jsonPath("$.code").value("qm.noteRequired"));
+        send(post("/api/customer-returns"), operator, body.replace("" + saleLine, "" + (saleLine + 100_000)).formatted(1, "DAMAGED"))
+                .andExpect(jsonPath("$.code").value("qm.lineInvalid"));
+        Cookie foreign = loginAs("OPERATOR", place().branchId());
+        send(post("/api/customer-returns"), foreign, body.formatted(1, "DAMAGED")).andExpect(status().isNotFound());
+
+        // Operator yaratadi — «Qabul kutilmoqda», Ombor mudiriga bildirishnoma; qarz va qoldiq o'zgarmaydi
+        MvcResult cr = send(post("/api/customer-returns"), operator, body.formatted(3, "DAMAGED"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.number", matchesPattern("QM-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.total").value("3000.00"))
+                .andExpect(jsonPath("$.lines[0].reason").value("DAMAGED"))
+                .andExpect(jsonPath("$.lines[0].cost").doesNotExist())
+                .andReturn();
+        long qm = id(cr);
+        String number = JsonPath.read(cr.getResponse().getContentAsString(), "$.number");
+        assertThat(jdbc.sql("SELECT count(*) FROM notification n JOIN employee e ON e.id = n.employee_id WHERE n.link = :l AND e.full_name = 'Sinov WAREHOUSE_MANAGER'")
+                .param("l", "/customer-returns?open=" + qm).query(Long.class).single()).isPositive();
+        assertThat(debtOf(c)).isEqualTo("5000.00");
+        assertThat(qtyIn(p.quarantine(), prod)).isZero();
+        mvc.perform(get("/api/customer-returns/sales/" + sale + "/lines").cookie(operator))
+                .andExpect(jsonPath("$[0].returned").value(3))
+                .andExpect(jsonPath("$[0].left").value(2));
+        send(post("/api/customer-returns"), operator, body.formatted(3, "DAMAGED")).andExpect(jsonPath("$.code").value("qm.qtyExceeds"));
+        send(post("/api/customer-returns/" + qm + "/approve"), operator, "").andExpect(status().isForbidden());
+
+        // Ombor mudiri qabul qiladi — Karantinga 3, qarz 5 000 − 3 000, sof savdo uchun sales_return (QQS/tannarx sotuvdan)
+        send(post("/api/customer-returns/" + qm + "/approve"), keeper, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("POSTED"))
+                .andExpect(jsonPath("$.postedBy").value("Sinov WAREHOUSE_MANAGER"));
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(3);
+        assertThat(debtOf(c)).isEqualTo("2000.00");
+        var sr = jdbc.sql("SELECT number, total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sales_return WHERE sale_id = :s")
+                .param("s", sale).query().singleRow();
+        assertThat(sr.get("number")).isEqualTo(number);
+        assertThat(sr.get("total")).isEqualTo("3000.00");
+        assertThat(sr.get("vat")).isEqualTo("321.43");
+        assertThat(sr.get("cost")).isEqualTo("300.00");
+        assertThat(jdbc.sql("SELECT count(*) FROM stock_move WHERE doc_type = 'QM' AND doc_number = :n").param("n", number).query(Long.class).single())
+                .isEqualTo(1);
+        send(post("/api/customer-returns/" + qm + "/approve"), keeper, "").andExpect(jsonPath("$.code").value("qm.notPending"));
+        assertThatThrownBy(() -> jdbc.sql("UPDATE customer_return SET note = 'x' WHERE id = :id").param("id", qm).update())
+                .hasMessageContaining("hal qilingan");
+
+        // Qolgan 2 dona — 4 ta parallel so'rov (har biri 2): aniq bittasi yaratiladi
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(4);
+        var start = new java.util.concurrent.CountDownLatch(1);
+        var created = new java.util.concurrent.atomic.AtomicInteger();
+        List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            futures.add(pool.submit(() -> {
+                start.await();
+                int code = send(post("/api/customer-returns"), operator, body.formatted(2, "EXPIRING")).andReturn().getResponse().getStatus();
+                if (code == 201) {
+                    created.incrementAndGet();
+                }
+                return null;
+            }));
+        }
+        start.countDown();
+        for (var f : futures) {
+            f.get(60, java.util.concurrent.TimeUnit.SECONDS);
+        }
+        pool.shutdown();
+        assertThat(created.get()).isEqualTo(1);
+        long pending = jdbc.sql("SELECT id FROM customer_return WHERE sale_id = :s AND status = 'PENDING'").param("s", sale).query(Long.class).single();
+
+        // Rad etish — sabab majburiy; hech narsa o'zgarmaydi, miqdor bo'shaydi
+        send(post("/api/customer-returns/" + pending + "/reject"), keeper, "{\"reason\":\"\"}").andExpect(status().isBadRequest());
+        send(post("/api/customer-returns/" + pending + "/reject"), keeper, "{\"reason\":\"Tovar kelmadi\"}")
+                .andExpect(jsonPath("$.status").value("REJECTED"))
+                .andExpect(jsonPath("$.rejectReason").value("Tovar kelmadi"));
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(3);
+        assertThat(debtOf(c)).isEqualTo("2000.00");
+        mvc.perform(get("/api/customer-returns/sales/" + sale + "/lines").cookie(operator)).andExpect(jsonPath("$[0].left").value(2));
+
+        // Ro'yxat: holat filtri, qidiruv; begona filial ko'rmaydi
+        mvc.perform(get("/api/customer-returns").param("status", "POSTED").param("q", number).cookie(keeper))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].qty").value(3))
+                .andExpect(jsonPath("$.items[0].total").value("3000.00"));
+        mvc.perform(get("/api/customer-returns/" + qm).cookie(foreign)).andExpect(status().isNotFound());
+
+        // Ruxsati bor yaratuvchi (Filial rahbari) — darhol qabul qilinadi
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        send(post("/api/customer-returns"), manager, body.formatted(1, "WRONG_ITEM")).andExpect(jsonPath("$.status").value("POSTED"));
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(4);
+        assertThat(debtOf(c)).isEqualTo("1000.00");
+    }
+
     /** Buyurtma bo'yicha bildirishnoma olgan, berilgan roldagi xodimlar soni. */
     private int notified(String kind, long orderId, String role) {
         return jdbc.sql("""
