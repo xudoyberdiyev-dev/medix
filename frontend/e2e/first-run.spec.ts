@@ -642,7 +642,7 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
   await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
   await expect(page.getByText(/joʻnatildi — yoʻlda/)).toBeVisible();
-  await expect(page.getByText(/^Joʻnatildi · /)).toBeVisible();
+  await expect(page.getByText(/^Joʻnatildi · \d/)).toBeVisible();
 
   // Qabul — alohida sahifa (prototip TransferReceive): qator boʻyicha miqdor, farq sababi, qayerga zona
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
@@ -655,7 +655,7 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   await page.getByRole("dialog").last().getByRole("button", { name: "Qabulni tasdiqlash" }).click();
   await expect(page.getByText(/farq bilan qabul qilindi$/)).toBeVisible();
   await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
-  await expect(page.getByText(/^Farq bilan qabul qilindi · /)).toBeVisible();
+  await expect(page.getByText(/^Farq bilan qabul qilindi · \d/)).toBeVisible();
   await page.getByRole("tab", { name: /Tarix/ }).click();
   await expect(page.getByText("farq bilan qabul qildi")).toBeVisible();
 
