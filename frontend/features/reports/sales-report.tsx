@@ -307,7 +307,7 @@ export function SalesReportPage() {
               options={groups.map((g) => ({ value: g, label: `${t("sales.group1")}: ${t(`sales.group.${g}`)}` }))}
             />
           </div>
-          <div className="w-44">
+          <div className="w-52">
             <Select
               label={t("sales.group2")}
               size="sm"
