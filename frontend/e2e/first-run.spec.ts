@@ -859,3 +859,35 @@ test("CEO: Kompaniya — tizim holati va nomni tahrirlash", async ({ page }) => 
   await expect(page.getByText("Kompaniya nomi saqlandi").first()).toBeVisible();
   await expect(page.getByText(old, { exact: true }).first()).toBeVisible();
 });
+
+test("CEO: Sozlamalar — chegarani oʻzgartirish (tasdiq oynasi, audit), QQS tarixi, hujjat raqamlari", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { name: "Sozlamalar", level: 1 })).toBeVisible();
+  const input = page.getByLabel("Muddat ogohlantirish chegarasi");
+  await expect(input).toHaveValue("90");
+  await input.fill("0");
+  await expect(page.getByText("1 dan 365 gacha qiymat kiriting")).toBeVisible();
+  await input.fill("60");
+  await expect(page.getByText("1 ta oʻzgarish")).toBeVisible();
+  await page.getByRole("button", { name: "Saqlash" }).click();
+  const dlg = page.getByRole("dialog", { name: "1 ta sozlamani saqlash" });
+  await expect(dlg.getByText("Muddat ogohlantirish chegarasi: 90 kun → 60 kun")).toBeVisible();
+  await dlg.getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText("1 ta sozlama saqlandi").first()).toBeVisible();
+  await expect(input).toHaveValue("60");
+  await expect(page.getByText(/Oxirgi oʻzgarish: /).first()).toBeVisible();
+  // Qaytarish — boshqa testlar standart 90 kun bilan ishlaydi
+  await input.fill("90");
+  await page.getByRole("button", { name: "Saqlash" }).click();
+  await page.getByRole("dialog", { name: "1 ta sozlamani saqlash" }).getByRole("button", { name: "Saqlash" }).click();
+  await expect(input).toHaveValue("90");
+
+  await page.getByRole("button", { name: "Soliq" }).click();
+  await expect(page.getByText("Stavkalar tarixi")).toBeVisible();
+  await expect(page.getByText("Amalda")).toBeVisible();
+  await page.getByRole("button", { name: "Hujjatlar" }).click();
+  await expect(page.getByText("Raqamlash formati: PREFIKS-FILIAL-000001", { exact: false })).toBeVisible();
+  await expect(page.getByText("Buyurtma", { exact: true })).toBeVisible();
+});

@@ -60,12 +60,12 @@ class SettingsController {
 
     record VatRow(long id, String rate, LocalDate validFrom, @Schema(nullable = true) String createdBy, VatStatus status) {}
 
-    record EmployeeOption(long id, String name) {}
+    record SignerOption(long id, String name) {}
 
     record SignerRow(long branchId, String branchName, @Schema(nullable = true) Long headId, @Schema(nullable = true) Long accountantId,
             @Schema(nullable = true, description = "Avtomatik (rol bo'yicha) rahbar") String autoHead,
             @Schema(nullable = true, description = "Avtomatik (rol bo'yicha) bosh hisobchi") String autoAccountant,
-            List<EmployeeOption> headOptions, List<EmployeeOption> accountantOptions) {}
+            List<SignerOption> headOptions, List<SignerOption> accountantOptions) {}
 
     record PrintSettings(boolean reprintMark, InvoiceVariant invoiceVariant, List<SignerRow> signers) {}
 
@@ -174,13 +174,13 @@ class SettingsController {
                 .list();
         List<SignerRow> signers = new ArrayList<>();
         for (Br b : branches) {
-            List<EmployeeOption> heads = emps.stream()
+            List<SignerOption> heads = emps.stream()
                     .filter(e -> HEAD_ROLES.contains(e.role()) && (e.branchId() == null || e.branchId() == b.id()))
-                    .map(e -> new EmployeeOption(e.id(), e.name()))
+                    .map(e -> new SignerOption(e.id(), e.name()))
                     .toList();
-            List<EmployeeOption> accs = emps.stream()
+            List<SignerOption> accs = emps.stream()
                     .filter(e -> ACC_ROLES.contains(e.role()) && (e.branchId() == null || e.branchId() == b.id()))
-                    .map(e -> new EmployeeOption(e.id(), e.name()))
+                    .map(e -> new SignerOption(e.id(), e.name()))
                     .toList();
             String autoHead = emps.stream().filter(e -> "BRANCH_MANAGER".equals(e.role()) && e.branchId() != null && e.branchId() == b.id())
                     .map(Emp::name).findFirst().orElse(null);
