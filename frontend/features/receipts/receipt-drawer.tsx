@@ -370,7 +370,7 @@ function Editor({
           icon={Undo2}
           onClick={() =>
             router.push(
-              `/supplier-returns?receipt=${doc.id}&supplier=${doc.supplierId}&supplierName=${encodeURIComponent(doc.supplier)}&receiptNo=${encodeURIComponent(doc.number)}`,
+              `/supplier-returns/new?receipt=${doc.id}&supplier=${doc.supplierId}&supplierName=${encodeURIComponent(doc.supplier)}&receiptNo=${encodeURIComponent(doc.number)}`,
             )
           }
         >

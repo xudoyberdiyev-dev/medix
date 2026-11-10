@@ -14,7 +14,6 @@ import { useMe } from "@/features/auth/session";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { QY_CREATE, QY_STATUSES, QY_VIEW_KEYS, useSupplierReturns, type SupplierReturnStatus, type SupplierReturnSummary } from "./api";
-import { SupplierReturnDrawer, type ReturnPreset } from "./supplier-return-drawer";
 import { HubTabs } from "@/components/shell/hub-tabs";
 
 export function SupplierReturnStatusBadge({ status }: { status: SupplierReturnStatus }) {
@@ -46,21 +45,11 @@ export function SupplierReturnsPage() {
   useEffect(() => {
     if (Number.isInteger(openId) && openId > 0) router.replace(`/supplier-returns/${openId}`);
   }, [openId, router]);
-  const [open, setOpen] = useState<{ id: number | null; preset?: ReturnPreset } | null>(() => {
-    const receiptId = Number(params.get("receipt"));
-    const supplierId = Number(params.get("supplier"));
-    if (Number.isInteger(receiptId) && receiptId > 0 && Number.isInteger(supplierId) && supplierId > 0)
-      return {
-        id: null,
-        preset: {
-          receiptId,
-          receiptNo: params.get("receiptNo") ?? "",
-          supplierId,
-          supplierName: params.get("supplierName") ?? "",
-        },
-      };
-    return null;
-  });
+  // Kirimdan: ?receipt=… — yangi hujjat sahifasiga shu parametrlar bilan
+  const fromReceipt = params.get("receipt") !== null && params.get("supplier") !== null;
+  useEffect(() => {
+    if (fromReceipt) router.replace(`/supplier-returns/new?${params.toString()}`);
+  }, [fromReceipt, params, router]);
   const allowed = canAny(me.data, QY_VIEW_KEYS);
   const canCreate = can(me.data, QY_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -98,7 +87,7 @@ export function SupplierReturnsPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => router.push("/supplier-returns/new")}>
             {t("create")}
           </Button>
         ) : null}
@@ -136,7 +125,7 @@ export function SupplierReturnsPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/supplier-returns/new")}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -158,14 +147,6 @@ export function SupplierReturnsPage() {
           }
         />
       )}
-      {open ? (
-        <SupplierReturnDrawer
-          id={open.id}
-          preset={open.preset}
-          onClose={() => setOpen(null)}
-          onCreated={(id) => (setOpen(null), router.push(`/supplier-returns/${id}`))}
-        />
-      ) : null}
     </>
   );
 }

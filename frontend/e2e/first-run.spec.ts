@@ -794,7 +794,9 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
 
   await page.goto("/supplier-returns");
   await page.getByRole("button", { name: "Qaytarish" }).first().click();
-  const drawer = page.getByRole("dialog").last();
+  // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = qy)
+  await expect(page).toHaveURL(/\/supplier-returns\/new$/);
+  const drawer = page.getByRole("main");
   await drawer.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
   await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();

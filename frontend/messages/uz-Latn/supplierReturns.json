@@ -124,6 +124,7 @@
     "dApproveT": "{n} ni tasdiqlaysizmi?",
     "dApprove": "«{zone}» zonasidan {n} qator, {q} dona yetkazib beruvchiga qaytariladi.",
     "dApproveDebt": "«{s}» oldidagi qarz {amount} ga kamayadi.",
-    "dApproveBonus": "{amount} bonus balansidan hisoblanadi."
+    "dApproveBonus": "{amount} bonus balansidan hisoblanadi.",
+    "crumbNew": "Yangi"
   }
 }
