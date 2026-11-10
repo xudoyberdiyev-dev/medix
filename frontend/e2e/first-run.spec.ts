@@ -638,8 +638,8 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
 
   // Yangi qoralama toʻliq sahifada (prototip TransferDoc): avtomatik saqlanadi → hujjat sahifasi, tahrirlash davom etadi
   await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
-  await expect(page.getByText(/^Saqlandi · /)).toBeVisible();
-  await expect(page.getByLabel(/E2E-01 — joʻnatish soni/)).toHaveValue("5");
+  await expect(page.getByRole("main").getByText(/^Saqlandi · /)).toBeVisible();
+  await expect(page.getByRole("main").getByLabel(/E2E-01 — joʻnatish soni/)).toHaveValue("5");
   await expect(page.getByRole("heading", { name: /Ombor koʻchirish/ })).toBeVisible();
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
   await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
@@ -837,15 +837,15 @@ test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx)
 
   await page.goto("/branch-sales");
   await page.getByRole("button", { name: "Savdo tuzish" }).first().click();
+  // Yangi qoralama — toʻliq sahifa (prototip TransferDoc, kind = fs): avtomatik saqlanadi → hujjat sahifasi
+  await expect(page).toHaveURL(/\/branch-sales\/new$/);
+  await expect(page.getByRole("heading", { name: "Yangi filiallararo savdo" })).toBeVisible();
   await choose(page, "Qaysi ombordan", /Markaziy ombor/);
   await choose(page, "Zona", /Asosiy saqlash/);
   await choose(page, "Xaridor ombori", /Samarqand ombori/);
   await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("1");
-  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
-  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
-
-  // Hujjat — toʻliq sahifa (prototip TransferDoc, kind = fs): Joʻnatish → tasdiqlash oynasi
   await expect(page).toHaveURL(/\/branch-sales\/\d+$/);
+  await expect(page.getByRole("main").getByText(/^Saqlandi · /)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Filiallararo savdo" })).toBeVisible();
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
   await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
@@ -873,9 +873,8 @@ test("CEO: FS kamomadi — topildi, sotuvchiga qaytariladi (qarz kamayadi)", asy
   await choose(page, "Zona", /Asosiy saqlash/);
   await choose(page, "Xaridor ombori", /Samarqand ombori/);
   await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("2");
-  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
-  await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
   await expect(page).toHaveURL(/\/branch-sales\/\d+$/);
+  await expect(page.getByRole("main").getByText(/^Saqlandi · /)).toBeVisible();
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
   await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
   await expect(page.getByText(/FS-.* joʻnatildi — yoʻlda/)).toBeVisible();

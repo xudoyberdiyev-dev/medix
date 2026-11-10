@@ -34,6 +34,7 @@ import {
   type WarehouseTransferDetail,
 } from "./api";
 import { okHistory, okSteps } from "./doc-model";
+import { TRANSFER_FS } from "@/features/branch-sales/api";
 import { AutosaveNote, OkDraftForm, type SaveState } from "./ok-draft-form";
 import { ShortagePanel } from "./shortage-panel";
 import { WarehouseTransferStatusBadge } from "./warehouse-transfers-page";
@@ -41,19 +42,20 @@ import { WarehouseTransferStatusBadge } from "./warehouse-transfers-page";
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
 
 /** OK — yangi qoralama toʻliq sahifa (prototip `TransferDoc`, raqamsiz): birinchi avtomatik saqlashda yaratiladi va hujjat sahifasiga oʻtiladi. */
-export function NewWarehouseTransferPage() {
+export function NewWarehouseTransferPage({ kind = "OK" }: { kind?: "OK" | "FS" }) {
   const t = useTranslations("warehouseTransfers.doc");
   const te = useTranslations("warehouseTransfers.edit");
+  const tb = useTranslations("branchSales");
   const me = useMe();
   const [draft, setDraft] = useState<SaveState>({ save: "idle", savedAt: "", dirty: false });
-  if (me.data && !can(me.data, TRANSFER_OK)) return <ForbiddenState />;
+  if (me.data && !can(me.data, kind === "FS" ? TRANSFER_FS : TRANSFER_OK)) return <ForbiddenState />;
   const steps = okSteps("DRAFT").map((s) => ({ label: t(`step.${s.key}`), state: s.state }));
   return (
     <div className="flex min-w-0 flex-col gap-4 pb-12">
       <DocumentHeader
         parent={{ label: t("parent"), href: "/transfers" }}
         crumb={te("crumbNew")}
-        title={te("newTitle")}
+        title={kind === "FS" ? tb("form.title") : te("newTitle")}
         meta={
           <>
             <Steps steps={steps} />
@@ -62,9 +64,9 @@ export function NewWarehouseTransferPage() {
         }
       />
       <Alert tone="info" title={t("bDraftT")}>
-        {te("bNew")}
+        {kind === "FS" ? te("bNewFs") : te("bNew")}
       </Alert>
-      <OkDraftForm doc={null} onState={setDraft} />
+      <OkDraftForm doc={null} onState={setDraft} kind={kind} />
     </div>
   );
 }

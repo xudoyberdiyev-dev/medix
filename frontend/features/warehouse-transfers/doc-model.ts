@@ -61,8 +61,20 @@ export function draftKey(d: OkDraft | null): string | null {
   return `${d.fromZoneId}>${d.toWarehouseId}|${d.note.trim()}|${lines.join(",")}`;
 }
 
+/** Tahrirlanadigan qoralama hujjati (OK yoki FS). */
+export interface DraftDoc {
+  id: number;
+  fromWarehouse: { id: number };
+  fromZone: { id: number };
+  toWarehouse: { id: number };
+  note?: string | null;
+  lines: { batchId: number; qty: number }[];
+  createdAt: string;
+  createdBy: string;
+}
+
 /** Saqlangan hujjatdan qoralama (tahrirlashni boshlash). */
-export function draftOf(doc: WarehouseTransferDetail): OkDraft {
+export function draftOf(doc: DraftDoc): OkDraft {
   return {
     fromZoneId: doc.fromZone.id,
     toWarehouseId: doc.toWarehouse.id,

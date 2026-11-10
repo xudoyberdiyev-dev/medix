@@ -230,6 +230,7 @@
     "reserved": "zahirada {q}",
     "fefoHint": "Partiyalar muddat boʻyicha (FEFO) — eng yaqini birinchi",
     "pickFromTitle": "Manba zonani tanlang",
-    "pickFromHint": "Qaysi ombor va zonadan joʻnatilishini tanlang — zonadagi partiyalar shu yerda chiqadi."
+    "pickFromHint": "Qaysi ombor va zonadan joʻnatilishini tanlang — zonadagi partiyalar shu yerda chiqadi.",
+    "bNewFs": "Sotuvchi ombor va zonani, xaridor filial omborini tanlang, partiyalarga joʻnatish sonini kiriting — qoralama avtomatik saqlanadi. Hisob-faktura joʻnatishda yoziladi."
   }
 }

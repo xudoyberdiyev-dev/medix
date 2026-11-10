@@ -24,7 +24,6 @@ import {
   type BranchSaleStatus,
   type BranchSaleSummary,
 } from "./api";
-import { BranchSaleDrawer } from "./branch-sale-drawer";
 import { BranchPayDialog, BranchPaymentsList, canPayFor, useBranchPayments } from "./branch-payments";
 import { HubTabs } from "@/components/shell/hub-tabs";
 
@@ -39,11 +38,12 @@ export function BranchSalesPage() {
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — hujjat sahifasiga yoʻnaltiriladi; «Koʻchirish» → «Yangi»: ?new=1 — yangi qoralama
   const router = useRouter();
-  const [creating, setCreating] = useState(() => params.get("new") === "1");
+  const isNew = params.get("new") === "1";
   const openId = Number(params.get("open"));
   useEffect(() => {
-    if (Number.isInteger(openId) && openId > 0) router.replace(`/branch-sales/${openId}`);
-  }, [openId, router]);
+    if (isNew) router.replace("/branch-sales/new");
+    else if (Number.isInteger(openId) && openId > 0) router.replace(`/branch-sales/${openId}`);
+  }, [isNew, openId, router]);
   const allowed = canAny(me.data, FS_VIEW_KEYS);
   const canCreate = can(me.data, TRANSFER_FS);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -105,7 +105,7 @@ export function BranchSalesPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setCreating(true)}>
+          <Button icon={Plus} onClick={() => router.push("/branch-sales/new")}>
             {t("create")}
           </Button>
         ) : null}
@@ -170,7 +170,7 @@ export function BranchSalesPage() {
                 description={t("empty.description", { hf: "HF" })}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setCreating(true)}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/branch-sales/new")}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -192,9 +192,6 @@ export function BranchSalesPage() {
           }
         />
       )}
-      {creating ? (
-        <BranchSaleDrawer id={null} onClose={() => setCreating(false)} onCreated={(id) => router.push(`/branch-sales/${id}`)} />
-      ) : null}
     </>
   );
 }

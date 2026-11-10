@@ -22,7 +22,16 @@ import { okHistory, okSteps } from "@/features/warehouse-transfers/doc-model";
 import { InfoRow, SideCard, ZoneCell } from "@/features/warehouse-transfers/transfer-doc-page";
 import { WarehouseTransferStatusBadge } from "@/features/warehouse-transfers/warehouse-transfers-page";
 import { formatDate, formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
-import { FS_VIEW_KEYS, useBranchSale, useCancelBranchSale, useSendBranchSale, type BranchSaleDetail, type BranchSaleLine } from "./api";
+import {
+  FS_VIEW_KEYS,
+  TRANSFER_FS,
+  useBranchSale,
+  useCancelBranchSale,
+  useSendBranchSale,
+  type BranchSaleDetail,
+  type BranchSaleLine,
+} from "./api";
+import { AutosaveNote, OkDraftForm, type SaveState } from "@/features/warehouse-transfers/ok-draft-form";
 import { BranchSaleReceiveModal } from "./branch-sale-drawer";
 import { BranchSaleShortagePanel } from "./shortage-panel";
 
@@ -55,6 +64,7 @@ function View({ doc }: { doc: BranchSaleDetail }) {
   const cancel = useCancelBranchSale();
   const [tab, setTab] = useState("doc");
   const [dlg, setDlg] = useState<"send" | "cancel" | "receive" | null>(null);
+  const [draft, setDraft] = useState<SaveState>({ save: "idle", savedAt: "", dirty: false });
   const fail = (e: unknown) => toast({ tone: "danger", title: tw("failed"), description: describeError(e).message ?? tw("retryHint") });
 
   // Server ham tekshiradi: joʻnatish / bekor qilish — sotuvchi filial, qabul — xaridor filial
@@ -66,6 +76,7 @@ function View({ doc }: { doc: BranchSaleDetail }) {
   const canCancel = st === "DRAFT" && can(me.data, TRANSFER_CANCEL) && side(doc.seller.id);
   const canReceive = st === "IN_TRANSIT" && can(me.data, TRANSFER_RECEIVE) && side(doc.buyer.id);
   const received = st === "RECEIVED";
+  const editable = st === "DRAFT" && can(me.data, TRANSFER_FS) && side(doc.seller.id);
   const diff = received && doc.shortageQty > 0;
   const money = Boolean(doc.total);
   const steps = okSteps(st).map((s) => ({ label: t(`step.${s.key}`), state: s.state }));
@@ -160,12 +171,17 @@ function View({ doc }: { doc: BranchSaleDetail }) {
             {fromPlace} → {toPlace}
           </span>
         }
-        meta={<Steps steps={steps} />}
+        meta={
+          <>
+            <Steps steps={steps} />
+            {editable ? <AutosaveNote state={draft} /> : null}
+          </>
+        }
         actions={
           <>
             <RowMenu items={menu} label={t("more")} />
             {canSend ? (
-              <Button icon={Truck} loading={send.isPending} onClick={() => setDlg("send")}>
+              <Button icon={Truck} loading={send.isPending} disabled={editable && draft.dirty} onClick={() => setDlg("send")}>
                 {t("send")}
               </Button>
             ) : null}
@@ -206,7 +222,9 @@ function View({ doc }: { doc: BranchSaleDetail }) {
         value={tab}
         onChange={setTab}
       />
-      {tab === "doc" ? (
+      {tab === "doc" && editable ? (
+        <OkDraftForm doc={doc} onState={setDraft} kind="FS" />
+      ) : tab === "doc" ? (
         <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div className="flex min-w-0 flex-col gap-4">
             <section className="rounded-card border border-border bg-surface">

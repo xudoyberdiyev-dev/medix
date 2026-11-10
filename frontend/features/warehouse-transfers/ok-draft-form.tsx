@@ -15,8 +15,9 @@ import { KIND_PAGE } from "@/features/transfers/model";
 import { linesFrom, type ZoneStockRow } from "@/features/zone-transfers/api";
 import { useLineErrorText } from "@/features/zone-transfers/line-error";
 import { formatDate, formatQuantity } from "@/lib/format";
-import { useCreateWarehouseTransfer, useSourceZoneStock, useUpdateWarehouseTransfer, type WarehouseTransferDetail } from "./api";
-import { draftKey, draftOf, fefo, type OkDraft } from "./doc-model";
+import { useBuyerWarehouses, useCreateBranchSale, useSellerZoneStock, useUpdateBranchSale } from "@/features/branch-sales/api";
+import { useCreateWarehouseTransfer, useSourceZoneStock, useUpdateWarehouseTransfer } from "./api";
+import { draftKey, draftOf, fefo, type DraftDoc, type OkDraft } from "./doc-model";
 import { InfoRow, SideCard, ZoneCell } from "./transfer-doc-page";
 
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
@@ -42,7 +43,18 @@ export function AutosaveNote({ state }: { state: SaveState }) {
  * OK qoralamasi — tahrirlash (prototip `TransferDoc`, editable): Turi, Qayerdan (ombor + zona), Qayerga, izoh; manba zona partiyalari
  * FEFO tartibida, joʻnatish soni; oʻzgarish 0,8 s dan keyin avtomatik saqlanadi (yangi — yaratiladi va hujjat sahifasiga oʻtiladi).
  */
-export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | null; onState: (s: SaveState) => void }) {
+export function OkDraftForm({
+  doc,
+  onState,
+  kind = "OK",
+}: {
+  doc: DraftDoc | null;
+  onState: (s: SaveState) => void;
+  /** OK — filial ichida; FS — boshqa filial ombori (xaridor), hisob-faktura joʻnatishda. */
+  kind?: "OK" | "FS";
+}) {
+  const fs = kind === "FS";
+  const tb = useTranslations("branchSales");
   const t = useTranslations("warehouseTransfers.edit");
   const tf = useTranslations("warehouseTransfers.form");
   const td = useTranslations("warehouseTransfers.doc");
@@ -52,8 +64,11 @@ export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | n
   const router = useRouter();
   const warehouses = useWarehouses();
   const branches = useBranchList();
-  const create = useCreateWarehouseTransfer();
-  const update = useUpdateWarehouseTransfer();
+  const okCreate = useCreateWarehouseTransfer();
+  const okUpdate = useUpdateWarehouseTransfer();
+  const fsCreate = useCreateBranchSale();
+  const fsUpdate = useUpdateBranchSale();
+  const busy = okCreate.isPending || okUpdate.isPending || fsCreate.isPending || fsUpdate.isPending;
   const [warehouseId, setWarehouseId] = useState<string | null>(doc ? String(doc.fromWarehouse.id) : null);
   const [fromId, setFromId] = useState<string | null>(doc ? String(doc.fromZone.id) : null);
   const [toId, setToId] = useState<string | null>(doc ? String(doc.toWarehouse.id) : null);
@@ -65,17 +80,23 @@ export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | n
   const [save, setSave] = useState<SaveState["save"]>(doc ? "saved" : "idle");
   const [savedAt, setSavedAt] = useState(doc ? new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }) : "");
   const [error, setError] = useState<string | null>(null);
-  const stock = useSourceZoneStock(fromId ? Number(fromId) : null);
+  const okStock = useSourceZoneStock(!fs && fromId ? Number(fromId) : null);
+  const fsStock = useSellerZoneStock(fs && fromId ? Number(fromId) : null);
+  const stock = fs ? fsStock : okStock;
 
   const active = (warehouses.data ?? []).filter((w) => w.active);
   const warehouse = active.find((w) => String(w.id) === warehouseId);
-  const targets = active.filter((w) => warehouse && w.id !== warehouse.id && w.branchId === warehouse.branchId);
+  const buyers = useBuyerWarehouses(fs && warehouse ? warehouse.branchId : null);
+  const targets: { id: number; name: string; branchId: number }[] = fs
+    ? (buyers.data ?? []).map((w) => ({ id: w.id, name: w.name, branchId: w.branch.id }))
+    : active.filter((w) => warehouse && w.id !== warehouse.id && w.branchId === warehouse.branchId);
   const zones = warehouse?.zones ?? [];
   const from = zones.find((z) => String(z.id) === fromId);
-  const to = active.find((w) => String(w.id) === toId);
+  const to = targets.find((w) => String(w.id) === toId);
   const rows = useMemo(() => fefo(stock.data ?? []), [stock.data]);
   const picked = linesFrom(rows, qty);
-  const branchName = (id?: number) => branches.data?.find((b) => b.id === id)?.name ?? "";
+  const branchName = (id?: number) =>
+    branches.data?.find((b) => b.id === id)?.name ?? buyers.data?.find((w) => w.branch.id === id)?.branch.name ?? "";
   const place = (w?: { name: string; branchId: number }) => (w ? [branchName(w.branchId), w.name].filter(Boolean).join(" · ") : "—");
 
   const draft: OkDraft | null =
@@ -83,7 +104,6 @@ export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | n
       ? { fromZoneId: from.id, toWarehouseId: Number(toId), note: note.trim(), lines: picked.lines }
       : null;
   const key = draftKey(draft);
-  const busy = create.isPending || update.isPending;
   const dirty = key !== null && key !== savedKey;
 
   useEffect(() => onState({ save, savedAt, dirty: dirty || busy }), [onState, save, savedAt, dirty, busy]);
@@ -102,12 +122,12 @@ export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | n
         setError(null);
       };
       const fail = (e: unknown) => (setSave("error"), setError(describeError(e).message ?? tw("saveFailed")));
-      if (doc) update.mutate({ id: doc.id, body: d }, { onSuccess: ok, onError: fail });
-      else
-        create.mutate(d, {
-          onSuccess: (r) => (ok(), router.replace(`/warehouse-transfers/${r.id}`)),
-          onError: fail,
-        });
+      const created = (id: number) => (ok(), router.replace(`${fs ? "/branch-sales" : "/warehouse-transfers"}/${id}`));
+      if (fs) {
+        if (doc) fsUpdate.mutate({ id: doc.id, body: d }, { onSuccess: ok, onError: fail });
+        else fsCreate.mutate(d, { onSuccess: (r) => created(r.id), onError: fail });
+      } else if (doc) okUpdate.mutate({ id: doc.id, body: d }, { onSuccess: ok, onError: fail });
+      else okCreate.mutate(d, { onSuccess: (r) => created(r.id), onError: fail });
     }, 800);
     return () => clearTimeout(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- faqat kalit oʻzgarganda
@@ -176,10 +196,8 @@ export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | n
           <div className="grid grid-cols-1 gap-4 px-5 py-4 md:grid-cols-3">
             <Select
               label={td("hKind")}
-              value="OK"
-              onChange={(v) =>
-                v === "ZK" ? router.push("/zone-transfers/new") : v === "FS" ? router.push(`${KIND_PAGE.FS}?new=1`) : undefined
-              }
+              value={kind}
+              onChange={(v) => (v && v !== kind ? router.push(`${KIND_PAGE[v as "ZK" | "OK" | "FS"]}/new`) : undefined)}
               options={(["ZK", "OK", "FS"] as const).map((k) => ({ value: k, label: tk(k) }))}
               disabled={doc !== null}
               hint={doc ? t("kindLocked") : undefined}
@@ -201,7 +219,7 @@ export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | n
               required
             />
             <Select
-              label={tf("toWarehouse")}
+              label={fs ? tb("form.buyerWarehouse") : tf("toWarehouse")}
               value={toId}
               onChange={setToId}
               options={targets.map((w) => ({ value: String(w.id), label: w.name, sub: branchName(w.branchId) }))}
@@ -217,11 +235,12 @@ export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | n
             {doc ? <InfoRow k={td("hBy")} v={doc.createdBy} /> : null}
           </dl>
         </section>
-        {warehouse && targets.length === 0 ? (
-          <Alert tone="info" title={tf("noTargetsTitle")}>
-            {tf("noTargetsBody", { fs: "FS" })}
+        {warehouse && targets.length === 0 && (!fs || buyers.data) ? (
+          <Alert tone="info" title={fs ? tb("form.noTargetsTitle") : tf("noTargetsTitle")}>
+            {fs ? tb("form.noTargetsBody", { ok: "OK" }) : tf("noTargetsBody", { fs: "FS" })}
           </Alert>
         ) : null}
+        {fs ? <Alert tone="info" title={tb("form.priceNote")} /> : null}
         <section className="rounded-card border border-border bg-surface">
           <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4">
             <h2 className="flex items-center gap-2 text-subtitle">
