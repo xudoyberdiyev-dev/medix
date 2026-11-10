@@ -2,8 +2,8 @@
 
 import { CircleCheck, Clock, FileMinus, Plus, ShieldAlert, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -49,11 +49,13 @@ export function WriteOffsPage() {
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [reason, setReason] = useState<string | null>(params.get("reason"));
   const [page, setPage] = useState(1);
-  // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi
-  const [open, setOpen] = useState<{ id: number | null } | null>(() => {
-    const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
-  });
+  // Bildirishnomadan oʻtish: ?open=<id> — hujjat sahifasiga yoʻnaltiriladi (prototip StockDocs — toʻliq sahifa)
+  const router = useRouter();
+  const [creating, setCreating] = useState(false);
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/write-offs/${openId}`);
+  }, [openId, router]);
   const allowed = canAny(me.data, HC_VIEW_KEYS);
   const canCreate = can(me.data, HC_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -102,7 +104,7 @@ export function WriteOffsPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => setCreating(true)}>
             {t("create")}
           </Button>
         ) : null}
@@ -116,7 +118,7 @@ export function WriteOffsPage() {
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setOpen({ id: d.id })}
+          onRowClick={(d) => router.push(`/write-offs/${d.id}`)}
           toolbar={
             <div className="flex gap-3">
               <div className="w-56">
@@ -153,7 +155,7 @@ export function WriteOffsPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => setCreating(true)}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -175,7 +177,13 @@ export function WriteOffsPage() {
           }
         />
       )}
-      {open ? <WriteOffDrawer id={open.id} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} /> : null}
+      {creating ? (
+        <WriteOffDrawer
+          id={null}
+          onClose={() => setCreating(false)}
+          onCreated={(id) => (setCreating(false), router.push(`/write-offs/${id}`))}
+        />
+      ) : null}
     </>
   );
 }

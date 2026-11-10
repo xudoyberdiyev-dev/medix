@@ -106,5 +106,21 @@
     "noLines": "Kamida bitta partiyaga hisobdan chiqarish sonini kiriting.",
     "sent": "Tasdiqqa yuborildi",
     "done": "Tovar hisobdan chiqarildi"
+  },
+  "doc": {
+    "loading": "Hujjat yuklanmoqda",
+    "parent": "Hisobdan chiqarish",
+    "stepCreated": "Yaratildi",
+    "stepApproval": "Tasdiqlash",
+    "stepDirector": "Direktor tasdigʻi",
+    "stepPosted": "Oʻtkazildi",
+    "bPosted": "Oʻtkazildi · {at} · {who}",
+    "sCost": "Tannarxda summa",
+    "sBy": "Yaratdi",
+    "sPosted": "Tasdiqladi",
+    "sRejected": "Rad etdi",
+    "dApproveT": "{n} ni tasdiqlaysizmi?",
+    "dApprove": "«{zone}» zonasidan {n} qator, {q} dona qoldiqdan chiqariladi.",
+    "dApproveCost": "Tannarxda {amount} xarajatga yoziladi."
   }
 }

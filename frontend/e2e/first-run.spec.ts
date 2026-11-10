@@ -706,9 +706,12 @@ test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, 
   await drawer.getByLabel("Dalolatnoma raqami").fill("E2E-AKT-1");
   await drawer.getByRole("button", { name: "Hisobdan chiqarish", exact: true }).click();
   await expect(page.getByText("Tovar hisobdan chiqarildi")).toBeVisible();
-  await expect(drawer.getByText("3.601,00", { exact: false }).first()).toBeVisible();
-  await page.keyboard.press("Escape");
+  // Hujjat — toʻliq sahifa (prototip StockDocs, kind = hc): tannarx bilan
+  await expect(page).toHaveURL(/\/write-offs\/\d+$/);
+  await expect(page.getByRole("main").getByText("3.601,00", { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole("main").getByText(/^Oʻtkazildi · \d/)).toBeVisible();
 
+  await page.goto("/write-offs");
   const row = page.getByRole("row", { name: /HC-/ }).first();
   await expect(row).toContainText("Oʻtkazildi");
   await expect(row).toContainText("Shikastlangan");
