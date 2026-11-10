@@ -27,6 +27,8 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 
 /**
  * Kassa (KO) va bank / Terminal (BO) operatsiyalari (SPEC 5.5): kirim yoki chiqim, modda bilan. Kassadan 2 000 000 so'mdan katta
@@ -37,7 +39,6 @@ import uz.medix.shared.security.Actor;
 class CashOps {
 
     /** Shu summadan katta kassa chiqimi tasdiq talab qiladi (SPEC 5.5). */
-    static final Money APPROVAL_LIMIT = Money.of(2_000_000);
 
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
 
@@ -49,10 +50,12 @@ class CashOps {
     private final AuditLog audit;
     private final Clock clock;
     private final Notifications notifications;
+    private final SystemSettings settings;
 
     CashOps(JdbcClient jdbc, MoneyLedger money, Accounts accounts, CashierGuard cashiers, DocumentSequenceService numbers, AuditLog audit, Clock clock,
-            Notifications notifications) {
+            Notifications notifications, SystemSettings settings) {
         this.notifications = notifications;
+        this.settings = settings;
         this.jdbc = jdbc;
         this.money = money;
         this.accounts = accounts;
@@ -108,7 +111,7 @@ class CashOps {
         if (date.isAfter(today())) {
             throw MedixException.badRequest("payment.dateFuture");
         }
-        boolean needsApproval = acc.kind() == Accounts.Kind.CASH && r.direction() == Direction.OUT && amount.compareTo(APPROVAL_LIMIT) > 0;
+        boolean needsApproval = acc.kind() == Accounts.Kind.CASH && r.direction() == Direction.OUT && amount.compareTo(settings.money(SettingKey.cashBranchApprove)) > 0;
         long id = insert(actor, acc, r.direction(), r.itemId(), amount, date, blank(r.party()), blank(r.note()), blank(r.baseNo()), OpSource.MANUAL,
                 needsApproval ? OpStatus.PENDING : OpStatus.POSTED);
         if (!needsApproval) {

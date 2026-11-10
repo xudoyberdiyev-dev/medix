@@ -12,6 +12,7 @@ import {
   OctagonX,
   PackageCheck,
   Plus,
+  Lock,
   TriangleAlert,
   Truck,
   Warehouse,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge, type Tone } from "@/components/ui/badge";
@@ -36,6 +38,7 @@ import { TRANSFER_ANY } from "@/components/shell/nav";
 import { cn } from "@/lib/cn";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { api, unwrap } from "@/lib/api/client";
 import { useTransfersOverview } from "./api";
 import {
   EMPTY_FILTERS,
@@ -336,6 +339,11 @@ export function TransfersPage() {
           onClick={() => reset({ states: ["DIFF"] })}
         />
       </div>
+      <InventoryLocks
+        branchId={branchId}
+        enabled={canAny(me.data, ["inventory.view", "inventory.create", "inventory.count", "inventory.approve"])}
+      />
+      <ResolveBlock branchId={branchId} enabled={can(me.data, "stock.view")} />
       {overview.data?.truncated ? <Alert tone="info" title={t("truncated")} className="mb-3" /> : null}
       <div className="mb-3">
         <Tabs
@@ -450,4 +458,78 @@ export function TransfersPage() {
 
 function dead(x: TransferItem): boolean {
   return x.state === "CANCELLED" || x.state === "REJECTED";
+}
+
+/**
+ * «Hal qilinishi kerak» (prototip Transfers `resolveRows`): qabulda yetishmagan, hal qilinmagan OK/FS miqdorlari — qator bosilsa
+ * hujjat ochiladi (u yerda hisobdan chiqarish yoki manbaga qaytarish). Manba — `/api/stock/transit` (stock.view).
+ */
+function ResolveBlock({ branchId, enabled }: { branchId: number | null; enabled: boolean }) {
+  const t = useTranslations("transfers");
+  const router = useRouter();
+  const transit = useQuery({
+    queryKey: ["stock", "transit", branchId],
+    queryFn: () => unwrap(api.GET("/api/stock/transit", { params: { query: { branchId: branchId ?? undefined } } })),
+    enabled,
+  });
+  const rows = (transit.data ?? []).filter((r) => r.shortage);
+  if (rows.length === 0) return null;
+  return (
+    <section className="mb-4 flex flex-col gap-2 rounded-card border border-warning bg-surface px-4 py-3" aria-label={t("resolveT")}>
+      <h2 className="flex items-center gap-1.5 text-body font-semibold text-warning">
+        <TriangleAlert size={16} strokeWidth={1.5} aria-hidden />
+        {t("resolveT")}
+      </h2>
+      <p className="text-caption text-text-secondary">{t("resolveD")}</p>
+      <ul className="flex flex-col gap-1.5">
+        {rows.map((r) => (
+          <li key={`${r.kind}-${r.docId}-${r.batchNumber}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 text-body">
+            <button
+              type="button"
+              className="font-mono text-caption text-primary hover:underline"
+              onClick={() => router.push(`${KIND_PAGE[r.kind as keyof typeof KIND_PAGE]}?open=${r.docId}`)}
+            >
+              {r.number}
+            </button>
+            <span className="min-w-0">
+              {t("resolveRow", {
+                p: r.productName,
+                b: r.batchNumber,
+                q: formatQuantity(r.qty),
+                to: r.toBranch === r.fromBranch ? r.toWarehouse : `${r.toBranch} · ${r.toWarehouse}`,
+              })}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** Inventarizatsiya qulfi (prototip Transfers `ivLocks`): sanoq ochiq hujjat zonalari — tugaguncha koʻchirib boʻlmaydi. */
+function InventoryLocks({ branchId, enabled }: { branchId: number | null; enabled: boolean }) {
+  const t = useTranslations("transfers");
+  const active = useQuery({
+    queryKey: ["inventory-counts", "locks", branchId],
+    queryFn: async () => {
+      const pages = await Promise.all(
+        (["COUNTING", "CHECK"] as const).map((status) =>
+          unwrap(api.GET("/api/inventory-counts", { params: { query: { branchId: branchId ?? undefined, status, page: 0, size: 50 } } })),
+        ),
+      );
+      return pages.flatMap((p) => p.items);
+    },
+    enabled,
+  });
+  const items = active.data ?? [];
+  if (items.length === 0) return null;
+  return (
+    <div className="mb-4 flex flex-col gap-2">
+      {items.map((x) => (
+        <Alert key={x.id} tone="warning" icon={Lock} title={t("ivLockT", { n: x.number })}>
+          {t("ivLockD", { w: x.warehouse, z: x.zone?.name ?? t("ivAllZones") })}
+        </Alert>
+      ))}
+    </div>
+  );
 }

@@ -92,7 +92,7 @@ class SalesReportController {
                 case REGION -> "Hudud";
                 case PAYMENT_TYPE -> "Toʻlov turi";
             };
-            List<String> titles = new ArrayList<>(List.of(first, "Buyurtmalar", "Sotuv", "Qaytarish", "Sof savdo (QQS bilan)"));
+            List<String> titles = new ArrayList<>(List.of(first, "Buyurtmalar", "Sotuv", "Chegirma", "Qaytarish", "Sof savdo (QQS bilan)"));
             if (r.costVisible()) {
                 titles.addAll(List.of("Tannarx", "Yalpi foyda (QQSsiz)"));
             }
@@ -109,7 +109,7 @@ class SalesReportController {
                 write(sheet.createRow(n++), row, r.costVisible(), null, right);
             }
             write(sheet.createRow(n), r.total(), r.costVisible(), bold, boldRight);
-            int[] widths = {40, 12, 18, 18, 22, 18, 20};
+            int[] widths = {40, 12, 18, 16, 18, 22, 18, 20};
             for (int i = 0; i < titles.size(); i++) {
                 sheet.setColumnWidth(i, widths[i] * 256);
             }
@@ -136,7 +136,7 @@ class SalesReportController {
             name.setCellStyle(text);
         }
         x.createCell(1).setCellValue(r.orders());
-        List<String> values = new ArrayList<>(List.of(r.sales(), r.returns(), r.net()));
+        List<String> values = new ArrayList<>(List.of(r.sales(), r.discount(), r.returns(), r.net()));
         if (cost) {
             values.add(r.cost());
             values.add(r.profit());

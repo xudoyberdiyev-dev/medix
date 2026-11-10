@@ -2,34 +2,32 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { AlarmClock, ArrowDownLeft, FileCheck2, HandCoins, Plus } from "lucide-react";
+import { AlarmClock, ArrowDownLeft, Building2, FileCheck2, HandCoins, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MultiFilter } from "@/components/ui/multi-filter";
-import { Drawer } from "@/components/ui/drawer";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { Checkbox } from "@/components/ui/selection-controls";
-import { can } from "@/features/auth/can";
+import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { ActSection } from "./act-section";
-import { AdvanceOffsetButton } from "./advance-offset";
 import { HubTabs } from "@/components/shell/hub-tabs";
 import { DebtStatusBadge, ReceivablesSummary, UsedBar } from "./receivables";
 import { AGE_KEYS, DEBT_TABS, inAges, inTab, statusOf, sumOf, type AgeKey, type DebtStatus, type DebtTab } from "./receivables-model";
 
 export type DebtRow = components["schemas"]["DebtRow"];
 export type DebtDoc = components["schemas"]["DebtDoc"];
+type GroupDebtRow = components["schemas"]["GroupDebtRow"];
 type Side = "CUSTOMER" | "SUPPLIER";
 
 const CONFIG = {
@@ -72,12 +70,13 @@ export function DebtsPage({ side }: { side: Side }) {
   });
   const [q, setQ] = useState("");
   const [overdueOnly, setOverdueOnly] = useState(false);
-  const [open, setOpen] = useState<DebtRow | null>(null);
   const router = useRouter();
   const isCustomer = side === "CUSTOMER";
   const [tab, setTab] = useState<DebtTab>("all");
   const [ages, setAges] = useState<AgeKey[]>([]);
   const [statuses, setStatuses] = useState<DebtStatus[]>([]);
+  const [regions, setRegions] = useState<string[]>([]);
+  const [operators, setOperators] = useState<string[]>([]);
   const all = useMemo(() => report.data?.rows ?? [], [report.data]);
   const rows = useMemo(
     () =>
@@ -85,20 +84,60 @@ export function DebtsPage({ side }: { side: Side }) {
         (r) =>
           matchesDebt(r, q) &&
           (isCustomer
-            ? inTab(r, tab) && inAges(r, ages) && (statuses.length === 0 || statuses.includes(statusOf(r)))
+            ? inTab(r, tab) &&
+              inAges(r, ages) &&
+              (statuses.length === 0 || statuses.includes(statusOf(r))) &&
+              (regions.length === 0 || regions.includes(r.region ?? "")) &&
+              (operators.length === 0 || (r.operator ?? "").split(", ").some((o) => operators.includes(o)))
             : !overdueOnly || r.buckets.overdue !== "0.00"),
       ),
-    [all, q, overdueOnly, isCustomer, tab, ages, statuses],
+    [all, q, overdueOnly, isCustomer, tab, ages, statuses, regions, operators],
   );
-  const filtered = isCustomer ? q !== "" || tab !== "all" || ages.length > 0 || statuses.length > 0 : q !== "" || overdueOnly;
+  const filtered = isCustomer
+    ? q !== "" || tab !== "all" || ages.length > 0 || statuses.length > 0 || regions.length > 0 || operators.length > 0
+    : q !== "" || overdueOnly;
   const clearFilters = () => {
     setQ("");
     setOverdueOnly(false);
     setTab("all");
     setAges([]);
     setStatuses([]);
+    setRegions([]);
+    setOperators([]);
   };
   const tr = useTranslations("debts.recv");
+  const [hideGroup, setHideGroup] = useState(true);
+  const groupColumns: TableColumn<GroupDebtRow>[] = [
+    {
+      key: "debtor",
+      title: tr("groupDebtor"),
+      render: (g) => (
+        <span className="flex items-center gap-2">
+          <span className="font-medium">{g.debtor}</span>
+          <Badge tone="neutral" icon={Building2}>
+            {tr("groupBadge")}
+          </Badge>
+        </span>
+      ),
+    },
+    { key: "creditor", title: tr("groupCreditor") },
+    {
+      key: "amount",
+      title: tr("groupAmount"),
+      align: "right",
+      render: (g) => <span className="tabular-nums">{formatMoney(g.amount)}</span>,
+    },
+  ];
+  // Hudud / Operator chiplari (prototip Receivables): qiymatlar hisobotdagi qatorlardan, «Koʻrsatilmagan» — boʻsh
+  const valuesOf = (pick: (r: DebtRow) => string[]) => {
+    const counts = new Map<string, number>();
+    for (const r of all) for (const v of pick(r)) counts.set(v, (counts.get(v) ?? 0) + 1);
+    return [...counts.entries()]
+      .sort((a, b) => (a[0] === "" ? 1 : b[0] === "" ? -1 : a[0].localeCompare(b[0])))
+      .map(([value, count]) => ({ value, label: value || tr("noValue"), count }));
+  };
+  const regionOptions = valuesOf((r) => [r.region ?? ""]);
+  const operatorOptions = valuesOf((r) => (r.operator ? r.operator.split(", ") : [""]));
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden", { title })} />;
 
@@ -157,6 +196,8 @@ export function DebtsPage({ side }: { side: Side }) {
           <div className="font-medium">{r.name}</div>
           <div className="text-caption text-text-secondary">
             {t("tin", { tin: "" }).trim()} <span className="font-mono">{r.tin}</span>
+            {r.region ? ` · ${r.region}` : ""}
+            {r.operator ? ` · ${r.operator}` : ""}
           </div>
         </div>
       ),
@@ -229,6 +270,17 @@ export function DebtsPage({ side }: { side: Side }) {
               allActive={tab === "all" && ages.length === 0 && statuses.length === 0}
             />
           ) : null}
+          {report.data && report.data.groupDebt !== "0.00" ? (
+            <div className="-mt-1 flex items-center gap-2 rounded-control border border-border bg-background px-3 py-2 text-[13px] text-text-secondary">
+              <Building2 size={14} strokeWidth={1.5} aria-hidden />
+              <span>{tr("groupNote", { s: formatMoney(report.data.groupDebt) })}</span>
+              {canAny(me.data, ["transfer.view", "transfer.fs"]) ? (
+                <Link href="/branch-sales" className="ml-auto text-primary hover:underline">
+                  {tr("groupOpen")}
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
           <Tabs
             aria-label={tr("tabsLabel")}
             value={tab}
@@ -248,7 +300,7 @@ export function DebtsPage({ side }: { side: Side }) {
           rows={rows}
           rowKey={(r) => String(r.counterpartyId)}
           loading={!ready || report.isPending}
-          onRowClick={setOpen}
+          onRowClick={(r) => router.push(`/debts/${cfg.path}/${r.counterpartyId}?name=${encodeURIComponent(r.name)}`)}
           rowActions={
             isCustomer
               ? (r) => (
@@ -306,6 +358,8 @@ export function DebtsPage({ side }: { side: Side }) {
               </div>
               {isCustomer ? (
                 <>
+                  <MultiFilter label={tr("regionFilter")} options={regionOptions} selected={regions} onChange={setRegions} />
+                  <MultiFilter label={tr("operatorFilter")} options={operatorOptions} selected={operators} onChange={setOperators} />
                   <MultiFilter
                     label={tr("statusFilter")}
                     options={(["ok", "overdue", "limit", "adv"] as const).map((v) => ({
@@ -326,6 +380,9 @@ export function DebtsPage({ side }: { side: Side }) {
                     selected={ages}
                     onChange={setAges}
                   />
+                  {report.data && report.data.groupRows.length > 0 ? (
+                    <Checkbox label={tr("hideGroup")} checked={hideGroup} onChange={setHideGroup} />
+                  ) : null}
                   {filtered ? (
                     <Button variant="tertiary" size="sm" onClick={clearFilters}>
                       {tr("clearFilters")}
@@ -346,116 +403,17 @@ export function DebtsPage({ side }: { side: Side }) {
           }
         />
       )}
-      {open ? <DocsDrawer side={side} row={open} branchId={branchId} onClose={() => setOpen(null)} /> : null}
+      {isCustomer && !hideGroup && report.data && report.data.groupRows.length > 0 ? (
+        <div className="mt-4">
+          <Table
+            caption={tr("groupTitle")}
+            density="compact"
+            columns={groupColumns}
+            rows={report.data.groupRows}
+            rowKey={(g) => `${g.debtorId}:${g.creditorId}`}
+          />
+        </div>
+      ) : null}
     </>
-  );
-}
-
-function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; onClose: () => void }) {
-  const t = useTranslations("debts");
-  const [tab, setTab] = useState("docs");
-  const docs = useQuery({
-    queryKey: ["debts", CONFIG[props.side].path, "docs", props.row.counterpartyId, props.branchId],
-    queryFn: () =>
-      props.side === "CUSTOMER"
-        ? unwrap(
-            api.GET("/api/debts/customers/{id}/docs", {
-              params: { path: { id: props.row.counterpartyId }, query: { branchId: props.branchId ?? undefined } },
-            }),
-          )
-        : unwrap(
-            api.GET("/api/debts/suppliers/{id}/docs", {
-              params: { path: { id: props.row.counterpartyId }, query: { branchId: props.branchId ?? undefined } },
-            }),
-          ),
-  });
-  const columns: TableColumn<DebtDoc>[] = [
-    { key: "docNumber", title: t("col.document"), mono: true },
-    { key: "date", title: t("col.date"), render: (d) => formatIsoDate(d.date) },
-    { key: "dueDate", title: t("col.dueDate"), render: (d) => formatIsoDate(d.dueDate) },
-    ...(props.branchId == null ? [{ key: "branch", title: t("col.branch") }] : []),
-    {
-      key: "open",
-      title: t("col.open"),
-      align: "right",
-      render: (d) =>
-        d.open.startsWith("-") ? (
-          <span className="tabular-nums">{t("advanceAmount", { amount: formatMoney(d.open.slice(1)) })}</span>
-        ) : (
-          money(d.open)
-        ),
-    },
-    {
-      key: "overdueDays",
-      title: t("col.overdue"),
-      render: (d) =>
-        d.overdueDays > 0 ? (
-          <Badge tone={d.overdueDays > 30 ? "danger" : "warning"} icon={AlarmClock}>
-            {t("days", { count: d.overdueDays })}
-          </Badge>
-        ) : null,
-    },
-  ];
-  return (
-    <Drawer
-      open
-      onClose={props.onClose}
-      size="lg"
-      kind={t(`side.${props.side}.party`)}
-      title={props.row.name}
-      subtitle={t("tin", { tin: props.row.tin })}
-      actions={<AdvanceOffsetButton side={props.side} branchId={props.branchId} counterpartyId={props.row.counterpartyId} />}
-    >
-      <dl className="mb-4 grid grid-cols-3 gap-4">
-        <div>
-          <dt className="text-caption text-text-secondary">{t("col.debt")}</dt>
-          <dd className="font-mono tabular-nums">
-            {formatMoney(props.row.buckets.debt)} {t("currency")}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-caption text-text-secondary">{t("overdueSum")}</dt>
-          <dd className="font-mono tabular-nums text-danger">
-            {formatMoney(props.row.buckets.overdue)} {t("currency")}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-caption text-text-secondary">{t("col.advance")}</dt>
-          <dd className="font-mono tabular-nums">
-            {formatMoney(props.row.buckets.advance)} {t("currency")}
-          </dd>
-        </div>
-      </dl>
-      <Tabs
-        aria-label={t("drawer.tabs")}
-        value={tab}
-        onChange={setTab}
-        items={[
-          { key: "docs", label: t("drawer.openDocs") },
-          { key: "act", label: t("drawer.act") },
-        ]}
-      />
-      <div className="mt-4">
-        {tab === "act" ? (
-          <ActSection side={props.side} counterpartyId={props.row.counterpartyId} branchId={props.branchId} />
-        ) : (
-          <>
-            {docs.error ? (
-              <ErrorState onRetry={() => docs.refetch()} />
-            ) : (
-              <Table
-                caption={t("drawer.openDocs")}
-                density="compact"
-                columns={columns}
-                rows={docs.data ?? []}
-                rowKey={(d) => `${d.branchId}:${d.docType}:${d.docId}`}
-                loading={docs.isPending}
-                emptyState={<EmptyState icon={HandCoins} title={t("drawer.emptyTitle")} description={t("drawer.emptyDescription")} />}
-              />
-            )}
-          </>
-        )}
-      </div>
-    </Drawer>
   );
 }

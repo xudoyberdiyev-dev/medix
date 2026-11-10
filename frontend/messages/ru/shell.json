@@ -19,6 +19,7 @@
     "transfersZone": "Внутри зоны",
     "transfersBranch": "Межфилиальные",
     "returns": "Виды возвратов",
+    "returnsCustomer": "Возврат от клиента",
     "returnsWriteOffs": "Списание",
     "returnsSupplier": "Возврат поставщику",
     "supplierDebts": "Разделы долгов поставщикам",

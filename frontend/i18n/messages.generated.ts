@@ -7,7 +7,9 @@ import uzLatn_branchPanel from "@/messages/uz-Latn/branchPanel.json";
 import uzLatn_branchSales from "@/messages/uz-Latn/branchSales.json";
 import uzLatn_cash from "@/messages/uz-Latn/cash.json";
 import uzLatn_common from "@/messages/uz-Latn/common.json";
+import uzLatn_company from "@/messages/uz-Latn/company.json";
 import uzLatn_counterparties from "@/messages/uz-Latn/counterparties.json";
+import uzLatn_customerReturns from "@/messages/uz-Latn/customerReturns.json";
 import uzLatn_debts from "@/messages/uz-Latn/debts.json";
 import uzLatn_dictionaries from "@/messages/uz-Latn/dictionaries.json";
 import uzLatn_employees from "@/messages/uz-Latn/employees.json";
@@ -32,6 +34,7 @@ import uzLatn_reconciliations from "@/messages/uz-Latn/reconciliations.json";
 import uzLatn_reports from "@/messages/uz-Latn/reports.json";
 import uzLatn_roles from "@/messages/uz-Latn/roles.json";
 import uzLatn_search from "@/messages/uz-Latn/search.json";
+import uzLatn_settings from "@/messages/uz-Latn/settings.json";
 import uzLatn_setup from "@/messages/uz-Latn/setup.json";
 import uzLatn_shell from "@/messages/uz-Latn/shell.json";
 import uzLatn_staff from "@/messages/uz-Latn/staff.json";
@@ -51,7 +54,9 @@ import uzCyrl_branchPanel from "@/messages/uz-Cyrl/branchPanel.json";
 import uzCyrl_branchSales from "@/messages/uz-Cyrl/branchSales.json";
 import uzCyrl_cash from "@/messages/uz-Cyrl/cash.json";
 import uzCyrl_common from "@/messages/uz-Cyrl/common.json";
+import uzCyrl_company from "@/messages/uz-Cyrl/company.json";
 import uzCyrl_counterparties from "@/messages/uz-Cyrl/counterparties.json";
+import uzCyrl_customerReturns from "@/messages/uz-Cyrl/customerReturns.json";
 import uzCyrl_debts from "@/messages/uz-Cyrl/debts.json";
 import uzCyrl_dictionaries from "@/messages/uz-Cyrl/dictionaries.json";
 import uzCyrl_employees from "@/messages/uz-Cyrl/employees.json";
@@ -76,6 +81,7 @@ import uzCyrl_reconciliations from "@/messages/uz-Cyrl/reconciliations.json";
 import uzCyrl_reports from "@/messages/uz-Cyrl/reports.json";
 import uzCyrl_roles from "@/messages/uz-Cyrl/roles.json";
 import uzCyrl_search from "@/messages/uz-Cyrl/search.json";
+import uzCyrl_settings from "@/messages/uz-Cyrl/settings.json";
 import uzCyrl_setup from "@/messages/uz-Cyrl/setup.json";
 import uzCyrl_shell from "@/messages/uz-Cyrl/shell.json";
 import uzCyrl_staff from "@/messages/uz-Cyrl/staff.json";
@@ -95,7 +101,9 @@ import ru_branchPanel from "@/messages/ru/branchPanel.json";
 import ru_branchSales from "@/messages/ru/branchSales.json";
 import ru_cash from "@/messages/ru/cash.json";
 import ru_common from "@/messages/ru/common.json";
+import ru_company from "@/messages/ru/company.json";
 import ru_counterparties from "@/messages/ru/counterparties.json";
+import ru_customerReturns from "@/messages/ru/customerReturns.json";
 import ru_debts from "@/messages/ru/debts.json";
 import ru_dictionaries from "@/messages/ru/dictionaries.json";
 import ru_employees from "@/messages/ru/employees.json";
@@ -120,6 +128,7 @@ import ru_reconciliations from "@/messages/ru/reconciliations.json";
 import ru_reports from "@/messages/ru/reports.json";
 import ru_roles from "@/messages/ru/roles.json";
 import ru_search from "@/messages/ru/search.json";
+import ru_settings from "@/messages/ru/settings.json";
 import ru_setup from "@/messages/ru/setup.json";
 import ru_shell from "@/messages/ru/shell.json";
 import ru_staff from "@/messages/ru/staff.json";
@@ -141,7 +150,9 @@ export const uzLatn = {
   "branchSales": uzLatn_branchSales,
   "cash": uzLatn_cash,
   "common": uzLatn_common,
+  "company": uzLatn_company,
   "counterparties": uzLatn_counterparties,
+  "customerReturns": uzLatn_customerReturns,
   "debts": uzLatn_debts,
   "dictionaries": uzLatn_dictionaries,
   "employees": uzLatn_employees,
@@ -166,6 +177,7 @@ export const uzLatn = {
   "reports": uzLatn_reports,
   "roles": uzLatn_roles,
   "search": uzLatn_search,
+  "settings": uzLatn_settings,
   "setup": uzLatn_setup,
   "shell": uzLatn_shell,
   "staff": uzLatn_staff,
@@ -188,7 +200,9 @@ export const uzCyrl = {
   "branchSales": uzCyrl_branchSales,
   "cash": uzCyrl_cash,
   "common": uzCyrl_common,
+  "company": uzCyrl_company,
   "counterparties": uzCyrl_counterparties,
+  "customerReturns": uzCyrl_customerReturns,
   "debts": uzCyrl_debts,
   "dictionaries": uzCyrl_dictionaries,
   "employees": uzCyrl_employees,
@@ -213,6 +227,7 @@ export const uzCyrl = {
   "reports": uzCyrl_reports,
   "roles": uzCyrl_roles,
   "search": uzCyrl_search,
+  "settings": uzCyrl_settings,
   "setup": uzCyrl_setup,
   "shell": uzCyrl_shell,
   "staff": uzCyrl_staff,
@@ -235,7 +250,9 @@ export const ru = {
   "branchSales": ru_branchSales,
   "cash": ru_cash,
   "common": ru_common,
+  "company": ru_company,
   "counterparties": ru_counterparties,
+  "customerReturns": ru_customerReturns,
   "debts": ru_debts,
   "dictionaries": ru_dictionaries,
   "employees": ru_employees,
@@ -260,6 +277,7 @@ export const ru = {
   "reports": ru_reports,
   "roles": ru_roles,
   "search": ru_search,
+  "settings": ru_settings,
   "setup": ru_setup,
   "shell": ru_shell,
   "staff": ru_staff,

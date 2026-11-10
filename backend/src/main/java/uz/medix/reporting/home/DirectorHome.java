@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -20,6 +20,8 @@ import uz.medix.finance.PartyLedger.Side;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.money.Money;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 
 /**
  * Direktor / Admin / Buxgalter bosh sahifasi (barcha filiallar) va Filial rahbari bosh sahifasi (o'z filiali) (SPEC 8): 4 karta (Savdo — sof, Mijozlar qarzi, Ta'minotchilarga qarz, Xarajatlar), filiallar kesimi,
@@ -32,7 +34,6 @@ class DirectorHome {
 
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
     private static final int TOP = 5;
-    static final int STALE_DAYS = 2;
     /** «Hammasi» filtridagi 11 katak (Rad etilgan va Bekor qilingan kirmaydi). */
     static final List<String> STATUSES = List.of("DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING",
             "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED");
@@ -93,7 +94,10 @@ class DirectorHome {
     private final DebtSummaries debts;
     private final Clock clock;
 
-    DirectorHome(JdbcClient jdbc, DebtSummaries debts, Clock clock) {
+    private final SystemSettings settings;
+
+    DirectorHome(JdbcClient jdbc, DebtSummaries debts, Clock clock, SystemSettings settings) {
+        this.settings = settings;
         this.jdbc = jdbc;
         this.debts = debts;
         this.clock = clock;
@@ -220,9 +224,14 @@ class DirectorHome {
         return new Home(f, t, today, branchId, byPayment(sales), new DebtCard(customers.debt(), customers.overdue(), customers.advance()),
                 new DebtCard(suppliers.debt(), suppliers.overdue(), suppliers.advance()), byPayment(expenses), byPayment(customerOpen),
                 byPayment(supplierOpen), rows, attention, top, daily, salesDocs, avgSale, m(group).toString(),
-                STALE_DAYS, statuses(branchId, null, f, t, today), operators(branchId, f, t, today),
+                staleDays(), statuses(branchId, null, f, t, today), operators(branchId, f, t, today),
                 canSeeCost ? suppliers(branchId, f, t, "owner_id", "employee", "full_name") : null,
                 canSeeCost ? suppliers(branchId, f, t, "supplier_id", "counterparty", "name") : null);
+    }
+
+    /** Buyurtma kechikishi (kun) — Sozlamalar → Savdo ({@code orderLateDays}). */
+    int staleDays() {
+        return settings.intValue(SettingKey.orderLateDays);
     }
 
     /** Buyurtma holatlari: createdBy berilsa — faqat shu xodim kiritgan buyurtmalar (Operator bosh sahifasi). */
@@ -240,7 +249,7 @@ class DirectorHome {
                   AND (status NOT IN ('DELIVERED', 'UNDELIVERED') OR (status_changed_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t)
                 GROUP BY status""")
                 .param("d", Date.valueOf(today))
-                .param("stale", Timestamp.from(clock.instant().minus(Duration.ofDays(STALE_DAYS))))
+                .param("stale", Timestamp.from(clock.instant().minus(Duration.ofDays(staleDays()))))
                 .param("b", branchId)
                 .param("e", createdBy)
                 .param("f", Date.valueOf(f))

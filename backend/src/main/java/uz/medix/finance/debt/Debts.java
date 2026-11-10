@@ -38,12 +38,21 @@ class Debts {
 
     record DebtRow(long counterpartyId, String name, String tin, @Schema(nullable = true) String phone, Buckets buckets, int maxOverdueDays,
             @Schema(nullable = true, description = "Kredit limiti (faqat bitta filial tanlanganda; mijoz)") String creditLimit,
-            @Schema(nullable = true) LocalDate lastPayment) {}
+            @Schema(nullable = true) LocalDate lastPayment, @Schema(nullable = true, description = "Hudud (mijoz kartochkasidan)") String region,
+            @Schema(nullable = true, description = "Masʼul operator (filial shartidan; filial tanlanmasa — barcha filiallardagilar)")
+            String operator,
+            @Schema(nullable = true, description = "To'lov sharti, kun (faqat bitta filial tanlanganda)") Integer paymentDays) {}
 
-    record DebtReport(@Schema(nullable = true) Long branchId, LocalDate today, Buckets totals, List<DebtRow> rows) {}
+    record DebtReport(@Schema(nullable = true) Long branchId, LocalDate today, Buckets totals, List<DebtRow> rows,
+            @Schema(description = "Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi") String groupDebt,
+            @Schema(description = "Guruh ichidagi qarz juftliklari (faqat musbat) — «Guruh ichidagini yashirish» oʻchirilganda qator") List<GroupDebtRow> groupRows) {}
+
+    @Schema(description = "Filiallararo qarz: debitor filial kreditor filialga qarzdor")
+    record GroupDebtRow(long debtorId, String debtor, long creditorId, String creditor, String amount) {}
 
     record DebtDoc(long branchId, String branch, String docType, long docId, String docNumber, LocalDate date, @Schema(nullable = true) LocalDate dueDate,
-            String open, int overdueDays) {}
+            String open, int overdueDays, @Schema(description = "Hujjat summasi") String total,
+            @Schema(description = "Qaytarishlar") String returned, @Schema(description = "To'langan (avans hisobga olinishi bilan)") String paid) {}
 
     record ActLine(java.time.Instant occurredAt, LocalDate date, String docType, long docId, String docNumber, @Schema(nullable = true) String note,
             @Schema(description = "Qarz oshdi") String debit, @Schema(description = "Qarz kamaydi") String credit, String balance) {}
@@ -110,17 +119,22 @@ class Debts {
             byParty.merge(first.counterpartyId(), Aging.of(docs, today), Aging.Result::plus);
         }
         if (byParty.isEmpty()) {
-            return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of());
+            List<GroupDebtRow> group = groupRows(side, branchId);
+            return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of(), groupSum(group), group);
         }
-        record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment) {}
+        record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment, String region, String operator, Integer days) {}
         String payDoc = side == Side.CUSTOMER ? "MT" : "YT";
         Map<Long, Info> info = new LinkedHashMap<>();
         jdbc.sql("""
-                SELECT c.id, c.name, c.tin, c.phone, t.credit_limit,
+                SELECT c.id, c.name, c.tin, c.phone, t.credit_limit, t.%s AS pay_days,
                        (SELECT max((p.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) FROM party_ledger p
-                        WHERE p.counterparty_id = c.id AND p.side = :s AND p.doc_type = :pd AND (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)) AS last_pay
+                        WHERE p.counterparty_id = c.id AND p.side = :s AND p.doc_type = :pd AND (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)) AS last_pay,
+                       rg.name AS region,
+                       (SELECT string_agg(DISTINCT e.full_name, ', ') FROM counterparty_branch_terms ot JOIN employee e ON e.id = ot.operator_employee_id
+                        WHERE ot.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR ot.branch_id = :b)) AS operator
                 FROM counterparty c LEFT JOIN counterparty_branch_terms t ON t.counterparty_id = c.id AND t.branch_id = :b
-                WHERE c.id IN (:ids)""")
+                LEFT JOIN region rg ON rg.id = c.region_id
+                WHERE c.id IN (:ids)""".formatted(side == Side.CUSTOMER ? "payment_days" : "supplier_payment_days"))
                 .param("s", side.name())
                 .param("pd", payDoc)
                 .param("b", branchId)
@@ -128,7 +142,8 @@ class Debts {
                 .query((rs, n) -> {
                     info.put(rs.getLong("id"), new Info(rs.getString("name"), rs.getString("tin"), rs.getString("phone"),
                             side == Side.CUSTOMER ? rs.getBigDecimal("credit_limit") : null,
-                            rs.getDate("last_pay") == null ? null : rs.getDate("last_pay").toLocalDate()));
+                            rs.getDate("last_pay") == null ? null : rs.getDate("last_pay").toLocalDate(), rs.getString("region"),
+                            side == Side.CUSTOMER ? rs.getString("operator") : null, rs.getObject("pay_days", Integer.class)));
                     return 0;
                 })
                 .list();
@@ -139,12 +154,35 @@ class Debts {
             total = total.plus(r);
             Info c = info.get(e.getKey());
             rows.add(new DebtRow(e.getKey(), c.name(), c.tin(), c.phone(), Buckets.of(r), r.maxOverdueDays(),
-                    c.limit() == null ? null : new Money(c.limit()).toString(), c.lastPayment()));
+                    c.limit() == null ? null : new Money(c.limit()).toString(), c.lastPayment(), c.region(), c.operator(), c.days()));
         }
         // Eng ko'p muddati o'tgan qarz birinchi, keyin umumiy qarz
         rows.sort(Comparator.comparing((DebtRow r) -> Money.of(r.buckets().overdue())).reversed()
                 .thenComparing((DebtRow r) -> Money.of(r.buckets().debt()), Comparator.reverseOrder()));
-        return new DebtReport(branchId, today, Buckets.of(total), rows);
+        List<GroupDebtRow> group = groupRows(side, branchId);
+        return new DebtReport(branchId, today, Buckets.of(total), rows, groupSum(group), group);
+    }
+
+    /**
+     * Filiallararo (FS) ochiq qarz, juftlik bo'yicha musbat qoldiq: mijozlar tomoni — boshqa filiallar bizga (kreditor = filial), YB
+     * tomoni — biz boshqa filiallarga (debitor = filial); filial tanlanmasa — barcha juftliklar.
+     */
+    private List<GroupDebtRow> groupRows(Side side, Long branchId) {
+        String col = side == Side.CUSTOMER ? "creditor_branch_id" : "debtor_branch_id";
+        return jdbc.sql("""
+                SELECT x.debtor_branch_id, d.name AS debtor, x.creditor_branch_id, c.name AS creditor, x.amt FROM (
+                    SELECT debtor_branch_id, creditor_branch_id, sum(amount) AS amt FROM branch_ledger
+                    WHERE CAST(:b AS BIGINT) IS NULL OR %s = :b GROUP BY 1, 2) x
+                JOIN branch d ON d.id = x.debtor_branch_id JOIN branch c ON c.id = x.creditor_branch_id
+                WHERE x.amt > 0 ORDER BY x.amt DESC, d.name""".formatted(col))
+                .param("b", branchId)
+                .query((rs, n) -> new GroupDebtRow(rs.getLong("debtor_branch_id"), rs.getString("debtor"), rs.getLong("creditor_branch_id"),
+                        rs.getString("creditor"), new Money(rs.getBigDecimal("amt")).toString()))
+                .list();
+    }
+
+    private static String groupSum(List<GroupDebtRow> rows) {
+        return rows.stream().map(r -> Money.of(r.amount())).reduce(Money.ZERO, Money::plus).toString();
     }
 
     /**
@@ -201,7 +239,8 @@ class Debts {
             for (PartyLedger.OpenDoc d : parties.openDocs(b, counterpartyId, side)) {
                 int overdue = d.dueDate() != null && d.dueDate().isBefore(today) && d.open().isPositive()
                         ? (int) java.time.temporal.ChronoUnit.DAYS.between(d.dueDate(), today) : 0;
-                out.add(new DebtDoc(b, name, d.type(), d.id(), d.number(), d.date(), d.dueDate(), d.open().toString(), overdue));
+                out.add(new DebtDoc(b, name, d.type(), d.id(), d.number(), d.date(), d.dueDate(), d.open().toString(), overdue,
+                        d.total().toString(), d.returned().toString(), d.paid().toString()));
             }
         }
         return out;

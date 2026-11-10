@@ -6,27 +6,28 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.sales.order.OrderModels.OrderStatus;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 
 /**
  * Ombor mudiri monitori (SPEC 5.4): bosqichlar ustunlari (Navbatda … Yuklanmoqda), jonli taymerlar, kechikkanlar.
  * Taymer: yig'ish va markirovkada — berilgan vaqt tugash payti; kechikish — shu paytdan o'tsa. Umumiy kechikish — buyurtma
- * shu holatda {@code medix.orders.late-days} kundan ortiq tursa.
+ * shu holatda Sozlamalardagi «Buyurtma kechikishi» ({@code orderLateDays}) kundan ortiq tursa.
  */
 @Service
 class OrderMonitor {
 
     private final JdbcClient jdbc;
-    private final int lateDays;
+    private final SystemSettings settings;
 
-    OrderMonitor(JdbcClient jdbc, @Value("${medix.orders.late-days:2}") int lateDays) {
+    OrderMonitor(JdbcClient jdbc, SystemSettings settings) {
         this.jdbc = jdbc;
-        this.lateDays = lateDays;
+        this.settings = settings;
     }
 
     record MonitorCard(
@@ -55,6 +56,7 @@ class OrderMonitor {
     @Transactional(readOnly = true)
     MonitorBoard board(Actor actor, Long branchId) {
         Instant now = Instant.now();
+        int lateDays = settings.intValue(SettingKey.orderLateDays);
         List<MonitorCard> cards = jdbc.sql("""
                 SELECT o.id, o.number, c.name AS customer, o.status, o.branch_id, o.pick_minutes, o.mark_minutes, o.pick_started_at,
                        o.mark_started_at, o.status_changed_at, pk.full_name AS picker, mk.full_name AS marker,

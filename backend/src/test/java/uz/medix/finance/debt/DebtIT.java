@@ -128,6 +128,13 @@ class DebtIT {
         entry(b, c2, "CUSTOMER", "MT", 9_400_006L, "-1000.00", null, null, null);
         entry(other, c2, "CUSTOMER", "SV", 9_400_007L, "5000.00", t.minusDays(40), null, null);
         jdbc.sql("INSERT INTO counterparty_branch_terms (counterparty_id, branch_id, credit_limit) VALUES (:c, :b, 10000)").param("c", c1).param("b", b).update();
+        // Hudud (kartochkadan) va masʼul operator (filial shartidan) — prototip Receivables filtrlari
+        long region = jdbc.sql("INSERT INTO region (name) VALUES (:n) RETURNING id").param("n", "Hudud " + UUID.randomUUID().toString().substring(0, 6))
+                .query(Long.class).single();
+        jdbc.sql("UPDATE counterparty SET region_id = :r WHERE id = :c").param("r", region).param("c", c1).update();
+        Session op = loginAs("OPERATOR", b);
+        jdbc.sql("UPDATE counterparty_branch_terms SET operator_employee_id = :e WHERE counterparty_id = :c AND branch_id = :b")
+                .param("e", op.id()).param("c", c1).param("b", b).update();
 
         Cookie cashier = loginAs("CASHIER", b).cookie();
         Cookie picker = loginAs("PICKER", b).cookie();
@@ -147,16 +154,25 @@ class DebtIT {
                 .andExpect(jsonPath("$.rows[0].buckets.overdue").value("2200.00"))
                 .andExpect(jsonPath("$.rows[0].maxOverdueDays").value(95))
                 .andExpect(jsonPath("$.rows[0].creditLimit").value("10000.00"))
+                .andExpect(jsonPath("$.rows[0].region", org.hamcrest.Matchers.startsWith("Hudud ")))
+                .andExpect(jsonPath("$.rows[0].operator").value("Sinov OPERATOR"))
+                .andExpect(jsonPath("$.rows[1].operator").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.rows[0].paymentDays").hasJsonPath())
                 .andExpect(jsonPath("$.rows[1].buckets.debt").value("0.00"))
                 .andExpect(jsonPath("$.rows[1].buckets.advance").value("1000.00"))
                 .andExpect(jsonPath("$.totals.debt").value("2900.00"))
-                .andExpect(jsonPath("$.totals.advance").value("1000.00"));
+                .andExpect(jsonPath("$.totals.advance").value("1000.00"))
+                .andExpect(jsonPath("$.groupDebt").exists())
+                .andExpect(jsonPath("$.groupRows").isArray());
 
         mvc.perform(get("/api/debts/customers/" + c1 + "/docs").param("branchId", "" + b).cookie(cashier))
                 .andExpect(jsonPath("$.length()").value(4))
                 .andExpect(jsonPath("$[0].docNumber").value("SV-TST-9400001"))
                 .andExpect(jsonPath("$[0].overdueDays").value(95))
-                .andExpect(jsonPath("$[1].open").value("1500.00"));
+                .andExpect(jsonPath("$[1].open").value("1500.00"))
+                .andExpect(jsonPath("$[0].total").exists())
+                .andExpect(jsonPath("$[0].returned").exists())
+                .andExpect(jsonPath("$[0].paid").exists());
 
         // Akt sverka: davr boshi 0, qarz oshdi 3 700, kamaydi 800, oxiri 2 900; boshqa filial xodimiga yopiq
         mvc.perform(get("/api/debts/customers/" + c1 + "/act").param("branchId", "" + b).cookie(cashier))

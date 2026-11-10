@@ -14,6 +14,7 @@ import uz.medix.shared.error.MedixException;
 import uz.medix.shared.pdf.PdfDocument;
 import uz.medix.shared.pdf.PdfFormat;
 import uz.medix.shared.pdf.PdfRenderer;
+import uz.medix.shared.pdf.PrintSettings;
 import uz.medix.shared.security.Actor;
 
 /** Hisob-faktura — server PDF (frontend {@code /print/invoice} bilan bir xil shakl, SPEC 300). */
@@ -28,11 +29,13 @@ class OrderInvoicePdf {
     private final OrderInvoices invoices;
     private final PdfRenderer pdf;
     private final JdbcClient jdbc;
+    private final PrintSettings print;
 
-    OrderInvoicePdf(OrderInvoices invoices, PdfRenderer pdf, JdbcClient jdbc) {
+    OrderInvoicePdf(OrderInvoices invoices, PdfRenderer pdf, JdbcClient jdbc, PrintSettings print) {
         this.invoices = invoices;
         this.pdf = pdf;
         this.jdbc = jdbc;
+        this.print = print;
     }
 
     @Transactional(readOnly = true)
@@ -62,6 +65,10 @@ class OrderInvoicePdf {
         vars.put("net", PdfFormat.money(d.netTotal()));
         vars.put("vat", PdfFormat.money(d.vatTotal()));
         vars.put("total", PdfFormat.money(d.total()));
+        PrintSettings.Signers signers = print.signers(d.branchId());
+        vars.put("head", signers.head());
+        vars.put("accountant", signers.accountant());
+        vars.put("reprint", print.registerPrint("HF", d.invoiceNumber(), actor.employeeId()));
         return new PdfDocument(d.invoiceNumber(), pdf.render("invoice", vars));
     }
 

@@ -6,6 +6,7 @@
     <style th:replace="~{_base :: css}"></style>
 </head>
 <body>
+<div class="reprint" th:if="${reprint != null}" th:text="${reprint}">Takroriy nusxa · 2</div>
 <div class="head center">
     <h1>Nakladnoy <span class="mono" th:text="${number}">NK-TSH-000001</span></h1>
     <div class="muted"><span th:text="${date}">06.11.2026</span> · buyurtma <span class="mono" th:text="${orderNumber}">BY</span></div>

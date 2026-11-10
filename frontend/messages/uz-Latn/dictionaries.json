@@ -110,5 +110,22 @@
     "saved": "Modda saqlandi",
     "created": "Modda qoʻshildi",
     "name": "Nomi"
+  },
+  "overview": {
+    "title": "Boshqa maʼlumotnomalar",
+    "subtitle": "Elementlar oʻchirilmaydi — faqat nofaol qilinadi. Nomlar lotin/kirill boʻyicha takrorlanmaydi.",
+    "count": "{n} ta element",
+    "fleetCount": "{drivers} haydovchi · {vehicles} mashina",
+    "last": "Oxirgi oʻzgarish: {d}",
+    "lastNone": "Hali oʻzgarmagan",
+    "kinds": {
+      "MANUFACTURER": "Ishlab chiqaruvchilar",
+      "CATEGORY": "Kategoriyalar",
+      "COUNTRY": "Davlatlar",
+      "UNIT": "Oʻlchov birliklari",
+      "REGION": "Hududlar",
+      "FLEET": "Haydovchilar va mashinalar",
+      "EXPENSE_ITEM": "Xarajat moddalari"
+    }
   }
 }

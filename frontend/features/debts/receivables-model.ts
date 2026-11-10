@@ -71,3 +71,36 @@ export function shareText(part: string, total: string): string {
   if (t <= 0) return "0%";
   return `${String(Math.round((toTiyin(part) / t) * 1000) / 10).replace(".", ",")}%`;
 }
+
+/** Qarz kartochkasidagi ochiq hujjat (DebtDoc bilan mos). */
+export interface CardDoc {
+  branchId: number;
+  branch: string;
+  docType: string;
+  docId: number;
+  docNumber: string;
+  date: string;
+  dueDate?: string | null;
+  open: string;
+  overdueDays: number;
+  total: string;
+  returned: string;
+  paid: string;
+}
+
+/** Ochiq hujjatlar jami: summa, qaytarishlar, toʻlangan, qoldiq (tiyinda qoʻshiladi). */
+export function cardTotals(docs: CardDoc[]): { total: string; returned: string; paid: string; open: string } {
+  return {
+    total: sumOf(docs, (d) => d.total),
+    returned: sumOf(docs, (d) => d.returned),
+    paid: sumOf(docs, (d) => d.paid),
+    open: sumOf(docs, (d) => d.open),
+  };
+}
+
+/** Limitdan boʻsh qism yoki oshgan summa (limit yoʻq — 0). */
+export function limitLeft(r: DebtLike): { over: boolean; value: string } {
+  if (!r.creditLimit) return { over: false, value: "0.00" };
+  const left = toTiyin(r.creditLimit) - toTiyin(r.buckets.debt);
+  return { over: left < 0, value: fromTiyin(Math.abs(left)) };
+}

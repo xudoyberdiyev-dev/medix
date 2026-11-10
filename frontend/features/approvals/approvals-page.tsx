@@ -20,6 +20,7 @@ import { cn } from "@/lib/cn";
 import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { chips, creditBar, fromTiyin, toMln, visibleOrders, waitLate, waitParts, type ApprovalTab } from "./model";
+import { useThresholds } from "@/features/settings/thresholds";
 
 type View = components["schemas"]["ApprovalsView"];
 type OrderApproval = components["schemas"]["OrderApproval"];
@@ -217,7 +218,7 @@ function QueueRow({ o, active, onSelect }: { o: OrderApproval; active: boolean; 
 
 function ChipRow({ o }: { o: OrderApproval }) {
   const t = useTranslations("approvals");
-  const list = chips(o);
+  const list = chips(o, useThresholds());
   if (list.length === 0) return null;
   return (
     <span className="mt-1 flex flex-wrap gap-1.5">

@@ -52,7 +52,7 @@ type AuditQuery = {
 };
 
 /** Harakat turi belgisi (prototip ACT): ikonka va rang tokeni. */
-const ACT: Record<AuditCategory, { icon: LucideIcon; className: string }> = {
+export const ACT: Record<AuditCategory, { icon: LucideIcon; className: string }> = {
   CREATE: { icon: FilePlus, className: "text-primary" },
   APPROVE: { icon: CircleCheck, className: "text-success" },
   CANCEL: { icon: CircleX, className: "text-danger" },
@@ -101,7 +101,7 @@ const OBJECT_TYPES = [
   "import_profile",
   "setup",
 ] as const;
-const isObjectType = (v: string): v is (typeof OBJECT_TYPES)[number] => (OBJECT_TYPES as readonly string[]).includes(v);
+export const isObjectType = (v: string): v is (typeof OBJECT_TYPES)[number] => (OBJECT_TYPES as readonly string[]).includes(v);
 
 const VIEWS: AuditView[] = ["ALL", "CANCEL", "FAIL", "PERM", "CTRL"];
 const CATEGORIES = Object.keys(ACT) as AuditCategory[];

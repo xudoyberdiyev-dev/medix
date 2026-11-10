@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui/tooltip";
 import { todayTashkent } from "@/features/counterparties/api";
 import type { Zone } from "@/features/organization/api";
-import { EXPIRY_WARN_DAYS } from "@/features/stock/expiry-control";
+import { useThresholds } from "@/features/settings/thresholds";
 import { ZONE_ICON } from "@/features/stock/zone-icon";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatQuantity } from "@/lib/format";
@@ -95,6 +95,7 @@ export function ReceiptLinesGrid({
   const editable = mode === "edit";
   const grid = `44px ${keys.map((k) => WIDTH[k]).join(" ")}${editable ? " 40px" : ""}`;
   const today = todayTashkent();
+  const { expiryWarnDays } = useThresholds();
   const meta = (productId: number) => server.find((l) => l.productId === productId);
 
   function focus(row: number, key: GridKey) {
@@ -149,7 +150,7 @@ export function ReceiptLinesGrid({
       case "batch":
         return <span className="font-mono text-[12.5px]">{l.batchNumber || "—"}</span>;
       case "exp": {
-        const f = expiryFlag(l.expiryDate, today, EXPIRY_WARN_DAYS);
+        const f = expiryFlag(l.expiryDate, today, expiryWarnDays);
         return (
           <span className="flex flex-col gap-0.5">
             <span className="tabular-nums">{l.expiryDate || "—"}</span>

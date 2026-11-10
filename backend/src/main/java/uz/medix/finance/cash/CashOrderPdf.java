@@ -13,6 +13,7 @@ import uz.medix.shared.money.MoneyWords;
 import uz.medix.shared.pdf.PdfDocument;
 import uz.medix.shared.pdf.PdfFormat;
 import uz.medix.shared.pdf.PdfRenderer;
+import uz.medix.shared.pdf.PrintSettings;
 import uz.medix.shared.security.Actor;
 
 /** Kassa (bank, terminal) kirim / chiqim orderi — server PDF: summa so'z bilan, imzo joylari (frontend {@code /print/cash-op}). */
@@ -27,11 +28,13 @@ class CashOrderPdf {
     private final CashOps ops;
     private final PdfRenderer pdf;
     private final JdbcClient jdbc;
+    private final PrintSettings print;
 
-    CashOrderPdf(CashOps ops, PdfRenderer pdf, JdbcClient jdbc) {
+    CashOrderPdf(CashOps ops, PdfRenderer pdf, JdbcClient jdbc, PrintSettings print) {
         this.ops = ops;
         this.pdf = pdf;
         this.jdbc = jdbc;
+        this.print = print;
     }
 
     @Transactional(readOnly = true)
@@ -64,6 +67,10 @@ class CashOrderPdf {
         vars.put("createdBy", o.createdBy());
         vars.put("approvedBy", o.approvedBy());
         vars.put("lastSign", incoming ? "Topshirdi" : "Oldi");
+        PrintSettings.Signers signers = print.signers(o.branchId());
+        vars.put("head", signers.head());
+        vars.put("accountant", signers.accountant());
+        vars.put("reprint", print.registerPrint("KO", o.number(), actor.employeeId()));
         return new PdfDocument(o.number(), pdf.render("cash-order", vars));
     }
 }

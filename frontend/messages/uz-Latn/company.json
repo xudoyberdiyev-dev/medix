@@ -1,0 +1,19 @@
+{
+  "title": "Kompaniya",
+  "subtitle": "Guruh maʼlumotlari va tizim holati",
+  "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
+  "card": "Guruh",
+  "name": "Guruh nomi",
+  "branches": "Filiallar",
+  "warehouses": "Omborlar",
+  "staff": "Xodimlar",
+  "launched": "Tizim ishga tushirilgan",
+  "edit": "Tahrirlash",
+  "editTitle": "Kompaniyani tahrirlash",
+  "nameHint": "Sarlavha va hisobotlarda koʻrsatiladi",
+  "save": "Saqlash",
+  "cancel": "Bekor qilish",
+  "saved": "Kompaniya nomi saqlandi",
+  "saveFailed": "Saqlanmadi. Qayta urinib koʻring.",
+  "required": "Majburiy maydon — nomni kiriting"
+}

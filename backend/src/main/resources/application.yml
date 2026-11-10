@@ -49,9 +49,7 @@ medix:
   employees:
     # Litsenziya: bloklanmagan xodimlar chegarasi (prototip WizStaff «N / 40», egasi E13 — standart 40); 0 — cheklanmagan
     limit: ${MEDIX_EMPLOYEE_LIMIT:40}
-  orders:
-    # Umumiy kechikish: buyurtma bir holatda shuncha kundan ortiq tursa — «N kundan oshgan» (SPEC 5.2)
-    late-days: 2
+  # orders.late-days → Sozlamalar → Savdo «Buyurtma kechikishi» (app_setting.orderLateDays)
   trips:
     # «Qaytish kutilmoqda»da shuncha soatdan ortiq tursa — Ombor mudiri / kassirga eslatma (T12-audit №23)
     return-wait-hours: 4

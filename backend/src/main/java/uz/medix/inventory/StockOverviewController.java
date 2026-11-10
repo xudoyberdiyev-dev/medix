@@ -29,6 +29,8 @@ import uz.medix.shared.error.MedixException;
 import uz.medix.shared.money.Money;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 import uz.medix.shared.text.SearchText;
 
 /**
@@ -43,7 +45,6 @@ class StockOverviewController {
 
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
     /** Muddat nazorati chegarasi (sidebar nishoni bilan bir xil). */
-    static final int EXPIRY_WARN_DAYS = 90;
 
     enum ExpiryBucket { EXPIRED, D0_30, D31_60, D61_90, D90_PLUS }
 
@@ -172,7 +173,10 @@ class StockOverviewController {
     private final CurrentActor currentActor;
     private final Clock clock;
 
-    StockOverviewController(JdbcClient jdbc, CurrentActor currentActor, Clock clock) {
+    private final SystemSettings settings;
+
+    StockOverviewController(JdbcClient jdbc, CurrentActor currentActor, Clock clock, SystemSettings settings) {
+        this.settings = settings;
         this.jdbc = jdbc;
         this.currentActor = currentActor;
         this.clock = clock;
@@ -349,7 +353,7 @@ class StockOverviewController {
                        count(DISTINCT batch_id) FILTER (WHERE zone_type = 'QUARANTINE') AS quarantine
                 FROM bal""")
                 .params(params)
-                .param("warn", EXPIRY_WARN_DAYS)
+                .param("warn", settings.intValue(SettingKey.expiryWarnDays))
                 .query(Kpi.class)
                 .single();
         List<TransitRow> transit = transitRows(actor, branchId, false);

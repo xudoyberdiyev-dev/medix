@@ -9,26 +9,34 @@
   "hoursMinutes": "{h} soat {m} daq",
   "catalog": {
     "title": "Hisobotlar",
+    "subtitle": "Maʼlumotlar tasdiqlangan hujjatlardan. Qoralama va bekor qilingan hujjatlar kirmaydi",
     "forbidden": "Hisobotlar sizning rolingiz uchun yopiq.",
     "emptyTitle": "Hisobot yoʻq",
     "emptyDescription": "Rolingiz uchun ochiq hisobot hali yoʻq.",
-    "soon": "Tez orada",
+    "costTag": "Tannarx",
+    "groups": {
+      "sales": "Savdo",
+      "group": "Guruh ichidagi",
+      "staff": "Xodimlar va taʼminot",
+      "other": "Boshqa boʻlimlardagi hisobotlar"
+    },
+    "sections": {
+      "wh": "Ombor",
+      "money": "Pul",
+      "admin": "Boshqaruv"
+    },
     "items": {
       "sales": {
         "title": "Savdo",
-        "description": "Sof savdo (sotuv − qaytarish) mijoz, operator, filial yoki kun boʻyicha; tannarx va yalpi foyda — ruxsat bilan."
+        "description": "Tasdiqlangan sotuvlar va qaytarishlar — filial, mijoz, operator, kun kesimida; chegirma ustuni."
       },
-      "operators": {
-        "title": "Operatorlar savdosi",
-        "description": "Har operatorning sof savdosi va buyurtmalari tanlangan davrda."
+      "gross-profit": {
+        "title": "Yalpi foyda",
+        "description": "Sof savdo minus sotilgan partiyalar tannarxi, marja va ustama."
       },
       "products": {
         "title": "Mahsulotlar savdosi",
         "description": "Dona va sof savdo mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha; mijoz filtri."
-      },
-      "gross-profit": {
-        "title": "Yalpi foyda",
-        "description": "Mahsulot, kategoriya yoki ishlab chiqaruvchi boʻyicha tannarx, yalpi foyda (QQSsiz) va rentabellik."
       },
       "returns": {
         "title": "Qaytarishlar",
@@ -38,25 +46,49 @@
         "title": "Xarajatlar",
         "description": "Oʻtkazilgan kassa va bank chiqimlari modda, filial, oy yoki kun boʻyicha; Naqd / Bank / Terminal."
       },
-      "debts": {
-        "title": "Qarzlar",
-        "description": "Mijozlar va taʼminotchilar qarzi muddat guruhlari bilan."
+      "branch-sales": {
+        "title": "Filiallararo savdo",
+        "description": "FS hujjatlari, filiallar matritsasi va guruh ichidagi qarz."
       },
-      "stock": {
-        "title": "Qoldiq",
-        "description": "Ombor va partiyalar boʻyicha qoldiq, .xlsx eksport."
+      "operators": {
+        "title": "Operatorlar savdosi",
+        "description": "Buyurtma kiritgan xodimlar: buyurtmalar soni va savdo."
       },
-      "suppliers": {
-        "title": "Taʼminotchi xodim va korxona tovari",
-        "description": "Olib keldi / sotildi / boshqa / qoldi (tannarxda); Aktiv / Passiv."
+      "supplier-staff": {
+        "title": "Taʼminotchi xodim tovari",
+        "description": "Kirimdagi «Kim nomiga» boʻyicha: Olib keldi, Sotildi, Qoldi tannarxda; Aktiv / Passiv."
+      },
+      "supplier-company": {
+        "title": "Taʼminotchi korxona tovari",
+        "description": "Yetkazib beruvchi boʻyicha: Olib keldi, Sotildi, Qoldi tannarxda."
       },
       "pickers": {
         "title": "Yigʻuvchilar natijasi",
-        "description": "Yigʻilgan buyurtma, qator va dona; vaqtida / kechikkan."
+        "description": "Har yigʻuvchi boʻyicha: buyurtma, qator va dona; vaqtida / kechikkan."
       },
       "markers": {
         "title": "Markirovkachilar natijasi",
-        "description": "Skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan."
+        "description": "Har markirovkachi boʻyicha: skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan."
+      },
+      "customer-debts": {
+        "title": "Mijozlar qarzi",
+        "description": "Qarz qoldigʻi, muddatlar va toʻlov taqvimi."
+      },
+      "supplier-debts": {
+        "title": "Yetkazib beruvchilar qarzi",
+        "description": "Yetkazib beruvchilarga qarz va toʻlov muddatlari."
+      },
+      "reconciliations": {
+        "title": "Akt sverka",
+        "description": "Kontragent bilan hisob-kitobni solishtirish."
+      },
+      "expiry": {
+        "title": "Muddat nazorati",
+        "description": "Muddati yaqin va oʻtgan partiyalar."
+      },
+      "audit": {
+        "title": "Audit jurnali",
+        "description": "Tizimdagi barcha harakatlar tarixi."
       }
     }
   },
@@ -73,6 +105,7 @@
       "PAYMENT_TYPE": "Toʻlov turi"
     },
     "sales": "Sotuv",
+    "discount": "Chegirma",
     "returns": "Qaytarish",
     "net": "Sof savdo (QQS bilan)",
     "cost": "Tannarx",

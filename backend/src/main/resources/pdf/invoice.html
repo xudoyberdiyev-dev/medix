@@ -6,6 +6,7 @@
     <style th:replace="~{_base :: css}"></style>
 </head>
 <body>
+<div class="reprint" th:if="${reprint != null}" th:text="${reprint}">Takroriy nusxa · 2</div>
 <div class="head center">
     <h1>Hisob-faktura <span class="mono" th:text="${number}">HF-TSH-000001</span></h1>
     <div class="muted"><span th:text="${date}">06.11.2026</span> · sotuv <span class="mono" th:text="${saleNumber}">SV</span>
@@ -70,8 +71,8 @@
 </table>
 <table class="signs">
     <tr>
-        <td>Rahbar<br/>____________________</td>
-        <td>Bosh hisobchi<br/>____________________</td>
+        <td>Rahbar<br/>____________________<br/><span class="caption" th:if="${head != null}" th:text="${head}">F.I.Sh.</span></td>
+        <td>Bosh hisobchi<br/>____________________<br/><span class="caption" th:if="${accountant != null}" th:text="${accountant}">F.I.Sh.</span></td>
         <td>Qabul qildi (Xaridor, M.Oʻ.)<br/>____________________</td>
     </tr>
 </table>

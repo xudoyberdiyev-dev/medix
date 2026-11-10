@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CircleCheck, CircleMinus, Download, Truck } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,8 @@ export function SupplierGoodsReportPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
   const period = usePeriodState();
   const { from, to } = period.range;
-  const [kind, setKind] = useState<SupplierKind>("STAFF");
+  const params = useSearchParams();
+  const [kind, setKind] = useState<SupplierKind>(params.get("kind") === "COMPANY" ? "COMPANY" : "STAFF");
   const report = useQuery({
     queryKey: ["reports", "supplier-goods", kind, branchId, from, to],
     queryFn: () =>

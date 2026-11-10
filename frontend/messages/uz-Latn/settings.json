@@ -1,0 +1,169 @@
+{
+  "title": "Sozlamalar",
+  "subtitle": "Biznes chegaralari, soliq, hujjatlar va xavfsizlik. Har oʻzgarish audit jurnaliga yoziladi.",
+  "forbidden": "Sozlamalarni koʻrish uchun ruxsat yoʻq. Direktor yoki Bosh administratorga murojaat qiling.",
+  "sec": {
+    "WH": "Ombor",
+    "SALES": "Savdo",
+    "MONEY": "Pul va tasdiqlar",
+    "VAT": "Soliq",
+    "PRINT": "Chop etish",
+    "DOCS": "Hujjatlar",
+    "BQ": "Boshlangʻich qoldiq",
+    "SEC": "Xavfsizlik"
+  },
+  "roDir": "Faqat Direktor oʻzgartira oladi",
+  "roSec": "Faqat Direktor va Bosh administrator oʻzgartira oladi",
+  "cfg": {
+    "expiryWarnDays": {
+      "name": "Muddat ogohlantirish chegarasi",
+      "desc": "Yaroqlilik muddati shuncha kun qolgan partiyalar Muddat nazorati va Qoldiqlarda ogohlantiriladi."
+    },
+    "invRemindDays": {
+      "name": "Inventarizatsiya eslatmasi",
+      "desc": "Ombor shuncha kun sanalmasa, inventarizatsiya oʻtkazish eslatiladi."
+    },
+    "orderLateDays": {
+      "name": "Buyurtma kechikishi",
+      "desc": "Buyurtma shuncha kundan ortiq yetkazilmasa, kechikkan deb belgilanadi."
+    },
+    "limitBranchPct": {
+      "name": "Limit oshishi — Filial rahbari tasdigʻi",
+      "desc": "Mijoz limiti shu foizgacha oshsa, buyurtmani Filial rahbari tasdiqlaydi; undan ortigʻi — Direktor."
+    },
+    "overdueDirDays": {
+      "name": "Muddati oʻtgan qarz — Direktor tasdigʻi",
+      "desc": "Mijozning muddati oʻtgan qarzi shuncha kundan oshsa, buyurtmani faqat Direktor tasdiqlaydi."
+    },
+    "priceWarnPct": {
+      "name": "Narx oʻzgarishi ogohlantirishi",
+      "desc": "Narx oʻzgarishi hujjatida yangi narx shuncha foizdan koʻp farq qilsa, qator ajratib koʻrsatiladi."
+    },
+    "cashBranchApprove": {
+      "name": "Kassa chiqimi — Filial rahbari tasdigʻi",
+      "desc": "Shu summadan katta kassa va bank chiqimlari Filial rahbari tasdigʻidan oʻtadi."
+    },
+    "hcDirApprove": {
+      "name": "Hisobdan chiqarish — Direktor tasdigʻi",
+      "desc": "Tannarxda shu summadan katta hisobdan chiqarishni Direktor tasdiqlaydi."
+    },
+    "ivDirApprove": {
+      "name": "Inventarizatsiya kamomadi — Direktor tasdigʻi",
+      "desc": "Kamomad shu summadan oshsa, inventarizatsiya natijasini Direktor tasdiqlaydi."
+    },
+    "pwMin": {
+      "name": "Parolning minimal uzunligi",
+      "desc": "Yangi parollar kamida shuncha belgidan iborat boʻladi."
+    },
+    "sessionMin": {
+      "name": "Harakatsizlikdan keyin sessiya tugashi",
+      "desc": "Shuncha daqiqa harakat boʻlmasa, tizimdan avtomatik chiqiladi."
+    },
+    "pinTries": {
+      "name": "PIN — notoʻgʻri urinishlar",
+      "desc": "Tasdiqlash PIN kodi shuncha marta notoʻgʻri kiritilsa, tasdiqlash vaqtincha bloklanadi."
+    },
+    "pinLockMin": {
+      "name": "PIN — bloklash vaqti",
+      "desc": "Notoʻgʻri urinishlardan keyin tasdiqlash shuncha daqiqaga bloklanadi."
+    },
+    "vat": {
+      "name": "QQS stavkasi",
+      "desc": "Hujjatlarda ishlatiladigan amaldagi stavka. Yangi stavka faqat kelajakdagi sanadan kiritiladi."
+    },
+    "bqCut": {
+      "name": "Kesish sanasi",
+      "desc": "SMARTUP dan koʻchirilgan qoldiqlar shu sanaga."
+    }
+  },
+  "unit": {
+    "DAY": "kun",
+    "PCT": "%",
+    "SUM": "soʻm",
+    "LEN": "belgi",
+    "MIN": "daqiqa",
+    "TRIES": "urinish",
+    "LOCK": "daqiqa",
+    "DATE": "sana"
+  },
+  "lastChange": "Oxirgi oʻzgarish: {t}, {n}",
+  "defaultVal": "Standart qiymat",
+  "eNum": "Raqam kiriting",
+  "eRange": "{a} dan {b} gacha qiymat kiriting",
+  "eSum": "Summa 0 dan katta boʻlishi kerak",
+  "eDate": "Sana notoʻgʻri — kk.oo.yyyy",
+  "eFuture": "Faqat kelajakdagi sana — oʻtgan sanaga stavka kiritilmaydi",
+  "eDupDate": "Bu sanadan stavka allaqachon kiritilgan",
+  "nChanges": "{n} ta oʻzgarish",
+  "cancel": "Bekor qilish",
+  "save": "Saqlash",
+  "saveTitle": "{n} ta sozlamani saqlash",
+  "saveText": "Yangi qiymat darhol amal qiladi. Hozir tasdiqlashda turgan {n} ta buyurtmaga taʼsir qilmaydi.",
+  "line": "{l}: {a} → {b}",
+  "saved": "{n} ta sozlama saqlandi",
+  "saveFailed": "Sozlamalar saqlanmadi",
+  "vatHist": "Stavkalar tarixi",
+  "vatRate": "Stavka",
+  "vatFrom": "Kuchga kirish sanasi",
+  "vatWho": "Kim kiritgan",
+  "status": "Holat",
+  "vatSt": {
+    "ACTIVE": "Amalda",
+    "FUTURE": "Kelajakda",
+    "PAST": "Avvalgi"
+  },
+  "vatNewRate": "Yangi stavka",
+  "vatAdd": "Stavka kiritish",
+  "vatHint": "Yangi stavka koʻrsatilgan sanadan boshlab yangi hujjatlarga qoʻllanadi. Avvalgi hujjatlar oʻz stavkasida qoladi.",
+  "vatAdded": "QQS {r}% — {d} dan kuchga kiradi",
+  "system": "Tizim",
+  "prSub": "Qogʻoz shakllaridagi imzo qoʻyuvchilar va standart variantlar",
+  "prSigners": "Imzo qoʻyuvchilar — filial boʻyicha",
+  "branch": "Filial",
+  "head": "Rahbar",
+  "acc": "Bosh hisobchi",
+  "auto": "Avtomatik",
+  "autoBy": "Avtomatik (rol boʻyicha): {n}",
+  "autoNone": "Avtomatik (rol boʻyicha): —",
+  "reprint": "Takroriy nusxa belgisini koʻrsatish",
+  "reprintD": "Ikkinchi va keyingi chop etishda varaq burchagida «Takroriy nusxa · N»",
+  "nakDef": "Yuk xati standart varianti",
+  "yes": "Ha",
+  "no": "Yoʻq",
+  "vPrice": "Narxlar bilan",
+  "vNoPrice": "Narxlarsiz",
+  "prSaved": "Chop etish sozlamalari saqlandi",
+  "docFmt": "Raqamlash formati: PREFIKS-FILIAL-000001. Raqamlar avtomatik, har filialda alohida. Faqat koʻrish uchun.",
+  "docPrefix": "Prefiks",
+  "docType": "Hujjat turi",
+  "docLast": "Oxirgi raqam",
+  "docN": "Hujjatlar",
+  "doc": {
+    "BY": "Buyurtma",
+    "SV": "Sotuv",
+    "HF": "Hisob-faktura",
+    "NK": "Nakladnoy",
+    "RS": "Reys",
+    "KR": "Kirim",
+    "BNS": "Bonus (yetkazib beruvchidan)",
+    "QM": "Mijozdan qaytarish",
+    "QY": "Yetkazib beruvchiga qaytarish",
+    "HC": "Hisobdan chiqarish",
+    "NO": "Narx oʻzgarishi",
+    "MT": "Mijozdan toʻlov",
+    "YT": "Yetkazib beruvchiga toʻlov",
+    "KO": "Kassa operatsiyasi",
+    "BO": "Bank operatsiyasi",
+    "IO": "Hisoblar orasida oʻtkazma",
+    "AH": "Avansni hisobga olish",
+    "AS": "Akt sverka",
+    "ZK": "Zona koʻchirishi",
+    "OK": "Ombor koʻchirishi",
+    "FS": "Filiallararo savdo",
+    "IN": "Inventarizatsiya",
+    "BQ": "Boshlangʻich qoldiq"
+  },
+  "bqLocked": "Tasdiqlangan boshlangʻich qoldiq hujjatlari bor. Kesish sanasini oʻzgartirish ular hisobini buzadi, shuning uchun maydon qulflangan.",
+  "bqLockedShort": "Tasdiqlangan BQ hujjatlari bor — oʻzgartirib boʻlmaydi",
+  "bqNone": "Boshlangʻich qoldiq hali kiritilmagan — sana birinchi BQ hujjatidan olinadi."
+}

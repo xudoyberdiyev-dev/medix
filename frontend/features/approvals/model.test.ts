@@ -30,6 +30,9 @@ describe("Tasdiqlash modeli", () => {
     expect(chips({ ...base, overdue: "1600000.00", overdueDays: 41 })[0]?.tone).toBe("danger");
     expect(chips({ ...base, blocked: true })).toEqual([{ kind: "blocked", tone: "danger" }]);
     expect(chips(base)).toEqual([]);
+    // Sozlamalardagi chegaralar
+    expect(chips({ ...base, limitOverPct: 30 }, { limitBranchPct: 40, overdueDirDays: 30 })[0]?.tone).toBe("warning");
+    expect(chips({ ...base, overdue: "1600000.00", overdueDays: 41 }, { limitBranchPct: 20, overdueDirDays: 60 })[0]?.tone).toBe("warning");
   });
 
   it("kutish vaqti", () => {

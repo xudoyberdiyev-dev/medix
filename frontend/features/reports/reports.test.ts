@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { visibleReports } from "./catalog";
+import { groupedReports, REPORTS, visibleReports } from "./catalog";
 import { expenseExportHref, initialDirection } from "./expense-report";
 import { drillFilter, formatMargin, initialProductGroupBy, productSalesExportHref } from "./product-sales-report";
 import { drillReturns, initialReturnsGroupBy, returnsExportHref } from "./returns-report";
@@ -15,6 +15,22 @@ describe("hisobotlar", () => {
     expect(visibleReports(["reports.view"]).map((r) => r.key)).not.toContain("gross-profit");
     expect(visibleReports(["reports.view", "prices.cost"]).map((r) => r.key)).toContain("gross-profit");
     expect(visibleReports([])).toHaveLength(0);
+  });
+
+  it("katalog guruhlari prototip tartibida, boʻsh guruh tashlanadi", () => {
+    const all = ["reports.view", "prices.cost", "transfer.view", "reports.pickers", "cdebt.view", "audit.view"];
+    expect(groupedReports(all).map((g) => g.group)).toEqual(["sales", "group", "staff", "other"]);
+    expect(groupedReports(["reports.own"]).map((g) => g.group)).toEqual(["sales"]);
+    const other = groupedReports(["cdebt.view", "audit.view"]);
+    expect(other).toHaveLength(1);
+    expect(other[0].items.map((r) => [r.key, r.section])).toEqual([
+      ["customer-debts", "money"],
+      ["audit", "admin"],
+    ]);
+    expect(REPORTS.filter((r) => r.cost).map((r) => r.key)).toEqual(["gross-profit"]);
+    expect(visibleReports(["reports.view", "prices.cost"]).find((r) => r.key === "supplier-company")?.href).toBe(
+      "/reports/supplier-goods?kind=COMPANY",
+    );
   });
 
   it("mahsulotlar savdosi: katalog, eksport havolasi, rentabellik", () => {
@@ -80,8 +96,8 @@ describe("hisobotlar", () => {
   });
 
   it("taʼminotchi tovari: tannarx ruxsati shart, eksport havolasi", () => {
-    expect(visibleReports(["reports.view"]).map((r) => r.key)).not.toContain("suppliers");
-    expect(visibleReports(["reports.view", "prices.cost"]).map((r) => r.key)).toContain("suppliers");
+    expect(visibleReports(["reports.view"]).map((r) => r.key)).not.toContain("supplier-staff");
+    expect(visibleReports(["reports.view", "prices.cost"]).map((r) => r.key)).toContain("supplier-company");
     expect(canSeeSupplierGoods(["prices.cost"])).toBe(false);
     expect(supplierGoodsExportHref("COMPANY", { branchId: 1, from: "2026-11-01", to: "2026-11-05" })).toBe(
       "/api/reports/supplier-goods/export?kind=COMPANY&branchId=1&from=2026-11-01&to=2026-11-05",

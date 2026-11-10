@@ -103,7 +103,20 @@ export function PayablesPage() {
   }));
 
   const columns: TableColumn<Invoice>[] = [
-    { key: "supplier", title: t("col.supplier"), wrap: true, render: (r) => <span className="font-medium">{r.supplier}</span> },
+    {
+      key: "supplier",
+      title: t("col.supplier"),
+      wrap: true,
+      render: (r) => (
+        <Link
+          href={`/debts/suppliers/${r.supplierId}?name=${encodeURIComponent(r.supplier)}`}
+          className="font-medium hover:text-primary hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {r.supplier}
+        </Link>
+      ),
+    },
     ...(allBranches
       ? [{ key: "branch", title: t("col.branch"), render: (r: Invoice) => <span className="text-text-secondary">{r.branch}</span> }]
       : []),

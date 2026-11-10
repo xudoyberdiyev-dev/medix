@@ -268,6 +268,8 @@
     "roles_view": "Rollar va ruxsatlar: boshqarish",
     "sdebt_view": "Yetkazib beruvchilar qarzi: koʻrish",
     "settings_view": "Sozlamalar",
+    "settings_edit": "Sozlamalar: tahrirlash (chegaralar, soliq, chop etish)",
+    "settings_security": "Sozlamalar: xavfsizlik",
     "shipments_ship": "Reysni joʻnatish (yuklash)",
     "shipments_trip": "Reys rejalashtirish: mashina va haydovchi biriktirish",
     "shipments_view": "Joʻnatish va reyslar: koʻrish",

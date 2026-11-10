@@ -6,6 +6,7 @@
     <style th:replace="~{_base :: css}"></style>
 </head>
 <body>
+<div class="reprint" th:if="${reprint != null}" th:text="${reprint}">Takroriy nusxa · 2</div>
 <table class="parties head">
     <tr>
         <td class="caption">
@@ -31,8 +32,8 @@
 </table>
 <table class="signs">
     <tr>
-        <td>Rahbar<br/>______________</td>
-        <td>Bosh buxgalter<br/>______________</td>
+        <td>Rahbar<br/>______________<br/><span class="caption" th:if="${head != null}" th:text="${head}">F.I.Sh.</span></td>
+        <td>Bosh buxgalter<br/>______________<br/><span class="caption" th:if="${accountant != null}" th:text="${accountant}">F.I.Sh.</span></td>
         <td>Kassir<br/>______________</td>
         <td><span th:text="${lastSign}">Topshirdi</span><br/>______________</td>
     </tr>

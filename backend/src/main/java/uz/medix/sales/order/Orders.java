@@ -19,25 +19,25 @@ import java.util.Set;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uz.medix.finance.PartyLedger;
 import uz.medix.finance.PartyLedger.CreditState;
 import uz.medix.finance.PartyLedger.Side;
+import uz.medix.finance.PartyLedger;
+import uz.medix.inventory.StockAvailability.Available;
 import uz.medix.inventory.StockAvailability;
 import uz.medix.inventory.StockLedger;
-import uz.medix.inventory.StockAvailability.Available;
-import uz.medix.inventory.StockReservations;
 import uz.medix.inventory.StockReservations.Allocation;
+import uz.medix.inventory.StockReservations;
 import uz.medix.notification.Notifications;
-import uz.medix.pricing.PriceBook;
 import uz.medix.pricing.PriceBook.Quote;
+import uz.medix.pricing.PriceBook;
 import uz.medix.sales.order.OrderModels.ApprovalLevel;
-import uz.medix.sales.order.OrderModels.CustomerCredit;
 import uz.medix.sales.order.OrderModels.CreditFlag;
+import uz.medix.sales.order.OrderModels.CustomerCredit;
 import uz.medix.sales.order.OrderModels.DeliveryType;
 import uz.medix.sales.order.OrderModels.FilterOption;
-import uz.medix.sales.order.OrderModels.OrderFacets;
 import uz.medix.sales.order.OrderModels.IssueLevel;
 import uz.medix.sales.order.OrderModels.OrderDetail;
+import uz.medix.sales.order.OrderModels.OrderFacets;
 import uz.medix.sales.order.OrderModels.OrderIssue;
 import uz.medix.sales.order.OrderModels.OrderLine;
 import uz.medix.sales.order.OrderModels.OrderLineRequest;
@@ -55,6 +55,8 @@ import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 import uz.medix.shared.text.SearchText;
 import uz.medix.shared.text.Texts;
 
@@ -68,7 +70,6 @@ class Orders {
 
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
     static final String DOC_TYPE = "BY";
-    static final BigDecimal LIMIT_BRANCH_PCT = BigDecimal.valueOf(20);
     /** E7: operator o'zi beradigan chegirma chegarasi, %; undan katta — Filial rahbari tasdig'i. */
     static final BigDecimal DISCOUNT_SELF_PCT = BigDecimal.valueOf(5);
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
@@ -84,7 +85,6 @@ class Orders {
     private static BigDecimal pct(BigDecimal p) {
         return p == null ? BigDecimal.ZERO : p.stripTrailingZeros().signum() == 0 ? BigDecimal.ZERO : p;
     }
-    static final int OVERDUE_DIRECTOR_DAYS = 30;
     static final Set<OrderStatus> CANCEL_BY_WAREHOUSE = Set.of(OrderStatus.QUEUED, OrderStatus.PICKING, OrderStatus.MARKING,
             OrderStatus.CHECKING, OrderStatus.DOCUMENTING, OrderStatus.LOADING);
 
@@ -95,6 +95,7 @@ class Orders {
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
     private final Clock clock;
+    private final SystemSettings settings;
     private final StockReservations reservations;
     private final StockLedger stock;
     private final org.springframework.context.ApplicationEventPublisher events;
@@ -103,7 +104,9 @@ class Orders {
 
     Orders(JdbcClient jdbc, PriceBook prices, StockAvailability availability, PartyLedger parties, AuditLog audit,
             DocumentSequenceService numbers, Clock clock, StockReservations reservations, StockLedger stock,
-            org.springframework.context.ApplicationEventPublisher events, Notifications notifications, Texts texts) {
+            org.springframework.context.ApplicationEventPublisher events, Notifications notifications, Texts texts,
+            SystemSettings settings) {
+        this.settings = settings;
         this.texts = texts;
         this.events = events;
         this.notifications = notifications;
@@ -300,14 +303,14 @@ class Orders {
             if (exposure.compareTo(limit) > 0 && !total.isZero()) {
                 Money over = exposure.minus(limit);
                 boolean small = !limit.isZero()
-                        && over.amount().multiply(BigDecimal.valueOf(100)).divide(limit.amount(), 2, RoundingMode.HALF_UP).compareTo(LIMIT_BRANCH_PCT) <= 0;
+                        && over.amount().multiply(BigDecimal.valueOf(100)).divide(limit.amount(), 2, RoundingMode.HALF_UP).compareTo(settings.value(SettingKey.limitBranchPct)) <= 0;
                 ApprovalLevel need = small ? ApprovalLevel.BRANCH : ApprovalLevel.DIRECTOR;
                 issues.add(issue(IssueLevel.APPROVAL, "order.overLimit", null, over.format(), approver(need)));
                 level = max(level, need);
             }
         }
         if (cs.overdueDays() > 0) {
-            ApprovalLevel need = cs.overdueDays() > OVERDUE_DIRECTOR_DAYS ? ApprovalLevel.DIRECTOR : ApprovalLevel.BRANCH;
+            ApprovalLevel need = cs.overdueDays() > settings.intValue(SettingKey.overdueDirDays) ? ApprovalLevel.DIRECTOR : ApprovalLevel.BRANCH;
             issues.add(issue(IssueLevel.APPROVAL, "order.overdue", null, cs.overdue().format(), cs.overdueDays(), approver(need)));
             level = max(level, need);
         }

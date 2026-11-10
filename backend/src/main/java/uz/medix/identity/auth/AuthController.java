@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
@@ -18,10 +19,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import uz.medix.identity.role.Roles;
 import uz.medix.identity.security.AuthService;
 import uz.medix.identity.security.MedixPrincipal;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 
 /** Kirish, chiqish ({@code POST /api/auth/logout} — Spring Security), joriy foydalanuvchi, parol almashtirish. */
 @RestController
@@ -33,8 +35,11 @@ class AuthController {
     private final SecurityContextRepository contextRepository;
     private final SessionAuthenticationStrategy sessionStrategy;
     private final Roles roles;
+    private final SystemSettings settings;
 
-    AuthController(AuthService auth, SecurityContextRepository contextRepository, SessionAuthenticationStrategy sessionStrategy, Roles roles) {
+    AuthController(AuthService auth, SecurityContextRepository contextRepository, SessionAuthenticationStrategy sessionStrategy, Roles roles,
+            SystemSettings settings) {
+        this.settings = settings;
         this.auth = auth;
         this.roles = roles;
         this.contextRepository = contextRepository;
@@ -78,7 +83,18 @@ class AuthController {
         context.setAuthentication(updated);
         SecurityContextHolder.setContext(context);
         contextRepository.saveContext(context, request, response);
+        // Profil → «Faol sessiyalar»: qurilma va IP sessiya atributida (sessiya identifikatori foydalanuvchiga berilmaydi)
+        var session = request.getSession();
+        String ua = request.getHeader("User-Agent");
+        if (ua != null && !ua.isBlank()) {
+            session.setAttribute(SESSION_DEVICE, ua.strip().length() > 160 ? ua.strip().substring(0, 160) : ua.strip());
+        }
+        session.setAttribute(SESSION_IP, request.getRemoteAddr());
     }
+
+    /** Sessiya atributlari (Profil → Faol sessiyalar). */
+    static final String SESSION_DEVICE = "medix.device";
+    static final String SESSION_IP = "medix.ip";
 
     private void establish(UsernamePasswordAuthenticationToken authentication, HttpServletRequest request, HttpServletResponse response) {
         sessionStrategy.onAuthentication(authentication, request, response);
@@ -86,5 +102,10 @@ class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         contextRepository.saveContext(context, request, response);
+        // Harakatsizlikdan keyin sessiya tugashi — Sozlamalar → Xavfsizlik (sessionMin)
+        var session = request.getSession(false);
+        if (session != null) {
+            session.setMaxInactiveInterval(settings.intValue(SettingKey.sessionMin) * 60);
+        }
     }
 }

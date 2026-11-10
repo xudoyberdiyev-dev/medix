@@ -13,6 +13,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
+import { useThresholds, useThresholdsState } from "@/features/settings/thresholds";
 import { useDictionary, useSaveEntry, type Entry } from "@/features/dictionaries/api";
 import { describeError } from "@/features/setup/form-error";
 import { cn } from "@/lib/cn";
@@ -50,6 +51,8 @@ export function ProductFormPage({ id = null, copyFrom = null }: { id?: number | 
   const t = useTranslations("products.pageForm");
   const loadId = id ?? copyFrom;
   const product = useProduct(loadId);
+  const limits = useThresholdsState();
+  const vatNow = limits.value.vatRate;
   const [code, setCode] = useState<string | null>(null);
   useEffect(() => {
     if (id !== null) return;
@@ -62,7 +65,7 @@ export function ProductFormPage({ id = null, copyFrom = null }: { id?: number | 
     };
   }, [id]);
   if (loadId !== null && product.error) return <ErrorState onRetry={() => product.refetch()} />;
-  if ((loadId !== null && !product.data) || (id === null && code === null)) {
+  if ((loadId !== null && !product.data) || (id === null && (code === null || !limits.ready))) {
     return (
       <div className="mx-auto flex w-full max-w-[880px] flex-col gap-4" aria-busy>
         <Skeleton className="h-8 w-1/3" />
@@ -77,7 +80,7 @@ export function ProductFormPage({ id = null, copyFrom = null }: { id?: number | 
       ? pageFormFromProduct(p)
       : copyFrom !== null && p
         ? { ...copyForm(p, t("copySuffix")), code: code ?? "" }
-        : { ...EMPTY_PAGE_FORM, code: code ?? "" };
+        : { ...EMPTY_PAGE_FORM, vat: vatNow, code: code ?? "" };
   return <FormBody key={`${loadId}-${id}`} product={id !== null ? p : null} initial={initial} />;
 }
 
@@ -186,9 +189,10 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
     );
   };
 
+  const vatNow = useThresholds().vatRate;
   const vatOpts: [string, string][] = [
-    ["12", "12%"],
-    ["0", "0%"],
+    [vatNow, `${vatNow}%`],
+    ...(vatNow === "0" ? [] : ([["0", "0%"]] as [string, string][])),
     ["none", t("vatNone")],
   ];
   if (!vatOpts.some(([v]) => v === f.vat)) vatOpts.splice(1, 0, [f.vat, `${f.vat}%`]);

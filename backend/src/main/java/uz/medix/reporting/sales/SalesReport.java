@@ -49,7 +49,9 @@ class SalesReport {
         }
     }
 
-    public record SalesRow(String key, String name, int orders, String sales, String returns, String net,
+    public record SalesRow(String key, String name, int orders, String sales,
+            @Schema(description = "Berilgan chegirma (E7): Σ qty × (narx turidagi narx − chegirmali narx); sotuv summasi chegirmadan keyin") String discount,
+            String returns, String net,
             @Schema(nullable = true) String cost, @Schema(nullable = true, description = "Yalpi foyda: sof savdo QQSsiz − tannarx") String profit) {}
 
     /** Filtrlar (SPEC 8, prototip: region, ptype): ixtiyoriy. */
@@ -62,7 +64,8 @@ class SalesReport {
     public record SalesReportView(LocalDate from, LocalDate to, @Schema(nullable = true) Long branchId, GroupBy groupBy, boolean mineOnly,
             @Schema(nullable = true) PaymentType paymentType, @Schema(nullable = true) Long regionId, boolean costVisible, List<SalesRow> rows, SalesRow total, boolean truncated) {}
 
-    private record Raw(String k, String name, int orders, BigDecimal sales, BigDecimal returns, BigDecimal vat, BigDecimal cost) {}
+    private record Raw(String k, String name, int orders, BigDecimal sales, BigDecimal discount, BigDecimal returns, BigDecimal vat,
+            BigDecimal cost) {}
 
     private final JdbcClient jdbc;
     private final Clock clock;
@@ -97,18 +100,20 @@ class SalesReport {
         List<Raw> raw = jdbc.sql("""
                 WITH x AS (
                     SELECT s.branch_id, s.customer_id, o.created_by, s.sale_date AS d, s.order_id, s.total AS sales, 0 AS returns, s.vat_total AS vat, s.cost_total AS cost,
-                           o.payment_type, cp.region_id
+                           o.payment_type, cp.region_id,
+                           (SELECT coalesce(sum(sl.qty * greatest(coalesce(ol.list_price, sl.price) - sl.price, 0)), 0)
+                            FROM sale_line sl JOIN sales_order_line ol ON ol.id = sl.order_line_id WHERE sl.sale_id = s.id) AS discount
                     FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN counterparty cp ON cp.id = s.customer_id
                     WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t
                       AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b) AND (CAST(:e AS BIGINT) IS NULL OR o.created_by = :e)
                     UNION ALL
                     SELECT r.branch_id, r.customer_id, o.created_by, r.return_date, NULL, 0, r.total, -r.vat_total, -r.cost_total,
-                           o.payment_type, cp.region_id
+                           o.payment_type, cp.region_id, 0
                     FROM sales_return r JOIN sales_order o ON o.id = r.order_id JOIN counterparty cp ON cp.id = r.customer_id
                     WHERE r.return_date BETWEEN :f AND :t
                       AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b) AND (CAST(:e AS BIGINT) IS NULL OR o.created_by = :e)
                 )
-                SELECT %s AS k, %s AS name, count(DISTINCT x.order_id) AS orders, sum(x.sales) AS sales, sum(x.returns) AS returns,
+                SELECT %s AS k, %s AS name, count(DISTINCT x.order_id) AS orders, sum(x.sales) AS sales, sum(x.discount) AS discount, sum(x.returns) AS returns,
                        sum(x.vat) AS vat, sum(x.cost) AS cost, sum(x.sales) - sum(x.returns) AS net
                 FROM x %s
                 WHERE (CAST(:pt AS VARCHAR) IS NULL OR x.payment_type = :pt) AND (CAST(:rg AS BIGINT) IS NULL OR x.region_id = :rg)
@@ -117,37 +122,39 @@ class SalesReport {
                 .param("pt", paymentType == null ? null : paymentType.name()).param("rg", regionId)
                 .param("lim", MAX_ROWS + 1)
                 .query((rs, n) -> new Raw(rs.getString("k"), rs.getString("name"), rs.getInt("orders"), rs.getBigDecimal("sales"),
-                        rs.getBigDecimal("returns"), rs.getBigDecimal("vat"), rs.getBigDecimal("cost")))
+                        rs.getBigDecimal("discount"), rs.getBigDecimal("returns"), rs.getBigDecimal("vat"), rs.getBigDecimal("cost")))
                 .list();
         boolean truncated = raw.size() > MAX_ROWS;
         List<Raw> shown = truncated ? raw.subList(0, MAX_ROWS) : raw;
 
         // Jami — barcha qatorlar bo'yicha (kesilgan bo'lsa ham to'liq): alohida so'rovsiz, raw bo'yicha
         Money sales = Money.ZERO;
+        Money discount = Money.ZERO;
         Money returns = Money.ZERO;
         Money vat = Money.ZERO;
         Money cost = Money.ZERO;
         int orders = 0;
         for (Raw r : raw) {
             sales = sales.plus(m(r.sales()));
+            discount = discount.plus(m(r.discount()));
             returns = returns.plus(m(r.returns()));
             vat = vat.plus(m(r.vat()));
             cost = cost.plus(m(r.cost()));
             orders += r.orders();
         }
-        List<SalesRow> rows = shown.stream().map(r -> row(r.k(), r.name(), r.orders(), m(r.sales()), m(r.returns()), m(r.vat()), m(r.cost()),
+        List<SalesRow> rows = shown.stream().map(r -> row(r.k(), r.name(), r.orders(), m(r.sales()), m(r.discount()), m(r.returns()), m(r.vat()), m(r.cost()),
                 canSeeCost))
                 .toList();
         // Kun bo'yicha guruhlashda bitta buyurtma bir necha kunda bo'lmaydi (sotuv bir marta) — jami buyurtmalar yig'indisi to'g'ri;
         // boshqa guruhlarda ham buyurtma bitta mijoz/operator/filialga tegishli.
-        SalesRow total = row("", "Jami", orders, sales, returns, vat, cost, canSeeCost);
+        SalesRow total = row("", "Jami", orders, sales, discount, returns, vat, cost, canSeeCost);
         return new SalesReportView(f, t, branchId, g, mine != null, paymentType, regionId, canSeeCost, rows, total, truncated);
     }
 
     /** Yalpi foyda = sof savdo QQSsiz − tannarx (tannarx QQSsiz). */
-    private static SalesRow row(String k, String name, int orders, Money sales, Money returns, Money vat, Money cost, boolean canSeeCost) {
+    private static SalesRow row(String k, String name, int orders, Money sales, Money discount, Money returns, Money vat, Money cost, boolean canSeeCost) {
         Money net = sales.minus(returns);
-        return new SalesRow(k, name, orders, sales.toString(), returns.toString(), net.toString(), canSeeCost ? cost.toString() : null,
+        return new SalesRow(k, name, orders, sales.toString(), discount.toString(), returns.toString(), net.toString(), canSeeCost ? cost.toString() : null,
                 canSeeCost ? net.minus(vat).minus(cost).toString() : null);
     }
 

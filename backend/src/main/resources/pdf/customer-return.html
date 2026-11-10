@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${number}">QM</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<div class="reprint" th:if="${reprint != null}" th:text="${reprint}">Takroriy nusxa · 2</div>
+<div class="head">
+    <div class="caption"><span th:text="${sellerName}">MChJ</span> · STIR <span th:text="${sellerTin}">000</span></div>
+    <h1>Mijozdan qaytarish dalolatnomasi <span class="mono" th:text="${number}">QM-TSH-000001</span></h1>
+    <div class="muted">Sana: <span th:text="${date}">06.11.2026</span> · Filial: <span th:text="${branch}">Toshkent</span></div>
+    <div class="muted">Mijoz: <span class="b" th:text="${customer}">Mijoz</span> · STIR <span th:text="${customerTin}">—</span></div>
+    <div class="muted">Sotuv: <span class="mono" th:text="${saleNumber}">SV</span> · <span th:text="${saleDate}">01.11.2026</span>
+        · buyurtma <span class="mono" th:text="${orderNumber}">BY</span></div>
+    <div class="muted">Ombor: <span th:text="${warehouse}">Markaziy</span> · Zona: <span th:text="${zone}">Karantin</span></div>
+    <div class="muted">Holat: <span th:text="${status}">Oʻtkazildi</span> · Tuzdi: <span th:text="${createdBy}">F.I.Sh.</span><span th:if="${postedBy != null}" th:text="' · Qabul qildi: ' + ${postedBy}"></span></div>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th class="num">№</th>
+        <th>Mahsulot</th>
+        <th>Partiya</th>
+        <th>Yaroqlilik</th>
+        <th>Sabab</th>
+        <th class="r">Soni</th>
+        <th class="r">Narx (QQS bilan)</th>
+        <th class="r">Summa, soʻm</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l, it : ${lines}">
+        <td class="num" th:text="${it.count}">1</td>
+        <td><span class="mono muted" th:text="${l.code}">0001</span> <span th:text="${l.name}">Mahsulot</span></td>
+        <td class="mono" th:text="${l.batch}">B1</td>
+        <td th:text="${l.expiry}">01.01.2029</td>
+        <td th:text="${l.reason}">Sabab</td>
+        <td class="r" th:text="${l.qty}">1</td>
+        <td class="r" th:text="${l.price}">0,00</td>
+        <td class="r" th:text="${l.amount}">0,00</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td></td>
+        <td class="b">Jami</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td class="r b" th:text="${totalQty}">0</td>
+        <td></td>
+        <td class="r b" th:text="${total}">0,00</td>
+    </tr>
+    </tfoot>
+</table>
+<p class="caption muted">Qaytarilgan summa mijoz qarzini kamaytiradi (sotuv narxida).</p>
+<p th:if="${note != null}" th:text="'Izoh: ' + ${note}">Izoh</p>
+<table class="signs">
+    <tr>
+        <td>Topshirdi (Mijoz, M.Oʻ.)<br/>____________________</td>
+        <td>Qabul qildi (Ombor mudiri)<br/>____________________</td>
+        <td>Tasdiqladi<br/>____________________</td>
+    </tr>
+</table>
+</body>
+</html>

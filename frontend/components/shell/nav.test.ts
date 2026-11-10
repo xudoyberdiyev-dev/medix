@@ -15,9 +15,10 @@ describe("ruxsatga qarab menyu", () => {
     expect(keys(["orders.queue"])).toContain("warehouse");
   });
 
-  it("kalitga qarab: Qoldiqlar — stock.view, Sozlamalar — xodimlar/audit/…", () => {
+  it("kalitga qarab: Qoldiqlar — stock.view, Sozlamalar — settings.view", () => {
     expect(keys(["receipt.view", "products.view"], "")).toEqual(["home", "receipts", "products"]);
-    expect(keys(["staff.view"], "")).toEqual(["home", "staff", "settings"]);
+    expect(keys(["staff.view"], "")).toEqual(["home", "staff"]);
+    expect(keys(["settings.view"], "")).toEqual(["home", "settings"]);
     expect(keys(["stock.view"], "")).toContain("stock");
     expect(navigationFor(undefined)).toEqual([]);
     expect(keys(["cdebt.view", "sdebt.view"], "")).toEqual(["home", "customer-debts", "supplier-debts"]);
@@ -40,6 +41,7 @@ describe("ruxsatga qarab menyu", () => {
     expect(isNavActive("/zone-transfers/5", item("transfers"))).toBe(true);
     expect(isNavActive("/branch-sales", item("transfers"))).toBe(true);
     expect(isNavActive("/supplier-returns", item("returns"))).toBe(true);
+    expect(isNavActive("/customer-returns", item("returns"))).toBe(true);
     expect(isNavActive("/bonuses", item("supplier-debts"))).toBe(true);
     expect(isNavActive("/settings/roles", item("settings"))).toBe(false);
     expect(isNavActive("/settings/roles/3", item("roles"))).toBe(true);
@@ -57,6 +59,7 @@ describe("yorliqli bandlar", () => {
   it("manzil — ruxsatli birinchi yorliq", () => {
     expect(href(["qy.view"], "returns")).toBe("/supplier-returns");
     expect(href(["hc.view", "qy.view"], "returns")).toBe("/write-offs");
+    expect(href(["qm.view", "hc.view"], "returns")).toBe("/customer-returns");
     expect(href(["supplierBonus.confirm"], "supplier-debts")).toBe("/bonuses");
     // Koʻchirish — bitta roʻyxat har qanday koʻchirish ruxsati bilan
     expect(href(["transfer.zk"], "transfers")).toBe("/transfers");

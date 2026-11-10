@@ -189,4 +189,30 @@ class CatalogDictionariesIT {
         mvc.perform(get("/api/expense-items").cookie(accountant))
                 .andExpect(jsonPath("$[?(@.direction == 'INCOME')]", hasSize(greaterThanOrEqualTo(3))));
     }
+    /** «Boshqa ma'lumotnomalar» kartalari: tartib, soni, faol, mashina va haydovchi — filial doirasida; ruxsatsiz 403. */
+    @Test
+    void overviewCards() throws Exception {
+        long b = branch();
+        long other = branch();
+        Cookie manager = loginAs("BRANCH_MANAGER", b);
+        Cookie driver = loginAs("DRIVER", b);
+        jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model, has_refrigerator) VALUES (:b, :p, 'Damas', false)")
+                .param("b", b).param("p", "01A" + ThreadLocalRandom.current().nextInt(100, 999) + "BC").update();
+        jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model, has_refrigerator) VALUES (:b, :p, 'Labo', false)")
+                .param("b", other).param("p", "01B" + ThreadLocalRandom.current().nextInt(100, 999) + "BC").update();
+        jdbc.sql("INSERT INTO region (name) VALUES (:n)").param("n", "Hudud " + UUID.randomUUID().toString().substring(0, 6)).update();
+        mvc.perform(get("/api/dictionaries-overview").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(7)))
+                .andExpect(jsonPath("$[0].kind").value("MANUFACTURER"))
+                .andExpect(jsonPath("$[4].kind").value("REGION"))
+                .andExpect(jsonPath("$[4].count").value(greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$[4].lastChangedAt").exists())
+                .andExpect(jsonPath("$[5].kind").value("FLEET"))
+                .andExpect(jsonPath("$[5].count").value(1))
+                .andExpect(jsonPath("$[5].active").value(1))
+                .andExpect(jsonPath("$[5].drivers").value(1))
+                .andExpect(jsonPath("$[6].kind").value("EXPENSE_ITEM"));
+        mvc.perform(get("/api/dictionaries-overview").cookie(driver)).andExpect(status().isForbidden());
+    }
 }
