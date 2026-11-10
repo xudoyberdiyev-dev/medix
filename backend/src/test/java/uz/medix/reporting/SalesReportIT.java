@@ -151,7 +151,8 @@ class SalesReportIT {
                 .andExpect(jsonPath("$.rows[0].profit").value("1700000.00"))
                 .andExpect(jsonPath("$.total.net").value("2000000.00"))
                 .andExpect(jsonPath("$.total.orders").value(3))
-                .andExpect(jsonPath("$.total.returns").value("0.00"));
+                .andExpect(jsonPath("$.total.returns").value("0.00"))
+                .andExpect(jsonPath("$.total.discount").value("0.00"));
         // Operator bo'yicha
         mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("groupBy", "OPERATOR").cookie(director))
                 .andExpect(jsonPath("$.rows[0].key").value(String.valueOf(op1.id())))
@@ -253,5 +254,56 @@ class SalesReportIT {
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
                         .string("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+    }
+    /** E7: chegirma ustuni — Σ dona × (narx turidagi narx − chegirmali narx); chegirmasiz qatorda 0. */
+    @Test
+    void discountColumn() throws Exception {
+        long b = branch();
+        long w = jdbc.sql("INSERT INTO warehouse (branch_id, name) VALUES (:b, 'Asosiy') RETURNING id").param("b", b).query(Long.class).single();
+        Session op = loginAs("OPERATOR", b);
+        Cookie director = loginAs("DIRECTOR", b).cookie();
+        long c = customer();
+        long p = jdbc.sql("""
+                INSERT INTO product (unit_id, code, name) SELECT id, :c, :n FROM unit ORDER BY id LIMIT 1 RETURNING id""")
+                .param("c", String.valueOf(10_000_000 + ThreadLocalRandom.current().nextInt(89_999_999)))
+                .param("n", "Chegirma " + UUID.randomUUID().toString().substring(0, 6)).query(Long.class).single();
+        long batch = jdbc.sql("""
+                INSERT INTO batch (product_id, number, expiry_date, cost, source_type) VALUES (:p, 'B1', :x, 50, 'TST') RETURNING id""")
+                .param("p", p).param("x", java.sql.Date.valueOf(today().plusYears(1))).query(Long.class).single();
+        // 3 × 100,00 → 7,5% chegirma → 92,50; 2 × 40,00 — chegirmasiz. Sotuv: 277,50 + 80,00 = 357,50; chegirma 22,50
+        long o = order(b, w, c, op.id(), "DRAFT", "357.50", "CASH");
+        long l1 = line(o, 1, p, 3, "92.50", "100.00", "7.5");
+        long l2 = line(o, 2, p, 2, "40.00", "40.00", "0");
+        jdbc.sql("UPDATE sales_order SET status = 'DELIVERED' WHERE id = :o").param("o", o).update();
+        String n = UUID.randomUUID().toString().substring(0, 8);
+        long s = jdbc.sql("""
+                INSERT INTO sale (number, invoice_number, order_id, branch_id, warehouse_id, customer_id, sale_date, total, vat_total, cost_total, created_by)
+                VALUES (:n, :i, :o, :b, :w, :c, :d, 357.50, 0, 0, :e) RETURNING id""")
+                .param("n", "SV-TST-" + n).param("i", "HF-TST-" + n).param("o", o).param("b", b).param("w", w)
+                .param("c", c).param("d", java.sql.Date.valueOf(today())).param("e", op.id()).query(Long.class).single();
+        saleLine(s, l1, p, batch, 3, "92.50", "277.50");
+        saleLine(s, l2, p, batch, 2, "40.00", "80.00");
+        String t = today().toString();
+        mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("to", t).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows[0].sales").value("357.50"))
+                .andExpect(jsonPath("$.rows[0].discount").value("22.50"))
+                .andExpect(jsonPath("$.total.discount").value("22.50"));
+    }
+
+    private long line(long order, int no, long product, int qty, String price, String listPrice, String pct) {
+        return jdbc.sql("""
+                INSERT INTO sales_order_line (order_id, line_no, product_id, qty, price, list_price, discount_pct)
+                VALUES (:o, :n, :p, :q, CAST(:pr AS NUMERIC), CAST(:lp AS NUMERIC), CAST(:d AS NUMERIC)) RETURNING id""")
+                .param("o", order).param("n", no).param("p", product).param("q", qty).param("pr", price).param("lp", listPrice).param("d", pct)
+                .query(Long.class).single();
+    }
+
+    private void saleLine(long sale, long orderLine, long product, long batch, int qty, String price, String amount) {
+        jdbc.sql("""
+                INSERT INTO sale_line (sale_id, order_line_id, product_id, batch_id, qty, price, amount, vat_rate, vat_amount, cost)
+                VALUES (:s, :l, :p, :b, :q, CAST(:pr AS NUMERIC), CAST(:a AS NUMERIC), 0, 0, 50)""")
+                .param("s", sale).param("l", orderLine).param("p", product).param("b", batch).param("q", qty).param("pr", price).param("a", amount)
+                .update();
     }
 }

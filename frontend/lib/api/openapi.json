@@ -27198,6 +27198,10 @@
           "cost" : {
             "type" : "string"
           },
+          "discount" : {
+            "type" : "string",
+            "description" : "Berilgan chegirma (E7): Σ qty × (narx turidagi narx − chegirmali narx); sotuv summasi chegirmadan keyin"
+          },
           "key" : {
             "type" : "string"
           },
@@ -27222,7 +27226,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "key", "name", "net", "orders", "returns", "sales" ]
+        "required" : [ "discount", "key", "name", "net", "orders", "returns", "sales" ]
       },
       "SaveRequest" : {
         "type" : "object",

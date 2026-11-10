@@ -11315,6 +11315,8 @@ export interface components {
         };
         SalesRow: {
             cost?: string;
+            /** @description Berilgan chegirma (E7): Σ qty × (narx turidagi narx − chegirmali narx); sotuv summasi chegirmadan keyin */
+            discount: string;
             key: string;
             name: string;
             net: string;

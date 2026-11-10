@@ -159,6 +159,7 @@ export function SalesReportPage() {
       render: (x) => <span className="font-mono tabular-nums">{x.orders}</span>,
     },
     { key: "sales", sortable: true, title: t("sales.sales"), align: "right", render: (x) => money(x.sales) },
+    { key: "discount", sortable: true, title: t("sales.discount"), align: "right", render: (x) => money(x.discount) },
     { key: "returns", sortable: true, title: t("sales.returns"), align: "right", render: (x) => money(x.returns) },
     { key: "net", sortable: true, title: t("sales.net"), align: "right", render: (x) => money(x.net) },
   ];
@@ -173,6 +174,7 @@ export function SalesReportPage() {
         name: t("total"),
         orders: <span className="font-mono tabular-nums">{r.total.orders}</span>,
         sales: money(r.total.sales),
+        discount: money(r.total.discount),
         returns: money(r.total.returns),
         net: money(r.total.net),
         ...(r.costVisible ? { cost: money(r.total.cost), profit: money(r.total.profit) } : {}),
