@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Wallet } from "lucide-react";
-import Link from "next/link";
+import { Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -15,7 +14,7 @@ import { opsFilterHref } from "@/features/cash/api";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { PeriodPicker } from "@/features/home/period-picker";
 import { reportHref } from "@/lib/saved-reports";
-import { ReportActions, useReportPeriod } from "./saved-reports";
+import { ReportActions, ReportCrumbs, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -109,9 +108,7 @@ export function ExpenseReportPage() {
 
   return (
     <>
-      <Link href="/reports" className="mb-2 inline-flex items-center gap-1 text-caption text-text-secondary hover:underline">
-        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> {t("back")}
-      </Link>
+      <ReportCrumbs title={title} />
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{title}</h1>
         <div className="flex flex-wrap items-end gap-3">

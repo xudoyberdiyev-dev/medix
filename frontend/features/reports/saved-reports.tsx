@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, FileSpreadsheet, Printer, X } from "lucide-react";
+import { Bookmark, ChevronRight, FileSpreadsheet, Printer, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -165,5 +165,21 @@ export function ReportActions({ href, defaultName, exportHref }: { href: string;
         {t("export")}
       </Button>
     </div>
+  );
+}
+
+/** Non-krosh (prototip Reports): «Hisobotlar › <hisobot>». */
+export function ReportCrumbs({ title }: { title: string }) {
+  const t = useTranslations("reports");
+  return (
+    <nav aria-label={t("crumbs")} className="mb-2 flex items-center gap-1 text-caption text-text-secondary print:hidden">
+      <Link href="/reports" className="hover:underline">
+        {t("back")}
+      </Link>
+      <ChevronRight size={14} strokeWidth={1.5} aria-hidden />
+      <span className="text-text-primary" aria-current="page">
+        {title}
+      </span>
+    </nav>
   );
 }

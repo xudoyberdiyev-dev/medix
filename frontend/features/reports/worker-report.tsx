@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, PackageCheck, ScanBarcode } from "lucide-react";
-import Link from "next/link";
+import { PackageCheck, ScanBarcode } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -11,7 +10,7 @@ import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { PeriodPicker } from "@/features/home/period-picker";
 import { reportHref } from "@/lib/saved-reports";
-import { ReportActions, useReportPeriod } from "./saved-reports";
+import { ReportActions, ReportCrumbs, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { rowField, useClientTable } from "@/lib/client-table";
@@ -122,9 +121,7 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
 
   return (
     <>
-      <Link href="/reports" className="mb-2 inline-flex items-center gap-1 text-caption text-text-secondary hover:underline">
-        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> {t("back")}
-      </Link>
+      <ReportCrumbs title={title} />
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{title}</h1>
         <div className="flex flex-wrap items-end gap-3">

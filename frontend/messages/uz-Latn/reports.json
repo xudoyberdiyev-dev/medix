@@ -253,5 +253,6 @@
     "done": "Hisobot saqlandi — «Mening hisobotlarim»da",
     "remove": "«{name}» ni oʻchirish"
   },
-  "print": "Chop etish"
+  "print": "Chop etish",
+  "crumbs": "Joylashuv"
 }
