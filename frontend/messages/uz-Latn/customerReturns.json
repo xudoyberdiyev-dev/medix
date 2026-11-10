@@ -121,5 +121,11 @@
     "cancelledBody": "{who} · {at} — tovar Karantindan chiqarildi, mijoz qarzi qaytarildi.",
     "blockedTitle": "Bekor qilib boʻlmaydi",
     "blockedHint": "Qaytgan tovar Karantindan keyingi hujjat bilan chiqarilgan. Avval oʻsha hujjatni bekor qiling, soʻng qayta urinib koʻring."
+  },
+  "doc": {
+    "loading": "Hujjat yuklanmoqda",
+    "stepCreated": "Yaratildi",
+    "stepApproval": "Tasdiqlash",
+    "stepPosted": "Oʻtkazildi"
   }
 }

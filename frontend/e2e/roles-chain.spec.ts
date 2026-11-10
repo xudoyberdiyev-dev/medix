@@ -884,7 +884,9 @@ test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yubora
   await page.getByRole("option", { name: "Shikastlangan" }).click();
   await drawer.getByRole("button", { name: "Qabul qilishga yuborish" }).click();
   await expect(page.getByText("Hujjat ombor mudiriga yuborildi").first()).toBeVisible();
-  await expect(drawer.getByText("Qabul kutilmoqda").first()).toBeVisible();
+  // Hujjat — toʻliq sahifa (prototip StockDocs, kind = qm)
+  await expect(page).toHaveURL(/\/customer-returns\/\d+$/);
+  await expect(page.getByRole("main").getByText("Qabul kutilmoqda").first()).toBeVisible();
 });
 
 test("Ombor mudiri: QM ni qabul qiladi — tovar Karantinga, mijoz qarzi kamayadi", async ({ page }) => {
@@ -894,13 +896,13 @@ test("Ombor mudiri: QM ni qabul qiladi — tovar Karantinga, mijoz qarzi kamayad
   const row = page.getByRole("row", { name: /QM-/ }).filter({ hasText: "Qabul kutilmoqda" }).first();
   await expect(row).toContainText(CUSTOMER);
   await row.click();
-  const drawer = page.getByRole("dialog").last();
-  await drawer.getByRole("button", { name: "Qabul qilish va tasdiqlash" }).click();
+  await expect(page).toHaveURL(/\/customer-returns\/\d+$/);
+  await page.getByRole("button", { name: "Qabul qilish va tasdiqlash" }).click();
   const confirm = page.getByRole("dialog", { name: "Qaytarishni tasdiqlaysizmi?" });
   await expect(confirm.getByText(/Karantin zonasiga kiradi/)).toBeVisible();
   await confirm.getByRole("button", { name: "Qabul qilish va tasdiqlash" }).click();
   await expect(page.getByText(/QM-[A-Z]{2,4}-\d{6} tasdiqlandi/).first()).toBeVisible();
-  await page.keyboard.press("Escape");
+  await page.goto("/customer-returns");
   await expect(page.getByRole("row", { name: /QM-/ }).first()).toContainText("Tasdiqlangan");
   // Qaytarish turlari yorligʻi: QM birinchi
   await expect(page.getByRole("link", { name: "Mijozdan qaytarish", exact: true })).toHaveAttribute("aria-current", "page");
