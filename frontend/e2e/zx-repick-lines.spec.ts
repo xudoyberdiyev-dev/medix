@@ -81,7 +81,11 @@ test("Ombor zanjiri: vaqt, yigʻish, markirovka", async ({ page }) => {
   await login(page, "marker.1", PASSWORD);
   await page.goto("/marking");
   await page.getByRole("tab", { name: /Navbat/ }).click();
-  await page.getByRole("listitem").filter({ hasText: number }).getByRole("button", { name: "Markirovkani boshlash" }).click();
+  await page
+    .locator("article")
+    .filter({ hasText: number })
+    .getByRole("button", { name: /Markirovkani boshlash|Markirovkasiz — tasdiqlash/ })
+    .click();
   const scan = page.getByLabel("Markirovka kodi");
   await expect(scan).toBeFocused();
   await scan.fill(mark("RP1"));
@@ -117,7 +121,11 @@ test("Ombor mudiri: faqat oddiy qatorni yigʻishga qaytaradi; qayta yigʻishda f
   await login(page, "marker.1", PASSWORD);
   await page.goto("/marking");
   await page.getByRole("tab", { name: /Navbat/ }).click();
-  await page.getByRole("listitem").filter({ hasText: number }).getByRole("button", { name: "Markirovkani boshlash" }).click();
+  await page
+    .locator("article")
+    .filter({ hasText: number })
+    .getByRole("button", { name: /Markirovkani boshlash|Markirovkasiz — tasdiqlash/ })
+    .click();
   const unmarked = page.getByRole("region", { name: "Markirovkasiz qatorlar" });
   await expect(unmarked).toContainText("Paracetamol E2E");
   await unmarked.getByRole("button", { name: "Tasdiqlash", exact: true }).click();

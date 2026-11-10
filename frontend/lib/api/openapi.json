@@ -21903,6 +21903,10 @@
       "MarkQueueItem" : {
         "type" : "object",
         "properties" : {
+          "boxesNeeded" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "customer" : {
             "type" : "string"
           },
@@ -21911,9 +21915,20 @@
             "format" : "date-time",
             "description" : "Berilgan vaqt tugash payti"
           },
+          "deliveryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "deliveryType" : {
+            "type" : "string",
+            "enum" : [ "DELIVERY", "PICKUP" ]
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "invoice" : {
+            "type" : "string"
           },
           "lines" : {
             "type" : "integer",
@@ -21935,7 +21950,13 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "note" : {
+            "type" : "string"
+          },
           "number" : {
+            "type" : "string"
+          },
+          "picker" : {
             "type" : "string"
           },
           "statusChangedAt" : {
@@ -21947,13 +21968,17 @@
             "format" : "int64",
             "description" : "Skanerlanadigan kodlar soni"
           },
+          "unitsNeeded" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "unmarkedLines" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Markirovkasiz (tasdiqlanadigan) qatorlar soni (E1)"
           }
         },
-        "required" : [ "customer", "id", "lines", "number", "statusChangedAt", "totalQty", "unmarkedLines" ]
+        "required" : [ "boxesNeeded", "customer", "deliveryType", "id", "lines", "number", "statusChangedAt", "totalQty", "unitsNeeded", "unmarkedLines" ]
       },
       "MarkWork" : {
         "type" : "object",
@@ -31683,6 +31708,10 @@
             "format" : "int32",
             "description" : "Bir buyurtmaga o'rtacha haqiqiy vaqt, daqiqa"
           },
+          "boxCodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "codes" : {
             "type" : "integer",
             "format" : "int32",
@@ -31727,6 +31756,10 @@
             "description" : "Faqat markirovkachilar: sabab bilan olib tashlangan kodlar"
           },
           "units" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "wrongScans" : {
             "type" : "integer",
             "format" : "int32"
           }

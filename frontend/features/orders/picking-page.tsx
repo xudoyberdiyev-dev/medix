@@ -195,11 +195,16 @@ function TodayStats() {
         [t("picking.kAvg"), r.orders > 0 ? t("picking.minutes", { n: formatQuantity(r.avgMinutes) }) : "—", ""],
       ]
     : [];
+  return <StatCards title={t("myToday.title")} items={r ? items : null} />;
+}
+
+/** «Bugungi natijam» kartalari (Yigʻuvchi / Markirovkachi paneli): [nom, qiymat, rang klassi]. */
+export function StatCards({ title, items }: { title: string; items: [string, string, string][] | null }) {
   return (
-    <section className="mt-6 mb-6" aria-label={t("myToday.title")}>
-      <h2 className="mb-2 text-table font-semibold text-text-secondary">{t("myToday.title")}</h2>
-      {r ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <section className="mt-6 mb-6" aria-label={title}>
+      <h2 className="mb-2 text-table font-semibold text-text-secondary">{title}</h2>
+      {items ? (
+        <div className={cn("grid grid-cols-2 gap-3", items.length > 4 ? "lg:grid-cols-5" : "lg:grid-cols-4")}>
           {items.map(([label, value, tone]) => (
             <div key={label} className="rounded-card border border-border bg-surface px-4 py-3">
               <div className="text-caption text-text-secondary">{label}</div>
@@ -214,7 +219,7 @@ function TodayStats() {
   );
 }
 
-function deliveryText(o: QueueItem, t: OrdersT): string {
+export function deliveryText(o: { deliveryType: string; deliveryDate?: string | null }, t: OrdersT): string {
   const kind = o.deliveryType === "PICKUP" ? t("list.pickup") : t("picking.deliver");
   return o.deliveryDate ? `${kind} · ${day(o.deliveryDate)}` : kind;
 }

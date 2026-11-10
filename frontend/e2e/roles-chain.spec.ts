@@ -286,7 +286,12 @@ test("Markirovkachi: birinchi kirish, kodlarni skanerlaydi (xato kod rad etiladi
   await firstLogin(page, "marker.1");
   await page.goto("/marking");
   await page.getByRole("tab", { name: /Navbat/ }).click();
-  await page.getByRole("listitem").filter({ hasText: CUSTOMER }).first().getByRole("button", { name: "Markirovkani boshlash" }).click();
+  await page
+    .locator("article")
+    .filter({ hasText: CUSTOMER })
+    .first()
+    .getByRole("button", { name: /Markirovkani boshlash|Markirovkasiz — tasdiqlash/ })
+    .click();
   const scan = page.getByLabel("Markirovka kodi");
   await expect(scan).toBeFocused();
   // Boshqa partiya — rad etiladi
@@ -556,9 +561,9 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
 async function confirmUnmarked(page: Page, customer: string) {
   await page.goto("/marking");
   await page.getByRole("tab", { name: /Navbat/ }).click();
-  const card = page.getByRole("listitem").filter({ hasText: customer }).first();
+  const card = page.locator("article").filter({ hasText: customer }).first();
   await expect(card).toContainText("Markirovkasiz — tasdiqlash");
-  await card.getByRole("button", { name: "Markirovkani boshlash" }).click();
+  await card.getByRole("button", { name: /Markirovkani boshlash|Markirovkasiz — tasdiqlash/ }).click();
   const unmarked = page.getByRole("region", { name: "Markirovkasiz qatorlar" });
   await expect(unmarked).toBeVisible();
   await expect(page.getByLabel("Markirovka kodi")).toHaveCount(0);

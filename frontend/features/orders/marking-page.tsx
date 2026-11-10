@@ -1,13 +1,35 @@
 "use client";
 
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, CheckCircle2, CircleX, FileDown, ListChecks, Play, ScanLine, Tag, Timer, Trash2 } from "lucide-react";
+import {
+  Ban,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  CircleX,
+  FileDown,
+  Info,
+  List,
+  ListChecks,
+  Lock,
+  MessageSquareText,
+  ReceiptText,
+  ScanBarcode,
+  ScanLine,
+  Tag,
+  Timer,
+  Trash2,
+  Truck,
+  User,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Icon, type LucideIcon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { Pagination } from "@/components/ui/pagination";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
@@ -16,17 +38,19 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
+import { useBranches } from "@/features/employees/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import type { components } from "@/lib/api/schema";
+import { cn } from "@/lib/cn";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, parseGs1 } from "@/lib/gs1";
-import { codesExportUrl } from "./api";
+import { codesExportUrl, useOrder } from "./api";
 import { IssueButton } from "./issues";
-import { MyToday } from "./my-today";
 import { day } from "./orders-page";
-import { timerText } from "./picking-page";
+import { deliveryText, StatCards, timerText } from "./picking-page";
+import { repickLines } from "./pick-sheet";
 import type { OrdersT } from "./i18n";
 
 export type MarkWork = components["schemas"]["MarkWork"];
@@ -85,7 +109,8 @@ export function MarkingPage() {
   const t = useTranslations("orders");
   const me = useMe();
   const allowed = can(me.data, "marking.scan");
-  const [tab, setTab] = useState("mine");
+  const [tab, setTab] = useState<string | null>(null);
+  const branches = useBranches();
   const mine = useQuery({
     queryKey: ["marking", "mine"],
     queryFn: async (): Promise<MarkWork | null> => {
@@ -104,27 +129,28 @@ export function MarkingPage() {
 
   if (me.data && !allowed) return <ForbiddenState description={t("marking.forbidden")} />;
   const waiting = (queue.data ?? []).filter((o) => !o.markerId).length;
+  const current = tab ?? (mine.data ? "mine" : "queue");
+  const branchName = branches.data?.find((b) => b.id === me.data?.branchId)?.name;
 
   return (
     <>
-      <h1 className="mb-4 text-page-title">{t("marking.title")}</h1>
-      <div className="mb-4 max-w-xl">
-        <MyToday kind="markers" />
-      </div>
+      <h1 className="text-page-title">{t("marking.panelTitle")}</h1>
+      {me.data ? <p className="mt-1 text-text-secondary">{[me.data.fullName, branchName].filter(Boolean).join(" · ")}</p> : null}
+      <MarkerToday />
       <div className="mb-4">
         <Tabs
           aria-label={t("marking.tabsAria")}
-          value={tab}
+          value={current}
           onChange={setTab}
           items={[
-            { key: "mine", label: t("marking.tabMine") },
-            { key: "queue", label: t("marking.tabQueue"), count: waiting },
+            { key: "queue", label: t("marking.tabQueue"), count: waiting || undefined },
+            { key: "mine", label: t("marking.tabMine"), count: mine.data ? 1 : undefined },
             { key: "today", label: t("marking.tabToday") },
             { key: "codes", label: t("marking.tabCodes") },
           ]}
         />
       </div>
-      {tab === "mine" ? (
+      {current === "mine" ? (
         mine.error ? (
           <ErrorState onRetry={() => mine.refetch()} />
         ) : mine.isPending ? (
@@ -146,9 +172,9 @@ export function MarkingPage() {
           </Card>
         )
       ) : null}
-      {tab === "queue" ? <Queue busy={Boolean(mine.data)} onStarted={() => setTab("mine")} /> : null}
-      {tab === "today" ? <CodesJournal today mine /> : null}
-      {tab === "codes" ? <CodesJournal today={false} mine={false} /> : null}
+      {current === "queue" ? <Queue busy={Boolean(mine.data)} onStarted={() => setTab("mine")} /> : null}
+      {current === "today" ? <CodesJournal today mine /> : null}
+      {current === "codes" ? <CodesJournal today={false} mine={false} /> : null}
     </>
   );
 }
@@ -188,42 +214,147 @@ function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
           <EmptyState icon={Tag} title={t("marking.queueEmpty")} description={t("marking.queueEmptyHint")} />
         </Card>
       ) : (
-        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
           {items.map((o) => (
-            <li key={o.id} className="rounded-card border border-border bg-surface p-3">
-              <div className="font-mono">{o.number}</div>
-              <div className="mt-1">{o.customer}</div>
-              <div className="mt-1 text-caption text-text-secondary">
-                {o.lines === 0
-                  ? t("marking.queueMetaUnmarked", { lines: formatQuantity(o.unmarkedLines) })
-                  : t("marking.queueMeta", {
-                      lines: formatQuantity(o.lines),
-                      qty: formatQuantity(o.totalQty),
-                      minutes: o.markMinutes ?? "—",
-                    })}
-                {o.lines > 0 && o.unmarkedLines > 0 ? ` · ${t("marking.plusUnmarked", { lines: formatQuantity(o.unmarkedLines) })}` : null}
-              </div>
-              {o.lines === 0 ? (
-                <div className="mt-2">
-                  <Badge tone="neutral" icon={ListChecks}>
-                    {t("marking.unmarkedOnly")}
-                  </Badge>
-                </div>
-              ) : null}
-              <div className="mt-2">
-                {o.markerId ? (
-                  <Badge tone="warning">{t("marking.busy", { name: o.marker ?? "" })}</Badge>
-                ) : (
-                  <Button size="sm" icon={Play} disabled={busy} loading={pending === o.id} onClick={() => void start(o.id)}>
-                    {t("marking.start")}
-                  </Button>
-                )}
-              </div>
-            </li>
+            <MarkQueueCard key={o.id} o={o} blocked={busy} pending={pending === o.id} onStart={() => void start(o.id)} />
           ))}
-        </ul>
+        </div>
       )}
     </>
+  );
+}
+
+type MarkQueueItem = components["schemas"]["MarkQueueItem"];
+
+/** «Bugungi natijam» (prototip MarkerPanel): buyurtmalar, urilgan kodlar (quti, dona), oʻz vaqtida, kechikkan, xato urishlar. */
+function MarkerToday() {
+  const t = useTranslations("orders");
+  const today = useQuery({
+    queryKey: ["reports", "markers", "mine"],
+    queryFn: () => unwrap(api.GET("/api/reports/markers/mine")),
+    refetchInterval: 60_000,
+  });
+  if (today.error) return null;
+  const r = today.data;
+  const boxes = r?.boxCodes ?? 0;
+  const units = (r?.codes ?? 0) - boxes;
+  return (
+    <StatCards
+      title={t("myToday.title")}
+      items={
+        r
+          ? [
+              [t("marking.kDone"), formatQuantity(r.orders), ""],
+              [t("marking.kCodes"), t("marking.boxesUnits", { boxes: formatQuantity(boxes), units: formatQuantity(units) }), ""],
+              [t("picking.kOnTime"), formatQuantity(r.onTime), "text-success"],
+              [t("picking.kLate"), formatQuantity(r.late), r.late > 0 ? "text-danger" : ""],
+              [t("marking.kErrs"), formatQuantity(r.wrongScans ?? 0), (r.wrongScans ?? 0) > 0 ? "text-danger" : ""],
+            ]
+          : null
+      }
+    />
+  );
+}
+
+/** Kerakli kodlar: «10 quti, 20 dona» (faqat borlari). */
+export function needText(o: Pick<MarkQueueItem, "boxesNeeded" | "unitsNeeded">, t: OrdersT): string {
+  const parts = [
+    o.boxesNeeded > 0 ? t("marking.boxesN", { n: formatQuantity(o.boxesNeeded) }) : null,
+    o.unitsNeeded > 0 ? t("marking.unitsN", { n: formatQuantity(o.unitsNeeded) }) : null,
+  ].filter(Boolean);
+  return parts.join(", ");
+}
+
+/** Navbat kartasi (prototip MarkerPanel): belgilar, nakladnoy, qatorlar, kerakli kodlar, yigʻuvchi, yetkazish; «Tafsilot» — qatorlar. */
+function MarkQueueCard({ o, blocked, pending, onStart }: { o: MarkQueueItem; blocked: boolean; pending: boolean; onStart: () => void }) {
+  const t = useTranslations("orders");
+  const [open, setOpen] = useState(false);
+  const busy = Boolean(o.markerId);
+  const none = o.lines === 0;
+  const meta: [LucideIcon, string, boolean][] = [
+    [ReceiptText, o.invoice ? t("picking.invoiceN", { number: o.invoice }) : t("picking.noInvoice"), false],
+    [List, t("marking.linesMk", { n: formatQuantity(o.lines + o.unmarkedLines), m: formatQuantity(o.lines) }), false],
+    [ScanBarcode, none ? t("marking.needNone") : t("marking.need", { what: needText(o, t) }), true],
+    ...(o.picker ? ([[User, t("marking.pickedBy", { name: o.picker }), false]] as [LucideIcon, string, boolean][]) : []),
+    [o.deliveryType === "PICKUP" ? User : Truck, deliveryText(o, t), false],
+  ];
+  return (
+    <article className={cn("rounded-card border border-border p-4", busy ? "bg-background" : "bg-surface")}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className={cn("font-mono text-table font-semibold", busy && "text-text-secondary")}>{o.number}</div>
+          <div className={cn("mt-0.5 text-subtitle", busy && "text-text-secondary")}>{o.customer}</div>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {busy ? (
+            <Badge tone="neutral" icon={Lock}>
+              {t("marking.busy", { name: o.marker ?? "" })}
+            </Badge>
+          ) : null}
+          <Badge tone={busy ? "neutral" : "primary"} icon={Timer}>
+            {o.markMinutes != null ? t("marking.tm", { n: o.markMinutes }) : t("picking.tmWait")}
+          </Badge>
+          {none ? (
+            <Badge tone="neutral" icon={Ban}>
+              {t("marking.noneBadge")}
+            </Badge>
+          ) : null}
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-1.5 text-table text-text-secondary sm:grid-cols-3">
+        {meta.map(([icon, text, strong]) => (
+          <span key={text} className={cn("inline-flex items-start gap-1.5", strong && "font-semibold text-text-primary")}>
+            <Icon icon={icon} size="sm" className="mt-0.5 shrink-0" />
+            <span>{text}</span>
+          </span>
+        ))}
+      </div>
+      {o.note ? (
+        <div className="mt-3 flex items-start gap-1.5 rounded-control bg-background px-3 py-2 text-table">
+          <Icon icon={MessageSquareText} size="sm" className="mt-0.5 shrink-0 text-text-secondary" />
+          <span>{o.note}</span>
+        </div>
+      ) : null}
+      {open ? <MarkQueueLines id={o.id} /> : null}
+      <div className={cn("mt-4 grid gap-2", busy ? "grid-cols-1" : "grid-cols-[2fr_3fr]")}>
+        <Button variant="secondary" size="lg" icon={open ? ChevronUp : ChevronDown} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          {open ? t("picking.hide") : t("picking.details")}
+        </Button>
+        {busy ? null : blocked ? (
+          <span className="inline-flex items-center gap-1.5 text-table text-text-secondary">
+            <Icon icon={Info} size="sm" />
+            {t("marking.oneActive")}
+          </span>
+        ) : (
+          <Button size="lg" icon={none ? Check : ScanBarcode} loading={pending} onClick={onStart}>
+            {none ? t("marking.noneBtn") : t("marking.start")}
+          </Button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+/** «Tafsilot»: buyurtma qatorlari (markirovkali — belgi bilan). */
+function MarkQueueLines({ id }: { id: number }) {
+  const t = useTranslations("orders");
+  const order = useOrder(id);
+  if (order.error) return <ErrorState onRetry={() => order.refetch()} />;
+  if (!order.data) return <Skeleton className="mt-3 h-16 w-full" />;
+  return (
+    <ul className="mt-3 flex flex-col border-t border-border">
+      {repickLines(order.data).map((l) => (
+        <li key={l.id} className="flex items-start justify-between gap-3 border-b border-border py-2 text-table">
+          <span className="inline-flex items-start gap-1.5">
+            {l.marked ? <Icon icon={ScanBarcode} size="sm" className="mt-0.5 shrink-0 text-primary" /> : null}
+            <span>
+              <span className="font-mono text-text-secondary">{l.productCode}</span> {l.productName}
+            </span>
+          </span>
+          <span className="font-semibold whitespace-nowrap tabular-nums">{t("picking.qty", { qty: formatQuantity(l.qty) })}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

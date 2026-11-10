@@ -9230,14 +9230,21 @@ export interface components {
             scanned: number;
         };
         MarkQueueItem: {
+            /** Format: int64 */
+            boxesNeeded: number;
             customer: string;
             /**
              * Format: date-time
              * @description Berilgan vaqt tugash payti
              */
             deadline?: string;
+            /** Format: date */
+            deliveryDate?: string;
+            /** @enum {string} */
+            deliveryType: "DELIVERY" | "PICKUP";
             /** Format: int64 */
             id: number;
+            invoice?: string;
             /**
              * Format: int32
              * @description Markirovkali qatorlar soni
@@ -9250,7 +9257,9 @@ export interface components {
             marker?: string;
             /** Format: int64 */
             markerId?: number;
+            note?: string;
             number: string;
+            picker?: string;
             /** Format: date-time */
             statusChangedAt: string;
             /**
@@ -9258,6 +9267,8 @@ export interface components {
              * @description Skanerlanadigan kodlar soni
              */
             totalQty: number;
+            /** Format: int64 */
+            unitsNeeded: number;
             /**
              * Format: int32
              * @description Markirovkasiz (tasdiqlanadigan) qatorlar soni (E1)
@@ -13247,6 +13258,8 @@ export interface components {
              * @description Bir buyurtmaga o'rtacha haqiqiy vaqt, daqiqa
              */
             avgMinutes: number;
+            /** Format: int32 */
+            boxCodes?: number;
             /**
              * Format: int32
              * @description Faqat markirovkachilar: buyurtmada qolgan kodlar
@@ -13280,6 +13293,8 @@ export interface components {
             removedCodes?: number;
             /** Format: int32 */
             units: number;
+            /** Format: int32 */
+            wrongScans?: number;
         };
         WriteOffDetail: {
             actNo?: string;
