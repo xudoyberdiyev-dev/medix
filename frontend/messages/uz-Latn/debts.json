@@ -131,7 +131,9 @@
     "statusFilter": "Holat",
     "recon": "Akt sverka",
     "clearFilters": "Filtrni tozalash",
-    "totalN": "Jami: {n}"
+    "totalN": "Jami: {n}",
+    "groupNote": "Guruh ichidagi hisob-kitoblar: {s} (jamiga kirmaydi)",
+    "groupOpen": "Filiallararo sotuvlar"
   },
   "pay": {
     "title": "Yetkazib beruvchilar qarzi",

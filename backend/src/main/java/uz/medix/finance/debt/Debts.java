@@ -43,7 +43,8 @@ class Debts {
             String operator,
             @Schema(nullable = true, description = "To'lov sharti, kun (faqat bitta filial tanlanganda)") Integer paymentDays) {}
 
-    record DebtReport(@Schema(nullable = true) Long branchId, LocalDate today, Buckets totals, List<DebtRow> rows) {}
+    record DebtReport(@Schema(nullable = true) Long branchId, LocalDate today, Buckets totals, List<DebtRow> rows,
+            @Schema(description = "Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi") String groupDebt) {}
 
     record DebtDoc(long branchId, String branch, String docType, long docId, String docNumber, LocalDate date, @Schema(nullable = true) LocalDate dueDate,
             String open, int overdueDays, @Schema(description = "Hujjat summasi") String total,
@@ -114,7 +115,7 @@ class Debts {
             byParty.merge(first.counterpartyId(), Aging.of(docs, today), Aging.Result::plus);
         }
         if (byParty.isEmpty()) {
-            return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of());
+            return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of(), groupDebt(side, branchId));
         }
         record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment, String region, String operator, Integer days) {}
         String payDoc = side == Side.CUSTOMER ? "MT" : "YT";
@@ -153,7 +154,20 @@ class Debts {
         // Eng ko'p muddati o'tgan qarz birinchi, keyin umumiy qarz
         rows.sort(Comparator.comparing((DebtRow r) -> Money.of(r.buckets().overdue())).reversed()
                 .thenComparing((DebtRow r) -> Money.of(r.buckets().debt()), Comparator.reverseOrder()));
-        return new DebtReport(branchId, today, Buckets.of(total), rows);
+        return new DebtReport(branchId, today, Buckets.of(total), rows, groupDebt(side, branchId));
+    }
+
+    /**
+     * Filiallararo (FS) ochiq qarz, juftlik bo'yicha musbat qoldiq: mijozlar tomoni — boshqa filiallar bizga (kreditor = filial), YB
+     * tomoni — biz boshqa filiallarga (debitor = filial); filial tanlanmasa — barcha juftliklar.
+     */
+    private String groupDebt(Side side, Long branchId) {
+        String col = side == Side.CUSTOMER ? "creditor_branch_id" : "debtor_branch_id";
+        return new Money(jdbc.sql("""
+                SELECT coalesce(sum(greatest(x.amt, 0)), 0) FROM (
+                    SELECT debtor_branch_id, creditor_branch_id, sum(amount) AS amt FROM branch_ledger
+                    WHERE CAST(:b AS BIGINT) IS NULL OR %s = :b GROUP BY 1, 2) x""".formatted(col))
+                .param("b", branchId).query(BigDecimal.class).single()).toString();
     }
 
     /**

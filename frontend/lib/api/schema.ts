@@ -8283,6 +8283,8 @@ export interface components {
         DebtReport: {
             /** Format: int64 */
             branchId?: number;
+            /** @description Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi */
+            groupDebt: string;
             rows: components["schemas"]["DebtRow"][];
             /** Format: date */
             today: string;

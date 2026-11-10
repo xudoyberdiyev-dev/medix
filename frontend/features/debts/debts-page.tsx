@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { AlarmClock, ArrowDownLeft, FileCheck2, HandCoins, Plus } from "lucide-react";
+import { AlarmClock, ArrowDownLeft, Building2, FileCheck2, HandCoins, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -14,7 +14,7 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { Checkbox } from "@/components/ui/selection-controls";
-import { can } from "@/features/auth/can";
+import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { api, unwrap } from "@/lib/api/client";
@@ -246,6 +246,17 @@ export function DebtsPage({ side }: { side: Side }) {
               onAll={clearFilters}
               allActive={tab === "all" && ages.length === 0 && statuses.length === 0}
             />
+          ) : null}
+          {report.data && report.data.groupDebt !== "0.00" ? (
+            <div className="-mt-1 flex items-center gap-2 rounded-control border border-border bg-background px-3 py-2 text-[13px] text-text-secondary">
+              <Building2 size={14} strokeWidth={1.5} aria-hidden />
+              <span>{tr("groupNote", { s: formatMoney(report.data.groupDebt) })}</span>
+              {canAny(me.data, ["transfer.view", "transfer.fs"]) ? (
+                <Link href="/branch-sales" className="ml-auto text-primary hover:underline">
+                  {tr("groupOpen")}
+                </Link>
+              ) : null}
+            </div>
           ) : null}
           <Tabs
             aria-label={tr("tabsLabel")}

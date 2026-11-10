@@ -19500,6 +19500,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "groupDebt" : {
+            "type" : "string",
+            "description" : "Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi"
+          },
           "rows" : {
             "type" : "array",
             "items" : {
@@ -19514,7 +19518,7 @@
             "$ref" : "#/components/schemas/Buckets"
           }
         },
-        "required" : [ "rows", "today", "totals" ]
+        "required" : [ "groupDebt", "rows", "today", "totals" ]
       },
       "DebtRow" : {
         "type" : "object",
