@@ -403,6 +403,21 @@ class PaymentIT {
         mvc.perform(get("/api/payments/customer/open-docs").param("branchId", "" + b).param("customerId", "" + c).cookie(cashier))
                 .andExpect(jsonPath("$.advance").value("3000.00"))
                 .andExpect(jsonPath("$.docs[0].open").value("2000.00"));
+        mvc.perform(get("/api/advance-offsets/" + ah2).cookie(cashier))
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.cancelledBy").isNotEmpty());
+
+        // Qo'lda taqsimot (prototip AdvanceDoc): faqat tanlangan hujjat, qoldiqdan oshmaydi, avansdan oshmaydi
+        String manual = ",\"allocations\":[{\"docType\":\"SV\",\"docId\":%d,\"amount\":\"%s\"}]";
+        send(post("/api/advance-offsets/customer"), cashier, body.formatted(manual.formatted(9_600_099L, "1")))
+                .andExpect(jsonPath("$.code").value("advance.docUnknown"));
+        send(post("/api/advance-offsets/customer"), cashier, body.formatted(manual.formatted(9_600_002L, "2000.01")))
+                .andExpect(jsonPath("$.code").value("advance.overDoc"));
+        send(post("/api/advance-offsets/customer"), cashier, body.formatted(manual.formatted(9_600_002L, "500")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.amount").value("500.00"))
+                .andExpect(jsonPath("$.lines.length()").value(1))
+                .andExpect(jsonPath("$.lines[0].debtDocNumber").value("SV-TST-9600002"));
 
         // Parallel: faqat bittasi hisobga oladi, qolganlari — «hisobga oladigan narsa yo'q»
         int n = 4;

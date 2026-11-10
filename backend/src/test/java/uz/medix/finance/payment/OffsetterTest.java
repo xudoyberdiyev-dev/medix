@@ -32,4 +32,21 @@ class OffsetterTest {
         assertThat(Offsetter.plan(List.of(doc(1, "5")), null)).isEmpty();
         assertThat(Offsetter.plan(List.of(doc(1, "-5")), null)).isEmpty();
     }
+
+    @Test
+    void manualAllocationOnlySelectedDocs() {
+        List<Allocator.Doc> r = Offsetter.restrict(docs, java.util.Map.of("SV:3", Money.of("400")));
+        List<Offsetter.Line> lines = Offsetter.plan(r, null);
+        assertThat(lines).extracting(l -> l.advance().id() + "->" + l.debt().id() + " " + l.amount()).containsExactly("2->3 400.00");
+    }
+
+    @Test
+    void manualAllocationRejectsUnknownAndOverOpen() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> Offsetter.restrict(docs, java.util.Map.of("SV:9", Money.of("1"))))
+                .hasMessage("advance.docUnknown");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> Offsetter.restrict(docs, java.util.Map.of("SV:3", Money.of("500.01"))))
+                .hasMessage("advance.overDoc");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> Offsetter.restrict(docs, java.util.Map.of("SV:2", Money.of("1"))))
+                .hasMessage("advance.docUnknown");
+    }
 }
