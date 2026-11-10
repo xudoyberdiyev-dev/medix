@@ -120,7 +120,7 @@ class ProfilePinIT {
         jdbc.sql("UPDATE employee SET pin_hash = :h WHERE id = :id").param("h", encoder.encode("4826")).param("id", s.id()).update();
 
         pins.verify(s.id(), "4826");
-        for (int i = 1; i < PinService.MAX_ATTEMPTS; i++) {
+        for (int i = 1; i < 5; i++) {
             assertThatThrownBy(() -> pins.verify(s.id(), "0000"))
                     .isInstanceOf(MedixException.class).hasFieldOrPropertyWithValue("code", "pin.wrong");
         }

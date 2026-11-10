@@ -10,6 +10,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.shared.security.Actor;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 
 /**
  * Sidebar nishonlari (prototip navBadges): tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati yaqin / o'tgan partiyalar.
@@ -18,7 +20,6 @@ import uz.medix.shared.security.Actor;
 @Service
 class NavBadges {
 
-    static final int EXPIRY_WARN_DAYS = 90;
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
 
     @Schema(description = "Ko'rsatkich: son va xavfli holat (qizil)")
@@ -34,10 +35,12 @@ class NavBadges {
 
     private final JdbcClient jdbc;
     private final Clock clock;
+    private final SystemSettings settings;
 
-    NavBadges(JdbcClient jdbc, Clock clock) {
+    NavBadges(JdbcClient jdbc, Clock clock, SystemSettings settings) {
         this.jdbc = jdbc;
         this.clock = clock;
+        this.settings = settings;
     }
 
     /** branchId — tanlangan filial; ruxsat bo'lmasa yoki berilmasa: barcha filiallar (allBranches) yoki o'z filiali. */
@@ -70,7 +73,7 @@ class NavBadges {
                     WHERE s.qty > 0 AND (:b = -1 OR s.branch_id = :b)""")
                     .param("b", scope)
                     .param("d", Date.valueOf(today))
-                    .param("w", Date.valueOf(today.plusDays(EXPIRY_WARN_DAYS)))
+                    .param("w", Date.valueOf(today.plusDays(settings.intValue(SettingKey.expiryWarnDays))))
                     .query(Exp.class)
                     .single();
             expiry = new Badge(e.near(), e.expired() > 0);
