@@ -94,7 +94,8 @@ class SettingsIT {
         mvc.perform(get("/api/settings/thresholds").cookie(picker))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.expiryWarnDays").value(expiry.intValue()))
-                .andExpect(jsonPath("$.priceWarnPct").value("20"));
+                .andExpect(jsonPath("$.priceWarnPct").value("20"))
+                .andExpect(jsonPath("$.vatRate").value(settings.vatRate(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Tashkent"))).stripTrailingZeros().toPlainString()));
 
         try {
             // Oraliqdan tashqari — 400; admin Direktor bo'limini o'zgartira olmaydi — 403

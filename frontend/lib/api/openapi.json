@@ -30679,9 +30679,13 @@
           },
           "priceWarnPct" : {
             "type" : "string"
+          },
+          "vatRate" : {
+            "type" : "string",
+            "description" : "Amaldagi QQS stavkasi (%) — yangi mahsulot standarti"
           }
         },
-        "required" : [ "expiryWarnDays", "limitBranchPct", "overdueDirDays", "priceWarnPct" ]
+        "required" : [ "expiryWarnDays", "limitBranchPct", "overdueDirDays", "priceWarnPct", "vatRate" ]
       },
       "UnmarkedLine" : {
         "type" : "object",

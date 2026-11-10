@@ -12840,6 +12840,8 @@ export interface components {
             /** Format: int32 */
             overdueDirDays: number;
             priceWarnPct: string;
+            /** @description Amaldagi QQS stavkasi (%) — yangi mahsulot standarti */
+            vatRate: string;
         };
         UnmarkedLine: {
             confirmed: boolean;

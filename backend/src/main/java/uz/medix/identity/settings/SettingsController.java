@@ -218,7 +218,8 @@ class SettingsController {
     }
 
     @Schema(description = "Interfeys uchun chegaralar (barcha kirgan xodimlarga)")
-    record UiThresholds(int expiryWarnDays, String priceWarnPct, String limitBranchPct, int overdueDirDays) {}
+    record UiThresholds(int expiryWarnDays, String priceWarnPct, String limitBranchPct, int overdueDirDays,
+            @Schema(description = "Amaldagi QQS stavkasi (%) — yangi mahsulot standarti") String vatRate) {}
 
     @GetMapping("/thresholds")
     @PreAuthorize("isAuthenticated()")
@@ -227,7 +228,8 @@ class SettingsController {
     UiThresholds thresholds() {
         return new UiThresholds(settings.intValue(SettingKey.expiryWarnDays),
                 settings.value(SettingKey.priceWarnPct).stripTrailingZeros().toPlainString(),
-                settings.value(SettingKey.limitBranchPct).stripTrailingZeros().toPlainString(), settings.intValue(SettingKey.overdueDirDays));
+                settings.value(SettingKey.limitBranchPct).stripTrailingZeros().toPlainString(), settings.intValue(SettingKey.overdueDirDays),
+                settings.vatRate(today()).stripTrailingZeros().toPlainString());
     }
 
     @PutMapping
