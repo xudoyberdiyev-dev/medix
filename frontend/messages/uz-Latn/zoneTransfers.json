@@ -83,5 +83,31 @@
   "lineError": {
     "notPositiveInt": "{product} · {batch}: miqdor musbat butun son boʻlishi kerak",
     "overFree": "{product} · {batch}: boʻsh {free}, kiritildi {got}"
+  },
+  "doc": {
+    "title": "Zona koʻchirish",
+    "approve": "Tasdiqlash",
+    "reject": "Rad etish",
+    "hWh": "Ombor",
+    "bPendingT": "Tasdiqqa yuborildi · {at} · {who}",
+    "bPending": "Karantindan sotuvga ochiq zonaga koʻchirish Filial rahbari tasdigʻini talab qiladi. Tasdiqlanmaguncha tovar «{zone}» zonasida qoladi.",
+    "bPosted": "Tasdiqlangan · {at} · {who}",
+    "bRej": "Rad etildi · {at} · {who}",
+    "bRejD": "Sabab: {reason}. Partiya joyida qoldi.",
+    "sBy": "Yaratdi",
+    "sAppr": "Filial rahbari tasdigʻi",
+    "sApprWho": "Tasdiq kutilmoqda",
+    "h_create": "hujjatni yaratdi va koʻchirdi",
+    "h_pending": "tasdiqqa yubordi",
+    "h_posted": "tasdiqladi",
+    "h_rejected": "rad etdi",
+    "dApprT": "Karantindan chiqarishni tasdiqlaysizmi?",
+    "cfZk": "{w}: {a} → {b} — {n} qator, {q} dona",
+    "tPosted": "{n} tasdiqlandi",
+    "dRejT": "{n} ni rad etasizmi?",
+    "dRejD": "Partiya Karantinda qoladi. Yaratuvchiga sabab koʻrsatiladi.",
+    "rejReason": "Rad etish sababi",
+    "rejReq": "Sababni kiriting",
+    "tRejected": "{n} rad etildi"
   }
 }

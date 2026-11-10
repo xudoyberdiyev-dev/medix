@@ -135,7 +135,9 @@
     "step": {
       "draft": "Qoralama",
       "transit": "Joʻnatildi · yoʻlda",
-      "received": "Qabul qilindi"
+      "received": "Qabul qilindi",
+      "pending": "Rahbar tasdigʻi",
+      "posted": "Tasdiqlangan"
     },
     "bDraftT": "Qoralama",
     "bDraft": "Filial ichida ombordan omborga. Joʻnatilgach tovar yoʻlda boʻladi va hech bir omborda sotuvga ochiq emas; tannarx va partiya oʻzgarmaydi.",

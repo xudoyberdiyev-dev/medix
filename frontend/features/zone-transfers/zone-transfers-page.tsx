@@ -2,8 +2,8 @@
 
 import { ArrowRightLeft, CircleCheck, Clock, Plus, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -39,12 +39,13 @@ export function ZoneTransfersPage() {
   const params = useSearchParams();
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
-  // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi; «Koʻchirish» → «Yangi»: ?new=1 — yangi qoralama
-  const [open, setOpen] = useState<{ id: number | null } | null>(() => {
-    if (params.get("new") === "1") return { id: null };
-    const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
-  });
+  const router = useRouter();
+  // «Koʻchirish» → «Yangi»: ?new=1 — yangi hujjat; bildirishnomadan ?open=<id> — hujjat sahifasiga yoʻnaltiriladi
+  const [creating, setCreating] = useState(() => params.get("new") === "1");
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/zone-transfers/${openId}`);
+  }, [openId, router]);
   const allowed = canAny(me.data, TRANSFER_VIEW_KEYS);
   const canCreate = can(me.data, TRANSFER_ZK);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -79,7 +80,7 @@ export function ZoneTransfersPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => setCreating(true)}>
             {t("create")}
           </Button>
         ) : null}
@@ -93,7 +94,7 @@ export function ZoneTransfersPage() {
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setOpen({ id: d.id })}
+          onRowClick={(d) => router.push(`/zone-transfers/${d.id}`)}
           toolbar={
             <div className="w-56">
               <Select
@@ -117,7 +118,7 @@ export function ZoneTransfersPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => setCreating(true)}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -139,7 +140,9 @@ export function ZoneTransfersPage() {
           }
         />
       )}
-      {open ? <ZoneTransferDrawer id={open.id} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} /> : null}
+      {creating ? (
+        <ZoneTransferDrawer id={null} onClose={() => setCreating(false)} onCreated={(id) => router.push(`/zone-transfers/${id}`)} />
+      ) : null}
     </>
   );
 }

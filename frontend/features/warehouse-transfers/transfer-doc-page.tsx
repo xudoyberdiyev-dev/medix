@@ -287,7 +287,7 @@ function View({ doc }: { doc: WarehouseTransferDetail }) {
   );
 }
 
-function InfoRow({ k, v }: { k: string; v: ReactNode }) {
+export function InfoRow({ k, v }: { k: string; v: ReactNode }) {
   return (
     <div className="grid grid-cols-[minmax(0,180px)_minmax(0,1fr)] gap-4 border-b border-border py-2.5 last:border-b-0">
       <dt className="text-caption text-text-secondary">{k}</dt>
@@ -296,7 +296,7 @@ function InfoRow({ k, v }: { k: string; v: ReactNode }) {
   );
 }
 
-function ZoneCell({ name }: { name: string }) {
+export function ZoneCell({ name }: { name: string }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
       <Layers size={14} strokeWidth={1.5} aria-hidden className="shrink-0 text-text-secondary" />
@@ -305,7 +305,7 @@ function ZoneCell({ name }: { name: string }) {
   );
 }
 
-function SideCard({ label, value, note, muted }: { label: string; value: string; note?: string; muted?: boolean }) {
+export function SideCard({ label, value, note, muted }: { label: string; value: string; note?: string; muted?: boolean }) {
   return (
     <section className="flex min-w-0 flex-col gap-1 rounded-card border border-border bg-surface p-4">
       <p className="text-caption text-text-secondary">{label}</p>
