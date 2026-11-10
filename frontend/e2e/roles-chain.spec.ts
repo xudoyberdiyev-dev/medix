@@ -802,6 +802,16 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   await page.goto("/debts/customers");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText(/ruxsat/i)).toHaveCount(0);
+  // Qarz kartochkasi (DebtCard): qatordan ochiladi — ochiq hujjatlar, harakatlar
+  await page.waitForLoadState("networkidle");
+  const debtRows = page.getByRole("main").getByRole("row");
+  if ((await debtRows.count()) > 2) {
+    await debtRows.nth(1).click();
+    await expect(page).toHaveURL(/\/debts\/customers\/\d+/);
+    await expect(page.getByRole("tab", { name: /Ochiq hujjatlar/ })).toBeVisible();
+    await page.getByRole("tab", { name: /Harakatlar/ }).click();
+    await expect(page.getByRole("main").getByText(/yuklanmadi/i)).toHaveCount(0);
+  }
 });
 
 test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yuboradi", async ({ page }) => {
