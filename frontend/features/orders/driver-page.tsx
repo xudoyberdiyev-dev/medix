@@ -545,7 +545,6 @@ function TripView(props: {
           label: tr("driver.markDelivered"),
           onClick: () => deliverStop && void deliver(deliverStop.id, cash),
           loading: pending?.startsWith("deliver") ?? false,
-          disabled: !cash.trim(),
         }}
       >
         <div className="flex flex-col gap-3 rounded-card bg-warning-bg p-3">
