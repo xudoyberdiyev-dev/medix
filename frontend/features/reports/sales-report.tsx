@@ -5,6 +5,7 @@ import { ChartColumn } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { ColumnsMenu, useColumnPrefs } from "@/components/ui/columns-menu";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -98,6 +99,8 @@ export function initialGroupBy(raw: string | null, allowed: GroupBy[]): GroupBy 
   return allowed.find((g) => g === raw) ?? "CUSTOMER";
 }
 
+const COLUMN_KEYS = ["name", "orders", "sales", "discount", "returns", "net", "cost", "profit"] as const;
+
 export function SalesReportPage() {
   const t = useTranslations("reports");
   const me = useMe();
@@ -155,6 +158,7 @@ export function SalesReportPage() {
   const bars = dayRows && from && to ? dayBars(from, to, dayRows.rows) : [];
 
   const table = useClientTable(report.data?.rows ?? NO_ROWS);
+  const { cols, update: setCols, reset: resetCols } = useColumnPrefs("medix-report-sales-cols", COLUMN_KEYS);
 
   if (me.data && !allowed) return <ForbiddenState description={t("sales.forbidden")} />;
   const r = report.data;
@@ -201,6 +205,11 @@ export function SalesReportPage() {
         ...(r.costVisible ? { cost: money(r.total.cost), profit: money(r.total.profit) } : {}),
       }
     : undefined;
+
+  const byKey = new Map(columns.map((c) => [c.key, c]));
+  const menuCols = cols.filter((c) => byKey.has(c.key));
+  const shownCols = menuCols.filter((c) => c.visible).flatMap((c) => byKey.get(c.key) ?? []);
+  const colLabels = Object.fromEntries(columns.map((c) => [c.key, String(c.title)]));
 
   return (
     <>
@@ -275,6 +284,15 @@ export function SalesReportPage() {
               {r.mineOnly ? ` · ${t("sales.mineOnly")}` : r.branchId == null ? ` · ${t("allBranches")}` : ""}
             </span>
           ) : null}
+          <ColumnsMenu
+            label={t("columns")}
+            hint={t("colsHint")}
+            resetLabel={t("colsReset")}
+            columns={menuCols}
+            labels={colLabels}
+            onChange={(next) => setCols([...next, ...cols.filter((c) => !byKey.has(c.key))])}
+            onReset={resetCols}
+          />
         </div>
       </div>
       {report.error ? (
@@ -283,7 +301,7 @@ export function SalesReportPage() {
         <Table
           caption={t("sales.title")}
           density="compact"
-          columns={columns}
+          columns={shownCols.length ? shownCols : columns}
           rows={table.rows}
           sort={table.sort}
           onSortChange={table.onSortChange}

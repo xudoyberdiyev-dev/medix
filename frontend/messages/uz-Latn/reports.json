@@ -261,5 +261,8 @@
     "remove": "«{name}» ni oʻchirish"
   },
   "print": "Chop etish",
-  "crumbs": "Joylashuv"
+  "crumbs": "Joylashuv",
+  "columns": "Ustunlar",
+  "colsHint": "Koʻrinish va tartib — sudrab oʻzgartiring",
+  "colsReset": "Standartga qaytarish"
 }
