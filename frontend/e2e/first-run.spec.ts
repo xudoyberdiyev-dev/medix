@@ -652,7 +652,7 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   // Qabul — alohida sahifa (prototip TransferReceive): qator boʻyicha miqdor, farq sababi, qayerga zona
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
   await expect(page).toHaveURL(/\/warehouse-transfers\/\d+\/receive$/);
-  await page.getByLabel(/E2E-01 · .* — qabul qilingan/).fill("4");
+  await page.getByLabel(/· E2E-01 — qabul qilingan/).fill("4");
   await page.getByRole("button", { name: "Qabulni tasdiqlash" }).click();
   await expect(page.getByText("Farq bor — sababni tanlang")).toBeVisible();
   await page.getByRole("radio", { name: "Kam keldi" }).click();
