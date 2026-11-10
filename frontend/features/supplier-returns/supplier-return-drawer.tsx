@@ -44,7 +44,7 @@ const zoneLabel = (z: { name: string; type: string }) => {
   return !t || z.name === t ? z.name : `${z.name} · ${zoneTypeLabel(type)}`;
 };
 
-function BonusBadge() {
+export function BonusBadge() {
   const t = useTranslations("supplierReturns");
   return (
     <Badge tone="info" icon={Gift}>

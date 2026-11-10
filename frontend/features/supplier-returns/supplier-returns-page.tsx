@@ -2,8 +2,8 @@
 
 import { CircleCheck, Clock, Plus, Undo2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
@@ -41,9 +41,12 @@ export function SupplierReturnsPage() {
   const [page, setPage] = useState(1);
   // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi
   // Kirim hujjatidan oʻtish: ?receipt=<id>&supplier=<id>&supplierName=…&receiptNo=… — yangi qaytarish shu kirim bilan ochiladi
+  const router = useRouter();
+  const openId = Number(params.get("open"));
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/supplier-returns/${openId}`);
+  }, [openId, router]);
   const [open, setOpen] = useState<{ id: number | null; preset?: ReturnPreset } | null>(() => {
-    const id = Number(params.get("open"));
-    if (Number.isInteger(id) && id > 0) return { id };
     const receiptId = Number(params.get("receipt"));
     const supplierId = Number(params.get("supplier"));
     if (Number.isInteger(receiptId) && receiptId > 0 && Number.isInteger(supplierId) && supplierId > 0)
@@ -109,7 +112,7 @@ export function SupplierReturnsPage() {
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setOpen({ id: d.id })}
+          onRowClick={(d) => router.push(`/supplier-returns/${d.id}`)}
           toolbar={
             <div className="w-56">
               <Select
@@ -156,7 +159,12 @@ export function SupplierReturnsPage() {
         />
       )}
       {open ? (
-        <SupplierReturnDrawer id={open.id} preset={open.preset} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} />
+        <SupplierReturnDrawer
+          id={open.id}
+          preset={open.preset}
+          onClose={() => setOpen(null)}
+          onCreated={(id) => (setOpen(null), router.push(`/supplier-returns/${id}`))}
+        />
       ) : null}
     </>
   );

@@ -809,9 +809,12 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
   await drawer.getByLabel(/KR-E2E — qaytarish soni/).fill("1");
   await drawer.getByRole("button", { name: "Qaytarish", exact: true }).click();
   await expect(page.getByText("Tovar YB ga qaytarildi")).toBeVisible();
-  await expect(drawer.getByText("2.000,00", { exact: false }).first()).toBeVisible();
-  await page.keyboard.press("Escape");
+  // Hujjat — toʻliq sahifa (prototip StockDocs, kind = qy)
+  await expect(page).toHaveURL(/\/supplier-returns\/\d+$/);
+  await expect(page.getByRole("main").getByText("2.000,00", { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: /KR-/ })).toBeVisible();
 
+  await page.goto("/supplier-returns");
   const row = page.getByRole("row", { name: /QY-/ }).first();
   await expect(row).toContainText("Oʻtkazildi");
   await expect(row).toContainText("Pharm Supply E2E");
