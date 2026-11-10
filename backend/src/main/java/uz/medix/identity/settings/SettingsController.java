@@ -218,16 +218,16 @@ class SettingsController {
     }
 
     @Schema(description = "Interfeys uchun chegaralar (barcha kirgan xodimlarga)")
-    record UiThresholds(int expiryWarnDays, String priceWarnPct, String limitBranchPct) {}
+    record UiThresholds(int expiryWarnDays, String priceWarnPct, String limitBranchPct, int overdueDirDays) {}
 
     @GetMapping("/thresholds")
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
-    @Operation(summary = "Interfeys chegaralari", description = "Muddat ogohlantirishi (kun), narx o'zgarishi ogohlantirishi (%), limit oshishi — Filial rahbari (%).")
+    @Operation(summary = "Interfeys chegaralari", description = "Muddat ogohlantirishi (kun), narx o'zgarishi ogohlantirishi (%), limit oshishi — Filial rahbari (%), muddati o'tgan qarz — Direktor (kun).")
     UiThresholds thresholds() {
         return new UiThresholds(settings.intValue(SettingKey.expiryWarnDays),
                 settings.value(SettingKey.priceWarnPct).stripTrailingZeros().toPlainString(),
-                settings.value(SettingKey.limitBranchPct).stripTrailingZeros().toPlainString());
+                settings.value(SettingKey.limitBranchPct).stripTrailingZeros().toPlainString(), settings.intValue(SettingKey.overdueDirDays));
     }
 
     @PutMapping
