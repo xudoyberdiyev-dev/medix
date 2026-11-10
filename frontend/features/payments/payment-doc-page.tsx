@@ -950,7 +950,7 @@ function Effect({ icon: Icon, className, children }: { icon: LucideIcon; classNa
 }
 
 /** Bosqichlar (prototip `DocumentHeader.steps`): bajarilgan — ✓, joriy — qalin, bekor — qizil. */
-function Steps({ steps }: { steps: { label: string; state: "done" | "cur" | "next" | "fail" }[] }) {
+export function Steps({ steps }: { steps: { label: string; state: "done" | "cur" | "next" | "fail" }[] }) {
   return (
     <ol className="flex flex-wrap items-center gap-1.5 text-caption">
       {steps.map((s, i) => (

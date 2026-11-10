@@ -723,6 +723,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cash-close/approvers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Farqni PIN bilan tasdiqlay oladigan xodimlar (kassa filiali doirasida) */
+        get: operations["closeApprovers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cash-close/preview": {
         parameters: {
             query?: never;
@@ -7794,6 +7811,13 @@ export interface components {
             /** Format: int32 */
             places: number;
         };
+        CloseApprover: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            ownBranch: boolean;
+            role: string;
+        };
         ClosePreview: {
             account: string;
             /** Format: int64 */
@@ -7812,6 +7836,11 @@ export interface components {
         CloseRequest: {
             /** Format: int64 */
             accountId: number;
+            /**
+             * Format: int64
+             * @description Farqni tasdiqlovchi (cash.closeDiff); bo'sh bo'lsa — yopayotgan xodimning o'zi
+             */
+            approverId?: number;
             /**
              * Format: date
              * @description Bo'sh bo'lsa — bugun
@@ -8254,6 +8283,7 @@ export interface components {
             account: string;
             /** Format: int64 */
             accountId: number;
+            approvedBy?: string;
             /** Format: date */
             closeDate: string;
             /** Format: date-time */
@@ -14627,6 +14657,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DayClose"];
+                };
+            };
+        };
+    };
+    closeApprovers: {
+        parameters: {
+            query: {
+                accountId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CloseApprover"][];
                 };
             };
         };

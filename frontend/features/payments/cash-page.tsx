@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { ArrowLeftRight, Banknote, Landmark, LockKeyhole, Plus, UserRound } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
@@ -18,7 +18,6 @@ import { ClosesTab, OpsTab, PendingOps, StatementTab, TransfersTab } from "@/fea
 import { BankReconTab } from "@/features/cash/bank-recon";
 import { AccountDialog } from "@/features/cash/account-dialog";
 import { CashierDialog } from "@/features/cash/cashier-dialog";
-import { CloseDrawer } from "@/features/cash/close-drawer";
 import { useBranchStore } from "@/lib/stores/branch";
 import { AccountCard, DriverCashSection } from "@/features/cash/cash-list";
 import { sumMoney } from "@/features/cash/list-model";
@@ -61,8 +60,7 @@ export function CashPage() {
   // Xarajatlar hisobotidan: ?tab=ops&expenseItemId=… — KO/BO roʻyxati shu modda va davr bilan
   const [opsFilter, setOpsFilter] = useState(() => opsFilterFromParams(params));
   const [tab, setTab] = useState(() => (params.get("tab") === "ops" ? "ops" : "statement"));
-  // Kassir bosh sahifasidan «Kunni yopish»: ?close=1
-  const [dialog, setDialog] = useState<"close" | "cashiers" | "account" | null>(() => (params.get("close") === "1" ? "close" : null));
+  const [dialog, setDialog] = useState<"cashiers" | "account" | null>(null);
   const router = useRouter();
   const canIo = can(me.data, CASH_IO);
   const canClose = can(me.data, CASH_CLOSE);
@@ -70,6 +68,12 @@ export function CashPage() {
   const accountList = all;
   const current = selected ?? kassas[0]?.id ?? accountList[0]?.id ?? null;
   const actionDefault = current != null && usable.some((a) => a.id === current) ? current : (usable[0]?.id ?? null);
+  // Kunni yopish — toʻliq sahifa (prototip CashClose); kassir bosh sahifasidan eski ?close=1 havolasi ham shu yerga
+  const closeAcct = kassas.find((a) => a.id === current)?.id ?? kassas[0]?.id ?? null;
+  const closeRequested = params.get("close") === "1";
+  useEffect(() => {
+    if (closeRequested && closeAcct != null) router.replace(`/cash/close?acct=${closeAcct}`);
+  }, [closeRequested, closeAcct, router]);
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
   if (me.data && branchId == null && !overall)
@@ -107,7 +111,7 @@ export function CashPage() {
             </Button>
           ) : null}
           {canClose && !overall && kassas.length > 0 ? (
-            <Button variant="secondary" icon={LockKeyhole} onClick={() => setDialog("close")}>
+            <Button variant="secondary" icon={LockKeyhole} onClick={() => router.push(`/cash/close?acct=${closeAcct}`)}>
               {t("closeDay")}
             </Button>
           ) : null}
@@ -190,9 +194,7 @@ export function CashPage() {
               <ClosesTab branchId={branchId} />
             )}
           </div>
-          {dialog === "close" ? (
-            <CloseDrawer accounts={usable} defaultAccount={actionDefault} onClose={() => setDialog(null)} />
-          ) : dialog === "account" ? (
+          {dialog === "account" ? (
             <AccountDialog branchId={branchId} onClose={() => setDialog(null)} />
           ) : dialog === "cashiers" ? (
             <CashierDialog branchId={branchId} accounts={accountList} onClose={() => setDialog(null)} />

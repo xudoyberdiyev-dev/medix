@@ -598,14 +598,20 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
   await expect(page.getByText("Chiqim tasdiqlandi").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /Asosiy kassa.*500\.000,00/ })).toBeVisible();
 
-  // Kunni yopish: 2 × 200 000 + 1 × 100 000 = kutilgan 500 000 — farqsiz
+  // Kunni yopish — toʻliq sahifa (prototip CashClose): 2 × 200 000 + 1 × 100 000 = tizim qoldigʻi 500 000 — farqsiz
   await page.getByRole("button", { name: "Kunni yopish" }).first().click();
-  const drawer = page.getByRole("dialog");
-  await expect(drawer.getByText("Kutilgan qoldiq")).toBeVisible();
-  await field(page, "200.000 soʻm").fill("2");
-  await field(page, "100.000 soʻm").fill("1");
-  await drawer.getByRole("button", { name: "Kunni yopish" }).click();
-  await expect(page.getByText(/Kun yopildi/).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/cash\/close\?acct=\d+/);
+  await expect(page.getByRole("heading", { name: "Kassa kunini yopish" })).toBeVisible();
+  await page.getByRole("button", { name: "Kunni yopish" }).last().click();
+  await expect(page.getByText("Kunni yopib boʻlmaydi: 1 ta muammo").first()).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Yopish" }).click();
+  await page.getByLabel("200.000", { exact: true }).fill("2");
+  await page.getByLabel("100.000", { exact: true }).fill("1");
+  await expect(page.getByText("Mos keldi — sanoq tizim qoldigʻiga teng")).toBeVisible();
+  await page.getByRole("button", { name: "Kunni yopish" }).last().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Kunni yopish" }).click();
+  await expect(page.getByText(/kassa kuni yopilgan/).first()).toBeVisible();
+  await page.goto("/cash");
   await page.getByRole("tab", { name: "Yopilgan kunlar" }).click();
   await expect(page.getByRole("cell", { name: "500.000,00" }).first()).toBeVisible();
 });
