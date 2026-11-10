@@ -130,6 +130,13 @@
       "avg": "Oʻrtacha hujjat summasi",
       "retShare": "Qaytarish ulushi",
       "soum": "soʻm"
+    },
+    "chart": {
+      "title": "Sof savdo — davr boʻyicha",
+      "hide": "Grafikni yashirish",
+      "show": "Grafikni koʻrsatish",
+      "soum": "soʻm",
+      "docsN": "{n} ta hujjat"
     }
   },
   "worker": {

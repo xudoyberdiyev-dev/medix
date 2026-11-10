@@ -16,7 +16,8 @@ import { useDictionary } from "@/features/dictionaries/api";
 import { PeriodPicker } from "@/features/home/period-picker";
 import { reportHref } from "@/lib/saved-reports";
 import { ReportActions, ReportCrumbs, useReportPeriod } from "./saved-reports";
-import { averageDoc, previousRange, returnShare } from "./sales-kpis";
+import { averageDoc, dayBars, previousRange, returnShare } from "./sales-kpis";
+import { SalesDayChart } from "./sales-chart";
 import { Delta } from "@/features/home/branch-home";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
@@ -116,7 +117,7 @@ export function SalesReportPage() {
   const groupBy = picked ?? initialGroupBy(params.get("groupBy"), groups);
   const [paymentType, setPaymentType] = useState<PaymentType | null>(null);
   const [regionId, setRegionId] = useState<number | null>(null);
-  const fetchSales = (range: { from: string; to: string }) =>
+  const fetchSales = (range: { from: string; to: string }, by: GroupBy = groupBy) =>
     unwrap(
       api.GET("/api/reports/sales", {
         params: {
@@ -124,7 +125,7 @@ export function SalesReportPage() {
             branchId: branchId ?? undefined,
             from: range.from,
             to: range.to,
-            groupBy,
+            groupBy: by,
             paymentType: paymentType ?? undefined,
             regionId: regionId ?? undefined,
           },
@@ -143,6 +144,15 @@ export function SalesReportPage() {
     queryFn: () => fetchSales(prevRange ?? { from: "", to: "" }),
     enabled: allowed && !!prevRange,
   });
+
+  // «Sof savdo — davr boʻyicha» grafigi: kunlar kesimi (joriy guruh «Kun» boʻlsa — shu soʻrov)
+  const daily = useQuery({
+    queryKey: ["reports", "sales", branchId, from, to, "DAY", paymentType, regionId],
+    queryFn: () => fetchSales({ from: from ?? "", to: to ?? "" }, "DAY"),
+    enabled: allowed && !!from && !!to && groupBy !== "DAY",
+  });
+  const dayRows = groupBy === "DAY" ? report.data : daily.data;
+  const bars = dayRows && from && to ? dayBars(from, to, dayRows.rows) : [];
 
   const table = useClientTable(report.data?.rows ?? NO_ROWS);
 
@@ -225,6 +235,7 @@ export function SalesReportPage() {
           <KpiTile label={t("sales.kpi.retShare")} value={returnShare(r.total.returns, r.total.sales)} />
         </div>
       ) : null}
+      {bars.some((b) => b.orders > 0) ? <SalesDayChart bars={bars} /> : null}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <Tabs
           aria-label={t("sales.groupBy")}
