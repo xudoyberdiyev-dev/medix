@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +17,7 @@ import uz.medix.delivery.trip.TripModels.ReadyOrder;
 import uz.medix.delivery.trip.TripModels.TripDetail;
 import uz.medix.delivery.trip.TripModels.TripOptions;
 import uz.medix.delivery.trip.TripModels.TripRequest;
+import uz.medix.delivery.trip.TripModels.TripUpdate;
 import uz.medix.delivery.trip.TripModels.TripStatus;
 import uz.medix.delivery.trip.TripModels.TripStop;
 import uz.medix.delivery.trip.TripModels.TripSummary;
@@ -183,8 +185,8 @@ class Trips {
         String branchCode = jdbc.sql("SELECT code FROM branch WHERE id = :b").param("b", branchId).query(String.class).single();
         String number = numbers.next(DocumentPrefix.RS, branchCode).toString();
         long id = jdbc.sql("""
-                INSERT INTO trip (number, branch_id, vehicle_id, driver_id, trip_date, places, note, created_by)
-                VALUES (:n, :b, :v, :d, :date, :p, :note, :by) RETURNING id""")
+                INSERT INTO trip (number, branch_id, vehicle_id, driver_id, trip_date, places, note, expeditor, created_by)
+                VALUES (:n, :b, :v, :d, :date, :p, :note, :exp, :by) RETURNING id""")
                 .param("n", number)
                 .param("b", branchId)
                 .param("v", v.id())
@@ -192,6 +194,7 @@ class Trips {
                 .param("date", java.sql.Date.valueOf(r.tripDate()))
                 .param("p", places)
                 .param("note", r.note() == null || r.note().isBlank() ? null : r.note().strip())
+                .param("exp", r.expeditor() == null || r.expeditor().isBlank() ? null : r.expeditor().strip())
                 .param("by", actor.employeeId())
                 .query(Long.class)
                 .single();
@@ -307,6 +310,85 @@ class Trips {
                 .param("p", places).param("t", tripId).update();
         audit.record(AuditEntry.of("trip.addOrders", "trip", tripId)
                 .change(null, Map.of("orders", orders.stream().map(DispatchOrder::number).toList(), "places", places)));
+    }
+
+    /**
+     * Rejalashtirilgan reys sarlavhasi (prototip TripPage): sana, haydovchi, mashina, ekspeditor, izoh. Haydovchi biror bekatni
+     * qabul qilgan (yuklangan) bo'lsa — o'zgartirilmaydi. Tekshiruvlar reys tuzishdagidek.
+     */
+    @Transactional
+    void update(Actor actor, long tripId, TripUpdate r) {
+        Planned t = lockPlanned(actor, tripId);
+        boolean loaded = jdbc.sql("SELECT EXISTS (SELECT 1 FROM trip_stop WHERE trip_id = :t AND active AND loaded_at IS NOT NULL)")
+                .param("t", tripId).query(Boolean.class).single();
+        if (loaded) {
+            throw MedixException.conflict("trip.stopLoaded");
+        }
+        boolean vehicleOk = jdbc.sql("SELECT EXISTS (SELECT 1 FROM vehicle WHERE id = :v AND branch_id = :b AND active)")
+                .param("v", r.vehicleId()).param("b", t.branchId()).query(Boolean.class).single();
+        if (!vehicleOk) {
+            throw MedixException.badRequest("trip.vehicleUnknown");
+        }
+        boolean driverOk = jdbc.sql("""
+                SELECT EXISTS (SELECT 1 FROM employee e JOIN role r ON r.id = e.role_id
+                               WHERE e.id = :d AND r.code = 'DRIVER' AND e.branch_id = :b AND e.status = 'ACTIVE')""")
+                .param("d", r.driverId())
+                .param("b", t.branchId())
+                .query(Boolean.class)
+                .single();
+        if (!driverOk) {
+            throw MedixException.badRequest("trip.driverUnknown");
+        }
+        jdbc.sql("SELECT id FROM employee WHERE id = :d FOR UPDATE").param("d", r.driverId()).query(Long.class).single();
+        String busyTrip = jdbc.sql("""
+                SELECT number FROM trip WHERE driver_id = :d AND id <> :t AND status IN ('PLANNED', 'IN_TRANSIT', 'RETURN_WAIT') LIMIT 1""")
+                .param("d", r.driverId())
+                .param("t", tripId)
+                .query(String.class)
+                .optional()
+                .orElse(null);
+        if (busyTrip != null) {
+            throw MedixException.conflict("trip.driverBusy", busyTrip);
+        }
+        if (r.tripDate().isBefore(LocalDate.now(TASHKENT))) {
+            throw MedixException.badRequest("trip.datePast");
+        }
+        jdbc.sql("""
+                UPDATE trip SET vehicle_id = :v, driver_id = :d, trip_date = :date, expeditor = :exp, note = :note,
+                       updated_at = now(), version = version + 1 WHERE id = :t""")
+                .param("v", r.vehicleId())
+                .param("d", r.driverId())
+                .param("date", java.sql.Date.valueOf(r.tripDate()))
+                .param("exp", r.expeditor() == null || r.expeditor().isBlank() ? null : r.expeditor().strip())
+                .param("note", r.note() == null || r.note().isBlank() ? null : r.note().strip())
+                .param("t", tripId)
+                .update();
+        audit.record(AuditEntry.of("trip.update", "trip", tripId)
+                .change(null, Map.of("vehicleId", r.vehicleId(), "driverId", r.driverId(), "tripDate", r.tripDate().toString())));
+    }
+
+    /** Bekatlar tartibi (prototip TripPage — sudrab): faqat «Rejalashtirilgan», ro'yxat reysning faol bekatlari bilan aynan mos. */
+    @Transactional
+    void reorder(Actor actor, long tripId, List<Long> stopIds) {
+        lockPlanned(actor, tripId);
+        List<Long> active = jdbc.sql("SELECT id FROM trip_stop WHERE trip_id = :t AND active ORDER BY seq")
+                .param("t", tripId).query(Long.class).list();
+        if (stopIds.size() != active.size() || !new HashSet<>(stopIds).equals(new HashSet<>(active))) {
+            throw MedixException.badRequest("trip.stopsMismatch");
+        }
+        // UNIQUE (trip_id, seq): avval hammasini vaqtincha suramiz, keyin faollar 1..n, olib tashlanganlar ulardan keyin
+        jdbc.sql("UPDATE trip_stop SET seq = seq + 100000 WHERE trip_id = :t").param("t", tripId).update();
+        int seq = 0;
+        for (long id : stopIds) {
+            jdbc.sql("UPDATE trip_stop SET seq = :s WHERE id = :id").param("s", ++seq).param("id", id).update();
+        }
+        List<Long> inactive = jdbc.sql("SELECT id FROM trip_stop WHERE trip_id = :t AND NOT active ORDER BY seq")
+                .param("t", tripId).query(Long.class).list();
+        for (long id : inactive) {
+            jdbc.sql("UPDATE trip_stop SET seq = :s WHERE id = :id").param("s", ++seq).param("id", id).update();
+        }
+        jdbc.sql("UPDATE trip SET updated_at = now(), version = version + 1 WHERE id = :t").param("t", tripId).update();
+        audit.record(AuditEntry.of("trip.reorder", "trip", tripId).change(null, Map.of("stops", stopIds)));
     }
 
     /**
@@ -698,7 +780,7 @@ class Trips {
                    (SELECT count(*) FROM trip_stop s WHERE s.trip_id = t.id AND s.active AND s.outcome IN ('DELIVERED', 'PARTIAL')) AS delivered,
                    (SELECT count(*) FROM trip_stop s WHERE s.trip_id = t.id AND s.active AND s.outcome IS NOT NULL) AS marked,
                    d.full_name AS driver, t.places, t.created_at, t.note, t.vehicle_id, t.driver_id, cb.full_name AS created_by, t.started_at,
-                   t.cancel_reason,
+                   t.cancel_reason, t.expeditor,
                    (SELECT count(*) FROM trip_stop s WHERE s.trip_id = t.id AND (s.active OR t.status = 'CANCELLED')) AS orders,
                    (SELECT coalesce(sum(o.total), 0) FROM trip_stop s JOIN sales_order o ON o.id = s.order_id
                     WHERE s.trip_id = t.id AND (s.active OR t.status = 'CANCELLED')) AS total
@@ -748,7 +830,8 @@ class Trips {
                                 rs.getInt("places"), money(rs.getBigDecimal("total")), rs.getString("created_by"),
                                 rs.getTimestamp("created_at").toInstant(),
                                 rs.getTimestamp("started_at") == null ? null : rs.getTimestamp("started_at").toInstant(), rs.getString("cancel_reason"),
-                                List.of())
+                                List.of(), rs.getString("expeditor"), rs.getString("driver_phone"), rs.getString("plate_number"),
+                                rs.getString("vehicle_model"), rs.getBoolean("has_refrigerator"))
                         : null)
                 .list()
                 .stream()
@@ -760,8 +843,11 @@ class Trips {
                        s.loaded_at, s.outcome, s.outcome_reason, s.cash_collected,
                        (SELECT count(*) FROM delivery_photo ph WHERE ph.stop_id = s.id AND ph.kind = 'PHOTO')::int AS photos,
                        EXISTS (SELECT 1 FROM delivery_photo ph WHERE ph.stop_id = s.id AND ph.kind = 'SIGNATURE') AS signed,
-                       q.number AS return_number, q.total AS return_total
+                       q.number AS return_number, q.total AS return_total, rg.name AS region,
+                       (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id)::int AS lines,
+                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l WHERE l.order_id = o.id)::int AS qty
                 FROM trip_stop s LEFT JOIN sales_return q ON q.order_id = s.order_id AND q.trip_id = s.trip_id JOIN sales_order o ON o.id = s.order_id JOIN counterparty c ON c.id = o.customer_id
+                LEFT JOIN region rg ON rg.id = c.region_id
                 WHERE s.trip_id = :id AND (s.active OR :cancelled) ORDER BY s.seq""")
                 .param("id", id)
                 .param("cancelled", head.status() == TripStatus.CANCELLED)
@@ -771,11 +857,13 @@ class Trips {
                         rs.getTimestamp("loaded_at") == null ? null : rs.getTimestamp("loaded_at").toInstant(), rs.getString("outcome"),
                         rs.getString("outcome_reason"), rs.getBigDecimal("cash_collected") == null ? null : money(rs.getBigDecimal("cash_collected")),
                         rs.getInt("photos"), rs.getString("return_number"),
-                        rs.getBigDecimal("return_total") == null ? null : money(rs.getBigDecimal("return_total")), rs.getBoolean("signed")))
+                        rs.getBigDecimal("return_total") == null ? null : money(rs.getBigDecimal("return_total")), rs.getBoolean("signed"),
+                        rs.getInt("lines"), rs.getInt("qty"), rs.getString("region")))
                 .list());
         return new TripDetail(head.id(), head.number(), head.branchId(), head.tripDate(), head.status(), head.vehicleId(), head.vehicle(),
                 head.driverId(), head.driver(), head.note(), head.places(), head.total(), head.createdBy(), head.createdAt(),
-                head.startedAt(), head.cancelReason(), stops);
+                head.startedAt(), head.cancelReason(), stops, head.expeditor(), head.driverPhone(), head.plateNumber(), head.vehicleModel(),
+                head.refrigerator());
     }
 
     private static String money(BigDecimal v) {

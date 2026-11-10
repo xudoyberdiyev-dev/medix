@@ -18,7 +18,19 @@ final class TripModels {
             @NotNull(message = "{validation.required}") Long driverId,
             @NotNull(message = "{validation.required}") LocalDate tripDate,
             @NotNull(message = "{validation.required}") @Size(min = 1, max = 100) List<Long> orderIds,
+            @Schema(nullable = true) @Size(max = 500) String note,
+            @Schema(nullable = true, description = "Ekspeditor (ixtiyoriy)") @Size(max = 120) String expeditor) {}
+
+    /** Rejalashtirilgan reys sarlavhasini tahrirlash (prototip TripPage): yuklash boshlanmaguncha. */
+    record TripUpdate(
+            @NotNull(message = "{validation.required}") Long vehicleId,
+            @NotNull(message = "{validation.required}") Long driverId,
+            @NotNull(message = "{validation.required}") LocalDate tripDate,
+            @Schema(nullable = true) @Size(max = 120) String expeditor,
             @Schema(nullable = true) @Size(max = 500) String note) {}
+
+    /** Bekatlar tartibi (prototip TripPage — sudrab o'zgartirish): reysning barcha faol bekatlari yangi tartibda. */
+    record StopOrderRequest(@NotNull(message = "{validation.required}") @Size(min = 1, max = 100) List<Long> stopIds) {}
 
     record PickupRequest(@NotNull(message = "{validation.required}") Long orderId) {}
 
@@ -53,7 +65,10 @@ final class TripModels {
             @Schema(nullable = true) String outcomeReason, @Schema(nullable = true) String cashCollected, int photos,
             @Schema(nullable = true, description = "Qisman yetkazishda QM raqami") String returnNumber,
             @Schema(nullable = true, description = "QM summasi (QQS bilan)") String returnTotal,
-            @Schema(description = "Mijoz imzosi olinganmi (ixtiyoriy)") boolean signed) {}
+            @Schema(description = "Mijoz imzosi olinganmi (ixtiyoriy)") boolean signed,
+            @Schema(description = "Buyurtma qatorlari soni") int lines,
+            @Schema(description = "Buyurtma miqdori (dona)") int qty,
+            @Schema(nullable = true, description = "Mijoz hududi") String region) {}
 
     record TripSummary(long id, String number, long branchId, LocalDate tripDate, TripStatus status, String vehicle,
             String driver, int orders, int places, String total, Instant createdAt,
@@ -67,7 +82,12 @@ final class TripModels {
     record TripDetail(long id, String number, long branchId, LocalDate tripDate, TripStatus status, long vehicleId, String vehicle,
             long driverId, String driver, @Schema(nullable = true) String note, int places,
             String total, String createdBy, Instant createdAt, @Schema(nullable = true) Instant startedAt,
-            @Schema(nullable = true) String cancelReason, List<TripStop> stops) {}
+            @Schema(nullable = true) String cancelReason, List<TripStop> stops,
+            @Schema(nullable = true) String expeditor,
+            @Schema(nullable = true) String driverPhone,
+            String plateNumber,
+            @Schema(nullable = true) String vehicleModel,
+            boolean refrigerator) {}
 
     /** Haydovchidagi pul (SPEC 5.4): Kassir qabul qilguncha. */
     record DriverCash(long stopId, long tripId, String tripNumber, String driver, String orderNumber, long customerId, String customer, String amount,
