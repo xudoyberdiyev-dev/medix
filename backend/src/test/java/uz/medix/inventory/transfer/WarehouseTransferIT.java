@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -385,6 +386,44 @@ class WarehouseTransferIT {
         send(post("/api/warehouse-transfers"), director, doc(p.main(), other.target(), b, 1))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("transfer.ok.otherBranch"));
+    }
+
+    /** Qoralamani tahrirlash (TransferDoc avtomatik saqlash): qatorlar almashtiriladi, qoldiq tekshiriladi, joʻnatilgandan keyin — 409. */
+    @Test
+    void draftIsEditableUntilSent() throws Exception {
+        Place p = place();
+        long b1 = stocked(p.main(), "OK tahrir 1", 5);
+        long b2 = stocked(p.main(), "OK tahrir 2", 7);
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        long id = id(send(post("/api/warehouse-transfers"), manager, doc(p.main(), p.target(), b1, 2)).andReturn());
+        String two = "{\"fromZoneId\":" + p.main() + ",\"toWarehouseId\":" + p.target() + ",\"note\":\"Tahrir\",\"lines\":[{\"batchId\":" + b2
+                + ",\"qty\":3},{\"batchId\":" + b1 + ",\"qty\":1}]}";
+        send(put("/api/warehouse-transfers/" + id), manager, two)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.note").value("Tahrir"))
+                .andExpect(jsonPath("$.totalQty").value(4))
+                .andExpect(jsonPath("$.lines.length()").value(2))
+                .andExpect(jsonPath("$.lines[0].batchId").value(b2))
+                .andExpect(jsonPath("$.lines[0].lineNo").value(1));
+        // Qoldiqdan ortiq — 409, hujjat oʻzgarmaydi
+        send(put("/api/warehouse-transfers/" + id), manager, doc(p.main(), p.target(), b1, 6))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.zk.notEnough"));
+        // Bir xil ombor — 400
+        send(put("/api/warehouse-transfers/" + id), manager, doc(p.main(), p.warehouseId(), b1, 1))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("transfer.ok.sameWarehouse"));
+        // Kassirda transfer.ok yoʻq
+        send(put("/api/warehouse-transfers/" + id), loginAs("CASHIER", p.branchId()), doc(p.main(), p.target(), b1, 1))
+                .andExpect(status().isForbidden());
+        assertThat(jdbc.sql("SELECT sum(qty) FROM warehouse_transfer_line WHERE transfer_id = :t").param("t", id).query(Integer.class).single())
+                .isEqualTo(4);
+        send(post("/api/warehouse-transfers/" + id + "/send"), manager, "{}").andExpect(status().isOk());
+        assertThat(bal(p.main(), b2)).isEqualTo(4);
+        send(put("/api/warehouse-transfers/" + id), manager, doc(p.main(), p.target(), b1, 1))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.ok.badStatus"));
     }
 
     @Test

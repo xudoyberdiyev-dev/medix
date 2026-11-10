@@ -167,6 +167,59 @@ class WarehouseTransfers {
     /** Qoralama: manba zona (filial ichidagi faol ombor), qabul qiluvchi boshqa ombor — shu filialda. */
     @Transactional
     long create(Actor actor, WarehouseTransferRequest r) {
+        Route route = route(actor, r);
+        String number = numbers.next(DocumentPrefix.OK, route.from().branchCode()).toString();
+        long id = jdbc.sql("""
+                INSERT INTO warehouse_transfer (number, branch_id, from_warehouse_id, from_zone_id, to_warehouse_id, note, status, created_by)
+                VALUES (:n, :b, :fw, :fz, :tw, :note, 'DRAFT', :by) RETURNING id""")
+                .param("n", number)
+                .param("b", route.from().branchId())
+                .param("fw", route.from().warehouseId())
+                .param("fz", route.from().id())
+                .param("tw", route.to().id())
+                .param("note", blankToNull(r.note()))
+                .param("by", actor.employeeId())
+                .query(Long.class)
+                .single();
+        insertLines(id, r.lines());
+        // Qoralamada ham qoldiq yetishi tekshiriladi (qulfsiz) — yo'q tovarga hujjat tuzilmasin; jo'natishda qayta, qulf bilan.
+        checkFree(route.from().id(), lines(id), false);
+        audit.record(AuditEntry.of("transfer.ok.create", "warehouse_transfer", id)
+                .change(null, Map.of("number", number, "lines", r.lines().size(), "to", route.to().name())), actor);
+        return id;
+    }
+
+    /**
+     * Qoralamani tahrirlash (prototip TransferDoc — avtomatik saqlash): manba zona, qabul qiluvchi ombor, izoh va qatorlar to'liq
+     * almashtiriladi. Filial o'zgarmaydi (manba zona hujjat filialida bo'lishi shart); faqat qoralama.
+     */
+    @Transactional
+    void update(Actor actor, long id, WarehouseTransferRequest r) {
+        Head h = lock(id, actor);
+        require(h, Status.DRAFT);
+        Route route = route(actor, r);
+        if (route.from().branchId() != h.branchId()) {
+            throw MedixException.badRequest("transfer.ok.otherBranch");
+        }
+        jdbc.sql("""
+                UPDATE warehouse_transfer SET from_warehouse_id = :fw, from_zone_id = :fz, to_warehouse_id = :tw, note = :note,
+                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("fw", route.from().warehouseId())
+                .param("fz", route.from().id())
+                .param("tw", route.to().id())
+                .param("note", blankToNull(r.note()))
+                .param("id", id)
+                .update();
+        jdbc.sql("DELETE FROM warehouse_transfer_line WHERE transfer_id = :id").param("id", id).update();
+        insertLines(id, r.lines());
+        checkFree(route.from().id(), lines(id), false);
+        audit.record(AuditEntry.of("transfer.ok.update", "warehouse_transfer", id)
+                .change(null, Map.of("number", h.number(), "lines", r.lines().size(), "to", route.to().name())), actor);
+    }
+
+    private record Route(ZoneInfo from, WarehouseInfo to) {}
+
+    private Route route(Actor actor, WarehouseTransferRequest r) {
         ZoneInfo from = zone(actor, r.fromZoneId());
         WarehouseInfo to = warehouse(actor, r.toWarehouseId());
         if (from.warehouseId() == to.id()) {
@@ -184,21 +237,12 @@ class WarehouseTransfers {
                 throw MedixException.badRequest("transfer.zk.duplicateBatch");
             }
         }
-        String number = numbers.next(DocumentPrefix.OK, from.branchCode()).toString();
-        long id = jdbc.sql("""
-                INSERT INTO warehouse_transfer (number, branch_id, from_warehouse_id, from_zone_id, to_warehouse_id, note, status, created_by)
-                VALUES (:n, :b, :fw, :fz, :tw, :note, 'DRAFT', :by) RETURNING id""")
-                .param("n", number)
-                .param("b", from.branchId())
-                .param("fw", from.warehouseId())
-                .param("fz", from.id())
-                .param("tw", to.id())
-                .param("note", blankToNull(r.note()))
-                .param("by", actor.employeeId())
-                .query(Long.class)
-                .single();
+        return new Route(from, to);
+    }
+
+    private void insertLines(long id, List<WarehouseTransferLineRequest> lines) {
         int lineNo = 0;
-        for (WarehouseTransferLineRequest l : r.lines()) {
+        for (WarehouseTransferLineRequest l : lines) {
             Long product = jdbc.sql("SELECT product_id FROM batch WHERE id = :b").param("b", l.batchId()).query(Long.class).optional()
                     .orElseThrow(() -> MedixException.badRequest("stock.batchUnknown"));
             jdbc.sql("INSERT INTO warehouse_transfer_line (transfer_id, line_no, batch_id, product_id, qty) VALUES (:t, :no, :b, :p, :q)")
@@ -209,11 +253,6 @@ class WarehouseTransfers {
                     .param("q", l.qty())
                     .update();
         }
-        // Qoralamada ham qoldiq yetishi tekshiriladi (qulfsiz) — yo'q tovarga hujjat tuzilmasin; jo'natishda qayta, qulf bilan.
-        checkFree(from.id(), lines(id), false);
-        audit.record(AuditEntry.of("transfer.ok.create", "warehouse_transfer", id)
-                .change(null, Map.of("number", number, "lines", r.lines().size(), "to", to.name())), actor);
-        return id;
     }
 
     /** Jo'natish: tovar manba zonadan chiqadi, hujjat «Yo'lda». Qabul qiluvchilarga (transfer.receive) bildirishnoma. */
