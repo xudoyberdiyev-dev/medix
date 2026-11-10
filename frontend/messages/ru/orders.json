@@ -549,11 +549,12 @@
     "customerPays": "Клиент платит:",
     "allBack": "Возвращается весь товар",
     "allBackHint": "Отметьте не «Частично», а «Не доставлен» с причиной.",
-    "tabTrip": "Текущий рейс",
+    "tabTrip": "Мой рейс",
     "tabHistory": "Завершённые рейсы",
     "historyEmpty": "Завершённых рейсов нет",
     "historyEmptyHint": "Рейс появится здесь после сдачи возврата и наличных.",
-    "historyMeta": "{date} · {vehicle} · заказов: {orders} · мест: {places} · {amount} сум"
+    "historyMeta": "{date} · {vehicle} · заказов: {orders} · мест: {places} · {amount} сум",
+    "panelTitle": "Панель водителя"
   },
   "shipments": {
     "tripStatus": {

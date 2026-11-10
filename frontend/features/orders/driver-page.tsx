@@ -10,15 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
-import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
+import { useBranches } from "@/features/employees/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { cn } from "@/lib/cn";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { partialTotals } from "./partial";
 import { SignatureModal } from "./signature-modal";
@@ -30,6 +31,7 @@ export type TripDetail = components["schemas"]["TripDetail"];
 export function DriverPage() {
   const tr = useTranslations("orders");
   const me = useMe();
+  const branches = useBranches();
   const qc = useQueryClient();
   const allowed = can(me.data, "trip.driver");
   const trip = useQuery({
@@ -83,19 +85,33 @@ export function DriverPage() {
   }
 
   const err = describeError(error);
+  const branchName = branches.data?.find((b) => b.id === me.data?.branchId)?.name;
   return (
-    <>
-      <h1 className="mb-4 text-page-title">{tr("driver.title")}</h1>
-      <div className="mb-4">
-        <Tabs
-          aria-label={tr("driver.title")}
-          items={[
-            { key: "trip", label: tr("driver.tabTrip") },
-            { key: "history", label: tr("driver.tabHistory") },
-          ]}
-          value={tab}
-          onChange={(k) => setTab(k === "history" ? "history" : "trip")}
-        />
+    <div className="mx-auto w-full max-w-[680px]">
+      <h1 className="text-page-title">{tr("driver.panelTitle")}</h1>
+      {me.data ? <p className="mt-1 text-table text-text-secondary">{[me.data.fullName, branchName].filter(Boolean).join(" · ")}</p> : null}
+      {/* Prototip: ikki teng segmentli yorliq */}
+      <div role="tablist" aria-label={tr("driver.panelTitle")} className="mt-4 mb-4 grid grid-cols-2 gap-1 rounded-card bg-border/60 p-1">
+        {(
+          [
+            ["trip", tr("driver.tabTrip")],
+            ["history", tr("driver.tabHistory")],
+          ] as const
+        ).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            className={cn(
+              "h-control-lg rounded-control text-body font-semibold transition-colors",
+              tab === k ? "bg-surface text-primary-button shadow-sm" : "text-text-secondary hover:text-text-primary",
+            )}
+          >
+            {label}
+          </button>
+        ))}
       </div>
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
       {tab === "history" ? (
@@ -118,7 +134,7 @@ export function DriverPage() {
           onStart={() => void start(trip.data as TripDetail)}
         />
       )}
-    </>
+    </div>
   );
 }
 
