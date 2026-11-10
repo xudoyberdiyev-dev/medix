@@ -289,6 +289,21 @@
     "h_post": "Tasdiqladi",
     "h_cancel": "Bekor qildi",
     "failed": "Bajarilmadi",
-    "retry": "Qayta urinib koʻring."
+    "retry": "Qayta urinib koʻring.",
+    "countT": "Sanoq",
+    "countTitle": "Sanoq · {n}",
+    "openCount": "Sanoq ekranini ochish",
+    "bBlindMgr": "Koʻr sanoq: sanovchilar miqdorni koʻrmaydi (siz rahbar sifatida koʻrasiz)",
+    "bOpen": "Ochiq sanoq: hisobdagi miqdor koʻrsatiladi",
+    "bookN": "hisobda {n}",
+    "notFoundBtn": "Topilmadi",
+    "notFound": "Partiya topilmadi",
+    "progText": "Sanaldi {d} / {n} qator",
+    "secProg": "{d} / {n}",
+    "savedAt": "Saqlandi · {t}",
+    "saveLocal": "Kiritilganlar avtomatik saqlanadi",
+    "tNotCount": "Hujjat sanoq holatida emas",
+    "back": "Hujjatga qaytish",
+    "rowsU": "qator"
   }
 }

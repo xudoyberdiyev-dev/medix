@@ -76,3 +76,12 @@ describe("inventarizatsiya hujjati modeli (prototip InventoryDoc)", () => {
     expect(dayToIso("2026-11-11")).toBeNull();
   });
 });
+
+describe("sanoq ekrani", () => {
+  it("kiritilgan miqdor: boʻsh, butun son (nuqta — minglik), notoʻgʻri", async () => {
+    const { parseCount } = await import("./inventory-count-screen");
+    expect(parseCount("")).toBeNull();
+    expect(parseCount(" 1.200 ")).toBe(1200);
+    expect(parseCount("12a")).toBeNaN();
+  });
+});

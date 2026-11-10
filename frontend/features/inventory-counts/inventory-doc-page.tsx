@@ -20,12 +20,11 @@ import {
   MessageSquare,
   Package,
   PackageOpen,
-  PackagePlus,
   Play,
   Plus,
   Printer,
   RotateCcw,
-  Save,
+  ScanLine,
   ShieldAlert,
   Snowflake,
   Truck,
@@ -59,9 +58,7 @@ import { Steps } from "@/features/payments/payment-doc-page";
 import { describeError } from "@/features/setup/form-error";
 import { cn } from "@/lib/cn";
 import { formatDate, formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
-import { AddFound } from "./add-found";
 import {
-  changedEntries,
   IN_APPROVE,
   IN_COUNT,
   IN_CREATE,
@@ -74,10 +71,8 @@ import {
   useInventoryCount,
   useLineNote,
   useRecountInventoryCount,
-  useSaveCounts,
   useScopeOptions,
   useStartInventoryCount,
-  useSubmitInventoryCount,
   useUpdateInventoryCount,
   type InventoryCountDetail,
   type InventoryCountLine,
@@ -710,16 +705,14 @@ function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
   const me = useMe();
   const warehouses = useWarehouses();
   const branches = useBranchList();
-  const save = useSaveCounts();
-  const submit = useSubmitInventoryCount();
   const recount = useRecountInventoryCount();
   const approve = useApproveInventoryCount();
   const cancel = useCancelInventoryCount();
   const note = useLineNote();
-  const [draft, setDraft] = useState<Record<number, string>>({});
+  const router = useRouter();
   const [tab, setTab] = useState<LineTab>("all");
   const [sel, setSel] = useState<string[]>([]);
-  const [dlg, setDlg] = useState<"finish" | "unc" | "post" | "cancel" | "noCancel" | "note" | "found" | null>(null);
+  const [dlg, setDlg] = useState<"post" | "cancel" | "noCancel" | "note" | null>(null);
   const [reason, setReason] = useState("");
   const [noteLine, setNoteLine] = useState<InventoryCountLine | null>(null);
   const st = doc.status;
@@ -736,40 +729,9 @@ function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
   const scope = scopeTextOf(t, doc.scopeMode, zoneNames, doc.products.length);
   const lockedZones =
     doc.scopeMode === "WAREHOUSE" ? t("doc.mWh") : [...new Set(doc.lines.map((l) => l.zone.name))].join(", ") || zoneNames.join(", ");
-  const pending = changedEntries(doc.lines, draft);
   const fail = (e: unknown) => toast({ tone: "danger", title: t("doc.failed"), description: describeError(e).message ?? t("doc.retry") });
   const at = (iso?: string | null) => (iso ? formatDateTime(new Date(iso)) : "—");
-  const counted = (l: InventoryCountLine) => {
-    const v = (draft[l.id] ?? "").trim();
-    return v !== "" && /^\d+$/.test(v) ? Number(v) : l.countedQty;
-  };
-  const uncounted = doc.lines.filter((l) => counted(l) == null);
 
-  const saveCounts = (then?: () => void, extra: { lineId: number; countedQty: number }[] = []) => {
-    if (pending.error) return toast({ tone: "danger", title: t("errors.qty", pending.error) });
-    const entries = [...pending.entries, ...extra];
-    if (!entries.length) return then?.();
-    save.mutate(
-      { id: doc.id, entries },
-      {
-        onSuccess: () => {
-          setDraft({});
-          if (then) then();
-          else toast({ tone: "success", title: t("doc.tCountSaved", { n: entries.length }) });
-        },
-        onError: fail,
-      },
-    );
-  };
-  const doSubmit = (zero: boolean) =>
-    saveCounts(
-      () =>
-        submit.mutate(doc.id, {
-          onSuccess: (d) => (setDlg(null), setTab("all"), toast({ tone: "success", title: t("doc.tFinished", { n: d.number }) })),
-          onError: (e) => (setDlg(null), fail(e)),
-        }),
-      zero ? uncounted.map((l) => ({ lineId: l.id, countedQty: 0 })) : [],
-    );
   const doRecount = (ids: number[]) =>
     recount.mutate(
       { id: doc.id, lineIds: ids },
@@ -915,23 +877,11 @@ function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
       key: "c",
       title: t("doc.cCounted"),
       align: "right",
-      render: (l) =>
-        counting && canCount ? (
-          <div className="ml-auto w-24">
-            <TextField
-              label={t("doc.countedLabel", { p: l.productName, b: l.batchNumber })}
-              className="[&>label]:sr-only"
-              value={draft[l.id] ?? (l.countedQty != null ? String(l.countedQty) : "")}
-              onChange={(v) => setDraft((d) => ({ ...d, [l.id]: v }))}
-              placeholder="0"
-              inputMode="numeric"
-            />
-          </div>
-        ) : (
-          <span className={cn("font-semibold", l.countedQty == null && "text-text-disabled")}>
-            {l.countedQty == null ? "—" : formatQuantity(l.countedQty)}
-          </span>
-        ),
+      render: (l) => (
+        <span className={cn("font-semibold", l.countedQty == null && "text-text-disabled")}>
+          {l.countedQty == null ? "—" : formatQuantity(l.countedQty)}
+        </span>
+      ),
     },
     ...(isRes ? [{ key: "d", title: t("doc.cDiff"), render: statusOf }] : []),
     ...(isRes && cost
@@ -997,15 +947,10 @@ function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
       actions={
         <>
           <RowMenu label={t("doc.more")} items={more} />
-          {counting && canCount ? (
-            <>
-              <Button variant="secondary" icon={Save} loading={save.isPending && !submit.isPending} onClick={() => saveCounts()}>
-                {t("doc.save")}
-              </Button>
-              <Button icon={Check} loading={submit.isPending} onClick={() => setDlg(uncounted.length ? "unc" : "finish")}>
-                {t("doc.finish")}
-              </Button>
-            </>
+          {counting ? (
+            <Button icon={ScanLine} onClick={() => router.push(`/inventory-counts/${doc.id}/count`)}>
+              {t("doc.openCount")}
+            </Button>
           ) : null}
           {isCheck && level ? (
             <Button icon={Check} loading={approve.isPending} onClick={() => setDlg("post")}>
@@ -1044,11 +989,6 @@ function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
             value={tab}
             onChange={(k) => (setTab(k as LineTab), setSel([]))}
           />
-          {counting && canCount ? (
-            <Button variant="secondary" icon={PackagePlus} onClick={() => setDlg("found")}>
-              {t("doc.addFound")}
-            </Button>
-          ) : null}
         </div>
         <Table
           caption={t("drawer.linesCaption")}
@@ -1113,28 +1053,6 @@ function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
         ) : null}
       </section>
 
-      <Modal
-        open={dlg === "finish"}
-        onClose={() => setDlg(null)}
-        title={t("doc.dFinT")}
-        primaryAction={{ label: t("doc.finish"), onClick: () => doSubmit(false), loading: save.isPending || submit.isPending }}
-        secondaryAction={{ label: t("doc.keep"), onClick: () => setDlg(null) }}
-      >
-        <p className="text-text-secondary">{t("doc.dFinD", { n: formatQuantity(doc.lines.length) })}</p>
-      </Modal>
-      <Modal
-        open={dlg === "unc"}
-        onClose={() => setDlg(null)}
-        tone="danger"
-        title={t("doc.dUncT", { n: formatQuantity(uncounted.length) })}
-        primaryAction={{ label: t("doc.markZero"), onClick: () => doSubmit(true), loading: save.isPending || submit.isPending }}
-        secondaryAction={{ label: t("doc.backToCount"), onClick: () => (setDlg(null), setTab("todo")) }}
-      >
-        <p className="mb-3 text-text-secondary">{t("doc.dUncD")}</p>
-        <ConfirmList
-          items={uncounted.slice(0, 8).map((l) => ({ icon: Package, text: t("doc.eUnc", { p: l.productName, b: l.batchNumber }) }))}
-        />
-      </Modal>
       <Modal
         open={dlg === "post"}
         onClose={() => setDlg(null)}
@@ -1204,7 +1122,6 @@ function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
           <TextField label={t("doc.cNote")} value={reason} onChange={setReason} maxLength={300} />
         </div>
       </Modal>
-      {dlg === "found" ? <AddFound doc={doc} onClose={() => setDlg(null)} /> : null}
     </Frame>
   );
 }

@@ -707,9 +707,7 @@ test("CEO: OK kamomadini hisobdan chiqarish (HC, qoldiq harakatisiz)", async ({ 
   await expect(row).toContainText("Oʻtkazildi");
 });
 
-test("CEO: inventarizatsiya (IN) — hujjat sahifasi: qoralama (avtosaqlash) → komissiya → sanoq → bekor qilish (qulf yechiladi)", async ({
-  page,
-}) => {
+test("CEO: inventarizatsiya (IN) — hujjat sahifasi: qoralama (avtosaqlash) → komissiya → sanoq ekrani → bekor qilish", async ({ page }) => {
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
 
@@ -736,12 +734,16 @@ test("CEO: inventarizatsiya (IN) — hujjat sahifasi: qoralama (avtosaqlash) →
   await confirm.getByRole("button", { name: "Sanoqni boshlash" }).click();
   await expect(page.getByText(/sanoq boshlandi, zona qulflandi/)).toBeVisible();
 
+  // Sanoq ekrani (planshet): kiritilgan miqdor avtomatik saqlanadi
+  await page.getByRole("button", { name: "Sanoq ekranini ochish" }).click();
+  await expect(page).toHaveURL(/\/inventory-counts\/\d+\/count$/);
   await page
     .getByLabel(/— sanalgan soni/)
     .first()
     .fill("1");
-  await page.getByRole("button", { name: "Saqlash", exact: true }).click();
-  await expect(page.getByText(/Sanoq saqlandi/)).toBeVisible();
+  await expect(page.getByText(/^Saqlandi · /)).toBeVisible();
+  await expect(page.getByText(/Sanaldi 1 \//)).toBeVisible();
+  await page.getByRole("link", { name: "Hujjatga qaytish" }).click();
 
   await page.getByRole("button", { name: "Boshqa amallar" }).click();
   await page.getByRole("menuitem", { name: "Inventarizatsiyani bekor qilish" }).click();
