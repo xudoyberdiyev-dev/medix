@@ -38,6 +38,9 @@
   "resolveT": "Hal qilinishi kerak",
   "resolveD": "Qabul qiluvchi kam qabul qilgan miqdor. Hal qilinmaguncha Qoldiqlarda «Yoʻlda» qatori sifatida koʻrinib turadi.",
   "resolveRow": "{p} · {b} — {q} ta yetishmadi, {to}",
+  "ivAllZones": "barcha zonalar",
+  "ivLockT": "Inventarizatsiya {n} — zonalar qulflangan",
+  "ivLockD": "{w}: {z} — sanoq tugaguncha bu zonadan koʻchirib boʻlmaydi.",
   "kpi": {
     "transit": "Yoʻlda",
     "cost": "Summa {sum}",

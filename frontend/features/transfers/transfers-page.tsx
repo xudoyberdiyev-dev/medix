@@ -12,6 +12,7 @@ import {
   OctagonX,
   PackageCheck,
   Plus,
+  Lock,
   TriangleAlert,
   Truck,
   Warehouse,
@@ -338,6 +339,10 @@ export function TransfersPage() {
           onClick={() => reset({ states: ["DIFF"] })}
         />
       </div>
+      <InventoryLocks
+        branchId={branchId}
+        enabled={canAny(me.data, ["inventory.view", "inventory.create", "inventory.count", "inventory.approve"])}
+      />
       <ResolveBlock branchId={branchId} enabled={can(me.data, "stock.view")} />
       {overview.data?.truncated ? <Alert tone="info" title={t("truncated")} className="mb-3" /> : null}
       <div className="mb-3">
@@ -498,5 +503,33 @@ function ResolveBlock({ branchId, enabled }: { branchId: number | null; enabled:
         ))}
       </ul>
     </section>
+  );
+}
+
+/** Inventarizatsiya qulfi (prototip Transfers `ivLocks`): sanoq ochiq hujjat zonalari — tugaguncha koʻchirib boʻlmaydi. */
+function InventoryLocks({ branchId, enabled }: { branchId: number | null; enabled: boolean }) {
+  const t = useTranslations("transfers");
+  const active = useQuery({
+    queryKey: ["inventory-counts", "locks", branchId],
+    queryFn: async () => {
+      const pages = await Promise.all(
+        (["COUNTING", "CHECK"] as const).map((status) =>
+          unwrap(api.GET("/api/inventory-counts", { params: { query: { branchId: branchId ?? undefined, status, page: 0, size: 50 } } })),
+        ),
+      );
+      return pages.flatMap((p) => p.items);
+    },
+    enabled,
+  });
+  const items = active.data ?? [];
+  if (items.length === 0) return null;
+  return (
+    <div className="mb-4 flex flex-col gap-2">
+      {items.map((x) => (
+        <Alert key={x.id} tone="warning" icon={Lock} title={t("ivLockT", { n: x.number })}>
+          {t("ivLockD", { w: x.warehouse, z: x.zone?.name ?? t("ivAllZones") })}
+        </Alert>
+      ))}
+    </div>
   );
 }
