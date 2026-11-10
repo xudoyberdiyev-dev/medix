@@ -76,12 +76,16 @@ final class CashModels {
             @NotNull(message = "{validation.required}") @Size(max = 20) List<@Valid Denomination> denominations,
             @Schema(nullable = true, description = "Tiyin va mayda pul summasi, masalan «350.50»") @Size(max = 24) String coins,
             @Schema(nullable = true, description = "Farq bo'lsa majburiy") @Size(max = 500) String note,
-            @Schema(nullable = true, description = "Farq bo'lsa majburiy") @Size(max = 6) String pin) {}
+            @Schema(nullable = true, description = "Farq bo'lsa majburiy") @Size(max = 6) String pin,
+            @Schema(nullable = true, description = "Farqni tasdiqlovchi (cash.closeDiff); bo'sh bo'lsa — yopayotgan xodimning o'zi") Long approverId) {}
+
+    /** Farqni PIN bilan tasdiqlay oladigan xodim (cash.closeDiff, kassa filiali doirasida). */
+    record CloseApprover(long id, String name, String role, boolean ownBranch) {}
 
     record ClosePreview(long accountId, String account, LocalDate closeDate, @Schema(nullable = true) LocalDate lastClosed, String expected,
             String income, String expense, int pendingOps, List<Integer> nominals) {}
 
     record DayClose(long id, long accountId, String account, LocalDate closeDate, String expected, String counted, String diff,
             List<Denomination> denominations, @Schema(nullable = true) String note, @Schema(nullable = true) String correctionNumber,
-            String closedBy, Instant closedAt) {}
+            String closedBy, Instant closedAt, @Schema(nullable = true) String approvedBy) {}
 }
