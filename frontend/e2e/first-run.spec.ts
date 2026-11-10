@@ -604,7 +604,7 @@ test("CEO: Kassa — kirim, katta chiqim tasdiqqa → tasdiqlash, kunni yopish",
   await expect(page.getByRole("heading", { name: "Kassa kunini yopish" })).toBeVisible();
   await page.getByRole("button", { name: "Kunni yopish" }).last().click();
   await expect(page.getByText("Kunni yopib boʻlmaydi: 1 ta muammo").first()).toBeVisible();
-  await page.getByRole("dialog").getByRole("button", { name: "Yopish" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Yopish", exact: true }).last().click();
   await page.getByLabel("200.000", { exact: true }).fill("2");
   await page.getByLabel("100.000", { exact: true }).fill("1");
   await expect(page.getByText("Mos keldi — sanoq tizim qoldigʻiga teng")).toBeVisible();

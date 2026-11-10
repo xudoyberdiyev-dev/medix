@@ -343,6 +343,16 @@ test("Ombor mudiri: hisobdan oʻtkazadi va reys tuzadi", async ({ page }) => {
   await expect(page.getByText(/^Reys RS-.* rejalashtirildi$/).first()).toBeVisible();
   await page.goto("/shipments?tab=trips");
   await expect(page.getByRole("region", { name: "Faol reyslar" })).toContainText("Hasan Haydovchiyev");
+  // Reys sahifasi (prototip TripPage): tarkib, ekspeditor avtomatik saqlanadi
+  await page.getByRole("region", { name: "Faol reyslar" }).getByText("Hasan Haydovchiyev").first().click();
+  await expect(page).toHaveURL(/\/shipments\/trips\/\d+/);
+  await expect(page.getByRole("heading", { name: "Reys", exact: true })).toBeVisible();
+  await expect(page.getByText("Reys tarkibi")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: CUSTOMER })).toBeVisible();
+  await field(page, "Ekspeditor").fill("Ali Valiyev");
+  await expect(page.getByText(/^Saqlandi · /)).toBeVisible();
+  await page.reload();
+  await expect(field(page, "Ekspeditor")).toHaveValue("Ali Valiyev");
 });
 
 test("Haydovchi: qabul qiladi, yetkazadi (rasm + naqd), reysni yakunlaydi", async ({ page }) => {

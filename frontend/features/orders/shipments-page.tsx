@@ -56,7 +56,6 @@ import {
   type TripSummary,
 } from "./shipments-model";
 import type { OrdersT } from "./i18n";
-import { TripEditModal } from "./trip-edit-modal";
 
 export { placesText, TRIP_STATUS, type ReadyOrder, type TripStatus, type TripSummary } from "./shipments-model";
 
@@ -121,7 +120,6 @@ export function ShipmentsPage() {
   });
   const [error, setError] = useState<unknown>(null);
   const [cancelling, setCancelling] = useState<TripSummary | null>(null);
-  const [editing, setEditing] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [cancelError, setCancelError] = useState<unknown>(null);
   const [cancelPending, setCancelPending] = useState(false);
@@ -466,9 +464,15 @@ export function ShipmentsPage() {
               rows={trips.data ?? []}
               rowKey={(t) => String(t.id)}
               loading={trips.isPending}
-              onRowClick={(t) => printSheet(t.id)}
+              onRowClick={(t) => router.push(`/shipments/trips/${t.id}`)}
               rowActions={(t) => {
                 const items: RowMenuItem[] = [
+                  {
+                    key: "open",
+                    label: tr("shipments.openTrip"),
+                    icon: <ArrowUpRight size={16} strokeWidth={1.5} />,
+                    onSelect: () => router.push(`/shipments/trips/${t.id}`),
+                  },
                   {
                     key: "sheet",
                     label: tr("shipments.printSheet"),
@@ -482,7 +486,7 @@ export function ShipmentsPage() {
                       key: "edit",
                       label: tr("shipments.editTrip"),
                       icon: <ListPlus size={16} strokeWidth={1.5} />,
-                      onSelect: () => setEditing(t.id),
+                      onSelect: () => router.push(`/shipments/trips/${t.id}`),
                     },
                     {
                       key: "cancel",
@@ -516,7 +520,6 @@ export function ShipmentsPage() {
         )
       ) : null}
 
-      <TripEditModal tripId={editing} ready={ready.data ?? []} onClose={() => setEditing(null)} />
       <Modal
         open={cancelling !== null}
         onClose={() => setCancelling(null)}
