@@ -197,14 +197,16 @@ function Receive({ doc }: { doc: WarehouseTransferDetail }) {
                     </td>
                     <td className="px-2 py-3 text-right tabular-nums">{formatQuantity(l.qty)}</td>
                     <td className="px-2 py-2">
-                      <TextField
-                        label={tr("recvLabel", { p: l.productName, b: l.batchNumber })}
-                        className="[&>label]:sr-only"
-                        value={r.recv}
-                        onChange={(v) => setRow(l.id, { recv: v })}
-                        inputMode="numeric"
-                        error={qtyErr ? errText(qtyErr) : undefined}
-                      />
+                      <div className="ml-auto w-32">
+                        <TextField
+                          label={tr("recvLabel", { p: l.productName, b: l.batchNumber })}
+                          className="[&>label]:sr-only"
+                          value={r.recv}
+                          onChange={(v) => setRow(l.id, { recv: v })}
+                          inputMode="numeric"
+                          error={qtyErr ? errText(qtyErr) : undefined}
+                        />
+                      </div>
                     </td>
                     <td className={cn("px-2 py-3 text-right tabular-nums", d > 0 ? "font-semibold text-danger" : "text-text-secondary")}>
                       {d > 0 ? `−${formatQuantity(d)}` : "0"}
@@ -237,7 +239,7 @@ function Receive({ doc }: { doc: WarehouseTransferDetail }) {
                     <td className="px-4 py-2">
                       <Select
                         label={tr("zoneLabel", { p: l.productName })}
-                        className="[&>label]:sr-only"
+                        className="[&>span:first-child]:sr-only"
                         value={r.zoneId !== null ? String(r.zoneId) : null}
                         onChange={(v) => setRow(l.id, { zoneId: v ? Number(v) : null })}
                         options={zones.map((z) => ({
