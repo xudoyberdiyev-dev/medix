@@ -275,7 +275,7 @@ test("Yigʻuvchi: birinchi kirish, buyurtmani yigʻadi", async ({ page }) => {
   await page.goto("/picking");
   await page.getByRole("button", { name: "Yigʻishni boshlash" }).first().click();
   await expect(page.getByRole("timer")).toBeVisible();
-  for (const c of await page.getByText("Olindi", { exact: true }).all()) await c.click();
+  for (const c of await page.getByRole("checkbox", { name: /^Olindi/ }).all()) await c.click();
   await page.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(page.getByText("Yigʻish yakunlandi")).toBeVisible();
   // Yigʻuvchiga Kassa yopiq
@@ -589,7 +589,7 @@ async function warehouseChain(page: Page) {
   await picker.goto("/picking");
   await picker.getByRole("button", { name: "Yigʻishni boshlash" }).first().click();
   await expect(picker.getByRole("timer")).toBeVisible();
-  for (const c of await picker.getByText("Olindi", { exact: true }).all()) await c.click();
+  for (const c of await picker.getByRole("checkbox", { name: /^Olindi/ }).all()) await c.click();
   await picker.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(picker.getByText("Yigʻish yakunlandi")).toBeVisible();
   // E1: markirovkasiz buyurtma ham Markirovkachidan «Tasdiqlash» bilan oʻtadi

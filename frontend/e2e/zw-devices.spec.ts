@@ -36,7 +36,7 @@ async function expectNoHorizontalOverflow(page: Page, where = "") {
 }
 
 const PHONE_PANELS = [
-  { login: "picker.1", path: "/picking", heading: "Yigʻish", nav: "Yigʻish" },
+  { login: "picker.1", path: "/picking", heading: "Yigʻuvchi paneli", nav: "Yigʻish" },
   { login: "marker.1", path: "/marking", heading: "Markirovka", nav: "Markirovka" },
   { login: "driver.1", path: "/driver", heading: "Reysim", nav: "Reysim" },
 ] as const;

@@ -36,7 +36,7 @@ async function choose(page: Page, label: string, option: RegExp, search?: string
 async function pick(page: Page) {
   await login(page, "picker.1", PASSWORD);
   await page.goto("/picking");
-  await page.getByRole("listitem").filter({ hasText: number }).getByRole("button", { name: "Yigʻishni boshlash" }).click();
+  await page.locator("article").filter({ hasText: number }).getByRole("button", { name: "Yigʻishni boshlash" }).click();
   await expect(page.getByRole("timer")).toBeVisible();
 }
 
@@ -74,7 +74,7 @@ test("Ombor zanjiri: vaqt, yigʻish, markirovka", async ({ page }) => {
   await expect(page.getByRole("status").getByText("Vaqt berildi", { exact: true })).toBeVisible();
 
   await pick(page);
-  for (const c of await page.getByText("Olindi", { exact: true }).all()) await c.click();
+  for (const c of await page.getByRole("checkbox", { name: /^Olindi/ }).all()) await c.click();
   await page.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(page.getByText("Yigʻish yakunlandi")).toBeVisible();
 
@@ -108,8 +108,8 @@ test("Ombor mudiri: faqat oddiy qatorni yigʻishga qaytaradi; qayta yigʻishda f
   // Vaqt saqlangan — yigʻuvchi darhol oladi; faqat Paracetamol qatori
   await pick(page);
   await expect(page.getByText(/^Qayta yigʻish: faqat 1 ta qator/)).toBeVisible();
-  await expect(page.getByText("Olindi", { exact: true })).toHaveCount(1);
-  await page.getByText("Olindi", { exact: true }).click();
+  await expect(page.getByRole("checkbox", { name: /^Olindi/ })).toHaveCount(1);
+  await page.getByRole("checkbox", { name: /^Olindi/ }).click();
   await page.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(page.getByText("Yigʻish yakunlandi")).toBeVisible();
 

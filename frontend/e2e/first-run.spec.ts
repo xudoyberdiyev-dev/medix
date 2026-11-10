@@ -492,7 +492,10 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.goto("/picking");
   await page.getByRole("button", { name: "Yigʻishni boshlash" }).first().click();
   await expect(page.getByRole("timer")).toBeVisible();
-  await page.getByText("Olindi").first().click();
+  await page
+    .getByRole("checkbox", { name: /^Olindi/ })
+    .first()
+    .click();
   await page.getByRole("button", { name: "Yigʻishni yakunlash" }).click();
   await expect(page.getByText("Yigʻish yakunlandi")).toBeVisible();
 
