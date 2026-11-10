@@ -4971,7 +4971,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Savdo hisoboti: sof savdo (sotuv − qaytarish), mijoz / operator / filial / kun bo'yicha; tannarx va yalpi foyda — prices.cost */
+        /** Savdo hisoboti: sof savdo (sotuv − qaytarish), mijoz / operator / filial / kun / hudud / to'lov turi bo'yicha, ixtiyoriy Guruh 2 (groupBy2 — ichki qatorlar); QQS alohida; tannarx va yalpi foyda — prices.cost */
         get: operations["salesReport"];
         put?: never;
         post?: never;
@@ -11946,6 +11946,8 @@ export interface components {
             from: string;
             /** @enum {string} */
             groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+            /** @enum {string} */
+            groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
             mineOnly: boolean;
             /** @enum {string} */
             paymentType?: "CASH" | "TRANSFER" | "ONLINE";
@@ -11958,18 +11960,28 @@ export interface components {
             truncated: boolean;
         };
         SalesRow: {
+            /** @description Guruh 2 (groupBy2) bo'yicha ichki qatorlar; groupBy2 berilmasa — null */
+            children?: components["schemas"]["SalesRow"][];
             cost?: string;
             /** @description Berilgan chegirma (E7): Σ qty × (narx turidagi narx − chegirmali narx); sotuv summasi chegirmadan keyin */
             discount: string;
             key: string;
             name: string;
             net: string;
+            /** @description Sof savdo QQSsiz */
+            netExVat: string;
             /** Format: int32 */
             orders: number;
             /** @description Yalpi foyda: sof savdo QQSsiz − tannarx */
             profit?: string;
             returns: string;
+            /** @description Qaytarish QQSsiz */
+            returnsExVat: string;
             sales: string;
+            /** @description Sotuv QQSsiz */
+            salesExVat: string;
+            /** @description Sof QQS: sotuv QQSi − qaytarish QQSi */
+            vat: string;
         };
         SaveRequest: {
             roles: components["schemas"]["RoleDraft"][];
@@ -20796,6 +20808,7 @@ export interface operations {
                 from?: string;
                 to?: string;
                 groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
                 paymentType?: "CASH" | "TRANSFER" | "ONLINE";
                 regionId?: number;
             };
@@ -20823,6 +20836,7 @@ export interface operations {
                 from?: string;
                 to?: string;
                 groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
+                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE";
                 paymentType?: "CASH" | "TRANSFER" | "ONLINE";
                 regionId?: number;
             };

@@ -11647,6 +11647,14 @@
           }
         }, {
           "in" : "query",
+          "name" : "groupBy2",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+          }
+        }, {
+          "in" : "query",
           "name" : "paymentType",
           "required" : false,
           "schema" : {
@@ -11674,7 +11682,7 @@
             "description" : "OK"
           }
         },
-        "summary" : "Savdo hisoboti: sof savdo (sotuv − qaytarish), mijoz / operator / filial / kun bo'yicha; tannarx va yalpi foyda — prices.cost",
+        "summary" : "Savdo hisoboti: sof savdo (sotuv − qaytarish), mijoz / operator / filial / kun / hudud / to'lov turi bo'yicha, ixtiyoriy Guruh 2 (groupBy2 — ichki qatorlar); QQS alohida; tannarx va yalpi foyda — prices.cost",
         "tags" : [ "reports" ]
       }
     },
@@ -11708,6 +11716,14 @@
         }, {
           "in" : "query",
           "name" : "groupBy",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "groupBy2",
           "required" : false,
           "schema" : {
             "type" : "string",
@@ -28460,6 +28476,10 @@
             "type" : "string",
             "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
           },
+          "groupBy2" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE" ]
+          },
           "mineOnly" : {
             "type" : "boolean"
           },
@@ -28493,6 +28513,13 @@
       "SalesRow" : {
         "type" : "object",
         "properties" : {
+          "children" : {
+            "type" : "array",
+            "description" : "Guruh 2 (groupBy2) bo'yicha ichki qatorlar; groupBy2 berilmasa — null",
+            "items" : {
+              "$ref" : "#/components/schemas/SalesRow"
+            }
+          },
           "cost" : {
             "type" : "string"
           },
@@ -28509,6 +28536,10 @@
           "net" : {
             "type" : "string"
           },
+          "netExVat" : {
+            "type" : "string",
+            "description" : "Sof savdo QQSsiz"
+          },
           "orders" : {
             "type" : "integer",
             "format" : "int32"
@@ -28520,11 +28551,23 @@
           "returns" : {
             "type" : "string"
           },
+          "returnsExVat" : {
+            "type" : "string",
+            "description" : "Qaytarish QQSsiz"
+          },
           "sales" : {
             "type" : "string"
+          },
+          "salesExVat" : {
+            "type" : "string",
+            "description" : "Sotuv QQSsiz"
+          },
+          "vat" : {
+            "type" : "string",
+            "description" : "Sof QQS: sotuv QQSi − qaytarish QQSi"
           }
         },
-        "required" : [ "discount", "key", "name", "net", "orders", "returns", "sales" ]
+        "required" : [ "discount", "key", "name", "net", "netExVat", "orders", "returns", "returnsExVat", "sales", "salesExVat", "vat" ]
       },
       "SaveRequest" : {
         "type" : "object",
