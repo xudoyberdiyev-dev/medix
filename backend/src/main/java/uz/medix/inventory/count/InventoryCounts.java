@@ -125,8 +125,6 @@ class InventoryCounts {
         return new InventoryCountPage(items, total, page, size);
     }
 
-    static final int REMIND_DAYS = 90;
-
     /** Roʻyxat yuqorisi (prototip Inventory): holatlar soni va har ombor boʻyicha oxirgi toʻliq inventarizatsiya. */
     @Transactional(readOnly = true)
     InventoryOverview overview(Actor actor, Long branchId) {
@@ -154,7 +152,7 @@ class InventoryCounts {
                             d == null ? null : (int) java.time.temporal.ChronoUnit.DAYS.between(d, today));
                 })
                 .list();
-        return new InventoryOverview(statuses, last, REMIND_DAYS);
+        return new InventoryOverview(statuses, last, settings.intValue(SettingKey.invRemindDays));
     }
 
     @Transactional(readOnly = true)
