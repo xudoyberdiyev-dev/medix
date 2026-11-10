@@ -86,6 +86,20 @@ function Screen({ doc }: { doc: InventoryCountDetail }) {
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [dlg, setDlg] = useState<"finish" | "unc" | "found" | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<Record<number, number>>({});
+  const saveRef = useRef(save.mutate);
+  useEffect(() => {
+    pendingRef.current = queue;
+    saveRef.current = save.mutate;
+  });
+  // Sahifadan chiqilganda saqlanmagan miqdorlar yoʻqolmasin
+  useEffect(
+    () => () => {
+      const entries = Object.entries(pendingRef.current).map(([lineId, countedQty]) => ({ lineId: Number(lineId), countedQty }));
+      if (entries.length) saveRef.current({ id: doc.id, entries });
+    },
+    [doc.id],
+  );
   const counting = doc.status === "COUNTING";
   const canEdit = counting && can(me.data, IN_COUNT);
   const open = !doc.bookHidden;

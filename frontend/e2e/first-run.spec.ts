@@ -741,7 +741,7 @@ test("CEO: inventarizatsiya (IN) — hujjat sahifasi: qoralama (avtosaqlash) →
     .getByLabel(/— sanalgan soni/)
     .first()
     .fill("1");
-  await expect(page.getByText(/^Saqlandi · /)).toBeVisible();
+  await expect(page.getByText(/^Saqlandi · /).filter({ visible: true })).toBeVisible();
   await expect(page.getByText(/Sanaldi 1 \//)).toBeVisible();
   await page.getByRole("link", { name: "Hujjatga qaytish" }).click();
 
