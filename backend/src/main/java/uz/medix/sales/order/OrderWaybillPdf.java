@@ -14,6 +14,7 @@ import uz.medix.shared.error.MedixException;
 import uz.medix.shared.pdf.PdfDocument;
 import uz.medix.shared.pdf.PdfFormat;
 import uz.medix.shared.pdf.PdfRenderer;
+import uz.medix.shared.pdf.PrintSettings;
 import uz.medix.shared.security.Actor;
 
 /** Nakladnoy — server PDF (frontend {@code /print/waybill} bilan bir xil shakl). */
@@ -28,21 +29,23 @@ class OrderWaybillPdf {
     private final Orders orders;
     private final PdfRenderer pdf;
     private final JdbcClient jdbc;
+    private final PrintSettings print;
 
-    OrderWaybillPdf(Orders orders, PdfRenderer pdf, JdbcClient jdbc) {
+    OrderWaybillPdf(Orders orders, PdfRenderer pdf, JdbcClient jdbc, PrintSettings print) {
         this.orders = orders;
         this.pdf = pdf;
         this.jdbc = jdbc;
+        this.print = print;
     }
 
-    /** Nakladnoy PDF; nakladnoy hali berilmagan bo'lsa — 409. */
+    /** Nakladnoy PDF; nakladnoy hali berilmagan bo'lsa — 409. Narxlar — Sozlamalar → Chop etish → yuk xati varianti. */
     @Transactional(readOnly = true)
     PdfDocument render(Actor actor, long id) {
         OrderDetail o = load(actor, id);
         String number = waybill(o);
         Map<String, Object> seller = jdbc.sql("SELECT legal_name, tin, address, phone FROM branch WHERE id = :b")
                 .param("b", o.branchId()).query().singleRow();
-        boolean withPrice = o.lines().stream().anyMatch(l -> l.price() != null);
+        boolean withPrice = print.waybillWithPrice() && o.lines().stream().anyMatch(l -> l.price() != null);
         long qty = o.lines().stream().mapToLong(OrderLine::qty).sum();
 
         Map<String, Object> vars = new HashMap<>();
@@ -62,6 +65,7 @@ class OrderWaybillPdf {
         vars.put("totalQty", PdfFormat.qty(qty));
         vars.put("total", PdfFormat.money(o.total()));
         vars.put("note", o.note());
+        vars.put("reprint", print.registerPrint("NK", number, actor.employeeId()));
         return new PdfDocument(number, pdf.render("waybill", vars));
     }
 

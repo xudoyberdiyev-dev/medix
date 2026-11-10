@@ -1135,7 +1135,19 @@ class OrderIT {
                 .andExpect(jsonPath("$[?(@.id == " + t1 + ")].marked").value(hasItem(0)));
         String nk1 = jdbc.sql("SELECT waybill_number FROM sales_order WHERE id = :o").param("o", o1).query(String.class).single();
         // Nakladnoy — server PDF (raqam, mahsulot, miqdor, imzolar)
-        assertThat(pdfText("/api/orders/" + o1 + "/waybill/pdf", keeper)).contains("Nakladnoy", nk1, "BY Reys", "Jami", "Qabul qildi");
+        assertThat(pdfText("/api/orders/" + o1 + "/waybill/pdf", keeper)).contains("Nakladnoy", nk1, "BY Reys", "Jami", "Qabul qildi")
+                .doesNotContain("Takroriy nusxa");
+        // Sozlamalar → Chop etish: yuk xati «Narxlarsiz» varianti va takroriy nusxa belgisi
+        jdbc.sql("UPDATE print_setting SET invoice_variant = 'NOPRICE' WHERE id = 1").update();
+        try {
+            assertThat(pdfText("/api/orders/" + o1 + "/waybill/pdf", keeper)).contains(nk1, "Takroriy nusxa · 2").doesNotContain("Narx (QQS bilan)");
+            jdbc.sql("UPDATE print_setting SET reprint_mark = false WHERE id = 1").update();
+            assertThat(pdfText("/api/orders/" + o1 + "/waybill/pdf", keeper)).contains(nk1).doesNotContain("Takroriy nusxa");
+        } finally {
+            jdbc.sql("UPDATE print_setting SET invoice_variant = 'PRICE', reprint_mark = true WHERE id = 1").update();
+        }
+        assertThat(jdbc.sql("SELECT copies FROM print_log WHERE doc_type = 'NK' AND doc_number = :n").param("n", nk1).query(Integer.class).single())
+                .isEqualTo(3);
         // Terish varag'i — server PDF (bir necha buyurtma jamlanadi)
         assertThat(pdfText("/api/orders/pick-sheet/pdf?ids=" + o1 + "," + o2, keeper)).contains("Terish varagʻi", "BY Reys", "2 buyurtma");
         mvc.perform(get("/api/orders/pick-sheet/pdf?ids=").cookie(keeper)).andExpect(status().is4xxClientError());
@@ -1489,7 +1501,9 @@ class OrderIT {
                 .andExpect(jsonPath("$.lines[0].vatRate").value("12"))
                 .andExpect(jsonPath("$.lines[0].cost").doesNotExist());
         mvc.perform(get("/api/orders/" + o + "/invoice").cookie(driverSession)).andExpect(status().isForbidden());
-        assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Hisob-faktura", (String) sv.get("invoice_number"), "QQS", "Jami");
+        assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Hisob-faktura", (String) sv.get("invoice_number"), "QQS", "Jami", "Rahbar")
+                .doesNotContain("Takroriy nusxa");
+        assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Takroriy nusxa · 2");
         var qm = jdbc.sql("SELECT total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sales_return WHERE order_id = :o")
                 .param("o", o).query().singleRow();
         assertThat(qm.get("total")).isEqualTo("2000.00");
