@@ -35,6 +35,9 @@
   },
   "out": "chiquvchi",
   "in": "kiruvchi",
+  "resolveT": "Hal qilinishi kerak",
+  "resolveD": "Qabul qiluvchi kam qabul qilgan miqdor. Hal qilinmaguncha Qoldiqlarda «Yoʻlda» qatori sifatida koʻrinib turadi.",
+  "resolveRow": "{p} · {b} — {q} ta yetishmadi, {to}",
   "kpi": {
     "transit": "Yoʻlda",
     "cost": "Summa {sum}",

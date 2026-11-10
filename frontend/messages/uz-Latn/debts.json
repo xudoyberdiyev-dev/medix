@@ -124,6 +124,9 @@
       "used": "Ishlatilgan",
       "status": "Holat"
     },
+    "regionFilter": "Hudud",
+    "operatorFilter": "Operator",
+    "noValue": "Koʻrsatilmagan",
     "ageFilter": "Muddat boʻlagi",
     "statusFilter": "Holat",
     "recon": "Akt sverka",

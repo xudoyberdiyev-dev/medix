@@ -124,6 +124,9 @@
       "used": "Ишлатилган",
       "status": "Ҳолат"
     },
+    "regionFilter": "Ҳудуд",
+    "operatorFilter": "Оператор",
+    "noValue": "Кўрсатилмаган",
     "ageFilter": "Муддат бўлаги",
     "statusFilter": "Ҳолат",
     "recon": "Акт сверка",

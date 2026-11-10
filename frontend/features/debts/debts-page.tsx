@@ -78,6 +78,8 @@ export function DebtsPage({ side }: { side: Side }) {
   const [tab, setTab] = useState<DebtTab>("all");
   const [ages, setAges] = useState<AgeKey[]>([]);
   const [statuses, setStatuses] = useState<DebtStatus[]>([]);
+  const [regions, setRegions] = useState<string[]>([]);
+  const [operators, setOperators] = useState<string[]>([]);
   const all = useMemo(() => report.data?.rows ?? [], [report.data]);
   const rows = useMemo(
     () =>
@@ -85,20 +87,38 @@ export function DebtsPage({ side }: { side: Side }) {
         (r) =>
           matchesDebt(r, q) &&
           (isCustomer
-            ? inTab(r, tab) && inAges(r, ages) && (statuses.length === 0 || statuses.includes(statusOf(r)))
+            ? inTab(r, tab) &&
+              inAges(r, ages) &&
+              (statuses.length === 0 || statuses.includes(statusOf(r))) &&
+              (regions.length === 0 || regions.includes(r.region ?? "")) &&
+              (operators.length === 0 || (r.operator ?? "").split(", ").some((o) => operators.includes(o)))
             : !overdueOnly || r.buckets.overdue !== "0.00"),
       ),
-    [all, q, overdueOnly, isCustomer, tab, ages, statuses],
+    [all, q, overdueOnly, isCustomer, tab, ages, statuses, regions, operators],
   );
-  const filtered = isCustomer ? q !== "" || tab !== "all" || ages.length > 0 || statuses.length > 0 : q !== "" || overdueOnly;
+  const filtered = isCustomer
+    ? q !== "" || tab !== "all" || ages.length > 0 || statuses.length > 0 || regions.length > 0 || operators.length > 0
+    : q !== "" || overdueOnly;
   const clearFilters = () => {
     setQ("");
     setOverdueOnly(false);
     setTab("all");
     setAges([]);
     setStatuses([]);
+    setRegions([]);
+    setOperators([]);
   };
   const tr = useTranslations("debts.recv");
+  // Hudud / Operator chiplari (prototip Receivables): qiymatlar hisobotdagi qatorlardan, «Koʻrsatilmagan» — boʻsh
+  const valuesOf = (pick: (r: DebtRow) => string[]) => {
+    const counts = new Map<string, number>();
+    for (const r of all) for (const v of pick(r)) counts.set(v, (counts.get(v) ?? 0) + 1);
+    return [...counts.entries()]
+      .sort((a, b) => (a[0] === "" ? 1 : b[0] === "" ? -1 : a[0].localeCompare(b[0])))
+      .map(([value, count]) => ({ value, label: value || tr("noValue"), count }));
+  };
+  const regionOptions = valuesOf((r) => [r.region ?? ""]);
+  const operatorOptions = valuesOf((r) => (r.operator ? r.operator.split(", ") : [""]));
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden", { title })} />;
 
@@ -157,6 +177,8 @@ export function DebtsPage({ side }: { side: Side }) {
           <div className="font-medium">{r.name}</div>
           <div className="text-caption text-text-secondary">
             {t("tin", { tin: "" }).trim()} <span className="font-mono">{r.tin}</span>
+            {r.region ? ` · ${r.region}` : ""}
+            {r.operator ? ` · ${r.operator}` : ""}
           </div>
         </div>
       ),
@@ -306,6 +328,8 @@ export function DebtsPage({ side }: { side: Side }) {
               </div>
               {isCustomer ? (
                 <>
+                  <MultiFilter label={tr("regionFilter")} options={regionOptions} selected={regions} onChange={setRegions} />
+                  <MultiFilter label={tr("operatorFilter")} options={operatorOptions} selected={operators} onChange={setOperators} />
                   <MultiFilter
                     label={tr("statusFilter")}
                     options={(["ok", "overdue", "limit", "adv"] as const).map((v) => ({

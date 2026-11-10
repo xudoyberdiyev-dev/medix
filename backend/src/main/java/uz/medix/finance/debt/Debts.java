@@ -38,7 +38,9 @@ class Debts {
 
     record DebtRow(long counterpartyId, String name, String tin, @Schema(nullable = true) String phone, Buckets buckets, int maxOverdueDays,
             @Schema(nullable = true, description = "Kredit limiti (faqat bitta filial tanlanganda; mijoz)") String creditLimit,
-            @Schema(nullable = true) LocalDate lastPayment) {}
+            @Schema(nullable = true) LocalDate lastPayment, @Schema(nullable = true, description = "Hudud (mijoz kartochkasidan)") String region,
+            @Schema(nullable = true, description = "Masʼul operator (filial shartidan; filial tanlanmasa — barcha filiallardagilar)")
+            String operator) {}
 
     record DebtReport(@Schema(nullable = true) Long branchId, LocalDate today, Buckets totals, List<DebtRow> rows) {}
 
@@ -112,14 +114,18 @@ class Debts {
         if (byParty.isEmpty()) {
             return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of());
         }
-        record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment) {}
+        record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment, String region, String operator) {}
         String payDoc = side == Side.CUSTOMER ? "MT" : "YT";
         Map<Long, Info> info = new LinkedHashMap<>();
         jdbc.sql("""
                 SELECT c.id, c.name, c.tin, c.phone, t.credit_limit,
                        (SELECT max((p.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) FROM party_ledger p
-                        WHERE p.counterparty_id = c.id AND p.side = :s AND p.doc_type = :pd AND (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)) AS last_pay
+                        WHERE p.counterparty_id = c.id AND p.side = :s AND p.doc_type = :pd AND (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)) AS last_pay,
+                       rg.name AS region,
+                       (SELECT string_agg(DISTINCT e.full_name, ', ') FROM counterparty_branch_terms ot JOIN employee e ON e.id = ot.operator_employee_id
+                        WHERE ot.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR ot.branch_id = :b)) AS operator
                 FROM counterparty c LEFT JOIN counterparty_branch_terms t ON t.counterparty_id = c.id AND t.branch_id = :b
+                LEFT JOIN region rg ON rg.id = c.region_id
                 WHERE c.id IN (:ids)""")
                 .param("s", side.name())
                 .param("pd", payDoc)
@@ -128,7 +134,8 @@ class Debts {
                 .query((rs, n) -> {
                     info.put(rs.getLong("id"), new Info(rs.getString("name"), rs.getString("tin"), rs.getString("phone"),
                             side == Side.CUSTOMER ? rs.getBigDecimal("credit_limit") : null,
-                            rs.getDate("last_pay") == null ? null : rs.getDate("last_pay").toLocalDate()));
+                            rs.getDate("last_pay") == null ? null : rs.getDate("last_pay").toLocalDate(), rs.getString("region"),
+                            side == Side.CUSTOMER ? rs.getString("operator") : null));
                     return 0;
                 })
                 .list();
@@ -139,7 +146,7 @@ class Debts {
             total = total.plus(r);
             Info c = info.get(e.getKey());
             rows.add(new DebtRow(e.getKey(), c.name(), c.tin(), c.phone(), Buckets.of(r), r.maxOverdueDays(),
-                    c.limit() == null ? null : new Money(c.limit()).toString(), c.lastPayment()));
+                    c.limit() == null ? null : new Money(c.limit()).toString(), c.lastPayment(), c.region(), c.operator()));
         }
         // Eng ko'p muddati o'tgan qarz birinchi, keyin umumiy qarz
         rows.sort(Comparator.comparing((DebtRow r) -> Money.of(r.buckets().overdue())).reversed()

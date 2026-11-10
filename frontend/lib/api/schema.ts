@@ -8128,7 +8128,11 @@ export interface components {
             /** Format: int32 */
             maxOverdueDays: number;
             name: string;
+            /** @description Masʼul operator (filial shartidan; filial tanlanmasa — barcha filiallardagilar) */
+            operator?: string;
             phone?: string;
+            /** @description Hudud (mijoz kartochkasidan) */
+            region?: string;
             tin: string;
         };
         Debtor: {

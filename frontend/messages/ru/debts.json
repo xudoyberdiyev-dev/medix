@@ -124,6 +124,9 @@
       "used": "Использовано",
       "status": "Статус"
     },
+    "regionFilter": "Регион",
+    "operatorFilter": "Оператор",
+    "noValue": "Не указан",
     "ageFilter": "Срок",
     "statusFilter": "Статус",
     "recon": "Акт сверки",

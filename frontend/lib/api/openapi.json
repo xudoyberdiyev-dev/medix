@@ -19232,8 +19232,16 @@
           "name" : {
             "type" : "string"
           },
+          "operator" : {
+            "type" : "string",
+            "description" : "Masʼul operator (filial shartidan; filial tanlanmasa — barcha filiallardagilar)"
+          },
           "phone" : {
             "type" : "string"
+          },
+          "region" : {
+            "type" : "string",
+            "description" : "Hudud (mijoz kartochkasidan)"
           },
           "tin" : {
             "type" : "string"

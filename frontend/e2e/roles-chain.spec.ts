@@ -849,5 +849,5 @@ test("Ombor mudiri: QM ni qabul qiladi — tovar Karantinga, mijoz qarzi kamayad
   await page.keyboard.press("Escape");
   await expect(page.getByRole("row", { name: /QM-/ }).first()).toContainText("Tasdiqlangan");
   // Qaytarish turlari yorligʻi: QM birinchi
-  await expect(page.getByRole("tab", { name: "Mijozdan qaytarish" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Mijozdan qaytarish", exact: true })).toHaveAttribute("aria-current", "page");
 });
