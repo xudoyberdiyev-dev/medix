@@ -464,7 +464,7 @@ function DraftDoc({ doc }: { doc: InventoryCountDetail | null }) {
             error={tried && dayToIso(f.countDate) === null ? t("doc.eDate") : undefined}
           />
           <div className="flex min-w-0 flex-col gap-1.5">
-            <span className="text-caption font-medium">{t("doc.hMode")}</span>
+            <span className="font-medium text-text-secondary">{t("doc.hMode")}</span>
             <div role="radiogroup" aria-label={t("doc.hMode")} className="flex gap-0.5 rounded-control bg-table-header p-0.5">
               {(["WAREHOUSE", "ZONES", "PRODUCTS"] as const).map((m) => (
                 <button
