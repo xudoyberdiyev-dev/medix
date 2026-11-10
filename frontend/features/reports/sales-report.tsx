@@ -381,6 +381,7 @@ export function SalesReportPage() {
             <span>
               {r.from === r.to ? formatIsoDate(r.from) : `${formatIsoDate(r.from)} – ${formatIsoDate(r.to)}`}
               {r.mineOnly ? ` · ${t("sales.mineOnly")}` : r.branchId == null ? ` · ${t("allBranches")}` : ""}
+              {` · ${gross ? t("sales.vatGross") : t("sales.vatNet")}`}
             </span>
           ) : null}
           <ColumnsMenu
