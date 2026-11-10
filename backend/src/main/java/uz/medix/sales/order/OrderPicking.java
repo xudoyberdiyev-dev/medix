@@ -18,6 +18,7 @@ import uz.medix.inventory.StockLedger.Move;
 import uz.medix.inventory.StockReservations;
 import uz.medix.inventory.StockReservations.Allocation;
 import uz.medix.inventory.StockReservations.Free;
+import uz.medix.sales.order.OrderModels.DeliveryType;
 import uz.medix.sales.order.OrderModels.OrderStatus;
 import uz.medix.sales.order.OrderModels.PickDoneItem;
 import uz.medix.sales.order.OrderModels.PickLineConfirm;
@@ -92,7 +93,7 @@ class OrderPicking {
     List<PickQueueItem> queue(Actor actor) {
         return jdbc.sql("""
                 SELECT o.id, o.number, c.name AS customer, o.status, o.branch_id, o.pick_minutes, pk.full_name AS picker, o.picker_id,
-                       o.pick_started_at, o.queued_at,
+                       o.pick_started_at, o.queued_at, o.delivery_type, o.delivery_date, o.note,
                        (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids)))
                            AS lines,
                        (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l
@@ -116,7 +117,8 @@ class OrderPicking {
                             OrderStatus.valueOf(rs.getString("status")), rs.getInt("lines"), rs.getLong("total_qty"), rs.getBoolean("marked"),
                             minutes, rs.getString("picker"), (Long) rs.getObject("picker_id"), started,
                             started == null || minutes == null ? null : started.plusSeconds(minutes * 60L), rs.getTimestamp("queued_at").toInstant(),
-                            rs.getString("contract"), rs.getString("invoice"));
+                            rs.getString("contract"), rs.getString("invoice"), DeliveryType.valueOf(rs.getString("delivery_type")),
+                            rs.getObject("delivery_date", java.time.LocalDate.class), rs.getString("note"));
                 })
                 .list()
                 .stream()
@@ -130,7 +132,8 @@ class OrderPicking {
         return jdbc.sql("""
                 SELECT o.id, o.number, c.name AS customer, o.status, o.pick_minutes, o.pick_started_at, o.pick_finished_at,
                        (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
-                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l WHERE l.order_id = o.id) AS total_qty
+                       (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l WHERE l.order_id = o.id) AS total_qty,
+                       (SELECT count(*) FROM sales_order_issue i WHERE i.order_id = o.id AND i.stage = 'PICKING') AS issues
                 FROM sales_order o JOIN counterparty c ON c.id = o.customer_id
                 WHERE o.picker_id = :p AND o.pick_finished_at IS NOT NULL
                   AND (o.pick_finished_at AT TIME ZONE 'Asia/Tashkent')::date = (now() AT TIME ZONE 'Asia/Tashkent')::date
@@ -143,7 +146,7 @@ class OrderPicking {
                     boolean onTime = minutes == null || started == null || !finished.isAfter(started.plusSeconds(minutes * 60L));
                     return new PickDoneItem(rs.getLong("id"), rs.getString("number"), rs.getString("customer"),
                             OrderStatus.valueOf(rs.getString("status")), rs.getInt("lines"), rs.getLong("total_qty"), started, finished, minutes,
-                            onTime);
+                            onTime, rs.getInt("issues"));
                 })
                 .list();
     }

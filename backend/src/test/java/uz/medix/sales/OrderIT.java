@@ -646,7 +646,8 @@ class OrderIT {
         send(post("/api/orders/" + o2 + "/time"), keeper, "{\"pickMinutes\":10}").andExpect(status().isOk());
         mvc.perform(get("/api/orders/pick-queue").cookie(picker))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].id", hasItem((int) o1)));
+                .andExpect(jsonPath("$[*].id", hasItem((int) o1)))
+                .andExpect(jsonPath("$[0].deliveryType").isNotEmpty());
 
         // Bitta faol yig'ish
         send(post("/api/orders/" + o1 + "/pick/start"), picker, "").andExpect(jsonPath("$.status").value("PICKING"));
@@ -668,7 +669,8 @@ class OrderIT {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(o1))
                 .andExpect(jsonPath("$[0].status").value("MARKING"))
-                .andExpect(jsonPath("$[0].onTime").value(true));
+                .andExpect(jsonPath("$[0].onTime").value(true))
+                .andExpect(jsonPath("$[0].issues").value(0));
         mvc.perform(get("/api/orders/pick-done-today").cookie(otherPicker)).andExpect(jsonPath("$.length()").value(0));
         mvc.perform(get("/api/orders/pick-done-today").cookie(keeper)).andExpect(status().isForbidden());
         assertThat(qtyIn(shipping, prod)).isEqualTo(4);
