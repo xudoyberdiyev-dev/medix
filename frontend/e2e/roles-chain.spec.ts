@@ -864,7 +864,9 @@ test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yubora
   await page.goto("/customer-returns");
   await expect(page.getByRole("heading", { name: "Mijozdan qaytarish", level: 1 })).toBeVisible();
   await page.getByRole("button", { name: "Yangi qaytarish" }).first().click();
-  const drawer = page.getByRole("dialog").last();
+  // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = qm)
+  await expect(page).toHaveURL(/\/customer-returns\/new$/);
+  const drawer = page.getByRole("main");
   await drawer.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();

@@ -16,7 +16,6 @@ import { useMe } from "@/features/auth/session";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { QM_CREATE, QM_STATUSES, QM_VIEW_KEYS, useCustomerReturns, type CustomerReturnStatus, type CustomerReturnSummary } from "./api";
-import { CustomerReturnDrawer } from "./customer-return-drawer";
 
 export function CustomerReturnStatusBadge({ status }: { status: CustomerReturnStatus }) {
   const t = useTranslations("customerReturns");
@@ -53,7 +52,9 @@ export function CustomerReturnsPage() {
   useEffect(() => {
     if (Number.isInteger(openId) && openId > 0) router.replace(`/customer-returns/${openId}`);
   }, [openId, router]);
-  const [open, setOpen] = useState<{ id: number | null } | null>(() => (params.get("new") === "1" ? { id: null } : null));
+  useEffect(() => {
+    if (params.get("new") === "1") router.replace("/customer-returns/new");
+  }, [params, router]);
   const allowed = canAny(me.data, QM_VIEW_KEYS);
   const canCreate = can(me.data, QM_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -90,7 +91,7 @@ export function CustomerReturnsPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => router.push("/customer-returns/new")}>
             {t("create")}
           </Button>
         ) : null}
@@ -141,7 +142,7 @@ export function CustomerReturnsPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/customer-returns/new")}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -163,13 +164,6 @@ export function CustomerReturnsPage() {
           }
         />
       )}
-      {open ? (
-        <CustomerReturnDrawer
-          id={open.id}
-          onClose={() => setOpen(null)}
-          onCreated={(id) => (setOpen(null), router.push(`/customer-returns/${id}`))}
-        />
-      ) : null}
     </>
   );
 }

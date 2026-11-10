@@ -348,7 +348,16 @@ function View({ doc, onClose, page = false }: { doc: CustomerReturnDetail; onClo
   );
 }
 
-function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (id: number) => void }) {
+export function CreateForm({
+  onClose,
+  onCreated,
+  page = false,
+}: {
+  onClose: () => void;
+  onCreated: (id: number) => void;
+  /** Toʻliq sahifa (prototip `StockDocs`, kind = qm, yangi hujjat). */
+  page?: boolean;
+}) {
   const t = useTranslations("customerReturns");
   const me = useMe();
   const selectedBranch = useBranchStore((s) => s.branchId);
@@ -446,122 +455,131 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
     );
   };
 
-  return (
-    <Drawer
-      open
-      onClose={onClose}
-      size="lg"
-      kind={t("kind")}
-      title={t("newTitle")}
-      actions={
-        <Button icon={canApprove ? Check : Send} loading={create.isPending} onClick={submit}>
-          {canApprove ? t("accept") : t("send")}
-        </Button>
-      }
-    >
-      <div className="flex flex-col gap-4">
-        {error ? (
-          <Alert tone="danger" title={t("errorTitle")}>
-            {error}
-          </Alert>
-        ) : null}
-        {tried && errors.length > 0 ? (
-          <Alert tone="danger" title={t("vsTitle", { n: errors.length })}>
-            <ul className="list-disc pl-5">
-              {errors.map((e) => (
-                <li key={e}>{e}</li>
-              ))}
-            </ul>
-          </Alert>
-        ) : null}
-        <div className="grid grid-cols-4 gap-4">
+  const action = (
+    <Button icon={canApprove ? Check : Send} loading={create.isPending} onClick={submit}>
+      {canApprove ? t("accept") : t("send")}
+    </Button>
+  );
+  const body = (
+    <div className="flex flex-col gap-4">
+      {error ? (
+        <Alert tone="danger" title={t("errorTitle")}>
+          {error}
+        </Alert>
+      ) : null}
+      {tried && errors.length > 0 ? (
+        <Alert tone="danger" title={t("vsTitle", { n: errors.length })}>
+          <ul className="list-disc pl-5">
+            {errors.map((e) => (
+              <li key={e}>{e}</li>
+            ))}
+          </ul>
+        </Alert>
+      ) : null}
+      <div className="grid grid-cols-4 gap-4">
+        <Select
+          label={t("head.customer")}
+          value={customer}
+          loadOptions={async (q) => {
+            const found = await searchCustomers(q);
+            found.forEach((o) => seen.current.set(o.value, o.label));
+            return found;
+          }}
+          onChange={(v) => (
+            setCustomer(v),
+            setCustomerLabel(v ? (seen.current.get(v) ?? "") : ""),
+            setSaleId(null),
+            setQty({}),
+            setReasons({})
+          )}
+          placeholder={customerLabel || t("choose")}
+          options={customer && customerLabel ? [{ value: customer, label: customerLabel }] : []}
+          required
+        />
+        <div className="col-span-2">
           <Select
-            label={t("head.customer")}
-            value={customer}
-            loadOptions={async (q) => {
-              const found = await searchCustomers(q);
-              found.forEach((o) => seen.current.set(o.value, o.label));
-              return found;
-            }}
-            onChange={(v) => (
-              setCustomer(v),
-              setCustomerLabel(v ? (seen.current.get(v) ?? "") : ""),
-              setSaleId(null),
-              setQty({}),
-              setReasons({})
-            )}
-            placeholder={customerLabel || t("choose")}
-            options={customer && customerLabel ? [{ value: customer, label: customerLabel }] : []}
+            label={t("head.sale")}
+            value={saleId}
+            onChange={(v) => (setSaleId(v), setQty({}), setReasons({}))}
+            options={(sales.data ?? []).map((s) => ({
+              value: String(s.id),
+              label: `${s.number} · ${day(s.saleDate)} · ${formatMoney(s.total)}`,
+              sub: t("canReturn", { n: s.returnableLines }),
+            }))}
+            placeholder={customer ? t("choose") : t("pickCustomer")}
+            disabled={!customer}
+            hint={
+              customer && sales.data && sales.data.length === 0
+                ? t("noSales")
+                : sale
+                  ? t("saleHint", { n: sale.returnableLines })
+                  : undefined
+            }
             required
           />
-          <div className="col-span-2">
-            <Select
-              label={t("head.sale")}
-              value={saleId}
-              onChange={(v) => (setSaleId(v), setQty({}), setReasons({}))}
-              options={(sales.data ?? []).map((s) => ({
-                value: String(s.id),
-                label: `${s.number} · ${day(s.saleDate)} · ${formatMoney(s.total)}`,
-                sub: t("canReturn", { n: s.returnableLines }),
-              }))}
-              placeholder={customer ? t("choose") : t("pickCustomer")}
-              disabled={!customer}
-              hint={
-                customer && sales.data && sales.data.length === 0
-                  ? t("noSales")
-                  : sale
-                    ? t("saleHint", { n: sale.returnableLines })
-                    : undefined
-              }
-              required
-            />
-          </div>
-          <Select
-            label={t("head.warehouse")}
-            value={sale ? String(sale.warehouseId) : null}
-            onChange={() => undefined}
-            options={sale ? [{ value: String(sale.warehouseId), label: sale.warehouse }] : []}
-            placeholder="—"
-            hint={t("whLocked")}
-            disabled
-          />
         </div>
-        {!canApprove ? (
-          <Alert tone="info" title={t("keeperAccepts")}>
-            {t("keeperAcceptsBody")}
-          </Alert>
-        ) : null}
-        {saleId ? (
-          lines.error ? (
-            <ErrorState onRetry={() => lines.refetch()} />
-          ) : (
-            <Table
-              caption={t("linesCaption")}
-              density="compact"
-              columns={columns}
-              rows={rows}
-              rowKey={(r) => String(r.saleLineId)}
-              loading={lines.isPending}
-              emptyState={<EmptyState icon={X} title={t("emptyLines")} description={t("fromSale")} />}
-            />
-          )
-        ) : (
-          <EmptyState icon={X} title={t("emptyQm")} description={t("fromSale")} />
-        )}
-        {saleId ? (
-          <p className="text-right text-body">
-            {t("totals", { lines: formatQuantity(picked.lines.length), qty: formatQuantity(pickedQty) })}{" "}
-            <span className="font-semibold">{t("totalSum", { sum: formatMoney(total) })}</span>
-          </p>
-        ) : null}
-        <TextField
-          label={t("head.note")}
-          value={note}
-          onChange={setNote}
-          placeholder={t("notePlaceholder")}
-          required={picked.lines.some((l) => l.reason === "OTHER")}
+        <Select
+          label={t("head.warehouse")}
+          value={sale ? String(sale.warehouseId) : null}
+          onChange={() => undefined}
+          options={sale ? [{ value: String(sale.warehouseId), label: sale.warehouse }] : []}
+          placeholder="—"
+          hint={t("whLocked")}
+          disabled
         />
       </div>
+      {!canApprove ? (
+        <Alert tone="info" title={t("keeperAccepts")}>
+          {t("keeperAcceptsBody")}
+        </Alert>
+      ) : null}
+      {saleId ? (
+        lines.error ? (
+          <ErrorState onRetry={() => lines.refetch()} />
+        ) : (
+          <Table
+            caption={t("linesCaption")}
+            density="compact"
+            columns={columns}
+            rows={rows}
+            rowKey={(r) => String(r.saleLineId)}
+            loading={lines.isPending}
+            emptyState={<EmptyState icon={X} title={t("emptyLines")} description={t("fromSale")} />}
+          />
+        )
+      ) : (
+        <EmptyState icon={X} title={t("emptyQm")} description={t("fromSale")} />
+      )}
+      {saleId ? (
+        <p className="text-right text-body">
+          {t("totals", { lines: formatQuantity(picked.lines.length), qty: formatQuantity(pickedQty) })}{" "}
+          <span className="font-semibold">{t("totalSum", { sum: formatMoney(total) })}</span>
+        </p>
+      ) : null}
+      <TextField
+        label={t("head.note")}
+        value={note}
+        onChange={setNote}
+        placeholder={t("notePlaceholder")}
+        required={picked.lines.some((l) => l.reason === "OTHER")}
+      />
+    </div>
+  );
+  if (page)
+    return (
+      <div className="flex min-w-0 flex-col gap-4 pb-12">
+        <DocumentHeader
+          parent={{ label: t("title"), href: "/customer-returns" }}
+          crumb={t("crumbNew")}
+          title={t("newTitle")}
+          actions={action}
+        />
+        <section className="rounded-card border border-border bg-surface p-5">{body}</section>
+      </div>
+    );
+  return (
+    <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("newTitle")} actions={action}>
+      {body}
     </Drawer>
   );
 }
