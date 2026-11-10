@@ -145,8 +145,10 @@ class SettingsIT {
                         .content("{\"login\":\"" + login + "\",\"password\":\"" + PASSWORD + "\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
-        assertThat(r.getRequest().getSession(false)).isNotNull();
-        assertThat(r.getRequest().getSession(false).getMaxInactiveInterval()).isEqualTo(settings.intValue(SettingKey.sessionMin) * 60);
+        assertThat(r.getResponse().getHeaders("Set-Cookie")).anyMatch(h -> h.startsWith("MEDIX_SESSION="));
+        // Spring Session JDBC: oxirgi yaratilgan sessiya — shu kirish
+        assertThat(jdbc.sql("SELECT max_inactive_interval FROM spring_session ORDER BY creation_time DESC LIMIT 1").query(Integer.class).single())
+                .isEqualTo(settings.intValue(SettingKey.sessionMin) * 60);
     }
 
     @Test
