@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import uz.medix.TestcontainersConfig;
 
-/** 1.3: 135 ta ruxsat kaliti (132 + E7 orders.discount + settings.edit, settings.security) va 11 rolning standart matritsasi (T12-topshirish §7). */
+/** 1.3: 136 ta ruxsat kaliti (132 + E7 orders.discount + settings.edit, settings.security + qm.cancelPosted) va 11 rolning standart matritsasi (T12-topshirish §7). */
 @SpringBootTest
 @Import(TestcontainersConfig.class)
 class PermissionMatrixIT {
