@@ -843,3 +843,19 @@ test("CEO: FS kamomadi — topildi, sotuvchiga qaytariladi (qarz kamayadi)", asy
   await expect(page.getByText(/Kamomad: 1 dona .*— hal qilindi/)).toBeVisible();
   await expect(page.getByText(/Sotuvchiga qaytarildi · qarz -/)).toBeVisible();
 });
+
+test("CEO: Kompaniya — tizim holati va nomni tahrirlash", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/company");
+  await expect(page.getByRole("heading", { name: "Kompaniya", level: 1 })).toBeVisible();
+  await expect(page.getByText("Tizim ishga tushirilgan")).toBeVisible();
+  await page.getByRole("button", { name: "Tahrirlash" }).click();
+  const modal = page.getByRole("dialog", { name: "Kompaniyani tahrirlash" });
+  const name = modal.getByLabel(/^Guruh nomi\s*\*?$/);
+  const old = await name.inputValue();
+  await name.fill(`${old} `);
+  await modal.getByRole("button", { name: "Saqlash" }).click();
+  await expect(page.getByText("Kompaniya nomi saqlandi").first()).toBeVisible();
+  await expect(page.getByText(old, { exact: true }).first()).toBeVisible();
+});

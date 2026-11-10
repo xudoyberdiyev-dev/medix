@@ -481,7 +481,7 @@ export interface paths {
             cookie?: never;
         };
         /** FS hujjati */
-        get: operations["get_24"];
+        get: operations["get_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -581,7 +581,7 @@ export interface paths {
          * FS kamomadi
          * @description Ochiqmi, summa (special.cost) va hal qilish tarixi.
          */
-        get: operations["get_25"];
+        get: operations["get_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -857,7 +857,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_23"];
+        get: operations["get_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -879,6 +879,30 @@ export interface paths {
          */
         get: operations["overview_7"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kompaniya va tizim holati
+         * @description Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.
+         */
+        get: operations["get_9"];
+        /**
+         * Guruh nomini tahrirlash
+         * @description Audit jurnaliga eski → yangi qiymat yoziladi.
+         */
+        put: operations["rename_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1311,7 +1335,7 @@ export interface paths {
             cookie?: never;
         };
         /** QM hujjati */
-        get: operations["get_22"];
+        get: operations["get_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1902,7 +1926,7 @@ export interface paths {
             cookie?: never;
         };
         /** Buxgalter bosh sahifasi: kassa/bank, qarzlar, to'lov taqvimi (14 kun), ish ro'yxati, pul filiallar bo'yicha */
-        get: operations["get_21"];
+        get: operations["get_22"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1919,7 +1943,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filial rahbari bosh sahifasi: tasdiqlarim, ko'rsatkichlar, bugungi reyslar, pul hisoblari */
-        get: operations["get_20"];
+        get: operations["get_21"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1936,7 +1960,7 @@ export interface paths {
             cookie?: never;
         };
         /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
-        get: operations["get_19"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2048,7 +2072,7 @@ export interface paths {
          * Inventarizatsiya hujjati
          * @description Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.
          */
-        get: operations["get_18"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2279,7 +2303,7 @@ export interface paths {
          * Buyurtma markirovkasi
          * @description Qatorlar, partiyalar, hisoblagichlar va faol kodlar.
          */
-        get: operations["get_17"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2549,7 +2573,7 @@ export interface paths {
          * Sidebar nishonlari
          * @description Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.
          */
-        get: operations["get_16"];
+        get: operations["get_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4673,7 +4697,7 @@ export interface paths {
             cookie?: never;
         };
         /** Akt sverka varagʻi (sarlavha + qarz jurnalidan qatorlar) */
-        get: operations["get_15"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5484,7 +5508,7 @@ export interface paths {
             cookie?: never;
         };
         /** QY hujjati */
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5785,7 +5809,7 @@ export interface paths {
             cookie?: never;
         };
         /** Reys */
-        get: operations["get_13"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6166,7 +6190,7 @@ export interface paths {
             cookie?: never;
         };
         /** OK hujjati */
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6246,7 +6270,7 @@ export interface paths {
          * OK kamomadi
          * @description Ochiqmi va hal qilish tarixi.
          */
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6541,7 +6565,7 @@ export interface paths {
             cookie?: never;
         };
         /** HC hujjati */
-        get: operations["get_10"];
+        get: operations["get_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6659,7 +6683,7 @@ export interface paths {
             cookie?: never;
         };
         /** ZK hujjati */
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7682,6 +7706,26 @@ export interface components {
             name: string;
             /** Format: date-time */
             setupCompletedAt?: string;
+        };
+        CompanyNameRequest: {
+            name: string;
+        };
+        CompanyOverview: {
+            /** Format: int32 */
+            branches: number;
+            defaultLocale: string;
+            /** Format: int32 */
+            employees: number;
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            launchedAt?: string;
+            launchedBy?: string;
+            /** Format: int64 */
+            logoVersion?: number;
+            name: string;
+            /** Format: int32 */
+            warehouses: number;
         };
         CompanyRequest: {
             defaultLocale?: string;
@@ -13897,7 +13941,7 @@ export interface operations {
             };
         };
     };
-    get_24: {
+    get_25: {
         parameters: {
             query?: never;
             header?: never;
@@ -14011,7 +14055,7 @@ export interface operations {
             };
         };
     };
-    get_25: {
+    get_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -14436,7 +14480,7 @@ export interface operations {
             };
         };
     };
-    get_23: {
+    get_24: {
         parameters: {
             query: {
                 branchId: number;
@@ -14481,6 +14525,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CashOverview"];
+                };
+            };
+        };
+    };
+    get_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyOverview"];
+                };
+            };
+        };
+    };
+    rename_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyNameRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyOverview"];
                 };
             };
         };
@@ -15130,7 +15218,7 @@ export interface operations {
             };
         };
     };
-    get_22: {
+    get_23: {
         parameters: {
             query?: never;
             header?: never;
@@ -15974,7 +16062,7 @@ export interface operations {
             };
         };
     };
-    get_21: {
+    get_22: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -15996,7 +16084,7 @@ export interface operations {
             };
         };
     };
-    get_20: {
+    get_21: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -16020,7 +16108,7 @@ export interface operations {
             };
         };
     };
-    get_19: {
+    get_20: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -16183,7 +16271,7 @@ export interface operations {
             };
         };
     };
-    get_18: {
+    get_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -16461,7 +16549,7 @@ export interface operations {
             };
         };
     };
-    get_17: {
+    get_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -16837,7 +16925,7 @@ export interface operations {
             };
         };
     };
-    get_16: {
+    get_17: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -19986,7 +20074,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -21172,7 +21260,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -21533,7 +21621,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -22075,7 +22163,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -22167,7 +22255,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -22602,7 +22690,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -22766,7 +22854,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;

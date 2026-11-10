@@ -1209,7 +1209,7 @@
     },
     "/api/branch-sales/{id}" : {
       "get" : {
-        "operationId" : "get_24",
+        "operationId" : "get_25",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1365,7 +1365,7 @@
     "/api/branch-sales/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi, summa (special.cost) va hal qilish tarixi.",
-        "operationId" : "get_25",
+        "operationId" : "get_26",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1973,7 +1973,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_23",
+        "operationId" : "get_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2059,6 +2059,54 @@
         },
         "summary" : "Kassalar roʻyxati (kartalar)",
         "tags" : [ "cash" ]
+      }
+    },
+    "/api/company" : {
+      "get" : {
+        "description" : "Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.",
+        "operationId" : "get_9",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CompanyOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kompaniya va tizim holati",
+        "tags" : [ "company" ]
+      },
+      "put" : {
+        "description" : "Audit jurnaliga eski → yangi qiymat yoziladi.",
+        "operationId" : "rename_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompanyNameRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CompanyOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Guruh nomini tahrirlash",
+        "tags" : [ "company" ]
       }
     },
     "/api/company/logo" : {
@@ -3151,7 +3199,7 @@
     },
     "/api/customer-returns/{id}" : {
       "get" : {
-        "operationId" : "get_22",
+        "operationId" : "get_23",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4379,7 +4427,7 @@
     },
     "/api/home/accountant" : {
       "get" : {
-        "operationId" : "get_21",
+        "operationId" : "get_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4407,7 +4455,7 @@
     },
     "/api/home/branch" : {
       "get" : {
-        "operationId" : "get_20",
+        "operationId" : "get_21",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4451,7 +4499,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_19",
+        "operationId" : "get_20",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4709,7 +4757,7 @@
     "/api/inventory-counts/{id}" : {
       "get" : {
         "description" : "Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.",
-        "operationId" : "get_18",
+        "operationId" : "get_19",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5133,7 +5181,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_17",
+        "operationId" : "get_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5660,7 +5708,7 @@
     "/api/nav/badges" : {
       "get" : {
         "description" : "Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.",
-        "operationId" : "get_16",
+        "operationId" : "get_17",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -10840,7 +10888,7 @@
     },
     "/api/reconciliations/{id}" : {
       "get" : {
-        "operationId" : "get_15",
+        "operationId" : "get_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -12959,7 +13007,7 @@
     },
     "/api/supplier-returns/{id}" : {
       "get" : {
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13448,7 +13496,7 @@
     },
     "/api/trips/{id}" : {
       "get" : {
-        "operationId" : "get_13",
+        "operationId" : "get_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14280,7 +14328,7 @@
     },
     "/api/warehouse-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_11",
+        "operationId" : "get_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14406,7 +14454,7 @@
     "/api/warehouse-transfers/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi va hal qilish tarixi.",
-        "operationId" : "get_12",
+        "operationId" : "get_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15051,7 +15099,7 @@
     },
     "/api/write-offs/{id}" : {
       "get" : {
-        "operationId" : "get_10",
+        "operationId" : "get_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15299,7 +15347,7 @@
     },
     "/api/zone-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_9",
+        "operationId" : "get_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -17934,6 +17982,56 @@
           }
         },
         "required" : [ "defaultLocale", "id", "name" ]
+      },
+      "CompanyNameRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
+      "CompanyOverview" : {
+        "type" : "object",
+        "properties" : {
+          "branches" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "defaultLocale" : {
+            "type" : "string"
+          },
+          "employees" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "launchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "launchedBy" : {
+            "type" : "string"
+          },
+          "logoVersion" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "warehouses" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "branches", "defaultLocale", "employees", "id", "name", "warehouses" ]
       },
       "CompanyRequest" : {
         "type" : "object",

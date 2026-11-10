@@ -7,6 +7,7 @@ import uzLatn_branchPanel from "@/messages/uz-Latn/branchPanel.json";
 import uzLatn_branchSales from "@/messages/uz-Latn/branchSales.json";
 import uzLatn_cash from "@/messages/uz-Latn/cash.json";
 import uzLatn_common from "@/messages/uz-Latn/common.json";
+import uzLatn_company from "@/messages/uz-Latn/company.json";
 import uzLatn_counterparties from "@/messages/uz-Latn/counterparties.json";
 import uzLatn_customerReturns from "@/messages/uz-Latn/customerReturns.json";
 import uzLatn_debts from "@/messages/uz-Latn/debts.json";
@@ -52,6 +53,7 @@ import uzCyrl_branchPanel from "@/messages/uz-Cyrl/branchPanel.json";
 import uzCyrl_branchSales from "@/messages/uz-Cyrl/branchSales.json";
 import uzCyrl_cash from "@/messages/uz-Cyrl/cash.json";
 import uzCyrl_common from "@/messages/uz-Cyrl/common.json";
+import uzCyrl_company from "@/messages/uz-Cyrl/company.json";
 import uzCyrl_counterparties from "@/messages/uz-Cyrl/counterparties.json";
 import uzCyrl_customerReturns from "@/messages/uz-Cyrl/customerReturns.json";
 import uzCyrl_debts from "@/messages/uz-Cyrl/debts.json";
@@ -97,6 +99,7 @@ import ru_branchPanel from "@/messages/ru/branchPanel.json";
 import ru_branchSales from "@/messages/ru/branchSales.json";
 import ru_cash from "@/messages/ru/cash.json";
 import ru_common from "@/messages/ru/common.json";
+import ru_company from "@/messages/ru/company.json";
 import ru_counterparties from "@/messages/ru/counterparties.json";
 import ru_customerReturns from "@/messages/ru/customerReturns.json";
 import ru_debts from "@/messages/ru/debts.json";
@@ -144,6 +147,7 @@ export const uzLatn = {
   "branchSales": uzLatn_branchSales,
   "cash": uzLatn_cash,
   "common": uzLatn_common,
+  "company": uzLatn_company,
   "counterparties": uzLatn_counterparties,
   "customerReturns": uzLatn_customerReturns,
   "debts": uzLatn_debts,
@@ -192,6 +196,7 @@ export const uzCyrl = {
   "branchSales": uzCyrl_branchSales,
   "cash": uzCyrl_cash,
   "common": uzCyrl_common,
+  "company": uzCyrl_company,
   "counterparties": uzCyrl_counterparties,
   "customerReturns": uzCyrl_customerReturns,
   "debts": uzCyrl_debts,
@@ -240,6 +245,7 @@ export const ru = {
   "branchSales": ru_branchSales,
   "cash": ru_cash,
   "common": ru_common,
+  "company": ru_company,
   "counterparties": ru_counterparties,
   "customerReturns": ru_customerReturns,
   "debts": ru_debts,
