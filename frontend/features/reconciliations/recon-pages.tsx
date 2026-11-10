@@ -55,7 +55,7 @@ const isDocType = (v: string): v is (typeof DOC_TYPES)[number] => (DOC_TYPES as 
 
 const errText = (e: unknown) => (e instanceof ApiError ? e.message : String(e));
 
-function StatusBadge({ status }: { status: ReconStatus }) {
+export function StatusBadge({ status }: { status: ReconStatus }) {
   const t = useTranslations("reconciliations");
   return (
     <Badge tone={STATUS[status].tone} icon={STATUS[status].icon}>

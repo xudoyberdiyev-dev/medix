@@ -9,7 +9,6 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MultiFilter } from "@/components/ui/multi-filter";
-import { Drawer } from "@/components/ui/drawer";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
@@ -22,8 +21,6 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { ActSection } from "./act-section";
-import { AdvanceOffsetButton } from "./advance-offset";
 import { HubTabs } from "@/components/shell/hub-tabs";
 import { DebtStatusBadge, ReceivablesSummary, UsedBar } from "./receivables";
 import { AGE_KEYS, DEBT_TABS, inAges, inTab, statusOf, sumOf, type AgeKey, type DebtStatus, type DebtTab } from "./receivables-model";
@@ -72,7 +69,6 @@ export function DebtsPage({ side }: { side: Side }) {
   });
   const [q, setQ] = useState("");
   const [overdueOnly, setOverdueOnly] = useState(false);
-  const [open, setOpen] = useState<DebtRow | null>(null);
   const router = useRouter();
   const isCustomer = side === "CUSTOMER";
   const [tab, setTab] = useState<DebtTab>("all");
@@ -270,7 +266,7 @@ export function DebtsPage({ side }: { side: Side }) {
           rows={rows}
           rowKey={(r) => String(r.counterpartyId)}
           loading={!ready || report.isPending}
-          onRowClick={setOpen}
+          onRowClick={(r) => router.push(`/debts/${cfg.path}/${r.counterpartyId}?name=${encodeURIComponent(r.name)}`)}
           rowActions={
             isCustomer
               ? (r) => (
@@ -370,116 +366,6 @@ export function DebtsPage({ side }: { side: Side }) {
           }
         />
       )}
-      {open ? <DocsDrawer side={side} row={open} branchId={branchId} onClose={() => setOpen(null)} /> : null}
     </>
-  );
-}
-
-function DocsDrawer(props: { side: Side; row: DebtRow; branchId: number | null; onClose: () => void }) {
-  const t = useTranslations("debts");
-  const [tab, setTab] = useState("docs");
-  const docs = useQuery({
-    queryKey: ["debts", CONFIG[props.side].path, "docs", props.row.counterpartyId, props.branchId],
-    queryFn: () =>
-      props.side === "CUSTOMER"
-        ? unwrap(
-            api.GET("/api/debts/customers/{id}/docs", {
-              params: { path: { id: props.row.counterpartyId }, query: { branchId: props.branchId ?? undefined } },
-            }),
-          )
-        : unwrap(
-            api.GET("/api/debts/suppliers/{id}/docs", {
-              params: { path: { id: props.row.counterpartyId }, query: { branchId: props.branchId ?? undefined } },
-            }),
-          ),
-  });
-  const columns: TableColumn<DebtDoc>[] = [
-    { key: "docNumber", title: t("col.document"), mono: true },
-    { key: "date", title: t("col.date"), render: (d) => formatIsoDate(d.date) },
-    { key: "dueDate", title: t("col.dueDate"), render: (d) => formatIsoDate(d.dueDate) },
-    ...(props.branchId == null ? [{ key: "branch", title: t("col.branch") }] : []),
-    {
-      key: "open",
-      title: t("col.open"),
-      align: "right",
-      render: (d) =>
-        d.open.startsWith("-") ? (
-          <span className="tabular-nums">{t("advanceAmount", { amount: formatMoney(d.open.slice(1)) })}</span>
-        ) : (
-          money(d.open)
-        ),
-    },
-    {
-      key: "overdueDays",
-      title: t("col.overdue"),
-      render: (d) =>
-        d.overdueDays > 0 ? (
-          <Badge tone={d.overdueDays > 30 ? "danger" : "warning"} icon={AlarmClock}>
-            {t("days", { count: d.overdueDays })}
-          </Badge>
-        ) : null,
-    },
-  ];
-  return (
-    <Drawer
-      open
-      onClose={props.onClose}
-      size="lg"
-      kind={t(`side.${props.side}.party`)}
-      title={props.row.name}
-      subtitle={t("tin", { tin: props.row.tin })}
-      actions={<AdvanceOffsetButton side={props.side} branchId={props.branchId} counterpartyId={props.row.counterpartyId} />}
-    >
-      <dl className="mb-4 grid grid-cols-3 gap-4">
-        <div>
-          <dt className="text-caption text-text-secondary">{t("col.debt")}</dt>
-          <dd className="font-mono tabular-nums">
-            {formatMoney(props.row.buckets.debt)} {t("currency")}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-caption text-text-secondary">{t("overdueSum")}</dt>
-          <dd className="font-mono tabular-nums text-danger">
-            {formatMoney(props.row.buckets.overdue)} {t("currency")}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-caption text-text-secondary">{t("col.advance")}</dt>
-          <dd className="font-mono tabular-nums">
-            {formatMoney(props.row.buckets.advance)} {t("currency")}
-          </dd>
-        </div>
-      </dl>
-      <Tabs
-        aria-label={t("drawer.tabs")}
-        value={tab}
-        onChange={setTab}
-        items={[
-          { key: "docs", label: t("drawer.openDocs") },
-          { key: "act", label: t("drawer.act") },
-        ]}
-      />
-      <div className="mt-4">
-        {tab === "act" ? (
-          <ActSection side={props.side} counterpartyId={props.row.counterpartyId} branchId={props.branchId} />
-        ) : (
-          <>
-            {docs.error ? (
-              <ErrorState onRetry={() => docs.refetch()} />
-            ) : (
-              <Table
-                caption={t("drawer.openDocs")}
-                density="compact"
-                columns={columns}
-                rows={docs.data ?? []}
-                rowKey={(d) => `${d.branchId}:${d.docType}:${d.docId}`}
-                loading={docs.isPending}
-                emptyState={<EmptyState icon={HandCoins} title={t("drawer.emptyTitle")} description={t("drawer.emptyDescription")} />}
-              />
-            )}
-          </>
-        )}
-      </div>
-    </Drawer>
   );
 }

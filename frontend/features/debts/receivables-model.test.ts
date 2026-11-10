@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fromTiyin, inAges, inTab, shareText, statusOf, sumOf, toTiyin, usedPct } from "./receivables-model";
+import { cardTotals, fromTiyin, inAges, inTab, limitLeft, shareText, statusOf, sumOf, toTiyin, usedPct } from "./receivables-model";
 
 const row = (b: Partial<Record<string, string>>, limit: string | null = null) => ({
   buckets: {
@@ -44,5 +44,44 @@ describe("mijozlar qarzi modeli", () => {
     expect(usedPct(row({ debt: "200.00" }))).toBeNull();
     expect(shareText("25.00", "200.00")).toBe("12,5%");
     expect(shareText("1.00", "0.00")).toBe("0%");
+  });
+});
+
+describe("qarz kartochkasi", () => {
+  const doc = (total: string, returned: string, paid: string, open: string) => ({
+    branchId: 1,
+    branch: "T",
+    docType: "SV",
+    docId: 1,
+    docNumber: "SV-1",
+    date: "2026-10-01",
+    open,
+    overdueDays: 0,
+    total,
+    returned,
+    paid,
+  });
+  it("ochiq hujjatlar jami tiyinda", () => {
+    expect(cardTotals([doc("100.10", "0.00", "50.05", "50.05"), doc("0.20", "0.10", "0.00", "0.10")])).toEqual({
+      total: "100.30",
+      returned: "0.10",
+      paid: "50.05",
+      open: "50.15",
+    });
+  });
+  it("limitdan boʻsh yoki oshgan qism", () => {
+    const b = (debt: string) => ({
+      debt,
+      advance: "0.00",
+      overdue: "0.00",
+      notDue: "0.00",
+      d1to30: "0.00",
+      d31to60: "0.00",
+      d61to90: "0.00",
+      d90plus: "0.00",
+    });
+    expect(limitLeft({ buckets: b("80.00"), creditLimit: "100.00" })).toEqual({ over: false, value: "20.00" });
+    expect(limitLeft({ buckets: b("120.50"), creditLimit: "100.00" })).toEqual({ over: true, value: "20.50" });
+    expect(limitLeft({ buckets: b("1.00"), creditLimit: null })).toEqual({ over: false, value: "0.00" });
   });
 });
