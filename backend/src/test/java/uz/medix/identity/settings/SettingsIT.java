@@ -131,6 +131,21 @@ class SettingsIT {
     }
 
     @Test
+    void sessionTimeoutFromSettings() throws Exception {
+        String login = "ss" + UUID.randomUUID().toString().substring(0, 8);
+        jdbc.sql("""
+                INSERT INTO employee (login, full_name, role_id, password_hash, must_change_password)
+                SELECT :login, 'Sessiya Sinov', id, :hash, false FROM role WHERE code = 'OPERATOR'""")
+                .param("login", login).param("hash", encoder.encode(PASSWORD)).update();
+        MvcResult r = mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"login\":\"" + login + "\",\"password\":\"" + PASSWORD + "\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(r.getRequest().getSession(false)).isNotNull();
+        assertThat(r.getRequest().getSession(false).getMaxInactiveInterval()).isEqualTo(settings.intValue(SettingKey.sessionMin) * 60);
+    }
+
+    @Test
     void vatHistoryFutureOnly() throws Exception {
         Cookie director = loginAs("DIRECTOR");
         Cookie admin = loginAs("ADMIN");
