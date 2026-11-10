@@ -99,7 +99,14 @@ class OrderMarking {
     List<MarkQueueItem> queue(Actor actor) {
         return jdbc.sql("""
                 SELECT o.id, o.number, c.name AS customer, o.branch_id, o.mark_minutes, mk.full_name AS marker, o.marker_id, o.mark_started_at,
-                       o.status_changed_at,
+                       o.status_changed_at, o.delivery_type, o.delivery_date, o.note, pk.full_name AS picker,
+                       (SELECT s.invoice_number FROM sale s WHERE s.order_id = o.id ORDER BY s.id DESC LIMIT 1) AS invoice,
+                       (SELECT coalesce(sum(l.qty) FILTER (WHERE lower(u.short_name) <> 'dona'), 0) FROM sales_order_line l
+                        JOIN product p ON p.id = l.product_id JOIN unit u ON u.id = p.unit_id
+                        WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS boxes,
+                       (SELECT coalesce(sum(l.qty) FILTER (WHERE lower(u.short_name) = 'dona'), 0) FROM sales_order_line l
+                        JOIN product p ON p.id = l.product_id JOIN unit u ON u.id = p.unit_id
+                        WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS units,
                        (SELECT count(*) FROM sales_order_line l JOIN product p ON p.id = l.product_id
                         WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS lines,
                        (SELECT count(*) FROM sales_order_line l JOIN product p ON p.id = l.product_id
@@ -107,6 +114,7 @@ class OrderMarking {
                        (SELECT coalesce(sum(l.qty), 0) FROM sales_order_line l JOIN product p ON p.id = l.product_id
                         WHERE l.order_id = o.id AND p.marked AND (o.repick_line_ids IS NULL OR l.id = ANY (o.repick_line_ids))) AS total_qty
                 FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN employee mk ON mk.id = o.marker_id
+                LEFT JOIN employee pk ON pk.id = o.picker_id
                 WHERE o.status = 'MARKING'
                 ORDER BY o.mark_started_at NULLS LAST, o.status_changed_at, o.id""")
                 .query((rs, n) -> {
@@ -117,7 +125,9 @@ class OrderMarking {
                     Integer minutes = (Integer) rs.getObject("mark_minutes");
                     return new MarkQueueItem(rs.getLong("id"), rs.getString("number"), rs.getString("customer"), rs.getInt("lines"),
                             rs.getLong("total_qty"), rs.getInt("unmarked"), minutes, rs.getString("marker"), (Long) rs.getObject("marker_id"), started,
-                            deadline(started, minutes), rs.getTimestamp("status_changed_at").toInstant());
+                            deadline(started, minutes), rs.getTimestamp("status_changed_at").toInstant(), rs.getLong("boxes"), rs.getLong("units"),
+                            rs.getString("picker"), rs.getString("invoice"), OrderModels.DeliveryType.valueOf(rs.getString("delivery_type")),
+                            rs.getObject("delivery_date", LocalDate.class), rs.getString("note"));
                 })
                 .list()
                 .stream()

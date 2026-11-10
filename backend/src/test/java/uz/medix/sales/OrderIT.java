@@ -896,6 +896,9 @@ class OrderIT {
                 .andExpect(jsonPath("$.detail", containsString("LOT-7")));
         send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S1", "LOT-7", "Q"))
                 .andExpect(jsonPath("$.code").value("marking.kindNeedUnit"));
+        // «Xato urishlar»: rad etilgan 4 skanerlash alohida tranzaksiyada yozilgan (asosiy tranzaksiya qaytsa ham)
+        org.assertj.core.api.Assertions.assertThat(jdbc.sql("SELECT count(*) FROM mark_scan_error WHERE order_id = :o")
+                .param("o", o1).query(Long.class).single()).isEqualTo(4L);
         // Qabul: 3 ta; takror (shu buyurtmada) va qator to'lgan
         for (String s : List.of("S1", "S2", "S3")) {
             send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, s, "lot-7", "D"))
