@@ -674,6 +674,16 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   await expect(all).toContainText("Ombor koʻchirish");
   await all.click();
   await expect(page).toHaveURL(/\/warehouse-transfers\/\d+$/);
+
+  // ZK — yangi hujjat toʻliq sahifada (prototip TransferDoc): ?new=1 → /zone-transfers/new; tanlash, partiyalar FEFO, tasdiqlash oynasi
+  await page.goto("/zone-transfers?new=1");
+  await expect(page).toHaveURL(/\/zone-transfers\/new$/);
+  await expect(page.getByRole("heading", { name: "Yangi zona koʻchirishi" })).toBeVisible();
+  await choose(page, "Ombor", /Markaziy ombor/);
+  await choose(page, "Qayerdan", /Asosiy saqlash/);
+  await expect(page.getByLabel(/E2E-01 — koʻchirish soni/)).toBeVisible();
+  await page.getByRole("button", { name: "Koʻchirish", exact: true }).click();
+  await expect(page.getByText("Qayerdan va qayerga zonalarini tanlang.").first()).toBeVisible();
 });
 
 test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, tannarx bilan", async ({ page }) => {

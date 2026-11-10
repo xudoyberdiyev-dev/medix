@@ -177,7 +177,9 @@ export function OkDraftForm({ doc, onState }: { doc: WarehouseTransferDetail | n
             <Select
               label={td("hKind")}
               value="OK"
-              onChange={(v) => (v === "ZK" || v === "FS" ? router.push(`${KIND_PAGE[v]}?new=1`) : undefined)}
+              onChange={(v) =>
+                v === "ZK" ? router.push("/zone-transfers/new") : v === "FS" ? router.push(`${KIND_PAGE.FS}?new=1`) : undefined
+              }
               options={(["ZK", "OK", "FS"] as const).map((k) => ({ value: k, label: tk(k) }))}
               disabled={doc !== null}
               hint={doc ? t("kindLocked") : undefined}

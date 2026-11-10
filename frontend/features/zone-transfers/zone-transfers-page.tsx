@@ -14,7 +14,6 @@ import { useMe } from "@/features/auth/session";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { TRANSFER_VIEW_KEYS, TRANSFER_ZK, ZK_STATUSES, useZoneTransfers, type ZoneTransferStatus, type ZoneTransferSummary } from "./api";
-import { ZoneTransferDrawer } from "./zone-transfer-drawer";
 import { HubTabs } from "@/components/shell/hub-tabs";
 
 export function ZoneTransferStatusBadge({ status }: { status: ZoneTransferStatus }) {
@@ -40,12 +39,13 @@ export function ZoneTransfersPage() {
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
   const router = useRouter();
-  // «Koʻchirish» → «Yangi»: ?new=1 — yangi hujjat; bildirishnomadan ?open=<id> — hujjat sahifasiga yoʻnaltiriladi
-  const [creating, setCreating] = useState(() => params.get("new") === "1");
+  // «Koʻchirish» → «Yangi»: ?new=1 — yangi hujjat sahifasi; bildirishnomadan ?open=<id> — hujjat sahifasiga yoʻnaltiriladi
+  const isNew = params.get("new") === "1";
   const openId = Number(params.get("open"));
   useEffect(() => {
-    if (Number.isInteger(openId) && openId > 0) router.replace(`/zone-transfers/${openId}`);
-  }, [openId, router]);
+    if (isNew) router.replace("/zone-transfers/new");
+    else if (Number.isInteger(openId) && openId > 0) router.replace(`/zone-transfers/${openId}`);
+  }, [isNew, openId, router]);
   const allowed = canAny(me.data, TRANSFER_VIEW_KEYS);
   const canCreate = can(me.data, TRANSFER_ZK);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -80,7 +80,7 @@ export function ZoneTransfersPage() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <h1 className="text-page-title">{t("title")}</h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setCreating(true)}>
+          <Button icon={Plus} onClick={() => router.push("/zone-transfers/new")}>
             {t("create")}
           </Button>
         ) : null}
@@ -118,7 +118,7 @@ export function ZoneTransfersPage() {
                 description={t("empty.description")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setCreating(true)}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/zone-transfers/new")}>
                       {t("create")}
                     </Button>
                   ) : undefined
@@ -140,9 +140,6 @@ export function ZoneTransfersPage() {
           }
         />
       )}
-      {creating ? (
-        <ZoneTransferDrawer id={null} onClose={() => setCreating(false)} onCreated={(id) => router.push(`/zone-transfers/${id}`)} />
-      ) : null}
     </>
   );
 }

@@ -109,5 +109,12 @@
     "rejReason": "Rad etish sababi",
     "rejReq": "Sababni kiriting",
     "tRejected": "{n} rad etildi"
+  },
+  "newDoc": {
+    "bNew": "Bitta ombor ichida zonadan zonaga. Tasdiq kerak boʻlmasa — koʻchirish darhol oʻtkaziladi; partiya va tannarx oʻzgarmaydi.",
+    "sameWh": "Shu ombor zonalari",
+    "pickFromHint": "Ombor va qaysi zonadan koʻchirilishini tanlang — zonadagi partiyalar shu yerda chiqadi.",
+    "dSendT": "Tasdiqqa yuborasizmi?",
+    "dMoveT": "Koʻchirasizmi?"
   }
 }
