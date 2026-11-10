@@ -85,7 +85,7 @@ class ProfileSessionsIT {
         mvc.perform(get("/api/profile/sessions").cookie(laptop))
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].current").value(true));
-        mvc.perform(get("/api/profile/actions").cookie(laptop))
+        mvc.perform(get("/api/audit/mine").cookie(laptop))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].action").value("employee.endSessions"));
         mvc.perform(get("/api/profile/sessions")).andExpect(status().isUnauthorized());

@@ -42,7 +42,8 @@ class ProfileController {
             @Schema(nullable = true) String branchName,
             boolean pinSet,
             @Schema(nullable = true) Instant pinSetAt,
-            @Schema(nullable = true) Instant lastLoginAt) {}
+            @Schema(nullable = true) Instant lastLoginAt,
+            @Schema(nullable = true, description = "Oxirgi parol almashtirish (audit jurnalidan)") Instant passwordChangedAt) {}
 
     record UpdateProfileRequest(@Schema(nullable = true) @Size(max = 32) String phone) {}
 
@@ -102,14 +103,15 @@ class ProfileController {
     private Profile load(long id) {
         return jdbc.sql("""
                 SELECT e.id, e.login, e.full_name, e.phone, e.position, r.code, r.name, b.name AS branch_name,
-                       e.pin_hash IS NOT NULL AS pin_set, e.pin_set_at, e.last_login_at
+                       e.pin_hash IS NOT NULL AS pin_set, e.pin_set_at, e.last_login_at,
+                       (SELECT max(a.occurred_at) FROM audit_log a WHERE a.employee_id = e.id AND a.action = 'auth.passwordChanged') AS pw_at
                 FROM employee e JOIN role r ON r.id = e.role_id LEFT JOIN branch b ON b.id = e.branch_id
                 WHERE e.id = :id""")
                 .param("id", id)
                 .query((rs, n) -> new Profile(rs.getLong("id"), rs.getString("login"), rs.getString("full_name"),
                         rs.getString("phone"), rs.getString("position"), rs.getString("code"), rs.getString("name"),
                         rs.getString("branch_name"), rs.getBoolean("pin_set"), instant(rs.getTimestamp("pin_set_at")),
-                        instant(rs.getTimestamp("last_login_at"))))
+                        instant(rs.getTimestamp("last_login_at")), instant(rs.getTimestamp("pw_at"))))
                 .optional()
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
     }

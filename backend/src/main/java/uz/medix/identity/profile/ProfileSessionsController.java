@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,7 @@ import uz.medix.shared.security.CurrentActor;
 
 /**
  * Profil (prototip Profile): «Faol sessiyalar» — o'z ochiq sessiyalari (qurilma, IP, oxirgi faollik), boshqalarini tugatish;
- * «Mening harakatlarim» — audit jurnalidagi oxirgi harakatlar. Sessiya identifikatori javobda berilmaydi.
+ * «Mening harakatlarim» — {@code /api/audit/mine}. Sessiya identifikatori javobda berilmaydi.
  */
 @RestController
 @RequestMapping("/api/profile")
@@ -36,15 +35,14 @@ class ProfileSessionsController {
     /** AuthController kirishda yozadigan sessiya atributlari. */
     static final String SESSION_DEVICE = "medix.device";
     static final String SESSION_IP = "medix.ip";
-    static final int ACTIONS_LIMIT = 10;
 
     record SessionInfo(boolean current, @Schema(nullable = true) String device, @Schema(nullable = true) String ip, Instant createdAt,
             Instant lastAccessAt) {}
 
     record EndSessionsResult(int ended) {}
 
-    record MyAction(OffsetDateTime at, String action, @Schema(nullable = true) String entityType, @Schema(nullable = true) String entityId,
-            @Schema(nullable = true) String reason) {}
+    /** Kirish yozuvi (audit auth.login): qurilma va IP — sessiya atributi bo'lmasa, yaratilish vaqti bo'yicha moslanadi. */
+    private record LoginEvent(Instant at, String device, String ip) {}
 
     private final FindByIndexNameSessionRepository<? extends Session> sessions;
     private final JdbcClient jdbc;
@@ -70,14 +68,41 @@ class ProfileSessionsController {
 
     @GetMapping("/sessions")
     @Operation(summary = "Faol sessiyalarim (joriysi birinchi)")
+    @Transactional(readOnly = true)
     List<SessionInfo> sessions(Authentication auth, HttpServletRequest request) {
-        me();
+        long id = me();
         String current = currentId(request);
+        List<LoginEvent> logins = jdbc.sql("""
+                SELECT occurred_at, new_value ->> 'device' AS device, host(ip_address) AS ip FROM audit_log
+                WHERE employee_id = :id AND action = 'auth.login' ORDER BY occurred_at DESC LIMIT 200""")
+                .param("id", id)
+                .query((rs, n) -> new LoginEvent(rs.getTimestamp("occurred_at").toInstant(), rs.getString("device"), rs.getString("ip")))
+                .list();
         return sessions.findByPrincipalName(auth.getName()).values().stream()
-                .map(s -> new SessionInfo(s.getId().equals(current), s.getAttribute(SESSION_DEVICE), s.getAttribute(SESSION_IP),
-                        s.getCreationTime(), s.getLastAccessedTime()))
+                .map(s -> {
+                    String device = s.getAttribute(SESSION_DEVICE);
+                    String ip = s.getAttribute(SESSION_IP);
+                    if (device == null || ip == null) {
+                        LoginEvent e = loginOf(logins, s.getCreationTime());
+                        if (e != null) {
+                            device = device == null ? e.device() : device;
+                            ip = ip == null ? e.ip() : ip;
+                        }
+                    }
+                    return new SessionInfo(s.getId().equals(current), device, ip, s.getCreationTime(), s.getLastAccessedTime());
+                })
                 .sorted(Comparator.comparing(SessionInfo::current).reversed().thenComparing(SessionInfo::lastAccessAt, Comparator.reverseOrder()))
                 .toList();
+    }
+
+    /** Sessiya yaratilishidan oldingi eng yaqin kirish (bir daqiqa ichida); kirish tranzaksiyasi sessiyadan oldin boshlanadi. */
+    private static LoginEvent loginOf(List<LoginEvent> newestFirst, Instant created) {
+        for (LoginEvent e : newestFirst) {
+            if (!e.at().isAfter(created)) {
+                return e.at().isBefore(created.minusSeconds(60)) ? null : e;
+            }
+        }
+        return null;
     }
 
     @PostMapping("/sessions/end-others")
@@ -96,20 +121,5 @@ class ProfileSessionsController {
         }
         audit.record(AuditEntry.of("employee.endSessions", "employee", id).change(null, Map.of("sessions", n, "self", true)));
         return new EndSessionsResult(n);
-    }
-
-    @GetMapping("/actions")
-    @Transactional(readOnly = true)
-    @Operation(summary = "Mening harakatlarim — oxirgi 10 ta (kirishlarsiz)")
-    List<MyAction> actions() {
-        return jdbc.sql("""
-                SELECT occurred_at, action, entity_type, entity_id, reason FROM audit_log
-                WHERE employee_id = :id AND action NOT IN ('auth.login', 'auth.loginFailed', 'auth.loginBlocked')
-                ORDER BY occurred_at DESC, id DESC LIMIT :lim""")
-                .param("id", me())
-                .param("lim", ACTIONS_LIMIT)
-                .query((rs, n) -> new MyAction(rs.getObject("occurred_at", OffsetDateTime.class), rs.getString("action"),
-                        rs.getString("entity_type"), rs.getString("entity_id"), rs.getString("reason")))
-                .list();
     }
 }

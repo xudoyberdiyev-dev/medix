@@ -184,6 +184,23 @@ class AuditController {
         return currentActor.current().orElseThrow(() -> MedixException.unauthorized("auth.unauthorized"));
     }
 
+    /** Profil → «Mening harakatlarim»: faqat o'z yozuvlari (audit.view shart emas), kirishlarsiz, oxirgi 10 ta. */
+    @GetMapping("/mine")
+    @PreAuthorize("isAuthenticated()")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Mening harakatlarim — oxirgi 10 ta (kirishlarsiz)")
+    List<AuditRow> mine() {
+        Actor a = actor();
+        // Filtr — faqat o'zi (employee_id); filial doirasi kerak emas
+        Actor own = new Actor(a.employeeId(), a.branchId(), true);
+        List<AuditCategory> cats = java.util.Arrays.stream(AuditCategory.values())
+                .filter(c -> c != AuditCategory.LOGIN && c != AuditCategory.LOGIN_FAIL)
+                .toList();
+        return rows(own, new Filter(AuditView.ALL, List.of(a.employeeId()), null, cats, null, null, null, null), MINE_LIMIT, 0);
+    }
+
+    static final int MINE_LIMIT = 10;
+
     @GetMapping
     @Transactional(readOnly = true)
     @Operation(summary = "Audit yozuvlari (yangilari birinchi), yorliqlar soni bilan")

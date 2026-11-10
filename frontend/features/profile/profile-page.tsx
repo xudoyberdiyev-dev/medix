@@ -1,21 +1,26 @@
 "use client";
 
-import { CircleCheck, KeyRound, ShieldAlert } from "lucide-react";
+import { ArrowUpRight, CircleAlert, CircleCheck, Grid3x3, Info, KeyRound, Monitor, Smartphone } from "lucide-react";
+import Link from "next/link";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/shell/language-switcher";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Drawer } from "@/components/ui/drawer";
+import { Modal } from "@/components/ui/modal";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { useChangePassword } from "@/features/auth/session";
+import { can } from "@/features/auth/can";
+import { useChangePassword, useMe } from "@/features/auth/session";
+import { ACT, isObjectType } from "@/features/audit/audit-page";
 import { describeError } from "@/features/setup/form-error";
 import { formatDateTime } from "@/lib/format";
-import { useProfile, useSetPin, useUpdatePhone, validatePin, type Profile } from "./api";
+import { describeDevice, useEndOtherSessions, useMyActions, useMySessions, useProfile, useSetPin, validatePin, type Profile } from "./api";
 
+/** Profil (prototip Profile): chapda Maʼlumotlarim, Til, Parol, PIN; oʻngda Faol sessiyalar va Mening harakatlarim. */
 export function ProfilePage() {
   const t = useTranslations("profile");
   const profile = useProfile();
@@ -27,25 +32,28 @@ export function ProfilePage() {
         <Skeleton className="h-48 w-full" />
       </div>
     );
+  const p = profile.data;
   return (
     <>
-      <h1 className="mb-6 text-page-title">{t("title")}</h1>
-      <div className="grid max-w-5xl grid-cols-1 gap-4 lg:grid-cols-2">
-        <InfoCard profile={profile.data} />
-        <PinCard profile={profile.data} />
-        <PasswordCard />
-        <LanguageCard />
+      <div className="mb-6">
+        <h1 className="text-page-title">{t("title")}</h1>
+        <p className="text-caption text-text-secondary">
+          {p.fullName} · {p.roleName}
+        </p>
+      </div>
+      <div className="grid max-w-6xl grid-cols-1 items-start gap-4 lg:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          <InfoCard profile={p} />
+          <LanguageCard />
+          <PasswordCard profile={p} />
+          <PinCard profile={p} />
+        </div>
+        <div className="flex flex-col gap-4">
+          <SessionsCard />
+          <ActionsCard />
+        </div>
       </div>
     </>
-  );
-}
-
-function LanguageCard() {
-  const t = useTranslations("language");
-  return (
-    <Card title={t("label")}>
-      <LanguageSwitcher className="max-w-xs" />
-    </Card>
   );
 }
 
@@ -60,49 +68,162 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 function InfoCard({ profile }: { profile: Profile }) {
   const t = useTranslations("profile.info");
-  const update = useUpdatePhone();
-  const [phone, setPhone] = useState(profile.phone ?? "");
-  const err = describeError(update.error);
-  const changed = phone.trim() !== (profile.phone ?? "");
   return (
     <Card title={t("title")}>
       <dl className="divide-y divide-border">
         <Row label={t("fullName")}>{profile.fullName}</Row>
+        <Row label={t("role")}>{profile.roleName}</Row>
+        <Row label={t("branch")}>{profile.branchName ?? t("allBranches")}</Row>
         <Row label={t("login")}>
           <span className="font-mono">{profile.login}</span>
         </Row>
-        <Row label={t("role")}>{profile.roleName}</Row>
-        <Row label={t("branch")}>{profile.branchName ?? t("allBranches")}</Row>
+        <Row label={t("phone")}>
+          <span className="font-mono">{profile.phone ?? "—"}</span>
+        </Row>
         {profile.position ? <Row label={t("position")}>{profile.position}</Row> : null}
         <Row label={t("lastLogin")}>{profile.lastLoginAt ? formatDateTime(new Date(profile.lastLoginAt)) : "—"}</Row>
       </dl>
-      <p className="mt-2 text-caption text-text-secondary">{t("adminEdits")}</p>
-      <form
-        className="mt-4 flex items-start gap-3"
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault();
-          update.mutate(phone, { onSuccess: () => toast({ tone: "success", title: t("phoneSaved") }) });
-        }}
-      >
-        <div className="flex-1">
-          <TextField
-            label={t("phone")}
-            value={phone}
-            onChange={setPhone}
-            error={err.fields.phone ?? err.message ?? undefined}
-            placeholder="+998 90 123 45 67"
-          />
-        </div>
-        <Button type="submit" variant="secondary" className="mt-6" disabled={!changed} loading={update.isPending}>
-          {t("savePhone")}
-        </Button>
-      </form>
+      <p className="mt-2 flex items-center gap-1.5 text-caption text-text-secondary">
+        <Info size={14} strokeWidth={1.5} aria-hidden /> {t("adminEdits")}
+      </p>
     </Card>
   );
 }
 
+function LanguageCard() {
+  const t = useTranslations("profile");
+  const tl = useTranslations("language");
+  return (
+    <Card title={tl("label")}>
+      <LanguageSwitcher className="max-w-xs" />
+      <p className="mt-2 text-caption text-text-secondary">{t("languageNote")}</p>
+    </Card>
+  );
+}
+
+/** Sarlavha + holat satri + amal tugmasi (prototip: Parol, PIN boʻlimlari). */
+function ActionSection({ title, meta, action }: { title: string; meta: ReactNode; action: ReactNode }) {
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface px-6 py-5">
+      <div className="flex min-w-0 flex-col">
+        <h2 className="text-subtitle">{title}</h2>
+        <span className="text-caption text-text-secondary">{meta}</span>
+      </div>
+      {action}
+    </section>
+  );
+}
+
+function PasswordCard({ profile }: { profile: Profile }) {
+  const t = useTranslations("profile.password");
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <ActionSection
+        title={t("title")}
+        meta={profile.passwordChangedAt ? t("changedAt", { date: formatDateTime(new Date(profile.passwordChangedAt)) }) : t("hint")}
+        action={
+          <Button variant="secondary" icon={KeyRound} onClick={() => setOpen(true)}>
+            {t("change")}
+          </Button>
+        }
+      />
+      {open ? <PasswordDrawer onClose={() => setOpen(false)} /> : null}
+    </>
+  );
+}
+
+function PasswordDrawer({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("profile.password");
+  const change = useChangePassword();
+  const [form, setForm] = useState({ currentPassword: "", newPassword: "", repeat: "" });
+  const [repeatError, setRepeatError] = useState<string>();
+  const err = describeError(change.error);
+  const set = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    if (form.newPassword !== form.repeat) return setRepeatError(t("mismatch"));
+    setRepeatError(undefined);
+    change.mutate(
+      { currentPassword: form.currentPassword, newPassword: form.newPassword },
+      { onSuccess: () => (toast({ tone: "success", title: t("changed") }), onClose()) },
+    );
+  }
+
+  return (
+    <Drawer open onClose={onClose} title={t("change")}>
+      <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+        <TextField
+          label={t("current")}
+          variant="password"
+          value={form.currentPassword}
+          onChange={set("currentPassword")}
+          error={err.fields.currentPassword}
+          autoComplete="current-password"
+          required
+        />
+        <TextField
+          label={t("new")}
+          variant="password"
+          value={form.newPassword}
+          onChange={set("newPassword")}
+          error={err.fields.newPassword}
+          hint={t("newHint")}
+          autoComplete="new-password"
+          required
+        />
+        <TextField
+          label={t("repeat")}
+          variant="password"
+          value={form.repeat}
+          onChange={set("repeat")}
+          error={repeatError}
+          autoComplete="new-password"
+          required
+        />
+        {err.message ? <Alert tone="danger" title={err.message} /> : null}
+        <div className="flex justify-end">
+          <Button type="submit" loading={change.isPending}>
+            {t("change")}
+          </Button>
+        </div>
+      </form>
+    </Drawer>
+  );
+}
+
 function PinCard({ profile }: { profile: Profile }) {
+  const t = useTranslations("profile.pin");
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <ActionSection
+        title={t("title")}
+        meta={
+          profile.pinSet ? (
+            <span className="inline-flex items-center gap-1.5 text-success">
+              <CircleCheck size={14} strokeWidth={1.5} aria-hidden />
+              {profile.pinSetAt ? t("isSetOn", { date: formatDateTime(new Date(profile.pinSetAt)) }) : t("isSet")}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-warning">
+              <CircleAlert size={14} strokeWidth={1.5} aria-hidden /> {t("notSet")}
+            </span>
+          )
+        }
+        action={
+          <Button variant="secondary" icon={Grid3x3} onClick={() => setOpen(true)}>
+            {profile.pinSet ? t("change") : t("setAction")}
+          </Button>
+        }
+      />
+      {open ? <PinDrawer profile={profile} onClose={() => setOpen(false)} /> : null}
+    </>
+  );
+}
+
+function PinDrawer({ profile, onClose }: { profile: Profile; onClose: () => void }) {
   const t = useTranslations("profile.pin");
   const setPin = useSetPin();
   const [form, setForm] = useState({ currentPassword: "", pin: "", repeat: "" });
@@ -117,35 +238,14 @@ function PinCard({ profile }: { profile: Profile }) {
     if (v.pin || v.repeat) return;
     setPin.mutate(
       { currentPassword: form.currentPassword, pin: form.pin },
-      {
-        onSuccess: () => (
-          toast({ tone: "success", title: profile.pinSet ? t("changed") : t("set") }),
-          setForm({ currentPassword: "", pin: "", repeat: "" })
-        ),
-      },
+      { onSuccess: () => (toast({ tone: "success", title: profile.pinSet ? t("changed") : t("set") }), onClose()) },
     );
   }
 
   return (
-    <Card
-      title={t("title")}
-      actions={
-        profile.pinSet ? (
-          <Badge tone="success" icon={CircleCheck}>
-            {t("isSet")}
-          </Badge>
-        ) : (
-          <Badge tone="warning" icon={ShieldAlert}>
-            {t("notSet")}
-          </Badge>
-        )
-      }
-    >
-      <p className="mb-4 text-text-secondary">
-        {t("about")}
-        {profile.pinSetAt ? t("lastChange", { date: formatDateTime(new Date(profile.pinSetAt)) }) : ""}
-      </p>
-      <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
+    <Drawer open onClose={onClose} title={profile.pinSet ? t("change") : t("setAction")}>
+      <p className="mb-4 text-text-secondary">{t("about")}</p>
+      <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <TextField
           label={t("currentPassword")}
           variant="password"
@@ -154,7 +254,6 @@ function PinCard({ profile }: { profile: Profile }) {
           error={err.fields.currentPassword}
           autoComplete="current-password"
           required
-          className="col-span-2"
         />
         <TextField
           label={profile.pinSet ? t("newPin") : t("pin")}
@@ -179,76 +278,142 @@ function PinCard({ profile }: { profile: Profile }) {
           autoComplete="off"
           required
         />
-        {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
-        <div className="col-span-2 flex justify-end">
+        {err.message ? <Alert tone="danger" title={err.message} /> : null}
+        <div className="flex justify-end">
           <Button type="submit" icon={KeyRound} loading={setPin.isPending}>
             {profile.pinSet ? t("change") : t("setAction")}
           </Button>
         </div>
       </form>
+    </Drawer>
+  );
+}
+
+function SessionsCard() {
+  const t = useTranslations("profile.sessions");
+  const sessions = useMySessions();
+  const end = useEndOtherSessions();
+  const [confirm, setConfirm] = useState(false);
+  const list = sessions.data ?? [];
+  const others = list.filter((s) => !s.current).length;
+  return (
+    <Card
+      title={t("title")}
+      flush
+      actions={
+        others > 0 ? (
+          <button type="button" onClick={() => setConfirm(true)} className="text-caption font-medium text-danger hover:underline">
+            {t("endOthers")}
+          </button>
+        ) : null
+      }
+    >
+      {sessions.isError ? (
+        <ErrorState onRetry={() => void sessions.refetch()} />
+      ) : !sessions.data ? (
+        <div className="p-5">
+          <Skeleton className="h-12 w-full" />
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {list.map((s, i) => {
+            const d = describeDevice(s.device);
+            const Icon = d.mobile ? Smartphone : Monitor;
+            return (
+              <li key={i} className="flex items-center gap-3 px-5 py-3">
+                <span className="flex size-8 flex-none items-center justify-center rounded-lg bg-background text-text-secondary">
+                  <Icon size={16} strokeWidth={1.5} aria-hidden />
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="flex items-center gap-2 text-body font-medium">
+                    {d.os ?? t("unknownDevice")}
+                    {s.current ? (
+                      <span className="rounded-md bg-primary-soft px-1.5 text-caption font-medium text-primary">{t("thisDevice")}</span>
+                    ) : null}
+                  </span>
+                  <span className="truncate text-caption text-text-secondary">
+                    {d.browser ?? t("unknownBrowser")} · <span className="font-mono">{s.ip ?? "—"}</span>
+                  </span>
+                </div>
+                <span className="flex-none text-caption text-text-secondary">
+                  {s.current ? t("now") : formatDateTime(new Date(s.lastAccessAt))}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <Modal
+        open={confirm}
+        onClose={() => setConfirm(false)}
+        title={t("confirmTitle")}
+        tone="danger"
+        primaryAction={{
+          label: t("confirm"),
+          loading: end.isPending,
+          onClick: () =>
+            end.mutate(undefined, {
+              onSuccess: (r) => (setConfirm(false), toast({ tone: "success", title: t("ended", { n: r.ended }) })),
+              onError: (e) => toast({ tone: "danger", title: describeError(e).message ?? t("title") }),
+            }),
+        }}
+        secondaryAction={{ label: t("cancel"), onClick: () => setConfirm(false) }}
+      >
+        {t("confirmText", { n: others })}
+      </Modal>
     </Card>
   );
 }
 
-function PasswordCard() {
-  const t = useTranslations("profile.password");
-  const change = useChangePassword();
-  const [form, setForm] = useState({ currentPassword: "", newPassword: "", repeat: "" });
-  const [repeatError, setRepeatError] = useState<string>();
-  const err = describeError(change.error);
-  const set = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
-
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    if (form.newPassword !== form.repeat) return setRepeatError(t("mismatch"));
-    setRepeatError(undefined);
-    change.mutate(
-      { currentPassword: form.currentPassword, newPassword: form.newPassword },
-      {
-        onSuccess: () => (toast({ tone: "success", title: t("changed") }), setForm({ currentPassword: "", newPassword: "", repeat: "" })),
-      },
-    );
-  }
-
+function ActionsCard() {
+  const t = useTranslations("profile.actions");
+  const ta = useTranslations("audit");
+  const me = useMe();
+  const actions = useMyActions();
   return (
-    <Card title={t("title")}>
-      <form onSubmit={submit} noValidate className="grid grid-cols-2 gap-4">
-        <TextField
-          label={t("current")}
-          variant="password"
-          value={form.currentPassword}
-          onChange={set("currentPassword")}
-          error={err.fields.currentPassword}
-          autoComplete="current-password"
-          required
-          className="col-span-2"
-        />
-        <TextField
-          label={t("new")}
-          variant="password"
-          value={form.newPassword}
-          onChange={set("newPassword")}
-          error={err.fields.newPassword}
-          hint={t("newHint")}
-          autoComplete="new-password"
-          required
-        />
-        <TextField
-          label={t("repeat")}
-          variant="password"
-          value={form.repeat}
-          onChange={set("repeat")}
-          error={repeatError}
-          autoComplete="new-password"
-          required
-        />
-        {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
-        <div className="col-span-2 flex justify-end">
-          <Button type="submit" variant="secondary" loading={change.isPending}>
-            {t("change")}
-          </Button>
+    <Card
+      title={t("title")}
+      flush
+      actions={
+        can(me.data, "audit.view") ? (
+          <Link
+            href="/settings/audit"
+            className="flex items-center gap-1 text-caption font-medium text-text-secondary hover:text-primary hover:underline"
+          >
+            {t("seeAll")} <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
+          </Link>
+        ) : null
+      }
+    >
+      {actions.isError ? (
+        <ErrorState onRetry={() => void actions.refetch()} />
+      ) : !actions.data ? (
+        <div className="p-5">
+          <Skeleton className="h-12 w-full" />
         </div>
-      </form>
+      ) : actions.data.length === 0 ? (
+        <p className="px-5 py-6 text-center text-caption text-text-secondary">{t("empty")}</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {actions.data.map((a) => {
+            const Icon = ACT[a.category].icon;
+            const object =
+              a.objectLabel ??
+              `${isObjectType(a.entityType) ? ta(`ot.${a.entityType}`) : a.entityType}${a.entityId ? ` #${a.entityId}` : ""}`;
+            return (
+              <li key={a.id} className="flex items-start gap-3 px-5 py-3">
+                <Icon size={15} strokeWidth={1.5} aria-hidden className={`mt-0.5 flex-none ${ACT[a.category].className}`} />
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-body">
+                    <b className="font-medium">{ta(`act.${a.category}`)}</b> · {object}
+                  </span>
+                  <span className="text-caption text-text-secondary">{formatDateTime(new Date(a.occurredAt))}</span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </Card>
   );
 }

@@ -199,11 +199,17 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
 
   // Profil: PIN oʻrnatish
   await page.goto("/profile");
+  await expect(page.getByRole("heading", { name: "Faol sessiyalar" })).toBeVisible();
+  await expect(page.getByText("Shu qurilma")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mening harakatlarim" })).toBeVisible();
+  await page.getByRole("button", { name: "PIN oʻrnatish" }).click();
+  const pinDrawer = page.getByRole("dialog");
   await field(page, "Joriy parol").first().fill(CEO_PASSWORD);
   await field(page, "PIN").fill("4826");
   await field(page, "PIN takrori").fill("4826");
-  await page.getByRole("button", { name: "PIN oʻrnatish" }).click();
+  await pinDrawer.getByRole("button", { name: "PIN oʻrnatish" }).click();
   await expect(page.getByText("PIN oʻrnatildi")).toBeVisible();
+  await expect(page.getByText(/Oʻrnatilgan, /)).toBeVisible();
 });
 
 test("Operator: vaqtinchalik parol bilan kirish va almashtirish; Sozlamalar yopiq", async ({ page }) => {

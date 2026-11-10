@@ -1,7 +1,8 @@
 "use client";
 
-import { BookOpen, CircleCheck, CirclePause, Lock, Pencil, Plus, Power, PowerOff, Truck } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { BookOpen, ChevronRight, CircleCheck, CirclePause, Lock, Pencil, Plus, Power, PowerOff, Truck } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -13,7 +14,6 @@ import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
-import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
@@ -39,6 +39,7 @@ import {
   type ExpenseItem,
   type Vehicle,
 } from "./api";
+import { DictionariesOverview } from "./overview";
 
 const TAB_KEYS = [...DICTIONARIES.map((d) => d.kind.toLowerCase()), "vehicles", "expense-items"];
 
@@ -102,18 +103,16 @@ function SearchBox({ value, onChange, placeholder }: { value: string; onChange: 
   );
 }
 
+/** Prototip Lookups: `?tab=` boʻlmasa — kartalar toʻri, aks holda tanlangan maʼlumotnoma roʻyxati. */
 export function DictionariesPage() {
+  const params = useSearchParams();
+  const tab = TAB_KEYS.find((k) => k === params.get("tab"));
+  return tab ? <DictionaryList key={tab} tab={tab} /> : <DictionariesOverview />;
+}
+
+function DictionaryList({ tab }: { tab: string }) {
   const t = useTranslations("dictionaries");
   const text = useMetaText();
-  const TABS = [
-    ...DICTIONARIES.map((d) => ({ key: d.kind.toLowerCase(), label: text(d).title })),
-    { key: "vehicles", label: t("vehicles") },
-    { key: "expense-items", label: t("expenseItems") },
-  ];
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const tab = TAB_KEYS.find((k) => k === params.get("tab")) ?? TAB_KEYS[0];
   const [creating, setCreating] = useState(false);
   const me = useMe();
   const dict = DICTIONARIES.find((d) => d.kind.toLowerCase() === tab);
@@ -122,24 +121,24 @@ export function DictionariesPage() {
     tab === "vehicles" ? VEHICLE_PERMISSION : tab === "expense-items" ? EXPENSE_PERMISSION : (dict?.permission ?? ""),
   );
   const addLabel = dict ? text(dict).add : tab === "vehicles" ? t("addVehicle") : t("addExpense");
+  const title = dict ? text(dict).title : tab === "vehicles" ? t("vehicles") : t("expenseItems");
 
   return (
     <>
+      <nav aria-label={t("overview.title")} className="mb-2 flex items-center gap-1.5 text-caption">
+        <Link href="/dictionaries" className="text-primary hover:underline">
+          {t("overview.title")}
+        </Link>
+        <ChevronRight size={14} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+        <span className="text-text-secondary">{title}</span>
+      </nav>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">{t("title")}</h1>
+        <h1 className="text-page-title">{title}</h1>
         {canEdit ? (
           <Button icon={Plus} onClick={() => setCreating(true)}>
             {addLabel}
           </Button>
         ) : null}
-      </div>
-      <div className="mb-4">
-        <Tabs
-          aria-label={t("title")}
-          items={TABS}
-          value={tab}
-          onChange={(key) => (setCreating(false), router.replace(`${pathname}?tab=${key}`, { scroll: false }))}
-        />
       </div>
       {dict ? (
         <DictionaryTab key={dict.kind} meta={dict} canEdit={canEdit} creating={creating} onCreated={() => setCreating(false)} />

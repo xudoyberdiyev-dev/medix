@@ -9,13 +9,13 @@
     "allBranches": "Barcha filiallar",
     "position": "Lavozim",
     "lastLogin": "Oxirgi kirish",
-    "adminEdits": "Ism, rol va filialni administrator oʻzgartiradi.",
+    "adminEdits": "Oʻzgartirish uchun administratorga murojaat qiling",
     "phoneSaved": "Telefon raqami saqlandi",
     "phone": "Telefon",
     "savePhone": "Telefonni saqlash"
   },
   "pin": {
-    "title": "PIN",
+    "title": "Tasdiqlash PIN kodi",
     "changed": "PIN almashtirildi",
     "set": "PIN oʻrnatildi",
     "isSet": "Oʻrnatilgan",
@@ -33,7 +33,8 @@
       "format": "PIN 4–6 ta raqamdan iborat boʻlishi kerak.",
       "easy": "PIN juda oson. 1111, 1234 kabi ketma-ketlik boʻlmasin.",
       "mismatch": "PIN takrori mos kelmadi. Qaytadan kiriting."
-    }
+    },
+    "isSetOn": "Oʻrnatilgan, {date}"
   },
   "password": {
     "title": "Parol",
@@ -43,6 +44,27 @@
     "new": "Yangi parol",
     "newHint": "Kamida 8 belgi",
     "repeat": "Parol takrori",
-    "change": "Parolni almashtirish"
+    "change": "Parolni almashtirish",
+    "changedAt": "Oxirgi almashtirilgan: {date}",
+    "hint": "Parolni muntazam almashtirib turing"
+  },
+  "languageNote": "Menyu va sarlavhalar darhol almashadi.",
+  "sessions": {
+    "title": "Faol sessiyalar",
+    "endOthers": "Boshqa barcha sessiyalarni yakunlash",
+    "thisDevice": "Shu qurilma",
+    "now": "Hozir",
+    "unknownDevice": "Nomaʼlum qurilma",
+    "unknownBrowser": "Nomaʼlum brauzer",
+    "confirmTitle": "Boshqa sessiyalarni yakunlash",
+    "confirmText": "{n} ta qurilmada tizimdan chiqiladi. Shu qurilmadagi sessiya qoladi.",
+    "confirm": "Yakunlash",
+    "cancel": "Bekor qilish",
+    "ended": "{n} ta sessiya yakunlandi"
+  },
+  "actions": {
+    "title": "Mening harakatlarim",
+    "seeAll": "Hammasini koʻrish",
+    "empty": "Hali harakat yoʻq"
   }
 }
