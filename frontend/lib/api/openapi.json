@@ -344,7 +344,7 @@
     },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
-        "operationId" : "cancel_11",
+        "operationId" : "cancel_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1004,7 +1004,7 @@
     "/api/branch-payments/{id}/cancel" : {
       "post" : {
         "description" : "Teskari: pul qaytadi, qarz tiklanadi.",
-        "operationId" : "cancel_10",
+        "operationId" : "cancel_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1241,7 +1241,7 @@
     "/api/branch-sales/{id}/cancel" : {
       "post" : {
         "description" : "Faqat qoralama.",
-        "operationId" : "cancel_9",
+        "operationId" : "cancel_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3056,7 +3056,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "PENDING", "POSTED", "REJECTED" ]
+            "enum" : [ "PENDING", "POSTED", "REJECTED", "CANCELLED" ]
           }
         }, {
           "in" : "query",
@@ -3254,6 +3254,45 @@
           }
         },
         "summary" : "Qabul qilish",
+        "tags" : [ "customer-return" ]
+      }
+    },
+    "/api/customer-returns/{id}/cancel" : {
+      "post" : {
+        "description" : "Karantindan tovar chiqadi, mijoz qarzi qaytadi, hisobotlardan chiqadi. Partiya keyingi hujjat bilan chiqarilgan bo'lsa — 409 qm.cancelBlocked.",
+        "operationId" : "cancel_9",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CustomerReturnRejectRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CustomerReturnDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "O'tkazilganini bekor qilish",
         "tags" : [ "customer-return" ]
       }
     },
@@ -19002,6 +19041,16 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -19076,7 +19125,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "PENDING", "POSTED", "REJECTED" ]
+            "enum" : [ "PENDING", "POSTED", "REJECTED", "CANCELLED" ]
           },
           "total" : {
             "type" : "string"
@@ -19285,7 +19334,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "PENDING", "POSTED", "REJECTED" ]
+            "enum" : [ "PENDING", "POSTED", "REJECTED", "CANCELLED" ]
           },
           "total" : {
             "type" : "string"
@@ -21854,6 +21903,11 @@
       "MarkQueueItem" : {
         "type" : "object",
         "properties" : {
+          "boxesNeeded" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Skanerlanadigan qutilar (o'lchov birligi «dona» emas)"
+          },
           "customer" : {
             "type" : "string"
           },
@@ -21862,9 +21916,21 @@
             "format" : "date-time",
             "description" : "Berilgan vaqt tugash payti"
           },
+          "deliveryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "deliveryType" : {
+            "type" : "string",
+            "enum" : [ "DELIVERY", "PICKUP" ]
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "invoice" : {
+            "type" : "string",
+            "description" : "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa"
           },
           "lines" : {
             "type" : "integer",
@@ -21886,8 +21952,16 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "note" : {
+            "type" : "string",
+            "description" : "Buyurtma izohi"
+          },
           "number" : {
             "type" : "string"
+          },
+          "picker" : {
+            "type" : "string",
+            "description" : "Yig'uvchi"
           },
           "statusChangedAt" : {
             "type" : "string",
@@ -21898,13 +21972,18 @@
             "format" : "int64",
             "description" : "Skanerlanadigan kodlar soni"
           },
+          "unitsNeeded" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Skanerlanadigan donalar (o'lchov birligi «dona»)"
+          },
           "unmarkedLines" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Markirovkasiz (tasdiqlanadigan) qatorlar soni (E1)"
           }
         },
-        "required" : [ "customer", "id", "lines", "number", "statusChangedAt", "totalQty", "unmarkedLines" ]
+        "required" : [ "boxesNeeded", "customer", "deliveryType", "id", "lines", "number", "statusChangedAt", "totalQty", "unitsNeeded", "unmarkedLines" ]
       },
       "MarkWork" : {
         "type" : "object",
@@ -25008,6 +25087,11 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "issues" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yig'ish bosqichida yuborilgan «Muammo bor» xabarlari soni"
+          },
           "lines" : {
             "type" : "integer",
             "format" : "int32"
@@ -25035,7 +25119,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "customer", "finishedAt", "id", "lines", "number", "onTime", "startedAt", "status", "totalQty" ]
+        "required" : [ "customer", "finishedAt", "id", "issues", "lines", "number", "onTime", "startedAt", "status", "totalQty" ]
       },
       "PickFinishRequest" : {
         "type" : "object",
@@ -25077,6 +25161,14 @@
             "format" : "date-time",
             "description" : "Berilgan vaqt tugash payti"
           },
+          "deliveryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "deliveryType" : {
+            "type" : "string",
+            "enum" : [ "DELIVERY", "PICKUP" ]
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -25091,6 +25183,10 @@
           },
           "marked" : {
             "type" : "boolean"
+          },
+          "note" : {
+            "type" : "string",
+            "description" : "Buyurtma izohi"
           },
           "number" : {
             "type" : "string"
@@ -25123,7 +25219,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "customer", "id", "lines", "marked", "number", "queuedAt", "status", "totalQty" ]
+        "required" : [ "customer", "deliveryType", "id", "lines", "marked", "number", "queuedAt", "status", "totalQty" ]
       },
       "PickupRequest" : {
         "type" : "object",
@@ -31617,6 +31713,11 @@
             "format" : "int32",
             "description" : "Bir buyurtmaga o'rtacha haqiqiy vaqt, daqiqa"
           },
+          "boxCodes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faqat markirovkachilar: qolgan kodlardan qutilar (qolgani — donalar)"
+          },
           "codes" : {
             "type" : "integer",
             "format" : "int32",
@@ -31663,6 +31764,11 @@
           "units" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "wrongScans" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faqat markirovkachilar: rad etilgan skanerlashlar («Xato urishlar»)"
           }
         },
         "required" : [ "actualMinutes", "avgMinutes", "employeeId", "givenMinutes", "late", "lines", "name", "onTime", "orders", "units" ]

@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Download, Undo2 } from "lucide-react";
-import Link from "next/link";
+import { Undo2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -13,7 +12,9 @@ import { Tabs } from "@/components/ui/tabs";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
+import { PeriodPicker } from "@/features/home/period-picker";
+import { reportHref } from "@/lib/saved-reports";
+import { ReportActions, ReportCrumbs, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney, formatQuantity } from "@/lib/format";
@@ -72,7 +73,7 @@ export function ReturnsReportPage() {
   const allowed = can(me.data, "reports.all") || can(me.data, "reports.view") || can(me.data, "reports.own");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const period = usePeriodState();
+  const period = useReportPeriod();
   const { from, to } = period.range;
   const params = useSearchParams();
   const [groupBy, setGroupBy] = useState<ReturnsGroupBy>(() => initialReturnsGroupBy(params.get("groupBy")));
@@ -149,12 +150,28 @@ export function ReturnsReportPage() {
 
   return (
     <>
-      <Link href="/reports" className="mb-2 inline-flex items-center gap-1 text-caption text-text-secondary hover:underline">
-        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> {t("back")}
-      </Link>
+      <ReportCrumbs title={t("returns.title")} />
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{t("returns.title")}</h1>
-        <PeriodPicker state={period} />
+        <div className="flex flex-wrap items-end gap-3">
+          <PeriodPicker state={period} />
+          <ReportActions
+            href={reportHref("/reports/returns", period.preset, { groupBy })}
+            defaultName={t("returns.title")}
+            exportHref={
+              from && to
+                ? returnsExportHref({
+                    branchId,
+                    from,
+                    to,
+                    groupBy,
+                    customerId: customer?.id ?? null,
+                    productId: product?.id ?? null,
+                  })
+                : null
+            }
+          />
+        </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -187,22 +204,6 @@ export function ReturnsReportPage() {
             </span>
           ) : null}
           {r?.total.rate != null ? <span>{t("returns.totalRate", { rate: formatMargin(r.total.rate) })}</span> : null}
-          {from && to ? (
-            <a
-              href={returnsExportHref({
-                branchId,
-                from,
-                to,
-                groupBy,
-                customerId: customer?.id ?? null,
-                productId: product?.id ?? null,
-              })}
-              download
-              className="inline-flex items-center gap-1 text-primary hover:underline"
-            >
-              <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
-            </a>
-          ) : null}
         </div>
       </div>
       {report.error ? (

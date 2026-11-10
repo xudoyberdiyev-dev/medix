@@ -5,7 +5,7 @@ import { canApprove, canCancelOrder, codesExportUrl } from "./api";
 import { confirmText, counterText } from "./marking-page";
 import { statusTabs, tabSummary } from "./orders-page";
 import { groupByStage, sinceText, type MonitorCard } from "./monitor-page";
-import { timerText } from "./picking-page";
+import { clockLeft, timerText } from "./picking-page";
 import { placesText } from "./shipments-model";
 
 const t = createTranslator({ locale: "uz-Latn", messages: uzLatn, namespace: "orders" });
@@ -35,6 +35,15 @@ describe("timerText", () => {
     const now = new Date("2026-11-01T10:00:00Z");
     expect(timerText(new Date("2026-11-01T10:12:05Z"), now, t)).toEqual({ text: "12:05", late: false });
     expect(timerText(new Date("2026-11-01T09:57:30Z"), now, t)).toEqual({ text: "Kechikdi: 3 daqiqa", late: true });
+  });
+});
+
+describe("clockLeft (Yigʻuvchi paneli taymeri)", () => {
+  it("qolgan MM:SS va kechikish +MM:SS", () => {
+    const now = new Date("2026-11-01T10:00:00Z");
+    expect(clockLeft(new Date("2026-11-01T10:12:05Z"), now)).toEqual({ text: "12:05", over: false });
+    expect(clockLeft(new Date("2026-11-01T10:00:09Z"), now)).toEqual({ text: "00:09", over: false });
+    expect(clockLeft(new Date("2026-11-01T09:57:30Z"), now)).toEqual({ text: "+02:30", over: true });
   });
 });
 

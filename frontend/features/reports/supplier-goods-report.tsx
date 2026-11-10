@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CircleCheck, CircleMinus, Download, Truck } from "lucide-react";
-import Link from "next/link";
+import { CircleCheck, CircleMinus, Truck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -12,7 +11,9 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
+import { PeriodPicker } from "@/features/home/period-picker";
+import { reportHref } from "@/lib/saved-reports";
+import { ReportActions, ReportCrumbs, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -50,7 +51,7 @@ export function SupplierGoodsReportPage() {
   const canOpenReceipts = (me.data?.permissions ?? []).includes("receipt.view");
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const period = usePeriodState();
+  const period = useReportPeriod();
   const { from, to } = period.range;
   const params = useSearchParams();
   const [kind, setKind] = useState<SupplierKind>(params.get("kind") === "COMPANY" ? "COMPANY" : "STAFF");
@@ -108,12 +109,17 @@ export function SupplierGoodsReportPage() {
 
   return (
     <>
-      <Link href="/reports" className="mb-2 inline-flex items-center gap-1 text-caption text-text-secondary hover:underline">
-        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> {t("back")}
-      </Link>
+      <ReportCrumbs title={pageTitle} />
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{pageTitle}</h1>
-        <PeriodPicker state={period} />
+        <div className="flex flex-wrap items-end gap-3">
+          <PeriodPicker state={period} />
+          <ReportActions
+            href={reportHref("/reports/supplier-goods", period.preset, { kind })}
+            defaultName={pageTitle}
+            exportHref={from && to ? supplierGoodsExportHref(kind, { branchId, from, to }) : null}
+          />
+        </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <Tabs
@@ -128,15 +134,6 @@ export function SupplierGoodsReportPage() {
               {r.from === r.to ? formatIsoDate(r.from) : `${formatIsoDate(r.from)} – ${formatIsoDate(r.to)}`}
               {r.branchId == null ? ` · ${t("allBranches")}` : ""}
             </span>
-          ) : null}
-          {from && to ? (
-            <a
-              href={supplierGoodsExportHref(kind, { branchId, from, to })}
-              download
-              className="inline-flex items-center gap-1 text-primary hover:underline"
-            >
-              <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
-            </a>
           ) : null}
         </div>
       </div>

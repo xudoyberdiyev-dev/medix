@@ -25,6 +25,7 @@ import { useTranslations } from "next-intl";
 import { EmptyState, ForbiddenState } from "@/components/ui/system-states";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
+import { MyReports } from "./saved-reports";
 
 export type ReportKey =
   | "sales"
@@ -252,6 +253,9 @@ export function ReportsCatalog() {
         <h1 className="text-page-title">{t("title")}</h1>
         <p className="mt-1 text-caption text-text-secondary">{t("subtitle")}</p>
       </div>
+      <MyReports
+        allowed={(href) => groups.some((g) => g.items.some((r) => r.href !== null && href.split("?")[0] === r.href.split("?")[0]))}
+      />
       {groups.length === 0 ? (
         <EmptyState icon={ChartColumn} title={t("emptyTitle")} description={t("emptyDescription")} />
       ) : (

@@ -110,7 +110,7 @@ class SalesReport {
                     SELECT r.branch_id, r.customer_id, o.created_by, r.return_date, NULL, 0, r.total, -r.vat_total, -r.cost_total,
                            o.payment_type, cp.region_id, 0
                     FROM sales_return r JOIN sales_order o ON o.id = r.order_id JOIN counterparty cp ON cp.id = r.customer_id
-                    WHERE r.return_date BETWEEN :f AND :t
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t
                       AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b) AND (CAST(:e AS BIGINT) IS NULL OR o.created_by = :e)
                 )
                 SELECT %s AS k, %s AS name, count(DISTINCT x.order_id) AS orders, sum(x.sales) AS sales, sum(x.discount) AS discount, sum(x.returns) AS returns,

@@ -267,7 +267,8 @@ final class OrderModels {
 
     /** «Bugun yakunlanganlar» (Yig'uvchi, SPEC 5.4): o'zi bugun yig'ib bo'lgan buyurtmalar; vaqtida — berilgan daqiqa ichida. */
     record PickDoneItem(long id, String number, String customer, OrderStatus status, int lines, long totalQty, Instant startedAt,
-            Instant finishedAt, @Schema(nullable = true) Integer minutes, boolean onTime) {}
+            Instant finishedAt, @Schema(nullable = true) Integer minutes, boolean onTime,
+            @Schema(description = "Yig'ish bosqichida yuborilgan «Muammo bor» xabarlari soni") int issues) {}
 
     /** Yig'uvchi navbati kartasi (SPEC 5.4). */
     record PickQueueItem(
@@ -285,7 +286,10 @@ final class OrderModels {
             @Schema(nullable = true, description = "Berilgan vaqt tugash payti") Instant deadline,
             Instant queuedAt,
             @Schema(nullable = true, description = "Mijozning amaldagi shartnomasi (shu filial; SPEC 213)") String contract,
-            @Schema(nullable = true, description = "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa") String invoice) {}
+            @Schema(nullable = true, description = "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa") String invoice,
+            DeliveryType deliveryType,
+            @Schema(nullable = true) java.time.LocalDate deliveryDate,
+            @Schema(nullable = true, description = "Buyurtma izohi") String note) {}
 
     /** Hisob-faktura (chop etish uchun, SPEC 300): summalar QQS bilan; tannarxsiz. */
     record InvoiceDoc(

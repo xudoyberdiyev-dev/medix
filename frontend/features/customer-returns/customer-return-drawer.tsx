@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, HandCoins, Link2, Lock, Printer, Send, ShieldAlert, X } from "lucide-react";
+import { Ban, Check, HandCoins, Link2, Lock, Printer, Send, ShieldAlert, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -16,11 +16,14 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { searchCustomers } from "@/features/orders/api";
 import { describeError } from "@/features/setup/form-error";
+import { ApiError } from "@/lib/api/errors";
 import { formatDate, formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
   QM_APPROVE,
+  QM_CANCEL_POSTED,
   useApproveCustomerReturn,
+  useCancelCustomerReturn,
   useCreateCustomerReturn,
   useCustomerReturn,
   useRejectCustomerReturn,
@@ -67,13 +70,19 @@ export function CustomerReturnDrawer(props: { id: number | null; onClose: () => 
 
 function View({ doc, onClose }: { doc: CustomerReturnDetail; onClose: () => void }) {
   const t = useTranslations("customerReturns");
+  const tc = useTranslations("common");
   const me = useMe();
   const approve = useApproveCustomerReturn();
   const reject = useRejectCustomerReturn();
   const [confirming, setConfirming] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
+  const cancel = useCancelCustomerReturn();
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [blocked, setBlocked] = useState<string | null>(null);
   const canDecide = doc.status === "PENDING" && can(me.data, QM_APPROVE);
+  const canCancel = doc.status === "POSTED" && can(me.data, QM_CANCEL_POSTED);
   type Line = CustomerReturnDetail["lines"][number];
   const columns: TableColumn<Line>[] = [
     { key: "productName", title: t("col.product"), wrap: true },
@@ -104,6 +113,11 @@ function View({ doc, onClose }: { doc: CustomerReturnDetail; onClose: () => void
           >
             {t("view.print")}
           </Button>
+          {canCancel ? (
+            <Button variant="secondary" icon={Ban} onClick={() => (setCancelReason(""), setCancelling(true))}>
+              {t("view.cancel")}
+            </Button>
+          ) : null}
           {canDecide ? (
             <>
               <Button variant="secondary" icon={X} onClick={() => setRejecting(true)}>
@@ -128,6 +142,14 @@ function View({ doc, onClose }: { doc: CustomerReturnDetail; onClose: () => void
             {t("view.postedBody", {
               at: doc.postedAt ? formatDateTime(new Date(doc.postedAt)) : "",
               zone: doc.quarantineZone ?? t("quarantine"),
+            })}
+          </Alert>
+        ) : null}
+        {doc.status === "CANCELLED" ? (
+          <Alert tone="info" title={t("view.cancelledTitle", { reason: doc.cancelReason ?? "" })}>
+            {t("view.cancelledBody", {
+              who: doc.cancelledBy ?? "",
+              at: doc.cancelledAt ? formatDateTime(new Date(doc.cancelledAt)) : "",
             })}
           </Alert>
         ) : null}
@@ -222,6 +244,49 @@ function View({ doc, onClose }: { doc: CustomerReturnDetail; onClose: () => void
         }}
       >
         <TextField label={t("view.rejectReason")} value={reason} onChange={setReason} placeholder={t("view.rejectPlaceholder")} required />
+      </Modal>
+      <Modal
+        open={cancelling}
+        onClose={() => setCancelling(false)}
+        title={t("view.cancelTitle")}
+        tone="danger"
+        primaryAction={{
+          label: t("view.cancel"),
+          loading: cancel.isPending,
+          disabled: cancelReason.trim() === "",
+          onClick: () =>
+            cancel.mutate(
+              { id: doc.id, reason: cancelReason.trim() },
+              {
+                onSuccess: () => (setCancelling(false), toast({ tone: "success", title: t("view.cancelled") })),
+                onError: (e) =>
+                  e instanceof ApiError && e.code === "qm.cancelBlocked" ? (setCancelling(false), setBlocked(e.message)) : fail(e),
+              },
+            ),
+        }}
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-body text-text-secondary">
+            {t("view.cancelBody", { zone: doc.quarantineZone ?? t("quarantine"), sum: formatMoney(doc.total) })}
+          </p>
+          <TextField
+            label={t("view.cancelReason")}
+            value={cancelReason}
+            onChange={setCancelReason}
+            placeholder={t("view.cancelPlaceholder")}
+            required
+          />
+        </div>
+      </Modal>
+      <Modal
+        open={blocked !== null}
+        onClose={() => setBlocked(null)}
+        title={t("view.blockedTitle")}
+        primaryAction={{ label: tc("close"), onClick: () => setBlocked(null) }}
+      >
+        <Alert tone="danger" title={blocked ?? ""}>
+          {t("view.blockedHint")}
+        </Alert>
       </Modal>
     </Drawer>
   );

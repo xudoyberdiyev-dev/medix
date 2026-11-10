@@ -37,7 +37,7 @@ import uz.medix.shared.security.CurrentActor;
 @Tag(name = "customer-return", description = "Mijozdan qaytarish (QM)")
 class CustomerReturnController {
 
-    private static final String VIEW = "hasAnyAuthority('qm.view', 'qm.create', 'qm.approve')";
+    private static final String VIEW = "hasAnyAuthority('qm.view', 'qm.create', 'qm.approve', 'qm.cancelPosted')";
 
     private final CustomerReturns returns;
     private final CurrentActor currentActor;
@@ -122,6 +122,15 @@ class CustomerReturnController {
     @Operation(summary = "Rad etish", description = "Hech narsa o'zgarmaydi; qaytarish miqdori bo'shaydi.")
     CustomerReturnDetail reject(@PathVariable long id, @Valid @RequestBody CustomerReturnRejectRequest r) {
         returns.reject(actor(), id, r.reason());
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAuthority('qm.cancelPosted')")
+    @Operation(summary = "O'tkazilganini bekor qilish",
+            description = "Karantindan tovar chiqadi, mijoz qarzi qaytadi, hisobotlardan chiqadi. Partiya keyingi hujjat bilan chiqarilgan bo'lsa — 409 qm.cancelBlocked.")
+    CustomerReturnDetail cancel(@PathVariable long id, @Valid @RequestBody CustomerReturnRejectRequest r) {
+        returns.cancel(actor(), id, r.reason());
         return detail(id);
     }
 }

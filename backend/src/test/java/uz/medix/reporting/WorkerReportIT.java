@@ -141,11 +141,18 @@ class WorkerReportIT {
                 .andExpect(jsonPath("$.employeeId").value(p3.id()))
                 .andExpect(jsonPath("$.orders").value(0));
         mvc.perform(get("/api/reports/pickers/mine").cookie(op.cookie())).andExpect(status().isForbidden());
+        // «Xato urishlar»: shu markirovkachining rad etilgan skanerlashlari (boshqa xodimniki hisoblanmaydi)
+        jdbc.sql("""
+                INSERT INTO mark_scan_error (order_id, employee_id, error_key)
+                SELECT o.id, e.id, 'marking.duplicate' FROM sales_order o, (VALUES (CAST(:m AS BIGINT)), (CAST(:m AS BIGINT)), (CAST(:p AS BIGINT))) AS e(id) WHERE o.marker_id = :m""")
+                .param("m", m1.id()).param("p", p1.id()).update();
         mvc.perform(get("/api/reports/markers/mine").cookie(m1.cookie()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.employeeId").value(m1.id()))
                 .andExpect(jsonPath("$.orders").value(1))
-                .andExpect(jsonPath("$.codes").value(0));
+                .andExpect(jsonPath("$.codes").value(0))
+                .andExpect(jsonPath("$.boxCodes").value(0))
+                .andExpect(jsonPath("$.wrongScans").value(2));
         mvc.perform(get("/api/reports/markers/mine").cookie(p1.cookie())).andExpect(status().isForbidden());
         mvc.perform(get("/api/reports/pickers").param("from", t).param("to", t).cookie(keeper))
                 .andExpect(status().isOk())
@@ -161,6 +168,7 @@ class WorkerReportIT {
                 .andExpect(jsonPath("$.rows[0].late").value(1))
                 .andExpect(jsonPath("$.rows[0].fefoDeviations").value(1))
                 .andExpect(jsonPath("$.rows[0].codes").doesNotExist())
+                .andExpect(jsonPath("$.rows[0].wrongScans").doesNotExist())
                 .andExpect(jsonPath("$.rows[1].onTime").value(0))
                 .andExpect(jsonPath("$.rows[1].late").value(0))
                 .andExpect(jsonPath("$.total.orders").value(3))

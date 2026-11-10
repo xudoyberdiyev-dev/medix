@@ -213,7 +213,6 @@ function BranchPanelInner({
                 value={form.tin}
                 onChange={(v) => set("tin")(v.replace(/\D/g, ""))}
                 placeholder="_________"
-
                 error={errorFor("tin")}
               />
             </div>
@@ -297,7 +296,6 @@ function BranchPanelInner({
                     value={b.account}
                     onChange={(v) => setBank(i, { account: v.replace(/\D/g, "") })}
                     placeholder="20208000900100001010"
-
                     error={errorFor(`account.${i}`)}
                   />
                 </div>

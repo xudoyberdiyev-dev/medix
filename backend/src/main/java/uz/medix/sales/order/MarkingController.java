@@ -41,11 +41,17 @@ import uz.medix.shared.security.CurrentActor;
 @Tag(name = "marking", description = "Markirovka")
 class MarkingController {
 
+    /** Rad etilgan kod (skaner xatosi) kalitlari — «Xato urishlar» uchun. */
+    static final java.util.Set<String> WRONG_SCAN = java.util.Set.of("marking.format", "marking.batchMismatch", "marking.duplicate",
+            "marking.duplicateHere", "marking.lineFull", "marking.productMismatch", "marking.expiryInvalid", "marking.gtinInvalid");
+
     private final OrderMarking marking;
+    private final MarkScanErrors scanErrors;
     private final CurrentActor currentActor;
 
-    MarkingController(OrderMarking marking, CurrentActor currentActor) {
+    MarkingController(OrderMarking marking, MarkScanErrors scanErrors, CurrentActor currentActor) {
         this.marking = marking;
+        this.scanErrors = scanErrors;
         this.currentActor = currentActor;
     }
 
@@ -86,7 +92,16 @@ class MarkingController {
     @Operation(summary = "Kodni skanerlash",
             description = "Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN) → partiya → tur (quti/dona) → qator to'lganmi.")
     ScanResult scan(@PathVariable long id, @Valid @RequestBody ScanRequest r) {
-        return marking.scan(actor(), id, r.code());
+        Actor a = actor();
+        try {
+            return marking.scan(a, id, r.code());
+        } catch (MedixException e) {
+            // «Xato urishlar»: faqat kodning o'zi rad etilgani (format, takror, mahsulot, partiya, tur, ortiqcha); holat/ruxsat xatolari hisoblanmaydi
+            if (WRONG_SCAN.contains(e.code()) || e.code().startsWith("marking.kind")) {
+                scanErrors.record(id, a.employeeId(), e.code());
+            }
+            throw e;
+        }
     }
 
     @PostMapping("/orders/{id}/codes/{markId}/remove")

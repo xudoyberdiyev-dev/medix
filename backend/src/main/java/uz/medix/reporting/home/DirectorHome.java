@@ -138,7 +138,7 @@ class DirectorHome {
                     UNION ALL
                     SELECT r.branch_id, o.payment_type, -r.total
                     FROM sales_return r JOIN sales_order o ON o.id = r.order_id
-                    WHERE r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
                 ) x GROUP BY branch_id, kind""")
                 .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId)
                 .query(Amount.class).list();
@@ -190,7 +190,7 @@ class DirectorHome {
                     WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b)
                     UNION ALL
                     SELECT r.return_date, -r.total, 0 FROM sales_return r
-                    WHERE r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
                 ) x GROUP BY d""")
                 .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId)
                 .query((rs, n) -> {
@@ -318,7 +318,7 @@ class DirectorHome {
                     UNION ALL
                     SELECT o.created_by, -r.total, 0
                     FROM sales_return r JOIN sales_order o ON o.id = r.order_id
-                    WHERE r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
                 ) x JOIN employee e ON e.id = x.emp
                 GROUP BY e.id, e.full_name ORDER BY amount DESC, e.full_name LIMIT :top""")
                 .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId).param("top", TOP)

@@ -2,11 +2,15 @@
 
 import { useRef, type KeyboardEvent } from "react";
 import { cn } from "@/lib/cn";
+import { Icon, type LucideIcon } from "./icon";
 
 export interface TabItem {
   key: string;
   label: string;
   count?: number;
+  /** Qizil hisoblagich (masalan, kechikkanlar) — 0 boʻlsa koʻrinmaydi. */
+  alert?: number;
+  icon?: LucideIcon;
   disabled?: boolean;
 }
 
@@ -68,6 +72,7 @@ export function Tabs({ items, value, onChange, ...aria }: TabsProps) {
               t.disabled && "cursor-not-allowed text-text-disabled hover:border-transparent hover:text-text-disabled",
             )}
           >
+            {t.icon ? <Icon icon={t.icon} size="sm" /> : null}
             {t.label}
             {t.count !== undefined ? (
               <span
@@ -77,6 +82,11 @@ export function Tabs({ items, value, onChange, ...aria }: TabsProps) {
                 )}
               >
                 {t.count}
+              </span>
+            ) : null}
+            {t.alert ? (
+              <span className="tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-caption font-medium text-white">
+                {t.alert}
               </span>
             ) : null}
           </button>

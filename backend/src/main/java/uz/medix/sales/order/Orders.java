@@ -405,7 +405,7 @@ class Orders {
         if (filter.soldFrom() != null || filter.soldTo() != null) {
             // Savdo hisoboti bilan bir xil: o'tkazilgan sotuv (sale_date) yoki qaytarish (return_date) shu davrda.
             where.append(" AND (EXISTS (SELECT 1 FROM sale s WHERE s.order_id = o.id AND s.status = 'POSTED' AND s.sale_date BETWEEN :sf AND :st)")
-                    .append(" OR EXISTS (SELECT 1 FROM sales_return r WHERE r.order_id = o.id AND r.return_date BETWEEN :sf AND :st))");
+                    .append(" OR EXISTS (SELECT 1 FROM sales_return r WHERE r.order_id = o.id AND r.cancelled_at IS NULL AND r.return_date BETWEEN :sf AND :st))");
             params.put("sf", java.sql.Date.valueOf(filter.soldFrom() == null ? LocalDate.of(2000, 1, 1) : filter.soldFrom()));
             params.put("st", java.sql.Date.valueOf(filter.soldTo() == null ? LocalDate.of(2999, 12, 31) : filter.soldTo()));
         }
@@ -663,7 +663,7 @@ class Orders {
                        q.number AS qm, q.total AS qm_total, t.number AS trip, d.full_name AS driver, v.plate_number AS vehicle
                 FROM sales_order o
                 LEFT JOIN sale s ON s.order_id = o.id
-                LEFT JOIN LATERAL (SELECT number, total FROM sales_return WHERE order_id = o.id ORDER BY id DESC LIMIT 1) q ON true
+                LEFT JOIN LATERAL (SELECT number, total FROM sales_return WHERE order_id = o.id AND cancelled_at IS NULL ORDER BY id DESC LIMIT 1) q ON true
                 LEFT JOIN LATERAL (SELECT ts.trip_id FROM trip_stop ts JOIN trip tt ON tt.id = ts.trip_id
                                    WHERE ts.order_id = o.id AND ts.active AND tt.status <> 'CANCELLED'
                                    ORDER BY ts.id DESC LIMIT 1) st ON true

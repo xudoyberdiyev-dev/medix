@@ -61,7 +61,8 @@ export function CashPage() {
   // Xarajatlar hisobotidan: ?tab=ops&expenseItemId=… — KO/BO roʻyxati shu modda va davr bilan
   const [opsFilter, setOpsFilter] = useState(() => opsFilterFromParams(params));
   const [tab, setTab] = useState(() => (params.get("tab") === "ops" ? "ops" : "statement"));
-  const [dialog, setDialog] = useState<"close" | "cashiers" | "account" | null>(null);
+  // Kassir bosh sahifasidan «Kunni yopish»: ?close=1
+  const [dialog, setDialog] = useState<"close" | "cashiers" | "account" | null>(() => (params.get("close") === "1" ? "close" : null));
   const router = useRouter();
   const canIo = can(me.data, CASH_IO);
   const canClose = can(me.data, CASH_CLOSE);

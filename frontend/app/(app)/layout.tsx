@@ -6,7 +6,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
     <AuthGate>
       <div className="flex h-screen print:block print:h-auto">
         <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+        <div data-app-content className="flex min-w-0 flex-1 flex-col">
+          {children}
+        </div>
       </div>
     </AuthGate>
   );

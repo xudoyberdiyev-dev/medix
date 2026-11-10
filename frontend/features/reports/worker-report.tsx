@@ -1,15 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Download, PackageCheck, ScanBarcode } from "lucide-react";
-import Link from "next/link";
+import { PackageCheck, ScanBarcode } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { PeriodPicker, usePeriodState } from "@/features/home/period-picker";
+import { PeriodPicker } from "@/features/home/period-picker";
+import { reportHref } from "@/lib/saved-reports";
+import { ReportActions, ReportCrumbs, useReportPeriod } from "./saved-reports";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { rowField, useClientTable } from "@/lib/client-table";
@@ -69,7 +70,7 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
   const allowed = can(me.data, k.perm);
   const selectedBranch = useBranchStore((s) => s.branchId);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
-  const period = usePeriodState();
+  const period = useReportPeriod();
   const { from, to } = period.range;
   const report = useQuery({
     queryKey: ["reports", kind, branchId, from, to],
@@ -120,12 +121,17 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
 
   return (
     <>
-      <Link href="/reports" className="mb-2 inline-flex items-center gap-1 text-caption text-text-secondary hover:underline">
-        <ArrowLeft size={14} strokeWidth={1.5} aria-hidden /> {t("back")}
-      </Link>
+      <ReportCrumbs title={title} />
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-page-title">{title}</h1>
-        <PeriodPicker state={period} />
+        <div className="flex flex-wrap items-end gap-3">
+          <PeriodPicker state={period} />
+          <ReportActions
+            href={reportHref(kind === "PICKERS" ? "/reports/pickers" : "/reports/markers", period.preset)}
+            defaultName={title}
+            exportHref={from && to ? workerExportHref(kind, { branchId, from, to }) : null}
+          />
+        </div>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-end gap-4 text-caption text-text-secondary">
         {r ? (
@@ -133,15 +139,6 @@ export function WorkerReportPage({ kind }: { kind: WorkerKind }) {
             {r.from === r.to ? formatIsoDate(r.from) : `${formatIsoDate(r.from)} – ${formatIsoDate(r.to)}`}
             {r.branchId == null ? ` · ${t("allBranches")}` : ""}
           </span>
-        ) : null}
-        {from && to ? (
-          <a
-            href={workerExportHref(kind, { branchId, from, to })}
-            download
-            className="inline-flex items-center gap-1 text-primary hover:underline"
-          >
-            <Download size={16} strokeWidth={1.5} aria-hidden /> {t("export")}
-          </a>
         ) : null}
       </div>
       {report.error ? (

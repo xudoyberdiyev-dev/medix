@@ -146,6 +146,11 @@ class OrderIT {
     }
 
     private void setPrice(Place p, long product, String price) {
+        setTypePrice(p, product, null, price);
+    }
+
+    /** Narx turidagi narx (code == null — bazaviy). */
+    private void setTypePrice(Place p, long product, String typeCode, String price) {
         long doc = jdbc.sql("""
                 INSERT INTO price_change (number, branch_id, effective_from, created_by, status)
                 VALUES (:n, :b, :d, :e, 'APPROVED') RETURNING id""")
@@ -157,7 +162,7 @@ class OrderIT {
                 .single();
         jdbc.sql("""
                 INSERT INTO price (product_id, price_type_id, branch_id, effective_from, amount, price_change_id)
-                SELECT :p, id, :b, :d, :a, :doc FROM price_type WHERE base""")
+                SELECT :p, id, :b, :d, :a, :doc FROM price_type WHERE\s""" + (typeCode == null ? "base" : "code = '" + typeCode + "'"))
                 .param("p", product)
                 .param("b", p.branchId())
                 .param("d", java.sql.Date.valueOf(today()))
@@ -641,7 +646,8 @@ class OrderIT {
         send(post("/api/orders/" + o2 + "/time"), keeper, "{\"pickMinutes\":10}").andExpect(status().isOk());
         mvc.perform(get("/api/orders/pick-queue").cookie(picker))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].id", hasItem((int) o1)));
+                .andExpect(jsonPath("$[*].id", hasItem((int) o1)))
+                .andExpect(jsonPath("$[0].deliveryType").isNotEmpty());
 
         // Bitta faol yig'ish
         send(post("/api/orders/" + o1 + "/pick/start"), picker, "").andExpect(jsonPath("$.status").value("PICKING"));
@@ -663,7 +669,8 @@ class OrderIT {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(o1))
                 .andExpect(jsonPath("$[0].status").value("MARKING"))
-                .andExpect(jsonPath("$[0].onTime").value(true));
+                .andExpect(jsonPath("$[0].onTime").value(true))
+                .andExpect(jsonPath("$[0].issues").value(0));
         mvc.perform(get("/api/orders/pick-done-today").cookie(otherPicker)).andExpect(jsonPath("$.length()").value(0));
         mvc.perform(get("/api/orders/pick-done-today").cookie(keeper)).andExpect(status().isForbidden());
         assertThat(qtyIn(shipping, prod)).isEqualTo(4);
@@ -889,6 +896,9 @@ class OrderIT {
                 .andExpect(jsonPath("$.detail", containsString("LOT-7")));
         send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S1", "LOT-7", "Q"))
                 .andExpect(jsonPath("$.code").value("marking.kindNeedUnit"));
+        // «Xato urishlar»: rad etilgan 4 skanerlash alohida tranzaksiyada yozilgan (asosiy tranzaksiya qaytsa ham)
+        org.assertj.core.api.Assertions.assertThat(jdbc.sql("SELECT count(*) FROM mark_scan_error WHERE order_id = :o")
+                .param("o", o1).query(Long.class).single()).isEqualTo(4L);
         // Qabul: 3 ta; takror (shu buyurtmada) va qator to'lgan
         for (String s : List.of("S1", "S2", "S3")) {
             send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, s, "lot-7", "D"))
@@ -1767,6 +1777,93 @@ class OrderIT {
         send(post("/api/customer-returns"), manager, body.formatted(1, "WRONG_ITEM")).andExpect(jsonPath("$.status").value("POSTED"));
         assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(4);
         assertThat(debtOf(c)).isEqualTo("1000.00");
+    }
+
+    @Test
+    void customerReturnUsesReturnPriceTypeButNeverAboveSalePrice() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        long cheap = product(p, "BY Vozvrat arzon", "1000", 20, null, null);
+        long dear = product(p, "BY Vozvrat qimmat", "1000", 20, null, null);
+        long o1 = delivered(p, c, cheap, 5, operator, keeper, picker);
+        long o2 = delivered(p, c, dear, 5, operator, keeper, picker);
+        assertThat(debtOf(c)).isEqualTo("10000.00");
+        // «Vozvrat» turi: arzonida 950 (sotuvdan past) → QM shu narxda; qimmatida 1200 (sotuvdan yuqori) → sotuv narxi 1000
+        setTypePrice(p, cheap, "RETURN", "950");
+        setTypePrice(p, dear, "RETURN", "1200");
+        long s1 = jdbc.sql("SELECT id FROM sale WHERE order_id = :o").param("o", o1).query(Long.class).single();
+        long s2 = jdbc.sql("SELECT id FROM sale WHERE order_id = :o").param("o", o2).query(Long.class).single();
+        MvcResult l1 = mvc.perform(get("/api/customer-returns/sales/" + s1 + "/lines").cookie(operator))
+                .andExpect(jsonPath("$[0].price").value("950.00"))
+                .andReturn();
+        mvc.perform(get("/api/customer-returns/sales/" + s2 + "/lines").cookie(operator)).andExpect(jsonPath("$[0].price").value("1000.00"));
+
+        long saleLine = ((Number) JsonPath.read(l1.getResponse().getContentAsString(), "$[0].saleLineId")).longValue();
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        send(post("/api/customer-returns"), manager,
+                "{\"saleId\":" + s1 + ",\"lines\":[{\"saleLineId\":" + saleLine + ",\"qty\":2,\"reason\":\"EXPIRING\"}]}")
+                .andExpect(jsonPath("$.status").value("POSTED"))
+                .andExpect(jsonPath("$.total").value("1900.00"))
+                .andExpect(jsonPath("$.lines[0].price").value("950.00"));
+        assertThat(debtOf(c)).isEqualTo("8100.00");
+        assertThat(qtyIn(p.quarantine(), cheap)).isEqualTo(2);
+    }
+
+    @Test
+    void postedCustomerReturnCancelRestoresDebtStockAndReturnableButBlockedWhenQuarantineMovedOut() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        Cookie director = loginAs("DIRECTOR", null);
+        long prod = product(p, "BY QM bekor", "1000", 20, null, null);
+        long o = delivered(p, c, prod, 5, operator, keeper, picker);
+        long sale = jdbc.sql("SELECT id FROM sale WHERE order_id = :o").param("o", o).query(Long.class).single();
+        long saleLine = jdbc.sql("SELECT id FROM sale_line WHERE sale_id = :s").param("s", sale).query(Long.class).single();
+        long batch = jdbc.sql("SELECT batch_id FROM sale_line WHERE id = :l").param("l", saleLine).query(Long.class).single();
+        String body = "{\"saleId\":" + sale + ",\"lines\":[{\"saleLineId\":" + saleLine + ",\"qty\":%d,\"reason\":\"DAMAGED\"}]}";
+
+        long qm = id(send(post("/api/customer-returns"), manager, body.formatted(3)).andExpect(jsonPath("$.status").value("POSTED")).andReturn());
+        String number = jdbc.sql("SELECT number FROM customer_return WHERE id = :id").param("id", qm).query(String.class).single();
+        assertThat(debtOf(c)).isEqualTo("2000.00");
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(3);
+
+        // Ruxsat: faqat qm.cancelPosted (Direktor); sabab majburiy
+        send(post("/api/customer-returns/" + qm + "/cancel"), manager, "{\"reason\":\"Xato\"}").andExpect(status().isForbidden());
+        send(post("/api/customer-returns/" + qm + "/cancel"), director, "{\"reason\":\" \"}").andExpect(status().isBadRequest());
+
+        send(post("/api/customer-returns/" + qm + "/cancel"), director, "{\"reason\":\"Notoʻgʻri kiritilgan\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.cancelReason").value("Notoʻgʻri kiritilgan"))
+                .andExpect(jsonPath("$.cancelledBy").isNotEmpty());
+        assertThat(debtOf(c)).isEqualTo("5000.00");
+        assertThat(qtyIn(p.quarantine(), prod)).isZero();
+        assertThat(jdbc.sql("SELECT cancelled_at IS NOT NULL FROM sales_return WHERE number = :n").param("n", number).query(Boolean.class).single())
+                .isTrue();
+        mvc.perform(get("/api/customer-returns/sales/" + sale + "/lines").cookie(operator))
+                .andExpect(jsonPath("$[0].returned").value(0))
+                .andExpect(jsonPath("$[0].left").value(5));
+        send(post("/api/customer-returns/" + qm + "/cancel"), director, "{\"reason\":\"Yana\"}")
+                .andExpect(jsonPath("$.code").value("qm.notPosted"));
+        // Bekor qilingan QM va sales_return o'zgarmaydi
+        assertThatThrownBy(() -> jdbc.sql("UPDATE sales_return SET total = 1 WHERE number = :n").param("n", number).update())
+                .hasStackTraceContaining("faqat qoʻshiladi");
+
+        // Yangi QM 2 dona; Karantindan 1 dona keyingi hujjat bilan chiqarildi → bekor qilib bo'lmaydi
+        long qm2 = id(send(post("/api/customer-returns"), manager, body.formatted(2)).andExpect(jsonPath("$.status").value("POSTED")).andReturn());
+        tx.executeWithoutResult(s -> ledger.post(new DocRef("HC", qm2, "HC-TST-" + qm2), List.of(Move.out(p.quarantine(), batch, 1))));
+        send(post("/api/customer-returns/" + qm2 + "/cancel"), director, "{\"reason\":\"Xato\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("qm.cancelBlocked"))
+                .andExpect(jsonPath("$.detail", containsString("HC-TST-" + qm2)));
+        assertThat(debtOf(c)).isEqualTo("3000.00");
+        assertThat(qtyIn(p.quarantine(), prod)).isEqualTo(1);
     }
 
     /** Buyurtma bo'yicha bildirishnoma olgan, berilgan roldagi xodimlar soni. */

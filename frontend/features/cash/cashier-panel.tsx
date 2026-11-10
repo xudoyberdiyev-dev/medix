@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Banknote, Clock, Receipt, Truck, Wallet } from "lucide-react";
+import { ArrowUpRight, Banknote, Clock, HandCoins, LockKeyhole, Receipt, Truck, Wallet, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,9 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
+import { useBranches } from "@/features/employees/api";
+import { firstName, greetKey, tashkentHour } from "@/features/home/director-view";
+import { cn } from "@/lib/cn";
 import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { PAYMENT_MT, useAccounts } from "@/features/payments/api";
 import { api, unwrap } from "@/lib/api/client";
@@ -49,7 +52,9 @@ export function CashierPanel() {
   const t = useTranslations("cash.panel");
   const tc = useTranslations("cash");
   const tk = useTranslations("payments.accountKind");
+  const th = useTranslations("home");
   const me = useMe();
+  const branches = useBranches();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const allowed = can(me.data, "cash.view");
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
@@ -99,13 +104,40 @@ export function CashierPanel() {
     );
 
   const p = panel.data;
+  const name = firstName(me.data?.fullName);
+  const greet = th(`dir.${greetKey(tashkentHour())}`) + (name ? `, ${name}` : "");
+  const branchName = branches.data?.find((b) => b.id === branchId)?.name;
   const driverTotal = (driverCash.data ?? []).reduce((s, c) => s + toCents(c.amount), 0n);
   const driverText = fromCents(driverTotal);
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-page-title">{t("title")}</h1>
+      <h1 className="text-page-title">{greet}</h1>
+      <p className="mt-1 text-text-secondary">{[formatIsoDate(todayTashkent()), branchName].filter(Boolean).join(" · ")}</p>
+      {/* Prototip CashierPanel: tezkor amallar — bitta asosiy (Mijozdan toʻlov) */}
+      <div className="mt-4 mb-4 flex flex-wrap gap-2">
+        {can(me.data, "cash.view") ? (
+          <ActionLink href="/cash/ops/new?kind=ko&dir=OUT" icon={ArrowUpRight}>
+            {t("act.out")}
+          </ActionLink>
+        ) : null}
+        {(driverCash.data ?? []).length > 0 ? (
+          <ActionLink href="/cash" icon={Truck}>
+            {t("act.driver", { n: (driverCash.data ?? []).length })}
+          </ActionLink>
+        ) : null}
+        {can(me.data, "cash.close") ? (
+          <ActionLink href="/cash?close=1" icon={LockKeyhole}>
+            {t("act.close")}
+          </ActionLink>
+        ) : null}
+        {can(me.data, PAYMENT_MT) ? (
+          <ActionLink href="/payments/mt/new" icon={HandCoins} primary>
+            {t("act.mt")}
+          </ActionLink>
+        ) : null}
+      </div>
+      <div className="mb-4 rounded-card border border-border bg-surface p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="w-36">
             <TextField
@@ -353,5 +385,32 @@ function Recent({ rows }: { rows: RecentMove[] }) {
         emptyState={<EmptyState icon={Receipt} title={t("recentEmpty.title")} description={t("recentEmpty.description")} />}
       />
     </section>
+  );
+}
+
+function ActionLink({
+  href,
+  icon: Glyph,
+  primary,
+  children,
+}: {
+  href: string;
+  icon: LucideIcon;
+  primary?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "inline-flex h-control-md items-center gap-2 rounded-control border px-4 text-body font-medium",
+        primary
+          ? "border-transparent bg-primary-button text-white hover:bg-primary-button-hover"
+          : "border-border bg-surface text-text-primary hover:bg-background",
+      )}
+    >
+      <Glyph size={16} strokeWidth={1.5} aria-hidden />
+      {children}
+    </Link>
   );
 }

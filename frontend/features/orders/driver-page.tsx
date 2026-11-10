@@ -1,7 +1,20 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, CircleCheck, CircleX, Flag, History, PackageCheck, PackageMinus, Signature, Truck } from "lucide-react";
+import {
+  Banknote,
+  Calendar,
+  Camera,
+  CircleCheck,
+  CircleX,
+  Flag,
+  History,
+  PackageCheck,
+  PackageMinus,
+  Phone,
+  Signature,
+  Truck,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -10,15 +23,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState, ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
-import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
+import { useBranches } from "@/features/employees/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { cn } from "@/lib/cn";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import { partialTotals } from "./partial";
 import { SignatureModal } from "./signature-modal";
@@ -30,6 +44,7 @@ export type TripDetail = components["schemas"]["TripDetail"];
 export function DriverPage() {
   const tr = useTranslations("orders");
   const me = useMe();
+  const branches = useBranches();
   const qc = useQueryClient();
   const allowed = can(me.data, "trip.driver");
   const trip = useQuery({
@@ -41,14 +56,13 @@ export function DriverPage() {
     },
     enabled: allowed,
   });
-  const [places, setPlaces] = useState<Record<number, string>>({});
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [tab, setTab] = useState<"trip" | "history">("trip");
 
   if (me.data && !allowed) return <ForbiddenState description={tr("driver.forbidden")} />;
 
-  async function load(t: TripDetail, stopId: number) {
+  async function load(t: TripDetail, stopId: number, places: number) {
     setPending(`load-${stopId}`);
     setError(null);
     try {
@@ -56,12 +70,14 @@ export function DriverPage() {
       const d = await unwrap(
         api.POST("/api/trips/{id}/stops/{stopId}/load", {
           params: { path: { id: t.id, stopId } },
-          body: { places: Number(places[stopId] ?? "0") },
+          body: { places },
         }),
       );
       qc.setQueryData(["trips", "mine"], d);
+      return true;
     } catch (e) {
       setError(e);
+      return false;
     } finally {
       setPending(null);
     }
@@ -83,19 +99,33 @@ export function DriverPage() {
   }
 
   const err = describeError(error);
+  const branchName = branches.data?.find((b) => b.id === me.data?.branchId)?.name;
   return (
-    <>
-      <h1 className="mb-4 text-page-title">{tr("driver.title")}</h1>
-      <div className="mb-4">
-        <Tabs
-          aria-label={tr("driver.title")}
-          items={[
-            { key: "trip", label: tr("driver.tabTrip") },
-            { key: "history", label: tr("driver.tabHistory") },
-          ]}
-          value={tab}
-          onChange={(k) => setTab(k === "history" ? "history" : "trip")}
-        />
+    <div className="mx-auto w-full max-w-[680px]">
+      <h1 className="text-page-title">{tr("driver.panelTitle")}</h1>
+      {me.data ? <p className="mt-1 text-table text-text-secondary">{[me.data.fullName, branchName].filter(Boolean).join(" · ")}</p> : null}
+      {/* Prototip: ikki teng segmentli yorliq */}
+      <div role="tablist" aria-label={tr("driver.panelTitle")} className="mt-4 mb-4 grid grid-cols-2 gap-1 rounded-card bg-border/60 p-1">
+        {(
+          [
+            ["trip", tr("driver.tabTrip")],
+            ["history", tr("driver.tabHistory")],
+          ] as const
+        ).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            className={cn(
+              "h-control-lg rounded-control text-body font-semibold transition-colors",
+              tab === k ? "bg-surface text-primary-button shadow-sm" : "text-text-secondary hover:text-text-primary",
+            )}
+          >
+            {label}
+          </button>
+        ))}
       </div>
       {err.message ? <Alert tone="danger" title={err.message} className="mb-4" /> : null}
       {tab === "history" ? (
@@ -111,14 +141,12 @@ export function DriverPage() {
       ) : (
         <TripView
           t={trip.data}
-          places={places}
-          setPlaces={(id, v) => setPlaces((m) => ({ ...m, [id]: v }))}
           pending={pending}
-          onLoad={(stopId) => void load(trip.data as TripDetail, stopId)}
+          onLoad={(stopId, places) => load(trip.data as TripDetail, stopId, places)}
           onStart={() => void start(trip.data as TripDetail)}
         />
       )}
-    </>
+    </div>
   );
 }
 
@@ -165,126 +193,31 @@ function TripHistory() {
   );
 }
 
+/** Prototip DriverPanel: reys kartasi → bekat kartalari → pastda yopishqoq asosiy tugma. */
 function TripView(props: {
   t: TripDetail;
-  places: Record<number, string>;
-  setPlaces: (id: number, v: string) => void;
   pending: string | null;
-  onLoad: (stopId: number) => void;
+  onLoad: (stopId: number, places: number) => Promise<boolean>;
   onStart: () => void;
 }) {
   const tr = useTranslations("orders");
+  const qc = useQueryClient();
   const { t } = props;
   const st = TRIP_STATUS[t.status];
   const planned = t.status === "PLANNED";
-  const left = t.stops.filter((s) => !s.loadedAt).length;
-  return (
-    <Card>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-subtitle">{t.number}</span>
-            <Badge tone={st.tone} icon={st.icon}>
-              {tr(`shipments.tripStatus.${t.status}`)}
-            </Badge>
-          </div>
-          <div className="text-caption text-text-secondary">
-            {tr("driver.tripMeta", {
-              date: formatIsoDate(t.tripDate),
-              vehicle: t.vehicle,
-              places: formatQuantity(t.places),
-              amount: formatMoney(t.total),
-            })}
-          </div>
-        </div>
-      </div>
-      <ul className="mt-4 flex flex-col">
-        {t.stops.map((s) => (
-          <li key={s.id} className="border-t border-border py-3">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div>
-                  {s.seq}. {s.customer}
-                </div>
-                <div className="text-caption text-text-secondary">
-                  {s.address ?? tr("driver.noAddress")} · <span className="font-mono">{s.waybillNumber ?? s.orderNumber}</span>
-                </div>
-                <div className="text-caption text-text-secondary">
-                  {tr("driver.stopMeta", { places: formatQuantity(s.places), amount: formatMoney(s.total) })}
-                </div>
-              </div>
-              {s.outcome === "DELIVERED" ? (
-                <Badge tone="success" icon={CircleCheck}>
-                  {tr("driver.delivered")}
-                </Badge>
-              ) : s.outcome === "PARTIAL" ? (
-                <Badge tone="warning" icon={PackageMinus}>
-                  {tr("driver.partial")} · <span className="font-mono">{s.returnNumber}</span>
-                </Badge>
-              ) : s.outcome === "UNDELIVERED" ? (
-                <Badge tone="danger" icon={CircleX}>
-                  {tr("driver.undelivered")}
-                </Badge>
-              ) : s.loadedAt ? (
-                <Badge tone="success" icon={CircleCheck}>
-                  {tr("driver.loaded")}
-                </Badge>
-              ) : null}
-            </div>
-            {planned && !s.loadedAt ? (
-              <div className="mt-2 flex flex-wrap items-end gap-2">
-                <div className="w-32">
-                  <TextField
-                    label={tr("driver.places")}
-                    value={props.places[s.id] ?? ""}
-                    onChange={(v) => props.setPlaces(s.id, v.replace(/\D/g, ""))}
-                    inputMode="numeric"
-                  />
-                </div>
-                <Button
-                  variant="secondary"
-                  icon={PackageCheck}
-                  disabled={!props.places[s.id]}
-                  loading={props.pending === `load-${s.id}`}
-                  onClick={() => props.onLoad(s.id)}
-                >
-                  {tr("driver.accept")}
-                </Button>
-              </div>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-      {planned ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <span className="text-caption text-text-secondary">
-            {left > 0 ? tr("driver.notLoaded", { count: formatQuantity(left) }) : tr("driver.allLoaded")}
-          </span>
-          <Button icon={Truck} disabled={left > 0} loading={props.pending === "start"} onClick={props.onStart}>
-            {tr("driver.startTrip")}
-          </Button>
-        </div>
-      ) : t.status === "IN_TRANSIT" ? (
-        <TransitActions t={t} />
-      ) : (
-        <p className="mt-4 text-text-secondary">{tr("driver.finishedText")}</p>
-      )}
-    </Card>
-  );
-}
-
-/** «Yoʻlda»: har manzilda rasm → «Yetkazildi» (naqd boʻlsa summa) yoki «Yetkazilmadi» (sabab); oxirida «Reysni yakunlash». */
-function TransitActions({ t }: { t: TripDetail }) {
-  const tr = useTranslations("orders");
-  const qc = useQueryClient();
-  const [cash, setCash] = useState<Record<number, string>>({});
+  const transit = t.status === "IN_TRANSIT";
+  const loadedN = t.stops.filter((s) => s.loadedAt).length;
+  const resN = t.stops.filter((s) => s.outcome).length;
+  const cashHeld = sumMoney(t.stops.map((s) => s.cashCollected));
+  const [loadForm, setLoadForm] = useState<{ stopId: number; cnt: string } | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [undeliver, setUndeliver] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [partial, setPartial] = useState<TripStop | null>(null);
+  const [deliverStop, setDeliverStop] = useState<TripStop | null>(null);
+  const [cash, setCash] = useState("");
   const [signing, setSigning] = useState<TripStop | null>(null);
-  const open = t.stops.filter((s) => !s.outcome);
 
   async function run(key: string, fn: () => Promise<TripDetail | void>) {
     setPending(key);
@@ -318,17 +251,20 @@ function TransitActions({ t }: { t: TripDetail }) {
       );
     });
 
-  const deliver = (stopId: number) =>
-    run(`deliver-${stopId}`, () => {
-      // «amount» maydoni qiymati — kanonik satr («25000.00»)
-      const raw = cash[stopId]?.trim();
-      return unwrap(
+  const deliver = async (stopId: number, amount?: string) => {
+    const ok = await run(`deliver-${stopId}`, () =>
+      unwrap(
         api.POST("/api/trips/{id}/stops/{stopId}/deliver", {
           params: { path: { id: t.id, stopId } },
-          body: { cash: raw || undefined },
+          body: { cash: amount?.trim() || undefined },
         }),
-      );
-    });
+      ),
+    );
+    if (ok) {
+      setDeliverStop(null);
+      setCash("");
+    }
+  };
 
   async function confirmUndeliver() {
     if (undeliver === null) return;
@@ -356,69 +292,233 @@ function TransitActions({ t }: { t: TripDetail }) {
       });
     });
 
+  function pickResult(s: TripStop, kind: "ok" | "part" | "fail") {
+    if (kind !== "fail" && s.photos === 0) {
+      toast({ tone: "danger", title: tr("driver.photoNeeded"), description: tr("driver.photoRequired") });
+      return;
+    }
+    if (kind === "fail") setUndeliver(s.id);
+    else if (kind === "part") setPartial(s);
+    else if (s.paymentType === "CASH") {
+      setCash("");
+      setDeliverStop(s);
+    } else void deliver(s.id);
+  }
+
   const err = describeError(error);
+  const info = planned ? tr("driver.infoLoad") : t.status === "RETURN_WAIT" ? tr("driver.infoWait") : null;
+  const allLoaded = loadedN === t.stops.length;
+  const allRes = resN === t.stops.length;
   return (
-    <div className="mt-4 flex flex-col gap-3">
+    <div className="flex flex-col gap-3.5">
+      <section className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="font-mono text-body font-semibold">{t.number}</span>
+          <Badge tone={st.tone} icon={st.icon}>
+            {tr(`shipments.tripStatus.${t.status}`)}
+          </Badge>
+        </div>
+        <span className="flex items-center gap-1.5 text-text-secondary">
+          <Truck size={16} strokeWidth={1.5} aria-hidden />
+          {t.vehicle}
+        </span>
+        <span className="flex items-center gap-1.5 text-text-secondary">
+          <Calendar size={16} strokeWidth={1.5} aria-hidden />
+          {tr("driver.tripStops", { date: formatIsoDate(t.tripDate), n: t.stops.length })}
+        </span>
+        {cashHeld > 0n ? (
+          <span className="flex items-center gap-1.5 font-semibold text-warning">
+            <Banknote size={16} strokeWidth={1.5} aria-hidden />
+            {tr("driver.cashHeld", { amount: formatMoney(fromTiyin(cashHeld)) })}
+          </span>
+        ) : null}
+      </section>
+      {info ? <Alert tone="info" title={info} /> : null}
       {err.message ? <Alert tone="danger" title={err.message} /> : null}
-      {open.map((s) => (
-        <div key={s.id} className="rounded-card border border-border p-3">
-          <div className="mb-2">
-            {s.seq}. {s.customer} {s.phone ? <span className="text-text-secondary">· {s.phone}</span> : null}
-          </div>
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="inline-flex h-control-md cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3">
-              <Camera size={16} strokeWidth={1.5} aria-hidden />
-              {s.photos > 0 ? tr("driver.photos", { count: s.photos }) : tr("driver.takePhoto")}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                capture="environment"
-                className="sr-only"
-                aria-label={tr("driver.photoAria", { customer: s.customer })}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void photo(s.id, f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            <Button variant="tertiary" icon={Signature} onClick={() => setSigning(s)}>
-              {s.signed ? tr("driver.signed") : tr("driver.sign")}
-            </Button>
-            {s.paymentType === "CASH" ? (
-              <div className="w-40">
+      {t.stops.map((s) => {
+        const res = s.outcome ? RESULT[s.outcome as keyof typeof RESULT] : null;
+        const lf = loadForm?.stopId === s.id ? loadForm : null;
+        const cnt = lf && lf.cnt !== "" ? Number(lf.cnt) : null;
+        const diff = cnt !== null && cnt !== s.places;
+        const mark = res ? res.mark : planned && s.loadedAt ? "border-l-success" : "border-l-border";
+        return (
+          <article
+            key={s.id}
+            aria-label={`${s.seq}. ${s.customer}`}
+            className={cn("flex min-w-0 flex-col gap-2.5 rounded-card border border-l-4 border-border bg-surface px-4 py-3.5", mark)}
+          >
+            <div className="flex items-start gap-2.5">
+              <span
+                className={cn(
+                  "flex size-7 flex-none items-center justify-center rounded-full text-caption font-bold",
+                  res ? res.num : "bg-background text-text-primary",
+                )}
+              >
+                {s.seq}
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-subtitle font-semibold text-pretty">{s.customer}</span>
+                <span className="text-text-secondary text-pretty">{s.address ?? tr("driver.noAddress")}</span>
+              </div>
+              {res ? (
+                <Badge tone={res.tone} icon={res.icon}>
+                  {tr(res.label)}
+                </Badge>
+              ) : null}
+            </div>
+            {s.phone ? (
+              <a
+                href={`tel:${s.phone.replace(/[^\d+]/g, "")}`}
+                className="inline-flex min-h-12 items-center gap-2 self-start rounded-control border border-border px-3.5 font-semibold text-primary-button"
+              >
+                <Phone size={18} strokeWidth={1.5} aria-hidden />
+                {s.phone}
+              </a>
+            ) : null}
+            <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-caption">
+              <Cell label={tr("driver.order")}>
+                <span className="font-mono">{s.orderNumber}</span>
+              </Cell>
+              <Cell label={tr("driver.waybill")}>
+                <span className="font-mono">{s.waybillNumber ?? "—"}</span>
+              </Cell>
+              <Cell label={tr("driver.placesLabel")} big>
+                {tr("driver.placesN", { n: formatQuantity(s.places) })}
+              </Cell>
+              <Cell label={tr("driver.sum")} big>
+                {formatMoney(s.total)}
+              </Cell>
+              <Cell label={tr("driver.pay")}>{tr(`paymentType.${s.paymentType as "CASH" | "TRANSFER" | "ONLINE"}`)}</Cell>
+              {s.paymentType === "CASH" ? (
+                <Cell label={tr("driver.collect")} big warn>
+                  {formatMoney(s.outcome ? (s.cashCollected ?? "0") : s.total)}
+                </Cell>
+              ) : null}
+            </dl>
+            {s.outcome ? (
+              <span className="text-caption text-text-secondary text-pretty">
+                {[
+                  s.outcome === "UNDELIVERED" && s.outcomeReason ? s.outcomeReason : null,
+                  s.outcome === "PARTIAL" && s.returnTotal
+                    ? tr("driver.retInfo", { amount: formatMoney(s.returnTotal), number: s.returnNumber ?? "" })
+                    : null,
+                  s.cashCollected ? tr("driver.cashGot", { amount: formatMoney(s.cashCollected) }) : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            ) : null}
+
+            {planned && !s.loadedAt && !lf ? (
+              <Button size="lg" icon={PackageCheck} onClick={() => setLoadForm({ stopId: s.id, cnt: "" })}>
+                {tr("driver.accept")}
+              </Button>
+            ) : null}
+            {lf ? (
+              <div className="flex flex-col gap-2 rounded-card bg-background p-3">
                 <TextField
-                  label={tr("driver.cashReceived")}
-                  variant="amount"
-                  value={cash[s.id] ?? ""}
-                  onChange={(v) => setCash((m) => ({ ...m, [s.id]: v }))}
+                  label={tr("driver.countPlaces")}
+                  value={lf.cnt}
+                  onChange={(v) => setLoadForm({ stopId: s.id, cnt: v.replace(/\D/g, "").slice(0, 4) })}
+                  inputMode="numeric"
+                  autoFocus
+                  error={diff ? tr("driver.loadDiff", { c: cnt ?? 0, e: s.places }) : undefined}
                 />
+                {diff ? <span className="text-caption text-text-secondary">{tr("driver.loadDiffHint")}</span> : null}
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <Button
+                    size="lg"
+                    icon={PackageCheck}
+                    disabled={cnt === null || diff}
+                    loading={props.pending === `load-${s.id}`}
+                    onClick={() =>
+                      void props.onLoad(s.id, cnt ?? 0).then((ok) => {
+                        if (ok) setLoadForm(null);
+                      })
+                    }
+                  >
+                    {tr("driver.accept")}
+                  </Button>
+                  <Button size="lg" variant="secondary" onClick={() => setLoadForm(null)}>
+                    {tr("driver.cancel")}
+                  </Button>
+                </div>
               </div>
             ) : null}
-            <Button
-              variant="secondary"
-              icon={CircleCheck}
-              disabled={s.photos === 0}
-              loading={pending === `deliver-${s.id}`}
-              onClick={() => void deliver(s.id)}
-            >
-              {tr("driver.delivered")}
+            {planned && s.loadedAt ? (
+              <span className="flex items-center gap-1.5 font-semibold text-success">
+                <CircleCheck size={16} strokeWidth={1.5} aria-hidden />
+                {tr("driver.loadedOk", { c: formatQuantity(s.places) })}
+              </span>
+            ) : null}
+
+            {transit && !s.outcome ? (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  <label className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3.5 font-semibold text-primary-button">
+                    <Camera size={18} strokeWidth={1.5} aria-hidden />
+                    {s.photos > 0 ? tr("driver.photos", { count: s.photos }) : tr("driver.takePhoto")}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      capture="environment"
+                      className="sr-only"
+                      aria-label={tr("driver.photoAria", { customer: s.customer })}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) void photo(s.id, f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  <Button size="lg" variant="secondary" icon={Signature} onClick={() => setSigning(s)}>
+                    {s.signed ? tr("driver.signed") : tr("driver.sign")}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(
+                    [
+                      ["ok", RESULT.DELIVERED],
+                      ["part", RESULT.PARTIAL],
+                      ["fail", RESULT.UNDELIVERED],
+                    ] as const
+                  ).map(([k, r]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => pickResult(s, k)}
+                      disabled={pending === `deliver-${s.id}`}
+                      className={cn(
+                        "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-card border p-1 text-caption font-semibold",
+                        r.button,
+                      )}
+                    >
+                      <r.icon size={18} strokeWidth={1.5} aria-hidden />
+                      {tr(r.label)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : null}
+          </article>
+        );
+      })}
+      {planned || transit ? (
+        <div className="sticky bottom-0 z-[5] -mx-1 flex flex-col gap-1.5 border-t border-border bg-background px-1 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom))]">
+          <span className="text-center text-caption text-text-secondary">
+            {planned ? tr("driver.loadedN", { a: loadedN, b: t.stops.length }) : tr("driver.resN", { a: resN, b: t.stops.length })}
+          </span>
+          {planned ? (
+            <Button size="lg" icon={Truck} disabled={!allLoaded} loading={props.pending === "start"} onClick={props.onStart}>
+              {tr("driver.startTrip")}
             </Button>
-            <Button variant="tertiary" icon={PackageMinus} disabled={s.photos === 0} onClick={() => setPartial(s)}>
-              {tr("driver.partial")}
+          ) : (
+            <Button size="lg" icon={Flag} disabled={!allRes} loading={pending === "finish"} onClick={() => void finish()}>
+              {tr("driver.finishTrip")}
             </Button>
-            <Button variant="tertiary" icon={CircleX} onClick={() => setUndeliver(s.id)}>
-              {tr("driver.undelivered")}
-            </Button>
-          </div>
-          {s.photos === 0 ? <div className="mt-1 text-caption text-text-secondary">{tr("driver.photoRequired")}</div> : null}
+          )}
         </div>
-      ))}
-      <div className="flex justify-end">
-        <Button icon={Flag} disabled={open.length > 0} loading={pending === "finish"} onClick={() => void finish()}>
-          {tr("driver.finishTrip")}
-        </Button>
-      </div>
+      ) : null}
       {signing ? (
         <SignatureModal
           key={signing.id}
@@ -437,6 +537,21 @@ function TransitActions({ t }: { t: TripDetail }) {
           }}
         />
       ) : null}
+      <Modal
+        open={deliverStop !== null}
+        onClose={() => setDeliverStop(null)}
+        title={tr("driver.deliverTitle", { customer: deliverStop?.customer ?? "" })}
+        primaryAction={{
+          label: tr("driver.markDelivered"),
+          onClick: () => deliverStop && void deliver(deliverStop.id, cash),
+          loading: pending?.startsWith("deliver") ?? false,
+        }}
+      >
+        <div className="flex flex-col gap-3 rounded-card bg-warning-bg p-3">
+          <span className="text-warning">{tr("driver.cashExp", { amount: formatMoney(deliverStop?.total ?? "0") })}</span>
+          <TextField label={tr("driver.cashReceived")} variant="amount" value={cash} onChange={setCash} autoFocus />
+        </div>
+      </Modal>
       <Modal
         open={undeliver !== null}
         onClose={() => setUndeliver(null)}
@@ -465,6 +580,61 @@ function TransitActions({ t }: { t: TripDetail }) {
       ) : null}
     </div>
   );
+}
+
+const RESULT = {
+  DELIVERED: {
+    label: "driver.delivered",
+    tone: "success",
+    icon: CircleCheck,
+    mark: "border-l-success",
+    num: "bg-success-bg text-success",
+    button: "border-success/30 bg-success-bg text-success",
+  },
+  PARTIAL: {
+    label: "driver.partial",
+    tone: "warning",
+    icon: PackageMinus,
+    mark: "border-l-warning",
+    num: "bg-warning-bg text-warning",
+    button: "border-warning/30 bg-warning-bg text-warning",
+  },
+  UNDELIVERED: {
+    label: "driver.undelivered",
+    tone: "danger",
+    icon: CircleX,
+    mark: "border-l-danger",
+    num: "bg-danger-bg text-danger",
+    button: "border-danger/30 bg-danger-bg text-danger",
+  },
+} as const;
+
+function Cell(props: { label: string; children: React.ReactNode; big?: boolean; warn?: boolean }) {
+  return (
+    <div className={props.warn ? "text-warning" : "text-text-secondary"}>
+      <dt>{props.label}</dt>
+      <dd className={cn("font-semibold", props.warn ? "" : "text-text-primary", props.big && "text-body")}>{props.children}</dd>
+    </div>
+  );
+}
+
+/** Pul satrlarini («25000.00») tiyinda BigInt bilan qoʻshadi — float ishlatilmaydi. */
+function sumMoney(values: (string | null | undefined)[]): bigint {
+  let total = 0n;
+  for (const v of values) {
+    if (!v) continue;
+    const neg = v.startsWith("-");
+    const [i = "0", f = ""] = v.replace("-", "").split(".");
+    const t = BigInt(i) * 100n + BigInt((f + "00").slice(0, 2));
+    total += neg ? -t : t;
+  }
+  return total;
+}
+
+function fromTiyin(t: bigint): string {
+  const neg = t < 0n;
+  const a = neg ? -t : t;
+  return `${neg ? "-" : ""}${a / 100n}.${(a % 100n).toString().padStart(2, "0")}`;
 }
 
 type TripStop = TripDetail["stops"][number];

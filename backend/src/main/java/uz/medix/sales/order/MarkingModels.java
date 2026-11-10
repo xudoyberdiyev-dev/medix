@@ -30,7 +30,14 @@ final class MarkingModels {
             @Schema(nullable = true) Long markerId,
             @Schema(nullable = true) Instant markStartedAt,
             @Schema(nullable = true, description = "Berilgan vaqt tugash payti") Instant deadline,
-            Instant statusChangedAt) {}
+            Instant statusChangedAt,
+            @Schema(description = "Skanerlanadigan qutilar (o'lchov birligi «dona» emas)") long boxesNeeded,
+            @Schema(description = "Skanerlanadigan donalar (o'lchov birligi «dona»)") long unitsNeeded,
+            @Schema(nullable = true, description = "Yig'uvchi") String picker,
+            @Schema(nullable = true, description = "Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa") String invoice,
+            OrderModels.DeliveryType deliveryType,
+            @Schema(nullable = true) LocalDate deliveryDate,
+            @Schema(nullable = true, description = "Buyurtma izohi") String note) {}
 
     record MarkBatch(long batchId, String batch, LocalDate expiryDate, int qty, int scanned) {}
 

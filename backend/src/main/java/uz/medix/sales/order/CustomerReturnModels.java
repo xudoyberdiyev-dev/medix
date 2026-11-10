@@ -20,7 +20,7 @@ final class CustomerReturnModels {
     static final int MAX_LINES = 500;
     static final int MAX_QTY = 10_000_000;
 
-    enum Status { PENDING, POSTED, REJECTED }
+    enum Status { PENDING, POSTED, REJECTED, CANCELLED }
 
     /** Sabab (prototip QM_REASONS): muddati yaqin, shikastlangan, noto'g'ri yuborilgan, mijoz rad etdi, boshqa (izoh majburiy). */
     enum Reason { EXPIRING, DAMAGED, WRONG_ITEM, REFUSED, OTHER }
@@ -51,7 +51,8 @@ final class CustomerReturnModels {
             @Schema(nullable = true) String quarantineZone, LocalDate returnDate, Status status, @Schema(nullable = true) String note,
             String total, long totalQty, String createdBy, Instant createdAt, @Schema(nullable = true) String postedBy,
             @Schema(nullable = true) Instant postedAt, @Schema(nullable = true) String rejectedBy, @Schema(nullable = true) Instant rejectedAt,
-            @Schema(nullable = true) String rejectReason, List<CustomerReturnLine> lines) {}
+            @Schema(nullable = true) String rejectReason, @Schema(nullable = true) String cancelledBy,
+            @Schema(nullable = true) Instant cancelledAt, @Schema(nullable = true) String cancelReason, List<CustomerReturnLine> lines) {}
 
     /** Mijozning qaytarish mumkin bo'lgan sotuvlari (prototip `custSales`): qaytarsa bo'ladigan qatorlar soni. */
     record ReturnableSale(long id, String number, LocalDate saleDate, String total, long warehouseId, String warehouse, int returnableLines) {}

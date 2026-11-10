@@ -91,7 +91,7 @@ class ReturnsReport {
                 WITH x AS (
                     SELECT r.id AS rid, r.return_date, r.reason, r.customer_id, l.product_id, l.qty, l.amount
                     FROM sales_return_line l JOIN sales_return r ON r.id = l.return_id JOIN sales_order o ON o.id = r.order_id
-                    WHERE r.return_date BETWEEN :f AND :t
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t
                       AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b) AND (CAST(:e AS BIGINT) IS NULL OR o.created_by = :e)
                       AND (CAST(:c AS BIGINT) IS NULL OR r.customer_id = :c) AND (CAST(:p AS BIGINT) IS NULL OR l.product_id = :p)
                 )
@@ -144,7 +144,7 @@ class ReturnsReport {
         return jdbc.sql("""
                 SELECT count(DISTINCT r.id) FROM sales_return_line l JOIN sales_return r ON r.id = l.return_id
                 JOIN sales_order o ON o.id = r.order_id
-                WHERE r.return_date BETWEEN :f AND :t
+                WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t
                   AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b) AND (CAST(:e AS BIGINT) IS NULL OR o.created_by = :e)
                   AND (CAST(:c AS BIGINT) IS NULL OR r.customer_id = :c) AND (CAST(:p AS BIGINT) IS NULL OR l.product_id = :p)""")
                 .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId).param("e", mine).param("c", customerId)

@@ -9,7 +9,8 @@
   "status": {
     "PENDING": "Qabul kutilmoqda",
     "POSTED": "Tasdiqlangan",
-    "REJECTED": "Rad etildi"
+    "REJECTED": "Rad etildi",
+    "CANCELLED": "Bekor qilingan"
   },
   "reason": {
     "EXPIRING": "Muddati yaqin",
@@ -109,6 +110,16 @@
     "rejectReason": "Sabab",
     "rejectPlaceholder": "Masalan: tovar kelmadi",
     "rejected": "Rad etildi",
-    "print": "Chop etish"
+    "print": "Chop etish",
+    "cancel": "Bekor qilish",
+    "cancelTitle": "Qaytarishni bekor qilish",
+    "cancelBody": "Tovar «{zone}» zonasidan chiqariladi, mijoz qarzi {sum} ga qaytadi, hujjat hisobotlardan chiqadi.",
+    "cancelReason": "Bekor qilish sababi",
+    "cancelPlaceholder": "Masalan: notoʻgʻri sotuv tanlangan",
+    "cancelled": "Bekor qilindi",
+    "cancelledTitle": "Bekor qilindi: {reason}",
+    "cancelledBody": "{who} · {at} — tovar Karantindan chiqarildi, mijoz qarzi qaytarildi.",
+    "blockedTitle": "Bekor qilib boʻlmaydi",
+    "blockedHint": "Qaytgan tovar Karantindan keyingi hujjat bilan chiqarilgan. Avval oʻsha hujjatni bekor qiling, soʻng qayta urinib koʻring."
   }
 }

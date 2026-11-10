@@ -176,3 +176,24 @@
     min-width: var(--spacing-control-touch);
   }
 }
+
+/* Asosiy kontent (har sahifaning <main>) — vertikal aylantirish chizigʻi koʻrinmaydi, aylantirish ishlaydi (egasi talabi 10.11 13:51).
+   scrollbar-width meros boʻlmaydi: ichki jadvallarning gorizontal aylantirish chizigʻi oʻz holicha qoladi. */
+@layer base {
+  [data-app-content] main {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  [data-app-content] main::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Aylantirish chizigʻi koʻrinmaydi, aylantirish (gʻildirak, sensor, klaviatura) ishlaydi — sidebar (egasi talabi 10.11) */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

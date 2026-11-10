@@ -84,7 +84,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** AH ni bekor qilish (teskari yozuvlar) */
-        post: operations["cancel_11"];
+        post: operations["cancel_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -382,7 +382,7 @@ export interface paths {
          * Filiallararo to'lovni bekor qilish
          * @description Teskari: pul qaytadi, qarz tiklanadi.
          */
-        post: operations["cancel_10"];
+        post: operations["cancel_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -503,7 +503,7 @@ export interface paths {
          * Bekor qilish
          * @description Faqat qoralama.
          */
-        post: operations["cancel_9"];
+        post: operations["cancel_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1358,6 +1358,26 @@ export interface paths {
          * @description Tovar Karantin zonasiga kiradi, mijoz qarzi qaytarish summasiga kamayadi.
          */
         post: operations["approve_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-returns/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * O'tkazilganini bekor qilish
+         * @description Karantindan tovar chiqadi, mijoz qarzi qaytadi, hisobotlardan chiqadi. Partiya keyingi hujjat bilan chiqarilgan bo'lsa — 409 qm.cancelBlocked.
+         */
+        post: operations["cancel_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8087,6 +8107,10 @@ export interface components {
             branch: string;
             /** Format: int64 */
             branchId: number;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -8117,7 +8141,7 @@ export interface components {
             saleId: number;
             saleNumber: string;
             /** @enum {string} */
-            status: "PENDING" | "POSTED" | "REJECTED";
+            status: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
             total: string;
             /** Format: int64 */
             totalQty: number;
@@ -8200,7 +8224,7 @@ export interface components {
             saleId: number;
             saleNumber: string;
             /** @enum {string} */
-            status: "PENDING" | "POSTED" | "REJECTED";
+            status: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
             total: string;
             warehouse: string;
             /** Format: int64 */
@@ -9206,14 +9230,25 @@ export interface components {
             scanned: number;
         };
         MarkQueueItem: {
+            /**
+             * Format: int64
+             * @description Skanerlanadigan qutilar (o'lchov birligi «dona» emas)
+             */
+            boxesNeeded: number;
             customer: string;
             /**
              * Format: date-time
              * @description Berilgan vaqt tugash payti
              */
             deadline?: string;
+            /** Format: date */
+            deliveryDate?: string;
+            /** @enum {string} */
+            deliveryType: "DELIVERY" | "PICKUP";
             /** Format: int64 */
             id: number;
+            /** @description Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa */
+            invoice?: string;
             /**
              * Format: int32
              * @description Markirovkali qatorlar soni
@@ -9226,7 +9261,11 @@ export interface components {
             marker?: string;
             /** Format: int64 */
             markerId?: number;
+            /** @description Buyurtma izohi */
+            note?: string;
             number: string;
+            /** @description Yig'uvchi */
+            picker?: string;
             /** Format: date-time */
             statusChangedAt: string;
             /**
@@ -9234,6 +9273,11 @@ export interface components {
              * @description Skanerlanadigan kodlar soni
              */
             totalQty: number;
+            /**
+             * Format: int64
+             * @description Skanerlanadigan donalar (o'lchov birligi «dona»)
+             */
+            unitsNeeded: number;
             /**
              * Format: int32
              * @description Markirovkasiz (tasdiqlanadigan) qatorlar soni (E1)
@@ -10530,6 +10574,11 @@ export interface components {
             finishedAt: string;
             /** Format: int64 */
             id: number;
+            /**
+             * Format: int32
+             * @description Yig'ish bosqichida yuborilgan «Muammo bor» xabarlari soni
+             */
+            issues: number;
             /** Format: int32 */
             lines: number;
             /** Format: int32 */
@@ -10561,6 +10610,10 @@ export interface components {
              * @description Berilgan vaqt tugash payti
              */
             deadline?: string;
+            /** Format: date */
+            deliveryDate?: string;
+            /** @enum {string} */
+            deliveryType: "DELIVERY" | "PICKUP";
             /** Format: int64 */
             id: number;
             /** @description Hisob-faktura raqami — sotuv hujjatlashtirilgan bo'lsa */
@@ -10568,6 +10621,8 @@ export interface components {
             /** Format: int32 */
             lines: number;
             marked: boolean;
+            /** @description Buyurtma izohi */
+            note?: string;
             number: string;
             /** Format: int32 */
             pickMinutes?: number;
@@ -13214,6 +13269,11 @@ export interface components {
             avgMinutes: number;
             /**
              * Format: int32
+             * @description Faqat markirovkachilar: qolgan kodlardan qutilar (qolgani — donalar)
+             */
+            boxCodes?: number;
+            /**
+             * Format: int32
              * @description Faqat markirovkachilar: buyurtmada qolgan kodlar
              */
             codes?: number;
@@ -13245,6 +13305,11 @@ export interface components {
             removedCodes?: number;
             /** Format: int32 */
             units: number;
+            /**
+             * Format: int32
+             * @description Faqat markirovkachilar: rad etilgan skanerlashlar («Xato urishlar»)
+             */
+            wrongScans?: number;
         };
         WriteOffDetail: {
             actNo?: string;
@@ -13652,7 +13717,7 @@ export interface operations {
             };
         };
     };
-    cancel_11: {
+    cancel_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -14068,7 +14133,7 @@ export interface operations {
             };
         };
     };
-    cancel_10: {
+    cancel_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -14229,7 +14294,7 @@ export interface operations {
             };
         };
     };
-    cancel_9: {
+    cancel_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -15393,7 +15458,7 @@ export interface operations {
                 branchId?: number;
                 customerId?: number;
                 saleId?: number;
-                status?: "PENDING" | "POSTED" | "REJECTED";
+                status?: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
                 q?: string;
                 page?: number;
                 size?: number;
@@ -15516,6 +15581,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReturnDetail"];
+                };
+            };
+        };
+    };
+    cancel_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerReturnRejectRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

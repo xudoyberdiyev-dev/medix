@@ -123,7 +123,21 @@
     "allPayments": "Barcha toʻlov turlari",
     "region": "Hudud",
     "allRegions": "Barcha hududlar",
-    "unspecified": "Koʻrsatilmagan"
+    "unspecified": "Koʻrsatilmagan",
+    "kpi": {
+      "net": "Sof savdo",
+      "docs": "Hujjatlar soni",
+      "avg": "Oʻrtacha hujjat summasi",
+      "retShare": "Qaytarish ulushi",
+      "soum": "soʻm"
+    },
+    "chart": {
+      "title": "Sof savdo — davr boʻyicha",
+      "hide": "Grafikni yashirish",
+      "show": "Grafikni koʻrsatish",
+      "soum": "soʻm",
+      "docsN": "{n} ta hujjat"
+    }
   },
   "worker": {
     "forbidden": "{title} sizning rolingiz uchun yopiq.",
@@ -233,5 +247,22 @@
     "productChip": "Mahsulot: {name}",
     "emptyTitle": "Bu davrda qaytarish yoʻq",
     "note": "Qaytarish = QM hujjatlari (qisman yetkazish va mijoz qaytargan tovar), QQS bilan. Ulushi = qaytarish / shu davrdagi sotuv (yetkazilmaganlar kirmaydi). Mijoz qatorini bosing — uning mahsulotlari, mahsulot qatorini — sabablari."
-  }
+  },
+  "saved": {
+    "mine": "Mening hisobotlarim",
+    "save": "Saqlash",
+    "title": "Hisobotni saqlash",
+    "hint": "Davr nisbiy saqlanadi (masalan, «Shu oy»), aniq sana emas.",
+    "name": "Nomi",
+    "empty": "Nom kiritilmagan. Hisobot nomini yozing.",
+    "tooLong": "Nom juda uzun. {max} belgigacha qisqartiring.",
+    "limit": "{max} tadan ortiq hisobot saqlanmaydi. Keraksizini katalogda oʻchiring.",
+    "done": "Hisobot saqlandi — «Mening hisobotlarim»da",
+    "remove": "«{name}» ni oʻchirish"
+  },
+  "print": "Chop etish",
+  "crumbs": "Joylashuv",
+  "columns": "Ustunlar",
+  "colsHint": "Koʻrinish va tartib — sudrab oʻzgartiring",
+  "colsReset": "Standartga qaytarish"
 }

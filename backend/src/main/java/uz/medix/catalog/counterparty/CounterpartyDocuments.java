@@ -86,7 +86,7 @@ class CounterpartyDocuments {
                     FROM supplier_payment x WHERE x.supplier_id = :c""";
             case RETURNS -> customers
                     ? """
-                    SELECT x.id, x.number, NULL AS extra, x.return_date AS d, x.branch_id, 'POSTED' AS status, x.total AS amount,
+                    SELECT x.id, x.number, NULL AS extra, x.return_date AS d, x.branch_id, CASE WHEN x.cancelled_at IS NULL THEN 'POSTED' ELSE 'CANCELLED' END AS status, x.total AS amount,
                            NULL::numeric AS open, NULL::date AS due, x.order_id AS link
                     FROM sales_return x WHERE x.customer_id = :c"""
                     : """
