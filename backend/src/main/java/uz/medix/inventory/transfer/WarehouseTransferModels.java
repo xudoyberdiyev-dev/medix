@@ -34,9 +34,8 @@ final class WarehouseTransferModels {
             @Size(max = 500) String note,
             @NotEmpty(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid @NotNull WarehouseTransferLineRequest> lines) {}
 
-    /** Qabul: har qator uchun haqiqatda kelgan miqdor (0 … jo'natilgan). Ko'rsatilmagan qator — to'liq keldi. */
     /**
-     * Qabul qatori: {@code receivedQty} — jismonan kelgan (shikastlangan ham); {@code damagedQty} — shundan Karantin zonasiga;
+     * Qabul qatori (koʻrsatilmagan qator — toʻliq keldi): {@code receivedQty} — jismonan kelgan (shikastlangan ham); {@code damagedQty} — shundan Karantinga;
      * {@code toZoneId} — qatorning qayerga zonasi (berilmasa — hujjat zonasi); {@code reason} — farq sababi (SHORT, DAMAGED, OTHER).
      */
     record ReceiveLineRequest(
