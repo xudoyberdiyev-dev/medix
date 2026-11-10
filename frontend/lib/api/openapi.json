@@ -1507,7 +1507,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_15",
+        "operationId" : "update_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2098,7 +2098,7 @@
     "/api/company" : {
       "get" : {
         "description" : "Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.",
-        "operationId" : "get_10",
+        "operationId" : "get_11",
         "responses" : {
           "200" : {
             "content" : {
@@ -2483,7 +2483,7 @@
     },
     "/api/counterparties/{id}" : {
       "get" : {
-        "operationId" : "get_9",
+        "operationId" : "get_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2509,7 +2509,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_14",
+        "operationId" : "update_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3861,7 +3861,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_13",
+        "operationId" : "update_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4120,7 +4120,7 @@
     "/api/employees/{id}" : {
       "put" : {
         "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
-        "operationId" : "update_12",
+        "operationId" : "update_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6003,7 +6003,7 @@
     },
     "/api/opening-balances/{id}" : {
       "get" : {
-        "operationId" : "get_8",
+        "operationId" : "get_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6030,7 +6030,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_11",
+        "operationId" : "update_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6248,7 +6248,7 @@
     },
     "/api/opening-finance/{id}" : {
       "get" : {
-        "operationId" : "get_7",
+        "operationId" : "get_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6274,7 +6274,7 @@
         "tags" : [ "opening-finance" ]
       },
       "put" : {
-        "operationId" : "update_10",
+        "operationId" : "update_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7206,7 +7206,7 @@
     "/api/orders/{id}" : {
       "get" : {
         "description" : "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.",
-        "operationId" : "get_6",
+        "operationId" : "get_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7232,7 +7232,7 @@
         "tags" : [ "orders" ]
       },
       "put" : {
-        "operationId" : "update_9",
+        "operationId" : "update_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7964,7 +7964,7 @@
     },
     "/api/payments/customer/{id}" : {
       "get" : {
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7990,7 +7990,7 @@
         "tags" : [ "payments" ]
       },
       "put" : {
-        "operationId" : "update_8",
+        "operationId" : "update_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8759,7 +8759,7 @@
     },
     "/api/price-changes/{id}" : {
       "get" : {
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8785,7 +8785,7 @@
         "tags" : [ "pricing" ]
       },
       "put" : {
-        "operationId" : "update_7",
+        "operationId" : "update_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9087,7 +9087,7 @@
     "/api/price-types/{id}" : {
       "put" : {
         "description" : "Bazaviy turni yoki mijozlarga biriktirilgan turni nofaol qilib bo'lmaydi. Ro'yxat tarkibi (SPEC 6) o'zgarmaydi.",
-        "operationId" : "update_6",
+        "operationId" : "update_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10064,7 +10064,7 @@
     },
     "/api/products/{id}" : {
       "get" : {
-        "operationId" : "get_3",
+        "operationId" : "get_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10090,7 +10090,7 @@
         "tags" : [ "products" ]
       },
       "put" : {
-        "operationId" : "update_5",
+        "operationId" : "update_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10265,7 +10265,7 @@
     },
     "/api/profile" : {
       "get" : {
-        "operationId" : "get_2",
+        "operationId" : "get_3",
         "responses" : {
           "200" : {
             "content" : {
@@ -10282,7 +10282,7 @@
         "tags" : [ "profile" ]
       },
       "put" : {
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -10691,7 +10691,7 @@
     },
     "/api/receipts/{id}" : {
       "get" : {
-        "operationId" : "get_1",
+        "operationId" : "get_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10718,7 +10718,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_3",
+        "operationId" : "update_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -12059,7 +12059,7 @@
     "/api/settings" : {
       "get" : {
         "description" : "Barcha bo'limlar qiymatlari, oxirgi o'zgarish (kim, qachon) va tahrirlash huquqlari.",
-        "operationId" : "get",
+        "operationId" : "get_1",
         "responses" : {
           "200" : {
             "content" : {
@@ -12077,7 +12077,7 @@
       },
       "put" : {
         "description" : "Bir nechta qiymat birdaniga; har biri oraliq bo'yicha tekshiriladi, audit — eski → yangi.",
-        "operationId" : "update_2",
+        "operationId" : "update_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -13781,7 +13781,7 @@
     },
     "/api/trips/{id}" : {
       "get" : {
-        "operationId" : "get_15",
+        "operationId" : "get",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13804,6 +13804,43 @@
           }
         },
         "summary" : "Reys",
+        "tags" : [ "trips" ]
+      },
+      "put" : {
+        "description" : "Sana, haydovchi, mashina, ekspeditor, izoh — «Rejalashtirilgan», yuklash boshlanmagan.",
+        "operationId" : "update_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TripUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Reys sarlavhasini tahrirlash",
         "tags" : [ "trips" ]
       }
     },
@@ -14055,6 +14092,45 @@
           }
         },
         "summary" : "«Yuklab bo'lindi — reysni boshlash»",
+        "tags" : [ "trips" ]
+      }
+    },
+    "/api/trips/{id}/stops/order" : {
+      "post" : {
+        "description" : "Faqat «Rejalashtirilgan» reys; barcha faol bekatlar yangi tartibda.",
+        "operationId" : "reorder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StopOrderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TripDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekatlar tartibi",
         "tags" : [ "trips" ]
       }
     },
@@ -14613,7 +14689,7 @@
     },
     "/api/warehouse-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_13",
+        "operationId" : "get_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14739,7 +14815,7 @@
     "/api/warehouse-transfers/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi va hal qilish tarixi.",
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15384,7 +15460,7 @@
     },
     "/api/write-offs/{id}" : {
       "get" : {
-        "operationId" : "get_12",
+        "operationId" : "get_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15632,7 +15708,7 @@
     },
     "/api/zone-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_11",
+        "operationId" : "get_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -29480,6 +29556,21 @@
         },
         "required" : [ "categories", "countries", "expired", "expiry", "manufacturers", "near", "products", "quarantine", "suppliers", "supplyBy", "transitDocs", "transitQty", "warehouses", "zoneTypes" ]
       },
+      "StopOrderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "stopIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 100,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "stopIds" ]
+      },
       "SupplierBlock" : {
         "type" : "object",
         "properties" : {
@@ -30701,6 +30792,12 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "driverPhone" : {
+            "type" : "string"
+          },
+          "expeditor" : {
+            "type" : "string"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -30714,6 +30811,12 @@
           "places" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "plateNumber" : {
+            "type" : "string"
+          },
+          "refrigerator" : {
+            "type" : "boolean"
           },
           "startedAt" : {
             "type" : "string",
@@ -30742,9 +30845,12 @@
           "vehicleId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "vehicleModel" : {
+            "type" : "string"
           }
         },
-        "required" : [ "branchId", "createdAt", "createdBy", "driver", "driverId", "id", "number", "places", "status", "stops", "total", "tripDate", "vehicle", "vehicleId" ]
+        "required" : [ "branchId", "createdAt", "createdBy", "driver", "driverId", "id", "number", "places", "plateNumber", "refrigerator", "status", "stops", "total", "tripDate", "vehicle", "vehicleId" ]
       },
       "TripOptions" : {
         "type" : "object",
@@ -30770,6 +30876,12 @@
           "driverId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "expeditor" : {
+            "type" : "string",
+            "description" : "Ekspeditor (ixtiyoriy)",
+            "maxLength" : 120,
+            "minLength" : 0
           },
           "note" : {
             "type" : "string",
@@ -30812,6 +30924,11 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Buyurtma qatorlari soni"
+          },
           "loadedAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -30844,6 +30961,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Buyurtma miqdori (dona)"
+          },
+          "region" : {
+            "type" : "string",
+            "description" : "Mijoz hududi"
+          },
           "returnNumber" : {
             "type" : "string",
             "description" : "Qisman yetkazishda QM raqami"
@@ -30867,7 +30993,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "customer", "id", "orderId", "orderNumber", "paymentType", "photos", "places", "seq", "signed", "total" ]
+        "required" : [ "customer", "id", "lines", "orderId", "orderNumber", "paymentType", "photos", "places", "qty", "seq", "signed", "total" ]
       },
       "TripSummary" : {
         "type" : "object",
@@ -30939,6 +31065,34 @@
           }
         },
         "required" : [ "branchId", "createdAt", "delivered", "driver", "id", "marked", "number", "orders", "places", "plateNumber", "refrigerator", "status", "total", "tripDate", "vehicle" ]
+      },
+      "TripUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "driverId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expeditor" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "tripDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "vehicleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "driverId", "tripDate", "vehicleId" ]
       },
       "UiThresholds" : {
         "type" : "object",

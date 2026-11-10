@@ -657,7 +657,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_15"];
+        put: operations["update_16"];
         post?: never;
         delete?: never;
         options?: never;
@@ -914,7 +914,7 @@ export interface paths {
          * Kompaniya va tizim holati
          * @description Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.
          */
-        get: operations["get_10"];
+        get: operations["get_11"];
         /**
          * Guruh nomini tahrirlash
          * @description Audit jurnaliga eski → yangi qiymat yoziladi.
@@ -1037,9 +1037,9 @@ export interface paths {
             cookie?: never;
         };
         /** Kontragent kartasi */
-        get: operations["get_9"];
+        get: operations["get_10"];
         /** Kartani tahrirlash */
-        put: operations["update_14"];
+        put: operations["update_15"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1644,7 +1644,7 @@ export interface paths {
         };
         get?: never;
         /** Yozuvni tahrirlash */
-        put: operations["update_13"];
+        put: operations["update_14"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1770,7 +1770,7 @@ export interface paths {
          * Xodimni tahrirlash
          * @description Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.
          */
-        put: operations["update_12"];
+        put: operations["update_13"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2750,12 +2750,12 @@ export interface paths {
             cookie?: never;
         };
         /** BQ hujjati */
-        get: operations["get_8"];
+        get: operations["get_9"];
         /**
          * Qoralamani tahrirlash
          * @description Qatorlar to'liq almashtiriladi.
          */
-        put: operations["update_11"];
+        put: operations["update_12"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2852,9 +2852,9 @@ export interface paths {
             cookie?: never;
         };
         /** BQ (pul turlari) hujjati */
-        get: operations["get_7"];
+        get: operations["get_8"];
         /** Qoralamani saqlash */
-        put: operations["update_10"];
+        put: operations["update_11"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3188,9 +3188,9 @@ export interface paths {
          * Buyurtma
          * @description Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.
          */
-        get: operations["get_6"];
+        get: operations["get_7"];
         /** Qoralamani tahrirlash */
-        put: operations["update_9"];
+        put: operations["update_10"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3575,9 +3575,9 @@ export interface paths {
             cookie?: never;
         };
         /** MT kartochkasi (taqsimot bilan) */
-        get: operations["get_5"];
+        get: operations["get_6"];
         /** Qoralamani o'zgartirish */
-        put: operations["update_8"];
+        put: operations["update_9"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3895,9 +3895,9 @@ export interface paths {
             cookie?: never;
         };
         /** NO hujjati */
-        get: operations["get_4"];
+        get: operations["get_5"];
         /** Qoralamani tahrirlash */
-        put: operations["update_7"];
+        put: operations["update_8"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4046,7 +4046,7 @@ export interface paths {
          * Narx turini tahrirlash (nom, muqobil nom, faollik)
          * @description Bazaviy turni yoki mijozlarga biriktirilgan turni nofaol qilib bo'lmaydi. Ro'yxat tarkibi (SPEC 6) o'zgarmaydi.
          */
-        put: operations["update_6"];
+        put: operations["update_7"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4381,9 +4381,9 @@ export interface paths {
             cookie?: never;
         };
         /** Mahsulot kartasi */
-        get: operations["get_3"];
+        get: operations["get_4"];
         /** Mahsulotni tahrirlash */
-        put: operations["update_5"];
+        put: operations["update_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4473,9 +4473,9 @@ export interface paths {
             cookie?: never;
         };
         /** O'z profilim */
-        get: operations["get_2"];
+        get: operations["get_3"];
         /** Telefon raqamini yangilash */
-        put: operations["update_4"];
+        put: operations["update_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4609,12 +4609,12 @@ export interface paths {
             cookie?: never;
         };
         /** Kirim hujjati */
-        get: operations["get_1"];
+        get: operations["get_2"];
         /**
          * Qoralamani tahrirlash
          * @description Qatorlar to'liq almashtiriladi.
          */
-        put: operations["update_3"];
+        put: operations["update_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -5155,12 +5155,12 @@ export interface paths {
          * Sozlamalar
          * @description Barcha bo'limlar qiymatlari, oxirgi o'zgarish (kim, qachon) va tahrirlash huquqlari.
          */
-        get: operations["get"];
+        get: operations["get_1"];
         /**
          * Sozlamalarni saqlash
          * @description Bir nechta qiymat birdaniga; har biri oraliq bo'yicha tekshiriladi, audit — eski → yangi.
          */
-        put: operations["update_2"];
+        put: operations["update_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -5967,8 +5967,12 @@ export interface paths {
             cookie?: never;
         };
         /** Reys */
-        get: operations["get_15"];
-        put?: never;
+        get: operations["get"];
+        /**
+         * Reys sarlavhasini tahrirlash
+         * @description Sana, haydovchi, mashina, ekspeditor, izoh — «Rejalashtirilgan», yuklash boshlanmagan.
+         */
+        put: operations["update_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -6107,6 +6111,26 @@ export interface paths {
          * @description Har buyurtmaga sotuv (SV) va hisob-faktura (HF); «Yo'lda».
          */
         post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/stops/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bekatlar tartibi
+         * @description Faqat «Rejalashtirilgan» reys; barcha faol bekatlar yangi tartibda.
+         */
+        post: operations["reorder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6348,7 +6372,7 @@ export interface paths {
             cookie?: never;
         };
         /** OK hujjati */
-        get: operations["get_13"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6428,7 +6452,7 @@ export interface paths {
          * OK kamomadi
          * @description Ochiqmi va hal qilish tarixi.
          */
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6723,7 +6747,7 @@ export interface paths {
             cookie?: never;
         };
         /** HC hujjati */
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6841,7 +6865,7 @@ export interface paths {
             cookie?: never;
         };
         /** ZK hujjati */
-        get: operations["get_11"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -12361,6 +12385,9 @@ export interface components {
             warehouses: components["schemas"]["Facet"][];
             zoneTypes: components["schemas"]["CodeCount"][];
         };
+        StopOrderRequest: {
+            stopIds: number[];
+        };
         SupplierBlock: {
             active: components["schemas"]["SupplierStat"][];
             passive: components["schemas"]["SupplierStat"][];
@@ -12871,12 +12898,16 @@ export interface components {
             driver: string;
             /** Format: int64 */
             driverId: number;
+            driverPhone?: string;
+            expeditor?: string;
             /** Format: int64 */
             id: number;
             note?: string;
             number: string;
             /** Format: int32 */
             places: number;
+            plateNumber: string;
+            refrigerator: boolean;
             /** Format: date-time */
             startedAt?: string;
             /** @enum {string} */
@@ -12888,6 +12919,7 @@ export interface components {
             vehicle: string;
             /** Format: int64 */
             vehicleId: number;
+            vehicleModel?: string;
         };
         TripOptions: {
             drivers: components["schemas"]["DriverOption"][];
@@ -12896,6 +12928,8 @@ export interface components {
         TripRequest: {
             /** Format: int64 */
             driverId: number;
+            /** @description Ekspeditor (ixtiyoriy) */
+            expeditor?: string;
             note?: string;
             orderIds: number[];
             /** Format: date */
@@ -12909,6 +12943,11 @@ export interface components {
             customer: string;
             /** Format: int64 */
             id: number;
+            /**
+             * Format: int32
+             * @description Buyurtma qatorlari soni
+             */
+            lines: number;
             /** Format: date-time */
             loadedAt?: string;
             /** Format: int64 */
@@ -12923,6 +12962,13 @@ export interface components {
             photos: number;
             /** Format: int32 */
             places: number;
+            /**
+             * Format: int32
+             * @description Buyurtma miqdori (dona)
+             */
+            qty: number;
+            /** @description Mijoz hududi */
+            region?: string;
             /** @description Qisman yetkazishda QM raqami */
             returnNumber?: string;
             /** @description QM summasi (QQS bilan) */
@@ -12970,6 +13016,16 @@ export interface components {
             vehicle: string;
             /** @description Mashina modeli */
             vehicleModel?: string;
+        };
+        TripUpdate: {
+            /** Format: int64 */
+            driverId: number;
+            expeditor?: string;
+            note?: string;
+            /** Format: date */
+            tripDate: string;
+            /** Format: int64 */
+            vehicleId: number;
         };
         /** @description Interfeys uchun chegaralar (barcha kirgan xodimlarga) */
         UiThresholds: {
@@ -14540,7 +14596,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -14924,7 +14980,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -15142,7 +15198,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -15164,7 +15220,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -16017,7 +16073,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -16199,7 +16255,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -17535,7 +17591,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -17557,7 +17613,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -17708,7 +17764,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -17730,7 +17786,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -18177,7 +18233,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -18199,7 +18255,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -18700,7 +18756,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -18722,7 +18778,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -19213,7 +19269,7 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -19235,7 +19291,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -19451,7 +19507,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_7: {
         parameters: {
             query: {
                 branchId: number;
@@ -19939,7 +19995,7 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -19961,7 +20017,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -20083,7 +20139,7 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    get_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -20103,7 +20159,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -20301,7 +20357,7 @@ export interface operations {
             };
         };
     };
-    get_1: {
+    get_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -20323,7 +20379,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -21093,7 +21149,7 @@ export interface operations {
             };
         };
     };
-    get: {
+    get_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -21113,7 +21169,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -22204,7 +22260,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get: {
         parameters: {
             query?: never;
             header?: never;
@@ -22214,6 +22270,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
+                };
+            };
+        };
+    };
+    update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripUpdate"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -22393,6 +22475,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StartResult"];
+                };
+            };
+        };
+    };
+    reorder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StopOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripDetail"];
                 };
             };
         };
@@ -22746,7 +22854,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -22838,7 +22946,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -23273,7 +23381,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -23437,7 +23545,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;

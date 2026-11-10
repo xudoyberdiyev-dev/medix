@@ -1,4 +1,4 @@
-import { addMoney, type ReadyOrder } from "./shipments-model";
+import { addMoney, type ReadyOrder, type TripStatus } from "./shipments-model";
 
 /** Roʻyxatda elementni `from` oʻrnidan `to` oʻrniga koʻchirish (sudrab tartiblash). */
 export function moveItem<T>(list: readonly T[], from: number, to: number): T[] {
@@ -42,12 +42,12 @@ export function stopTotals(stops: readonly { lines: number; qty: number; total: 
 export type StepState = "done" | "cur" | "next" | "fail";
 export const TRIP_STEPS = ["PLANNED", "IN_TRANSIT", "RETURN_WAIT", "DONE"] as const;
 
-export function tripSteps(status: string): { key: string; state: StepState }[] {
+export function tripSteps(status: TripStatus): { key: TripStatus; state: StepState }[] {
   if (status === "CANCELLED")
     return [
       { key: "PLANNED", state: "done" },
       { key: "CANCELLED", state: "fail" },
     ];
-  const idx = TRIP_STEPS.indexOf(status as (typeof TRIP_STEPS)[number]);
+  const idx = (TRIP_STEPS as readonly TripStatus[]).indexOf(status);
   return TRIP_STEPS.map((key, i) => ({ key, state: i < idx ? "done" : i === idx ? "cur" : "next" }));
 }
