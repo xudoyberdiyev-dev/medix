@@ -388,4 +388,4 @@ _(07.11.2026 18:12 — 6 savolga javob berildi va 20:00–20:30 da joriy qilindi
 
 - 10.11 03:27–04:10 (tungi oyna, 6-sessiya, zanjir): E7 chegirma % (V70, IT, UI OrderEntry/OrderCard, ruxsat `orders.discount`) va E8 kontragent standart chegirmasi + YB yetkazish muddati (API, IT, UI). Audit roʻyxatida obyektsiz yozuv NPE (e2e 500) tuzatildi; e2e jami lokatorlari moslandi.
 - 10.11 06:54–07:25 (ertalabki oyna, 2-sessiya, zanjir): CI yashil (profil/katalog e2e). Mijozdan qaytarish QM: backend V71 + API + IT (Karantin, qarz, sales_return, parallel, rad etish), frontend roʻyxat + yangi hujjat + qabul/rad etish drawer, nav yorligʻi, 3 til, unit + e2e.
-- 10.11 07:25–07:40 (2-sessiya davomi): Mijozlar qarzi — Hudud va masʼul operator (API, IT, chiplar); Koʻchirish — «Hal qilinishi kerak» bloki. QM CI: backend/frontend yashil, e2e faqat yorliq lokatori — tuzatildi.
+- 10.11 07:25–07:40 (2-sessiya davomi): Mijozlar qarzi — Hudud va masʼul operator (API, IT, chiplar); Koʻchirish — «Hal qilinishi kerak» bloki. QM CI: backend/frontend yashil, e2e faqat yorliq lokatori — tuzatildi. CI toʻliq yashil (07:40).
