@@ -84,7 +84,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** AH ni bekor qilish (teskari yozuvlar) */
-        post: operations["cancel_11"];
+        post: operations["cancel_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -382,7 +382,7 @@ export interface paths {
          * Filiallararo to'lovni bekor qilish
          * @description Teskari: pul qaytadi, qarz tiklanadi.
          */
-        post: operations["cancel_10"];
+        post: operations["cancel_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -503,7 +503,7 @@ export interface paths {
          * Bekor qilish
          * @description Faqat qoralama.
          */
-        post: operations["cancel_9"];
+        post: operations["cancel_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1358,6 +1358,26 @@ export interface paths {
          * @description Tovar Karantin zonasiga kiradi, mijoz qarzi qaytarish summasiga kamayadi.
          */
         post: operations["approve_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/customer-returns/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * O'tkazilganini bekor qilish
+         * @description Karantindan tovar chiqadi, mijoz qarzi qaytadi, hisobotlardan chiqadi. Partiya keyingi hujjat bilan chiqarilgan bo'lsa — 409 qm.cancelBlocked.
+         */
+        post: operations["cancel_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8087,6 +8107,10 @@ export interface components {
             branch: string;
             /** Format: int64 */
             branchId: number;
+            cancelReason?: string;
+            /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -8117,7 +8141,7 @@ export interface components {
             saleId: number;
             saleNumber: string;
             /** @enum {string} */
-            status: "PENDING" | "POSTED" | "REJECTED";
+            status: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
             total: string;
             /** Format: int64 */
             totalQty: number;
@@ -8200,7 +8224,7 @@ export interface components {
             saleId: number;
             saleNumber: string;
             /** @enum {string} */
-            status: "PENDING" | "POSTED" | "REJECTED";
+            status: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
             total: string;
             warehouse: string;
             /** Format: int64 */
@@ -13652,7 +13676,7 @@ export interface operations {
             };
         };
     };
-    cancel_11: {
+    cancel_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -14068,7 +14092,7 @@ export interface operations {
             };
         };
     };
-    cancel_10: {
+    cancel_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -14229,7 +14253,7 @@ export interface operations {
             };
         };
     };
-    cancel_9: {
+    cancel_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -15393,7 +15417,7 @@ export interface operations {
                 branchId?: number;
                 customerId?: number;
                 saleId?: number;
-                status?: "PENDING" | "POSTED" | "REJECTED";
+                status?: "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
                 q?: string;
                 page?: number;
                 size?: number;
@@ -15516,6 +15540,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReturnDetail"];
+                };
+            };
+        };
+    };
+    cancel_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerReturnRejectRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

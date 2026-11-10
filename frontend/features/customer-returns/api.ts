@@ -12,12 +12,16 @@ export type CustomerReturnRequest = components["schemas"]["CustomerReturnRequest
 export type ReturnableSale = components["schemas"]["ReturnableSale"];
 export type ReturnableLine = components["schemas"]["ReturnableLine"];
 
-/** Ruxsatlar: koʻrish — qm.view, yaratish — qm.create (Operator), qabul qilish — qm.approve (Ombor mudiri). */
+/**
+ * Ruxsatlar: koʻrish — qm.view, yaratish — qm.create (Operator), qabul qilish — qm.approve (Ombor mudiri),
+ * oʻtkazilganini bekor qilish — qm.cancelPosted (Direktor).
+ */
 export const QM_CREATE = "qm.create";
 export const QM_APPROVE = "qm.approve";
-export const QM_VIEW_KEYS = ["qm.view", QM_CREATE, QM_APPROVE];
+export const QM_CANCEL_POSTED = "qm.cancelPosted";
+export const QM_VIEW_KEYS = ["qm.view", QM_CREATE, QM_APPROVE, QM_CANCEL_POSTED];
 
-export const QM_STATUSES = ["PENDING", "POSTED", "REJECTED"] as const satisfies readonly CustomerReturnStatus[];
+export const QM_STATUSES = ["PENDING", "POSTED", "REJECTED", "CANCELLED"] as const satisfies readonly CustomerReturnStatus[];
 
 export function useCustomerReturns(branchId: number | null, status: CustomerReturnStatus | null, q: string, page: number) {
   return useQuery({
@@ -92,5 +96,11 @@ export function useApproveCustomerReturn() {
 export function useRejectCustomerReturn() {
   return useQmMutation((v: { id: number; reason: string }) =>
     unwrap(api.POST("/api/customer-returns/{id}/reject", { params: { path: { id: v.id } }, body: { reason: v.reason } })),
+  );
+}
+
+export function useCancelCustomerReturn() {
+  return useQmMutation((v: { id: number; reason: string }) =>
+    unwrap(api.POST("/api/customer-returns/{id}/cancel", { params: { path: { id: v.id } }, body: { reason: v.reason } })),
   );
 }

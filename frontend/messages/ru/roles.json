@@ -247,6 +247,7 @@
     "products_create": "Товары: создание и редактирование",
     "products_view": "Товары: просмотр",
     "qm_approve": "QM: проведение",
+    "qm_cancelPosted": "QM: отмена проведённого",
     "qm_create": "QM: создание",
     "qm_view": "Возврат от клиента (QM): просмотр",
     "qy_approve": "QY: проведение",

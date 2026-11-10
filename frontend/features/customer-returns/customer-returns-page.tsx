@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleCheck, Clock, Plus, Undo2, XCircle } from "lucide-react";
+import { Ban, CircleCheck, Clock, Plus, Undo2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -24,6 +24,7 @@ export function CustomerReturnStatusBadge({ status }: { status: CustomerReturnSt
     PENDING: { tone: "warning", icon: Clock },
     POSTED: { tone: "success", icon: CircleCheck },
     REJECTED: { tone: "neutral", icon: XCircle },
+    CANCELLED: { tone: "neutral", icon: Ban },
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>
